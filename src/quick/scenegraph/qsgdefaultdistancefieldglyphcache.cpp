@@ -62,6 +62,7 @@ QSGDefaultDistanceFieldGlyphCache::DistanceFieldTextureData *QSGDefaultDistanceF
 QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
     : QSGDistanceFieldGlyphCache(man, c, font)
     , m_maxTextureSize(0)
+    , m_maxTextureCount(3)
 {
     m_textureData = textureData(c);
 }
@@ -77,25 +78,32 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
         if (cacheIsFull() && m_textureData->unusedGlyphs.isEmpty())
             continue;
 
+        if (textureIsFull(m_textureData->currentTexture) && m_textureData->textures.count() < m_maxTextureCount)
+            m_textureData->currentTexture = m_textureData->addTexture();
+
         m_textureData->unusedGlyphs.remove(glyphIndex);
+
+        DistanceFieldTextureData::TextureInfo *tex = m_textureData->currentTexture;
 
         GlyphPosition p;
         p.glyph = glyphIndex;
-        p.position = QPointF(m_textureData->currX, m_textureData->currY);
+        p.position = QPointF(tex->currX, tex->currY);
 
         if (!cacheIsFull()) {
-            m_textureData->currX += QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution());
-            if (m_textureData->currX >= maxTextureSize()) {
-                m_textureData->currX = 0;
-                m_textureData->currY += QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution());
+            tex->currX += QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution());
+            if (tex->currX >= maxTextureSize()) {
+                tex->currX = 0;
+                tex->currY += QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution());
             }
         } else {
             // Recycle glyphs
             if (!m_textureData->unusedGlyphs.isEmpty()) {
                 glyph_t unusedGlyph = *m_textureData->unusedGlyphs.constBegin();
                 TexCoord unusedCoord = glyphTexCoord(unusedGlyph);
+                tex = m_textureData->glyphsTexture.value(unusedGlyph);
                 p.position = QPointF(unusedCoord.x, unusedCoord.y);
                 m_textureData->unusedGlyphs.remove(unusedGlyph);
+                m_textureData->glyphsTexture.remove(unusedGlyph);
                 removeGlyph(unusedGlyph);
             }
         }
@@ -103,6 +111,7 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
         if (p.position.y() < maxTextureSize()) {
             glyphPositions.append(p);
             glyphsToRender.append(glyphIndex);
+            m_textureData->glyphsTexture.insert(glyphIndex, tex);
         }
     }
 
@@ -114,41 +123,46 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
 {
     int requiredWidth = maxTextureSize();
     int rows = 128 / (requiredWidth / QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution())); // Enough rows to fill the latin1 set by default..
-    int requiredHeight = qMin(maxTextureSize(),
-                              qMax(m_textureData->currY + QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()),
-                                   QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()) * rows));
 
-    resizeTexture((requiredWidth), (requiredHeight));
-    glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
-
-    QVector<glyph_t> glyphTextures;
+    QHash<DistanceFieldTextureData::TextureInfo *, QVector<glyph_t> > glyphTextures;
 
     QHash<glyph_t, QImage>::const_iterator it;
     for (it = glyphs.constBegin(); it != glyphs.constEnd(); ++it) {
         glyph_t glyphIndex = it.key();
         TexCoord c = glyphTexCoord(glyphIndex);
+        DistanceFieldTextureData::TextureInfo *texInfo = m_textureData->glyphsTexture.value(glyphIndex);
 
-        glyphTextures.append(glyphIndex);
+        int requiredHeight = qMin(maxTextureSize(),
+                                  qMax(texInfo->currY + QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()),
+                                       QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()) * rows));
+
+        resizeTexture(texInfo, requiredWidth, requiredHeight);
+        glBindTexture(GL_TEXTURE_2D, texInfo->texture);
+
+        glyphTextures[texInfo].append(glyphIndex);
 
         QImage glyph = it.value();
 
         if (useWorkaroundBrokenFBOReadback()) {
             uchar *inBits = glyph.scanLine(0);
-            uchar *outBits = m_textureData->image.scanLine(int(c.y)) + int(c.x);
+            uchar *outBits = texInfo->image.scanLine(int(c.y)) + int(c.x);
             for (int y = 0; y < glyph.height(); ++y) {
                 qMemCopy(outBits, inBits, glyph.width());
                 inBits += glyph.bytesPerLine();
-                outBits += m_textureData->image.bytesPerLine();
+                outBits += texInfo->image.bytesPerLine();
             }
         }
 
         glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, glyph.width(), glyph.height(), GL_ALPHA, GL_UNSIGNED_BYTE, glyph.constBits());
     }
 
-    Texture t;
-    t.textureId = m_textureData->texture;
-    t.size = m_textureData->size;
-    setGlyphsTexture(glyphTextures, t);
+    QHash<DistanceFieldTextureData::TextureInfo *, QVector<glyph_t> >::const_iterator i;
+    for (i = glyphTextures.constBegin(); i != glyphTextures.constEnd(); ++i) {
+        Texture t;
+        t.textureId = i.key()->texture;
+        t.size = i.key()->size;
+        setGlyphsTexture(i.value(), t);
+    }
 }
 
 void QSGDefaultDistanceFieldGlyphCache::referenceGlyphs(const QSet<glyph_t> &glyphs)
@@ -161,15 +175,15 @@ void QSGDefaultDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyph
     m_textureData->unusedGlyphs += glyphs;
 }
 
-void QSGDefaultDistanceFieldGlyphCache::createTexture(int width, int height)
+void QSGDefaultDistanceFieldGlyphCache::createTexture(DistanceFieldTextureData::TextureInfo *texInfo, int width, int height)
 {
-    if (useWorkaroundBrokenFBOReadback() && m_textureData->image.isNull())
-        m_textureData->image = QImage(width, height, QImage::Format_Indexed8);
+    if (useWorkaroundBrokenFBOReadback() && texInfo->image.isNull())
+        texInfo->image = QImage(width, height, QImage::Format_Indexed8);
 
     while (glGetError() != GL_NO_ERROR) { }
 
-    glGenTextures(1, &m_textureData->texture);
-    glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
+    glGenTextures(1, &texInfo->texture);
+    glBindTexture(GL_TEXTURE_2D, texInfo->texture);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -177,35 +191,35 @@ void QSGDefaultDistanceFieldGlyphCache::createTexture(int width, int height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    m_textureData->size = QSize(width, height);
+    texInfo->size = QSize(width, height);
 
     GLuint error = glGetError();
     if (error != GL_NO_ERROR) {
         glBindTexture(GL_TEXTURE_2D, 0);
-        glDeleteTextures(1, &m_textureData->texture);
-        m_textureData->texture = 0;
+        glDeleteTextures(1, &texInfo->texture);
+        texInfo->texture = 0;
     }
 
 }
 
-void QSGDefaultDistanceFieldGlyphCache::resizeTexture(int width, int height)
+void QSGDefaultDistanceFieldGlyphCache::resizeTexture(DistanceFieldTextureData::TextureInfo *texInfo, int width, int height)
 {
-    int oldWidth = m_textureData->size.width();
-    int oldHeight = m_textureData->size.height();
+    int oldWidth = texInfo->size.width();
+    int oldHeight = texInfo->size.height();
     if (width == oldWidth && height == oldHeight)
         return;
 
-    GLuint oldTexture = m_textureData->texture;
-    createTexture(width, height);
+    GLuint oldTexture = texInfo->texture;
+    createTexture(texInfo, width, height);
 
     if (!oldTexture)
         return;
 
-    updateTexture(oldTexture, m_textureData->texture, m_textureData->size);
+    updateTexture(oldTexture, texInfo->texture, texInfo->size);
 
     if (useWorkaroundBrokenFBOReadback()) {
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, oldWidth, oldHeight, GL_ALPHA, GL_UNSIGNED_BYTE, m_textureData->image.constBits());
-        m_textureData->image = m_textureData->image.copy(0, 0, width, height);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, oldWidth, oldHeight, GL_ALPHA, GL_UNSIGNED_BYTE, texInfo->image.constBits());
+        texInfo->image = texInfo->image.copy(0, 0, width, height);
         glDeleteTextures(1, &oldTexture);
         return;
     }
@@ -267,7 +281,7 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(int width, int height)
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
+    glBindTexture(GL_TEXTURE_2D, texInfo->texture);
 
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, oldWidth, oldHeight);
 
