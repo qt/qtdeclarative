@@ -68,7 +68,6 @@ void Squircle::itemChange(ItemChange change, const ItemChangeData &)
     }
 }
 
-
 void Squircle::paint()
 {
     if (!m_program) {
@@ -105,6 +104,8 @@ void Squircle::paint()
     };
     m_program->setAttributeArray(0, GL_FLOAT, values, 2);
     m_program->setUniformValue("t", (float) m_t);
+
+    glViewport(0, 0, canvas()->width(), canvas()->height());
 
     glDisable(GL_DEPTH_TEST);
 

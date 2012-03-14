@@ -55,7 +55,7 @@ public:
     Squircle();
 
     qreal t() const { return m_t; }
-    void setT(qreal t) { m_t = t; emit tChanged(); }
+    void setT(qreal t) { m_t = t; emit tChanged(); update(); }
 
     void itemChange(ItemChange change, const ItemChangeData &);
 
