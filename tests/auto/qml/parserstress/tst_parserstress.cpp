@@ -128,8 +128,7 @@ void tst_parserstress::ecmascript()
 
     QQmlComponent component(&engine);
 
-    QString dummyFile = QFINDTESTDATA("dummy.qml");
-    component.setData(qmlData, QUrl::fromLocalFile(dummyFile));
+    component.setData(qmlData, QUrl());
 
     QFileInfo info(file);
 
