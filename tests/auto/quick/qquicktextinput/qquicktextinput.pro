@@ -9,3 +9,5 @@ include (../../shared/util.pri)
 TESTDATA = data/*
 
 QT += core-private gui-private v8-private qml-private quick-private testlib
+
+win32:CONFIG += insignificant_test # QTBUG-24790
