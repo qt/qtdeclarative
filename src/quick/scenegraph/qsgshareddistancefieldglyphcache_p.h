@@ -44,6 +44,7 @@
 
 #include <QtCore/qwaitcondition.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <private/qqmlguard_p.h>
 
 QT_BEGIN_HEADER
 
@@ -105,8 +106,19 @@ private:
         QPoint position;
     };
 
+    struct Owner
+    {
+        Owner() : ref(0) {}
+        Owner(const Owner &o) : item(o.item), ref(o.ref) {}
+        Owner &operator =(const Owner &o) { item = o.item; ref = o.ref; return *this; }
+
+        QQmlGuard<QQuickItem> item;
+        int ref;
+    };
+
     QHash<quint32, PendingGlyph> m_pendingReadyGlyphs;
     QHash<glyph_t, void *> m_bufferForGlyph;
+    QHash<QQuickItem *, Owner> m_registeredOwners;
 };
 
 QT_END_NAMESPACE

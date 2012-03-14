@@ -234,14 +234,25 @@ void QSGSharedDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyphs
 
 void QSGSharedDistanceFieldGlyphCache::registerOwnerElement(QQuickItem *ownerElement)
 {
-    bool ok = connect(this, SIGNAL(glyphsPending()), ownerElement, SLOT(triggerPreprocess()));
-    Q_ASSERT_X(ok, Q_FUNC_INFO, "QML element that owns a glyph node must have triggerPreprocess() slot");
-    Q_UNUSED(ok);
+    Owner &owner = m_registeredOwners[ownerElement];
+    if (owner.ref == 0) {
+        owner.item = ownerElement;
+
+        bool ok = connect(this, SIGNAL(glyphsPending()), ownerElement, SLOT(triggerPreprocess()));
+        Q_ASSERT_X(ok, Q_FUNC_INFO, "QML element that owns a glyph node must have triggerPreprocess() slot");
+        Q_UNUSED(ok);
+    }
+    ++owner.ref;
 }
 
 void QSGSharedDistanceFieldGlyphCache::unregisterOwnerElement(QQuickItem *ownerElement)
 {
-    disconnect(this, SIGNAL(glyphsPending()), ownerElement, SLOT(triggerPreprocess()));
+    QHash<QQuickItem *, Owner>::iterator it = m_registeredOwners.find(ownerElement);
+    if (it != m_registeredOwners.end() && --it->ref <= 0) {
+        if (it->item)
+            disconnect(this, SIGNAL(glyphsPending()), ownerElement, SLOT(triggerPreprocess()));
+        m_registeredOwners.erase(it);
+    }
 }
 
 #if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG_)
