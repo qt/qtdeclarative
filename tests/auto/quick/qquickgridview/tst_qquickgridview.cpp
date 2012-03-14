@@ -5186,7 +5186,7 @@ void tst_QQuickGridView::asynchronous()
     QQmlIncubationController controller;
     canvas->engine()->setIncubationController(&controller);
 
-    canvas->setSource(testFile("asyncloader.qml"));
+    canvas->setSource(testFileUrl("asyncloader.qml"));
 
     QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
     QVERIFY(rootObject);

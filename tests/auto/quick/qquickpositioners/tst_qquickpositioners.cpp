@@ -532,7 +532,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
-    canvas->setSource(testFile("transitions.qml"));
+    canvas->setSource(testFileUrl("transitions.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -641,7 +641,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
-    canvas->setSource(testFile("transitions.qml"));
+    canvas->setSource(testFileUrl("transitions.qml"));
     canvas->show();
     qApp->processEvents();
 

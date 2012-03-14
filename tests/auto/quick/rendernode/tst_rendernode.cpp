@@ -54,10 +54,10 @@ class tst_rendernode: public QQmlDataTest
 public:
     tst_rendernode();
 
-    QImage runTest(const QString &url)
+    QImage runTest(const QString &fileName)
     {
         QQuickView view;
-        view.setSource(QUrl(url));
+        view.setSource(testFileUrl(fileName));
 
         view.show();
         QTest::qWaitForWindowShown(&view);
@@ -194,7 +194,7 @@ static void fuzzyCompareColor(QRgb x, QRgb y)
 
 void tst_rendernode::renderOrder()
 {
-    QImage fb = runTest(testFile("RenderOrder.qml"));
+    QImage fb = runTest("RenderOrder.qml");
     int x1 = fb.width() / 8;
     int x2 = fb.width() * 3 / 8;
     int x3 = fb.width() * 5 / 8;
@@ -216,7 +216,7 @@ void tst_rendernode::renderOrder()
 
 void tst_rendernode::messUpState()
 {
-    QImage fb = runTest(testFile("MessUpState.qml"));
+    QImage fb = runTest("MessUpState.qml");
     int x1 = 0;
     int x2 = fb.width() / 2;
     int x3 = fb.width() - 1;

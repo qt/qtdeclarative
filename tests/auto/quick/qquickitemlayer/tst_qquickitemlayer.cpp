@@ -53,10 +53,10 @@ class tst_QQuickItemLayer: public QQmlDataTest
 public:
     tst_QQuickItemLayer();
 
-    QImage runTest(const QString &url)
+    QImage runTest(const QString &fileName)
     {
         QQuickView view;
-        view.setSource(QUrl(url));
+        view.setSource(testFileUrl(fileName));
 
         view.show();
         QTest::qWaitForWindowShown(&view);
@@ -135,7 +135,7 @@ void tst_QQuickItemLayer::layerSmooth()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
-    QImage fb = runTest(testFile("Smooth.qml"));
+    QImage fb = runTest("Smooth.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0, 0xff));
 
@@ -154,7 +154,7 @@ void tst_QQuickItemLayer::layerEnabled()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
-    QImage fb = runTest(testFile("Enabled.qml"));
+    QImage fb = runTest("Enabled.qml");
     // Verify the banding
     QCOMPARE(fb.pixel(0, 0), fb.pixel(0, 1));
     // Verify the gradient
@@ -170,7 +170,7 @@ void tst_QQuickItemLayer::layerMipmap()
 {
     if (m_isMesaSoftwareRasterizer)
         QSKIP("Mipmapping does not work with the Mesa Software Rasterizer.");
-    QImage fb = runTest(testFile("Mipmap.qml"));
+    QImage fb = runTest("Mipmap.qml");
     QVERIFY(fb.pixel(0, 0) != 0xff000000);
     QVERIFY(fb.pixel(0, 0) != 0xffffffff);
 }
@@ -184,7 +184,7 @@ void tst_QQuickItemLayer::layerEffect()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
-    QImage fb = runTest(testFile("Effect.qml"));
+    QImage fb = runTest("Effect.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0xff, 0));
 }
@@ -199,7 +199,7 @@ void tst_QQuickItemLayer::layerSourceRect()
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
 
-    QImage fb = runTest(testFile("SourceRect.qml"));
+    QImage fb = runTest("SourceRect.qml");
 
     // Check that the edges are converted to blue
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0, 0xff));
@@ -219,7 +219,7 @@ void tst_QQuickItemLayer::layerIsTextureProvider()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
-    QImage fb = runTest(testFile("TextureProvider.qml"));
+    QImage fb = runTest("TextureProvider.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(fb.width() - 1, 0), qRgb(0, 0xff, 0));
 }
@@ -257,7 +257,7 @@ void tst_QQuickItemLayer::layerVisibility()
     QFETCH(qreal, opacity);
 
     QQuickView view;
-    view.setSource(testFile("Visible.qml"));
+    view.setSource(testFileUrl("Visible.qml"));
 
     QQuickItem *child = view.rootItem()->childItems().at(0);
     child->setProperty("layerVisible", visible);
@@ -303,7 +303,7 @@ void tst_QQuickItemLayer::layerZOrder()
     QFETCH(bool, effect);
 
     QQuickView view;
-    view.setSource(testFile("ZOrder.qml"));
+    view.setSource(testFileUrl("ZOrder.qml"));
 
     QQuickItem *child = view.rootItem()->childItems().at(0);
     child->setProperty("layerEffect", effect);
@@ -338,7 +338,7 @@ void tst_QQuickItemLayer::changeZOrder()
     QFETCH(bool, effect);
 
     QQuickView view;
-    view.setSource(testFile("ZOrderChange.qml"));
+    view.setSource(testFileUrl("ZOrderChange.qml"));
 
     QQuickItem *child = view.rootItem()->childItems().at(0);
     child->setProperty("layerEnabled", layered);
@@ -388,20 +388,20 @@ void tst_QQuickItemLayer::changeZOrder()
 void tst_QQuickItemLayer::toggleLayerAndEffect()
 {
     // This test passes if it doesn't crash.
-    runTest(testFile("ToggleLayerAndEffect.qml"));
+    runTest("ToggleLayerAndEffect.qml");
 }
 
 void tst_QQuickItemLayer::disableLayer()
 {
     // This test passes if it doesn't crash.
-    runTest(testFile("DisableLayer.qml"));
+    runTest("DisableLayer.qml");
 }
 
 void tst_QQuickItemLayer::changeSamplerName()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
-    QImage fb = runTest(testFile("SamplerNameChange.qml"));
+    QImage fb = runTest("SamplerNameChange.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0, 0xff));
 }
 
@@ -409,7 +409,7 @@ void tst_QQuickItemLayer::itemEffect()
 {
     if (m_isMesaSoftwareRasterizer && m_mesaVersion < QT_VERSION_CHECK(7, 11, 0))
         QSKIP("Mesa Software Rasterizer below version 7.11 does not render this test correctly.");
-    QImage fb = runTest(testFile("ItemEffect.qml"));
+    QImage fb = runTest("ItemEffect.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(199, 0), qRgb(0xff, 0, 0));
     QCOMPARE(fb.pixel(0, 199), qRgb(0, 0, 0xff));
@@ -418,7 +418,7 @@ void tst_QQuickItemLayer::itemEffect()
 
 void tst_QQuickItemLayer::rectangleEffect()
 {
-    QImage fb = runTest(testFile("RectangleEffect.qml"));
+    QImage fb = runTest("RectangleEffect.qml");
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0xff, 0));
     QCOMPARE(fb.pixel(199, 0), qRgb(0, 0xff, 0));
     QCOMPARE(fb.pixel(0, 199), qRgb(0, 0xff, 0));

@@ -44,14 +44,16 @@
 #include <private/qquickmultipointtoucharea_p.h>
 #include <private/qquickflickable_p.h>
 #include <QtQuick/qquickview.h>
+#include "../../shared/util.h"
 
-class tst_QQuickMultiPointTouchArea: public QObject
+class tst_QQuickMultiPointTouchArea : public QQmlDataTest
 {
     Q_OBJECT
 public:
     tst_QQuickMultiPointTouchArea() : device(0) { }
 private slots:
     void initTestCase() {
+        QQmlDataTest::initTestCase();
         if (!device) {
             device = new QTouchDevice;
             device->setType(QTouchDevice::TouchScreen);
@@ -714,7 +716,7 @@ void tst_QQuickMultiPointTouchArea::invisible()
 QQuickView *tst_QQuickMultiPointTouchArea::createAndShowView(const QString &file)
 {
     QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + QLatin1String("/data/") + file));
+    canvas->setSource(testFileUrl(file));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);

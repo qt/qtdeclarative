@@ -653,7 +653,7 @@ void tst_QQuickLoader::initialPropertyValues_data()
             << (QVariantList() << 2 << 0);
 
     QTest::newRow("set source with initial property values specified, active = false") << testFileUrl("initialPropertyValues.3.qml")
-            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("initialPropertyValues.3.qml").toLocalFile() + QLatin1String(":16: TypeError: Cannot read property 'canary' of null")))
+            << (QStringList() << QString(testFileUrl("initialPropertyValues.3.qml").toString() + QLatin1String(":16: TypeError: Cannot read property 'canary' of null")))
             << (QStringList())
             << (QVariantList());
 

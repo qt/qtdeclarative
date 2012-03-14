@@ -6,4 +6,6 @@ SOURCES += tst_qquickmultipointtoucharea.cpp
 
 TESTDATA = data/*
 
+include(../../shared/util.pri)
+
 QT += core-private gui-private qml-private quick-private testlib
