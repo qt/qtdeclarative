@@ -117,9 +117,10 @@ public:
         m_pluginName = pluginName;
     }
 
-    void setPort(int port, bool block) {
+    void setPort(int port, bool block, QString &hostAddress) {
         m_port = port;
         m_block = block;
+        m_hostAddress = hostAddress;
     }
 
     void run();
@@ -128,6 +129,7 @@ private:
     QString m_pluginName;
     int m_port;
     bool m_block;
+    QString m_hostAddress;
 };
 
 QQmlDebugServerPrivate::QQmlDebugServerPrivate() :
@@ -214,7 +216,7 @@ void QQmlDebugServerThread::run()
             = server->d_func()->loadConnectionPlugin(m_pluginName);
     if (connection) {
         connection->setServer(QQmlDebugServer::instance());
-        connection->setPort(m_port, m_block);
+        connection->setPort(m_port, m_block, m_hostAddress);
     } else {
         QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
         qWarning() << QString(QLatin1String("QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
@@ -258,8 +260,9 @@ QQmlDebugServer *QQmlDebugServer::instance()
         int port = 0;
         bool block = false;
         bool ok = false;
+        QString hostAddress;
 
-        // format: qmljsdebugger=port:3768[,block] OR qmljsdebugger=ost[,block]
+        // format: qmljsdebugger=port:3768[,host:<ip address>][,block] OR qmljsdebugger=ost[,block]
         if (!appD->qmljsDebugArgumentsString().isEmpty()) {
             if (!QQmlEnginePrivate::qml_debugging_enabled) {
                 qWarning() << QString(QLatin1String(
@@ -270,16 +273,22 @@ QQmlDebugServer *QQmlDebugServer::instance()
             }
 
             QString pluginName;
-            if (appD->qmljsDebugArgumentsString().indexOf(QLatin1String("port:")) == 0) {
-                int separatorIndex = appD->qmljsDebugArgumentsString().indexOf(QLatin1Char(','));
-                port = appD->qmljsDebugArgumentsString().mid(5, separatorIndex - 5).toInt(&ok);
-                pluginName = QStringLiteral("qmldbg_tcp");
-            } else if (appD->qmljsDebugArgumentsString().contains(QLatin1String("ost"))) {
-                pluginName = QStringLiteral("qmldbg_ost");
-                ok = true;
+            QStringList lstjsDebugArguments = appD->qmljsDebugArgumentsString()
+                                                                    .split(QLatin1Char(','));
+            foreach (const QString &strArgument, lstjsDebugArguments) {
+                if (strArgument.startsWith(QLatin1String("port:"))) {
+                    port = strArgument.mid(5).toInt(&ok);
+                    pluginName = QLatin1String("qmldbg_tcp");
+                } else if (strArgument.startsWith(QLatin1String("host:"))) {
+                    hostAddress = strArgument.mid(5);
+                } else if (strArgument == QLatin1String("block")) {
+                    block = true;
+                } else {
+                    qWarning() << QString::fromLatin1("QML Debugger: Invalid argument '%1' "
+                                                      "detected. Ignoring the same.")
+                                                       .arg(strArgument);
+                }
             }
-
-            block = appD->qmljsDebugArgumentsString().contains(QLatin1String("block"));
 
             if (ok) {
                 qQmlDebugServer = new QQmlDebugServer();
@@ -287,7 +296,7 @@ QQmlDebugServer *QQmlDebugServer::instance()
                 qQmlDebugServer->d_func()->thread = thread;
                 qQmlDebugServer->moveToThread(thread);
                 thread->setPluginName(pluginName);
-                thread->setPort(port, block);
+                thread->setPort(port, block, hostAddress);
                 thread->start();
 
                 if (block) {

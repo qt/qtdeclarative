@@ -115,10 +115,11 @@ bool QmlOstPlugin::waitForMessage()
     return d->protocol->waitForReadyRead(-1);
 }
 
-void QmlOstPlugin::setPort(int port, bool block)
+void QmlOstPlugin::setPort(int port, bool block, const QString &hostaddress)
 {
     Q_UNUSED(port);
     Q_UNUSED(block);
+    Q_UNUSED(hostaddress);
 
     Q_D(QmlOstPlugin);
 
