@@ -213,6 +213,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::MathPIReal:
         INSTR_DUMP << "\t" << "MathPIReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::LoadNull:
+        INSTR_DUMP << "\t" << "LoadNull" << "\t\t" << "Constant(null) -> Output_Reg(" << i->null_value.reg << ")";
+        break;
     case V4Instr::LoadReal:
         INSTR_DUMP << "\t" << "LoadReal" << "\t\t" << "Constant(" << i->real_value.value << ") -> Output_Reg(" << i->real_value.reg << ")";
         break;
@@ -314,6 +317,18 @@ void Bytecode::dump(const V4Instr *i, int address) const
         break;
     case V4Instr::StrictNotEqualString:
         INSTR_DUMP << "\t" << "StrictNotEqualString" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+        break;
+    case V4Instr::EqualObject:
+        INSTR_DUMP << "\t" << "EqualObject" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+        break;
+    case V4Instr::NotEqualObject:
+        INSTR_DUMP << "\t" << "NotEqualObject" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+        break;
+    case V4Instr::StrictEqualObject:
+        INSTR_DUMP << "\t" << "StrictEqualObject" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+        break;
+    case V4Instr::StrictNotEqualObject:
+        INSTR_DUMP << "\t" << "StrictNotEqualObject" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
     case V4Instr::MathMaxReal:
         INSTR_DUMP << "\t" << "MathMaxReal" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";

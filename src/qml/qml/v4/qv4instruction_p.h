@@ -106,6 +106,7 @@ QT_BEGIN_NAMESPACE
     F(MathFloorReal, unaryop) \
     F(MathCeilReal, unaryop) \
     F(MathPIReal, unaryop) \
+    F(LoadNull, null_value) \
     F(LoadReal, real_value) \
     F(LoadInt, int_value) \
     F(LoadBool, bool_value) \
@@ -140,6 +141,10 @@ QT_BEGIN_NAMESPACE
     F(NotEqualString, binaryop) \
     F(StrictEqualString, binaryop) \
     F(StrictNotEqualString, binaryop) \
+    F(EqualObject, binaryop) \
+    F(NotEqualObject, binaryop) \
+    F(StrictEqualObject, binaryop) \
+    F(StrictNotEqualObject, binaryop) \
     F(MathMaxReal, binaryop) \
     F(MathMinReal, binaryop) \
     F(NewString, construct) \
@@ -271,6 +276,11 @@ union V4Instr {
         qint8 reg;
     };
 
+    struct instr_null_value {
+        QML_V4_INSTR_HEADER
+        qint8 reg;
+    };
+
     struct instr_real_value {
         QML_V4_INSTR_HEADER
         qint8 reg;
@@ -358,6 +368,7 @@ union V4Instr {
     instr_fetch fetch;
     instr_copy copy;
     instr_construct construct;
+    instr_null_value null_value;
     instr_real_value real_value;
     instr_int_value int_value;
     instr_bool_value bool_value;

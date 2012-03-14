@@ -881,13 +881,15 @@ void QV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left, ExprResult
             implicitCvt(left, t);
             implicitCvt(right, t);
         }
+    } else if ((left.type() != IR::ObjectType && left.type() != IR::NullType) ||
+               (right.type() != IR::ObjectType && right.type() != IR::NullType))
+        return;
 
-        if (_expr.hint == ExprResult::cx) {
-            _expr.format = ExprResult::cx;
-            _block->CJUMP(_block->BINOP(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
-        } else {
-            _expr.code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
-        }
+    if (_expr.hint == ExprResult::cx) {
+        _expr.format = ExprResult::cx;
+        _block->CJUMP(_block->BINOP(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
+    } else {
+        _expr.code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
     }
 }
 
@@ -999,9 +1001,6 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
             implicitCvt(left, IR::RealType);
             implicitCvt(right, IR::RealType);
             binop(ast, left, right);
-        } else if (left.type() == IR::BoolType || right.type() == IR::BoolType) {
-            implicitCvt(left, IR::BoolType);
-            implicitCvt(right, IR::BoolType);
         } else if (left.isValid() && right.isValid()) {
             binop(ast, left, right);
         }
@@ -1013,16 +1012,21 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
         ExprResult right = expression(ast->right);
         if (left.type() == right.type()) {
             binop(ast, left, right);
-        } else if (left.type() >= IR::BoolType && right.type() >= IR::BoolType) {
+        } else if (left.type() > IR::BoolType && right.type() > IR::BoolType) {
             // left and right have numeric type (int or real)
             binop(ast, left, right);
+        } else if ((left.type() == IR::ObjectType && right.type() == IR::NullType) ||
+                   (right.type() == IR::ObjectType && left.type() == IR::NullType)) {
+            // comparing a qobject with null
+            binop(ast, left, right);
         } else if (left.isValid() && right.isValid()) {
+            // left and right have different types
             const bool isEq = ast->op == QSOperator::StrictEqual;
             if (_expr.hint == ExprResult::cx) {
                 _expr.format = ExprResult::cx;
-                _block->JUMP(isEq ? _expr.iftrue : _expr.iffalse);
+                _block->JUMP(isEq ? _expr.iffalse : _expr.iftrue);
             } else {
-                _expr.code = _block->CONST(IR::BoolType, isEq ? 1 : 0);
+                _expr.code = _block->CONST(IR::BoolType, isEq ? 0 : 1);
             }
         }
     } break;

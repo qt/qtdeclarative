@@ -124,6 +124,8 @@ void tst_v4::qtscript_data()
 {
     QTest::addColumn<QString>("file");
 
+    QTest::newRow("equals") << "equals.qml";
+    QTest::newRow("strict equals") << "strictEquals.qml";
     QTest::newRow("qreal -> int rounding") << "qrealToIntRounding.qml";
     QTest::newRow("exception on fetch") << "fetchException.qml";
     QTest::newRow("logical or") << "logicalOr.qml";

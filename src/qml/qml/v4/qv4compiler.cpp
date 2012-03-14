@@ -234,6 +234,12 @@ void QV4CompilerPrivate::visitConst(IR::Const *e)
         gen(i);
         } break;
 
+    case IR::NullType: {
+        Instr::LoadNull i;
+        i.reg = currentReg;
+        gen(i);
+        } break;
+
     default:
         if (qmlVerboseCompiler())
             qWarning() << Q_FUNC_INFO << "unexpected type";
@@ -682,21 +688,29 @@ quint8 QV4CompilerPrivate::instructionOpcode(IR::Binop *e)
         return V4Instr::LeReal;
 
     case IR::OpEqual:
+        if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
+            return V4Instr::EqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::EqualString;
         return V4Instr::EqualReal;
 
     case IR::OpNotEqual:
+        if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
+            return V4Instr::NotEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::NotEqualString;
         return V4Instr::NotEqualReal;
 
     case IR::OpStrictEqual:
+        if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
+            return V4Instr::StrictEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::StrictEqualString;
         return V4Instr::StrictEqualReal;
 
     case IR::OpStrictNotEqual:
+        if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
+            return V4Instr::StrictNotEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::StrictNotEqualString;
         return V4Instr::StrictNotEqualReal;
@@ -774,7 +788,7 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
     case IR::OpNotEqual:
     case IR::OpStrictEqual:
     case IR::OpStrictNotEqual:
-        if (e->left->type != IR::StringType) {
+        if (e->left->type >= IR::FirstNumberType) {
             convertToReal(e->left, left);
             convertToReal(e->right, right);
         }
