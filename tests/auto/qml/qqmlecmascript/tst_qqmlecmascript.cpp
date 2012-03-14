@@ -207,6 +207,7 @@ private slots:
     void deleteLater();
     void in();
     void typeOf();
+    void qtbug_24448();
     void sharedAttachedObject();
     void objectName();
     void writeRemovesBinding();
@@ -5376,17 +5377,9 @@ void tst_qqmlecmascript::typeOf()
 {
     QQmlComponent component(&engine, testFileUrl("typeOf.qml"));
 
-    // These warnings should not happen once QTBUG-21864 is fixed
-    QString warning1 = component.url().toString() + QLatin1String(":16: Error: Cannot assign [undefined] to QString");
-    QString warning2 = component.url().resolved(QUrl("typeOf.js")).toString() + QLatin1String(":1: ReferenceError: a is not defined");
-
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
-
     QObject *o = component.create();
     QVERIFY(o != 0);
 
-    QEXPECT_FAIL("", "QTBUG-21864", Abort);
     QCOMPARE(o->property("test1").toString(), QLatin1String("undefined"));
     QCOMPARE(o->property("test2").toString(), QLatin1String("object"));
     QCOMPARE(o->property("test3").toString(), QLatin1String("number"));
@@ -5398,6 +5391,14 @@ void tst_qqmlecmascript::typeOf()
     QCOMPARE(o->property("test9").toString(), QLatin1String("object"));
 
     delete o;
+}
+
+void tst_qqmlecmascript::qtbug_24448()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_24448.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != 0);
+    QVERIFY(o->property("test").toBool());
 }
 
 void tst_qqmlecmascript::sharedAttachedObject()
