@@ -73,7 +73,7 @@ class QQmlDebugObjectReference;
 class QQmlDebugFileReference;
 class QQmlDebugEngineReference;
 class QQmlEngineDebugPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlEngineDebug : public QObject
+class QQmlEngineDebug : public QObject
 {
     Q_OBJECT
 public:
@@ -121,7 +121,7 @@ private:
     Q_DECLARE_PRIVATE(QQmlEngineDebug)
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugWatch : public QObject
+class QQmlDebugWatch : public QObject
 {
     Q_OBJECT
 public:
@@ -152,7 +152,7 @@ private:
     int m_objectDebugId;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugPropertyWatch : public QQmlDebugWatch
+class QQmlDebugPropertyWatch : public QQmlDebugWatch
 {
     Q_OBJECT
 public:
@@ -165,7 +165,7 @@ private:
     QString m_name;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugObjectExpressionWatch : public QQmlDebugWatch
+class QQmlDebugObjectExpressionWatch : public QQmlDebugWatch
 {
     Q_OBJECT
 public:
@@ -180,7 +180,7 @@ private:
 };
 
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugQuery : public QObject
+class QQmlDebugQuery : public QObject
 {
     Q_OBJECT
 public:
@@ -202,7 +202,7 @@ private:
     State m_state;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugFileReference 
+class QQmlDebugFileReference
 {
 public:
     QQmlDebugFileReference();
@@ -223,7 +223,7 @@ private:
     int m_columnNumber;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugEngineReference
+class QQmlDebugEngineReference
 {
 public:
     QQmlDebugEngineReference();
@@ -240,7 +240,7 @@ private:
     QString m_name;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugObjectReference
+class QQmlDebugObjectReference
 {
 public:
     QQmlDebugObjectReference();
@@ -271,7 +271,7 @@ private:
     QList<QQmlDebugObjectReference> m_children;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugContextReference
+class QQmlDebugContextReference
 {
 public:
     QQmlDebugContextReference();
@@ -292,7 +292,7 @@ private:
     QList<QQmlDebugContextReference> m_contexts;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugPropertyReference
+class QQmlDebugPropertyReference
 {
 public:
     QQmlDebugPropertyReference();
@@ -317,7 +317,7 @@ private:
 };
 
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugEnginesQuery : public QQmlDebugQuery
+class QQmlDebugEnginesQuery : public QQmlDebugQuery
 {
     Q_OBJECT
 public:
@@ -332,7 +332,7 @@ private:
     QList<QQmlDebugEngineReference> m_engines;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugRootContextQuery : public QQmlDebugQuery
+class QQmlDebugRootContextQuery : public QQmlDebugQuery
 {
     Q_OBJECT
 public:
@@ -347,7 +347,7 @@ private:
     QQmlDebugContextReference m_context;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugObjectQuery : public QQmlDebugQuery
+class QQmlDebugObjectQuery : public QQmlDebugQuery
 {
     Q_OBJECT
 public:
@@ -363,7 +363,7 @@ private:
 
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugExpressionQuery : public QQmlDebugQuery
+class QQmlDebugExpressionQuery : public QQmlDebugQuery
 {
     Q_OBJECT
 public:
