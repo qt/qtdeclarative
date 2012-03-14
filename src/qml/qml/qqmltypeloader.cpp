@@ -1558,7 +1558,6 @@ void QQmlTypeData::dataReceived(const QByteArray &data)
             ref.qualifier = import.qualifier;
             ref.script = blob;
             m_scripts << ref;
-
         }
     }
 
@@ -1657,8 +1656,8 @@ void QQmlTypeData::resolveTypes()
         import.extractVersion(&vmaj, &vmin);
 
         QList<QQmlError> errors;
-        if (!m_imports.addImport(importDatabase, import.uri, import.qualifier,
-                                 vmaj, vmin, import.type, qmldircomponentsnetwork, &errors)) {
+        if (m_imports.addImport(importDatabase, import.uri, import.qualifier, vmaj, vmin,
+                                import.type, qmldircomponentsnetwork, &errors).isNull()) {
             QQmlError error;
             if (errors.size()) {
                 error = errors.takeFirst();
@@ -1859,8 +1858,9 @@ void QQmlScriptBlob::dataReceived(const QByteArray &data)
             import.extractVersion(&vmaj, &vmin);
 
             QList<QQmlError> errors;
-            if (!m_imports.addImport(importDatabase, import.uri, import.qualifier, vmaj, vmin,
-                                     import.type, QQmlDirComponents(), &errors)) {
+            QString importUrl = m_imports.addImport(importDatabase, import.uri, import.qualifier, vmaj, vmin,
+                                                    import.type, QQmlDirComponents(), &errors);
+            if (importUrl.isNull()) {
                 QQmlError error = errors.takeFirst();
                 // description should be set by addImport().
                 error.setUrl(m_imports.baseUrl());
@@ -1870,6 +1870,22 @@ void QQmlScriptBlob::dataReceived(const QByteArray &data)
 
                 setError(errors);
                 return;
+            }
+
+            // Does this library contain any scripts?
+            QUrl libraryUrl(importUrl);
+            const QQmlDirParser *dirParser = typeLoader()->qmlDirParser(libraryUrl.path() + QLatin1String("qmldir"));
+            foreach (const QQmlDirParser::Script &script, dirParser->scripts()) {
+                QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
+                QQmlScriptBlob *blob = typeLoader()->getScript(scriptUrl);
+                addDependency(blob);
+
+                ScriptReference ref;
+                ref.location = import.location.start;
+                ref.qualifier = script.nameSpace;
+                ref.nameSpace = import.qualifier;
+                ref.script = blob;
+                m_scripts << ref;
             }
         }
     }
@@ -1902,11 +1918,20 @@ void QQmlScriptBlob::done()
     m_scriptData->urlString = finalUrlString();
     m_scriptData->importCache = new QQmlTypeNameCache();
 
-    for (int ii = 0; !isError() && ii < m_scripts.count(); ++ii) {
-        const ScriptReference &script = m_scripts.at(ii);
+    QSet<QString> ns;
+
+    for (int scriptIndex = 0; !isError() && scriptIndex < m_scripts.count(); ++scriptIndex) {
+        const ScriptReference &script = m_scripts.at(scriptIndex);
 
         m_scriptData->scripts.append(script.script);
-        m_scriptData->importCache->add(script.qualifier, ii);
+
+        if (!script.nameSpace.isNull()) {
+            if (!ns.contains(script.nameSpace)) {
+                ns.insert(script.nameSpace);
+                m_scriptData->importCache->add(script.nameSpace);
+            }
+        }
+        m_scriptData->importCache->add(script.qualifier, scriptIndex, script.nameSpace);
     }
 
     m_imports.populateCache(m_scriptData->importCache, engine);

@@ -390,6 +390,7 @@ public:
 
         QQmlScript::Location location;
         QString qualifier;
+        QString nameSpace;
         QQmlScriptBlob *script;
     };
 

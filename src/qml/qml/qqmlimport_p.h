@@ -93,7 +93,7 @@ public:
                      QQmlType** type_return, QString* url_return,
                      int *version_major, int *version_minor) const;
 
-    bool addImport(QQmlImportDatabase *, 
+    QString addImport(QQmlImportDatabase *,
                    const QString& uri, const QString& prefix, int vmaj, int vmin, 
                    QQmlScript::Import::Type importType,
                    const QQmlDirComponents &qmldircomponentsnetwork, 

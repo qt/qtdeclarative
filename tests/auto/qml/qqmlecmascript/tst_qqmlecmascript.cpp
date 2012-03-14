@@ -254,6 +254,9 @@ void tst_qqmlecmascript::initTestCase()
 {
     QQmlDataTest::initTestCase();
     registerTypes();
+
+    QString dataDir(dataDirectory() + QLatin1Char('/') + QLatin1String("lib"));
+    engine.addImportPath(dataDir);
 }
 
 void tst_qqmlecmascript::assignBasicTypes()
@@ -3298,6 +3301,17 @@ void tst_qqmlecmascript::importScripts_data()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
             << (QVariantList() << QVariant(20));
+
+    QTest::newRow("import module which exports a script")
+            << testFileUrl("jsimport/testJsImport.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("importedScriptStringValue")
+                              << QLatin1String("renamedScriptStringValue")
+                              << QLatin1String("reimportedScriptStringValue"))
+            << (QVariantList() << QVariant(QString("Hello"))
+                               << QVariant(QString("Hello"))
+                               << QVariant(QString("Hello")));
 }
 
 void tst_qqmlecmascript::importScripts()
