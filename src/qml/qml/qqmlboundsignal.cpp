@@ -174,13 +174,7 @@ int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
         if (QQmlDebugService::isDebuggingEnabled())
             QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.signature()));
 
-        QQmlHandlingSignalProfiler prof;
-        if (prof.enabled) {
-            prof.setSignalInfo(QString::fromLatin1(m_signal.signature()),
-                               m_expression->expression());
-            prof.setLocation(m_expression->sourceFile(), m_expression->lineNumber(),
-                             m_expression->columnNumber());
-        }
+        QQmlHandlingSignalProfiler prof(m_signal, m_expression);
 
         m_isEvaluating = true;
         if (!m_paramsValid) {
