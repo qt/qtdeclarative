@@ -194,13 +194,6 @@ struct QQmlBindingProfiler {
             QQmlProfilerService::instance->endRange(QQmlProfilerService::Binding);
     }
 
-    void addDetail(const QString &details)
-    {
-        if (enabled)
-            QQmlProfilerService::instance->rangeData(QQmlProfilerService::Binding,
-                                                             details);
-    }
-\
     bool enabled;
 };
 
