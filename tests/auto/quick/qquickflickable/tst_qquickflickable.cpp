@@ -585,7 +585,7 @@ void tst_qquickflickable::flickVelocity()
     QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(flickable);
     bool boosted = false;
     for (int i = 0; i < 6; ++i) {
-        flick(canvas, QPoint(20,390), QPoint(20, 50), 200);
+        flick(canvas, QPoint(20,390), QPoint(20, 50), 100);
         boosted |= fp->flickBoost > 1.0;
     }
     QVERIFY(boosted);

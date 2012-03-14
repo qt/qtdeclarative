@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
 // The number of samples to discard when calculating the flick velocity.
 // Touch panels often produce inaccurate results as the finger is lifted.
 #ifndef QML_FLICK_DISCARDSAMPLES
-#define QML_FLICK_DISCARDSAMPLES 1
+#define QML_FLICK_DISCARDSAMPLES 0
 #endif
 
 // The default maximum velocity of a flick.
@@ -103,7 +103,7 @@ QT_BEGIN_NAMESPACE
 
 // FlickThreshold determines how far the "mouse" must have moved
 // before we perform a flick.
-static const int FlickThreshold = 20;
+static const int FlickThreshold = 15;
 
 // RetainGrabVelocity is the maxmimum instantaneous velocity that
 // will ensure the Flickable retains the grab on consecutive flicks.
@@ -1030,7 +1030,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
         vVelocity = (extended && extended->capabilities().testFlag(QTouchDevice::Velocity))
                 ? extended->velocity().y() : vData.velocity;
     }
-    if (vData.atBeginning || vData.atEnd) {
+    if ((vData.atBeginning && vVelocity > 0.) || (vData.atEnd && vVelocity < 0.)) {
         vVelocity /= 2;
     } else if (vData.continuousFlickVelocity != 0.0
                && vData.viewSize/q->height() > QML_FLICK_MULTIFLICK_RATIO
@@ -1046,7 +1046,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
         hVelocity = (extended && extended->capabilities().testFlag(QTouchDevice::Velocity))
                 ? extended->velocity().x() : hData.velocity;
     }
-    if (hData.atBeginning || hData.atEnd) {
+    if ((hData.atBeginning && hVelocity > 0.) || (hData.atEnd && hVelocity < 0.)) {
         hVelocity /= 2;
     } else if (hData.continuousFlickVelocity != 0.0
                && hData.viewSize/q->width() > QML_FLICK_MULTIFLICK_RATIO
