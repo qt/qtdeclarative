@@ -1416,10 +1416,10 @@ void tst_qqmlecmascript::scriptErrors()
     QString url = component.url().toString();
 
     QString warning1 = url.left(url.length() - 3) + "js:2: Error: Invalid write to global property \"a\"";
-    QString warning2 = url + ":5: ReferenceError: Can't find variable: a";
+    QString warning2 = url + ":5: ReferenceError: a is not defined";
     QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
-    QString warning4 = url + ":13: ReferenceError: Can't find variable: a";
-    QString warning5 = url + ":11: ReferenceError: Can't find variable: a";
+    QString warning4 = url + ":13: ReferenceError: a is not defined";
+    QString warning5 = url + ":11: ReferenceError: a is not defined";
     QString warning6 = url + ":10: Unable to assign [undefined] to int";
     QString warning7 = url + ":15: Error: Cannot assign to read-only property \"trueProperty\"";
     QString warning8 = url + ":16: Error: Cannot assign to non-existent property \"fakeProperty\"";
@@ -3216,7 +3216,7 @@ void tst_qqmlecmascript::importScripts_data()
     QTest::newRow("javascript imports in an import should be private to the import scope")
             << testFileUrl("jsimportfail/failTwo.qml")
             << QString()
-            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/failTwo.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: ImportOneJs")))
+            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/failTwo.qml").toLocalFile() + QLatin1String(":6: ReferenceError: ImportOneJs is not defined")))
             << (QStringList() << QLatin1String("importScriptFunctionValue"))
             << (QVariantList() << QVariant(QString()));
 
@@ -3230,14 +3230,14 @@ void tst_qqmlecmascript::importScripts_data()
     QTest::newRow("typenames in an import should be private to the import scope")
             << testFileUrl("jsimportfail/failFour.qml")
             << QString()
-            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/failFour.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: JsQtTest")))
+            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/failFour.qml").toLocalFile() + QLatin1String(":6: ReferenceError: JsQtTest is not defined")))
             << (QStringList() << QLatin1String("importedModuleEnumValue"))
             << (QVariantList() << QVariant(0));
 
     QTest::newRow("import with imports has it's own activation scope")
             << testFileUrl("jsimportfail/failFive.qml")
             << QString()
-            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/importWithImports.js").toLocalFile() + QLatin1String(":8: ReferenceError: Can't find variable: Component")))
+            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/importWithImports.js").toLocalFile() + QLatin1String(":8: ReferenceError: Component is not defined")))
             << (QStringList() << QLatin1String("componentError"))
             << (QVariantList() << QVariant(0));
 
@@ -3251,7 +3251,7 @@ void tst_qqmlecmascript::importScripts_data()
     QTest::newRow("pragma library imports shouldn't inherit parent imports or scope")
             << testFileUrl("jsimportfail/testImportPragmaLibrary.qml")
             << QString()
-            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/importPragmaLibrary.js").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: Component")))
+            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("jsimportfail/importPragmaLibrary.js").toLocalFile() + QLatin1String(":6: ReferenceError: Component is not defined")))
             << (QStringList() << QLatin1String("testValue"))
             << (QVariantList() << QVariant(0));
 
@@ -5378,7 +5378,7 @@ void tst_qqmlecmascript::typeOf()
 
     // These warnings should not happen once QTBUG-21864 is fixed
     QString warning1 = component.url().toString() + QLatin1String(":16: Error: Cannot assign [undefined] to QString");
-    QString warning2 = component.url().resolved(QUrl("typeOf.js")).toString() + QLatin1String(":1: ReferenceError: Can't find variable: a");
+    QString warning2 = component.url().resolved(QUrl("typeOf.js")).toString() + QLatin1String(":1: ReferenceError: a is not defined");
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
@@ -5550,9 +5550,9 @@ void tst_qqmlecmascript::revisionErrors()
         QQmlComponent component(&engine, testFileUrl("metaobjectRevisionErrors.qml"));
         QString url = component.url().toString();
 
-        QString warning1 = url + ":8: ReferenceError: Can't find variable: prop2";
-        QString warning2 = url + ":11: ReferenceError: Can't find variable: prop2";
-        QString warning3 = url + ":13: ReferenceError: Can't find variable: method2";
+        QString warning1 = url + ":8: ReferenceError: prop2 is not defined";
+        QString warning2 = url + ":11: ReferenceError: prop2 is not defined";
+        QString warning3 = url + ":13: ReferenceError: method2 is not defined";
 
         QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
         QTest::ignoreMessage(QtWarningMsg, warning2.toLatin1().constData());
@@ -5568,11 +5568,11 @@ void tst_qqmlecmascript::revisionErrors()
         // MyRevisionedSubclass 1.0 uses MyRevisionedClass revision 0
         // method2, prop2 from MyRevisionedClass not available
         // method4, prop4 from MyRevisionedSubclass not available
-        QString warning1 = url + ":8: ReferenceError: Can't find variable: prop2";
-        QString warning2 = url + ":14: ReferenceError: Can't find variable: prop2";
-        QString warning3 = url + ":10: ReferenceError: Can't find variable: prop4";
-        QString warning4 = url + ":16: ReferenceError: Can't find variable: prop4";
-        QString warning5 = url + ":20: ReferenceError: Can't find variable: method2";
+        QString warning1 = url + ":8: ReferenceError: prop2 is not defined";
+        QString warning2 = url + ":14: ReferenceError: prop2 is not defined";
+        QString warning3 = url + ":10: ReferenceError: prop4 is not defined";
+        QString warning4 = url + ":16: ReferenceError: prop4 is not defined";
+        QString warning5 = url + ":20: ReferenceError: method2 is not defined";
 
         QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
         QTest::ignoreMessage(QtWarningMsg, warning2.toLatin1().constData());
@@ -5589,9 +5589,9 @@ void tst_qqmlecmascript::revisionErrors()
 
         // MyRevisionedSubclass 1.1 uses MyRevisionedClass revision 1
         // All properties/methods available, except MyRevisionedBaseClassUnregistered rev 1
-        QString warning1 = url + ":30: ReferenceError: Can't find variable: methodD";
-        QString warning2 = url + ":10: ReferenceError: Can't find variable: propD";
-        QString warning3 = url + ":20: ReferenceError: Can't find variable: propD";
+        QString warning1 = url + ":30: ReferenceError: methodD is not defined";
+        QString warning2 = url + ":10: ReferenceError: propD is not defined";
+        QString warning3 = url + ":20: ReferenceError: propD is not defined";
         QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
         QTest::ignoreMessage(QtWarningMsg, warning2.toLatin1().constData());
         QTest::ignoreMessage(QtWarningMsg, warning3.toLatin1().constData());

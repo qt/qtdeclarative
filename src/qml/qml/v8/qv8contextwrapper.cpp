@@ -245,7 +245,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Local<v8::String> proper
 
     QV8Engine *engine = resource->engine;
 
-    QString error = QLatin1String("Can't find variable: ") + engine->toString(property);
+    QString error = engine->toString(property) + QLatin1String(" is not defined");
     v8::ThrowException(v8::Exception::ReferenceError(engine->toString(error)));
     return v8::Undefined();
 }
@@ -365,7 +365,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
 
     expressionContext->unresolvedNames = true;
 
-    QString error = QLatin1String("Can't find variable: ") + engine->toString(property);
+    QString error = engine->toString(property) + QLatin1String(" is not defined");
     v8::ThrowException(v8::Exception::ReferenceError(engine->toString(error)));
     return v8::Undefined();
 }
