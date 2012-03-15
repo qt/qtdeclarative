@@ -848,6 +848,34 @@ void tst_qqmlecmascript::enums()
 
     delete object;
     }
+    // Enums as literals
+    {
+    QQmlComponent component(&engine, testFileUrl("enums.3.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    // check the values are what we expect
+    QCOMPARE(object->property("a").toInt(), 4);
+    QCOMPARE(object->property("b").toInt(), 5);
+    QCOMPARE(object->property("c").toInt(), 9);
+    QCOMPARE(object->property("d").toInt(), 13);
+    QCOMPARE(object->property("e").toInt(), 2);
+    QCOMPARE(object->property("f").toInt(), 3);
+    QCOMPARE(object->property("h").toInt(), 2);
+    QCOMPARE(object->property("i").toInt(), 3);
+
+    // count of change signals
+    QCOMPARE(object->property("ac").toInt(), 0);
+    QCOMPARE(object->property("bc").toInt(), 0);
+    QCOMPARE(object->property("cc").toInt(), 0);
+    QCOMPARE(object->property("dc").toInt(), 0);
+    QCOMPARE(object->property("ec").toInt(), 0);
+    QCOMPARE(object->property("fc").toInt(), 0);
+    QCOMPARE(object->property("hc").toInt(), 1); // namespace -> binding
+    QCOMPARE(object->property("ic").toInt(), 1); // namespace -> binding
+
+    delete object;
+    }
 }
 
 void tst_qqmlecmascript::valueTypeFunctions()

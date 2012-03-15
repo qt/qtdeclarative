@@ -2227,7 +2227,7 @@ bool QQmlCompiler::buildValueTypeProperty(QObject *type,
                 //optimization for <Type>.<EnumValue> enum assignments
                 bool isEnumAssignment = false;
 
-                if (prop->core.isEnum()) 
+                if (prop->core.isEnum() || prop->core.propType == QMetaType::Int)
                     COMPILE_CHECK(testQualifiedEnumAssignment(prop, obj, value, &isEnumAssignment));
 
                 if (isEnumAssignment) {
@@ -2495,7 +2495,7 @@ bool QQmlCompiler::buildPropertyLiteralAssignment(QQmlScript::Property *prop,
     if (v->value.isScript()) {
 
         //optimization for <Type>.<EnumValue> enum assignments
-        if (prop->core.isEnum()) {
+        if (prop->core.isEnum() || prop->core.propType == QMetaType::Int) {
             bool isEnumAssignment = false;
             COMPILE_CHECK(testQualifiedEnumAssignment(prop, obj, v, &isEnumAssignment));
             if (isEnumAssignment) {
@@ -2525,8 +2525,9 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
                                                        QQmlScript::Value *v,
                                                        bool *isAssignment)
 {
+    bool isIntProp = (prop->core.propType == QMetaType::Int) && !prop->core.isEnum();
     *isAssignment = false;
-    if (!prop->core.isEnum())
+    if (!prop->core.isEnum() && !isIntProp)
         return true;
 
     QMetaProperty mprop = obj->metaObject()->property(prop->index);
@@ -2537,6 +2538,17 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     QString string = v->value.asString();
     if (!string.at(0).isUpper())
         return true;
+
+    if (isIntProp) {
+        // Allow enum assignment to ints.
+        int enumval = evaluateEnum(string.toUtf8());
+        if (enumval != -1) {
+            v->type = Value::Literal;
+            v->value = QQmlScript::Variant((double)enumval);
+            *isAssignment = true;
+        }
+        return true;
+    }
 
     QStringList parts = string.split(QLatin1Char('.'));
     if (parts.count() != 2)
