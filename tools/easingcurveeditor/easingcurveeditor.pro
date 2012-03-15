@@ -16,8 +16,6 @@ RESOURCES = $$PWD/resources.qrc
 HEADERS += \
     splineeditor.h \
     mainwindow.h \
-    ui_properties.h \
-    ui_pane.h \
     segmentproperties.h
 
 FORMS += \
