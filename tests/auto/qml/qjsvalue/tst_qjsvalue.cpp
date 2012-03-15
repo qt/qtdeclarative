@@ -993,8 +993,8 @@ void tst_QJSValue::toVariant()
     QCOMPARE(qjsvalue_cast<QVariant>(undefined), QVariant());
 
     QJSValue null = eng.evaluate("null");
-    QCOMPARE(null.toVariant(), QVariant());
-    QCOMPARE(qjsvalue_cast<QVariant>(null), QVariant());
+    QCOMPARE(null.toVariant(), QVariant(QMetaType::VoidStar, 0));
+    QCOMPARE(qjsvalue_cast<QVariant>(null), QVariant(QMetaType::VoidStar, 0));
 
     {
         QJSValue number = eng.toScriptValue(123.0);
@@ -1064,6 +1064,14 @@ void tst_QJSValue::toVariant()
         QJSValue str = QJSValue(QString("ciao"));
         QCOMPARE(str.toVariant(), QVariant(QString("ciao")));
         QCOMPARE(qjsvalue_cast<QVariant>(str), QVariant(QString("ciao")));
+
+        QJSValue undef = QJSValue(QJSValue::UndefinedValue);
+        QCOMPARE(undef.toVariant(), QVariant());
+        QCOMPARE(qjsvalue_cast<QVariant>(undef), QVariant());
+
+        QJSValue nil = QJSValue(QJSValue::NullValue);
+        QCOMPARE(nil.toVariant(), QVariant(QMetaType::VoidStar, 0));
+        QCOMPARE(qjsvalue_cast<QVariant>(nil), QVariant(QMetaType::VoidStar, 0));
     }
 
 #if 0 // FIXME: No automatic sequence conversion
