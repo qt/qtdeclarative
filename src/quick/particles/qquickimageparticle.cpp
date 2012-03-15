@@ -839,6 +839,13 @@ QQmlListProperty<QQuickSprite> QQuickImageParticle::sprites()
     return QQmlListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
 }
 
+void QQuickImageParticle::sceneGraphInvalidated()
+{
+    m_nodes.clear();
+    m_rootNode = 0;
+    m_material = 0;
+}
+
 void QQuickImageParticle::setImage(const QUrl &image)
 {
     if (image.isEmpty()){

@@ -348,6 +348,8 @@ protected:
     void prepareNextFrame();
     void buildParticleNodes();
 
+    void sceneGraphInvalidated();
+
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 

@@ -76,6 +76,8 @@ public:
         return m_groups;
     }
 
+    void itemChange(ItemChange, const ItemChangeData &);
+
 signals:
     void countChanged();
     void systemChanged(QQuickParticleSystem* arg);
@@ -95,6 +97,9 @@ public slots:
     }
 
     void calcSystemOffset(bool resetPending = false);
+
+private slots:
+    virtual void sceneGraphInvalidated() {}
 
 protected:
     /* Reset resets all your internal data structures. But anything attached to a particle should
@@ -120,6 +125,8 @@ protected:
     bool m_pleaseReset;//Used by subclasses, but it's a nice optimization to know when stuff isn't going to matter.
     QStringList m_groups;
     QPointF m_systemOffset;
+
+    QQuickCanvas *m_canvas;
 
 private:
     QSet<QPair<int,int> > m_pendingCommits;

@@ -93,6 +93,8 @@ protected:
     QQuickShaderEffectNode *buildCustomNodes();
     void performPendingResize();
 
+    void sceneGraphInvalidated();
+
 private:
     void buildData();
 
