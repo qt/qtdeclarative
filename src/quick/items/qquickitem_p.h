@@ -475,6 +475,7 @@ public:
     void initCanvas(InitializationState *, QQuickCanvas *);
 
     QQuickItem *subFocusItem;
+    void updateSubFocusItem(QQuickItem *scope, bool focus);
 
     QTransform canvasToItemTransform() const;
     QTransform itemToCanvasTransform() const;

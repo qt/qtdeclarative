@@ -548,27 +548,12 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
 
     if (item != rootItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
-        // Correct focus chain in scope
-        if (oldSubFocusItem) {
-            QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
-            while (sfi != scope) {
-                QQuickItemPrivate::get(sfi)->subFocusItem = 0;
-                sfi = sfi->parentItem();
-            }
-        }
-        {
-            scopePrivate->subFocusItem = item;
-            QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
-            while (sfi != scope) {
-                QQuickItemPrivate::get(sfi)->subFocusItem = item;
-                sfi = sfi->parentItem();
-            }
-        }
-
         if (oldSubFocusItem) {
             QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
             changed << oldSubFocusItem;
         }
+
+        QQuickItemPrivate::get(item)->updateSubFocusItem(scope, true);
     }
 
     if (!(options & DontChangeFocusProperty)) {
@@ -658,20 +643,13 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
     if (item != rootItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
-        // Correct focus chain in scope
-        if (oldSubFocusItem) {
-            QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
-            while (sfi != scope) {
-                QQuickItemPrivate::get(sfi)->subFocusItem = 0;
-                sfi = sfi->parentItem();
-            }
-        }
-        scopePrivate->subFocusItem = 0;
-
         if (oldSubFocusItem && !(options & DontChangeFocusProperty)) {
             QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
             changed << oldSubFocusItem;
         }
+
+        QQuickItemPrivate::get(item)->updateSubFocusItem(scope, false);
+
     } else if (!(options & DontChangeFocusProperty)) {
         QQuickItemPrivate::get(item)->focus = false;
         changed << item;

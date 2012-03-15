@@ -1621,6 +1621,36 @@ void QQuickItemPrivate::setAccessibleFlagAndListener()
     }
 }
 
+void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
+{
+    Q_Q(QQuickItem);
+    Q_ASSERT(scope);
+
+    QQuickItemPrivate *scopePrivate = QQuickItemPrivate::get(scope);
+
+    QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
+    // Correct focus chain in scope
+    if (oldSubFocusItem) {
+        QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
+        while (sfi != scope) {
+            QQuickItemPrivate::get(sfi)->subFocusItem = 0;
+            sfi = sfi->parentItem();
+        }
+    }
+
+    if (focus) {
+        scopePrivate->subFocusItem = q;
+        QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
+        while (sfi != scope) {
+            QQuickItemPrivate::get(sfi)->subFocusItem = q;
+            sfi = sfi->parentItem();
+        }
+    } else {
+        scopePrivate->subFocusItem = 0;
+    }
+}
+
+
 /*!
     \class QQuickItem
     \brief The QQuickItem class provides the most basic of all visual items in QML.
@@ -1895,18 +1925,17 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
         QQuickItem *scopeItem = 0;
 
         if (d->canvas && hasFocus()) {
-            scopeItem = oldParentItem;
-            while (!scopeItem->isFocusScope()) scopeItem = scopeItem->parentItem();
             scopeFocusedItem = this;
         } else if (d->canvas && !isFocusScope() && d->subFocusItem) {
-            scopeItem = oldParentItem;
-            while (!scopeItem->isFocusScope()) scopeItem = scopeItem->parentItem();
             scopeFocusedItem = d->subFocusItem;
         }
 
-        if (scopeFocusedItem)
+        if (scopeFocusedItem) {
+            scopeItem = oldParentItem;
+            while (!scopeItem->isFocusScope()) scopeItem = scopeItem->parentItem();
             QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem,
                                                                 QQuickCanvasPrivate::DontChangeFocusProperty);
+        }
 
         const bool wasVisible = isVisible();
         op->removeChild(this);
