@@ -93,6 +93,8 @@ template <typename T> static T evaluate(QObject *scope, const QString &expressio
     return result;
 }
 
+template<typename T, int N> int lengthOf(const T (&)[N]) { return N; }
+
 typedef QPair<int, QChar> Key;
 
 class tst_qquicktextinput : public QQmlDataTest
@@ -140,6 +142,7 @@ private slots:
     void cursorDelegate_data();
     void cursorDelegate();
     void cursorVisible();
+    void cursorRectangle_data();
     void cursorRectangle();
     void navigation();
     void navigation_RTL();
@@ -2405,10 +2408,34 @@ void tst_qquicktextinput::cursorVisible()
     QCOMPARE(spy.count(), 7);
 }
 
+void tst_qquicktextinput::cursorRectangle_data()
+{
+    const quint16 arabic_str[] = { 0x0638, 0x0643, 0x00646, 0x0647, 0x0633, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0638, 0x0643, 0x00646, 0x0647, 0x0633, 0x0647};
+
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<int>("positionAtWidth");
+    QTest::addColumn<int>("wrapPosition");
+    QTest::addColumn<QString>("shortText");
+    QTest::addColumn<bool>("leftToRight");
+
+    QTest::newRow("left to right")
+            << "Hello      World!" << 5 << 11
+            << "Hi"
+            << true;
+    QTest::newRow("right to left")
+            << QString::fromUtf16(arabic_str, lengthOf(arabic_str)) << 5 << 11
+            << QString::fromUtf16(arabic_str, 3)
+            << false;
+}
+
 void tst_qquicktextinput::cursorRectangle()
 {
 
-    QString text = "Hello World!";
+    QFETCH(QString, text);
+    QFETCH(int, positionAtWidth);
+    QFETCH(int, wrapPosition);
+    QFETCH(QString, shortText);
+    QFETCH(bool, leftToRight);
 
     QQuickTextInput input;
     input.setText(text);
@@ -2425,33 +2452,30 @@ void tst_qquicktextinput::cursorRectangle()
     QTextLine line = layout.createLine();
     layout.endLayout();
 
-    input.setWidth(line.cursorToX(5, QTextLine::Leading));
+    qreal offset = 0;
+    if (leftToRight) {
+        input.setWidth(line.cursorToX(positionAtWidth, QTextLine::Leading));
+    } else {
+        input.setWidth(line.horizontalAdvance() - line.cursorToX(positionAtWidth, QTextLine::Leading));
+        offset = line.horizontalAdvance() - input.width();
+    }
     input.setHeight(qCeil(line.height() * 3 / 2));
 
     QRectF r;
 
-    // some tolerance for different fonts.
-#ifdef Q_OS_LINUX
-    const int error = 2;
-#else
-    const int error = 5;
-#endif
-
-    for (int i = 0; i <= 5; ++i) {
+    for (int i = 0; i <= positionAtWidth; ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
 
-        QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
-        QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
+        QCOMPARE(r.left(), line.cursorToX(i, QTextLine::Leading) - offset);
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
     // Check the cursor rectangle remains within the input bounding rect when auto scrolling.
-    QVERIFY(r.left() < input.width() + error);
-    QVERIFY(r.right() >= input.width() - error);
+    QCOMPARE(r.left(), leftToRight ? input.width() : 0);
 
-    for (int i = 6; i < text.length(); ++i) {
+    for (int i = positionAtWidth + 1; i < text.length(); ++i) {
         input.setCursorPosition(i);
         QCOMPARE(r, input.cursorRectangle());
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
@@ -2462,7 +2486,11 @@ void tst_qquicktextinput::cursorRectangle()
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QCOMPARE(r.top(), 0.);
-        QVERIFY(r.right() >= 0);
+        if (leftToRight) {
+            QVERIFY(r.right() >= 0);
+        } else {
+            QVERIFY(r.left() <= input.width());
+        }
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
@@ -2470,69 +2498,102 @@ void tst_qquicktextinput::cursorRectangle()
     // Check position with word wrap.
     input.setWrapMode(QQuickTextInput::WordWrap);
     input.setAutoScroll(false);
-    for (int i = 0; i <= 5; ++i) {
+    for (int i = 0; i < wrapPosition; ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
 
-        QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
-        QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
+        if (i > positionAtWidth)
+            QEXPECT_FAIL("right to left", "QTBUG-24801", Continue);
+        QCOMPARE(r.left(), line.cursorToX(i, QTextLine::Leading) - offset);
         QCOMPARE(r.top(), 0.);
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
-    input.setCursorPosition(6);
+    input.setCursorPosition(wrapPosition);
     r = input.cursorRectangle();
-    QCOMPARE(r.left(), 0.);
-    QVERIFY(r.top() > line.height() - error);
+    if (leftToRight) {
+        QCOMPARE(r.left(), 0.);
+    } else {
+        QCOMPARE(r.left(), input.width());
+    }
+    QVERIFY(r.top() >= line.height() - 1);
     QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
-    QCOMPARE(input.positionToRectangle(6), r);
+    QCOMPARE(input.positionToRectangle(11), r);
 
-    for (int i = 7; i < text.length(); ++i) {
+    for (int i = wrapPosition + 1; i < text.length(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
-        QVERIFY(r.top() > line.height() - error);
+        QVERIFY(r.top() >= line.height() - 1);
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
     // Check vertical scrolling with word wrap.
     input.setAutoScroll(true);
-    for (int i = 0; i <= 5; ++i) {
+    for (int i = 0; i <= positionAtWidth; ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
 
-        QVERIFY(r.left() < qCeil(line.cursorToX(i, QTextLine::Trailing)));
-        QVERIFY(r.right() >= qFloor(line.cursorToX(i , QTextLine::Leading)));
+        QCOMPARE(r.left(), line.cursorToX(i, QTextLine::Leading) - offset);
         QCOMPARE(r.top(), 0.);
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
-    input.setCursorPosition(6);
+    // Whitespace doesn't wrap, so scroll horizontally until the until the cursor
+    // reaches the next non-whitespace character.
+    QCOMPARE(r.left(), leftToRight ? input.width() : 0);
+    for (int i = positionAtWidth + 1; i < wrapPosition && leftToRight; ++i) {
+        input.setCursorPosition(i);
+        QCOMPARE(r, input.cursorRectangle());
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
+    }
+
+    input.setCursorPosition(wrapPosition);
     r = input.cursorRectangle();
-    QCOMPARE(r.left(), 0.);
-    QVERIFY(r.bottom() >= input.height() - error);
+    if (leftToRight) {
+        QCOMPARE(r.left(), 0.);
+    } else {
+        QCOMPARE(r.left(), input.width());
+    }
+    QVERIFY(r.bottom() >= input.height());
     QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
-    QCOMPARE(input.positionToRectangle(6), r);
+    QCOMPARE(input.positionToRectangle(11), r);
 
-    for (int i = 7; i < text.length(); ++i) {
+    for (int i = wrapPosition + 1; i < text.length(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
-        QVERIFY(r.bottom() >= input.height() - error);
+        QVERIFY(r.bottom() >= input.height());
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
-    for (int i = text.length() - 2; i >= 6; --i) {
+    for (int i = text.length() - 2; i >= wrapPosition; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
-        QVERIFY(r.bottom() >= input.height() - error);
+        QVERIFY(r.bottom() >= input.height());
         QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
-    for (int i = 5; i >= 0; --i) {
+    input.setCursorPosition(wrapPosition - 1);
+    r = input.cursorRectangle();
+    QCOMPARE(r.top(), 0.);
+    QEXPECT_FAIL("right to left", "QTBUG-24801", Continue);
+    QCOMPARE(r.left(), leftToRight ? input.width() : 0);
+    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+    QCOMPARE(input.positionToRectangle(10), r);
+
+    for (int i = wrapPosition - 2; i >= positionAtWidth + 1; --i) {
+        input.setCursorPosition(i);
+        QCOMPARE(r, input.cursorRectangle());
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        QCOMPARE(input.positionToRectangle(i), r);
+    }
+
+    for (int i = positionAtWidth; i >= 0; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QCOMPARE(r.top(), 0.);
@@ -2540,11 +2601,10 @@ void tst_qquicktextinput::cursorRectangle()
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
-    input.setText("Hi!");
-    input.setHAlign(QQuickTextInput::AlignRight);
+    input.setText(shortText);
+    input.setHAlign(leftToRight ? QQuickTextInput::AlignRight : QQuickTextInput::AlignLeft);
     r = input.cursorRectangle();
-    QVERIFY(r.left() < input.width() + error);
-    QVERIFY(r.right() >= input.width() - error);
+    QCOMPARE(r.left(), leftToRight ? input.width() : 0);
 }
 
 void tst_qquicktextinput::readOnly()
@@ -2891,6 +2951,13 @@ void tst_qquicktextinput::contentSize()
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
     QCOMPARE(spy.count(), 3);
+
+    textObject->setText("The quick red fox jumped over the lazy brown dog");
+    for (int w = 60; w < 120; ++w) {
+        textObject->setWidth(w);
+        QVERIFY(textObject->contentWidth() <= textObject->width());
+        QVERIFY(textObject->contentHeight() > textObject->height());
+    }
 }
 
 static void sendPreeditText(const QString &text, int cursor)

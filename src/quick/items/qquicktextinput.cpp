@@ -1614,14 +1614,19 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
     QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + m_preeditCursor);
     const int preeditLength = m_textLayout.preeditAreaText().length();
     const qreal width = qMax<qreal>(0, q->width());
-    qreal widthUsed = currentLine.isValid() ? currentLine.naturalTextWidth() : 0;
+    qreal cix = 0;
+    qreal widthUsed = 0;
+    if (currentLine.isValid()) {
+        cix = currentLine.cursorToX(m_cursor + preeditLength);
+        const qreal cursorWidth = cix >= 0 ? cix : width - cix;
+        widthUsed = qMax(currentLine.naturalTextWidth(), cursorWidth);
+    }
     int previousScroll = hscroll;
 
     if (!autoScroll || widthUsed <=  width || m_echoMode == QQuickTextInput::NoEcho) {
         hscroll = 0;
     } else {
         Q_ASSERT(currentLine.isValid());
-        qreal cix = currentLine.cursorToX(m_cursor + preeditLength);
         if (cix - hscroll >= width) {
             // text doesn't fit, cursor is to the right of br (scroll right)
             hscroll = cix - width;
@@ -1632,6 +1637,10 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
             // text doesn't fit, text document is to the left of br; align
             // right
             hscroll = widthUsed - width;
+        } else if (width - hscroll > widthUsed) {
+            // text doesn't fit, text document is to the right of br; align
+            // left
+            hscroll = width - widthUsed;
         }
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
@@ -2699,7 +2708,6 @@ void QQuickTextInputPrivate::updateLayout()
 
     QTextOption option = m_textLayout.textOption();
     option.setTextDirection(layoutDirection());
-    option.setFlags(QTextOption::IncludeTrailingSpaces);
     option.setWrapMode(QTextOption::WrapMode(wrapMode));
     option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
     m_textLayout.setTextOption(option);
@@ -2710,7 +2718,6 @@ void QQuickTextInputPrivate::updateLayout()
     QTextLine line = m_textLayout.createLine();
     qreal lineWidth = q->widthValid() ? q->width() : INT_MAX;
     qreal height = 0;
-    QTextLine firstLine = line;
     do {
         line.setLineWidth(lineWidth);
         line.setPosition(QPointF(line.position().x(), height));
