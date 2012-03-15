@@ -123,6 +123,7 @@ private slots:
     void creationContext();
     void currentOffsetOnInsertion();
     void asynchronous();
+    void cancelDrag();
 };
 
 class TestObject : public QObject
@@ -1452,6 +1453,41 @@ void tst_QQuickPathView::missingPercent()
     QCOMPARE(obj->attributeAt("_qfx_percent", 1.0), qreal(1.0));
     delete obj;
 }
+
+void tst_QQuickPathView::cancelDrag()
+{
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("dragpath.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QVERIFY(pathview != 0);
+
+    // drag between snap points
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(10,100));
+    QTest::qWait(100);
+    QTest::mouseMove(canvas, QPoint(30, 100));
+    QTest::mouseMove(canvas, QPoint(85, 100));
+
+    QTRY_VERIFY(pathview->offset() != qFloor(pathview->offset()));
+    QTRY_VERIFY(pathview->isMoving());
+
+    // steal mouse grab - cancels PathView dragging
+    QQuickItem *item = canvas->rootObject()->findChild<QQuickItem*>("text");
+    item->grabMouse();
+
+    // returns to a snap point.
+    QTRY_VERIFY(pathview->offset() == qFloor(pathview->offset()));
+    QTRY_VERIFY(!pathview->isMoving());
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(40,100));
+
+    delete canvas;
+}
+
 
 QTEST_MAIN(tst_QQuickPathView)
 

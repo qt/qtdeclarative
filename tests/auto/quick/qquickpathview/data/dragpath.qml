@@ -14,6 +14,7 @@ PathView {
     preferredHighlightBegin: 0.5
     preferredHighlightEnd: 0.5
     Text {
+        objectName: "text"
         text: "current index: " + parent.currentIndex
     }
 }

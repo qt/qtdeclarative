@@ -1422,6 +1422,9 @@ void QQuickPathView::mouseUngrabEvent()
         d->stealMouse = false;
         setKeepMouseGrab(false);
         d->lastPosTime.invalidate();
+        d->fixOffset();
+        if (!d->tl.isActive())
+            movementEnding();
     }
 }
 

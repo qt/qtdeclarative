@@ -1763,6 +1763,10 @@ void QQuickFlickable::mouseUngrabEvent()
         d->draggingEnding();
         d->stealMouse = false;
         setKeepMouseGrab(false);
+        d->fixupX();
+        d->fixupY();
+        if (!d->timeline.isActive())
+            movementEnding();
     }
 }
 
