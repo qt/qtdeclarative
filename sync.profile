@@ -48,8 +48,8 @@
         "qdeclarativeextensioninterface.h" => "QtQml/qqmlextensioninterface.h",
         "QDeclarativeExtensionPlugin" => "QtQml/QQmlExtensionPlugin",
         "qdeclarativeextensionplugin.h" => "QtQml/qqmlextensionplugin.h",
-        "QDeclarativeImageProvider" => "QtQml/QQmlImageProvider",
-        "qdeclarativeimageprovider.h" => "QtQml/qqmlimageprovider.h",
+        "QDeclarativeImageProvider" => "QtQuick/QQuickImageProvider",
+        "qdeclarativeimageprovider.h" => "QtQuick/qquickimageprovider.h",
         "QDeclarativeIncubationController" => "QtQml/QQmlIncubationController",
         "QDeclarativeIncubator" => "QtQml/QQmlIncubator",
         "qdeclarativeincubator.h" => "QtQml/qqmlincubator.h",
@@ -207,6 +207,10 @@
         "qv8variantwrapper_p.h" => "QtQml/private/qv8variantwrapper_p.h",
         "qv8worker_p.h" => "QtQml/private/qv8worker_p.h",
         "textwriter_p.h" => "QtQml/private/textwriter_p.h",
+    },
+    "QtQml" => {
+        "QQmlImageProvider" => "QtQuick/QQuickImageProvider",
+        "qqmlimageprovider.h" => "QtQuick/qquickimageprovider.h",
     },
 );
 # Module dependencies.

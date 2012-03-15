@@ -95,7 +95,7 @@ QT_BEGIN_NAMESPACE
     AnimatedImage can handle any image format supported by Qt, loaded from any
     URL scheme supported by Qt.
 
-    \sa QQmlImageProvider
+    \sa QQuickImageProvider
 */
 
 /*!

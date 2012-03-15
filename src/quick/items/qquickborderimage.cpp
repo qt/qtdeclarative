@@ -257,7 +257,7 @@ QQuickBorderImage::~QQuickBorderImage()
 
     The URL may be absolute, or relative to the URL of the component.
 
-    \sa QQmlImageProvider
+    \sa QQuickImageProvider
 */
 
 /*!

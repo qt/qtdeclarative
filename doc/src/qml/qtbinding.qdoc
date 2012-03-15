@@ -43,7 +43,7 @@ You may want to mix QML and C++ for a number of reasons. For example:
 \li To use functionality defined in a C++ source (for example, when using a C++ Qt-based data model, or
 calling functions in a third-party C++ library)
 \li To access functionality in the Qt Declarative module (for example, to dynamically generate
-images using QQmlImageProvider)
+images using QQuickImageProvider)
 \li To write your own QML elements (whether for your applications, or for distribution to others)
 \endlist
 

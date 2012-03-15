@@ -147,7 +147,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     size bounded via the \l sourceSize property. This is especially important for content
     that is loaded from external sources or provided by the user.
 
-    \sa {declarative/imageelements/image}{Image example}, QQmlImageProvider
+    \sa {declarative/imageelements/image}{Image example}, QQuickImageProvider
 */
 
 QQuickImage::QQuickImage(QQuickItem *parent)
@@ -431,7 +431,7 @@ qreal QQuickImage::paintedHeight() const
 
     The URL may be absolute, or relative to the URL of the component.
 
-    \sa QQmlImageProvider
+    \sa QQuickImageProvider
 */
 
 /*!
