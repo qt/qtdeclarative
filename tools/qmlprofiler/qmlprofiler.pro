@@ -9,7 +9,7 @@ INSTALLS += target
 
 macx: CONFIG -= app_bundle
 
-CONFIG   += console declarative_debug
+CONFIG   += console
 
 SOURCES += main.cpp \
     qmlprofilerapplication.cpp \

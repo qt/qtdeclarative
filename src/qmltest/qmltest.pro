@@ -4,7 +4,7 @@ TARGET     = QtQuickTest
 QPRO_PWD   = $$PWD
 
 CONFIG += module
-CONFIG += dll warn_on declarative_debug
+CONFIG += dll warn_on
 MODULE_PRI += ../../modules/qt_qmltest.pri
 
 QT +=  testlib testlib-private qml quick  gui
