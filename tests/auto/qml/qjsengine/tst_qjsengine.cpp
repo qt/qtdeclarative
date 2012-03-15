@@ -899,6 +899,7 @@ void tst_QJSEngine::jsParseDate()
 void tst_QJSEngine::newQObject()
 {
     QJSEngine eng;
+    QObject temp;
 
     {
         QJSValue qobject = eng.newQObject(0);
@@ -907,11 +908,11 @@ void tst_QJSEngine::newQObject()
         QCOMPARE(qobject.toQObject(), (QObject *)0);
     }
     {
-        QJSValue qobject = eng.newQObject(this);
+        QJSValue qobject = eng.newQObject(&temp);
         QVERIFY(!qobject.isUndefined());
         QCOMPARE(qobject.isQObject(), true);
         QCOMPARE(qobject.isObject(), true);
-        QCOMPARE(qobject.toQObject(), (QObject *)this);
+        QCOMPARE(qobject.toQObject(), (QObject *)&temp);
         QVERIFY(!qobject.isCallable());
         // prototype should be QObject.prototype
         QCOMPARE(qobject.prototype().isObject(), true);
@@ -1068,6 +1069,7 @@ void tst_QJSEngine::newQObject_sameQObject()
 #if 0 // FIXME: No prototype API in QScriptEngine
 void tst_QJSEngine::newQObject_defaultPrototype()
 {
+    QObject temp;
     QScriptEngine eng;
     // newQObject() should set the default prototype, if one has been registered
     {
@@ -1076,14 +1078,14 @@ void tst_QJSEngine::newQObject_defaultPrototype()
         QScriptValue qobjectProto = eng.newObject();
         eng.setDefaultPrototype(qMetaTypeId<QObject*>(), qobjectProto);
         {
-            QScriptValue ret = eng.newQObject(this);
+            QScriptValue ret = eng.newQObject(&temp);
             QVERIFY(ret.prototype().equals(qobjectProto));
         }
         QScriptValue tstProto = eng.newObject();
         int typeId = qRegisterMetaType<tst_QJSEngine*>("tst_QJSEngine*");
         eng.setDefaultPrototype(typeId, tstProto);
         {
-            QScriptValue ret = eng.newQObject(this);
+            QScriptValue ret = eng.newQObject(temp);
             QVERIFY(ret.prototype().equals(tstProto));
         }
 
@@ -1261,7 +1263,8 @@ void tst_QJSEngine::newQMetaObject()
         QVERIFY(instanceofJS(inst, qclass3).strictlyEquals(false));
     }
     {
-        QScriptValue inst = qclass4.callAsConstructor(QScriptValueList() << eng.newQObject(this));
+        QObject temp;
+        QScriptValue inst = qclass4.callAsConstructor(QScriptValueList() << eng.newQObject(&temp));
         QVERIFY(inst.isQObject());
         QVERIFY(inst.toQObject() != 0);
         QCOMPARE(inst.toQObject()->parent(), (QObject*)this);
@@ -2887,6 +2890,7 @@ void tst_QJSEngine::castWithPrototypeChain()
     QScriptEngine eng;
     Bar bar;
     Baz baz;
+    QObject temp;
     QScriptValue barProto = eng.toScriptValue(&bar);
     QScriptValue bazProto = eng.toScriptValue(&baz);
     eng.setDefaultPrototype(qMetaTypeId<Bar*>(), barProto);
@@ -2954,7 +2958,7 @@ void tst_QJSEngine::castWithPrototypeChain()
         QVERIFY(pbar == 0);
     }
 
-    bazProto.setPrototype(eng.newQObject(this));
+    bazProto.setPrototype(eng.newQObject(&temp));
     {
         Baz *pbaz = qscriptvalue_cast<Baz*>(baz2Value);
         QVERIFY(pbaz != 0);
@@ -3756,8 +3760,9 @@ private:
     QScriptEngine* m_engine;
 protected:
     void run() {
+        QObject temp;
         m_engine = new QScriptEngine();
-        m_engine->setGlobalObject(m_engine->newQObject(this));
+        m_engine->setGlobalObject(m_engine->newQObject(&temp));
         m_engine->evaluate("while (1) { sleep(); }");
         delete m_engine;
     }
@@ -4941,6 +4946,7 @@ void tst_QJSEngine::reentrancy_Array()
 
 void tst_QJSEngine::reentrancy_objectCreation()
 {
+    QObject temp;
     QJSEngine eng1;
     QJSEngine eng2;
     {
@@ -4957,8 +4963,8 @@ void tst_QJSEngine::reentrancy_objectCreation()
         QCOMPARE(qjsvalue_cast<QRegExp>(r2), qjsvalue_cast<QRegExp>(r1));
     }
     {
-        QJSValue o1 = eng1.newQObject(this);
-        QJSValue o2 = eng2.newQObject(this);
+        QJSValue o1 = eng1.newQObject(&temp);
+        QJSValue o2 = eng2.newQObject(&temp);
         QCOMPARE(o1.toQObject(), o2.toQObject());
         QCOMPARE(o2.toQObject(), o1.toQObject());
     }
