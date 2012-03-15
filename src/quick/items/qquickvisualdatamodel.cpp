@@ -1306,11 +1306,13 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
 
     v8::HandleScope handleScope;
     v8::Context::Scope contextScope(engine->context());
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("model"), get_model);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("groups"), get_groups, set_groups);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("isUnresolved"), get_member, 0, v8::Int32::New(30));
+
+    constructor = qPersistentNew(v8::ObjectTemplate::New());
+
+    constructor->SetHasExternalResource(true);
+    constructor->SetAccessor(v8::String::New("model"), get_model);
+    constructor->SetAccessor(v8::String::New("groups"), get_groups, set_groups);
+    constructor->SetAccessor(v8::String::New("isUnresolved"), get_member, 0, v8::Int32::New(30));
 
     int notifierId = 0;
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
@@ -1321,7 +1323,7 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
                 propertyName.toUtf8(), "bool", notifierId);
         propertyBuilder.setWritable(true);
 
-        ft->PrototypeTemplate()->SetAccessor(
+        constructor->SetAccessor(
                 engine->toString(propertyName), get_member, set_member, v8::Int32::New(i + 1));
     }
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
@@ -1331,13 +1333,11 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
                 propertyName.toUtf8(), "int", notifierId);
         propertyBuilder.setWritable(true);
 
-        ft->PrototypeTemplate()->SetAccessor(
+        constructor->SetAccessor(
                 engine->toString(propertyName), get_index, 0, v8::Int32::New(i + 1));
     }
 
     metaObject = builder.toMetaObject();
-
-    constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
 QQuickVisualDataModelItemMetaType::~QQuickVisualDataModelItemMetaType()
