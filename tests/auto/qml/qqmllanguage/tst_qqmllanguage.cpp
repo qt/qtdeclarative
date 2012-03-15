@@ -46,6 +46,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
+#include <QSignalSpy>
 
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlmetatype_p.h>
@@ -175,6 +176,8 @@ private slots:
     // regression tests for crashes
     void crash1();
     void crash2();
+
+    void globalEnums();
 
 private:
     QQmlEngine engine;
@@ -2282,6 +2285,47 @@ void tst_qqmllanguage::remoteLoadCrash()
         QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
 
     QObject *o = component.create();
+    delete o;
+}
+
+// QTBUG-20639
+void tst_qqmllanguage::globalEnums()
+{
+    qRegisterMetaType<MyEnum1Class::EnumA>();
+    qRegisterMetaType<MyEnum2Class::EnumB>();
+
+    QQmlComponent component(&engine, TEST_FILE("globalEnums.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    MyEnum1Class *enum1Class = o->findChild<MyEnum1Class *>(QString::fromLatin1("enum1Class"));
+    QVERIFY(enum1Class != 0);
+    QVERIFY(enum1Class->getValue() == -1);
+
+    MyEnumDerivedClass *enum2Class = o->findChild<MyEnumDerivedClass *>(QString::fromLatin1("enumDerivedClass"));
+    QVERIFY(enum2Class != 0);
+    QVERIFY(enum2Class->getValueA() == -1);
+    QVERIFY(enum2Class->getValueB() == -1);
+
+    QVERIFY(enum2Class->property("aValue") == 0);
+    QVERIFY(enum2Class->property("bValue") == 0);
+
+    QSignalSpy signalA(enum2Class, SIGNAL(valueAChanged(MyEnum1Class::EnumA)));
+    QSignalSpy signalB(enum2Class, SIGNAL(valueBChanged(MyEnum2Class::EnumB)));
+
+    QMetaObject::invokeMethod(o, "setEnumValues");
+
+    QVERIFY(enum1Class->getValue() == MyEnum1Class::A_13);
+    QVERIFY(enum2Class->getValueA() == MyEnum1Class::A_11);
+    QVERIFY(enum2Class->getValueB() == MyEnum2Class::B_37);
+
+    QVERIFY(signalA.count() == 1);
+    QVERIFY(signalB.count() == 1);
+
+    QVERIFY(enum2Class->property("aValue") == MyEnum1Class::A_11);
+    QVERIFY(enum2Class->property("bValue") == 37);
+
     delete o;
 }
 

@@ -811,13 +811,75 @@ class MyVersion2Class : public QObject
     Q_OBJECT
 };
 
+class MyEnum1Class : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(EnumA)
+
+public:
+    MyEnum1Class() : value(A_Invalid) {}
+
+    enum EnumA
+    {
+        A_Invalid = -1,
+
+        A_11 = 11,
+        A_13 = 13
+    };
+
+    Q_INVOKABLE void setValue(EnumA v) { value = v; }
+
+    EnumA getValue() { return value; }
+
+private:
+    EnumA value;
+};
+
+class MyEnum2Class : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(EnumB)
+
+public:
+    MyEnum2Class() : valueA(MyEnum1Class::A_Invalid), valueB(B_Invalid) {}
+
+    enum EnumB
+    {
+        B_Invalid = -1,
+
+        B_29 = 29,
+        B_31 = 31,
+        B_37 = 37
+    };
+
+    MyEnum1Class::EnumA getValueA() { return valueA; }
+    EnumB getValueB() { return valueB; }
+
+    Q_INVOKABLE void setValueA(MyEnum1Class::EnumA v) { valueA = v; emit valueAChanged(v); }
+    Q_INVOKABLE void setValueB(EnumB v) { valueB = v; emit valueBChanged(v); }
+
+signals:
+    void valueAChanged(MyEnum1Class::EnumA newValue);
+    void valueBChanged(MyEnum2Class::EnumB newValue);
+
+private:
+    MyEnum1Class::EnumA valueA;
+    EnumB valueB;
+};
+
+class MyEnumDerivedClass : public MyEnum2Class
+{
+    Q_OBJECT
+};
+
+Q_DECLARE_METATYPE(MyEnum2Class::EnumB)
+Q_DECLARE_METATYPE(MyEnum1Class::EnumA)
+
 QML_DECLARE_TYPE(MyRevisionedBaseClassRegistered)
 QML_DECLARE_TYPE(MyRevisionedBaseClassUnregistered)
 QML_DECLARE_TYPE(MyRevisionedClass)
 QML_DECLARE_TYPE(MyRevisionedSubclass)
 QML_DECLARE_TYPE(MySubclass)
-
-
 
 void registerTypes();
 

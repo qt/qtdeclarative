@@ -227,7 +227,10 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
             prop.setWritable(false);
         } else {
             QByteArray propType = type;
-            if (t >= QVariant::UserType || t == QVariant::Invalid) {
+            if ((QMetaType::typeFlags(t) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration) {
+                t = QVariant::Int;
+                propType = "int";
+            } else if (t == QVariant::Invalid) {
                 QByteArray scope;
                 QByteArray name;
                 int scopeIdx = propType.lastIndexOf("::");

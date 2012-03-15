@@ -77,6 +77,10 @@ void registerTypes()
 
     qmlRegisterType<MyVersion2Class>("Test.VersionOrder", 2,0, "MyQmlObject");
     qmlRegisterType<MyQmlObject>("Test.VersionOrder", 1,0, "MyQmlObject");
+
+    qmlRegisterType<MyEnum1Class>("Test",1,0,"MyEnum1Class");
+    qmlRegisterType<MyEnum2Class>("Test",1,0,"MyEnum2Class");
+    qmlRegisterType<MyEnumDerivedClass>("Test",1,0,"MyEnumDerivedClass");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
@@ -85,4 +89,3 @@ QVariant myCustomVariantTypeConverter(const QString &data)
     rv.a = data.toInt();
     return QVariant::fromValue(rv);
 }
-

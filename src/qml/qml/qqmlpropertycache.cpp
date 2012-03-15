@@ -734,7 +734,9 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         for (int ii = 0; ii < argTypeNames.count(); ++ii) {
             int type = QMetaType::type(argTypeNames.at(ii));
-            if (type == QVariant::Invalid)
+            if ((QMetaType::typeFlags(type) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration)
+                type = QVariant::Int;
+            else if (type == QVariant::Invalid)
                 type = EnumType(object->metaObject(), argTypeNames.at(ii));
             if (type == QVariant::Invalid) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
@@ -757,7 +759,9 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         for (int ii = 0; ii < argTypeNames.count(); ++ii) {
             int type = QMetaType::type(argTypeNames.at(ii));
-            if (type == QVariant::Invalid)
+            if ((QMetaType::typeFlags(type) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration)
+                type = QVariant::Int;
+            else if (type == QVariant::Invalid)
                 type = EnumType(object->metaObject(), argTypeNames.at(ii));
             if (type == QVariant::Invalid) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
