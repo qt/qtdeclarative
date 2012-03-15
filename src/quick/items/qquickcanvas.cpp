@@ -1618,6 +1618,7 @@ void QQuickCanvasPrivate::cleanupNodesOnShutdown(QQuickItem *item)
         if (p->extra.isAllocated()) {
             p->extra->opacityNode = 0;
             p->extra->clipNode = 0;
+            p->extra->rootNode = 0;
         }
 
         p->groupNode = 0;
