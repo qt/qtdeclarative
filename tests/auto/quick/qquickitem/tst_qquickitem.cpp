@@ -181,7 +181,7 @@ void tst_qquickitem::initTestCase()
     qmlRegisterType<TestPolishItem>("Qt.test", 1, 0, "TestPolishItem");
 }
 
-// Focus has no effect when outside a canvas
+// Focus still updates when outside a canvas
 void tst_qquickitem::noCanvas()
 {
     QQuickItem *root = new TestItem;
@@ -201,7 +201,7 @@ void tst_qquickitem::noCanvas()
     scopedChild2->setFocus(true);
     QCOMPARE(root->hasFocus(), true);
     QCOMPARE(child->hasFocus(), false);
-    QCOMPARE(scope->hasFocus(), true);
+    QCOMPARE(scope->hasFocus(), false);
     QCOMPARE(scopedChild->hasFocus(), false);
     QCOMPARE(scopedChild2->hasFocus(), true);
 
@@ -210,10 +210,10 @@ void tst_qquickitem::noCanvas()
     scopedChild->setFocus(true);
     scope->setFocus(false);
     QCOMPARE(root->hasFocus(), false);
-    QCOMPARE(child->hasFocus(), true);
+    QCOMPARE(child->hasFocus(), false);
     QCOMPARE(scope->hasFocus(), false);
     QCOMPARE(scopedChild->hasFocus(), true);
-    QCOMPARE(scopedChild2->hasFocus(), true);
+    QCOMPARE(scopedChild2->hasFocus(), false);
 
     delete root;
 }
@@ -434,7 +434,7 @@ void tst_qquickitem::addedToCanvas()
     c1->setFocus(true);
     c2->setFocus(true);
     focusState[item].set(true, true);
-    focusState[c1].set(true, false);
+    focusState[c1].set(false, false);
     focusState[c2].set(true, false);
     focusState.active(item);
     FVERIFY();
@@ -458,14 +458,14 @@ void tst_qquickitem::addedToCanvas()
     focusState << tree << c1 << c2;
     c1->setFocus(true);
     c2->setFocus(true);
-    focusState[c1].set(true, false);
+    focusState[c1].set(false, false);
     focusState[c2].set(true, false);
     FVERIFY();
 
     tree->setParentItem(canvas.rootItem());
-    focusState[c1].set(true, true);
-    focusState[c2].set(false, false);
-    focusState.active(c1);
+    focusState[c1].set(false, false);
+    focusState[c2].set(true, true);
+    focusState.active(c2);
     FVERIFY();
     }
 
@@ -481,19 +481,19 @@ void tst_qquickitem::addedToCanvas()
     focusState << tree << c1 << c2;
     c1->setFocus(true);
     c2->setFocus(true);
-    focusState[c1].set(true, false);
+    focusState[c1].set(false, false);
     focusState[c2].set(true, false);
     FVERIFY();
 
     tree->setParentItem(canvas.rootItem());
-    focusState[c1].set(true, false);
-    focusState[c2].set(false, false);
+    focusState[c1].set(false, false);
+    focusState[c2].set(true, false);
     FVERIFY();
 
     tree->setFocus(true);
     focusState[tree].set(true, true);
-    focusState[c1].set(true, true);
-    focusState.active(c1);
+    focusState[c2].set(true, true);
+    focusState.active(c2);
     FVERIFY();
     }
 
@@ -511,15 +511,15 @@ void tst_qquickitem::addedToCanvas()
     c1->setFocus(true);
     c2->setFocus(true);
     focusState[tree].set(true, false);
-    focusState[c1].set(true, false);
+    focusState[c1].set(false, false);
     focusState[c2].set(true, false);
     FVERIFY();
 
     tree->setParentItem(canvas.rootItem());
     focusState[tree].set(true, true);
-    focusState[c1].set(true, true);
-    focusState[c2].set(false, false);
-    focusState.active(c1);
+    focusState[c1].set(false, false);
+    focusState[c2].set(true, true);
+    focusState.active(c2);
     FVERIFY();
     }
 
@@ -540,22 +540,22 @@ void tst_qquickitem::addedToCanvas()
     c2->setFocus(true);
     focusState[child].set(true, true);
     focusState[tree].set(true, false);
-    focusState[c1].set(true, false);
+    focusState[c1].set(false, false);
     focusState[c2].set(true, false);
     focusState.active(child);
     FVERIFY();
 
     tree->setParentItem(canvas.rootItem());
     focusState[tree].set(false, false);
-    focusState[c1].set(true, false);
-    focusState[c2].set(false, false);
+    focusState[c1].set(false, false);
+    focusState[c2].set(true, false);
     FVERIFY();
 
     tree->setFocus(true);
     focusState[child].set(false, false);
     focusState[tree].set(true, true);
-    focusState[c1].set(true, true);
-    focusState.active(c1);
+    focusState[c2].set(true, true);
+    focusState.active(c2);
     FVERIFY();
     }
 }
@@ -674,6 +674,40 @@ void tst_qquickitem::changeParent()
     FVERIFY();
     }
 
+    // child has active focus, then its fs parent changes parent to 0, then
+    // child is deleted, then its parent changes again to a valid parent
+    {
+    QQuickCanvas canvas;
+    ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickItem *item = new TestFocusScope(canvas.rootItem());
+    QQuickItem *child = new TestItem(item);
+    QQuickItem *child2 = new TestItem;
+
+    FocusState focusState;
+    focusState << item << child;
+    FVERIFY();
+
+    item->setFocus(true);
+    child->setFocus(true);
+    focusState[child].set(true, true);
+    focusState[item].set(true, true);
+    focusState.active(child);
+    FVERIFY();
+
+    item->setParentItem(0);
+    focusState[child].set(true, false);
+    focusState[item].set(true, false);
+    focusState.active(0);
+    FVERIFY();
+
+    focusState.remove(child);
+    delete child;
+    item->setParentItem(canvas.rootItem());
+    focusState[item].set(true, true);
+    focusState.active(item);
+    FVERIFY();
+    }
 }
 
 void tst_qquickitem::multipleFocusClears()

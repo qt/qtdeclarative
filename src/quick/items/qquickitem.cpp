@@ -1924,17 +1924,21 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
         QQuickItem *scopeItem = 0;
 
-        if (d->canvas && hasFocus()) {
+        if (hasFocus())
             scopeFocusedItem = this;
-        } else if (d->canvas && !isFocusScope() && d->subFocusItem) {
+        else if (!isFocusScope() && d->subFocusItem)
             scopeFocusedItem = d->subFocusItem;
-        }
 
         if (scopeFocusedItem) {
             scopeItem = oldParentItem;
-            while (!scopeItem->isFocusScope()) scopeItem = scopeItem->parentItem();
-            QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem,
+            while (!scopeItem->isFocusScope() && scopeItem->parentItem())
+                scopeItem = scopeItem->parentItem();
+            if (d->canvas) {
+                QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem,
                                                                 QQuickCanvasPrivate::DontChangeFocusProperty);
+            } else {
+                QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(scopeItem, false);
+            }
         }
 
         const bool wasVisible = isVisible();
@@ -1963,18 +1967,31 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
     d->setEffectiveVisibleRecur(d->calcEffectiveVisible());
     d->setEffectiveEnableRecur(0, d->calcEffectiveEnable());
 
-    if (scopeFocusedItem && d->parentItem && d->canvas) {
-        // We need to test whether this item becomes scope focused
-        QQuickItem *scopeItem = 0;
-        scopeItem = d->parentItem;
-        while (!scopeItem->isFocusScope()) scopeItem = scopeItem->parentItem();
+    if (d->parentItem) {
+        if (!scopeFocusedItem) {
+            if (hasFocus())
+                scopeFocusedItem = this;
+            else if (!isFocusScope() && d->subFocusItem)
+                scopeFocusedItem = d->subFocusItem;
+        }
 
-        if (scopeItem->scopedFocusItem()) {
-            QQuickItemPrivate::get(scopeFocusedItem)->focus = false;
-            emit scopeFocusedItem->focusChanged(false);
-        } else {
-            QQuickCanvasPrivate::get(d->canvas)->setFocusInScope(scopeItem, scopeFocusedItem,
-                                                              QQuickCanvasPrivate::DontChangeFocusProperty);
+        if (scopeFocusedItem) {
+            // We need to test whether this item becomes scope focused
+            QQuickItem *scopeItem = d->parentItem;
+            while (!scopeItem->isFocusScope() && scopeItem->parentItem())
+                scopeItem = scopeItem->parentItem();
+
+            if (scopeItem->scopedFocusItem()) {
+                QQuickItemPrivate::get(scopeFocusedItem)->focus = false;
+                emit scopeFocusedItem->focusChanged(false);
+            } else {
+                if (d->canvas) {
+                    QQuickCanvasPrivate::get(d->canvas)->setFocusInScope(scopeItem, scopeFocusedItem,
+                                                                  QQuickCanvasPrivate::DontChangeFocusProperty);
+                } else {
+                    QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(scopeItem, true);
+                }
+            }
         }
     }
 
@@ -2208,16 +2225,6 @@ void QQuickItemPrivate::initCanvas(InitializationState *state, QQuickCanvas *c)
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuickItem *child = childItems.at(ii);
         QQuickItemPrivate::get(child)->initCanvas(childState, c);
-    }
-
-    if (c && focus) {
-        // Fixup
-        if (state->getFocusScope(q)->scopedFocusItem()) {
-            focus = false;
-            emit q->focusChanged(false);
-        } else {
-            QQuickCanvasPrivate::get(canvas)->setFocusInScope(state->getFocusScope(q), q);
-        }
     }
 
     dirty(Canvas);
@@ -4672,15 +4679,33 @@ void QQuickItem::setFocus(bool focus)
     if (d->focus == focus)
         return;
 
-    if (d->canvas) {
+    if (d->canvas || d->parentItem) {
         // Need to find our nearest focus scope
         QQuickItem *scope = parentItem();
-        while (scope && !scope->isFocusScope())
+        while (scope && !scope->isFocusScope() && scope->parentItem())
             scope = scope->parentItem();
-        if (focus)
-            QQuickCanvasPrivate::get(d->canvas)->setFocusInScope(scope, this);
-        else
-            QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scope, this);
+        if (d->canvas) {
+            if (focus)
+                QQuickCanvasPrivate::get(d->canvas)->setFocusInScope(scope, this);
+            else
+                QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scope, this);
+        } else {
+            // do the focus changes from setFocusInScope/clearFocusInScope that are
+            // unrelated to a canvas
+            QVarLengthArray<QQuickItem *, 20> changed;
+            QQuickItem *oldSubFocusItem = QQuickItemPrivate::get(scope)->subFocusItem;
+            if (oldSubFocusItem) {
+                QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
+                changed << oldSubFocusItem;
+            }
+            d->updateSubFocusItem(scope, focus);
+
+            d->focus = focus;
+            changed << this;
+            emit focusChanged(focus);
+
+            QQuickCanvasPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+        }
     } else {
         d->focus = focus;
         emit focusChanged(focus);
