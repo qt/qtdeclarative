@@ -236,13 +236,22 @@ void QQuickViewSection::setLabelPositioning(int l)
 class FxListItemSG : public FxViewItem
 {
 public:
-    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own) : FxViewItem(i, own), view(v) {
+    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own, bool trackGeometry) : FxViewItem(i, own, trackGeometry), view(v) {
         attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(item));
         if (attached)
             static_cast<QQuickListViewAttached*>(attached)->setView(view);
+        if (trackGeometry) {
+            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+        }
     }
 
-    ~FxListItemSG() {}
+    ~FxListItemSG() {
+        if (trackGeom) {
+            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            itemPrivate->removeItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+        }
+    }
 
     inline QQuickItem *section() const {
         return attached ? static_cast<QQuickListViewAttached*>(attached)->m_sectionItem : 0;
@@ -536,7 +545,7 @@ FxViewItem *QQuickListViewPrivate::newViewItem(int modelIndex, QQuickItem *item)
 {
     Q_Q(QQuickListView);
 
-    FxListItemSG *listItem = new FxListItemSG(item, q, false);
+    FxListItemSG *listItem = new FxListItemSG(item, q, false, false);
     listItem->index = modelIndex;
 
     // initialise attached properties
@@ -835,7 +844,7 @@ void QQuickListViewPrivate::createHighlight()
     if (currentItem) {
         QQuickItem *item = createHighlightItem();
         if (item) {
-            FxListItemSG *newHighlight = new FxListItemSG(item, q, true);
+            FxListItemSG *newHighlight = new FxListItemSG(item, q, true, true);
 
             if (autoHighlight) {
                 newHighlight->setSize(static_cast<FxListItemSG*>(currentItem)->itemSize());
@@ -1238,11 +1247,11 @@ void QQuickListViewPrivate::updateFooter()
     Q_Q(QQuickListView);
     bool created = false;
     if (!footer) {
-        QQuickItem *item = createComponentItem(footerComponent, true);
+        QQuickItem *item = createComponentItem(footerComponent);
         if (!item)
             return;
         item->setZ(1);
-        footer = new FxListItemSG(item, q, true);
+        footer = new FxListItemSG(item, q, true, true);
         created = true;
     }
 
@@ -1269,11 +1278,11 @@ void QQuickListViewPrivate::updateHeader()
     Q_Q(QQuickListView);
     bool created = false;
     if (!header) {
-        QQuickItem *item = createComponentItem(headerComponent, true);
+        QQuickItem *item = createComponentItem(headerComponent);
         if (!item)
             return;
         item->setZ(1);
-        header = new FxListItemSG(item, q, true);
+        header = new FxListItemSG(item, q, true, true);
         created = true;
     }
 

@@ -60,7 +60,7 @@ QT_MODULE(Quick)
 class FxViewItem
 {
 public:
-    FxViewItem(QQuickItem *, bool own);
+    FxViewItem(QQuickItem *, bool own, bool trackGeometry);
     virtual ~FxViewItem();
 
     qreal itemX() const;
@@ -92,6 +92,7 @@ public:
     int index;
     bool ownItem;
     bool releaseAfterTransition;
+    bool trackGeom;
 };
 
 
@@ -123,6 +124,8 @@ class QQuickItemViewPrivate : public QQuickFlickablePrivate, public QQuickItemVi
 public:
     QQuickItemViewPrivate();
     ~QQuickItemViewPrivate();
+
+    static inline QQuickItemViewPrivate *get(QQuickItemView *o) { return o->d_func(); }
 
     struct ChangeResult {
         QQmlNullableValue<qreal> visiblePos;
@@ -191,7 +194,7 @@ public:
     virtual bool releaseItem(FxViewItem *item);
 
     QQuickItem *createHighlightItem();
-    QQuickItem *createComponentItem(QQmlComponent *component, bool receiveItemGeometryChanges, bool createDefault = false);
+    QQuickItem *createComponentItem(QQmlComponent *component, bool createDefault = false);
 
     void updateCurrent(int modelIndex);
     void updateTrackedItem();

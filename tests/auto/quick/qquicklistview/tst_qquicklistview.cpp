@@ -3529,6 +3529,45 @@ void tst_QQuickListView::headerFooter()
 
         delete canvas;
     }
+    {
+        // Reset model
+        QQuickView *canvas = createView();
+
+        QaimModel model;
+        for (int i = 0; i < 4; i++)
+            model.addItem("Item" + QString::number(i), "");
+        QQmlContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+
+        canvas->setSource(testFileUrl("headerfooter.qml"));
+        qApp->processEvents();
+
+        QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
+        QTRY_VERIFY(listview != 0);
+
+        QQuickItem *contentItem = listview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+        QVERIFY(header);
+        QCOMPARE(header->y(), -header->height());
+
+        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+        QVERIFY(footer);
+        QCOMPARE(footer->y(), 30.*4);
+
+        model.reset();
+
+        header = findItem<QQuickItem>(contentItem, "header");
+        QVERIFY(header);
+        QCOMPARE(header->y(), -header->height());
+
+        footer = findItem<QQuickItem>(contentItem, "footer");
+        QVERIFY(footer);
+        QCOMPARE(footer->y(), 30.*4);
+
+        delete canvas;
+    }
 }
 
 void tst_QQuickListView::resizeView()

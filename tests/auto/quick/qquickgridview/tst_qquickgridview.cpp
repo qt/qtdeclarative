@@ -113,6 +113,7 @@ private slots:
     void footer_data();
     void header();
     void header_data();
+    void headerFooter();
     void resizeViewAndRepaint();
     void changeColumnCount();
     void indexAt_itemAt_data();
@@ -3142,6 +3143,151 @@ void tst_QQuickGridView::header_data()
         << QPointF(-(240 - 50), 0)
         << QPointF(-80, 0)
         << QPointF(-(240 - 40), 0);
+}
+
+class GVAccessor : public QQuickGridView
+{
+public:
+    qreal minY() const { return minYExtent(); }
+    qreal maxY() const { return maxYExtent(); }
+    qreal minX() const { return minXExtent(); }
+    qreal maxX() const { return maxXExtent(); }
+};
+
+void tst_QQuickGridView::headerFooter()
+{
+    {
+        // Vertical
+        QQuickView *canvas = createView();
+
+        QmlListModel model;
+        QQmlContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+
+        canvas->setSource(testFileUrl("headerfooter.qml"));
+        qApp->processEvents();
+
+        QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+        QTRY_VERIFY(gridview != 0);
+
+        QQuickItem *contentItem = gridview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+        QVERIFY(header);
+        QCOMPARE(header->y(), -header->height());
+
+        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+        QVERIFY(footer);
+        QCOMPARE(footer->y(), 0.);
+
+        QCOMPARE(static_cast<GVAccessor*>(gridview)->minY(), header->height());
+        QCOMPARE(static_cast<GVAccessor*>(gridview)->maxY(), header->height());
+
+        delete canvas;
+    }
+    {
+        // Horizontal
+        QQuickView *canvas = createView();
+
+        QmlListModel model;
+        QQmlContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+
+        canvas->setSource(testFileUrl("headerfooter.qml"));
+        canvas->rootObject()->setProperty("horizontal", true);
+        qApp->processEvents();
+
+        QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+        QTRY_VERIFY(gridview != 0);
+
+        QQuickItem *contentItem = gridview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+        QVERIFY(header);
+        QCOMPARE(header->x(), -header->width());
+
+        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+        QVERIFY(footer);
+        QCOMPARE(footer->x(), 0.);
+
+        QCOMPARE(static_cast<GVAccessor*>(gridview)->minX(), header->width());
+        QCOMPARE(static_cast<GVAccessor*>(gridview)->maxX(), header->width());
+
+        delete canvas;
+    }
+    {
+        // Horizontal RTL
+        QQuickView *canvas = createView();
+
+        QmlListModel model;
+        QQmlContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+
+        canvas->setSource(testFileUrl("headerfooter.qml"));
+        canvas->rootObject()->setProperty("horizontal", true);
+        canvas->rootObject()->setProperty("rtl", true);
+        qApp->processEvents();
+
+        QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+        QTRY_VERIFY(gridview != 0);
+
+        QQuickItem *contentItem = gridview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+        QVERIFY(header);
+        QCOMPARE(header->x(), 0.);
+
+        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+        QVERIFY(footer);
+        QCOMPARE(footer->x(), -footer->width());
+
+        QCOMPARE(static_cast<GVAccessor*>(gridview)->minX(), 240. - header->width());
+        QCOMPARE(static_cast<GVAccessor*>(gridview)->maxX(), 240. - header->width());
+
+        delete canvas;
+    }
+    {
+        // Reset model
+        QQuickView *canvas = createView();
+
+        QaimModel model;
+        for (int i = 0; i < 6; i++)
+            model.addItem("Item" + QString::number(i), "");
+        QQmlContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+
+        canvas->setSource(testFileUrl("headerfooter.qml"));
+        qApp->processEvents();
+
+        QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+        QTRY_VERIFY(gridview != 0);
+
+        QQuickItem *contentItem = gridview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+        QVERIFY(header);
+        QCOMPARE(header->y(), -header->height());
+
+        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+        QVERIFY(footer);
+        QCOMPARE(footer->y(), 80.*2);
+
+        model.reset();
+
+        header = findItem<QQuickItem>(contentItem, "header");
+        QVERIFY(header);
+        QCOMPARE(header->y(), -header->height());
+
+        footer = findItem<QQuickItem>(contentItem, "footer");
+        QVERIFY(footer);
+        QCOMPARE(footer->y(), 80.*2);
+
+        delete canvas;
+    }
 }
 
 void tst_QQuickGridView::resizeViewAndRepaint()

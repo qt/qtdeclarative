@@ -1,6 +1,6 @@
 import QtQuick 2.0
 
-ListView {
+GridView {
     id: view
     property bool horizontal: false
     property bool rtl: false
@@ -9,7 +9,7 @@ ListView {
 
     model: testModel
     
-    orientation: horizontal ? ListView.Horizontal : ListView.Vertical
+    flow: horizontal ? GridView.TopToBottom : GridView.LeftToRight
     header: Rectangle {
         objectName: "header"
         width: horizontal ? 20 : view.width
@@ -23,6 +23,9 @@ ListView {
         color: "blue"
     }
 
-    delegate: Text { width: 30; height: 30; text: index + "(" + x + ")" }
+    cellWidth: 80;
+    cellHeight: 80;
+
+    delegate: Text { width: 80; height: 80; text: index + "(" + x + ")" }
     layoutDirection: rtl ? Qt.RightToLeft : Qt.LeftToRight
 }
