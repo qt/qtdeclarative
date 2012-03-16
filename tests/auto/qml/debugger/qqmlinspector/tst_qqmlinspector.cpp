@@ -150,9 +150,8 @@ void tst_QQmlInspector::init()
 
     m_process = new QQmlDebugProcess(executable);
     m_process->start(QStringList() << argument);
-    if (!m_process->waitForSessionStart()) {
-        QFAIL(QString("Could not launch app '%1'.\nApplication output:\n%2").arg(executable, m_process->output()).toAscii());
-    }
+    QVERIFY2(m_process->waitForSessionStart(),
+             "Could not launch application, or did not get 'Waiting for connection'.");
 
     QQmlDebugConnection *m_connection = new QQmlDebugConnection();
     m_client = new QQmlInspectorClient(m_connection);
@@ -162,6 +161,10 @@ void tst_QQmlInspector::init()
 
 void tst_QQmlInspector::cleanup()
 {
+    if (QTest::currentTestFailed()) {
+        qDebug() << "Process State:" << m_process->state();
+        qDebug() << "Application Output:" << m_process->output();
+    }
     delete m_process;
     delete m_connection;
     delete m_client;

@@ -1011,18 +1011,29 @@ bool tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode)
         process->start(QStringList() << QLatin1String(NORMALMODE) << testFile(qmlFile));
 
     if (!process->waitForSessionStart()) {
+        qDebug() << "could not launch application, or did not get 'Waiting for connection'.";
         return false;
     }
 
     connection->connectToHost("127.0.0.1", 3771);
-    if (!connection->waitForConnected())
+    if (!connection->waitForConnected()) {
+        qDebug() << "could not connect to host!";
         return false;
+    }
+
+    if (client->state() == QQmlDebugClient::Enabled)
+        return true;
 
     return QQmlDebugTest::waitForSignal(client, SIGNAL(enabled()));
 }
 
 void tst_QQmlDebugJS::cleanup()
 {
+    if (QTest::currentTestFailed()) {
+        qDebug() << "Process State:" << process->state();
+        qDebug() << "Application Output:" << process->output();
+    }
+
     if (process) {
         process->stop();
         delete process;

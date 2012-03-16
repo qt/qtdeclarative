@@ -43,7 +43,9 @@
 #include "../../../../../src/plugins/qmltooling/shared/qpacketprotocol.h"
 
 #include <QtCore/qdebug.h>
+#include <QtCore/qeventloop.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/qtimer.h>
 #include <QtNetwork/qnetworkproxy.h>
 
 const int protocolVersion = 1;
@@ -67,6 +69,8 @@ public:
     QQmlDebugConnection *q;
     QPacketProtocol *protocol;
     QIODevice *device;
+    QEventLoop handshakeEventLoop;
+    QTimer handshakeTimer;
 
     bool gotHello;
     QHash <QString, float> serverPlugins;
@@ -79,6 +83,7 @@ public Q_SLOTS:
     void connected();
     void readyRead();
     void deviceAboutToClose();
+    void handshakeTimeout();
 };
 
 QQmlDebugConnectionPrivate::QQmlDebugConnectionPrivate(QQmlDebugConnection *c)
@@ -87,6 +92,10 @@ QQmlDebugConnectionPrivate::QQmlDebugConnectionPrivate(QQmlDebugConnection *c)
     protocol = new QPacketProtocol(q, this);
     QObject::connect(c, SIGNAL(connected()), this, SLOT(connected()));
     QObject::connect(protocol, SIGNAL(readyRead()), this, SLOT(readyRead()));
+
+    handshakeTimer.setSingleShot(true);
+    handshakeTimer.setInterval(3000);
+    connect(&handshakeTimer, SIGNAL(timeout()), SLOT(handshakeTimeout()));
 }
 
 void QQmlDebugConnectionPrivate::advertisePlugins()
@@ -158,6 +167,9 @@ void QQmlDebugConnectionPrivate::readyRead()
                 newState = QQmlDebugClient::Enabled;
             iter.value()->stateChanged(newState);
         }
+
+        handshakeTimer.stop();
+        handshakeEventLoop.quit();
     }
 
     while (protocol->packetsAvailable()) {
@@ -226,6 +238,14 @@ void QQmlDebugConnectionPrivate::deviceAboutToClose()
     q->QIODevice::close();
 }
 
+void QQmlDebugConnectionPrivate::handshakeTimeout()
+{
+    if (!gotHello) {
+        qWarning() << "Qml Debug Client: Did not get handshake answer in time";
+        handshakeEventLoop.quit();
+    }
+}
+
 QQmlDebugConnection::QQmlDebugConnection(QObject *parent)
     : QIODevice(parent), d(new QQmlDebugConnectionPrivate(this))
 {
@@ -282,9 +302,14 @@ void QQmlDebugConnection::close()
 bool QQmlDebugConnection::waitForConnected(int msecs)
 {
     QAbstractSocket *socket = qobject_cast<QAbstractSocket*>(d->device);
-    if (socket)
-        return socket->waitForConnected(msecs);
-    return false;
+    if (!socket)
+        return false;
+    if (!socket->waitForConnected(msecs))
+        return false;
+    // wait for handshake
+    d->handshakeTimer.start();
+    d->handshakeEventLoop.exec();
+    return d->gotHello;
 }
 
 QAbstractSocket::SocketState QQmlDebugConnection::state() const

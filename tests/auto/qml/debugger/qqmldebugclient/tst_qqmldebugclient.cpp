@@ -153,7 +153,6 @@ void tst_QQmlDebugClient::parallelConnect()
     QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Another client is already connected.");
     // will connect & immediately disconnect
     connection2.connectToHost("127.0.0.1", PORT);
-    QVERIFY(connection2.waitForConnected());
     QTRY_COMPARE(connection2.state(), QAbstractSocket::UnconnectedState);
     QVERIFY(m_conn->isConnected());
 }

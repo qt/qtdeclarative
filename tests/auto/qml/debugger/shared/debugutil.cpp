@@ -99,13 +99,36 @@ QQmlDebugProcess::~QQmlDebugProcess()
     stop();
 }
 
+QString QQmlDebugProcess::state()
+{
+    QString stateStr;
+    switch (m_process.state()) {
+    case QProcess::NotRunning: {
+        stateStr = "not running";
+        if (m_process.exitStatus() == QProcess::CrashExit)
+            stateStr += " (crashed!)";
+        else
+            stateStr += ", return value" + m_process.exitCode();
+        break;
+    }
+    case QProcess::Starting: stateStr = "starting"; break;
+    case QProcess::Running: stateStr = "running"; break;
+    }
+    return stateStr;
+}
+
 void QQmlDebugProcess::start(const QStringList &arguments)
 {
     m_mutex.lock();
     m_process.setEnvironment(m_environment);
     m_process.start(m_executable, arguments);
-    m_process.waitForStarted();
-    m_timer.start();
+    if (!m_process.waitForStarted()) {
+        qWarning() << "QML Debug Client: Could not launch app " << m_executable
+                   << ": " << m_process.errorString();
+        m_eventLoop.quit();
+    } else {
+        m_timer.start();
+    }
     m_mutex.unlock();
 }
 
@@ -120,7 +143,7 @@ void QQmlDebugProcess::stop()
 void QQmlDebugProcess::timeout()
 {
     qWarning() << "Timeout while waiting for QML debugging messages "
-                  "in application output";
+                  "in application output. Process is in state" << m_process.state() << ".";
     m_eventLoop.quit();
 }
 
@@ -162,12 +185,14 @@ void QQmlDebugProcess::processAppOutput()
 
         if (line.startsWith("QML Debugger:")) {
             if (line.contains("Waiting for connection ")) {
+                m_timer.stop();
                 m_started = true;
                 m_eventLoop.quit();
                 continue;
             }
             if (line.contains("Unable to listen")) {
                 qWarning() << "App was unable to bind to port!";
+                m_timer.stop();
                 m_eventLoop.quit();
                 continue;
             }

@@ -183,20 +183,24 @@ void tst_QDebugMessageService::init()
     m_client = new QQmlDebugMsgClient(m_connection);
 
     m_process->start(QStringList() << QLatin1String(NORMALMODE) << QQmlDataTest::instance()->testFile(QMLFILE));
-    if (!m_process->waitForSessionStart()) {
-        QFAIL(QString("Could not launch app. Application output: \n%1").arg(m_process->output()).toAscii());
-    }
+    QVERIFY2(m_process->waitForSessionStart(),
+             "Could not launch application, or did not get 'Waiting for connection'.");
 
     m_connection->connectToHost("127.0.0.1", 3777);
     QVERIFY(m_connection->waitForConnected());
 
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(enabled())));
+    if (m_client->state() != QQmlDebugClient::Enabled)
+        QQmlDebugTest::waitForSignal(m_client, SIGNAL(enabled()));
+
+    QVERIFY(m_client->state() == QQmlDebugClient::Enabled);
 }
 
 void tst_QDebugMessageService::cleanup()
 {
-    if (QTest::currentTestFailed())
-        qDebug() << m_process->output();
+    if (QTest::currentTestFailed()) {
+        qDebug() << "Process State:" << m_process->state();
+        qDebug() << "Application Output:" << m_process->output();
+    }
     if (m_process)
         delete m_process;
 

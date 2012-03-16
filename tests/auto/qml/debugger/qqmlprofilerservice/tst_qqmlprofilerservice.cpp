@@ -242,11 +242,7 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 
     m_process = new QQmlDebugProcess(executable);
     m_process->start(QStringList() << arguments);
-    if (!m_process->waitForSessionStart()) {
-        QString failMsg = QString("Could not launch app '%1'.\nApplication output:\n%2").arg(
-                    executable, m_process->output());
-        QFAIL(qPrintable(failMsg));
-    }
+    QVERIFY2(m_process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
 
     QQmlDebugConnection *m_connection = new QQmlDebugConnection();
     m_client = new QQmlProfilerClient(m_connection);
@@ -256,6 +252,10 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 
 void tst_QQmlProfilerService::cleanup()
 {
+    if (QTest::currentTestFailed()) {
+        qDebug() << "Process State:" << m_process->state();
+        qDebug() << "Application Output:" << m_process->output();
+    }
     delete m_process;
     delete m_connection;
     delete m_client;
@@ -268,11 +268,7 @@ void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
 
     m_client->setTraceState(true);
     m_client->setTraceState(false);
-    if (!QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
-        QString failMsg
-                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
-        QFAIL(qPrintable(failMsg));
-    }
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
 
     QVERIFY(m_client->traceMessages.count());
     // must start with "StartTrace"
@@ -292,11 +288,7 @@ void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
     m_client->setTraceState(false);
     m_client->setTraceState(true);
     m_client->setTraceState(false);
-    if (!QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
-        QString failMsg
-                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
-        QFAIL(qPrintable(failMsg));
-    }
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
 
     QVERIFY(m_client->traceMessages.count());
 
@@ -316,11 +308,7 @@ void tst_QQmlProfilerService::nonBlockingConnect()
 
     m_client->setTraceState(true);
     m_client->setTraceState(false);
-    if (!QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
-        QString failMsg
-                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
-        QFAIL(qPrintable(failMsg));
-    }
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
 
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);
@@ -338,11 +326,7 @@ void tst_QQmlProfilerService::profileOnExit()
 
     m_client->setTraceState(true);
 
-    if (!QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete()))) {
-        QString failMsg
-                = QString("No trace received in time. App output: \n%1\n").arg(m_process->output());
-        QFAIL(qPrintable(failMsg));
-    }
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
 
     // must start with "StartTrace"
     QCOMPARE(m_client->traceMessages.first().messageType, (int)QQmlProfilerClient::Event);

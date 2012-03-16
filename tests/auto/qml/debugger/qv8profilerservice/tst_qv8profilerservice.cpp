@@ -220,7 +220,7 @@ bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
     m_process = new QQmlDebugProcess(executable);
     m_process->start(QStringList() << arguments);
     if (!m_process->waitForSessionStart()) {
-        *error = QLatin1String("Could not launch app ") + executable;
+        *error = QLatin1String("Could not launch application, or did not get 'Waiting for connection'.");
         return false;
     }
 
@@ -234,9 +234,10 @@ bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
 
 void tst_QV8ProfilerService::cleanup()
 {
-    if (QTest::currentTestFailed())
+    if (QTest::currentTestFailed()) {
+        qDebug() << "Process State:" << m_process->state();
         qDebug() << "Application Output:" << m_process->output();
-
+    }
     delete m_client;
     delete m_process;
     delete m_connection;
@@ -265,11 +266,8 @@ void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->stopProfiling("");
-    if (QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete()), 1000)) {
-        QString failMsg
-                = QString("Unexpected trace received! App output: %1\n\n").arg(m_process->output());
-        QFAIL(qPrintable(failMsg));
-    }
+    QVERIFY2(!QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete()), 1000),
+             "Unexpected trace received.");
     m_client->startProfiling("");
     m_client->stopProfiling("");
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())),

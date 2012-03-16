@@ -87,6 +87,8 @@ public:
     QQmlDebugProcess(const QString &executable);
     ~QQmlDebugProcess();
 
+    QString state();
+
     void setEnvironment(const QStringList &environment);
 
     void start(const QStringList &arguments);
