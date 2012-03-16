@@ -211,7 +211,7 @@ QVariant QQmlEngineDebugService::valueContents(const QVariant &value) const
         }
     }
 
-    return QStringLiteral("<unknown value>");
+    return QString(QStringLiteral("<unknown value>"));
 }
 
 void QQmlEngineDebugService::buildObjectDump(QDataStream &message, 
