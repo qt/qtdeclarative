@@ -200,6 +200,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
     const QVector<quint32> indexes = m_glyphs.glyphIndexes();
     const QVector<QPointF> positions = m_glyphs.positions();
+    qreal fontPixelSize = m_glyphs.rawFont().pixelSize();
 
     QVector<QSGGeometry::TexturedPoint2D> vp;
     vp.reserve(indexes.size() * 4);
@@ -207,8 +208,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     ip.reserve(indexes.size() * 6);
 
     QPointF margins(2, 2);
-    QPointF texMargins = margins / m_glyph_cache->fontScale();
-
+    QPointF texMargins = margins / m_glyph_cache->fontScale(fontPixelSize);
 
     for (int i = 0; i < indexes.size(); ++i) {
         const int glyphIndex = indexes.at(i);
@@ -232,7 +232,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
             continue;
         }
 
-        QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphIndex);
+        QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphIndex, fontPixelSize);
 
         if (!metrics.isNull() && !c.isNull()) {
             metrics.width += margins.x() * 2;
@@ -356,6 +356,8 @@ void QSGDistanceFieldGlyphNode::updateMaterial()
     }
 
     m_material->setGlyphCache(m_glyph_cache);
+    if (m_glyph_cache)
+        m_material->setFontScale(m_glyph_cache->fontScale(m_glyphs.rawFont().pixelSize()));
     m_material->setColor(m_color);
     setMaterial(m_material);
     m_dirtyMaterial = false;

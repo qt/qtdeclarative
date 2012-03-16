@@ -67,6 +67,9 @@ public:
     void setTexture(const QSGDistanceFieldGlyphCache::Texture * tex) { m_texture = tex; }
     const QSGDistanceFieldGlyphCache::Texture * texture() const { return m_texture; }
 
+    void setFontScale(qreal fontScale) { m_fontScale = fontScale; }
+    qreal fontScale() const { return m_fontScale; }
+
     QSize textureSize() const { return m_size; }
 
     bool updateTextureSize();
@@ -76,6 +79,7 @@ protected:
     QColor m_color;
     QSGDistanceFieldGlyphCache *m_glyph_cache;
     const QSGDistanceFieldGlyphCache::Texture *m_texture;
+    qreal m_fontScale;
 };
 
 class QSGDistanceFieldStyledTextMaterial : public QSGDistanceFieldTextMaterial

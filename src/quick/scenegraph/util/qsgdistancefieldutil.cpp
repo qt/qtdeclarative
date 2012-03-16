@@ -81,10 +81,14 @@ QSGDistanceFieldGlyphCacheManager::~QSGDistanceFieldGlyphCacheManager()
 
 QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCacheManager::cache(const QRawFont &font)
 {
-    QRawFontPrivate *fontD = QRawFontPrivate::get(font);
-    QHash<QFontEngine *, QSGDistanceFieldGlyphCache *>::iterator cache = m_caches.find(fontD->fontEngine);
+    QString key = QString::fromLatin1("%1_%2_%3_%4")
+                  .arg(font.familyName())
+                  .arg(font.styleName())
+                  .arg(font.weight())
+                  .arg(font.style());
+    QHash<QString , QSGDistanceFieldGlyphCache *>::iterator cache = m_caches.find(key);
     if (cache == m_caches.end())
-        cache = m_caches.insert(fontD->fontEngine, sgCtx->createDistanceFieldGlyphCache(font));
+        cache = m_caches.insert(key, sgCtx->createDistanceFieldGlyphCache(font));
     return cache.value();
 }
 

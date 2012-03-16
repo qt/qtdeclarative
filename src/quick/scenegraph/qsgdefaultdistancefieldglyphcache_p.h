@@ -53,6 +53,7 @@ class Q_QUICK_EXPORT QSGDefaultDistanceFieldGlyphCache : public QSGDistanceField
 {
 public:
     QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);
+    virtual ~QSGDefaultDistanceFieldGlyphCache();
 
     void requestGlyphs(const QSet<glyph_t> &glyphs);
     void storeGlyphs(const QHash<glyph_t, QImage> &glyphs);
@@ -60,8 +61,8 @@ public:
     void releaseGlyphs(const QSet<glyph_t> &glyphs);
 
     bool cacheIsFull() const {
-        return m_textureData->textures.count() == m_maxTextureCount
-                && textureIsFull(m_textureData->currentTexture);
+        return m_textures.count() == m_maxTextureCount
+                && textureIsFull(m_currentTexture);
     }
     bool useWorkaroundBrokenFBOReadback() const;
     int maxTextureSize() const;
@@ -70,123 +71,67 @@ public:
     int maxTextureCount() const { return m_maxTextureCount; }
 
 private:
+    struct TextureInfo {
+        GLuint texture;
+        QSize size;
+        int currX;
+        int currY;
+        QImage image;
+
+        TextureInfo() : texture(0), currX(0), currY(0)
+        { }
+    };
+
+    void createTexture(TextureInfo * texInfo, int width, int height);
+    void resizeTexture(TextureInfo * texInfo, int width, int height);
+    bool textureIsFull (const TextureInfo *tex) const { return tex->currY >= maxTextureSize(); }
+
+    TextureInfo *createTextureInfo()
+    {
+        m_textures.append(TextureInfo());
+        return &m_textures.last();
+    }
+
+    void createBlitProgram()
+    {
+        m_blitProgram = new QOpenGLShaderProgram;
+        {
+            QString source;
+            source.append(QLatin1String(qopenglslMainWithTexCoordsVertexShader));
+            source.append(QLatin1String(qopenglslUntransformedPositionVertexShader));
+
+            QOpenGLShader *vertexShader = new QOpenGLShader(QOpenGLShader::Vertex, m_blitProgram);
+            vertexShader->compileSourceCode(source);
+
+            m_blitProgram->addShader(vertexShader);
+        }
+        {
+            QString source;
+            source.append(QLatin1String(qopenglslMainFragmentShader));
+            source.append(QLatin1String(qopenglslImageSrcFragmentShader));
+
+            QOpenGLShader *fragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, m_blitProgram);
+            fragmentShader->compileSourceCode(source);
+
+            m_blitProgram->addShader(fragmentShader);
+        }
+        m_blitProgram->bindAttributeLocation("vertexCoordsArray", QT_VERTEX_COORDS_ATTR);
+        m_blitProgram->bindAttributeLocation("textureCoordArray", QT_TEXTURE_COORDS_ATTR);
+        m_blitProgram->link();
+    }
+
     mutable int m_maxTextureSize;
     int m_maxTextureCount;
 
-    struct DistanceFieldTextureData : public QOpenGLSharedResource {
-        struct TextureInfo {
-            GLuint texture;
-            QSize size;
-            int currX;
-            int currY;
-            QImage image;
+    TextureInfo *m_currentTexture;
+    QList<TextureInfo> m_textures;
+    QHash<glyph_t, TextureInfo *> m_glyphsTexture;
+    GLuint m_fbo;
+    QSet<glyph_t> m_unusedGlyphs;
 
-            TextureInfo() : texture(0), currX(0), currY(0)
-            { }
-        };
-
-        TextureInfo *currentTexture;
-        QList<TextureInfo> textures;
-        QHash<glyph_t, TextureInfo *> glyphsTexture;
-        GLuint fbo;
-        QSet<glyph_t> unusedGlyphs;
-
-        QOpenGLShaderProgram *blitProgram;
-        GLfloat blitVertexCoordinateArray[8];
-        GLfloat blitTextureCoordinateArray[8];
-
-        TextureInfo *addTexture()
-        {
-            textures.append(TextureInfo());
-            return &textures.last();
-        }
-
-        DistanceFieldTextureData(QOpenGLContext *ctx)
-            : QOpenGLSharedResource(ctx->shareGroup())
-            , fbo(0)
-            , blitProgram(0)
-        {
-            currentTexture = addTexture();
-
-            blitVertexCoordinateArray[0] = -1.0f;
-            blitVertexCoordinateArray[1] = -1.0f;
-            blitVertexCoordinateArray[2] =  1.0f;
-            blitVertexCoordinateArray[3] = -1.0f;
-            blitVertexCoordinateArray[4] =  1.0f;
-            blitVertexCoordinateArray[5] =  1.0f;
-            blitVertexCoordinateArray[6] = -1.0f;
-            blitVertexCoordinateArray[7] =  1.0f;
-
-            blitTextureCoordinateArray[0] = 0.0f;
-            blitTextureCoordinateArray[1] = 0.0f;
-            blitTextureCoordinateArray[2] = 1.0f;
-            blitTextureCoordinateArray[3] = 0.0f;
-            blitTextureCoordinateArray[4] = 1.0f;
-            blitTextureCoordinateArray[5] = 1.0f;
-            blitTextureCoordinateArray[6] = 0.0f;
-            blitTextureCoordinateArray[7] = 1.0f;
-        }
-
-        void invalidateResource()
-        {
-            glyphsTexture.clear();
-            textures.clear();
-            fbo = 0;
-            delete blitProgram;
-            blitProgram = 0;
-
-            currentTexture = addTexture();
-        }
-
-        void freeResource(QOpenGLContext *ctx)
-        {
-            glyphsTexture.clear();
-            for (int i = 0; i < textures.count(); ++i)
-                glDeleteTextures(1, &textures[i].texture);
-            textures.clear();
-            ctx->functions()->glDeleteFramebuffers(1, &fbo);
-            delete blitProgram;
-            blitProgram = 0;
-
-            currentTexture = addTexture();
-        }
-
-        void createBlitProgram()
-        {
-            blitProgram = new QOpenGLShaderProgram;
-            {
-                QString source;
-                source.append(QLatin1String(qopenglslMainWithTexCoordsVertexShader));
-                source.append(QLatin1String(qopenglslUntransformedPositionVertexShader));
-
-                QOpenGLShader *vertexShader = new QOpenGLShader(QOpenGLShader::Vertex, blitProgram);
-                vertexShader->compileSourceCode(source);
-
-                blitProgram->addShader(vertexShader);
-            }
-            {
-                QString source;
-                source.append(QLatin1String(qopenglslMainFragmentShader));
-                source.append(QLatin1String(qopenglslImageSrcFragmentShader));
-
-                QOpenGLShader *fragmentShader = new QOpenGLShader(QOpenGLShader::Fragment, blitProgram);
-                fragmentShader->compileSourceCode(source);
-
-                blitProgram->addShader(fragmentShader);
-            }
-            blitProgram->bindAttributeLocation("vertexCoordsArray", QT_VERTEX_COORDS_ATTR);
-            blitProgram->bindAttributeLocation("textureCoordArray", QT_TEXTURE_COORDS_ATTR);
-            blitProgram->link();
-        }
-    };
-
-    void createTexture(DistanceFieldTextureData::TextureInfo * texInfo, int width, int height);
-    void resizeTexture(DistanceFieldTextureData::TextureInfo * texInfo, int width, int height);
-    bool textureIsFull (const DistanceFieldTextureData::TextureInfo *tex) const { return tex->currY >= maxTextureSize(); }
-
-    DistanceFieldTextureData *textureData(QOpenGLContext *c);
-    DistanceFieldTextureData *m_textureData;
-    static QHash<QString, QOpenGLMultiGroupSharedResource> m_textures_data;
+    QOpenGLShaderProgram *m_blitProgram;
+    GLfloat m_blitVertexCoordinateArray[8];
+    GLfloat m_blitTextureCoordinateArray[8];
 };
 
 QT_END_NAMESPACE

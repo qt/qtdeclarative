@@ -73,7 +73,7 @@ public:
     void setAntialiasingSpreadFunc(AntialiasingSpreadFunc func) { m_antialiasingSpread_func = func; }
 
 private:
-    QHash<QFontEngine *, QSGDistanceFieldGlyphCache *> m_caches;
+    QHash<QString, QSGDistanceFieldGlyphCache *> m_caches;
 
     QSGContext *sgCtx;
 
