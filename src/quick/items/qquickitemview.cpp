@@ -257,8 +257,8 @@ void QQuickItemView::setModel(const QVariant &model)
     QQuickVisualModel *oldModel = d->model;
 
     d->clear();
-    d->setPosition(d->contentStartOffset());
     d->model = 0;
+    d->setPosition(d->contentStartOffset());
     d->modelVariant = model;
 
     QObject *object = qvariant_cast<QObject*>(model);
