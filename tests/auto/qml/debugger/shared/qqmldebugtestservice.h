@@ -54,8 +54,12 @@ public:
 signals:
     void stateHasChanged();
 
+private slots:
+    void _sendMessage(const QByteArray &msg);
+
 protected:
     virtual void messageReceived(const QByteArray &ba);
+    virtual void stateAboutToBeChanged(State state);
     virtual void stateChanged(State state);
 };
 

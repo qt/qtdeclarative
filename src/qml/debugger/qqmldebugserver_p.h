@@ -44,6 +44,7 @@
 
 #include <QtQml/qtqmlglobal.h>
 #include <private/qqmldebugserverconnection_p.h>
+#include <private/qqmldebugservice_p.h>
 
 //
 //  W A R N I N G
@@ -60,8 +61,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-
-class QQmlDebugService;
 
 class QQmlDebugServerPrivate;
 class Q_QML_EXPORT QQmlDebugServer : public QObject
@@ -95,6 +94,8 @@ private:
     friend class QQmlDebugServicePrivate;
     friend class QQmlDebugServerThread;
     QQmlDebugServer();
+    Q_PRIVATE_SLOT(d_func(), void _q_changeServiceState(const QString &serviceName,
+                                                        QQmlDebugService::State state))
     Q_PRIVATE_SLOT(d_func(), void _q_sendMessages(QList<QByteArray>))
 };
 

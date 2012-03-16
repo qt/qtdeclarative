@@ -314,7 +314,6 @@ void tst_QV8ProfilerService::profileOnExit()
     m_client->startProfiling("");
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
-    //QVERIFY(!m_client->traceMessages.isEmpty());
 }
 
 void tst_QV8ProfilerService::console()

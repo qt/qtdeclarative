@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qqmldebugtestservice.h"
+#include <QThread>
 
 QQmlDebugTestService::QQmlDebugTestService(const QString &s, float version, QObject *parent)
     : QQmlDebugService(s, version, parent)
@@ -49,10 +50,22 @@ QQmlDebugTestService::QQmlDebugTestService(const QString &s, float version, QObj
 
 void QQmlDebugTestService::messageReceived(const QByteArray &ba)
 {
-    sendMessage(ba);
+    Q_ASSERT(QThread::currentThread() != thread());
+    QMetaObject::invokeMethod(this, "_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, ba));
+}
+
+void QQmlDebugTestService::stateAboutToBeChanged(QQmlDebugService::State state)
+{
+    Q_ASSERT(QThread::currentThread() != thread());
 }
 
 void QQmlDebugTestService::stateChanged(State)
 {
+    Q_ASSERT(QThread::currentThread() != thread());
     emit stateHasChanged();
+}
+
+void QQmlDebugTestService::_sendMessage(const QByteArray &msg)
+{
+    QQmlDebugService::sendMessage(msg);
 }

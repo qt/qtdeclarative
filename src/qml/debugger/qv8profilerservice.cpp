@@ -134,9 +134,11 @@ void QV8ProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
         return;
 
     if (state() == Enabled) {
-        foreach (const QString &title, d->m_ongoing)
-            QMetaObject::invokeMethod(this, "stopProfiling", Qt::QueuedConnection, Q_ARG(QString, title));
-        sendProfilingData();
+        foreach (const QString &title, d->m_ongoing) {
+            QMetaObject::invokeMethod(this, "stopProfiling", Qt::BlockingQueuedConnection,
+                                      Q_ARG(QString, title));
+        }
+        QMetaObject::invokeMethod(this, "sendProfilingData", Qt::BlockingQueuedConnection);
     }
 }
 
