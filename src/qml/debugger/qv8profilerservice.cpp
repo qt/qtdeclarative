@@ -52,20 +52,19 @@ Q_GLOBAL_STATIC(QV8ProfilerService, v8ProfilerInstance)
 
 class DebugServiceOutputStream : public v8::OutputStream
 {
-    QQmlDebugService &_service;
 public:
-    DebugServiceOutputStream(QQmlDebugService &service)
-        : v8::OutputStream(),
-          _service(service) {}
+    DebugServiceOutputStream()
+        : v8::OutputStream() {}
     void EndOfStream() {}
     WriteResult WriteAsciiChunk(char *rawData, int size)
     {
         QByteArray data;
         QDataStream ds(&data, QIODevice::WriteOnly);
         ds << QV8ProfilerService::V8SnapshotChunk << QByteArray(rawData, size);
-        _service.sendMessage(data);
+        messages.append(data);
         return kContinue;
     }
+    QList<QByteArray> messages;
 };
 
 // convert to a QByteArray that can be sent to the debug client
@@ -267,16 +266,18 @@ void QV8ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType
     v8::HandleScope scope;
     v8::Local<v8::String> title = v8::String::New("");
 
-    DebugServiceOutputStream outputStream(*q);
+    DebugServiceOutputStream outputStream;
     const v8::HeapSnapshot *snapshot = v8::HeapProfiler::TakeSnapshot(title, snapshotType);
     snapshot->Serialize(&outputStream, v8::HeapSnapshot::kJSON);
+    QList<QByteArray> messages = outputStream.messages;
 
     //indicate completion
     QByteArray data;
     QDataStream ds(&data, QIODevice::WriteOnly);
     ds << (int)QV8ProfilerService::V8SnapshotComplete;
+    messages.append(data);
 
-    q->sendMessage(data);
+    q->sendMessages(messages);
 }
 
 void QV8ProfilerServicePrivate::sendMessages()
@@ -285,16 +286,16 @@ void QV8ProfilerServicePrivate::sendMessages()
 
     QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
-        messages << m_data.at(i).toByteArray();
-    q->sendMessages(messages);
+        messages.append(m_data.at(i).toByteArray());
     m_data.clear();
 
     //indicate completion
     QByteArray data;
     QDataStream ds(&data, QIODevice::WriteOnly);
     ds << (int)QV8ProfilerService::V8Complete;
+    messages.append(data);
 
-    q->sendMessage(data);
+    q->sendMessages(messages);
 }
 
 
