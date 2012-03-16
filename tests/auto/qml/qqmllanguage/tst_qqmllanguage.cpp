@@ -2293,6 +2293,7 @@ void tst_qqmllanguage::globalEnums()
 {
     qRegisterMetaType<MyEnum1Class::EnumA>();
     qRegisterMetaType<MyEnum2Class::EnumB>();
+    qRegisterMetaType<Qt::TextFormat>();
 
     QQmlComponent component(&engine, TEST_FILE("globalEnums.qml"));
 
@@ -2310,6 +2311,8 @@ void tst_qqmllanguage::globalEnums()
 
     QVERIFY(enum2Class->property("aValue") == 0);
     QVERIFY(enum2Class->property("bValue") == 0);
+    QVERIFY(enum2Class->property("cValue") == 0);
+    QVERIFY(enum2Class->property("dValue") == 0);
 
     QSignalSpy signalA(enum2Class, SIGNAL(valueAChanged(MyEnum1Class::EnumA)));
     QSignalSpy signalB(enum2Class, SIGNAL(valueBChanged(MyEnum2Class::EnumB)));
@@ -2319,12 +2322,16 @@ void tst_qqmllanguage::globalEnums()
     QVERIFY(enum1Class->getValue() == MyEnum1Class::A_13);
     QVERIFY(enum2Class->getValueA() == MyEnum1Class::A_11);
     QVERIFY(enum2Class->getValueB() == MyEnum2Class::B_37);
+    QVERIFY(enum2Class->getValueC() == Qt::RichText);
+    QVERIFY(enum2Class->getValueD() == Qt::ElideMiddle);
 
     QVERIFY(signalA.count() == 1);
     QVERIFY(signalB.count() == 1);
 
     QVERIFY(enum2Class->property("aValue") == MyEnum1Class::A_11);
     QVERIFY(enum2Class->property("bValue") == 37);
+    QVERIFY(enum2Class->property("cValue") == 1);
+    QVERIFY(enum2Class->property("dValue") == 2);
 
     delete o;
 }

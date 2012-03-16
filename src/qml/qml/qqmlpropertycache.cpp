@@ -682,7 +682,13 @@ QStringList QQmlPropertyCache::propertyNames() const
     return keys;
 }
 
-static int EnumType(const QMetaObject *meta, const QByteArray &str)
+struct StaticQtMetaObject : public QObject
+{
+    static const QMetaObject *get()
+        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
+};
+
+static int EnumType(const QMetaObject *metaobj, const QByteArray &str)
 {
     QByteArray scope;
     QByteArray name;
@@ -693,6 +699,11 @@ static int EnumType(const QMetaObject *meta, const QByteArray &str)
     } else { 
         name = str;
     }
+    const QMetaObject *meta;
+    if (scope == "Qt")
+        meta = StaticQtMetaObject::get();
+    else
+        meta = metaobj;
     for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
         QMetaEnum m = meta->enumerator(i);
         if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))

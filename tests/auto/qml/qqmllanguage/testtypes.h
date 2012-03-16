@@ -854,17 +854,25 @@ public:
 
     MyEnum1Class::EnumA getValueA() { return valueA; }
     EnumB getValueB() { return valueB; }
+    Qt::TextFormat getValueC() { return valueC; }
+    Qt::TextElideMode getValueD() { return valueD; }
 
     Q_INVOKABLE void setValueA(MyEnum1Class::EnumA v) { valueA = v; emit valueAChanged(v); }
     Q_INVOKABLE void setValueB(EnumB v) { valueB = v; emit valueBChanged(v); }
+    Q_INVOKABLE void setValueC(Qt::TextFormat v) { valueC = v; emit valueCChanged(v); }     //registered
+    Q_INVOKABLE void setValueD(Qt::TextElideMode v) { valueD = v; emit valueDChanged(v); }  //unregistered
 
 signals:
     void valueAChanged(MyEnum1Class::EnumA newValue);
     void valueBChanged(MyEnum2Class::EnumB newValue);
+    void valueCChanged(Qt::TextFormat newValue);
+    void valueDChanged(Qt::TextElideMode newValue);
 
 private:
     MyEnum1Class::EnumA valueA;
     EnumB valueB;
+    Qt::TextFormat valueC;
+    Qt::TextElideMode valueD;
 };
 
 class MyEnumDerivedClass : public MyEnum2Class
@@ -874,6 +882,7 @@ class MyEnumDerivedClass : public MyEnum2Class
 
 Q_DECLARE_METATYPE(MyEnum2Class::EnumB)
 Q_DECLARE_METATYPE(MyEnum1Class::EnumA)
+Q_DECLARE_METATYPE(Qt::TextFormat)
 
 QML_DECLARE_TYPE(MyRevisionedBaseClassRegistered)
 QML_DECLARE_TYPE(MyRevisionedBaseClassUnregistered)
