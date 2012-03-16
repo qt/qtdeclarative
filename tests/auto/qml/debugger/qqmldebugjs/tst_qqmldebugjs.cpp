@@ -191,6 +191,7 @@ private slots:
     void setBreakpointInScriptInDifferentFile();
     void setBreakpointInScriptOnComment();
     void setBreakpointInScriptOnEmptyLine();
+    void setBreakpointInScriptOnOptimizedBinding();
     void setBreakpointInScriptWithCondition();
     //void setBreakpointInFunction(); //NOT SUPPORTED
     void setBreakpointOnEvent();
@@ -1019,9 +1020,6 @@ bool tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode)
     process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
     client = new QJSDebugClient(connection);
 
-    QStringList systemEnvironment = QProcess::systemEnvironment();
-    systemEnvironment << "QML_DISABLE_OPTIMIZER=1";
-    process->setEnvironment(systemEnvironment);
     if (blockMode)
         process->start(QStringList() << QLatin1String(BLOCKMODE) << testFile(qmlFile));
     else
@@ -1292,6 +1290,26 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
     QVariantMap body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
+    QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(BREAKPOINTRELOCATION_QMLFILE));
+}
+
+void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
+{
+    //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
+
+    int sourceLine = 52;
+    QVERIFY(init(BREAKPOINTRELOCATION_QMLFILE));
+
+    client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
+    client->connect();
+    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
+
+    QString jsonString(client->response);
+    QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+
+    QVariantMap body = value.value("body").toMap();
+
+    QCOMPARE(body.value("sourceLine").toInt(), sourceLine);
     QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(BREAKPOINTRELOCATION_QMLFILE));
 }
 
