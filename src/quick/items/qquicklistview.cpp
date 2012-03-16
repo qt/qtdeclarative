@@ -524,7 +524,9 @@ void QQuickListViewPrivate::clear()
         sectionCache[i] = 0;
     }
     visiblePos = 0;
+    releaseSectionItem(currentSectionItem);
     currentSectionItem = 0;
+    releaseSectionItem(nextSectionItem);
     nextSectionItem = 0;
     lastVisibleSection = QString();
     QQuickItemViewPrivate::clear();
@@ -933,6 +935,8 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
 
 void QQuickListViewPrivate::releaseSectionItem(QQuickItem *item)
 {
+    if (!item)
+        return;
     int i = 0;
     do {
         if (!sectionCache[i]) {
@@ -970,7 +974,7 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
 
 void QQuickListViewPrivate::updateStickySections()
 {
-    if (!sectionCriteria || visibleItems.isEmpty()
+    if (!sectionCriteria
             || (!sectionCriteria->labelPositioning() && !currentSectionItem && !nextSectionItem))
         return;
 
@@ -1006,7 +1010,7 @@ void QQuickListViewPrivate::updateStickySections()
     }
 
     // Current section header
-    if (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart) {
+    if (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart && isValid() && visibleItems.count()) {
         if (!currentSectionItem) {
             currentSectionItem = getSectionItem(currentSection);
         } else if (currentStickySection != currentSection) {
@@ -1039,7 +1043,7 @@ void QQuickListViewPrivate::updateStickySections()
     }
 
     // Next section footer
-    if (sectionCriteria->labelPositioning() & QQuickViewSection::NextLabelAtEnd) {
+    if (sectionCriteria->labelPositioning() & QQuickViewSection::NextLabelAtEnd && isValid() && visibleItems.count()) {
         if (!nextSectionItem) {
             nextSectionItem = getSectionItem(nextSection);
         } else if (nextStickySection != nextSection) {
@@ -1077,7 +1081,7 @@ void QQuickListViewPrivate::updateSections()
 
     QQuickItemViewPrivate::updateSections();
 
-    if (sectionCriteria && !visibleItems.isEmpty()) {
+    if (sectionCriteria && !visibleItems.isEmpty() && isValid()) {
         QString prevSection;
         if (visibleIndex > 0)
             prevSection = sectionAt(visibleIndex-1);

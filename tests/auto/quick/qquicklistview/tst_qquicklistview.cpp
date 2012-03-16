@@ -2182,6 +2182,23 @@ void tst_QQuickListView::sectionsPositioning()
     QTRY_VERIFY(item = findVisibleChild(contentItem, "sect_aaa")); // inline label restored
     QCOMPARE(item->y(), 0.);
 
+    // if an empty model is set the header/footer should be cleaned up
+    canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart | QQuickViewSection::NextLabelAtEnd)));
+    QTRY_VERIFY(findVisibleChild(contentItem, "sect_aaa")); // section header
+    QTRY_VERIFY(findVisibleChild(contentItem, "sect_new")); // section footer
+    QmlListModel model1;
+    ctxt->setContextProperty("testModel", &model1);
+    QTRY_VERIFY(!findVisibleChild(contentItem, "sect_aaa")); // section header
+    QTRY_VERIFY(!findVisibleChild(contentItem, "sect_new")); // section footer
+
+    // clear model - header/footer should be cleaned up
+    ctxt->setContextProperty("testModel", &model);
+    QTRY_VERIFY(findVisibleChild(contentItem, "sect_aaa")); // section header
+    QTRY_VERIFY(findVisibleChild(contentItem, "sect_new")); // section footer
+    model.clear();
+    QTRY_VERIFY(!findVisibleChild(contentItem, "sect_aaa")); // section header
+    QTRY_VERIFY(!findVisibleChild(contentItem, "sect_new")); // section footer
+
     delete canvas;
 }
 
