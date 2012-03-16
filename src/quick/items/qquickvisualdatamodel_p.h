@@ -131,11 +131,17 @@ Q_SIGNALS:
     void rootIndexChanged();
 
 private Q_SLOTS:
-    void _q_itemsChanged(int index, int count);
+    void _q_itemsChanged(int index, int count, const QList<int> &roles);
     void _q_itemsInserted(int index, int count);
     void _q_itemsRemoved(int index, int count);
     void _q_itemsMoved(int from, int to, int count);
-    void _q_modelReset(int oldCount, int newCount);
+    void _q_modelReset();
+    void _q_rowsInserted(const QModelIndex &,int,int);
+    void _q_rowsRemoved(const QModelIndex &,int,int);
+    void _q_rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int);
+    void _q_dataChanged(const QModelIndex&,const QModelIndex&);
+    void _q_layoutChanged();
+
 private:
     Q_DISABLE_COPY(QQuickVisualDataModel)
 };

@@ -44,6 +44,8 @@
 
 #include "qquickvisualdatamodel_p.h"
 
+#include "qquickvisualadaptormodel_p.h"
+
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlincubator.h>
 
@@ -105,8 +107,7 @@ class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource
     Q_PROPERTY(QObject *model READ modelObject CONSTANT)
     V8_RESOURCE_TYPE(VisualDataItemType)
 public:
-    QQuickVisualDataModelItem(
-            QQuickVisualDataModelItemMetaType *metaType, QQuickVisualAdaptorModel *model, int modelIndex);
+    QQuickVisualDataModelItem(QQuickVisualDataModelItemMetaType *metaType, int modelIndex);
     ~QQuickVisualDataModelItem();
 
     void referenceObject() { ++objectRef; }
@@ -129,15 +130,14 @@ public:
     virtual v8::Handle<v8::Value> get() { return engine->newQObject(this); }
 
     virtual void setValue(const QString &role, const QVariant &value) { Q_UNUSED(role); Q_UNUSED(value); }
-    virtual bool resolveIndex(int) { return false; }
+    virtual bool resolveIndex(const QQuickVisualAdaptorModel &, int) { return false; }
 
 Q_SIGNALS:
     void modelIndexChanged();
 
 public:
-    QQuickVisualDataModelItemMetaType * const metaType;
-    QQmlGuard<QQuickVisualAdaptorModel> model;
     QQmlGuard<QObject> object;
+    QQuickVisualDataModelItemMetaType * const metaType;
     QQuickVisualDataModelAttached *attached;
     v8::Persistent<v8::Object> indexHandle;
     v8::Persistent<v8::Value> modelHandle;
@@ -277,25 +277,30 @@ public:
     void incubatorStatusChanged(QVDMIncubationTask *incubationTask, QQmlIncubator::Status status);
     void setInitialState(QVDMIncubationTask *incubationTask, QObject *o);
 
-    QQuickVisualAdaptorModel *m_adaptorModel;
+    QQuickVisualAdaptorModel m_adaptorModel;
+    QQuickListCompositor m_compositor;
     QQmlComponent *m_delegate;
     QQuickVisualDataModelItemMetaType *m_cacheMetaType;
-    QQmlGuard<QQmlContext> m_context;
-
-    QList<QQuickVisualDataModelItem *> m_cache;
+    QQmlContext *m_context;
     QQuickVisualDataModelParts *m_parts;
     QQuickVisualDataGroupEmitterList m_pendingParts;
 
-    QQuickListCompositor m_compositor;
+    QList<QQuickVisualDataModelItem *> m_cache;
+    QList<QVDMIncubationTask *> m_finishedIncubating;
+    QList<QByteArray> m_watchedRoles;
+
+    QString m_filterGroup;
+
+
+    int m_count;
+    int m_groupCount;
+
     QQuickListCompositor::Group m_compositorGroup;
     bool m_complete : 1;
     bool m_delegateValidated : 1;
     bool m_reset : 1;
     bool m_transaction : 1;
     bool m_incubatorCleanupScheduled : 1;
-
-    QString m_filterGroup;
-    QList<QByteArray> watchedRoles;
 
     union {
         struct {
@@ -305,9 +310,6 @@ public:
         };
         QQuickVisualDataGroup *m_groups[Compositor::MaximumGroupCount];
     };
-    int m_groupCount;
-
-    QList<QVDMIncubationTask *> m_finishedIncubating;
 };
 
 class QQuickVisualPartsModel : public QQuickVisualModel, public QQuickVisualDataGroupEmitter
@@ -329,6 +331,7 @@ public:
     QQuickItem *item(int index, bool asynchronous=false);
     ReleaseFlags release(QQuickItem *item);
     QString stringValue(int index, const QString &role);
+    QList<QByteArray> watchedRoles() const { return m_watchedRoles; }
     void setWatchedRoles(QList<QByteArray> roles);
 
     int indexOf(QQuickItem *item, QObject *objectContext) const;

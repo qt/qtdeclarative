@@ -82,7 +82,7 @@ static void initStandardTreeModel(QStandardItemModel *model)
 class SingleRoleModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(QStringList values WRITE setList)
+    Q_PROPERTY(QStringList values READ getList WRITE setList)
 public:
     SingleRoleModel(const QByteArray &role = "name", QObject *parent = 0)
         : QAbstractListModel(parent)
@@ -100,6 +100,7 @@ public:
 
     QStringList list;
 
+    QStringList getList() const { return list; }
     void setList(const QStringList &l) { list = l; }
 
 public slots:
@@ -122,9 +123,10 @@ protected:
 class StandardItem : public QObject, public QStandardItem
 {
     Q_OBJECT
-    Q_PROPERTY(QString text WRITE setText)
+    Q_PROPERTY(QString text READ readText WRITE setText)
 
 public:
+    QString readText() const { return text(); }
     void writeText(const QString &text) { setText(text); }
 };
 

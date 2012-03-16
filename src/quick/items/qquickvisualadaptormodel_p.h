@@ -42,8 +42,12 @@
 #ifndef QQUICKVISUALADAPTORMODEL_P_H
 #define QQUICKVISUALADAPTORMODEL_P_H
 
-#include <QtCore/qobject.h>
 #include <QtCore/qabstractitemmodel.h>
+
+#include "private/qlistmodelinterface_p.h"
+#include "private/qquicklistaccessor_p.h"
+
+#include <private/qqmlguard_p.h>
 
 QT_BEGIN_HEADER
 
@@ -51,66 +55,88 @@ QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
 
+class QQuickVisualDataModel;
 class QQuickVisualDataModelItem;
 class QQuickVisualDataModelItemMetaType;
 
-class QQuickVisualAdaptorModelPrivate;
-class QQuickVisualAdaptorModel : public QObject
+class QQuickVisualAdaptorModel : public QQmlGuard<QObject>
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQuickVisualAdaptorModel)
 public:
-    enum Flag
+    class Accessors
     {
-        ProxiedObject       = 0x01
+    public:
+        inline Accessors() {}
+        virtual int count(const QQuickVisualAdaptorModel &) const { return 0; }
+        virtual void cleanup(QQuickVisualAdaptorModel &, QQuickVisualDataModel * = 0) const {}
+
+        virtual QString stringValue(const QQuickVisualAdaptorModel &, int, const QString &) const {
+            return QString(); }
+
+        virtual QQuickVisualDataModelItem *createItem(
+                QQuickVisualAdaptorModel &,
+                QQuickVisualDataModelItemMetaType *,
+                QQmlEngine *,
+                int) const { return 0; }
+
+        virtual bool notify(
+                const QQuickVisualAdaptorModel &,
+                const QList<QQuickVisualDataModelItem *> &,
+                int,
+                int,
+                const QList<int> &) const { return false; }
+        virtual void replaceWatchedRoles(
+                QQuickVisualAdaptorModel &,
+                const QList<QByteArray> &,
+                const QList<QByteArray> &) const {}
+        virtual QVariant parentModelIndex(const QQuickVisualAdaptorModel &) const {
+            return QVariant(); }
+        virtual QVariant modelIndex(const QQuickVisualAdaptorModel &, int) const {
+            return QVariant(); }
+        virtual bool canFetchMore(const QQuickVisualAdaptorModel &) const { return false; }
+        virtual void fetchMore(QQuickVisualAdaptorModel &) const {}
     };
-    Q_DECLARE_FLAGS(Flags, Flag)
 
-    QQuickVisualAdaptorModel(QObject *parent = 0);
-    virtual ~QQuickVisualAdaptorModel();
+    const Accessors *accessors;
+    QModelIndex rootIndex;
+    QQuickListAccessor list;
 
-    Flags flags() const;
+    QQuickVisualAdaptorModel();
+    ~QQuickVisualAdaptorModel();
 
-    QVariant model() const;
-    void setModel(const QVariant &, QQmlEngine *);
+    inline QVariant model() const { return list.list(); }
+    void setModel(const QVariant &variant, QQuickVisualDataModel *vdm, QQmlEngine *engine);
 
-    QVariant rootIndex() const;
-    void setRootIndex(const QVariant &root);
+    inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }
+    inline const QAbstractItemModel *aim() const { return static_cast<const QAbstractItemModel *>(object()); }
 
-    QVariant modelIndex(int idx) const;
-    QVariant parentModelIndex() const;
+    inline QListModelInterface *lmi() { return static_cast<QListModelInterface *>(object()); }
+    inline const QListModelInterface *lmi() const { return static_cast<const QListModelInterface *>(object()); }
 
-    int count() const;
-    QQuickVisualDataModelItem *createItem(QQuickVisualDataModelItemMetaType *metaType, int index);
-    QString stringValue(int index, const QString &role);
-    void replaceWatchedRoles(const QList<QByteArray> &oldRoles, const QList<QByteArray> &newRoles);
+    inline int count() const { return qMax(0, accessors->count(*this)); }
+    inline QString stringValue(int index, const QString &role) const {
+        return accessors->stringValue(*this, index, role); }
+    inline QQuickVisualDataModelItem *createItem(QQuickVisualDataModelItemMetaType *metaType, QQmlEngine *engine, int index) {
+        return accessors->createItem(*this, metaType, engine, index); }
+    inline bool hasProxyObject() const {
+        return list.type() == QQuickListAccessor::Instance || list.type() == QQuickListAccessor::ListProperty; }
 
-    bool canFetchMore() const;
-    void fetchMore();
+    inline bool notify(
+            const QList<QQuickVisualDataModelItem *> &items,
+            int index,
+            int count,
+            const QList<int> &roles) const {
+        return accessors->notify(*this, items, index, count, roles); }
+    inline void replaceWatchedRoles(
+            const QList<QByteArray> &oldRoles, const QList<QByteArray> &newRoles) {
+        accessors->replaceWatchedRoles(*this, oldRoles, newRoles); }
 
-Q_SIGNALS:
-    void rootIndexChanged();
-    void modelReset(int oldCount, int newCount);
+    inline QVariant modelIndex(int index) const { return accessors->modelIndex(*this, index); }
+    inline QVariant parentModelIndex() const { return accessors->parentModelIndex(*this); }
+    inline bool canFetchMore() const { return accessors->canFetchMore(*this); }
+    inline void fetchMore() { return accessors->fetchMore(*this); }
 
-    void itemsInserted(int index, int count);
-    void itemsRemoved(int index, int count);
-    void itemsMoved(int from, int to, int count);
-    void itemsChanged(int index, int count);
-
-private Q_SLOTS:
-    void _q_itemsChanged(int, int, const QList<int> &);
-    void _q_itemsInserted(int index, int count);
-    void _q_itemsRemoved(int index, int count);
-    void _q_itemsMoved(int from, int to, int count);
-    void _q_rowsInserted(const QModelIndex &,int,int);
-    void _q_rowsRemoved(const QModelIndex &,int,int);
-    void _q_rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int);
-    void _q_dataChanged(const QModelIndex&,const QModelIndex&);
-    void _q_layoutChanged();
-    void _q_modelReset();
-
-private:
-    Q_DISABLE_COPY(QQuickVisualAdaptorModel)
+protected:
+    void objectDestroyed(QObject *);
 };
 
 class QQuickVisualAdaptorModelProxyInterface
