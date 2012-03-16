@@ -158,9 +158,7 @@ private slots:
     void focusOutClearSelection();
 
     void echoMode();
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
     void passwordEchoDelay();
-#endif
     void geometrySignals();
     void contentSize();
 
@@ -2716,9 +2714,11 @@ void tst_qquicktextinput::echoMode()
     QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), initial);
 }
 
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
 void tst_qquicktextinput::passwordEchoDelay()
 {
+    int maskDelay = qGuiApp->styleHints()->passwordMaskDelay();
+    if (maskDelay <= 0)
+        QSKIP("No mask delay in use");
     QQuickView canvas(testFileUrl("echoMode.qml"));
     canvas.show();
     canvas.requestActivateWindow();
@@ -2747,7 +2747,7 @@ void tst_qquicktextinput::passwordEchoDelay()
     QCOMPARE(input->displayText(), QString(4, fillChar));
     QTest::keyPress(&canvas, '4');
     QCOMPARE(input->displayText(), QString(4, fillChar) + QLatin1Char('4'));
-    QTest::qWait(QT_GUI_PASSWORD_ECHO_DELAY);
+    QTest::qWait(maskDelay);
     QTRY_COMPARE(input->displayText(), QString(5, fillChar));
     QTest::keyPress(&canvas, '5');
     QCOMPARE(input->displayText(), QString(5, fillChar) + QLatin1Char('5'));
@@ -2772,7 +2772,6 @@ void tst_qquicktextinput::passwordEchoDelay()
     QTest::keyPress(&canvas, Qt::Key_Backspace);
     QCOMPARE(input->displayText(), QString(8, fillChar));
 }
-#endif
 
 
 void tst_qquicktextinput::simulateKey(QWindow *view, int key)

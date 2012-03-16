@@ -62,10 +62,6 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
-static const int qt_passwordEchoDelay = QT_GUI_PASSWORD_ECHO_DELAY;
-#endif
-
 /*!
     \qmlclass TextInput QQuickTextInput
     \inqmlmodule QtQuick 2
@@ -1929,11 +1925,11 @@ void QQuickTextInput::redo()
 void QQuickTextInput::insert(int position, const QString &text)
 {
     Q_D(QQuickTextInput);
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
-    if (d->m_echoMode == QQuickTextInput::Password)
-        d->m_passwordEchoTimer.start(qt_passwordEchoDelay, this);
-#endif
-
+    if (d->m_echoMode == QQuickTextInput::Password) {
+        int delay = qGuiApp->styleHints()->passwordMaskDelay();
+        if (delay > 0)
+            d->m_passwordEchoTimer.start(delay, this);
+    }
     if (position < 0 || position > d->m_text.length())
         return;
 
@@ -2484,11 +2480,7 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
     if (change == ItemActiveFocusHasChanged) {
         bool hasFocus = value.boolValue;
         setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
         if (!hasFocus && (d->m_passwordEchoEditing || d->m_passwordEchoTimer.isActive())) {
-#else
-        if (!hasFocus && d->m_passwordEchoEditing) {
-#endif
             d->updatePasswordEchoEditing(false);//QQuickTextInputPrivate sets it on key events, but doesn't deal with focus events
         }
 
@@ -2660,7 +2652,6 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
 
     if (m_echoMode == QQuickTextInput::Password) {
          str.fill(m_passwordCharacter);
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
         if (m_passwordEchoTimer.isActive() && m_cursor > 0 && m_cursor <= m_text.length()) {
             int cursor = m_cursor - 1;
             QChar uc = m_text.at(cursor);
@@ -2673,7 +2664,6 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
                     str[cursor - 1] = uc;
             }
         }
-#endif
     } else if (m_echoMode == QQuickTextInput::PasswordEchoOnEdit && !m_passwordEchoEditing) {
         str.fill(m_passwordCharacter);
     }
@@ -3333,11 +3323,12 @@ void QQuickTextInputPrivate::addCommand(const Command &cmd)
 */
 void QQuickTextInputPrivate::internalInsert(const QString &s)
 {
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
     Q_Q(QQuickTextInput);
-    if (m_echoMode == QQuickTextInput::Password)
-        m_passwordEchoTimer.start(qt_passwordEchoDelay, q);
-#endif
+    if (m_echoMode == QQuickTextInput::Password) {
+        int delay = qGuiApp->styleHints()->passwordMaskDelay();
+        if (delay > 0)
+            m_passwordEchoTimer.start(delay, q);
+    }
     if (hasSelectedText())
         addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
     if (m_maskData) {
@@ -3962,11 +3953,9 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
         d->m_blinkStatus = !d->m_blinkStatus;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
     } else if (event->timerId() == d->m_passwordEchoTimer.timerId()) {
         d->m_passwordEchoTimer.stop();
         d->updateDisplayText();
-#endif
     }
 }
 

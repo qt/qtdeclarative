@@ -202,9 +202,7 @@ public:
     QColor selectionColor;
     QColor selectedTextColor;
 
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
     QBasicTimer m_passwordEchoTimer;
-#endif
     int lastSelectionStart;
     int lastSelectionEnd;
     int m_cursor;
@@ -378,9 +376,7 @@ public:
     void updatePasswordEchoEditing(bool editing);
 
     void cancelPasswordEchoTimer() {
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
         m_passwordEchoTimer.stop();
-#endif
     }
 
     Qt::LayoutDirection layoutDirection() const {
