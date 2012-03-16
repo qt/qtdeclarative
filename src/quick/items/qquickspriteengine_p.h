@@ -70,7 +70,7 @@ class Q_AUTOTEST_EXPORT QQuickStochasticState : public QObject //Currently for i
 public:
     QQuickStochasticState(QObject* parent = 0)
         : QObject(parent)
-        , m_duration(1000)
+        , m_duration(-1)
         , m_durationVariation(0)
         , m_randomStart(false)
     {
