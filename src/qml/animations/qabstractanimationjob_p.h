@@ -113,7 +113,6 @@ public:
 
     void addAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes);
     void removeAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes);
-
     QAbstractAnimationJob *nextSibling() const { return m_nextSibling; }
     QAbstractAnimationJob *previousSibling() const { return m_previousSibling; }
 

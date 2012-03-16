@@ -961,11 +961,12 @@ void tst_qquickanimations::disabledTransition()
     QCOMPARE(myRect->x(),qreal(200));
 
     trans->setEnabled(true);
-
+    QSignalSpy runningSpy(trans, SIGNAL(runningChanged()));
     QQuickItemPrivate::get(rect)->setState("");
     QCOMPARE(myRect->x(),qreal(200));
     QTest::qWait(300);
     QTIMED_COMPARE(myRect->x(),qreal(100));
+    QCOMPARE(runningSpy.count(), 2); //stopped, running, stopped
 }
 
 void tst_qquickanimations::invalidDuration()

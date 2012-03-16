@@ -43,6 +43,7 @@
 #define QQUICKTRANSITION_H
 
 #include "qquickstate_p.h"
+#include <private/qabstractanimationjob_p.h>
 #include <qqml.h>
 
 #include <QtCore/qobject.h>
@@ -55,12 +56,11 @@ class QQuickAbstractAnimation;
 class QQuickTransitionPrivate;
 class QQuickTransitionManager;
 class QQuickTransition;
-class QAbstractAnimationJob;
 
 class Q_QUICK_EXPORT QQuickTransitionInstance
 {
 public:
-    QQuickTransitionInstance();
+    QQuickTransitionInstance(QQuickTransitionPrivate *transition, QAbstractAnimationJob *anim);
     ~QQuickTransitionInstance();
 
     void start();
@@ -69,6 +69,7 @@ public:
     bool isRunning() const;
 
 private:
+    QQuickTransitionPrivate *m_transition;
     QAbstractAnimationJob *m_anim;
     friend class QQuickTransition;
 };
@@ -81,6 +82,7 @@ class Q_QUICK_EXPORT QQuickTransition : public QObject
     Q_PROPERTY(QString from READ fromState WRITE setFromState NOTIFY fromChanged)
     Q_PROPERTY(QString to READ toState WRITE setToState NOTIFY toChanged)
     Q_PROPERTY(bool reversible READ reversible WRITE setReversible NOTIFY reversibleChanged)
+    Q_PROPERTY(bool running READ running NOTIFY runningChanged)
     Q_PROPERTY(QQmlListProperty<QQuickAbstractAnimation> animations READ animations)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_CLASSINFO("DefaultProperty", "animations")
@@ -102,6 +104,8 @@ public:
     bool enabled() const;
     void setEnabled(bool enabled);
 
+    bool running() const;
+
     QQmlListProperty<QQuickAbstractAnimation> animations();
 
     QQuickTransitionInstance *prepare(QQuickStateOperation::ActionList &actions,
@@ -116,6 +120,7 @@ Q_SIGNALS:
     void toChanged();
     void reversibleChanged();
     void enabledChanged();
+    void runningChanged();
 };
 
 QT_END_NAMESPACE

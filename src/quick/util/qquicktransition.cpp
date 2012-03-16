@@ -96,34 +96,6 @@ QT_BEGIN_NAMESPACE
     \sa {QML Animation and Transitions}, {declarative/animation/states}{states example}, {qmlstates}{States}, {QtQml}
 */
 
-QQuickTransitionInstance::QQuickTransitionInstance()
-    : m_anim(0)
-{
-}
-
-QQuickTransitionInstance::~QQuickTransitionInstance()
-{
-    delete m_anim;
-}
-
-void QQuickTransitionInstance::start()
-{
-    if (m_anim)
-        m_anim->start();
-}
-
-void QQuickTransitionInstance::stop()
-{
-    if (m_anim)
-        m_anim->stop();
-}
-
-bool QQuickTransitionInstance::isRunning() const
-{
-    return m_anim && m_anim->state() == QAbstractAnimationJob::Running;
-}
-
-
 //ParallelAnimationWrapper allows us to do a "callback" when the animation finishes, rather than connecting
 //and disconnecting signals and slots frequently
 class ParallelAnimationWrapper : public QParallelAnimationGroupJob
@@ -136,21 +108,32 @@ protected:
     virtual void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
 };
 
-class QQuickTransitionPrivate : public QObjectPrivate
+class QQuickTransitionPrivate : public QObjectPrivate, QAnimationJobChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickTransition)
 public:
     QQuickTransitionPrivate()
-    : fromState(QLatin1String("*")), toState(QLatin1String("*")),
-        reversed(false), reversible(false), enabled(true)
+    : fromState(QLatin1String("*")), toState(QLatin1String("*"))
+    , runningInstanceCount(0), state(QAbstractAnimationJob::Stopped)
+    , reversed(false), reversible(false), enabled(true)
     {
+    }
+
+    void removeStateChangeListener(QAbstractAnimationJob *anim)
+    {
+        if (anim)
+            anim->removeAnimationChangeListener(this, QAbstractAnimationJob::StateChange);
     }
 
     QString fromState;
     QString toState;
+    quint32 runningInstanceCount;
+    QAbstractAnimationJob::State state;
     bool reversed;
     bool reversible;
     bool enabled;
+protected:
+    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State, QAbstractAnimationJob::State);
 
     static void append_animation(QQmlListProperty<QQuickAbstractAnimation> *list, QQuickAbstractAnimation *a);
     static int animation_count(QQmlListProperty<QQuickAbstractAnimation> *list);
@@ -187,6 +170,21 @@ void QQuickTransitionPrivate::clear_animations(QQmlListProperty<QQuickAbstractAn
     }
 }
 
+void QQuickTransitionPrivate::animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State)
+{
+    Q_Q(QQuickTransition);
+
+    if (newState == QAbstractAnimationJob::Running) {
+        if (!runningInstanceCount)
+            emit q->runningChanged();
+        runningInstanceCount++;
+    } else if (newState == QAbstractAnimationJob::Stopped) {
+        runningInstanceCount--;
+        if (!runningInstanceCount)
+            emit q->runningChanged();
+    }
+}
+
 void ParallelAnimationWrapper::updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState)
 {
     QParallelAnimationGroupJob::updateState(newState, oldState);
@@ -198,6 +196,34 @@ void ParallelAnimationWrapper::updateState(QAbstractAnimationJob::State newState
     }
 }
 
+QQuickTransitionInstance::QQuickTransitionInstance(QQuickTransitionPrivate *transition, QAbstractAnimationJob *anim)
+    : m_transition(transition)
+    , m_anim(anim)
+{
+}
+
+QQuickTransitionInstance::~QQuickTransitionInstance()
+{
+    m_transition->removeStateChangeListener(m_anim);
+    delete m_anim;
+}
+
+void QQuickTransitionInstance::start()
+{
+    if (m_anim)
+        m_anim->start();
+}
+
+void QQuickTransitionInstance::stop()
+{
+    if (m_anim)
+        m_anim->stop();
+}
+
+bool QQuickTransitionInstance::isRunning() const
+{
+    return m_anim && m_anim->state() == QAbstractAnimationJob::Running;
+}
 
 QQuickTransition::QQuickTransition(QObject *parent)
     : QObject(*(new QQuickTransitionPrivate), parent)
@@ -240,8 +266,8 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
 
     group->setDirection(d->reversed ? QAbstractAnimationJob::Backward : QAbstractAnimationJob::Forward);
 
-    QQuickTransitionInstance *wrapper = new QQuickTransitionInstance;
-    wrapper->m_anim = group;
+    group->addAnimationChangeListener(d, QAbstractAnimationJob::StateChange);
+    QQuickTransitionInstance *wrapper = new QQuickTransitionInstance(d, group);
     return wrapper;
 }
 
@@ -384,6 +410,20 @@ void QQuickTransition::setEnabled(bool enabled)
     d->enabled = enabled;
     emit enabledChanged();
 }
+
+/*!
+    \qmlproperty bool QtQuick2::Transition::running
+
+    This property holds whether the transition is currently running.
+
+    This property is read only.
+*/
+bool QQuickTransition::running() const
+{
+    Q_D(const QQuickTransition);
+    return d->runningInstanceCount;
+}
+
 
 /*!
     \qmlproperty list<Animation> QtQuick2::Transition::animations

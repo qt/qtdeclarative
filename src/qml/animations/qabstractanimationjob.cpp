@@ -567,7 +567,6 @@ void QAbstractAnimationJob::removeAnimationChangeListener(QAnimationJobChangeLis
     changeListeners.removeOne(ChangeListener(listener, changes));
 }
 
-
 QT_END_NAMESPACE
 
 //#include "moc_qabstractanimation2_p.cpp"
