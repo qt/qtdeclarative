@@ -624,6 +624,32 @@ void tst_qquickanimations::resume()
     QTest::qWait(400);
     animation.stop();
     QVERIFY(rect.x() > x);
+
+    animation.start();
+    QVERIFY(animation.isRunning());
+    animation.pause();
+    QVERIFY(animation.isPaused());
+    animation.resume();
+    QVERIFY(!animation.isPaused());
+
+    QSignalSpy spy(&animation, SIGNAL(pausedChanged(bool)));
+    animation.pause();
+    QCOMPARE(spy.count(), 1);
+    QVERIFY(animation.isPaused());
+    animation.stop();
+    QVERIFY(!animation.isPaused());
+    QCOMPARE(spy.count(), 2);
+
+    qmlRegisterType<QQuickPropertyAnimation>("QtQuick",2,0,"PropertyAnimation"); //make sure QQuickPropertyAnimation has correct qml type name
+    QByteArray message = "<Unknown File>: QML PropertyAnimation: setPaused() cannot be used when animation isn't running.";
+    QTest::ignoreMessage(QtWarningMsg, message);
+    animation.pause();
+    QCOMPARE(spy.count(), 2);
+    QVERIFY(!animation.isPaused());
+    animation.resume();
+    QVERIFY(!animation.isPaused());
+    QVERIFY(!animation.isRunning());
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquickanimations::dotProperty()

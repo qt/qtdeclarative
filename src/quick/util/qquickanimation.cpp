@@ -231,6 +231,11 @@ void QQuickAbstractAnimation::setRunning(bool r)
             d->commence();
         emit started();
     } else {
+        if (d->paused) {
+            d->paused = false; //reset paused state to false when stopped
+            emit pausedChanged(d->paused);
+        }
+
         if (d->animationInstance) {
             if (d->alwaysRunToEnd) {
                 if (d->loopCount != 1)
@@ -260,6 +265,7 @@ void QQuickAbstractAnimation::setRunning(bool r)
 bool QQuickAbstractAnimation::isPaused() const
 {
     Q_D(const QQuickAbstractAnimation);
+    Q_ASSERT((d->paused && d->running) || !d->paused);
     return d->paused;
 }
 
@@ -268,6 +274,11 @@ void QQuickAbstractAnimation::setPaused(bool p)
     Q_D(QQuickAbstractAnimation);
     if (d->paused == p)
         return;
+
+    if (!d->running) {
+        qmlInfo(this) << "setPaused() cannot be used when animation isn't running.";
+        return;
+    }
 
     if (d->group || d->disableUserControl) {
         qmlInfo(this) << "setPaused() cannot be used on non-root animation nodes.";
@@ -445,8 +456,8 @@ void QQuickAbstractAnimation::start()
     \qmlmethod QtQuick2::Animation::pause()
     \brief Pauses the animation.
 
-    If the animation is already paused, calling this method has no effect.  The
-    \c paused property will be true following a call to \c pause().
+    If the animation is already paused or not \c running, calling this method has no effect.
+    The \c paused property will be true following a call to \c pause().
 */
 void QQuickAbstractAnimation::pause()
 {
@@ -457,8 +468,8 @@ void QQuickAbstractAnimation::pause()
     \qmlmethod QtQuick2::Animation::resume()
     \brief Resumes a paused animation.
 
-    If the animation is not paused, calling this method has no effect.  The
-    \c paused property will be false following a call to \c resume().
+    If the animation is not paused or not \c running, calling this method has no effect.
+    The \c paused property will be false following a call to \c resume().
 */
 void QQuickAbstractAnimation::resume()
 {
@@ -469,8 +480,8 @@ void QQuickAbstractAnimation::resume()
     \qmlmethod QtQuick2::Animation::stop()
     \brief Stops the animation.
 
-    If the animation is not running, calling this method has no effect.  The
-    \c running property will be false following a call to \c stop().
+    If the animation is not running, calling this method has no effect.  Both the
+    \c running and \c paused properties will be false following a call to \c stop().
 
     Normally \c stop() stops the animation immediately, and the animation has
     no further influence on property values.  In this example animation
