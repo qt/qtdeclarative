@@ -97,6 +97,8 @@ private slots:
     void importScope();
     void signalParameterTypes();
     void objectsCompareAsEqual();
+    void componentCreation_data();
+    void componentCreation();
     void dynamicCreation_data();
     void dynamicCreation();
     void dynamicDestruction();
@@ -1199,6 +1201,89 @@ void tst_qqmlecmascript::aliasPropertyReset()
     QCOMPARE(object->property("intAlias").value<int>(), 12);
     QCOMPARE(object->property("aliasedIntIsUndefined"), QVariant(false));
     delete object;
+}
+
+void tst_qqmlecmascript::componentCreation_data()
+{
+    QTest::addColumn<QString>("method");
+    QTest::addColumn<QString>("creationError");
+    QTest::addColumn<QString>("createdParent");
+
+    QTest::newRow("url")
+        << "url"
+        << ""
+        << "";
+    QTest::newRow("urlMode")
+        << "urlMode"
+        << ""
+        << "";
+    QTest::newRow("urlParent")
+        << "urlParent"
+        << ""
+        << "obj";
+    QTest::newRow("urlNullParent")
+        << "urlNullParent"
+        << ""
+        << "null";
+    QTest::newRow("urlModeParent")
+        << "urlModeParent"
+        << ""
+        << "obj";
+    QTest::newRow("urlModeNullParent")
+        << "urlModeNullParent"
+        << ""
+        << "null";
+    QTest::newRow("invalidSecondArg")
+        << "invalidSecondArg"
+        << ":40: Error: Qt.createComponent(): Invalid arguments"
+        << "";
+    QTest::newRow("invalidThirdArg")
+        << "invalidThirdArg"
+        << ":45: Error: Qt.createComponent(): Invalid parent object"
+        << "";
+    QTest::newRow("invalidMode")
+        << "invalidMode"
+        << ":50: Error: Qt.createComponent(): Invalid arguments"
+        << "";
+}
+
+/*
+Test using createComponent to dynamically generate a component.
+*/
+void tst_qqmlecmascript::componentCreation()
+{
+    QFETCH(QString, method);
+    QFETCH(QString, creationError);
+    QFETCH(QString, createdParent);
+
+    QUrl testUrl(testFileUrl("componentCreation.qml"));
+
+    if (!creationError.isEmpty()) {
+        QString warning = testUrl.toString() + creationError;
+        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+    }
+
+    QQmlComponent component(&engine, testUrl);
+    MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
+    QVERIFY(object != 0);
+
+    QMetaObject::invokeMethod(object, method.toUtf8());
+    QQmlComponent *created = object->componentProperty();
+
+    if (creationError.isEmpty()) {
+        QVERIFY(created);
+
+        QObject *expectedParent;
+        if (createdParent.isEmpty()) {
+            // For now, the parent should be the engine; this will change for QTBUG-24841
+            expectedParent = &engine;
+        } else if (createdParent == QLatin1String("obj")) {
+            expectedParent = object;
+        } else if (createdParent == QLatin1String("null")) {
+            expectedParent = 0;
+        }
+        QCOMPARE(created->parent(), expectedParent);
+    }
 }
 
 void tst_qqmlecmascript::dynamicCreation_data()
