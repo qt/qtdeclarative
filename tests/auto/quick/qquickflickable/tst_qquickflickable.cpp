@@ -441,6 +441,19 @@ void tst_qquickflickable::movingAndDragging()
     // wait for any motion to end
     QTRY_VERIFY(flickable->isMoving() == false);
 
+    // Vertical with a quick press-move-release: should cause a flick in release.
+    QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 90));
+    QTest::qWait(10);
+    QTest::mouseMove(canvas, QPoint(50, 40));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 40));
+
+    QCOMPARE(vFlickSpy.count(), 1);
+
+    // wait for any motion to end
+    QTRY_VERIFY(flickable->isMoving() == false);
+
     //Horizontal
     vDragSpy.clear();
     hDragSpy.clear();
@@ -493,7 +506,7 @@ void tst_qquickflickable::movingAndDragging()
     vMoveSpy.clear();
     hMoveSpy.clear();
     moveSpy.clear();
-    QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
+    vFlickSpy.clear();
     QSignalSpy hFlickSpy(flickable, SIGNAL(flickingHorizontallyChanged()));
     QSignalSpy flickSpy(flickable, SIGNAL(flickingChanged()));
 
