@@ -69,6 +69,8 @@ QQmlJavaScriptExpression::QQmlJavaScriptExpression(VTable *v)
 QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
 {
     clearGuards();
+    if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
+        m_scopeObject.asT2()->_s = 0;
 }
 
 void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
