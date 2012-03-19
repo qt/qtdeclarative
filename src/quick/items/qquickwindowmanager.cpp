@@ -228,7 +228,7 @@ public slots:
 private:
     void handleAddedWindows();
     void handleAddedWindow(QQuickCanvas *canvas);
-    void handleRemovedWindows();
+    void handleRemovedWindows(bool clearGLContext = true);
 
     QSGContext *sg;
     QOpenGLContext *gl;
@@ -475,7 +475,7 @@ void QQuickRenderThreadSingleContextWindowManager::hide(QQuickCanvas *canvas)
 /*!
     Called on Render Thread
  */
-void QQuickRenderThreadSingleContextWindowManager::handleRemovedWindows()
+void QQuickRenderThreadSingleContextWindowManager::handleRemovedWindows(bool clearGLContext)
 {
 #ifdef THREAD_DEBUG
     printf("                RenderThread: about to remove %d\n", m_removed_windows.size());
@@ -496,7 +496,7 @@ void QQuickRenderThreadSingleContextWindowManager::handleRemovedWindows()
     // If a window is removed because it has been hidden it will take with it
     // the gl context (at least on Mac) if bound, so disconnect the gl context
     // from anything
-    if (removedAnything)
+    if (removedAnything && clearGLContext)
         gl->doneCurrent();
 }
 
@@ -755,7 +755,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 #endif
 
     m_removed_windows << m_rendered_windows.keys();
-    handleRemovedWindows();
+    handleRemovedWindows(false);
 
     sg->invalidate();
 
