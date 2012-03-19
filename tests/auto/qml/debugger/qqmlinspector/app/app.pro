@@ -1,4 +1,5 @@
 TARGET = app
+DESTDIR = $$OUT_PWD
 QT += qml quick
 
 CONFIG += declarative_debug
