@@ -542,6 +542,10 @@ void QQmlIncubator::clear()
 
     d->clear();
 
+    // if we're waiting on any incubators then they should be cleared too.
+    while (d->waitingFor.first())
+        static_cast<QQmlIncubatorPrivate*>(d->waitingFor.first())->q->clear();
+
     d->vme.reset();
     d->vmeGuard.clear();
 

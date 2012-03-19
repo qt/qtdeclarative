@@ -76,6 +76,7 @@ private slots:
     void nestedComponent();
     void chainedAsynchronousIfNested();
     void chainedAsynchronousIfNestedOnCompleted();
+    void chainedAsynchronousClear();
     void selfDelete();
     void contextDelete();
 
@@ -932,6 +933,122 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
     QVERIFY(incubator1.isReady());
     QVERIFY(incubator2.isReady());
     QVERIFY(incubator3.isReady());
+}
+
+// Checks that new AsynchronousIfNested incubators can be correctly cleared if started in
+// componentCompleted().
+void tst_qqmlincubator::chainedAsynchronousClear()
+{
+    SelfRegisteringType::clearMe();
+
+    QQmlComponent component(&engine, testFileUrl("chainInCompletion.qml"));
+    QVERIFY(component.isReady());
+
+    QQmlComponent c1(&engine, testFileUrl("chainedAsynchronousIfNested.qml"));
+    QVERIFY(c1.isReady());
+
+    struct MyIncubator : public QQmlIncubator {
+        MyIncubator(MyIncubator *next, QQmlComponent *component, QQmlContext *ctxt)
+        : QQmlIncubator(AsynchronousIfNested), next(next), component(component), ctxt(ctxt) {}
+
+    protected:
+        virtual void statusChanged(Status s) {
+            if (s == Ready && next) {
+                component->create(*next, 0, ctxt);
+            }
+        }
+
+    private:
+        MyIncubator *next;
+        QQmlComponent *component;
+        QQmlContext *ctxt;
+    };
+
+    struct CallbackData {
+        CallbackData(QQmlComponent *c, MyIncubator *i, QQmlContext *ct)
+            : component(c), incubator(i), ctxt(ct) {}
+        QQmlComponent *component;
+        MyIncubator *incubator;
+        QQmlContext *ctxt;
+        static void callback(CompletionCallbackType *, void *data) {
+            CallbackData *d = (CallbackData *)data;
+            d->component->create(*d->incubator, 0, d->ctxt);
+        }
+    };
+
+    QQmlIncubator incubator(QQmlIncubator::Asynchronous);
+    component.create(incubator);
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(SelfRegisteringType::me() == 0);
+
+    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(incubator.isLoading());
+
+    MyIncubator incubator3(0, &c1, qmlContext(SelfRegisteringType::me()));
+    MyIncubator incubator2(&incubator3, &c1, qmlContext(SelfRegisteringType::me()));
+    MyIncubator incubator1(&incubator2, &c1, qmlContext(SelfRegisteringType::me()));
+
+    // start incubator1 in componentComplete
+    CallbackData cd(&c1, &incubator1, qmlContext(SelfRegisteringType::me()));
+    CompletionCallbackType::registerCallback(&CallbackData::callback, &cd);
+
+    while (!incubator1.isLoading()) {
+        QVERIFY(incubator.isLoading());
+        QVERIFY(incubator2.isNull());
+        QVERIFY(incubator3.isNull());
+
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(incubator1.isLoading());
+    QVERIFY(incubator2.isNull());
+    QVERIFY(incubator3.isNull());
+
+    while (incubator1.isLoading()) {
+        QVERIFY(incubator.isLoading());
+        QVERIFY(incubator1.isLoading());
+        QVERIFY(incubator2.isNull());
+        QVERIFY(incubator3.isNull());
+
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(incubator1.isReady());
+    QVERIFY(incubator2.isLoading());
+    QVERIFY(incubator3.isNull());
+
+    while (incubator2.isLoading()) {
+        QVERIFY(incubator.isLoading());
+        QVERIFY(incubator1.isReady());
+        QVERIFY(incubator2.isLoading());
+        QVERIFY(incubator3.isNull());
+
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(incubator1.isReady());
+    QVERIFY(incubator2.isReady());
+    QVERIFY(incubator3.isLoading());
+
+    // Any in loading state will become null when cleared.
+    incubator.clear();
+
+    QVERIFY(incubator.isNull());
+    QVERIFY(incubator1.isReady());
+    QVERIFY(incubator2.isReady());
+    QVERIFY(incubator3.isNull());
 }
 
 void tst_qqmlincubator::selfDelete()
