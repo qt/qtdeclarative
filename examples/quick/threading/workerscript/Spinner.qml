@@ -41,55 +41,47 @@
 import QtQuick 2.0
 
 Rectangle {
-    width: 320; height: 480
+    width: 64
+    height: 64
+    property alias value: list.currentIndex
+    property alias label: caption.text
 
-    WorkerScript {
-        id: myWorker
-        source: "workerscript.js"
-
-        onMessage: {
-            if (messageObject.row == rowSpinner.value && messageObject.column == columnSpinner.value){ //Not an old result
-                if (messageObject.result == -1)
-                    resultText.text = "Column must be <= Row";
-                else
-                    resultText.text = messageObject.result;
-            }
-        }
-    }
-    Row {
-        y: 24
-        spacing: 24
+    Text {
+        id: caption
+        text: "Spinner"
         anchors.horizontalCenter: parent.horizontalCenter
-        Spinner {
-            id: rowSpinner
-            label: "Row"
-            onValueChanged: {
-                resultText.text = "Loading...";
-                myWorker.sendMessage( { row: rowSpinner.value, column: columnSpinner.value } );
-            }
-        }
-
-        Spinner {
-            id: columnSpinner
-            label: "Column"
-            onValueChanged: {
-                resultText.text = "Loading...";
-                myWorker.sendMessage( { row: rowSpinner.value, column: columnSpinner.value } );
-            }
-        }
     }
 
-    Text {
-        id: resultText
-        y: 180
-        width: parent.width
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.WordWrap
-        font.pixelSize: 32
-    }
-
-    Text {
-        text: "Pascal's Triangle Calculator"
-        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 50 }
+    Rectangle {
+        anchors.top: caption.bottom
+        anchors.topMargin: 4
+        anchors.horizontalCenter: parent.horizontalCenter
+        height: 48
+        width: 32
+        color: "black"
+        ListView {
+            id: list
+            anchors.fill: parent
+            highlightRangeMode: ListView.StrictlyEnforceRange
+            preferredHighlightBegin: height/3
+            preferredHighlightEnd: height/3
+            clip: true
+            model: 64
+            delegate: Text {
+                font.pixelSize: 18;
+                color: "white";
+                text: index;
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#FF000000" }
+                GradientStop { position: 0.2; color: "#00000000" }
+                GradientStop { position: 0.8; color: "#00000000" }
+                GradientStop { position: 1.0; color: "#FF000000" }
+            }
+        }
     }
 }
