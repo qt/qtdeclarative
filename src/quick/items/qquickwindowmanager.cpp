@@ -107,11 +107,6 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
   lock. This variable is an integer to allow for recursive calls to lockInGui()
   without using a recursive mutex. See isPostingSyncEvent.
 
-  RenderThread::isPaintComplete: This variable is cleared when rendering starts and
-  set once rendering is complete. It is monitored in the paintEvent(),
-  resizeEvent() and grab() functions to force them to wait for rendering to
-  complete.
-
   RenderThread::isPostingSyncEvent: This variable is set in the render thread just
   before the sync event is sent to the GUI thread. It is used to avoid deadlocks
   in the case where render thread waits while waiting for GUI to pick up the sync
@@ -160,7 +155,6 @@ public:
         , allowMainThreadProcessingFlag(false)
         , isGuiLocked(0)
         , animationRunning(false)
-        , isPaintCompleted(false)
         , isPostingSyncEvent(false)
         , isRenderBlocked(false)
         , isExternalUpdatePending(false)
@@ -248,7 +242,6 @@ private:
 
     int isGuiLocked;
     uint animationRunning: 1;
-    uint isPaintCompleted : 1;
     uint isPostingSyncEvent : 1;
     uint isRenderBlocked : 1;
     uint isExternalUpdatePending : 1;
@@ -723,8 +716,6 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 
         handleRemovedWindows();
 
-        isPaintCompleted = true;
-
         // Update sizes...
         for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
              it != m_rendered_windows.constEnd(); ++it) {
@@ -1077,8 +1068,7 @@ QImage QQuickRenderThreadSingleContextWindowManager::grab(QQuickCanvas *canvas)
     exhaustSyncEvent();
 
     canvasToGrab = canvas;
-    isPaintCompleted = false;
-    while (isRunning() && !isPaintCompleted) {
+    while (isRunning() && canvasToGrab) {
         if (isRenderBlocked)
             wake();
         wait();
