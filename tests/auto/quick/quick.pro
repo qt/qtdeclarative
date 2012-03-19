@@ -19,6 +19,7 @@ PRIVATETESTS += \
     qquickpath \
     qquicksmoothedanimation \
     qquickspringanimation \
+    qquickanimationcontroller \
     qquickstyledtext \
     qquickstates \
     qquicksystempalette \

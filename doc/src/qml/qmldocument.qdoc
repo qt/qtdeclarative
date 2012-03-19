@@ -43,16 +43,16 @@ QML documents are always encoded in UTF-8 format.
 A QML document always begins with one or more import statements.  To prevent elements
 introduced in later versions from affecting existing QML programs, the element types
 available within a document are controlled by the imported QML \l {Modules} with
-a corresponding \i version.
+a corresponding \e version.
 
-QML does \i not have a preprocessor that modifies the document prior to
+QML does \e not have a preprocessor that modifies the document prior to
 presentation to the \l{The QML Engine}{QML engine}, unlike C or C++.
 The \c import statements do not copy and prepend the code in the document, but
 instead instruct the QML engine on how to resolve type references found
 in the document. Any type reference present in a QML document - such as \c
 Rectangle and \c ListView - including those made within an \l {Inline
 JavaScript}{JavaScript block} or \l {Property Binding in QML}{property
-bindings}, are \i resolved based exclusively on the import statements. At least
+bindings}, are \e resolved based exclusively on the import statements. At least
 one \c import statement must be present such as \c{import QtQuick 2.0}.
 
 Each \c id value in a QML document must be unique within that document. They do
@@ -65,7 +65,7 @@ A QML document defines a single, top-level \l {QML Components}{QML component}. A
 QML component is a template that is interpreted by the QML engine to
 create an object with some predefined behaviour. As it is a template, a single
 QML component can be "run" multiple times to produce several objects, each of
-which are said to be \i instances of the component.
+which are said to be \e instances of the component.
 
 Once created, instances are not dependent on the component that created them, so
 they can operate on independent data. Here is an example of a simple "Button"
@@ -75,12 +75,12 @@ text property:
 
 \table
 \row
-\o Button.qml
-\o application.qml
+\li Button.qml
+\li application.qml
 
 \row
-\o \snippet doc/src/snippets/qml/qml-documents/qmldocuments.qml document
-\o
+\li \snippet doc/src/snippets/qml/qml-documents/qmldocuments.qml document
+\li
 \qml
 import QtQuick 2.0
 
@@ -99,7 +99,7 @@ Column {
 \endtable
 
 Any snippet of QML code can become a component, just by placing it in the file
-"<Name>.qml" where <Name> is the component name, and begins with an \bold
+"<Name>.qml" where <Name> is the component name, and begins with an \b
 uppercase letter. Note that the case of all characters in the <Name> are
 significant on some filesystems, notably UNIX filesystems. It is recommended
 that the case of the filename matches the case of the component name in QML
@@ -113,7 +113,7 @@ load them in other components.
 \section1 Inline Components
 
 In addition to the top-level component that all QML documents define, and any
-reusable components placed in separate files, documents may also include \i
+reusable components placed in separate files, documents may also include \e
 inline components. Inline components are declared using the \l Component
 element, as can be seen in the first example above. Inline components share all
 the characteristics of regular top-level components and use the same \c import
@@ -137,9 +137,9 @@ These final two examples perform identically to the original document.
 
 \table
 \row
-\o
+\li
 \snippet doc/src/snippets/qml/qml-documents/inline-component.qml document
-\o
+\li
 \snippet doc/src/snippets/qml/qml-documents/inline-text-component.qml document
 \endtable
 

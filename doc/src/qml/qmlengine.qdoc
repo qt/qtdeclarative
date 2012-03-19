@@ -44,10 +44,10 @@ specified in QML files, plugins, or applications.
     that provide the essential capabilities for doing this. These are:
 
     \list
-    \o QQmlEngine: A QML engine provides the environment for executing QML code. Every
+    \li QQmlEngine: A QML engine provides the environment for executing QML code. Every
     application requires at least one engine instance.
-    \o QQmlComponent: A component encapsulates QML information.
-    \o QQmlContext: A context allows an application to expose data to
+    \li QQmlComponent: A component encapsulates QML information.
+    \li QQmlContext: A context allows an application to expose data to
     the QML components created by an engine.
     \endlist
 
@@ -55,9 +55,9 @@ specified in QML files, plugins, or applications.
     context, component encapsulation, and visual items.
 
     \list
-    \o QQuickItem
-    \o QQuickPaintedItem
-    \o QQuickView
+    \li QQuickItem
+    \li QQuickPaintedItem
+    \li QQuickView
     \endlist
 
     \section2 Declarative Engine
@@ -110,11 +110,11 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-a
     \dots 0
     \snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-b
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/loading/main.cpp QQuickView
     \endtable
 
@@ -195,11 +195,11 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/context-advanced/applicationdata.h 0
     \codeline
     \snippet doc/src/snippets/qml/qtbinding/context-advanced/main.cpp 0
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/context-advanced/MyItem.qml 0
     \endtable
 
@@ -246,8 +246,8 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \o \snippet doc/src/snippets/qml/qtbinding/functions-qml/MyItem.qml 0
-    \o \snippet doc/src/snippets/qml/qtbinding/functions-qml/main.cpp 0
+    \li \snippet doc/src/snippets/qml/qtbinding/functions-qml/MyItem.qml 0
+    \li \snippet doc/src/snippets/qml/qtbinding/functions-qml/main.cpp 0
     \endtable
 
     Notice the Q_RETURN_ARG() and Q_ARG() arguments for
@@ -261,9 +261,9 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/functions-cpp/MyItem.qml 0
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/functions-cpp/myclass.h 0
     \codeline
     \snippet doc/src/snippets/qml/qtbinding/functions-cpp/main.cpp 0
@@ -288,9 +288,9 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/signals-qml/MyItem.qml 0
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/signals-qml/myclass.h 0
     \codeline
     \snippet doc/src/snippets/qml/qtbinding/signals-qml/main.cpp 0
@@ -306,13 +306,13 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \o
+    \li
 
     \snippet doc/src/snippets/qml/qtbinding/signals-cpp/imageviewer.h start
     \dots 4
     \snippet doc/src/snippets/qml/qtbinding/signals-cpp/imageviewer.h end
 
-    \o
+    \li
     \snippet doc/src/snippets/qml/qtbinding/signals-cpp/standalone.qml 0
     \endtable
 
@@ -331,8 +331,8 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \o \snippet doc/src/snippets/qml/qtbinding/signals-cpp/main.cpp connections
-    \o \snippet doc/src/snippets/qml/qtbinding/signals-cpp/MyItem.qml 0
+    \li \snippet doc/src/snippets/qml/qtbinding/signals-cpp/main.cpp connections
+    \li \snippet doc/src/snippets/qml/qtbinding/signals-cpp/MyItem.qml 0
     \endtable
 
     C++ signals can use enum values as parameters provided that the enum is
@@ -381,8 +381,8 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \o \snippet doc/src/snippets/qml/qtbinding/properties-cpp/applicationdata.h 0
-    \o \snippet doc/src/snippets/qml/qtbinding/properties-cpp/MyItem.qml 0
+    \li \snippet doc/src/snippets/qml/qtbinding/properties-cpp/applicationdata.h 0
+    \li \snippet doc/src/snippets/qml/qtbinding/properties-cpp/MyItem.qml 0
     \endtable
 
     Notice the \c backgroundColorChanged signal is declared as the NOTIFY signal
@@ -438,14 +438,14 @@ specified in QML files, plugins, or applications.
     return pointers to invalid objects. QML makes the following guarentees:
 
     \list
-    \o An object assigned to a QObject (or QObject-derived) pointer property
+    \li An object assigned to a QObject (or QObject-derived) pointer property
     will be valid at the time of assignment.
 
     Following assignment, it is the responsibility of the class to subsequently
     guard this pointer, either through a class specific method or the generic
     QPointer class.
 
-    \o An object assigned to a QVariant will be valid at the time of assignment.
+    \li An object assigned to a QVariant will be valid at the time of assignment.
 
     When assigning an object to a QVariant property, QML will always use a
     QMetaType::QObjectStar typed QVariant. It is the responsibility of the class
@@ -453,7 +453,7 @@ specified in QML files, plugins, or applications.
     properties is to check the type of the QVariant when it is set and if the
     type is not handled by your class, reset it to an invalid variant.
 
-    \o An object assigned to a QObject (or QObject-derived) list property will
+    \li An object assigned to a QObject (or QObject-derived) list property will
     be valid at the time of assignment.
 
     Following assignment, it is the responsibility of the class to subsequently

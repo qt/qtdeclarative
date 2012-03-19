@@ -579,14 +579,14 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     operations:
 
     \list
-    \o \c populate - the transition to run when a view is created, or when the model changes
-    \o \c add - the transition to apply to items that are added to the view
-    \o \c remove - the transition to apply to items that are removed from the view
-    \o \c move - the transition to apply to items that are moved within the view (i.e. as a result
+    \li \c populate - the transition to run when a view is created, or when the model changes
+    \li \c add - the transition to apply to items that are added to the view
+    \li \c remove - the transition to apply to items that are removed from the view
+    \li \c move - the transition to apply to items that are moved within the view (i.e. as a result
        of a move operation in the model)
-    \o \c displaced - the generic transition to be applied to any items that are displaced by an
+    \li \c displaced - the generic transition to be applied to any items that are displaced by an
        add, move or remove operation
-    \o \c addDisplaced, \c removeDisplaced and \c moveDisplaced - the transitions to be applied when
+    \li \c addDisplaced, \c removeDisplaced and \c moveDisplaced - the transitions to be applied when
        items are displaced by add, move, or remove operations, respectively (these override the
        generic displaced transition if specified)
     \endlist
@@ -595,9 +595,9 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     items rather than data models, the following properties are used instead:
 
     \list
-    \o \c add - the transition to apply to items that are created for the positioner, added to
+    \li \c add - the transition to apply to items that are created for the positioner, added to
        or reparented to the positioner, or items that have become \l {Item::}{visible}
-    \o \c move - the transition to apply to items that have moved within the positioner, including
+    \li \c move - the transition to apply to items that have moved within the positioner, including
        when they are displaced due to the addition or removal of other items, or when items are otherwise
        rearranged within the positioner, or when items are repositioned due to the resizing of other
        items in the positioner
@@ -612,17 +612,17 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     which the transition is applied:
 
     \list
-    \o ViewTransition.item - the item that is under transition
-    \o ViewTransition.index - the index of this item
-    \o ViewTransition.destination - the (x,y) point to which this item is moving for the relevant view operation
+    \li ViewTransition.item - the item that is under transition
+    \li ViewTransition.index - the index of this item
+    \li ViewTransition.destination - the (x,y) point to which this item is moving for the relevant view operation
     \endlist
 
     In addition, ViewTransition provides properties specific to the items which are the target
     of the operation that triggered the transition:
 
     \list
-    \o ViewTransition.targetIndexes - the indexes of the target items
-    \o ViewTransition.targetItems - the target items themselves
+    \li ViewTransition.targetIndexes - the indexes of the target items
+    \li ViewTransition.targetItems - the target items themselves
     \endlist
 
     (Note that for the \l Row, \l Column, \l Grid and \l Flow positioner elements, the \c move transition only
@@ -679,29 +679,29 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 
     \table
     \header
-        \o Property
-        \o Value
-        \o Explanation
+        \li Property
+        \li Value
+        \li Explanation
     \row
-        \o ViewTransition.item
-        \o "Item 0" delegate instance
-        \o The "Item 0" \l Rectangle object itself
+        \li ViewTransition.item
+        \li "Item 0" delegate instance
+        \li The "Item 0" \l Rectangle object itself
     \row
-        \o ViewTransition.index
-        \o \c int value of 4
-        \o The index of "Item 0" within the model following the add operation
+        \li ViewTransition.index
+        \li \c int value of 4
+        \li The index of "Item 0" within the model following the add operation
     \row
-        \o ViewTransition.destination
-        \o \l point value of (0, 120)
-        \o The position that "Item 0" is moving to
+        \li ViewTransition.destination
+        \li \l point value of (0, 120)
+        \li The position that "Item 0" is moving to
     \row
-        \o ViewTransition.targetIndexes
-        \o \c int array, just contains the integer "0" (zero)
-        \o The index of "Item 4", the new item added to the view
+        \li ViewTransition.targetIndexes
+        \li \c int array, just contains the integer "0" (zero)
+        \li The index of "Item 4", the new item added to the view
     \row
-        \o ViewTransition.targetItems
-        \o object array, just contains the "Item 4" delegate instance
-        \o The "Item 4" \l Rectangle object - the new item added to the view
+        \li ViewTransition.targetItems
+        \li object array, just contains the "Item 4" delegate instance
+        \li The "Item 4" \l Rectangle object - the new item added to the view
     \endtable
 
     The ViewTransition.targetIndexes and ViewTransition.targetItems lists provide the items and

@@ -103,15 +103,15 @@ const char *qtTexCoordAttributeName()
     There are two types of input to the \l vertexShader:
     uniform variables and attributes. Some are predefined:
     \list
-    \o uniform mat4 qt_Matrix - combined transformation
+    \li uniform mat4 qt_Matrix - combined transformation
        matrix, the product of the matrices from the root item to this
        ShaderEffect, and an orthogonal projection.
-    \o uniform float qt_Opacity - combined opacity, the product of the
+    \li uniform float qt_Opacity - combined opacity, the product of the
        opacities from the root item to this ShaderEffect.
-    \o attribute vec4 qt_Vertex - vertex position, the top-left vertex has
+    \li attribute vec4 qt_Vertex - vertex position, the top-left vertex has
        position (0, 0), the bottom-right (\l{Item::width}{width},
        \l{Item::height}{height}).
-    \o attribute vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
+    \li attribute vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
        coordinate is (0, 0), the bottom-right (1, 1).
     \endlist
 
@@ -119,17 +119,17 @@ const char *qtTexCoordAttributeName()
     (GLSL) type is available as a uniform variable. The following list shows
     how properties are mapped to GLSL uniform variables:
     \list
-    \o bool, int, qreal -> bool, int, float - If the type in the shader is not
+    \li bool, int, qreal -> bool, int, float - If the type in the shader is not
        the same as in QML, the value is converted automatically.
-    \o QColor -> vec4 - When colors are passed to the shader, they are first
+    \li QColor -> vec4 - When colors are passed to the shader, they are first
        premultiplied. Thus Qt.rgba(0.2, 0.6, 1.0, 0.5) becomes
        vec4(0.1, 0.3, 0.5, 0.5) in the shader, for example.
-    \o QRect, QRectF -> vec4 - Qt.rect(x, y, w, h) becomes vec4(x, y, w, h) in
+    \li QRect, QRectF -> vec4 - Qt.rect(x, y, w, h) becomes vec4(x, y, w, h) in
        the shader.
-    \o QPoint, QPointF, QSize, QSizeF -> vec2
-    \o QVector3D -> vec3
-    \o QTransform -> mat4
-    \o \l Image, \l ShaderEffectSource -> sampler2D - Origin is in the top-left
+    \li QPoint, QPointF, QSize, QSizeF -> vec2
+    \li QVector3D -> vec3
+    \li QTransform -> mat4
+    \li \l Image, \l ShaderEffectSource -> sampler2D - Origin is in the top-left
        corner, and the color values are premultiplied.
     \endlist
 
@@ -138,8 +138,8 @@ const char *qtTexCoordAttributeName()
     blending can be achieved by outputting zero in the alpha channel.
 
     \row
-    \o \image declarative-shadereffectitem.png
-    \o \qml
+    \li \image declarative-shadereffectitem.png
+    \li \qml
         import QtQuick 2.0
 
         Rectangle {
@@ -326,9 +326,9 @@ void QQuickShaderEffect::setMesh(const QVariant &mesh)
     This property defines which sides of the element should be visible.
 
     \list
-    \o ShaderEffect.NoCulling - Both sides are visible
-    \o ShaderEffect.BackFaceCulling - only front side is visible
-    \o ShaderEffect.FrontFaceCulling - only back side is visible
+    \li ShaderEffect.NoCulling - Both sides are visible
+    \li ShaderEffect.BackFaceCulling - only front side is visible
+    \li ShaderEffect.FrontFaceCulling - only back side is visible
     \endlist
 
     The default is NoCulling.
@@ -349,9 +349,9 @@ void QQuickShaderEffect::setCullMode(CullMode face)
     This property tells the current status of the OpenGL shader program.
 
     \list
-    \o ShaderEffect.Compiled - the shader program was successfully compiled and linked.
-    \o ShaderEffect.Uncompiled - the shader program has not yet been compiled.
-    \o ShaderEffect.Error - the shader program failed to compile or link.
+    \li ShaderEffect.Compiled - the shader program was successfully compiled and linked.
+    \li ShaderEffect.Uncompiled - the shader program has not yet been compiled.
+    \li ShaderEffect.Error - the shader program failed to compile or link.
     \endlist
 
     When setting the fragment or vertex shader source code, the status will become Uncompiled.

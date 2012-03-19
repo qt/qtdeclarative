@@ -443,8 +443,8 @@ with much worse performance.  As such, always try to ensure you meet the followi
 criteria:
 
 \list
-\o Avoid using eval() if at all possible
-\o Do not delete properties of objects
+\li Avoid using eval() if at all possible
+\li Do not delete properties of objects
 \endlist
 
 \section1 Common Interface Elements
@@ -545,10 +545,10 @@ QML.  While the optimal implementation of any such model will depend heavily on 
 use-case it must fulfil, some general guidelines are as follows:
 
 \list
-\o Be as asynchronous as possible
-\o Do all processing in a (low priority) worker thread
-\o Batch up backend operations so that (potentially slow) I/O and IPC is minimised
-\o Use a sliding slice window to cache results, whose parameters are determined with the help of profiling
+\li Be as asynchronous as possible
+\li Do all processing in a (low priority) worker thread
+\li Batch up backend operations so that (potentially slow) I/O and IPC is minimised
+\li Use a sliding slice window to cache results, whose parameters are determined with the help of profiling
 \endlist
 
 It is important to note that using a low-priority worker thread is recommended to
@@ -592,15 +592,15 @@ needed (see the upcoming section on lazy initialisation).
 
 The following list is a good summary of things to keep in mind when designing a delegate:
 \list
-\o The fewer elements that are in a delegate, the faster they can be created, and thus
+\li The fewer elements that are in a delegate, the faster they can be created, and thus
    the faster the view can be scrolled.
-\o Keep the number of bindings in a delegate to a minimum; in particular, use anchors
+\li Keep the number of bindings in a delegate to a minimum; in particular, use anchors
    rather than bindings for relative positioning within a delegate.
-\o Set a cacheBuffer to allow asynchronous creation of delegates outside the visible area.
+\li Set a cacheBuffer to allow asynchronous creation of delegates outside the visible area.
    Be mindful that this creates additional delegates and therefore the size of the
    cacheBuffer must be balanced against additional memory usage.
-\o Avoid using ShaderEffect elements within delegates.
-\o Never enable clipping on a delegate.
+\li Avoid using ShaderEffect elements within delegates.
+\li Never enable clipping on a delegate.
 \endlist
 
 \section1 Visual Effects
@@ -669,10 +669,10 @@ it is necessary.  This may be achieved by using either \l Loader or creating com
 The Loader is an element which allows dynamic loading and unloading of components.
 
 \list
-\o Using the "active" property of a Loader, initialisation can be delayed until required.
-\o Using the overloaded version of the "setSource()" function, initial property values can
+\li Using the "active" property of a Loader, initialisation can be delayed until required.
+\li Using the overloaded version of the "setSource()" function, initial property values can
    be supplied.
-\o Setting the Loader \l {Loader::asynchronous}{asynchronous} property to true may also
+\li Setting the Loader \l {Loader::asynchronous}{asynchronous} property to true may also
    improve fluidity while a component is instantiated.
 \endlist
 

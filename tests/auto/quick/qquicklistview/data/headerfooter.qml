@@ -6,6 +6,8 @@ ListView {
     property bool rtl: false
     width: 240
     height: 320
+
+    model: testModel
     
     orientation: horizontal ? ListView.Horizontal : ListView.Vertical
     header: Rectangle {

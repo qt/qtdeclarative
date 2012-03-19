@@ -137,11 +137,15 @@ QQmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(int context,
     QQmlDebugRootContextQuery *q_context = m_dbg->queryRootContexts(q_engines->engines()[0].debugId(), this);
     waitForQuery(q_context);
 
-    if (q_context->rootContext().objects().count() == 0)
+    if (q_context->rootContext().contexts().count() == 0 ||
+            q_context->rootContext().contexts().last().objects().count() == 0)
         return QQmlDebugObjectReference();
+
+    //Contexts are in a stack
+    int count = q_context->rootContext().contexts().count();
     QQmlDebugObjectQuery *q_obj = recursive ?
-                m_dbg->queryObjectRecursive(q_context->rootContext().objects()[context], this) :
-                m_dbg->queryObject(q_context->rootContext().objects()[context], this);
+                m_dbg->queryObjectRecursive(q_context->rootContext().contexts()[count - context - 1].objects()[0], this) :
+                m_dbg->queryObject(q_context->rootContext().contexts()[count - context - 1].objects()[0], this);
     waitForQuery(q_obj);
 
     QQmlDebugObjectReference result = q_obj->object();
@@ -301,7 +305,7 @@ void tst_QQmlEngineDebugService::initTestCase()
     qRegisterMetaType<QQmlDebugWatch::State>();
     qmlRegisterType<NonScriptProperty>("Test", 1, 0, "NonScriptPropertyElement");
 
-    QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Waiting for connection on port 3768...");
+    QTest::ignoreMessage(QtDebugMsg, "QML Debugger: Waiting for connection on port 3768...");
     m_engine = new QQmlEngine(this);
 
     QList<QByteArray> qml;
@@ -386,7 +390,7 @@ void tst_QQmlEngineDebugService::initTestCase()
     m_conn = new QQmlDebugConnection(this);
     m_conn->connectToHost("127.0.0.1", 3768);
 
-    QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Connection established.");
+    QTest::ignoreMessage(QtDebugMsg, "QML Debugger: Connection established.");
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
     QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());
@@ -493,8 +497,9 @@ void tst_QQmlEngineDebugService::watch_object()
     QQmlDebugRootContextQuery *q_context = m_dbg->queryRootContexts(q_engines->engines()[0].debugId(), this);
     waitForQuery(q_context);
 
-    QVERIFY(q_context->rootContext().objects().count() > 0);
-    QQmlDebugObjectQuery *q_obj = m_dbg->queryObject(q_context->rootContext().objects()[0], this);
+    QVERIFY(q_context->rootContext().contexts().count());
+    QVERIFY(q_context->rootContext().contexts().last().objects().count() > 0);
+    QQmlDebugObjectQuery *q_obj = m_dbg->queryObject(q_context->rootContext().contexts().last().objects()[0], this);
     waitForQuery(q_obj);
 
     QQmlDebugObjectReference obj = q_obj->object();
@@ -705,12 +710,9 @@ void tst_QQmlEngineDebugService::queryRootContexts()
     QCOMPARE(context.debugId(), QQmlDebugService::idForObject(actualContext));
     QCOMPARE(context.name(), actualContext->objectName());
 
-    QCOMPARE(context.objects().count(), 4); // 4 qml component objects created for context in main()
-
     // root context query sends only root object data - it doesn't fill in
     // the children or property info
-    QCOMPARE(context.objects()[0].properties().count(), 0);
-    QCOMPARE(context.objects()[0].children().count(), 0);
+    QCOMPARE(context.objects().count(), 0);
 
     QCOMPARE(context.contexts().count(), 5);
     QVERIFY(context.contexts()[0].debugId() >= 0);
@@ -734,7 +736,7 @@ void tst_QQmlEngineDebugService::queryObject()
 
     QQmlDebugRootContextQuery *q_context = m_dbg->queryRootContexts(q_engines->engines()[0].debugId(), this);
     waitForQuery(q_context);
-    QQmlDebugObjectReference rootObject = q_context->rootContext().objects()[0];
+    QQmlDebugObjectReference rootObject = q_context->rootContext().contexts().last().objects()[0];
 
     QQmlDebugObjectQuery *q_obj = 0;
 
@@ -815,7 +817,7 @@ void tst_QQmlEngineDebugService::queryExpressionResult()
 
     QQmlDebugRootContextQuery *q_context = m_dbg->queryRootContexts(q_engines->engines()[0].debugId(), this);
     waitForQuery(q_context);
-    int objectId = q_context->rootContext().objects()[0].debugId();
+    int objectId = q_context->rootContext().contexts().last().objects()[0].debugId();
 
     QQmlDebugExpressionQuery *q_expr;
 
@@ -1164,8 +1166,9 @@ void tst_QQmlEngineDebugService::queryObjectTree()
     QQmlDebugRootContextQuery *q_context = m_dbg->queryRootContexts(q_engines->engines()[0].debugId(), this);
     waitForQuery(q_context);
 
-    QVERIFY(q_context->rootContext().objects().count() > sourceIndex);
-    QQmlDebugObjectReference rootObject = q_context->rootContext().objects()[sourceIndex];
+    QVERIFY(q_context->rootContext().contexts().count() >= sourceIndex);
+    int count = q_context->rootContext().contexts().count();
+    QQmlDebugObjectReference rootObject = q_context->rootContext().contexts()[count - sourceIndex - 1].objects()[0];
 
     QQmlDebugObjectQuery *q_obj = m_dbg->queryObjectRecursive(rootObject, this);
     waitForQuery(q_obj);

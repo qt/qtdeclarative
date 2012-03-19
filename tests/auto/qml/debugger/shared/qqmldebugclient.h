@@ -47,7 +47,7 @@
 #include <private/qtqmlglobal_p.h>
 
 class QQmlDebugConnectionPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDebugConnection : public QIODevice
+class QQmlDebugConnection : public QIODevice
 {
     Q_OBJECT
     Q_DISABLE_COPY(QQmlDebugConnection)
@@ -81,7 +81,7 @@ private:
 };
 
 class QQmlDebugClientPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlDebugClient : public QObject
+class QQmlDebugClient : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlDebugClient)

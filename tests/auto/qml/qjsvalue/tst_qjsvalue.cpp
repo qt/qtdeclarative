@@ -986,6 +986,7 @@ Q_DECLARE_METATYPE(QVariant)
 void tst_QJSValue::toVariant()
 {
     QJSEngine eng;
+    QObject temp;
 
     QJSValue undefined = eng.toScriptValue(QVariant());
     QCOMPARE(undefined.toVariant(), QVariant());
@@ -1020,11 +1021,11 @@ void tst_QJSValue::toVariant()
     QJSValue object = eng.newObject();
     QCOMPARE(object.toVariant(), QVariant(QVariantMap()));
 
-    QJSValue qobject = eng.newQObject(this);
+    QJSValue qobject = eng.newQObject(&temp);
     {
         QVariant var = qobject.toVariant();
         QCOMPARE(var.userType(), int(QMetaType::QObjectStar));
-        QCOMPARE(qVariantValue<QObject*>(var), (QObject *)this);
+        QCOMPARE(qVariantValue<QObject*>(var), (QObject *)&temp);
     }
 
     {
@@ -1130,10 +1131,11 @@ Q_DECLARE_METATYPE(QPushButton*);
 void tst_QJSValue::toQObject()
 {
     QJSEngine eng;
+    QObject temp;
 
-    QJSValue qobject = eng.newQObject(this);
-    QCOMPARE(qobject.toQObject(), (QObject *)this);
-    QCOMPARE(qjsvalue_cast<QObject*>(qobject), (QObject *)this);
+    QJSValue qobject = eng.newQObject(&temp);
+    QCOMPARE(qobject.toQObject(), (QObject *)&temp);
+    QCOMPARE(qjsvalue_cast<QObject*>(qobject), (QObject *)&temp);
     QCOMPARE(qjsvalue_cast<QWidget*>(qobject), (QWidget *)0);
 
     QWidget widget;
@@ -2168,6 +2170,7 @@ void tst_QJSValue::getSetData_objects_data()
 {
 #if 0 // FIXME: no setData/data API
     newEngine();
+    QObject *temp = new QObject;
 
     QTest::addColumn<QJSValue>("object");
 
@@ -2175,7 +2178,7 @@ void tst_QJSValue::getSetData_objects_data()
     QTest::newRow("object from engine") << engine->newObject();
     QTest::newRow("Array") << engine->newArray();
     QTest::newRow("Date") << engine->evaluate("new Date(12324)");
-    QTest::newRow("QObject") << engine->newQObject(this);
+    QTest::newRow("QObject") << engine->newQObject(temp);
     QTest::newRow("RegExp") << engine->newRegExp(QRegExp());
 #endif
 }
@@ -2265,6 +2268,7 @@ public:
 void tst_QJSValue::getSetScriptClass_emptyClass_data()
 {
     newEngine();
+    QObject *temp = new QObject;
     QTest::addColumn<QJSValue>("value");
 
     QTest::newRow("invalid") << QJSValue();
@@ -2281,7 +2285,7 @@ void tst_QJSValue::getSetScriptClass_emptyClass_data()
     QTest::newRow("undefined") << QJSValue(engine->toScriptValue(QVariant()));
     QTest::newRow("object") << QJSValue(engine->newObject());
     QTest::newRow("date") << QJSValue(engine->evaluate("new Date()"));
-    QTest::newRow("qobject") << QJSValue(engine->newQObject(this));
+    QTest::newRow("qobject") << QJSValue(engine->newQObject(temp));
 }
 
 void tst_QJSValue::getSetScriptClass_emptyClass()
@@ -2341,9 +2345,10 @@ void tst_QJSValue::getSetScriptClass_QVariant()
 void tst_QJSValue::getSetScriptClass_QObject()
 {
     QScriptEngine eng;
+    QObject temp;
     TestScriptClass testClass(&eng);
     {
-        QJSValue obj = eng.newQObject(this);
+        QJSValue obj = eng.newQObject(&temp);
         QVERIFY(obj.isQObject());
         obj.setScriptClass(&testClass);
         QCOMPARE(obj.scriptClass(), (QScriptClass*)&testClass);
@@ -2999,6 +3004,7 @@ void tst_QJSValue::lessThan()
 void tst_QJSValue::equals()
 {
     QJSEngine eng;
+    QObject temp;
 
     QVERIFY(QJSValue().equals(QJSValue()));
 
@@ -3088,8 +3094,8 @@ void tst_QJSValue::equals()
     QCOMPARE(obj1.equals(obj1), true);
     QCOMPARE(obj2.equals(obj2), true);
 
-    QJSValue qobj1 = eng.newQObject(this);
-    QJSValue qobj2 = eng.newQObject(this);
+    QJSValue qobj1 = eng.newQObject(&temp);
+    QJSValue qobj2 = eng.newQObject(&temp);
     QJSValue qobj3 = eng.newQObject(0);
 
     // FIXME: No ScriptOwnership: QJSValue qobj4 = eng.newQObject(new QObject(), QScriptEngine::ScriptOwnership);
@@ -3137,6 +3143,7 @@ void tst_QJSValue::equals()
 void tst_QJSValue::strictlyEquals()
 {
     QJSEngine eng;
+    QObject temp;
 
     QVERIFY(QJSValue().strictlyEquals(QJSValue()));
 
@@ -3242,8 +3249,8 @@ void tst_QJSValue::strictlyEquals()
     QCOMPARE(obj2.strictlyEquals(obj2), true);
     QVERIFY(!obj1.strictlyEquals(QJSValue()));
 
-    QJSValue qobj1 = eng.newQObject(this);
-    QJSValue qobj2 = eng.newQObject(this);
+    QJSValue qobj1 = eng.newQObject(&temp);
+    QJSValue qobj2 = eng.newQObject(&temp);
     QVERIFY(qobj1.strictlyEquals(qobj2));
 
     {
@@ -3482,13 +3489,14 @@ void tst_QJSValue::prettyPrinter()
 void tst_QJSValue::engineDeleted()
 {
     QJSEngine *eng = new QJSEngine;
+    QObject temp;
     QJSValue v1 = eng->toScriptValue(123);
     QVERIFY(v1.isNumber());
     QJSValue v2 = eng->toScriptValue(QString("ciao"));
     QVERIFY(v2.isString());
     QJSValue v3 = eng->newObject();
     QVERIFY(v3.isObject());
-    QJSValue v4 = eng->newQObject(this);
+    QJSValue v4 = eng->newQObject(&temp);
     QVERIFY(v4.isQObject());
     QJSValue v5 = "Hello";
     QVERIFY(v2.isString());

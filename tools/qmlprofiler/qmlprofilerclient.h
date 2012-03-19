@@ -39,16 +39,15 @@
 **
 ****************************************************************************/
 
-#ifndef PROFILECLIENT_H
-#define PROFILECLIENT_H
-
-#include "profiledata.h"
+#ifndef QMLPROFILERCLIENT_H
+#define QMLPROFILERCLIENT_H
 
 #include "qqmldebugclient.h"
 #include <QtQml/private/qqmlprofilerservice_p.h>
+#include "qmlprofilereventlocation.h"
 
-class ProfileClientPrivate;
-class ProfileClient : public QQmlDebugClient
+class ProfilerClientPrivate;
+class ProfilerClient : public QQmlDebugClient
 {
     Q_OBJECT
 
@@ -57,9 +56,9 @@ class ProfileClient : public QQmlDebugClient
                NOTIFY recordingChanged)
 
 public:
-    ProfileClient(const QString & clientName,
+    ProfilerClient(const QString &clientName,
                   QQmlDebugConnection *client);
-    ~ProfileClient();
+    ~ProfilerClient();
 
     bool isEnabled() const;
     bool isRecording() const;
@@ -83,13 +82,13 @@ protected:
     bool m_enabled;
 };
 
-class QmlProfileClient : public ProfileClient
+class QmlProfilerClient : public ProfilerClient
 {
     Q_OBJECT
 
 public:
-    QmlProfileClient(QQmlDebugConnection *client);
-    ~QmlProfileClient();
+    QmlProfilerClient(QQmlDebugConnection *client);
+    ~QmlProfilerClient();
 
 public slots:
     void clearData();
@@ -100,17 +99,17 @@ signals:
     void traceStarted( qint64 time );
     void range(QQmlProfilerService::RangeType type, qint64 startTime,
                qint64 length, const QStringList &data,
-               const EventLocation &location);
+               const QmlEventLocation &location);
     void frame(qint64 time, int frameRate, int animationCount);
 
 protected:
     virtual void messageReceived(const QByteArray &);
 
 private:
-    class QmlProfileClientPrivate *d;
+    class QmlProfilerClientPrivate *d;
 };
 
-class V8ProfileClient : public ProfileClient
+class V8ProfilerClient : public ProfilerClient
 {
     Q_OBJECT
 
@@ -122,8 +121,8 @@ public:
         V8MaximumMessage
     };
 
-    V8ProfileClient(QQmlDebugConnection *client);
-    ~V8ProfileClient();
+    V8ProfilerClient(QQmlDebugConnection *client);
+    ~V8ProfilerClient();
 
 public slots:
     void sendRecordingStatus();
@@ -136,4 +135,4 @@ protected:
     virtual void messageReceived(const QByteArray &);
 };
 
-#endif // PROFILECLIENT_H
+#endif // QMLPROFILERCLIENT_H

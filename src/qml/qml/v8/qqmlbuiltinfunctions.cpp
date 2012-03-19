@@ -797,54 +797,54 @@ If \a format is not provided, \a dateTime is formatted using
 \a format should be either:
 
 \list
-\o One of the Qt::DateFormat enumeration values, such as
+\li One of the Qt::DateFormat enumeration values, such as
    \c Qt.DefaultLocaleShortDate or \c Qt.ISODate
-\o A string that specifies the format of the returned string, as detailed below.
+\li A string that specifies the format of the returned string, as detailed below.
 \endlist
 
 If \a format specifies a format string, it should use the following expressions
 to specify the date:
 
     \table
-    \header \i Expression \i Output
-    \row \i d \i the day as number without a leading zero (1 to 31)
-    \row \i dd \i the day as number with a leading zero (01 to 31)
-    \row \i ddd
-            \i the abbreviated localized day name (e.g. 'Mon' to 'Sun').
+    \header \li Expression \li Output
+    \row \li d \li the day as number without a leading zero (1 to 31)
+    \row \li dd \li the day as number with a leading zero (01 to 31)
+    \row \li ddd
+            \li the abbreviated localized day name (e.g. 'Mon' to 'Sun').
             Uses QDate::shortDayName().
-    \row \i dddd
-            \i the long localized day name (e.g. 'Monday' to 'Qt::Sunday').
+    \row \li dddd
+            \li the long localized day name (e.g. 'Monday' to 'Qt::Sunday').
             Uses QDate::longDayName().
-    \row \i M \i the month as number without a leading zero (1-12)
-    \row \i MM \i the month as number with a leading zero (01-12)
-    \row \i MMM
-            \i the abbreviated localized month name (e.g. 'Jan' to 'Dec').
+    \row \li M \li the month as number without a leading zero (1-12)
+    \row \li MM \li the month as number with a leading zero (01-12)
+    \row \li MMM
+            \li the abbreviated localized month name (e.g. 'Jan' to 'Dec').
             Uses QDate::shortMonthName().
-    \row \i MMMM
-            \i the long localized month name (e.g. 'January' to 'December').
+    \row \li MMMM
+            \li the long localized month name (e.g. 'January' to 'December').
             Uses QDate::longMonthName().
-    \row \i yy \i the year as two digit number (00-99)
-    \row \i yyyy \i the year as four digit number
+    \row \li yy \li the year as two digit number (00-99)
+    \row \li yyyy \li the year as four digit number
     \endtable
 
 In addition the following expressions can be used to specify the time:
 
     \table
-    \header \i Expression \i Output
-    \row \i h
-         \i the hour without a leading zero (0 to 23 or 1 to 12 if AM/PM display)
-    \row \i hh
-         \i the hour with a leading zero (00 to 23 or 01 to 12 if AM/PM display)
-    \row \i m \i the minute without a leading zero (0 to 59)
-    \row \i mm \i the minute with a leading zero (00 to 59)
-    \row \i s \i the second without a leading zero (0 to 59)
-    \row \i ss \i the second with a leading zero (00 to 59)
-    \row \i z \i the milliseconds without leading zeroes (0 to 999)
-    \row \i zzz \i the milliseconds with leading zeroes (000 to 999)
-    \row \i AP
-            \i use AM/PM display. \e AP will be replaced by either "AM" or "PM".
-    \row \i ap
-            \i use am/pm display. \e ap will be replaced by either "am" or "pm".
+    \header \li Expression \li Output
+    \row \li h
+         \li the hour without a leading zero (0 to 23 or 1 to 12 if AM/PM display)
+    \row \li hh
+         \li the hour with a leading zero (00 to 23 or 01 to 12 if AM/PM display)
+    \row \li m \li the minute without a leading zero (0 to 59)
+    \row \li mm \li the minute with a leading zero (00 to 59)
+    \row \li s \li the second without a leading zero (0 to 59)
+    \row \li ss \li the second with a leading zero (00 to 59)
+    \row \li z \li the milliseconds without leading zeroes (0 to 999)
+    \row \li zzz \li the milliseconds with leading zeroes (000 to 999)
+    \row \li AP
+            \li use AM/PM display. \e AP will be replaced by either "AM" or "PM".
+    \row \li ap
+            \li use am/pm display. \e ap will be replaced by either "am" or "pm".
     \endtable
 
     All other input characters will be ignored. Any sequence of characters that
@@ -864,11 +864,11 @@ This \a dateTime value could be passed to \c Qt.formatDateTime(),
 with the \a format values below to produce the following results:
 
     \table
-    \header \i Format \i Result
-    \row \i "dd.MM.yyyy"      \i 21.05.2001
-    \row \i "ddd MMMM d yy"   \i Tue May 21 01
-    \row \i "hh:mm:ss.zzz"    \i 14:13:09.042
-    \row \i "h:m:s ap"        \i 2:13:9 pm
+    \header \li Format \li Result
+    \row \li "dd.MM.yyyy"      \li 21.05.2001
+    \row \li "ddd MMMM d yy"   \li Tue May 21 01
+    \row \li "hh:mm:ss.zzz"    \li 14:13:09.042
+    \row \li "h:m:s ap"        \li 2:13:9 pm
     \endtable
 
     \sa Locale
@@ -1120,7 +1120,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 }
 
 /*!
-\qmlmethod object Qt::createComponent(url)
+\qmlmethod object Qt::createComponent(url, mode)
 
 Returns a \l Component object created using the QML file at the specified \a url,
 or \c null if an empty string was given.
@@ -1128,6 +1128,12 @@ or \c null if an empty string was given.
 The returned component's \l Component::status property indicates whether the
 component was successfully created. If the status is \c Component.Error,
 see \l Component::errorString() for an error description.
+
+If the optional \a mode parameter is set to \c Component.Asynchronous, the
+component will be loaded in a background thread.  The Component::status property
+will be \c Component.Loading while it is loading.  The status will change to
+\c Component.Ready if the component loads successfully, or \c Component.Error
+if loading fails.
 
 Call \l {Component::createObject()}{Component.createObject()} on the returned
 component to create an object instance of the component.
@@ -1143,8 +1149,9 @@ use \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
 v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
 {
-    if (args.Length() != 1)
-        V8THROW_ERROR("Qt.createComponent(): Invalid arguments");
+    const char *invalidArgs = "Qt.createComponent(): Invalid arguments";
+    if (args.Length() < 1 || args.Length() > 2)
+        V8THROW_ERROR(invalidArgs);
 
     QV8Engine *v8engine = V8ENGINE();
     QQmlEngine *engine = v8engine->engine();
@@ -1159,8 +1166,20 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
     if (arg.isEmpty())
         return v8::Null();
 
+    QQmlComponent::CompilationMode compileMode = QQmlComponent::PreferSynchronous;
+    if (args.Length() == 2) {
+        if (args[1]->IsInt32()) {
+            int mode = args[1]->Int32Value();
+            if (mode != int(QQmlComponent::PreferSynchronous) && mode != int(QQmlComponent::Asynchronous))
+                V8THROW_ERROR(invalidArgs);
+            compileMode = QQmlComponent::CompilationMode(mode);
+        } else {
+            V8THROW_ERROR(invalidArgs);
+        }
+    }
+
     QUrl url = context->resolvedUrl(QUrl(arg));
-    QQmlComponent *c = new QQmlComponent(engine, url, engine);
+    QQmlComponent *c = new QQmlComponent(engine, url, compileMode, engine);
     QQmlComponentPrivate::get(c)->creationContext = effectiveContext;
     QQmlData::get(c, true)->setImplicitDestructible();
     return v8engine->newQObject(c);
@@ -1287,9 +1306,9 @@ v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
     or "C", where:
 
     \list
-    \o language is a lowercase, two-letter, ISO 639 language code,
-    \o territory is an uppercase, two-letter, ISO 3166 country code,
-    \o and codeset and modifier are ignored.
+    \li language is a lowercase, two-letter, ISO 639 language code,
+    \li territory is an uppercase, two-letter, ISO 3166 country code,
+    \li and codeset and modifier are ignored.
     \endlist
 
     If the string violates the locale format, or language is not a

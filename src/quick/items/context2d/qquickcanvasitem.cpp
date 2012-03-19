@@ -169,13 +169,13 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     Although the Canvas item is provides a HTML5 like API, HTML5 canvas
     applications need to be modified to run in the Canvas item:
     \list
-    \o Replace all DOM API calls with QML property bindings or Canvas item methods.
-    \o Replace all HTML event handlers with the \a MouseArea item.
-    \o Change setInterval/setTimeout function calls with the \a Timer item or
+    \li Replace all DOM API calls with QML property bindings or Canvas item methods.
+    \li Replace all HTML event handlers with the \a MouseArea item.
+    \li Change setInterval/setTimeout function calls with the \a Timer item or
        the use of requestAnimationFrame.
-    \o Place painting code into the \a QtQuick2::Canvas::onPaint handler and trigger
+    \li Place painting code into the \a QtQuick2::Canvas::onPaint handler and trigger
        painting by calling the \c markDirty or \c requestPaint methods.
-    \o To draw images, load them by calling the Canvas's loadImage method and then request to paint
+    \li To draw images, load them by calling the Canvas's loadImage method and then request to paint
        them in the onImageLoaded handler.
     \endlist
 
@@ -369,8 +369,8 @@ void QQuickCanvasItem::setCanvasWindow(const QRectF& rect)
     Holds the current canvas render target.
 
     \list
-    \o Canvas.Image  - render to an in memory image buffer.
-    \o Canvas.FramebufferObject - render to an OpenGL frame buffer
+    \li Canvas.Image  - render to an in memory image buffer.
+    \li Canvas.FramebufferObject - render to an OpenGL frame buffer
     \endlist
 
     This hint is supplied along with renderStrategy to the graphics context to
@@ -404,9 +404,9 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
     Holds the current canvas rendering strategy.
 
     \list
-    \o Canvas.Immediate - context will perform graphics commands immediately in the main UI thread.
-    \o Canvas.Threaded - context will defer graphics commands to a private rendering thread.
-    \o Canvas.Cooperative - context will defer graphics commands to the applications global render thread.
+    \li Canvas.Immediate - context will perform graphics commands immediately in the main UI thread.
+    \li Canvas.Threaded - context will defer graphics commands to a private rendering thread.
+    \li Canvas.Cooperative - context will defer graphics commands to the applications global render thread.
     \endlist
 
     This hint is supplied along with renderTarget to the graphics context to

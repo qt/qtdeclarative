@@ -329,7 +329,7 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
 /*!
     Set the \a value of the \a name property on this context.
 
-    QQmlContext does \bold not take ownership of \a value.
+    QQmlContext does \b not take ownership of \a value.
 */
 void QQmlContext::setContextProperty(const QString &name, QObject *value)
 {

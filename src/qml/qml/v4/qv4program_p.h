@@ -85,6 +85,7 @@ struct QV4Program {
 
 enum QQmlRegisterType { 
     UndefinedType,
+    NullType,
     QObjectStarType,
     QRealType,
     IntType,

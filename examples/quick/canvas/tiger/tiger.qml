@@ -43,18 +43,18 @@ import "../contents"
 import "tiger.js" as Tiger
 Item {
   id:container
-  width:360
-  height:600
+  width:320
+  height:480
 
   Column {
     spacing:5
     anchors.fill:parent
-    Text { font.pointSize:25; text:"Tiger with SVG path"; anchors.horizontalCenter:parent.horizontalCenter}
+    Text { font.pointSize:15; text:"Tiger with SVG path"; anchors.horizontalCenter:parent.horizontalCenter}
 
     Canvas {
         id:canvas
-        width:360
-        height:360
+        width:320
+        height:280
         smooth:true
         renderTarget:Canvas.FramebufferObject
         renderStrategy: Canvas.Cooperative
@@ -115,14 +115,14 @@ Item {
     }
     Rectangle {
         id:controls
-        width:360
-        height:160
+        width:320
+        height:150
         Column {
           spacing:3
-          Slider {id:scaleXCtrl; width:300; height:30; min:0.1; max:10; init:0.5; name:"ScaleX"}
-          Slider {id:scaleYCtrl; width:300; height:30; min:0.1; max:10; init:0.5; name:"ScaleY"}
-          Slider {id:rotateCtrl; width:300; height:30; min:0; max:Math.PI*2; init:0; name:"Rotate"}
-          Slider {id:alphaCtrl; width:300; height:30; min:0; max:1; init:1; name:"Alpha"}
+          Slider {id:scaleXCtrl; width:300; height:20; min:0.1; max:10; init:0.5; name:"ScaleX"}
+          Slider {id:scaleYCtrl; width:300; height:20; min:0.1; max:10; init:0.5; name:"ScaleY"}
+          Slider {id:rotateCtrl; width:300; height:20; min:0; max:Math.PI*2; init:0; name:"Rotate"}
+          Slider {id:alphaCtrl; width:300; height:20; min:0; max:1; init:1; name:"Alpha"}
         }
     }
   }

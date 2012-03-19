@@ -40,10 +40,10 @@ QtQuick 2 is based on an OpenGL scenegraph.  The following
 classes replace their equivalents in QtQuick 1:
 
 \list
-\o QQuickView
-\o QQuickCanvas
-\o QQuickItem
-\o QQuickPaintedItem
+\li QQuickView
+\li QQuickCanvas
+\li QQuickItem
+\li QQuickPaintedItem
 \endlist
 
 \section2 QML Engine/Language Improvements
@@ -100,7 +100,7 @@ You can still ignore these events in the handler to let them pass through.
 This behavior is triggered with the new property propagateComposedEvents.
 
 The Binding element can now be used as a value source, and will also restore any previously
-set binding when its \i when clause becomes false.
+set binding when its \e when clause becomes false.
 
 Flickable: added dragging, draggingHorizontally and draggingVerically properties.
 Added topMargin, bottomMargin, leftMargin, rightMargin, xOrigin, yOrigin properties.
@@ -114,8 +114,8 @@ of integers.
 
 Positioner (Row, Column, Grid, Flow) improvements:
 \list
-\o Transitions used for \c add and \c move now have improved features: they can access a ViewTransition attached property (see the ViewTransition documentation for examples) and can now animate arbitrary item properties (instead of being restricted to animating an item's position).
-\o Items in a positioner now have attached properties that can be used to determine a subitem's location: Positioner.index, Positioner.isFirstItem, Positioner.isLastItem.
+\li Transitions used for \c add and \c move now have improved features: they can access a ViewTransition attached property (see the ViewTransition documentation for examples) and can now animate arbitrary item properties (instead of being restricted to animating an item's position).
+\li Items in a positioner now have attached properties that can be used to determine a subitem's location: Positioner.index, Positioner.isFirstItem, Positioner.isLastItem.
 \endlist
 
 Loader improvements:

@@ -54,6 +54,8 @@
 //
 
 #include <QtQml/qtqmlglobal.h>
+#include <QtCore/QList>
+#include <QtCore/QPointer>
 
 QT_BEGIN_HEADER
 
@@ -74,7 +76,8 @@ protected:
 public:
     virtual ~QQmlDebugStatesDelegate() {}
 
-    virtual void buildStatesList(QQmlContext *ctxt, bool cleanList) = 0;
+    virtual void buildStatesList(bool cleanList,
+                                 const QList<QPointer<QObject> > &instances) = 0;
     virtual void updateBinding(QQmlContext *context,
                                const QQmlProperty &property,
                                const QVariant &expression, bool isLiteralValue,

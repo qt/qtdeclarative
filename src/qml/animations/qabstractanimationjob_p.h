@@ -93,6 +93,9 @@ public:
     inline bool isRunning() { return m_state == Running; }
     inline bool isStopped() { return m_state == Stopped; }
     inline bool isPaused() { return m_state == Paused; }
+    void setDisableUserControl();
+    void setEnableUserControl();
+    bool userControlDisabled() const;
 
     void setCurrentTime(int msecs);
 
@@ -128,8 +131,6 @@ protected:
     void directionChanged(QAbstractAnimationJob::Direction);
 
     //definition
-    bool m_isPause;
-    bool m_isGroup;
     int m_loopCount;
     QAnimationGroupJob *m_group;
     QAbstractAnimationJob::Direction m_direction;
@@ -139,10 +140,8 @@ protected:
     int m_totalCurrentTime;
     int m_currentTime;
     int m_currentLoop;
-    bool m_hasRegisteredTimer;
     //records the finish time for an uncontrolled animation (used by animation groups)
     int m_uncontrolledFinishTime;
-    bool *m_wasDeleted;
 
     struct ChangeListener {
         ChangeListener(QAnimationJobChangeListener *l, QAbstractAnimationJob::ChangeTypes t) : listener(l), types(t) {}
@@ -154,6 +153,12 @@ protected:
 
     QAbstractAnimationJob *m_nextSibling;
     QAbstractAnimationJob *m_previousSibling;
+
+    bool *m_wasDeleted;
+    bool m_hasRegisteredTimer:1;
+    bool m_isPause:1;
+    bool m_isGroup:1;
+    bool m_disableUserControl:1;
 
     friend class QQmlAnimationTimer;
     friend class QAnimationGroupJob;

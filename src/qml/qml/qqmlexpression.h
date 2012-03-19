@@ -96,8 +96,6 @@ Q_SIGNALS:
 protected:
     QQmlExpression(QQmlContextData *, QObject *, const QString &,
                            QQmlExpressionPrivate &dd);
-    QQmlExpression(QQmlContextData *, QObject *, void *, 
-                           QQmlExpressionPrivate &dd);
     QQmlExpression(QQmlContextData *, QObject *, const QString &, bool,
                            const QString &, int, int, QQmlExpressionPrivate &dd);
     QQmlExpression(QQmlContextData *, QObject *, const QByteArray &, bool,

@@ -73,10 +73,15 @@ class Q_QML_EXPORT QQmlComponent : public QObject
     Q_PROPERTY(QUrl url READ url CONSTANT)
 
 public:
+    Q_ENUMS(CompilationMode)
+    enum CompilationMode { PreferSynchronous, Asynchronous };
+
     QQmlComponent(QObject *parent = 0);
     QQmlComponent(QQmlEngine *, QObject *parent=0);
     QQmlComponent(QQmlEngine *, const QString &fileName, QObject *parent = 0);
+    QQmlComponent(QQmlEngine *, const QString &fileName, CompilationMode mode, QObject *parent = 0);
     QQmlComponent(QQmlEngine *, const QUrl &url, QObject *parent = 0);
+    QQmlComponent(QQmlEngine *, const QUrl &url, CompilationMode mode, QObject *parent = 0);
     virtual ~QQmlComponent();
 
     Q_ENUMS(Status)
@@ -108,6 +113,7 @@ public:
 
 public Q_SLOTS:
     void loadUrl(const QUrl &url);
+    void loadUrl(const QUrl &url, CompilationMode mode);
     void setData(const QByteArray &, const QUrl &baseUrl);
 
 Q_SIGNALS:

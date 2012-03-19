@@ -33,7 +33,7 @@
 
 \target anchor-layout
 In addition to the more traditional \l Grid, \l Row, and \l Column,
-QML also provides a way to layout items using the concept of \i anchors.
+QML also provides a way to layout items using the concept of \e anchors.
 Each item can be thought of as having a set of 7 invisible "anchor lines":
 \l {Item::anchors.left}{left}, \l {Item::anchors.horizontalCenter}{horizontalCenter},
 \l {Item::anchors.right}{right}, \l {Item::anchors.top}{top},
@@ -43,7 +43,7 @@ and \l {Item::anchors.bottom}{bottom}.
 \image edges_qml.png
 
 The baseline (not pictured above) corresponds to the imaginary line on which
-text would sit. For items with no text it is the same as \i top.
+text would sit. For items with no text it is the same as \e top.
 
 The QML anchoring system allows you to define relationships between the anchor lines of different items. For example, you can write:
 
@@ -52,7 +52,7 @@ Rectangle { id: rect1; ... }
 Rectangle { id: rect2; anchors.left: rect1.right; ... }
 \endcode
 
-In this case, the left edge of \i rect2 is bound to the right edge of \i rect1, producing the following:
+In this case, the left edge of \e rect2 is bound to the right edge of \e rect1, producing the following:
 
 \image edge1.png
 
@@ -67,8 +67,8 @@ Rectangle { id: rect2; anchors.left: rect1.right; anchors.top: rect1.bottom; ...
 \image edge3.png
 
 By specifying multiple horizontal or vertical anchors you can control the size of an item. Below,
-\i rect2 is anchored to the right of \i rect1 and the left of \i rect3. If either of the blue
-rectangles are moved, \i rect2 will stretch and shrink as necessary:
+\e rect2 is anchored to the right of \e rect1 and the left of \e rect3. If either of the blue
+rectangles are moved, \e rect2 will stretch and shrink as necessary:
 
 \code
 Rectangle { id: rect1; x: 0; ... }
@@ -84,7 +84,7 @@ and horizontalCenter anchors to the verticalCenter and horizontalCenter of the t
 
 \section1 Anchor Margins and Offsets
 
-The anchoring system also allows \i margins and \i offsets to be specified for an item's anchors.
+The anchoring system also allows \e margins and \e offsets to be specified for an item's anchors.
 Margins specify the amount of empty space to leave to the outside of an item's anchor, while
 offsets allow positioning to be manipulated using the center anchor lines.  An item can
 specify its anchor margins individually through \l {Item::anchors.leftMargin}{leftMargin},
@@ -104,11 +104,11 @@ Rectangle { id: rect1; ... }
 Rectangle { id: rect2; anchors.left: rect1.right; anchors.leftMargin: 5; ... }
 \endcode
 
-In this case, a margin of 5 pixels is reserved to the left of \i rect2, producing the following:
+In this case, a margin of 5 pixels is reserved to the left of \e rect2, producing the following:
 
 \image edge2.png
 
-\note Anchor margins only apply to anchors; they are \i not a generic means of applying margins to an \l Item.
+\note Anchor margins only apply to anchors; they are \e not a generic means of applying margins to an \l Item.
 If an anchor margin is specified for an edge but the item is not anchored to any item on that
 edge, the margin is not applied.
 

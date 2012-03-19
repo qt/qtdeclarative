@@ -259,7 +259,7 @@ qreal QQuickTimeLinePrivate::value(const Op &op, int time, qreal base, bool *cha
 
     QQuickTimeLine is similar to QTimeLine except:
     \list
-    \i It updates QQuickTimeLineValue instances directly, rather than maintaining a single
+    \li It updates QQuickTimeLineValue instances directly, rather than maintaining a single
     current value.
 
     For example, the following animates a simple value over 200 milliseconds:
@@ -274,7 +274,7 @@ qreal QQuickTimeLinePrivate::value(const Op &op, int time, qreal base, bool *cha
     connect to the QQuickTimeLine's updated() signal, or inherit from QQuickTimeLineValue
     and reimplement the QQuickTimeLineValue::setValue() method.
 
-    \i Supports multiple QQuickTimeLineValue, arbitrary start and end values and allows
+    \li Supports multiple QQuickTimeLineValue, arbitrary start and end values and allows
     animations to be strung together for more complex effects.
 
     For example, the following animation moves the x and y coordinates of
@@ -294,7 +294,7 @@ qreal QQuickTimeLinePrivate::value(const Op &op, int time, qreal base, bool *cha
     tl.move(y, 200., 50);
     \endcode
 
-    \i All QQuickTimeLine instances share a single, synchronized clock.
+    \li All QQuickTimeLine instances share a single, synchronized clock.
 
     Actions scheduled within the same event loop tick are scheduled
     synchronously against each other, regardless of the wall time between the
@@ -585,10 +585,10 @@ void QQuickTimeLine::sync(QQuickTimeLineValue &timeLineValue)
     will result in:
 
     \table
-    \header \o \o 0ms \o 50ms \o 100ms \o 150ms \o 200ms \o 250ms \o 300ms
-    \row \o value1 \o 0 \o 2.5 \o 5.0 \o 7.5 \o 10 \o 10 \o 10
-    \row \o value2 \o 0 \o 5.0 \o 10.0 \o 10.0 \o 10.0 \o 15.0 \o 20.0
-    \row \o value2 \o 0 \o 0 \o 0 \o 0 \o 0 \o 10.0 \o 20.0
+    \header \li \li 0ms \li 50ms \li 100ms \li 150ms \li 200ms \li 250ms \li 300ms
+    \row \li value1 \li 0 \li 2.5 \li 5.0 \li 7.5 \li 10 \li 10 \li 10
+    \row \li value2 \li 0 \li 5.0 \li 10.0 \li 10.0 \li 10.0 \li 15.0 \li 20.0
+    \row \li value2 \li 0 \li 0 \li 0 \li 0 \li 0 \li 10.0 \li 20.0
     \endtable
 */
 

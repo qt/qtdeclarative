@@ -201,11 +201,11 @@ QString QQuickTextInputPrivate::realText() const
 
     The weight can be one of:
     \list
-    \o Font.Light
-    \o Font.Normal - the default
-    \o Font.DemiBold
-    \o Font.Bold
-    \o Font.Black
+    \li Font.Light
+    \li Font.Normal - the default
+    \li Font.DemiBold
+    \li Font.Bold
+    \li Font.Black
     \endlist
 
     \qml
@@ -271,11 +271,11 @@ QString QQuickTextInputPrivate::realText() const
     Sets the capitalization for the text.
 
     \list
-    \o Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
-    \o Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \o Font.AllLowercase - This alters the text to be rendered in all lowercase type.
-    \o Font.SmallCaps - This alters the text to be rendered in small-caps type.
-    \o Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
+    \li Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
+    \li Font.AllUppercase - This alters the text to be rendered in all uppercase type.
+    \li Font.AllLowercase - This alters the text to be rendered in all lowercase type.
+    \li Font.SmallCaps - This alters the text to be rendered in small-caps type.
+    \li Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
     \endlist
 
     \qml
@@ -512,10 +512,10 @@ void QQuickTextInput::setVAlign(QQuickTextInput::VAlignment alignment)
     The text will only wrap if an explicit width has been set.
 
     \list
-    \o TextInput.NoWrap - no wrapping will be performed. If the text contains insufficient newlines, then implicitWidth will exceed a set width.
-    \o TextInput.WordWrap - wrapping is done on word boundaries only. If a word is too long, implicitWidth will exceed a set width.
-    \o TextInput.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
-    \o TextInput.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
+    \li TextInput.NoWrap - no wrapping will be performed. If the text contains insufficient newlines, then implicitWidth will exceed a set width.
+    \li TextInput.WordWrap - wrapping is done on word boundaries only. If a word is too long, implicitWidth will exceed a set width.
+    \li TextInput.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
+    \li TextInput.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
     \endlist
 
     The default is TextInput.NoWrap. If you set a width, consider using TextInput.Wrap.
@@ -958,8 +958,8 @@ void QQuickDoubleValidator::resetLocaleName()
     The possible values for this property are:
 
     \list
-    \o DoubleValidator.StandardNotation
-    \o DoubleValidator.ScientificNotation (default)
+    \li DoubleValidator.StandardNotation
+    \li DoubleValidator.ScientificNotation (default)
     \endlist
 
     If this property is set to DoubleValidator.ScientificNotation, the written number may have an exponent part (e.g. 1.5E-2).
@@ -1110,10 +1110,10 @@ Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
 
     Specifies how the text should be displayed in the TextInput.
     \list
-    \o TextInput.Normal - Displays the text as it is. (Default)
-    \o TextInput.Password - Displays asterisks instead of characters.
-    \o TextInput.NoEcho - Displays nothing.
-    \o TextInput.PasswordEchoOnEdit - Displays characters as they are entered
+    \li TextInput.Normal - Displays the text as it is. (Default)
+    \li TextInput.Password - Displays asterisks instead of characters.
+    \li TextInput.NoEcho - Displays nothing.
+    \li TextInput.PasswordEchoOnEdit - Displays characters as they are entered
     while editing, otherwise displays asterisks.
     \endlist
 */
@@ -1149,37 +1149,37 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     Flags that alter behaviour are:
 
     \list
-    \o Qt.ImhHiddenText - Characters should be hidden, as is typically used when entering passwords.
+    \li Qt.ImhHiddenText - Characters should be hidden, as is typically used when entering passwords.
             This is automatically set when setting echoMode to \c TextInput.Password.
-    \o Qt.ImhSensitiveData - Typed text should not be stored by the active input method
+    \li Qt.ImhSensitiveData - Typed text should not be stored by the active input method
             in any persistent storage like predictive user dictionary.
-    \o Qt.ImhNoAutoUppercase - The input method should not try to automatically switch to upper case
+    \li Qt.ImhNoAutoUppercase - The input method should not try to automatically switch to upper case
             when a sentence ends.
-    \o Qt.ImhPreferNumbers - Numbers are preferred (but not required).
-    \o Qt.ImhPreferUppercase - Upper case letters are preferred (but not required).
-    \o Qt.ImhPreferLowercase - Lower case letters are preferred (but not required).
-    \o Qt.ImhNoPredictiveText - Do not use predictive text (i.e. dictionary lookup) while typing.
+    \li Qt.ImhPreferNumbers - Numbers are preferred (but not required).
+    \li Qt.ImhPreferUppercase - Upper case letters are preferred (but not required).
+    \li Qt.ImhPreferLowercase - Lower case letters are preferred (but not required).
+    \li Qt.ImhNoPredictiveText - Do not use predictive text (i.e. dictionary lookup) while typing.
 
-    \o Qt.ImhDate - The text editor functions as a date field.
-    \o Qt.ImhTime - The text editor functions as a time field.
+    \li Qt.ImhDate - The text editor functions as a date field.
+    \li Qt.ImhTime - The text editor functions as a time field.
     \endlist
 
     Flags that restrict input (exclusive flags) are:
 
     \list
-    \o Qt.ImhDigitsOnly - Only digits are allowed.
-    \o Qt.ImhFormattedNumbersOnly - Only number input is allowed. This includes decimal point and minus sign.
-    \o Qt.ImhUppercaseOnly - Only upper case letter input is allowed.
-    \o Qt.ImhLowercaseOnly - Only lower case letter input is allowed.
-    \o Qt.ImhDialableCharactersOnly - Only characters suitable for phone dialing are allowed.
-    \o Qt.ImhEmailCharactersOnly - Only characters suitable for email addresses are allowed.
-    \o Qt.ImhUrlCharactersOnly - Only characters suitable for URLs are allowed.
+    \li Qt.ImhDigitsOnly - Only digits are allowed.
+    \li Qt.ImhFormattedNumbersOnly - Only number input is allowed. This includes decimal point and minus sign.
+    \li Qt.ImhUppercaseOnly - Only upper case letter input is allowed.
+    \li Qt.ImhLowercaseOnly - Only lower case letter input is allowed.
+    \li Qt.ImhDialableCharactersOnly - Only characters suitable for phone dialing are allowed.
+    \li Qt.ImhEmailCharactersOnly - Only characters suitable for email addresses are allowed.
+    \li Qt.ImhUrlCharactersOnly - Only characters suitable for URLs are allowed.
     \endlist
 
     Masks:
 
     \list
-    \o Qt.ImhExclusiveInputMask - This mask yields nonzero if any of the exclusive flags are used.
+    \li Qt.ImhExclusiveInputMask - This mask yields nonzero if any of the exclusive flags are used.
     \endlist
 */
 
@@ -1323,8 +1323,8 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     The cursor position type specifies how the cursor position should be resolved.
 
     \list
-    \o TextInput.CursorBetweenCharacters - Returns the position between characters that is nearest x.
-    \o TextInput.CursorOnCharacter - Returns the position before the character that is nearest x.
+    \li TextInput.CursorBetweenCharacters - Returns the position between characters that is nearest x.
+    \li TextInput.CursorOnCharacter - Returns the position before the character that is nearest x.
     \endlist
 */
 
@@ -2161,8 +2161,8 @@ void QQuickTextInput::setSelectByMouse(bool on)
     Specifies how text should be selected using a mouse.
 
     \list
-    \o TextInput.SelectCharacters - The selection is updated with individual characters. (Default)
-    \o TextInput.SelectWords - The selection is updated with whole words.
+    \li TextInput.SelectCharacters - The selection is updated with individual characters. (Default)
+    \li TextInput.SelectWords - The selection is updated with whole words.
     \endlist
 
     This property only applies when \l selectByMouse is true.
@@ -2295,9 +2295,9 @@ void QQuickTextInput::moveCursorSelection(int position)
     basis.  If not specified the selection mode will default to TextInput.SelectCharacters.
 
     \list
-    \o TextInput.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
+    \li TextInput.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
     the previous cursor position) to the specified position.
-    \o TextInput.SelectWords - Sets the selectionStart and selectionEnd to include all
+    \li TextInput.SelectWords - Sets the selectionStart and selectionEnd to include all
     words between the specified position and the previous cursor position.  Words partially in the
     range are included.
     \endlist
@@ -2930,19 +2930,6 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
 /*!
     \internal
 
-    Initializes the line control with a starting text value of \a txt.
-*/
-void QQuickTextInputPrivate::init(const QString &txt)
-{
-    m_text = txt;
-
-    updateDisplayText();
-    m_cursor = m_text.length();
-}
-
-/*!
-    \internal
-
     Sets the password echo editing to \a editing.  If password echo editing
     is true, then the text of the password is displayed even if the echo
     mode is set to QLineEdit::PasswordEchoOnEdit.  Password echoing editing
@@ -3274,12 +3261,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
     m_textDirty = (oldText != m_text);
 
     bool changed = finishChange(-1, true, edited);
-#ifdef QT_NO_ACCESSIBILITY
     Q_UNUSED(changed)
-#else
-    if (changed)
-        QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::TextUpdated, q, 0));
-#endif
 }
 
 
@@ -3902,10 +3884,6 @@ bool QQuickTextInputPrivate::emitCursorPositionChanged()
                 emit q->selectionEndChanged();
             }
         }
-
-#ifndef QT_NO_ACCESSIBILITY
-        QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::TextCaretMoved, q, 0));
-#endif
 
         return true;
     }

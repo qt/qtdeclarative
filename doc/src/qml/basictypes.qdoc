@@ -88,7 +88,7 @@
     Item { width: 100.45; height: 150.82 }
     \endqml
 
-    \bold{Note:} In QML all reals are stored in double precision, \l
+    \b{Note:} In QML all reals are stored in double precision, \l
     {http://en.wikipedia.org/wiki/IEEE_754} {IEEE floating point}
     format.
 
@@ -331,12 +331,12 @@
     A font type has the properties of a QFont. The properties are:
 
     \list
-    \o \c string font.family
-    \o \c bool font.bold
-    \o \c bool font.italic
-    \o \c bool font.underline
-    \o \c real font.pointSize
-    \o \c int font.pixelSize
+    \li \c string font.family
+    \li \c bool font.bold
+    \li \c bool font.italic
+    \li \c bool font.underline
+    \li \c real font.pointSize
+    \li \c int font.pixelSize
     \endlist
 
     Example:
@@ -357,9 +357,9 @@
     are:
 
     \list
-    \o \c slot action.trigger - invoke the action
-    \o \c bool action.enabled - true if the action is enabled
-    \o \c string action.text - the text associated with the action
+    \li \c slot action.trigger - invoke the action
+    \li \c bool action.enabled - true if the action is enabled
+    \li \c string action.text - the text associated with the action
     \endlist
 
     Actions are used like this:
@@ -458,7 +458,7 @@
     \endqml
 
     It is important to note that changes in regular properties of JavaScript
-    objects assigned to a var property will \bold{not} trigger updates of bindings
+    objects assigned to a var property will \b{not} trigger updates of bindings
     that access them.  The example below will display "The car has 4 wheels" as
     the change to the wheels property will not cause the reevaluation of the
     binding assigned to the "text" property:
@@ -537,8 +537,8 @@
     Finally, the \c variant type can also hold:
 
     \list
-    \o An array of \l {QML Basic Types}{basic type} values
-    \o A map of key-value pairs with \l {QML Basic Types}{basic-type} values
+    \li An array of \l {QML Basic Types}{basic type} values
+    \li A map of key-value pairs with \l {QML Basic Types}{basic-type} values
     \endlist
 
     For example, below is an \c items array and an \c attributes map. Their
@@ -562,12 +562,12 @@
     \endqml
 
     While this is a convenient way to store array and map-type values, you
-    must be aware that the \c items and \c attributes properties above are \i not
+    must be aware that the \c items and \c attributes properties above are \e not
     QML objects (and certainly not JavaScript object either) and the key-value
-    pairs in \c attributes are \i not QML properties. Rather, the \c items
+    pairs in \c attributes are \e not QML properties. Rather, the \c items
     property holds an array of values, and \c attributes holds a set of key-value
     pairs. Since they are stored as a set of values, instead of as an object,
-    their contents \i cannot be modified individually:
+    their contents \e cannot be modified individually:
 
     \qml
     Item {
@@ -593,7 +593,7 @@
     One way to "update" the contents of an array or map is to copy the property
     to a JavaScript object, modify the copy as desired, and then reassign the
     property to the updated copy. Note, however, that this is not efficient.
-    In the example below, which reassigns the \c attributes property, the \i entire
+    In the example below, which reassigns the \c attributes property, the \e entire
     set of key-value pairs must be serialized and deserialized every time it is
     copied between a JavaScript object and a QML property:
 
@@ -616,7 +616,7 @@
     within a JavaScript file.
 
     JavaScript programmers should also note that when a JavaScript object is
-    copied to an array or map property, the \i contents of the object (that is,
+    copied to an array or map property, the \e contents of the object (that is,
     its key-value properties) are copied, rather than the object itself. The
     property does not hold a reference to the original JavaScript object, and
     extra data such as the object's JavaScript prototype chain is also lost in

@@ -6,4 +6,6 @@ SUBDIRS=\
     particles \
     qmldevtools
 
+testcocoon: SUBDIRS -= headersclean
+
 contains(QT_CONFIG, qmltest): SUBDIRS += qmltest

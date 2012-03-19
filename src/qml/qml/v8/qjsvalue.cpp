@@ -426,18 +426,18 @@ quint32 QJSValue::toUInt() const
   The conversion is performed according to the following table:
 
     \table
-    \header \o Input Type \o Result
-    \row    \o Undefined  \o An invalid QVariant.
-    \row    \o Null       \o An invalid QVariant.
-    \row    \o Boolean    \o A QVariant containing the value of the boolean.
-    \row    \o Number     \o A QVariant containing the value of the number.
-    \row    \o String     \o A QVariant containing the value of the string.
-    \row    \o QVariant Object \o The result is the QVariant value of the object (no conversion).
-    \row    \o QObject Object \o A QVariant containing a pointer to the QObject.
-    \row    \o Date Object \o A QVariant containing the date value (toDateTime()).
-    \row    \o RegExp Object \o A QVariant containing the regular expression value.
-    \row    \o Array Object \o The array is converted to a QVariantList. Each element is converted to a QVariant, recursively; cyclic references are not followed.
-    \row    \o Object     \o The object is converted to a QVariantMap. Each property is converted to a QVariant, recursively; cyclic references are not followed.
+    \header \li Input Type \li Result
+    \row    \li Undefined  \li An invalid QVariant.
+    \row    \li Null       \li An invalid QVariant.
+    \row    \li Boolean    \li A QVariant containing the value of the boolean.
+    \row    \li Number     \li A QVariant containing the value of the number.
+    \row    \li String     \li A QVariant containing the value of the string.
+    \row    \li QVariant Object \li The result is the QVariant value of the object (no conversion).
+    \row    \li QObject Object \li A QVariant containing a pointer to the QObject.
+    \row    \li Date Object \li A QVariant containing the date value (toDateTime()).
+    \row    \li RegExp Object \li A QVariant containing the regular expression value.
+    \row    \li Array Object \li The array is converted to a QVariantList. Each element is converted to a QVariant, recursively; cyclic references are not followed.
+    \row    \li Object     \li The object is converted to a QVariantMap. Each property is converted to a QVariant, recursively; cyclic references are not followed.
     \endtable
 
   \sa isVariant()
@@ -634,13 +634,13 @@ bool QJSValue::equals(const QJSValue& other) const
   the result depends on the type, as shown in the following table:
 
     \table
-    \header \o Type \o Result
-    \row    \o Undefined  \o true
-    \row    \o Null       \o true
-    \row    \o Boolean    \o true if both values are true, false otherwise
-    \row    \o Number     \o false if either value is NaN (Not-a-Number); true if values are equal, false otherwise
-    \row    \o String     \o true if both values are exactly the same sequence of characters, false otherwise
-    \row    \o Object     \o true if both values refer to the same object, false otherwise
+    \header \li Type \li Result
+    \row    \li Undefined  \li true
+    \row    \li Null       \li true
+    \row    \li Boolean    \li true if both values are true, false otherwise
+    \row    \li Number     \li false if either value is NaN (Not-a-Number); true if values are equal, false otherwise
+    \row    \li String     \li true if both values are exactly the same sequence of characters, false otherwise
+    \row    \li Object     \li true if both values refer to the same object, false otherwise
     \endtable
 
   \sa equals()
@@ -737,11 +737,11 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
   delete operator. In particular:
 
   \list
-  \o Non-configurable properties cannot be deleted.
-  \o This function will return true even if this object doesn't
+  \li Non-configurable properties cannot be deleted.
+  \li This function will return true even if this object doesn't
      have a property of the given \a name (i.e., non-existent
      properties are "trivially deletable").
-  \o If this object doesn't have an own property of the given
+  \li If this object doesn't have an own property of the given
      \a name, but an object in the prototype() chain does, the
      prototype object's property is not deleted, and this function
      returns true.

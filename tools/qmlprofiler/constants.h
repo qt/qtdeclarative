@@ -54,15 +54,6 @@ const char CMD_RECORD2[] ="r";
 const char CMD_QUIT[] ="quit";
 const char CMD_QUIT2[] = "q";
 
-const char TYPE_PAINTING_STR[] = "Painting";
-const char TYPE_COMPILING_STR[] = "Compiling";
-const char TYPE_CREATING_STR[] = "Creating";
-const char TYPE_BINDING_STR[] = "Binding";
-const char TYPE_HANDLINGSIGNAL_STR[] = "HandlingSignal";
-const char PROFILER_FILE_VERSION[] = "1.02";
-
-const int MIN_LEVEL = 1;
-
-} // Contants
+} // Constants
 
 #endif // CONSTANTS_H

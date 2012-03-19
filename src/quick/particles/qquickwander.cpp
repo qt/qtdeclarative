@@ -73,9 +73,9 @@ QT_BEGIN_NAMESPACE
 
     What attribute of particles is directly affected.
     \list
-    \o PointAttractor.Position
-    \o PointAttractor.Velocity
-    \o PointAttractor.Acceleration
+    \li PointAttractor.Position
+    \li PointAttractor.Velocity
+    \li PointAttractor.Acceleration
     \endlist
 */
 

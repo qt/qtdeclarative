@@ -1306,11 +1306,13 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
 
     v8::HandleScope handleScope;
     v8::Context::Scope contextScope(engine->context());
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("model"), get_model);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("groups"), get_groups, set_groups);
-    ft->PrototypeTemplate()->SetAccessor(v8::String::New("isUnresolved"), get_member, 0, v8::Int32::New(30));
+
+    constructor = qPersistentNew(v8::ObjectTemplate::New());
+
+    constructor->SetHasExternalResource(true);
+    constructor->SetAccessor(v8::String::New("model"), get_model);
+    constructor->SetAccessor(v8::String::New("groups"), get_groups, set_groups);
+    constructor->SetAccessor(v8::String::New("isUnresolved"), get_member, 0, v8::Int32::New(30));
 
     int notifierId = 0;
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
@@ -1321,7 +1323,7 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
                 propertyName.toUtf8(), "bool", notifierId);
         propertyBuilder.setWritable(true);
 
-        ft->PrototypeTemplate()->SetAccessor(
+        constructor->SetAccessor(
                 engine->toString(propertyName), get_member, set_member, v8::Int32::New(i + 1));
     }
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
@@ -1331,13 +1333,11 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
                 propertyName.toUtf8(), "int", notifierId);
         propertyBuilder.setWritable(true);
 
-        ft->PrototypeTemplate()->SetAccessor(
+        constructor->SetAccessor(
                 engine->toString(propertyName), get_index, 0, v8::Int32::New(i + 1));
     }
 
     metaObject = builder.toMetaObject();
-
-    constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
 QQuickVisualDataModelItemMetaType::~QQuickVisualDataModelItemMetaType()
@@ -1891,16 +1891,16 @@ void QQuickVisualDataGroup::setDefaultInclude(bool include)
     VisualDataModel attached as well as the model for that item.  It has the properties:
 
     \list
-    \o \b model The model data of the item.  This is the same as the model context property in
+    \li \b model The model data of the item.  This is the same as the model context property in
     a delegate
-    \o \b groups A list the of names of groups the item is a member of.  This property can be
+    \li \b groups A list the of names of groups the item is a member of.  This property can be
     written to change the item's membership.
-    \o \b inItems Whether the item belongs to the \l {QtQuick2::VisualDataModel::items}{items} group.
+    \li \b inItems Whether the item belongs to the \l {QtQuick2::VisualDataModel::items}{items} group.
     Writing to this property will add or remove the item from the group.
-    \o \b itemsIndex The index of the item within the \l {QtQuick2::VisualDataModel::items}{items} group.
-    \o \b {in\i{GroupName}} Whether the item belongs to the dynamic group \i groupName.  Writing to
+    \li \b itemsIndex The index of the item within the \l {QtQuick2::VisualDataModel::items}{items} group.
+    \li \b {in\e{GroupName}} Whether the item belongs to the dynamic group \e groupName.  Writing to
     this property will add or remove the item from the group.
-    \o \b {\i{groupName}Index} The index of the item within the dynamic group \i groupName.
+    \li \b {\e{groupName}Index} The index of the item within the dynamic group \e groupName.
     \endlist
 */
 

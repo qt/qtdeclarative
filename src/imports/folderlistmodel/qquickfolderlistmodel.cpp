@@ -208,21 +208,21 @@ void QQuickFolderListModelPrivate::_q_sortFinished(const QList<FileProperty> &li
     \e{Elements in the Qt.labs module are not guaranteed to remain compatible
     in future versions.}
 
-    \bold{import Qt.labs.folderlistmodel 1.0}
+    \b{import Qt.labs.folderlistmodel 1.0}
 
     The \l folder property specifies the folder to access. Information about the
     files and directories in the folder is supplied via the model's interface.
     Components access names and paths via the following roles:
 
     \list
-    \o \c fileName
-    \o \c filePath
-    \o \c fileBaseName
-    \o \c fileSuffix
-    \o \c fileSize
-    \o \c fileModified
-    \o \c fileAccessed
-    \o \c fileIsDir
+    \li \c fileName
+    \li \c filePath
+    \li \c fileBaseName
+    \li \c fileSuffix
+    \li \c fileSize
+    \li \c fileModified
+    \li \c fileAccessed
+    \li \c fileIsDir
     \endlist
 
     Additionally a file entry can be differentiated from a folder entry via the
@@ -493,11 +493,11 @@ void QQuickFolderListModel::componentComplete()
     The \a sortField property contains field to use for sorting.  sortField
     may be one of:
     \list
-    \o Unsorted - no sorting is applied.
-    \o Name - sort by filename
-    \o LastModified - sort by time modified
-    \o Size - sort by file size
-    \o Type - sort by file type (extension)
+    \li Unsorted - no sorting is applied.
+    \li Name - sort by filename
+    \li LastModified - sort by time modified
+    \li Size - sort by file size
+    \li Type - sort by file type (extension)
     \endlist
 
     \sa sortReversed
@@ -672,14 +672,14 @@ void QQuickFolderListModel::setShowOnlyReadable(bool on)
     are available.
 
     \list
-        \o \c fileName
-        \o \c filePath
-        \o \c fileBaseName
-        \o \c fileSuffix
-        \o \c fileSize
-        \o \c fileModified
-        \o \c fileAccessed
-        \o \c fileIsDir
+        \li \c fileName
+        \li \c filePath
+        \li \c fileBaseName
+        \li \c fileSuffix
+        \li \c fileSize
+        \li \c fileModified
+        \li \c fileAccessed
+        \li \c fileIsDir
     \endlist
 */
 QVariant QQuickFolderListModel::get(int idx, const QString &property) const

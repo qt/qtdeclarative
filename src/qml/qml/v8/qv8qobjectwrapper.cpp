@@ -599,11 +599,10 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
                                                                                              v8::StackTrace::kScriptName));
                 v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
                 int lineNumber = frame->GetLineNumber();
-                int columNumber = frame->GetColumn();
+                int columnNumber = frame->GetColumn();
                 QString url = engine->toString(frame->GetScriptName());
 
-                newBinding = new QQmlBinding(&function, object, context);
-                newBinding->setSourceLocation(url, lineNumber, columNumber);
+                newBinding = new QQmlBinding(&function, object, context, url, lineNumber, columnNumber);
                 newBinding->setTarget(object, *property, context);
                 newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                              QQmlBinding::RequiresThisObject);
@@ -619,11 +618,10 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
                                                                                          v8::StackTrace::kScriptName));
             v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
             int lineNumber = frame->GetLineNumber();
-            int columNumber = frame->GetColumn();
+            int columnNumber = frame->GetColumn();
             QString url = engine->toString(frame->GetScriptName());
 
-            newBinding = new QQmlBinding(&function, object, context);
-            newBinding->setSourceLocation(url, lineNumber, columNumber);
+            newBinding = new QQmlBinding(&function, object, context, url, lineNumber, columnNumber);
             newBinding->setTarget(object, *property, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                          QQmlBinding::RequiresThisObject);
@@ -925,8 +923,10 @@ static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void 
         QQmlData *ddata = QQmlData::get(object, false);
         if (ddata) {
             ddata->v8object.Clear();
-            if (!object->parent() && !ddata->indestructible)
+            if (!object->parent() && !ddata->indestructible) {
+                ddata->isQueuedForDeletion = true;
                 object->deleteLater();
+            }
         }
     }
 
@@ -1084,12 +1084,15 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         return v8::Null();
 
     if (QObjectPrivate::get(object)->wasDeleted)
-       return v8::Undefined();
-    
+       return v8::Null();
+
     QQmlData *ddata = QQmlData::get(object, true);
 
     if (!ddata) 
         return v8::Undefined();
+
+    if (ddata->isQueuedForDeletion)
+        return v8::Null();
 
     if (ddata->v8objectid == m_id && !ddata->v8object.IsEmpty()) {
         // We own the v8object 

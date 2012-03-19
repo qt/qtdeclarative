@@ -45,7 +45,6 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlcompiler_p.h>
 #include <private/qqmlproperty_p.h>
-#include <private/qqmlbinding_p_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qobject_p.h>
 #include <private/qqmltrace_p.h>
@@ -157,9 +156,8 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         ep->dereferenceScarceResources(); 
 
     } else {
-        QQmlProperty p = QQmlPropertyPrivate::restore(target, instruction->property,
-                                                                      context);
-        QQmlBindingPrivate::printBindingLoopError(p);
+        QQmlProperty p = QQmlPropertyPrivate::restore(target, instruction->property, context);
+        QQmlAbstractBinding::printBindingLoopError(p);
     }
 }
 

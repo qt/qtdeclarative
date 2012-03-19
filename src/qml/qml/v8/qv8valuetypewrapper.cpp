@@ -352,8 +352,8 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
             int columnNumber = frame->GetColumn();
             QString url = r->engine->toString(frame->GetScriptName());
 
-            newBinding = new QQmlBinding(&function, reference->object, context);
-            newBinding->setSourceLocation(url, lineNumber, columnNumber);
+            newBinding = new QQmlBinding(&function, reference->object, context,
+                                         url, lineNumber, columnNumber);
             newBinding->setTarget(reference->object, cacheData, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                          QQmlBinding::RequiresThisObject);

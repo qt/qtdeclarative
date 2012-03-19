@@ -34,8 +34,8 @@
 \section1 Canvas Element
 
 \list
-    \o \l{Canvas}
-    \o \l{Context2D}
+    \li \l{Canvas}
+    \li \l{Context2D}
 \endlist
 
 The Canvas and Context2D elements implement the \l{HTML Canvas API 2D Context}

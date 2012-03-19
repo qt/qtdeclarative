@@ -428,6 +428,17 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
         if (r.isValid()) {
             if (r.type) {
                 _expr.code = _block->ATTACH_TYPE(name, r.type, IR::Name::ScopeStorage, line, column);
+            } else if (r.importNamespace) {
+                QQmlMetaType::ModuleApiInstance *moduleApi = m_expression->importCache->moduleApi(r.importNamespace);
+                if (moduleApi) {
+                    if (moduleApi->qobjectCallback) {
+                        moduleApi->qobjectApi = moduleApi->qobjectCallback(QQmlEnginePrivate::get(m_engine), QQmlEnginePrivate::get(m_engine));
+                        moduleApi->qobjectCallback = 0;
+                        moduleApi->scriptCallback = 0;
+                    }
+                    if (moduleApi->qobjectApi)
+                        _expr.code = _block->MODULE_OBJECT(name, moduleApi->qobjectApi->metaObject(), IR::Name::MemberStorage, line, column);
+                }
             }
             // We don't support anything else
         } else {
@@ -602,6 +613,46 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     _expr.code = _block->SYMBOL(baseName, irType, name, attachedMeta, data, line, column);
                 }
                 break;
+
+            case IR::Name::ModuleObject: {
+                if (name.at(0).isUpper()) {
+                    QByteArray utf8Name = name.toUtf8();
+                    const char *enumName = utf8Name.constData();
+
+                    const QMetaObject *meta = baseName->meta;
+                    bool found = false;
+                    for (int ii = 0; !found && ii < meta->enumeratorCount(); ++ii) {
+                        QMetaEnum e = meta->enumerator(ii);
+                        for (int jj = 0; !found && jj < e.keyCount(); ++jj) {
+                            if (0 == strcmp(e.key(jj), enumName)) {
+                                found = true;
+                                _expr.code = _block->CONST(IR::IntType, e.value(jj));
+                            }
+                        }
+                    }
+                    if (!found && qmlVerboseCompiler())
+                        qWarning() << "*** unresolved enum:"
+                                   << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                } else {
+                    QQmlPropertyCache *cache = m_engine->cache(baseName->meta);
+                    if (!cache) return false;
+                    QQmlPropertyData *data = cache->property(name);
+
+                    if (!data || data->isFunction())
+                        return false; // Don't support methods (or non-existing properties ;)
+
+                    if (!data->isFinal()) {
+                        if (qmlVerboseCompiler())
+                            qWarning() << "*** non-final attached property:"
+                                       << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                        return false; // We don't know enough about this property
+                    }
+
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, baseName->meta);
+                    _expr.code = _block->SYMBOL(baseName, irType, name, baseName->meta, data, line, column);
+                }
+            }
+            break;
 
             case IR::Name::IdObject: {
                 const QQmlScript::Object *idObject = baseName->idObject;
@@ -830,13 +881,15 @@ void QV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left, ExprResult
             implicitCvt(left, t);
             implicitCvt(right, t);
         }
+    } else if ((left.type() != IR::ObjectType && left.type() != IR::NullType) ||
+               (right.type() != IR::ObjectType && right.type() != IR::NullType))
+        return;
 
-        if (_expr.hint == ExprResult::cx) {
-            _expr.format = ExprResult::cx;
-            _block->CJUMP(_block->BINOP(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
-        } else {
-            _expr.code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
-        }
+    if (_expr.hint == ExprResult::cx) {
+        _expr.format = ExprResult::cx;
+        _block->CJUMP(_block->BINOP(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
+    } else {
+        _expr.code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
     }
 }
 
@@ -860,12 +913,15 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
             IR::BasicBlock *iffalse = _function->newBasicBlock();
             IR::BasicBlock *endif = _function->newBasicBlock();
 
-            condition(ast->left, iftrue, iffalse);
+            ExprResult left = expression(ast->left);
+            IR::Temp *cond = _block->TEMP(IR::BoolType);
+            _block->MOVE(cond, left);
+            _block->CJUMP(cond, iftrue, iffalse);
 
             IR::Temp *r = _block->TEMP(IR::InvalidType);
 
             _block = iffalse;
-            _block->MOVE(r, _block->CONST(IR::BoolType, 0)); // ### use the right null value
+            _block->MOVE(r, cond);
             _block->JUMP(endif);
 
             _block = iftrue;
@@ -873,9 +929,12 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
             _block->MOVE(r, right);
             _block->JUMP(endif);
 
+            if (left.type() != right.type())
+                discard();
+
             _block = endif;
 
-            r->type = right.type(); // ### not exactly, it can be IR::BoolType.
+            r->type = right.type();
             _expr.code = r;
         }
     } break;
@@ -942,9 +1001,6 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
             implicitCvt(left, IR::RealType);
             implicitCvt(right, IR::RealType);
             binop(ast, left, right);
-        } else if (left.type() == IR::BoolType || right.type() == IR::BoolType) {
-            implicitCvt(left, IR::BoolType);
-            implicitCvt(right, IR::BoolType);
         } else if (left.isValid() && right.isValid()) {
             binop(ast, left, right);
         }
@@ -956,16 +1012,21 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
         ExprResult right = expression(ast->right);
         if (left.type() == right.type()) {
             binop(ast, left, right);
-        } else if (left.type() >= IR::BoolType && right.type() >= IR::BoolType) {
+        } else if (left.type() > IR::BoolType && right.type() > IR::BoolType) {
             // left and right have numeric type (int or real)
             binop(ast, left, right);
+        } else if ((left.type() == IR::ObjectType && right.type() == IR::NullType) ||
+                   (right.type() == IR::ObjectType && left.type() == IR::NullType)) {
+            // comparing a qobject with null
+            binop(ast, left, right);
         } else if (left.isValid() && right.isValid()) {
+            // left and right have different types
             const bool isEq = ast->op == QSOperator::StrictEqual;
             if (_expr.hint == ExprResult::cx) {
                 _expr.format = ExprResult::cx;
-                _block->JUMP(isEq ? _expr.iftrue : _expr.iffalse);
+                _block->JUMP(isEq ? _expr.iffalse : _expr.iftrue);
             } else {
-                _expr.code = _block->CONST(IR::BoolType, isEq ? 1 : 0);
+                _expr.code = _block->CONST(IR::BoolType, isEq ? 0 : 1);
             }
         }
     } break;

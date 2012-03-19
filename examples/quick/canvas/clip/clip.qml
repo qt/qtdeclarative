@@ -42,17 +42,17 @@ import QtQuick 2.0
 import "../contents"
 Item {
   id:container
-  width:360
-  height:600
+  width:320
+  height:480
 
   Column {
     spacing:5
     anchors.fill:parent
-    Text { font.pointSize:25; text:"Makes squircle icon with clip"; anchors.horizontalCenter:parent.horizontalCenter}
+    Text { font.pointSize:15; text:"Makes squircle icon with clip"; anchors.horizontalCenter:parent.horizontalCenter}
     Canvas {
       id:canvas
-      width:360
-      height:360
+      width:320
+      height:280
       property string strokeStyle:"blue"
       property string fillStyle:"steelblue"
       property int lineWidth:2
@@ -135,15 +135,15 @@ Item {
 
     Rectangle {
         id:controls
-        width:360
-        height:160
+        width:320
+        height:150
         Column {
           spacing:3
-          Slider {id:nCtrl; width:300; height:30; min:1; max:10; init:4; name:"N"}
-          Slider {id:rCtrl; width:300; height:30; min:30; max:180; init:100; name:"Radius"}
-          Slider {id:xCtrl; width:300; height:30; min:50; max:300; init:180; name:"X"}
-          Slider {id:yCtrl; width:300; height:30; min:30; max:300; init:220; name:"Y"}
-          Slider {id:alphaCtrl; width:300; height:30; min:0; max:1; init:1; name:"Alpha"}
+          Slider {id:nCtrl; width:300; height:20; min:1; max:10; init:4; name:"N"}
+          Slider {id:rCtrl; width:300; height:20; min:30; max:180; init:100; name:"Radius"}
+          Slider {id:xCtrl; width:300; height:20; min:50; max:300; init:180; name:"X"}
+          Slider {id:yCtrl; width:300; height:20; min:30; max:300; init:220; name:"Y"}
+          Slider {id:alphaCtrl; width:300; height:20; min:0; max:1; init:1; name:"Alpha"}
         }
     }
   }

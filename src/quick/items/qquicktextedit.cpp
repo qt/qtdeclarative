@@ -159,11 +159,11 @@ QString QQuickTextEdit::text() const
 
     The weight can be one of:
     \list
-    \o Font.Light
-    \o Font.Normal - the default
-    \o Font.DemiBold
-    \o Font.Bold
-    \o Font.Black
+    \li Font.Light
+    \li Font.Normal - the default
+    \li Font.DemiBold
+    \li Font.Bold
+    \li Font.Black
     \endlist
 
     \qml
@@ -230,11 +230,11 @@ QString QQuickTextEdit::text() const
     Sets the capitalization for the text.
 
     \list
-    \o Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
-    \o Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \o Font.AllLowercase - This alters the text to be rendered in all lowercase type.
-    \o Font.SmallCaps - This alters the text to be rendered in small-caps type.
-    \o Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
+    \li Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
+    \li Font.AllUppercase - This alters the text to be rendered in all uppercase type.
+    \li Font.AllLowercase - This alters the text to be rendered in all lowercase type.
+    \li Font.SmallCaps - This alters the text to be rendered in small-caps type.
+    \li Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
     \endlist
 
     \qml
@@ -274,9 +274,9 @@ void QQuickTextEdit::setText(const QString &text)
     The way the text property should be displayed.
 
     \list
-    \o TextEdit.AutoText
-    \o TextEdit.PlainText
-    \o TextEdit.RichText
+    \li TextEdit.AutoText
+    \li TextEdit.PlainText
+    \li TextEdit.RichText
     \endlist
 
     The default is TextEdit.PlainText.  If the text format is TextEdit.AutoText the text edit
@@ -285,7 +285,7 @@ void QQuickTextEdit::setText(const QString &text)
 
     \table
     \row
-    \o
+    \li
     \qml
 Column {
     TextEdit {
@@ -304,7 +304,7 @@ Column {
     }
 }
     \endqml
-    \o \image declarative-textformat.png
+    \li \image declarative-textformat.png
     \endtable
 */
 QQuickTextEdit::TextFormat QQuickTextEdit::textFormat() const
@@ -459,17 +459,17 @@ void QQuickTextEdit::setSelectedTextColor(const QColor &color)
 
     Valid values for \c horizontalAlignment are:
     \list
-    \o TextEdit.AlignLeft (default)
-    \o TextEdit.AlignRight
-    \o TextEdit.AlignHCenter
-    \o TextEdit.AlignJustify
+    \li TextEdit.AlignLeft (default)
+    \li TextEdit.AlignRight
+    \li TextEdit.AlignHCenter
+    \li TextEdit.AlignJustify
     \endlist
 
     Valid values for \c verticalAlignment are:
     \list
-    \o TextEdit.AlignTop (default)
-    \o TextEdit.AlignBottom
-    \o TextEdit.AlignVCenter
+    \li TextEdit.AlignTop (default)
+    \li TextEdit.AlignBottom
+    \li TextEdit.AlignVCenter
     \endlist
 
     When using the attached property LayoutMirroring::enabled to mirror application
@@ -591,10 +591,10 @@ void QQuickTextEdit::setVAlign(QQuickTextEdit::VAlignment alignment)
     The text will only wrap if an explicit width has been set.
 
     \list
-    \o TextEdit.NoWrap - no wrapping will be performed. If the text contains insufficient newlines, then implicitWidth will exceed a set width.
-    \o TextEdit.WordWrap - wrapping is done on word boundaries only. If a word is too long, implicitWidth will exceed a set width.
-    \o TextEdit.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
-    \o TextEdit.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
+    \li TextEdit.NoWrap - no wrapping will be performed. If the text contains insufficient newlines, then implicitWidth will exceed a set width.
+    \li TextEdit.WordWrap - wrapping is done on word boundaries only. If a word is too long, implicitWidth will exceed a set width.
+    \li TextEdit.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
+    \li TextEdit.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
     \endlist
 
     The default is TextEdit.NoWrap. If you set a width, consider using TextEdit.Wrap.
@@ -770,9 +770,9 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
     basis.  If not specified the selection mode will default to TextEdit.SelectCharacters.
 
     \list
-    \o TextEdit.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
+    \li TextEdit.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
     the previous cursor position) to the specified position.
-    \o TextEdit.SelectWords - Sets the selectionStart and selectionEnd to include all
+    \li TextEdit.SelectWords - Sets the selectionStart and selectionEnd to include all
     words between the specified position and the previous cursor position.  Words partially in the
     range are included.
     \endlist
@@ -1089,36 +1089,36 @@ void QQuickTextEdit::setTextMargin(qreal margin)
     Flags that alter behaviour are:
 
     \list
-    \o Qt.ImhHiddenText - Characters should be hidden, as is typically used when entering passwords.
-    \o Qt.ImhSensitiveData - Typed text should not be stored by the active input method
+    \li Qt.ImhHiddenText - Characters should be hidden, as is typically used when entering passwords.
+    \li Qt.ImhSensitiveData - Typed text should not be stored by the active input method
             in any persistent storage like predictive user dictionary.
-    \o Qt.ImhNoAutoUppercase - The input method should not try to automatically switch to upper case
+    \li Qt.ImhNoAutoUppercase - The input method should not try to automatically switch to upper case
             when a sentence ends.
-    \o Qt.ImhPreferNumbers - Numbers are preferred (but not required).
-    \o Qt.ImhPreferUppercase - Upper case letters are preferred (but not required).
-    \o Qt.ImhPreferLowercase - Lower case letters are preferred (but not required).
-    \o Qt.ImhNoPredictiveText - Do not use predictive text (i.e. dictionary lookup) while typing.
+    \li Qt.ImhPreferNumbers - Numbers are preferred (but not required).
+    \li Qt.ImhPreferUppercase - Upper case letters are preferred (but not required).
+    \li Qt.ImhPreferLowercase - Lower case letters are preferred (but not required).
+    \li Qt.ImhNoPredictiveText - Do not use predictive text (i.e. dictionary lookup) while typing.
 
-    \o Qt.ImhDate - The text editor functions as a date field.
-    \o Qt.ImhTime - The text editor functions as a time field.
+    \li Qt.ImhDate - The text editor functions as a date field.
+    \li Qt.ImhTime - The text editor functions as a time field.
     \endlist
 
     Flags that restrict input (exclusive flags) are:
 
     \list
-    \o Qt.ImhDigitsOnly - Only digits are allowed.
-    \o Qt.ImhFormattedNumbersOnly - Only number input is allowed. This includes decimal point and minus sign.
-    \o Qt.ImhUppercaseOnly - Only upper case letter input is allowed.
-    \o Qt.ImhLowercaseOnly - Only lower case letter input is allowed.
-    \o Qt.ImhDialableCharactersOnly - Only characters suitable for phone dialing are allowed.
-    \o Qt.ImhEmailCharactersOnly - Only characters suitable for email addresses are allowed.
-    \o Qt.ImhUrlCharactersOnly - Only characters suitable for URLs are allowed.
+    \li Qt.ImhDigitsOnly - Only digits are allowed.
+    \li Qt.ImhFormattedNumbersOnly - Only number input is allowed. This includes decimal point and minus sign.
+    \li Qt.ImhUppercaseOnly - Only upper case letter input is allowed.
+    \li Qt.ImhLowercaseOnly - Only lower case letter input is allowed.
+    \li Qt.ImhDialableCharactersOnly - Only characters suitable for phone dialing are allowed.
+    \li Qt.ImhEmailCharactersOnly - Only characters suitable for email addresses are allowed.
+    \li Qt.ImhUrlCharactersOnly - Only characters suitable for URLs are allowed.
     \endlist
 
     Masks:
 
     \list
-    \o Qt.ImhExclusiveInputMask - This mask yields nonzero if any of the exclusive flags are used.
+    \li Qt.ImhExclusiveInputMask - This mask yields nonzero if any of the exclusive flags are used.
     \endlist
 */
 
@@ -1203,8 +1203,8 @@ void QQuickTextEdit::setSelectByMouse(bool on)
     Specifies how text should be selected using a mouse.
 
     \list
-    \o TextEdit.SelectCharacters - The selection is updated with individual characters. (Default)
-    \o TextEdit.SelectWords - The selection is updated with whole words.
+    \li TextEdit.SelectCharacters - The selection is updated with individual characters. (Default)
+    \li TextEdit.SelectWords - The selection is updated with whole words.
     \endlist
 
     This property only applies when \l selectByMouse is true.

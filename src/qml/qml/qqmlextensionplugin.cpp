@@ -57,10 +57,10 @@ QT_BEGIN_NAMESPACE
     To write a QML extension plugin:
     
     \list
-    \o Subclass QQmlExtensionPlugin, implement registerTypes() method
+    \li Subclass QQmlExtensionPlugin, implement registerTypes() method
     to register types using qmlRegisterType(), and export the class using the Q_EXPORT_PLUGIN2() macro
-    \o Write an appropriate project file for the plugin
-    \o Create a \l{Writing a qmldir file}{qmldir file} to describe the plugin
+    \li Write an appropriate project file for the plugin
+    \li Create a \l{Writing a qmldir file}{qmldir file} to describe the plugin
     \endlist
 
     QML extension plugins can be used to provide either application-specific or

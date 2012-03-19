@@ -295,22 +295,22 @@ void QQuickFontLoader::setName(const QString &name)
 
     This property holds the status of font loading.  It can be one of:
     \list
-    \o FontLoader.Null - no font has been set
-    \o FontLoader.Ready - the font has been loaded
-    \o FontLoader.Loading - the font is currently being loaded
-    \o FontLoader.Error - an error occurred while loading the font
+    \li FontLoader.Null - no font has been set
+    \li FontLoader.Ready - the font has been loaded
+    \li FontLoader.Loading - the font is currently being loaded
+    \li FontLoader.Error - an error occurred while loading the font
     \endlist
 
     Use this status to provide an update or respond to the status change in some way.
     For example, you could:
 
     \list
-    \o Trigger a state change:
+    \li Trigger a state change:
     \qml
         State { name: 'loaded'; when: loader.status == FontLoader.Ready }
     \endqml
 
-    \o Implement an \c onStatusChanged signal handler:
+    \li Implement an \c onStatusChanged signal handler:
     \qml
         FontLoader {
             id: loader
@@ -318,7 +318,7 @@ void QQuickFontLoader::setName(const QString &name)
         }
     \endqml
 
-    \o Bind to the status value:
+    \li Bind to the status value:
     \qml
         Text { text: loader.status == FontLoader.Ready ? 'Loaded' : 'Not loaded' }
     \endqml

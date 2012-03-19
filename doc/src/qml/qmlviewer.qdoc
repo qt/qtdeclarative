@@ -38,7 +38,7 @@ runtime to load QML documents and also includes additional features useful for
 the development of QML-based applications.
 
 The QML Viewer is a tool for testing and developing QML applications. It is
-\i not intended for use in a production environment and should not be used for the
+\e not intended for use in a production environment and should not be used for the
 deployment of QML applications. In those cases, the QML runtime should be invoked
 from a Qt application instead; see \l {Qt Declarative UI Runtime} for more
 information.
@@ -172,9 +172,9 @@ information about the application's runtime environment through the following pr
 \table
 \row
 
-\o \c runtime.isActiveWindow
+\li \c runtime.isActiveWindow
 
-\o This property indicates whether the QML Viewer window is the current active
+\li This property indicates whether the QML Viewer window is the current active
 window on the system. It is useful for "pausing" an application, particularly
 animations, when the QML Viewer loses focus or moves to the background.
 
@@ -193,22 +193,22 @@ Rectangle {
 }
 \endqml
 
-\bold{Note:} Since Qt Quick 1.1 this information is accessible outside of the QML Viewer,
+\b{Note:} Since Qt Quick 1.1 this information is accessible outside of the QML Viewer,
 through the \c active property of the \l {QML:Qt::application}{Qt.application} object.
 
 \row
 
-\o \c runtime.orientation
+\li \c runtime.orientation
 
-\o This property indicates the current orientation of the QML Viewer.
+\li This property indicates the current orientation of the QML Viewer.
 This indicates the orientation currently selected in the QML Viewer's
-\i {Settings -> Properties} menu. The \c orientation value can be one of the following:
+\e {Settings -> Properties} menu. The \c orientation value can be one of the following:
 
 \list
-\o \c Orientation.Portrait
-\o \c Orientation.Landscape
-\o \c Orientation.PortraitInverted (Portrait orientation, upside-down)
-\o \c Orientation.LandscapeInverted (Landscape orientation, upside-down)
+\li \c Orientation.Portrait
+\li \c Orientation.Landscape
+\li \c Orientation.PortraitInverted (Portrait orientation, upside-down)
+\li \c Orientation.LandscapeInverted (Landscape orientation, upside-down)
 \endlist
 
 When the viewer's orientation changes, the appearance of the loaded QML document

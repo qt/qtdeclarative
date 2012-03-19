@@ -147,7 +147,7 @@ void QTcpServerConnection::listen()
     d->tcpServer = new QTcpServer(this);
     QObject::connect(d->tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
     if (d->tcpServer->listen(QHostAddress::Any, d->port))
-        qWarning("QML Debugger: Waiting for connection on port %d...", d->port);
+        qDebug("QML Debugger: Waiting for connection on port %d...", d->port);
     else
         qWarning("QML Debugger: Unable to listen to port %d.", d->port);
 }

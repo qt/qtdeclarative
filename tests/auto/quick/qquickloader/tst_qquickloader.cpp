@@ -56,12 +56,20 @@ class PeriodicIncubationController : public QObject,
 {
 public:
     PeriodicIncubationController() {
+        incubated = false;
         startTimer(16);
     }
+
+    bool incubated;
 
 protected:
     virtual void timerEvent(QTimerEvent *) {
         incubateFor(15);
+    }
+
+    virtual void incubatingObjectCountChanged(int count) {
+        if (count)
+            incubated = true;
     }
 };
 
@@ -102,6 +110,7 @@ private slots:
     void asynchronous_data();
     void asynchronous();
     void asynchronous_clear();
+    void simultaneousSyncAsync();
 
     void parented();
     void sizeBound();
@@ -481,7 +490,7 @@ void tst_QQuickLoader::failNetworkRequest()
     QTRY_VERIFY(loader->status() == QQuickLoader::Error);
 
     QVERIFY(loader->item() == 0);
-    QCOMPARE(loader->progress(), 0.0);
+    QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->property("did_load").toInt(), 123);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
 
@@ -644,7 +653,7 @@ void tst_QQuickLoader::initialPropertyValues_data()
             << (QVariantList() << 2 << 0);
 
     QTest::newRow("set source with initial property values specified, active = false") << testFileUrl("initialPropertyValues.3.qml")
-            << (QStringList() << QString(QLatin1String("file://") + testFileUrl("initialPropertyValues.3.qml").toLocalFile() + QLatin1String(":16: TypeError: Cannot read property 'canary' of null")))
+            << (QStringList() << QString(testFileUrl("initialPropertyValues.3.qml").toString() + QLatin1String(":16: TypeError: Cannot read property 'canary' of null")))
             << (QStringList())
             << (QVariantList());
 
@@ -856,7 +865,7 @@ void tst_QQuickLoader::asynchronous_data()
     QTest::newRow("Valid component") << testFileUrl("BigComponent.qml")
             << QStringList();
 
-    QTest::newRow("Non-existant component") << testFileUrl("IDoNotExist.qml")
+    QTest::newRow("Non-existent component") << testFileUrl("IDoNotExist.qml")
             << (QStringList() << QString(testFileUrl("IDoNotExist.qml").toString() + ": File not found"));
 
     QTest::newRow("Invalid component") << testFileUrl("InvalidSourceComponent.qml")
@@ -870,6 +879,8 @@ void tst_QQuickLoader::asynchronous()
 
     if (!engine.incubationController())
         engine.setIncubationController(new PeriodicIncubationController);
+    PeriodicIncubationController *controller = static_cast<PeriodicIncubationController*>(engine.incubationController());
+    controller->incubated = false;
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
@@ -881,19 +892,20 @@ void tst_QQuickLoader::asynchronous()
         QTest::ignoreMessage(QtWarningMsg, warning.toUtf8().constData());
 
     QVERIFY(!loader->item());
+    QCOMPARE(loader->progress(), 0.0);
     root->setProperty("comp", qmlFile.toString());
     QMetaObject::invokeMethod(root, "loadComponent");
     QVERIFY(!loader->item());
 
     if (expectedWarnings.isEmpty()) {
         QCOMPARE(loader->status(), QQuickLoader::Loading);
-        QCOMPARE(engine.incubationController()->incubatingObjectCount(), 1);
-
+        QVERIFY(!controller->incubated); // asynchronous compilation means not immediately compiled/incubating.
+        QTRY_VERIFY(controller->incubated); // but should start incubating once compilation is complete.
         QTRY_VERIFY(loader->item());
         QCOMPARE(loader->progress(), 1.0);
         QCOMPARE(loader->status(), QQuickLoader::Ready);
     } else {
-        QCOMPARE(loader->progress(), 1.0);
+        QTRY_COMPARE(loader->progress(), 1.0);
         QTRY_COMPARE(loader->status(), QQuickLoader::Error);
     }
 
@@ -941,6 +953,37 @@ void tst_QQuickLoader::asynchronous_clear()
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+}
+
+void tst_QQuickLoader::simultaneousSyncAsync()
+{
+    if (!engine.incubationController())
+        engine.setIncubationController(new PeriodicIncubationController);
+    PeriodicIncubationController *controller = static_cast<PeriodicIncubationController*>(engine.incubationController());
+    controller->incubated = false;
+    QQmlComponent component(&engine, testFileUrl("simultaneous.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(root);
+
+    QQuickLoader *asyncLoader = root->findChild<QQuickLoader*>("asyncLoader");
+    QQuickLoader *syncLoader = root->findChild<QQuickLoader*>("syncLoader");
+    QVERIFY(asyncLoader);
+    QVERIFY(syncLoader);
+
+    QVERIFY(!asyncLoader->item());
+    QVERIFY(!syncLoader->item());
+    QMetaObject::invokeMethod(root, "loadComponents");
+    QVERIFY(!asyncLoader->item());
+    QVERIFY(syncLoader->item());
+
+    QCOMPARE(asyncLoader->status(), QQuickLoader::Loading);
+    QVERIFY(!controller->incubated); // asynchronous compilation means not immediately compiled/incubating.
+    QTRY_VERIFY(controller->incubated); // but should start incubating once compilation is complete.
+    QTRY_VERIFY(asyncLoader->item());
+    QCOMPARE(asyncLoader->progress(), 1.0);
+    QCOMPARE(asyncLoader->status(), QQuickLoader::Ready);
+
+    delete root;
 }
 
 void tst_QQuickLoader::parented()

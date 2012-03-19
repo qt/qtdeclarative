@@ -71,12 +71,12 @@ QT_BEGIN_NAMESPACE
     create the displayed border image in the following way:
 
     \list
-    \i The corners (regions 1, 3, 7, and 9) are not scaled at all.
-    \i Regions 2 and 8 are scaled according to
+    \li The corners (regions 1, 3, 7, and 9) are not scaled at all.
+    \li Regions 2 and 8 are scaled according to
        \l{BorderImage::horizontalTileMode}{horizontalTileMode}.
-    \i Regions 4 and 6 are scaled according to
+    \li Regions 4 and 6 are scaled according to
        \l{BorderImage::verticalTileMode}{verticalTileMode}.
-    \i The middle (region 5) is scaled according to both
+    \li The middle (region 5) is scaled according to both
        \l{BorderImage::horizontalTileMode}{horizontalTileMode} and
        \l{BorderImage::verticalTileMode}{verticalTileMode}.
     \endlist
@@ -182,10 +182,10 @@ QQuickBorderImage::~QQuickBorderImage()
     This property describes the status of image loading.  It can be one of:
 
     \list
-    \o BorderImage.Null - no image has been set
-    \o BorderImage.Ready - the image has been loaded
-    \o BorderImage.Loading - the image is currently being loaded
-    \o BorderImage.Error - an error occurred while loading the image
+    \li BorderImage.Null - no image has been set
+    \li BorderImage.Ready - the image has been loaded
+    \li BorderImage.Loading - the image is currently being loaded
+    \li BorderImage.Error - an error occurred while loading the image
     \endlist
 
     \sa progress
@@ -393,9 +393,9 @@ QQuickScaleGrid *QQuickBorderImage::border()
     This property describes how to repeat or stretch the middle parts of the border image.
 
     \list
-    \o BorderImage.Stretch - Scales the image to fit to the available area.
-    \o BorderImage.Repeat - Tile the image until there is no more space. May crop the last image.
-    \o BorderImage.Round - Like Repeat, but scales the images down to ensure that the last image is not cropped.
+    \li BorderImage.Stretch - Scales the image to fit to the available area.
+    \li BorderImage.Repeat - Tile the image until there is no more space. May crop the last image.
+    \li BorderImage.Round - Like Repeat, but scales the images down to ensure that the last image is not cropped.
     \endlist
 
     The default tile mode for each property is BorderImage.Stretch.

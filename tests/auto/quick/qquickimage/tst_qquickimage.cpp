@@ -369,11 +369,11 @@ void tst_qquickimage::svg()
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
     QVERIFY(obj != 0);
     QCOMPARE(obj->width(), 300.0);
-    QCOMPARE(obj->height(), 300.0);
+    QCOMPARE(obj->height(), 273.0);
     obj->setSourceSize(QSize(200,200));
 
     QCOMPARE(obj->width(), 200.0);
-    QCOMPARE(obj->height(), 200.0);
+    QCOMPARE(obj->height(), 182.0);
     delete obj;
 }
 

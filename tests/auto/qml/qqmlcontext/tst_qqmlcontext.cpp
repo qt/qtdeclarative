@@ -617,7 +617,7 @@ void tst_qqmlcontext::refreshExpressionsRootContext()
     QQmlContext context(engine.rootContext());
     QQmlContext context2(engine.rootContext());
 
-    QString warning = component2.url().toString() + QLatin1String(":4: ReferenceError: Can't find variable: unresolvedName");
+    QString warning = component2.url().toString() + QLatin1String(":4: ReferenceError: unresolvedName is not defined");
 
     QObject *o1 = component.create(&context);
 

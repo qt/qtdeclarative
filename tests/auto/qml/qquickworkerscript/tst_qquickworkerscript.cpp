@@ -275,7 +275,7 @@ void tst_QQuickWorkerScript::scriptError_onCall()
     QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
 
     QTRY_COMPARE(qquickworkerscript_lastWarning,
-            testFileUrl("script_error_onCall.js").toString() + QLatin1String(":4: ReferenceError: Can't find variable: getData"));
+            testFileUrl("script_error_onCall.js").toString() + QLatin1String(":4: ReferenceError: getData is not defined"));
 
     qInstallMsgHandler(previousMsgHandler);
     qApp->processEvents();

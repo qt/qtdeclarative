@@ -42,18 +42,18 @@ import QtQuick 2.0
 import "../contents"
 Item {
   id:container
-  width:360
-  height:600
+  width:320
+  height:480
 
   Column {
     spacing:5
     anchors.fill:parent
-    Text { font.pointSize:25; text:"Quadratic Curve"; anchors.horizontalCenter:parent.horizontalCenter}
+    Text { font.pointSize:15; text:"Quadratic Curve"; anchors.horizontalCenter:parent.horizontalCenter}
 
     Canvas {
       id:canvas
-      width:360
-      height:360
+      width:320
+      height:280
       property string strokeStyle:"steelblue"
       property string fillStyle:"yellow"
       property int lineWidth:lineWidthCtrl.value
@@ -113,15 +113,15 @@ Item {
 
     Rectangle {
         id:controls
-        width:360
-        height:160
+        width:320
+        height:150
         Column {
           spacing:3
-          Slider {id:lineWidthCtrl; width:300; height:30; min:1; max:10; init:2; name:"Line width"}
-          Slider {id:scaleXCtrl; width:300; height:30; min:0.1; max:10; init:1; name:"ScaleX"}
-          Slider {id:scaleYCtrl; width:300; height:30; min:0.1; max:10; init:1; name:"ScaleY"}
-          Slider {id:rotateCtrl; width:300; height:30; min:0; max:Math.PI*2; init:0; name:"Rotate"}
-          Slider {id:alphaCtrl; width:300; height:30; min:0; max:1; init:1; name:"Alpha"}
+          Slider {id:lineWidthCtrl; width:300; height:20; min:1; max:10; init:2; name:"Line width"}
+          Slider {id:scaleXCtrl; width:300; height:20; min:0.1; max:10; init:1; name:"ScaleX"}
+          Slider {id:scaleYCtrl; width:300; height:20; min:0.1; max:10; init:1; name:"ScaleY"}
+          Slider {id:rotateCtrl; width:300; height:20; min:0; max:Math.PI*2; init:0; name:"Rotate"}
+          Slider {id:alphaCtrl; width:300; height:20; min:0; max:1; init:1; name:"Alpha"}
         }
     }
   }

@@ -95,7 +95,7 @@
   int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
   \endcode
 
-  The former is the standard form which registers the type \i T as a new type.
+  The former is the standard form which registers the type \e T as a new type.
   The latter allows a particular revision of a class to be registered in
   a specified version (see \l {QML Type Versioning}).
 
@@ -245,7 +245,7 @@
    may be registered into any given namespace (combination of \a uri, \a versionMajor and \a versionMinor).
    This function should be used to register a module API provider function which returns a QJSValue as a module API.
 
-   \bold{NOTE:} QJSValue module API properties will \bold{not} trigger binding re-evaluation if changed.
+   \b{NOTE:} QJSValue module API properties will \b{not} trigger binding re-evaluation if changed.
 
    Usage:
    \code

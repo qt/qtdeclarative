@@ -591,10 +591,10 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
     This element renders a logical particle as an image. The image can be
     \list
-    \o colorized
-    \o rotated
-    \o deformed
-    \o a sprite-based animation
+    \li colorized
+    \li rotated
+    \li deformed
+    \li a sprite-based animation
     \endlist
 
     ImageParticles implictly share data on particles if multiple ImageParticles are painting
@@ -770,9 +770,9 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
     Acceptable values are
     \list
-    \o ImageParticle.None: Particles just appear and disappear.
-    \o ImageParticle.Fade: Particles fade in from 0 opacity at the start of their life, and fade out to 0 at the end.
-    \o ImageParticle.Scale: Particles scale in from 0 size at the start of their life, and scale back to 0 at the end.
+    \li ImageParticle.None: Particles just appear and disappear.
+    \li ImageParticle.Fade: Particles fade in from 0 opacity at the start of their life, and fade out to 0 at the end.
+    \li ImageParticle.Scale: Particles scale in from 0 size at the start of their life, and scale back to 0 at the end.
     \endlist
 
     Default value is Fade.

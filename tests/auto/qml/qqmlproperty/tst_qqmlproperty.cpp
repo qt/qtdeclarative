@@ -143,7 +143,7 @@ void tst_qqmlproperty::qmlmetaproperty()
 {
     QQmlProperty prop;
 
-    QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
+    QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
     QVERIFY(binding != 0);
     QWeakPointer<QQmlExpression> expression(new QQmlExpression());
     QVERIFY(expression != 0);
@@ -246,7 +246,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
     {
         QQmlProperty prop(&object);
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -292,8 +292,8 @@ void tst_qqmlproperty::qmlmetaproperty_object()
     {
         QQmlProperty prop(&dobject);
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
-        binding.data()->setTarget(prop);
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
+        static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -347,7 +347,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
     {
         QQmlProperty prop(&object, QString("defaultProperty"));
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -393,8 +393,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
     {
         QQmlProperty prop(&dobject, QString("defaultProperty"));
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
-        binding.data()->setTarget(prop);
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
+        static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -442,8 +442,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
     {
         QQmlProperty prop(&dobject, QString("onClicked"));
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
-        binding.data()->setTarget(prop);
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
+        static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -490,8 +490,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
     {
         QQmlProperty prop(&dobject, QString("onPropertyWithNotifyChanged"));
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
-        binding.data()->setTarget(prop);
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
+        static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -544,7 +544,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
     {
         QQmlProperty prop(&object, engine.rootContext());
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -590,8 +590,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
     {
         QQmlProperty prop(&dobject, engine.rootContext());
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
-        binding.data()->setTarget(prop);
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
+        static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -645,7 +645,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
     {
         QQmlProperty prop(&object, QString("defaultProperty"), engine.rootContext());
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -691,8 +691,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
     {
         QQmlProperty prop(&dobject, QString("defaultProperty"), engine.rootContext());
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
-        binding.data()->setTarget(prop);
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
+        static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -740,8 +740,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
     {
         QQmlProperty prop(&dobject, QString("onClicked"), engine.rootContext());
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
-        binding.data()->setTarget(prop);
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
+        static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -788,8 +788,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
     {
         QQmlProperty prop(&dobject, QString("onPropertyWithNotifyChanged"), engine.rootContext());
 
-        QWeakPointer<QQmlBinding> binding(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext()));
-        binding.data()->setTarget(prop);
+        QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
+        static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
         QWeakPointer<QQmlExpression> expression(new QQmlExpression());
         QVERIFY(expression != 0);
@@ -1552,8 +1552,6 @@ void tst_qqmlproperty::crashOnValueProperty()
     //don't crash once the engine is deleted
     delete engine;
     engine = 0;
-
-    QSKIP("QTBUG-24734: test accesses deleted QML engine from QQmlProperty::propertyTypeName()");
 
     QCOMPARE(p.propertyTypeName(), "int");
     QCOMPARE(p.read(), QVariant(10));

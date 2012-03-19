@@ -63,6 +63,19 @@
 #include <dirent.h>
 #endif
 
+#if defined (QT_LINUXBASE)
+// LSB doesn't declare NAME_MAX. Use SYMLINK_MAX instead, which seems to
+// always be identical to NAME_MAX
+#ifndef NAME_MAX
+#  define NAME_MAX _POSIX_SYMLINK_MAX
+#endif
+
+// LSB has a broken version of offsetof that can't be used at compile time
+// https://lsbbugs.linuxfoundation.org/show_bug.cgi?id=3462
+#undef offsetof
+#define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#endif
+
 // #define DATABLOB_DEBUG
 
 #ifdef DATABLOB_DEBUG
@@ -248,14 +261,14 @@ The QQmlDataLoader invokes callbacks on the QQmlDataBlob as data becomes availab
 This enum describes the status of the data blob.
 
 \list
-\o Null The blob has not yet been loaded by a QQmlDataLoader
-\o Loading The blob is loading network data.  The QQmlDataBlob::setData() callback has not yet been
+\li Null The blob has not yet been loaded by a QQmlDataLoader
+\li Loading The blob is loading network data.  The QQmlDataBlob::setData() callback has not yet been
 invoked or has not yet returned.
-\o WaitingForDependencies The blob is waiting for dependencies to be done before continueing.  This status
+\li WaitingForDependencies The blob is waiting for dependencies to be done before continueing.  This status
 only occurs after the QQmlDataBlob::setData() callback has been made, and when the blob has outstanding
 dependencies.
-\o Complete The blob's data has been loaded and all dependencies are done.
-\o Error An error has been set on this blob.
+\li Complete The blob's data has been loaded and all dependencies are done.
+\li Error An error has been set on this blob.
 \endlist
 */
 
@@ -265,9 +278,9 @@ dependencies.
 This enum describes the type of the data blob.
 
 \list
-\o QmlFile This is a QQmlTypeData
-\o JavaScriptFile This is a QQmlScriptData
-\o QmldirFile This is a QQmlQmldirData
+\li QmlFile This is a QQmlTypeData
+\li JavaScriptFile This is a QQmlScriptData
+\li QmldirFile This is a QQmlQmldirData
 \endlist
 */
 
@@ -877,9 +890,9 @@ To complete processing, the QQmlDataBlob::done() callback is invoked.  done() is
 one of these three preconditions are met.
 
 \list 1
-\o The QQmlDataBlob has no dependencies.
-\o The QQmlDataBlob has an error set.
-\o All the QQmlDataBlob's dependencies are themselves "done()".
+\li The QQmlDataBlob has no dependencies.
+\li The QQmlDataBlob has an error set.
+\li All the QQmlDataBlob's dependencies are themselves "done()".
 \endlist
 
 Thus QQmlDataBlob::done() will always eventually be called, even if the blob has an error set.
@@ -1171,7 +1184,7 @@ This enum defines the options that control the way type data is handled.
 /*!
 Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached.
 */
-QQmlTypeData *QQmlTypeLoader::get(const QUrl &url)
+QQmlTypeData *QQmlTypeLoader::get(const QUrl &url, Mode mode)
 {
     Q_ASSERT(!url.isRelative() && 
             (QQmlEnginePrivate::urlToLocalFileOrQrc(url).isEmpty() || 
@@ -1184,7 +1197,7 @@ QQmlTypeData *QQmlTypeLoader::get(const QUrl &url)
     if (!typeData) {
         typeData = new QQmlTypeData(url, None, this);
         m_typeCache.insert(url, typeData);
-        QQmlDataLoader::load(typeData);
+        QQmlDataLoader::load(typeData, mode);
     }
 
     typeData->addref();

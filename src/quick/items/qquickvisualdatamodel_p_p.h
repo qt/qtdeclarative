@@ -92,7 +92,7 @@ public:
     QV8Engine * const v8Engine;
     QMetaObject *metaObject;
     const QStringList groupNames;
-    v8::Persistent<v8::Function> constructor;
+    v8::Persistent<v8::ObjectTemplate> constructor;
 };
 
 class QQuickVisualAdaptorModel;

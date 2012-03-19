@@ -92,7 +92,7 @@ Q_DECLARE_METATYPE(QList<int>)
 
   \section1 Engine Configuration
 
-  The globalObject() function returns the \bold {Global Object}
+  The globalObject() function returns the \b {Global Object}
   associated with the script engine. Properties of the Global Object
   are accessible from any script code (i.e. they are global
   variables). Typically, before evaluating "user" scripts, you will

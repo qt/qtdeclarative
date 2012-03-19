@@ -116,9 +116,9 @@ void QQuickItemPrivate::registerAccessorProperties()
     The following concrete Transform types are available:
 
     \list
-    \o \l Rotation
-    \o \l Scale
-    \o \l Translate
+    \li \l Rotation
+    \li \l Scale
+    \li \l Translate
     \endlist
 
     The Transform elements let you create and control advanced transformations that can be configured
@@ -696,10 +696,10 @@ void QQuickKeyNavigationAttached::setBacktab(QQuickItem *i)
     or after the attached item's own key handling.
 
     \list
-    \o KeyNavigation.BeforeItem - process the key events before normal
+    \li KeyNavigation.BeforeItem - process the key events before normal
     item key processing.  If the event is used for key navigation, it will be accepted and will not
     be passed on to the item.
-    \o KeyNavigation.AfterItem (default) - process the key events after normal item key
+    \li KeyNavigation.AfterItem (default) - process the key events after normal item key
     handling.  If the item accepts the key event it will not be
     handled by the KeyNavigation attached property handler.
     \endlist
@@ -933,21 +933,21 @@ bool QQuickKeysAttachedPrivate::isConnected(const char *signalName)
     If \l priority is Keys.BeforeItem (default) the order of key event processing is:
 
     \list 1
-    \o Items specified in \c forwardTo
-    \o specific key handlers, e.g. onReturnPressed
-    \o onKeyPress, onKeyRelease handlers
-    \o Item specific key handling, e.g. TextInput key handling
-    \o parent item
+    \li Items specified in \c forwardTo
+    \li specific key handlers, e.g. onReturnPressed
+    \li onKeyPress, onKeyRelease handlers
+    \li Item specific key handling, e.g. TextInput key handling
+    \li parent item
     \endlist
 
     If priority is Keys.AfterItem the order of key event processing is:
 
     \list 1
-    \o Item specific key handling, e.g. TextInput key handling
-    \o Items specified in \c forwardTo
-    \o specific key handlers, e.g. onReturnPressed
-    \o onKeyPress, onKeyRelease handlers
-    \o parent item
+    \li Item specific key handling, e.g. TextInput key handling
+    \li Items specified in \c forwardTo
+    \li specific key handlers, e.g. onReturnPressed
+    \li onKeyPress, onKeyRelease handlers
+    \li parent item
     \endlist
 
     If the event is accepted during any of the above steps, key
@@ -970,10 +970,10 @@ bool QQuickKeysAttachedPrivate::isConnected(const char *signalName)
     or after the attached item's own key handling.
 
     \list
-    \o Keys.BeforeItem (default) - process the key events before normal
+    \li Keys.BeforeItem (default) - process the key events before normal
     item key processing.  If the event is accepted it will not
     be passed on to the item.
-    \o Keys.AfterItem - process the key events after normal item key
+    \li Keys.AfterItem - process the key events after normal item key
     handling.  If the item accepts the key event it will not be
     handled by the Keys attached property handler.
     \endlist
@@ -2644,8 +2644,8 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
 
   \table
   \row
-  \o \image declarative-item_stacking1.png
-  \o Same \c z - later children above earlier children:
+  \li \image declarative-item_stacking1.png
+  \li Same \c z - later children above earlier children:
   \qml
   Item {
       Rectangle {
@@ -2659,8 +2659,8 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
   }
   \endqml
   \row
-  \o \image declarative-item_stacking2.png
-  \o Higher \c z on top:
+  \li \image declarative-item_stacking2.png
+  \li Higher \c z on top:
   \qml
   Item {
       Rectangle {
@@ -2675,8 +2675,8 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
   }
   \endqml
   \row
-  \o \image declarative-item_stacking3.png
-  \o Same \c z - children above parents:
+  \li \image declarative-item_stacking3.png
+  \li Same \c z - children above parents:
   \qml
   Item {
       Rectangle {
@@ -2690,8 +2690,8 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
   }
   \endqml
   \row
-  \o \image declarative-item_stacking4.png
-  \o Lower \c z below:
+  \li \image declarative-item_stacking4.png
+  \li Lower \c z below:
   \qml
   Item {
       Rectangle {
@@ -2769,8 +2769,8 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
 
   \table
   \row
-  \o \image declarative-anchors_example.png
-  \o Text anchored to Image, horizontally centered and vertically below, with a margin.
+  \li \image declarative-anchors_example.png
+  \li Text anchored to Image, horizontally centered and vertically below, with a margin.
   \qml
   Item {
       Image {
@@ -2787,8 +2787,8 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
   }
   \endqml
   \row
-  \o \image declarative-anchors_example2.png
-  \o
+  \li \image declarative-anchors_example2.png
+  \li
   Left of Text anchored to right of Image, with a margin. The y
   property of both defaults to 0.
 
@@ -3018,7 +3018,6 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 
 void QQuickItem::focusInEvent(QFocusEvent *)
 {
-    QAccessible::updateAccessibility(QAccessibleEvent(QAccessible::Focus, this, 0));
 }
 
 void QQuickItem::focusOutEvent(QFocusEvent *)
@@ -3734,8 +3733,8 @@ void QQuickItem::setZ(qreal v)
 
   \table
   \row
-  \o \image declarative-rotation.png
-  \o
+  \li \image declarative-rotation.png
+  \li
   \qml
   Rectangle {
       color: "blue"
@@ -3768,8 +3767,8 @@ void QQuickItem::setZ(qreal v)
 
   \table
   \row
-  \o \image declarative-scale.png
-  \o
+  \li \image declarative-scale.png
+  \li
   \qml
   Rectangle {
       color: "blue"
@@ -3805,8 +3804,8 @@ void QQuickItem::setZ(qreal v)
 
   \table
   \row
-  \o \image declarative-item_opacity1.png
-  \o
+  \li \image declarative-item_opacity1.png
+  \li
   \qml
     Item {
         Rectangle {
@@ -3820,8 +3819,8 @@ void QQuickItem::setZ(qreal v)
     }
   \endqml
   \row
-  \o \image declarative-item_opacity2.png
-  \o
+  \li \image declarative-item_opacity2.png
+  \li
   \qml
     Item {
         Rectangle {
@@ -3989,9 +3988,6 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
         childVisibilityChanged |= QQuickItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
 
     itemChange(QQuickItem::ItemVisibleHasChanged, effectiveVisible);
-
-    if (isAccessible)
-        QAccessible::updateAccessibility(QAccessibleEvent(effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide, q, 0));
 
     emit q->visibleChanged();
     if (childVisibilityChanged)
@@ -4445,7 +4441,7 @@ qreal QQuickItem::implicitWidth() const
     }
     \endqml
 
-    \bold Note: using implicitWidth of Text or TextEdit and setting the width explicitly
+    \b Note: using implicitWidth of Text or TextEdit and setting the width explicitly
     incurs a performance penalty as the text must be laid out twice.
 */
 
@@ -5638,9 +5634,9 @@ void QQuickItemLayer::setMipmap(bool mipmap)
     allow you to save some texture memory.
 
     \list
-    \o ShaderEffectSource.Alpha - GL_ALPHA
-    \o ShaderEffectSource.RGB - GL_RGB
-    \o ShaderEffectSource.RGBA - GL_RGBA
+    \li ShaderEffectSource.Alpha - GL_ALPHA
+    \li ShaderEffectSource.RGB - GL_RGB
+    \li ShaderEffectSource.RGBA - GL_RGBA
     \endlist
 
     \note Some OpenGL implementations do not support the GL_ALPHA format.
@@ -5735,10 +5731,10 @@ void QQuickItemLayer::setSize(const QSize &size)
     specified.
 
     \list
-    \o ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
-    \o ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
-    \o ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
-    \o ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
+    \li ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
+    \li ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
+    \li ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
+    \li ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
     \endlist
 
     \note Some OpenGL ES 2 implementations do not support the GL_REPEAT
@@ -5747,7 +5743,7 @@ void QQuickItemLayer::setSize(const QSize &size)
 
 void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
 {
-    if (mode != m_wrapMode)
+    if (mode == m_wrapMode)
         return;
     m_wrapMode = mode;
 

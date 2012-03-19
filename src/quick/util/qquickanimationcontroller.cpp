@@ -174,6 +174,7 @@ void QQuickAnimationController::reload()
         if (oldInstance && oldInstance != d->animationInstance)
             delete oldInstance;
         d->animationInstance->setLoopCount(1);
+        d->animationInstance->setDisableUserControl();
         d->animationInstance->start();
         d->animationInstance->pause();
         updateProgress();
@@ -186,6 +187,7 @@ void QQuickAnimationController::updateProgress()
     if (!d->animationInstance)
         return;
 
+    d->animationInstance->setDisableUserControl();
     d->animationInstance->start();
     QQmlAnimationTimer::unregisterAnimation(d->animationInstance);
     d->animationInstance->setCurrentTime(d->progress * d->animationInstance->duration());

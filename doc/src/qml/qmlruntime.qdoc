@@ -50,8 +50,8 @@ the application. This is done by writing a Qt C++ application that loads the
 QQmlEngine by either:
 
 \list
-\o Loading the QML file through a QQuickView instance, or
-\o Creating a QQmlEngine instance and loading QML files with QQmlComponent
+\li Loading the QML file through a QQuickView instance, or
+\li Creating a QQmlEngine instance and loading QML files with QQmlComponent
 \endlist
 
 

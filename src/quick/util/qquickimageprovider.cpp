@@ -117,12 +117,12 @@ QImage QQuickTextureFactory::image() const
     in QML applications. It allows images in QML to be:
 
     \list
-    \o Loaded using QPixmaps rather than actual image files
-    \o Loaded asynchronously in a separate thread, if imageType() is \l{QQuickImageProvider::ImageType}{ImageType::Image}
+    \li Loaded using QPixmaps rather than actual image files
+    \li Loaded asynchronously in a separate thread, if imageType() is \l{QQmlImageProvider::ImageType}{ImageType::Image}
     \endlist
 
     To specify that an image should be loaded by an image provider, use the
-    \bold {"image:"} scheme for the URL source of the image, followed by the 
+    \b {"image:"} scheme for the URL source of the image, followed by the
     identifiers of the image provider and the requested image. For example:
 
     \qml

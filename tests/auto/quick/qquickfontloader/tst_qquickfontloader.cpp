@@ -116,7 +116,7 @@ void tst_qquickfontloader::namedFont()
 
 void tst_qquickfontloader::localFont()
 {
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + testFile("tarzeau_ocr_a.ttf") + "\" }";
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + testFileUrl("tarzeau_ocr_a.ttf").toString() + "\" }";
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());

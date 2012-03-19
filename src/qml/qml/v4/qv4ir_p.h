@@ -252,6 +252,7 @@ struct Name: Expr {
         Unbound,
         IdObject,      // This is a load of a id object.  Storage will always be IdStorage
         AttachType,    // This is a load of an attached object 
+        ModuleObject,  // This is a load of a module object
         Object,        // XXX what is this for?
         Property,      // This is a load of a regular property
         Slot           // XXX what is this for?
@@ -538,6 +539,7 @@ struct BasicBlock {
     Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QQmlPropertyData *property, Name::Storage storage, quint32 line, quint32 column);
     Name *ID_OBJECT(const QString &id, const QQmlScript::Object *object, quint32 line, quint32 column);
     Name *ATTACH_TYPE(const QString &id, const QQmlType *attachType, Name::Storage storage, quint32 line, quint32 column);
+    Name *MODULE_OBJECT(const QString &id, const QMetaObject *meta, Name::Storage storage, quint32 line, quint32 column);
 
     Expr *UNOP(AluOp op, Expr *expr);
     Expr *BINOP(AluOp op, Expr *left, Expr *right);

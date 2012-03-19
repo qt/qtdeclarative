@@ -63,113 +63,27 @@
 #include <QtCore/QMetaProperty>
 
 #include <private/qpointervaluepair_p.h>
+#include <private/qqmlabstractbinding_p.h>
+#include <private/qqmlabstractexpression_p.h>
+#include <private/qqmljavascriptexpression_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
-{
-public:
-    typedef QWeakPointer<QQmlAbstractBinding> Pointer;
-
-    QQmlAbstractBinding();
-
-    virtual void destroy();
-
-    virtual QString expression() const;
-
-    enum Type { PropertyBinding, ValueTypeProxy };
-    virtual Type bindingType() const { return PropertyBinding; }
-
-    // Should return the encoded property index for the binding.  Should return this value
-    // even if the binding is not enabled or added to an object.
-    // Encoding is:  coreIndex | (valueTypeIndex << 24)
-    virtual int propertyIndex() const = 0;
-    // Should return the object for the binding.  Should return this object even if the
-    // binding is not enabled or added to the object.
-    virtual QObject *object() const = 0;
-
-    void setEnabled(bool e) { setEnabled(e, QQmlPropertyPrivate::DontRemoveBinding); }
-    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags) = 0;
-
-    void update() { update(QQmlPropertyPrivate::DontRemoveBinding); }
-    virtual void update(QQmlPropertyPrivate::WriteFlags) = 0;
-
-    void addToObject();
-    void removeFromObject();
-
-    static inline Pointer getPointer(QQmlAbstractBinding *p);
-
-protected:
-    virtual ~QQmlAbstractBinding();
-    void clear();
-
-    // Called by QQmlPropertyPrivate to "move" a binding to a different property.
-    // This is only used for alias properties, and only used by QQmlBinding not
-    // V8 or V4 bindings.  The default implementation qFatal()'s to ensure that the
-    // method is never called for V4 or V8 bindings.
-    virtual void retargetBinding(QObject *, int);
-private:
-    Pointer weakPointer();
-
-    friend class QQmlData;
-    friend class QQmlComponentPrivate;
-    friend class QQmlValueTypeProxyBinding;
-    friend class QQmlPropertyPrivate;
-    friend class QQmlVME;
-    friend class QtSharedPointer::ExternalRefCount<QQmlAbstractBinding>;
-
-    typedef QSharedPointer<QQmlAbstractBinding> SharedPointer;
-    // To save memory, we also store the rarely used weakPointer() instance in here
-    QPointerValuePair<QQmlAbstractBinding*, SharedPointer> m_mePtr;
-
-    QQmlAbstractBinding **m_prevBinding;
-    QQmlAbstractBinding  *m_nextBinding;
-};
-
-class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
-{
-public:
-    QQmlValueTypeProxyBinding(QObject *o, int coreIndex);
-
-    virtual Type bindingType() const { return ValueTypeProxy; }
-
-    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
-    virtual void update(QQmlPropertyPrivate::WriteFlags);
-    virtual int propertyIndex() const;
-    virtual QObject *object() const;
-
-    QQmlAbstractBinding *binding(int propertyIndex);
-
-    void removeBindings(quint32 mask);
-
-protected:
-    ~QQmlValueTypeProxyBinding();
-
-private:
-    void recursiveEnable(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
-    void recursiveDisable(QQmlAbstractBinding *);
-
-    friend class QQmlAbstractBinding;
-    QObject *m_object;
-    int m_index;
-    QQmlAbstractBinding *m_bindings;
-};
-
 class QQmlContext;
-class QQmlBindingPrivate;
-class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlExpression,
-                                                         public QQmlAbstractBinding
+class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
+                                         public QQmlAbstractExpression,
+                                         public QQmlAbstractBinding
 {
-Q_OBJECT
 public:
     enum EvaluateFlag { None = 0x00, RequiresThisObject = 0x01 };
     Q_DECLARE_FLAGS(EvaluateFlags, EvaluateFlag)
 
-    QQmlBinding(const QString &, QObject *, QQmlContext *, QObject *parent=0);
-    QQmlBinding(const QString &, QObject *, QQmlContextData *, QObject *parent=0);
+    QQmlBinding(const QString &, QObject *, QQmlContext *);
+    QQmlBinding(const QString &, QObject *, QQmlContextData *);
     QQmlBinding(const QString &, bool isRewritten, QObject *, QQmlContextData *, 
-                        const QString &url, int lineNumber, int columnNumber = 0, QObject *parent=0);
-    QQmlBinding(void *, QObject *, QQmlContextData *, QObject *parent=0);
+                const QString &url, int lineNumber, int columnNumber);
+    QQmlBinding(void *, QObject *, QQmlContextData *,
+                const QString &url, int lineNumber, int columnNumber);
 
     void setTarget(const QQmlProperty &);
     void setTarget(QObject *, const QQmlPropertyData &, QQmlContextData *);
@@ -178,39 +92,81 @@ public:
     void setEvaluateFlags(EvaluateFlags flags);
     EvaluateFlags evaluateFlags() const;
 
-    bool enabled() const;
+    void setNotifyOnValueChanged(bool);
+
+    // Inherited from  QQmlAbstractExpression
+    virtual void refresh();
 
     // Inherited from  QQmlAbstractBinding
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags);
     virtual void update(QQmlPropertyPrivate::WriteFlags flags);
     virtual QString expression() const;
-    virtual int propertyIndex() const;
     virtual QObject *object() const;
+    virtual int propertyIndex() const;
     virtual void retargetBinding(QObject *, int);
 
     typedef int Identifier;
     static Identifier Invalid;
-    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *,
-                                              const QString &, int, QObject *parent=0);
 
+    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *, const QString &, int);
 
-public Q_SLOTS:
+    QVariant evaluate();
     void update() { update(QQmlPropertyPrivate::DontRemoveBinding); }
+
+    static QString expressionIdentifier(QQmlJavaScriptExpression *);
+    static void expressionChanged(QQmlJavaScriptExpression *);
 
 protected:
     ~QQmlBinding();
 
 private:
-    Q_DECLARE_PRIVATE(QQmlBinding)
+    v8::Persistent<v8::Function> v8function;
+
+    inline bool updatingFlag() const;
+    inline void setUpdatingFlag(bool);
+    inline bool enabledFlag() const;
+    inline void setEnabledFlag(bool);
+
+    struct Retarget {
+        QObject *target;
+        int targetProperty;
+    };
+
+    QPointerValuePair<QObject, Retarget> m_coreObject;
+    QQmlPropertyData m_core;
+    // We store some flag bits in the following flag pointers.
+    //    m_ctxt:flag1 - updatingFlag
+    //    m_ctxt:flag2 - enabledFlag
+    QFlagPointer<QQmlContextData> m_ctxt;
+
+    // XXX It would be good if we could get rid of these in most circumstances
+    QString m_url;
+    int m_lineNumber;
+    int m_columnNumber;
+    QByteArray m_expression;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlBinding::EvaluateFlags)
-
-QQmlAbstractBinding::Pointer
-QQmlAbstractBinding::getPointer(QQmlAbstractBinding *p)
+bool QQmlBinding::updatingFlag() const
 {
-    return p ? p->weakPointer() : Pointer();
+    return m_ctxt.flag();
 }
+
+void QQmlBinding::setUpdatingFlag(bool v)
+{
+    m_ctxt.setFlagValue(v);
+}
+
+bool QQmlBinding::enabledFlag() const
+{
+    return m_ctxt.flag2();
+}
+
+void QQmlBinding::setEnabledFlag(bool v)
+{
+    m_ctxt.setFlag2Value(v);
+}
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlBinding::EvaluateFlags)
 
 QT_END_NAMESPACE
 

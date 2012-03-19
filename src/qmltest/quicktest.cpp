@@ -203,8 +203,11 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     }
 
     // Determine where to look for the test data.
-    if (testPath.isEmpty() && sourceDir)
-        testPath = QString::fromLocal8Bit(sourceDir);
+    if (testPath.isEmpty() && sourceDir) {
+        const QString s = QString::fromLocal8Bit(sourceDir);
+        if (QFile::exists(s))
+            testPath = s;
+    }
     if (testPath.isEmpty()) {
         QDir current = QDir::current();
 #ifdef Q_OS_WIN

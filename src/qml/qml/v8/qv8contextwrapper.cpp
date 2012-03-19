@@ -238,16 +238,11 @@ QQmlContextData *QV8ContextWrapper::context(v8::Handle<v8::Value> value)
     return r?r->getContext():0;
 }
 
-v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Local<v8::String> property, 
-                                                    const v8::AccessorInfo &info)
+v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Local<v8::String>,
+                                                    const v8::AccessorInfo &)
 {
-    QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
-
-    QV8Engine *engine = resource->engine;
-
-    QString error = QLatin1String("Can't find variable: ") + engine->toString(property);
-    v8::ThrowException(v8::Exception::ReferenceError(engine->toString(error)));
-    return v8::Undefined();
+    // V8 will throw a ReferenceError if appropriate ("typeof" should not throw)
+    return v8::Handle<v8::Value>();
 }
 
 v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property, 
@@ -365,9 +360,8 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
 
     expressionContext->unresolvedNames = true;
 
-    QString error = QLatin1String("Can't find variable: ") + engine->toString(property);
-    v8::ThrowException(v8::Exception::ReferenceError(engine->toString(error)));
-    return v8::Undefined();
+    // V8 will throw a ReferenceError if appropriate ("typeof" should not throw)
+    return v8::Handle<v8::Value>();
 }
 
 v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Local<v8::String> property, 

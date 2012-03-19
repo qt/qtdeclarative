@@ -59,37 +59,55 @@ public:
     void referenceGlyphs(const QSet<glyph_t> &glyphs);
     void releaseGlyphs(const QSet<glyph_t> &glyphs);
 
-    bool cacheIsFull() const { return m_textureData->currY >= maxTextureSize(); }
+    bool cacheIsFull() const {
+        return m_textureData->textures.count() == m_maxTextureCount
+                && textureIsFull(m_textureData->currentTexture);
+    }
     bool useWorkaroundBrokenFBOReadback() const;
     int maxTextureSize() const;
 
-private:
-    void createTexture(int width, int height);
-    void resizeTexture(int width, int height);
+    void setMaxTextureCount(int max) { m_maxTextureCount = max; }
+    int maxTextureCount() const { return m_maxTextureCount; }
 
+private:
     mutable int m_maxTextureSize;
+    int m_maxTextureCount;
 
     struct DistanceFieldTextureData : public QOpenGLSharedResource {
-        GLuint texture;
+        struct TextureInfo {
+            GLuint texture;
+            QSize size;
+            int currX;
+            int currY;
+            QImage image;
+
+            TextureInfo() : texture(0), currX(0), currY(0)
+            { }
+        };
+
+        TextureInfo *currentTexture;
+        QList<TextureInfo> textures;
+        QHash<glyph_t, TextureInfo *> glyphsTexture;
         GLuint fbo;
-        QSize size;
         QSet<glyph_t> unusedGlyphs;
-        int currX;
-        int currY;
-        QImage image;
 
         QOpenGLShaderProgram *blitProgram;
         GLfloat blitVertexCoordinateArray[8];
         GLfloat blitTextureCoordinateArray[8];
 
+        TextureInfo *addTexture()
+        {
+            textures.append(TextureInfo());
+            return &textures.last();
+        }
+
         DistanceFieldTextureData(QOpenGLContext *ctx)
             : QOpenGLSharedResource(ctx->shareGroup())
-            , texture(0)
             , fbo(0)
-            , currX(0)
-            , currY(0)
             , blitProgram(0)
         {
+            currentTexture = addTexture();
+
             blitVertexCoordinateArray[0] = -1.0f;
             blitVertexCoordinateArray[1] = -1.0f;
             blitVertexCoordinateArray[2] =  1.0f;
@@ -111,19 +129,26 @@ private:
 
         void invalidateResource()
         {
-            texture = 0;
+            glyphsTexture.clear();
+            textures.clear();
             fbo = 0;
-            size = QSize();
             delete blitProgram;
             blitProgram = 0;
+
+            currentTexture = addTexture();
         }
 
         void freeResource(QOpenGLContext *ctx)
         {
-            glDeleteTextures(1, &texture);
+            glyphsTexture.clear();
+            for (int i = 0; i < textures.count(); ++i)
+                glDeleteTextures(1, &textures[i].texture);
+            textures.clear();
             ctx->functions()->glDeleteFramebuffers(1, &fbo);
             delete blitProgram;
             blitProgram = 0;
+
+            currentTexture = addTexture();
         }
 
         void createBlitProgram()
@@ -154,6 +179,10 @@ private:
             blitProgram->link();
         }
     };
+
+    void createTexture(DistanceFieldTextureData::TextureInfo * texInfo, int width, int height);
+    void resizeTexture(DistanceFieldTextureData::TextureInfo * texInfo, int width, int height);
+    bool textureIsFull (const DistanceFieldTextureData::TextureInfo *tex) const { return tex->currY >= maxTextureSize(); }
 
     DistanceFieldTextureData *textureData(QOpenGLContext *c);
     DistanceFieldTextureData *m_textureData;

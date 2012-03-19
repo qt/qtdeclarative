@@ -69,12 +69,13 @@ void tst_qquickimageparticle::initTestCase()
 {
     QQmlDataTest::initTestCase();
     QUnifiedTimer::instance()->setConsistentTiming(true);
-    setenv("QML_PARTICLES_DEBUG","please",0);//QQuickImageParticle has several debug statements, with possible pointer dereferences
+    //QQuickImageParticle has several debug statements, with possible pointer dereferences
+    qputenv("QML_PARTICLES_DEBUG","please");
 }
 
 tst_qquickimageparticle::~tst_qquickimageparticle()
 {
-    unsetenv("QML_PARTICLES_DEBUG");
+    qputenv("QML_PARTICLES_DEBUG","");
 }
 
 void tst_qquickimageparticle::test_basic()

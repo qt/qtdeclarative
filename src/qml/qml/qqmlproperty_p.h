@@ -54,6 +54,7 @@
 //
 
 #include "qqmlproperty.h"
+#include "qqmlengine.h"
 
 #include <private/qobject_p.h>
 #include <private/qtqmlglobal_p.h>
@@ -77,7 +78,7 @@ public:
     Q_DECLARE_FLAGS(WriteFlags, WriteFlag)
 
     QQmlContextData *context;
-    QQmlEngine *engine;
+    QQmlGuard<QQmlEngine> engine;
     QQmlGuard<QObject> object;
 
     QQmlPropertyData core;
@@ -143,11 +144,6 @@ public:
     static QQmlExpression *setSignalExpression(const QQmlProperty &that, 
                                                        QQmlExpression *) ;
     static bool write(const QQmlProperty &that, const QVariant &, WriteFlags);
-    static bool writeBinding(const QQmlProperty &that, 
-                             QQmlContextData *context,
-                             QQmlJavaScriptExpression *expression, 
-                             v8::Handle<v8::Value> result, bool isUndefined,
-                             WriteFlags flags);
     static bool writeBinding(QObject *, const QQmlPropertyData &,
                              QQmlContextData *context,
                              QQmlJavaScriptExpression *expression, 

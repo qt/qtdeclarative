@@ -45,8 +45,14 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlincubator.h>
+#include <QtQuick>
+#include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 #include <qcolor.h>
 #include "../../shared/util.h"
+#include "testhttpserver.h"
+
+#define SERVER_PORT 14450
 
 class MyIC : public QObject, public QQmlIncubationController
 {
@@ -56,6 +62,37 @@ public:
 protected:
     virtual void timerEvent(QTimerEvent*) {
         incubateFor(5);
+    }
+};
+
+class ComponentWatcher : public QObject
+{
+    Q_OBJECT
+public:
+    ComponentWatcher(QQmlComponent *comp) : loading(0), error(0), ready(0) {
+        connect(comp, SIGNAL(statusChanged(QQmlComponent::Status)),
+                this, SLOT(statusChanged(QQmlComponent::Status)));
+    }
+
+    int loading;
+    int error;
+    int ready;
+
+public slots:
+    void statusChanged(QQmlComponent::Status status) {
+        switch (status) {
+        case QQmlComponent::Loading:
+            ++loading;
+            break;
+        case QQmlComponent::Error:
+            ++error;
+            break;
+        case QQmlComponent::Ready:
+            ++ready;
+            break;
+        default:
+            break;
+        }
     }
 };
 
@@ -72,6 +109,8 @@ private slots:
     void qmlCreateObjectWithProperties();
     void qmlIncubateObject();
     void qmlCreateParentReference();
+    void async();
+    void asyncHierarchy();
 
 private:
     QQmlEngine engine;
@@ -211,6 +250,68 @@ void tst_qqmlcomponent::qmlCreateParentReference()
     QCOMPARE(engine.outputWarningsToStandardError(), false);
 
     QCOMPARE(warnings.count(), 0);
+}
+
+void tst_qqmlcomponent::async()
+{
+    TestHTTPServer server(SERVER_PORT);
+    QVERIFY(server.isValid());
+    server.serveDirectory(dataDirectory());
+
+    QQmlComponent component(&engine);
+    ComponentWatcher watcher(&component);
+    component.loadUrl(QUrl("http://127.0.0.1:14450/TestComponent.qml"), QQmlComponent::Asynchronous);
+    QCOMPARE(watcher.loading, 1);
+    QTRY_VERIFY(component.isReady());
+    QCOMPARE(watcher.ready, 1);
+    QCOMPARE(watcher.error, 0);
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    delete object;
+}
+
+void tst_qqmlcomponent::asyncHierarchy()
+{
+    TestHTTPServer server(SERVER_PORT);
+    QVERIFY(server.isValid());
+    server.serveDirectory(dataDirectory());
+
+    // ensure that the item hierarchy is compiled correctly.
+    QQmlComponent component(&engine);
+    ComponentWatcher watcher(&component);
+    component.loadUrl(QUrl("http://127.0.0.1:14450/TestComponent.2.qml"), QQmlComponent::Asynchronous);
+    QCOMPARE(watcher.loading, 1);
+    QTRY_VERIFY(component.isReady());
+    QCOMPARE(watcher.ready, 1);
+    QCOMPARE(watcher.error, 0);
+
+    QObject *root = component.create();
+    QVERIFY(root != 0);
+
+    // ensure that the parent-child relationship hierarchy is correct
+    QQuickItem *c1 = root->findChild<QQuickItem*>("c1", Qt::FindDirectChildrenOnly);
+    QVERIFY(c1);
+    QQuickItem *c1c1 = c1->findChild<QQuickItem*>("c1c1", Qt::FindDirectChildrenOnly);
+    QVERIFY(c1c1);
+    QQuickItem *c1c2 = c1->findChild<QQuickItem*>("c1c2", Qt::FindDirectChildrenOnly);
+    QVERIFY(c1c2);
+    QQuickRectangle *c1c2c3 = c1c2->findChild<QQuickRectangle*>("c1c2c3", Qt::FindDirectChildrenOnly);
+    QVERIFY(c1c2c3);
+    QQuickItem *c2 = root->findChild<QQuickItem*>("c2", Qt::FindDirectChildrenOnly);
+    QVERIFY(c2);
+    QQuickRectangle *c2c1 = c2->findChild<QQuickRectangle*>("c2c1", Qt::FindDirectChildrenOnly);
+    QVERIFY(c2c1);
+    QQuickMouseArea *c2c1c1 = c2c1->findChild<QQuickMouseArea*>("c2c1c1", Qt::FindDirectChildrenOnly);
+    QVERIFY(c2c1c1);
+    QQuickItem *c2c1c2 = c2c1->findChild<QQuickItem*>("c2c1c2", Qt::FindDirectChildrenOnly);
+    QVERIFY(c2c1c2);
+
+    // ensure that values and bindings are assigned correctly
+    QVERIFY(root->property("success").toBool());
+
+    delete root;
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

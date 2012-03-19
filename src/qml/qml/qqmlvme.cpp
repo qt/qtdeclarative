@@ -57,7 +57,6 @@
 #include "qqmlengine_p.h"
 #include "qqmlcomponent_p.h"
 #include "qqmlvmemetaobject_p.h"
-#include "qqmlbinding_p_p.h"
 #include "qqmlcontext_p.h"
 #include <private/qv4bindings_p.h>
 #include <private/qv8bindings_p.h>
@@ -66,6 +65,7 @@
 #include "qqmlscriptstring.h"
 #include "qqmlscriptstring_p.h"
 #include "qqmlpropertyvalueinterceptor_p.h"
+#include "qqmlvaluetypeproxybinding_p.h"
 
 #include <QStack>
 #include <QColor>
@@ -767,8 +767,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 QML_NEXT_INSTR(StoreBinding);
 
             QQmlBinding *bind = new QQmlBinding(PRIMITIVES.at(instr.value), true, 
-                                                                context, CTXT, COMP->name, instr.line,
-                                                                instr.column);
+                                                context, CTXT, COMP->name, instr.line,
+                                                instr.column);
             bindValues.push(bind);
             bind->m_mePtr = &bindValues.top();
             bind->setTarget(target, instr.property, CTXT);
@@ -790,8 +790,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 QML_NEXT_INSTR(StoreBindingOnAlias);
 
             QQmlBinding *bind = new QQmlBinding(PRIMITIVES.at(instr.value), true,
-                                                                context, CTXT, COMP->name, instr.line,
-                                                                instr.column);
+                                                context, CTXT, COMP->name, instr.line,
+                                                instr.column);
             bindValues.push(bind);
             bind->m_mePtr = &bindValues.top();
             bind->setTarget(target, instr.property, CTXT);

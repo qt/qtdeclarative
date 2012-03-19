@@ -78,8 +78,8 @@ problem occurs because we have used a Behavior to animate the change in color, a
 
 To state the problem more formally, using States and Behaviors together can cause unexpected behavior when:
 \list
-\o a Behavior is used to animate a property change, specifically when moving from an explicitly defined state back to the implicit base state; and
-\o this Behavior can be interrupted to (re-)enter an explicitly defined state.
+\li a Behavior is used to animate a property change, specifically when moving from an explicitly defined state back to the implicit base state; and
+\li this Behavior can be interrupted to (re-)enter an explicitly defined state.
 \endlist
 
 The problem occurs because of the way the base state is defined for QML: as the "snapshot" state of the application just prior to entering an explicitly defined state. In this case, if we are in the process of animating from green back

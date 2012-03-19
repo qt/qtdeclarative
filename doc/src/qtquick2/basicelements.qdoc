@@ -31,7 +31,7 @@
 \title Qt Quick Basic Elements
 \brief introduction to the Qt Quick Elements
 
-Qt Quick includes \i elements for placing components. These can be combined
+Qt Quick includes \e elements for placing components. These can be combined
 to form other components.
 
 \code
@@ -40,15 +40,15 @@ import QtQuick 2.0
 \section1 Basic Elements
 This is a list of some of the elements readily available for users.
 \list
-\o \l {Item}
-\o \l {Rectangle}
-\o \l {Image}
-\o \l {Text}
-\o \l {TextInput}
-\o \l {TextEdit}
-\o \l {FocusScope}
-\o \l {Component}
-\o \l {MouseArea}
+\li \l {Item}
+\li \l {Rectangle}
+\li \l {Image}
+\li \l {Text}
+\li \l {TextInput}
+\li \l {TextEdit}
+\li \l {FocusScope}
+\li \l {Component}
+\li \l {MouseArea}
 \endlist
 
 For a complete list of QML elements, please visit the \l {QML Elements} page.

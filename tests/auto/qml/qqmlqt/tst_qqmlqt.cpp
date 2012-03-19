@@ -395,6 +395,7 @@ void tst_qqmlqt::md5()
 
 void tst_qqmlqt::createComponent()
 {
+    {
     QQmlComponent component(&engine, testFileUrl("createComponent.qml"));
 
     QString warning1 = component.url().toString() + ":9: Error: Qt.createComponent(): Invalid arguments";
@@ -408,7 +409,19 @@ void tst_qqmlqt::createComponent()
     QCOMPARE(object->property("absoluteUrl").toString(), QString("http://www.example.com/test.qml"));
     QCOMPARE(object->property("relativeUrl").toString(), testFileUrl("createComponentData.qml").toString());
 
+    QTRY_VERIFY(object->property("asyncResult").toBool());
+
     delete object;
+    }
+
+    // simultaneous sync and async compilation
+    {
+    QQmlComponent component(&engine, testFileUrl("createComponent.2.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QTRY_VERIFY(object->property("success").toBool());
+    delete object;
+    }
 }
 
 void tst_qqmlqt::createComponent_pragmaLibrary()

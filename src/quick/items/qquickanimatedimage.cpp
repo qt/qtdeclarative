@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
     about its state, such as the current frame and total number of frames.
     The result is an animated image with a simple progress indicator underneath it.
 
-    \bold Note: Unlike images, animated images are not cached or shared internally.
+    \b Note: Unlike images, animated images are not cached or shared internally.
 
     \clearfloat
     \snippet doc/src/snippets/qml/animatedimage.qml document

@@ -141,7 +141,7 @@ void tst_QQmlInspector::cleanupTestCase()
 
 void tst_QQmlInspector::init()
 {
-    const QString executable = SRCDIR"/app/app";
+    const QString executable = "app/app";
     const QString argument = "-qmljsdebugger=port:"STR_PORT",block";
 
     m_process = new QQmlDebugProcess(executable);

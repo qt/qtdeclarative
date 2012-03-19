@@ -171,14 +171,14 @@ bool QQuickPath::hasEnd() const
 
     A path can contain the following path objects:
     \list
-        \i \l PathLine - a straight line to a given position.
-        \i \l PathQuad - a quadratic Bezier curve to a given position with a control point.
-        \i \l PathCubic - a cubic Bezier curve to a given position with two control points.
-        \i \l PathArc - an arc to a given position with a radius.
-        \i \l PathSvg - a path specified as an SVG path data string.
-        \i \l PathCurve - a point on a Catmull-Rom curve.
-        \i \l PathAttribute - an attribute at a given position in the path.
-        \i \l PathPercent - a way to spread out items along various segments of the path.
+        \li \l PathLine - a straight line to a given position.
+        \li \l PathQuad - a quadratic Bezier curve to a given position with a control point.
+        \li \l PathCubic - a cubic Bezier curve to a given position with two control points.
+        \li \l PathArc - an arc to a given position with a radius.
+        \li \l PathSvg - a path specified as an SVG path data string.
+        \li \l PathCurve - a point on a Catmull-Rom curve.
+        \li \l PathAttribute - an attribute at a given position in the path.
+        \li \l PathPercent - a way to spread out items along various segments of the path.
     \endlist
 
     \snippet doc/src/snippets/qml/pathview/pathattributes.qml 2
@@ -808,8 +808,8 @@ bool QQuickCurve::hasRelativeY()
 
     \table
     \row
-    \o \image declarative-pathattribute.png
-    \o
+    \li \image declarative-pathattribute.png
+    \li
     \snippet doc/src/snippets/qml/pathview/pathattributes.qml 0
     (see the PathView documentation for the specification of ContactModel.qml
      used for ContactModel above.)
@@ -970,8 +970,8 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
     The following QML produces the path shown below:
     \table
     \row
-    \o \image declarative-pathquad.png
-    \o
+    \li \image declarative-pathquad.png
+    \li
     \qml
     Path {
         startX: 0; startY: 0
@@ -1121,8 +1121,8 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
     The following QML produces the path shown below:
     \table
     \row
-    \o \image declarative-pathcubic.png
-    \o
+    \li \image declarative-pathcubic.png
+    \li
     \qml
     Path {
         startX: 20; startY: 0
@@ -1492,8 +1492,8 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     The following QML produces the path shown below:
     \table
     \row
-    \o \image declarative-patharc.png
-    \o \snippet doc/src/snippets/qml/path/basicarc.qml 0
+    \li \image declarative-patharc.png
+    \li \snippet doc/src/snippets/qml/path/basicarc.qml 0
     \endtable
 
     Note that a single PathArc cannot be used to specify a circle. Instead, you can
@@ -1536,8 +1536,8 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     the shape of the arc:
     \table
     \row
-    \o \image declarative-arcradius.png
-    \o \snippet doc/src/snippets/qml/path/arcradius.qml 0
+    \li \image declarative-arcradius.png
+    \li \snippet doc/src/snippets/qml/path/arcradius.qml 0
     \endtable
 */
 
@@ -1581,8 +1581,8 @@ void QQuickPathArc::setRadiusY(qreal radius)
 
     \table
     \row
-    \o \image declarative-largearc.png
-    \o \snippet doc/src/snippets/qml/path/largearc.qml 0
+    \li \image declarative-largearc.png
+    \li \snippet doc/src/snippets/qml/path/largearc.qml 0
     \endtable
 
     The default value is false.
@@ -1612,8 +1612,8 @@ void QQuickPathArc::setUseLargeArc(bool largeArc)
     by changing the value of direction.
     \table
     \row
-    \o \image declarative-arcdirection.png
-    \o \snippet doc/src/snippets/qml/path/arcdirection.qml 0
+    \li \image declarative-arcdirection.png
+    \li \snippet doc/src/snippets/qml/path/arcdirection.qml 0
     \endtable
 
     \sa useLargeArc
@@ -1659,8 +1659,8 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     The following QML produces the path shown below:
     \table
     \row
-    \o \image declarative-pathsvg.png
-    \o
+    \li \image declarative-pathsvg.png
+    \li
     \qml
     Path {
         startX: 50; startY: 50
@@ -1717,8 +1717,8 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
     PathLine section of the path.
     \table
     \row
-    \o \image declarative-nopercent.png
-    \o
+    \li \image declarative-nopercent.png
+    \li
     \qml
     PathView {
         // ...
@@ -1731,8 +1731,8 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
     }
     \endqml
     \row
-    \o \image declarative-percent.png
-    \o
+    \li \image declarative-percent.png
+    \li
     \qml
     PathView {
         // ...

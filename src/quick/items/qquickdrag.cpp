@@ -410,10 +410,10 @@ void QQuickDragAttached::start(QQmlV8Function *args)
     The returned drop action may be one of:
 
     \list
-    \o Qt.CopyAction Copy the data to the target
-    \o Qt.MoveAction Move the data from the source to the target
-    \o Qt.LinkAction Create a link from the source to the target.
-    \o Qt.IgnoreAction Ignore the action (do nothing with the data).
+    \li Qt.CopyAction Copy the data to the target
+    \li Qt.MoveAction Move the data from the source to the target
+    \li Qt.LinkAction Create a link from the source to the target.
+    \li Qt.IgnoreAction Ignore the action (do nothing with the data).
     \endlist
 
 */

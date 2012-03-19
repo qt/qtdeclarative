@@ -57,6 +57,7 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
+#include <QtCore/QPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -111,9 +112,10 @@ private Q_SLOTS:
 
 private:
     void prepareDeferredObjects(QObject *);
-    void buildObjectList(QDataStream &, QQmlContext *);
+    void buildObjectList(QDataStream &, QQmlContext *,
+                         const QList<QPointer<QObject> > &instances);
     void buildObjectDump(QDataStream &, QObject *, bool, bool);
-    void buildStatesList(QQmlContext *, bool);
+    void buildStatesList(bool cleanList, const QList<QPointer<QObject> > &instances);
     QQmlObjectData objectData(QObject *);
     QQmlObjectProperty propertyData(QObject *, int);
     QVariant valueContents(const QVariant &defaultValue) const;

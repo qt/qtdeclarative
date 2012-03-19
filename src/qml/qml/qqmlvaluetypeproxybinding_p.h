@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLBINDING_P_P_H
-#define QQMLBINDING_P_P_H
+#ifndef QQMLVALUETYPEPROXYBINDING_P_H
+#define QQMLVALUETYPEPROXYBINDING_P_H
 
 //
 //  W A R N I N G
@@ -53,37 +53,39 @@
 // We mean it.
 //
 
-#include "qqmlbinding_p.h"
-
-#include "qqmlproperty.h"
-#include "qqmlexpression_p.h"
+#include <private/qqmlabstractbinding_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlBindingPrivate : public QQmlExpressionPrivate
+class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 {
-    Q_DECLARE_PUBLIC(QQmlBinding)
 public:
-    QQmlBindingPrivate();
-    ~QQmlBindingPrivate();
+    QQmlValueTypeProxyBinding(QObject *o, int coreIndex);
 
-    virtual void expressionChanged();
+    virtual Type bindingType() const { return ValueTypeProxy; }
 
-    static void printBindingLoopError(QQmlProperty &prop);
+    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
+    virtual void update(QQmlPropertyPrivate::WriteFlags);
+    virtual int propertyIndex() const;
+    virtual QObject *object() const;
+
+    QQmlAbstractBinding *binding(int propertyIndex);
+
+    void removeBindings(quint32 mask);
 
 protected:
-    virtual void refresh();
+    ~QQmlValueTypeProxyBinding();
 
 private:
-    bool updating:1;
-    bool enabled:1;
-    int columnNumber;
-    QQmlProperty property; 
+    void recursiveEnable(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
+    void recursiveDisable(QQmlAbstractBinding *);
 
-    QObject *target;
-    int targetProperty;
+    friend class QQmlAbstractBinding;
+    QObject *m_object;
+    int m_index;
+    QQmlAbstractBinding *m_bindings;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQMLBINDING_P_P_H
+#endif // QQMLVALUETYPEPROXYBINDING_P_H

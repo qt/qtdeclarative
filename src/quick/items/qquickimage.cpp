@@ -142,7 +142,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     Images are cached and shared internally, so if several Image elements have the same \l source,
     only one copy of the image will be loaded.
 
-    \bold Note: Images are often the greatest user of memory in QML user interfaces.  It is recommended
+    \b Note: Images are often the greatest user of memory in QML user interfaces.  It is recommended
     that images which do not form part of the user interface have their
     size bounded via the \l sourceSize property. This is especially important for content
     that is loaded from external sources or provided by the user.
@@ -185,20 +185,20 @@ void QQuickImagePrivate::setImage(const QImage &image)
     than the item.
 
     \list
-    \o Image.Stretch - the image is scaled to fit
-    \o Image.PreserveAspectFit - the image is scaled uniformly to fit without cropping
-    \o Image.PreserveAspectCrop - the image is scaled uniformly to fill, cropping if necessary
-    \o Image.Tile - the image is duplicated horizontally and vertically
-    \o Image.TileVertically - the image is stretched horizontally and tiled vertically
-    \o Image.TileHorizontally - the image is stretched vertically and tiled horizontally
-    \o Image.Pad - the image is not transformed
+    \li Image.Stretch - the image is scaled to fit
+    \li Image.PreserveAspectFit - the image is scaled uniformly to fit without cropping
+    \li Image.PreserveAspectCrop - the image is scaled uniformly to fill, cropping if necessary
+    \li Image.Tile - the image is duplicated horizontally and vertically
+    \li Image.TileVertically - the image is stretched horizontally and tiled vertically
+    \li Image.TileHorizontally - the image is stretched vertically and tiled horizontally
+    \li Image.Pad - the image is not transformed
     \endlist
 
     \table
 
     \row
-    \o \image declarative-qtlogo-stretch.png
-    \o Stretch (default)
+    \li \image declarative-qtlogo-stretch.png
+    \li Stretch (default)
     \qml
     Image {
         width: 130; height: 100
@@ -208,8 +208,8 @@ void QQuickImagePrivate::setImage(const QImage &image)
     \endqml
 
     \row
-    \o \image declarative-qtlogo-preserveaspectfit.png
-    \o PreserveAspectFit
+    \li \image declarative-qtlogo-preserveaspectfit.png
+    \li PreserveAspectFit
     \qml
     Image {
         width: 130; height: 100
@@ -220,8 +220,8 @@ void QQuickImagePrivate::setImage(const QImage &image)
     \endqml
 
     \row
-    \o \image declarative-qtlogo-preserveaspectcrop.png
-    \o PreserveAspectCrop
+    \li \image declarative-qtlogo-preserveaspectcrop.png
+    \li PreserveAspectCrop
     \qml
     Image {
         width: 130; height: 100
@@ -233,8 +233,8 @@ void QQuickImagePrivate::setImage(const QImage &image)
     \endqml
 
     \row
-    \o \image declarative-qtlogo-tile.png
-    \o Tile
+    \li \image declarative-qtlogo-tile.png
+    \li Tile
     \qml
     Image {
         width: 120; height: 120
@@ -244,8 +244,8 @@ void QQuickImagePrivate::setImage(const QImage &image)
     \endqml
 
     \row
-    \o \image declarative-qtlogo-tilevertically.png
-    \o TileVertically
+    \li \image declarative-qtlogo-tilevertically.png
+    \li TileVertically
     \qml
     Image {
         width: 120; height: 120
@@ -256,8 +256,8 @@ void QQuickImagePrivate::setImage(const QImage &image)
     \endqml
 
     \row
-    \o \image declarative-qtlogo-tilehorizontally.png
-    \o TileHorizontally
+    \li \image declarative-qtlogo-tilehorizontally.png
+    \li TileHorizontally
     \qml
     Image {
         width: 120; height: 120
@@ -319,22 +319,22 @@ qreal QQuickImage::paintedHeight() const
 
     This property holds the status of image loading.  It can be one of:
     \list
-    \o Image.Null - no image has been set
-    \o Image.Ready - the image has been loaded
-    \o Image.Loading - the image is currently being loaded
-    \o Image.Error - an error occurred while loading the image
+    \li Image.Null - no image has been set
+    \li Image.Ready - the image has been loaded
+    \li Image.Loading - the image is currently being loaded
+    \li Image.Error - an error occurred while loading the image
     \endlist
 
     Use this status to provide an update or respond to the status change in some way.
     For example, you could:
 
     \list
-    \o Trigger a state change:
+    \li Trigger a state change:
     \qml
         State { name: 'loaded'; when: image.status == Image.Ready }
     \endqml
 
-    \o Implement an \c onStatusChanged signal handler:
+    \li Implement an \c onStatusChanged signal handler:
     \qml
         Image {
             id: image
@@ -342,7 +342,7 @@ qreal QQuickImage::paintedHeight() const
         }
     \endqml
 
-    \o Bind to the status value:
+    \li Bind to the status value:
     \qml
         Text { text: image.status == Image.Ready ? 'Loaded' : 'Not loaded' }
     \endqml

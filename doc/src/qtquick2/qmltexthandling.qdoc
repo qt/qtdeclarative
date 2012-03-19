@@ -37,16 +37,16 @@
 \section1 Text Elements
 
 \list
-\o \l{Text}
-\o \l{TextInput}
-\o \l{TextEdit}
+\li \l{Text}
+\li \l{TextInput}
+\li \l{TextEdit}
 \endlist
 
 \section1 Validators
 \list
-\o \l{IntValidator}
-\o \l{DoubleValidator}
-\o \l{RegExpValidator}
+\li \l{IntValidator}
+\li \l{DoubleValidator}
+\li \l{RegExpValidator}
 \endlist
 
 \section1 Displaying Text in QML

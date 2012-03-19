@@ -136,6 +136,19 @@ struct QQmlVMEMetaData
     }
 };
 
+class QQmlVMEMetaObject;
+class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
+{
+public:
+    inline QQmlVMEVariantQObjectPtr();
+    inline ~QQmlVMEVariantQObjectPtr();
+    inline void objectDestroyed(QObject *);
+    inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
+
+    QQmlVMEMetaObject *m_target;
+    int m_index;
+};
+
 class QV8QObjectWrapper;
 class QQmlVMEVariant;
 class QQmlRefCount;
@@ -163,6 +176,7 @@ protected:
 
 private:
     friend class QQmlVMEMetaObjectEndpoint;
+    friend class QQmlVMEVariantQObjectPtr;
 
     QObject *object;
     QQmlCompiledData *compiledData;
@@ -181,7 +195,7 @@ private:
     static void VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void GcPrologueCallback(QV8GCCallback::Node *node);
     inline void allocateVarPropertiesArray();
-    inline void ensureVarPropertiesAllocated();
+    inline bool ensureVarPropertiesAllocated();
 
     void connectAlias(int aliasId);
     QBitArray aConnected;

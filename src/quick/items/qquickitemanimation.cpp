@@ -701,12 +701,12 @@ void QQuickPathAnimation::setTargetObject(QQuickItem *target)
     item to achieve the specified orientation as it travels along the path.
 
     \list
-    \o PathAnimation.Fixed (default) - the PathAnimation will not control
+    \li PathAnimation.Fixed (default) - the PathAnimation will not control
        the rotation of the item.
-    \o PathAnimation.RightFirst - The right side of the item will lead along the path.
-    \o PathAnimation.LeftFirst - The left side of the item will lead along the path.
-    \o PathAnimation.BottomFirst - The bottom of the item will lead along the path.
-    \o PathAnimation.TopFirst - The top of the item will lead along the path.
+    \li PathAnimation.RightFirst - The right side of the item will lead along the path.
+    \li PathAnimation.LeftFirst - The left side of the item will lead along the path.
+    \li PathAnimation.BottomFirst - The bottom of the item will lead along the path.
+    \li PathAnimation.TopFirst - The top of the item will lead along the path.
     \endlist
 */
 QQuickPathAnimation::Orientation QQuickPathAnimation::orientation() const

@@ -34,31 +34,31 @@
 \target qmlstates
 \section1 States Elements
 \list
-\o \l State
-\o \l PropertyChanges
-\o \l StateGroup
-\o \l StateChangeScript
-\o \l ParentChange
-\o \l AnchorChanges
+\li \l State
+\li \l PropertyChanges
+\li \l StateGroup
+\li \l StateChangeScript
+\li \l ParentChange
+\li \l AnchorChanges
 \endlist
 
-Many user interface designs are \i state driven; interfaces have configurations
+Many user interface designs are \e state driven; interfaces have configurations
 that differ depending on the current state. For example, a traffic signal will
 configure its flags or lights depending on its state. While in the signal's
 \c stop state, a red light will turn on while the yellow and the green lights
 will turn off. In the \c caution state, the yellow light is on while the other
 lights are turned off.
 
-In QML, \i states are a set of property configurations defined in a \l State
+In QML, \e states are a set of property configurations defined in a \l State
 element. Different configurations could, for example:
 
 \list
-\o Show some UI elements and hide others
-\o Present different available actions to the user
-\o Start, stop, or pause animations
-\o Execute some script required in the new state
-\o Change a property value for a particular item
-\o Show a different view or screen
+\li Show some UI elements and hide others
+\li Present different available actions to the user
+\li Start, stop, or pause animations
+\li Execute some script required in the new state
+\li Change a property value for a particular item
+\li Show a different view or screen
 \endlist
 
 All \l {Item}-based objects have a \c state property, and can specify additional
@@ -94,15 +94,15 @@ assigning a different state whenever the signal receives a mouse click.
 The State element is not limited to performing modifications on property values.
 It can also:
 \list
-\o Run some script using \l StateChangeScript
-\o Override an existing signal handler for an object using \l PropertyChanges
-\o Re-parent an \l Item using \l ParentChange
-\o Modify anchor values using \l AnchorChanges
+\li Run some script using \l StateChangeScript
+\li Override an existing signal handler for an object using \l PropertyChanges
+\li Re-parent an \l Item using \l ParentChange
+\li Modify anchor values using \l AnchorChanges
 \endlist
 
 \section1 The Default State
 
-Every \l Item based component has a \c state property and a \i{default state}.
+Every \l Item based component has a \c state property and a \e{default state}.
 The default state is the empty string (\c{""}) and contains all of an item's
 initial property values. The default state is useful for managing property
 values before state changes. Setting the \c state property to an empty string
@@ -141,13 +141,13 @@ for the engine to fast forward and rewind a state (that is, internally set and u
 before it is finally applied. The process is as follows:
 
 \list 1
-\o The state is fast forwarded to determine the complete set of end values.
-\o The state is rewound.
-\o The state is fully applied, with transitions.
+\li The state is fast forwarded to determine the complete set of end values.
+\li The state is rewound.
+\li The state is fully applied, with transitions.
 \endlist
 
 In some cases this may cause unintended behavior. For example, a state that changes
-a view's \i model or a Loader's \i sourceComponent will set these properties
+a view's \e model or a Loader's \e sourceComponent will set these properties
 multiple times (to apply, rewind, and then reapply), which can be relatively expensive.
 
 State fast forwarding should be considered an implementation detail,

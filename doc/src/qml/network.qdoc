@@ -41,7 +41,7 @@ Image {
 }
 \endqml
 
-Since a \i relative URL is the same
+Since a \e relative URL is the same
 as a relative file, development of QML on regular file systems remains simple:
 
 \qml
@@ -53,8 +53,8 @@ Image {
 Network transparency is supported throughout QML, for example:
 
 \list
-\o Fonts - the \c source property of FontLoader is a URL
-\o WebViews - the \c url property of WebView (obviously!)
+\li Fonts - the \c source property of FontLoader is a URL
+\li WebViews - the \c url property of WebView (obviously!)
 \endlist
 
 Even QML types themselves can be on the network - if the \l {QML Viewer} is used to load
@@ -148,10 +148,10 @@ The \c import statement is only network transparent if it has an "as" clause.
 
 More specifically:
 \list
-\o \c{import "dir"} only works on local file systems
-\o \c{import libraryUri} only works on local file systems
-\o \c{import "dir" as D} works network transparently
-\o \c{import libraryUrl as U} works network transparently
+\li \c{import "dir"} only works on local file systems
+\li \c{import libraryUri} only works on local file systems
+\li \c{import "dir" as D} works network transparently
+\li \c{import libraryUrl as U} works network transparently
 \endlist
 
 \section1 XMLHttpRequest
@@ -164,8 +164,8 @@ data from over a network.
 The XMLHttpRequest API implements the same \l {http://www.w3.org/TR/XMLHttpRequest/}{W3C standard}
 as many popular web browsers with following exceptions:
 \list
-\i QML's XMLHttpRequest does not enforce the same origin policy.
-\i QML's XMLHttpRequest does not support \i synchronous requests.
+\li QML's XMLHttpRequest does not enforce the same origin policy.
+\li QML's XMLHttpRequest does not support \e synchronous requests.
 \endlist
 
 Additionally, the \c responseXML XML DOM tree currently supported by QML is a reduced subset
@@ -174,58 +174,58 @@ browser.  The following objects and properties are supported by the QML implemen
 
 \table
 \header
-\o \bold {Node}
-\o \bold {Document}
-\o \bold {Element}
-\o \bold {Attr}
-\o \bold {CharacterData}
-\o \bold {Text}
+\li \b {Node}
+\li \b {Document}
+\li \b {Element}
+\li \b {Attr}
+\li \b {CharacterData}
+\li \b {Text}
 
 \row
-\o
+\li
 \list
-\o nodeName
-\o nodeValue
-\o nodeType
-\o parentNode
-\o childNodes
-\o firstChild
-\o lastChild
-\o previousSibling
-\o nextSibling
-\o attributes
+\li nodeName
+\li nodeValue
+\li nodeType
+\li parentNode
+\li childNodes
+\li firstChild
+\li lastChild
+\li previousSibling
+\li nextSibling
+\li attributes
 \endlist
 
-\o
+\li
 \list
-\o xmlVersion
-\o xmlEncoding
-\o xmlStandalone
-\o documentElement
+\li xmlVersion
+\li xmlEncoding
+\li xmlStandalone
+\li documentElement
 \endlist
 
-\o
+\li
 \list
-\o tagName
+\li tagName
 \endlist
 
-\o
+\li
 \list
-\o name
-\o value
-\o ownerElement
+\li name
+\li value
+\li ownerElement
 \endlist
 
-\o
+\li
 \list
-\o data
-\o length
+\li data
+\li length
 \endlist
 
-\o
+\li
 \list
-\o isElementContentWhitespace
-\o wholeText
+\li isElementContentWhitespace
+\li wholeText
 \endlist
 
 \endtable

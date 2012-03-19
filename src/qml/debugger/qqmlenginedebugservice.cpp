@@ -67,7 +67,7 @@ QQmlEngineDebugService *QQmlEngineDebugService::instance()
 }
 
 QQmlEngineDebugService::QQmlEngineDebugService(QObject *parent)
-    : QQmlDebugService(QLatin1String("QDeclarativeEngine"), 1, parent),
+    : QQmlDebugService(QStringLiteral("QDeclarativeEngine"), 1, parent),
       m_watch(new QQmlWatcher(this)),
       m_statesDelegate(0)
 {
@@ -206,12 +206,12 @@ QVariant QQmlEngineDebugService::valueContents(const QVariant &value) const
         if (o) {
             QString name = o->objectName();
             if (name.isEmpty())
-                name = QLatin1String("<unnamed object>");
+                name = QStringLiteral("<unnamed object>");
             return name;
         }
     }
 
-    return QLatin1String("<unknown value>");
+    return QString(QStringLiteral("<unknown value>"));
 }
 
 void QQmlEngineDebugService::buildObjectDump(QDataStream &message, 
@@ -247,7 +247,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
                 prop.value = expr->expression();
                 QObject *scope = expr->scopeObject();
                 if (scope) {
-                    QString methodName = QLatin1String(scope->metaObject()->method(signal->index()).name().constData());
+                    QString methodName = QString::fromLatin1(scope->metaObject()->method(signal->index()).name());
                     if (!methodName.isEmpty()) {
                         prop.name = QLatin1String("on") + methodName[0].toUpper()
                                 + methodName.mid(1);
@@ -295,7 +295,9 @@ void QQmlEngineDebugService::prepareDeferredObjects(QObject *obj)
 
 }
 
-void QQmlEngineDebugService::buildObjectList(QDataStream &message, QQmlContext *ctxt)
+void QQmlEngineDebugService::buildObjectList(QDataStream &message,
+                                             QQmlContext *ctxt,
+                                             const QList<QPointer<QObject> > &instances)
 {
     QQmlContextData *p = QQmlContextData::get(ctxt);
 
@@ -316,29 +318,30 @@ void QQmlEngineDebugService::buildObjectList(QDataStream &message, QQmlContext *
 
     child = p->childContexts;
     while (child) {
-        buildObjectList(message, child->asQQmlContext());
+        buildObjectList(message, child->asQQmlContext(), instances);
         child = child->nextChild;
     }
 
-    // Clean deleted objects
-    QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(ctxt);
-    for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-        if (!ctxtPriv->instances.at(ii)) {
-            ctxtPriv->instances.removeAt(ii);
-            --ii;
-        }
+    count = 0;
+    for (int ii = 0; ii < instances.count(); ++ii) {
+        QQmlData *data = QQmlData::get(instances.at(ii));
+        if (data->context == p)
+            count ++;
     }
+    message << count;
 
-    message << ctxtPriv->instances.count();
-    for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-        message << objectData(ctxtPriv->instances.at(ii));
+    for (int ii = 0; ii < instances.count(); ++ii) {
+        QQmlData *data = QQmlData::get(instances.at(ii));
+        if (data->context == p)
+            message << objectData(instances.at(ii));
     }
 }
 
-void QQmlEngineDebugService::buildStatesList(QQmlContext *ctxt, bool cleanList)
+void QQmlEngineDebugService::buildStatesList(bool cleanList,
+                                             const QList<QPointer<QObject> > &instances)
 {
     if (m_statesDelegate)
-        m_statesDelegate->buildStatesList(ctxt, cleanList);
+        m_statesDelegate->buildStatesList(cleanList, instances);
 }
 
 QQmlEngineDebugService::QQmlObjectData
@@ -425,8 +428,17 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         rs << QByteArray("LIST_OBJECTS_R") << queryId;
 
         if (engine) {
-            buildObjectList(rs, engine->rootContext());
-            buildStatesList(engine->rootContext(), true);
+            QQmlContext *rootContext = engine->rootContext();
+            // Clean deleted objects
+            QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(rootContext);
+            for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
+                if (!ctxtPriv->instances.at(ii)) {
+                    ctxtPriv->instances.removeAt(ii);
+                    --ii;
+                }
+            }
+            buildObjectList(rs, rootContext, ctxtPriv->instances);
+            buildStatesList(true, ctxtPriv->instances);
         }
 
         sendMessage(reply);
@@ -508,11 +520,11 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
             bool undefined = false;
             QVariant value = exprObj.evaluate(&undefined);
             if (undefined)
-                result = QLatin1String("<undefined>");
+                result = QString(QStringLiteral("<undefined>"));
             else
                 result = valueContents(value);
         } else {
-            result = QLatin1String("<unknown context>");
+            result = QString(QStringLiteral("<unknown context>"));
         }
 
         QByteArray reply;
@@ -575,10 +587,8 @@ void QQmlEngineDebugService::setBinding(int objectId,
                     QQmlPropertyPrivate::setSignalExpression(property, qmlExpression);
                     qmlExpression->setSourceLocation(filename, line, column);
                 } else if (property.isProperty()) {
-                    QQmlBinding *binding = new QQmlBinding(expression.toString(), object, context);
+                    QQmlBinding *binding = new QQmlBinding(expression.toString(), false, object, QQmlContextData::get(context), filename, line, column);;
                     binding->setTarget(property);
-                    binding->setSourceLocation(filename, line, column);
-                    binding->setNotifyOnValueChanged(true);
                     QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::setBinding(property, binding);
                     if (oldBinding)
                         oldBinding->destroy();
@@ -665,11 +675,11 @@ void QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
 
     QString paramStr;
     for (int ii = 0; ii < paramNames.count(); ++ii) {
-        if (ii != 0) paramStr.append(QLatin1String(","));
+        if (ii != 0) paramStr.append(QLatin1Char(','));
         paramStr.append(QString::fromUtf8(paramNames.at(ii)));
     }
 
-    QString jsfunction = QLatin1String("(function ") + method + QLatin1String("(") + paramStr +
+    QString jsfunction = QLatin1String("(function ") + method + QLatin1Char('(') + paramStr +
             QLatin1String(") {");
     jsfunction += body;
     jsfunction += QLatin1String("\n})");

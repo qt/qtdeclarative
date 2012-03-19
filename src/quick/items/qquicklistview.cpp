@@ -236,13 +236,22 @@ void QQuickViewSection::setLabelPositioning(int l)
 class FxListItemSG : public FxViewItem
 {
 public:
-    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own) : FxViewItem(i, own), view(v) {
+    FxListItemSG(QQuickItem *i, QQuickListView *v, bool own, bool trackGeometry) : FxViewItem(i, own, trackGeometry), view(v) {
         attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(item));
         if (attached)
             static_cast<QQuickListViewAttached*>(attached)->setView(view);
+        if (trackGeometry) {
+            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+        }
     }
 
-    ~FxListItemSG() {}
+    ~FxListItemSG() {
+        if (trackGeom) {
+            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+            itemPrivate->removeItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+        }
+    }
 
     inline QQuickItem *section() const {
         return attached ? static_cast<QQuickListViewAttached*>(attached)->m_sectionItem : 0;
@@ -524,7 +533,9 @@ void QQuickListViewPrivate::clear()
         sectionCache[i] = 0;
     }
     visiblePos = 0;
+    releaseSectionItem(currentSectionItem);
     currentSectionItem = 0;
+    releaseSectionItem(nextSectionItem);
     nextSectionItem = 0;
     lastVisibleSection = QString();
     QQuickItemViewPrivate::clear();
@@ -534,7 +545,7 @@ FxViewItem *QQuickListViewPrivate::newViewItem(int modelIndex, QQuickItem *item)
 {
     Q_Q(QQuickListView);
 
-    FxListItemSG *listItem = new FxListItemSG(item, q, false);
+    FxListItemSG *listItem = new FxListItemSG(item, q, false, false);
     listItem->index = modelIndex;
 
     // initialise attached properties
@@ -833,7 +844,7 @@ void QQuickListViewPrivate::createHighlight()
     if (currentItem) {
         QQuickItem *item = createHighlightItem();
         if (item) {
-            FxListItemSG *newHighlight = new FxListItemSG(item, q, true);
+            FxListItemSG *newHighlight = new FxListItemSG(item, q, true, true);
 
             if (autoHighlight) {
                 newHighlight->setSize(static_cast<FxListItemSG*>(currentItem)->itemSize());
@@ -933,6 +944,8 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
 
 void QQuickListViewPrivate::releaseSectionItem(QQuickItem *item)
 {
+    if (!item)
+        return;
     int i = 0;
     do {
         if (!sectionCache[i]) {
@@ -970,7 +983,7 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
 
 void QQuickListViewPrivate::updateStickySections()
 {
-    if (!sectionCriteria || visibleItems.isEmpty()
+    if (!sectionCriteria
             || (!sectionCriteria->labelPositioning() && !currentSectionItem && !nextSectionItem))
         return;
 
@@ -1006,7 +1019,7 @@ void QQuickListViewPrivate::updateStickySections()
     }
 
     // Current section header
-    if (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart) {
+    if (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart && isValid() && visibleItems.count()) {
         if (!currentSectionItem) {
             currentSectionItem = getSectionItem(currentSection);
         } else if (currentStickySection != currentSection) {
@@ -1039,7 +1052,7 @@ void QQuickListViewPrivate::updateStickySections()
     }
 
     // Next section footer
-    if (sectionCriteria->labelPositioning() & QQuickViewSection::NextLabelAtEnd) {
+    if (sectionCriteria->labelPositioning() & QQuickViewSection::NextLabelAtEnd && isValid() && visibleItems.count()) {
         if (!nextSectionItem) {
             nextSectionItem = getSectionItem(nextSection);
         } else if (nextStickySection != nextSection) {
@@ -1077,7 +1090,7 @@ void QQuickListViewPrivate::updateSections()
 
     QQuickItemViewPrivate::updateSections();
 
-    if (sectionCriteria && !visibleItems.isEmpty()) {
+    if (sectionCriteria && !visibleItems.isEmpty() && isValid()) {
         QString prevSection;
         if (visibleIndex > 0)
             prevSection = sectionAt(visibleIndex-1);
@@ -1234,11 +1247,11 @@ void QQuickListViewPrivate::updateFooter()
     Q_Q(QQuickListView);
     bool created = false;
     if (!footer) {
-        QQuickItem *item = createComponentItem(footerComponent, true);
+        QQuickItem *item = createComponentItem(footerComponent);
         if (!item)
             return;
         item->setZ(1);
-        footer = new FxListItemSG(item, q, true);
+        footer = new FxListItemSG(item, q, true, true);
         created = true;
     }
 
@@ -1265,11 +1278,11 @@ void QQuickListViewPrivate::updateHeader()
     Q_Q(QQuickListView);
     bool created = false;
     if (!header) {
-        QQuickItem *item = createComponentItem(headerComponent, true);
+        QQuickItem *item = createComponentItem(headerComponent);
         if (!item)
             return;
         item->setZ(1);
-        header = new FxListItemSG(item, q, true);
+        header = new FxListItemSG(item, q, true, true);
         created = true;
     }
 
@@ -1848,13 +1861,13 @@ QQuickListView::~QQuickListView()
     Valid values for \c highlightRangeMode are:
 
     \list
-    \o ListView.ApplyRange - the view attempts to maintain the highlight within the range.
+    \li ListView.ApplyRange - the view attempts to maintain the highlight within the range.
        However, the highlight can move outside of the range at the ends of the list or due
        to mouse interaction.
-    \o ListView.StrictlyEnforceRange - the highlight never moves outside of the range.
+    \li ListView.StrictlyEnforceRange - the highlight never moves outside of the range.
        The current item changes if a keyboard or mouse action would cause the highlight to move
        outside of the range.
-    \o ListView.NoHighlightRange - this is the default value.
+    \li ListView.NoHighlightRange - this is the default value.
     \endlist
 */
 void QQuickListView::setHighlightFollowsCurrentItem(bool autoHighlight)
@@ -1902,17 +1915,17 @@ void QQuickListView::setSpacing(qreal spacing)
     Possible values:
 
     \list
-    \o ListView.Horizontal - Items are laid out horizontally
-    \o ListView.Vertical (default) - Items are laid out vertically
+    \li ListView.Horizontal - Items are laid out horizontally
+    \li ListView.Vertical (default) - Items are laid out vertically
     \endlist
 
     \table
     \row
-    \o Horizontal orientation:
+    \li Horizontal orientation:
     \image ListViewHorizontal.png
 
     \row
-    \o Vertical orientation:
+    \li Vertical orientation:
     \image listview-highlight.png
     \endtable
 */
@@ -1948,8 +1961,8 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
   Possible values:
 
   \list
-  \o Qt.LeftToRight (default) - Items will be laid out from left to right.
-  \o Qt.RightToLeft - Items will be laid out from right to let.
+  \li Qt.LeftToRight (default) - Items will be laid out from left to right.
+  \li Qt.RightToLeft - Items will be laid out from right to let.
   \endlist
 
   \sa ListView::effectiveLayoutDirection
@@ -2020,9 +2033,9 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     \c section.property. This value can be one of:
 
     \list
-    \o ViewSection.FullString (default) - sections are created based on the
+    \li ViewSection.FullString (default) - sections are created based on the
     \c section.property value.
-    \o ViewSection.FirstCharacter - sections are created based on the first
+    \li ViewSection.FirstCharacter - sections are created based on the first
     character of the \c section.property value (for example, 'A', 'B', 'C'
     sections, etc. for an address book)
     \endlist
@@ -2034,11 +2047,11 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     the labels are shown inline.  This value can be a combination of:
 
     \list
-    \o ViewSection.InlineLabels - section labels are shown inline between
+    \li ViewSection.InlineLabels - section labels are shown inline between
     the item delegates separating sections (default).
-    \o ViewSection.CurrentLabelAtStart - the current section label sticks to the
+    \li ViewSection.CurrentLabelAtStart - the current section label sticks to the
     start of the view as it is moved.
-    \o ViewSection.NextLabelAtEnd - the next section label (beyond all visible
+    \li ViewSection.NextLabelAtEnd - the next section label (beyond all visible
     sections) sticks to the end of the view as it is moved. \note Enabling
     \c ViewSection.NextLabelAtEnd requires the view to scan ahead for the next
     section, which has performance implications, especially for slower models.
@@ -2174,10 +2187,10 @@ void QQuickListView::setHighlightResizeDuration(int duration)
     The possible values are:
 
     \list
-    \o ListView.NoSnap (default) - the view stops anywhere within the visible area.
-    \o ListView.SnapToItem - the view settles with an item aligned with the start of
+    \li ListView.NoSnap (default) - the view stops anywhere within the visible area.
+    \li ListView.SnapToItem - the view settles with an item aligned with the start of
     the view.
-    \o ListView.SnapOneItem - the view settles no more than one item away from the first
+    \li ListView.SnapOneItem - the view settles no more than one item away from the first
     visible item at the time the mouse button is released.  This mode is particularly
     useful for moving one page at a time.
     \endlist
@@ -2254,9 +2267,9 @@ void QQuickListView::setSnapMode(SnapMode mode)
     It is applied to all items that are created when:
 
     \list
-    \o The view is first created
-    \o The view's \l model changes
-    \o The view's \l model is \l {QAbstractItemModel::reset}{reset}, if the model is a QAbstractItemModel subclass
+    \li The view is first created
+    \li The view's \l model changes
+    \li The view's \l model is \l {QAbstractItemModel::reset}{reset}, if the model is a QAbstractItemModel subclass
     \endlist
 
     For example, here is a view that specifies such a transition:
@@ -2670,7 +2683,7 @@ void QQuickListView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
     if keyNavigationWraps is true and it is currently at the end.
     This method has no effect if the \l count is zero.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 void QQuickListView::incrementCurrentIndex()
 {
@@ -2690,7 +2703,7 @@ void QQuickListView::incrementCurrentIndex()
     if keyNavigationWraps is true and it is currently at the beginning.
     This method has no effect if the \l count is zero.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 void QQuickListView::decrementCurrentIndex()
 {
@@ -2879,12 +2892,12 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     \a mode:
 
     \list
-    \o ListView.Beginning - position item at the top (or left for horizontal orientation) of the view.
-    \o ListView.Center - position item in the center of the view.
-    \o ListView.End - position item at bottom (or right for horizontal orientation) of the view.
-    \o ListView.Visible - if any part of the item is visible then take no action, otherwise
+    \li ListView.Beginning - position item at the top (or left for horizontal orientation) of the view.
+    \li ListView.Center - position item in the center of the view.
+    \li ListView.End - position item at bottom (or right for horizontal orientation) of the view.
+    \li ListView.Visible - if any part of the item is visible then take no action, otherwise
     bring the item into view.
-    \o ListView.Contain - ensure the entire item is visible.  If the item is larger than
+    \li ListView.Contain - ensure the entire item is visible.  If the item is larger than
     the view the item is positioned at the top (or left for horizontal orientation) of the view.
     \endlist
 
@@ -2897,7 +2910,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     the actual start of the view can vary based on the size of the delegates.
     The correct way to bring an item into view is with \c positionViewAtIndex.
 
-    \bold Note: methods should only be called after the Component has completed.  To position
+    \b Note: methods should only be called after the Component has completed.  To position
     the view at startup, this method should be called by Component.onCompleted.  For
     example, to position the view at the end:
 
@@ -2917,7 +2930,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     of the list does not cause all other items to be repositioned, and because
     the actual start of the view can vary based on the size of the delegates.
 
-    \bold Note: methods should only be called after the Component has completed.  To position
+    \b Note: methods should only be called after the Component has completed.  To position
     the view at startup, this method should be called by Component.onCompleted.  For
     example, to position the view at the end on startup:
 
@@ -2936,7 +2949,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     If the item is outside the visible area, -1 is returned, regardless of
     whether an item will exist at that point when scrolled into view.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 
 /*!
@@ -2949,7 +2962,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     If the item is outside the visible area, null is returned, regardless of
     whether an item will exist at that point when scrolled into view.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 
 QQuickListViewAttached *QQuickListView::qmlAttachedProperties(QObject *obj)

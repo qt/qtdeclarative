@@ -466,7 +466,7 @@ void QQuickPathViewPrivate::regenerate()
 
     \snippet doc/src/snippets/qml/pathview/pathview.qml 1
 
-    \bold Note that views do not enable \e clip automatically.  If the view
+    \b Note that views do not enable \e clip automatically.  If the view
     is not clipped by another item or the screen, it will be necessary
     to set \e {clip: true} in order to have the out of view items clipped
     nicely.
@@ -695,7 +695,7 @@ QQuickItem *QQuickPathView::currentItem() const
 
     Increments the current index.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 void QQuickPathView::incrementCurrentIndex()
 {
@@ -709,7 +709,7 @@ void QQuickPathView::incrementCurrentIndex()
 
     Decrements the current index.
 
-    \bold Note: methods should only be called after the Component has completed.
+    \b Note: methods should only be called after the Component has completed.
 */
 void QQuickPathView::decrementCurrentIndex()
 {

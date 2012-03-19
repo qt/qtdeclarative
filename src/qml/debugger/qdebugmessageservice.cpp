@@ -69,7 +69,7 @@ public:
 
 QDebugMessageService::QDebugMessageService(QObject *parent) :
     QQmlDebugService(*(new QDebugMessageServicePrivate()),
-                                   QLatin1String("DebugMessages"), 2, parent)
+                                   QStringLiteral("DebugMessages"), 2, parent)
 {
     Q_D(QDebugMessageService);
 

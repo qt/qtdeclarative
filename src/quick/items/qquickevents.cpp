@@ -117,12 +117,12 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \o Qt.NoModifier - No modifier key is pressed.
-    \o Qt.ShiftModifier - A Shift key on the keyboard is pressed.
-    \o Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
-    \o Qt.AltModifier - An Alt key on the keyboard is pressed.
-    \o Qt.MetaModifier - A Meta key on the keyboard is pressed.
-    \o Qt.KeypadModifier - A keypad button is pressed.
+    \li Qt.NoModifier - No modifier key is pressed.
+    \li Qt.ShiftModifier - A Shift key on the keyboard is pressed.
+    \li Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
+    \li Qt.AltModifier - An Alt key on the keyboard is pressed.
+    \li Qt.MetaModifier - A Meta key on the keyboard is pressed.
+    \li Qt.KeypadModifier - A keypad button is pressed.
     \endlist
 
     For example, to react to a Shift key + Enter key combination:
@@ -179,9 +179,9 @@ Item {
 
     This property holds the button that caused the event.  It can be one of:
     \list
-    \o Qt.LeftButton
-    \o Qt.RightButton
-    \o Qt.MiddleButton
+    \li Qt.LeftButton
+    \li Qt.RightButton
+    \li Qt.MiddleButton
     \endlist
 */
 
@@ -202,9 +202,9 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \o Qt.LeftButton
-    \o Qt.RightButton
-    \o Qt.MiddleButton
+    \li Qt.LeftButton
+    \li Qt.RightButton
+    \li Qt.MiddleButton
     \endlist
 */
 
@@ -216,12 +216,12 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \o Qt.NoModifier - No modifier key is pressed.
-    \o Qt.ShiftModifier - A Shift key on the keyboard is pressed.
-    \o Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
-    \o Qt.AltModifier - An Alt key on the keyboard is pressed.
-    \o Qt.MetaModifier - A Meta key on the keyboard is pressed.
-    \o Qt.KeypadModifier - A keypad button is pressed.
+    \li Qt.NoModifier - No modifier key is pressed.
+    \li Qt.ShiftModifier - A Shift key on the keyboard is pressed.
+    \li Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
+    \li Qt.AltModifier - An Alt key on the keyboard is pressed.
+    \li Qt.MetaModifier - A Meta key on the keyboard is pressed.
+    \li Qt.KeypadModifier - A keypad button is pressed.
     \endlist
 
     For example, to react to a Shift key + Left mouse button click:
@@ -277,9 +277,9 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \o Qt.LeftButton
-    \o Qt.RightButton
-    \o Qt.MiddleButton
+    \li Qt.LeftButton
+    \li Qt.RightButton
+    \li Qt.MiddleButton
     \endlist
 */
 
@@ -317,12 +317,12 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \o Qt.NoModifier - No modifier key is pressed.
-    \o Qt.ShiftModifier - A Shift key on the keyboard is pressed.
-    \o Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
-    \o Qt.AltModifier - An Alt key on the keyboard is pressed.
-    \o Qt.MetaModifier - A Meta key on the keyboard is pressed.
-    \o Qt.KeypadModifier - A keypad button is pressed.
+    \li Qt.NoModifier - No modifier key is pressed.
+    \li Qt.ShiftModifier - A Shift key on the keyboard is pressed.
+    \li Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
+    \li Qt.AltModifier - An Alt key on the keyboard is pressed.
+    \li Qt.MetaModifier - A Meta key on the keyboard is pressed.
+    \li Qt.KeypadModifier - A keypad button is pressed.
     \endlist
 
     For example, to react to a Control key pressed during the wheel event:

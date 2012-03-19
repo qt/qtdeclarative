@@ -46,7 +46,8 @@
 #include <QtCore/QProcess>
 #include <QtCore/QTimer>
 
-#include "profileclient.h"
+#include "qmlprofilerclient.h"
+#include "qmlprofilerdata.h"
 
 class QmlProfilerApplication : public QCoreApplication
 {
@@ -104,9 +105,9 @@ private:
     bool m_quitAfterSave;
 
     QQmlDebugConnection m_connection;
-    QmlProfileClient m_qmlProfilerClient;
-    V8ProfileClient m_v8profilerClient;
-    ProfileData m_profileData;
+    QmlProfilerClient m_qmlProfilerClient;
+    V8ProfilerClient m_v8profilerClient;
+    QmlProfilerData m_profilerData;
     QTimer m_connectTimer;
     uint m_connectionAttempts;
 

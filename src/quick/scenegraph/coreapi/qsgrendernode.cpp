@@ -63,14 +63,14 @@ void QSGRenderNode::setInheritedOpacity(qreal opacity)
     This function should return a mask where each bit represents OpenGL states changed by
     the \l render() function:
     \list
-    \o DepthState - depth write mask, depth test enabled, depth comparison function
-    \o StencilState - stencil write masks, stencil test enabled, stencil operations,
+    \li DepthState - depth write mask, depth test enabled, depth comparison function
+    \li StencilState - stencil write masks, stencil test enabled, stencil operations,
                       stencil comparison functions
-    \o ScissorState - scissor enabled, scissor test enabled
-    \o ColorState - clear color, color write mask
-    \o BlendState - blend enabled, blend function
-    \o CullState - front face, cull face enabled
-    \o ViewportState - viewport
+    \li ScissorState - scissor enabled, scissor test enabled
+    \li ColorState - clear color, color write mask
+    \li BlendState - blend enabled, blend function
+    \li CullState - front face, cull face enabled
+    \li ViewportState - viewport
     \endlist
 
     The function is called by the renderer so it can reset the OpenGL states after rendering this
@@ -96,17 +96,17 @@ void QSGRenderNode::setInheritedOpacity(qreal opacity)
 
     The following states are set before this function is called:
     \list
-    \o glDepthMask(false)
-    \o glDisable(GL_DEPTH_TEST)
-    \o glStencilMask(0)
-    \o glEnable(GL_STENCIL_TEST)/glDisable(GL_STENCIL_TEST) depending on clip
-    \o glStencilFunc(GL_EQUAL, state.stencilValue, 0xff) depending on clip
-    \o glEnable(GL_SCISSOR_TEST)/glDisable(GL_SCISSOR_TEST) depending on clip
-    \o glScissor(state.scissorRect.x(), state.scissorRect.y(),
+    \li glDepthMask(false)
+    \li glDisable(GL_DEPTH_TEST)
+    \li glStencilMask(0)
+    \li glEnable(GL_STENCIL_TEST)/glDisable(GL_STENCIL_TEST) depending on clip
+    \li glStencilFunc(GL_EQUAL, state.stencilValue, 0xff) depending on clip
+    \li glEnable(GL_SCISSOR_TEST)/glDisable(GL_SCISSOR_TEST) depending on clip
+    \li glScissor(state.scissorRect.x(), state.scissorRect.y(),
                  state.scissorRect.width(), state.scissorRect.height()) depending on clip
-    \o glEnable(GL_BLEND)
-    \o glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
-    \o glDisable(GL_CULL_FACE)
+    \li glEnable(GL_BLEND)
+    \li glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+    \li glDisable(GL_CULL_FACE)
     \endlist
 
     States that are not listed above, but are included in \l StateFlags, can have arbitrary

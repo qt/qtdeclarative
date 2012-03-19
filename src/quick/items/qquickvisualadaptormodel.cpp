@@ -173,7 +173,7 @@ public:
     VDMDelegateDataType *m_delegateDataType;
     CreateModelData createItem;
     StringValue stringValue;
-    v8::Persistent<v8::Function> m_constructor;
+    v8::Persistent<v8::ObjectTemplate> m_constructor;
 
     int m_ref;
     int m_count;
@@ -716,9 +716,9 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
 
     v8::HandleScope handleScope;
     v8::Context::Scope contextScope(v8Engine->context());
-    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetHasExternalResource(true);
-    ft->PrototypeTemplate()->SetAccessor(
+    v8::Local<v8::ObjectTemplate> constructor = v8::ObjectTemplate::New();
+    constructor->SetHasExternalResource(true);
+    constructor->SetAccessor(
             v8::String::New("index"), QQuickVisualDataModelItemMetaObject::get_index);
 
     if (m_listAccessor
@@ -726,9 +726,9 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
             && m_listAccessor->type() != QQuickListAccessor::Instance) {
         createItem = &QQuickVDMListAccessorData::create;
         stringValue = &QQuickVDMListAccessorData::stringValue;
-        ft->PrototypeTemplate()->SetAccessor(
+        constructor->SetAccessor(
                 v8::String::New("modelData"), QQuickVDMListAccessorData::get_modelData);
-        m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+        m_constructor = qPersistentNew(constructor);
         return;
     }
 
@@ -741,7 +741,7 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
             const QString roleName = m_listModelInterface->toString(role);
             const QByteArray propertyName = roleName.toUtf8();
             addProperty(role, propertyId, propertyName, "QVariant");
-            ft->PrototypeTemplate()->SetAccessor(
+            constructor->SetAccessor(
                     v8Engine->toString(roleName),
                     QQuickVDMListModelInterfaceData::get_property,
                     QQuickVDMListModelInterfaceData::set_property,
@@ -751,7 +751,7 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
         m_roleCount = m_propertyData.count();
         if (m_propertyData.count() == 1) {
             addProperty(roles.first(), 1, "modelData", "QVariant", true);
-            ft->PrototypeTemplate()->SetAccessor(
+            constructor->SetAccessor(
                     v8::String::New("modelData"),
                     QQuickVDMListModelInterfaceData::get_property,
                     QQuickVDMListModelInterfaceData::set_property,
@@ -764,7 +764,7 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
         for (QHash<int, QByteArray>::const_iterator it = roleNames.begin(); it != roleNames.end(); ++it) {
             const int propertyId = m_propertyData.count();
             addProperty(it.key(), propertyId, it.value(), "QVariant");
-            ft->PrototypeTemplate()->SetAccessor(
+            constructor->SetAccessor(
                     v8::String::New(it.value().constData(), it.value().length()),
                     QQuickVDMAbstractItemModelData::get_property,
                     QQuickVDMAbstractItemModelData::set_property,
@@ -774,14 +774,14 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
         m_roleCount = m_propertyData.count();
         if (m_propertyData.count() == 1) {
             addProperty(roleNames.begin().key(), 1, "modelData", "QVariant", true);
-            ft->PrototypeTemplate()->SetAccessor(
+            constructor->SetAccessor(
                     v8::String::New("modelData"),
                     QQuickVDMAbstractItemModelData::get_property,
                     QQuickVDMAbstractItemModelData::set_property,
                     v8::Int32::New(0));
             m_roleNames.insert("modelData", roleNames.begin().key());
         }
-        ft->PrototypeTemplate()->SetAccessor(
+        constructor->SetAccessor(
                 v8::String::New("hasModelChildren"),
                 QQuickVDMAbstractItemModelData::get_hasModelChildren);
     } else if (m_listAccessor) {
@@ -796,7 +796,7 @@ void QQuickVisualAdaptorModelPrivate::createMetaObject()
     if (!m_objectList) {
         m_delegateDataType->propertyCache = new QQmlPropertyCache(
                 m_engine, m_delegateDataType->metaObject);
-        m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
+        m_constructor = qPersistentNew(constructor);
     }
 }
 

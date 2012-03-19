@@ -318,7 +318,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             newBinding->setTarget(property);
             QQuickAction xa;
             xa.property = property;
-            xa.toBinding = newBinding;
+            xa.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             xa.fromValue = xa.property.read();
             xa.deletableToBinding = true;
             actions << xa;
@@ -338,7 +338,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             newBinding->setTarget(property);
             QQuickAction ya;
             ya.property = property;
-            ya.toBinding = newBinding;
+            ya.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             ya.fromValue = ya.property.read();
             ya.deletableToBinding = true;
             actions << ya;
@@ -358,7 +358,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             newBinding->setTarget(property);
             QQuickAction sa;
             sa.property = property;
-            sa.toBinding = newBinding;
+            sa.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             sa.fromValue = sa.property.read();
             sa.deletableToBinding = true;
             actions << sa;
@@ -378,7 +378,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             newBinding->setTarget(property);
             QQuickAction ra;
             ra.property = property;
-            ra.toBinding = newBinding;
+            ra.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             ra.fromValue = ra.property.read();
             ra.deletableToBinding = true;
             actions << ra;
@@ -398,7 +398,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             newBinding->setTarget(property);
             QQuickAction wa;
             wa.property = property;
-            wa.toBinding = newBinding;
+            wa.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             wa.fromValue = wa.property.read();
             wa.deletableToBinding = true;
             actions << wa;
@@ -418,7 +418,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             newBinding->setTarget(property);
             QQuickAction ha;
             ha.property = property;
-            ha.toBinding = newBinding;
+            ha.toBinding = QQmlAbstractBinding::getPointer(newBinding);
             ha.fromValue = ha.property.read();
             ha.deletableToBinding = true;
             actions << ha;

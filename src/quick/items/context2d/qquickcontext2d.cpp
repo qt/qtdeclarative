@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
     {http://www.w3.org/TR/2dcontext}{W3C Canvas 2D Context API standard} with
     some enhanced features.
 
-    The Context2D API provides the rendering \bold{context} which defines the
+    The Context2D API provides the rendering \b{context} which defines the
     methods and attributes needed to draw on the \c Canvas item. The following
     assigns the canvas rendering context to a \c{context} variable:
     \code
@@ -495,22 +495,22 @@ static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
     Each state consists of the current transformation matrix, clipping region,
     and values of the following attributes:
     \list
-    \o\a QtQuick2::Context2D::strokeStyle
-    \o\a QtQuick2::Context2D::fillStyle
-    \o\a QtQuick2::Context2D::fillRule
-    \o\a QtQuick2::Context2D::globalAlpha
-    \o\a QtQuick2::Context2D::lineWidth
-    \o\a QtQuick2::Context2D::lineCap
-    \o\a QtQuick2::Context2D::lineJoin
-    \o\a QtQuick2::Context2D::miterLimit
-    \o\a QtQuick2::Context2D::shadowOffsetX
-    \o\a QtQuick2::Context2D::shadowOffsetY
-    \o\a QtQuick2::Context2D::shadowBlur
-    \o\a QtQuick2::Context2D::shadowColor
-    \o\a QtQuick2::Context2D::globalCompositeOperation
-    \o\a QtQuick2::Context2D::font
-    \o\a QtQuick2::Context2D::textAlign
-    \o\a QtQuick2::Context2D::textBaseline
+    \li\a QtQuick2::Context2D::strokeStyle
+    \li\a QtQuick2::Context2D::fillStyle
+    \li\a QtQuick2::Context2D::fillRule
+    \li\a QtQuick2::Context2D::globalAlpha
+    \li\a QtQuick2::Context2D::lineWidth
+    \li\a QtQuick2::Context2D::lineCap
+    \li\a QtQuick2::Context2D::lineJoin
+    \li\a QtQuick2::Context2D::miterLimit
+    \li\a QtQuick2::Context2D::shadowOffsetX
+    \li\a QtQuick2::Context2D::shadowOffsetY
+    \li\a QtQuick2::Context2D::shadowBlur
+    \li\a QtQuick2::Context2D::shadowColor
+    \li\a QtQuick2::Context2D::globalCompositeOperation
+    \li\a QtQuick2::Context2D::font
+    \li\a QtQuick2::Context2D::textAlign
+    \li\a QtQuick2::Context2D::textBaseline
     \endlist
 
     The current path is NOT part of the drawing state. The path can be reset by
@@ -606,19 +606,19 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
     \image qml-item-canvas-math.png
     where:
     \list
-    \o \c{a} is the scale factor in the horizontal (x) direction
+    \li \c{a} is the scale factor in the horizontal (x) direction
     \image qml-item-canvas-scalex.png
-    \o \c{c} is the skew factor in the x direction
+    \li \c{c} is the skew factor in the x direction
     \image qml-item-canvas-canvas-skewx.png
-    \o \c{e} is the translation in the x direction
+    \li \c{e} is the translation in the x direction
     \image qml-item-canvas-canvas-translate.png
-    \o \c{b} is the skew factor in the y (vertical) direction
+    \li \c{b} is the skew factor in the y (vertical) direction
     \image qml-item-canvas-canvas-skewy.png
-    \o \c{d} is the scale factor in the y direction
+    \li \c{d} is the scale factor in the y direction
     \image qml-item-canvas-canvas-scaley.png
-    \o \c{f} is the translation in the y direction
+    \li \c{f} is the translation in the y direction
     \image qml-item-canvas-canvas-translatey.png
-    \o the last row remains constant
+    \li the last row remains constant
     \endlist
     The scale factors and skew factors are multiples; \c{e} and \c{f} are
     coordinate space units, just like the units in the \a QtQuick2::Context2D::translate(x,y)
@@ -799,22 +799,22 @@ static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> va
     \qmlproperty string QtQuick2::Context2D::globalCompositeOperation
      Holds the the current the current composition operation, from the list below:
      \list
-     \o source-atop      - A atop B. Display the source image wherever both images are opaque.
+     \li source-atop      - A atop B. Display the source image wherever both images are opaque.
                            Display the destination image wherever the destination image is opaque but the source image is transparent.
                            Display transparency elsewhere.
-     \o source-in        - A in B. Display the source image wherever both the source image and destination image are opaque.
+     \li source-in        - A in B. Display the source image wherever both the source image and destination image are opaque.
                            Display transparency elsewhere.
-     \o source-out       - A out B. Display the source image wherever the source image is opaque and the destination image is transparent.
+     \li source-out       - A out B. Display the source image wherever the source image is opaque and the destination image is transparent.
                            Display transparency elsewhere.
-     \o source-over      - (default) A over B. Display the source image wherever the source image is opaque.
+     \li source-over      - (default) A over B. Display the source image wherever the source image is opaque.
                            Display the destination image elsewhere.
-     \o destination-atop - B atop A. Same as source-atop but using the destination image instead of the source image and vice versa.
-     \o destination-in   - B in A. Same as source-in but using the destination image instead of the source image and vice versa.
-     \o destination-out  - B out A. Same as source-out but using the destination image instead of the source image and vice versa.
-     \o destination-over - B over A. Same as source-over but using the destination image instead of the source image and vice versa.
-     \o lighter          - A plus B. Display the sum of the source image and destination image, with color values approaching 255 (100%) as a limit.
-     \o copy             - A (B is ignored). Display the source image instead of the destination image.
-     \o xor              - A xor B. Exclusive OR of the source image and destination image.
+     \li destination-atop - B atop A. Same as source-atop but using the destination image instead of the source image and vice versa.
+     \li destination-in   - B in A. Same as source-in but using the destination image instead of the source image and vice versa.
+     \li destination-out  - B out A. Same as source-out but using the destination image instead of the source image and vice versa.
+     \li destination-over - B over A. Same as source-over but using the destination image instead of the source image and vice versa.
+     \li lighter          - A plus B. Display the sum of the source image and destination image, with color values approaching 255 (100%) as a limit.
+     \li copy             - A (B is ignored). Display the source image instead of the destination image.
+     \li xor              - A xor B. Exclusive OR of the source image and destination image.
      \endlist
 
      Additionally, this property also accepts the compositon modes listed in \a {QPainter::CompositionMode}. According to the W3C standard, these
@@ -858,12 +858,12 @@ static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<
      The style can be either a string containing a CSS color, a CanvasGradient or CanvasPattern object. Invalid values are ignored.
      This property accepts several color syntaxes:
      \list
-     \o 'rgb(red, green, blue)' - for example: 'rgb(255, 100, 55)' or 'rgb(100%, 70%, 30%)'
-     \o 'rgba(red, green, blue, alpha)' - for example: 'rgb(255, 100, 55, 1.0)' or 'rgb(100%, 70%, 30%, 0.5)'
-     \o 'hsl(hue, saturation, lightness)'
-     \o 'hsla(hue, saturation, lightness, alpha)'
-     \o '#RRGGBB' - for example: '#00FFCC'
-     \o Qt.rgba(red, green, blue, alpha) - for example: Qt.rgba(0.3, 0.7, 1, 1.0)
+     \li 'rgb(red, green, blue)' - for example: 'rgb(255, 100, 55)' or 'rgb(100%, 70%, 30%)'
+     \li 'rgba(red, green, blue, alpha)' - for example: 'rgb(255, 100, 55, 1.0)' or 'rgb(100%, 70%, 30%, 0.5)'
+     \li 'hsl(hue, saturation, lightness)'
+     \li 'hsla(hue, saturation, lightness, alpha)'
+     \li '#RRGGBB' - for example: '#00FFCC'
+     \li Qt.rgba(red, green, blue, alpha) - for example: Qt.rgba(0.3, 0.7, 1, 1.0)
      \endlist
      If the \a fillStyle or \a strokeStyle is assigned many times in a loop, the last Qt.rgba() syntax should be chosen, as it has the
      best performance, because it's already a valid QColor value, does not need to be parsed everytime.
@@ -931,8 +931,8 @@ static void ctx2d_fillStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
     \qmlproperty enumeration QtQuick2::Context2D::fillRule
      Holds the current fill rule used for filling shapes. The following fill rules supported:
      \list
-     \o Qt.OddEvenFill
-     \o Qt.WindingFill
+     \li Qt.OddEvenFill
+     \li Qt.WindingFill
      \endlist
      Note: Unlike the \a QPainterPath, the Canvas API uses the winding fill as the default fill rule.
      The fillRule property is part of the context rendering state.
@@ -1183,20 +1183,20 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
   Returns a CanvasPattern object that uses the given \c color and \c patternMode.
   The valid pattern modes are:
     \list
-    \o Qt.SolidPattern
-    \o Qt.Dense1Pattern
-    \o Qt.Dense2Pattern
-    \o Qt.Dense3Pattern
-    \o Qt.Dense4Pattern
-    \o Qt.Dense5Pattern
-    \o Qt.Dense6Pattern
-    \o Qt.Dense7Pattern
-    \o Qt.HorPattern
-    \o Qt.VerPattern
-    \o Qt.CrossPattern
-    \o Qt.BDiagPattern
-    \o Qt.FDiagPattern
-    \o Qt.DiagCrossPattern
+    \li Qt.SolidPattern
+    \li Qt.Dense1Pattern
+    \li Qt.Dense2Pattern
+    \li Qt.Dense3Pattern
+    \li Qt.Dense4Pattern
+    \li Qt.Dense5Pattern
+    \li Qt.Dense6Pattern
+    \li Qt.Dense7Pattern
+    \li Qt.HorPattern
+    \li Qt.VerPattern
+    \li Qt.CrossPattern
+    \li Qt.BDiagPattern
+    \li Qt.FDiagPattern
+    \li Qt.DiagCrossPattern
 \endlist
     \sa Qt::BrushStyle
  */
@@ -1209,10 +1209,10 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
   The allowed values for \a repetition are:
 
   \list
-  \o "repeat"    - both directions
-  \o "repeat-x   - horizontal only
-  \o "repeat-y"  - vertical only
-  \o "no-repeat" - neither
+  \li "repeat"    - both directions
+  \li "repeat-x   - horizontal only
+  \li "repeat-y"  - vertical only
+  \li "no-repeat" - neither
   \endlist
 
   If the repetition argument is empty or null, the value "repeat" is used.
@@ -1287,9 +1287,9 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
      Holds the the current line cap style.
      The possible line cap styles are:
     \list
-    \o butt - the end of each line has a flat edge perpendicular to the direction of the line, this is the default line cap value.
-    \o round - a semi-circle with the diameter equal to the width of the line must then be added on to the end of the line.
-    \o square - a rectangle with the length of the line width and the width of half the line width, placed flat against the edge perpendicular to the direction of the line.
+    \li butt - the end of each line has a flat edge perpendicular to the direction of the line, this is the default line cap value.
+    \li round - a semi-circle with the diameter equal to the width of the line must then be added on to the end of the line.
+    \li square - a rectangle with the length of the line width and the width of half the line width, placed flat against the edge perpendicular to the direction of the line.
     \endlist
     Other values are ignored.
 */
@@ -1345,9 +1345,9 @@ static void ctx2d_lineCap_set(v8::Local<v8::String>, v8::Local<v8::Value> value,
 
     The possible line join styles are:
     \list
-    \o bevel - this is all that is rendered at joins.
-    \o round - a filled arc connecting the two aforementioned corners of the join, abutting (and not overlapping) the aforementioned triangle, with the diameter equal to the line width and the origin at the point of the join, must be rendered at joins.
-    \o miter - a second filled triangle must (if it can given the miter length) be rendered at the join, this is the default line join style.
+    \li bevel - this is all that is rendered at joins.
+    \li round - a filled arc connecting the two aforementioned corners of the join, abutting (and not overlapping) the aforementioned triangle, with the diameter equal to the line width and the origin at the point of the join, must be rendered at joins.
+    \li miter - a second filled triangle must (if it can given the miter length) be rendered at the join, this is the default line join style.
     \endlist
     Other values are ignored.
 */
@@ -1711,9 +1711,9 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
    Adds an arc with the given control points and radius to the current subpath, connected to the previous point by a straight line.
    To draw an arc, you begin with the same steps your followed to create a line:
     \list
-    \o Call the context.beginPath() method to set a new path.
-    \o Call the context.moveTo(\c x, \c y) method to set your starting position on the canvas at the point (\c x,\c y).
-    \o To draw an arc or circle, call the context.arcTo(\c x1, \c y1, \c x2, \c y2,\c radius) method.
+    \li Call the context.beginPath() method to set a new path.
+    \li Call the context.moveTo(\c x, \c y) method to set your starting position on the canvas at the point (\c x,\c y).
+    \li To draw an arc or circle, call the context.arcTo(\c x1, \c y1, \c x2, \c y2,\c radius) method.
        This adds an arc with starting point (\c x1,\c y1), ending point (\c x2, \c y2), and radius \c radius to the current subpath and connects
        it to the previous subpath by a straight line.
     \endlist
@@ -1820,10 +1820,10 @@ static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
    To create a complex shape using the \a clip() method:
 
     \list 1
-    \o Call the \c{context.beginPath()} method to set the clipping path.
-    \o Define the clipping path by calling any combination of the \c{lineTo},
+    \li Call the \c{context.beginPath()} method to set the clipping path.
+    \li Define the clipping path by calling any combination of the \c{lineTo},
     \c{arcTo}, \c{arc}, \c{moveTo}, etc and \c{closePath} methods.
-    \o Call the \c{context.clip()} method.
+    \li Call the \c{context.clip()} method.
     \endlist
 
     The new shape displays.  The following shows how a clipping path can
@@ -2168,11 +2168,11 @@ static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
   Holds the current text alignment settings.
   The possible values are:
   \list
-    \o start
-    \o end
-    \o left
-    \o right
-    \o center
+    \li start
+    \li end
+    \li left
+    \li right
+    \li center
   \endlist
   Other values are ignored. The default value is "start".
   */
@@ -2231,12 +2231,12 @@ static void ctx2d_textAlign_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
   Holds the current baseline alignment settings.
   The possible values are:
   \list
-    \o top
-    \o hanging
-    \o middle
-    \o alphabetic
-    \o ideographic
-    \o bottom
+    \li top
+    \li hanging
+    \li middle
+    \li alphabetic
+    \li ideographic
+    \li bottom
   \endlist
   Other values are ignored. The default value is "alphabetic".
   */

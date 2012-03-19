@@ -148,10 +148,10 @@ void QQuickLoaderPrivate::initResize()
     accordingly to become visible.
 
     \list
-    \o If an explicit size is not specified for the Loader, the Loader
+    \li If an explicit size is not specified for the Loader, the Loader
     is automatically resized to the size of the loaded item once the
     component is loaded.
-    \o If the size of the Loader is specified explicitly by setting
+    \li If the size of the Loader is specified explicitly by setting
     the width, height or by anchoring, the loaded item will be resized
     to the size of the Loader.
     \endlist
@@ -162,14 +162,14 @@ void QQuickLoaderPrivate::initResize()
 
     \table
     \row
-    \o sizeloader.qml
-    \o sizeitem.qml
+    \li sizeloader.qml
+    \li sizeitem.qml
     \row
-    \o \snippet doc/src/snippets/qml/loader/sizeloader.qml 0
-    \o \snippet doc/src/snippets/qml/loader/sizeitem.qml 0
+    \li \snippet doc/src/snippets/qml/loader/sizeloader.qml 0
+    \li \snippet doc/src/snippets/qml/loader/sizeitem.qml 0
     \row
-    \o The red rectangle will be sized to the size of the root item.
-    \o The red rectangle will be 50x50, centered in the root item.
+    \li The red rectangle will be sized to the size of the root item.
+    \li The red rectangle will be 50x50, centered in the root item.
     \endtable
 
 
@@ -182,11 +182,11 @@ void QQuickLoaderPrivate::initResize()
 
     \table
     \row
-    \o application.qml
-    \o MyItem.qml
+    \li application.qml
+    \li MyItem.qml
     \row
-    \o \snippet doc/src/snippets/qml/loader/connections.qml 0
-    \o \snippet doc/src/snippets/qml/loader/MyItem.qml 0
+    \li \snippet doc/src/snippets/qml/loader/connections.qml 0
+    \li \snippet doc/src/snippets/qml/loader/MyItem.qml 0
     \endtable
 
     Alternatively, since \c MyItem.qml is loaded within the scope of the
@@ -209,11 +209,11 @@ void QQuickLoaderPrivate::initResize()
 
     \table
     \row
-    \o application.qml
-    \o KeyReader.qml
+    \li application.qml
+    \li KeyReader.qml
     \row
-    \o \snippet doc/src/snippets/qml/loader/focus.qml 0
-    \o \snippet doc/src/snippets/qml/loader/KeyReader.qml 0
+    \li \snippet doc/src/snippets/qml/loader/focus.qml 0
+    \li \snippet doc/src/snippets/qml/loader/KeyReader.qml 0
     \endtable
 
     Once \c KeyReader.qml is loaded, it accepts key events and sets
@@ -344,7 +344,8 @@ void QQuickLoader::loadFromSource()
     }
 
     if (isComponentComplete()) {
-        d->component = new QQmlComponent(qmlEngine(this), d->source, this);
+        QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
+        d->component = new QQmlComponent(qmlEngine(this), d->source, mode, this);
         d->load();
     }
 }
@@ -428,7 +429,7 @@ void QQuickLoader::loadFromSourceComponent()
     the \a source component will be created with the initial \a properties set.
 
     Setting the initial property values of an instance of a component in this manner
-    will \bold{not} trigger any associated \l{Behavior}s.
+    will \b{not} trigger any associated \l{Behavior}s.
 
     Note that the cached \a properties will be cleared if the \l source or \l sourceComponent
     is changed after calling this function but prior to setting the loader \l active.
@@ -436,7 +437,7 @@ void QQuickLoader::loadFromSourceComponent()
     Example:
     \table
     \row
-    \o
+    \li
     \qml
     // ExampleComponent.qml
     import QtQuick 2.0
@@ -456,7 +457,7 @@ void QQuickLoader::loadFromSourceComponent()
         }
     }
     \endqml
-    \o
+    \li
     \qml
     // example.qml
     import QtQuick 2.0
@@ -633,22 +634,22 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
 
     This property holds the status of QML loading.  It can be one of:
     \list
-    \o Loader.Null - the loader is inactive or no QML source has been set
-    \o Loader.Ready - the QML source has been loaded
-    \o Loader.Loading - the QML source is currently being loaded
-    \o Loader.Error - an error occurred while loading the QML source
+    \li Loader.Null - the loader is inactive or no QML source has been set
+    \li Loader.Ready - the QML source has been loaded
+    \li Loader.Loading - the QML source is currently being loaded
+    \li Loader.Error - an error occurred while loading the QML source
     \endlist
 
     Use this status to provide an update or respond to the status change in some way.
     For example, you could:
 
     \list
-    \o Trigger a state change:
+    \li Trigger a state change:
     \qml
         State { name: 'loaded'; when: loader.status == Loader.Ready }
     \endqml
 
-    \o Implement an \c onStatusChanged signal handler:
+    \li Implement an \c onStatusChanged signal handler:
     \qml
         Loader {
             id: loader
@@ -656,7 +657,7 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
         }
     \endqml
 
-    \o Bind to the status value:
+    \li Bind to the status value:
     \qml
         Text { text: loader.status == Loader.Ready ? 'Loaded' : 'Not loaded' }
     \endqml
@@ -711,7 +712,8 @@ void QQuickLoader::componentComplete()
     QQuickItem::componentComplete();
     if (active()) {
         if (d->loadingFromSource) {
-            d->component = new QQmlComponent(qmlEngine(this), d->source, this);
+            QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
+            d->component = new QQmlComponent(qmlEngine(this), d->source, mode, this);
         }
         d->load();
     }
@@ -751,6 +753,9 @@ qreal QQuickLoader::progress() const
 \qmlproperty bool QtQuick2::Loader::asynchronous
 
 This property holds whether the component will be instantiated asynchronously.
+
+When used in conjunction with the \l source property, loading and compilation
+will also be performed in a background thread.
 
 Loading asynchronously creates the objects declared by the component
 across multiple frames, and reduces the

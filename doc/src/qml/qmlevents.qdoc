@@ -38,8 +38,8 @@ The button may change colors to indicate its state or perform some logic. As
 well, application needs to know whether the user is clicking the button. The
 application may need to relay this clicking event to other applications.
 
-QML has a signal and handler mechanism, where the \i signal is the event
-and the component responds to the event through the \i handler. The signal
+QML has a signal and handler mechanism, where the \e signal is the event
+and the component responds to the event through the \e handler. The signal
 is emitted and the handler is invoked. Placing logic such as scripts or other
 operations in the handler allows the component to respond to the event.
 
@@ -66,7 +66,7 @@ If the signal has no parameters, the "\c{()}" brackets are optional. If
 parameters are used, the parameter types must be declared, as for the \c string
 and \c variant arguments of the \c perform signal.
 
-Adding a signal to an item automatically adds a \i{signal handler} as well. The
+Adding a signal to an item automatically adds a \e{signal handler} as well. The
 signal hander is named \c on<SignalName>, with the first letter of the signal in
 uppercase.  The previous signals have the following signal handlers:
 \snippet doc/src/snippets/qml/events.qml signal handler declaration

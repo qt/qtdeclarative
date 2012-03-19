@@ -68,10 +68,10 @@ a \l Component object from this URL.
 Once you have a \l Component, you can call its \l {Component::createObject()}{createObject()} method to create an instance of
 the component. This function can take one or two arguments:
 \list
-\o The first is the parent for the new item. Since graphical items will not appear on the scene without a parent, it is
+\li The first is the parent for the new item. Since graphical items will not appear on the scene without a parent, it is
   recommended that you set the parent this way. However, if you wish to set the parent later you can safely pass \c null to
   this function.
-\o The second is optional and is a map of property-value items that define initial any property values for the item.
+\li The second is optional and is a map of property-value items that define initial any property values for the item.
   Property values specified by this argument are applied to the object before its creation is finalized, avoiding
   binding errors that may occur if particular properties must be initialized to enable other property bindings.
   when certain properties have been bound to before they have been set by the code. Additionally, there are small
@@ -144,11 +144,11 @@ the bindings in the dynamic item will no longer work.
 The actual creation context depends on how an item is created:
 
 \list
-\o If \l {QML:Qt::createComponent()}{Qt.createComponent()} is used, the creation context
+\li If \l {QML:Qt::createComponent()}{Qt.createComponent()} is used, the creation context
    is the QQmlContext in which this method is called
-\o If \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}
+\li If \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}
    if called, the creation context is the context of the parent item passed to this method
-\o If a \c {Component{}} item is defined and \l {Component::createObject()}{createObject()}
+\li If a \c {Component{}} item is defined and \l {Component::createObject()}{createObject()}
    is called on that item, the creation context is the context in which the \c Component is defined
 \endlist
 
@@ -177,12 +177,12 @@ component. Each instance runs a NumberAnimation, and when the animation has fini
 
 \table
 \row
-\o \c application.qml
-\o \c SelfDestroyingRect.qml
+\li \c application.qml
+\li \c SelfDestroyingRect.qml
 
 \row
-\o \snippet doc/src/snippets/qml/dynamicObjects-destroy.qml 0
-\o \snippet doc/src/snippets/qml/SelfDestroyingRect.qml 0
+\li \snippet doc/src/snippets/qml/dynamicObjects-destroy.qml 0
+\li \snippet doc/src/snippets/qml/SelfDestroyingRect.qml 0
 
 \endtable
 

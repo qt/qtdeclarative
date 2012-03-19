@@ -45,11 +45,12 @@
 QT_BEGIN_NAMESPACE
 
 
-FxViewItem::FxViewItem(QQuickItem *i, bool own)
+FxViewItem::FxViewItem(QQuickItem *i, bool own, bool trackGeometry)
     : item(i)
     , transitionableItem(0)
     , ownItem(own)
     , releaseAfterTransition(false)
+    , trackGeom(trackGeometry)
 {
 }
 
@@ -257,8 +258,8 @@ void QQuickItemView::setModel(const QVariant &model)
     QQuickVisualModel *oldModel = d->model;
 
     d->clear();
-    d->setPosition(d->contentStartOffset());
     d->model = 0;
+    d->setPosition(d->contentStartOffset());
     d->modelVariant = model;
 
     QObject *object = qvariant_cast<QObject*>(model);
@@ -2195,10 +2196,10 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
 
 QQuickItem *QQuickItemViewPrivate::createHighlightItem()
 {
-    return createComponentItem(highlightComponent, true, true);
+    return createComponentItem(highlightComponent, true);
 }
 
-QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, bool receiveItemGeometryChanges, bool createDefault)
+QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, bool createDefault)
 {
     Q_Q(QQuickItemView);
 
@@ -2222,10 +2223,6 @@ QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component,
     if (item) {
         QQml_setParent_noEvent(item, q->contentItem());
         item->setParentItem(q->contentItem());
-        if (receiveItemGeometryChanges) {
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-            itemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
-        }
     }
     return item;
 }

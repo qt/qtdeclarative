@@ -96,11 +96,10 @@ private:
     QList<QSGDistanceFieldGlyphNode *> m_nodesToDelete;
 
     struct GlyphInfo {
-        quint32 glyphIndex;
-        QPointF position;
+        QVector<quint32> indexes;
+        QVector<QPointF> positions;
     };
     QSet<quint32> m_allGlyphIndexesLookup;
-    QList<GlyphInfo> m_allGlyphs;
 
     uint m_dirtyGeometry: 1;
     uint m_dirtyMaterial: 1;

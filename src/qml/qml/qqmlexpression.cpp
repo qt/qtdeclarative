@@ -52,32 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-bool QQmlDelayedError::addError(QQmlEnginePrivate *e)
-{
-    if (!e) return false;
-
-    if (e->inProgressCreations == 0) return false; // Not in construction
-
-    if (prevError) return true; // Already in error chain
-
-    prevError = &e->erroredBindings;
-    nextError = e->erroredBindings;
-    e->erroredBindings = this;
-    if (nextError) nextError->prevError = &nextError;
-
-    return true;
-}
-
-QQmlJavaScriptExpression::QQmlJavaScriptExpression(VTable *v)
-: m_vtable(v)
-{
-}
-
-QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
-{
-    clearGuards();
-}
-
 static QQmlJavaScriptExpression::VTable QQmlExpressionPrivate_jsvtable = {
     QQmlExpressionPrivate::expressionIdentifier,
     QQmlExpressionPrivate::expressionChanged
@@ -98,8 +72,7 @@ QQmlExpressionPrivate::~QQmlExpressionPrivate()
     dataRef = 0;
 }
 
-void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, 
-                                         QObject *me)
+void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QObject *me)
 {
     expression = expr;
 
@@ -109,22 +82,9 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
     expressionFunctionRewritten = false;
 }
 
-void QQmlExpressionPrivate::init(QQmlContextData *ctxt, v8::Handle<v8::Function> func,
-                                         QObject *me)
-{
-    QQmlAbstractExpression::setContext(ctxt);
-    setScopeObject(me);
-
-    v8function = qPersistentNew<v8::Function>(func);
-    setUseSharedContext(false);
-    expressionFunctionValid = true;
-    expressionFunctionRewritten = false;
-    extractExpressionFromFunction = true;
-}
-
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
-                                         bool isRewritten, QObject *me, const QString &srcUrl,
-                                         int lineNumber, int columnNumber)
+                                 bool isRewritten, QObject *me, const QString &srcUrl,
+                                 int lineNumber, int columnNumber)
 {
     url = srcUrl;
     line = lineNumber;
@@ -140,8 +100,8 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
 }
 
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QByteArray &expr,
-                                         bool isRewritten, QObject *me, const QString &srcUrl,
-                                         int lineNumber, int columnNumber)
+                                 bool isRewritten, QObject *me, const QString &srcUrl,
+                                 int lineNumber, int columnNumber)
 {
     url = srcUrl;
     line = lineNumber;
@@ -166,97 +126,13 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QByteArray &expr,
     setScopeObject(me);
 }
 
-// Callee owns the persistent handle
-v8::Persistent<v8::Function>
-QQmlExpressionPrivate::evalFunction(QQmlContextData *ctxt, QObject *scope,
-                                            const char *code, int codeLength,
-                                            const QString &filename, int line,
-                                            v8::Persistent<v8::Object> *qmlscope)
-{
-    QQmlEngine *engine = ctxt->engine;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-
-    v8::HandleScope handle_scope;
-    v8::Context::Scope ctxtscope(ep->v8engine()->context());
-
-    v8::TryCatch tc;
-    v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
-    v8::Local<v8::Script> script = ep->v8engine()->qmlModeCompile(code, codeLength, filename, line);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function compilation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Local<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return v8::Persistent<v8::Function>();
-    }
-    v8::Local<v8::Value> result = script->Run(scopeobject);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Local<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return v8::Persistent<v8::Function>();
-    }
-    if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
-    return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
-}
-
-// Callee owns the persistent handle
-v8::Persistent<v8::Function> 
-QQmlExpressionPrivate::evalFunction(QQmlContextData *ctxt, QObject *scope, 
-                                            const QString &code, const QString &filename, int line,
-                                            v8::Persistent<v8::Object> *qmlscope)
-{
-    QQmlEngine *engine = ctxt->engine;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-
-    v8::HandleScope handle_scope;
-    v8::Context::Scope ctxtscope(ep->v8engine()->context());
-
-    v8::TryCatch tc;
-    v8::Local<v8::Object> scopeobject = ep->v8engine()->qmlScope(ctxt, scope);
-    v8::Local<v8::Script> script = ep->v8engine()->qmlModeCompile(code, filename, line);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function compilation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Local<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return v8::Persistent<v8::Function>();
-    }
-    v8::Local<v8::Value> result = script->Run(scopeobject);
-    if (tc.HasCaught()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        error.setLine(line);
-        error.setUrl(QUrl::fromLocalFile(filename));
-        v8::Local<v8::Message> message = tc.Message();
-        if (!message.IsEmpty())
-            QQmlExpressionPrivate::exceptionToError(message, error);
-        ep->warning(error);
-        return v8::Persistent<v8::Function>();
-    }
-    if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
-    return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
-}
-
 QQmlExpression *
 QQmlExpressionPrivate::create(QQmlContextData *ctxt, QObject *object,
-                                      const QString &expr, bool isRewritten,
-                                      const QString &url, int lineNumber, int columnNumber)
+                              const QString &expr, bool isRewritten,
+                              const QString &url, int lineNumber, int columnNumber)
 {
-    return new QQmlExpression(ctxt, object, expr, isRewritten, url, lineNumber, columnNumber, *new QQmlExpressionPrivate);
+    return new QQmlExpression(ctxt, object, expr, isRewritten, url, lineNumber, columnNumber,
+                              *new QQmlExpressionPrivate);
 }
 
 /*!
@@ -408,24 +284,6 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
     d->init(ctxt, expression, scope);
 }
 
-/*!  
-    \internal 
-
-    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.  
-    For example:
-        v8::Handle<v8::Function> function;
-        new QQmlExpression(ctxt, scope, &function, ...);
- */
-QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope, void *functionPtr,
-                                               QQmlExpressionPrivate &dd)
-: QObject(dd, 0)
-{
-    v8::Handle<v8::Function> function = *(v8::Handle<v8::Function> *)functionPtr;
-
-    Q_D(QQmlExpression);
-    d->init(ctxt, function, scope);
-}
-
 /*!
     Destroy the QQmlExpression instance.
 */
@@ -487,217 +345,6 @@ void QQmlExpression::setExpression(const QString &expression)
     d->expressionFunctionRewritten = false;
     qPersistentDispose(d->v8function);
     qPersistentDispose(d->v8qmlscope);
-}
-
-void QQmlExpressionPrivate::exceptionToError(v8::Handle<v8::Message> message, 
-                                                     QQmlError &error)
-{
-    Q_ASSERT(!message.IsEmpty());
-
-    v8::Handle<v8::Value> name = message->GetScriptResourceName();
-    v8::Handle<v8::String> description = message->Get();
-    int lineNumber = message->GetLineNumber();
-
-    v8::Local<v8::String> file = name->IsString()?name->ToString():v8::Local<v8::String>();
-    if (file.IsEmpty() || file->Length() == 0) 
-        error.setUrl(QUrl(QLatin1String("<Unknown File>")));
-    else 
-        error.setUrl(QUrl(QV8Engine::toStringStatic(file)));
-
-    error.setLine(lineNumber);
-    error.setColumn(-1);
-
-    QString qDescription = QV8Engine::toStringStatic(description);
-    if (qDescription.startsWith(QLatin1String("Uncaught ")))
-        qDescription = qDescription.mid(9 /* strlen("Uncaught ") */);
-
-    error.setDescription(qDescription);
-}
-
-void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
-{
-    activeGuards.setFlagValue(v);
-    if (!v) clearGuards();
-}
-
-void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
-{
-    clearGuards();
-}
-
-v8::Local<v8::Value>
-QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                           v8::Handle<v8::Function> function, bool *isUndefined)
-{
-    Q_ASSERT(context && context->engine);
-
-    if (function.IsEmpty() || function->IsUndefined()) {
-        if (isUndefined) *isUndefined = true;
-        return v8::Local<v8::Value>();
-    }
-
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
-
-    Q_ASSERT(notifyOnValueChanged() || activeGuards.isEmpty());
-    GuardCapture capture(context->engine, this);
-
-    QQmlEnginePrivate::PropertyCapture *lastPropertyCapture = ep->propertyCapture;
-    ep->propertyCapture = notifyOnValueChanged()?&capture:0;
-
-
-    if (notifyOnValueChanged())
-        capture.guards.copyAndClearPrepend(activeGuards);
-
-    QQmlContextData *lastSharedContext = 0;
-    QObject *lastSharedScope = 0;
-
-    bool sharedContext = useSharedContext();
-
-    // All code that follows must check with watcher before it accesses data members 
-    // incase we have been deleted.
-    DeleteWatcher watcher(this);
-
-    if (sharedContext) {
-        lastSharedContext = ep->sharedContext;
-        lastSharedScope = ep->sharedScope;
-        ep->sharedContext = context;
-        ep->sharedScope = scopeObject();
-    }
-
-    v8::Local<v8::Value> result;
-    {
-        v8::TryCatch try_catch;
-        v8::Handle<v8::Object> This = ep->v8engine()->global();
-        if (scopeObject() && requiresThisObject()) {
-            v8::Handle<v8::Value> value = ep->v8engine()->newQObject(scopeObject());
-            if (value->IsObject()) This = v8::Handle<v8::Object>::Cast(value);
-        }
-
-        result = function->Call(This, 0, 0);
-
-        if (isUndefined)
-            *isUndefined = try_catch.HasCaught() || result->IsUndefined();
-
-        if (watcher.wasDeleted()) {
-        } else if (try_catch.HasCaught()) {
-            v8::Context::Scope scope(ep->v8engine()->context());
-            v8::Local<v8::Message> message = try_catch.Message();
-            if (!message.IsEmpty()) {
-                QQmlExpressionPrivate::exceptionToError(message, delayedError()->error);
-            } else {
-                if (hasDelayedError()) delayedError()->error = QQmlError();
-            }
-        } else {
-            if (hasDelayedError()) delayedError()->error = QQmlError();
-        }
-    }
-
-    if (sharedContext) {
-        ep->sharedContext = lastSharedContext;
-        ep->sharedScope = lastSharedScope;
-    }
-
-    if (capture.errorString) {
-        for (int ii = 0; ii < capture.errorString->count(); ++ii)
-            qWarning("%s", qPrintable(capture.errorString->at(ii)));
-        delete capture.errorString;
-        capture.errorString = 0;
-    }
-
-    while (Guard *g = capture.guards.takeFirst())
-        g->Delete();
-
-    ep->propertyCapture = lastPropertyCapture;
-
-    return result;
-}
-
-void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
-{
-    if (expression) {
-
-        // Try and find a matching guard
-        while (!guards.isEmpty() && !guards.first()->isConnected(n))
-            guards.takeFirst()->Delete();
-
-        Guard *g = 0;
-        if (!guards.isEmpty()) {
-            g = guards.takeFirst();
-            g->cancelNotify();
-            Q_ASSERT(g->isConnected(n));
-        } else {
-            g = Guard::New(expression, engine);
-            g->connect(n);
-        }
-
-        expression->activeGuards.prepend(g);
-    }
-}
-
-void QQmlJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, int n)
-{
-    if (expression) {
-        if (n == -1) {
-            if (!errorString) {
-                errorString = new QStringList;
-                QString preamble = QLatin1String("QQmlExpression: Expression ") +
-                                   expression->m_vtable->expressionIdentifier(expression) +
-                                   QLatin1String(" depends on non-NOTIFYable properties:");
-                errorString->append(preamble);
-            }
-
-            const QMetaObject *metaObj = o->metaObject();
-            QMetaProperty metaProp = metaObj->property(c);
-
-            QString error = QLatin1String("    ") +
-                            QString::fromUtf8(metaObj->className()) +
-                            QLatin1String("::") +
-                            QString::fromUtf8(metaProp.name());
-            errorString->append(error);
-        } else {
-
-            // Try and find a matching guard
-            while (!guards.isEmpty() && !guards.first()->isConnected(o, n))
-                guards.takeFirst()->Delete();
-
-            Guard *g = 0;
-            if (!guards.isEmpty()) {
-                g = guards.takeFirst();
-                g->cancelNotify();
-                Q_ASSERT(g->isConnected(o, n));
-            } else {
-                g = Guard::New(expression, engine);
-                g->connect(o, n);
-            }
-
-            expression->activeGuards.prepend(g);
-        }
-    }
-}
-
-void QQmlJavaScriptExpression::clearError()
-{
-    if (m_vtable.hasValue()) {
-        m_vtable.value().error = QQmlError();
-        m_vtable.value().removeError();
-    }
-}
-
-QQmlError QQmlJavaScriptExpression::error() const
-{
-    if (m_vtable.hasValue()) return m_vtable.constValue()->error;
-    else return QQmlError();
-}
-
-QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
-{
-    return &m_vtable.value();
-}
-
-void QQmlJavaScriptExpression::clearGuards()
-{
-    while (Guard *g = activeGuards.takeFirst())
-        g->Delete();
 }
 
 // Must be called with a valid handle scope
@@ -921,60 +568,6 @@ QString QQmlExpressionPrivate::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlExpressionPrivate *This = static_cast<QQmlExpressionPrivate *>(e);
     return QLatin1String("\"") + This->expression + QLatin1String("\"");
-}
-
-QQmlAbstractExpression::QQmlAbstractExpression()
-: m_prevExpression(0), m_nextExpression(0)
-{
-}
-
-QQmlAbstractExpression::~QQmlAbstractExpression()
-{
-    if (m_prevExpression) {
-        *m_prevExpression = m_nextExpression;
-        if (m_nextExpression) 
-            m_nextExpression->m_prevExpression = m_prevExpression;
-    }
-
-    if (m_context.isT2())
-        m_context.asT2()->_s = 0;
-}
-
-QQmlContextData *QQmlAbstractExpression::context() const
-{
-    if (m_context.isT1()) return m_context.asT1();
-    else return m_context.asT2()->_c;
-}
-
-void QQmlAbstractExpression::setContext(QQmlContextData *context)
-{
-    if (m_prevExpression) {
-        *m_prevExpression = m_nextExpression;
-        if (m_nextExpression) 
-            m_nextExpression->m_prevExpression = m_prevExpression;
-        m_prevExpression = 0;
-        m_nextExpression = 0;
-    }
-
-    if (m_context.isT1()) m_context = context;
-    else m_context.asT2()->_c = context;
-
-    if (context) {
-        m_nextExpression = context->expressions;
-        if (m_nextExpression) 
-            m_nextExpression->m_prevExpression = &m_nextExpression;
-        m_prevExpression = &context->expressions;
-        context->expressions = this;
-    }
-}
-
-void QQmlAbstractExpression::refresh()
-{
-}
-
-bool QQmlAbstractExpression::isValid() const
-{
-    return context() != 0;
 }
 
 QT_END_NAMESPACE

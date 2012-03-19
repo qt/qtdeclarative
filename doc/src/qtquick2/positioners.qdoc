@@ -44,10 +44,10 @@ A set of standard positioners are provided in the basic set of Qt Quick
 graphical elements:
 
 \list
-\o \l{#Column}{Column} arranges its children in a column
-\o \l{#Row}{Row} arranges its children in a row
-\o \l{#Grid}{Grid} arranges its children in a grid
-\o \l{#Flow}{Flow} arranges its children like words on a page
+\li \l{#Column}{Column} arranges its children in a column
+\li \l{#Row}{Row} arranges its children in a row
+\li \l{#Grid}{Grid} arranges its children in a grid
+\li \l{#Flow}{Flow} arranges its children like words on a page
 \endlist
 
 \section2 Column

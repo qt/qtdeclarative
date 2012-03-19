@@ -1023,13 +1023,13 @@ v8::Handle<v8::Value> QQmlLocale::localeCompare(const v8::Arguments &args)
     Holds the first day of the week according to the current locale.
 
     \list
-    \o Locale.Sunday = 0
-    \o Locale.Monday = 1
-    \o Locale.Tuesday = 2
-    \o Locale.Wednesday = 3
-    \o Locale.Thursday = 4
-    \o Locale.Friday = 5
-    \o Locale.Saturday = 6
+    \li Locale.Sunday = 0
+    \li Locale.Monday = 1
+    \li Locale.Tuesday = 2
+    \li Locale.Wednesday = 3
+    \li Locale.Thursday = 4
+    \li Locale.Friday = 5
+    \li Locale.Saturday = 6
     \endlist
 
     \note that these values match the JS Date API which is different
@@ -1062,8 +1062,8 @@ v8::Handle<v8::Value> QQmlLocale::localeCompare(const v8::Arguments &args)
 
     Holds the text direction of the language:
     \list
-    \o Qt.LeftToRight
-    \o Qt.RightToLeft
+    \li Qt.LeftToRight
+    \li Qt.RightToLeft
     \endlist
 */
 
@@ -1084,9 +1084,9 @@ v8::Handle<v8::Value> QQmlLocale::localeCompare(const v8::Arguments &args)
 
     Returns the currency symbol for the specified \a format:
     \list
-    \o Locale.CurrencyIsoCode a ISO-4217 code of the currency.
-    \o Locale.CurrencySymbol a currency symbol.
-    \o Locale.CurrencyDisplayName a user readable name of the currency.
+    \li Locale.CurrencyIsoCode a ISO-4217 code of the currency.
+    \li Locale.CurrencySymbol a currency symbol.
+    \li Locale.CurrencyDisplayName a user readable name of the currency.
     \endlist
     \sa Number::toLocaleCurrencyString()
 */
@@ -1115,9 +1115,9 @@ v8::Handle<v8::Value> QQmlLocale::localeCompare(const v8::Arguments &args)
     This property defines which units are used for measurement.
 
     \list
-    \o Locale.MetricSystem This value indicates metric units, such as meters,
+    \li Locale.MetricSystem This value indicates metric units, such as meters,
         centimeters and millimeters.
-    \o Locale.ImperialSystem This value indicates imperial units, such as inches and
+    \li Locale.ImperialSystem This value indicates imperial units, such as inches and
         miles. There are several distinct imperial systems in the world; this
         value stands for the official United States imperial units.
     \endlist

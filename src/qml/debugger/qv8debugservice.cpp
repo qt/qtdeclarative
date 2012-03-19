@@ -120,7 +120,7 @@ public:
 
 QV8DebugService::QV8DebugService(QObject *parent)
     : QQmlDebugService(*(new QV8DebugServicePrivate()),
-                               QLatin1String("V8Debugger"), 2, parent)
+                               QStringLiteral("V8Debugger"), 2, parent)
 {
     Q_D(QV8DebugService);
     v8ServiceInstancePtr = this;

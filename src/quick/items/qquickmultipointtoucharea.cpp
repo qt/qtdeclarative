@@ -108,9 +108,9 @@ void QQuickTouchPoint::setY(qreal y)
     These properties hold additional information about the current state of the touch point.
 
     \list
-    \i \c pressure is a value in the range of 0.0 to 1.0.
-    \i \c velocity is a vector with magnitude reported in pixels per second.
-    \i \c area is a rectangle covering the area of the touch point, centered on the current position of the touch point.
+    \li \c pressure is a value in the range of 0.0 to 1.0.
+    \li \c velocity is a vector with magnitude reported in pixels per second.
+    \li \c area is a rectangle covering the area of the touch point, centered on the current position of the touch point.
     \endlist
 
     Not all touch devices support velocity. If velocity is not supported, it will be reported
@@ -235,11 +235,11 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
     MultiPointTouchArea can be used in two ways:
 
     \list
-    \o setting \c touchPoints to provide touch point objects with properties that can be bound to
-    \o using the onTouchUpdated or onTouchPointsPressed, onTouchPointsUpdated and onTouchPointsReleased handlers
+    \li setting \c touchPoints to provide touch point objects with properties that can be bound to
+    \li using the onTouchUpdated or onTouchPointsPressed, onTouchPointsUpdated and onTouchPointsReleased handlers
     \endlist
 
-    While a MultiPointTouchArea \i can take exclusive ownership of certain touch points, it is also possible to have
+    While a MultiPointTouchArea \e can take exclusive ownership of certain touch points, it is also possible to have
     multiple MultiPointTouchAreas active at the same time, each operating on a different set of touch points.
 
     \sa TouchPoint

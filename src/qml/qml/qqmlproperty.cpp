@@ -55,6 +55,7 @@
 #include "qqmlcompiler_p.h"
 #include "qqmlvmemetaobject_p.h"
 #include "qqmlexpression_p.h"
+#include "qqmlvaluetypeproxybinding_p.h"
 
 #include <QStringList>
 #include <QtCore/qdebug.h>
@@ -1528,24 +1529,6 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
     }
 
     return true;
-}
-
-bool QQmlPropertyPrivate::writeBinding(const QQmlProperty &that, 
-                                               QQmlContextData *context,
-                                               QQmlJavaScriptExpression *expression, 
-                                               v8::Handle<v8::Value> result, bool isUndefined,
-                                               WriteFlags flags)
-{
-    QQmlPropertyPrivate *pp = that.d;
-
-    if (!pp)
-        return true;
-
-    QObject *object = that.object();
-    if (!object)
-        return true;
-
-    return writeBinding(object, pp->core, context, expression, result, isUndefined, flags);
 }
 
 const QMetaObject *QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engine, int userType)

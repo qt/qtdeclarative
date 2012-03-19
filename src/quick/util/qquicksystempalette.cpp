@@ -267,9 +267,9 @@ QColor QQuickSystemPalette::highlightedText() const
     The color group of the palette. This can be one of:
 
     \list
-    \o SystemPalette.Active (default)
-    \o SystemPalette.Inactive
-    \o SystemPalette.Disabled
+    \li SystemPalette.Active (default)
+    \li SystemPalette.Inactive
+    \li SystemPalette.Disabled
     \endlist
 
     \sa QPalette::ColorGroup

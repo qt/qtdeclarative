@@ -66,6 +66,7 @@ struct Register {
     typedef QQmlRegisterType Type;
 
     void setUndefined() { dataType = UndefinedType; }
+    void setNull() { dataType = NullType; }
     void setNaN() { setqreal(qSNaN()); }
     bool isUndefined() const { return dataType == UndefinedType; }
 
@@ -820,6 +821,29 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         registers[instr->load.reg].setQObject(context->contextObject);
     QML_V4_END_INSTR(LoadRoot, load)
 
+    QML_V4_BEGIN_INSTR(LoadModuleObject, load)
+    {
+        Register &reg = registers[instr->load.reg];
+
+        const QString *name = reg.getstringptr();
+        QQmlTypeNameCache::Result r = context->imports->query(*name);
+        reg.cleanupString();
+
+        if (r.isValid() && r.importNamespace) {
+            QQmlMetaType::ModuleApiInstance *moduleApi = context->imports->moduleApi(r.importNamespace);
+            if (moduleApi) {
+                if (moduleApi->qobjectCallback) {
+                    moduleApi->qobjectApi = moduleApi->qobjectCallback(context->engine, context->engine);
+                    moduleApi->qobjectCallback = 0;
+                    moduleApi->scriptCallback = 0;
+                }
+                if (moduleApi->qobjectApi)
+                    reg.setQObject(moduleApi->qobjectApi);
+            }
+        }
+    }
+    QML_V4_END_INSTR(LoadModuleObject, load)
+
     QML_V4_BEGIN_INSTR(LoadAttached, attached)
     {
         const Register &input = registers[instr->attached.reg];
@@ -1216,6 +1240,10 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(MathPIReal, unaryop)
 
+    QML_V4_BEGIN_INSTR(LoadNull, null_value)
+        registers[instr->null_value.reg].setNull();
+    QML_V4_END_INSTR(LoadNull, null_value)
+
     QML_V4_BEGIN_INSTR(LoadReal, real_value)
         registers[instr->real_value.reg].setqreal(instr->real_value.value);
     QML_V4_END_INSTR(LoadReal, real_value)
@@ -1497,6 +1525,46 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         registers[instr->binaryop.output].setbool(result);
     }
     QML_V4_END_INSTR(StrictNotEqualString, binaryop)
+
+    QML_V4_BEGIN_INSTR(EqualObject, binaryop)
+    {
+        const Register &left = registers[instr->binaryop.left];
+        const Register &right = registers[instr->binaryop.right];
+        QObject *leftobj = (left.gettype() == NullType) ? 0 : left.getQObject();
+        QObject *rightobj = (right.gettype() == NullType) ? 0 : right.getQObject();
+        registers[instr->binaryop.output].setbool(leftobj == rightobj);
+    }
+    QML_V4_END_INSTR(EqualObject, binaryop)
+
+    QML_V4_BEGIN_INSTR(NotEqualObject, binaryop)
+    {
+        const Register &left = registers[instr->binaryop.left];
+        const Register &right = registers[instr->binaryop.right];
+        QObject *leftobj = (left.gettype() == NullType) ? 0 : left.getQObject();
+        QObject *rightobj = (right.gettype() == NullType) ? 0 : right.getQObject();
+        registers[instr->binaryop.output].setbool(leftobj != rightobj);
+    }
+    QML_V4_END_INSTR(NotEqualObject, binaryop)
+
+    QML_V4_BEGIN_INSTR(StrictEqualObject, binaryop)
+    {
+        const Register &left = registers[instr->binaryop.left];
+        const Register &right = registers[instr->binaryop.right];
+        QObject *leftobj = (left.gettype() == NullType) ? 0 : left.getQObject();
+        QObject *rightobj = (right.gettype() == NullType) ? 0 : right.getQObject();
+        registers[instr->binaryop.output].setbool(leftobj == rightobj);
+    }
+    QML_V4_END_INSTR(StrictEqualObject, binaryop)
+
+    QML_V4_BEGIN_INSTR(StrictNotEqualObject, binaryop)
+    {
+        const Register &left = registers[instr->binaryop.left];
+        const Register &right = registers[instr->binaryop.right];
+        QObject *leftobj = (left.gettype() == NullType) ? 0 : left.getQObject();
+        QObject *rightobj = (right.gettype() == NullType) ? 0 : right.getQObject();
+        registers[instr->binaryop.output].setbool(leftobj != rightobj);
+    }
+    QML_V4_END_INSTR(StrictNotEqualObject, binaryop)
 
     QML_V4_BEGIN_INSTR(MathMaxReal, binaryop)
     {

@@ -978,10 +978,11 @@ class testQObjectApi : public QObject
     Q_ENUMS(MyEnum)
     Q_PROPERTY (int qobjectTestProperty READ qobjectTestProperty NOTIFY qobjectTestPropertyChanged)
     Q_PROPERTY (int qobjectTestWritableProperty READ qobjectTestWritableProperty WRITE setQObjectTestWritableProperty NOTIFY qobjectTestWritablePropertyChanged)
+    Q_PROPERTY (int qobjectTestWritableFinalProperty READ qobjectTestWritableFinalProperty WRITE setQObjectTestWritableFinalProperty NOTIFY qobjectTestWritableFinalPropertyChanged FINAL)
 
 public:
     testQObjectApi(QObject* parent = 0)
-        : QObject(parent), m_testProperty(0), m_testWritableProperty(0), m_methodCallCount(0)
+        : QObject(parent), m_testProperty(0), m_testWritableProperty(0), m_testWritableFinalProperty(0), m_methodCallCount(0), m_trackedObject(0)
     {
     }
 
@@ -991,20 +992,31 @@ public:
     Q_INVOKABLE int qobjectEnumTestMethod(MyEnum val) { return (static_cast<int>(val) + 5); }
     Q_INVOKABLE int qobjectTestMethod(int increment = 1) { m_methodCallCount += increment; return m_methodCallCount; }
 
+    Q_INVOKABLE void trackObject(QObject *obj) { m_trackedObject = obj; }
+    Q_INVOKABLE QObject *trackedObject() const { return m_trackedObject; }
+    Q_INVOKABLE void setTrackedObjectProperty(const QString &propName) const { m_trackedObject->setProperty(qPrintable(propName), QVariant(5)); }
+    Q_INVOKABLE QVariant trackedObjectProperty(const QString &propName) const { return m_trackedObject->property(qPrintable(propName)); }
+
     int qobjectTestProperty() const { return m_testProperty; }
     void setQObjectTestProperty(int tp) { m_testProperty = tp; emit qobjectTestPropertyChanged(tp); }
 
     int qobjectTestWritableProperty() const { return m_testWritableProperty; }
     void setQObjectTestWritableProperty(int tp) { m_testWritableProperty = tp; emit qobjectTestWritablePropertyChanged(tp); }
 
+    int qobjectTestWritableFinalProperty() const { return m_testWritableFinalProperty; }
+    void setQObjectTestWritableFinalProperty(int tp) { m_testWritableFinalProperty = tp; emit qobjectTestWritableFinalPropertyChanged(); }
+
 signals:
     void qobjectTestPropertyChanged(int testProperty);
     void qobjectTestWritablePropertyChanged(int testWritableProperty);
+    void qobjectTestWritableFinalPropertyChanged();
 
 private:
     int m_testProperty;
     int m_testWritableProperty;
+    int m_testWritableFinalProperty;
     int m_methodCallCount;
+    QObject *m_trackedObject;
 };
 
 class CircularReferenceObject : public QObject,
