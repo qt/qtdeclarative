@@ -60,8 +60,6 @@
 #include <QtCore/qstack.h>
 #include <QtCore/qdebug.h>
 
-#include <QtCore/QStringBuilder>
-
 #ifndef QT_NO_XMLSTREAMREADER
 
 #define V8THROW_REFERENCE(string) { \
