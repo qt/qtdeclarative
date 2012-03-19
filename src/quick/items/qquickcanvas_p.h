@@ -184,6 +184,11 @@ public:
 
     uint clearBeforeRendering : 1;
 
+    // Currently unused in the default implementation, as we're not stopping
+    // rendering when obscured as we should...
+    uint persistentGLContext : 1;
+    uint persistentSceneGraph : 1;
+
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;
     QSize renderTargetSize;
