@@ -698,7 +698,7 @@ void tst_qquickcanvas::headless()
     canvas->show();
     QTest::qWaitForWindowShown(canvas);
 
-    QCOMPARE(initialized.size(), 1);
+    QTRY_COMPARE(initialized.size(), 1);
     QVERIFY(canvas->openglContext() != 0);
 
     // Verify that the visual output is the same
