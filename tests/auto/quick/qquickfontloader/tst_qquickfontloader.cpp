@@ -116,6 +116,9 @@ void tst_qquickfontloader::namedFont()
 
 void tst_qquickfontloader::localFont()
 {
+#if defined(Q_OS_WIN)
+    QSKIP("Windows doesn't support font loading.");
+#endif
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + testFileUrl("tarzeau_ocr_a.ttf").toString() + "\" }";
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -129,6 +132,9 @@ void tst_qquickfontloader::localFont()
 
 void tst_qquickfontloader::failLocalFont()
 {
+#if defined(Q_OS_WIN)
+    QSKIP("Windows doesn't support font loading.");
+#endif
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + testFileUrl("dummy.ttf").toString() + "\" }";
     QTest::ignoreMessage(QtWarningMsg, QString("file::2:1: QML FontLoader: Cannot load font: \"" + testFileUrl("dummy.ttf").toString() + "\"").toUtf8().constData());
     QQmlComponent component(&engine);
@@ -143,6 +149,9 @@ void tst_qquickfontloader::failLocalFont()
 
 void tst_qquickfontloader::webFont()
 {
+#if defined(Q_OS_WIN)
+    QSKIP("Windows doesn't support font loading.");
+#endif
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"http://localhost:14448/tarzeau_ocr_a.ttf\" }";
     QQmlComponent component(&engine);
 
@@ -157,6 +166,9 @@ void tst_qquickfontloader::webFont()
 
 void tst_qquickfontloader::redirWebFont()
 {
+#if defined(Q_OS_WIN)
+    QSKIP("Windows doesn't support font loading.");
+#endif
     server.addRedirect("olddir/oldname.ttf","../tarzeau_ocr_a.ttf");
 
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"http://localhost:14448/olddir/oldname.ttf\" }";
@@ -173,6 +185,9 @@ void tst_qquickfontloader::redirWebFont()
 
 void tst_qquickfontloader::failWebFont()
 {
+#if defined(Q_OS_WIN)
+    QSKIP("Windows doesn't support font loading.");
+#endif
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"http://localhost:14448/nonexist.ttf\" }";
     QTest::ignoreMessage(QtWarningMsg, "file::2:1: QML FontLoader: Cannot load font: \"http://localhost:14448/nonexist.ttf\"");
     QQmlComponent component(&engine);
@@ -187,6 +202,9 @@ void tst_qquickfontloader::failWebFont()
 
 void tst_qquickfontloader::changeFont()
 {
+#if defined(Q_OS_WIN)
+    QSKIP("Windows doesn't support font loading.");
+#endif
     QString componentStr = "import QtQuick 2.0\nFontLoader { source: font }";
     QQmlContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("font", testFileUrl("tarzeau_ocr_a.ttf"));
@@ -226,6 +244,9 @@ void tst_qquickfontloader::changeFont()
 
 void tst_qquickfontloader::changeFontSourceViaState()
 {
+#if defined(Q_OS_WIN)
+    QSKIP("Windows doesn't support font loading.");
+#endif
     QQuickView canvas(testFileUrl("qtbug-20268.qml"));
     canvas.show();
     canvas.requestActivateWindow();
