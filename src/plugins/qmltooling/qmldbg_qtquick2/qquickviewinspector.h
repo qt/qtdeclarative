@@ -57,6 +57,7 @@ namespace QtQuick2 {
 
 class SelectionTool;
 class SelectionHighlight;
+class ZoomTool;
 
 class QQuickViewInspector : public AbstractViewInspector
 {
@@ -99,6 +100,7 @@ private:
     QQuickItem *m_overlay;
 
     SelectionTool *m_selectionTool;
+    ZoomTool *m_zoomTool;
 
     QList<QWeakPointer<QQuickItem> > m_selectedItems;
     QHash<QQuickItem*, SelectionHighlight*> m_highlightItems;

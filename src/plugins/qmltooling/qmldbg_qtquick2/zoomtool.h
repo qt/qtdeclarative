@@ -39,50 +39,73 @@
 **
 ****************************************************************************/
 
-#ifndef ABSTRACTTOOL_H
-#define ABSTRACTTOOL_H
+#ifndef ZOOMTOOL_H
+#define ZOOMTOOL_H
 
-#include <QtCore/QObject>
+#include "abstracttool.h"
 
-QT_BEGIN_NAMESPACE
-class QMouseEvent;
-class QKeyEvent;
-class QWheelEvent;
-class QTouchEvent;
-QT_END_NAMESPACE
+#include <QtCore/QPointF>
+
+QT_FORWARD_DECLARE_CLASS(QQuickView)
+QT_FORWARD_DECLARE_CLASS(QQuickItem)
 
 namespace QmlJSDebugger {
+namespace QtQuick2 {
 
-class AbstractViewInspector;
+class QQuickViewInspector;
 
-class AbstractTool : public QObject
+class ZoomTool : public AbstractTool
 {
     Q_OBJECT
 
 public:
-    explicit AbstractTool(AbstractViewInspector *inspector);
+    enum ZoomDirection {
+        ZoomIn,
+        ZoomOut
+    };
 
-    AbstractViewInspector *inspector() const { return m_inspector; }
+    explicit ZoomTool(QQuickViewInspector *inspector, QQuickView *view);
+    virtual ~ZoomTool();
+    void leaveEvent(QEvent *) {}
 
-    virtual void leaveEvent(QEvent *event) = 0;
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *event);
 
-    virtual void mousePressEvent(QMouseEvent *event) = 0;
-    virtual void mouseMoveEvent(QMouseEvent *event) = 0;
-    virtual void mouseReleaseEvent(QMouseEvent *event) = 0;
-    virtual void mouseDoubleClickEvent(QMouseEvent *event) = 0;
+    void hoverMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
 
-    virtual void hoverMoveEvent(QMouseEvent *event) = 0;
-    virtual void wheelEvent(QWheelEvent *event) = 0;
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *event);
 
-    virtual void keyPressEvent(QKeyEvent *event) = 0;
-    virtual void keyReleaseEvent(QKeyEvent *keyEvent) = 0;
-
-    virtual void touchEvent(QTouchEvent *) {}
+    void touchEvent(QTouchEvent *event);
 
 private:
-    AbstractViewInspector *m_inspector;
+    qreal nextZoomScale(ZoomDirection direction);
+    void scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter);
+    void zoomTo100();
+    void zoomIn();
+    void zoomOut();
+
+private:
+    bool m_originalSmooth;
+    bool m_dragStarted;
+    bool m_pinchStarted;
+    QQuickItem *m_rootItem;
+    QPointF m_adjustedOrigin;
+    QPointF m_dragStartPosition;
+    QPointF m_mousePosition;
+    QPointF m_originalPosition;
+    qreal m_currentScale;
+    qreal m_smoothScaleFactor;
+    qreal m_minScale;
+    qreal m_maxScale;
+    qreal m_tapScaleCounter;
+    qreal m_originalScale;
 };
 
+} // namespace QtQuick2
 } // namespace QmlJSDebugger
 
-#endif // ABSTRACTTOOL_H
+#endif // ZOOMTOOL_H

@@ -56,6 +56,8 @@ class QQmlInspectorService;
 class QKeyEvent;
 class QMouseEvent;
 class QWheelEvent;
+class QTouchEvent;
+
 QT_END_NAMESPACE
 
 namespace QmlJSDebugger {
@@ -128,6 +130,7 @@ protected:
     virtual bool keyReleaseEvent(QKeyEvent *keyEvent);
     virtual bool mouseDoubleClickEvent(QMouseEvent *event);
     virtual bool wheelEvent(QWheelEvent *event);
+    virtual bool touchEvent(QTouchEvent *event);
 
 private slots:
     void sendColorChanged(const QColor &color);

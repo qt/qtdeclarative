@@ -44,6 +44,7 @@
 #include "qqmlinspectorprotocol.h"
 #include "highlight.h"
 #include "selectiontool.h"
+#include "zoomtool.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -120,6 +121,7 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
     m_view(view),
     m_overlay(new QQuickItem),
     m_selectionTool(new SelectionTool(this)),
+    m_zoomTool(0),
     m_designMode(true)
 {
     // Try to make sure the overlay is always on top
@@ -176,7 +178,9 @@ void QQuickViewInspector::changeTool(InspectorProtocol::Tool tool)
         emit selectToolActivated();
         break;
     case InspectorProtocol::ZoomTool:
-        // TODO
+        if (!m_zoomTool)
+            m_zoomTool = new ZoomTool(this, m_view);
+        setCurrentTool(m_zoomTool);
         emit zoomToolActivated();
         break;
     }
