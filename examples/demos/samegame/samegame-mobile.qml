@@ -38,56 +38,46 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 import QtQuick 2.0
+import QtQuick.Particles 2.0
+import "content"
+import "content/samegame.js" as Logic
 
-Dialog {
-    id: nameInputDialog
+Rectangle {
+    id: screen
+    width: 320; height: 480
 
-    property int initialWidth: 0
-    property alias name: nameInputText.text
+    SystemPalette { id: activePalette }
 
-    anchors.centerIn: parent
-    z: 22;
-
-    Behavior on width {
-        NumberAnimation {} 
-        enabled: nameInputDialog.initialWidth != 0
+    GameArea {
+        id: gameCanvas
+        width: parent.width
+        blockSize: 40
+        anchors { top: parent.top; bottom: toolBar.top }
     }
 
-    signal accepted(string name)
-    onClosed: {
-        if (nameInputText.text != "")
-            accepted(name);
-    }
-    Text {
-        id: dialogText
-        anchors { left: nameInputDialog.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
-        text: "You won! Your name: "
-    }
-    MouseArea {
-        anchors.fill: parent
-        onClicked: {
-            if (nameInputText.text == "")
-                nameInputText.openSoftwareInputPanel();
-            else
-                nameInputDialog.forceClose();
+    Rectangle {
+        id: toolBar
+        width: parent.width; height: 40
+        color: activePalette.window
+        anchors.bottom: screen.bottom
+
+        Button {
+            id: newGameButton
+            anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
+            fontSize: 12
+            text: "New Game" 
+            onClicked: Logic.startNewGame(gameCanvas)
         }
-    }
 
-    TextInput {
-        id: nameInputText
-        anchors { verticalCenter: parent.verticalCenter; left: dialogText.right }
-        focus: visible
-        autoScroll: false
-        maximumLength: 24
-        onTextChanged: {
-            var newWidth = nameInputText.width + dialogText.width + 40;
-            if ( (newWidth > nameInputDialog.width && newWidth < screen.width) 
-                    || (nameInputDialog.width > nameInputDialog.initialWidth) )
-                nameInputDialog.width = newWidth;
-        }
-        onAccepted: {
-            nameInputDialog.forceClose();
+        Text {
+            id: score
+            anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+            text: "Score: " + gameCanvas.score
+            font.bold: true
+            font.pixelSize: 12
+            color: activePalette.windowText
         }
     }
 }

@@ -45,6 +45,7 @@ Rectangle {
     id: container
 
     property string text: "Button"
+    property int fontSize: 24
 
     signal clicked
 
@@ -70,6 +71,6 @@ Rectangle {
     MouseArea { id: mouseArea; anchors.fill: parent; onClicked: container.clicked() }
 
     Text {
-        id: buttonLabel; text: container.text; anchors.centerIn: container; color: activePalette.buttonText; font.pixelSize: 24
+        id: buttonLabel; text: container.text; anchors.centerIn: container; color: activePalette.buttonText; font.pixelSize: container.fontSize
     }
 }
