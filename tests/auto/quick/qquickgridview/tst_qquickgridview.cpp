@@ -58,8 +58,10 @@
 #include "../shared/visualtestutil.h"
 #include <QtGui/qguiapplication.h>
 
-Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QQuickGridView::Flow)
+Q_DECLARE_METATYPE(Qt::LayoutDirection)
+Q_DECLARE_METATYPE(QQuickItemView::VerticalLayoutDirection)
+Q_DECLARE_METATYPE(Qt::Key)
 
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
@@ -76,19 +78,19 @@ private slots:
     void init();
     void items();
     void changed();
-    void inserted();
-    void inserted_more();
-    void inserted_more_data();
+    void inserted_basic();
+    void inserted_defaultLayout(QQuickGridView::Flow flow = QQuickGridView::FlowLeftToRight, Qt::LayoutDirection horizLayout = Qt::LeftToRight, QQuickItemView::VerticalLayoutDirection verticalLayout = QQuickItemView::TopToBottom);
+    void inserted_defaultLayout_data();
     void insertBeforeVisible();
     void insertBeforeVisible_data();
-    void removed();
-    void removed_more();
-    void removed_more_data();
+    void removed_basic();
+    void removed_defaultLayout(QQuickGridView::Flow flow = QQuickGridView::FlowLeftToRight, Qt::LayoutDirection horizLayout = Qt::LeftToRight, QQuickItemView::VerticalLayoutDirection verticalLayout = QQuickItemView::TopToBottom);
+    void removed_defaultLayout_data();
     void addOrRemoveBeforeVisible();
     void addOrRemoveBeforeVisible_data();
     void clear();
-    void moved();
-    void moved_data();
+    void moved_defaultLayout(QQuickGridView::Flow flow = QQuickGridView::FlowLeftToRight, Qt::LayoutDirection horizLayout = Qt::LeftToRight, QQuickItemView::VerticalLayoutDirection verticalLayout = QQuickItemView::TopToBottom);
+    void moved_defaultLayout_data();
     void multipleChanges_condensed() { multipleChanges(true); }
     void multipleChanges_condensed_data() { multipleChanges_data(); }
     void multipleChanges_uncondensed() { multipleChanges(false); }
@@ -97,6 +99,8 @@ private slots:
     void changeFlow();
     void currentIndex();
     void noCurrentIndex();
+    void keyNavigation();
+    void keyNavigation_data();
     void defaultValues();
     void properties();
     void propertyChanges();
@@ -116,7 +120,11 @@ private slots:
     void header();
     void header_data();
     void headerFooter();
+    void headerFooter_data();
+    void resetModel_headerFooter();
     void resizeViewAndRepaint();
+    void resizeGrid();
+    void resizeGrid_data();
     void changeColumnCount();
     void indexAt_itemAt_data();
     void indexAt_itemAt();
@@ -150,6 +158,51 @@ private slots:
     void multipleTransitions_data();
     void multipleDisplaced();
 
+    void inserted_leftToRight_RtL_TtB();
+    void inserted_leftToRight_RtL_TtB_data();
+    void inserted_leftToRight_LtR_BtT();
+    void inserted_leftToRight_LtR_BtT_data();
+    void inserted_leftToRight_RtL_BtT();
+    void inserted_leftToRight_RtL_BtT_data();
+    void inserted_topToBottom_LtR_TtB();
+    void inserted_topToBottom_LtR_TtB_data();
+    void inserted_topToBottom_RtL_TtB();
+    void inserted_topToBottom_RtL_TtB_data();
+    void inserted_topToBottom_LtR_BtT();
+    void inserted_topToBottom_LtR_BtT_data();
+    void inserted_topToBottom_RtL_BtT();
+    void inserted_topToBottom_RtL_BtT_data();
+
+    void removed_leftToRight_RtL_TtB();
+    void removed_leftToRight_RtL_TtB_data();
+    void removed_leftToRight_LtR_BtT();
+    void removed_leftToRight_LtR_BtT_data();
+    void removed_leftToRight_RtL_BtT();
+    void removed_leftToRight_RtL_BtT_data();
+    void removed_topToBottom_LtR_TtB();
+    void removed_topToBottom_LtR_TtB_data();
+    void removed_topToBottom_RtL_TtB();
+    void removed_topToBottom_RtL_TtB_data();
+    void removed_topToBottom_LtR_BtT();
+    void removed_topToBottom_LtR_BtT_data();
+    void removed_topToBottom_RtL_BtT();
+    void removed_topToBottom_RtL_BtT_data();
+
+    void moved_leftToRight_RtL_TtB();
+    void moved_leftToRight_RtL_TtB_data();
+    void moved_leftToRight_LtR_BtT();
+    void moved_leftToRight_LtR_BtT_data();
+    void moved_leftToRight_RtL_BtT();
+    void moved_leftToRight_RtL_BtT_data();
+    void moved_topToBottom_LtR_TtB();
+    void moved_topToBottom_LtR_TtB_data();
+    void moved_topToBottom_RtL_TtB();
+    void moved_topToBottom_RtL_TtB_data();
+    void moved_topToBottom_LtR_BtT();
+    void moved_topToBottom_LtR_BtT_data();
+    void moved_topToBottom_RtL_BtT();
+    void moved_topToBottom_RtL_BtT_data();
+
 private:
     QList<int> toIntList(const QVariantList &list);
     void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
@@ -158,6 +211,63 @@ private:
 
     void multipleChanges(bool condensed);
     void multipleChanges_data();
+
+    QPointF expectedItemPos(QQuickGridView *grid, int index, qreal rowOffset = 0) {
+        qreal x;
+        qreal y;
+        if (grid->flow() == QQuickGridView::FlowLeftToRight) {
+            int columns = grid->width() / grid->cellWidth();
+            x = (index % columns) * grid->cellWidth();
+            y = (index / columns) * grid->cellHeight();
+            if (grid->effectiveLayoutDirection() == Qt::RightToLeft) {
+                int col = (index % columns) * grid->cellWidth();
+                x = grid->cellWidth() * (columns - 1) - col;
+            }
+
+            qreal offset = grid->cellHeight() * rowOffset;
+            if (grid->verticalLayoutDirection() == QQuickItemView::TopToBottom)
+                y += offset;
+            else
+                y = -grid->cellHeight() - y - offset;
+        } else {
+            int rows = grid->height() / grid->cellHeight();
+            x = (index / rows) * grid->cellWidth();
+            y = (index % rows) * grid->cellHeight();
+            if (grid->effectiveLayoutDirection() == Qt::RightToLeft)
+                x = -x - grid->cellWidth();
+
+            qreal offset = grid->cellWidth() * rowOffset;
+            if (grid->effectiveLayoutDirection() == Qt::RightToLeft)
+                x -= offset;
+            else
+                x += offset;
+            if (grid->verticalLayoutDirection() == QQuickItemView::BottomToTop)
+                y = -grid->cellHeight() - y;
+        }
+        return QPointF(x, y);
+    }
+
+    // Sets contentY (or contentX in TopToBottom flow) according to given row offset
+    // (in LeftToRight flow) or col offset (in TopToBottom).
+    bool setContentPos(QQuickGridView *gridview, qreal rowOrColOffset) {
+        bool contentPosChanged = (rowOrColOffset != 0);
+        qreal contentOffset = gridview->flow() == QQuickGridView::FlowLeftToRight
+                ? rowOrColOffset * gridview->cellHeight()
+                : rowOrColOffset * gridview->cellWidth();
+
+        if (gridview->flow() == QQuickGridView::FlowLeftToRight) {
+            if (gridview->verticalLayoutDirection() == QQuickItemView::BottomToTop)
+                contentOffset = -gridview->height() - contentOffset;
+        } else {
+            if (gridview->effectiveLayoutDirection() == Qt::RightToLeft)
+                contentOffset = -gridview->width() - contentOffset;
+        }
+        if (gridview->flow() == QQuickGridView::FlowLeftToRight)
+            gridview->setContentY(contentOffset);
+        else
+            gridview->setContentX(contentOffset);
+        return contentPosChanged;
+    }
 
 #ifdef SHARE_VIEWS
     QQuickView *getView() {
@@ -222,8 +332,6 @@ void tst_QQuickGridView::items()
 
     QQmlContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
     canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
@@ -272,8 +380,6 @@ void tst_QQuickGridView::changed()
 
     QQmlContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
     canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
@@ -295,7 +401,7 @@ void tst_QQuickGridView::changed()
     delete canvas;
 }
 
-void tst_QQuickGridView::inserted()
+void tst_QQuickGridView::inserted_basic()
 {
     QQuickView *canvas = createView();
     canvas->show();
@@ -305,11 +411,7 @@ void tst_QQuickGridView::inserted()
     model.addItem("John", "2345");
     model.addItem("Bob", "54321");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
@@ -375,11 +477,15 @@ void tst_QQuickGridView::inserted()
     delete canvas;
 }
 
-void tst_QQuickGridView::inserted_more()
+void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
+                                       Qt::LayoutDirection horizLayout,
+                                       QQuickItemView::VerticalLayoutDirection verticalLayout)
 {
     QFETCH(qreal, contentYRowOffset);
     QFETCH(int, insertIndex);
     QFETCH(int, insertCount);
+    QFETCH(int, insertIndex_ttb);
+    QFETCH(int, insertCount_ttb);
     QFETCH(qreal, rowOffsetAfterMove);
 
     QaimModel model;
@@ -389,10 +495,10 @@ void tst_QQuickGridView::inserted_more()
     QQuickView *canvas = getView();
     QQmlContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
+    ctxt->setContextProperty("testRightToLeft", horizLayout == Qt::RightToLeft);
+    ctxt->setContextProperty("testBottomToTop", verticalLayout == QQuickGridView::BottomToTop);
+    canvas->setSource(testFileUrl("layouts.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -401,8 +507,12 @@ void tst_QQuickGridView::inserted_more()
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
-    gridview->setContentY(contentYRowOffset * 60.0);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    if (flow == QQuickGridView::FlowTopToBottom) {
+        insertIndex = insertIndex_ttb;
+        insertCount = insertCount_ttb;
+    }
+    if (setContentPos(gridview, contentYRowOffset))
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     QList<QPair<QString, QString> > newData;
     for (int i=0; i<insertCount; i++)
@@ -413,74 +523,76 @@ void tst_QQuickGridView::inserted_more()
     // check visibleItems.first() is in correct position
     QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item0);
-    QCOMPARE(item0->y(), 0.0);
+    QPointF firstPos(0, 0);
+    if (horizLayout == Qt::RightToLeft)
+        firstPos.rx() = flow == QQuickGridView::FlowLeftToRight ? gridview->width() - gridview->cellWidth() : -gridview->cellWidth();
+    if (verticalLayout == QQuickItemView::BottomToTop)
+        firstPos.ry() -= gridview->cellHeight();
+    QCOMPARE(item0->pos(), firstPos);
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
     for (int i=0; i<items.count(); i++) {
-        if (items[i]->y() >= gridview->contentY()) {
-            QQmlExpression e(qmlContext(items[i]), items[i], "index");
-            firstVisibleIndex = e.evaluate().toInt();
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (item && item->isVisible()) {
+            firstVisibleIndex = i;
             break;
         }
     }
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    QQuickText *name;
-    QQuickText *number;
-    qreal pixelOffset = 60 * rowOffsetAfterMove;
-    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-
-        QCOMPARE(item->x(), (i%3)*80.0);
-        QCOMPARE(item->y(), (i/3)*60.0 + pixelOffset);
-
-        name = findItem<QQuickText>(contentItem, "textName", i);
+        QCOMPARE(item->pos(), expectedItemPos(gridview, i, rowOffsetAfterMove));
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QCOMPARE(name->text(), model.name(i));
-        number = findItem<QQuickText>(contentItem, "textNumber", i);
-        QVERIFY(number != 0);
-        QCOMPARE(number->text(), model.number(i));
     }
 
     releaseView(canvas);
 }
 
-void tst_QQuickGridView::inserted_more_data()
+void tst_QQuickGridView::inserted_defaultLayout_data()
 {
     QTest::addColumn<qreal>("contentYRowOffset");
     QTest::addColumn<int>("insertIndex");
     QTest::addColumn<int>("insertCount");
+    QTest::addColumn<int>("insertIndex_ttb");
+    QTest::addColumn<int>("insertCount_ttb");
     QTest::addColumn<qreal>("rowOffsetAfterMove");
 
     QTest::newRow("add 1, before visible items")
             << 2.0     // show 6-23
             << 5 << 1
+               << 9 << 1
             << 0.0;   // insert 1 above first visible, grid is rearranged; first visible moves forward within its row
                       // new 1st visible item is at 0
 
     QTest::newRow("add 2, before visible items")
             << 2.0     // show 6-23
             << 5 << 2
+               << 9 << 2
             << 0.0;   // insert 2 above first visible, grid is rearranged; first visible moves forward within its row
 
     QTest::newRow("add 3, before visible items")
             << 2.0     // show 6-23
             << 5 << 3
+               << 9 << 5
             << -1.0;   // insert 3 (1 row) above first visible in negative pos, first visible does not move
 
     QTest::newRow("add 5, before visible items")
             << 2.0     // show 6-23
             << 5 << 5
+               << 9 << 7
             << -1.0;   // insert 1 row + 2 items above first visible, 1 row added at negative pos,
                         // grid is rearranged and first visible moves forward within its row
 
     QTest::newRow("add 6, before visible items")
             << 2.0     // show 6-23
             << 5 << 6
+               << 9 << 10
             << -1.0 * 2;   // insert 2 rows above first visible in negative pos, first visible does not move
 
 
@@ -488,63 +600,75 @@ void tst_QQuickGridView::inserted_more_data()
    QTest::newRow("add 1, at start of visible, content at start")
             << 0.0
             << 0 << 1
+               << 0 << 1
             << 0.0;
 
     QTest::newRow("add multiple, at start of visible, content at start")
             << 0.0
             << 0 << 3
+               << 0 << 5
             << 0.0;
 
     QTest::newRow("add 1, at start of visible, content not at start")
             << 2.0     // show 6-23
             << 6 << 1
+               << 10 << 1
             << 0.0;
 
     QTest::newRow("add multiple, at start of visible, content not at start")
             << 2.0     // show 6-23
             << 6 << 3
+               << 10 << 5
             << 0.0;
 
 
     QTest::newRow("add 1, at end of visible, content at start")
             << 0.0
             << 17 << 1
+               << 14 << 1
             << 0.0;
 
-    QTest::newRow("add 1, at end of visible, content at start")
+    QTest::newRow("add row, at end of visible, content at start")
             << 0.0
             << 17 << 3
+               << 14 << 5
             << 0.0;
 
     QTest::newRow("add 1, at end of visible, content not at start")
             << 2.0     // show 6-23
-            << 23 << 1
+            << 17+6 << 1
+               << 14+10 << 1
             << 0.0;
 
     QTest::newRow("add multiple, at end of visible, content not at start")
             << 2.0     // show 6-23
-            << 23 << 3
+            << 17+6 << 3
+               << 14+10 << 5
             << 0.0;
 
 
     QTest::newRow("add 1, after visible, content at start")
             << 0.0
             << 20 << 1
+               << 18 << 1
             << 0.0;
 
-    QTest::newRow("add 1, after visible, content at start")
+    QTest::newRow("add row, after visible, content at start")
             << 0.0
             << 20 << 3
+               << 18 << 5
             << 0.0;
 
     QTest::newRow("add 1, after visible, content not at start")
             << 2.0     // show 6-23
-            << 24 << 1
+            << 20+6 << 1
+               << 18+10 << 1
             << 0.0;
 
     QTest::newRow("add multiple, after visible, content not at start")
             << 2.0     // show 6-23
-            << 24 << 3
+            << 20+6 << 3
+               << 18+10 << 3
             << 0.0;
 }
 
@@ -563,8 +687,6 @@ void tst_QQuickGridView::insertBeforeVisible()
 
     QQmlContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
     canvas->setSource(testFileUrl("gridview1.qml"));
     canvas->show();
     qApp->processEvents();
@@ -639,7 +761,7 @@ void tst_QQuickGridView::insertBeforeVisible_data()
     QTest::newRow("insert multiple at 1, 500 buffer") << 1 << 6 << 500;
 }
 
-void tst_QQuickGridView::removed()
+void tst_QQuickGridView::removed_basic()
 {
     QQuickView *canvas = createView();
     canvas->show();
@@ -648,11 +770,7 @@ void tst_QQuickGridView::removed()
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
@@ -784,16 +902,19 @@ void tst_QQuickGridView::removed()
     delete canvas;
 }
 
-void tst_QQuickGridView::removed_more()
+void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
+                                               Qt::LayoutDirection horizLayout,
+                                               QQuickItemView::VerticalLayoutDirection verticalLayout)
 {
     QFETCH(qreal, contentYRowOffset);
     QFETCH(int, removeIndex);
     QFETCH(int, removeCount);
+    QFETCH(int, removeIndex_ttb);
+    QFETCH(int, removeCount_ttb);
     QFETCH(qreal, rowOffsetAfterMove);
     QFETCH(QString, firstVisible);
+    QFETCH(QString, firstVisible_ttb);
 
-    QQuickText *name;
-    QQuickText *number;
     QQuickView *canvas = getView();
 
     QaimModel model;
@@ -802,9 +923,10 @@ void tst_QQuickGridView::removed_more()
 
     QQmlContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
+    ctxt->setContextProperty("testRightToLeft", horizLayout == Qt::RightToLeft);
+    ctxt->setContextProperty("testBottomToTop", verticalLayout == QQuickGridView::BottomToTop);
+    canvas->setSource(testFileUrl("layouts.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -813,8 +935,13 @@ void tst_QQuickGridView::removed_more()
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
-    gridview->setContentY(contentYRowOffset * 60.0);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    if (flow == QQuickGridView::FlowTopToBottom) {
+        removeIndex = removeIndex_ttb;
+        removeCount = removeCount_ttb;
+        firstVisible = firstVisible_ttb;
+    }
+    if (setContentPos(gridview, contentYRowOffset))
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     model.removeItems(removeIndex, removeCount);
     QTRY_COMPARE(gridview->property("count").toInt(), model.count());
@@ -822,80 +949,87 @@ void tst_QQuickGridView::removed_more()
     QString firstName;
     int firstVisibleIndex = -1;
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    QRectF viewRect(gridview->contentX(), gridview->contentY(), gridview->width(), gridview->height());
     for (int i=0; i<items.count(); i++) {
-        if (items[i]->y() >= gridview->contentY()) {
-            QQmlExpression e(qmlContext(items[i]), items[i], "index");
-            firstVisibleIndex = e.evaluate().toInt();
-            QQmlExpression en(qmlContext(items[i]), items[i], "name");
-            firstName = en.evaluate().toString();
-            break;
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (item) {
+            QRectF itemRect(item->x(), item->y(), item->width(), item->height());
+            if (item->isVisible() && viewRect.intersects(itemRect)) {
+                firstVisibleIndex = i;
+                QQmlExpression en(qmlContext(item), item, "name");
+                firstName = en.evaluate().toString();
+                break;
+            }
         }
     }
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
     QCOMPARE(firstName, firstVisible);
 
     // Confirm items positioned correctly and indexes correct
-    qreal pixelOffset = 60 * rowOffsetAfterMove;
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-
-        QTRY_COMPARE(item->x(), (i%3)*80.0);
-        QTRY_COMPARE(item->y(), (i/3)*60.0 + pixelOffset);
-
-        name = findItem<QQuickText>(contentItem, "textName", i);
+        QCOMPARE(item->pos(), expectedItemPos(gridview, i, rowOffsetAfterMove));
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
-        number = findItem<QQuickText>(contentItem, "textNumber", i);
-        QVERIFY(number != 0);
-        QTRY_COMPARE(number->text(), model.number(i));
     }
 
     releaseView(canvas);
 }
 
-void tst_QQuickGridView::removed_more_data()
+void tst_QQuickGridView::removed_defaultLayout_data()
 {
     QTest::addColumn<qreal>("contentYRowOffset");
     QTest::addColumn<int>("removeIndex");
     QTest::addColumn<int>("removeCount");
+    QTest::addColumn<int>("removeIndex_ttb");
+    QTest::addColumn<int>("removeCount_ttb");
     QTest::addColumn<qreal>("rowOffsetAfterMove");
     QTest::addColumn<QString>("firstVisible");
+    QTest::addColumn<QString>("firstVisible_ttb");
 
     QTest::newRow("remove 1, before visible items")
             << 2.0     // show 6-23
             << 2 << 1
-            << 0.0 << "Item7";
+               << 4 << 1
+            << 0.0 << "Item7" << "Item11";
 
     QTest::newRow("remove 1, before visible position")
             << 2.0     // show 6-23
             << 3 << 1
-            << 0.0 << "Item7";
+               << 5 << 1
+            << 0.0 << "Item7" << "Item11";
 
-    QTest::newRow("remove multiple, all before visible items")
+    QTest::newRow("remove multiple (1 row), all before visible items")
             << 2.0
             << 1 << 3
-            << 1.0 << "Item6";    // removed top row, slide down by 1 row
+               << 1 << 5
+            << 1.0 << "Item6" << "Item10";    // removed top row, slide down by 1 row
 
     QTest::newRow("remove multiple, all before visible items, remove item 0")
             << 2.0
             << 0 << 4
-            << 1.0 << "Item7";    // removed top row, slide down by 1 row
+               << 0 << 6
+            << 1.0 << "Item7" << "Item11";    // removed top row, slide down by 1 row
 
     QTest::newRow("remove multiple rows, all before visible items")
             << 4.0     // show 12-29
             << 1 << 7
-            << 2.0 << "Item13";
+               << 1 << 12
+            << 2.0 << "Item13" << "Item17";
 
     QTest::newRow("remove one row before visible, content y not on item border")
             << 1.5
             << 0 << 3
-            << 1.0 << "Item6"; // 1 row removed
+               << 0 << 5
+            << 1.0 << "Item3" << "Item5"; // 1 row removed
 
     QTest::newRow("remove mix of visible/non-visible")
             << 2.0     // show 6-23
             << 2 << 3
-            << 1.0 << "Item6"; // 1 row removed
+               << 4 << 3
+            << 1.0 << "Item6" << "Item8"; // 1 row removed
 
 
     // remove 3,4,5 before the visible pos, first row moves down to just before the visible pos,
@@ -903,80 +1037,95 @@ void tst_QQuickGridView::removed_more_data()
     QTest::newRow("remove multiple, mix of items from before and within visible items")
             << 2.0
             << 3 << 5
-            << 1.0 << "Item8";    // adjust for the 1 row removed before the visible
+                << 5 << 7
+            << 1.0 << "Item8" << "Item12";    // adjust for the 1 row removed before the visible
 
     QTest::newRow("remove multiple, mix of items from before and within visible items, remove item 0")
             << 2.0
             << 0 << 8
-            << 1.0 * 2 << "Item8";    // adjust for the 2 rows removed before the visible
+               << 0 << 12
+            << 1.0 * 2 << "Item8" << "Item12";    // adjust for the 2 rows removed before the visible
 
 
     QTest::newRow("remove 1, from start of visible, content at start")
             << 0.0
             << 0 << 1
-            << 0.0 << "Item1";
+               << 0 << 1
+            << 0.0 << "Item1" << "Item1";
 
     QTest::newRow("remove multiple, from start of visible, content at start")
             << 0.0
             << 0 << 3
-            << 0.0 << "Item3";
+               << 0 << 5
+            << 0.0 << "Item3" << "Item5";
 
     QTest::newRow("remove 1, from start of visible, content not at start")
             << 2.0     // show 6-23
             << 4 << 1
-            << 0.0 << "Item7";
+               << 7 << 1
+            << 0.0 << "Item7" << "Item11";
 
     QTest::newRow("remove multiple, from start of visible, content not at start")
             << 2.0     // show 6-23
             << 4 << 3
-            << 0.0 << "Item9";
+               << 7 << 5
+            << 0.0 << "Item9" << "Item15";
 
 
     QTest::newRow("remove 1, from middle of visible, content at start")
             << 0.0
             << 10 << 1
-            << 0.0 << "Item0";
+               << 12 << 1
+            << 0.0 << "Item0" << "Item0";
 
     QTest::newRow("remove multiple, from middle of visible, content at start")
             << 0.0
             << 10 << 5
-            << 0.0 << "Item0";
+               << 12 << 5
+            << 0.0 << "Item0" << "Item0";
 
     QTest::newRow("remove 1, from middle of visible, content not at start")
             << 2.0     // show 6-23
             << 10 << 1
-            << 0.0 << "Item6";
+               << 12 << 1
+            << 0.0 << "Item6" << "Item10";
 
     QTest::newRow("remove multiple, from middle of visible, content not at start")
             << 2.0     // show 6-23
             << 10 << 5
-            << 0.0 << "Item6";
+               << 12 << 7
+            << 0.0 << "Item6" << "Item10";
 
 
     QTest::newRow("remove 1, after visible, content at start")
             << 0.0
             << 16 << 1
-            << 0.0 << "Item0";
+               << 15 << 1
+            << 0.0 << "Item0" << "Item0";
 
     QTest::newRow("remove multiple, after visible, content at start")
             << 0.0
             << 16 << 5
-            << 0.0 << "Item0";
+               << 15 << 7
+            << 0.0 << "Item0" << "Item0";
 
     QTest::newRow("remove 1, after visible, content not at start")
             << 2.0     // show 6-23
             << 16+4 << 1
-            << 0.0 << "Item6";
+               << 15+10 << 1
+            << 0.0 << "Item6" << "Item10";
 
     QTest::newRow("remove multiple, after visible, content not at start")
             << 2.0     // show 6-23
             << 16+4 << 5
-            << 0.0 << "Item6";
+               << 15+10 << 7
+            << 0.0 << "Item6" << "Item10";
 
     QTest::newRow("remove multiple, mix of items from within and after visible items")
             << 2.0     // show 6-23
             << 20 << 5
-            << 0.0 << "Item6";
+               << 22 << 7
+            << 0.0 << "Item6" << "Item10";
 }
 
 void tst_QQuickGridView::addOrRemoveBeforeVisible()
@@ -994,10 +1143,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -1073,11 +1219,7 @@ void tst_QQuickGridView::clear()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     canvas->show();
     qApp->processEvents();
@@ -1104,28 +1246,31 @@ void tst_QQuickGridView::clear()
     delete canvas;
 }
 
-void tst_QQuickGridView::moved()
+void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
+                                             Qt::LayoutDirection horizLayout,
+                                             QQuickItemView::VerticalLayoutDirection verticalLayout)
 {
     QFETCH(qreal, contentYRowOffset);
     QFETCH(int, from);
     QFETCH(int, to);
     QFETCH(int, count);
+    QFETCH(int, from_ttb);
+    QFETCH(int, to_ttb);
+    QFETCH(int, count_ttb);
     QFETCH(qreal, rowOffsetAfterMove);
 
-    QQuickText *name;
-    QQuickText *number;
     QQuickView *canvas = getView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
+    ctxt->setContextProperty("testRightToLeft", horizLayout == Qt::RightToLeft);
+    ctxt->setContextProperty("testBottomToTop", verticalLayout == QQuickGridView::BottomToTop);
+    canvas->setSource(testFileUrl("layouts.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -1138,33 +1283,41 @@ void tst_QQuickGridView::moved()
     QQuickItem *currentItem = gridview->currentItem();
     QTRY_VERIFY(currentItem != 0);
 
-    if (contentYRowOffset != 0) {
-        gridview->setContentY(contentYRowOffset * 60.0);
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    if (flow == QQuickGridView::FlowTopToBottom) {
+        from = from_ttb;
+        to = to_ttb;
+        count = count_ttb;
     }
+    if (setContentPos(gridview, contentYRowOffset))
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     model.moveItems(from, to, count);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     // Confirm items positioned correctly and indexes correct
-    int firstVisibleIndex = qCeil(gridview->contentY() / 60.0) * 3;
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    qreal pixelOffset = 60 * rowOffsetAfterMove;
-    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
-        if (i >= firstVisibleIndex + 18)    // index has moved out of view
-            continue;
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (item && item->isVisible()) {
+            firstVisibleIndex = i;
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item &&
+                ( (flow == QQuickGridView::FlowLeftToRight && i >= firstVisibleIndex + (3*6))
+                || flow == QQuickGridView::FlowTopToBottom && i >= firstVisibleIndex + (5*3) ) ) {
+            continue;   // index has moved out of view
+        }
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-
-        QTRY_COMPARE(item->x(), (i%3)*80.0);
-        QTRY_COMPARE(item->y(), (i/3)*60.0 + pixelOffset);
-
-        name = findItem<QQuickText>(contentItem, "textName", i);
+        QCOMPARE(item->pos(), expectedItemPos(gridview, i, rowOffsetAfterMove));
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
-        number = findItem<QQuickText>(contentItem, "textNumber", i);
-        QVERIFY(number != 0);
-        QTRY_COMPARE(number->text(), model.number(i));
 
         // current index should have been updated
         if (item == currentItem)
@@ -1174,12 +1327,15 @@ void tst_QQuickGridView::moved()
     releaseView(canvas);
 }
 
-void tst_QQuickGridView::moved_data()
+void tst_QQuickGridView::moved_defaultLayout_data()
 {
     QTest::addColumn<qreal>("contentYRowOffset");
     QTest::addColumn<int>("from");
     QTest::addColumn<int>("to");
     QTest::addColumn<int>("count");
+    QTest::addColumn<int>("from_ttb");
+    QTest::addColumn<int>("to_ttb");
+    QTest::addColumn<int>("count_ttb");
     QTest::addColumn<qreal>("rowOffsetAfterMove");
 
     // model starts with 30 items, each 80x60, in area 240x320
@@ -1192,139 +1348,166 @@ void tst_QQuickGridView::moved_data()
     QTest::newRow("move 1 forwards, within visible items")
             << 0.0
             << 1 << 8 << 1
+               << 2 << 12 << 1
             << 0.0;
 
     QTest::newRow("move 1 forwards, from non-visible -> visible")
             << 2.0     // show 6-23
-            << 1 << 23 << 1
+            << 1 << 8+6 << 1
+               << 2 << 12+10 << 1
             << 0.0;
 
     QTest::newRow("move 1 forwards, from non-visible -> visible (move first item)")
             << 2.0     // // show 6-23
             << 0 << 6 << 1
+               << 0 << 10 << 1
             << 0.0;
 
     QTest::newRow("move 1 forwards, from visible -> non-visible")
             << 0.0
             << 1 << 20 << 1
+               << 1 << 20 << 1
             << 0.0;
 
     QTest::newRow("move 1 forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 20 << 1
+               << 0 << 20 << 1
             << 0.0;
 
 
     QTest::newRow("move 1 backwards, within visible items")
             << 0.0
             << 10 << 5 << 1
+               << 10 << 5 << 1
             << 0.0;
 
     QTest::newRow("move 1 backwards, within visible items (to first index)")
             << 0.0
             << 10 << 0 << 1
+               << 10 << 0 << 1
             << 0.0;
 
     QTest::newRow("move 1 backwards, from non-visible -> visible")
             << 0.0
             << 28 << 8 << 1
+               << 28 << 8 << 1
             << 0.0;
 
     QTest::newRow("move 1 backwards, from non-visible -> visible (move last item)")
             << 0.0
             << 29 << 14 << 1
+               << 29 << 14 << 1
             << 0.0;
 
     QTest::newRow("move 1 backwards, from visible -> non-visible")
             << 2.0     // show 6-23
             << 7 << 1 << 1
+               << 10 << 1 << 1
             << 0.0;     // only 1 item moved back, so items shift accordingly and first row doesn't move
 
     QTest::newRow("move 1 backwards, from visible -> non-visible (move first item)")
             << 2.0     // show 6-23
             << 7 << 0 << 1
+               << 10 << 0 << 1
             << 0.0;     // only 1 item moved back, so items shift accordingly and first row doesn't move
 
 
     QTest::newRow("move multiple forwards, within visible items")
             << 0.0
             << 0 << 5 << 3
+               << 0 << 7 << 5
             << 0.0;
 
     QTest::newRow("move multiple backwards, within visible items (move first item)")
             << 0.0
             << 10 << 0 << 3
+               << 12 << 0 << 5
             << 0.0;
 
     QTest::newRow("move multiple forwards, before visible items")
             << 2.0     // show 6-23
             << 3 << 4 << 3      // 3, 4, 5 move to after 6
+               << 5 << 6 << 5
             << 1.0;      // row of 3,4,5 has moved down
 
     QTest::newRow("move multiple forwards, from non-visible -> visible")
             << 2.0     // show 6-23
             << 1 << 6 << 3
+               << 1 << 10 << 5
             << 1.0; // 1st row (it's above visible area) disappears, 0 drops down 1 row, first visible item (6) stays where it is
 
     QTest::newRow("move multiple forwards, from non-visible -> visible (move first item)")
             << 2.0     // show 6-23
             << 0 << 6 << 3
+               << 0 << 10 << 5
             << 1.0;    // top row moved and shifted to below 3rd row, all items should shift down by 1 row
 
     QTest::newRow("move multiple forwards, mix of non-visible/visible")
             << 2.0
             << 3 << 16 << 6
+               << 5 << 18 << 10
             << 1.0;    // top two rows removed, third row is now the first visible
 
     QTest::newRow("move multiple forwards, to bottom of view")
             << 0.0
             << 5 << 13 << 5
+               << 1 << 8 << 6
             << 0.0;
 
     QTest::newRow("move multiple forwards, to bottom of view, first row -> last")
             << 0.0
             << 0 << 15 << 3
+               << 0 << 10 << 5
             << 0.0;
 
     QTest::newRow("move multiple forwards, to bottom of view, content y not 0")
             << 2.0
             << 5+4 << 13+4 << 5
+               << 11 << 19 << 6
             << 0.0;
 
     QTest::newRow("move multiple forwards, from visible -> non-visible")
             << 0.0
             << 1 << 16 << 3
+               << 1 << 18 << 5
             << 0.0;
 
     QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 3
+               << 1 << 18 << 5
             << 0.0;
 
 
     QTest::newRow("move multiple backwards, within visible items")
             << 0.0
             << 4 << 1 << 3
+               << 7 << 1 << 5
             << 0.0;
 
     QTest::newRow("move multiple backwards, from non-visible -> visible")
             << 0.0
             << 20 << 4 << 3
+               << 20 << 4 << 5
             << 0.0;
 
     QTest::newRow("move multiple backwards, from non-visible -> visible (move last item)")
             << 0.0
             << 27 << 10 << 3
+               << 25 << 8 << 5
             << 0.0;
 
     QTest::newRow("move multiple backwards, from visible -> non-visible")
             << 2.0     // show 6-23
             << 16 << 1 << 3
+               << 17 << 1 << 5
             << -1.0;   // to minimize movement, items are added above visible area, all items move up by 1 row
 
     QTest::newRow("move multiple backwards, from visible -> non-visible (move first item)")
             << 2.0     // show 6-23
             << 16 << 0 << 3
+               << 17 << 0 << 5
             << -1.0;   // 16,17,18 move to above item 0, all items move up by 1 row
 }
 
@@ -1341,11 +1524,7 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
     for (int i = 0; i < startCount; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     canvas->show();
     qApp->processEvents();
@@ -1588,11 +1767,7 @@ void tst_QQuickGridView::swapWithFirstItem()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     canvas->show();
     qApp->processEvents();
@@ -1639,56 +1814,10 @@ void tst_QQuickGridView::currentIndex()
     QCOMPARE(gridview->currentItem()->y(), gridview->highlightItem()->y());
     QCOMPARE(gridview->contentY(), 400.0);
 
-    gridview->moveCurrentIndexRight();
-    QCOMPARE(gridview->currentIndex(), 36);
-    gridview->moveCurrentIndexDown();
-    QCOMPARE(gridview->currentIndex(), 39);
-    gridview->moveCurrentIndexUp();
-    QCOMPARE(gridview->currentIndex(), 36);
-    gridview->moveCurrentIndexLeft();
-    QCOMPARE(gridview->currentIndex(), 35);
-
-    // wait until motion stops
-    QTRY_VERIFY(gridview->verticalVelocity() == 0.0);
-
-    // no wrap
     gridview->setCurrentIndex(0);
     QCOMPARE(gridview->currentIndex(), 0);
     // confirm that the velocity is updated
     QTRY_VERIFY(gridview->verticalVelocity() != 0.0);
-
-    gridview->moveCurrentIndexUp();
-    QCOMPARE(gridview->currentIndex(), 0);
-
-    gridview->moveCurrentIndexLeft();
-    QCOMPARE(gridview->currentIndex(), 0);
-
-    gridview->setCurrentIndex(model.count()-1);
-    QCOMPARE(gridview->currentIndex(), model.count()-1);
-
-    gridview->moveCurrentIndexRight();
-    QCOMPARE(gridview->currentIndex(), model.count()-1);
-
-    gridview->moveCurrentIndexDown();
-    QCOMPARE(gridview->currentIndex(), model.count()-1);
-
-    // with wrap
-    gridview->setWrapEnabled(true);
-
-    gridview->setCurrentIndex(0);
-    QCOMPARE(gridview->currentIndex(), 0);
-
-    gridview->moveCurrentIndexLeft();
-    QCOMPARE(gridview->currentIndex(), model.count()-1);
-
-    qApp->processEvents();
-    QTRY_COMPARE(gridview->contentY(), 880.0);
-
-    gridview->moveCurrentIndexRight();
-    QCOMPARE(gridview->currentIndex(), 0);
-
-    QTRY_COMPARE(gridview->contentY(), 0.0);
-
 
     // footer should become visible if it is out of view, and then current index moves to the first row
     canvas->rootObject()->setProperty("showFooter", true);
@@ -1708,132 +1837,12 @@ void tst_QQuickGridView::currentIndex()
     QTRY_COMPARE(gridview->contentY(), -gridview->headerItem()->height());
     canvas->rootObject()->setProperty("showHeader", false);
 
-
-    // Test keys
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
-
-    gridview->setCurrentIndex(0);
-
-    QTest::keyClick(canvas, Qt::Key_Down);
-    QCOMPARE(gridview->currentIndex(), 3);
-
-    QTest::keyClick(canvas, Qt::Key_Up);
-    QCOMPARE(gridview->currentIndex(), 0);
-
-    // hold down Key_Down
-    for (int i=0; i<(model.count() / 3) - 1; i++) {
-        QTest::simulateEvent(canvas, true, Qt::Key_Down, Qt::NoModifier, "", true);
-        QTRY_COMPARE(gridview->currentIndex(), i*3 + 3);
-    }
-    QTest::keyRelease(canvas, Qt::Key_Down);
-    QTRY_COMPARE(gridview->currentIndex(), 57);
-    QTRY_COMPARE(gridview->contentY(), 880.0);
-
-    // hold down Key_Up
-    for (int i=(model.count() / 3) - 1; i > 0; i--) {
-        QTest::simulateEvent(canvas, true, Qt::Key_Up, Qt::NoModifier, "", true);
-        QTRY_COMPARE(gridview->currentIndex(), i*3 - 3);
-    }
-    QTest::keyRelease(canvas, Qt::Key_Up);
-    QTRY_COMPARE(gridview->currentIndex(), 0);
-    QTRY_COMPARE(gridview->contentY(), 0.0);
-
-
-    gridview->setFlow(QQuickGridView::TopToBottom);
-
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QVERIFY(qGuiApp->focusWindow() == canvas);
-    qApp->processEvents();
-
-    QTest::keyClick(canvas, Qt::Key_Right);
-    QCOMPARE(gridview->currentIndex(), 5);
-
-    QTest::keyClick(canvas, Qt::Key_Left);
-    QCOMPARE(gridview->currentIndex(), 0);
-
-    QTest::keyClick(canvas, Qt::Key_Down);
-    QCOMPARE(gridview->currentIndex(), 1);
-
-    QTest::keyClick(canvas, Qt::Key_Up);
-    QCOMPARE(gridview->currentIndex(), 0);
-
-    // hold down Key_Right
-    for (int i=0; i<(model.count() / 5) - 1; i++) {
-        QTest::simulateEvent(canvas, true, Qt::Key_Right, Qt::NoModifier, "", true);
-        QTRY_COMPARE(gridview->currentIndex(), i*5 + 5);
-    }
-
-    QTest::keyRelease(canvas, Qt::Key_Right);
-    QTRY_COMPARE(gridview->currentIndex(), 55);
-    QTRY_COMPARE(gridview->contentX(), 720.0);
-
-    // hold down Key_Left
-    for (int i=(model.count() / 5) - 1; i > 0; i--) {
-        QTest::simulateEvent(canvas, true, Qt::Key_Left, Qt::NoModifier, "", true);
-        QTRY_COMPARE(gridview->currentIndex(), i*5 - 5);
-    }
-    QTest::keyRelease(canvas, Qt::Key_Left);
-    QTRY_COMPARE(gridview->currentIndex(), 0);
-    QTRY_COMPARE(gridview->contentX(), 0.0);
-
-
     // turn off auto highlight
     gridview->setHighlightFollowsCurrentItem(false);
     QVERIFY(gridview->highlightFollowsCurrentItem() == false);
     QVERIFY(gridview->highlightItem());
     qreal hlPosX = gridview->highlightItem()->x();
     qreal hlPosY = gridview->highlightItem()->y();
-
-    gridview->setCurrentIndex(5);
-    QTRY_COMPARE(gridview->highlightItem()->x(), hlPosX);
-    QTRY_COMPARE(gridview->highlightItem()->y(), hlPosY);
-
-    // insert item before currentIndex
-    gridview->setCurrentIndex(28);
-    model.insertItem(0, "Foo", "1111");
-    QTRY_COMPARE(canvas->rootObject()->property("current").toInt(), 29);
-
-    // check removing highlight by setting currentIndex to -1;
-    gridview->setCurrentIndex(-1);
-
-    QCOMPARE(gridview->currentIndex(), -1);
-    QVERIFY(!gridview->highlightItem());
-    QVERIFY(!gridview->currentItem());
-
-    gridview->setHighlightFollowsCurrentItem(true);
-
-    gridview->setFlow(QQuickGridView::LeftToRight);
-    gridview->setLayoutDirection(Qt::RightToLeft);
-
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
-    qApp->processEvents();
-
-    gridview->setCurrentIndex(35);
-
-    QTest::keyClick(canvas, Qt::Key_Right);
-    QCOMPARE(gridview->currentIndex(), 34);
-
-    QTest::keyClick(canvas, Qt::Key_Down);
-    QCOMPARE(gridview->currentIndex(), 37);
-
-    QTest::keyClick(canvas, Qt::Key_Up);
-    QCOMPARE(gridview->currentIndex(), 34);
-
-    QTest::keyClick(canvas, Qt::Key_Left);
-    QCOMPARE(gridview->currentIndex(), 35);
-
-
-    // turn off auto highlight
-    gridview->setHighlightFollowsCurrentItem(false);
-    QVERIFY(gridview->highlightFollowsCurrentItem() == false);
-    QVERIFY(gridview->highlightItem());
-    hlPosX = gridview->highlightItem()->x();
-    hlPosY = gridview->highlightItem()->y();
 
     gridview->setCurrentIndex(5);
     QTRY_COMPARE(gridview->highlightItem()->x(), hlPosX);
@@ -1897,6 +1906,199 @@ void tst_QQuickGridView::noCurrentIndex()
     delete canvas;
 }
 
+void tst_QQuickGridView::keyNavigation()
+{
+    QFETCH(QQuickGridView::Flow, flow);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
+    QFETCH(Qt::Key, forwardsKey);
+    QFETCH(Qt::Key, backwardsKey);
+    QFETCH(QPointF, contentPosAtFirstItem);
+    QFETCH(QPointF, contentPosAtLastItem);
+    QFETCH(int, indexRightOf7);
+    QFETCH(int, indexLeftOf7);
+    QFETCH(int, indexUpFrom7);
+    QFETCH(int, indexDownFrom7);
+
+    QmlListModel model;
+    for (int i = 0; i < 18; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQuickView *canvas = getView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->setSource(testFileUrl("gridview1.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    gridview->setFlow(flow);
+    gridview->setLayoutDirection(layoutDirection);
+    gridview->setVerticalLayoutDirection(verticalLayoutDirection);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    canvas->requestActivateWindow();
+    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
+    QCOMPARE(gridview->currentIndex(), 0);
+
+    QTest::keyClick(canvas, forwardsKey);
+    QCOMPARE(gridview->currentIndex(), 1);
+
+    QTest::keyClick(canvas, backwardsKey);
+    QCOMPARE(gridview->currentIndex(), 0);
+
+    gridview->setCurrentIndex(7);
+    gridview->moveCurrentIndexRight();
+    QCOMPARE(gridview->currentIndex(), indexRightOf7);
+    gridview->moveCurrentIndexLeft();
+    QCOMPARE(gridview->currentIndex(), 7);
+    gridview->moveCurrentIndexLeft();
+    QCOMPARE(gridview->currentIndex(), indexLeftOf7);
+    gridview->moveCurrentIndexRight();
+    QCOMPARE(gridview->currentIndex(), 7);
+    gridview->moveCurrentIndexUp();
+    QCOMPARE(gridview->currentIndex(), indexUpFrom7);
+    gridview->moveCurrentIndexDown();
+    QCOMPARE(gridview->currentIndex(), 7);
+    gridview->moveCurrentIndexDown();
+    QCOMPARE(gridview->currentIndex(), indexDownFrom7);
+
+    gridview->setCurrentIndex(7);
+    QTest::keyClick(canvas, Qt::Key_Right);
+    QCOMPARE(gridview->currentIndex(), indexRightOf7);
+    QTest::keyClick(canvas, Qt::Key_Left);
+    QCOMPARE(gridview->currentIndex(), 7);
+    QTest::keyClick(canvas, Qt::Key_Left);
+    QCOMPARE(gridview->currentIndex(), indexLeftOf7);
+    QTest::keyClick(canvas, Qt::Key_Right);
+    QCOMPARE(gridview->currentIndex(), 7);
+    QTest::keyClick(canvas, Qt::Key_Up);
+    QCOMPARE(gridview->currentIndex(), indexUpFrom7);
+    QTest::keyClick(canvas, Qt::Key_Down);
+    QCOMPARE(gridview->currentIndex(), 7);
+    QTest::keyClick(canvas, Qt::Key_Down);
+    QCOMPARE(gridview->currentIndex(), indexDownFrom7);
+
+    // hold down a key to go forwards
+    gridview->setCurrentIndex(0);
+    for (int i=0; i<model.count()-1; i++) {
+//        QTest::qWait(500);
+        QTest::simulateEvent(canvas, true, forwardsKey, Qt::NoModifier, "", true);
+        QTRY_COMPARE(gridview->currentIndex(), i+1);
+    }
+    QTest::keyRelease(canvas, forwardsKey);
+    QTRY_COMPARE(gridview->currentIndex(), model.count()-1);
+    QTRY_COMPARE(gridview->contentX(), contentPosAtLastItem.x());
+    QTRY_COMPARE(gridview->contentY(), contentPosAtLastItem.y());
+
+    // hold down a key to go backwards
+    for (int i=model.count()-1; i > 0; i--) {
+        QTest::simulateEvent(canvas, true, backwardsKey, Qt::NoModifier, "", true);
+        QTRY_COMPARE(gridview->currentIndex(), i-1);
+    }
+    QTest::keyRelease(canvas, backwardsKey);
+    QTRY_COMPARE(gridview->currentIndex(), 0);
+    QTRY_COMPARE(gridview->contentX(), contentPosAtFirstItem.x());
+    QTRY_COMPARE(gridview->contentY(), contentPosAtFirstItem.y());
+
+    // no wrap
+    QVERIFY(!gridview->isWrapEnabled());
+    QTest::keyClick(canvas, forwardsKey);
+    QCOMPARE(gridview->currentIndex(), 1);
+    QTest::keyClick(canvas, backwardsKey);
+    QCOMPARE(gridview->currentIndex(), 0);
+
+    QTest::keyClick(canvas, backwardsKey);
+    QCOMPARE(gridview->currentIndex(), 0);
+
+    // with wrap
+    gridview->setWrapEnabled(true);
+    QVERIFY(gridview->isWrapEnabled());
+
+    QTest::keyClick(canvas, backwardsKey);
+    QCOMPARE(gridview->currentIndex(), model.count()-1);
+    QTRY_COMPARE(gridview->contentX(), contentPosAtLastItem.x());
+    QTRY_COMPARE(gridview->contentY(), contentPosAtLastItem.y());
+
+    QTest::keyClick(canvas, forwardsKey);
+    QCOMPARE(gridview->currentIndex(), 0);
+    QTRY_COMPARE(gridview->contentX(), contentPosAtFirstItem.x());
+    QTRY_COMPARE(gridview->contentY(), contentPosAtFirstItem.y());
+
+    releaseView(canvas);
+}
+
+void tst_QQuickGridView::keyNavigation_data()
+{
+    QTest::addColumn<QQuickGridView::Flow>("flow");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
+    QTest::addColumn<Qt::Key>("forwardsKey");
+    QTest::addColumn<Qt::Key>("backwardsKey");
+    QTest::addColumn<QPointF>("contentPosAtFirstItem");
+    QTest::addColumn<QPointF>("contentPosAtLastItem");
+    QTest::addColumn<int>("indexRightOf7");
+    QTest::addColumn<int>("indexLeftOf7");
+    QTest::addColumn<int>("indexUpFrom7");
+    QTest::addColumn<int>("indexDownFrom7");
+
+    QTest::newRow("LeftToRight, LtR, TtB")
+            << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << Qt::Key_Right << Qt::Key_Left
+            << QPointF(0, 0)
+            << QPointF(0, 40)
+            << 8 << 6 << 4 << 10;
+
+    QTest::newRow("LeftToRight, RtL, TtB")
+            << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << Qt::Key_Left << Qt::Key_Right
+            << QPointF(0, 0)
+            << QPointF(0, 40)
+            << 6 << 8 << 4 << 10;
+
+    QTest::newRow("LeftToRight, LtR, BtT")
+            << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << Qt::Key_Right << Qt::Key_Left
+            << QPointF(0, -320)
+            << QPointF(0, -360)
+            << 8 << 6 << 10 << 4;
+
+    QTest::newRow("LeftToRight, RtL, BtT")
+            << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::BottomToTop
+            << Qt::Key_Left << Qt::Key_Right
+            << QPointF(0, -320)
+            << QPointF(0, -360)
+            << 6 << 8 << 10 << 4;
+
+    QTest::newRow("TopToBottom, LtR, TtB")
+            << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << Qt::Key_Down << Qt::Key_Up
+            << QPointF(0, 0)
+            << QPointF(80, 0)
+            << 12 << 2 << 6 << 8;
+
+    QTest::newRow("TopToBottom, RtL, TtB")
+            << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << Qt::Key_Down << Qt::Key_Up
+            << QPointF(-240, 0)
+            << QPointF(-320, 0)
+            << 2 << 12 << 6 << 8;
+
+    QTest::newRow("TopToBottom, LtR, BtT")
+            << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << Qt::Key_Up << Qt::Key_Down
+            << QPointF(0, -320)
+            << QPointF(80, -320)
+            << 12 << 2 << 8 << 6;
+
+    QTest::newRow("TopToBottom, RtL, BtT")
+            << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::BottomToTop
+            << Qt::Key_Up << Qt::Key_Down
+            << QPointF(-240, -320)
+            << QPointF(-320, -320)
+            << 2 << 12 << 8 << 6;
+}
+
 void tst_QQuickGridView::changeFlow()
 {
     QQuickView *canvas = createView();
@@ -1909,8 +2111,9 @@ void tst_QQuickGridView::changeFlow()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
+    ctxt->setContextProperty("testBottomToTop", QVariant(false));
 
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    canvas->setSource(testFileUrl("layouts.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -2056,15 +2259,15 @@ void tst_QQuickGridView::propertyChanges()
 
     QTRY_COMPARE(gridView->isWrapEnabled(), true);
     QTRY_COMPARE(gridView->cacheBuffer(), 10);
-    QTRY_COMPARE(gridView->flow(), QQuickGridView::LeftToRight);
+    QTRY_COMPARE(gridView->flow(), QQuickGridView::FlowLeftToRight);
 
     gridView->setWrapEnabled(false);
     gridView->setCacheBuffer(3);
-    gridView->setFlow(QQuickGridView::TopToBottom);
+    gridView->setFlow(QQuickGridView::FlowTopToBottom);
 
     QTRY_COMPARE(gridView->isWrapEnabled(), false);
     QTRY_COMPARE(gridView->cacheBuffer(), 3);
-    QTRY_COMPARE(gridView->flow(), QQuickGridView::TopToBottom);
+    QTRY_COMPARE(gridView->flow(), QQuickGridView::FlowTopToBottom);
 
     QTRY_COMPARE(keyNavigationWrapsSpy.count(),1);
     QTRY_COMPARE(cacheBufferSpy.count(),1);
@@ -2072,14 +2275,14 @@ void tst_QQuickGridView::propertyChanges()
 
     gridView->setWrapEnabled(false);
     gridView->setCacheBuffer(3);
-    gridView->setFlow(QQuickGridView::TopToBottom);
+    gridView->setFlow(QQuickGridView::FlowTopToBottom);
 
     QTRY_COMPARE(keyNavigationWrapsSpy.count(),1);
     QTRY_COMPARE(cacheBufferSpy.count(),1);
     QTRY_COMPARE(flowSpy.count(),1);
 
-    gridView->setFlow(QQuickGridView::LeftToRight);
-    QTRY_COMPARE(gridView->flow(), QQuickGridView::LeftToRight);
+    gridView->setFlow(QQuickGridView::FlowLeftToRight);
+    QTRY_COMPARE(gridView->flow(), QQuickGridView::FlowLeftToRight);
 
     gridView->setWrapEnabled(true);
     gridView->setCacheBuffer(5);
@@ -2103,11 +2306,11 @@ void tst_QQuickGridView::propertyChanges()
     QTRY_COMPARE(layoutSpy.count(),1);
     QTRY_COMPARE(flowSpy.count(),2);
 
-    gridView->setFlow(QQuickGridView::TopToBottom);
-    QTRY_COMPARE(gridView->flow(), QQuickGridView::TopToBottom);
+    gridView->setFlow(QQuickGridView::FlowTopToBottom);
+    QTRY_COMPARE(gridView->flow(), QQuickGridView::FlowTopToBottom);
     QTRY_COMPARE(flowSpy.count(),3);
 
-    gridView->setFlow(QQuickGridView::TopToBottom);
+    gridView->setFlow(QQuickGridView::FlowTopToBottom);
     QTRY_COMPARE(flowSpy.count(),3);
 
     delete canvas;
@@ -2208,8 +2411,9 @@ void tst_QQuickGridView::positionViewAtIndex()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
+    ctxt->setContextProperty("testBottomToTop", QVariant(false));
 
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    canvas->setSource(testFileUrl("layouts.qml"));
     canvas->show();
     qApp->processEvents();
 
@@ -2406,11 +2610,7 @@ void tst_QQuickGridView::snapping()
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
@@ -2512,8 +2712,9 @@ void tst_QQuickGridView::positionViewAtIndex_rightToLeft()
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
     ctxt->setContextProperty("testRightToLeft", QVariant(true));
+    ctxt->setContextProperty("testBottomToTop", QVariant(false));
 
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    canvas->setSource(testFileUrl("layouts.qml"));
     qApp->processEvents();
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
@@ -2841,8 +3042,8 @@ void tst_QQuickGridView::manualHighlight()
     QTRY_COMPARE(gridview->highlightItem()->y() - 5, gridview->currentItem()->y());
     QTRY_COMPARE(gridview->highlightItem()->x() - 5, gridview->currentItem()->x());
 
-    gridview->setFlow(QQuickGridView::TopToBottom);
-    QTRY_COMPARE(gridview->flow(), QQuickGridView::TopToBottom);
+    gridview->setFlow(QQuickGridView::FlowTopToBottom);
+    QTRY_COMPARE(gridview->flow(), QQuickGridView::FlowTopToBottom);
 
     gridview->setCurrentIndex(0);
     QTRY_COMPARE(gridview->currentIndex(), 0);
@@ -2858,10 +3059,10 @@ void tst_QQuickGridView::footer()
 {
     QFETCH(QQuickGridView::Flow, flow);
     QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(QPointF, initialFooterPos);
     QFETCH(QPointF, changedFooterPos);
     QFETCH(QPointF, initialContentPos);
-    QFETCH(QPointF, changedContentPos);
     QFETCH(QPointF, firstDelegatePos);
     QFETCH(QPointF, resizeContentPos);
 
@@ -2874,7 +3075,6 @@ void tst_QQuickGridView::footer()
 
     QQmlContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
-
     canvas->setSource(testFileUrl("footer.qml"));
     qApp->processEvents();
 
@@ -2882,13 +3082,14 @@ void tst_QQuickGridView::footer()
     QTRY_VERIFY(gridview != 0);
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
+    gridview->setVerticalLayoutDirection(verticalLayoutDirection);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
     QQuickText *footer = findItem<QQuickText>(contentItem, "footer");
     QVERIFY(footer);
-
     QVERIFY(footer == gridview->footerItem());
 
     QCOMPARE(footer->pos(), initialFooterPos);
@@ -2896,7 +3097,7 @@ void tst_QQuickGridView::footer()
     QCOMPARE(footer->height(), 30.);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
 
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentHeight(), (model.count()+2) / 3 * 60. + footer->height());
     else
         QCOMPARE(gridview->contentWidth(), (model.count()+3) / 5 * 80. + footer->width());
@@ -2905,10 +3106,13 @@ void tst_QQuickGridView::footer()
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
 
-    if (flow == QQuickGridView::LeftToRight) {
+    if (flow == QQuickGridView::FlowLeftToRight) {
         // shrink by one row
         model.removeItem(2);
-        QTRY_COMPARE(footer->y(), initialFooterPos.y() - gridview->cellHeight());
+        if (verticalLayoutDirection == QQuickItemView::TopToBottom)
+            QTRY_COMPARE(footer->y(), initialFooterPos.y() - gridview->cellHeight());
+        else
+            QTRY_COMPARE(footer->y(), initialFooterPos.y() + gridview->cellHeight());
     } else {
         // shrink by one column
         model.removeItem(2);
@@ -2924,10 +3128,12 @@ void tst_QQuickGridView::footer()
 
     QPointF posWhenNoItems(0, 0);
     if (layoutDirection == Qt::RightToLeft)
-        posWhenNoItems.setX(flow == QQuickGridView::LeftToRight ? gridview->width() - footer->width() : -footer->width());
+        posWhenNoItems.setX(flow == QQuickGridView::FlowLeftToRight ? gridview->width() - footer->width() : -footer->width());
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop)
+        posWhenNoItems.setY(-footer->height());
     QTRY_COMPARE(footer->pos(), posWhenNoItems);
 
-    // if header is present, it's at a negative pos, so the footer should not move
+    // if header is toggled, it shouldn't affect the footer position
     canvas->rootObject()->setProperty("showHeader", true);
     QVERIFY(findItem<QQuickItem>(contentItem, "header") != 0);
     QTRY_COMPARE(footer->pos(), posWhenNoItems);
@@ -2946,13 +3152,14 @@ void tst_QQuickGridView::footer()
     QVERIFY(!footer);
     footer = findItem<QQuickText>(contentItem, "footer2");
     QVERIFY(footer);
-
     QVERIFY(footer == gridview->footerItem());
 
     QCOMPARE(footer->pos(), changedFooterPos);
     QCOMPARE(footer->width(), 50.);
     QCOMPARE(footer->height(), 20.);
-    QTRY_COMPARE(QPointF(gridview->contentX(), gridview->contentY()), changedContentPos);
+
+    // changing the footer shouldn't change the content pos
+    QTRY_COMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
 
     item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
@@ -2970,10 +3177,10 @@ void tst_QQuickGridView::footer_data()
 {
     QTest::addColumn<QQuickGridView::Flow>("flow");
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
     QTest::addColumn<QPointF>("initialFooterPos");
     QTest::addColumn<QPointF>("changedFooterPos");
     QTest::addColumn<QPointF>("initialContentPos");
-    QTest::addColumn<QPointF>("changedContentPos");
     QTest::addColumn<QPointF>("firstDelegatePos");
     QTest::addColumn<QPointF>("resizeContentPos");
 
@@ -2984,46 +3191,84 @@ void tst_QQuickGridView::footer_data()
     // view height = 320
 
     // footer below items, bottom left
-    QTest::newRow("flow left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight
+    QTest::newRow("LeftToRight, LtR, TtB")
+        << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::TopToBottom
         << QPointF(0, 3 * 60)  // 180 = height of 3 rows (cell height is 60)
         << QPointF(0, 10 * 60)  // 30 items = 10 rows
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0)
-        << QPointF(0, 10 * 60 - 320 + 10);
+        << QPointF(0, (10 * 60) - 320 + 10);
 
     // footer below items, bottom right
-    QTest::newRow("flow left to right, layout right to left") << QQuickGridView::LeftToRight << Qt::RightToLeft
+    QTest::newRow("LeftToRight, RtL, TtB")
+        << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::TopToBottom
         << QPointF(240 - 100, 3 * 60)
         << QPointF((240 - 100) + 50, 10 * 60)     // 50 = width diff between old and new footers
         << QPointF(0, 0)
-        << QPointF(0, 0)
         << QPointF(240 - 80, 0)
-        << QPointF(0, 10 * 60 - 320 + 10);
+        << QPointF(0, (10 * 60) - 320 + 10);
 
-    // footer to right of items
-    QTest::newRow("flow top to bottom, layout left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight
+    // footer above items, top left
+    QTest::newRow("LeftToRight, LtR, BtT")
+        << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::BottomToTop
+        << QPointF(0, -(3 * 60) - 30)
+        << QPointF(0, -(10 * 60) - 20)
+        << QPointF(0, -320)
+        << QPointF(0, -60)
+        << QPointF(0, -(10 * 60) - 10);
+
+    // footer above items, top right
+    QTest::newRow("LeftToRight, RtL, BtT")
+        << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::BottomToTop
+        << QPointF(240 - 100, -(3 * 60) - 30)
+        << QPointF((240 - 100) + 50, -(10 * 60) - 20)
+        << QPointF(0, -320)
+        << QPointF(240 - 80, -60)
+        << QPointF(0, -(10 * 60) - 10);
+
+
+    // footer to right of items, bottom right
+    QTest::newRow("TopToBottom, LtR, TtB")
+        << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::TopToBottom
         << QPointF(2 * 80, 0)      // 2 columns, cell width 80
         << QPointF(6 * 80, 0)      // 30 items = 6 columns
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0)
-        << QPointF(6 * 80 - 240 + 40, 0);
+        << QPointF((6 * 80) - 240 + 40, 0);
 
-    // footer to left of items
-    QTest::newRow("flow top to bottom, layout right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft
+    // footer to left of items, bottom right
+    QTest::newRow("TopToBottom, RtL, TtB")
+        << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::TopToBottom
         << QPointF(-(2 * 80) - 100, 0)
         << QPointF(-(6 * 80) - 50, 0)     // 50 = new footer width
         << QPointF(-240, 0)
-        << QPointF(-240, 0)    // unchanged, footer change doesn't change content pos
         << QPointF(-80, 0)
         << QPointF(-(6 * 80) - 40, 0);
+
+    // footer to right of items, top right
+    QTest::newRow("TopToBottom, LtR, BtT")
+        << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::BottomToTop
+        << QPointF(2 * 80, -30)
+        << QPointF(6 * 80, -20)
+        << QPointF(0, -320)
+        << QPointF(0, -60)
+        << QPointF((6 * 80) - 240 + 40, -320);
+
+    // footer to left of items, top left
+    QTest::newRow("TopToBottom, RtL, BtT")
+        << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::BottomToTop
+        << QPointF(-(2 * 80) - 100, -30)
+        << QPointF(-(6 * 80) - 50, -20)
+        << QPointF(-240, -320)
+        << QPointF(-80, -60)
+        << QPointF(-(6 * 80) - 40, -320);
 }
 
 void tst_QQuickGridView::header()
 {
     QFETCH(QQuickGridView::Flow, flow);
     QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(QPointF, initialHeaderPos);
     QFETCH(QPointF, changedHeaderPos);
     QFETCH(QPointF, initialContentPos);
@@ -3047,6 +3292,7 @@ void tst_QQuickGridView::header()
     QTRY_VERIFY(gridview != 0);
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
+    gridview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -3054,7 +3300,6 @@ void tst_QQuickGridView::header()
 
     QQuickText *header = findItem<QQuickText>(contentItem, "header");
     QVERIFY(header);
-
     QVERIFY(header == gridview->headerItem());
 
     QCOMPARE(header->pos(), initialHeaderPos);
@@ -3062,7 +3307,7 @@ void tst_QQuickGridView::header()
     QCOMPARE(header->height(), 30.);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
 
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentHeight(), (model.count()+2) / 3 * 60. + header->height());
     else
         QCOMPARE(gridview->contentWidth(), (model.count()+3) / 5 * 80. + header->width());
@@ -3120,6 +3365,7 @@ void tst_QQuickGridView::header()
     QTRY_VERIFY(gridview != 0);
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
+    gridview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     gridview->setWidth(240);
@@ -3134,6 +3380,7 @@ void tst_QQuickGridView::header_data()
 {
     QTest::addColumn<QQuickGridView::Flow>("flow");
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
     QTest::addColumn<QPointF>("initialHeaderPos");
     QTest::addColumn<QPointF>("changedHeaderPos");
     QTest::addColumn<QPointF>("initialContentPos");
@@ -3147,7 +3394,8 @@ void tst_QQuickGridView::header_data()
     // view width = 240
 
     // header above items, top left
-    QTest::newRow("flow left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight
+    QTest::newRow("LeftToRight, LtR, TtB")
+        << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::TopToBottom
         << QPointF(0, -30)
         << QPointF(0, -20)
         << QPointF(0, -30)
@@ -3156,7 +3404,8 @@ void tst_QQuickGridView::header_data()
         << QPointF(0, -10);
 
     // header above items, top right
-    QTest::newRow("flow left to right, layout right to left") << QQuickGridView::LeftToRight << Qt::RightToLeft
+    QTest::newRow("LeftToRight, RtL, TtB")
+        << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::TopToBottom
         << QPointF(240 - 100, -30)
         << QPointF((240 - 100) + 50, -20)     // 50 = width diff between old and new headers
         << QPointF(0, -30)
@@ -3164,8 +3413,30 @@ void tst_QQuickGridView::header_data()
         << QPointF(160, 0)
         << QPointF(0, -10);
 
-    // header to left of items
-    QTest::newRow("flow top to bottom, layout left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight
+    // header below items, bottom left
+    QTest::newRow("LeftToRight, LtR, BtT")
+        << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::BottomToTop
+        << QPointF(0, 0)
+        << QPointF(0, 0)
+        << QPointF(0, -320 + 30)
+        << QPointF(0, -320 + 20)
+        << QPointF(0, -60)
+        << QPointF(0, -320 + 10);
+
+    // header above items, top right
+    QTest::newRow("LeftToRight, RtL, BtT")
+        << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::BottomToTop
+        << QPointF(240 - 100, 0)
+        << QPointF((240 - 100) + 50, 0)
+        << QPointF(0, -320 + 30)
+        << QPointF(0, -320 + 20)
+        << QPointF(160, -60)
+        << QPointF(0, -320 + 10);
+
+
+    // header to left of items, bottom left
+    QTest::newRow("TopToBottom, LtR, TtB")
+        << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::TopToBottom
         << QPointF(-100, 0)
         << QPointF(-50, 0)
         << QPointF(-100, 0)
@@ -3173,14 +3444,35 @@ void tst_QQuickGridView::header_data()
         << QPointF(0, 0)
         << QPointF(-40, 0);
 
-    // header to right of items
-    QTest::newRow("flow top to bottom, layout right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft
+    // header to right of items, bottom right
+    QTest::newRow("TopToBottom, RtL, TtB")
+        << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::TopToBottom
         << QPointF(0, 0)
         << QPointF(0, 0)
         << QPointF(-(240 - 100), 0)
         << QPointF(-(240 - 50), 0)
         << QPointF(-80, 0)
         << QPointF(-(240 - 40), 0);
+
+    // header to left of items, top left
+    QTest::newRow("TopToBottom, LtR, BtT")
+        << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::BottomToTop
+        << QPointF(-100, -30)
+        << QPointF(-50, -20)
+        << QPointF(-100, -320)
+        << QPointF(-50, -320)
+        << QPointF(0, -60)
+        << QPointF(-40, -320);
+
+    // header to right of items, top right
+    QTest::newRow("TopToBottom, RtL, BtT")
+        << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::BottomToTop
+        << QPointF(0, -30)
+        << QPointF(0, -20)
+        << QPointF(-(240 - 100), -320)
+        << QPointF(-(240 - 50), -320)
+        << QPointF(-80, -60)
+        << QPointF(-(240 - 40), -320);
 }
 
 class GVAccessor : public QQuickGridView
@@ -3194,138 +3486,144 @@ public:
 
 void tst_QQuickGridView::headerFooter()
 {
-    {
-        // Vertical
-        QQuickView *canvas = createView();
+    QFETCH(QQuickGridView::Flow, flow);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
+    QFETCH(QPointF, headerPos);
+    QFETCH(QPointF, footerPos);
+    QFETCH(QPointF, minPos);
+    QFETCH(QPointF, maxPos);
 
-        QmlListModel model;
-        QQmlContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+    QQuickView *canvas = getView();
 
-        canvas->setSource(testFileUrl("headerfooter.qml"));
-        qApp->processEvents();
+    QmlListModel model;
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    canvas->setSource(testFileUrl("headerfooter.qml"));
+    canvas->show();
+    qApp->processEvents();
 
-        QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
-        QTRY_VERIFY(gridview != 0);
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+    QTRY_VERIFY(gridview != 0);
+    gridview->setFlow(flow);
+    gridview->setLayoutDirection(layoutDirection);
+    gridview->setVerticalLayoutDirection(verticalLayoutDirection);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
-        QQuickItem *contentItem = gridview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
 
-        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->y(), -header->height());
+    QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+    QVERIFY(header);
+    QCOMPARE(header->pos(), headerPos);
 
-        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->y(), 0.);
+    QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+    QVERIFY(footer);
+    QCOMPARE(footer->pos(), footerPos);
 
-        QCOMPARE(static_cast<GVAccessor*>(gridview)->minY(), header->height());
-        QCOMPARE(static_cast<GVAccessor*>(gridview)->maxY(), header->height());
+    QCOMPARE(static_cast<GVAccessor*>(gridview)->minX(), minPos.x());
+    QCOMPARE(static_cast<GVAccessor*>(gridview)->minY(), minPos.y());
+    QCOMPARE(static_cast<GVAccessor*>(gridview)->maxX(), maxPos.x());
+    QCOMPARE(static_cast<GVAccessor*>(gridview)->maxY(), maxPos.y());
 
-        delete canvas;
-    }
-    {
-        // Horizontal
-        QQuickView *canvas = createView();
+    releaseView(canvas);
+}
 
-        QmlListModel model;
-        QQmlContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+void tst_QQuickGridView::headerFooter_data()
+{
+    QTest::addColumn<QQuickGridView::Flow>("flow");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
+    QTest::addColumn<QPointF>("headerPos");
+    QTest::addColumn<QPointF>("footerPos");
+    QTest::addColumn<QPointF>("minPos");
+    QTest::addColumn<QPointF>("maxPos");
 
-        canvas->setSource(testFileUrl("headerfooter.qml"));
-        canvas->rootObject()->setProperty("horizontal", true);
-        qApp->processEvents();
+    // header is 240x20 (or 20x320 in TopToBottom)
+    // footer is 240x30 (or 30x320 in TopToBottom)
 
-        QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
-        QTRY_VERIFY(gridview != 0);
+    QTest::newRow("LeftToRight, LtR, TtB")
+            << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << QPointF(0, -20) << QPointF(0, 0)
+            << QPointF(0, 20) << QPointF(240, 20);
 
-        QQuickItem *contentItem = gridview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+    QTest::newRow("LeftToRight, RtL, TtB")
+            << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << QPointF(0, -20) << QPointF(0, 0)
+            << QPointF(0, 20) << QPointF(240, 20);
 
-        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->x(), -header->width());
+    QTest::newRow("LeftToRight, LtR, BtT")
+            << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << QPointF(0, 0) << QPointF(0, -30)
+            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20);  // content flow is reversed
 
-        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->x(), 0.);
+    QTest::newRow("LeftToRight, RtL, BtT")
+            << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::BottomToTop
+            << QPointF(0, 0) << QPointF(0, -30)
+            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20);  // content flow is reversed
 
-        QCOMPARE(static_cast<GVAccessor*>(gridview)->minX(), header->width());
-        QCOMPARE(static_cast<GVAccessor*>(gridview)->maxX(), header->width());
 
-        delete canvas;
-    }
-    {
-        // Horizontal RTL
-        QQuickView *canvas = createView();
+    QTest::newRow("TopToBottom, LtR, TtB")
+            << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << QPointF(-20, 0) << QPointF(0, 0)
+            << QPointF(20, 0) << QPointF(20, 320);
 
-        QmlListModel model;
-        QQmlContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+    QTest::newRow("TopToBottom, RtL, TtB")
+            << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << QPointF(0, 0) << QPointF(-30, 0)
+            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320);  // content flow is reversed
 
-        canvas->setSource(testFileUrl("headerfooter.qml"));
-        canvas->rootObject()->setProperty("horizontal", true);
-        canvas->rootObject()->setProperty("rtl", true);
-        qApp->processEvents();
+    QTest::newRow("TopToBottom, LtR, BtT")
+            << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << QPointF(-20, -320) << QPointF(0, -320)
+            << QPointF(20, 0) << QPointF(20, 320);
 
-        QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
-        QTRY_VERIFY(gridview != 0);
+    QTest::newRow("TopToBottom, RtL, BtT")
+            << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::BottomToTop
+            << QPointF(0, -320) << QPointF(-30, -320)
+            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320);  // content flow is reversed
+}
 
-        QQuickItem *contentItem = gridview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+void tst_QQuickGridView::resetModel_headerFooter()
+{
+    // Resetting a model shouldn't crash in views with header/footer
 
-        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->x(), 0.);
+    QQuickView *canvas = createView();
 
-        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->x(), -footer->width());
+    QaimModel model;
+    for (int i = 0; i < 6; i++)
+        model.addItem("Item" + QString::number(i), "");
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
 
-        QCOMPARE(static_cast<GVAccessor*>(gridview)->minX(), 240. - header->width());
-        QCOMPARE(static_cast<GVAccessor*>(gridview)->maxX(), 240. - header->width());
+    canvas->setSource(testFileUrl("headerfooter.qml"));
+    qApp->processEvents();
 
-        delete canvas;
-    }
-    {
-        // Reset model
-        QQuickView *canvas = createView();
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+    QTRY_VERIFY(gridview != 0);
 
-        QaimModel model;
-        for (int i = 0; i < 6; i++)
-            model.addItem("Item" + QString::number(i), "");
-        QQmlContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
 
-        canvas->setSource(testFileUrl("headerfooter.qml"));
-        qApp->processEvents();
+    QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+    QVERIFY(header);
+    QCOMPARE(header->y(), -header->height());
 
-        QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
-        QTRY_VERIFY(gridview != 0);
+    QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+    QVERIFY(footer);
+    QCOMPARE(footer->y(), 80.*2);
 
-        QQuickItem *contentItem = gridview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+    model.reset();
 
-        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->y(), -header->height());
+    header = findItem<QQuickItem>(contentItem, "header");
+    QVERIFY(header);
+    QCOMPARE(header->y(), -header->height());
 
-        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->y(), 80.*2);
+    footer = findItem<QQuickItem>(contentItem, "footer");
+    QVERIFY(footer);
+    QCOMPARE(footer->y(), 80.*2);
 
-        model.reset();
-
-        header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->y(), -header->height());
-
-        footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->y(), 80.*2);
-
-        delete canvas;
-    }
+    delete canvas;
 }
 
 void tst_QQuickGridView::resizeViewAndRepaint()
@@ -3398,6 +3696,147 @@ void tst_QQuickGridView::resizeViewAndRepaint()
 
     delete canvas;
 }
+
+void tst_QQuickGridView::resizeGrid()
+{
+    QFETCH(QQuickGridView::Flow, flow);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
+    QFETCH(QPointF, initialContentPos);
+    QFETCH(QPointF, firstItemPos);
+
+    QaimModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQuickView *canvas = getView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
+    ctxt->setContextProperty("testRightToLeft", layoutDirection == Qt::RightToLeft);
+    ctxt->setContextProperty("testBottomToTop", verticalLayoutDirection == QQuickGridView::BottomToTop);
+    canvas->setSource(testFileUrl("resizegrid.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // set the width to slightly larger than 3 items across, to test
+    // items are aligned correctly in right-to-left
+    canvas->rootObject()->setWidth(260);
+    canvas->rootObject()->setHeight(320);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    QCOMPARE(gridview->contentX(), initialContentPos.x());
+    QCOMPARE(gridview->contentY(), initialContentPos.y());
+
+    QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
+    QVERIFY(item0);
+    QCOMPARE(item0->pos(), firstItemPos);
+
+    // Confirm items positioned correctly and indexes correct
+    QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    QVERIFY(items.count() >= 18 && items.count() <= 21);
+    for (int i = 0; i < model.count() && i < items.count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->pos(), expectedItemPos(gridview, i, 0));
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QCOMPARE(name->text(), model.name(i));
+    }
+
+    // change from 3x5 grid to 4x7
+    canvas->rootObject()->setWidth(canvas->rootObject()->width() + 80);
+    canvas->rootObject()->setHeight(canvas->rootObject()->height() + 60*2);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    // other than in LeftToRight+RightToLeft layout, the first item should not move
+    // if view is resized
+    QCOMPARE(findItem<QQuickItem>(contentItem, "wrapper", 0), item0);
+    if (flow == QQuickGridView::FlowLeftToRight && layoutDirection == Qt::RightToLeft)
+        firstItemPos.rx() += 80;
+    QCOMPARE(item0->pos(), firstItemPos);
+
+    QPointF newContentPos = initialContentPos;
+    if (flow == QQuickGridView::FlowTopToBottom && layoutDirection == Qt::RightToLeft)
+        newContentPos.rx() -= 80.0;
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop)
+        newContentPos.ry() -= 60.0 * 2;
+    QCOMPARE(gridview->contentX(), newContentPos.x());
+    QCOMPARE(gridview->contentY(), newContentPos.y());
+
+    // Confirm items positioned correctly and indexes correct
+    items = findItems<QQuickItem>(contentItem, "wrapper");
+    QVERIFY(items.count() >= 28);
+    for (int i = 0; i < model.count() && i < items.count(); ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QCOMPARE(item->pos(), expectedItemPos(gridview, i, 0));
+        QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QCOMPARE(name->text(), model.name(i));
+    }
+
+    releaseView(canvas);
+}
+
+void tst_QQuickGridView::resizeGrid_data()
+{
+    QTest::addColumn<QQuickGridView::Flow>("flow");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
+    QTest::addColumn<QPointF>("initialContentPos");
+    QTest::addColumn<QPointF>("firstItemPos");
+
+    // Initial view width is 260, so in LeftToRight + right-to-left mode the
+    // content x should be -20
+
+    QTest::newRow("LeftToRight, LtR, TtB")
+            << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << QPointF(0, 0)
+            << QPointF(0, 0);
+
+    QTest::newRow("LeftToRight, RtL, TtB")
+            << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << QPointF(-20.0, 0)
+            << QPointF(80.0 * 2, 0);
+
+    QTest::newRow("LeftToRight, LtR, BtT")
+            << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << QPointF(0, -320)
+            << QPointF(0, -60.0);
+
+    QTest::newRow("LeftToRight, RtL, BtT")
+            << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::BottomToTop
+            << QPointF(-20.0, -320)
+            << QPointF(80.0 * 2, -60.0);
+
+
+    QTest::newRow("TopToBottom, LtR, TtB")
+            << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << QPointF(0, 0)
+            << QPointF(0, 0);
+
+    QTest::newRow("TopToBottom, RtL, TtB")
+            << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << QPointF(-260, 0)
+            << QPointF(-80.0, 0);
+
+    QTest::newRow("TopToBottom, LtR, BtT")
+            << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << QPointF(0, -320)
+            << QPointF(0, -60.0);
+
+    QTest::newRow("TopToBottom, RtL, BtT")
+            << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::BottomToTop
+            << QPointF(-260, -320)
+            << QPointF(-80.0, -60.0);
+}
+
 
 void tst_QQuickGridView::changeColumnCount()
 {
@@ -3487,11 +3926,7 @@ void tst_QQuickGridView::indexAt_itemAt()
     model.addItem("Ben", "04321");
     model.addItem("Jim", "0780");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
@@ -3805,22 +4240,22 @@ void tst_QQuickGridView::snapToRow_data()
     QTest::addColumn<qreal>("endExtent");
     QTest::addColumn<qreal>("startExtent");
 
-    QTest::newRow("vertical, left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("vertical, left to right") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 800.0 << 0.0;
 
-    QTest::newRow("horizontal, left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("horizontal, left to right") << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
         << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 800.0 << 0.0;
 
-    QTest::newRow("horizontal, right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("horizontal, right to left") << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -800.0 - 240.0 << -240.0;
 
-    QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 940.0 << -20.0;
 
-    QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 940.0 << -20.0;
 
-    QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -800.0 - 240.0 - 140.0 << -220.0;
 }
 
@@ -3855,7 +4290,7 @@ void tst_QQuickGridView::snapToRow()
     // confirm that a flick hits an item boundary
     flick(canvas, flickStart, flickEnd, 180);
     QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(qreal(fmod(gridview->contentY(),80.0)), snapAlignment);
     else
         QCOMPARE(qreal(fmod(gridview->contentX(),80.0)), snapAlignment);
@@ -3864,11 +4299,11 @@ void tst_QQuickGridView::snapToRow()
     do {
         flick(canvas, flickStart, flickEnd, 180);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::LeftToRight
+    } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYEnd()
            : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
 
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), endExtent);
     else
         QCOMPARE(gridview->contentX(), endExtent);
@@ -3877,11 +4312,11 @@ void tst_QQuickGridView::snapToRow()
     do {
         flick(canvas, flickEnd, flickStart, 180);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::LeftToRight
+    } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYBeginning()
            : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
 
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), startExtent);
     else
         QCOMPARE(gridview->contentX(), startExtent);
@@ -3900,22 +4335,22 @@ void tst_QQuickGridView::snapOneRow_data()
     QTest::addColumn<qreal>("endExtent");
     QTest::addColumn<qreal>("startExtent");
 
-    QTest::newRow("vertical, left to right") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("vertical, left to right") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
 
-    QTest::newRow("horizontal, left to right") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("horizontal, left to right") << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
         << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
 
-    QTest::newRow("horizontal, right to left") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("horizontal, right to left") << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -240.0 - 240.0 << -240.0;
 
-    QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::LeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(20, 200) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
 
-    QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::TopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(200, 20) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
 
-    QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::TopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(20, 20) << QPoint(200, 20) << -340.0 << -240.0 - 240.0 - 100.0 << -220.0;
 }
 
@@ -3952,7 +4387,7 @@ void tst_QQuickGridView::snapOneRow()
     // confirm that a flick hits next row boundary
     flick(canvas, flickStart, flickEnd, 180);
     QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), snapAlignment);
     else
         QCOMPARE(gridview->contentX(), snapAlignment);
@@ -3966,7 +4401,7 @@ void tst_QQuickGridView::snapOneRow()
     do {
         flick(canvas, flickStart, flickEnd, 180);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::LeftToRight
+    } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYEnd()
            : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
 
@@ -3975,7 +4410,7 @@ void tst_QQuickGridView::snapOneRow()
         QCOMPARE(currentIndexSpy.count(), 3);
     }
 
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), endExtent);
     else
         QCOMPARE(gridview->contentX(), endExtent);
@@ -3984,11 +4419,11 @@ void tst_QQuickGridView::snapOneRow()
     do {
         flick(canvas, flickEnd, flickStart, 180);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::LeftToRight
+    } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYBeginning()
            : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
 
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), startExtent);
     else
         QCOMPARE(gridview->contentX(), startExtent);
@@ -5312,11 +5747,7 @@ void tst_QQuickGridView::cacheBuffer()
     for (int i = 0; i < 90; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testRightToLeft", QVariant(false));
-    ctxt->setContextProperty("testTopToBottom", QVariant(false));
-
+    canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     canvas->show();
     qApp->processEvents();
@@ -5619,6 +6050,220 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     delete canvas;
 }
+
+
+void tst_QQuickGridView::inserted_leftToRight_RtL_TtB()
+{
+    inserted_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::RightToLeft);
+}
+
+void tst_QQuickGridView::inserted_leftToRight_RtL_TtB_data()
+{
+    inserted_defaultLayout_data();
+}
+
+void tst_QQuickGridView::inserted_topToBottom_LtR_TtB()
+{
+    inserted_defaultLayout(QQuickGridView::FlowTopToBottom);
+}
+
+void tst_QQuickGridView::inserted_topToBottom_LtR_TtB_data()
+{
+    inserted_defaultLayout_data();
+}
+
+void tst_QQuickGridView::inserted_topToBottom_RtL_TtB()
+{
+    inserted_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::RightToLeft);
+}
+
+void tst_QQuickGridView::inserted_topToBottom_RtL_TtB_data()
+{
+    inserted_defaultLayout_data();
+}
+
+void tst_QQuickGridView::inserted_leftToRight_LtR_BtT()
+{
+    inserted_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::LeftToRight, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::inserted_leftToRight_LtR_BtT_data()
+{
+    inserted_defaultLayout_data();
+}
+
+void tst_QQuickGridView::inserted_leftToRight_RtL_BtT()
+{
+    inserted_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::RightToLeft, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::inserted_leftToRight_RtL_BtT_data()
+{
+    inserted_defaultLayout_data();
+}
+
+void tst_QQuickGridView::inserted_topToBottom_LtR_BtT()
+{
+    inserted_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::LeftToRight, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::inserted_topToBottom_LtR_BtT_data()
+{
+    inserted_defaultLayout_data();
+}
+
+void tst_QQuickGridView::inserted_topToBottom_RtL_BtT()
+{
+    inserted_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::RightToLeft, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::inserted_topToBottom_RtL_BtT_data()
+{
+    inserted_defaultLayout_data();
+}
+
+
+void tst_QQuickGridView::removed_leftToRight_RtL_TtB()
+{
+    removed_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::RightToLeft);
+}
+
+void tst_QQuickGridView::removed_leftToRight_RtL_TtB_data()
+{
+    removed_defaultLayout_data();
+}
+
+void tst_QQuickGridView::removed_topToBottom_LtR_TtB()
+{
+    removed_defaultLayout(QQuickGridView::FlowTopToBottom);
+}
+
+void tst_QQuickGridView::removed_topToBottom_LtR_TtB_data()
+{
+    removed_defaultLayout_data();
+}
+
+void tst_QQuickGridView::removed_topToBottom_RtL_TtB()
+{
+    removed_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::RightToLeft);
+}
+
+void tst_QQuickGridView::removed_topToBottom_RtL_TtB_data()
+{
+    removed_defaultLayout_data();
+}
+
+void tst_QQuickGridView::removed_leftToRight_LtR_BtT()
+{
+    removed_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::LeftToRight, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::removed_leftToRight_LtR_BtT_data()
+{
+    removed_defaultLayout_data();
+}
+
+void tst_QQuickGridView::removed_leftToRight_RtL_BtT()
+{
+    removed_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::RightToLeft, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::removed_leftToRight_RtL_BtT_data()
+{
+    removed_defaultLayout_data();
+}
+
+void tst_QQuickGridView::removed_topToBottom_LtR_BtT()
+{
+    removed_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::LeftToRight, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::removed_topToBottom_LtR_BtT_data()
+{
+    removed_defaultLayout_data();
+}
+
+void tst_QQuickGridView::removed_topToBottom_RtL_BtT()
+{
+    removed_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::RightToLeft, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::removed_topToBottom_RtL_BtT_data()
+{
+    removed_defaultLayout_data();
+}
+
+
+void tst_QQuickGridView::moved_leftToRight_RtL_TtB()
+{
+    moved_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::RightToLeft);
+}
+
+void tst_QQuickGridView::moved_leftToRight_RtL_TtB_data()
+{
+    moved_defaultLayout_data();
+}
+
+void tst_QQuickGridView::moved_topToBottom_LtR_TtB()
+{
+    moved_defaultLayout(QQuickGridView::FlowTopToBottom);
+}
+
+void tst_QQuickGridView::moved_topToBottom_LtR_TtB_data()
+{
+    moved_defaultLayout_data();
+}
+
+void tst_QQuickGridView::moved_topToBottom_RtL_TtB()
+{
+    moved_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::RightToLeft);
+}
+
+void tst_QQuickGridView::moved_topToBottom_RtL_TtB_data()
+{
+    moved_defaultLayout_data();
+}
+
+void tst_QQuickGridView::moved_leftToRight_LtR_BtT()
+{
+    moved_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::LeftToRight, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::moved_leftToRight_LtR_BtT_data()
+{
+    moved_defaultLayout_data();
+}
+
+void tst_QQuickGridView::moved_leftToRight_RtL_BtT()
+{
+    moved_defaultLayout(QQuickGridView::FlowLeftToRight, Qt::RightToLeft, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::moved_leftToRight_RtL_BtT_data()
+{
+    moved_defaultLayout_data();
+}
+
+void tst_QQuickGridView::moved_topToBottom_LtR_BtT()
+{
+    moved_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::LeftToRight, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::moved_topToBottom_LtR_BtT_data()
+{
+    moved_defaultLayout_data();
+}
+
+void tst_QQuickGridView::moved_topToBottom_RtL_BtT()
+{
+    moved_defaultLayout(QQuickGridView::FlowTopToBottom, Qt::RightToLeft, QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickGridView::moved_topToBottom_RtL_BtT_data()
+{
+    moved_defaultLayout_data();
+}
+
 
 QList<int> tst_QQuickGridView::toIntList(const QVariantList &list)
 {

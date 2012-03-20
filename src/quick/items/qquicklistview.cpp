@@ -73,6 +73,7 @@ public:
     virtual Qt::Orientation layoutOrientation() const;
     virtual bool isContentFlowReversed() const;
     bool isRightToLeft() const;
+    bool isBottomToTop() const;
 
     virtual qreal positionAt(int index) const;
     virtual qreal endPositionAt(int index) const;
@@ -265,7 +266,7 @@ public:
     qreal position() const {
         if (section()) {
             if (view->orientation() == QQuickListView::Vertical)
-                return section()->y();
+                return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop ? -section()->height()-section()->y() : section()->y());
             else
                 return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -section()->width()-section()->x() : section()->x());
         } else {
@@ -274,7 +275,7 @@ public:
     }
     qreal itemPosition() const {
         if (view->orientation() == QQuickListView::Vertical)
-            return itemY();
+            return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop ? -item->height()-itemY() : itemY());
         else
             return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -item->width()-itemX() : itemX());
     }
@@ -294,7 +295,9 @@ public:
     }
     qreal endPosition() const {
         if (view->orientation() == QQuickListView::Vertical) {
-            return itemY() + item->height();
+            return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop
+                    ? -itemY()
+                    : itemY() + item->height());
         } else {
             return (view->effectiveLayoutDirection() == Qt::RightToLeft
                     ? -itemX()
@@ -305,7 +308,10 @@ public:
         // position the section immediately even if there is a transition
         if (section()) {
             if (view->orientation() == QQuickListView::Vertical) {
-                section()->setY(pos);
+                if (view->verticalLayoutDirection() == QQuickItemView::BottomToTop)
+                    section()->setY(-section()->height()-pos);
+                else
+                    section()->setY(pos);
             } else {
                 if (view->effectiveLayoutDirection() == Qt::RightToLeft)
                     section()->setX(-section()->width()-pos);
@@ -331,9 +337,15 @@ public:
 private:
     QPointF pointForPosition(qreal pos) const {
         if (view->orientation() == QQuickListView::Vertical) {
-            if (section())
-                pos += section()->height();
-            return QPointF(itemX(), pos);
+            if (view->verticalLayoutDirection() == QQuickItemView::BottomToTop) {
+                if (section())
+                    pos += section()->height();
+                return QPointF(itemX(), -item->height() - pos);
+            } else {
+                if (section())
+                    pos += section()->height();
+                return QPointF(itemX(), pos);
+            }
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
                 if (section())
@@ -352,7 +364,7 @@ private:
 
 bool QQuickListViewPrivate::isContentFlowReversed() const
 {
-    return isRightToLeft();
+    return isRightToLeft() || isBottomToTop();
 }
 
 Qt::Orientation QQuickListViewPrivate::layoutOrientation() const
@@ -364,6 +376,11 @@ bool QQuickListViewPrivate::isRightToLeft() const
 {
     Q_Q(const QQuickListView);
     return orient == QQuickListView::Horizontal && q->effectiveLayoutDirection() == Qt::RightToLeft;
+}
+
+bool QQuickListViewPrivate::isBottomToTop() const
+{
+    return orient == QQuickListView::Vertical && verticalLayoutDirection == QQuickItemView::BottomToTop;
 }
 
 // Returns the item before modelIndex, if created.
@@ -391,7 +408,10 @@ void QQuickListViewPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickListView);
     if (orient == QQuickListView::Vertical) {
-        q->QQuickFlickable::setContentY(pos);
+        if (isBottomToTop())
+            q->QQuickFlickable::setContentY(-pos-size());
+        else
+            q->QQuickFlickable::setContentY(pos);
     } else {
         if (isRightToLeft())
             q->QQuickFlickable::setContentX(-pos-size());
@@ -797,8 +817,12 @@ void QQuickListViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
     Q_Q(QQuickListView);
     qreal pos = position();
     if (orient == QQuickListView::Vertical) {
-        if (item->y() + item->height() > pos && item->y() < pos + q->height())
-            item->setY(positionAt(index));
+        if (item->y() + item->height() > pos && item->y() < pos + q->height()) {
+            if (isBottomToTop())
+                item->setY(-positionAt(index)-item->height());
+            else
+                item->setY(positionAt(index));
+        }
     } else {
         if (item->x() + item->width() > pos && item->x() < pos + q->width()) {
             if (isRightToLeft())
@@ -880,7 +904,7 @@ void QQuickListViewPrivate::updateHighlight()
     if (currentItem && autoHighlight && highlight && (!strictHighlight || !pressed)) {
         // auto-update highlight
         FxListItemSG *listItem = static_cast<FxListItemSG*>(currentItem);
-        highlightPosAnimator->to = isRightToLeft()
+        highlightPosAnimator->to = isContentFlowReversed()
                 ? -listItem->itemPosition()-listItem->itemSize()
                 : listItem->itemPosition();
         highlightSizeAnimator->to = listItem->itemSize();
@@ -987,8 +1011,8 @@ void QQuickListViewPrivate::updateStickySections()
             || (!sectionCriteria->labelPositioning() && !currentSectionItem && !nextSectionItem))
         return;
 
-    bool isRtl = isRightToLeft();
-    qreal viewPos = isRightToLeft() ? -position()-size() : position();
+    bool isFlowReversed = isContentFlowReversed();
+    qreal viewPos = isFlowReversed ? -position()-size() : position();
     QQuickItem *sectionItem = 0;
     QQuickItem *lastSectionItem = 0;
     int index = 0;
@@ -1000,14 +1024,14 @@ void QQuickListViewPrivate::updateStickySections()
             qreal sectionSize = orient == QQuickListView::Vertical ? section->height() : section->width();
             bool visTop = true;
             if (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart)
-                visTop = isRtl ? -sectionPos-sectionSize >= viewPos : sectionPos >= viewPos;
+                visTop = isFlowReversed ? -sectionPos-sectionSize >= viewPos : sectionPos >= viewPos;
             bool visBot = true;
             if (sectionCriteria->labelPositioning() & QQuickViewSection::NextLabelAtEnd)
-                visBot = isRtl ? -sectionPos <= viewPos + size() : sectionPos + sectionSize < viewPos + size();
+                visBot = isFlowReversed ? -sectionPos <= viewPos + size() : sectionPos + sectionSize < viewPos + size();
             section->setVisible(visBot && visTop);
             if (visTop && !sectionItem)
                 sectionItem = section;
-            if (isRtl) {
+            if (isFlowReversed) {
                if (-sectionPos <= viewPos + size())
                     lastSectionItem = section;
             } else {
@@ -1031,17 +1055,18 @@ void QQuickListViewPrivate::updateStickySections()
             return;
 
         qreal sectionSize = orient == QQuickListView::Vertical ? currentSectionItem->height() : currentSectionItem->width();
-        bool atBeginning = orient == QQuickListView::Vertical ? vData.atBeginning : (isRightToLeft() ? hData.atEnd : hData.atBeginning);
+        bool atBeginning = orient == QQuickListView::Vertical ? (isBottomToTop() ? vData.atEnd : vData.atBeginning) : (isRightToLeft() ? hData.atEnd : hData.atBeginning);
+
         currentSectionItem->setVisible(!atBeginning && (!header || header->endPosition() < viewPos));
-        qreal pos = isRtl ? position() + size() - sectionSize : viewPos;
+        qreal pos = isFlowReversed ? position() + size() - sectionSize : viewPos;
         if (sectionItem) {
             qreal sectionPos = orient == QQuickListView::Vertical ? sectionItem->y() : sectionItem->x();
-            pos = isRtl ? qMax(pos, sectionPos + sectionSize) : qMin(pos, sectionPos - sectionSize);
+            pos = isFlowReversed ? qMax(pos, sectionPos + sectionSize) : qMin(pos, sectionPos - sectionSize);
         }
         if (header)
-            pos = isRtl ? qMin(header->endPosition(), pos) : qMax(header->endPosition(), pos);
+            pos = isFlowReversed ? qMin(header->endPosition(), pos) : qMax(header->endPosition(), pos);
         if (footer)
-            pos = isRtl ? qMax(-footer->position(), pos) : qMin(footer->position() - sectionSize, pos);
+            pos = isFlowReversed ? qMax(-footer->position(), pos) : qMin(footer->position() - sectionSize, pos);
         if (orient == QQuickListView::Vertical)
             currentSectionItem->setY(pos);
         else
@@ -1065,13 +1090,13 @@ void QQuickListViewPrivate::updateStickySections()
 
         qreal sectionSize = orient == QQuickListView::Vertical ? nextSectionItem->height() : nextSectionItem->width();
         nextSectionItem->setVisible(!nextSection.isEmpty());
-        qreal pos = isRtl ? position() : viewPos + size() - sectionSize;
+        qreal pos = isFlowReversed ? position() : viewPos + size() - sectionSize;
         if (lastSectionItem) {
             qreal sectionPos = orient == QQuickListView::Vertical ? lastSectionItem->y() : lastSectionItem->x();
-            pos = isRtl ? qMin(pos, sectionPos - sectionSize) : qMax(pos, sectionPos + sectionSize);
+            pos = isFlowReversed ? qMin(pos, sectionPos - sectionSize) : qMax(pos, sectionPos + sectionSize);
         }
         if (header)
-            pos = isRtl ? qMin(header->endPosition() - sectionSize, pos) : qMax(header->endPosition(), pos);
+            pos = isFlowReversed ? qMin(header->endPosition() - sectionSize, pos) : qMax(header->endPosition(), pos);
         if (orient == QQuickListView::Vertical)
             nextSectionItem->setY(pos);
         else
@@ -1162,7 +1187,7 @@ void QQuickListViewPrivate::updateCurrentSection()
         // section when that changes.  Clearing lastVisibleSection will also
         // force searching.
         QString lastSection = currentSection;
-        qreal endPos = isRightToLeft() ? -position() : position() + size();
+        qreal endPos = isContentFlowReversed() ? -position() : position() + size();
         if (nextSectionItem && !inlineSections)
             endPos -= orient == QQuickListView::Vertical ? nextSectionItem->height() : nextSectionItem->width();
         while (index < visibleItems.count() && static_cast<FxListItemSG*>(visibleItems.at(index))->itemPosition() < endPos) {
@@ -1341,10 +1366,10 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
     fixupMode = moveReason == Mouse ? fixupMode : Immediate;
     bool strictHighlightRange = haveHighlightRange && highlightRange == QQuickListView::StrictlyEnforceRange;
 
-    qreal viewPos = isRightToLeft() ? -position()-size() : position();
+    qreal viewPos = isContentFlowReversed() ? -position()-size() : position();
 
     if (snapMode != QQuickListView::NoSnap && moveReason != QQuickListViewPrivate::SetIndex) {
-        qreal tempPosition = isRightToLeft() ? -position()-size() : position();
+        qreal tempPosition = isContentFlowReversed() ? -position()-size() : position();
         if (snapMode == QQuickListView::SnapOneItem && moveReason == Mouse) {
             // if we've been dragged < averageSize/2 then bias towards the next item
             qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
@@ -1353,7 +1378,7 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
                 bias = averageSize/2;
             else if (data.velocity < 0 && dist < -QML_FLICK_SNAPONETHRESHOLD && dist > -averageSize/2)
                 bias = -averageSize/2;
-            if (isRightToLeft())
+            if (isContentFlowReversed())
                 bias = -bias;
             tempPosition -= bias;
         }
@@ -1373,15 +1398,15 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
         bool isInBounds = -position() > maxExtent && -position() <= minExtent;
         if (topItem && (isInBounds || strictHighlightRange)) {
             if (topItem->index == 0 && header && tempPosition+highlightRangeStart < header->position()+header->size()/2 && !strictHighlightRange) {
-                pos = isRightToLeft() ? - header->position() + highlightRangeStart - size() : header->position() - highlightRangeStart;
+                pos = isContentFlowReversed() ? - header->position() + highlightRangeStart - size() : header->position() - highlightRangeStart;
             } else {
-                if (isRightToLeft())
+                if (isContentFlowReversed())
                     pos = qMax(qMin(-topItem->position() + highlightRangeStart - size(), -maxExtent), -minExtent);
                 else
                     pos = qMax(qMin(topItem->position() - highlightRangeStart, -maxExtent), -minExtent);
             }
         } else if (bottomItem && isInBounds) {
-            if (isRightToLeft())
+            if (isContentFlowReversed())
                 pos = qMax(qMin(-bottomItem->position() + highlightRangeEnd - size(), -maxExtent), -minExtent);
             else
                 pos = qMax(qMin(bottomItem->position() - highlightRangeEnd, -maxExtent), -minExtent);
@@ -1408,7 +1433,7 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
             viewPos = pos + static_cast<FxListItemSG*>(currentItem)->itemSize() - highlightRangeEnd;
         if (viewPos > pos - highlightRangeStart)
             viewPos = pos - highlightRangeStart;
-        if (isRightToLeft())
+        if (isContentFlowReversed())
             viewPos = -viewPos-size();
 
         timeline.reset(data.move);
@@ -1441,7 +1466,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         return;
     }
     qreal maxDistance = 0;
-    qreal dataValue = isRightToLeft() ? -data.move.value()+size() : data.move.value();
+    qreal dataValue = isContentFlowReversed() ? -data.move.value()+size() : data.move.value();
 
     // -ve velocity means list is moving up/left
     if (velocity > 0) {
@@ -1450,7 +1475,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
                 // if we've been dragged < averageSize/2 then bias towards the next item
                 qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
                 qreal bias = dist < averageSize/2 ? averageSize/2 : 0;
-                if (isRightToLeft())
+                if (isContentFlowReversed())
                     bias = -bias;
                 data.flickTarget = -snapPosAt(-(dataValue - highlightRangeStart) - bias) + highlightRangeStart;
                 maxDistance = qAbs(data.flickTarget - data.move.value());
@@ -1467,7 +1492,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
                 // if we've been dragged < averageSize/2 then bias towards the next item
                 qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
                 qreal bias = -dist < averageSize/2 ? averageSize/2 : 0;
-                if (isRightToLeft())
+                if (isContentFlowReversed())
                     bias = -bias;
                 data.flickTarget = -snapPosAt(-(dataValue - highlightRangeStart) + bias) + highlightRangeStart;
                 maxDistance = qAbs(data.flickTarget - data.move.value());
@@ -1505,10 +1530,10 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
                 dist = -dist;
             if ((maxDistance > 0.0 && v2 / (2.0f * maxDistance) < accel) || snapMode == QQuickListView::SnapOneItem) {
                 if (snapMode != QQuickListView::SnapOneItem) {
-                    qreal distTemp = isRightToLeft() ? -dist : dist;
+                    qreal distTemp = isContentFlowReversed() ? -dist : dist;
                     data.flickTarget = -snapPosAt(-(dataValue - highlightRangeStart) + distTemp) + highlightRangeStart;
                 }
-                data.flickTarget = isRightToLeft() ? -data.flickTarget+size() : data.flickTarget;
+                data.flickTarget = isContentFlowReversed() ? -data.flickTarget+size() : data.flickTarget;
                 if (overShoot) {
                     if (data.flickTarget >= minExtent) {
                         overshootDist = overShootDistance(vSize);
@@ -1561,9 +1586,9 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             // reevaluate the target boundary.
             qreal newtarget = data.flickTarget;
             if (snapMode != QQuickListView::NoSnap || highlightRange == QQuickListView::StrictlyEnforceRange) {
-                qreal tempFlickTarget = isRightToLeft() ? -data.flickTarget+size() : data.flickTarget;
+                qreal tempFlickTarget = isContentFlowReversed() ? -data.flickTarget+size() : data.flickTarget;
                 newtarget = -snapPosAt(-(tempFlickTarget - highlightRangeStart)) + highlightRangeStart;
-                newtarget = isRightToLeft() ? -newtarget+size() : newtarget;
+                newtarget = isContentFlowReversed() ? -newtarget+size() : newtarget;
             }
             if (velocity < 0 && newtarget <= maxExtent)
                 newtarget = maxExtent - overshootDist;
@@ -1654,6 +1679,45 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     is not clipped by another item or the screen, it will be necessary
     to set \e {clip: true} in order to have the out of view items clipped
     nicely.
+
+
+    \section1 ListView layouts
+
+    The layout of the items in a ListView can be controlled by these properties:
+
+    \list
+    \li \l orientation - controls whether items flow horizontally or vertically.
+        This value can be either Qt.Horizontal or Qt.Vertical.
+    \li \l layoutDirection - controls the horizontal layout direction for a
+        horizontally-oriented view: that is, whether items are laid out from the left side of
+        the view to the right, or vice-versa. This value can be either Qt.LeftToRight or Qt.RightToLeft.
+    \li \l verticalLayoutDirection - controls the vertical layout direction for a vertically-oriented
+        view: that is, whether items are laid out from the top of the view down towards the bottom of
+        the view, or vice-versa. This value can be either ListView.TopToBottom or ListView.BottomToTop.
+    \endlist
+
+    By default, a ListView has a vertical orientation, and items are laid out from top to bottom. The
+    table below shows the different layouts that a ListView can have, depending on the values of
+    the properties listed above.
+
+    \table
+    \header
+        \li {2, 1}
+            \bold ListViews with Qt.Vertical orientation
+    \row
+        \li Top to bottom
+            \image listview-layout-toptobottom.png
+        \li Bottom to top
+            \image listview-layout-bottomtotop.png
+    \header
+        \li {2, 1}
+            \bold ListViews with Qt.Horizontal orientation
+    \row
+        \li Left to right
+            \image listview-layout-lefttoright.png
+        \li Right to left
+            \image listview-layout-righttoleft.png
+    \endtable
 
     \sa {QML Data Models}, GridView, {declarative/modelviews/listview}{ListView examples}
 */
@@ -1956,7 +2020,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 
 /*!
   \qmlproperty enumeration QtQuick2::ListView::layoutDirection
-  This property holds the layout direction of the horizontal list.
+  This property holds the layout direction of a horizontally-oriented list.
 
   Possible values:
 
@@ -1965,13 +2029,15 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
   \li Qt.RightToLeft - Items will be laid out from right to let.
   \endlist
 
-  \sa ListView::effectiveLayoutDirection
+  Setting this property has no effect if the \l orientation is Qt.Vertical.
+
+  \sa ListView::effectiveLayoutDirection, ListView::verticalLayoutDirection
 */
 
 
 /*!
     \qmlproperty enumeration QtQuick2::ListView::effectiveLayoutDirection
-    This property holds the effective layout direction of the horizontal list.
+    This property holds the effective layout direction of a horizontally-oriented list.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
     the visual layout direction of the horizontal list will be mirrored. However, the
@@ -1979,6 +2045,24 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 
     \sa ListView::layoutDirection, {LayoutMirroring}{LayoutMirroring}
 */
+
+
+/*!
+  \qmlproperty enumeration QtQuick2::ListView::verticalLayoutDirection
+  This property holds the layout direction of a vertically-oriented list.
+
+  Possible values:
+
+  \list
+  \li ListView.TopToBottom (default) - Items are laid out from the top of the view down to the bottom of the view.
+  \li ListView.BottomToTop - Items are laid out from the bottom of the view up to the top of the view.
+  \endlist
+
+  Setting this property has no effect if the \l orientation is Qt.Horizontal.
+
+  \sa ListView::layoutDirection
+*/
+
 
 /*!
     \qmlproperty bool QtQuick2::ListView::keyNavigationWraps
@@ -2550,12 +2634,17 @@ void QQuickListView::viewportMoved()
         return;
     d->inViewportMoved = true;
 
-    if (yflick())
-        d->bufferMode = d->vData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferBefore : QQuickListViewPrivate::BufferAfter;
-    else if (d->isRightToLeft())
-        d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferAfter : QQuickListViewPrivate::BufferBefore;
-    else
-        d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferBefore : QQuickListViewPrivate::BufferAfter;
+    if (yflick()) {
+        if (d->isBottomToTop())
+            d->bufferMode = d->vData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferAfter : QQuickListViewPrivate::BufferBefore;
+        else
+            d->bufferMode = d->vData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferBefore : QQuickListViewPrivate::BufferAfter;
+    } else {
+        if (d->isRightToLeft())
+            d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferAfter : QQuickListViewPrivate::BufferBefore;
+        else
+            d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferBefore : QQuickListViewPrivate::BufferAfter;
+    }
 
     d->refillOrLayout();
 
@@ -2575,7 +2664,7 @@ void QQuickListView::viewportMoved()
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange && d->highlight) {
             // reposition highlight
             qreal pos = d->highlight->position();
-            qreal viewPos = d->isRightToLeft() ? -d->position()-d->size() : d->position();
+            qreal viewPos = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
             if (pos > viewPos + d->highlightRangeEnd - d->highlight->size())
                 pos = viewPos + d->highlightRangeEnd - d->highlight->size();
             if (pos < viewPos + d->highlightRangeStart)
@@ -2641,7 +2730,8 @@ void QQuickListView::keyPressEvent(QKeyEvent *event)
     if (d->model && d->model->count() && d->interactive) {
         if ((d->orient == QQuickListView::Horizontal && !d->isRightToLeft() && event->key() == Qt::Key_Left)
                     || (d->orient == QQuickListView::Horizontal && d->isRightToLeft() && event->key() == Qt::Key_Right)
-                    || (d->orient == QQuickListView::Vertical && event->key() == Qt::Key_Up)) {
+                    || (d->orient == QQuickListView::Vertical && !d->isBottomToTop() && event->key() == Qt::Key_Up)
+                    || (d->orient == QQuickListView::Vertical && d->isBottomToTop() && event->key() == Qt::Key_Down)) {
             if (currentIndex() > 0 || (d->wrap && !event->isAutoRepeat())) {
                 decrementCurrentIndex();
                 event->accept();
@@ -2652,7 +2742,8 @@ void QQuickListView::keyPressEvent(QKeyEvent *event)
             }
         } else if ((d->orient == QQuickListView::Horizontal && !d->isRightToLeft() && event->key() == Qt::Key_Right)
                     || (d->orient == QQuickListView::Horizontal && d->isRightToLeft() && event->key() == Qt::Key_Left)
-                    || (d->orient == QQuickListView::Vertical && event->key() == Qt::Key_Down)) {
+                   || (d->orient == QQuickListView::Vertical && !d->isBottomToTop() && event->key() == Qt::Key_Down)
+                   || (d->orient == QQuickListView::Vertical && d->isBottomToTop() && event->key() == Qt::Key_Up)) {
             if (currentIndex() < d->model->count() - 1 || (d->wrap && !event->isAutoRepeat())) {
                 incrementCurrentIndex();
                 event->accept();
@@ -2670,10 +2761,14 @@ void QQuickListView::keyPressEvent(QKeyEvent *event)
 void QQuickListView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickListView);
-    if (d->isRightToLeft() && d->orient == QQuickListView::Horizontal) {
+    if (d->isRightToLeft()) {
         // maintain position relative to the right edge
         int dx = newGeometry.width() - oldGeometry.width();
         setContentX(contentX() - dx);
+    } else if (d->isBottomToTop()) {
+        // maintain position relative to the bottom edge
+        int dy = newGeometry.height() - oldGeometry.height();
+        setContentY(contentY() - dy);
     }
     QQuickItemView::geometryChanged(newGeometry, oldGeometry);
 }
@@ -2740,7 +2835,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
     int modelIndex = change.index;
     int count = change.count;
 
-    qreal tempPos = isRightToLeft() ? -position()-size() : position();
+    qreal tempPos = isContentFlowReversed() ? -position()-size() : position();
     int index = visibleItems.count() ? mapFromModel(modelIndex) : 0;
 
     if (index < 0) {

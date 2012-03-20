@@ -92,7 +92,7 @@ public:
     }
 
     qreal size() const {
-        return view->flow() == QQuickGridView::LeftToRight ? view->cellHeight() : view->cellWidth();
+        return view->flow() == QQuickGridView::FlowLeftToRight ? view->cellHeight() : view->cellWidth();
     }
 
     qreal sectionSize() const {
@@ -100,14 +100,14 @@ public:
     }
 
     qreal rowPos() const {
-        if (view->flow() == QQuickGridView::LeftToRight)
-            return itemY();
+        if (view->flow() == QQuickGridView::FlowLeftToRight)
+            return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop ? -view->cellHeight()-itemY() : itemY());
         else
             return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -view->cellWidth()-itemX() : itemX());
     }
 
     qreal colPos() const {
-        if (view->flow() == QQuickGridView::LeftToRight) {
+        if (view->flow() == QQuickGridView::FlowLeftToRight) {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
                 qreal colSize = view->cellWidth();
                 int columns = view->width()/colSize;
@@ -116,12 +116,19 @@ public:
                 return itemX();
             }
         } else {
-            return itemY();
+            if (view->verticalLayoutDirection() == QQuickItemView::BottomToTop) {
+                return -view->cellHeight() - itemY();
+            } else {
+                return itemY();
+            }
         }
     }
     qreal endRowPos() const {
-        if (view->flow() == QQuickGridView::LeftToRight) {
-            return itemY() + view->cellHeight();
+        if (view->flow() == QQuickGridView::FlowLeftToRight) {
+            if (view->verticalLayoutDirection() == QQuickItemView::BottomToTop)
+                return -itemY();
+            else
+                return itemY() + view->cellHeight();
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft)
                 return -itemX();
@@ -141,19 +148,24 @@ public:
 
 private:
     QPointF pointForPosition(qreal col, qreal row) const {
-        if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
-            if (view->flow() == QQuickGridView::LeftToRight) {
+        qreal x;
+        qreal y;
+        if (view->flow() == QQuickGridView::FlowLeftToRight) {
+            x = col;
+            y = row;
+            if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
                 int columns = view->width()/view->cellWidth();
-                return QPointF(view->cellWidth() * (columns-1) - col, row);
-            } else {
-                return QPointF(-view->cellWidth() - row, col);
+                x = view->cellWidth() * (columns-1) - col;
             }
         } else {
-            if (view->flow() == QQuickGridView::LeftToRight)
-                return QPointF(col, row);
-            else
-                return QPointF(row, col);
+            x = row;
+            y = col;
+            if (view->effectiveLayoutDirection() == Qt::RightToLeft)
+                x = -view->cellWidth() - row;
         }
+        if (view->verticalLayoutDirection() == QQuickItemView::BottomToTop)
+            y = -view->cellHeight() - y;
+        return QPointF(x, y);
     }
 };
 
@@ -166,7 +178,6 @@ class QQuickGridViewPrivate : public QQuickItemViewPrivate
 public:
     virtual Qt::Orientation layoutOrientation() const;
     virtual bool isContentFlowReversed() const;
-    bool isRightToLeftTopToBottom() const;
 
     virtual qreal positionAt(int index) const;
     virtual qreal endPositionAt(int index) const;
@@ -180,6 +191,8 @@ public:
     qreal snapPosAt(qreal pos) const;
     FxViewItem *snapItemAt(qreal pos) const;
     int snapIndex() const;
+    qreal contentXForPosition(qreal pos) const;
+    qreal contentYForPosition(qreal pos) const;
 
     void resetColumns();
 
@@ -229,7 +242,7 @@ public:
     QSmoothedAnimation *highlightYAnimator;
 
     QQuickGridViewPrivate()
-        : flow(QQuickGridView::LeftToRight)
+        : flow(QQuickGridView::FlowLeftToRight)
         , cellWidth(100), cellHeight(100), columns(1)
         , snapMode(QQuickGridView::NoSnap)
         , highlightXAnimator(0), highlightYAnimator(0)
@@ -243,18 +256,15 @@ public:
 
 Qt::Orientation QQuickGridViewPrivate::layoutOrientation() const
 {
-    return flow == QQuickGridView::LeftToRight ? Qt::Vertical : Qt::Horizontal;
+    return flow == QQuickGridView::FlowLeftToRight ? Qt::Vertical : Qt::Horizontal;
 }
 
 bool QQuickGridViewPrivate::isContentFlowReversed() const
 {
-    return isRightToLeftTopToBottom();
-}
-
-bool QQuickGridViewPrivate::isRightToLeftTopToBottom() const
-{
     Q_Q(const QQuickGridView);
-    return flow == QQuickGridView::TopToBottom && q->effectiveLayoutDirection() == Qt::RightToLeft;
+
+    return (flow == QQuickGridView::FlowLeftToRight && verticalLayoutDirection == QQuickItemView::BottomToTop)
+            || (flow == QQuickGridView::FlowTopToBottom && q->effectiveLayoutDirection() == Qt::RightToLeft);
 }
 
 void QQuickGridViewPrivate::changedVisibleIndex(int newIndex)
@@ -265,16 +275,8 @@ void QQuickGridViewPrivate::changedVisibleIndex(int newIndex)
 void QQuickGridViewPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickGridView);
-    if (flow == QQuickGridView::LeftToRight) {
-        q->QQuickFlickable::setContentY(pos);
-        q->QQuickFlickable::setContentX(0);
-    } else {
-        if (q->effectiveLayoutDirection() == Qt::LeftToRight)
-            q->QQuickFlickable::setContentX(pos);
-        else
-            q->QQuickFlickable::setContentX(-pos-size());
-        q->QQuickFlickable::setContentY(0);
-    }
+    q->QQuickFlickable::setContentX(contentXForPosition(pos));
+    q->QQuickFlickable::setContentY(contentYForPosition(pos));
 }
 
 qreal QQuickGridViewPrivate::originPosition() const
@@ -306,10 +308,10 @@ qreal QQuickGridViewPrivate::endPositionAt(int index) const
 }
 
 qreal QQuickGridViewPrivate::rowSize() const {
-    return flow == QQuickGridView::LeftToRight ? cellHeight : cellWidth;
+    return flow == QQuickGridView::FlowLeftToRight ? cellHeight : cellWidth;
 }
 qreal QQuickGridViewPrivate::colSize() const {
-    return flow == QQuickGridView::LeftToRight ? cellWidth : cellHeight;
+    return flow == QQuickGridView::FlowLeftToRight ? cellWidth : cellHeight;
 }
 
 qreal QQuickGridViewPrivate::colPosAt(int modelIndex) const
@@ -375,12 +377,12 @@ qreal QQuickGridViewPrivate::snapPosAt(qreal pos) const
         snapPos -= highlightStart;
         qreal maxExtent;
         qreal minExtent;
-        if (isRightToLeftTopToBottom()) {
+        if (isContentFlowReversed()) {
             maxExtent = q->minXExtent()-size();
             minExtent = q->maxXExtent()-size();
         } else {
-            maxExtent = flow == QQuickGridView::LeftToRight ? -q->maxYExtent() : -q->maxXExtent();
-            minExtent = flow == QQuickGridView::LeftToRight ? -q->minYExtent() : -q->minXExtent();
+            maxExtent = flow == QQuickGridView::FlowLeftToRight ? -q->maxYExtent() : -q->maxXExtent();
+            minExtent = flow == QQuickGridView::FlowLeftToRight ? -q->minYExtent() : -q->minXExtent();
         }
         if (snapPos > maxExtent)
             snapPos = maxExtent;
@@ -421,10 +423,49 @@ int QQuickGridViewPrivate::snapIndex() const
     return index;
 }
 
+qreal QQuickGridViewPrivate::contentXForPosition(qreal pos) const
+{
+    Q_Q(const QQuickGridView);
+    if (flow == QQuickGridView::FlowLeftToRight) {
+        // vertical scroll
+        if (q->effectiveLayoutDirection() == Qt::LeftToRight) {
+            return 0;
+        } else {
+            qreal colSize = cellWidth;
+            int columns = q->width()/colSize;
+            return -q->width() + (cellWidth * columns);
+        }
+    } else {
+        // horizontal scroll
+        if (q->effectiveLayoutDirection() == Qt::LeftToRight)
+            return pos;
+        else
+            return -pos - q->width();
+    }
+}
+
+qreal QQuickGridViewPrivate::contentYForPosition(qreal pos) const
+{
+    Q_Q(const QQuickGridView);
+    if (flow == QQuickGridView::FlowLeftToRight) {
+        // vertical scroll
+        if (verticalLayoutDirection == QQuickItemView::TopToBottom)
+            return pos;
+        else
+            return -pos - q->height();
+    } else {
+        // horizontal scroll
+        if (verticalLayoutDirection == QQuickItemView::TopToBottom)
+            return 0;
+        else
+            return -q->height();
+    }
+}
+
 void QQuickGridViewPrivate::resetColumns()
 {
     Q_Q(QQuickGridView);
-    qreal length = flow == QQuickGridView::LeftToRight ? q->width() : q->height();
+    qreal length = flow == QQuickGridView::FlowLeftToRight ? q->width() : q->height();
     columns = (int)qMax((length + colSize()/2) / colSize(), qreal(1.));
 }
 
@@ -641,15 +682,22 @@ void QQuickGridViewPrivate::repositionPackageItemAt(QQuickItem *item, int index)
 {
     Q_Q(QQuickGridView);
     qreal pos = position();
-    if (flow == QQuickGridView::LeftToRight) {
-        if (item->y() + item->height() > pos && item->y() < pos + q->height())
-            item->setPos(QPointF(colPosAt(index), rowPosAt(index)));
+    if (flow == QQuickGridView::FlowLeftToRight) {
+        if (item->y() + item->height() > pos && item->y() < pos + q->height()) {
+            qreal y = (verticalLayoutDirection == QQuickItemView::TopToBottom)
+                    ? rowPosAt(index)
+                    : -rowPosAt(index) - item->height();
+            item->setPos(QPointF(colPosAt(index), y));
+        }
     } else {
         if (item->x() + item->width() > pos && item->x() < pos + q->width()) {
-            if (isRightToLeftTopToBottom())
-                item->setPos(QPointF(-rowPosAt(index)-item->width(), colPosAt(index)));
+            qreal y = (verticalLayoutDirection == QQuickItemView::TopToBottom)
+                    ? colPosAt(index)
+                    : -colPosAt(index) - item->height();
+            if (flow == QQuickGridView::FlowTopToBottom && q->effectiveLayoutDirection() == Qt::RightToLeft)
+                item->setPos(QPointF(-rowPosAt(index)-item->width(), y));
             else
-                item->setPos(QPointF(rowPosAt(index), colPosAt(index)));
+                item->setPos(QPointF(rowPosAt(index), y));
         }
     }
 }
@@ -744,14 +792,14 @@ qreal QQuickGridViewPrivate::headerSize() const
 {
     if (!header)
         return 0.0;
-    return flow == QQuickGridView::LeftToRight ? header->item->height() : header->item->width();
+    return flow == QQuickGridView::FlowLeftToRight ? header->item->height() : header->item->width();
 }
 
 qreal QQuickGridViewPrivate::footerSize() const
 {
     if (!footer)
         return 0.0;
-    return flow == QQuickGridView::LeftToRight? footer->item->height() : footer->item->width();
+    return flow == QQuickGridView::FlowLeftToRight? footer->item->height() : footer->item->width();
 }
 
 bool QQuickGridViewPrivate::showHeaderForIndex(int index) const
@@ -781,17 +829,23 @@ void QQuickGridViewPrivate::updateFooter()
     qreal colOffset = 0;
     qreal rowOffset = 0;
     if (q->effectiveLayoutDirection() == Qt::RightToLeft) {
-        if (flow == QQuickGridView::TopToBottom)
-            rowOffset = gridItem->item->width() - cellWidth;
+        if (flow == QQuickGridView::FlowTopToBottom)
+            rowOffset += gridItem->item->width() - cellWidth;
         else
-            colOffset = gridItem->item->width() - cellWidth;
+            colOffset += gridItem->item->width() - cellWidth;
+    }
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop) {
+        if (flow == QQuickGridView::FlowTopToBottom)
+            colOffset += gridItem->item->height() - cellHeight;
+        else
+            rowOffset += gridItem->item->height() - cellHeight;
     }
     if (visibleItems.count()) {
         qreal endPos = lastPosition();
         if (findLastVisibleIndex() == model->count()-1) {
             gridItem->setPosition(colOffset, endPos + rowOffset);
         } else {
-            qreal visiblePos = isRightToLeftTopToBottom() ? -position() : position() + size();
+            qreal visiblePos = isContentFlowReversed() ? -position() : position() + size();
             if (endPos <= visiblePos || gridItem->endPosition() <= endPos + rowOffset)
                 gridItem->setPosition(colOffset, endPos + rowOffset);
         }
@@ -820,23 +874,29 @@ void QQuickGridViewPrivate::updateHeader()
     qreal colOffset = 0;
     qreal rowOffset = -headerSize();
     if (q->effectiveLayoutDirection() == Qt::RightToLeft) {
-        if (flow == QQuickGridView::TopToBottom)
-            rowOffset += gridItem->item->width()-cellWidth;
+        if (flow == QQuickGridView::FlowTopToBottom)
+            rowOffset += gridItem->item->width() - cellWidth;
         else
-            colOffset = gridItem->item->width()-cellWidth;
+            colOffset += gridItem->item->width() - cellWidth;
+    }
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop) {
+        if (flow == QQuickGridView::FlowTopToBottom)
+            colOffset += gridItem->item->height() - cellHeight;
+        else
+            rowOffset += gridItem->item->height() - cellHeight;
     }
     if (visibleItems.count()) {
         qreal startPos = originPosition();
         if (visibleIndex == 0) {
             gridItem->setPosition(colOffset, startPos + rowOffset);
         } else {
-            qreal tempPos = isRightToLeftTopToBottom() ? -position()-size() : position();
-            qreal headerPos = isRightToLeftTopToBottom() ? gridItem->rowPos() + cellWidth - headerSize() : gridItem->rowPos();
+            qreal tempPos = isContentFlowReversed() ? -position()-size() : position();
+            qreal headerPos = isContentFlowReversed() ? gridItem->rowPos() + cellWidth - headerSize() : gridItem->rowPos();
             if (tempPos <= startPos || headerPos > startPos + rowOffset)
                 gridItem->setPosition(colOffset, startPos + rowOffset);
         }
     } else {
-        if (isRightToLeftTopToBottom())
+        if (isContentFlowReversed())
             gridItem->setPosition(colOffset, rowOffset);
         else
             gridItem->setPosition(colOffset, -headerSize());
@@ -861,7 +921,7 @@ void QQuickGridViewPrivate::initializeCurrentItem()
 void QQuickGridViewPrivate::fixupPosition()
 {
     moveReason = Other;
-    if (flow == QQuickGridView::LeftToRight)
+    if (flow == QQuickGridView::FlowLeftToRight)
         fixupY();
     else
         fixupX();
@@ -869,17 +929,17 @@ void QQuickGridViewPrivate::fixupPosition()
 
 void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 {
-    if ((flow == QQuickGridView::TopToBottom && &data == &vData)
-        || (flow == QQuickGridView::LeftToRight && &data == &hData))
+    if ((flow == QQuickGridView::FlowTopToBottom && &data == &vData)
+        || (flow == QQuickGridView::FlowLeftToRight && &data == &hData))
         return;
 
     fixupMode = moveReason == Mouse ? fixupMode : Immediate;
 
-    qreal viewPos = isRightToLeftTopToBottom() ? -position()-size() : position();
+    qreal viewPos = isContentFlowReversed() ? -position()-size() : position();
 
     bool strictHighlightRange = haveHighlightRange && highlightRange == QQuickGridView::StrictlyEnforceRange;
     if (snapMode != QQuickGridView::NoSnap) {
-        qreal tempPosition = isRightToLeftTopToBottom() ? -position()-size() : position();
+        qreal tempPosition = isContentFlowReversed() ? -position()-size() : position();
         if (snapMode == QQuickGridView::SnapOneRow && moveReason == Mouse) {
             // if we've been dragged < rowSize()/2 then bias towards the next row
             qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
@@ -888,7 +948,7 @@ void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
                 bias = rowSize()/2;
             else if (data.velocity < 0 && dist < -QML_FLICK_SNAPONETHRESHOLD && dist > -rowSize()/2)
                 bias = -rowSize()/2;
-            if (isRightToLeftTopToBottom())
+            if (isContentFlowReversed())
                 bias = -bias;
             tempPosition -= bias;
         }
@@ -909,15 +969,15 @@ void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
         if (topItem && (isInBounds || strictHighlightRange)) {
             qreal headerPos = header ? static_cast<FxGridItemSG*>(header)->rowPos() : 0;
             if (topItem->index == 0 && header && tempPosition+highlightRangeStart < headerPos+headerSize()/2 && !strictHighlightRange) {
-                pos = isRightToLeftTopToBottom() ? - headerPos + highlightRangeStart - size() : headerPos - highlightRangeStart;
+                pos = isContentFlowReversed() ? - headerPos + highlightRangeStart - size() : headerPos - highlightRangeStart;
             } else {
-                if (isRightToLeftTopToBottom())
+                if (isContentFlowReversed())
                     pos = qMax(qMin(-topItem->position() + highlightRangeStart - size(), -maxExtent), -minExtent);
                 else
                     pos = qMax(qMin(topItem->position() - highlightRangeStart, -maxExtent), -minExtent);
             }
         } else if (bottomItem && isInBounds) {
-            if (isRightToLeftTopToBottom())
+            if (isContentFlowReversed())
                 pos = qMax(qMin(-bottomItem->position() + highlightRangeEnd - size(), -maxExtent), -minExtent);
             else
                 pos = qMax(qMin(bottomItem->position() - highlightRangeEnd, -maxExtent), -minExtent);
@@ -945,7 +1005,7 @@ void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
                 viewPos = pos + rowSize() - highlightRangeEnd;
             if (viewPos > pos - highlightRangeStart)
                 viewPos = pos - highlightRangeStart;
-            if (isRightToLeftTopToBottom())
+            if (isContentFlowReversed())
                 viewPos = -viewPos-size();
             timeline.reset(data.move);
             if (viewPos != position()) {
@@ -977,7 +1037,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         return;
     }
     qreal maxDistance = 0;
-    qreal dataValue = isRightToLeftTopToBottom() ? -data.move.value()+size() : data.move.value();
+    qreal dataValue = isContentFlowReversed() ? -data.move.value()+size() : data.move.value();
     // -ve velocity means list is moving up/left
     if (velocity > 0) {
         if (data.move.value() < minExtent) {
@@ -985,7 +1045,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
                 // if we've been dragged < averageSize/2 then bias towards the next item
                 qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
                 qreal bias = dist < rowSize()/2 ? rowSize()/2 : 0;
-                if (isRightToLeftTopToBottom())
+                if (isContentFlowReversed())
                     bias = -bias;
                 data.flickTarget = -snapPosAt(-dataValue - bias);
                 maxDistance = qAbs(data.flickTarget - data.move.value());
@@ -1002,7 +1062,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
                 // if we've been dragged < averageSize/2 then bias towards the next item
                 qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
                 qreal bias = -dist < rowSize()/2 ? rowSize()/2 : 0;
-                if (isRightToLeftTopToBottom())
+                if (isContentFlowReversed())
                     bias = -bias;
                 data.flickTarget = -snapPosAt(-dataValue + bias);
                 maxDistance = qAbs(data.flickTarget - data.move.value());
@@ -1034,10 +1094,10 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             if (v > 0)
                 dist = -dist;
             if (snapMode != QQuickGridView::SnapOneRow) {
-                qreal distTemp = isRightToLeftTopToBottom() ? -dist : dist;
+                qreal distTemp = isContentFlowReversed() ? -dist : dist;
                 data.flickTarget = -snapPosAt(-dataValue + distTemp);
             }
-            data.flickTarget = isRightToLeftTopToBottom() ? -data.flickTarget+size() : data.flickTarget;
+            data.flickTarget = isContentFlowReversed() ? -data.flickTarget+size() : data.flickTarget;
             if (overShoot) {
                 if (data.flickTarget >= minExtent) {
                     overshootDist = overShootDistance(vSize);
@@ -1158,6 +1218,60 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     If the view is not clipped by another item or the screen, it will be necessary
     to set this property to true in order to clip the items that are partially or
     fully outside the view.
+
+
+    \section1 GridView layouts
+
+    The layout of the items in a GridView can be controlled by these properties:
+
+    \list
+    \li \l flow - controls whether items flow from left to right (as a series of rows)
+        or from top to bottom (as a series of columns). This value can be either
+        GridView.LeftToRight or GridView.TopToBottom.
+    \li \l layoutDirection - controls the horizontal layout direction: that is, whether items
+        are laid out from the left side of the view to the right, or vice-versa. This value can
+        be either Qt.LeftToRight or Qt.RightToLeft.
+    \li \l verticalLayoutDirection - controls the vertical layout direction: that is, whether items
+        are laid out from the top of the view down towards the bottom of the view, or vice-versa.
+        This value can be either GridView.TopToBottom or GridView.BottomToTop.
+    \endlist
+
+    By default, a GridView flows from left to right, and items are laid out from left to right
+    horizontally, and from top to bottom vertically.
+
+    These properties can be combined to produce a variety of layouts, as shown in the table below.
+    The GridViews in the first row all have a \l flow value of GridView.LeftToRight, but use
+    different combinations of horizontal and vertical layout directions (specified by \l layoutDirection
+    and \l verticalLayoutDirection respectively). Similarly, the GridViews in the second row below
+    all have a \l flow value of GridView.TopToBottom, but use different combinations of horizontal and
+    vertical layout directions to lay out their items in different ways.
+
+    \table
+    \header
+        \li {4, 1}
+            \bold GridViews with GridView.LeftToRight flow
+    \row
+        \li \bold (H) Left to right \bold (V) Top to bottom
+            \image gridview-layout-lefttoright-ltr-ttb.png
+        \li \bold (H) Right to left \bold (V) Top to bottom
+            \image gridview-layout-lefttoright-rtl-ttb.png
+        \li \bold (H) Left to right \bold (V) Bottom to top
+            \image gridview-layout-lefttoright-ltr-btt.png
+        \li \bold (H) Right to left \bold (V) Bottom to top
+            \image gridview-layout-lefttoright-rtl-btt.png
+    \header
+        \li {4, 1}
+            \bold GridViews with GridView.TopToBottom flow
+    \row
+        \li \bold (H) Left to right \bold (V) Top to bottom
+            \image gridview-layout-toptobottom-ltr-ttb.png
+        \li \bold (H) Right to left \bold (V) Top to bottom
+            \image gridview-layout-toptobottom-rtl-ttb.png
+        \li \bold (H) Left to right \bold (V) Bottom to top
+            \image gridview-layout-toptobottom-ltr-btt.png
+        \li \bold (H) Right to left \bold (V) Bottom to top
+            \image gridview-layout-toptobottom-rtl-btt.png
+    \endtable
 
     \sa {declarative/modelviews/gridview}{GridView example}
 */
@@ -1380,6 +1494,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
   \b Note: If GridView::flow is set to GridView.LeftToRight, this is not to be confused if
   GridView::layoutDirection is set to Qt.RightToLeft. The GridView.LeftToRight flow value simply
   indicates that the flow is horizontal.
+
+  \sa GridView::effectiveLayoutDirection, GridView::verticalLayoutDirection
 */
 
 
@@ -1393,6 +1509,21 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     \sa GridView::layoutDirection, {LayoutMirroring}{LayoutMirroring}
 */
+
+/*!
+  \qmlproperty enumeration QtQuick2::GridView::verticalLayoutDirection
+  This property holds the vertical layout direction of the grid.
+
+  Possible values:
+
+  \list
+  \li GridView.TopToBottom (default) - Items are laid out from the top of the view down to the bottom of the view.
+  \li GridView.BottomToTop - Items are laid out from the bottom of the view up to the top of the view.
+  \endlist
+
+  \sa GridView::layoutDirection
+*/
+
 /*!
   \qmlproperty bool QtQuick2::GridView::keyNavigationWraps
   This property holds whether the grid wraps key navigation
@@ -1461,7 +1592,7 @@ void QQuickGridView::setFlow(Flow flow)
     Q_D(QQuickGridView);
     if (d->flow != flow) {
         d->flow = flow;
-        if (d->flow == LeftToRight) {
+        if (d->flow == FlowLeftToRight) {
             setContentWidth(-1);
             setFlickableDirection(VerticalFlick);
         } else {
@@ -1877,12 +2008,17 @@ void QQuickGridView::viewportMoved()
         return;
     d->inViewportMoved = true;
 
-    if (yflick())
-        d->bufferMode = d->vData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferBefore : QQuickItemViewPrivate::BufferAfter;
-    else if (d->isRightToLeftTopToBottom())
-        d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferAfter : QQuickItemViewPrivate::BufferBefore;
-    else
-        d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferBefore : QQuickItemViewPrivate::BufferAfter;
+    if (yflick()) {
+        if (d->isContentFlowReversed())
+            d->bufferMode = d->vData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferAfter : QQuickItemViewPrivate::BufferBefore;
+        else
+            d->bufferMode = d->vData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferBefore : QQuickItemViewPrivate::BufferAfter;
+    } else {
+        if (d->isContentFlowReversed())
+            d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferAfter : QQuickItemViewPrivate::BufferBefore;
+        else
+            d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickItemViewPrivate::BufferBefore : QQuickItemViewPrivate::BufferAfter;
+    }
 
     d->refillOrLayout();
 
@@ -1904,7 +2040,7 @@ void QQuickGridView::viewportMoved()
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange && d->highlight) {
             // reposition highlight
             qreal pos = d->highlight->position();
-            qreal viewPos = d->isRightToLeftTopToBottom() ? -d->position()-d->size() : d->position();
+            qreal viewPos = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
             if (pos > viewPos + d->highlightRangeEnd - d->highlight->size())
                 pos = viewPos + d->highlightRangeEnd - d->highlight->size();
             if (pos < viewPos + d->highlightRangeStart)
@@ -1923,7 +2059,7 @@ void QQuickGridView::viewportMoved()
             if (idx >= 0 && idx != d->currentIndex) {
                 d->updateCurrent(idx);
                 if (d->currentItem && static_cast<FxGridItemSG*>(d->currentItem)->colPos() != static_cast<FxGridItemSG*>(d->highlight)->colPos() && d->autoHighlight) {
-                    if (d->flow == LeftToRight)
+                    if (d->flow == FlowLeftToRight)
                         d->highlightXAnimator->to = d->currentItem->itemX();
                     else
                         d->highlightYAnimator->to = d->currentItem->itemY();
@@ -1970,6 +2106,16 @@ void QQuickGridView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
 {
     Q_D(QQuickGridView);
     d->resetColumns();
+
+    if (newGeometry.width() != oldGeometry.width()
+            && newGeometry.height() != oldGeometry.height()) {
+        d->setPosition(d->position());
+    } else if (newGeometry.width() != oldGeometry.width()) {
+        QQuickFlickable::setContentX(d->contentXForPosition(d->position()));
+    } else if (newGeometry.height() != oldGeometry.height()) {
+        QQuickFlickable::setContentY(d->contentYForPosition(d->position()));
+    }
+
     QQuickItemView::geometryChanged(newGeometry, oldGeometry);
 }
 
@@ -1990,15 +2136,29 @@ void QQuickGridView::moveCurrentIndexUp()
     const int count = d->model ? d->model->count() : 0;
     if (!count)
         return;
-    if (d->flow == QQuickGridView::LeftToRight) {
-        if (currentIndex() >= d->columns || d->wrap) {
-            int index = currentIndex() - d->columns;
-            setCurrentIndex((index >= 0 && index < count) ? index : count-1);
+    if (d->verticalLayoutDirection == QQuickItemView::TopToBottom) {
+        if (d->flow == QQuickGridView::FlowLeftToRight) {
+            if (currentIndex() >= d->columns || d->wrap) {
+                int index = currentIndex() - d->columns;
+                setCurrentIndex((index >= 0 && index < count) ? index : count-1);
+            }
+        } else {
+            if (currentIndex() > 0 || d->wrap) {
+                int index = currentIndex() - 1;
+                setCurrentIndex((index >= 0 && index < count) ? index : count-1);
+            }
         }
     } else {
-        if (currentIndex() > 0 || d->wrap) {
-            int index = currentIndex() - 1;
-            setCurrentIndex((index >= 0 && index < count) ? index : count-1);
+        if (d->flow == QQuickGridView::FlowLeftToRight) {
+            if (currentIndex() < count - d->columns || d->wrap) {
+                int index = currentIndex()+d->columns;
+                setCurrentIndex((index >= 0 && index < count) ? index : 0);
+            }
+        } else {
+            if (currentIndex() < count - 1 || d->wrap) {
+                int index = currentIndex() + 1;
+                setCurrentIndex((index >= 0 && index < count) ? index : 0);
+            }
         }
     }
 }
@@ -2018,15 +2178,30 @@ void QQuickGridView::moveCurrentIndexDown()
     const int count = d->model ? d->model->count() : 0;
     if (!count)
         return;
-    if (d->flow == QQuickGridView::LeftToRight) {
-        if (currentIndex() < count - d->columns || d->wrap) {
-            int index = currentIndex()+d->columns;
-            setCurrentIndex((index >= 0 && index < count) ? index : 0);
+
+    if (d->verticalLayoutDirection == QQuickItemView::TopToBottom) {
+        if (d->flow == QQuickGridView::FlowLeftToRight) {
+            if (currentIndex() < count - d->columns || d->wrap) {
+                int index = currentIndex()+d->columns;
+                setCurrentIndex((index >= 0 && index < count) ? index : 0);
+            }
+        } else {
+            if (currentIndex() < count - 1 || d->wrap) {
+                int index = currentIndex() + 1;
+                setCurrentIndex((index >= 0 && index < count) ? index : 0);
+            }
         }
     } else {
-        if (currentIndex() < count - 1 || d->wrap) {
-            int index = currentIndex() + 1;
-            setCurrentIndex((index >= 0 && index < count) ? index : 0);
+        if (d->flow == QQuickGridView::FlowLeftToRight) {
+            if (currentIndex() >= d->columns || d->wrap) {
+                int index = currentIndex() - d->columns;
+                setCurrentIndex((index >= 0 && index < count) ? index : count-1);
+            }
+        } else {
+            if (currentIndex() > 0 || d->wrap) {
+                int index = currentIndex() - 1;
+                setCurrentIndex((index >= 0 && index < count) ? index : count-1);
+            }
         }
     }
 }
@@ -2047,7 +2222,7 @@ void QQuickGridView::moveCurrentIndexLeft()
     if (!count)
         return;
     if (effectiveLayoutDirection() == Qt::LeftToRight) {
-        if (d->flow == QQuickGridView::LeftToRight) {
+        if (d->flow == QQuickGridView::FlowLeftToRight) {
             if (currentIndex() > 0 || d->wrap) {
                 int index = currentIndex() - 1;
                 setCurrentIndex((index >= 0 && index < count) ? index : count-1);
@@ -2059,7 +2234,7 @@ void QQuickGridView::moveCurrentIndexLeft()
             }
         }
     } else {
-        if (d->flow == QQuickGridView::LeftToRight) {
+        if (d->flow == QQuickGridView::FlowLeftToRight) {
             if (currentIndex() < count - 1 || d->wrap) {
                 int index = currentIndex() + 1;
                 setCurrentIndex((index >= 0 && index < count) ? index : 0);
@@ -2090,7 +2265,7 @@ void QQuickGridView::moveCurrentIndexRight()
     if (!count)
         return;
     if (effectiveLayoutDirection() == Qt::LeftToRight) {
-        if (d->flow == QQuickGridView::LeftToRight) {
+        if (d->flow == QQuickGridView::FlowLeftToRight) {
             if (currentIndex() < count - 1 || d->wrap) {
                 int index = currentIndex() + 1;
                 setCurrentIndex((index >= 0 && index < count) ? index : 0);
@@ -2102,7 +2277,7 @@ void QQuickGridView::moveCurrentIndexRight()
             }
         }
     } else {
-        if (d->flow == QQuickGridView::LeftToRight) {
+        if (d->flow == QQuickGridView::FlowLeftToRight) {
             if (currentIndex() > 0 || d->wrap) {
                 int index = currentIndex() - 1;
                 setCurrentIndex((index >= 0 && index < count) ? index : count-1);
@@ -2146,7 +2321,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
         }
     }
 
-    qreal tempPos = isRightToLeftTopToBottom() ? -position()-size()+q->width()+1 : position();
+    qreal tempPos = isContentFlowReversed() ? -position()-size()+q->width()+1 : position();
     qreal colPos = 0;
     qreal rowPos = 0;
     int colNum = 0;

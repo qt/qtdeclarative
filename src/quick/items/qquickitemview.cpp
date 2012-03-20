@@ -475,6 +475,21 @@ Qt::LayoutDirection QQuickItemView::effectiveLayoutDirection() const
         return d->layoutDirection;
 }
 
+QQuickItemView::VerticalLayoutDirection QQuickItemView::verticalLayoutDirection() const
+{
+    Q_D(const QQuickItemView);
+    return d->verticalLayoutDirection;
+}
+
+void QQuickItemView::setVerticalLayoutDirection(VerticalLayoutDirection layoutDirection)
+{
+    Q_D(QQuickItemView);
+    if (d->verticalLayoutDirection != layoutDirection) {
+        d->verticalLayoutDirection = layoutDirection;
+        d->regenerate();
+        emit verticalLayoutDirectionChanged();
+    }
+}
 
 QQmlComponent *QQuickItemView::header() const
 {
@@ -818,7 +833,7 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
     FxViewItem *item = visibleItem(idx);
     qreal maxExtent;
     if (layoutOrientation() == Qt::Vertical)
-        maxExtent = -q->maxYExtent();
+        maxExtent = isContentFlowReversed() ? q->minYExtent()-size(): -q->maxYExtent();
     else
         maxExtent = isContentFlowReversed() ? q->minXExtent()-size(): -q->maxXExtent();
     if (!item) {
@@ -864,7 +879,7 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
         pos = qMin(pos, maxExtent);
         qreal minExtent;
         if (layoutOrientation() == Qt::Vertical)
-            minExtent = -q->minYExtent();
+            minExtent = isContentFlowReversed() ? q->maxYExtent()-size(): -q->minYExtent();
         else
             minExtent = isContentFlowReversed() ? q->maxXExtent()-size(): -q->minXExtent();
         pos = qMax(pos, minExtent);
@@ -946,6 +961,89 @@ int QQuickItemViewPrivate::findMoveKeyIndex(QQuickChangeSet::MoveKey key, const 
         }
     }
     return -1;
+}
+
+qreal QQuickItemViewPrivate::minExtentForAxis(const AxisData &axisData, bool forXAxis) const
+{
+    Q_Q(const QQuickItemView);
+
+    qreal highlightStart;
+    qreal highlightEnd;
+    qreal endPositionFirstItem = 0;
+    qreal extent = -startPosition() + axisData.startMargin;
+    if (isContentFlowReversed()) {
+        if (model && model->count())
+            endPositionFirstItem = positionAt(model->count()-1);
+        else
+            extent += headerSize();
+        highlightStart = highlightRangeEndValid ? size() - highlightRangeEnd : size();
+        highlightEnd = highlightRangeStartValid ? size() - highlightRangeStart : size();
+        extent += footerSize();
+        qreal maxExtentAlongAxis = forXAxis ? q->maxXExtent() : q->maxYExtent();
+        if (extent < maxExtentAlongAxis)
+            extent = maxExtentAlongAxis;
+    } else {
+        endPositionFirstItem = endPositionAt(0);
+        highlightStart = highlightRangeStart;
+        highlightEnd = highlightRangeEnd;
+        extent += headerSize();
+    }
+    if (haveHighlightRange && highlightRange == QQuickItemView::StrictlyEnforceRange) {
+        extent += highlightStart;
+        FxViewItem *firstItem = visibleItem(0);
+        if (firstItem)
+            extent -= firstItem->sectionSize();
+        extent = isContentFlowReversed()
+                            ? qMin(extent, endPositionFirstItem + highlightEnd)
+                            : qMax(extent, -(endPositionFirstItem - highlightEnd));
+    }
+    return extent;
+}
+
+qreal QQuickItemViewPrivate::maxExtentForAxis(const AxisData &axisData, bool forXAxis) const
+{
+    Q_Q(const QQuickItemView);
+
+    qreal highlightStart;
+    qreal highlightEnd;
+    qreal lastItemPosition = 0;
+    qreal extent = 0;
+    if (isContentFlowReversed()) {
+        highlightStart = highlightRangeEndValid ? size() - highlightRangeEnd : size();
+        highlightEnd = highlightRangeStartValid ? size() - highlightRangeStart : size();
+        lastItemPosition = endPosition();
+    } else {
+        highlightStart = highlightRangeStart;
+        highlightEnd = highlightRangeEnd;
+        if (model && model->count())
+            lastItemPosition = positionAt(model->count()-1);
+    }
+    if (!model || !model->count()) {
+        if (!isContentFlowReversed())
+            maxExtent = header ? -headerSize() : 0;
+        extent += forXAxis ? q->width() : q->height();
+    } else if (haveHighlightRange && highlightRange == QQuickItemView::StrictlyEnforceRange) {
+        extent = -(lastItemPosition - highlightStart);
+        if (highlightEnd != highlightStart) {
+            extent = isContentFlowReversed()
+                    ? qMax(extent, -(endPosition() - highlightEnd))
+                    : qMin(extent, -(endPosition() - highlightEnd));
+        }
+    } else {
+        extent = -(endPosition() - (forXAxis ? q->width() : q->height()));
+    }
+    if (isContentFlowReversed()) {
+        extent -= headerSize();
+        extent -= axisData.endMargin;
+    } else {
+        extent -= footerSize();
+        extent -= axisData.endMargin;
+        qreal minExtentAlongAxis = forXAxis ? q->minXExtent() : q->minYExtent();
+        if (extent > minExtentAlongAxis)
+            extent = minExtentAlongAxis;
+    }
+
+    return extent;
 }
 
 // for debugging only
@@ -1119,12 +1217,17 @@ void QQuickItemView::trackedPositionChanged()
                 toItemEndPos -= startOffset;
             } else if (d->showFooterForIndex(d->currentIndex)) {
                 qreal endOffset = d->footerSize();
-                if (d->layoutOrientation() == Qt::Vertical)
-                    endOffset += d->vData.endMargin;
-                else if (d->isContentFlowReversed())
-                    endOffset += d->hData.startMargin;
-                else
-                    endOffset += d->hData.endMargin;
+                if (d->layoutOrientation() == Qt::Vertical) {
+                    if (d->isContentFlowReversed())
+                        endOffset += d->vData.startMargin;
+                    else
+                        endOffset += d->vData.endMargin;
+                } else {
+                    if (d->isContentFlowReversed())
+                        endOffset += d->hData.startMargin;
+                    else
+                        endOffset += d->hData.endMargin;
+                }
                 trackedPos += endOffset;
                 trackedEndPos += endOffset;
                 toItemPos += endOffset;
@@ -1166,7 +1269,6 @@ void QQuickItemView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
     QQuickFlickable::geometryChanged(newGeometry, oldGeometry);
 }
 
-
 qreal QQuickItemView::minYExtent() const
 {
     Q_D(const QQuickItemView);
@@ -1174,15 +1276,7 @@ qreal QQuickItemView::minYExtent() const
         return QQuickFlickable::minYExtent();
 
     if (d->vData.minExtentDirty) {
-        d->minExtent = d->vData.startMargin-d->startPosition();
-        if (d->header)
-            d->minExtent += d->headerSize();
-        if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
-            d->minExtent += d->highlightRangeStart;
-            if (d->visibleItem(0))
-                d->minExtent -= d->visibleItem(0)->sectionSize();
-            d->minExtent = qMax(d->minExtent, -(d->endPositionAt(0) - d->highlightRangeEnd));
-        }
+        d->minExtent = d->minExtentForAxis(d->vData, false);
         d->vData.minExtentDirty = false;
     }
 
@@ -1196,25 +1290,10 @@ qreal QQuickItemView::maxYExtent() const
         return height();
 
     if (d->vData.maxExtentDirty) {
-        if (!d->model || !d->model->count()) {
-            d->maxExtent = d->header ? -d->headerSize() : 0;
-            d->maxExtent += height();
-        } else if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
-            d->maxExtent = -(d->positionAt(d->model->count()-1) - d->highlightRangeStart);
-            if (d->highlightRangeEnd != d->highlightRangeStart)
-                d->maxExtent = qMin(d->maxExtent, -(d->endPosition() - d->highlightRangeEnd));
-        } else {
-            d->maxExtent = -(d->endPosition() - height());
-        }
-
-        if (d->footer)
-            d->maxExtent -= d->footerSize();
-        d->maxExtent -= d->vData.endMargin;
-        qreal minY = minYExtent();
-        if (d->maxExtent > minY)
-            d->maxExtent = minY;
+        d->maxExtent = d->maxExtentForAxis(d->vData, false);
         d->vData.maxExtentDirty = false;
     }
+
     return d->maxExtent;
 }
 
@@ -1225,35 +1304,7 @@ qreal QQuickItemView::minXExtent() const
         return QQuickFlickable::minXExtent();
 
     if (d->hData.minExtentDirty) {
-        d->minExtent = -d->startPosition() + d->hData.startMargin;
-        qreal highlightStart;
-        qreal highlightEnd;
-        qreal endPositionFirstItem = 0;
-        if (d->isContentFlowReversed()) {
-            if (d->model && d->model->count())
-                endPositionFirstItem = d->positionAt(d->model->count()-1);
-            else if (d->header)
-                d->minExtent += d->headerSize();
-            highlightStart = d->highlightRangeEndValid ? d->size() - d->highlightRangeEnd : d->size();
-            highlightEnd = d->highlightRangeStartValid ? d->size() - d->highlightRangeStart : d->size();
-            if (d->footer)
-                d->minExtent += d->footerSize();
-            qreal maxX = maxXExtent();
-            if (d->minExtent < maxX)
-                d->minExtent = maxX;
-        } else {
-            endPositionFirstItem = d->endPositionAt(0);
-            highlightStart = d->highlightRangeStart;
-            highlightEnd = d->highlightRangeEnd;
-            if (d->header)
-                d->minExtent += d->headerSize();
-        }
-        if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
-            d->minExtent += highlightStart;
-            d->minExtent = d->isContentFlowReversed()
-                                ? qMin(d->minExtent, endPositionFirstItem + highlightEnd)
-                                : qMax(d->minExtent, -(endPositionFirstItem - highlightEnd));
-        }
+        d->minExtent = d->minExtentForAxis(d->hData, true);
         d->hData.minExtentDirty = false;
     }
 
@@ -1267,46 +1318,7 @@ qreal QQuickItemView::maxXExtent() const
         return width();
 
     if (d->hData.maxExtentDirty) {
-        qreal highlightStart;
-        qreal highlightEnd;
-        qreal lastItemPosition = 0;
-        d->maxExtent = 0;
-        if (d->isContentFlowReversed()) {
-            highlightStart = d->highlightRangeEndValid ? d->size() - d->highlightRangeEnd : d->size();
-            highlightEnd = d->highlightRangeStartValid ? d->size() - d->highlightRangeStart : d->size();
-            lastItemPosition = d->endPosition();
-        } else {
-            highlightStart = d->highlightRangeStart;
-            highlightEnd = d->highlightRangeEnd;
-            if (d->model && d->model->count())
-                lastItemPosition = d->positionAt(d->model->count()-1);
-        }
-        if (!d->model || !d->model->count()) {
-            if (!d->isContentFlowReversed())
-                d->maxExtent = d->header ? -d->headerSize() : 0;
-            d->maxExtent += width();
-        } else if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
-            d->maxExtent = -(lastItemPosition - highlightStart);
-            if (highlightEnd != highlightStart) {
-                d->maxExtent = d->isContentFlowReversed()
-                        ? qMax(d->maxExtent, -(d->endPosition() - highlightEnd))
-                        : qMin(d->maxExtent, -(d->endPosition() - highlightEnd));
-            }
-        } else {
-            d->maxExtent = -(d->endPosition() - width());
-        }
-        if (d->isContentFlowReversed()) {
-            if (d->header)
-                d->maxExtent -= d->headerSize();
-            d->maxExtent -= d->hData.endMargin;
-        } else {
-            if (d->footer)
-                d->maxExtent -= d->footerSize();
-            d->maxExtent -= d->hData.endMargin;
-            qreal minX = minXExtent();
-            if (d->maxExtent > minX)
-                d->maxExtent = minX;
-        }
+        d->maxExtent = d->maxExtentForAxis(d->hData, true);
         d->hData.maxExtentDirty = false;
     }
 
@@ -1336,6 +1348,15 @@ qreal QQuickItemView::xOrigin() const
         return -maxXExtent() + d->size() - d->hData.endMargin;
     else
         return -minXExtent() + d->hData.startMargin;
+}
+
+qreal QQuickItemView::yOrigin() const
+{
+    Q_D(const QQuickItemView);
+    if (d->isContentFlowReversed())
+        return -maxYExtent() + d->size() - d->vData.endMargin;
+    else
+        return -minYExtent() + d->vData.startMargin;
 }
 
 void QQuickItemView::updatePolish()
@@ -1385,7 +1406,7 @@ void QQuickItemView::componentComplete()
 QQuickItemViewPrivate::QQuickItemViewPrivate()
     : itemCount(0)
     , buffer(0), bufferMode(BufferBefore | BufferAfter)
-    , layoutDirection(Qt::LeftToRight)
+    , layoutDirection(Qt::LeftToRight), verticalLayoutDirection(QQuickItemView::TopToBottom)
     , moveReason(Other)
     , visibleIndex(0)
     , currentIndex(-1), currentItem(0)
@@ -1442,13 +1463,17 @@ qreal QQuickItemViewPrivate::endPosition() const
 qreal QQuickItemViewPrivate::contentStartOffset() const
 {
     qreal pos = -headerSize();
-    if (layoutOrientation() == Qt::Vertical)
-        pos -= vData.startMargin;
-    else if (isContentFlowReversed())
-        pos -= hData.endMargin;
-    else
-        pos -= hData.startMargin;
-
+    if (layoutOrientation() == Qt::Vertical) {
+        if (isContentFlowReversed())
+            pos -= vData.endMargin;
+        else
+            pos -= vData.startMargin;
+    } else {
+        if (isContentFlowReversed())
+            pos -= hData.endMargin;
+        else
+            pos -= hData.startMargin;
+    }
     return pos;
 }
 

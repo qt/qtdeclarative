@@ -15,7 +15,7 @@ Rectangle {
             height: 30
             width: 240
             Text {
-                text: index + " " + x + "," + y
+                text: index + " " + parent.x + "," + parent.y
             }
             color: ListView.isCurrentItem ? "lightsteelblue" : "white"
         }

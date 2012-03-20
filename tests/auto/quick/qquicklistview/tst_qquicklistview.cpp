@@ -58,7 +58,9 @@
 #include <math.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
+Q_DECLARE_METATYPE(QQuickItemView::VerticalLayoutDirection)
 Q_DECLARE_METATYPE(QQuickListView::Orientation)
+Q_DECLARE_METATYPE(Qt::Key)
 
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
@@ -89,6 +91,8 @@ private slots:
     void qAbstractItemModel_inserted();
     void qAbstractItemModel_inserted_more();
     void qAbstractItemModel_inserted_more_data();
+    void qAbstractItemModel_inserted_more_bottomToTop();
+    void qAbstractItemModel_inserted_more_bottomToTop_data();
 
     void qListModelInterface_removed();
     void qListModelInterface_removed_more();
@@ -97,6 +101,8 @@ private slots:
     void qAbstractItemModel_removed();
     void qAbstractItemModel_removed_more();
     void qAbstractItemModel_removed_more_data();
+    void qAbstractItemModel_removed_more_bottomToTop();
+    void qAbstractItemModel_removed_more_bottomToTop_data();
 
     void qListModelInterface_moved();
     void qListModelInterface_moved_data();
@@ -104,6 +110,8 @@ private slots:
     void qListModelInterface_package_moved_data();
     void qAbstractItemModel_moved();
     void qAbstractItemModel_moved_data();
+    void qAbstractItemModel_moved_bottomToTop();
+    void qAbstractItemModel_moved_bottomToTop_data();
 
     void multipleChanges_condensed() { multipleChanges(true); }
     void multipleChanges_condensed_data() { multipleChanges_data(); }
@@ -113,6 +121,7 @@ private slots:
     void qListModelInterface_clear();
     void qListModelInterface_package_clear();
     void qAbstractItemModel_clear();
+    void qAbstractItemModel_clear_bottomToTop();
 
     void insertBeforeVisible();
     void insertBeforeVisible_data();
@@ -122,6 +131,8 @@ private slots:
     void currentIndex_delayedItemCreation_data();
     void currentIndex();
     void noCurrentIndex();
+    void keyNavigation();
+    void keyNavigation_data();
     void enforceRange();
     void enforceRange_withoutHighlight();
     void spacing();
@@ -144,6 +155,8 @@ private slots:
     void footer();
     void footer_data();
     void headerFooter();
+    void headerFooter_data();
+    void resetModel_headerFooter();
     void resizeView();
     void resizeViewAndRepaint();
     void sizeLessThan1();
@@ -197,11 +210,11 @@ private:
     template <class T> void items(const QUrl &source, bool forceLayout);
     template <class T> void changed(const QUrl &source, bool forceLayout);
     template <class T> void inserted(const QUrl &source);
-    template <class T> void inserted_more();
+    template <class T> void inserted_more(QQuickItemView::VerticalLayoutDirection verticalLayoutDirection = QQuickItemView::TopToBottom);
     template <class T> void removed(const QUrl &source, bool animated);
-    template <class T> void removed_more(const QUrl &source);
-    template <class T> void moved(const QUrl &source);
-    template <class T> void clear(const QUrl &source);
+    template <class T> void removed_more(const QUrl &source, QQuickItemView::VerticalLayoutDirection verticalLayoutDirection = QQuickItemView::TopToBottom);
+    template <class T> void moved(const QUrl &source, QQuickItemView::VerticalLayoutDirection verticalLayoutDirection = QQuickItemView::TopToBottom);
+    template <class T> void clear(const QUrl &source, QQuickItemView::VerticalLayoutDirection verticalLayoutDirection = QQuickItemView::TopToBottom);
     template <class T> void sections(const QUrl &source);
 
     void multipleChanges(bool condensed);
@@ -527,7 +540,7 @@ void tst_QQuickListView::inserted(const QUrl &source)
 }
 
 template <class T>
-void tst_QQuickListView::inserted_more()
+void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection verticalLayoutDirection)
 {
     QFETCH(qreal, contentY);
     QFETCH(int, insertIndex);
@@ -555,8 +568,15 @@ void tst_QQuickListView::inserted_more()
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
+    bool waitForPolish = (contentY != 0);
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop) {
+        listview->setVerticalLayoutDirection(verticalLayoutDirection);
+        QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+        contentY = -listview->height() - contentY;
+    }
     listview->setContentY(contentY);
-    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    if (waitForPolish)
+        QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QList<QPair<QString, QString> > newData;
     for (int i=0; i<insertCount; i++)
@@ -567,27 +587,32 @@ void tst_QQuickListView::inserted_more()
     // check visibleItems.first() is in correct position
     QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item0);
-    QCOMPARE(item0->y(), itemsOffsetAfterMove);
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop)
+        QCOMPARE(item0->y(), -item0->height() - itemsOffsetAfterMove);
+    else
+        QCOMPARE(item0->y(), itemsOffsetAfterMove);
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
     for (int i=0; i<items.count(); i++) {
-        if (items[i]->y() >= contentY) {
-            QQmlExpression e(qmlContext(items[i]), items[i], "index");
-            firstVisibleIndex = e.evaluate().toInt();
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (item && item->isVisible()) {
+            firstVisibleIndex = i;
             break;
         }
     }
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     QQuickText *name;
     QQuickText *number;
-    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
+        qreal pos = i*20.0 + itemsOffsetAfterMove;
+        if (verticalLayoutDirection == QQuickItemView::BottomToTop)
+            pos = -item0->height() - pos;
+        QTRY_COMPARE(item->y(), pos);
         name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
@@ -957,15 +982,13 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
 }
 
 template <class T>
-void tst_QQuickListView::removed_more(const QUrl &source)
+void tst_QQuickListView::removed_more(const QUrl &source, QQuickItemView::VerticalLayoutDirection verticalLayoutDirection)
 {
     QFETCH(qreal, contentY);
     QFETCH(int, removeIndex);
     QFETCH(int, removeCount);
     QFETCH(qreal, itemsOffsetAfterMove);
 
-    QQuickText *name;
-    QQuickText *number;
     QQuickView *canvas = getView();
 
     T model;
@@ -988,13 +1011,15 @@ void tst_QQuickListView::removed_more(const QUrl &source)
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
+    bool waitForPolish = (contentY != 0);
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop) {
+        listview->setVerticalLayoutDirection(verticalLayoutDirection);
+        QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+        contentY = -listview->height() - contentY;
+    }
     listview->setContentY(contentY);
-    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
-
-    // wait for refill (after refill, items above the firstVisibleIndex-1 should not be rendered)
-    int firstVisibleIndex = contentY / 20;
-    if (firstVisibleIndex - 2 >= 0)
-        QTRY_VERIFY(!findItem<QQuickText>(contentItem, "textName", firstVisibleIndex - 2));
+    if (waitForPolish)
+        QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     model.removeItems(removeIndex, removeCount);
     QTRY_COMPARE(listview->property("count").toInt(), model.count());
@@ -1002,24 +1027,33 @@ void tst_QQuickListView::removed_more(const QUrl &source)
     // check visibleItems.first() is in correct position
     QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item0);
-    QCOMPARE(item0->y(), itemsOffsetAfterMove);
+    QVERIFY(item0);
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop)
+        QCOMPARE(item0->y(), -item0->height() - itemsOffsetAfterMove);
+    else
+        QCOMPARE(item0->y(), itemsOffsetAfterMove);
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
     for (int i=0; i<items.count(); i++) {
-        if (items[i]->y() >= contentY) {
-            QQmlExpression e(qmlContext(items[i]), items[i], "index");
-            firstVisibleIndex = e.evaluate().toInt();
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (item && item->isVisible()) {
+            firstVisibleIndex = i;
             break;
         }
     }
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+    QQuickText *name;
+    QQuickText *number;
+    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
+        qreal pos = i*20.0 + itemsOffsetAfterMove;
+        if (verticalLayoutDirection == QQuickItemView::BottomToTop)
+            pos = -item0->height() - pos;
+        QTRY_COMPARE(item->y(), pos);
         name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
@@ -1136,7 +1170,7 @@ void tst_QQuickListView::removed_more_data()
 }
 
 template <class T>
-void tst_QQuickListView::clear(const QUrl &source)
+void tst_QQuickListView::clear(const QUrl &source, QQuickItemView::VerticalLayoutDirection verticalLayoutDirection)
 {
     QQuickView *canvas = createView();
 
@@ -1158,13 +1192,19 @@ void tst_QQuickListView::clear(const QUrl &source)
     QTRY_VERIFY(listview != 0);
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
+
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     model.clear();
 
+    QTRY_COMPARE(findItems<QQuickListView>(contentItem, "wrapper").count(), 0);
     QTRY_VERIFY(listview->count() == 0);
     QTRY_VERIFY(listview->currentItem() == 0);
-    QTRY_VERIFY(listview->contentY() == 0);
+    if (verticalLayoutDirection == QQuickItemView::TopToBottom)
+        QTRY_COMPARE(listview->contentY(), 0.0);
+    else
+        QTRY_COMPARE(listview->contentY(), -listview->height());
     QVERIFY(listview->currentIndex() == -1);
 
     // confirm sanity when adding an item to cleared list
@@ -1178,7 +1218,7 @@ void tst_QQuickListView::clear(const QUrl &source)
 }
 
 template <class T>
-void tst_QQuickListView::moved(const QUrl &source)
+void tst_QQuickListView::moved(const QUrl &source, QQuickItemView::VerticalLayoutDirection verticalLayoutDirection)
 {
     QFETCH(qreal, contentY);
     QFETCH(int, from);
@@ -1209,15 +1249,19 @@ void tst_QQuickListView::moved(const QUrl &source)
     QTRY_VERIFY(listview != 0);
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
+
+    // always need to wait for view to be painted before the first move()
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
-    QQuickItem *currentItem = listview->currentItem();
-    QTRY_VERIFY(currentItem != 0);
-
-    if (contentY != 0) {
-        listview->setContentY(contentY);
+    bool waitForPolish = (contentY != 0);
+    if (verticalLayoutDirection == QQuickItemView::BottomToTop) {
+        listview->setVerticalLayoutDirection(verticalLayoutDirection);
         QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+        contentY = -listview->height() - contentY;
     }
+    listview->setContentY(contentY);
+    if (waitForPolish)
+        QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     model.moveItems(from, to, count);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
@@ -1225,22 +1269,22 @@ void tst_QQuickListView::moved(const QUrl &source)
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
     for (int i=0; i<items.count(); i++) {
-        if (items[i]->y() >= contentY) {
-            QQmlExpression e(qmlContext(items[i]), items[i], "index");
-            firstVisibleIndex = e.evaluate().toInt();
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (item && item->isVisible()) {
+            firstVisibleIndex = i;
             break;
         }
     }
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
-        if (i >= firstVisibleIndex + 16)    // index has moved out of view
-            continue;
+    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
+        qreal pos = i*20.0 + itemsOffsetAfterMove;
+        if (verticalLayoutDirection == QQuickItemView::BottomToTop)
+            pos = -item->height() - pos;
+        QTRY_COMPARE(item->y(), pos);
         name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
@@ -1249,7 +1293,7 @@ void tst_QQuickListView::moved(const QUrl &source)
         QTRY_COMPARE(number->text(), model.number(i));
 
         // current index should have been updated
-        if (item == currentItem)
+        if (item == listview->currentItem())
             QTRY_COMPARE(listview->currentIndex(), i);
     }
 
@@ -2340,34 +2384,10 @@ void tst_QQuickListView::currentIndex()
     QCOMPARE(listview->currentItem(), findItem<QQuickItem>(contentItem, "wrapper", 20));
     QCOMPARE(listview->highlightItem()->y(), listview->currentItem()->y());
 
-    // no wrap
     listview->setCurrentIndex(0);
     QCOMPARE(listview->currentIndex(), 0);
     // confirm that the velocity is updated
     QTRY_VERIFY(listview->verticalVelocity() != 0.0);
-
-    listview->incrementCurrentIndex();
-    QCOMPARE(listview->currentIndex(), 1);
-    listview->decrementCurrentIndex();
-    QCOMPARE(listview->currentIndex(), 0);
-
-    listview->decrementCurrentIndex();
-    QCOMPARE(listview->currentIndex(), 0);
-
-    // with wrap
-    ctxt->setContextProperty("testWrap", QVariant(true));
-    QVERIFY(listview->isWrapEnabled());
-
-    listview->decrementCurrentIndex();
-    QCOMPARE(listview->currentIndex(), model.count()-1);
-
-    QTRY_COMPARE(listview->contentY(), 280.0);
-
-    listview->incrementCurrentIndex();
-    QCOMPARE(listview->currentIndex(), 0);
-
-    QTRY_COMPARE(listview->contentY(), 0.0);
-
 
     // footer should become visible if it is out of view, and then current index is set to count-1
     canvas->rootObject()->setProperty("showFooter", true);
@@ -2386,40 +2406,6 @@ void tst_QQuickListView::currentIndex()
     listview->setCurrentIndex(0);
     QTRY_COMPARE(listview->contentY(), -listview->headerItem()->height());
     canvas->rootObject()->setProperty("showHeader", false);
-
-
-    // Test keys
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
-
-    listview->setCurrentIndex(0);
-
-    QTest::keyClick(canvas, Qt::Key_Down);
-    QCOMPARE(listview->currentIndex(), 1);
-
-    QTest::keyClick(canvas, Qt::Key_Up);
-    QCOMPARE(listview->currentIndex(), 0);
-
-    // hold down Key_Down
-    for (int i=0; i<model.count()-1; i++) {
-        QTest::simulateEvent(canvas, true, Qt::Key_Down, Qt::NoModifier, "", true);
-        QTRY_COMPARE(listview->currentIndex(), i+1);
-    }
-    QTest::keyRelease(canvas, Qt::Key_Down);
-    QTRY_COMPARE(listview->currentIndex(), model.count()-1);
-    QTRY_COMPARE(listview->contentY(), 280.0);
-
-    // hold down Key_Up
-    for (int i=model.count()-1; i > 0; i--) {
-        QTest::simulateEvent(canvas, true, Qt::Key_Up, Qt::NoModifier, "", true);
-        QTRY_COMPARE(listview->currentIndex(), i-1);
-    }
-    QTest::keyRelease(canvas, Qt::Key_Up);
-    QTRY_COMPARE(listview->currentIndex(), 0);
-    QTRY_COMPARE(listview->contentY(), 0.0);
-
 
     // turn off auto highlight
     listview->setHighlightFollowsCurrentItem(false);
@@ -2443,6 +2429,7 @@ void tst_QQuickListView::currentIndex()
     QVERIFY(!listview->highlightItem());
     QVERIFY(!listview->currentItem());
 
+    // moving currentItem out of view should make it invisible
     listview->setCurrentIndex(0);
     QTRY_VERIFY(listview->currentItem()->isVisible());
     listview->setContentY(200);
@@ -2487,6 +2474,129 @@ void tst_QQuickListView::noCurrentIndex()
     QVERIFY(listview->currentItem());
 
     delete canvas;
+}
+
+void tst_QQuickListView::keyNavigation()
+{
+    QFETCH(QQuickListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
+    QFETCH(Qt::Key, forwardsKey);
+    QFETCH(Qt::Key, backwardsKey);
+    QFETCH(QPointF, contentPosAtFirstItem);
+    QFETCH(QPointF, contentPosAtLastItem);
+
+    QmlListModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQuickView *canvas = getView();
+    TestObject *testObject = new TestObject;
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->rootContext()->setContextProperty("testObject", testObject);
+    canvas->setSource(testFileUrl("listviewtest.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    canvas->requestActivateWindow();
+    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
+    QCOMPARE(listview->currentIndex(), 0);
+
+    QTest::keyClick(canvas, forwardsKey);
+    QCOMPARE(listview->currentIndex(), 1);
+
+    QTest::keyClick(canvas, backwardsKey);
+    QCOMPARE(listview->currentIndex(), 0);
+
+    // hold down a key to go forwards
+    for (int i=0; i<model.count()-1; i++) {
+        QTest::simulateEvent(canvas, true, forwardsKey, Qt::NoModifier, "", true);
+        QTRY_COMPARE(listview->currentIndex(), i+1);
+    }
+    QTest::keyRelease(canvas, forwardsKey);
+    QTRY_COMPARE(listview->currentIndex(), model.count()-1);
+    QTRY_COMPARE(listview->contentX(), contentPosAtLastItem.x());
+    QTRY_COMPARE(listview->contentY(), contentPosAtLastItem.y());
+
+    // hold down a key to go backwards
+    for (int i=model.count()-1; i > 0; i--) {
+        QTest::simulateEvent(canvas, true, backwardsKey, Qt::NoModifier, "", true);
+        QTRY_COMPARE(listview->currentIndex(), i-1);
+    }
+    QTest::keyRelease(canvas, backwardsKey);
+    QTRY_COMPARE(listview->currentIndex(), 0);
+    QTRY_COMPARE(listview->contentX(), contentPosAtFirstItem.x());
+    QTRY_COMPARE(listview->contentY(), contentPosAtFirstItem.y());
+
+    // no wrap
+    QVERIFY(!listview->isWrapEnabled());
+    listview->incrementCurrentIndex();
+    QCOMPARE(listview->currentIndex(), 1);
+    listview->decrementCurrentIndex();
+    QCOMPARE(listview->currentIndex(), 0);
+
+    listview->decrementCurrentIndex();
+    QCOMPARE(listview->currentIndex(), 0);
+
+    // with wrap
+    listview->setWrapEnabled(true);
+    QVERIFY(listview->isWrapEnabled());
+
+    listview->decrementCurrentIndex();
+    QCOMPARE(listview->currentIndex(), model.count()-1);
+    QTRY_COMPARE(listview->contentX(), contentPosAtLastItem.x());
+    QTRY_COMPARE(listview->contentY(), contentPosAtLastItem.y());
+
+    listview->incrementCurrentIndex();
+    QCOMPARE(listview->currentIndex(), 0);
+    QTRY_COMPARE(listview->contentX(), contentPosAtFirstItem.x());
+    QTRY_COMPARE(listview->contentY(), contentPosAtFirstItem.y());
+
+    releaseView(canvas);
+    delete testObject;
+}
+
+void tst_QQuickListView::keyNavigation_data()
+{
+    QTest::addColumn<QQuickListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
+    QTest::addColumn<Qt::Key>("forwardsKey");
+    QTest::addColumn<Qt::Key>("backwardsKey");
+    QTest::addColumn<QPointF>("contentPosAtFirstItem");
+    QTest::addColumn<QPointF>("contentPosAtLastItem");
+
+    QTest::newRow("Vertical, TopToBottom")
+            << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << Qt::Key_Down << Qt::Key_Up
+            << QPointF(0, 0)
+            << QPointF(0, 30*20 - 320);
+
+    QTest::newRow("Vertical, BottomToTop")
+            << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << Qt::Key_Up << Qt::Key_Down
+            << QPointF(0, -320)
+            << QPointF(0, -(30 * 20));
+
+    QTest::newRow("Horizontal, LeftToRight")
+            << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << Qt::Key_Right << Qt::Key_Left
+            << QPointF(0, 0)
+            << QPointF(30*240 - 240, 0);
+
+    QTest::newRow("Horizontal, RightToLeft")
+            << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << Qt::Key_Left << Qt::Key_Right
+            << QPointF(-240, 0)
+            << QPointF(-(30 * 240), 0);
 }
 
 void tst_QQuickListView::itemList()
@@ -3110,11 +3220,12 @@ void tst_QQuickListView::header()
 {
     QFETCH(QQuickListView::Orientation, orientation);
     QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(QPointF, initialHeaderPos);
-    QFETCH(QPointF, firstDelegatePos);
-    QFETCH(QPointF, initialContentPos);
     QFETCH(QPointF, changedHeaderPos);
+    QFETCH(QPointF, initialContentPos);
     QFETCH(QPointF, changedContentPos);
+    QFETCH(QPointF, firstDelegatePos);
     QFETCH(QPointF, resizeContentPos);
 
     QmlListModel model;
@@ -3133,6 +3244,8 @@ void tst_QQuickListView::header()
     QTRY_VERIFY(listview != 0);
     listview->setOrientation(orientation);
     listview->setLayoutDirection(layoutDirection);
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -3183,6 +3296,11 @@ void tst_QQuickListView::header()
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
 
+    listview->positionViewAtBeginning();
+    header->setHeight(10);
+    header->setWidth(40);
+    QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), resizeContentPos);
+
     releaseView(canvas);
 
 
@@ -3200,6 +3318,7 @@ void tst_QQuickListView::header()
     QTRY_VERIFY(listview != 0);
     listview->setOrientation(orientation);
     listview->setLayoutDirection(layoutDirection);
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     listview->setWidth(240);
@@ -3214,6 +3333,7 @@ void tst_QQuickListView::header_data()
 {
     QTest::addColumn<QQuickListView::Orientation>("orientation");
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
     QTest::addColumn<QPointF>("initialHeaderPos");
     QTest::addColumn<QPointF>("changedHeaderPos");
     QTest::addColumn<QPointF>("initialContentPos");
@@ -3223,11 +3343,11 @@ void tst_QQuickListView::header_data()
 
     // header1 = 100 x 30
     // header2 = 50 x 20
-    // delegates = 240 x 20
+    // delegates = 240 x 30
     // view width = 240
 
     // header above items, top left
-    QTest::newRow("vertical, left to right") << QQuickListView::Vertical << Qt::LeftToRight
+    QTest::newRow("vertical, left to right") << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
         << QPointF(0, -30)
         << QPointF(0, -20)
         << QPointF(0, -30)
@@ -3236,7 +3356,7 @@ void tst_QQuickListView::header_data()
         << QPointF(0, -10);
 
     // header above items, top right
-    QTest::newRow("vertical, layout right to left") << QQuickListView::Vertical << Qt::RightToLeft
+    QTest::newRow("vertical, layout right to left") << QQuickListView::Vertical << Qt::RightToLeft << QQuickItemView::TopToBottom
         << QPointF(0, -30)
         << QPointF(0, -20)
         << QPointF(0, -30)
@@ -3245,7 +3365,7 @@ void tst_QQuickListView::header_data()
         << QPointF(0, -10);
 
     // header to left of items
-    QTest::newRow("horizontal, layout left to right") << QQuickListView::Horizontal << Qt::LeftToRight
+    QTest::newRow("horizontal, layout left to right") << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom
         << QPointF(-100, 0)
         << QPointF(-50, 0)
         << QPointF(-100, 0)
@@ -3254,13 +3374,22 @@ void tst_QQuickListView::header_data()
         << QPointF(-40, 0);
 
     // header to right of items
-    QTest::newRow("horizontal, layout right to left") << QQuickListView::Horizontal << Qt::RightToLeft
+    QTest::newRow("horizontal, layout right to left") << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
         << QPointF(0, 0)
         << QPointF(0, 0)
         << QPointF(-240 + 100, 0)
         << QPointF(-240 + 50, 0)
         << QPointF(-240, 0)
         << QPointF(-240 + 40, 0);
+
+    // header below items
+    QTest::newRow("vertical, bottom to top") << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
+        << QPointF(0, 0)
+        << QPointF(0, 0)
+        << QPointF(0, -320 + 30)
+        << QPointF(0, -320 + 20)
+        << QPointF(0, -30)
+        << QPointF(0, -320 + 10);
 }
 
 void tst_QQuickListView::header_delayItemCreation()
@@ -3295,6 +3424,7 @@ void tst_QQuickListView::footer()
 {
     QFETCH(QQuickListView::Orientation, orientation);
     QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(QPointF, initialFooterPos);
     QFETCH(QPointF, firstDelegatePos);
     QFETCH(QPointF, initialContentPos);
@@ -3319,6 +3449,7 @@ void tst_QQuickListView::footer()
     QTRY_VERIFY(listview != 0);
     listview->setOrientation(orientation);
     listview->setLayoutDirection(layoutDirection);
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QQuickItem *contentItem = listview->contentItem();
@@ -3347,7 +3478,8 @@ void tst_QQuickListView::footer()
     model.removeItem(1);
 
     if (orientation == QQuickListView::Vertical) {
-        QTRY_COMPARE(footer->y(), initialFooterPos.y() - 20);   // delegate height = 20
+        QTRY_COMPARE(footer->y(), verticalLayoutDirection == QQuickItemView::TopToBottom ?
+                initialFooterPos.y() - 20 : initialFooterPos.y() + 20);  // delegate width = 40
     } else {
         QTRY_COMPARE(footer->x(), layoutDirection == Qt::LeftToRight ?
                 initialFooterPos.x() - 40 : initialFooterPos.x() + 40);  // delegate width = 40
@@ -3359,6 +3491,8 @@ void tst_QQuickListView::footer()
     QPointF posWhenNoItems(0, 0);
     if (orientation == QQuickListView::Horizontal && layoutDirection == Qt::RightToLeft)
         posWhenNoItems.setX(-100);
+    else if (orientation == QQuickListView::Vertical && verticalLayoutDirection == QQuickItemView::BottomToTop)
+        posWhenNoItems.setY(-30);
     QTRY_COMPARE(footer->pos(), posWhenNoItems);
 
     // if header is present, it's at a negative pos, so the footer should not move
@@ -3403,6 +3537,7 @@ void tst_QQuickListView::footer_data()
 {
     QTest::addColumn<QQuickListView::Orientation>("orientation");
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
     QTest::addColumn<QPointF>("initialFooterPos");
     QTest::addColumn<QPointF>("changedFooterPos");
     QTest::addColumn<QPointF>("initialContentPos");
@@ -3417,7 +3552,7 @@ void tst_QQuickListView::footer_data()
     // view height = 320
 
     // footer below items, bottom left
-    QTest::newRow("vertical, layout left to right") << QQuickListView::Vertical << Qt::LeftToRight
+    QTest::newRow("vertical, layout left to right") << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
         << QPointF(0, 3 * 20)
         << QPointF(0, 30 * 20)  // added 30 items
         << QPointF(0, 0)
@@ -3426,7 +3561,7 @@ void tst_QQuickListView::footer_data()
         << QPointF(0, 30 * 20 - 320 + 10);
 
     // footer below items, bottom right
-    QTest::newRow("vertical, layout right to left") << QQuickListView::Vertical << Qt::RightToLeft
+    QTest::newRow("vertical, layout right to left") << QQuickListView::Vertical << Qt::RightToLeft << QQuickItemView::TopToBottom
         << QPointF(0, 3 * 20)
         << QPointF(0, 30 * 20)
         << QPointF(0, 0)
@@ -3435,7 +3570,7 @@ void tst_QQuickListView::footer_data()
         << QPointF(0, 30 * 20 - 320 + 10);
 
     // footer to right of items
-    QTest::newRow("horizontal, layout left to right") << QQuickListView::Horizontal << Qt::LeftToRight
+    QTest::newRow("horizontal, layout left to right") << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom
         << QPointF(40 * 3, 0)
         << QPointF(40 * 30, 0)
         << QPointF(0, 0)
@@ -3444,13 +3579,22 @@ void tst_QQuickListView::footer_data()
         << QPointF(40 * 30 - 240 + 40, 0);
 
     // footer to left of items
-    QTest::newRow("horizontal, layout right to left") << QQuickListView::Horizontal << Qt::RightToLeft
+    QTest::newRow("horizontal, layout right to left") << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
         << QPointF(-(40 * 3) - 100, 0)
         << QPointF(-(40 * 30) - 50, 0)     // 50 = new footer width
         << QPointF(-240, 0)
         << QPointF(-240, 0)
         << QPointF(-40, 0)
         << QPointF(-(40 * 30) - 40, 0);
+
+    // footer above items
+    QTest::newRow("vertical, layout left to right") << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
+        << QPointF(0, -(3 * 20) - 30)
+        << QPointF(0, -(30 * 20) - 20)
+        << QPointF(0, -320)
+        << QPointF(0, -320)
+        << QPointF(0, -20)
+        << QPointF(0, -(30 * 20) - 10);
 }
 
 class LVAccessor : public QQuickListView
@@ -3462,140 +3606,127 @@ public:
     qreal maxX() const { return maxXExtent(); }
 };
 
+
 void tst_QQuickListView::headerFooter()
 {
-    {
-        // Vertical
-        QQuickView *canvas = createView();
+    QFETCH(QQuickListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
+    QFETCH(QPointF, headerPos);
+    QFETCH(QPointF, footerPos);
+    QFETCH(QPointF, minPos);
+    QFETCH(QPointF, maxPos);
 
-        QmlListModel model;
-        QQmlContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+    QQuickView *canvas = getView();
 
-        canvas->setSource(testFileUrl("headerfooter.qml"));
-        qApp->processEvents();
+    QmlListModel model;
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    canvas->setSource(testFileUrl("headerfooter.qml"));
+    canvas->show();
+    qApp->processEvents();
 
-        QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
-        QTRY_VERIFY(listview != 0);
+    QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
+    QTRY_VERIFY(listview != 0);
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
-        QQuickItem *contentItem = listview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
 
-        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->y(), -header->height());
+    QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+    QVERIFY(header);
+    QCOMPARE(header->pos(), headerPos);
 
-        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->y(), 0.);
+    QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+    QVERIFY(footer);
+    QCOMPARE(footer->pos(), footerPos);
 
-        QCOMPARE(static_cast<LVAccessor*>(listview)->minY(), header->height());
-        QCOMPARE(static_cast<LVAccessor*>(listview)->maxY(), header->height());
+    QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), minPos.x());
+    QCOMPARE(static_cast<LVAccessor*>(listview)->minY(), minPos.y());
+    QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), maxPos.x());
+    QCOMPARE(static_cast<LVAccessor*>(listview)->maxY(), maxPos.y());
 
-        delete canvas;
-    }
-    {
-        // Horizontal
-        QQuickView *canvas = createView();
+    releaseView(canvas);
+}
 
-        QmlListModel model;
-        QQmlContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+void tst_QQuickListView::headerFooter_data()
+{
+    QTest::addColumn<QQuickListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
+    QTest::addColumn<QPointF>("headerPos");
+    QTest::addColumn<QPointF>("footerPos");
+    QTest::addColumn<QPointF>("minPos");
+    QTest::addColumn<QPointF>("maxPos");
 
-        canvas->setSource(testFileUrl("headerfooter.qml"));
-        canvas->rootObject()->setProperty("horizontal", true);
-        qApp->processEvents();
+    // header is 240x20 (or 20x320 in Horizontal orientation)
+    // footer is 240x30 (or 30x320 in Horizontal orientation)
 
-        QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
-        QTRY_VERIFY(listview != 0);
+    QTest::newRow("Vertical, TopToBottom")
+            << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << QPointF(0, -20) << QPointF(0, 0)
+            << QPointF(0, 20) << QPointF(240, 20);
 
-        QQuickItem *contentItem = listview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+    QTest::newRow("Vertical, BottomToTop")
+            << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << QPointF(0, 0) << QPointF(0, -30)
+            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20);  // content flow is reversed
 
-        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->x(), -header->width());
 
-        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->x(), 0.);
+    QTest::newRow("Horizontal, LeftToRight")
+            << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << QPointF(-20, 0) << QPointF(0, 0)
+            << QPointF(20, 0) << QPointF(20, 320);
 
-        QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), header->width());
-        QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), header->width());
+    QTest::newRow("Horizontal, RightToLeft")
+            << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << QPointF(0, 0) << QPointF(-30, 0)
+            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320);  // content flow is reversed
+}
 
-        delete canvas;
-    }
-    {
-        // Horizontal RTL
-        QQuickView *canvas = createView();
+void tst_QQuickListView::resetModel_headerFooter()
+{
+    // Resetting a model shouldn't crash in views with header/footer
 
-        QmlListModel model;
-        QQmlContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+    QQuickView *canvas = createView();
 
-        canvas->setSource(testFileUrl("headerfooter.qml"));
-        canvas->rootObject()->setProperty("horizontal", true);
-        canvas->rootObject()->setProperty("rtl", true);
-        qApp->processEvents();
+    QaimModel model;
+    for (int i = 0; i < 4; i++)
+        model.addItem("Item" + QString::number(i), "");
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
 
-        QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
-        QTRY_VERIFY(listview != 0);
+    canvas->setSource(testFileUrl("headerfooter.qml"));
+    qApp->processEvents();
 
-        QQuickItem *contentItem = listview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+    QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
+    QTRY_VERIFY(listview != 0);
 
-        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->x(), 0.);
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
 
-        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->x(), -footer->width());
+    QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
+    QVERIFY(header);
+    QCOMPARE(header->y(), -header->height());
 
-        QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), 240. - header->width());
-        QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), 240. - header->width());
+    QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
+    QVERIFY(footer);
+    QCOMPARE(footer->y(), 30.*4);
 
-        delete canvas;
-    }
-    {
-        // Reset model
-        QQuickView *canvas = createView();
+    model.reset();
 
-        QaimModel model;
-        for (int i = 0; i < 4; i++)
-            model.addItem("Item" + QString::number(i), "");
-        QQmlContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+    header = findItem<QQuickItem>(contentItem, "header");
+    QVERIFY(header);
+    QCOMPARE(header->y(), -header->height());
 
-        canvas->setSource(testFileUrl("headerfooter.qml"));
-        qApp->processEvents();
+    footer = findItem<QQuickItem>(contentItem, "footer");
+    QVERIFY(footer);
+    QCOMPARE(footer->y(), 30.*4);
 
-        QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
-        QTRY_VERIFY(listview != 0);
-
-        QQuickItem *contentItem = listview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
-
-        QQuickItem *header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->y(), -header->height());
-
-        QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->y(), 30.*4);
-
-        model.reset();
-
-        header = findItem<QQuickItem>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->y(), -header->height());
-
-        footer = findItem<QQuickItem>(contentItem, "footer");
-        QVERIFY(footer);
-        QCOMPARE(footer->y(), 30.*4);
-
-        delete canvas;
-    }
+    delete canvas;
 }
 
 void tst_QQuickListView::resizeView()
@@ -4315,13 +4446,14 @@ void tst_QQuickListView::marginsResize()
 {
     QFETCH(QQuickListView::Orientation, orientation);
     QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(qreal, start);
     QFETCH(qreal, end);
 
     QPoint flickStart(20, 20);
     QPoint flickEnd(20, 20);
     if (orientation == QQuickListView::Vertical)
-        flickStart.ry() += 180;
+        flickStart.ry() += (verticalLayoutDirection == QQuickItemView::TopToBottom) ? 180 : -180;
     else
         flickStart.rx() += (layoutDirection == Qt::LeftToRight) ? 180 : -180;
 
@@ -4336,6 +4468,7 @@ void tst_QQuickListView::marginsResize()
 
     listview->setOrientation(orientation);
     listview->setLayoutDirection(layoutDirection);
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     // view is resized after componentCompleted - top margin should still be visible
@@ -4381,20 +4514,34 @@ void tst_QQuickListView::marginsResize_data()
 {
     QTest::addColumn<QQuickListView::Orientation>("orientation");
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickListView::VerticalLayoutDirection>("verticalLayoutDirection");
     QTest::addColumn<qreal>("start");
     QTest::addColumn<qreal>("end");
 
     // in Right to Left mode, leftMargin still means leftMargin - it doesn't reverse to mean rightMargin
 
-    QTest::newRow("vertical") << QQuickListView::Vertical << Qt::LeftToRight << -40.0 << 1020.0;
-    QTest::newRow("horizontal") << QQuickListView::Horizontal << Qt::LeftToRight << -40.0 << 1020.0;
-    QTest::newRow("horizontal, rtl") << QQuickListView::Horizontal << Qt::RightToLeft << -180.0 << -1240.0;
+    QTest::newRow("vertical")
+            << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << -40.0 << 1020.0;
+
+    QTest::newRow("vertical, BottomToTop")
+            << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << -180.0 << -1240.0;
+
+    QTest::newRow("horizontal")
+            << QQuickListView::Horizontal<< Qt::LeftToRight << QQuickItemView::TopToBottom
+            << -40.0 << 1020.0;
+
+    QTest::newRow("horizontal, rtl")
+            << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << -180.0 << -1240.0;
 }
 
 void tst_QQuickListView::snapToItem_data()
 {
     QTest::addColumn<QQuickListView::Orientation>("orientation");
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
     QTest::addColumn<int>("highlightRangeMode");
     QTest::addColumn<QPoint>("flickStart");
     QTest::addColumn<QPoint>("flickEnd");
@@ -4402,22 +4549,36 @@ void tst_QQuickListView::snapToItem_data()
     QTest::addColumn<qreal>("endExtent");
     QTest::addColumn<qreal>("startExtent");
 
-    QTest::newRow("vertical, left to right") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("vertical, top to bottom")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 560.0 << 0.0;
 
-    QTest::newRow("horizontal, left to right") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("vertical, bottom to top")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop << int(QQuickItemView::NoHighlightRange)
+        << QPoint(20, 20) << QPoint(20, 200) << -60.0 << -560.0 - 240.0 << -240.0;
+
+    QTest::newRow("horizontal, left to right")
+        << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
         << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 560.0 << 0.0;
 
-    QTest::newRow("horizontal, right to left") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("horizontal, right to left")
+        << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -560.0 - 240.0 << -240.0;
 
-    QTest::newRow("vertical, left to right, enforce range") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("vertical, top to bottom, enforce range")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 700.0 << -20.0;
 
-    QTest::newRow("horizontal, left to right, enforce range") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("vertical, bottom to top, enforce range")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(20, 20) << QPoint(20, 200) << -60.0 << -560.0 - 240.0 - 140.0 << -220.0;
+
+    QTest::newRow("horizontal, left to right, enforce range")
+        << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 700.0 << -20.0;
 
-    QTest::newRow("horizontal, right to left, enforce range") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("horizontal, right to left, enforce range")
+        << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -560.0 - 240.0 - 140.0 << -220.0;
 }
 
@@ -4425,6 +4586,7 @@ void tst_QQuickListView::snapToItem()
 {
     QFETCH(QQuickListView::Orientation, orientation);
     QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(int, highlightRangeMode);
     QFETCH(QPoint, flickStart);
     QFETCH(QPoint, flickEnd);
@@ -4443,6 +4605,7 @@ void tst_QQuickListView::snapToItem()
 
     listview->setOrientation(orientation);
     listview->setLayoutDirection(layoutDirection);
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
     listview->setHighlightRangeMode(QQuickItemView::HighlightRangeMode(highlightRangeMode));
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
@@ -4462,7 +4625,7 @@ void tst_QQuickListView::snapToItem()
         flick(canvas, flickStart, flickEnd, 180);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
-           ? !listview->isAtYEnd()
+           ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYEnd() : !listview->isAtYBeginning()
            : layoutDirection == Qt::LeftToRight ? !listview->isAtXEnd() : !listview->isAtXBeginning());
 
     if (orientation == QQuickListView::Vertical)
@@ -4475,7 +4638,7 @@ void tst_QQuickListView::snapToItem()
         flick(canvas, flickEnd, flickStart, 180);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
-           ? !listview->isAtYBeginning()
+           ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYBeginning() : !listview->isAtYEnd()
            : layoutDirection == Qt::LeftToRight ? !listview->isAtXBeginning() : !listview->isAtXEnd());
 
     if (orientation == QQuickListView::Vertical)
@@ -4551,6 +4714,16 @@ void tst_QQuickListView::qAbstractItemModel_inserted_more_data()
     inserted_more_data();
 }
 
+void tst_QQuickListView::qAbstractItemModel_inserted_more_bottomToTop()
+{
+    inserted_more<QaimModel>(QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickListView::qAbstractItemModel_inserted_more_bottomToTop_data()
+{
+    inserted_more_data();
+}
+
 void tst_QQuickListView::qListModelInterface_removed()
 {
     removed<QmlListModel>(testFileUrl("listviewtest.qml"), false);
@@ -4589,6 +4762,16 @@ void tst_QQuickListView::qAbstractItemModel_removed_more_data()
     removed_more_data();
 }
 
+void tst_QQuickListView::qAbstractItemModel_removed_more_bottomToTop()
+{
+    removed_more<QaimModel>(testFileUrl("listviewtest.qml"), QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickListView::qAbstractItemModel_removed_more_bottomToTop_data()
+{
+    removed_more_data();
+}
+
 void tst_QQuickListView::qListModelInterface_moved()
 {
     moved<QmlListModel>(testFileUrl("listviewtest.qml"));
@@ -4619,6 +4802,16 @@ void tst_QQuickListView::qAbstractItemModel_moved_data()
     moved_data();
 }
 
+void tst_QQuickListView::qAbstractItemModel_moved_bottomToTop()
+{
+    moved<QaimModel>(testFileUrl("listviewtest-package.qml"), QQuickItemView::BottomToTop);
+}
+
+void tst_QQuickListView::qAbstractItemModel_moved_bottomToTop_data()
+{
+    moved_data();
+}
+
 void tst_QQuickListView::qListModelInterface_clear()
 {
     clear<QmlListModel>(testFileUrl("listviewtest.qml"));
@@ -4632,6 +4825,11 @@ void tst_QQuickListView::qListModelInterface_package_clear()
 void tst_QQuickListView::qAbstractItemModel_clear()
 {
     clear<QaimModel>(testFileUrl("listviewtest.qml"));
+}
+
+void tst_QQuickListView::qAbstractItemModel_clear_bottomToTop()
+{
+    clear<QaimModel>(testFileUrl("listviewtest.qml"), QQuickItemView::BottomToTop);
 }
 
 void tst_QQuickListView::qListModelInterface_sections()
@@ -4732,6 +4930,7 @@ void tst_QQuickListView::snapOneItem_data()
 {
     QTest::addColumn<QQuickListView::Orientation>("orientation");
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickItemView::VerticalLayoutDirection>("verticalLayoutDirection");
     QTest::addColumn<int>("highlightRangeMode");
     QTest::addColumn<QPoint>("flickStart");
     QTest::addColumn<QPoint>("flickEnd");
@@ -4739,22 +4938,36 @@ void tst_QQuickListView::snapOneItem_data()
     QTest::addColumn<qreal>("endExtent");
     QTest::addColumn<qreal>("startExtent");
 
-    QTest::newRow("vertical, left to right") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("vertical, top to bottom")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 200) << QPoint(20, 20) << 180.0 << 560.0 << 0.0;
 
-    QTest::newRow("horizontal, left to right") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("vertical, bottom to top")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop << int(QQuickItemView::NoHighlightRange)
+        << QPoint(20, 20) << QPoint(20, 200) << -420.0 << -560.0 - 240.0 << -240.0;
+
+    QTest::newRow("horizontal, left to right")
+        << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
         << QPoint(200, 20) << QPoint(20, 20) << 180.0 << 560.0 << 0.0;
 
-    QTest::newRow("horizontal, right to left") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
+    QTest::newRow("horizontal, right to left")
+        << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 20) << QPoint(200, 20) << -420.0 << -560.0 - 240.0 << -240.0;
 
-    QTest::newRow("vertical, left to right, enforce range") << QQuickListView::Vertical << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("vertical, top to bottom, enforce range")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(20, 200) << QPoint(20, 20) << 180.0 << 580.0 << -20.0;
 
-    QTest::newRow("horizontal, left to right, enforce range") << QQuickListView::Horizontal << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("vertical, bottom to top, enforce range")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(20, 20) << QPoint(20, 200) << -420.0 << -580.0 - 240.0 << -220.0;
+
+    QTest::newRow("horizontal, left to right, enforce range")
+        << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(200, 20) << QPoint(20, 20) << 180.0 << 580.0 << -20.0;
 
-    QTest::newRow("horizontal, right to left, enforce range") << QQuickListView::Horizontal << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
+    QTest::newRow("horizontal, right to left, enforce range")
+        << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
         << QPoint(20, 20) << QPoint(200, 20) << -420.0 << -580.0 - 240.0 << -220.0;
 }
 
@@ -4762,6 +4975,7 @@ void tst_QQuickListView::snapOneItem()
 {
     QFETCH(QQuickListView::Orientation, orientation);
     QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(int, highlightRangeMode);
     QFETCH(QPoint, flickStart);
     QFETCH(QPoint, flickEnd);
@@ -4785,6 +4999,7 @@ void tst_QQuickListView::snapOneItem()
 
     listview->setOrientation(orientation);
     listview->setLayoutDirection(layoutDirection);
+    listview->setVerticalLayoutDirection(verticalLayoutDirection);
     listview->setHighlightRangeMode(QQuickItemView::HighlightRangeMode(highlightRangeMode));
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
@@ -4811,7 +5026,7 @@ void tst_QQuickListView::snapOneItem()
         flick(canvas, flickStart, flickEnd, 180);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
-           ? !listview->isAtYEnd()
+           ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYEnd() : !listview->isAtYBeginning()
            : layoutDirection == Qt::LeftToRight ? !listview->isAtXEnd() : !listview->isAtXBeginning());
 
     if (orientation == QQuickListView::Vertical)
@@ -4829,7 +5044,7 @@ void tst_QQuickListView::snapOneItem()
         flick(canvas, flickEnd, flickStart, 180);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
-           ? !listview->isAtYBeginning()
+           ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYBeginning() : !listview->isAtYEnd()
            : layoutDirection == Qt::LeftToRight ? !listview->isAtXBeginning() : !listview->isAtXEnd());
 
     if (orientation == QQuickListView::Vertical)
@@ -6303,4 +6518,5 @@ void tst_QQuickListView::destroyItemOnCreation()
 QTEST_MAIN(tst_QQuickListView)
 
 #include "tst_qquicklistview.moc"
+
 

@@ -26,8 +26,9 @@ Rectangle {
                     text: index
                 }
                 Text {
-                    x: 40
+                    x: 30
                     text: wrapper.x + ", " + wrapper.y
+                    font.pixelSize: 12
                 }
                 Text {
                     y: 20
@@ -58,12 +59,11 @@ Rectangle {
         height: 320
         cellWidth: 80
         cellHeight: 60
-        flow: (testTopToBottom == false) ? GridView.LeftToRight : GridView.TopToBottom
-        layoutDirection: (testRightToLeft == true) ? Qt.RightToLeft : Qt.LeftToRight
         model: testModel
         delegate: myDelegate
         header: root.showHeader ? headerFooter : null
         footer: root.showFooter ? headerFooter : null
         cacheBuffer: root.cacheBuffer
+        focus: true
     }
 }

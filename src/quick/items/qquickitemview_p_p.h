@@ -204,6 +204,10 @@ public:
     void updateUnrequestedPositions();
     void updateVisibleIndex();
     void positionViewAtIndex(int index, int mode);
+
+    qreal minExtentForAxis(const AxisData &axisData, bool forXAxis) const;
+    qreal maxExtentForAxis(const AxisData &axisData, bool forXAxis) const;
+
     void applyPendingChanges();
     bool applyModelChanges(ChangeResult *insertionResult, ChangeResult *removalResult);
     bool applyRemovalChange(const QQuickChangeSet::Remove &removal, ChangeResult *changeResult, int *removedCount);
@@ -248,6 +252,7 @@ public:
     int buffer;
     int bufferMode;
     Qt::LayoutDirection layoutDirection;
+    QQuickItemView::VerticalLayoutDirection verticalLayoutDirection;
 
     MovementReason moveReason;
 

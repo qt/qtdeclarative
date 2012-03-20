@@ -69,13 +69,17 @@ class Q_AUTOTEST_EXPORT QQuickGridView : public QQuickItemView
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
+    enum Flow {
+        FlowLeftToRight = LeftToRight,
+        FlowTopToBottom = TopToBottom
+    };
+
     QQuickGridView(QQuickItem *parent=0);
     ~QQuickGridView();
 
     virtual void setHighlightFollowsCurrentItem(bool);
     virtual void setHighlightMoveDuration(int);
 
-    enum Flow { LeftToRight, TopToBottom };
     Flow flow() const;
     void setFlow(Flow);
 

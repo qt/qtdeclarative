@@ -70,6 +70,7 @@ class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
 
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
+    Q_PROPERTY(VerticalLayoutDirection verticalLayoutDirection READ verticalLayoutDirection WRITE setVerticalLayoutDirection NOTIFY verticalLayoutDirectionChanged)
 
     Q_PROPERTY(QQmlComponent *header READ header WRITE setHeader NOTIFY headerChanged)
     Q_PROPERTY(QQuickItem *headerItem READ headerItem NOTIFY headerItemChanged)
@@ -95,8 +96,25 @@ class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
 
     Q_ENUMS(HighlightRangeMode)
     Q_ENUMS(PositionMode)
+    Q_ENUMS(VerticalLayoutDirection)
+    Q_ENUMS(LayoutDirection)
 
 public:
+    // this holds all layout enum values so they can be referred to by other enums
+    // to ensure consistent values - e.g. QML references to GridView.TopToBottom flow
+    // and GridView.TopToBottom vertical layout direction should have same value
+    enum LayoutDirection {
+        LeftToRight = Qt::LeftToRight,
+        RightToLeft = Qt::RightToLeft,
+        VerticalTopToBottom,
+        VerticalBottomToTop
+    };
+
+    enum VerticalLayoutDirection {
+        TopToBottom = VerticalTopToBottom,
+        BottomToTop = VerticalBottomToTop
+    };
+
     QQuickItemView(QQuickFlickablePrivate &dd, QQuickItem *parent = 0);
     ~QQuickItemView();
 
@@ -122,6 +140,9 @@ public:
     Qt::LayoutDirection layoutDirection() const;
     void setLayoutDirection(Qt::LayoutDirection);
     Qt::LayoutDirection effectiveLayoutDirection() const;
+
+    VerticalLayoutDirection verticalLayoutDirection() const;
+    void setVerticalLayoutDirection(VerticalLayoutDirection layoutDirection);
 
     QQmlComponent *footer() const;
     void setFooter(QQmlComponent *);
@@ -189,6 +210,7 @@ public:
     virtual void setContentX(qreal pos);
     virtual void setContentY(qreal pos);
     virtual qreal xOrigin() const;
+    virtual qreal yOrigin() const;
 
 signals:
     void modelChanged();
@@ -202,6 +224,7 @@ signals:
 
     void layoutDirectionChanged();
     void effectiveLayoutDirectionChanged();
+    void verticalLayoutDirectionChanged();
 
     void headerChanged();
     void footerChanged();
