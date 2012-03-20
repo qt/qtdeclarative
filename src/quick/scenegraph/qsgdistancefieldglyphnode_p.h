@@ -77,8 +77,15 @@ public:
     void updateGeometry();
 
 private:
+    enum DistanceFieldGlyphNodeType {
+        RootGlyphNode,
+        SubGlyphNode
+    };
+
+    void setGlyphNodeType(DistanceFieldGlyphNodeType type) { m_glyphNodeType = type; }
     void updateMaterial();
 
+    DistanceFieldGlyphNodeType m_glyphNodeType;
     QColor m_color;
     QPointF m_baseLine;
     QSGContext *m_context;
@@ -93,8 +100,7 @@ private:
     AntialiasingMode m_antialiasingMode;
     QRectF m_boundingRect;
     const QSGDistanceFieldGlyphCache::Texture *m_texture;
-    QHash<const QSGDistanceFieldGlyphCache::Texture *, QSGDistanceFieldGlyphNode *> m_subNodes;
-    QList<QSGDistanceFieldGlyphNode *> m_nodesToDelete;
+    QLinkedList<QSGNode *> m_nodesToDelete;
 
     struct GlyphInfo {
         QVector<quint32> indexes;
