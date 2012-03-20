@@ -26,5 +26,3 @@ OTHER_FILES += \
     data/SamplerNameChange.qml \
     data/ItemEffect.qml \
     data/RectangleEffect.qml
-
-win32:CONFIG += insignificant_test # QTBUG-24787
