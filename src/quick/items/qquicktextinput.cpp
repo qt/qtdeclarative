@@ -3246,7 +3246,6 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 */
 void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool edited)
 {
-    Q_Q(QQuickTextInput);
     internalDeselect();
     QString oldText = m_text;
     if (m_maskData) {
@@ -3260,8 +3259,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
     m_cursor = (pos < 0 || pos > m_text.length()) ? m_text.length() : pos;
     m_textDirty = (oldText != m_text);
 
-    bool changed = finishChange(-1, true, edited);
-    Q_UNUSED(changed)
+    finishChange(-1, true, edited);
 }
 
 
