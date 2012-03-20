@@ -251,7 +251,7 @@ void tst_QQmlMetaObject::property()
     QCOMPARE(signal.parameterTypes(), QList<QByteArray>());
     QCOMPARE(signal.parameterNames(), QList<QByteArray>());
     QCOMPARE(signal.tag(), "");
-    QCOMPARE(signal.typeName(), "");
+    QCOMPARE(signal.typeName(), "void");
     QCOMPARE(signal.returnType(), int(QMetaType::Void));
 
     QSignalSpy changedSpy(object, SIGNAL(testChanged()));
@@ -310,42 +310,42 @@ void tst_QQmlMetaObject::method_data()
     QTest::newRow("testSignal") << "signal.1.qml"
             << "testSignal()"
             << QMetaMethod::Signal
-            << int(QMetaType::Void) << ""
+            << int(QMetaType::Void) << "void"
             << QList<int>()
             << QList<QByteArray>()
             << QList<QByteArray>();
     QTest::newRow("testSignal(string foo)") << "signal.2.qml"
             << "testSignal(QString)"
             << QMetaMethod::Signal
-            << int(QMetaType::Void) << ""
+            << int(QMetaType::Void) << "void"
             << (QList<int>() << QMetaType::QString)
             << (QList<QByteArray>() << "QString")
             << (QList<QByteArray>() << "foo");
     QTest::newRow("testSignal(int foo, bool bar, real baz)") << "signal.3.qml"
             << "testSignal(int,bool,double)"
             << QMetaMethod::Signal
-            << int(QMetaType::Void) << ""
+            << int(QMetaType::Void) << "void"
             << (QList<int>() << QMetaType::Int << QMetaType::Bool << QMetaType::Double)
             << (QList<QByteArray>() << "int" << "bool" << "double")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
     QTest::newRow("testSignal(variant foo, var bar)") << "signal.4.qml"
             << "testSignal(QVariant,QVariant)"
             << QMetaMethod::Signal
-            << int(QMetaType::Void) << ""
+            << int(QMetaType::Void) << "void"
             << (QList<int>() << QMetaType::QVariant << QMetaType::QVariant)
             << (QList<QByteArray>() << "QVariant" << "QVariant")
             << (QList<QByteArray>() << "foo" << "bar");
     QTest::newRow("testSignal(color foo, date bar, url baz)") << "signal.5.qml"
             << "testSignal(QColor,QDateTime,QUrl)"
             << QMetaMethod::Signal
-            << int(QMetaType::Void) << ""
+            << int(QMetaType::Void) << "void"
             << (QList<int>() << QMetaType::QColor << QMetaType::QDateTime << QMetaType::QUrl)
             << (QList<QByteArray>() << "QColor" << "QDateTime" << "QUrl")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
     QTest::newRow("testSignal(double foo)") << "signal.6.qml"
             << "testSignal(double)"
             << QMetaMethod::Signal
-            << int(QMetaType::Void) << ""
+            << int(QMetaType::Void) << "void"
             << (QList<int>() << QMetaType::Double)
             << (QList<QByteArray>() << "double")
             << (QList<QByteArray>() << "foo");

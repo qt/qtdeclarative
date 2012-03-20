@@ -196,10 +196,11 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
     flags |= IsFunction;
     if (m.methodType() == QMetaMethod::Signal)
         flags |= IsSignal;
-    propType = QVariant::Invalid;
+    propType = QMetaType::Void;
 
     const char *returnType = m.typeName();
-    if (returnType && *returnType) {
+    Q_ASSERT(returnType != 0);
+    if ((*returnType != 'v') || (qstrcmp(returnType+1, "oid") != 0)) {
         propTypeName = returnType;
         flags |= NotFullyResolved;
     }
