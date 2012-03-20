@@ -44,7 +44,7 @@ import "content"
 
 /*!
     \title QtQuick Examples - Accessibility
-    \example qtquick/accessibility
+    \example quick/accessibility
     \brief This example has accessible buttons.
 
 */

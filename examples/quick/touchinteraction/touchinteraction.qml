@@ -43,7 +43,7 @@ import "../../shared"
 
 /*!
     \title QtQuick Examples - Touch Interaction
-    \example qtquick/touchinteraction
+    \example quick/touchinteraction
     \brief This is a collection of QML Touch Interaction examples.
     \image qml-touchinteraction-example.png
 

@@ -43,7 +43,7 @@ import "../../shared"
 
 /*!
     \title QML Examples - Image Elements
-    \example declarative/imageelements
+    \example quick/imageelements
     \brief This is a collection of QML examples
     \image qml-imageelements-example.png
 

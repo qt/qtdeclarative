@@ -48,7 +48,7 @@ Rectangle {
     height: 480
 /*!
     \title QML Examples - Shader Effects
-    \example declarative/shadereffects
+    \example quick/shadereffects
     \image qml-shadereffects-example.png
     \brief This is a shader effects example
 

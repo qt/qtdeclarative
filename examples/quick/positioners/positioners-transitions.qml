@@ -43,12 +43,12 @@ import QtQuick 2.0
 Rectangle {
     id: page
     width: 320; height: 480
-    property int effectiveOpacity: 1.0
+    property real effectiveOpacity: 1.0
     Timer {
         interval: 2000
         running: true
         repeat: true
-        onTriggered: effectiveOpacity = (effectiveOpacity == 1.0 ? 0.0 : 1.0)
+        onTriggered: effectiveOpacity = (effectiveOpacity == 1.0 ? 0.0 : 1.0);
     }
 
     Column {

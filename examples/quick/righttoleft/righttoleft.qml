@@ -43,7 +43,7 @@ import "../../shared" as Examples
 
 /*!
     \title QtQuick Examples - Right to Left
-    \example qtquick/Right to Left
+    \example quick/righttoleft
     \brief This is a collection of QML Right to Left examples.
     \image qml-righttoleft-example.png
 

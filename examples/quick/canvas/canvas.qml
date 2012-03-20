@@ -45,6 +45,7 @@ import "../../shared" as Examples
     \title QtQuick Examples - Canvas
     \example quick/canvas
     \brief This is a collection of QML Canvas examples.
+    \image qml-canvas-example.png
 
     This is a collection of small QML examples relating to Canvas item. Each example is
     a small QML file emphasizing a particular element or feature.

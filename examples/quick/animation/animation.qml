@@ -43,7 +43,7 @@ import "../../shared" as Examples
 
 /*!
     \title QtQuick Examples - Animation
-    \example qtquick/animation
+    \example quick/animation
     \brief This is a collection of QML Animation examples.
     \image qml-animations-example.png
 

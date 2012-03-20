@@ -26,12 +26,12 @@
 ****************************************************************************/
 
 /*!
-    \title QML Demo - Calculator
-    \example demos/calculator
-    \brief This is an example calculator application written in QML.
-    \image qml-calculator-example-small.png
+    \title QML Demo - Clocks
+    \example demos/clocks
+    \brief This example demonstrates creating components and using them multiple times.
+    \image qml-clocks-example.png
 
-    The Calculator demo implements a simple calculator in QML. It is written for desktop and portrait devices,
-    although on device it supports orientation changes.
+    This demo give a simple world clock application, containing multiple clocks from around the world.
+
+    In doing this, it reuses a signle Clock component with some slight changes to the parameters.
 */
-

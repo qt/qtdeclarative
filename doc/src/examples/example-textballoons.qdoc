@@ -28,7 +28,7 @@
 
 /*!
     \title Scenegraph Painted Item Example
-    \example declarative/painteditem/textballoons
+    \example quick/painteditem/textballoons
 
     The Painted Item example shows how to use the QML Scene Graph framework to
     implement custom scenegraph items using QPainter.

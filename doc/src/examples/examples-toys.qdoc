@@ -47,16 +47,3 @@
     \image qml-corkboards-example.png
 */
 
-/*!
-    \title QML Example - Dynamic Scene
-    \example declarative/toys/dynamicscene
-    \brief This example demonstrates creating components dynamically.
-    \image qml-dynamicscene-example.png
-*/
-
-/*!
-    \title QML Example - Clocks
-    \example declarative/toys/clocks
-    \brief This example demonstrates creating components and using them multiple times.
-    \image qml-clocks-example.png
-*/
