@@ -2,12 +2,12 @@ import QtQuick 2.0
 
 Item
 {
-    width: 100
+    width: 200
     height: 100
 
     Rectangle {
         id: box
-        width: 100
+        width: 200
         height: 100
 
         color: "#ff0000"
