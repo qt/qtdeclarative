@@ -3302,6 +3302,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 */
 void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool edited)
 {
+    Q_Q(QQuickTextInput);
     internalDeselect();
     QString oldText = m_text;
     if (m_maskData) {
@@ -3315,7 +3316,15 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
     m_cursor = (pos < 0 || pos > m_text.length()) ? m_text.length() : pos;
     m_textDirty = (oldText != m_text);
 
-    finishChange(-1, true, edited);
+    bool changed = finishChange(-1, true, edited);
+#ifdef QT_NO_ACCESSIBILITY
+    Q_UNUSED(changed)
+#else
+    if (changed) {
+        QAccessibleTextUpdateEvent ev(q, 0, oldText, m_text);
+        QAccessible::updateAccessibility(&ev);
+    }
+#endif
 }
 
 
@@ -3938,6 +3947,11 @@ bool QQuickTextInputPrivate::emitCursorPositionChanged()
                 emit q->selectionEndChanged();
             }
         }
+
+#ifndef QT_NO_ACCESSIBILITY
+        QAccessibleTextCursorEvent ev(q, m_cursor);
+        QAccessible::updateAccessibility(&ev);
+#endif
 
         return true;
     }
