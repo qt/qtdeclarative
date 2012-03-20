@@ -2,7 +2,7 @@ TARGET  = qmlfolderlistmodelplugin
 TARGETPATH = Qt/labs/folderlistmodel
 include(../qimportbase.pri)
 
-QT += qml
+QT += core-private qml qml-private v8-private
 
 SOURCES += qquickfolderlistmodel.cpp plugin.cpp \
     fileinfothread.cpp
