@@ -61,6 +61,8 @@ QQuickLoaderPrivate::QQuickLoaderPrivate()
 
 QQuickLoaderPrivate::~QQuickLoaderPrivate()
 {
+    delete itemContext;
+    itemContext = 0;
     delete incubator;
     disposeInitialPropertyValues();
 }
@@ -79,12 +81,21 @@ void QQuickLoaderPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRec
 
 void QQuickLoaderPrivate::clear()
 {
+    Q_Q(QQuickLoader);
     disposeInitialPropertyValues();
 
     if (incubator)
         incubator->clear();
 
+    delete itemContext;
+    itemContext = 0;
+
     if (loadingFromSource && component) {
+        // disconnect since we deleteLater
+        QObject::disconnect(component, SIGNAL(statusChanged(QQmlComponent::Status)),
+                q, SLOT(_q_sourceLoaded()));
+        QObject::disconnect(component, SIGNAL(progressChanged(qreal)),
+                q, SIGNAL(progressChanged()));
         component->deleteLater();
         component = 0;
     }
@@ -545,6 +556,7 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
         QQml_setParent_noEvent(itemContext, obj);
         QQml_setParent_noEvent(item, q);
         item->setParentItem(q);
+        itemContext = 0;
     }
 
     if (initialPropertyValues.IsEmpty())

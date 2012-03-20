@@ -929,7 +929,7 @@ void tst_QQuickLoader::asynchronous_clear()
     QVERIFY(!loader->item());
 
     QCOMPARE(loader->status(), QQuickLoader::Loading);
-    QCOMPARE(engine.incubationController()->incubatingObjectCount(), 1);
+    QTRY_COMPARE(engine.incubationController()->incubatingObjectCount(), 1);
 
     // clear before component created
     root->setProperty("comp", "");
@@ -942,7 +942,7 @@ void tst_QQuickLoader::asynchronous_clear()
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
 
     // check loading component
-    root->setProperty("comp", "Rect120x60.qml");
+    root->setProperty("comp", "BigComponent.qml");
     QMetaObject::invokeMethod(root, "loadComponent");
     QVERIFY(!loader->item());
 
@@ -953,6 +953,8 @@ void tst_QQuickLoader::asynchronous_clear()
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+
+    delete root;
 }
 
 void tst_QQuickLoader::simultaneousSyncAsync()
