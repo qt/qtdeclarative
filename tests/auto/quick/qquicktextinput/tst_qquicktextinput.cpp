@@ -4507,9 +4507,6 @@ void tst_qquicktextinput::undo_keypressevents_data()
                 << Qt::Key_Delete
                 << QKeySequence::Undo
                 << Qt::Key_Right
-#ifdef Q_OS_WIN //Mac(?) has a specialcase to handle jumping to the end of a selection
-                << Qt::Key_Left
-#endif
                 << (Qt::Key_Right | Qt::ShiftModifier) << (Qt::Key_Right | Qt::ShiftModifier)
                 << Qt::Key_Delete;
 
