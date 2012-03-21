@@ -177,6 +177,38 @@ void QQmlEnginePrivate::defineModule()
 }
 
 
+/*!
+    \class QQmlImageProviderBase
+    \brief The QQmlImageProviderBase class is used to register image providers in the QML engine.
+    \mainclass
+
+    Image providers must be registered with the QML engine.  The only information the QML
+    engine knows about image providers is the type of image data they provide.  To use an
+    image provider to acquire image data, you must cast the QQmlImageProviderBase pointer
+    to a QQuickImageProvider pointer.
+
+    \sa QQuickImageProvider, QQuickTextureFactory
+*/
+
+/*!
+    \enum QQmlImageProviderBase::ImageType
+
+    Defines the type of image supported by this image provider.
+
+    \value Image The Image Provider provides QImage images.
+        The QQuickImageProvider::requestImage() method will be called for all image requests.
+    \value Pixmap The Image Provider provides QPixmap images.
+        The QQuickImageProvider::requestPixmap() method will be called for all image requests.
+    \value Texture The Image Provider provides QSGTextureProvider based images.
+        The QQuickImageProvider::requestTexture() method will be called for all image requests. \omitvalue
+*/
+
+/*! \internal */
+QQmlImageProviderBase::QQmlImageProviderBase()
+{
+}
+
+/*! \internal */
 QQmlImageProviderBase::~QQmlImageProviderBase()
 {
 }
@@ -679,7 +711,7 @@ QNetworkAccessManager *QQmlEngine::networkAccessManager() const
   All required image providers should be added to the engine before any
   QML sources files are loaded.
 
-  \sa removeImageProvider(), QQuickImageProvider
+  \sa removeImageProvider(), QQuickImageProvider, QQmlImageProviderBase
 */
 void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProviderBase *provider)
 {

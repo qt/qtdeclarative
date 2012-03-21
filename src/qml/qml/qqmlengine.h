@@ -57,7 +57,20 @@ QT_BEGIN_NAMESPACE
 class Q_QML_EXPORT QQmlImageProviderBase
 {
 public:
+    enum ImageType {
+        Image,
+        Pixmap,
+        Texture,
+        Invalid
+    };
+
     virtual ~QQmlImageProviderBase();
+
+    virtual ImageType imageType() const = 0;
+
+private:
+    friend class QQuickImageProvider;
+    QQmlImageProviderBase();
 };
 
 class QQmlComponent;

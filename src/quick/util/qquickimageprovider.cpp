@@ -222,19 +222,6 @@ QImage QQuickTextureFactory::image() const
 */
 
 /*!
-    \enum QQuickImageProvider::ImageType
-
-    Defines the type of image supported by this image provider.
-
-    \value Image The Image Provider provides QImage images. The 
-        requestImage() method will be called for all image requests.
-    \value Pixmap The Image Provider provides QPixmap images. The 
-        requestPixmap() method will be called for all image requests.
-    \value Texture The Image Provider provides QSGTextureProvider based images.
-        The requestTexture() method will be called for all image requests. \omitvalue
-*/
-
-/*!
     Creates an image provider that will provide images of the given \a type.
 */
 QQuickImageProvider::QQuickImageProvider(ImageType type)

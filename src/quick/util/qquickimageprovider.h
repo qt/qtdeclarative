@@ -71,13 +71,6 @@ public:
 class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
 {
 public:
-    enum ImageType {
-        Image,
-        Pixmap,
-        Texture,
-        Invalid
-    };
-
     QQuickImageProvider(ImageType type);
     virtual ~QQuickImageProvider();
 
