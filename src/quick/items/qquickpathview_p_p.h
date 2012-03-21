@@ -122,10 +122,11 @@ public:
     void setAdjustedOffset(qreal offset);
     void regenerate();
     void updateItem(QQuickItem *, qreal);
-    void snapToCurrent();
+    void snapToIndex(int index);
     QPointF pointNear(const QPointF &point, qreal *nearPercent=0) const;
     void addVelocitySample(qreal v);
     qreal calcVelocity() const;
+    qint64 computeCurrentTime(QInputEvent *event);
 
     QQuickPath *path;
     int currentIndex;
@@ -133,8 +134,6 @@ public:
     qreal currentItemOffset;
     qreal startPc;
     QPointF startPoint;
-    qreal lastDist;
-    int lastElapsed;
     qreal offset;
     qreal offsetAdj;
     qreal mappedRange;
@@ -149,7 +148,8 @@ public:
     bool flicking : 1;
     bool requestedOnPath : 1;
     bool inRequest : 1;
-    QElapsedTimer lastPosTime;
+    QElapsedTimer timer;
+    qint64 lastPosTime;
     QPointF lastPos;
     qreal dragMargin;
     qreal deceleration;
@@ -180,6 +180,7 @@ public:
     int highlightMoveDuration;
     int modelCount;
     QPODVector<qreal,10> velocityBuffer;
+    QQuickPathView::SnapMode snapMode;
 };
 
 QT_END_NAMESPACE

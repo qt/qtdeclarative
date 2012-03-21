@@ -83,8 +83,10 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(int pathItemCount READ pathItemCount WRITE setPathItemCount NOTIFY pathItemCountChanged)
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
     Q_ENUMS(HighlightRangeMode)
+    Q_ENUMS(SnapMode)
 
 public:
     QQuickPathView(QQuickItem *parent=0);
@@ -144,6 +146,10 @@ public:
     int pathItemCount() const;
     void setPathItemCount(int);
 
+    enum SnapMode { NoSnap, SnapToItem, SnapOneItem };
+    SnapMode snapMode() const;
+    void setSnapMode(SnapMode mode);
+
     static QQuickPathViewAttached *qmlAttachedProperties(QObject *);
 
 public Q_SLOTS:
@@ -176,6 +182,7 @@ Q_SIGNALS:
     void movementEnded();
     void flickStarted();
     void flickEnded();
+    void snapModeChanged();
 
 protected:
     virtual void updatePolish();

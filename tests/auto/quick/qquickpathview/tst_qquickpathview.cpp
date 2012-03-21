@@ -125,6 +125,10 @@ private slots:
     void asynchronous();
     void cancelDrag();
     void maximumFlickVelocity();
+    void snapToItem();
+    void snapToItem_data();
+    void snapOneItem();
+    void snapOneItem_data();
 };
 
 class TestObject : public QObject
@@ -1541,6 +1545,89 @@ void tst_QQuickPathView::maximumFlickVelocity()
     delete canvas;
 }
 
+void tst_QQuickPathView::snapToItem()
+{
+    QFETCH(bool, enforceRange);
+
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("panels.qml"));
+    QQuickPathView *pathview = canvas->rootObject()->findChild<QQuickPathView*>("view");
+    QVERIFY(pathview != 0);
+
+    canvas->rootObject()->setProperty("enforceRange", enforceRange);
+    QTRY_VERIFY(!pathview->isMoving()); // ensure stable
+
+    int currentIndex = pathview->currentIndex();
+
+    QSignalSpy snapModeSpy(pathview, SIGNAL(snapModeChanged()));
+
+    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+
+    QVERIFY(pathview->isMoving());
+    QTRY_VERIFY(!pathview->isMoving());
+
+    QVERIFY(pathview->offset() == qFloor(pathview->offset()));
+
+    if (enforceRange)
+        QVERIFY(pathview->currentIndex() != currentIndex);
+    else
+        QVERIFY(pathview->currentIndex() == currentIndex);
+}
+
+void tst_QQuickPathView::snapToItem_data()
+{
+    QTest::addColumn<bool>("enforceRange");
+
+    QTest::newRow("no enforce range") << false;
+    QTest::newRow("enforce range") << true;
+}
+
+void tst_QQuickPathView::snapOneItem()
+{
+    QFETCH(bool, enforceRange);
+
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("panels.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = canvas->rootObject()->findChild<QQuickPathView*>("view");
+    QVERIFY(pathview != 0);
+
+    canvas->rootObject()->setProperty("enforceRange", enforceRange);
+
+    QSignalSpy snapModeSpy(pathview, SIGNAL(snapModeChanged()));
+
+    canvas->rootObject()->setProperty("snapOne", true);
+    QVERIFY(snapModeSpy.count() == 1);
+    QTRY_VERIFY(!pathview->isMoving()); // ensure stable
+
+    int currentIndex = pathview->currentIndex();
+
+    double startOffset = pathview->offset();
+    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+
+    QVERIFY(pathview->isMoving());
+    QTRY_VERIFY(!pathview->isMoving());
+
+    // must have moved only one item
+    QCOMPARE(pathview->offset(), fmodf(3.0 + startOffset - 1.0, 3.0));
+
+    if (enforceRange)
+        QVERIFY(pathview->currentIndex() == currentIndex+1);
+    else
+        QVERIFY(pathview->currentIndex() == currentIndex);
+}
+
+void tst_QQuickPathView::snapOneItem_data()
+{
+    QTest::addColumn<bool>("enforceRange");
+
+    QTest::newRow("no enforce range") << false;
+    QTest::newRow("enforce range") << true;
+}
 
 
 QTEST_MAIN(tst_QQuickPathView)
