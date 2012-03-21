@@ -223,7 +223,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
     
     int childrenCount = children.count();
     for (int ii = 0; ii < children.count(); ++ii) {
-        if (qobject_cast<QQmlContext*>(children[ii]) || QQmlBoundSignal::cast(children[ii]))
+        if (qobject_cast<QQmlContext*>(children[ii]) || qobject_cast<QQmlAbstractBoundSignal*>(children[ii]))
             --childrenCount;
     }
 
@@ -235,7 +235,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
         QObject *child = children.at(ii);
         if (qobject_cast<QQmlContext*>(child))
             continue;
-        QQmlBoundSignal *signal = QQmlBoundSignal::cast(child);
+        QQmlAbstractBoundSignal *signal = qobject_cast<QQmlAbstractBoundSignal*>(child);
         if (signal) {
             if (!dumpProperties)
                 continue;

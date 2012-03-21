@@ -928,7 +928,7 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
     for (int ii = 0; ii < children.count(); ++ii) {
         QObject *child = children.at(ii);
 
-        QQmlBoundSignal *signal = QQmlBoundSignal::cast(child);
+        QQmlAbstractBoundSignal *signal = qobject_cast<QQmlAbstractBoundSignal*>(child);
         if (signal && signal->index() == that.index()) 
             return signal->expression();
     }
@@ -957,7 +957,7 @@ QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
     for (int ii = 0; ii < children.count(); ++ii) {
         QObject *child = children.at(ii);
 
-        QQmlBoundSignal *signal = QQmlBoundSignal::cast(child);
+        QQmlAbstractBoundSignal *signal = qobject_cast<QQmlAbstractBoundSignal*>(child);
         if (signal && signal->index() == that.index()) 
             return signal->setExpression(expr);
     }

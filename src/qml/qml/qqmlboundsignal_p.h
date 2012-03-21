@@ -67,6 +67,10 @@ class Q_QML_EXPORT QQmlAbstractBoundSignal : public QObject
 public:
     QQmlAbstractBoundSignal(QObject *parent = 0);
     virtual ~QQmlAbstractBoundSignal() = 0;
+
+    virtual int index() const = 0;
+    virtual QQmlExpression *expression() const = 0;
+    virtual QQmlExpression *setExpression(QQmlExpression *) = 0;
 };
 
 class QQmlBoundSignalParameters;
@@ -84,8 +88,6 @@ public:
     QQmlExpression *setExpression(QQmlExpression *);
 
     bool isEvaluating() const { return m_isEvaluating; }
-
-    static QQmlBoundSignal *cast(QObject *);
 
 protected:
     virtual int qt_metacall(QMetaObject::Call c, int id, void **a);

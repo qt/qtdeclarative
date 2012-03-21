@@ -98,7 +98,6 @@ private:
     friend class QQmlComponent;
     friend class QQmlComponentPrivate;
     friend class QQmlScriptPrivate;
-    friend class QQmlBoundSignalProxy;
     friend class QQmlContextData;
     QQmlContext(QQmlContextData *);
     QQmlContext(QQmlEngine *, bool);

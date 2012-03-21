@@ -161,12 +161,6 @@ QQmlExpression *QQmlBoundSignal::setExpression(QQmlExpression *e)
     return rv;
 }
 
-QQmlBoundSignal *QQmlBoundSignal::cast(QObject *o)
-{
-    QQmlAbstractBoundSignal *s = qobject_cast<QQmlAbstractBoundSignal*>(o);
-    return static_cast<QQmlBoundSignal *>(s);
-}
-
 int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
 {
     if (c == QMetaObject::InvokeMetaMethod && id == evaluateIdx) {
