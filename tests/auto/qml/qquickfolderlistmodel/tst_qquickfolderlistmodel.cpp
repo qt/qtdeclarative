@@ -38,7 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
+#include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
