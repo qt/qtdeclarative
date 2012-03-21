@@ -135,7 +135,14 @@ QList<QQuickItem *> QAccessibleQuickItem::childItems() const
             role() == QAccessible::PageTab ||
             role() == QAccessible::ProgressBar)
         return QList<QQuickItem *>();
-    return item()->childItems();
+
+    QList<QQuickItem *> items;
+    Q_FOREACH (QQuickItem *child, item()->childItems()) {
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(child);
+        if (itemPrivate->isAccessible)
+            items.append(child);
+    }
+    return items;
 }
 
 QAccessible::State QAccessibleQuickItem::state() const
