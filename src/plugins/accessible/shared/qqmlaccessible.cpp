@@ -158,9 +158,9 @@ void QQmlAccessible::doAction(const QString &actionName)
 {
     // Look for and call the accessible[actionName]Action() function on the item.
     // This allows for overriding the default action handling.
-    const QByteArray functionName = "accessible" + actionName.toLatin1() + "Action()";
-    if (object()->metaObject()->indexOfMethod(functionName) != -1) {
-        QMetaObject::invokeMethod(object(), functionName, Q_ARG(QString, actionName));
+    const QByteArray functionName = "accessible" + actionName.toLatin1() + "Action";
+    if (object()->metaObject()->indexOfMethod(functionName + "()") != -1) {
+        QMetaObject::invokeMethod(object(), functionName);
         return;
     }
 
