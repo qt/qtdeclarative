@@ -62,6 +62,34 @@ class QSGContext;
 class QSignalMapper;
 class QQuickCustomMaterialShader;
 
+// Common class for QQuickShaderEffect and QQuickCustomParticle.
+struct QQuickShaderEffectCommon
+{
+    typedef QQuickShaderEffectMaterialKey Key;
+    typedef QQuickShaderEffectMaterial::UniformData UniformData;
+
+    ~QQuickShaderEffectCommon();
+    void disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
+    void connectPropertySignals(QQuickItem *item, Key::ShaderType shaderType);
+    void updateParseLog(bool ignoreAttributes);
+    void lookThroughShaderCode(QQuickItem *item, Key::ShaderType shaderType, const QByteArray &code);
+    void updateShader(QQuickItem *item, Key::ShaderType shaderType);
+    void updateMaterial(QQuickShaderEffectNode *node, QQuickShaderEffectMaterial *material,
+                        bool updateUniforms, bool updateUniformValues, bool updateTextureProviders);
+    void updateCanvas(QQuickCanvas *canvas);
+
+    // Called by slots in QQuickShaderEffect:
+    void sourceDestroyed(QObject *object);
+    void propertyChanged(QQuickItem *item, int mappedId, bool *textureProviderChanged);
+
+    Key source;
+    QVector<QByteArray> attributes;
+    QVector<UniformData> uniformData[Key::ShaderTypeCount];
+    QVector<QSignalMapper *> signalMappers[Key::ShaderTypeCount];
+    QString parseLog;
+};
+
+
 class Q_AUTOTEST_EXPORT QQuickShaderEffect : public QQuickItem
 {
     Q_OBJECT
@@ -93,10 +121,10 @@ public:
     QQuickShaderEffect(QQuickItem *parent = 0);
     ~QQuickShaderEffect();
 
-    QByteArray fragmentShader() const { return m_source.fragmentCode; }
+    QByteArray fragmentShader() const { return m_common.source.sourceCode[Key::FragmentShader]; }
     void setFragmentShader(const QByteArray &code);
 
-    QByteArray vertexShader() const { return m_source.vertexCode; }
+    QByteArray vertexShader() const { return m_common.source.sourceCode[Key::VertexShader]; }
     void setVertexShader(const QByteArray &code);
 
     bool blending() const { return m_blending; }
@@ -111,8 +139,9 @@ public:
     QString log() const { return m_log; }
     Status status() const { return m_status; }
 
-    void ensureCompleted();
-    QString parseLog() { return m_parseLog; }
+    QString parseLog();
+
+    virtual bool event(QEvent *);
 
 Q_SIGNALS:
     void fragmentShaderChanged();
@@ -126,27 +155,22 @@ Q_SIGNALS:
 protected:
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    virtual void componentComplete();
     virtual void itemChange(ItemChange change, const ItemChangeData &value);
 
 private Q_SLOTS:
-    void changeSource(int index);
-    void updateData();
     void updateGeometry();
     void updateLogAndStatus(const QString &log, int status);
     void sourceDestroyed(QObject *object);
+    void propertyChanged(int mappedId);
 
 private:
     friend class QQuickCustomMaterialShader;
     friend class QQuickShaderEffectNode;
 
-    void setSource(const QVariant &var, int index);
-    void disconnectPropertySignals();
-    void connectPropertySignals();
-    void reset();
-    void updateProperties();
-    void lookThroughShaderCode(const QByteArray &code);
+    typedef QQuickShaderEffectMaterialKey Key;
+    typedef QQuickShaderEffectMaterial::UniformData UniformData;
 
-    QQuickShaderEffectProgram m_source;
     QSize m_meshResolution;
     QQuickShaderEffectMesh *m_mesh;
     QQuickGridMesh m_defaultMesh;
@@ -154,23 +178,16 @@ private:
     QString m_log;
     Status m_status;
 
-    struct SourceData
-    {
-        QSignalMapper *mapper;
-        QQuickItem *sourceObject;
-        QByteArray name;
-    };
-    QVector<SourceData> m_sources;
-    QString m_parseLog;
+    QQuickShaderEffectCommon m_common;
 
     uint m_blending : 1;
-    uint m_dirtyData : 1;
-
-    uint m_programDirty : 1;
+    uint m_dirtyUniforms : 1;
+    uint m_dirtyUniformValues : 1;
+    uint m_dirtyTextureProviders : 1;
+    uint m_dirtyProgram : 1;
+    uint m_dirtyParseLog : 1;
     uint m_dirtyMesh : 1;
     uint m_dirtyGeometry : 1;
-
-    uint m_complete : 1;
 };
 
 QT_END_NAMESPACE

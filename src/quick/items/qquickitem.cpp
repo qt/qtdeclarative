@@ -5700,10 +5700,11 @@ void QQuickItemLayer::activateEffect()
     Q_ASSERT(m_effectComponent);
     Q_ASSERT(!m_effect);
 
-    QObject *created = m_effectComponent->create();
+    QObject *created = m_effectComponent->beginCreate(m_effectComponent->creationContext());
     m_effect = qobject_cast<QQuickItem *>(created);
     if (!m_effect) {
         qWarning("Item: layer.effect is not a QML Item.");
+        m_effectComponent->completeCreate();
         delete created;
         return;
     }
@@ -5714,6 +5715,7 @@ void QQuickItemLayer::activateEffect()
     }
     m_effect->setVisible(m_item->isVisible());
     m_effect->setProperty(m_name, qVariantFromValue<QObject *>(m_effectSource));
+    m_effectComponent->completeCreate();
 }
 
 void QQuickItemLayer::deactivateEffect()

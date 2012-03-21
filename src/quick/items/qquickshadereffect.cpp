@@ -88,502 +88,6 @@ const char *qtTexCoordAttributeName()
     return qt_texcoord_attribute_name;
 }
 
-/*!
-    \qmlclass ShaderEffect QQuickShaderEffect
-    \inqmlmodule QtQuick 2
-    \ingroup qml-basic-visual-elements
-    \brief The ShaderEffect element applies custom shaders to a rectangle.
-    \inherits Item
-
-    The ShaderEffect element applies a custom OpenGL
-    \l{vertexShader}{vertex} and \l{fragmentShader}{fragment} shader to a
-    rectangle. It allows you to write effects such as drop shadow, blur,
-    colorize and page curl directly in QML.
-
-    There are two types of input to the \l vertexShader:
-    uniform variables and attributes. Some are predefined:
-    \list
-    \li uniform mat4 qt_Matrix - combined transformation
-       matrix, the product of the matrices from the root item to this
-       ShaderEffect, and an orthogonal projection.
-    \li uniform float qt_Opacity - combined opacity, the product of the
-       opacities from the root item to this ShaderEffect.
-    \li attribute vec4 qt_Vertex - vertex position, the top-left vertex has
-       position (0, 0), the bottom-right (\l{Item::width}{width},
-       \l{Item::height}{height}).
-    \li attribute vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
-       coordinate is (0, 0), the bottom-right (1, 1).
-    \endlist
-
-    In addition, any property that can be mapped to an OpenGL Shading Language
-    (GLSL) type is available as a uniform variable. The following list shows
-    how properties are mapped to GLSL uniform variables:
-    \list
-    \li bool, int, qreal -> bool, int, float - If the type in the shader is not
-       the same as in QML, the value is converted automatically.
-    \li QColor -> vec4 - When colors are passed to the shader, they are first
-       premultiplied. Thus Qt.rgba(0.2, 0.6, 1.0, 0.5) becomes
-       vec4(0.1, 0.3, 0.5, 0.5) in the shader, for example.
-    \li QRect, QRectF -> vec4 - Qt.rect(x, y, w, h) becomes vec4(x, y, w, h) in
-       the shader.
-    \li QPoint, QPointF, QSize, QSizeF -> vec2
-    \li QVector3D -> vec3
-    \li QTransform -> mat4
-    \li \l Image, \l ShaderEffectSource -> sampler2D - Origin is in the top-left
-       corner, and the color values are premultiplied.
-    \endlist
-
-    The output from the \l fragmentShader should be premultiplied. If
-    \l blending is enabled, source-over blending is used. However, additive
-    blending can be achieved by outputting zero in the alpha channel.
-
-    \row
-    \li \image declarative-shadereffectitem.png
-    \li \qml
-        import QtQuick 2.0
-
-        Rectangle {
-            width: 200; height: 100
-            Row {
-                Image { id: img; sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
-                ShaderEffect {
-                    width: 100; height: 100
-                    property variant src: img
-                    vertexShader: "
-                        uniform highp mat4 qt_Matrix;
-                        attribute highp vec4 qt_Vertex;
-                        attribute highp vec2 qt_MultiTexCoord0;
-                        varying highp vec2 coord;
-                        void main() {
-                            coord = qt_MultiTexCoord0;
-                            gl_Position = qt_Matrix * qt_Vertex;
-                        }"
-                    fragmentShader: "
-                        varying highp vec2 coord;
-                        uniform sampler2D src;
-                        uniform lowp float qt_Opacity;
-                        void main() {
-                            lowp vec4 tex = texture2D(src, coord);
-                            gl_FragColor = vec4(vec3(dot(tex.rgb, vec3(0.344, 0.5, 0.156))), tex.a) * qt_Opacity;
-                        }"
-                }
-            }
-        }
-        \endqml
-    \endrow
-
-    By default, the ShaderEffect consists of four vertices, one for each
-    corner. For non-linear vertex transformations, like page curl, you can
-    specify a fine grid of vertices by specifying a \l mesh resolution.
-
-    \note Scene Graph textures have origin in the top-left corner rather than
-    bottom-left which is common in OpenGL.
-*/
-
-QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
-    : QQuickItem(parent)
-    , m_meshResolution(1, 1)
-    , m_mesh(0)
-    , m_cullMode(NoCulling)
-    , m_status(Uncompiled)
-    , m_blending(true)
-    , m_dirtyData(true)
-    , m_programDirty(true)
-    , m_dirtyMesh(true)
-    , m_dirtyGeometry(true)
-    , m_complete(false)
-{
-    setFlag(QQuickItem::ItemHasContents);
-}
-
-QQuickShaderEffect::~QQuickShaderEffect()
-{
-    reset();
-}
-
-/*!
-    \qmlproperty string QtQuick2::ShaderEffect::fragmentShader
-
-    This property holds the fragment shader's GLSL source code.
-    The default shader passes the texture coordinate along to the fragment
-    shader as "varying highp vec2 qt_TexCoord0".
-*/
-
-void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
-{
-    if (m_source.fragmentCode.constData() == code.constData())
-        return;
-    m_source.fragmentCode = code;
-    update();
-    m_complete = false;
-    if (m_status != Uncompiled) {
-        m_status = Uncompiled;
-        emit statusChanged();
-    }
-    emit fragmentShaderChanged();
-}
-
-/*!
-    \qmlproperty string QtQuick2::ShaderEffect::vertexShader
-
-    This property holds the vertex shader's GLSL source code.
-    The default shader expects the texture coordinate to be passed from the
-    vertex shader as "varying highp vec2 qt_TexCoord0", and it samples from a
-    sampler2D named "source".
-*/
-
-void QQuickShaderEffect::setVertexShader(const QByteArray &code)
-{
-    if (m_source.vertexCode.constData() == code.constData())
-        return;
-    m_source.vertexCode = code;
-    update();
-    m_complete = false;
-    if (m_status != Uncompiled) {
-        m_status = Uncompiled;
-        emit statusChanged();
-    }
-    emit vertexShaderChanged();
-}
-
-/*!
-    \qmlproperty bool QtQuick2::ShaderEffect::blending
-
-    If this property is true, the output from the \l fragmentShader is blended
-    with the background using source-over blend mode. If false, the background
-    is disregarded. Blending decreases the performance, so you should set this
-    property to false when blending is not needed. The default value is true.
-*/
-
-void QQuickShaderEffect::setBlending(bool enable)
-{
-    if (blending() == enable)
-        return;
-
-    m_blending = enable;
-    update();
-
-    emit blendingChanged();
-}
-
-/*!
-    \qmlproperty variant QtQuick2::ShaderEffect::mesh
-
-    This property defines the mesh used to draw the ShaderEffect. It can hold
-    any mesh object deriving from \l QQuickShaderEffectMesh, such as \l GridMesh.
-    If a size value is assigned to this property, the ShaderEffect implicitly
-    uses a \l GridMesh with the value as
-    \l{GridMesh::resolution}{mesh resolution}. By default, this property is
-    the size 1x1.
-
-    \sa GridMesh
-*/
-
-QVariant QQuickShaderEffect::mesh() const
-{
-    return m_mesh ? qVariantFromValue(static_cast<QObject *>(m_mesh))
-                  : qVariantFromValue(m_meshResolution);
-}
-
-void QQuickShaderEffect::setMesh(const QVariant &mesh)
-{
-    QQuickShaderEffectMesh *newMesh = qobject_cast<QQuickShaderEffectMesh *>(qVariantValue<QObject *>(mesh));
-    if (newMesh && newMesh == m_mesh)
-        return;
-    if (m_mesh)
-        disconnect(m_mesh, SIGNAL(geometryChanged()), this, 0);
-    m_mesh = newMesh;
-    if (m_mesh) {
-        connect(m_mesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
-    } else {
-        if (qVariantCanConvert<QSize>(mesh)) {
-            m_meshResolution = mesh.toSize();
-        } else {
-            QList<QByteArray> res = mesh.toByteArray().split('x');
-            bool ok = res.size() == 2;
-            if (ok) {
-                int w = res.at(0).toInt(&ok);
-                if (ok) {
-                    int h = res.at(1).toInt(&ok);
-                    if (ok)
-                        m_meshResolution = QSize(w, h);
-                }
-            }
-            if (!ok)
-                qWarning("ShaderEffect: mesh property must be size or object deriving from QQuickShaderEffectMesh.");
-        }
-        m_defaultMesh.setResolution(m_meshResolution);
-    }
-
-    m_dirtyMesh = true;
-    update();
-    emit meshChanged();
-}
-
-/*!
-    \qmlproperty enumeration QtQuick2::ShaderEffect::cullMode
-
-    This property defines which sides of the element should be visible.
-
-    \list
-    \li ShaderEffect.NoCulling - Both sides are visible
-    \li ShaderEffect.BackFaceCulling - only front side is visible
-    \li ShaderEffect.FrontFaceCulling - only back side is visible
-    \endlist
-
-    The default is NoCulling.
-*/
-
-void QQuickShaderEffect::setCullMode(CullMode face)
-{
-    if (face == m_cullMode)
-        return;
-    m_cullMode = face;
-    update();
-    emit cullModeChanged();
-}
-
-/*!
-    \qmlproperty enumeration QtQuick2::ShaderEffect::status
-
-    This property tells the current status of the OpenGL shader program.
-
-    \list
-    \li ShaderEffect.Compiled - the shader program was successfully compiled and linked.
-    \li ShaderEffect.Uncompiled - the shader program has not yet been compiled.
-    \li ShaderEffect.Error - the shader program failed to compile or link.
-    \endlist
-
-    When setting the fragment or vertex shader source code, the status will become Uncompiled.
-    The first time the ShaderEffect is rendered with new shader source code, the shaders are
-    compiled and linked, and the status is updated to Compiled or Error.
-
-    \sa log
-*/
-
-/*!
-    \qmlproperty string QtQuick2::ShaderEffect::log
-
-    This property holds a log of warnings and errors from the latest attempt at compiling and
-    linking the OpenGL shader program. It is updated at the same time \l status is set to Compiled
-    or Error.
-
-    \sa status
-*/
-
-void QQuickShaderEffect::changeSource(int index)
-{
-    Q_ASSERT(index >= 0 && index < m_sources.size());
-    QVariant v = property(m_sources.at(index).name.constData());
-    setSource(v, index);
-}
-
-void QQuickShaderEffect::updateData()
-{
-    m_dirtyData = true;
-    update();
-}
-
-void QQuickShaderEffect::updateGeometry()
-{
-    m_dirtyGeometry = true;
-    update();
-}
-
-void QQuickShaderEffect::updateLogAndStatus(const QString &log, int status)
-{
-    m_log = m_parseLog + log;
-    m_status = Status(status);
-    emit logChanged();
-    emit statusChanged();
-}
-
-void QQuickShaderEffect::sourceDestroyed(QObject *object)
-{
-    for (int i = 0; i < m_sources.size(); ++i) {
-        SourceData &source = m_sources[i];
-        if (object == source.sourceObject)
-            source.sourceObject = 0;
-    }
-}
-
-void QQuickShaderEffect::setSource(const QVariant &var, int index)
-{
-    Q_ASSERT(index >= 0 && index < m_sources.size());
-
-    SourceData &source = m_sources[index];
-
-    if (source.sourceObject) {
-        if (canvas())
-            QQuickItemPrivate::get(source.sourceObject)->derefCanvas();
-        disconnect(source.sourceObject, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
-    }
-
-    source.sourceObject = 0;
-    if (var.isNull()) {
-        return;
-    } else if (!qVariantCanConvert<QObject *>(var)) {
-        qWarning("Could not assign source of type '%s' to property '%s'.", var.typeName(), source.name.constData());
-        return;
-    }
-
-    QObject *obj = qVariantValue<QObject *>(var);
-    if (!obj)
-        return;
-    QQuickItem *item = qobject_cast<QQuickItem *>(obj);
-    if (!item || !item->isTextureProvider()) {
-        qWarning("ShaderEffect: source uniform [%s] is not assigned a valid texture provider: %s [%s]",
-                 source.name.constData(), qPrintable(obj->objectName()), obj->metaObject()->className());
-        return;
-    }
-
-    source.sourceObject = item;
-
-    if (item) {
-        // 'item' needs a canvas to get a scene graph node. It usually gets one through its
-        // parent, but if the source item is "inline" rather than a reference -- i.e.
-        // "property variant source: Image { }" instead of "property variant source: foo" -- it
-        // will not get a parent. In those cases, 'item' should get the canvas from 'this'.
-        if (canvas())
-            QQuickItemPrivate::get(item)->refCanvas(canvas());
-        connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
-    }
-}
-
-void QQuickShaderEffect::disconnectPropertySignals()
-{
-    disconnect(this, 0, this, SLOT(updateData()));
-    for (int i = 0; i < m_sources.size(); ++i) {
-        SourceData &source = m_sources[i];
-        disconnect(this, 0, source.mapper, 0);
-        disconnect(source.mapper, 0, this, 0);
-    }
-}
-
-void QQuickShaderEffect::connectPropertySignals()
-{
-    QSet<QByteArray>::const_iterator it;
-    for (it = m_source.uniformNames.begin(); it != m_source.uniformNames.end(); ++it) {
-        int pi = metaObject()->indexOfProperty(it->constData());
-        if (pi >= 0) {
-            QMetaProperty mp = metaObject()->property(pi);
-            if (!mp.hasNotifySignal())
-                qWarning("QQuickShaderEffect: property '%s' does not have notification method!", it->constData());
-            QByteArray signalName("2");
-            signalName.append(mp.notifySignal().signature());
-            connect(this, signalName, this, SLOT(updateData()));
-        } else {
-            // If the source is set via a dynamic property, like the layer is, then we need this check
-            // to disable the warning.
-            if (property(it->constData()).isValid())
-                continue;
-            qWarning("QQuickShaderEffect: '%s' does not have a matching property!", it->constData());
-        }
-    }
-    for (int i = 0; i < m_sources.size(); ++i) {
-        SourceData &source = m_sources[i];
-        int pi = metaObject()->indexOfProperty(source.name.constData());
-        if (pi >= 0) {
-            QMetaProperty mp = metaObject()->property(pi);
-            QByteArray signalName("2");
-            signalName.append(mp.notifySignal().signature());
-            connect(this, signalName, source.mapper, SLOT(map()));
-            source.mapper->setMapping(this, i);
-            connect(source.mapper, SIGNAL(mapped(int)), this, SLOT(changeSource(int)));
-        } else {
-            // If the source is set via a dynamic property, like the layer is, then we need this check
-            // to disable the warning.
-            if (property(source.name.constData()).isValid())
-                continue;
-            qWarning("QQuickShaderEffect: '%s' does not have a matching source!", source.name.constData());
-        }
-    }
-}
-
-
-void QQuickShaderEffect::ensureCompleted()
-{
-    if (!m_complete) {
-        reset();
-        updateProperties();
-        m_complete = true;
-    }
-}
-
-
-void QQuickShaderEffect::reset()
-{
-    disconnectPropertySignals();
-
-    m_source.attributeNames.clear();
-    m_source.uniformNames.clear();
-    m_source.respectsOpacity = false;
-    m_source.respectsMatrix = false;
-    m_source.className = metaObject()->className();
-
-    for (int i = 0; i < m_sources.size(); ++i) {
-        const SourceData &source = m_sources.at(i);
-        delete source.mapper;
-        if (source.sourceObject) {
-            if (canvas())
-                QQuickItemPrivate::get(source.sourceObject)->derefCanvas();
-            disconnect(source.sourceObject, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
-        }
-    }
-    m_sources.clear();
-    m_log.clear();
-    m_parseLog.clear();
-    m_programDirty = true;
-    m_dirtyMesh = true;
-}
-
-void QQuickShaderEffect::updateProperties()
-{
-    if (m_source.vertexCode.isEmpty()) {
-        m_source.attributeNames.append(QByteArray(qt_position_attribute_name));
-        m_source.attributeNames.append(QByteArray(qt_texcoord_attribute_name));
-        m_source.respectsMatrix = true;
-    } else {
-        lookThroughShaderCode(m_source.vertexCode);
-    }
-    if (m_source.fragmentCode.isEmpty()) {
-        m_source.respectsOpacity = true;
-        QByteArray name("source");
-        m_source.uniformNames.insert(name);
-        SourceData d;
-        d.mapper = new QSignalMapper;
-        d.name = name;
-        d.sourceObject = 0;
-        m_sources.append(d);
-    } else {
-        lookThroughShaderCode(m_source.fragmentCode);
-    }
-
-    if (!m_mesh && !m_source.attributeNames.contains(qt_position_attribute_name)) {
-        m_parseLog += QLatin1String("Warning: Missing reference to \'");
-        m_parseLog += QLatin1String(qt_position_attribute_name);
-        m_parseLog += QLatin1String("\'.\n");
-    }
-    if (!m_mesh && !m_source.attributeNames.contains(qt_texcoord_attribute_name)) {
-        m_parseLog += QLatin1String("Warning: Missing reference to \'");
-        m_parseLog += QLatin1String(qt_texcoord_attribute_name);
-        m_parseLog += QLatin1String("\'.\n");
-    }
-    if (!m_source.respectsMatrix) {
-        m_parseLog += QLatin1String("Warning: Missing reference to \'qt_Matrix\'.\n");
-    }
-    if (!m_source.respectsOpacity) {
-        m_parseLog += QLatin1String("Warning: Missing reference to \'qt_Opacity\'.\n");
-    }
-
-    for (int i = 0; i < m_sources.size(); ++i) {
-        QVariant v = property(m_sources.at(i).name);
-        setSource(v, i);
-    }
-
-    connectPropertySignals();
-}
-
 namespace {
 
     enum VariableQualifier {
@@ -700,7 +204,98 @@ namespace {
     }
 }
 
-void QQuickShaderEffect::lookThroughShaderCode(const QByteArray &code)
+
+
+QQuickShaderEffectCommon::~QQuickShaderEffectCommon()
+{
+    for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
+        qDeleteAll(signalMappers[shaderType]);
+}
+
+void QQuickShaderEffectCommon::disconnectPropertySignals(QQuickItem *item, Key::ShaderType shaderType)
+{
+    for (int i = 0; i < uniformData[shaderType].size(); ++i) {
+        if (signalMappers[shaderType].at(i) == 0)
+            continue;
+        const UniformData &d = uniformData[shaderType].at(i);
+        QSignalMapper *mapper = signalMappers[shaderType].at(i);
+        QObject::disconnect(item, 0, mapper, SLOT(map()));
+        QObject::disconnect(mapper, SIGNAL(mapped(int)), item, SLOT(propertyChanged(int)));
+        if (d.specialType == UniformData::Sampler) {
+            QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+            if (source) {
+                if (item->canvas())
+                    QQuickItemPrivate::get(source)->derefCanvas();
+                QObject::disconnect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+            }
+        }
+    }
+}
+
+void QQuickShaderEffectCommon::connectPropertySignals(QQuickItem *item, Key::ShaderType shaderType)
+{
+    for (int i = 0; i < uniformData[shaderType].size(); ++i) {
+        if (signalMappers[shaderType].at(i) == 0)
+            continue;
+        const UniformData &d = uniformData[shaderType].at(i);
+        int pi = item->metaObject()->indexOfProperty(d.name.constData());
+        if (pi >= 0) {
+            QMetaProperty mp = item->metaObject()->property(pi);
+            if (!mp.hasNotifySignal())
+                qWarning("QQuickShaderEffect: property '%s' does not have notification method!", d.name.constData());
+            QByteArray signalName("2");
+            signalName.append(mp.notifySignal().signature());
+            QSignalMapper *mapper = signalMappers[shaderType].at(i);
+            QObject::connect(item, signalName, mapper, SLOT(map()));
+            QObject::connect(mapper, SIGNAL(mapped(int)), item, SLOT(propertyChanged(int)));
+        } else {
+            // If the source is set via a dynamic property, like the layer is, then we need this
+            // check to disable the warning.
+            if (!item->property(d.name.constData()).isValid())
+                qWarning("QQuickShaderEffect: '%s' does not have a matching property!", d.name.constData());
+        }
+
+        if (d.specialType == UniformData::Sampler) {
+            QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+            if (source) {
+                if (item->canvas())
+                    QQuickItemPrivate::get(source)->refCanvas(item->canvas());
+                QObject::connect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+            }
+        }
+    }
+}
+
+void QQuickShaderEffectCommon::updateParseLog(bool ignoreAttributes)
+{
+    parseLog.clear();
+    if (!ignoreAttributes) {
+        if (!attributes.contains(qt_position_attribute_name)) {
+            parseLog += QLatin1String("Warning: Missing reference to \'");
+            parseLog += QLatin1String(qt_position_attribute_name);
+            parseLog += QLatin1String("\'.\n");
+        }
+        if (!attributes.contains(qt_texcoord_attribute_name)) {
+            parseLog += QLatin1String("Warning: Missing reference to \'");
+            parseLog += QLatin1String(qt_texcoord_attribute_name);
+            parseLog += QLatin1String("\'.\n");
+        }
+    }
+    bool respectsMatrix = false;
+    bool respectsOpacity = false;
+    for (int i = 0; i < uniformData[Key::VertexShader].size(); ++i)
+        respectsMatrix |= uniformData[Key::VertexShader].at(i).specialType == UniformData::Matrix;
+    for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
+        for (int i = 0; i < uniformData[shaderType].size(); ++i)
+            respectsOpacity |= uniformData[shaderType].at(i).specialType == UniformData::Opacity;
+    }
+    if (!respectsMatrix)
+        parseLog += QLatin1String("Warning: Vertex shader is missing reference to \'qt_Matrix\'.\n");
+    if (!respectsOpacity)
+        parseLog += QLatin1String("Warning: Shaders are missing reference to \'qt_Opacity\'.\n");
+}
+
+void QQuickShaderEffectCommon::lookThroughShaderCode(QQuickItem *item, Key::ShaderType shaderType, const QByteArray &code)
 {
     int index = 0;
     int typeIndex, typeLength, nameIndex, nameLength;
@@ -710,31 +305,581 @@ void QQuickShaderEffect::lookThroughShaderCode(const QByteArray &code)
                                            nameIndex, nameLength)) != -1)
     {
         if (decl == AttributeQualifier) {
-            m_source.attributeNames.append(QByteArray(s + nameIndex, nameLength));
+            if (shaderType == Key::VertexShader)
+                attributes.append(QByteArray(s + nameIndex, nameLength));
         } else {
             Q_ASSERT(decl == UniformQualifier);
 
-            const int matLen = sizeof("qt_Matrix") - 1;
-            const int opLen = sizeof("qt_Opacity") - 1;
             const int sampLen = sizeof("sampler2D") - 1;
+            const int opLen = sizeof("qt_Opacity") - 1;
+            const int matLen = sizeof("qt_Matrix") - 1;
 
-            if (nameLength == matLen && qstrncmp("qt_Matrix", s + nameIndex, matLen) == 0) {
-                m_source.respectsMatrix = true;
-            } else if (nameLength == opLen && qstrncmp("qt_Opacity", s + nameIndex, opLen) == 0) {
-                m_source.respectsOpacity = true;
+            UniformData d;
+            QSignalMapper *mapper = 0;
+            d.name = QByteArray(s + nameIndex, nameLength);
+            if (nameLength == opLen && qstrncmp("qt_Opacity", s + nameIndex, opLen) == 0) {
+                d.specialType = UniformData::Opacity;
+            } else if (nameLength == matLen && qstrncmp("qt_Matrix", s + nameIndex, matLen) == 0) {
+                d.specialType = UniformData::Matrix;
             } else {
-                QByteArray name(s + nameIndex, nameLength);
-                m_source.uniformNames.insert(name);
-                if (typeLength == sampLen && qstrncmp("sampler2D", s + typeIndex, sampLen) == 0) {
-                    SourceData d;
-                    d.mapper = new QSignalMapper;
-                    d.name = name;
-                    d.sourceObject = 0;
-                    m_sources.append(d);
+                mapper = new QSignalMapper;
+                mapper->setMapping(item, uniformData[shaderType].size() | (shaderType << 16));
+                d.value = item->property(d.name.constData());
+                bool sampler = typeLength == sampLen && qstrncmp("sampler2D", s + typeIndex, sampLen) == 0;
+                d.specialType = sampler ? UniformData::Sampler : UniformData::None;
+            }
+            uniformData[shaderType].append(d);
+            signalMappers[shaderType].append(mapper);
+        }
+    }
+}
+
+void QQuickShaderEffectCommon::updateShader(QQuickItem *item, Key::ShaderType shaderType)
+{
+    disconnectPropertySignals(item, shaderType);
+    qDeleteAll(signalMappers[shaderType]);
+    uniformData[shaderType].clear();
+    signalMappers[shaderType].clear();
+    if (shaderType == Key::VertexShader)
+        attributes.clear();
+
+    const QByteArray &code = source.sourceCode[shaderType];
+    if (code.isEmpty()) {
+        // Optimize for default code.
+        if (shaderType == Key::VertexShader) {
+            attributes.append(QByteArray(qt_position_attribute_name));
+            attributes.append(QByteArray(qt_texcoord_attribute_name));
+            UniformData d;
+            d.name = "qt_Matrix";
+            d.specialType = UniformData::Matrix;
+            uniformData[Key::VertexShader].append(d);
+            signalMappers[Key::VertexShader].append(0);
+        } else if (shaderType == Key::FragmentShader) {
+            UniformData d;
+            d.name = "qt_Opacity";
+            d.specialType = UniformData::Opacity;
+            uniformData[Key::FragmentShader].append(d);
+            signalMappers[Key::FragmentShader].append(0);
+            QSignalMapper *mapper = new QSignalMapper;
+            mapper->setMapping(item, 1 | (Key::FragmentShader << 16));
+            const char *sourceName = "source";
+            d.name = sourceName;
+            d.value = item->property(sourceName);
+            d.specialType = UniformData::Sampler;
+            uniformData[Key::FragmentShader].append(d);
+            signalMappers[Key::FragmentShader].append(mapper);
+        }
+    } else {
+        lookThroughShaderCode(item, shaderType, code);
+    }
+
+    connectPropertySignals(item, shaderType);
+}
+
+void QQuickShaderEffectCommon::updateMaterial(QQuickShaderEffectNode *node,
+                                              QQuickShaderEffectMaterial *material,
+                                              bool updateUniforms, bool updateUniformValues,
+                                              bool updateTextureProviders)
+{
+    if (updateUniforms) {
+        for (int i = 0; i < material->textureProviders.size(); ++i) {
+            QSGTextureProvider *t = material->textureProviders.at(i).second;
+            if (t) {
+                QObject::disconnect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
+                QObject::disconnect(t, SIGNAL(destroyed(QObject*)), node, SLOT(textureProviderDestroyed(QObject*)));
+            }
+        }
+        material->textureProviders.clear();
+
+        for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
+            for (int i = 0; i < uniformData[shaderType].size(); ++i) {
+                const UniformData &d = uniformData[shaderType].at(i);
+                // First make room in the textureProviders array. Set to proper value further down.
+                if (d.specialType == UniformData::Sampler)
+                    material->textureProviders.append(qMakePair(d.name, (QSGTextureProvider *)0));
+            }
+            material->uniforms[shaderType] = uniformData[shaderType];
+        }
+        updateUniformValues = false;
+        updateTextureProviders = true;
+    }
+
+    if (updateUniformValues) {
+        for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
+            Q_ASSERT(uniformData[shaderType].size() == material->uniforms[shaderType].size());
+            for (int i = 0; i < uniformData[shaderType].size(); ++i)
+                material->uniforms[shaderType][i].value = uniformData[shaderType].at(i).value;
+        }
+    }
+
+    if (updateTextureProviders) {
+        int index = 0;
+        for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
+            for (int i = 0; i < uniformData[shaderType].size(); ++i) {
+                const UniformData &d = uniformData[shaderType].at(i);
+                if (d.specialType != UniformData::Sampler)
+                    continue;
+                Q_ASSERT(material->textureProviders.at(index).first == d.name);
+                QSGTextureProvider *oldProvider = material->textureProviders.at(index).second;
+                QSGTextureProvider *newProvider = 0;
+                QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+                if (source && source->isTextureProvider())
+                    newProvider = source->textureProvider();
+                if (newProvider != oldProvider) {
+                    if (oldProvider) {
+                        QObject::disconnect(oldProvider, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
+                        QObject::disconnect(oldProvider, SIGNAL(destroyed(QObject*)), node, SLOT(textureProviderDestroyed(QObject*)));
+                    }
+                    if (newProvider) {
+                        Q_ASSERT_X(newProvider->thread() == QThread::currentThread(),
+                                   "QQuickShaderEffect::updatePaintNode",
+                                   "Texture provider must belong to the rendering thread");
+                        QObject::connect(newProvider, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
+                        QObject::connect(newProvider, SIGNAL(destroyed(QObject*)), node, SLOT(textureProviderDestroyed(QObject*)));
+                    } else {
+                        const char *typeName = source ? source->metaObject()->className() : d.value.typeName();
+                        qWarning("ShaderEffect: Property '%s' is not assigned a valid texture provider (%s).",
+                                 d.name.constData(), typeName);
+                    }
+                    material->textureProviders[index].second = newProvider;
+                }
+                ++index;
+            }
+        }
+        Q_ASSERT(index == material->textureProviders.size());
+    }
+}
+
+void QQuickShaderEffectCommon::updateCanvas(QQuickCanvas *canvas)
+{
+    // See comment in QQuickShaderEffectCommon::propertyChanged().
+    if (canvas) {
+        for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
+            for (int i = 0; i < uniformData[shaderType].size(); ++i) {
+                const UniformData &d = uniformData[shaderType].at(i);
+                if (d.specialType == UniformData::Sampler) {
+                    QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+                    if (source)
+                        QQuickItemPrivate::get(source)->refCanvas(canvas);
+                }
+            }
+        }
+    } else {
+        for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
+            for (int i = 0; i < uniformData[shaderType].size(); ++i) {
+                const UniformData &d = uniformData[shaderType].at(i);
+                if (d.specialType == UniformData::Sampler) {
+                    QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+                    if (source)
+                        QQuickItemPrivate::get(source)->derefCanvas();
                 }
             }
         }
     }
+}
+
+void QQuickShaderEffectCommon::sourceDestroyed(QObject *object)
+{
+    for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
+        for (int i = 0; i < uniformData[shaderType].size(); ++i) {
+            UniformData &d = uniformData[shaderType][i];
+            if (d.specialType == UniformData::Sampler && qVariantCanConvert<QObject *>(d.value)) {
+                if (qVariantValue<QObject *>(d.value) == object)
+                    d.value = QVariant();
+            }
+        }
+    }
+}
+
+
+void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
+                                               bool *textureProviderChanged)
+{
+    Key::ShaderType shaderType = Key::ShaderType(mappedId >> 16);
+    int index = mappedId & 0xffff;
+    UniformData &d = uniformData[shaderType][index];
+    if (d.specialType == UniformData::Sampler) {
+        QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+        if (source) {
+            if (item->canvas())
+                QQuickItemPrivate::get(source)->derefCanvas();
+            QObject::disconnect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+        }
+
+        d.value = item->property(d.name.constData());
+
+        source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+        if (source) {
+            // 'source' needs a canvas to get a scene graph node. It usually gets one through its
+            // parent, but if the source item is "inline" rather than a reference -- i.e.
+            // "property variant source: Image { }" instead of "property variant source: foo" -- it
+            // will not get a parent. In those cases, 'source' should get the canvas from 'item'.
+            if (item->canvas())
+                QQuickItemPrivate::get(source)->refCanvas(item->canvas());
+            QObject::connect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
+        }
+        if (textureProviderChanged)
+            *textureProviderChanged = true;
+    } else {
+        d.value = item->property(d.name.constData());
+        if (textureProviderChanged)
+            *textureProviderChanged = false;
+    }
+}
+
+
+/*!
+    \qmlclass ShaderEffect QQuickShaderEffect
+    \inqmlmodule QtQuick 2
+    \ingroup qml-basic-visual-elements
+    \brief The ShaderEffect element applies custom shaders to a rectangle.
+    \inherits Item
+
+    The ShaderEffect element applies a custom OpenGL
+    \l{vertexShader}{vertex} and \l{fragmentShader}{fragment} shader to a
+    rectangle. It allows you to write effects such as drop shadow, blur,
+    colorize and page curl directly in QML.
+
+    There are two types of input to the \l vertexShader:
+    uniform variables and attributes. Some are predefined:
+    \list
+    \li uniform mat4 qt_Matrix - combined transformation
+       matrix, the product of the matrices from the root item to this
+       ShaderEffect, and an orthogonal projection.
+    \li uniform float qt_Opacity - combined opacity, the product of the
+       opacities from the root item to this ShaderEffect.
+    \li attribute vec4 qt_Vertex - vertex position, the top-left vertex has
+       position (0, 0), the bottom-right (\l{Item::width}{width},
+       \l{Item::height}{height}).
+    \li attribute vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
+       coordinate is (0, 0), the bottom-right (1, 1).
+    \endlist
+
+    In addition, any property that can be mapped to an OpenGL Shading Language
+    (GLSL) type is available as a uniform variable. The following list shows
+    how properties are mapped to GLSL uniform variables:
+    \list
+    \li bool, int, qreal -> bool, int, float - If the type in the shader is not
+       the same as in QML, the value is converted automatically.
+    \li QColor -> vec4 - When colors are passed to the shader, they are first
+       premultiplied. Thus Qt.rgba(0.2, 0.6, 1.0, 0.5) becomes
+       vec4(0.1, 0.3, 0.5, 0.5) in the shader, for example.
+    \li QRect, QRectF -> vec4 - Qt.rect(x, y, w, h) becomes vec4(x, y, w, h) in
+       the shader.
+    \li QPoint, QPointF, QSize, QSizeF -> vec2
+    \li QVector3D -> vec3
+    \li QTransform -> mat4
+    \li \l Image, \l ShaderEffectSource -> sampler2D - Origin is in the top-left
+       corner, and the color values are premultiplied.
+    \endlist
+
+    The output from the \l fragmentShader should be premultiplied. If
+    \l blending is enabled, source-over blending is used. However, additive
+    blending can be achieved by outputting zero in the alpha channel.
+
+    \row
+    \li \image declarative-shadereffectitem.png
+    \li \qml
+        import QtQuick 2.0
+
+        Rectangle {
+            width: 200; height: 100
+            Row {
+                Image { id: img; sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
+                ShaderEffect {
+                    width: 100; height: 100
+                    property variant src: img
+                    vertexShader: "
+                        uniform highp mat4 qt_Matrix;
+                        attribute highp vec4 qt_Vertex;
+                        attribute highp vec2 qt_MultiTexCoord0;
+                        varying highp vec2 coord;
+                        void main() {
+                            coord = qt_MultiTexCoord0;
+                            gl_Position = qt_Matrix * qt_Vertex;
+                        }"
+                    fragmentShader: "
+                        varying highp vec2 coord;
+                        uniform sampler2D src;
+                        uniform lowp float qt_Opacity;
+                        void main() {
+                            lowp vec4 tex = texture2D(src, coord);
+                            gl_FragColor = vec4(vec3(dot(tex.rgb, vec3(0.344, 0.5, 0.156))), tex.a) * qt_Opacity;
+                        }"
+                }
+            }
+        }
+        \endqml
+    \endrow
+
+    By default, the ShaderEffect consists of four vertices, one for each
+    corner. For non-linear vertex transformations, like page curl, you can
+    specify a fine grid of vertices by specifying a \l mesh resolution.
+
+    \note Scene Graph textures have origin in the top-left corner rather than
+    bottom-left which is common in OpenGL.
+*/
+
+QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
+    : QQuickItem(parent)
+    , m_meshResolution(1, 1)
+    , m_mesh(0)
+    , m_cullMode(NoCulling)
+    , m_status(Uncompiled)
+    , m_blending(true)
+    , m_dirtyUniforms(true)
+    , m_dirtyUniformValues(true)
+    , m_dirtyTextureProviders(true)
+    , m_dirtyProgram(true)
+    , m_dirtyParseLog(true)
+    , m_dirtyMesh(true)
+    , m_dirtyGeometry(true)
+{
+    setFlag(QQuickItem::ItemHasContents);
+}
+
+QQuickShaderEffect::~QQuickShaderEffect()
+{
+    for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
+        m_common.disconnectPropertySignals(this, Key::ShaderType(shaderType));
+}
+
+/*!
+    \qmlproperty string QtQuick2::ShaderEffect::fragmentShader
+
+    This property holds the fragment shader's GLSL source code.
+    The default shader passes the texture coordinate along to the fragment
+    shader as "varying highp vec2 qt_TexCoord0".
+*/
+
+void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
+{
+    if (m_common.source.sourceCode[Key::FragmentShader].constData() == code.constData())
+        return;
+    m_common.source.sourceCode[Key::FragmentShader] = code;
+    m_dirtyProgram = true;
+    m_dirtyParseLog = true;
+
+    if (isComponentComplete())
+        m_common.updateShader(this, Key::FragmentShader);
+
+    update();
+    if (m_status != Uncompiled) {
+        m_status = Uncompiled;
+        emit statusChanged();
+    }
+    emit fragmentShaderChanged();
+}
+
+/*!
+    \qmlproperty string QtQuick2::ShaderEffect::vertexShader
+
+    This property holds the vertex shader's GLSL source code.
+    The default shader expects the texture coordinate to be passed from the
+    vertex shader as "varying highp vec2 qt_TexCoord0", and it samples from a
+    sampler2D named "source".
+*/
+
+void QQuickShaderEffect::setVertexShader(const QByteArray &code)
+{
+    if (m_common.source.sourceCode[Key::VertexShader].constData() == code.constData())
+        return;
+    m_common.source.sourceCode[Key::VertexShader] = code;
+    m_dirtyProgram = true;
+    m_dirtyParseLog = true;
+
+    if (isComponentComplete())
+        m_common.updateShader(this, Key::VertexShader);
+
+    update();
+    if (m_status != Uncompiled) {
+        m_status = Uncompiled;
+        emit statusChanged();
+    }
+    emit vertexShaderChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick2::ShaderEffect::blending
+
+    If this property is true, the output from the \l fragmentShader is blended
+    with the background using source-over blend mode. If false, the background
+    is disregarded. Blending decreases the performance, so you should set this
+    property to false when blending is not needed. The default value is true.
+*/
+
+void QQuickShaderEffect::setBlending(bool enable)
+{
+    if (blending() == enable)
+        return;
+
+    m_blending = enable;
+    update();
+
+    emit blendingChanged();
+}
+
+/*!
+    \qmlproperty variant QtQuick2::ShaderEffect::mesh
+
+    This property defines the mesh used to draw the ShaderEffect. It can hold
+    any mesh object deriving from \l QQuickShaderEffectMesh, such as \l GridMesh.
+    If a size value is assigned to this property, the ShaderEffect implicitly
+    uses a \l GridMesh with the value as
+    \l{GridMesh::resolution}{mesh resolution}. By default, this property is
+    the size 1x1.
+
+    \sa GridMesh
+*/
+
+QVariant QQuickShaderEffect::mesh() const
+{
+    return m_mesh ? qVariantFromValue(static_cast<QObject *>(m_mesh))
+                  : qVariantFromValue(m_meshResolution);
+}
+
+void QQuickShaderEffect::setMesh(const QVariant &mesh)
+{
+    QQuickShaderEffectMesh *newMesh = qobject_cast<QQuickShaderEffectMesh *>(qVariantValue<QObject *>(mesh));
+    if (newMesh && newMesh == m_mesh)
+        return;
+    if (m_mesh)
+        disconnect(m_mesh, SIGNAL(geometryChanged()), this, 0);
+    m_mesh = newMesh;
+    if (m_mesh) {
+        connect(m_mesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
+    } else {
+        if (qVariantCanConvert<QSize>(mesh)) {
+            m_meshResolution = mesh.toSize();
+        } else {
+            QList<QByteArray> res = mesh.toByteArray().split('x');
+            bool ok = res.size() == 2;
+            if (ok) {
+                int w = res.at(0).toInt(&ok);
+                if (ok) {
+                    int h = res.at(1).toInt(&ok);
+                    if (ok)
+                        m_meshResolution = QSize(w, h);
+                }
+            }
+            if (!ok)
+                qWarning("ShaderEffect: mesh property must be size or object deriving from QQuickShaderEffectMesh.");
+        }
+        m_defaultMesh.setResolution(m_meshResolution);
+    }
+
+    m_dirtyMesh = true;
+    m_dirtyParseLog = true;
+    update();
+    emit meshChanged();
+}
+
+/*!
+    \qmlproperty enumeration QtQuick2::ShaderEffect::cullMode
+
+    This property defines which sides of the element should be visible.
+
+    \list
+    \li ShaderEffect.NoCulling - Both sides are visible
+    \li ShaderEffect.BackFaceCulling - only front side is visible
+    \li ShaderEffect.FrontFaceCulling - only back side is visible
+    \endlist
+
+    The default is NoCulling.
+*/
+
+void QQuickShaderEffect::setCullMode(CullMode face)
+{
+    if (face == m_cullMode)
+        return;
+    m_cullMode = face;
+    update();
+    emit cullModeChanged();
+}
+
+QString QQuickShaderEffect::parseLog()
+{
+    if (m_dirtyParseLog) {
+        m_common.updateParseLog(m_mesh != 0);
+        m_dirtyParseLog = false;
+    }
+    return m_common.parseLog;
+}
+
+bool QQuickShaderEffect::event(QEvent *event)
+{
+    if (event->type() == QEvent::DynamicPropertyChange) {
+        QDynamicPropertyChangeEvent *e = static_cast<QDynamicPropertyChangeEvent *>(event);
+        for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
+            for (int i = 0; i < m_common.uniformData[shaderType].size(); ++i) {
+                if (m_common.uniformData[shaderType].at(i).name == e->propertyName()) {
+                    bool textureProviderChanged;
+                    m_common.propertyChanged(this, (shaderType << 16) | i, &textureProviderChanged);
+                    m_dirtyTextureProviders |= textureProviderChanged;
+                    m_dirtyUniformValues = true;
+                    update();
+                }
+            }
+        }
+    }
+    return QQuickItem::event(event);
+}
+
+/*!
+    \qmlproperty enumeration QtQuick2::ShaderEffect::status
+
+    This property tells the current status of the OpenGL shader program.
+
+    \list
+    \li ShaderEffect.Compiled - the shader program was successfully compiled and linked.
+    \li ShaderEffect.Uncompiled - the shader program has not yet been compiled.
+    \li ShaderEffect.Error - the shader program failed to compile or link.
+    \endlist
+
+    When setting the fragment or vertex shader source code, the status will become Uncompiled.
+    The first time the ShaderEffect is rendered with new shader source code, the shaders are
+    compiled and linked, and the status is updated to Compiled or Error.
+
+    \sa log
+*/
+
+/*!
+    \qmlproperty string QtQuick2::ShaderEffect::log
+
+    This property holds a log of warnings and errors from the latest attempt at compiling and
+    linking the OpenGL shader program. It is updated at the same time \l status is set to Compiled
+    or Error.
+
+    \sa status
+*/
+
+void QQuickShaderEffect::updateGeometry()
+{
+    m_dirtyGeometry = true;
+    update();
+}
+
+void QQuickShaderEffect::updateLogAndStatus(const QString &log, int status)
+{
+    m_log = parseLog() + log;
+    m_status = Status(status);
+    emit logChanged();
+    emit statusChanged();
+}
+
+void QQuickShaderEffect::sourceDestroyed(QObject *object)
+{
+    m_common.sourceDestroyed(object);
+}
+
+
+void QQuickShaderEffect::propertyChanged(int mappedId)
+{
+    bool textureProviderChanged;
+    m_common.propertyChanged(this, mappedId, &textureProviderChanged);
+    m_dirtyTextureProviders |= textureProviderChanged;
+    m_dirtyUniformValues = true;
+    update();
 }
 
 void QQuickShaderEffect::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -747,10 +892,8 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
 {
     QQuickShaderEffectNode *node = static_cast<QQuickShaderEffectNode *>(oldNode);
 
-    ensureCompleted();
-
     // In the case of a bad vertex shader, don't try to create a node...
-    if (m_source.attributeNames.isEmpty()) {
+    if (m_common.attributes.isEmpty()) {
         if (node)
             delete node;
         return 0;
@@ -758,13 +901,13 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
 
     if (!node) {
         node = new QQuickShaderEffectNode;
-        m_programDirty = true;
-        m_dirtyData = true;
+        node->setMaterial(new QQuickShaderEffectMaterial(node));
+        node->setFlag(QSGNode::OwnsMaterial, true);
+        m_dirtyProgram = true;
+        m_dirtyUniforms = true;
         m_dirtyGeometry = true;
         connect(node, SIGNAL(logAndStatusChanged(QString,int)), this, SLOT(updateLogAndStatus(QString,int)));
     }
-
-    QQuickShaderEffectMaterial *material = node->shaderMaterial();
 
     if (m_dirtyMesh) {
         node->setGeometry(0);
@@ -778,11 +921,11 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         QRectF rect(0, 0, width(), height());
         QQuickShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
 
-        geometry = mesh->updateGeometry(geometry, m_source.attributeNames, rect);
+        geometry = mesh->updateGeometry(geometry, m_common.attributes, rect);
         if (!geometry) {
             QString log = mesh->log();
             if (!log.isNull()) {
-                m_log = m_parseLog;
+                m_log = parseLog();
                 m_log += QLatin1String("*** Mesh ***\n");
                 m_log += log;
                 m_status = Error;
@@ -799,18 +942,7 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         m_dirtyGeometry = false;
     }
 
-    if (m_programDirty) {
-        QQuickShaderEffectProgram s = m_source;
-        if (s.fragmentCode.isEmpty())
-            s.fragmentCode = qt_default_fragment_code;
-        if (s.vertexCode.isEmpty())
-            s.vertexCode = qt_default_vertex_code;
-        s.className = metaObject()->className();
-
-        material->setProgramSource(s);
-        node->markDirty(QSGNode::DirtyMaterial);
-        m_programDirty = false;
-    }
+    QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(node->material());
 
     // Update blending
     if (bool(material->flags() & QSGMaterial::Blending) != m_blending) {
@@ -818,66 +950,48 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         node->markDirty(QSGNode::DirtyMaterial);
     }
 
-    if (int(material->cullMode()) != int(m_cullMode)) {
-        material->setCullMode(QQuickShaderEffectMaterial::CullMode(m_cullMode));
+    if (int(material->cullMode) != int(m_cullMode)) {
+        material->cullMode = QQuickShaderEffectMaterial::CullMode(m_cullMode);
         node->markDirty(QSGNode::DirtyMaterial);
     }
 
-    if (m_dirtyData) {
-        QVector<QPair<QByteArray, QVariant> > values;
-        QVector<QPair<QByteArray, QSGTextureProvider *> > textures;
-        const QVector<QPair<QByteArray, QSGTextureProvider *> > &oldTextures = material->textureProviders();
+    if (m_dirtyProgram) {
+        Key s = m_common.source;
+        if (s.sourceCode[Key::FragmentShader].isEmpty())
+            s.sourceCode[Key::FragmentShader] = qt_default_fragment_code;
+        if (s.sourceCode[Key::VertexShader].isEmpty())
+            s.sourceCode[Key::VertexShader] = qt_default_vertex_code;
+        s.className = metaObject()->className();
 
-        for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin();
-             it != m_source.uniformNames.end(); ++it) {
-            values.append(qMakePair(*it, property(*it)));
-        }
-        for (int i = 0; i < oldTextures.size(); ++i) {
-            QSGTextureProvider *t = oldTextures.at(i).second;
-            if (t) {
-                disconnect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
-                disconnect(t, SIGNAL(destroyed(QObject*)), node, SLOT(textureProviderDestroyed(QObject*)));
-            }
-        }
-        for (int i = 0; i < m_sources.size(); ++i) {
-            const SourceData &source = m_sources.at(i);
-            QSGTextureProvider *t = source.sourceObject ? source.sourceObject->textureProvider() : 0;
-            textures.append(qMakePair(source.name, t));
-            if (t) {
-                Q_ASSERT_X(t->thread() == QThread::currentThread(),
-                           "QQuickShaderEffect::updatePaintNode",
-                           "Texture provider must belong to the rendering thread");
-                connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
-                connect(t, SIGNAL(destroyed(QObject*)), node, SLOT(textureProviderDestroyed(QObject*)));
-            }
-        }
-        material->setUniforms(values);
-        material->setTextureProviders(textures);
+        material->setProgramSource(s);
+        material->attributes = m_common.attributes;
         node->markDirty(QSGNode::DirtyMaterial);
-        m_dirtyData = false;
+        m_dirtyProgram = false;
+        m_dirtyUniforms = true;
+    }
+
+    if (m_dirtyUniforms || m_dirtyUniformValues || m_dirtyTextureProviders) {
+        m_common.updateMaterial(node, material, m_dirtyUniforms, m_dirtyUniformValues,
+                                m_dirtyTextureProviders);
+        node->markDirty(QSGNode::DirtyMaterial);
+        m_dirtyUniforms = m_dirtyUniformValues = m_dirtyTextureProviders = false;
     }
 
     return node;
 }
 
-void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
+void QQuickShaderEffect::componentComplete()
 {
-    if (change == QQuickItem::ItemSceneChange) {
-        // See comment in QQuickShaderEffect::setSource().
-        if (value.canvas) {
-            for (int i = 0; i < m_sources.size(); ++i) {
-                if (m_sources.at(i).sourceObject)
-                    QQuickItemPrivate::get(m_sources.at(i).sourceObject)->refCanvas(value.canvas);
-            }
-        } else {
-            for (int i = 0; i < m_sources.size(); ++i) {
-                if (m_sources.at(i).sourceObject)
-                    QQuickItemPrivate::get(m_sources.at(i).sourceObject)->derefCanvas();
-            }
-        }
-    }
-    QQuickItem::itemChange(change, value);
+    m_common.updateShader(this, Key::VertexShader);
+    m_common.updateShader(this, Key::FragmentShader);
+    QQuickItem::componentComplete();
 }
 
+void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    if (change == QQuickItem::ItemSceneChange)
+        m_common.updateCanvas(value.canvas);
+    QQuickItem::itemChange(change, value);
+}
 
 QT_END_NAMESPACE

@@ -60,7 +60,6 @@ protected:
     friend class QQuickShaderEffectNode;
 
     virtual void compile();
-    virtual void initialize();
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
 
@@ -70,17 +69,15 @@ protected:
     QString m_log;
     bool m_compiled;
 
-    QVector<int> m_uniformLocs;
-    int m_opacityLoc;
-    int m_matrixLoc;
-    uint m_textureIndicesSet;
+    QVector<int> m_uniformLocs[QQuickShaderEffectMaterialKey::ShaderTypeCount];
+    uint m_initialized : 1;
 };
 
 QQuickCustomMaterialShader::QQuickCustomMaterialShader(const QQuickShaderEffectMaterialKey &key, const QVector<QByteArray> &attributes)
     : m_key(key)
     , m_attributes(attributes)
     , m_compiled(false)
-    , m_textureIndicesSet(false)
+    , m_initialized(false)
 {
     for (int i = 0; i < attributes.count(); ++i)
         m_attributeNames.append(attributes.at(i).constData());
@@ -104,24 +101,25 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                                                                      : QQuickShaderEffect::Error);
     }
 
-    if (!m_textureIndicesSet) {
-        for (int i = 0; i < material->m_textures.size(); ++i)
-            program()->setUniformValue(material->m_textures.at(i).first.constData(), i);
-        m_textureIndicesSet = true;
-    }
+    if (!m_initialized) {
+        for (int i = 0; i < material->textureProviders.size(); ++i)
+            program()->setUniformValue(material->textureProviders.at(i).first.constData(), i);
 
-    if (m_uniformLocs.size() != material->m_uniformValues.size()) {
-        m_uniformLocs.reserve(material->m_uniformValues.size());
-        for (int i = 0; i < material->m_uniformValues.size(); ++i) {
-            const QByteArray &name = material->m_uniformValues.at(i).first;
-            m_uniformLocs.append(program()->uniformLocation(name.constData()));
+        for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
+            Q_ASSERT(m_uniformLocs[shaderType].isEmpty());
+            m_uniformLocs[shaderType].reserve(material->uniforms[shaderType].size());
+            for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
+                const QByteArray &name = material->uniforms[shaderType].at(i).name;
+                m_uniformLocs[shaderType].append(program()->uniformLocation(name.constData()));
+            }
         }
+        m_initialized = true;
     }
 
     QOpenGLFunctions *functions = state.context()->functions();
-    for (int i = material->m_textures.size() - 1; i >= 0; --i) {
+    for (int i = material->textureProviders.size() - 1; i >= 0; --i) {
         functions->glActiveTexture(GL_TEXTURE0 + i);
-        if (QSGTextureProvider *provider = material->m_textures.at(i).second) {
+        if (QSGTextureProvider *provider = material->textureProviders.at(i).second) {
             if (QSGTexture *texture = provider->texture()) {
                 texture->bind();
                 continue;
@@ -131,57 +129,67 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    if (material->m_source.respectsOpacity)
-        program()->setUniformValue(m_opacityLoc, state.opacity());
+    for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
+        for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
+            const QQuickShaderEffectMaterial::UniformData &d = material->uniforms[shaderType].at(i);
+            int loc = m_uniformLocs[shaderType].at(i);
 
-    for (int i = 0; i < material->m_uniformValues.count(); ++i) {
-        const QVariant &v = material->m_uniformValues.at(i).second;
-
-        switch (v.type()) {
-        case QMetaType::QColor:
-            program()->setUniformValue(m_uniformLocs.at(i), qt_premultiply_color(qvariant_cast<QColor>(v)));
-            break;
-        case QMetaType::Float:
-            program()->setUniformValue(m_uniformLocs.at(i), qvariant_cast<float>(v));
-            break;
-        case QMetaType::Double:
-            program()->setUniformValue(m_uniformLocs.at(i), (float) qvariant_cast<double>(v));
-            break;
-        case QMetaType::QTransform:
-            program()->setUniformValue(m_uniformLocs.at(i), qvariant_cast<QTransform>(v));
-            break;
-        case QMetaType::Int:
-            program()->setUniformValue(m_uniformLocs.at(i), v.toInt());
-            break;
-        case QMetaType::Bool:
-            program()->setUniformValue(m_uniformLocs.at(i), GLint(v.toBool()));
-            break;
-        case QMetaType::QSize:
-        case QMetaType::QSizeF:
-            program()->setUniformValue(m_uniformLocs.at(i), v.toSizeF());
-            break;
-        case QMetaType::QPoint:
-        case QMetaType::QPointF:
-            program()->setUniformValue(m_uniformLocs.at(i), v.toPointF());
-            break;
-        case QMetaType::QRect:
-        case QMetaType::QRectF:
-            {
-                QRectF r = v.toRectF();
-                program()->setUniformValue(m_uniformLocs.at(i), r.x(), r.y(), r.width(), r.height());
+            if (d.specialType == QQuickShaderEffectMaterial::UniformData::Opacity) {
+                program()->setUniformValue(loc, state.opacity());
+            } if (d.specialType == QQuickShaderEffectMaterial::UniformData::Matrix) {
+                if (state.isMatrixDirty())
+                    program()->setUniformValue(loc, state.combinedMatrix());
+            } else {
+                switch (d.value.type()) {
+                case QMetaType::QColor:
+                    program()->setUniformValue(loc, qt_premultiply_color(qvariant_cast<QColor>(d.value)));
+                    break;
+                case QMetaType::Float:
+                    program()->setUniformValue(loc, qvariant_cast<float>(d.value));
+                    break;
+                case QMetaType::Double:
+                    program()->setUniformValue(loc, (float) qvariant_cast<double>(d.value));
+                    break;
+                case QMetaType::QTransform:
+                    program()->setUniformValue(loc, qvariant_cast<QTransform>(d.value));
+                    break;
+                case QMetaType::Int:
+                    program()->setUniformValue(loc, d.value.toInt());
+                    break;
+                case QMetaType::Bool:
+                    program()->setUniformValue(loc, GLint(d.value.toBool()));
+                    break;
+                case QMetaType::QSize:
+                case QMetaType::QSizeF:
+                    program()->setUniformValue(loc, d.value.toSizeF());
+                    break;
+                case QMetaType::QPoint:
+                case QMetaType::QPointF:
+                    program()->setUniformValue(loc, d.value.toPointF());
+                    break;
+                case QMetaType::QRect:
+                case QMetaType::QRectF:
+                    {
+                        QRectF r = d.value.toRectF();
+                        program()->setUniformValue(loc, r.x(), r.y(), r.width(), r.height());
+                    }
+                    break;
+                case QMetaType::QVector3D:
+                    program()->setUniformValue(loc, qvariant_cast<QVector3D>(d.value));
+                    break;
+                case QMetaType::QVector4D:
+                    program()->setUniformValue(loc, qvariant_cast<QVector4D>(d.value));
+                    break;
+                default:
+                    break;
+                }
             }
-            break;
-        case QMetaType::QVector3D:
-            program()->setUniformValue(m_uniformLocs.at(i), qvariant_cast<QVector3D>(v));
-            break;
-        default:
-            break;
         }
     }
 
     const QQuickShaderEffectMaterial *oldMaterial = static_cast<const QQuickShaderEffectMaterial *>(oldEffect);
-    if (oldEffect == 0 || material->cullMode() != oldMaterial->cullMode()) {
-        switch (material->cullMode()) {
+    if (oldEffect == 0 || material->cullMode != oldMaterial->cullMode) {
+        switch (material->cullMode) {
         case QQuickShaderEffectMaterial::FrontFaceCulling:
             glEnable(GL_CULL_FACE);
             glCullFace(GL_FRONT);
@@ -195,9 +203,6 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
             break;
         }
     }
-
-    if ((state.isMatrixDirty()) && material->m_source.respectsMatrix)
-        program()->setUniformValue(m_matrixLoc, state.combinedMatrix());
 }
 
 char const *const *QQuickCustomMaterialShader::attributeNames() const
@@ -277,38 +282,42 @@ void QQuickCustomMaterialShader::compile()
     }
 }
 
-void QQuickCustomMaterialShader::initialize()
-{
-    m_opacityLoc = program()->uniformLocation("qt_Opacity");
-    m_matrixLoc = program()->uniformLocation("qt_Matrix");
-}
-
 const char *QQuickCustomMaterialShader::vertexShader() const
 {
-    return m_key.vertexCode.constData();
+    return m_key.sourceCode[QQuickShaderEffectMaterialKey::VertexShader].constData();
 }
 
 const char *QQuickCustomMaterialShader::fragmentShader() const
 {
-    return m_key.fragmentCode.constData();
+    return m_key.sourceCode[QQuickShaderEffectMaterialKey::FragmentShader].constData();
 }
 
 
 bool QQuickShaderEffectMaterialKey::operator == (const QQuickShaderEffectMaterialKey &other) const
 {
-    return vertexCode == other.vertexCode && fragmentCode == other.fragmentCode && className == other.className;
+    if (className != other.className)
+        return false;
+    for (int shaderType = 0; shaderType < ShaderTypeCount; ++shaderType) {
+        if (sourceCode[shaderType] != other.sourceCode[shaderType])
+            return false;
+    }
+    return true;
 }
 
 uint qHash(const QQuickShaderEffectMaterialKey &key)
 {
-    return qHash(qMakePair(qMakePair(key.vertexCode, key.fragmentCode), key.className));
+    uint hash = qHash((void *)key.className);
+    typedef QQuickShaderEffectMaterialKey Key;
+    for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
+        hash = hash * 31337 + qHash(key.sourceCode[shaderType]);
+    return hash;
 }
 
 
 QHash<QQuickShaderEffectMaterialKey, QSharedPointer<QSGMaterialType> > QQuickShaderEffectMaterial::materialMap;
 
 QQuickShaderEffectMaterial::QQuickShaderEffectMaterial(QQuickShaderEffectNode *node)
-    : m_cullMode(NoCulling)
+    : cullMode(NoCulling)
     , m_node(node)
     , m_emittedLogChanged(false)
 {
@@ -322,7 +331,7 @@ QSGMaterialType *QQuickShaderEffectMaterial::type() const
 
 QSGMaterialShader *QQuickShaderEffectMaterial::createShader() const
 {
-    return new QQuickCustomMaterialShader(m_source, m_source.attributeNames);
+    return new QQuickCustomMaterialShader(m_source, attributes);
 }
 
 int QQuickShaderEffectMaterial::compare(const QSGMaterial *other) const
@@ -330,17 +339,7 @@ int QQuickShaderEffectMaterial::compare(const QSGMaterial *other) const
     return this - static_cast<const QQuickShaderEffectMaterial *>(other);
 }
 
-void QQuickShaderEffectMaterial::setCullMode(QQuickShaderEffectMaterial::CullMode face)
-{
-    m_cullMode = face;
-}
-
-QQuickShaderEffectMaterial::CullMode QQuickShaderEffectMaterial::cullMode() const
-{
-    return m_cullMode;
-}
-
-void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectProgram &source)
+void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectMaterialKey &source)
 {
     m_source = source;
     m_emittedLogChanged = false;
@@ -351,25 +350,10 @@ void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectProgra
     }
 }
 
-void QQuickShaderEffectMaterial::setUniforms(const QVector<QPair<QByteArray, QVariant> > &uniformValues)
-{
-    m_uniformValues = uniformValues;
-}
-
-void QQuickShaderEffectMaterial::setTextureProviders(const QVector<QPair<QByteArray, QSGTextureProvider *> > &textures)
-{
-    m_textures = textures;
-}
-
-const QVector<QPair<QByteArray, QSGTextureProvider *> > &QQuickShaderEffectMaterial::textureProviders() const
-{
-    return m_textures;
-}
-
 void QQuickShaderEffectMaterial::updateTextures() const
 {
-    for (int i = 0; i < m_textures.size(); ++i) {
-        if (QSGTextureProvider *provider = m_textures.at(i).second) {
+    for (int i = 0; i < textureProviders.size(); ++i) {
+        if (QSGTextureProvider *provider = textureProviders.at(i).second) {
             if (QSGDynamicTexture *texture = qobject_cast<QSGDynamicTexture *>(provider->texture()))
                 texture->updateTexture();
         }
@@ -378,18 +362,16 @@ void QQuickShaderEffectMaterial::updateTextures() const
 
 void QQuickShaderEffectMaterial::invalidateTextureProvider(QSGTextureProvider *provider)
 {
-    for (int i = 0; i < m_textures.size(); ++i) {
-        if (provider == m_textures.at(i).second)
-            m_textures[i].second = 0;
+    for (int i = 0; i < textureProviders.size(); ++i) {
+        if (provider == textureProviders.at(i).second)
+            textureProviders[i].second = 0;
     }
 }
 
 
 QQuickShaderEffectNode::QQuickShaderEffectNode()
-    : m_material(this)
 {
     QSGNode::setFlag(UsePreprocess, true);
-    setMaterial(&m_material);
 
 #ifdef QML_RUNTIME_TESTING
     description = QLatin1String("shadereffect");
@@ -407,7 +389,8 @@ void QQuickShaderEffectNode::markDirtyTexture()
 
 void QQuickShaderEffectNode::textureProviderDestroyed(QObject *object)
 {
-    m_material.invalidateTextureProvider(static_cast<QSGTextureProvider *>(object));
+    Q_ASSERT(material());
+    static_cast<QQuickShaderEffectMaterial *>(material())->invalidateTextureProvider(static_cast<QSGTextureProvider *>(object));
 }
 
 void QQuickShaderEffectNode::preprocess()
