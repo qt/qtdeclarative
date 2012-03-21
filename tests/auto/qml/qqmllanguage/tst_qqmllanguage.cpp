@@ -2308,11 +2308,17 @@ void tst_qqmllanguage::globalEnums()
     QVERIFY(enum2Class != 0);
     QVERIFY(enum2Class->getValueA() == -1);
     QVERIFY(enum2Class->getValueB() == -1);
+    QVERIFY(enum2Class->getValueC() == 0);
+    QVERIFY(enum2Class->getValueD() == 0);
+    QVERIFY(enum2Class->getValueE() == -1);
+    QVERIFY(enum2Class->getValueE2() == -1);
 
     QVERIFY(enum2Class->property("aValue") == 0);
     QVERIFY(enum2Class->property("bValue") == 0);
     QVERIFY(enum2Class->property("cValue") == 0);
     QVERIFY(enum2Class->property("dValue") == 0);
+    QVERIFY(enum2Class->property("eValue") == 0);
+    QVERIFY(enum2Class->property("e2Value") == 0);
 
     QSignalSpy signalA(enum2Class, SIGNAL(valueAChanged(MyEnum1Class::EnumA)));
     QSignalSpy signalB(enum2Class, SIGNAL(valueBChanged(MyEnum2Class::EnumB)));
@@ -2324,6 +2330,8 @@ void tst_qqmllanguage::globalEnums()
     QVERIFY(enum2Class->getValueB() == MyEnum2Class::B_37);
     QVERIFY(enum2Class->getValueC() == Qt::RichText);
     QVERIFY(enum2Class->getValueD() == Qt::ElideMiddle);
+    QVERIFY(enum2Class->getValueE() == MyEnum2Class::E_14);
+    QVERIFY(enum2Class->getValueE2() == MyEnum2Class::E_76);
 
     QVERIFY(signalA.count() == 1);
     QVERIFY(signalB.count() == 1);
@@ -2332,6 +2340,8 @@ void tst_qqmllanguage::globalEnums()
     QVERIFY(enum2Class->property("bValue") == 37);
     QVERIFY(enum2Class->property("cValue") == 1);
     QVERIFY(enum2Class->property("dValue") == 2);
+    QVERIFY(enum2Class->property("eValue") == 14);
+    QVERIFY(enum2Class->property("e2Value") == 76);
 
     delete o;
 }

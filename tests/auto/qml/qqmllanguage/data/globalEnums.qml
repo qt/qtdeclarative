@@ -27,10 +27,20 @@ Item {
             dValue = newValue;
         }
 
+        onValueEChanged: {
+            eValue = newValue;
+        }
+
+        onValueE2Changed: {
+            e2Value = newValue;
+        }
+
         property int aValue: 0
         property int bValue: 0
         property int cValue: 0
         property int dValue: 0
+        property int eValue: 0
+        property int e2Value: 0
     }
 
     function setEnumValues() {
@@ -39,5 +49,7 @@ Item {
         enumDerivedClass.setValueB(MyEnum2Class.B_37);
         enumDerivedClass.setValueC(Qt.RichText);
         enumDerivedClass.setValueD(Qt.ElideMiddle);
+        enumDerivedClass.setValueE(MyEnum2Class.E_14);
+        enumDerivedClass.setValueE2(MyEnum2Class.E_76);
     }
 }
