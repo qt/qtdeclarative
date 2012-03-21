@@ -9,9 +9,9 @@ Item {
         }
         ListView {
             objectName: "listview"
-            topMargin: 20
+            topMargin: 40
             bottomMargin: 20
-            leftMargin: 20
+            leftMargin: 40
             rightMargin: 20
             anchors.fill: parent
 
