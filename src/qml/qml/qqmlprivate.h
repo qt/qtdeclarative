@@ -246,6 +246,7 @@ namespace QQmlPrivate
 
         QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
         QObject *(*qobjectApi)(QQmlEngine *, QJSEngine *);
+        const QMetaObject *instanceMetaObject;
     };
 
     enum RegistrationType {

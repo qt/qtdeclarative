@@ -1701,6 +1701,7 @@ QQmlEnginePrivate::moduleApiInstance(const QQmlMetaType::ModuleApi &module)
         a = new QQmlMetaType::ModuleApiInstance;
         a->scriptCallback = module.script;
         a->qobjectCallback = module.qobject;
+        a->instanceMetaObject = module.instanceMetaObject;
         moduleApiInstances.insert(module, a);
     }
 

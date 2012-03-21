@@ -263,7 +263,7 @@ static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
 // QTBUG-20937
 void tst_qquickconnection::moduleApiTarget()
 {
-    qmlRegisterModuleApi("MyTestModuleApi", 1, 0, module_api_factory);
+    qmlRegisterModuleApi<MyTestModuleApi>("MyTestModuleApi", 1, 0, module_api_factory);
     QQmlComponent component(&engine, testFileUrl("moduleapi-target.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);

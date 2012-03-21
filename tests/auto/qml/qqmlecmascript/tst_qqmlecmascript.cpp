@@ -3372,6 +3372,17 @@ void tst_qqmlecmascript::moduleApi_data()
             << QVariantList()
             << QStringList()
             << QVariantList();
+
+    QTest::newRow("legacy module api registration")
+            << testFileUrl("moduleapi/qobjectModuleApiLegacy.qml")
+            << QString()
+            << QStringList() // warning doesn't occur in the test, but in registerTypes()
+            << (QStringList() << "legacyModulePropertyTest" << "legacyModuleMethodTest")
+            << (QVariantList() << 20 << 2)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
 }
 
 void tst_qqmlecmascript::moduleApi()

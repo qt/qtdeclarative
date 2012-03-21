@@ -81,6 +81,7 @@ private slots:
     void mathCeil();
     void mathMax();
     void mathMin();
+    void moduleApi();
 
 private:
     QQmlEngine engine;
@@ -586,6 +587,46 @@ void tst_v4::mathMin()
     QCOMPARE(o->property("test10").toReal(), qreal(-3.7));
     QCOMPARE(o->property("test11").toReal(), qreal(0));
     QCOMPARE(o->property("test12").toReal(), qreal(-3.7));
+    delete o;
+}
+
+class V4ModuleApi : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int ip READ ip WRITE setIp NOTIFY ipChanged FINAL)
+public:
+    V4ModuleApi() : m_ip(12) {}
+    ~V4ModuleApi() {}
+
+    Q_INVOKABLE int random() { static int prng = 3; prng++; m_ip++; emit ipChanged(); return prng; }
+
+    int ip() const { return m_ip; }
+    void setIp(int v) { m_ip = v; emit ipChanged(); }
+
+signals:
+    void ipChanged();
+
+private:
+    int m_ip;
+};
+
+static QObject *v4_module_api_factory(QQmlEngine*, QJSEngine*)
+{
+    return new V4ModuleApi;
+}
+
+void tst_v4::moduleApi()
+{
+    // register module api, providing typeinfo via template
+    qmlRegisterModuleApi<V4ModuleApi>("Qt.test", 1, 0, v4_module_api_factory);
+    QQmlComponent component(&engine, testFileUrl("moduleApi.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("testProp").toInt(), 12);
+    QCOMPARE(o->property("testProp2").toInt(), 2);
+    QMetaObject::invokeMethod(o, "getRandom");
+    QCOMPARE(o->property("testProp").toInt(), 13);
+    QCOMPARE(o->property("testProp2").toInt(), 4);
     delete o;
 }
 

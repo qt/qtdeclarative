@@ -115,20 +115,23 @@ public:
 
     struct ModuleApiInstance {
         ModuleApiInstance()
-            : scriptCallback(0), qobjectCallback(0), qobjectApi(0) {}
+            : scriptCallback(0), qobjectCallback(0), qobjectApi(0), instanceMetaObject(0) {}
 
         QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
         QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);
-        QJSValue scriptApi;
         QObject *qobjectApi;
+        const QMetaObject *instanceMetaObject;
+        QJSValue scriptApi;
+
     };
     struct ModuleApi {
         inline ModuleApi();
         inline bool operator==(const ModuleApi &) const;
         int major;
         int minor;
-        QJSValue (*script)(QQmlEngine *, QJSEngine *);
         QObject *(*qobject)(QQmlEngine *, QJSEngine *);
+        const QMetaObject *instanceMetaObject;
+        QJSValue (*script)(QQmlEngine *, QJSEngine *);
     };
     static ModuleApi moduleApi(const QString &, int, int);
     static QHash<QString, QList<ModuleApi> > moduleApis();
@@ -247,8 +250,9 @@ QQmlMetaType::ModuleApi::ModuleApi()
 {
     major = 0;
     minor = 0;
-    script = 0;
     qobject = 0;
+    instanceMetaObject = 0;
+    script = 0;
 }
 
 bool QQmlMetaType::ModuleApi::operator==(const ModuleApi &other) const
