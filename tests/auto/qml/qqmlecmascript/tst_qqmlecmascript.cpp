@@ -71,6 +71,8 @@ public:
 private slots:
     void initTestCase();
     void assignBasicTypes();
+    void assignDate_data();
+    void assignDate();
     void idShortcutInvalidates();
     void boolPropertiesEvaluateAsBool();
     void methods();
@@ -278,7 +280,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->colorProperty(), QColor("red"));
     QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
     QCOMPARE(object->timeProperty(), QTime(11, 11, 32));
-    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1)));
+    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
     QCOMPARE(object->pointProperty(), QPoint(99,13));
     QCOMPARE(object->pointFProperty(), QPointF(-10.1, 12.3));
     QCOMPARE(object->sizeProperty(), QSize(99, 13));
@@ -306,7 +308,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->colorProperty(), QColor("red"));
     QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
     QCOMPARE(object->timeProperty(), QTime(11, 11, 32));
-    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1)));
+    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
     QCOMPARE(object->pointProperty(), QPoint(99,13));
     QCOMPARE(object->pointFProperty(), QPointF(-10.1, 12.3));
     QCOMPARE(object->sizeProperty(), QSize(99, 13));
@@ -319,6 +321,28 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
     delete object;
     }
+}
+
+void tst_qqmlecmascript::assignDate_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::newRow("Component.onComplete JS") << testFileUrl("assignDate.qml");
+    QTest::newRow("Binding JS") << testFileUrl("assignDate.2.qml");
+    QTest::newRow("Binding UTC") << testFileUrl("assignDate.3.qml");
+    QTest::newRow("Binding JS UTC") << testFileUrl("assignDate.4.qml");
+    QTest::newRow("Binding UTC+2") << testFileUrl("assignDate.5.qml");
+    QTest::newRow("Binding JS UTC+2 ") << testFileUrl("assignDate.6.qml");
+}
+
+void tst_qqmlecmascript::assignDate()
+{
+    QFETCH(QUrl, source);
+    QQmlComponent component(&engine, source);
+    QScopedPointer<QObject> obj(component.create());
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(obj.data());
+    QVERIFY(object != 0);
+    QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
+    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
 }
 
 void tst_qqmlecmascript::idShortcutInvalidates()
