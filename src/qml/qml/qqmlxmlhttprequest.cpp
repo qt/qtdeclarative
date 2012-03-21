@@ -1258,12 +1258,11 @@ void QQmlXMLHttpRequest::downloadProgress(qint64 bytes)
 
     bool wasEmpty = m_responseEntityBody.isEmpty();
     m_responseEntityBody.append(m_network->readAll());
-    if (wasEmpty && !m_responseEntityBody.isEmpty()) {
+    if (wasEmpty && !m_responseEntityBody.isEmpty())
         m_state = Loading;
-        v8::TryCatch tc;
-        dispatchCallback(m_me);
-        if (tc.HasCaught()) printError(tc.Message());
-    }
+    v8::TryCatch tc;
+    dispatchCallback(m_me);
+    if (tc.HasCaught()) printError(tc.Message());
 }
 
 static const char *errorToString(QNetworkReply::NetworkError error)
