@@ -46,7 +46,7 @@ Rectangle {
 
     property string text: "Button"
 
-    signal clicked
+    signal clicked(int x, int y)
 
     width: buttonLabel.width + 20; height: buttonLabel.height + 5
     border { width: 1; color: "black" }
@@ -62,7 +62,7 @@ Rectangle {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        onClicked: container.clicked();
+        onClicked: container.clicked(mouse.x, mouse.y);
     }
 
     Text {

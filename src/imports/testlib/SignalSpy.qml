@@ -49,16 +49,17 @@ Item {
     TestUtil {
         id: util
     }
-
     // Public API.
-
     property var target: null
     property string signalName: ""
-    property int count: 0
+    readonly property alias count: spy.qtest_count
+    readonly property alias valid:spy.qtest_valid
+    readonly property alias signalArguments:spy.qtest_signalArguments
 
     function clear() {
-        count = 0
+        qtest_count = 0
         qtest_expectedCount = 0
+        qtest_signalArguments = []
     }
 
     function wait(timeout) {
@@ -66,11 +67,11 @@ Item {
             timeout = 5000
         var expected = ++qtest_expectedCount
         var i = 0
-        while (i < timeout && count < expected) {
+        while (i < timeout && qtest_count < expected) {
             qtest_results.wait(50)
             i += 50
         }
-        var success = (count >= expected)
+        var success = (qtest_count >= expected)
         if (!qtest_results.verify(success, "wait for signal " + signalName, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")
     }
@@ -89,6 +90,9 @@ Item {
     property var qtest_prevTarget: null
     property string qtest_prevSignalName: ""
     property int qtest_expectedCount: 0
+    property var qtest_signalArguments:[]
+    property int qtest_count: 0
+    property bool qtest_valid:false
 
     function qtest_update() {
         if (qtest_prevTarget != null) {
@@ -101,16 +105,22 @@ Item {
         if (target != null && signalName != "") {
             var func = target[signalName]
             if (func === undefined) {
+                spy.qtest_valid = false
                 console.log("Signal '" + signalName + "' not found")
             } else {
                 qtest_prevTarget = target
                 qtest_prevSignalName = signalName
                 func.connect(spy.qtest_activated)
+                spy.qtest_valid = true
+                spy.qtest_signalArguments = []
             }
+        } else {
+            spy.qtest_valid = false
         }
     }
 
     function qtest_activated() {
-        ++count
+        ++qtest_count
+        spy.qtest_signalArguments[spy.qtest_signalArguments.length] = arguments
     }
 }

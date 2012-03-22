@@ -58,9 +58,19 @@ Button {
 
         function test_click() {
             compare(spy.count, 0)
-            button.clicked();
+            button.clicked(1, 2);
             compare(button.text, "Clicked");
             compare(spy.count, 1)
+            compare(spy.signalArguments.length, 1)
+            compare(spy.signalArguments[0][0], 1)
+            compare(spy.signalArguments[0][1], 2)
+            verify(spy.valid)
+            spy.clear()
+            compare(spy.count, 0)
+            verify(spy.valid)
+            compare(spy.signalArguments.length, 0)
+            spy.signalName = ""
+            verify(!spy.valid)
         }
     }
 }

@@ -94,18 +94,38 @@
 */
 
 /*!
+    \qmlproperty list SignalSpy::signalArguments
+
+    This property holds a list of emitted signal arguments. Each emission of the signal will append one item to the list, containing the arguments of the signal.
+    When connecting to a new \l target or new \l signalName or calling the \l clear() method, the \l signalArguments will be reset to empty.
+
+    \sa signalName, clear()
+    \readonly
+*/
+
+/*!
+    \qmlproperty bool SignalSpy::valid
+
+    This property defines the current signal connection status. It will be true when the \l signalName of the \l target is connected successfully, otherwise it will be false.
+
+    \sa count, target, signalName, clear()
+    \readonly
+*/
+
+/*!
     \qmlproperty int SignalSpy::count
 
     This property defines the number of times that \l signalName has
     been emitted from \l target since the last call to clear().
 
     \sa target, signalName, clear()
+    \readonly
 */
 
 /*!
     \qmlmethod SignalSpy::clear()
 
-    Clears \l count to 0.
+    Clears \l count to 0, resets \l valid to false and clears the \l signalArguments to empty.
 
     \sa count, wait()
 */
