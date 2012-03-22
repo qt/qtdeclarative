@@ -102,6 +102,8 @@ qreal QQuickPathInterpolator::progress() const
 
 void QQuickPathInterpolator::setProgress(qreal progress)
 {
+    progress = qMin(qMax(progress, (qreal)0.0), (qreal)1.0);
+
     if (progress == _progress)
         return;
     _progress = progress;
