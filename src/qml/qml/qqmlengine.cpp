@@ -71,6 +71,7 @@
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
 #include <private/qv8profilerservice_p.h>
+#include <private/qqmlboundsignal_p.h>
 
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qsettings.h>
@@ -1162,6 +1163,15 @@ void QQmlData::destroyed(QObject *object)
         binding->m_nextBinding = 0;
         binding->destroy();
         binding = next;
+    }
+
+    QQmlAbstractBoundSignal *signalHandler = signalHandlers;
+    while (signalHandler) {
+        QQmlAbstractBoundSignal *next = signalHandler->m_nextSignal;
+        signalHandler->m_prevSignal = 0;
+        signalHandler->m_nextSignal = 0;
+        delete signalHandler;
+        signalHandler = next;
     }
 
     if (bindingBits)

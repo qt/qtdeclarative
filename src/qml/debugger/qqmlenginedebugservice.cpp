@@ -223,7 +223,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
     
     int childrenCount = children.count();
     for (int ii = 0; ii < children.count(); ++ii) {
-        if (qobject_cast<QQmlContext*>(children[ii]) || qobject_cast<QQmlAbstractBoundSignal*>(children[ii]))
+        if (qobject_cast<QQmlContext*>(children[ii]))
             --childrenCount;
     }
 
@@ -235,34 +235,10 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
         QObject *child = children.at(ii);
         if (qobject_cast<QQmlContext*>(child))
             continue;
-        QQmlAbstractBoundSignal *signal = qobject_cast<QQmlAbstractBoundSignal*>(child);
-        if (signal) {
-            if (!dumpProperties)
-                continue;
-            QQmlObjectProperty prop;
-            prop.type = QQmlObjectProperty::SignalProperty;
-            prop.hasNotifySignal = false;
-            QQmlExpression *expr = signal->expression();
-            if (expr) {
-                prop.value = expr->expression();
-                QObject *scope = expr->scopeObject();
-                if (scope) {
-                    QString sig = QString::fromLatin1(scope->metaObject()->method(signal->index()).signature());
-                    int lparen = sig.indexOf(QLatin1Char('('));
-                    if (lparen >= 0) {
-                        QString methodName = sig.mid(0, lparen);
-                        prop.name = QLatin1String("on") + methodName[0].toUpper()
-                                + methodName.mid(1);
-                    }
-                }
-            }
-            fakeProperties << prop;
-        } else {
-            if (recur)
-                buildObjectDump(message, child, recur, dumpProperties);
-            else
-                message << objectData(child);
-        }
+         if (recur)
+             buildObjectDump(message, child, recur, dumpProperties);
+         else
+             message << objectData(child);
     }
 
     if (!dumpProperties) {
@@ -274,6 +250,38 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
     for (int ii = 0; ii < object->metaObject()->propertyCount(); ++ii) {
         if (object->metaObject()->property(ii).isScriptable())
             propertyIndexes << ii;
+    }
+
+    QQmlData *ddata = QQmlData::get(object);
+    if (ddata && ddata->signalHandlers) {
+        QQmlAbstractBoundSignal *signalHandler = ddata->signalHandlers;
+
+        while (signalHandler) {
+            if (!dumpProperties) {
+                signalHandler = signalHandler->m_nextSignal;
+                continue;
+            }
+            QQmlObjectProperty prop;
+            prop.type = QQmlObjectProperty::SignalProperty;
+            prop.hasNotifySignal = false;
+            QQmlExpression *expr = signalHandler->expression();
+            if (expr) {
+                prop.value = expr->expression();
+                QObject *scope = expr->scopeObject();
+                if (scope) {
+                    QString sig = QString::fromLatin1(scope->metaObject()->method(signalHandler->index()).signature());
+                    int lparen = sig.indexOf(QLatin1Char('('));
+                    if (lparen >= 0) {
+                        QString methodName = sig.mid(0, lparen);
+                        prop.name = QLatin1String("on") + methodName[0].toUpper()
+                                + methodName.mid(1);
+                    }
+                }
+            }
+            fakeProperties << prop;
+
+            signalHandler = signalHandler->m_nextSignal;
+        }
     }
 
     message << propertyIndexes.size() + fakeProperties.count();
