@@ -1632,7 +1632,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     // Correct focus chain in scope
     if (oldSubFocusItem) {
         QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
-        while (sfi != scope) {
+        while (sfi && sfi != scope) {
             QQuickItemPrivate::get(sfi)->subFocusItem = 0;
             sfi = sfi->parentItem();
         }
@@ -1641,7 +1641,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     if (focus) {
         scopePrivate->subFocusItem = q;
         QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
-        while (sfi != scope) {
+        while (sfi && sfi != scope) {
             QQuickItemPrivate::get(sfi)->subFocusItem = q;
             sfi = sfi->parentItem();
         }

@@ -539,7 +539,7 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
             q->sendEvent(oldActiveFocusItem, &event);
 
             QQuickItem *afi = oldActiveFocusItem;
-            while (afi != scope) {
+            while (afi && afi != scope) {
                 if (QQuickItemPrivate::get(afi)->activeFocus) {
                     QQuickItemPrivate::get(afi)->activeFocus = false;
                     changed << afi;
@@ -635,7 +635,7 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         q->sendEvent(oldActiveFocusItem, &event);
 
         QQuickItem *afi = oldActiveFocusItem;
-        while (afi != scope) {
+        while (afi && afi != scope) {
             if (QQuickItemPrivate::get(afi)->activeFocus) {
                 QQuickItemPrivate::get(afi)->activeFocus = false;
                 changed << afi;
