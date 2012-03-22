@@ -1071,11 +1071,11 @@ void tst_qquicktext::smooth()
     for (int i = 0; i < standard.size(); i++)
     {
         {
-            QString componentStr = "import QtQuick 2.0\nText { smooth: true; text: \"" + standard.at(i) + "\" }";
+            QString componentStr = "import QtQuick 2.0\nText { smooth: false; text: \"" + standard.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-            QCOMPARE(textObject->smooth(), true);
+            QCOMPARE(textObject->smooth(), false);
 
             delete textObject;
         }
@@ -1084,7 +1084,7 @@ void tst_qquicktext::smooth()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-            QCOMPARE(textObject->smooth(), false);
+            QCOMPARE(textObject->smooth(), true);
 
             delete textObject;
         }
@@ -1092,11 +1092,11 @@ void tst_qquicktext::smooth()
     for (int i = 0; i < richText.size(); i++)
     {
         {
-            QString componentStr = "import QtQuick 2.0\nText { smooth: true; text: \"" + richText.at(i) + "\" }";
+            QString componentStr = "import QtQuick 2.0\nText { smooth: false; text: \"" + richText.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-            QCOMPARE(textObject->smooth(), true);
+            QCOMPARE(textObject->smooth(), false);
 
             delete textObject;
         }
@@ -1105,7 +1105,7 @@ void tst_qquicktext::smooth()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-            QCOMPARE(textObject->smooth(), false);
+            QCOMPARE(textObject->smooth(), true);
 
             delete textObject;
         }

@@ -2387,7 +2387,7 @@ bool QQuickItem::isComponentComplete() const
 QQuickItemPrivate::QQuickItemPrivate()
 : _anchors(0), _stateGroup(0),
   flags(0), widthValid(false), heightValid(false), baselineOffsetValid(false), componentComplete(true),
-  keepMouse(false), keepTouch(false), hoverEnabled(false), smooth(false), focus(false), activeFocus(false), notifiedFocus(false),
+  keepMouse(false), keepTouch(false), hoverEnabled(false), smooth(true), focus(false), activeFocus(false), notifiedFocus(false),
   notifiedActiveFocus(false), filtersChildMouseEvents(false), explicitVisible(true),
   effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
@@ -4314,13 +4314,15 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 
 /*!
     \property QQuickItem::smooth
-    \brief whether the item is smoothly transformed.
+    \brief whether the item is smoothed or not.
 
-    This property is provided purely for the purpose of optimization. Turning
-    smooth transforms off is faster, but looks worse; turning smooth
-    transformations on is slower, but looks better.
+    Primarily used in image based elements to decide if the item should use smooth
+    sampling or not. Smooth sampling is performed using linear interpolation, while
+    non-smooth is performed using nearest neighbor.
 
-    By default smooth transformations are off.
+    In Qt Quick 2.0, this property has minimal impact on performance.
+
+    By default is true.
 */
 
 /*!
