@@ -880,6 +880,11 @@ inline QJSValuePrivate::operator v8::Handle<v8::Object>() const
     return v8::Handle<v8::Object>::Cast(m_value);
 }
 
+inline v8::Handle<v8::Value> QJSValuePrivate::handle() const
+{
+    return m_value;
+}
+
 /*!
  * Return a v8::Handle, assign to the engine if needed.
  */

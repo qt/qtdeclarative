@@ -164,6 +164,7 @@ public:
 
     inline operator v8::Handle<v8::Value>() const;
     inline operator v8::Handle<v8::Object>() const;
+    inline v8::Handle<v8::Value> handle() const;
     inline v8::Handle<v8::Value> asV8Value(QV8Engine *engine);
 private:
     QIntrusiveListNode m_node;
