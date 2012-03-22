@@ -78,6 +78,11 @@ QT_BEGIN_NAMESPACE
 */
 
 static const int NINF = -1000000;//magic number for random start time - should be more negative than a single realistic animation duration
+//#define SPRITE_IMAGE_DEBUG
+#ifdef SPRITE_IMAGE_DEBUG
+#include <QFile>
+#include <QDir>
+#endif
 /* TODO:
    make sharable?
    solve the state data initialization/transfer issue so as to not need to make friends
@@ -364,7 +369,9 @@ QImage QQuickSpriteEngine::assembledImage()
     int maxSize = 0;
 
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
-    //qDebug() << "MAX TEXTURE SIZE" << maxSize;
+#ifdef SPRITE_IMAGE_DEBUG
+    qDebug() << "MAX TEXTURE SIZE" << maxSize;
+#endif
     foreach (QQuickSprite* state, m_sprites){
         if (state->frames() > m_maxFrames)
             m_maxFrames = state->frames();
@@ -454,6 +461,15 @@ QImage QQuickSpriteEngine::assembledImage()
         qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
         return QImage();
     }
+
+#ifdef SPRITE_IMAGE_DEBUG
+    QString fPath = QDir::tempPath() + "/SpriteImage.%1.png";
+    int acc = 0;
+    while (QFile::exists(fPath.arg(acc))) acc++;
+    image.save(fPath.arg(acc), "PNG");
+    qDebug() << "Assembled image output to: " << fPath.arg(acc);
+#endif
+
     return image;
 }
 
