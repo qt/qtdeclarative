@@ -1604,9 +1604,11 @@ void QQuickTextInput::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
     Q_D(QQuickTextInput);
-    if (newGeometry.width() != oldGeometry.width())
-        d->updateLayout();
-    updateCursorRectangle();
+    if (!d->inLayout) {
+        if (newGeometry.width() != oldGeometry.width() && d->wrapMode != NoWrap)
+            d->updateLayout();
+        updateCursorRectangle();
+    }
     QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
 }
 
@@ -2699,6 +2701,38 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
     }
 }
 
+qreal QQuickTextInputPrivate::getImplicitWidth() const
+{
+    Q_Q(const QQuickTextInput);
+    if (!requireImplicitWidth) {
+        QQuickTextInputPrivate *d = const_cast<QQuickTextInputPrivate *>(this);
+        d->requireImplicitWidth = true;
+
+        if (q->isComponentComplete()) {
+            // One time cost, only incurred if implicitWidth is first requested after
+            // componentComplete.
+            QTextLayout layout(m_text);
+
+            QTextOption option = m_textLayout.textOption();
+            option.setTextDirection(m_layoutDirection);
+            option.setFlags(QTextOption::IncludeTrailingSpaces);
+            option.setWrapMode(QTextOption::WrapMode(wrapMode));
+            option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
+            layout.setTextOption(option);
+            layout.setFont(font);
+            layout.setPreeditArea(m_textLayout.preeditAreaPosition(), m_textLayout.preeditAreaText());
+            layout.beginLayout();
+
+            QTextLine line = layout.createLine();
+            line.setLineWidth(INT_MAX);
+            d->implicitWidth = qCeil(line.naturalTextWidth());
+
+            layout.endLayout();
+        }
+    }
+    return implicitWidth;
+}
+
 void QQuickTextInputPrivate::updateLayout()
 {
     Q_Q(QQuickTextInput);
@@ -2718,6 +2752,15 @@ void QQuickTextInputPrivate::updateLayout()
     boundingRect = QRectF();
     m_textLayout.beginLayout();
     QTextLine line = m_textLayout.createLine();
+    if (requireImplicitWidth) {
+        line.setLineWidth(INT_MAX);
+        const bool wasInLayout = inLayout;
+        inLayout = true;
+        q->setImplicitWidth(qCeil(line.naturalTextWidth()));
+        inLayout = wasInLayout;
+        if (inLayout)       // probably the result of a binding loop, but by letting it
+            return;         // get this far we'll get a warning to that effect.
+    }
     qreal lineWidth = q->widthValid() ? q->width() : INT_MAX;
     qreal height = 0;
     do {
@@ -2737,7 +2780,11 @@ void QQuickTextInputPrivate::updateLayout()
 
     updateType = UpdatePaintNode;
     q->update();
-    q->setImplicitSize(boundingRect.width(), boundingRect.height());
+
+    if (!requireImplicitWidth && !q->widthValid())
+        q->setImplicitSize(qCeil(boundingRect.width()), qCeil(boundingRect.height()));
+    else
+        q->setImplicitHeight(qCeil(boundingRect.height()));
 
     if (previousRect != boundingRect)
         emit q->contentSizeChanged();

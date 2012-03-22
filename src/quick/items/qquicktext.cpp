@@ -421,6 +421,10 @@ void QQuickTextPrivate::updateSize()
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
         QRectF textRect = setupTextLayout(&naturalWidth);
+
+        if (internalWidthUpdate)    // probably the result of a binding loop, but by letting it
+            return;      // get this far we'll get a warning to that effect if it is.
+
         layedOutTextRect = textRect;
         size = textRect.size();
         dy -= size.height();
@@ -443,7 +447,13 @@ void QQuickTextPrivate::updateSize()
         if (requireImplicitWidth && q->widthValid()) {
             extra->doc->setTextWidth(-1);
             naturalWidth = extra->doc->idealWidth();
+            const bool wasInLayout = internalWidthUpdate;
+            internalWidthUpdate = true;
+            q->setImplicitWidth(naturalWidth);
+            internalWidthUpdate = wasInLayout;
         }
+        if (internalWidthUpdate)
+            return;
         if (wrapMode != QQuickText::NoWrap && q->widthValid())
             extra->doc->setTextWidth(q->width());
         else
@@ -468,8 +478,6 @@ void QQuickTextPrivate::updateSize()
     qreal iWidth = -1;
     if (!q->widthValid())
         iWidth = size.width();
-    else if (requireImplicitWidth)
-        iWidth = naturalWidth;
     if (iWidth > -1)
         q->setImplicitSize(iWidth, size.height());
     internalWidthUpdate = false;
@@ -697,6 +705,11 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
             layout.endLayout();
             *naturalWidth = layout.maximumWidth();
             layout.clearLayout();
+
+            bool wasInLayout = internalWidthUpdate;
+            internalWidthUpdate = true;
+            q->setImplicitWidth(*naturalWidth);
+            internalWidthUpdate = wasInLayout;
         }
 
         QFontMetrics fm(font);
@@ -704,7 +717,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         return QRect(0, 0, 0, height);
     }
 
-    const qreal lineWidth = q->widthValid() ? q->width() : FLT_MAX;
+    qreal lineWidth = q->widthValid() && q->width() > 0 ? q->width() : FLT_MAX;
     const qreal maxHeight = q->heightValid() ? q->height() : FLT_MAX;
 
     const bool customLayout = isLineLaidOutConnected();
@@ -735,6 +748,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
     QTextLine line;
     int visibleCount = 0;
     bool elide;
+    bool widthChanged;
     qreal height = 0;
     QString elideText;
     bool once = true;
@@ -755,13 +769,14 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
                 scaledFont.setPointSize(scaledFontSize);
             layout.setFont(scaledFont);
         }
-        layout.beginLayout();
 
+        layout.beginLayout();
 
         bool wrapped = false;
         bool truncateHeight = false;
         truncated = false;
         elide = false;
+        widthChanged = false;
         int characterCount = 0;
         int unwrappedLineCount = 1;
         int maxLineCount = maximumLineCount();
@@ -864,7 +879,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
             br = br.united(line.naturalTextRect());
             line = nextLine;
         }
-
         layout.endLayout();
         br.moveTop(0);
 
@@ -886,7 +900,20 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
                     if (!line.isValid())
                         break;
                 }
+
                 *naturalWidth = qMax(*naturalWidth, widthLayout.maximumWidth());
+            }
+
+            bool wasInLayout = internalWidthUpdate;
+            internalWidthUpdate = true;
+            q->setImplicitWidth(*naturalWidth);
+            internalWidthUpdate = wasInLayout;
+
+            const qreal oldWidth = lineWidth;
+            lineWidth = q->widthValid() && q->width() > 0 ? q->width() : FLT_MAX;
+            if (lineWidth != oldWidth && (singlelineElide || multilineElide || canWrap || horizontalFit)) {
+                widthChanged = true;
+                continue;
             }
         }
 
@@ -911,32 +938,36 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         if (horizontalFit) {
             if (unelidedRect.width() > lineWidth || (!verticalFit && wrapped)) {
                 largeFont = scaledFontSize - 1;
-                scaledFontSize = (smallFont + largeFont) / 2;
                 if (smallFont > largeFont)
                     break;
+                scaledFontSize = (smallFont + largeFont) / 2;
+                if (pixelSize)
+                    scaledFont.setPixelSize(scaledFontSize);
+                else
+                    scaledFont.setPointSize(scaledFontSize);
                 continue;
             } else if (!verticalFit) {
                 smallFont = scaledFontSize;
-                scaledFontSize = (smallFont + largeFont + 1) / 2;
                 if (smallFont == largeFont)
                     break;
+                scaledFontSize = (smallFont + largeFont + 1) / 2;
             }
         }
 
         if (verticalFit) {
             if (truncateHeight || unelidedRect.height() > maxHeight) {
                 largeFont = scaledFontSize - 1;
-                scaledFontSize = (smallFont + largeFont + 1) / 2;
                 if (smallFont > largeFont)
                     break;
+                scaledFontSize = (smallFont + largeFont) / 2;
+
             } else {
                 smallFont = scaledFontSize;
-                scaledFontSize = (smallFont + largeFont + 1) / 2;
                 if (smallFont == largeFont)
                     break;
+                scaledFontSize = (smallFont + largeFont + 1) / 2;
             }
         }
-
     }
 
     if (eos != multilengthEos)

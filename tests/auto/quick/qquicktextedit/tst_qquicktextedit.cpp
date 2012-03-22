@@ -152,6 +152,8 @@ private slots:
     void implicitSize_data();
     void implicitSize();
     void contentSize();
+    void implicitSizeBinding_data();
+    void implicitSizeBinding();
 
     void preeditCursorRectangle();
     void inputMethodComposing();
@@ -2512,17 +2514,19 @@ void tst_qquicktextedit::implicitSize_data()
 {
     QTest::addColumn<QString>("text");
     QTest::addColumn<QString>("wrap");
-    QTest::newRow("plain") << "The quick red fox jumped over the lazy brown dog" << "TextEdit.NoWrap";
-    QTest::newRow("richtext") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "TextEdit.NoWrap";
-    QTest::newRow("plain_wrap") << "The quick red fox jumped over the lazy brown dog" << "TextEdit.Wrap";
-    QTest::newRow("richtext_wrap") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "TextEdit.Wrap";
+    QTest::addColumn<QString>("format");
+    QTest::newRow("plain") << "The quick red fox jumped over the lazy brown dog" << "TextEdit.NoWrap" << "TextEdit.PlainText";
+    QTest::newRow("richtext") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "TextEdit.NoWrap" << "TextEdit.RichText";
+    QTest::newRow("plain_wrap") << "The quick red fox jumped over the lazy brown dog" << "TextEdit.Wrap" << "TextEdit.PlainText";
+    QTest::newRow("richtext_wrap") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "TextEdit.Wrap" << "TextEdit.RichText";
 }
 
 void tst_qquicktextedit::implicitSize()
 {
     QFETCH(QString, text);
     QFETCH(QString, wrap);
-    QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\"; width: 50; wrapMode: " + wrap + " }";
+    QFETCH(QString, format);
+    QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\"; width: 50; wrapMode: " + wrap + "; textFormat: " + format + " }";
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
@@ -2561,6 +2565,34 @@ void tst_qquicktextedit::contentSize()
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
     QCOMPARE(spy.count(), 3);
+}
+
+void tst_qquicktextedit::implicitSizeBinding_data()
+{
+    implicitSize_data();
+}
+
+void tst_qquicktextedit::implicitSizeBinding()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, wrap);
+    QFETCH(QString, format);
+    QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\"; width: implicitWidth; height: implicitHeight; wrapMode: " + wrap + "; textFormat: " + format + " }";
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit *>(object.data());
+
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+
+    textObject->resetWidth();
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+
+    textObject->resetHeight();
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 }
 
 void tst_qquicktextedit::preeditCursorRectangle()

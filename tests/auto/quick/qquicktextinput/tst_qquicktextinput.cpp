@@ -192,6 +192,11 @@ private slots:
     void QTBUG_19956_data();
     void QTBUG_19956_regexp();
 
+    void implicitSize_data();
+    void implicitSize();
+    void implicitSizeBinding_data();
+    void implicitSizeBinding();
+
     void negativeDimensions();
 
 private:
@@ -4938,6 +4943,58 @@ void tst_qquicktextinput::QTBUG_19956_regexp()
     canvas.rootObject()->setProperty("regexvalue", QRegExp("abc"));
     QCOMPARE(canvas.rootObject()->property("regexvalue").toRegExp(), QRegExp("abc"));
     QVERIFY(canvas.rootObject()->property("acceptableInput").toBool());
+}
+
+void tst_qquicktextinput::implicitSize_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("wrap");
+    QTest::newRow("plain") << "The quick red fox jumped over the lazy brown dog" << "TextInput.NoWrap";
+    QTest::newRow("plain_wrap") << "The quick red fox jumped over the lazy brown dog" << "TextInput.Wrap";
+}
+
+void tst_qquicktextinput::implicitSize()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, wrap);
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; width: 50; wrapMode: " + wrap + " }";
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
+
+    QVERIFY(textObject->width() < textObject->implicitWidth());
+    QVERIFY(textObject->height() == textObject->implicitHeight());
+
+    textObject->resetWidth();
+    QVERIFY(textObject->width() == textObject->implicitWidth());
+    QVERIFY(textObject->height() == textObject->implicitHeight());
+}
+
+void tst_qquicktextinput::implicitSizeBinding_data()
+{
+    implicitSize_data();
+}
+
+void tst_qquicktextinput::implicitSizeBinding()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, wrap);
+    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; width: implicitWidth; height: implicitHeight; wrapMode: " + wrap + " }";
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickTextInput *textObject = qobject_cast<QQuickTextInput *>(object.data());
+
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+
+    textObject->resetWidth();
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+
+    textObject->resetHeight();
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 }
 
 
