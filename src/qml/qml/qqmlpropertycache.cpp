@@ -688,7 +688,7 @@ struct StaticQtMetaObject : public QObject
         { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
 };
 
-static int EnumType(const QMetaObject *metaobj, const QByteArray &str)
+static int EnumType(const QMetaObject *metaobj, const QByteArray &str, int type)
 {
     QByteArray scope;
     QByteArray name;
@@ -709,7 +709,7 @@ static int EnumType(const QMetaObject *metaobj, const QByteArray &str)
         if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))
             return QVariant::Int;
     }
-    return QVariant::Invalid;
+    return type;
 }
 
 // Returns an array of the arguments for method \a index.  The first entry in the array
@@ -745,10 +745,14 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         for (int ii = 0; ii < argTypeNames.count(); ++ii) {
             int type = QMetaType::type(argTypeNames.at(ii));
-            if ((QMetaType::typeFlags(type) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration)
+            QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
+            if (flags & QMetaType::IsEnumeration)
                 type = QVariant::Int;
-            else if (type == QVariant::Invalid)
-                type = EnumType(object->metaObject(), argTypeNames.at(ii));
+            else if (type == QVariant::Invalid ||
+                     (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+                      type != qMetaTypeId<QJSValue>()))
+                //the UserType clause is to catch registered QFlags
+                type = EnumType(object->metaObject(), argTypeNames.at(ii), type);
             if (type == QVariant::Invalid) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
                 free(args);
@@ -770,10 +774,14 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         for (int ii = 0; ii < argTypeNames.count(); ++ii) {
             int type = QMetaType::type(argTypeNames.at(ii));
-            if ((QMetaType::typeFlags(type) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration)
+            QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
+            if (flags & QMetaType::IsEnumeration)
                 type = QVariant::Int;
-            else if (type == QVariant::Invalid)
-                type = EnumType(object->metaObject(), argTypeNames.at(ii));
+            else if (type == QVariant::Invalid ||
+                     (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+                      type != qMetaTypeId<QJSValue>()))
+                //the UserType clause is to catch registered QFlags)
+                type = EnumType(object->metaObject(), argTypeNames.at(ii), type);
             if (type == QVariant::Invalid) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
                 return 0;

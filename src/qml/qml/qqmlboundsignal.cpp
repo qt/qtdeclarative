@@ -55,6 +55,8 @@
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
 
+Q_DECLARE_METATYPE(QJSValue)
+
 QT_BEGIN_NAMESPACE
 
 class QQmlBoundSignalParameters : public QObject
@@ -227,10 +229,14 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
             prop.setWritable(false);
         } else {
             QByteArray propType = type;
-            if ((QMetaType::typeFlags(t) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration) {
+            QMetaType::TypeFlags flags = QMetaType::typeFlags(t);
+            if (flags & QMetaType::IsEnumeration) {
                 t = QVariant::Int;
                 propType = "int";
-            } else if (t == QVariant::Invalid) {
+            } else if (t == QVariant::Invalid ||
+                       (t >= QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+                        t != qMetaTypeId<QJSValue>())) {
+                //the UserType clause is to catch registered QFlags
                 QByteArray scope;
                 QByteArray name;
                 int scopeIdx = propType.lastIndexOf("::");
