@@ -48,7 +48,9 @@
 FileInfoThread::FileInfoThread(QObject *parent)
     : QThread(parent),
       abort(false),
+#ifndef QT_NO_FILESYSTEMWATCHER
       watcher(0),
+#endif
       sortFlags(QDir::Name),
       needUpdate(true),
       folderUpdate(false),
@@ -58,9 +60,11 @@ FileInfoThread::FileInfoThread(QObject *parent)
       showDotDot(false),
       showOnlyReadable(false)
 {
+#ifndef QT_NO_FILESYSTEMWATCHER
     watcher = new QFileSystemWatcher(this);
     connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(dirChanged(QString)));
     connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(updateFile(QString)));
+#endif // !QT_NO_FILESYSTEMWATCHER
     start(LowPriority);
 }
 
@@ -76,14 +80,18 @@ FileInfoThread::~FileInfoThread()
 void FileInfoThread::clear()
 {
     QMutexLocker locker(&mutex);
+#ifndef QT_NO_FILESYSTEMWATCHER
     watcher->removePaths(watcher->files());
     watcher->removePaths(watcher->directories());
+#endif
 }
 
 void FileInfoThread::removePath(const QString &path)
 {
     QMutexLocker locker(&mutex);
+#ifndef QT_NO_FILESYSTEMWATCHER
     watcher->removePath(path);
+#endif
     currentPath.clear();
 }
 
@@ -92,7 +100,9 @@ void FileInfoThread::setPath(const QString &path)
     Q_ASSERT(!path.isEmpty());
 
     QMutexLocker locker(&mutex);
+#ifndef QT_NO_FILESYSTEMWATCHER
     watcher->addPath(path);
+#endif
     currentPath = path;
     needUpdate = true;
     condition.wakeAll();
@@ -106,6 +116,7 @@ void FileInfoThread::setRootPath(const QString &path)
     rootPath = path;
 }
 
+#ifndef QT_NO_FILESYSTEMWATCHER
 void FileInfoThread::dirChanged(const QString &directoryPath)
 {
     Q_UNUSED(directoryPath);
@@ -113,6 +124,7 @@ void FileInfoThread::dirChanged(const QString &directoryPath)
     folderUpdate = true;
     condition.wakeAll();
 }
+#endif
 
 void FileInfoThread::setSortFlags(QDir::SortFlags flags)
 {
@@ -162,6 +174,7 @@ void FileInfoThread::setShowOnlyReadable(bool on)
     condition.wakeAll();
 }
 
+#ifndef QT_NO_FILESYSTEMWATCHER
 void FileInfoThread::updateFile(const QString &path)
 {
     Q_UNUSED(path);
@@ -169,6 +182,7 @@ void FileInfoThread::updateFile(const QString &path)
     folderUpdate = true;
     condition.wakeAll();
 }
+#endif
 
 void FileInfoThread::run()
 {

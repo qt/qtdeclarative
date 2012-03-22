@@ -76,8 +76,10 @@ public:
     void setShowOnlyReadable(bool on);
 
 public Q_SLOTS:
+#ifndef QT_NO_FILESYSTEMWATCHER
     void dirChanged(const QString &directoryPath);
     void updateFile(const QString &path);
+#endif
 
 protected:
     void run();
@@ -89,7 +91,9 @@ private:
     QWaitCondition condition;
     volatile bool abort;
 
+#ifndef QT_NO_FILESYSTEMWATCHER
     QFileSystemWatcher *watcher;
+#endif
     QList<FileProperty> currentFileList;
     QDir::SortFlags sortFlags;
     QString currentPath;
