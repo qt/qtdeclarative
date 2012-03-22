@@ -970,7 +970,11 @@ QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
         return signalHandler->setExpression(expr);
 
     if (expr) {
-        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
+        QQmlAbstractBoundSignal *signal = 0;
+        if (that.method().parameterTypes().count())
+            signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
+        else
+            signal = new QQmlBoundSignalNoParams(that.d->object, that.method(), that.d->object);
         QQmlExpression *oldExpr = signal->setExpression(expr);
         signal->addToObject();
         return oldExpr;

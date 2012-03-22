@@ -300,6 +300,71 @@ int QQmlBoundSignalParameters::metaCall(QMetaObject::Call c, int id, void **a)
     }
 }
 
+////////////////////////////////////////////////////////////////////////
+
+QQmlBoundSignalNoParams::QQmlBoundSignalNoParams(QObject *scope, const QMetaMethod &signal,
+                               QObject *owner)
+: m_expression(0), m_owner(owner), m_index(signal.methodIndex()), m_isEvaluating(false)
+{
+    callback = &subscriptionCallback;
+    QQmlNotifierEndpoint::connect(scope, m_index);
+}
+
+QQmlBoundSignalNoParams::~QQmlBoundSignalNoParams()
+{
+    delete m_expression;
+    m_expression = 0;
+}
+
+int QQmlBoundSignalNoParams::index() const
+{
+    return m_index;
+}
+
+/*!
+    Returns the signal expression.
+*/
+QQmlExpression *QQmlBoundSignalNoParams::expression() const
+{
+    return m_expression;
+}
+
+/*!
+    Sets the signal expression to \a e.  Returns the current signal expression,
+    or null if there is no signal expression.
+
+    The QQmlBoundSignalNoParams instance takes ownership of \a e.  The caller is
+    assumes ownership of the returned QQmlExpression.
+*/
+QQmlExpression *QQmlBoundSignalNoParams::setExpression(QQmlExpression *e)
+{
+    QQmlExpression *rv = m_expression;
+    m_expression = e;
+    if (m_expression) m_expression->setNotifyOnValueChanged(false);
+    return rv;
+}
+
+void QQmlBoundSignalNoParams::subscriptionCallback(QQmlNotifierEndpoint *e)
+{
+    QQmlBoundSignalNoParams *s = static_cast<QQmlBoundSignalNoParams*>(e);
+    if (!s->m_expression)
+        return;
+
+    if (QQmlDebugService::isDebuggingEnabled())
+        QV8DebugService::instance()->signalEmitted(QString::fromAscii(s->m_owner->metaObject()->method(s->m_index).signature()));
+
+    QQmlHandlingSignalProfiler prof(s->m_owner, s->m_index, s->m_expression);
+
+    s->m_isEvaluating = true;
+
+    if (s->m_expression && s->m_expression->engine()) {
+        QQmlExpressionPrivate::get(s->m_expression)->value();
+        if (s->m_expression && s->m_expression->hasError())
+            QQmlEnginePrivate::warning(s->m_expression->engine(), s->m_expression->error());
+    }
+    s->m_isEvaluating = false;
+}
+
 QT_END_NAMESPACE
 
 #include <qqmlboundsignal.moc>
