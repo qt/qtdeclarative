@@ -1,11 +1,12 @@
 TEMPLATE = subdirs
 
 PUBLICTESTS += \
-    examples \
     geometry \
     nodes \
     rendernode \
     qquickpixmapcache
+
+!cross_compile: PUBLICTESTS += examples
 
 # This test requires the qtconcurrent module
 !contains(QT_CONFIG, concurrent):PUBLICTESTS -= qquickpixmapcache

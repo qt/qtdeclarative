@@ -165,6 +165,10 @@ and ensures that the subnode's source locations are inside parent node's source 
 
 void tst_qqmlparser::qmlParser_data()
 {
+#if defined(QTEST_CROSS_COMPILED)
+    return;
+#endif
+
     QTest::addColumn<QString>("file");
 
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
@@ -180,11 +184,10 @@ void tst_qqmlparser::qmlParser_data()
 
 void tst_qqmlparser::qmlParser()
 {
-    QFETCH(QString, file);
-
 #if defined(QTEST_CROSS_COMPILED)
     QSKIP("sources not available when cross compiled");
 #endif
+    QFETCH(QString, file);
 
     using namespace QQmlJS;
 
