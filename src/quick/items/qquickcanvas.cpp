@@ -306,6 +306,8 @@ QQuickCanvasPrivate::QQuickCanvasPrivate()
     , windowManager(0)
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
+    , persistentGLContext(false)
+    , persistentSceneGraph(false)
     , renderTarget(0)
     , renderTargetId(0)
     , incubationController(0)
@@ -325,6 +327,7 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     rootItem = new QQuickRootItem;
     QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(rootItem);
     rootItemPrivate->canvas = q;
+    rootItemPrivate->canvasRefCount = 1;
     rootItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
 
     // In the absence of a focus in event on some platforms assume the window will
@@ -536,7 +539,7 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
             q->sendEvent(oldActiveFocusItem, &event);
 
             QQuickItem *afi = oldActiveFocusItem;
-            while (afi != scope) {
+            while (afi && afi != scope) {
                 if (QQuickItemPrivate::get(afi)->activeFocus) {
                     QQuickItemPrivate::get(afi)->activeFocus = false;
                     changed << afi;
@@ -548,27 +551,12 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
 
     if (item != rootItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
-        // Correct focus chain in scope
-        if (oldSubFocusItem) {
-            QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
-            while (sfi != scope) {
-                QQuickItemPrivate::get(sfi)->subFocusItem = 0;
-                sfi = sfi->parentItem();
-            }
-        }
-        {
-            scopePrivate->subFocusItem = item;
-            QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
-            while (sfi != scope) {
-                QQuickItemPrivate::get(sfi)->subFocusItem = item;
-                sfi = sfi->parentItem();
-            }
-        }
-
         if (oldSubFocusItem) {
             QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
             changed << oldSubFocusItem;
         }
+
+        QQuickItemPrivate::get(item)->updateSubFocusItem(scope, true);
     }
 
     if (!(options & DontChangeFocusProperty)) {
@@ -647,7 +635,7 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         q->sendEvent(oldActiveFocusItem, &event);
 
         QQuickItem *afi = oldActiveFocusItem;
-        while (afi != scope) {
+        while (afi && afi != scope) {
             if (QQuickItemPrivate::get(afi)->activeFocus) {
                 QQuickItemPrivate::get(afi)->activeFocus = false;
                 changed << afi;
@@ -658,20 +646,13 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
     if (item != rootItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
-        // Correct focus chain in scope
-        if (oldSubFocusItem) {
-            QQuickItem *sfi = scopePrivate->subFocusItem->parentItem();
-            while (sfi != scope) {
-                QQuickItemPrivate::get(sfi)->subFocusItem = 0;
-                sfi = sfi->parentItem();
-            }
-        }
-        scopePrivate->subFocusItem = 0;
-
         if (oldSubFocusItem && !(options & DontChangeFocusProperty)) {
             QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
             changed << oldSubFocusItem;
         }
+
+        QQuickItemPrivate::get(item)->updateSubFocusItem(scope, false);
+
     } else if (!(options & DontChangeFocusProperty)) {
         QQuickItemPrivate::get(item)->focus = false;
         changed << item;
@@ -750,6 +731,55 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
     reparent the items to the root item or to an existing item in the scene.
 
     For easily displaying a scene from a QML file, see \l{QQuickView}.
+
+
+    \section1 Scene Graph and Rendering
+
+    The QQuickCanvas uses a scene graph on top of OpenGL to render. This scene graph is disconnected
+    from the QML scene and potentially lives in another thread, depending on the platform
+    implementation. Since the rendering scene graph lives independently from the QML scene, it can
+    also be completely released without affecting the state of the QML scene.
+
+    The sceneGraphInitialized() signal is emitted on the rendering thread before the QML scene is
+    rendered to the screen for the first time. If the rendering scene graph has been released
+    the signal will be emitted again before the next frame is rendered.
+
+    Rendering is done by first copying the QML scene's state into the rendering scene graph. This is
+    done by calling QQuickItem::updatePaintNode() functions on all items that have changed. This phase
+    is run on the rendering thread with the GUI thread blocked, when a separate rendering thread
+    is being used. The scene can then be rendered.
+
+    Before the scene graph is rendered, the beforeRendering() signal is emitted. The OpenGL context
+    is bound at this point and the application is free to do its own rendering. Also
+    make sure to disable the clearing of the color buffer, using setClearBeforeRendering(). The
+    default clear color is white and can be changed with setClearColor(). After the scene has
+    been rendered, the afterRendering() signal is emitted. The application can use this to render
+    OpenGL on top of a QML application. Once the frame is fully done and has been swapped,
+    the frameSwapped() signal is emitted.
+
+    While the scene graph is being rendered on the rendering thread, the GUI will process animations
+    for the next frame. This means that as long as users are not using scene graph API
+    directly, the added complexity of a rendering thread can be completely ignored.
+
+    When a QQuickCanvas is programatically hidden with hide() or setVisible(false), it will
+    stop rendering and its scene graph and OpenGL context might be released. The
+    sceneGraphInvalidated() signal will be emitted when this happens.
+
+    \warning It is crucial that OpenGL operations and interaction with the scene graph happens
+    exclusively on the rendering thread, primarily during the updatePaintNode() phase.
+
+    \warning As signals related to rendering might be emitted from the rendering thread,
+    connections should be made using Qt::DirectConnection
+
+
+    \section1 Resource Management
+
+    QML will typically try to cache images, scene graph nodes, etc to improve performance, but in
+    some low-memory scenarios it might be required to aggressively release these resources. The
+    releaseResources() can be used to force clean up of certain resources. Calling releaseResources()
+    may result in the entire scene graph and its OpenGL context being deleted. The
+    sceneGraphInvalidated() signal will be emitted when this happens.
+
 */
 QQuickCanvas::QQuickCanvas(QWindow *parent)
     : QWindow(*(new QQuickCanvasPrivate), parent)
@@ -771,11 +801,6 @@ QQuickCanvas::~QQuickCanvas()
 
     d->windowManager->canvasDestroyed(this);
 
-    // ### should we change ~QQuickItem to handle this better?
-    // manually cleanup for the root item (item destructor only handles these when an item is parented)
-    QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(d->rootItem);
-    rootItemPrivate->removeFromDirtyList();
-
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     delete d->incubationController; d->incubationController = 0;
 
@@ -786,6 +811,15 @@ QQuickCanvas::~QQuickCanvas()
 
 /*!
     This function tries to release redundant resources currently held by the QML scene.
+
+    Calling this function might result in the scene graph and the OpenGL context used
+    for rendering being released to release graphics memory. If this happens, the
+    sceneGraphInvalidated() signal will be called, allowing users to clean up their
+    own graphics resources. The setPersistentOpenGLContext() and setPersistentSceneGraph()
+    functions can be used to prevent this from happening, if handling the cleanup is
+    not feasible in the application, at the cost of higher memory usage.
+
+    \sa sceneGraphInvalidated(), setPersistentOpenGLContext(), setPersistentSceneGraph().
  */
 
 void QQuickCanvas::releaseResources()
@@ -794,6 +828,69 @@ void QQuickCanvas::releaseResources()
     d->windowManager->releaseResources();
     QQuickPixmap::purgeCache();
 }
+
+
+
+/*!
+    Controls whether the OpenGL context can be released as a part of a call to
+    releaseResources().
+
+    The OpenGL context might still be released when the user makes an explicit
+    call to hide().
+
+    \sa setPersistentSceneGraph()
+ */
+
+void QQuickCanvas::setPersistentOpenGLContext(bool persistent)
+{
+    Q_D(QQuickCanvas);
+    d->persistentGLContext = persistent;
+}
+
+
+/*!
+    Returns whether the OpenGL context can be released as a part of a call to
+    releaseResources().
+ */
+
+bool QQuickCanvas::isPersistentOpenGLContext() const
+{
+    Q_D(const QQuickCanvas);
+    return d->persistentGLContext;
+}
+
+
+
+/*!
+    Controls whether the scene graph nodes and resources can be released as a
+    part of a call to releaseResources().
+
+    The scene graph nodes and resources might still be released when the user
+    makes an explicit call to hide().
+
+    \sa setPersistentOpenGLContext()
+ */
+
+void QQuickCanvas::setPersistentSceneGraph(bool persistent)
+{
+    Q_D(QQuickCanvas);
+    d->persistentSceneGraph = persistent;
+}
+
+
+
+/*!
+    Returns whether the scene graph nodes and resources can be released as a part
+    of a call to releaseResources().
+ */
+
+bool QQuickCanvas::isPersistentSceneGraph() const
+{
+    Q_D(const QQuickCanvas);
+    return d->persistentSceneGraph;
+}
+
+
 
 
 
@@ -1618,6 +1715,7 @@ void QQuickCanvasPrivate::cleanupNodesOnShutdown(QQuickItem *item)
         if (p->extra.isAllocated()) {
             p->extra->opacityNode = 0;
             p->extra->clipNode = 0;
+            p->extra->rootNode = 0;
         }
 
         p->groupNode = 0;

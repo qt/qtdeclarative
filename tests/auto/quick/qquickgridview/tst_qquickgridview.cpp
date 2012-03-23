@@ -3691,31 +3691,32 @@ void tst_QQuickGridView::margins()
         QQuickItem *contentItem = gridview->contentItem();
         QTRY_VERIFY(contentItem != 0);
 
-        QCOMPARE(gridview->contentX(), -240+30.);
-        QCOMPARE(gridview->xOrigin(), 0.);
+        QTRY_COMPARE(gridview->contentX(), -240+50.);
+        QTRY_COMPARE(gridview->xOrigin(), 0.);
 
         // check end bound
         gridview->positionViewAtEnd();
         qreal pos = gridview->contentX();
         gridview->setContentX(pos - 80);
         gridview->returnToBounds();
-        QTRY_COMPARE(gridview->contentX(), pos - 50);
+        QTRY_COMPARE(gridview->contentX(), pos - 30);
 
         // remove item before visible and check that left margin is maintained
         // and xOrigin is updated
         gridview->setContentX(-400);
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
         model.removeItems(0, 4);
-        QTest::qWait(100);
+        QTRY_COMPARE(model.count(), gridview->count());
         gridview->setContentX(-240+50);
         gridview->returnToBounds();
         QCOMPARE(gridview->xOrigin(), -100.);
-        QTRY_COMPARE(gridview->contentX(), -240-70.);
+        QTRY_COMPARE(gridview->contentX(), -240-50.);
 
-        // reduce left margin (i.e. right side due to RTL)
+        // reduce right margin
         pos = gridview->contentX();
-        gridview->setLeftMargin(20);
+        gridview->setRightMargin(40);
         QCOMPARE(gridview->xOrigin(), -100.);
-        QTRY_COMPARE(gridview->contentX(), -240-80.);
+        QTRY_COMPARE(gridview->contentX(), -240-100 + 40.);
 
         // check end bound
         gridview->positionViewAtEnd();
@@ -3723,11 +3724,11 @@ void tst_QQuickGridView::margins()
         pos = gridview->contentX();
         gridview->setContentX(pos - 80);
         gridview->returnToBounds();
-        QTRY_COMPARE(gridview->contentX(), pos - 50);
+        QTRY_COMPARE(gridview->contentX(), pos - 30);
 
-        // reduce right margin (i.e. left side due to RTL)
+        // reduce left margin
         pos = gridview->contentX();
-        gridview->setRightMargin(40);
+        gridview->setLeftMargin(20);
         QCOMPARE(gridview->xOrigin(), 0.);
         QTRY_COMPARE(gridview->contentX(), pos+10);
 

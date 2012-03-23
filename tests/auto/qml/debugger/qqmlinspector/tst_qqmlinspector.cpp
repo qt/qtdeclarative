@@ -141,7 +141,11 @@ void tst_QQmlInspector::cleanupTestCase()
 
 void tst_QQmlInspector::init()
 {
+#if defined(Q_OS_WIN)
+    const QString executable = "app\\app.exe";
+#else
     const QString executable = "app/app";
+#endif
     const QString argument = "-qmljsdebugger=port:"STR_PORT",block";
 
     m_process = new QQmlDebugProcess(executable);

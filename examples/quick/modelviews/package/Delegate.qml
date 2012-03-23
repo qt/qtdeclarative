@@ -42,26 +42,16 @@ import QtQuick 2.0
 
 //![0]
 Package {
-    Text { id: listDelegate; width: 200; height: 25; text: 'Empty'; Package.name: 'list' }
-    Text { id: gridDelegate; width: 100; height: 50; text: 'Empty'; Package.name: 'grid' }
+    Text { id: listDelegate; width: parent.width; height: 25; text: 'Empty'; Package.name: 'list' }
+    Text { id: gridDelegate; width: parent.width / 2; height: 50; text: 'Empty'; Package.name: 'grid' }
 
     Rectangle {
         id: wrapper
-        width: 200; height: 25
+        width: parent.width; height: 25
         color: 'lightsteelblue'
 
         Text { text: display; anchors.centerIn: parent }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                if (wrapper.state == 'inList')
-                    wrapper.state = 'inGrid';
-                else
-                    wrapper.state = 'inList';
-            }
-        }
-
-        state: 'inList'
+        state: root.upTo > index ? 'inGrid' : 'inList'
         states: [
             State {
                 name: 'inList'

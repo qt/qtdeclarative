@@ -1143,7 +1143,8 @@ void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
 void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
-    if (newGeometry.width() != oldGeometry.width())
+    Q_D(QQuickTextEdit);
+    if (newGeometry.width() != oldGeometry.width() && d->wrapMode != NoWrap && !d->inLayout)
         updateSize();
     QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
 }
@@ -1477,6 +1478,7 @@ Handles the given mouse \a event.
 void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextEdit);
+    d->control->processEvent(event, QPointF(0, -d->yoff));
     if (d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
@@ -1484,7 +1486,6 @@ void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
         if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
             openSoftwareInputPanel();
     }
-    d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mousePressEvent(event);
 }
@@ -1857,6 +1858,13 @@ void QQuickTextEdit::updateSize()
             if (d->requireImplicitWidth) {
                 d->document->setTextWidth(-1);
                 naturalWidth = d->document->idealWidth();
+
+                const bool wasInLayout = d->inLayout;
+                d->inLayout = true;
+                setImplicitWidth(naturalWidth);
+                d->inLayout = wasInLayout;
+                if (d->inLayout)    // probably the result of a binding loop, but by letting it
+                    return;         // get this far we'll get a warning to that effect.
             }
             if (d->document->textWidth() != width())
                 d->document->setTextWidth(width());
@@ -1888,11 +1896,11 @@ void QQuickTextEdit::updateSize()
             d->document->setTextWidth(newWidth); // ### Text does not align if width is not set (QTextDoc bug)
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
         qreal iWidth = -1;
-        if (!widthValid())
+        if (!widthValid() && !d->requireImplicitWidth)
             iWidth = newWidth;
-        else if (d->requireImplicitWidth)
-            iWidth = naturalWidth;
+
         qreal newHeight = d->document->isEmpty() ? fm.height() : d->document->size().height();
+
         if (iWidth > -1)
             setImplicitSize(iWidth, newHeight);
         else

@@ -133,6 +133,7 @@ void tst_v4::qtscript_data()
     QTest::newRow("double bool jump") << "doubleBoolJump.qml";
     QTest::newRow("unary minus") << "unaryMinus.qml";
     QTest::newRow("null qobject") << "nullQObject.qml";
+    QTest::newRow("qobject -> bool") << "objectToBool.qml";
 }
 
 void tst_v4::unnecessaryReeval()

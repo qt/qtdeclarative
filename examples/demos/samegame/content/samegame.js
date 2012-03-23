@@ -173,7 +173,7 @@ function victoryCheck()
         }
         initHighScoreBar();
         if(gameCanvas.score > highScoreBar){
-            nameInputDialog.show("You won! Please enter your name:                 ");
+            nameInputDialog.show("You won! Your name:                 ");
             nameInputDialog.initialWidth = nameInputDialog.text.width + 20;
             if (nameInputDialog.name == "")
                nameInputDialog.width = nameInputDialog.initialWidth;

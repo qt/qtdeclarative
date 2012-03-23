@@ -151,8 +151,8 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
 
     bool updateRange = false;
     if (oldMaterial == 0
-            || material->glyphCache()->fontScale() != oldMaterial->glyphCache()->fontScale()) {
-        m_fontScale = material->glyphCache()->fontScale();
+            || material->fontScale() != oldMaterial->fontScale()) {
+        m_fontScale = material->fontScale();
         updateRange = true;
     }
     if (state.isMatrixDirty()) {
@@ -226,10 +226,8 @@ int QSGDistanceFieldTextMaterial::compare(const QSGMaterial *o) const
     const QSGDistanceFieldTextMaterial *other = static_cast<const QSGDistanceFieldTextMaterial *>(o);
     if (m_glyph_cache != other->m_glyph_cache)
         return m_glyph_cache - other->m_glyph_cache;
-    if (m_glyph_cache->fontScale() != other->m_glyph_cache->fontScale()) {
-        qreal s1 = m_glyph_cache->fontScale();
-        qreal s2 = other->m_glyph_cache->fontScale();
-        return int(s2 < s1) - int(s1 < s2);
+    if (m_fontScale != other->m_fontScale) {
+        return int(other->m_fontScale < m_fontScale) - int(m_fontScale < other->m_fontScale);
     }
     QRgb c1 = m_color.rgba();
     QRgb c2 = other->m_color.rgba();
@@ -371,7 +369,7 @@ void DistanceFieldOutlineTextMaterialShader::updateState(const RenderState &stat
     QSGDistanceFieldOutlineTextMaterial *oldMaterial = static_cast<QSGDistanceFieldOutlineTextMaterial *>(oldEffect);
 
     if (oldMaterial == 0
-            || material->glyphCache()->fontScale() != oldMaterial->glyphCache()->fontScale()
+            || material->fontScale() != oldMaterial->fontScale()
             || state.isMatrixDirty())
         updateOutlineAlphaRange(material->glyphCache()->distanceFieldRadius());
 }
@@ -410,7 +408,7 @@ protected:
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
 
-    void updateShift(const QSGDistanceFieldGlyphCache *cache, const QPointF& shift);
+    void updateShift(qreal fontScale, const QPointF& shift);
 
     int m_shift_id;
 };
@@ -434,17 +432,17 @@ void DistanceFieldShiftedStyleTextMaterialShader::updateState(const RenderState 
     QSGDistanceFieldShiftedStyleTextMaterial *oldMaterial = static_cast<QSGDistanceFieldShiftedStyleTextMaterial *>(oldEffect);
 
     if (oldMaterial == 0
-            || oldMaterial->glyphCache()->fontScale() != material->glyphCache()->fontScale()
+            || oldMaterial->fontScale() != material->fontScale()
             || oldMaterial->shift() != material->shift()
             || oldMaterial->textureSize() != material->textureSize()) {
-        updateShift(material->glyphCache(), material->shift());
+        updateShift(material->fontScale(), material->shift());
     }
 }
 
-void DistanceFieldShiftedStyleTextMaterialShader::updateShift(const QSGDistanceFieldGlyphCache *cache, const QPointF &shift)
+void DistanceFieldShiftedStyleTextMaterialShader::updateShift(qreal fontScale, const QPointF &shift)
 {
-    QPointF texel(1.0 / cache->fontScale() * shift.x(),
-                  1.0 / cache->fontScale() * shift.y());
+    QPointF texel(1.0 / fontScale * shift.x(),
+                  1.0 / fontScale * shift.y());
     program()->setUniformValue(m_shift_id, texel);
 }
 
@@ -639,8 +637,8 @@ void QSGHiQSubPixelDistanceFieldTextMaterialShader::updateState(const RenderStat
         state.context()->functions()->glBlendColor(c.redF(), c.greenF(), c.blueF(), 1.0f);
     }
 
-    if (oldMaterial == 0 || material->glyphCache()->fontScale() != oldMaterial->glyphCache()->fontScale())
-        program()->setUniformValue(m_fontScale_id, GLfloat(material->glyphCache()->fontScale()));
+    if (oldMaterial == 0 || material->fontScale() != oldMaterial->fontScale())
+        program()->setUniformValue(m_fontScale_id, GLfloat(material->fontScale()));
 
     if (oldMaterial == 0 || state.isMatrixDirty()) {
         int viewportWidth = state.viewportRect().width();

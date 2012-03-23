@@ -46,9 +46,10 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheManager *cacheManager)
-    : m_material(0)
-    , m_glyph_cacheManager(cacheManager)
+QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGContext *context)
+    : m_glyphNodeType(RootGlyphNode)
+    , m_context(context)
+    , m_material(0)
     , m_glyph_cache(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
     , m_style(QQuickText::Normal)
@@ -59,7 +60,6 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheM
 {
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
-    setPreferredAntialiasingMode(cacheManager->defaultAntialiasingMode());
     setFlag(UsePreprocess);
 #ifdef QML_RUNTIME_TESTING
     description = QLatin1String("glyphs");
@@ -70,15 +70,17 @@ QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
 {
     delete m_material;
 
+    if (m_glyphNodeType == SubGlyphNode)
+        return;
+
     if (m_glyph_cache) {
         m_glyph_cache->release(m_glyphs.glyphIndexes());
         m_glyph_cache->unregisterGlyphNode(this);
         m_glyph_cache->unregisterOwnerElement(ownerElement());
     }
 
-    for (int i = 0; i < m_nodesToDelete.count(); ++i)
-        delete m_nodesToDelete.at(i);
-    m_nodesToDelete.clear();
+    while (m_nodesToDelete.count())
+        delete m_nodesToDelete.takeLast();
 }
 
 void QSGDistanceFieldGlyphNode::setColor(const QColor &color)
@@ -107,8 +109,15 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     m_position = QPointF(position.x(), position.y() - font.ascent());
     m_glyphs = glyphs;
 
+    m_dirtyGeometry = true;
+    m_dirtyMaterial = true;
+
     QSGDistanceFieldGlyphCache *oldCache = m_glyph_cache;
-    m_glyph_cache = m_glyph_cacheManager->cache(m_glyphs.rawFont());
+    m_glyph_cache = m_context->distanceFieldGlyphCache(m_glyphs.rawFont());
+
+    if (m_glyphNodeType == SubGlyphNode)
+        return;
+
     if (m_glyph_cache != oldCache) {
         Q_ASSERT(ownerElement() != 0);
         if (oldCache) {
@@ -123,9 +132,6 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     const QVector<quint32> glyphIndexes = m_glyphs.glyphIndexes();
     for (int i = 0; i < glyphIndexes.count(); ++i)
         m_allGlyphIndexesLookup.insert(glyphIndexes.at(i));
-
-    m_dirtyGeometry = true;
-    m_dirtyMaterial = true;
 }
 
 void QSGDistanceFieldGlyphNode::setStyle(QQuickText::TextStyle style)
@@ -154,9 +160,8 @@ void QSGDistanceFieldGlyphNode::preprocess()
 {
     Q_ASSERT(m_glyph_cache);
 
-    for (int i = 0; i < m_nodesToDelete.count(); ++i)
-        delete m_nodesToDelete.at(i);
-    m_nodesToDelete.clear();
+    while (m_nodesToDelete.count())
+        delete m_nodesToDelete.takeLast();
 
     m_glyph_cache->processPendingGlyphs();
     m_glyph_cache->update();
@@ -183,14 +188,15 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     Q_ASSERT(m_glyph_cache);
 
     // Remove previously created sub glyph nodes
-    QHash<const QSGDistanceFieldGlyphCache::Texture *, QSGDistanceFieldGlyphNode *>::iterator it = m_subNodes.begin();
-    while (it != m_subNodes.end()) {
-        removeChildNode(it.value());
+    // We assume all the children are sub glyph nodes
+    QSGNode *subnode = firstChild();
+    while (subnode) {
         // We can't delete the node now as it might be in the preprocess list
         // It will be deleted in the next preprocess
-        m_nodesToDelete.append(it.value());
-        it = m_subNodes.erase(it);
+        m_nodesToDelete.append(subnode);
+        subnode = subnode->nextSibling();
     }
+    removeAllChildNodes();
 
     QSGGeometry *g = geometry();
 
@@ -200,6 +206,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
     const QVector<quint32> indexes = m_glyphs.glyphIndexes();
     const QVector<QPointF> positions = m_glyphs.positions();
+    qreal fontPixelSize = m_glyphs.rawFont().pixelSize();
 
     QVector<QSGGeometry::TexturedPoint2D> vp;
     vp.reserve(indexes.size() * 4);
@@ -207,8 +214,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     ip.reserve(indexes.size() * 6);
 
     QPointF margins(2, 2);
-    QPointF texMargins = margins / m_glyph_cache->fontScale();
-
+    QPointF texMargins = margins / m_glyph_cache->fontScale(fontPixelSize);
 
     for (int i = 0; i < indexes.size(); ++i) {
         const int glyphIndex = indexes.at(i);
@@ -232,7 +238,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
             continue;
         }
 
-        QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphIndex);
+        QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphIndex, fontPixelSize);
 
         if (!metrics.isNull() && !c.isNull()) {
             metrics.width += margins.x() * 2;
@@ -288,25 +294,19 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
     QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo>::const_iterator ite = glyphsInOtherTextures.constBegin();
     while (ite != glyphsInOtherTextures.constEnd()) {
-        QHash<const QSGDistanceFieldGlyphCache::Texture *, QSGDistanceFieldGlyphNode *>::iterator subIt = m_subNodes.find(ite.key());
-        if (subIt == m_subNodes.end()) {
-            QSGDistanceFieldGlyphNode *subNode = new QSGDistanceFieldGlyphNode(m_glyph_cacheManager);
-            subNode->setOwnerElement(m_ownerElement);
-            subNode->setColor(m_color);
-            subNode->setStyle(m_style);
-            subNode->setStyleColor(m_styleColor);
-            subNode->update();
-            appendChildNode(subNode);
-            subIt = m_subNodes.insert(ite.key(), subNode);
-        }
-
         QGlyphRun subNodeGlyphRun(m_glyphs);
         subNodeGlyphRun.setGlyphIndexes(ite->indexes);
         subNodeGlyphRun.setPositions(ite->positions);
 
-        subIt.value()->setGlyphs(m_originalPosition, subNodeGlyphRun);
-        subIt.value()->update();
-        subIt.value()->updateGeometry(); // we have to explicity call this now as preprocess won't be called before it's rendered
+        QSGDistanceFieldGlyphNode *subNode = new QSGDistanceFieldGlyphNode(m_context);
+        subNode->setGlyphNodeType(SubGlyphNode);
+        subNode->setColor(m_color);
+        subNode->setStyle(m_style);
+        subNode->setStyleColor(m_styleColor);
+        subNode->setGlyphs(m_originalPosition, subNodeGlyphRun);
+        subNode->update();
+        subNode->updateGeometry(); // we have to explicity call this now as preprocess won't be called before it's rendered
+        appendChildNode(subNode);
 
         ++ite;
     }
@@ -356,6 +356,8 @@ void QSGDistanceFieldGlyphNode::updateMaterial()
     }
 
     m_material->setGlyphCache(m_glyph_cache);
+    if (m_glyph_cache)
+        m_material->setFontScale(m_glyph_cache->fontScale(m_glyphs.rawFont().pixelSize()));
     m_material->setColor(m_color);
     setMaterial(m_material);
     m_dirtyMaterial = false;

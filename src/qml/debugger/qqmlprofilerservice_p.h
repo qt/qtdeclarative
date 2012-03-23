@@ -54,11 +54,14 @@
 //
 
 #include <private/qqmldebugservice_p.h>
-#include <QtQml/qtqmlglobal.h>
+#include "qqmlexpression.h"
+
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qmetaobject.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qstringbuilder.h>
+
 
 QT_BEGIN_HEADER
 
@@ -194,47 +197,30 @@ struct QQmlBindingProfiler {
             QQmlProfilerService::instance->endRange(QQmlProfilerService::Binding);
     }
 
-    void addDetail(const QString &details)
-    {
-        if (enabled)
-            QQmlProfilerService::instance->rangeData(QQmlProfilerService::Binding,
-                                                             details);
-    }
-\
     bool enabled;
 };
 
 struct QQmlHandlingSignalProfiler {
-    QQmlHandlingSignalProfiler()
+    QQmlHandlingSignalProfiler(const QMetaMethod &signal, QQmlExpression *expression)
     {
         enabled = QQmlProfilerService::instance
                 ? QQmlProfilerService::instance->profilingEnabled() : false;
         if (enabled) {
-            QQmlProfilerService::instance->startRange(
-                        QQmlProfilerService::HandlingSignal);
+            QQmlProfilerService *service = QQmlProfilerService::instance;
+            service->startRange(QQmlProfilerService::HandlingSignal);
+            service->rangeData(QQmlProfilerService::HandlingSignal,
+                               QString::fromLatin1(signal.methodSignature()) + QLatin1String(": ")
+                               + expression->expression());
+            service->rangeLocation(QQmlProfilerService::HandlingSignal,
+                                   expression->sourceFile(), expression->lineNumber(),
+                                   expression->columnNumber());
         }
-    }
-
-    void setSignalInfo(const QString &name, const QString &expression)
-    {
-        if (enabled)
-            QQmlProfilerService::instance->rangeData(
-                        QQmlProfilerService::HandlingSignal,
-                        name % QLatin1String(": ") % expression);
-    }
-
-    void setLocation(const QString &file, int line, int column)
-    {
-        if (enabled)
-            QQmlProfilerService::instance->rangeLocation(
-                        QQmlProfilerService::HandlingSignal, file, line, column);
     }
 
     ~QQmlHandlingSignalProfiler()
     {
         if (enabled)
-            QQmlProfilerService::instance->endRange(
-                        QQmlProfilerService::HandlingSignal);
+            QQmlProfilerService::instance->endRange(QQmlProfilerService::HandlingSignal);
     }
 
     bool enabled;
@@ -243,22 +229,23 @@ struct QQmlHandlingSignalProfiler {
 struct QQmlObjectCreatingProfiler {
     QQmlObjectCreatingProfiler()
     {
-        QQmlProfilerService *instance = QQmlProfilerService::instance;
-        enabled = instance ?
-                    instance->profilingEnabled() : false;
-        if (enabled)
-            instance->startRange(QQmlProfilerService::Creating);
+        enabled = QQmlProfilerService::instance
+                ? QQmlProfilerService::instance->profilingEnabled() : false;
+        if (enabled) {
+            QQmlProfilerService *service = QQmlProfilerService::instance;
+            service->startRange(QQmlProfilerService::Creating);
+        }
     }
 
     void setTypeName(const QString &typeName)
     {
-        if (enabled)
-            QQmlProfilerService::instance->rangeData(
-                        QQmlProfilerService::Creating, typeName);
+        Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
+        QQmlProfilerService::instance->rangeData(QQmlProfilerService::Creating, typeName);
     }
 
     void setLocation(const QUrl &url, int line, int column)
     {
+        Q_ASSERT_X(enabled, Q_FUNC_INFO, "method called although profiler is not enabled.");
         if (enabled)
             QQmlProfilerService::instance->rangeLocation(
                         QQmlProfilerService::Creating, url, line, column);

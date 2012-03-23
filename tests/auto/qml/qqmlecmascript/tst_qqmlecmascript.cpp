@@ -71,6 +71,8 @@ public:
 private slots:
     void initTestCase();
     void assignBasicTypes();
+    void assignDate_data();
+    void assignDate();
     void idShortcutInvalidates();
     void boolPropertiesEvaluateAsBool();
     void methods();
@@ -97,6 +99,8 @@ private slots:
     void importScope();
     void signalParameterTypes();
     void objectsCompareAsEqual();
+    void componentCreation_data();
+    void componentCreation();
     void dynamicCreation_data();
     void dynamicCreation();
     void dynamicDestruction();
@@ -129,6 +133,8 @@ private slots:
     void ownership();
     void cppOwnershipReturnValue();
     void ownershipCustomReturnValue();
+    void ownershipRootObject();
+    void ownershipConsistency();
     void qlistqobjectMethods();
     void strictlyEquals();
     void compiled();
@@ -255,6 +261,9 @@ void tst_qqmlecmascript::initTestCase()
 {
     QQmlDataTest::initTestCase();
     registerTypes();
+
+    QString dataDir(dataDirectory() + QLatin1Char('/') + QLatin1String("lib"));
+    engine.addImportPath(dataDir);
 }
 
 void tst_qqmlecmascript::assignBasicTypes()
@@ -274,7 +283,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->colorProperty(), QColor("red"));
     QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
     QCOMPARE(object->timeProperty(), QTime(11, 11, 32));
-    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1)));
+    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
     QCOMPARE(object->pointProperty(), QPoint(99,13));
     QCOMPARE(object->pointFProperty(), QPointF(-10.1, 12.3));
     QCOMPARE(object->sizeProperty(), QSize(99, 13));
@@ -302,7 +311,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->colorProperty(), QColor("red"));
     QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
     QCOMPARE(object->timeProperty(), QTime(11, 11, 32));
-    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1)));
+    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
     QCOMPARE(object->pointProperty(), QPoint(99,13));
     QCOMPARE(object->pointFProperty(), QPointF(-10.1, 12.3));
     QCOMPARE(object->sizeProperty(), QSize(99, 13));
@@ -315,6 +324,28 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
     delete object;
     }
+}
+
+void tst_qqmlecmascript::assignDate_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::newRow("Component.onComplete JS") << testFileUrl("assignDate.qml");
+    QTest::newRow("Binding JS") << testFileUrl("assignDate.2.qml");
+    QTest::newRow("Binding UTC") << testFileUrl("assignDate.3.qml");
+    QTest::newRow("Binding JS UTC") << testFileUrl("assignDate.4.qml");
+    QTest::newRow("Binding UTC+2") << testFileUrl("assignDate.5.qml");
+    QTest::newRow("Binding JS UTC+2 ") << testFileUrl("assignDate.6.qml");
+}
+
+void tst_qqmlecmascript::assignDate()
+{
+    QFETCH(QUrl, source);
+    QQmlComponent component(&engine, source);
+    QScopedPointer<QObject> obj(component.create());
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(obj.data());
+    QVERIFY(object != 0);
+    QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
+    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
 }
 
 void tst_qqmlecmascript::idShortcutInvalidates()
@@ -820,6 +851,34 @@ void tst_qqmlecmascript::enums()
 
     delete object;
     }
+    // Enums as literals
+    {
+    QQmlComponent component(&engine, testFileUrl("enums.3.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    // check the values are what we expect
+    QCOMPARE(object->property("a").toInt(), 4);
+    QCOMPARE(object->property("b").toInt(), 5);
+    QCOMPARE(object->property("c").toInt(), 9);
+    QCOMPARE(object->property("d").toInt(), 13);
+    QCOMPARE(object->property("e").toInt(), 2);
+    QCOMPARE(object->property("f").toInt(), 3);
+    QCOMPARE(object->property("h").toInt(), 2);
+    QCOMPARE(object->property("i").toInt(), 3);
+
+    // count of change signals
+    QCOMPARE(object->property("ac").toInt(), 0);
+    QCOMPARE(object->property("bc").toInt(), 0);
+    QCOMPARE(object->property("cc").toInt(), 0);
+    QCOMPARE(object->property("dc").toInt(), 0);
+    QCOMPARE(object->property("ec").toInt(), 0);
+    QCOMPARE(object->property("fc").toInt(), 0);
+    QCOMPARE(object->property("hc").toInt(), 1); // namespace -> binding
+    QCOMPARE(object->property("ic").toInt(), 1); // namespace -> binding
+
+    delete object;
+    }
 }
 
 void tst_qqmlecmascript::valueTypeFunctions()
@@ -1197,6 +1256,89 @@ void tst_qqmlecmascript::aliasPropertyReset()
     QCOMPARE(object->property("intAlias").value<int>(), 12);
     QCOMPARE(object->property("aliasedIntIsUndefined"), QVariant(false));
     delete object;
+}
+
+void tst_qqmlecmascript::componentCreation_data()
+{
+    QTest::addColumn<QString>("method");
+    QTest::addColumn<QString>("creationError");
+    QTest::addColumn<QString>("createdParent");
+
+    QTest::newRow("url")
+        << "url"
+        << ""
+        << "";
+    QTest::newRow("urlMode")
+        << "urlMode"
+        << ""
+        << "";
+    QTest::newRow("urlParent")
+        << "urlParent"
+        << ""
+        << "obj";
+    QTest::newRow("urlNullParent")
+        << "urlNullParent"
+        << ""
+        << "null";
+    QTest::newRow("urlModeParent")
+        << "urlModeParent"
+        << ""
+        << "obj";
+    QTest::newRow("urlModeNullParent")
+        << "urlModeNullParent"
+        << ""
+        << "null";
+    QTest::newRow("invalidSecondArg")
+        << "invalidSecondArg"
+        << ":40: Error: Qt.createComponent(): Invalid arguments"
+        << "";
+    QTest::newRow("invalidThirdArg")
+        << "invalidThirdArg"
+        << ":45: Error: Qt.createComponent(): Invalid parent object"
+        << "";
+    QTest::newRow("invalidMode")
+        << "invalidMode"
+        << ":50: Error: Qt.createComponent(): Invalid arguments"
+        << "";
+}
+
+/*
+Test using createComponent to dynamically generate a component.
+*/
+void tst_qqmlecmascript::componentCreation()
+{
+    QFETCH(QString, method);
+    QFETCH(QString, creationError);
+    QFETCH(QString, createdParent);
+
+    QUrl testUrl(testFileUrl("componentCreation.qml"));
+
+    if (!creationError.isEmpty()) {
+        QString warning = testUrl.toString() + creationError;
+        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+    }
+
+    QQmlComponent component(&engine, testUrl);
+    MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
+    QVERIFY(object != 0);
+
+    QMetaObject::invokeMethod(object, method.toUtf8());
+    QQmlComponent *created = object->componentProperty();
+
+    if (creationError.isEmpty()) {
+        QVERIFY(created);
+
+        QObject *expectedParent;
+        if (createdParent.isEmpty()) {
+            // For now, the parent should be the engine; this will change for QTBUG-24841
+            expectedParent = &engine;
+        } else if (createdParent == QLatin1String("obj")) {
+            expectedParent = object;
+        } else if (createdParent == QLatin1String("null")) {
+            expectedParent = 0;
+        }
+        QCOMPARE(created->parent(), expectedParent);
+    }
 }
 
 void tst_qqmlecmascript::dynamicCreation_data()
@@ -2800,6 +2942,72 @@ void tst_qqmlecmascript::ownershipCustomReturnValue()
     QVERIFY(source.value == 0);
 }
 
+//the return value from getObject will be JS ownership,
+//unless strong Cpp ownership has been set
+class OwnershipChangingObject : public QObject
+{
+    Q_OBJECT
+public:
+    OwnershipChangingObject(): object(0) { }
+
+    QPointer<QObject> object;
+
+public slots:
+    QObject *getObject() { return object; }
+    void setObject(QObject *obj) { object = obj; }
+};
+
+void tst_qqmlecmascript::ownershipRootObject()
+{
+    OwnershipChangingObject own;
+    QQmlContext *context = new QQmlContext(engine.rootContext());
+    context->setContextObject(&own);
+
+    QQmlComponent component(&engine, testFileUrl("ownershipRootObject.qml"));
+    QQmlGuard<QObject> object = component.create(context);
+    QVERIFY(object);
+
+    engine.collectGarbage();
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(own.object != 0);
+
+    delete context;
+    delete object;
+}
+
+void tst_qqmlecmascript::ownershipConsistency()
+{
+    OwnershipChangingObject own;
+    QQmlContext *context = new QQmlContext(engine.rootContext());
+    context->setContextObject(&own);
+
+    QString expectedWarning = testFileUrl("ownershipConsistency.qml").toString() + QLatin1String(":19: Error: Invalid attempt to destroy() an indestructible object");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+    expectedWarning = testFileUrl("ownershipConsistency.qml").toString() + QLatin1String(":15: Error: Invalid attempt to destroy() an indestructible object");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+    expectedWarning = testFileUrl("ownershipConsistency.qml").toString() + QLatin1String(":6: Error: Invalid attempt to destroy() an indestructible object");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+    expectedWarning = testFileUrl("ownershipConsistency.qml").toString() + QLatin1String(":10: Error: Invalid attempt to destroy() an indestructible object");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+
+    QQmlComponent component(&engine, testFileUrl("ownershipConsistency.qml"));
+    QQmlGuard<QObject> object = component.create(context);
+    QVERIFY(object);
+
+    engine.collectGarbage();
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(own.object != 0);
+
+    delete context;
+    delete object;
+}
+
 class QListQObjectMethodsObject : public QObject
 {
     Q_OBJECT
@@ -3299,6 +3507,17 @@ void tst_qqmlecmascript::importScripts_data()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
             << (QVariantList() << QVariant(20));
+
+    QTest::newRow("import module which exports a script")
+            << testFileUrl("jsimport/testJsImport.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("importedScriptStringValue")
+                              << QLatin1String("renamedScriptStringValue")
+                              << QLatin1String("reimportedScriptStringValue"))
+            << (QVariantList() << QVariant(QString("Hello"))
+                               << QVariant(QString("Hello"))
+                               << QVariant(QString("Hello")));
 }
 
 void tst_qqmlecmascript::importScripts()

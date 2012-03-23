@@ -41,6 +41,25 @@
 import QtQuick 2.0
 import "../../shared"
 
+/*!
+    \title QtQuick Examples - Touch Interaction
+    \example qtquick/touchinteraction
+    \brief This is a collection of QML Touch Interaction examples.
+    \image qml-touchinteraction-example.png
+
+    This is a collection of small QML examples relating to touch interaction methods.
+
+    Multipoint Flames demonstrates distinguishing different fingers in a MultiPointTouchArea, by assignning a different colored flame to each touch point.
+
+    Bear-Whack demonstrates using a MultiPointTouchArea to add multiple finger support to a simple game.
+
+    Flick Resize uses a PinchArea to allow Pinch-to-Resize behavior.
+
+    Flickable is a simple example demonstrating the Flickable element.
+
+    Corkboards shows a more complex Flickable usecase, with elements on the flickable that respond to mouse and keyboard interaction.
+*/
+
 Item {
     height: 480
     width: 320
@@ -51,6 +70,8 @@ Item {
             addExample("Multipoint Flames", "Create multiple flames with multiple fingers", Qt.resolvedUrl("multipointtouch/multiflame.qml"));
             addExample("Bear-Whack", "Use multiple touches to knock all the bears down",  Qt.resolvedUrl("multipointtouch/bearwhack.qml"));
             addExample("Flick Resize", "Manipulate images using pinch gestures", Qt.resolvedUrl("pincharea/flickresize.qml"));
+            addExample("Flickable", "A viewport you can move with touch gestures", Qt.resolvedUrl("flickable/basic-flickable.qml"));
+            addExample("Corkboards", "Uses touch input on items inside a Flickable", Qt.resolvedUrl("flickable/corkboards.qml"));
         }
     }
 }

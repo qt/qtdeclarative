@@ -1,11 +1,11 @@
 TEMPLATE = subdirs
 SUBDIRS = accessibility \
             animation \
-            draganddrop
+            draganddrop \
             #canvas \
             #imageelements \
             #keyinteraction \
-            #modelviews \
+            modelviews \
             #mousearea \
             #openglunderqml \
             #painteditem \

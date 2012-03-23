@@ -42,6 +42,11 @@
 #include "qquickellipseextruder_p.h"
 #include <stdlib.h>
 #include <cmath>
+
+#ifdef Q_OS_QNX
+#include <math.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 /*!
     \qmlclass EllipseShape QQuickEllipseExtruder

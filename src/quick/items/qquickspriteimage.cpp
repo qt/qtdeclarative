@@ -261,7 +261,7 @@ struct SpriteVertices {
     The sprite or sprites to draw. Sprites will be scaled to the size of this element.
 */
 
-//TODO: Implicitly size element to size of first sprite?
+//TODO: Implicitly size element to size of first sprite? or currentSprite?
 QQuickSpriteImage::QQuickSpriteImage(QQuickItem *parent) :
     QQuickItem(parent)
     , m_node(0)

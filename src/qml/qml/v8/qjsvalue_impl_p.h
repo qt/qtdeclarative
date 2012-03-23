@@ -281,7 +281,7 @@ QVariant QJSValuePrivate::toVariant() const
         case CNumber:
             return QVariant(u.m_number);
         case CNull:
-            return QVariant();
+            return QVariant(QMetaType::VoidStar, 0);
         case CUndefined:
             return QVariant();
         case JSValue:

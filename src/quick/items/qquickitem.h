@@ -396,6 +396,7 @@ protected:
                                  const QRectF &oldGeometry);
 
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    virtual void releaseResources();
     virtual void updatePolish();
 
 protected Q_SLOTS:

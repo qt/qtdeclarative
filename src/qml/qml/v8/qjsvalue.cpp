@@ -428,7 +428,7 @@ quint32 QJSValue::toUInt() const
     \table
     \header \li Input Type \li Result
     \row    \li Undefined  \li An invalid QVariant.
-    \row    \li Null       \li An invalid QVariant.
+    \row    \li Null       \li A QVariant containing a null pointer (QMetaType::VoidStar).
     \row    \li Boolean    \li A QVariant containing the value of the boolean.
     \row    \li Number     \li A QVariant containing the value of the number.
     \row    \li String     \li A QVariant containing the value of the string.

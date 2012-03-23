@@ -527,6 +527,8 @@ QPointF QQuickPath::sequentialPointAt(qreal p, qreal *angle) const
 
 QPointF QQuickPath::sequentialPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QQuickCachedBezier &prevBez, qreal p, qreal *angle)
 {
+    Q_ASSERT(p >= 0.0 && p <= 1.0);
+
     if (!prevBez.isValid)
         return p > .5 ? backwardsPointAt(path, pathLength, attributePoints, prevBez, p, angle) :
                         forwardsPointAt(path, pathLength, attributePoints, prevBez, p, angle);

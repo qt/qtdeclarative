@@ -44,6 +44,24 @@ import QtTest 1.0
 
 Item {
     id: top
+    property bool canconnect
+    property bool checkfinished: false
+
+    Component.onCompleted: {
+        var check = new XMLHttpRequest;
+        check.open("GET", "http://127.0.0.1:14445/colors.png");
+        check.onreadystatechange = function() {
+            if (check.readyState == XMLHttpRequest.DONE) {
+                if (check.status == 404) {
+                    top.canconnect = false;
+                }else{
+                    top.canconnect = true;
+                }
+                top.checkfinished = true;
+            }
+        }
+        check.send();
+    }
 
     BorderImage {
         id: noSource
@@ -59,14 +77,14 @@ Item {
 
     BorderImage {
         id: resized
-        source: "colors.png"
+        source: srcImage
         width: 300
         height: 300
     }
 
     BorderImage {
         id: smooth
-        source: "colors.png"
+        source: srcImage
         smooth: true
         width: 300
         height: 300
@@ -74,7 +92,7 @@ Item {
 
     BorderImage {
         id: tileModes1
-        source: "colors.png"
+        source: srcImage
         width: 100
         height: 300
         horizontalTileMode: BorderImage.Repeat
@@ -83,7 +101,7 @@ Item {
 
     BorderImage {
         id: tileModes2
-        source: "colors.png"
+        source: srcImage
         width: 300
         height: 150
         horizontalTileMode: BorderImage.Round
@@ -114,8 +132,13 @@ Item {
                     source: "no-such-file.png",
                     remote: false,
                     error: "SUBinline:1:21: QML BorderImage: Cannot open: SUBno-such-file.png"
+                },
+                {
+                    tag: "remote",
+                    source: "http://127.0.0.1:14445/colors.png",
+                    remote: true,
+                    error: ""
                 }
-                // TODO: remote tests that need to use http
             ]
         }
 
@@ -130,11 +153,16 @@ Item {
                 ('import QtQuick 2.0; BorderImage { source: "' +
                     row.source + '" }', top)
 
-            if (row.remote)
+            if (row.remote) {
+                skip("Remote solution not yet complete")
                 tryCompare(img, "status", BorderImage.Loading)
+                tryCompare(top, "checkfinished", true, 10000)
+                if (top.canconnect == false)
+                    skip("Cannot access remote")
+            }
 
             if (!expectError) {
-                tryCompare(img, "status", BorderImage.Ready)
+                tryCompare(img, "status", BorderImage.Ready, 10000)
                 compare(img.width, 120)
                 compare(img.height, 120)
                 compare(img.horizontalTileMode, BorderImage.Stretch)
@@ -197,25 +225,35 @@ Item {
                     source: "no-such-file.sci",
                     remote: false,
                     valid: false
+                },
+                {
+                    tag: "remote",
+                    source: "remote.sci",
+                    remote: true,
+                    valid: true
                 }
-                // TODO: remote tests that need to use http
             ]
         }
 
         function test_sciSource(row) {
-            var img = Qt.createQmlObject
-                ('import QtQuick 2.0; BorderImage { source: "' +
-                    row.source + '"; width: 300; height: 300 }', top)
+            var img = Qt.createQmlObject('import QtQuick 2.0; BorderImage { height: 300; width: 300 }', top)
 
-            if (row.remote)
-                tryCompare(img, "status", BorderImage.Loading)
+            if (row.remote) {
+                skip("Remote solution not yet complete")
+                img.source = row.source;
+                tryCompare(top, "checkfinished", true, 10000)
+                if (top.canconnect == false)
+                    skip("Cannot access remote")
+            }else{
+                img.source = row.source;
+            }
 
             compare(img.source, Qt.resolvedUrl(row.source))
             compare(img.width, 300)
             compare(img.height, 300)
 
             if (row.valid) {
-                tryCompare(img, "status", BorderImage.Ready)
+                tryCompare(img, "status", BorderImage.Ready, 10000)
                 compare(img.border.left, 10)
                 compare(img.border.top, 20)
                 compare(img.border.right, 30)

@@ -2369,6 +2369,8 @@ void tst_QJSEngine::valueConversion_basic()
         QCOMPARE(eng.fromScriptValue<QChar>(code), c);
         QCOMPARE(eng.fromScriptValue<QChar>(eng.toScriptValue(c)), c);
     }
+
+    QVERIFY(eng.toScriptValue(static_cast<void *>(0)).isNull());
 }
 
 #if 0 // FIXME: No API for custom types
@@ -2588,6 +2590,8 @@ void tst_QJSEngine::valueConversion_QVariant()
     }
 
     QCOMPARE(qjsvalue_cast<QVariant>(QJSValue(123)), QVariant(123));
+
+    QVERIFY(eng.toScriptValue(QVariant(QMetaType::VoidStar, 0)).isNull());
 }
 
 #if 0 // FIXME: No support for custom types

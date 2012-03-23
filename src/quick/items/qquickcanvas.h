@@ -114,6 +114,12 @@ public:
     void setClearColor(const QColor &color);
     QColor clearColor() const;
 
+    void setPersistentOpenGLContext(bool persistent);
+    bool isPersistentOpenGLContext() const;
+
+    void setPersistentSceneGraph(bool persistent);
+    bool isPersistentSceneGraph() const;
+
     QOpenGLContext *openglContext() const;
 
 Q_SIGNALS:

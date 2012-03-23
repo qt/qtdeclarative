@@ -107,6 +107,8 @@ private slots:
     void implicitSize_data();
     void implicitSize();
     void contentSize();
+    void implicitSizeBinding_data();
+    void implicitSizeBinding();
 
     void lineLaidOut();
 
@@ -1069,11 +1071,11 @@ void tst_qquicktext::smooth()
     for (int i = 0; i < standard.size(); i++)
     {
         {
-            QString componentStr = "import QtQuick 2.0\nText { smooth: true; text: \"" + standard.at(i) + "\" }";
+            QString componentStr = "import QtQuick 2.0\nText { smooth: false; text: \"" + standard.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-            QCOMPARE(textObject->smooth(), true);
+            QCOMPARE(textObject->smooth(), false);
 
             delete textObject;
         }
@@ -1082,7 +1084,7 @@ void tst_qquicktext::smooth()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-            QCOMPARE(textObject->smooth(), false);
+            QCOMPARE(textObject->smooth(), true);
 
             delete textObject;
         }
@@ -1090,11 +1092,11 @@ void tst_qquicktext::smooth()
     for (int i = 0; i < richText.size(); i++)
     {
         {
-            QString componentStr = "import QtQuick 2.0\nText { smooth: true; text: \"" + richText.at(i) + "\" }";
+            QString componentStr = "import QtQuick 2.0\nText { smooth: false; text: \"" + richText.at(i) + "\" }";
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-            QCOMPARE(textObject->smooth(), true);
+            QCOMPARE(textObject->smooth(), false);
 
             delete textObject;
         }
@@ -1103,7 +1105,7 @@ void tst_qquicktext::smooth()
             QQmlComponent textComponent(&engine);
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-            QCOMPARE(textObject->smooth(), false);
+            QCOMPARE(textObject->smooth(), true);
 
             delete textObject;
         }
@@ -1548,29 +1550,36 @@ void tst_qquicktext::implicitSize_data()
     QTest::addColumn<QString>("width");
     QTest::addColumn<QString>("wrap");
     QTest::addColumn<QString>("elide");
-    QTest::newRow("plain") << "The quick red fox jumped over the lazy brown dog" << "50" << "Text.NoWrap" << "Text.ElideNone";
-    QTest::newRow("richtext") << "<b>The quick red fox jumped over the lazy brown dog</b>" <<" 50" << "Text.NoWrap" << "Text.ElideNone";
-    QTest::newRow("plain, 0 width") << "The quick red fox jumped over the lazy brown dog" << "0" << "Text.NoWrap" << "Text.ElideNone";
-    QTest::newRow("plain, elide") << "The quick red fox jumped over the lazy brown dog" << "50" << "Text.NoWrap" << "Text.ElideRight";
-    QTest::newRow("plain, 0 width, elide") << "The quick red fox jumped over the lazy brown dog" << "0" << "Text.NoWrap" << "Text.ElideRight";
-    QTest::newRow("richtext, 0 width") << "<b>The quick red fox jumped over the lazy brown dog</b>" <<" 0" << "Text.NoWrap" << "Text.ElideNone";
-    QTest::newRow("plain_wrap") << "The quick red fox jumped over the lazy brown dog" << "50" << "Text.Wrap" << "Text.ElideNone";
-    QTest::newRow("richtext_wrap") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "50" << "Text.Wrap" << "Text.ElideNone";
-    QTest::newRow("plain_wrap, 0 width") << "The quick red fox jumped over the lazy brown dog" << "0" << "Text.Wrap" << "Text.ElideNone";
-    QTest::newRow("plain_wrap, elide") << "The quick red fox jumped over the lazy brown dog" << "50" << "Text.Wrap" << "Text.ElideRight";
-    QTest::newRow("plain_wrap, 0 width, elide") << "The quick red fox jumped over the lazy brown dog" << "0" << "Text.Wrap" << "Text.ElideRight";
-    QTest::newRow("richtext_wrap, 0 width") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "0" << "Text.Wrap" << "Text.ElideNone";
+    QTest::addColumn<QString>("format");
+    QTest::newRow("plain") << "The quick red fox jumped over the lazy brown dog" << "50" << "Text.NoWrap" << "Text.ElideNone" << "Text.PlainText";
+    QTest::newRow("richtext") << "<b>The quick red fox jumped over the lazy brown dog</b>" <<" 50" << "Text.NoWrap" << "Text.ElideNone" << "Text.RichText";
+    QTest::newRow("styledtext") << "<b>The quick red fox jumped over the lazy brown dog</b>" <<" 50" << "Text.NoWrap" << "Text.ElideNone" << "Text.StyledText";
+    QTest::newRow("plain, 0 width") << "The quick red fox jumped over the lazy brown dog" << "0" << "Text.NoWrap" << "Text.ElideNone" << "Text.PlainText";
+    QTest::newRow("plain, elide") << "The quick red fox jumped over the lazy brown dog" << "50" << "Text.NoWrap" << "Text.ElideRight" << "Text.PlainText";
+    QTest::newRow("plain, 0 width, elide") << "The quick red fox jumped over the lazy brown dog" << "0" << "Text.NoWrap" << "Text.ElideRight" << "Text.PlainText";
+    QTest::newRow("richtext, 0 width") << "<b>The quick red fox jumped over the lazy brown dog</b>" <<" 0" << "Text.NoWrap" << "Text.ElideNone" << "Text.RichText";
+    QTest::newRow("styledtext, 0 width") << "<b>The quick red fox jumped over the lazy brown dog</b>" <<" 0" << "Text.NoWrap" << "Text.ElideNone" << "Text.StyledText";
+    QTest::newRow("plain_wrap") << "The quick red fox jumped over the lazy brown dog" << "50" << "Text.Wrap" << "Text.ElideNone" << "Text.PlainText";
+    QTest::newRow("richtext_wrap") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "50" << "Text.Wrap" << "Text.ElideNone" << "Text.RichText";
+    QTest::newRow("styledtext_wrap") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "50" << "Text.Wrap" << "Text.ElideNone" << "Text.StyledText";
+    QTest::newRow("plain_wrap, 0 width") << "The quick red fox jumped over the lazy brown dog" << "0" << "Text.Wrap" << "Text.ElideNone" << "Text.PlainText";
+    QTest::newRow("plain_wrap, elide") << "The quick red fox jumped over the lazy brown dog" << "50" << "Text.Wrap" << "Text.ElideRight" << "Text.PlainText";
+    QTest::newRow("plain_wrap, 0 width, elide") << "The quick red fox jumped over the lazy brown dog" << "0" << "Text.Wrap" << "Text.ElideRight" << "Text.PlainText";
+    QTest::newRow("richtext_wrap, 0 width") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "0" << "Text.Wrap" << "Text.ElideNone" << "Text.RichText";
+    QTest::newRow("styledtext_wrap, 0 width") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "0" << "Text.Wrap" << "Text.ElideNone" << "Text.StyledText";
 }
 
 void tst_qquicktext::implicitSize()
 {
     QFETCH(QString, text);
     QFETCH(QString, width);
+    QFETCH(QString, format);
     QFETCH(QString, wrap);
     QFETCH(QString, elide);
     QString componentStr = "import QtQuick 2.0\nText { "
             "text: \"" + text + "\"; "
             "width: " + width + "; "
+            "textFormat: " + format + "; "
             "wrapMode: " + wrap + "; "
             "elide: " + elide + "; "
             "maximumLineCount: 1 }";
@@ -1629,6 +1638,35 @@ void tst_qquicktext::contentSize()
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
     QCOMPARE(spy.count(), ++spyCount);
+}
+
+void tst_qquicktext::implicitSizeBinding_data()
+{
+    implicitSize_data();
+}
+
+void tst_qquicktext::implicitSizeBinding()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, wrap);
+    QFETCH(QString, format);
+    QString componentStr = "import QtQuick 2.0\nText { text: \"" + text + "\"; width: implicitWidth; height: implicitHeight; wrapMode: " + wrap + "; textFormat: " + format + " }";
+
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+
+    textObject->resetWidth();
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+
+    textObject->resetHeight();
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 }
 
 void tst_qquicktext::lineLaidOut()

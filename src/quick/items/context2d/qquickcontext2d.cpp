@@ -63,6 +63,10 @@
 #include <private/qv8domerrors_p.h>
 #include <QtCore/qnumeric.h>
 
+#ifdef Q_OS_QNX
+#include <ctype.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Context2D QQuickContext2D

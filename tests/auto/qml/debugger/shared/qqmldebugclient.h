@@ -44,8 +44,6 @@
 
 #include <QtNetwork/qtcpsocket.h>
 
-#include <private/qtqmlglobal_p.h>
-
 class QQmlDebugConnectionPrivate;
 class QQmlDebugConnection : public QIODevice
 {
@@ -84,7 +82,6 @@ class QQmlDebugClientPrivate;
 class QQmlDebugClient : public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlDebugClient)
     Q_DISABLE_COPY(QQmlDebugClient)
 
 public:

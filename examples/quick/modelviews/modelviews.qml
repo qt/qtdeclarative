@@ -39,26 +39,49 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "../../shared"
+import "../../shared" as Examples
+
+/*!
+    \title QtQuick Examples - ModelViews
+    \example quick/modelviews
+    \brief This is a collection of QML drag and drop examples
+    \image qml-modelviews-example.png
+
+    This is a collection of small QML examples relating to model and view functionality.
+
+    GridView and PathView demonstrate usage of these elements to display views.
+
+    Dynamic List demonstrates runtime modification of a ListModel.
+
+    Expanding Delegates demonstrates delegates that expand when activated.
+
+    Highlight demonstrates adding a custom highlight to a ListView.
+
+    Highlight Ranges shows the three different highlight range modes of ListView.
+
+    Sections demonstrates the various section headers and footers available to ListView.
+
+    Packages demonstrates using Packages to transition delegates between two views.
+
+    VisualItemModel uses a VisualItemModel for the model instead of a ListModel.
+*/
 
 Item {
     height: 480
-    width: 480
-    LauncherList {
+    width: 320
+    Examples.LauncherList {
         id: ll
         anchors.fill: parent
         Component.onCompleted: {
-            addExample("Dynamic List", "A ListView harboring dynamic data",  Qt.resolvedUrl("listview/dynamiclist.qml"));
-            addExample("Expanding Delegates", "Delegates that expand to fill the list when clicked", Qt.resolvedUrl("listview/expandingdelegates.qml"));
-            addExample("Highlight", "Adding a highlight to the current item", Qt.resolvedUrl("listview/highlight.qml"));
-            addExample("Sections", "A ListView with section headers", Qt.resolvedUrl("listview/sections.qml"));
-            addExample("GridView", "A view laid out in a grid", Qt.resolvedUrl("gridview/gridview-example.qml"));
-            addExample("PathView", "A view laid out along a path", Qt.resolvedUrl("pathview/pathview-example.qml"));
-            addExample("Package", "Using a package to transition items between views", Qt.resolvedUrl("package/view.qml"));
-            addExample("Parallax", "Adds a background and a parallax effect to a ListView", Qt.resolvedUrl("parallax/parallax.qml"));
-            addExample("Slideshow", "A model demonstrating delayed image loading", Qt.resolvedUrl("visualdatamodel/slideshow.qml"));
-            addExample("Sorted Model", "Two views on a model, one of which is sorted", Qt.resolvedUrl("visualdatamodel/sortedmodel.qml"));
-            addExample("VisualItemModel", "A model that consists of the actual Items", Qt.resolvedUrl("visualitemmodel/visualitemmodel.qml"));
+            addExample("GridView", "A simple GridView", Qt.resolvedUrl("gridview/gridview-example.qml"))
+            addExample("Dynamic List", "A dynamically alterable list", Qt.resolvedUrl("listview/dynamiclist.qml"))
+            addExample("Expanding Delegates", "A ListView with delegates that expand", Qt.resolvedUrl("listview/expandingdelegates.qml"))
+            addExample("Highlight", "A ListView with a custom highlight", Qt.resolvedUrl("listview/highlight.qml"))
+            addExample("Highlight Ranges", "The three highlight ranges of ListView", Qt.resolvedUrl("listview/highlightranges.qml"))
+            addExample("Sections", "ListView section headers and footers", Qt.resolvedUrl("listview/sections.qml"))
+            addExample("Packages", "Transitions between a ListView and GridView", Qt.resolvedUrl("package/view.qml"))
+            addExample("PathView", "A simple PathView", Qt.resolvedUrl("pathview/pathview-example.qml"))
+            addExample("VisualItemModel", "Using a VisualItemModel", Qt.resolvedUrl("visualitemmodel/visualitemmodel.qml"))
         }
     }
 }

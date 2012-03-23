@@ -295,4 +295,18 @@ QList<QQmlDirParser::TypeInfo> QQmlDirParser::typeInfos() const
 }
 #endif
 
+QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)
+{
+    return debug << qPrintable(QString("{%1 %2.%3}").arg(component.typeName)
+                                                    .arg(component.majorVersion)
+                                                    .arg(component.minorVersion));
+}
+
+QDebug &operator<< (QDebug &debug, const QQmlDirParser::Script &script)
+{
+    return debug << qPrintable(QString("{%1 %2.%3}").arg(script.nameSpace)
+                                                    .arg(script.majorVersion)
+                                                    .arg(script.minorVersion));
+}
+
 QT_END_NAMESPACE

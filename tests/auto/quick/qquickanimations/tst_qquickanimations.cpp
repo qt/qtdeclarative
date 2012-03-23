@@ -107,6 +107,7 @@ private slots:
     void pauseBug();
     void loopingBug();
     void anchorBug();
+    void pathAnimationInOutBackBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -455,6 +456,13 @@ void tst_qquickanimations::pathInterpolator()
     QCOMPARE(interpolator->x(), qreal(300));
     QCOMPARE(interpolator->y(), qreal(300));
     QCOMPARE(interpolator->angle(), qreal(0));
+
+    //for path interpulator the progress value must be [0,1] range.
+    interpolator->setProgress(1.1);
+    QCOMPARE(interpolator->progress(), qreal(1));
+
+    interpolator->setProgress(-0.000123);
+    QCOMPARE(interpolator->progress(), qreal(0));
 }
 
 void tst_qquickanimations::pathInterpolatorBackwardJump()
@@ -1169,6 +1177,22 @@ void tst_qquickanimations::runningTrueBug()
     QVERIFY(cloud);
     QTest::qWait(1000);
     QVERIFY(cloud->x() > qreal(0));
+}
+
+//QTBUG-24308
+void tst_qquickanimations::pathAnimationInOutBackBug()
+{
+    //ensure we don't pass bad progress value (out of [0,1]) to  QQuickPath::backwardsPointAt()
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("pathAnimationInOutBackCrash.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(item);
+
+    QQuickRectangle *rect = item->findChild<QQuickRectangle *>("rect");
+    QVERIFY(rect);
+    QTest::qWait(1000);
+    QCOMPARE(rect->x(), qreal(0));
+    QCOMPARE(rect->y(), qreal(0));
 }
 
 //QTBUG-12805

@@ -63,7 +63,7 @@ public:
     ~QmlOstPlugin();
 
     void setServer(QQmlDebugServer *server);
-    void setPort(int port, bool bock);
+    void setPort(int port, bool bock, const QString &hostaddress);
 
     bool isConnected() const;
     void send(const QByteArray &message);

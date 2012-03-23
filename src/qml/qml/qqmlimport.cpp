@@ -117,7 +117,7 @@ public:
                          QList<QQmlError> *errors);
 
     QString resolvedUri(const QString &dir_arg, QQmlImportDatabase *database);
-    bool add(const QQmlDirComponents &qmldircomponentsnetwork, 
+    QString add(const QQmlDirComponents &qmldircomponentsnetwork,
              const QString& uri_arg, const QString& prefix, 
              int vmaj, int vmin, QQmlScript::Import::Type importType, 
              QQmlImportDatabase *database, QList<QQmlError> *errors);
@@ -493,7 +493,7 @@ QString QQmlImportsPrivate::resolvedUri(const QString &dir_arg, QQmlImportDataba
     return stableRelativePath;
 }
 
-bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork, 
+QString QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                                      const QString& uri_arg, const QString& prefix, int vmaj, int vmin, 
                                      QQmlScript::Import::Type importType, 
                                      QQmlImportDatabase *database, QList<QQmlError> *errors)
@@ -540,7 +540,7 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                     url = QUrl::fromLocalFile(fi.absolutePath()).toString();
                 uri = resolvedUri(dir, database);
                 if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, &qmldirscripts, errors))
-                    return false;
+                    return QString();
                 break;
             }
         }
@@ -564,7 +564,7 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                     url = QUrl::fromLocalFile(fi.absolutePath()).toString();
                 uri = resolvedUri(dir, database);
                 if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, &qmldirscripts, errors))
-                    return false;
+                    return QString();
                 break;
             }
         }
@@ -586,7 +586,7 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                         url = QUrl::fromLocalFile(absolutePath).toString();
                     uri = resolvedUri(dir, database);
                     if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, &qmldirscripts, errors))
-                        return false;
+                        return QString();
                     break;
                 }
             }
@@ -604,7 +604,7 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                     error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed").arg(uri_arg));
                 errors->prepend(error);
             }
-            return false;
+            return QString();
         }
     } else {
         if (importType == QQmlScript::Import::File && qmldircomponents.isEmpty()) {
@@ -619,14 +619,14 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                         error.setUrl(QUrl(importUrl));
                         errors->prepend(error);
                     }
-                    return false; // local import dirs must exist
+                    return QString(); // local import dirs must exist
                 }
                 uri = resolvedUri(dir, database);
                 if (uri.endsWith(Slash))
                     uri.chop(1);
                 if (!typeLoader->absoluteFilePath(localFileOrQrc).isEmpty()) {
                     if (!importExtension(localFileOrQrc,uri,database,&qmldircomponents,&qmldirscripts,errors))
-                        return false;
+                        return QString();
                 }
             } else {
                 if (prefix.isEmpty()) {
@@ -642,7 +642,7 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                             error.setUrl(QUrl(importUrl));
                             errors->prepend(error);
                         }
-                        return false;
+                        return QString();
                     }
                 }
             }
@@ -669,7 +669,7 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                 error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri_arg).arg(vmaj).arg(vmin));
                 errors->prepend(error);
             }
-            return false;
+            return QString();
         }
     }
 
@@ -686,7 +686,7 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
                 QQmlError error;
                 error.setDescription(QQmlImportDatabase::tr("\"%1\" is ambiguous. Found in %2 and in %3").arg(uri).arg(url).arg(it->url));
                 errors->prepend(error);
-                return false;
+                return QString();
             }
         }
 
@@ -716,7 +716,7 @@ bool QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork,
 
     s->imports.prepend(data);
 
-    return true;
+    return data.url;
 }
 
 bool QQmlImportsPrivate::find(const QString& type, int *vmajor, int *vminor, QQmlType** type_return,
@@ -874,9 +874,11 @@ QQmlImportDatabase::~QQmlImportDatabase()
   The \a prefix may be empty, in which case the import location is considered for
   unqualified types.
 
+  Returns the resolved URL of the import on success.
+
   The base URL must already have been set with Import::setBaseUrl().
 */
-bool QQmlImports::addImport(QQmlImportDatabase *importDb, 
+QString QQmlImports::addImport(QQmlImportDatabase *importDb,
                                     const QString& uri, const QString& prefix, int vmaj, int vmin, 
                                     QQmlScript::Import::Type importType, 
                                     const QQmlDirComponents &qmldircomponentsnetwork, 

@@ -345,8 +345,15 @@ double timeClip(double t)
         return  NaN;
     return t >= 0 ? floor(t) : ceil(t);
 #else
+
+#if defined(__QNXNTO__)
+    if (!isfinite(t) || fabs(t) > maxECMAScriptTime)
+        return NaN;
+#else
     if (!std::isfinite(t) || fabs(t) > maxECMAScriptTime)
         return NaN;
+#endif
+
     return trunc(t);
 #endif
 }

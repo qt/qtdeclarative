@@ -119,9 +119,9 @@ private:
     QQmlObjectData objectData(QObject *);
     QQmlObjectProperty propertyData(QObject *, int);
     QVariant valueContents(const QVariant &defaultValue) const;
-    void setBinding(int objectId, const QString &propertyName, const QVariant &expression, bool isLiteralValue, QString filename = QString(), int line = -1, int column = 0);
-    void resetBinding(int objectId, const QString &propertyName);
-    void setMethodBody(int objectId, const QString &method, const QString &body);
+    bool setBinding(int objectId, const QString &propertyName, const QVariant &expression, bool isLiteralValue, QString filename = QString(), int line = -1, int column = 0);
+    bool resetBinding(int objectId, const QString &propertyName);
+    bool setMethodBody(int objectId, const QString &method, const QString &body);
 
     QList<QQmlEngine *> m_engines;
     QQmlWatcher *m_watch;

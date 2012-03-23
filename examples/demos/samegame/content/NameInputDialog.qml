@@ -62,7 +62,7 @@ Dialog {
     Text {
         id: dialogText
         anchors { left: nameInputDialog.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
-        text: "You won! Please enter your name: "
+        text: "You won! Your name: "
     }
     MouseArea {
         anchors.fill: parent

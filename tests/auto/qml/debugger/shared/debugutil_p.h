@@ -52,26 +52,11 @@
 #include <QtQml/qqmlengine.h>
 
 #include "qqmldebugclient.h"
-#include <private/qqmldebugservice_p.h>
 
 class QQmlDebugTest
 {
 public:
     static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
-};
-
-class QQmlDebugTestService : public QQmlDebugService
-{
-    Q_OBJECT
-public:
-    QQmlDebugTestService(const QString &s, float version = 1, QObject *parent = 0);
-
-signals:
-    void stateHasChanged();
-
-protected:
-    virtual void messageReceived(const QByteArray &ba);
-    virtual void stateChanged(State state);
 };
 
 class QQmlDebugTestClient : public QQmlDebugClient

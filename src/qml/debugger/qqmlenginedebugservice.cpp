@@ -67,7 +67,7 @@ QQmlEngineDebugService *QQmlEngineDebugService::instance()
 }
 
 QQmlEngineDebugService::QQmlEngineDebugService(QObject *parent)
-    : QQmlDebugService(QStringLiteral("QDeclarativeEngine"), 1, parent),
+    : QQmlDebugService(QStringLiteral("QmlDebugger"), 1, parent),
       m_watch(new QQmlWatcher(this)),
       m_statesDelegate(0)
 {
@@ -394,12 +394,10 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
     QDataStream ds(message);
 
     QByteArray type;
-    ds >> type;
+    int queryId;
+    ds >> type >> queryId;
 
     if (type == "LIST_ENGINES") {
-        int queryId;
-        ds >> queryId;
-
         QByteArray reply;
         QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("LIST_ENGINES_R");
@@ -416,9 +414,8 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
 
         sendMessage(reply);
     } else if (type == "LIST_OBJECTS") {
-        int queryId;
         int engineId = -1;
-        ds >> queryId >> engineId;
+        ds >> engineId;
 
         QQmlEngine *engine =
                 qobject_cast<QQmlEngine *>(QQmlDebugService::objectForId(engineId));
@@ -443,12 +440,11 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
 
         sendMessage(reply);
     } else if (type == "FETCH_OBJECT") {
-        int queryId;
         int objectId;
         bool recurse;
         bool dumpProperties = true;
 
-        ds >> queryId >> objectId >> recurse >> dumpProperties;
+        ds >> objectId >> recurse >> dumpProperties;
 
         QObject *object = QQmlDebugService::objectForId(objectId);
 
@@ -464,10 +460,9 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
 
         sendMessage(reply);
     } else if (type == "WATCH_OBJECT") {
-        int queryId;
         int objectId;
 
-        ds >> queryId >> objectId;
+        ds >> objectId;
         bool ok = m_watch->addWatch(queryId, objectId);
 
         QByteArray reply;
@@ -476,11 +471,10 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
 
         sendMessage(reply);
     } else if (type == "WATCH_PROPERTY") {
-        int queryId;
         int objectId;
         QByteArray property;
 
-        ds >> queryId >> objectId >> property;
+        ds >> objectId >> property;
         bool ok = m_watch->addWatch(queryId, objectId, property);
 
         QByteArray reply;
@@ -489,11 +483,10 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
 
         sendMessage(reply);
     } else if (type == "WATCH_EXPR_OBJECT") {
-        int queryId;
         int debugId;
         QString expr;
 
-        ds >> queryId >> debugId >> expr;
+        ds >> debugId >> expr;
         bool ok = m_watch->addWatch(queryId, debugId, expr);
 
         QByteArray reply;
@@ -501,16 +494,17 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         rs << QByteArray("WATCH_EXPR_OBJECT_R") << queryId << ok;
         sendMessage(reply);
     } else if (type == "NO_WATCH") {
-        int queryId;
+        bool ok = m_watch->removeWatch(queryId);
 
-        ds >> queryId;
-        m_watch->removeWatch(queryId);
+        QByteArray reply;
+        QDataStream rs(&reply, QIODevice::WriteOnly);
+        rs << QByteArray("NO_WATCH_R") << queryId << ok;
+        sendMessage(reply);
     } else if (type == "EVAL_EXPRESSION") {
-        int queryId;
         int objectId;
         QString expr;
 
-        ds >> queryId >> objectId >> expr;
+        ds >> objectId >> expr;
 
         QObject *object = QQmlDebugService::objectForId(objectId);
         QQmlContext *context = qmlContext(object);
@@ -539,26 +533,43 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         bool isLiteralValue;
         QString filename;
         int line;
-        ds >> objectId >> propertyName >> expr >> isLiteralValue;
-        if (!ds.atEnd()) { // backward compatibility from 2.1, 2.2
-            ds >> filename >> line;
-        }
-        setBinding(objectId, propertyName, expr, isLiteralValue, filename, line);
+        ds >> objectId >> propertyName >> expr >> isLiteralValue >>
+              filename >> line;
+        bool ok = setBinding(objectId, propertyName, expr, isLiteralValue,
+                             filename, line);
+
+        QByteArray reply;
+        QDataStream rs(&reply, QIODevice::WriteOnly);
+        rs << QByteArray("SET_BINDING_R") << queryId << ok;
+
+        sendMessage(reply);
     } else if (type == "RESET_BINDING") {
         int objectId;
         QString propertyName;
         ds >> objectId >> propertyName;
-        resetBinding(objectId, propertyName);
+        bool ok = resetBinding(objectId, propertyName);
+
+        QByteArray reply;
+        QDataStream rs(&reply, QIODevice::WriteOnly);
+        rs << QByteArray("RESET_BINDING_R") << queryId << ok;
+
+        sendMessage(reply);
     } else if (type == "SET_METHOD_BODY") {
         int objectId;
         QString methodName;
         QString methodBody;
         ds >> objectId >> methodName >> methodBody;
-        setMethodBody(objectId, methodName, methodBody);
+        bool ok = setMethodBody(objectId, methodName, methodBody);
+
+        QByteArray reply;
+        QDataStream rs(&reply, QIODevice::WriteOnly);
+        rs << QByteArray("SET_METHOD_BODY_R") << queryId << ok;
+
+        sendMessage(reply);
     }
 }
 
-void QQmlEngineDebugService::setBinding(int objectId,
+bool QQmlEngineDebugService::setBinding(int objectId,
                                                 const QString &propertyName,
                                                 const QVariant &expression,
                                                 bool isLiteralValue,
@@ -566,6 +577,7 @@ void QQmlEngineDebugService::setBinding(int objectId,
                                                 int line,
                                                 int column)
 {
+    bool ok = true;
     QObject *object = objectForId(objectId);
     QQmlContext *context = qmlContext(object);
 
@@ -594,22 +606,23 @@ void QQmlEngineDebugService::setBinding(int objectId,
                         oldBinding->destroy();
                     binding->update();
                 } else {
+                    ok = false;
                     qWarning() << "QQmlEngineDebugService::setBinding: unable to set property" << propertyName << "on object" << object;
                 }
             }
 
         } else {
             // not a valid property
-            bool ok = false;
             if (m_statesDelegate)
                 ok = m_statesDelegate->setBindingForInvalidProperty(object, propertyName, expression, isLiteralValue);
             if (!ok)
                 qWarning() << "QQmlEngineDebugService::setBinding: unable to set property" << propertyName << "on object" << object;
         }
     }
+    return ok;
 }
 
-void QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyName)
+bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyName)
 {
     QObject *object = objectForId(objectId);
     QQmlContext *context = qmlContext(object);
@@ -651,24 +664,25 @@ void QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyN
                 m_statesDelegate->resetBindingForInvalidProperty(object, propertyName);
         }
     }
+    return true;
 }
 
-void QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, const QString &body)
+bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, const QString &body)
 {
     QObject *object = objectForId(objectId);
     QQmlContext *context = qmlContext(object);
     if (!object || !context || !context->engine())
-        return;
+        return false;
     QQmlContextData *contextData = QQmlContextData::get(context);
     if (!contextData)
-        return;
+        return false;
 
     QQmlPropertyData dummy;
     QQmlPropertyData *prop =
             QQmlPropertyCache::property(context->engine(), object, method, dummy);
 
     if (!prop || !prop->isVMEFunction())
-        return;
+        return false;
 
     QMetaMethod metaMethod = object->metaObject()->method(prop->coreIndex);
     QList<QByteArray> paramNames = metaMethod.parameterNames();
@@ -690,6 +704,7 @@ void QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
 
     int lineNumber = vmeMetaObject->vmeMethodLineNumber(prop->coreIndex);
     vmeMetaObject->setVmeMethod(prop->coreIndex, QQmlExpressionPrivate::evalFunction(contextData, object, jsfunction, contextData->url.toString(), lineNumber));
+    return true;
 }
 
 void QQmlEngineDebugService::propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value)
@@ -729,7 +744,8 @@ void QQmlEngineDebugService::objectCreated(QQmlEngine *engine, QObject *object)
     QByteArray reply;
     QDataStream rs(&reply, QIODevice::WriteOnly);
 
-    rs << QByteArray("OBJECT_CREATED") << engineId << objectId;
+    //unique queryId -1
+    rs << QByteArray("OBJECT_CREATED") << -1 << engineId << objectId;
     sendMessage(reply);
 }
 

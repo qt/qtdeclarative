@@ -811,13 +811,102 @@ class MyVersion2Class : public QObject
     Q_OBJECT
 };
 
+class MyEnum1Class : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(EnumA)
+
+public:
+    MyEnum1Class() : value(A_Invalid) {}
+
+    enum EnumA
+    {
+        A_Invalid = -1,
+
+        A_11 = 11,
+        A_13 = 13
+    };
+
+    Q_INVOKABLE void setValue(EnumA v) { value = v; }
+
+    EnumA getValue() { return value; }
+
+private:
+    EnumA value;
+};
+
+class MyEnum2Class : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(EnumB)
+    Q_ENUMS(EnumE)
+
+public:
+    MyEnum2Class() : valueA(MyEnum1Class::A_Invalid), valueB(B_Invalid), valueC(Qt::PlainText),
+                     valueD(Qt::ElideLeft), valueE(E_Invalid), valueE2(E_Invalid) {}
+
+    enum EnumB
+    {
+        B_Invalid = -1,
+
+        B_29 = 29,
+        B_31 = 31,
+        B_37 = 37
+    };
+
+    enum EnumE
+    {
+        E_Invalid = -1,
+
+        E_14 = 14,
+        E_76 = 76
+    };
+
+    MyEnum1Class::EnumA getValueA() { return valueA; }
+    EnumB getValueB() { return valueB; }
+    Qt::TextFormat getValueC() { return valueC; }
+    Qt::TextElideMode getValueD() { return valueD; }
+    EnumE getValueE() { return valueE; }
+    EnumE getValueE2() { return valueE2; }
+
+    Q_INVOKABLE void setValueA(MyEnum1Class::EnumA v) { valueA = v; emit valueAChanged(v); }
+    Q_INVOKABLE void setValueB(EnumB v) { valueB = v; emit valueBChanged(v); }
+    Q_INVOKABLE void setValueC(Qt::TextFormat v) { valueC = v; emit valueCChanged(v); }     //registered
+    Q_INVOKABLE void setValueD(Qt::TextElideMode v) { valueD = v; emit valueDChanged(v); }  //unregistered
+    Q_INVOKABLE void setValueE(EnumE v) { valueE = v; emit valueEChanged(v); }
+    Q_INVOKABLE void setValueE2(MyEnum2Class::EnumE v) { valueE2 = v; emit valueE2Changed(v); }
+
+signals:
+    void valueAChanged(MyEnum1Class::EnumA newValue);
+    void valueBChanged(MyEnum2Class::EnumB newValue);
+    void valueCChanged(Qt::TextFormat newValue);
+    void valueDChanged(Qt::TextElideMode newValue);
+    void valueEChanged(EnumE newValue);
+    void valueE2Changed(MyEnum2Class::EnumE newValue);
+
+private:
+    MyEnum1Class::EnumA valueA;
+    EnumB valueB;
+    Qt::TextFormat valueC;
+    Qt::TextElideMode valueD;
+    EnumE valueE;
+    EnumE valueE2;
+};
+
+class MyEnumDerivedClass : public MyEnum2Class
+{
+    Q_OBJECT
+};
+
+Q_DECLARE_METATYPE(MyEnum2Class::EnumB)
+Q_DECLARE_METATYPE(MyEnum1Class::EnumA)
+Q_DECLARE_METATYPE(Qt::TextFormat)
+
 QML_DECLARE_TYPE(MyRevisionedBaseClassRegistered)
 QML_DECLARE_TYPE(MyRevisionedBaseClassUnregistered)
 QML_DECLARE_TYPE(MyRevisionedClass)
 QML_DECLARE_TYPE(MyRevisionedSubclass)
 QML_DECLARE_TYPE(MySubclass)
-
-
 
 void registerTypes();
 

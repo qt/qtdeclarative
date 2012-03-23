@@ -97,7 +97,7 @@ QT_BEGIN_NAMESPACE
     \code
     TEMPLATE = lib
     CONFIG += qt plugin
-    QT += declarative
+    QT += qml
 
     DESTDIR = com/nokia/TimeExample
     TARGET = qmlqtimeexampleplugin

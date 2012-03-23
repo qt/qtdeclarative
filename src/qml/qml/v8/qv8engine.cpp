@@ -1368,7 +1368,8 @@ v8::Handle<v8::Value> QV8Engine::variantToJS(const QVariant &value)
 }
 
 // Converts a JS value to a QVariant.
-// Null, Undefined -> QVariant() (invalid)
+// Undefined -> QVariant() (invalid)
+// Null -> QVariant((void*)0)
 // Boolean -> QVariant(bool)
 // Number -> QVariant(double)
 // String -> QVariant(QString)
@@ -1379,8 +1380,10 @@ v8::Handle<v8::Value> QV8Engine::variantToJS(const QVariant &value)
 QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
 {
     Q_ASSERT(!value.IsEmpty());
-    if (value->IsNull() || value->IsUndefined())
+    if (value->IsUndefined())
         return QVariant();
+    if (value->IsNull())
+        return QVariant(QMetaType::VoidStar, 0);
     if (value->IsBoolean())
         return value->ToBoolean()->Value();
     if (value->IsInt32())

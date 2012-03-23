@@ -51,12 +51,13 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+class QSGContext;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldTextMaterial;
-class QSGDistanceFieldGlyphNode: public QSGGlyphNode
+class QSGDistanceFieldGlyphNode: public QSGGlyphNode, public QSGDistanceFieldGlyphConsumer
 {
 public:
-    QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheManager *cacheManager);
+    QSGDistanceFieldGlyphNode(QSGContext *context);
     ~QSGDistanceFieldGlyphNode();
 
     virtual QPointF baseLine() const { return m_baseLine; }
@@ -76,15 +77,22 @@ public:
     void updateGeometry();
 
 private:
+    enum DistanceFieldGlyphNodeType {
+        RootGlyphNode,
+        SubGlyphNode
+    };
+
+    void setGlyphNodeType(DistanceFieldGlyphNodeType type) { m_glyphNodeType = type; }
     void updateMaterial();
 
+    DistanceFieldGlyphNodeType m_glyphNodeType;
     QColor m_color;
     QPointF m_baseLine;
+    QSGContext *m_context;
     QSGDistanceFieldTextMaterial *m_material;
     QPointF m_originalPosition;
     QPointF m_position;
     QGlyphRun m_glyphs;
-    QSGDistanceFieldGlyphCacheManager *m_glyph_cacheManager;
     QSGDistanceFieldGlyphCache *m_glyph_cache;
     QSGGeometry m_geometry;
     QQuickText::TextStyle m_style;
@@ -92,8 +100,7 @@ private:
     AntialiasingMode m_antialiasingMode;
     QRectF m_boundingRect;
     const QSGDistanceFieldGlyphCache::Texture *m_texture;
-    QHash<const QSGDistanceFieldGlyphCache::Texture *, QSGDistanceFieldGlyphNode *> m_subNodes;
-    QList<QSGDistanceFieldGlyphNode *> m_nodesToDelete;
+    QLinkedList<QSGNode *> m_nodesToDelete;
 
     struct GlyphInfo {
         QVector<quint32> indexes;

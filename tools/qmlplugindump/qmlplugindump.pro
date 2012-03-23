@@ -23,15 +23,15 @@ macx: QMAKE_INFO_PLIST = Info.plist
 
     contains(QT_CONFIG,debug):contains(QT_CONFIG,release) {
         CONFIG += debug_and_release build_all
+        CONFIG(debug, debug|release) {
+           win32: TARGET = $$join(TARGET,,,d)
+        }
     } else {
         contains(QT_CONFIG,debug): CONFIG += debug
         contains(QT_CONFIG,release): CONFIG += release
     }
 }
 
-CONFIG(debug, debug|release) {
-    win32: TARGET = $$join(TARGET,,,d)
-}
 
 target.path = $$[QT_INSTALL_BINS]
 INSTALLS += target

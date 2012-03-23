@@ -40,8 +40,7 @@
 ****************************************************************************/
 
 #include "qqmldebugclient.h"
-
-#include <private/qpacketprotocol_p.h>
+#include "qpacketprotocol.h"
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>

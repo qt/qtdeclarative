@@ -48,6 +48,7 @@
 #include <QtQml/qqmlengine.h>
 
 #include "debugutil_p.h"
+#include "qqmldebugtestservice.h"
 
 #define PORT 13770
 #define STR_PORT "13770"

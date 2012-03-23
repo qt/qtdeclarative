@@ -59,6 +59,10 @@
 
 #include <private/qflagpointer_p.h>
 
+#if defined(Q_OS_QNX)
+#include <stdlib.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 // Enable this to debug hash linking assumptions.

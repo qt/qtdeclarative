@@ -47,11 +47,10 @@
 
 #include <QtQml/qqmlengine.h>
 
-#include <private/qqmldebugservice_p.h>
-
 #include "../../../shared/util.h"
 #include "debugutil_p.h"
 #include "qqmldebugclient.h"
+#include "qqmldebugtestservice.h"
 
 #define PORT 13769
 #define STR_PORT "13769"
@@ -204,7 +203,7 @@ int main(int argc, char *argv[])
     char **_argv = new char*[_argc];
     for (int i = 0; i < argc; ++i)
         _argv[i] = argv[i];
-    char arg[] = "-qmljsdebugger=port:" STR_PORT;
+    char arg[] = "-qmljsdebugger=port:" STR_PORT ",host:127.0.0.1";
     _argv[_argc - 1] = arg;
 
     QGuiApplication app(_argc, _argv);

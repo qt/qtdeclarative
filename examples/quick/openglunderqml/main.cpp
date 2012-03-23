@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<Squircle>("QtQuick", 2, 0, "Squircle");
+    qmlRegisterType<Squircle>("OpenGLUnderQML", 2, 0, "Squircle");
 
     QQuickView view;
     view.setSource(QUrl("main.qml"));

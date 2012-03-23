@@ -376,6 +376,14 @@ void QQuickShaderEffectMaterial::updateTextures() const
     }
 }
 
+void QQuickShaderEffectMaterial::invalidateTextureProvider(QSGTextureProvider *provider)
+{
+    for (int i = 0; i < m_textures.size(); ++i) {
+        if (provider == m_textures.at(i).second)
+            m_textures[i].second = 0;
+    }
+}
+
 
 QQuickShaderEffectNode::QQuickShaderEffectNode()
     : m_material(this)
@@ -395,6 +403,12 @@ QQuickShaderEffectNode::~QQuickShaderEffectNode()
 void QQuickShaderEffectNode::markDirtyTexture()
 {
     markDirty(DirtyMaterial);
+}
+
+void QQuickShaderEffectNode::textureProviderDestroyed(QObject *object)
+{
+    Q_ASSERT(qobject_cast<QSGTextureProvider *>(object));
+    m_material.invalidateTextureProvider(static_cast<QSGTextureProvider *>(object));
 }
 
 void QQuickShaderEffectNode::preprocess()

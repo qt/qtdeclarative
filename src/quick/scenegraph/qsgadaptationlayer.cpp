@@ -45,31 +45,28 @@
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <private/qrawfont_p.h>
-#include <private/qdistancefield_p.h>
 #include <QtGui/qguiapplication.h>
 #include <qdir.h>
 
 QT_BEGIN_NAMESPACE
 
 
-QHash<QString, QOpenGLMultiGroupSharedResource> QSGDistanceFieldGlyphCache::m_caches_data;
+QSGDistanceFieldGlyphCache::Texture QSGDistanceFieldGlyphCache::s_emptyTexture;
 
 QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
     : ctx(c)
     , m_manager(man)
+    , m_pendingGlyphs(64)
 {
     Q_ASSERT(font.isValid());
-    m_font = font;
 
-    m_cacheData = cacheData();
-
-    QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
+    QRawFontPrivate *fontD = QRawFontPrivate::get(font);
     m_glyphCount = fontD->fontEngine->glyphCount();
 
-    m_cacheData->doubleGlyphResolution = qt_fontHasNarrowOutlines(font) && m_glyphCount < QT_DISTANCEFIELD_HIGHGLYPHCOUNT;
+    m_doubleGlyphResolution = qt_fontHasNarrowOutlines(font) && m_glyphCount < QT_DISTANCEFIELD_HIGHGLYPHCOUNT;
 
-    m_referenceFont = m_font;
-    m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_cacheData->doubleGlyphResolution));
+    m_referenceFont = font;
+    m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
 }
 
@@ -77,58 +74,31 @@ QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()
 {
 }
 
-QSGDistanceFieldGlyphCache::GlyphCacheData *QSGDistanceFieldGlyphCache::cacheData()
+QSGDistanceFieldGlyphCache::GlyphData &QSGDistanceFieldGlyphCache::glyphData(glyph_t glyph)
 {
-    QString key = QString::fromLatin1("%1_%2_%3_%4")
-            .arg(m_font.familyName())
-            .arg(m_font.styleName())
-            .arg(m_font.weight())
-            .arg(m_font.style());
-    return m_caches_data[key].value<QSGDistanceFieldGlyphCache::GlyphCacheData>(ctx);
-}
-
-qreal QSGDistanceFieldGlyphCache::fontScale() const
-{
-    return qreal(m_font.pixelSize()) / QT_DISTANCEFIELD_BASEFONTSIZE(m_cacheData->doubleGlyphResolution);
-}
-
-int QSGDistanceFieldGlyphCache::distanceFieldRadius() const
-{
-    return QT_DISTANCEFIELD_DEFAULT_RADIUS / QT_DISTANCEFIELD_SCALE(m_cacheData->doubleGlyphResolution);
-}
-
-QSGDistanceFieldGlyphCache::Metrics QSGDistanceFieldGlyphCache::glyphMetrics(glyph_t glyph)
-{
-    QHash<glyph_t, Metrics>::iterator metric = m_metrics.find(glyph);
-    if (metric == m_metrics.end()) {
-        QPainterPath path = m_font.pathForGlyph(glyph);
-        QRectF br = path.boundingRect();
-
-        Metrics m;
-        m.width = br.width();
-        m.height = br.height();
-        m.baselineX = br.x();
-        m.baselineY = -br.y();
-
-        metric = m_metrics.insert(glyph, m);
+    QHash<glyph_t, GlyphData>::iterator data = m_glyphsData.find(glyph);
+    if (data == m_glyphsData.end()) {
+        GlyphData gd;
+        gd.texture = &s_emptyTexture;
+        QPainterPath path = m_referenceFont.pathForGlyph(glyph);
+        gd.boundingRect = path.boundingRect();
+        data = m_glyphsData.insert(glyph, gd);
     }
-
-    return metric.value();
+    return data.value();
 }
 
-QSGDistanceFieldGlyphCache::TexCoord QSGDistanceFieldGlyphCache::glyphTexCoord(glyph_t glyph) const
+QSGDistanceFieldGlyphCache::Metrics QSGDistanceFieldGlyphCache::glyphMetrics(glyph_t glyph, qreal pixelSize)
 {
-    return m_cacheData->texCoords.value(glyph);
-}
+    GlyphData &gd = glyphData(glyph);
+    qreal scale = fontScale(pixelSize);
 
-static QSGDistanceFieldGlyphCache::Texture g_emptyTexture;
+    Metrics m;
+    m.width = gd.boundingRect.width() * scale;
+    m.height = gd.boundingRect.height() * scale;
+    m.baselineX = gd.boundingRect.x() * scale;
+    m.baselineY = -gd.boundingRect.y() * scale;
 
-const QSGDistanceFieldGlyphCache::Texture *QSGDistanceFieldGlyphCache::glyphTexture(glyph_t glyph) const
-{
-    QHash<glyph_t, Texture*>::const_iterator it = m_cacheData->glyphTextures.find(glyph);
-    if (it == m_cacheData->glyphTextures.constEnd())
-        return &g_emptyTexture;
-    return it.value();
+    return m;
 }
 
 void QSGDistanceFieldGlyphCache::populate(const QVector<glyph_t> &glyphs)
@@ -143,23 +113,18 @@ void QSGDistanceFieldGlyphCache::populate(const QVector<glyph_t> &glyphs)
             continue;
         }
 
-        ++m_cacheData->glyphRefCount[glyphIndex];
+        GlyphData &gd = glyphData(glyphIndex);
+        ++gd.ref;
         referencedGlyphs.insert(glyphIndex);
 
-        if (m_cacheData->texCoords.contains(glyphIndex) || newGlyphs.contains(glyphIndex))
+        if (gd.texCoord.isValid() || newGlyphs.contains(glyphIndex))
             continue;
 
-        QPainterPath path = m_referenceFont.pathForGlyph(glyphIndex);
-        m_cacheData->glyphPaths.insert(glyphIndex, path);
-        if (path.isEmpty()) {
-            TexCoord c;
-            c.width = 0;
-            c.height = 0;
-            m_cacheData->texCoords.insert(glyphIndex, c);
-            continue;
-        }
+        gd.texCoord.width = 0;
+        gd.texCoord.height = 0;
 
-        newGlyphs.insert(glyphIndex);
+        if (!gd.boundingRect.isEmpty())
+            newGlyphs.insert(glyphIndex);
     }
 
     if (newGlyphs.isEmpty())
@@ -175,7 +140,8 @@ void QSGDistanceFieldGlyphCache::release(const QVector<glyph_t> &glyphs)
     int count = glyphs.count();
     for (int i = 0; i < count; ++i) {
         glyph_t glyphIndex = glyphs.at(i);
-        if (--m_cacheData->glyphRefCount[glyphIndex] == 0 && !glyphTexCoord(glyphIndex).isNull())
+        GlyphData &gd = glyphData(glyphIndex);
+        if (--gd.ref == 0 && !gd.texCoord.isNull())
             unusedGlyphs.insert(glyphIndex);
     }
     releaseGlyphs(unusedGlyphs);
@@ -183,7 +149,7 @@ void QSGDistanceFieldGlyphCache::release(const QVector<glyph_t> &glyphs)
 
 void QSGDistanceFieldGlyphCache::update()
 {
-    if (m_cacheData->pendingGlyphs.isEmpty())
+    if (m_pendingGlyphs.isEmpty())
         return;
 
     QHash<glyph_t, QImage> distanceFields;
@@ -194,16 +160,16 @@ void QSGDistanceFieldGlyphCache::update()
     QString tmpPath = QString::fromLatin1("%1/.qt/").arg(QDir::tempPath());
     QString keyBase = QString::fromLatin1("%1%2%3_%4_%5_%6.fontblob")
             .arg(tmpPath)
-            .arg(m_font.familyName())
-            .arg(m_font.styleName())
-            .arg(m_font.weight())
-            .arg(m_font.style());
+            .arg(m_referenceFont.familyName())
+            .arg(m_referenceFont.styleName())
+            .arg(m_referenceFont.weight())
+            .arg(m_referenceFont.style());
 
     if (cacheDistanceFields && !QFile::exists(tmpPath))
         QDir(tmpPath).mkpath(tmpPath);
 
-    for (int i = 0; i < m_cacheData->pendingGlyphs.size(); ++i) {
-        glyph_t glyphIndex = m_cacheData->pendingGlyphs.at(i);
+    for (int i = 0; i < m_pendingGlyphs.size(); ++i) {
+        glyph_t glyphIndex = m_pendingGlyphs.at(i);
 
         if (cacheDistanceFields) {
             QString key = keyBase.arg(glyphIndex);
@@ -219,7 +185,7 @@ void QSGDistanceFieldGlyphCache::update()
             }
         }
 
-        QImage distanceField = qt_renderDistanceFieldGlyph(m_font, glyphIndex, m_cacheData->doubleGlyphResolution);
+        QImage distanceField = qt_renderDistanceFieldGlyph(m_referenceFont, glyphIndex, m_doubleGlyphResolution);
         distanceFields.insert(glyphIndex, distanceField);
 
         if (cacheDistanceFields) {
@@ -230,7 +196,7 @@ void QSGDistanceFieldGlyphCache::update()
         }
     }
 
-    m_cacheData->pendingGlyphs.reset();
+    m_pendingGlyphs.reset();
 
     storeGlyphs(distanceFields);
 }
@@ -242,28 +208,22 @@ void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &g
     int count = glyphs.count();
     for (int i = 0; i < count; ++i) {
         GlyphPosition glyph = glyphs.at(i);
+        GlyphData &gd = glyphData(glyph.glyph);
 
-        Q_ASSERT(m_cacheData->glyphPaths.contains(glyph.glyph));
-
-        QPainterPath path = m_cacheData->glyphPaths.value(glyph.glyph);
-        QRectF br = path.boundingRect();
-        TexCoord c;
-        c.xMargin = QT_DISTANCEFIELD_RADIUS(m_cacheData->doubleGlyphResolution) / qreal(QT_DISTANCEFIELD_SCALE(m_cacheData->doubleGlyphResolution));
-        c.yMargin = QT_DISTANCEFIELD_RADIUS(m_cacheData->doubleGlyphResolution) / qreal(QT_DISTANCEFIELD_SCALE(m_cacheData->doubleGlyphResolution));
-        c.x = glyph.position.x();
-        c.y = glyph.position.y();
-        c.width = br.width();
-        c.height = br.height();
-
-        if (m_cacheData->texCoords.contains(glyph.glyph))
+        if (!gd.texCoord.isNull())
             invalidatedGlyphs.append(glyph.glyph);
 
-        m_cacheData->texCoords.insert(glyph.glyph, c);
+        gd.texCoord.xMargin = QT_DISTANCEFIELD_RADIUS(m_doubleGlyphResolution) / qreal(QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
+        gd.texCoord.yMargin = QT_DISTANCEFIELD_RADIUS(m_doubleGlyphResolution) / qreal(QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
+        gd.texCoord.x = glyph.position.x();
+        gd.texCoord.y = glyph.position.y();
+        gd.texCoord.width = gd.boundingRect.width();
+        gd.texCoord.height = gd.boundingRect.height();
     }
 
     if (!invalidatedGlyphs.isEmpty()) {
-        QLinkedList<QSGDistanceFieldGlyphNode *>::iterator it = m_cacheData->m_registeredNodes.begin();
-        while (it != m_cacheData->m_registeredNodes.end()) {
+        QLinkedList<QSGDistanceFieldGlyphConsumer *>::iterator it = m_registeredNodes.begin();
+        while (it != m_registeredNodes.end()) {
             (*it)->invalidateGlyphs(invalidatedGlyphs);
             ++it;
         }
@@ -287,28 +247,29 @@ void QSGDistanceFieldGlyphCache::processPendingGlyphs()
 
 void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QVector<glyph_t> &glyphs, const Texture &tex)
 {
-    int i = m_cacheData->textures.indexOf(tex);
+    int i = m_textures.indexOf(tex);
     if (i == -1) {
-        m_cacheData->textures.append(tex);
-        i = m_cacheData->textures.size() - 1;
+        m_textures.append(tex);
+        i = m_textures.size() - 1;
     } else {
-        m_cacheData->textures[i].size = tex.size;
+        m_textures[i].size = tex.size;
     }
-    Texture *texture = &(m_cacheData->textures[i]);
+    Texture *texture = &(m_textures[i]);
 
     QVector<quint32> invalidatedGlyphs;
 
     int count = glyphs.count();
     for (int j = 0; j < count; ++j) {
         glyph_t glyphIndex = glyphs.at(j);
-        if (m_cacheData->glyphTextures.contains(glyphIndex))
+        GlyphData &gd = glyphData(glyphIndex);
+        if (gd.texture != &s_emptyTexture)
             invalidatedGlyphs.append(glyphIndex);
-        m_cacheData->glyphTextures.insert(glyphIndex, texture);
+        gd.texture = texture;
     }
 
     if (!invalidatedGlyphs.isEmpty()) {
-        QLinkedList<QSGDistanceFieldGlyphNode *>::iterator it = m_cacheData->m_registeredNodes.begin();
-        while (it != m_cacheData->m_registeredNodes.end()) {
+        QLinkedList<QSGDistanceFieldGlyphConsumer*>::iterator it = m_registeredNodes.begin();
+        while (it != m_registeredNodes.end()) {
             (*it)->invalidateGlyphs(invalidatedGlyphs);
             ++it;
         }
@@ -319,20 +280,14 @@ void QSGDistanceFieldGlyphCache::markGlyphsToRender(const QVector<glyph_t> &glyp
 {
     int count = glyphs.count();
     for (int i = 0; i < count; ++i)
-        m_cacheData->pendingGlyphs.add(glyphs.at(i));
-}
-
-void QSGDistanceFieldGlyphCache::removeGlyph(glyph_t glyph)
-{
-    m_cacheData->texCoords.remove(glyph);
-    m_cacheData->glyphTextures.remove(glyph);
+        m_pendingGlyphs.add(glyphs.at(i));
 }
 
 void QSGDistanceFieldGlyphCache::updateTexture(GLuint oldTex, GLuint newTex, const QSize &newTexSize)
 {
-    int count = m_cacheData->textures.count();
+    int count = m_textures.count();
     for (int i = 0; i < count; ++i) {
-        Texture &tex = m_cacheData->textures[i];
+        Texture &tex = m_textures[i];
         if (tex.textureId == oldTex) {
             tex.textureId = newTex;
             tex.size = newTexSize;
@@ -340,21 +295,5 @@ void QSGDistanceFieldGlyphCache::updateTexture(GLuint oldTex, GLuint newTex, con
         }
     }
 }
-
-bool QSGDistanceFieldGlyphCache::containsGlyph(glyph_t glyph) const
-{
-    return m_cacheData->texCoords.contains(glyph);
-}
-
-void QSGDistanceFieldGlyphCache::registerGlyphNode(QSGDistanceFieldGlyphNode *node)
-{
-    m_cacheData->m_registeredNodes.append(node);
-}
-
-void QSGDistanceFieldGlyphCache::unregisterGlyphNode(QSGDistanceFieldGlyphNode *node)
-{
-    m_cacheData->m_registeredNodes.removeOne(node);
-}
-
 
 QT_END_NAMESPACE

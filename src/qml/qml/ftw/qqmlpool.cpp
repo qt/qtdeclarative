@@ -41,6 +41,10 @@
 
 #include "qqmlpool_p.h"
 
+#ifdef Q_OS_QNX
+#include <malloc.h>
+#endif
+
 // #define POOL_DEBUG
 
 QT_BEGIN_NAMESPACE

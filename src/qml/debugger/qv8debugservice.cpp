@@ -42,6 +42,7 @@
 #include "qv8debugservice_p.h"
 #include "qqmldebugservice_p_p.h"
 #include <private/qjsconverter_impl_p.h>
+#include <private/qv4compiler_p.h>
 #include <private/qv8engine_p.h>
 
 #include <QtCore/QHash>
@@ -192,6 +193,7 @@ void QV8DebugService::init()
     Q_D(QV8DebugService);
     v8::Debug::SetMessageHandler2(DebugMessageHandler);
     v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
+    QV4Compiler::enableV4(false);
     d->initializeMutex.unlock();
 }
 

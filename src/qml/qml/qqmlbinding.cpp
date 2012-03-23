@@ -193,8 +193,6 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
     if (!updatingFlag()) {
         QQmlBindingProfiler prof(m_url, m_lineNumber, m_columnNumber);
-        if (prof.enabled)
-            prof.addDetail(expression());
         setUpdatingFlag(true);
 
         QQmlAbstractExpression::DeleteWatcher watcher(this);

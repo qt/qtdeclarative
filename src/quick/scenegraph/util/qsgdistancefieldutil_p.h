@@ -58,13 +58,11 @@ class QSGContext;
 class Q_QUICK_EXPORT QSGDistanceFieldGlyphCacheManager
 {
 public:
-    QSGDistanceFieldGlyphCacheManager(QSGContext *c);
+    QSGDistanceFieldGlyphCacheManager();
     ~QSGDistanceFieldGlyphCacheManager();
 
     QSGDistanceFieldGlyphCache *cache(const QRawFont &font);
-
-    QSGGlyphNode::AntialiasingMode defaultAntialiasingMode() const { return m_defaultAntialiasingMode; }
-    void setDefaultAntialiasingMode(QSGGlyphNode::AntialiasingMode mode) { m_defaultAntialiasingMode = mode; }
+    void insertCache(const QRawFont &font, QSGDistanceFieldGlyphCache *cache);
 
     ThresholdFunc thresholdFunc() const { return m_threshold_func; }
     void setThresholdFunc(ThresholdFunc func) { m_threshold_func = func; }
@@ -73,9 +71,7 @@ public:
     void setAntialiasingSpreadFunc(AntialiasingSpreadFunc func) { m_antialiasingSpread_func = func; }
 
 private:
-    QHash<QFontEngine *, QSGDistanceFieldGlyphCache *> m_caches;
-
-    QSGContext *sgCtx;
+    QHash<QString, QSGDistanceFieldGlyphCache *> m_caches;
 
     QSGGlyphNode::AntialiasingMode m_defaultAntialiasingMode;
     ThresholdFunc m_threshold_func;

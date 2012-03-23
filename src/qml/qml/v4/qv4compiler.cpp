@@ -54,7 +54,6 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(bindingsDump, QML_BINDINGS_DUMP)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableOptimizer, QML_DISABLE_OPTIMIZER)
-DEFINE_BOOL_CONFIG_OPTION(qmlExperimental, QML_EXPERIMENTAL)
 DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
 DEFINE_BOOL_CONFIG_OPTION(qmlBindingsTestEnv, QML_BINDINGS_TEST)
 
@@ -958,6 +957,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::StringType: opcode = V4Instr::ConvertStringToBool; break;
             case IR::UrlType: opcode = V4Instr::ConvertUrlToBool; break;
             case IR::ColorType: opcode = V4Instr::ConvertColorToBool; break;
+            case IR::ObjectType: opcode = V4Instr::ConvertObjectToBool; break;
             default: break;
             } // switch
         } else if (targetTy == IR::IntType) {
@@ -1008,6 +1008,11 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
         } else if (targetTy == IR::ColorType) {
             switch (sourceTy) {
             case IR::StringType: opcode = V4Instr::ConvertStringToColor; break;
+            default: break;
+            } // switch
+        } else if (targetTy == IR::ObjectType) {
+            switch (sourceTy) {
+            case IR::NullType: opcode = V4Instr::ConvertNullToObject; break;
             default: break;
             } // switch
         }
@@ -1353,9 +1358,6 @@ bool QV4Compiler::isValid() const
 int QV4Compiler::compile(const Expression &expression, QQmlEnginePrivate *engine)
 {
     if (!expression.expression.asAST()) return false;
-
-    if (!qmlExperimental() && expression.property->isValueTypeSubProperty)
-        return -1;
 
     if (qmlDisableOptimizer() || !qmlEnableV4)
         return -1;

@@ -9,14 +9,15 @@ INSTALLS += target
 
 macx: CONFIG -= app_bundle
 
-CONFIG   += console declarative_debug
+CONFIG   += console
 
 SOURCES += main.cpp \
     qmlprofilerapplication.cpp \
     commandlistener.cpp \
     qqmldebugclient.cpp \
     qmlprofilerdata.cpp \
-    qmlprofilerclient.cpp
+    qmlprofilerclient.cpp \
+    qpacketprotocol.cpp
 
 HEADERS += \
     qmlprofilerapplication.h \
@@ -25,4 +26,5 @@ HEADERS += \
     qmlprofilerdata.h \
     qmlprofilerclient.h \
     qmlprofilereventlocation.h \
-    qqmldebugclient.h
+    qqmldebugclient.h \
+    qpacketprotocol.h

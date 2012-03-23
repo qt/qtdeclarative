@@ -9,10 +9,14 @@ DESTDIR = $$QT.qml.plugins/qmltooling
 QTDIR_build:REQUIRES += "contains(QT_CONFIG, qml)"
 
 SOURCES += \
-    qtcpserverconnection.cpp
+    qtcpserverconnection.cpp \
+    ../shared/qpacketprotocol.cpp
 
 HEADERS += \
-    qtcpserverconnection.h
+    qtcpserverconnection.h \
+    ../shared/qpacketprotocol.h
+
+INCLUDEPATH += ../shared
 
 OTHER_FILES += qtcpserverconnection.json
 

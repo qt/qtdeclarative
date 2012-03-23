@@ -1061,7 +1061,9 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 
     QObject *obj = component.beginCreate(effectiveContext);
     if (obj) {
-        QQmlData::get(obj, true)->setImplicitDestructible();
+        QQmlData::get(obj, true)->explicitIndestructibleSet = false;
+        QQmlData::get(obj)->indestructible = false;
+
 
         obj->setParent(parentArg);
 
@@ -1084,7 +1086,7 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 }
 
 /*!
-\qmlmethod object Qt::createComponent(url, mode)
+\qmlmethod object Qt::createComponent(url, mode, parent)
 
 Returns a \l Component object created using the QML file at the specified \a url,
 or \c null if an empty string was given.
@@ -1098,6 +1100,9 @@ component will be loaded in a background thread.  The Component::status property
 will be \c Component.Loading while it is loading.  The status will change to
 \c Component.Ready if the component loads successfully, or \c Component.Error
 if loading fails.
+
+If the optional \a parent parameter is given, it should refer to the object
+that will become the parent for the created \l Component object.
 
 Call \l {Component::createObject()}{Component.createObject()} on the returned
 component to create an object instance of the component.
@@ -1114,7 +1119,8 @@ use \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}.
 v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
 {
     const char *invalidArgs = "Qt.createComponent(): Invalid arguments";
-    if (args.Length() < 1 || args.Length() > 2)
+    const char *invalidParent = "Qt.createComponent(): Invalid parent object";
+    if (args.Length() < 1 || args.Length() > 3)
         V8THROW_ERROR(invalidArgs);
 
     QV8Engine *v8engine = V8ENGINE();
@@ -1131,21 +1137,46 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
         return v8::Null();
 
     QQmlComponent::CompilationMode compileMode = QQmlComponent::PreferSynchronous;
-    if (args.Length() == 2) {
+
+    // Default to engine parent; this will be removed in the near future (QTBUG-24841)
+    QObject *parentArg = engine;
+
+    unsigned consumedCount = 1;
+    if (args.Length() > 1) {
+        const v8::Local<v8::Value> &lastArg = args[args.Length()-1];
+
+        // The second argument could be the mode enum
         if (args[1]->IsInt32()) {
             int mode = args[1]->Int32Value();
             if (mode != int(QQmlComponent::PreferSynchronous) && mode != int(QQmlComponent::Asynchronous))
                 V8THROW_ERROR(invalidArgs);
             compileMode = QQmlComponent::CompilationMode(mode);
+            consumedCount += 1;
         } else {
-            V8THROW_ERROR(invalidArgs);
+            // The second argument could be the parent only if there are exactly two args
+            if ((args.Length() != 2) || !(lastArg->IsObject() || lastArg->IsNull()))
+                V8THROW_ERROR(invalidArgs);
+        }
+
+        if (consumedCount < args.Length()) {
+            if (lastArg->IsObject()) {
+                parentArg = v8engine->toQObject(lastArg);
+                if (!parentArg)
+                    V8THROW_ERROR(invalidParent);
+            } else if (lastArg->IsNull()) {
+                parentArg = 0;
+            } else {
+                V8THROW_ERROR(invalidParent);
+            }
         }
     }
 
     QUrl url = context->resolvedUrl(QUrl(arg));
-    QQmlComponent *c = new QQmlComponent(engine, url, compileMode, engine);
+    QQmlComponent *c = new QQmlComponent(engine, url, compileMode, parentArg);
     QQmlComponentPrivate::get(c)->creationContext = effectiveContext;
-    QQmlData::get(c, true)->setImplicitDestructible();
+    QQmlData::get(c, true)->explicitIndestructibleSet = false;
+    QQmlData::get(c)->indestructible = false;
+
     return v8engine->newQObject(c);
 }
 

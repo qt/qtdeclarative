@@ -450,6 +450,7 @@ public:
     QQuickItem**prevDirtyItem;
 
     QQuickCanvas *canvas;
+    int canvasRefCount;
     inline QSGContext *sceneGraphContext() const;
 
     QQuickItem *parentItem;
@@ -472,9 +473,13 @@ public:
     private:
         QQuickItem *focusScope;
     };
-    void initCanvas(InitializationState *, QQuickCanvas *);
+
+    void refCanvas(QQuickCanvas *);
+    void refCanvas(InitializationState *, QQuickCanvas *);
+    void derefCanvas();
 
     QQuickItem *subFocusItem;
+    void updateSubFocusItem(QQuickItem *scope, bool focus);
 
     QTransform canvasToItemTransform() const;
     QTransform itemToCanvasTransform() const;
@@ -854,6 +859,13 @@ void QQuickItemPrivate::markSortedChildrenDirty(QQuickItem *child)
 QQuickItem::TransformOrigin QQuickItemPrivate::origin() const
 {
     return extra.isAllocated()?extra->origin:QQuickItem::Center;
+}
+
+inline void QQuickItemPrivate::refCanvas(QQuickCanvas *c)
+{
+    QQuickItemPrivate::InitializationState initState;
+    initState.clear();
+    refCanvas(&initState, c);
 }
 
 QSGTransformNode *QQuickItemPrivate::itemNode()

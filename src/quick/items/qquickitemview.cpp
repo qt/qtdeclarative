@@ -1101,9 +1101,9 @@ void QQuickItemView::trackedPositionChanged()
                 if (d->layoutOrientation() == Qt::Vertical)
                     endOffset += d->vData.endMargin;
                 else if (d->isContentFlowReversed())
-                    endOffset += d->hData.endMargin;
-                else
                     endOffset += d->hData.startMargin;
+                else
+                    endOffset += d->hData.endMargin;
                 trackedPos += endOffset;
                 trackedEndPos += endOffset;
                 toItemPos += endOffset;
@@ -1204,12 +1204,11 @@ qreal QQuickItemView::minXExtent() const
         return QQuickFlickable::minXExtent();
 
     if (d->hData.minExtentDirty) {
-        d->minExtent = -d->startPosition();
+        d->minExtent = -d->startPosition() + d->hData.startMargin;
         qreal highlightStart;
         qreal highlightEnd;
         qreal endPositionFirstItem = 0;
         if (d->isContentFlowReversed()) {
-            d->minExtent += d->hData.endMargin;
             if (d->model && d->model->count())
                 endPositionFirstItem = d->positionAt(d->model->count()-1);
             else if (d->header)
@@ -1222,7 +1221,6 @@ qreal QQuickItemView::minXExtent() const
             if (d->minExtent < maxX)
                 d->minExtent = maxX;
         } else {
-            d->minExtent += d->hData.startMargin;
             endPositionFirstItem = d->endPositionAt(0);
             highlightStart = d->highlightRangeStart;
             highlightEnd = d->highlightRangeEnd;
@@ -1279,7 +1277,7 @@ qreal QQuickItemView::maxXExtent() const
         if (d->isContentFlowReversed()) {
             if (d->header)
                 d->maxExtent -= d->headerSize();
-            d->maxExtent -= d->hData.startMargin;
+            d->maxExtent -= d->hData.endMargin;
         } else {
             if (d->footer)
                 d->maxExtent -= d->footerSize();
@@ -1314,7 +1312,7 @@ qreal QQuickItemView::xOrigin() const
 {
     Q_D(const QQuickItemView);
     if (d->isContentFlowReversed())
-        return -maxXExtent() + d->size() - d->hData.startMargin;
+        return -maxXExtent() + d->size() - d->hData.endMargin;
     else
         return -minXExtent() + d->hData.startMargin;
 }

@@ -55,6 +55,7 @@
 
 #include <QtCore/QUrl>
 #include <QtCore/QHash>
+#include <QtCore/QDebug>
 
 QT_BEGIN_NAMESPACE
 
@@ -160,6 +161,8 @@ private:
 typedef QList<QQmlDirParser::Component> QQmlDirComponents;
 typedef QList<QQmlDirParser::Script> QQmlDirScripts;
 
+QDebug &operator<< (QDebug &, const QQmlDirParser::Component &);
+QDebug &operator<< (QDebug &, const QQmlDirParser::Script &);
 
 QT_END_NAMESPACE
 

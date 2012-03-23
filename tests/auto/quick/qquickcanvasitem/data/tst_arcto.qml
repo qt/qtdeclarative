@@ -4,6 +4,7 @@ import "testhelper.js" as Helper
 
 Canvas {
    id:canvas; width:100;height:50; renderTarget: Canvas.Image; renderStrategy:Canvas.Threaded
+   smooth: false
    TestCase {
        name: "arcTo"; when: windowShown
        function test_coincide() {

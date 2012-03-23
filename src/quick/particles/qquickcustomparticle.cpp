@@ -139,6 +139,12 @@ QQuickCustomParticle::QQuickCustomParticle(QQuickItem* parent)
 
 class QQuickShaderEffectMaterialObject : public QObject, public QQuickShaderEffectMaterial { };
 
+void QQuickCustomParticle::sceneGraphInvalidated()
+{
+    m_nodes.clear();
+    m_rootNode = 0;
+}
+
 QQuickCustomParticle::~QQuickCustomParticle()
 {
     if (m_material)

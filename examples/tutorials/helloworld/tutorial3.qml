@@ -43,7 +43,7 @@ import QtQuick 2.0
 
 Rectangle {
     id: page
-    width: 500; height: 200
+    width: 320; height: 480
     color: "lightgray"
 
     Text {

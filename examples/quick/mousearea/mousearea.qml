@@ -40,9 +40,18 @@
 
 import QtQuick 2.0
 
+/*!
+    \title QtQuick Examples - MouseArea
+    \example quick/mousearea
+    \brief This is a collection of QML Animation examples.
+    \image qml-mousearea-example.png
+
+    This example shows you how to respond to clicks and drags with a MouseArea.
+*/
+
 Rectangle {
     id: box
-    width: 400; height: 300
+    width: 320; height: 480
 
     Rectangle {
         id: redSquare

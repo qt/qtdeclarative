@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qdebugmessageservice
-QT += network qml-private testlib
+QT += qml network testlib
 macx:CONFIG -= app_bundle
 
 SOURCES +=     tst_qdebugmessageservice.cpp

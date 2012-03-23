@@ -284,23 +284,17 @@ QQuickParticleExtruder* QQuickParticleEmitter::effectiveExtruder()
 
 void QQuickParticleEmitter::pulse(int milliseconds)
 {
-    if (!particleCount())
-        qWarning() << "pulse called on an emitter with a particle count of zero";
     if (!m_enabled)
         m_pulseLeft = milliseconds;
 }
 
 void QQuickParticleEmitter::burst(int num)
 {
-    if (!particleCount())
-        qWarning() << "burst called on an emitter with a particle count of zero";
     m_burstQueue << qMakePair(num, QPointF(x(), y()));
 }
 
 void QQuickParticleEmitter::burst(int num, qreal x, qreal y)
 {
-    if (!particleCount())
-        qWarning() << "burst called on an emitter with a particle count of zero";
     m_burstQueue << qMakePair(num, QPointF(x, y));
 }
 

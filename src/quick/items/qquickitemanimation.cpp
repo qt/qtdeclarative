@@ -927,6 +927,8 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
 
 void QQuickPathAnimationUpdater::setValue(qreal v)
 {
+    v = qMin(qMax(v, (qreal)0.0), (qreal)1.0);;
+
     if (interruptStart.isValid()) {
         if (reverse)
             v = 1 - v;

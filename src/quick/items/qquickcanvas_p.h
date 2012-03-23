@@ -144,7 +144,7 @@ public:
 
     void setFocusInScope(QQuickItem *scope, QQuickItem *item, FocusOptions = 0);
     void clearFocusInScope(QQuickItem *scope, QQuickItem *item, FocusOptions = 0);
-    void notifyFocusChangesRecur(QQuickItem **item, int remaining);
+    static void notifyFocusChangesRecur(QQuickItem **item, int remaining);
 
     void updateFocusItemTransform();
 
@@ -183,6 +183,11 @@ public:
     QColor clearColor;
 
     uint clearBeforeRendering : 1;
+
+    // Currently unused in the default implementation, as we're not stopping
+    // rendering when obscured as we should...
+    uint persistentGLContext : 1;
+    uint persistentSceneGraph : 1;
 
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;

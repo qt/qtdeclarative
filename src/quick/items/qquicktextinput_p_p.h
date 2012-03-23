@@ -125,6 +125,8 @@ public:
         , m_acceptableInput(1)
         , m_blinkStatus(0)
         , m_passwordEchoEditing(false)
+        , inLayout(false)
+        , requireImplicitWidth(false)
     {
     }
 
@@ -256,7 +258,8 @@ public:
     bool m_acceptableInput : 1;
     bool m_blinkStatus : 1;
     bool m_passwordEchoEditing : 1;
-
+    bool inLayout:1;
+    bool requireImplicitWidth:1;
 
     static inline QQuickTextInputPrivate *get(QQuickTextInput *t) {
         return t->d_func();
@@ -403,6 +406,8 @@ public:
     void setCursorBlinkPeriod(int msec);
 
     void updateLayout();
+
+    qreal getImplicitWidth() const;
 
 private:
     void removeSelectedText();

@@ -47,7 +47,9 @@ Item {
     Component.onCompleted: {
         //Comment
 
-        var b = 6;
+        var x = 6;
     }
+
+    width : height + 2
 }
 

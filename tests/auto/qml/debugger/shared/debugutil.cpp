@@ -55,23 +55,6 @@ bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int tim
     return timer.isActive();
 }
 
-QQmlDebugTestService::QQmlDebugTestService(const QString &s, float version, QObject *parent)
-    : QQmlDebugService(s, version, parent)
-{
-    registerService();
-}
-
-void QQmlDebugTestService::messageReceived(const QByteArray &ba)
-{
-    sendMessage(ba);
-}
-
-void QQmlDebugTestService::stateChanged(State)
-{
-    emit stateHasChanged();
-}
-
-
 QQmlDebugTestClient::QQmlDebugTestClient(const QString &s, QQmlDebugConnection *c)
     : QQmlDebugClient(s, c)
 {

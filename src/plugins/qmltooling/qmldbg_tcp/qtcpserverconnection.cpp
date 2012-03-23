@@ -40,13 +40,13 @@
 ****************************************************************************/
 
 #include "qtcpserverconnection.h"
+#include "qpacketprotocol.h"
 
 #include <QtCore/qplugin.h>
 #include <QtNetwork/qtcpserver.h>
 #include <QtNetwork/qtcpsocket.h>
 
 #include <private/qqmldebugserver_p.h>
-#include <private/qpacketprotocol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,6 +56,7 @@ public:
 
     int port;
     bool block;
+    QString hostaddress;
     QTcpSocket *socket;
     QPacketProtocol *protocol;
     QTcpServer *tcpServer;
@@ -129,11 +130,12 @@ bool QTcpServerConnection::waitForMessage()
     return d->protocol->waitForReadyRead(-1);
 }
 
-void QTcpServerConnection::setPort(int port, bool block)
+void QTcpServerConnection::setPort(int port, bool block, const QString &hostaddress)
 {
     Q_D(QTcpServerConnection);
     d->port = port;
     d->block = block;
+    d->hostaddress = hostaddress;
 
     listen();
     if (block)
@@ -146,7 +148,17 @@ void QTcpServerConnection::listen()
 
     d->tcpServer = new QTcpServer(this);
     QObject::connect(d->tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
-    if (d->tcpServer->listen(QHostAddress::Any, d->port))
+    QHostAddress hostaddress;
+    if (!d->hostaddress.isEmpty()) {
+        if (!hostaddress.setAddress(d->hostaddress)) {
+            hostaddress = QHostAddress::Any;
+            qDebug("QML Debugger: Incorrect host address provided. So accepting connections "
+                     "from any host.");
+        }
+    } else {
+        hostaddress = QHostAddress::Any;
+    }
+    if (d->tcpServer->listen(hostaddress, d->port))
         qDebug("QML Debugger: Waiting for connection on port %d...", d->port);
     else
         qWarning("QML Debugger: Unable to listen to port %d.", d->port);
@@ -194,4 +206,3 @@ void QTcpServerConnection::invalidPacket()
 }
 
 QT_END_NAMESPACE
-

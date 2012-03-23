@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGDistanceFieldTextMaterial: public QSGMaterial
+class Q_QUICK_EXPORT QSGDistanceFieldTextMaterial: public QSGMaterial
 {
 public:
     QSGDistanceFieldTextMaterial();
@@ -67,6 +67,9 @@ public:
     void setTexture(const QSGDistanceFieldGlyphCache::Texture * tex) { m_texture = tex; }
     const QSGDistanceFieldGlyphCache::Texture * texture() const { return m_texture; }
 
+    void setFontScale(qreal fontScale) { m_fontScale = fontScale; }
+    qreal fontScale() const { return m_fontScale; }
+
     QSize textureSize() const { return m_size; }
 
     bool updateTextureSize();
@@ -76,9 +79,10 @@ protected:
     QColor m_color;
     QSGDistanceFieldGlyphCache *m_glyph_cache;
     const QSGDistanceFieldGlyphCache::Texture *m_texture;
+    qreal m_fontScale;
 };
 
-class QSGDistanceFieldStyledTextMaterial : public QSGDistanceFieldTextMaterial
+class Q_QUICK_EXPORT QSGDistanceFieldStyledTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
     QSGDistanceFieldStyledTextMaterial();
@@ -95,7 +99,7 @@ protected:
     QColor m_styleColor;
 };
 
-class QSGDistanceFieldOutlineTextMaterial : public QSGDistanceFieldStyledTextMaterial
+class Q_QUICK_EXPORT QSGDistanceFieldOutlineTextMaterial : public QSGDistanceFieldStyledTextMaterial
 {
 public:
     QSGDistanceFieldOutlineTextMaterial();
@@ -105,7 +109,7 @@ public:
     virtual QSGMaterialShader *createShader() const;
 };
 
-class QSGDistanceFieldShiftedStyleTextMaterial : public QSGDistanceFieldStyledTextMaterial
+class Q_QUICK_EXPORT QSGDistanceFieldShiftedStyleTextMaterial : public QSGDistanceFieldStyledTextMaterial
 {
 public:
     QSGDistanceFieldShiftedStyleTextMaterial();
@@ -121,14 +125,14 @@ protected:
     QPointF m_shift;
 };
 
-class QSGHiQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
+class Q_QUICK_EXPORT QSGHiQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
     virtual QSGMaterialType *type() const;
     virtual QSGMaterialShader *createShader() const;
 };
 
-class QSGLoQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
+class Q_QUICK_EXPORT QSGLoQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
     virtual QSGMaterialType *type() const;

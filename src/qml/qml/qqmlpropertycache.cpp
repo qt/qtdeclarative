@@ -674,7 +674,13 @@ QStringList QQmlPropertyCache::propertyNames() const
     return keys;
 }
 
-static int EnumType(const QMetaObject *meta, const QByteArray &str)
+struct StaticQtMetaObject : public QObject
+{
+    static const QMetaObject *get()
+        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
+};
+
+static int EnumType(const QMetaObject *metaobj, const QByteArray &str)
 {
     QByteArray scope;
     QByteArray name;
@@ -685,6 +691,11 @@ static int EnumType(const QMetaObject *meta, const QByteArray &str)
     } else { 
         name = str;
     }
+    const QMetaObject *meta;
+    if (scope == "Qt")
+        meta = StaticQtMetaObject::get();
+    else
+        meta = metaobj;
     for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
         QMetaEnum m = meta->enumerator(i);
         if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))
@@ -727,12 +738,14 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         for (int ii = 0; ii < argc; ++ii) {
             int type = m.parameterType(ii);
-            if (type == QVariant::Invalid) {
+            if ((QMetaType::typeFlags(type) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration)
+                type = QVariant::Int;
+            else if (type == QMetaType::UnknownType) {
                 if (argTypeNames.isEmpty())
                     argTypeNames = m.parameterTypes();
                 type = EnumType(object->metaObject(), argTypeNames.at(ii));
             }
-            if (type == QVariant::Invalid) {
+            if (type == QMetaType::UnknownType) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
                 free(args);
                 return 0;
@@ -754,12 +767,14 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         for (int ii = 0; ii < argc; ++ii) {
             int type = m.parameterType(ii);
-            if (type == QVariant::Invalid) {
+            if ((QMetaType::typeFlags(type) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration)
+                type = QVariant::Int;
+            else if (type == QMetaType::UnknownType) {
                 if (argTypeNames.isEmpty())
                     argTypeNames = m.parameterTypes();
                 type = EnumType(object->metaObject(), argTypeNames.at(ii));
             }
-            if (type == QVariant::Invalid) {
+            if (type == QMetaType::UnknownType) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
                 return 0;
             }

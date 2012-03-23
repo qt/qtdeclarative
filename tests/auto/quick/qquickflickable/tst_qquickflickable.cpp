@@ -77,6 +77,7 @@ private slots:
     void disabled();
     void flickVelocity();
     void margins();
+    void cancel();
 
 private:
     QQmlEngine engine;
@@ -440,6 +441,19 @@ void tst_qquickflickable::movingAndDragging()
     // wait for any motion to end
     QTRY_VERIFY(flickable->isMoving() == false);
 
+    // Vertical with a quick press-move-release: should cause a flick in release.
+    QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 90));
+    QTest::qWait(10);
+    QTest::mouseMove(canvas, QPoint(50, 40));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 40));
+
+    QCOMPARE(vFlickSpy.count(), 1);
+
+    // wait for any motion to end
+    QTRY_VERIFY(flickable->isMoving() == false);
+
     //Horizontal
     vDragSpy.clear();
     hDragSpy.clear();
@@ -492,7 +506,7 @@ void tst_qquickflickable::movingAndDragging()
     vMoveSpy.clear();
     hMoveSpy.clear();
     moveSpy.clear();
-    QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
+    vFlickSpy.clear();
     QSignalSpy hFlickSpy(flickable, SIGNAL(flickingHorizontallyChanged()));
     QSignalSpy flickSpy(flickable, SIGNAL(flickingChanged()));
 
@@ -656,6 +670,41 @@ void tst_qquickflickable::margins()
 
     delete root;
 }
+
+void tst_qquickflickable::cancel()
+{
+    QQuickView *canvas = new QQuickView;
+    canvas->setSource(testFileUrl("cancel.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(canvas->rootObject());
+    QVERIFY(flickable != 0);
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(10, 10));
+    // drag out of bounds
+    QTest::mouseMove(canvas, QPoint(50, 50));
+    QTest::mouseMove(canvas, QPoint(100, 100));
+    QTest::mouseMove(canvas, QPoint(150, 150));
+
+    QVERIFY(flickable->contentX() != 0);
+    QVERIFY(flickable->contentY() != 0);
+    QVERIFY(flickable->isMoving());
+    QVERIFY(flickable->isDragging());
+
+    // grabbing mouse will cancel flickable interaction.
+    QQuickItem *item = canvas->rootObject()->findChild<QQuickItem*>("row");
+    item->grabMouse();
+
+    QTRY_COMPARE(flickable->contentX(), 0.);
+    QTRY_COMPARE(flickable->contentY(), 0.);
+    QTRY_VERIFY(!flickable->isMoving());
+    QTRY_VERIFY(!flickable->isDragging());
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 10));
+}
+
 
 QTEST_MAIN(tst_qquickflickable)
 

@@ -80,12 +80,6 @@ class Q_AUTOTEST_EXPORT QQuickTextControl : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickTextControl)
-#ifndef QT_NO_TEXTHTMLPARSER
-    Q_PROPERTY(QString html READ toHtml WRITE setHtml NOTIFY textChanged USER true)
-#endif
-    Q_PROPERTY(bool acceptRichText READ acceptRichText WRITE setAcceptRichText)
-    Q_PROPERTY(int cursorWidth READ cursorWidth WRITE setCursorWidth)
-    Q_PROPERTY(Qt::TextInteractionFlags textInteractionFlags READ textInteractionFlags WRITE setTextInteractionFlags)
 public:
     explicit QQuickTextControl(QTextDocument *doc, QObject *parent = 0);
     virtual ~QQuickTextControl();
@@ -104,7 +98,6 @@ public:
     QString toHtml() const;
 #endif
 
-    QTextCursor cursorForPosition(const QPointF &pos) const;
     QRectF cursorRect(const QTextCursor &cursor) const;
     QRectF cursorRect() const;
     QRectF selectionRect(const QTextCursor &cursor) const;
@@ -112,26 +105,15 @@ public:
 
     QString anchorAt(const QPointF &pos) const;
 
-    QString anchorAtCursor() const;
-
-    int cursorWidth() const;
     void setCursorWidth(int width);
 
-    bool acceptRichText() const;
     void setAcceptRichText(bool accept);
-
-    void setTextWidth(qreal width);
-    qreal textWidth() const;
-    QSizeF size() const;
 
     void moveCursor(QTextCursor::MoveOperation op, QTextCursor::MoveMode mode = QTextCursor::MoveAnchor);
 
     bool canPaste() const;
 
     void setCursorIsFocusIndicator(bool b);
-    bool cursorIsFocusIndicator() const;
-
-    bool isWordSelectionEnabled() const;
     void setWordSelectionEnabled(bool enabled);
 
     virtual int hitTest(const QPointF &point, Qt::HitTestAccuracy accuracy) const;
@@ -151,7 +133,6 @@ public Q_SLOTS:
     void undo();
     void redo();
 
-    void clear();
     void selectAll();
 
 Q_SIGNALS:
@@ -175,9 +156,6 @@ public:
     virtual void processEvent(QEvent *e, const QMatrix &matrix);
     void processEvent(QEvent *e, const QPointF &coordinateOffset = QPointF());
 
-    // control methods
-    void setFocus(bool focus, Qt::FocusReason = Qt::OtherFocusReason);
-
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
 
     virtual QMimeData *createMimeDataFromSelection() const;
@@ -195,7 +173,6 @@ private:
     Q_DISABLE_COPY(QQuickTextControl)
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrentCharFormatAndSelection())
     Q_PRIVATE_SLOT(d_func(), void _q_emitCursorPosChanged(const QTextCursor &))
-    Q_PRIVATE_SLOT(d_func(), void _q_deleteSelected())
     Q_PRIVATE_SLOT(d_func(), void _q_updateBlock(const QTextBlock &))
     Q_PRIVATE_SLOT(d_func(), void _q_documentLayoutChanged())
 };

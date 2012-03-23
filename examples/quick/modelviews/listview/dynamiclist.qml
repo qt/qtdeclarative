@@ -87,70 +87,84 @@ Rectangle {
         
         Item {
             id: delegateItem
-            width: listView.width; height: 55
+            width: listView.width; height: 100
             clip: true
 
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 10
+            Column {
+                id: arrows
+                anchors {
+                    left: parent.left
+                    verticalCenter: parent.verticalCenter
+                }
+                Image {
+                    source: "content/pics/arrow-up.png"
+                    MouseArea { anchors.fill: parent; onClicked: fruitModel.move(index, index-1, 1) }
+                }
+                Image { source: "content/pics/arrow-down.png"
+                    MouseArea { anchors.fill: parent; onClicked: fruitModel.move(index, index+1, 1) }
+                }
+            }
 
-                Column {
-                    Image {
-                        source: "content/pics/arrow-up.png"
-                        MouseArea { anchors.fill: parent; onClicked: fruitModel.move(index, index-1, 1) }
-                    }
-                    Image { source: "content/pics/arrow-down.png"
-                        MouseArea { anchors.fill: parent; onClicked: fruitModel.move(index, index+1, 1) }
-                    }
+            Column {
+                anchors {
+                    left: arrows.right
+                    horizontalCenter: parent.horizontalCenter;
+                    bottom: parent.verticalCenter
                 }
 
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Text { 
-                        text: name
-                        font.pixelSize: 15
-                        color: "white"
-                    }
-                    Row {
-                        spacing: 5
-                        Repeater {
-                            model: attributes
-                            Text { text: description; color: "White" }
-                        }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: name
+                    font.pixelSize: 15
+                    color: "white"
+                }
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 5
+                    Repeater {
+                        model: attributes
+                        Text { text: description; color: "White" }
                     }
                 }
             }
 
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
-                spacing: 10
-
-                PressAndHoldButton {
-                    anchors.verticalCenter: parent.verticalCenter
-                    source: "content/pics/plus-sign.png"
-                    onClicked: fruitModel.setProperty(index, "cost", cost + 0.25)
+            Item {
+                anchors {
+                    left: arrows.right
+                    horizontalCenter: parent.horizontalCenter;
+                    top: parent.verticalCenter
+                    bottom: parent.bottom
                 }
 
-                Text { 
-                    id: costText
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: '$' + Number(cost).toFixed(2)
-                    font.pixelSize: 15
-                    color: "white"
-                    font.bold: true
-                }
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 10
 
-                PressAndHoldButton {
-                    anchors.verticalCenter: parent.verticalCenter
-                    source: "content/pics/minus-sign.png"
-                    onClicked: fruitModel.setProperty(index, "cost", Math.max(0,cost-0.25))
-                }
+                    PressAndHoldButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: "content/pics/plus-sign.png"
+                        onClicked: fruitModel.setProperty(index, "cost", cost + 0.25)
+                    }
 
-                Image {
-                    source: "content/pics/list-delete.png"
-                    MouseArea { anchors.fill:parent; onClicked: fruitModel.remove(index) }
+                    Text {
+                        id: costText
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: '$' + Number(cost).toFixed(2)
+                        font.pixelSize: 15
+                        color: "white"
+                        font.bold: true
+                    }
+
+                    PressAndHoldButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: "content/pics/minus-sign.png"
+                        onClicked: fruitModel.setProperty(index, "cost", Math.max(0,cost-0.25))
+                    }
+
+                    Image {
+                        source: "content/pics/list-delete.png"
+                        MouseArea { anchors.fill:parent; onClicked: fruitModel.remove(index) }
+                    }
                 }
             }
 
@@ -174,12 +188,17 @@ Rectangle {
     // The view:
     ListView {
         id: listView
-        anchors.fill: parent; anchors.margins: 20
+        anchors {
+            left: parent.left; top: parent.top;
+            right: parent.right; bottom: buttons.top;
+            margins: 20
+        }
         model: fruitModel
         delegate: listDelegate
     }
 
     Row {
+        id: buttons
         anchors { left: parent.left; bottom: parent.bottom; margins: 20 }
         spacing: 10
 

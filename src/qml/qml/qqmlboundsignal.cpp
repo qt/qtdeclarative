@@ -174,13 +174,7 @@ int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
         if (QQmlDebugService::isDebuggingEnabled())
             QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.methodSignature().constData()));
 
-        QQmlHandlingSignalProfiler prof;
-        if (prof.enabled) {
-            prof.setSignalInfo(QString::fromLatin1(m_signal.methodSignature().constData()),
-                               m_expression->expression());
-            prof.setLocation(m_expression->sourceFile(), m_expression->lineNumber(),
-                             m_expression->columnNumber());
-        }
+        QQmlHandlingSignalProfiler prof(m_signal, m_expression);
 
         m_isEvaluating = true;
         if (!m_paramsValid) {
@@ -233,7 +227,10 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
             prop.setWritable(false);
         } else {
             QByteArray propType = type;
-            if (t >= int(QVariant::UserType) || t == QMetaType::UnknownType || t == QMetaType::Void) {
+            if ((QMetaType::typeFlags(t) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration) {
+                t = QVariant::Int;
+                propType = "int";
+            } else if (t == QMetaType::UnknownType) {
                 QByteArray scope;
                 QByteArray name;
                 int scopeIdx = propType.lastIndexOf("::");

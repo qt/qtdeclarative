@@ -189,6 +189,12 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertColorToString:
         INSTR_DUMP << "\t" << "ConvertColorToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::ConvertObjectToBool:
+        INSTR_DUMP << "\t" << "ConvertObjectToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
+    case V4Instr::ConvertNullToObject:
+        INSTR_DUMP << "\t" << "ConvertNullToObject" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
     case V4Instr::ResolveUrl:
         INSTR_DUMP << "\t" << "ResolveUrl" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;

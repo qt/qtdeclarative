@@ -78,7 +78,7 @@ public:
         , documentDirty(true), dirty(false), richText(false), cursorVisible(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
-        , rightToLeftText(false), textCached(false)
+        , rightToLeftText(false), textCached(false), inLayout(false)
     {
     }
 
@@ -144,6 +144,7 @@ public:
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
     bool textCached:1;
+    bool inLayout:1;
 };
 
 QT_END_NAMESPACE

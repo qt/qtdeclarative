@@ -65,7 +65,8 @@ public:
     }
 
     VDMDelegateDataType(const VDMDelegateDataType &type)
-        : metaObject(0)
+        : QQmlRefCount()
+        , metaObject(0)
         , propertyCache(0)
         , propertyOffset(type.propertyOffset)
         , signalOffset(type.signalOffset)

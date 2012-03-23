@@ -46,6 +46,10 @@
 #include <qopenglfunctions.h>
 #include <private/qopenglextensions_p.h>
 
+#ifdef Q_OS_QNX
+#include <malloc.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 

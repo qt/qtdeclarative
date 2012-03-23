@@ -1444,13 +1444,9 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
 
     d->pressPos = event->localPos();
 
-    if (d->focusOnPress) {
-        bool hadActiveFocus = hasActiveFocus();
-        forceActiveFocus();
-        // re-open input panel on press if already focused
-        if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
-            openSoftwareInputPanel();
-    }
+    if (d->sendMouseEventToInputContext(event))
+        return;
+
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
@@ -1463,12 +1459,18 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
         }
     }
 
-    if (d->sendMouseEventToInputContext(event))
-        return;
-
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
     int cursor = d->positionAt(event->localPos());
     d->moveCursor(cursor, mark);
+
+    if (d->focusOnPress) {
+        bool hadActiveFocus = hasActiveFocus();
+        forceActiveFocus();
+        // re-open input panel on press if already focused
+        if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
+            openSoftwareInputPanel();
+    }
+
     event->setAccepted(true);
 }
 
@@ -1602,9 +1604,11 @@ void QQuickTextInput::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
     Q_D(QQuickTextInput);
-    if (newGeometry.width() != oldGeometry.width())
-        d->updateLayout();
-    updateCursorRectangle();
+    if (!d->inLayout) {
+        if (newGeometry.width() != oldGeometry.width() && d->wrapMode != NoWrap)
+            d->updateLayout();
+        updateCursorRectangle();
+    }
     QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
 }
 
@@ -1614,14 +1618,19 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
     QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + m_preeditCursor);
     const int preeditLength = m_textLayout.preeditAreaText().length();
     const qreal width = qMax<qreal>(0, q->width());
-    qreal widthUsed = currentLine.isValid() ? currentLine.naturalTextWidth() : 0;
+    qreal cix = 0;
+    qreal widthUsed = 0;
+    if (currentLine.isValid()) {
+        cix = currentLine.cursorToX(m_cursor + preeditLength);
+        const qreal cursorWidth = cix >= 0 ? cix : width - cix;
+        widthUsed = qMax(currentLine.naturalTextWidth(), cursorWidth);
+    }
     int previousScroll = hscroll;
 
     if (!autoScroll || widthUsed <=  width || m_echoMode == QQuickTextInput::NoEcho) {
         hscroll = 0;
     } else {
         Q_ASSERT(currentLine.isValid());
-        qreal cix = currentLine.cursorToX(m_cursor + preeditLength);
         if (cix - hscroll >= width) {
             // text doesn't fit, cursor is to the right of br (scroll right)
             hscroll = cix - width;
@@ -1632,6 +1641,10 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
             // text doesn't fit, text document is to the left of br; align
             // right
             hscroll = widthUsed - width;
+        } else if (width - hscroll > widthUsed) {
+            // text doesn't fit, text document is to the right of br; align
+            // left
+            hscroll = width - widthUsed;
         }
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
@@ -2688,6 +2701,38 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
     }
 }
 
+qreal QQuickTextInputPrivate::getImplicitWidth() const
+{
+    Q_Q(const QQuickTextInput);
+    if (!requireImplicitWidth) {
+        QQuickTextInputPrivate *d = const_cast<QQuickTextInputPrivate *>(this);
+        d->requireImplicitWidth = true;
+
+        if (q->isComponentComplete()) {
+            // One time cost, only incurred if implicitWidth is first requested after
+            // componentComplete.
+            QTextLayout layout(m_text);
+
+            QTextOption option = m_textLayout.textOption();
+            option.setTextDirection(m_layoutDirection);
+            option.setFlags(QTextOption::IncludeTrailingSpaces);
+            option.setWrapMode(QTextOption::WrapMode(wrapMode));
+            option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
+            layout.setTextOption(option);
+            layout.setFont(font);
+            layout.setPreeditArea(m_textLayout.preeditAreaPosition(), m_textLayout.preeditAreaText());
+            layout.beginLayout();
+
+            QTextLine line = layout.createLine();
+            line.setLineWidth(INT_MAX);
+            d->implicitWidth = qCeil(line.naturalTextWidth());
+
+            layout.endLayout();
+        }
+    }
+    return implicitWidth;
+}
+
 void QQuickTextInputPrivate::updateLayout()
 {
     Q_Q(QQuickTextInput);
@@ -2699,7 +2744,6 @@ void QQuickTextInputPrivate::updateLayout()
 
     QTextOption option = m_textLayout.textOption();
     option.setTextDirection(layoutDirection());
-    option.setFlags(QTextOption::IncludeTrailingSpaces);
     option.setWrapMode(QTextOption::WrapMode(wrapMode));
     option.setAlignment(Qt::Alignment(q->effectiveHAlign()));
     m_textLayout.setTextOption(option);
@@ -2708,9 +2752,17 @@ void QQuickTextInputPrivate::updateLayout()
     boundingRect = QRectF();
     m_textLayout.beginLayout();
     QTextLine line = m_textLayout.createLine();
+    if (requireImplicitWidth) {
+        line.setLineWidth(INT_MAX);
+        const bool wasInLayout = inLayout;
+        inLayout = true;
+        q->setImplicitWidth(qCeil(line.naturalTextWidth()));
+        inLayout = wasInLayout;
+        if (inLayout)       // probably the result of a binding loop, but by letting it
+            return;         // get this far we'll get a warning to that effect.
+    }
     qreal lineWidth = q->widthValid() ? q->width() : INT_MAX;
     qreal height = 0;
-    QTextLine firstLine = line;
     do {
         line.setLineWidth(lineWidth);
         line.setPosition(QPointF(line.position().x(), height));
@@ -2728,7 +2780,11 @@ void QQuickTextInputPrivate::updateLayout()
 
     updateType = UpdatePaintNode;
     q->update();
-    q->setImplicitSize(boundingRect.width(), boundingRect.height());
+
+    if (!requireImplicitWidth && !q->widthValid())
+        q->setImplicitSize(qCeil(boundingRect.width()), qCeil(boundingRect.height()));
+    else
+        q->setImplicitHeight(qCeil(boundingRect.height()));
 
     if (previousRect != boundingRect)
         emit q->contentSizeChanged();
@@ -3261,7 +3317,14 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
     m_textDirty = (oldText != m_text);
 
     bool changed = finishChange(-1, true, edited);
+#ifdef QT_NO_ACCESSIBILITY
     Q_UNUSED(changed)
+#else
+    if (changed) {
+        QAccessibleTextUpdateEvent ev(q, 0, oldText, m_text);
+        QAccessible::updateAccessibility(&ev);
+    }
+#endif
 }
 
 
@@ -3885,6 +3948,11 @@ bool QQuickTextInputPrivate::emitCursorPositionChanged()
             }
         }
 
+#ifndef QT_NO_ACCESSIBILITY
+        QAccessibleTextCursorEvent ev(q, m_cursor);
+        QAccessible::updateAccessibility(&ev);
+#endif
+
         return true;
     }
     return false;
@@ -3964,12 +4032,10 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     }
 #ifndef QT_NO_SHORTCUT
     else if (event == QKeySequence::Undo) {
-        if (!m_readOnly)
-            q->undo();
+        q->undo();
     }
     else if (event == QKeySequence::Redo) {
-        if (!m_readOnly)
-            q->redo();
+        q->redo();
     }
     else if (event == QKeySequence::SelectAll) {
         selectAll();

@@ -44,7 +44,27 @@ import "content"
 Rectangle {
     id: root
     property int current: 0
-    width: 600; height: 300
+    // Example index automation for convenience, disabled on click or tap
+    SequentialAnimation on current {
+        id: anim
+        loops: -1
+        NumberAnimation {
+            duration: 5000
+            to: aModel.count - 1
+        }
+        NumberAnimation {
+            duration: 5000
+            to: 0
+        }
+    }
+    MouseArea{
+        id: ma
+        z: 1
+        anchors.fill: parent
+        onClicked: {ma.enabled = false; anim.running = false;}
+    }
+
+    width: 320; height: 480
 
     // This example shows the same model in three different ListView items, 
     // with different highlight ranges. The highlight ranges are set by the 
@@ -72,9 +92,10 @@ Rectangle {
 
     ListView {
         id: list1
-        width: 200; height: parent.height
-        model: PetsModel {}
+        height: 160; width: parent.width
+        model: PetsModel {id: aModel}
         delegate: petDelegate
+        orientation: ListView.Horizontal
 
         highlight: Rectangle { color: "lightsteelblue" }
         currentIndex: root.current
@@ -84,10 +105,11 @@ Rectangle {
 
     ListView {
         id: list2
-        x: list1.width
-        width: 200; height: parent.height
+        y: list1.height
+        height: 160; width: parent.width
         model: PetsModel {}
         delegate: petDelegate
+        orientation: ListView.Horizontal
 
         highlight: Rectangle { color: "yellow" }
         currentIndex: root.current
@@ -97,10 +119,11 @@ Rectangle {
 
     ListView {
         id: list3
-        x: list1.width + list2.width
-        width: 200; height: parent.height
+        y: list1.height + list2.height
+        height: 160; width: parent.width
         model: PetsModel {}
         delegate: petDelegate
+        orientation: ListView.Horizontal
 
         highlight: Rectangle { color: "yellow" }
         currentIndex: root.current
@@ -112,11 +135,20 @@ Rectangle {
     // The delegate for each list
     Component {
         id: petDelegate
-        Column {
-            width: 200
-            Text { text: 'Name: ' + name }
-            Text { text: 'Type: ' + type }
-            Text { text: 'Age: ' + age }
+        Item {
+            width: 160
+            height: column.height
+            Column {
+                id: column
+                Text { text: 'Name: ' + name }
+                Text { text: 'Type: ' + type }
+                Text { text: 'Age: ' + age }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: wrapper.ListView.view.currentIndex = index
+            }
         }
     }
 }

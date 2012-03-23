@@ -77,7 +77,7 @@ public:
     bool addWatch(int id, quint32 objectId, const QByteArray &property);
     bool addWatch(int id, quint32 objectId, const QString &expr);
 
-    void removeWatch(int id);
+    bool removeWatch(int id);
 
 Q_SIGNALS:
     void propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value);

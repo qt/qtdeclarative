@@ -248,12 +248,14 @@ int QQuickSprite::variedDuration() const //Deals with precedence when multiple d
                 + (m_frameDurationVariation * ((qreal)qrand()/RAND_MAX) * 2)
                 - m_frameDurationVariation;
         return qMax(0, m_frames * mspf);
-    }
-    qWarning() << "Sprite::duration is changing meaning to the full animation duration.";
-    qWarning() << "Use Sprite::frameDuration for the old meaning, of per frame duration.";
-    qWarning() << "As an interim measure, duration/durationVariation means the same as frameDuration/frameDurationVariation, and you'll get this warning spewed out everywhere to movtivate you.";
+    } else if (duration() >= 0) {
+        qWarning() << "Sprite::duration is changing meaning to the full animation duration.";
+        qWarning() << "Use Sprite::frameDuration for the old meaning, of per frame duration.";
+        qWarning() << "As an interim measure, duration/durationVariation means the same as frameDuration/frameDurationVariation, and you'll get this warning spewed out everywhere to motivate you.";
     //Note that the spammyness is due to this being the best location to detect, but also called once each animation loop
-    return QQuickStochasticState::variedDuration() * m_frames;
+        return QQuickStochasticState::variedDuration() * m_frames;
+    }
+    return 1000; //When nothing set
 }
 
 void QQuickSprite::startImageLoading()

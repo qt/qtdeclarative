@@ -887,11 +887,11 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     bool stealY = stealMouse;
     bool stealX = stealMouse;
 
-    qint64 elapsed = computeCurrentTime(event) - lastPressTime;
+    qint64 elapsedSincePress = computeCurrentTime(event) - lastPressTime;
 
     if (q->yflick()) {
         qreal dy = event->localPos().y() - pressPos.y();
-        if (qAbs(dy) > qApp->styleHints()->startDragDistance() || elapsed > 200) {
+        if (qAbs(dy) > qApp->styleHints()->startDragDistance() || elapsedSincePress > 200) {
             if (!vMoved)
                 vData.dragStartOffset = dy;
             qreal newY = dy + vData.pressPos - vData.dragStartOffset;
@@ -924,7 +924,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 
     if (q->xflick()) {
         qreal dx = event->localPos().x() - pressPos.x();
-        if (qAbs(dx) > qApp->styleHints()->startDragDistance() || elapsed > 200) {
+        if (qAbs(dx) > qApp->styleHints()->startDragDistance() || elapsedSincePress > 200) {
             if (!hMoved)
                 hData.dragStartOffset = dx;
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
@@ -974,28 +974,26 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         q->movementStarting();
     }
 
-    if (!lastPos.isNull()) {
-        qint64 currentTimestamp = computeCurrentTime(event);
-        qreal elapsed = qreal(currentTimestamp - lastPosTime) / 1000.;
-        if (elapsed <= 0)
-            return;
-        lastPosTime = currentTimestamp;
-        QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
-        if (q->yflick() && !rejectY) {
-            if (extended && extended->capabilities().testFlag(QTouchDevice::Velocity)) {
-                vData.addVelocitySample(extended->velocity().y(), maxVelocity);
-            } else {
-                qreal dy = event->localPos().y()-lastPos.y();
-                vData.addVelocitySample(dy/elapsed, maxVelocity);
-            }
+    qint64 currentTimestamp = computeCurrentTime(event);
+    qreal elapsed = qreal(currentTimestamp - (lastPos.isNull() ? lastPressTime : lastPosTime)) / 1000.;
+    if (elapsed <= 0)
+        return;
+    lastPosTime = currentTimestamp;
+    QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
+    if (q->yflick() && !rejectY) {
+        if (extended && extended->capabilities().testFlag(QTouchDevice::Velocity)) {
+            vData.addVelocitySample(extended->velocity().y(), maxVelocity);
+        } else {
+            qreal dy = event->localPos().y() - (lastPos.isNull() ? pressPos.y() : lastPos.y());
+            vData.addVelocitySample(dy/elapsed, maxVelocity);
         }
-        if (q->xflick() && !rejectX) {
-            if (extended && extended->capabilities().testFlag(QTouchDevice::Velocity)) {
-                hData.addVelocitySample(extended->velocity().x(), maxVelocity);
-            } else {
-                qreal dx = event->localPos().x()-lastPos.x();
-                hData.addVelocitySample(dx/elapsed, maxVelocity);
-            }
+    }
+    if (q->xflick() && !rejectX) {
+        if (extended && extended->capabilities().testFlag(QTouchDevice::Velocity)) {
+            hData.addVelocitySample(extended->velocity().x(), maxVelocity);
+        } else {
+            qreal dx = event->localPos().x() - (lastPos.isNull() ? pressPos.x() : lastPos.x());
+            hData.addVelocitySample(dx/elapsed, maxVelocity);
         }
     }
 
@@ -1763,6 +1761,10 @@ void QQuickFlickable::mouseUngrabEvent()
         d->draggingEnding();
         d->stealMouse = false;
         setKeepMouseGrab(false);
+        d->fixupX();
+        d->fixupY();
+        if (!d->timeline.isActive())
+            movementEnding();
     }
 }
 

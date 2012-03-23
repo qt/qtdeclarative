@@ -69,6 +69,7 @@
 
 
 Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
+Q_DECLARE_METATYPE(Qt::Key)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
@@ -151,6 +152,8 @@ private slots:
     void implicitSize_data();
     void implicitSize();
     void contentSize();
+    void implicitSizeBinding_data();
+    void implicitSizeBinding();
 
     void preeditCursorRectangle();
     void inputMethodComposing();
@@ -185,7 +188,7 @@ private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
 
-    void simulateKey(QQuickView *, int key, Qt::KeyboardModifiers modifiers = 0);
+    void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = 0);
 
     QStringList standard;
     QStringList richText;
@@ -1012,23 +1015,88 @@ void tst_qquicktextedit::persistentSelection()
 
 void tst_qquicktextedit::focusOnPress()
 {
-    {
-        QString componentStr = "import QtQuick 2.0\nTextEdit {  activeFocusOnPress: true; text: \"Hello World\" }";
-        QQmlComponent texteditComponent(&engine);
-        texteditComponent.setData(componentStr.toLatin1(), QUrl());
-        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
-        QCOMPARE(textEditObject->focusOnPress(), true);
-    }
+    QString componentStr =
+            "import QtQuick 2.0\n"
+            "TextEdit {\n"
+                "property bool selectOnFocus: false\n"
+                "width: 100; height: 50\n"
+                "activeFocusOnPress: true\n"
+                "text: \"Hello World\"\n"
+                "onFocusChanged: { if (focus && selectOnFocus) selectAll() }"
+            " }";
+    QQmlComponent texteditComponent(&engine);
+    texteditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
+    QVERIFY(textEditObject != 0);
+    QCOMPARE(textEditObject->focusOnPress(), true);
+    QCOMPARE(textEditObject->hasFocus(), false);
 
-    {
-        QString componentStr = "import QtQuick 2.0\nTextEdit {  activeFocusOnPress: false; text: \"Hello World\" }";
-        QQmlComponent texteditComponent(&engine);
-        texteditComponent.setData(componentStr.toLatin1(), QUrl());
-        QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
-        QCOMPARE(textEditObject->focusOnPress(), false);
-    }
+    QSignalSpy focusSpy(textEditObject, SIGNAL(focusChanged(bool)));
+    QSignalSpy activeFocusSpy(textEditObject, SIGNAL(focusChanged(bool)));
+    QSignalSpy activeFocusOnPressSpy(textEditObject, SIGNAL(activeFocusOnPressChanged(bool)));
+
+    textEditObject->setFocusOnPress(true);
+    QCOMPARE(textEditObject->focusOnPress(), true);
+    QCOMPARE(activeFocusOnPressSpy.count(), 0);
+
+    QQuickCanvas canvas;
+    canvas.resize(100, 50);
+    textEditObject->setParentItem(canvas.rootItem());
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    QCOMPARE(textEditObject->hasFocus(), false);
+    QCOMPARE(textEditObject->hasActiveFocus(), false);
+
+    QPoint centerPoint(canvas.width()/2, canvas.height()/2);
+    Qt::KeyboardModifiers noModifiers = 0;
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textEditObject->hasFocus(), true);
+    QCOMPARE(textEditObject->hasActiveFocus(), true);
+    QCOMPARE(focusSpy.count(), 1);
+    QCOMPARE(activeFocusSpy.count(), 1);
+    QCOMPARE(textEditObject->selectedText(), QString());
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+
+    textEditObject->setFocusOnPress(false);
+    QCOMPARE(textEditObject->focusOnPress(), false);
+    QCOMPARE(activeFocusOnPressSpy.count(), 1);
+
+    textEditObject->setFocus(false);
+    QCOMPARE(textEditObject->hasFocus(), false);
+    QCOMPARE(textEditObject->hasActiveFocus(), false);
+    QCOMPARE(focusSpy.count(), 2);
+    QCOMPARE(activeFocusSpy.count(), 2);
+
+    // Wait for double click timeout to expire before clicking again.
+    QTest::qWait(400);
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textEditObject->hasFocus(), false);
+    QCOMPARE(textEditObject->hasActiveFocus(), false);
+    QCOMPARE(focusSpy.count(), 2);
+    QCOMPARE(activeFocusSpy.count(), 2);
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+
+    textEditObject->setFocusOnPress(true);
+    QCOMPARE(textEditObject->focusOnPress(), true);
+    QCOMPARE(activeFocusOnPressSpy.count(), 2);
+
+    // Test a selection made in the on(Active)FocusChanged handler isn't overwritten.
+    textEditObject->setProperty("selectOnFocus", true);
+
+    QTest::qWait(400);
+    QTest::mousePress(&canvas, Qt::LeftButton, noModifiers, centerPoint);
+    QGuiApplication::processEvents();
+    QCOMPARE(textEditObject->hasFocus(), true);
+    QCOMPARE(textEditObject->hasActiveFocus(), true);
+    QCOMPARE(focusSpy.count(), 3);
+    QCOMPARE(activeFocusSpy.count(), 3);
+    QCOMPARE(textEditObject->selectedText(), textEditObject->text());
+    QTest::mouseRelease(&canvas, Qt::LeftButton, noModifiers, centerPoint);
 }
 
 void tst_qquicktextedit::selection()
@@ -1562,21 +1630,41 @@ void tst_qquicktextedit::mouseSelection_data()
     QTest::addColumn<int>("from");
     QTest::addColumn<int>("to");
     QTest::addColumn<QString>("selectedText");
+    QTest::addColumn<bool>("focus");
+    QTest::addColumn<bool>("focusOnPress");
+    QTest::addColumn<bool>("doubleClick");
 
     // import installed
-    QTest::newRow("on") << testFile("mouseselection_true.qml") << 4 << 9 << "45678";
-    QTest::newRow("off") << testFile("mouseselection_false.qml") << 4 << 9 << QString();
-    QTest::newRow("default") << testFile("mouseselection_default.qml") << 4 << 9 << QString();
-    QTest::newRow("off word selection") << testFile("mouseselection_false_words.qml") << 4 << 9 << QString();
-    QTest::newRow("on word selection (4,9)") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789";
-    QTest::newRow("on word selection (2,13)") << testFile("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (2,30)") << testFile("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (9,13)") << testFile("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (9,30)") << testFile("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (13,2)") << testFile("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (20,2)") << testFile("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (12,9)") << testFile("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (30,9)") << testFile("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << true << true << false;
+    QTest::newRow("off") << testFile("mouseselection_false.qml") << 4 << 9 << QString() << true << true << false;
+    QTest::newRow("default") << testFile("mouseselection_default.qml") << 4 << 9 << QString() << true << true << false;
+    QTest::newRow("off word selection") << testFile("mouseselection_false_words.qml") << 4 << 9 << QString() << true << true << false;
+    QTest::newRow("on word selection (4,9)") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << true << true << false;
+
+    QTest::newRow("on unfocused") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false << false << false;
+    QTest::newRow("on word selection (4,9) unfocused") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false << false << false;
+
+    QTest::newRow("on focus on press") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false << true << false;
+    QTest::newRow("on word selection (4,9) focus on press") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false << true << false;
+
+    QTest::newRow("on word selection (2,13)") << testFile("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (2,30)") << testFile("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (9,13)") << testFile("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (9,30)") << testFile("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (13,2)") << testFile("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (20,2)") << testFile("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (12,9)") << testFile("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (30,9)") << testFile("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+
+    QTest::newRow("off double click (4,9)") << testFile("mouseselection_true.qml") << 4 << 9 << "0123456789" << true << true << true;
+    QTest::newRow("off double click (2,13)") << testFile("mouseselection_true.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (2,30)") << testFile("mouseselection_true.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (9,13)") << testFile("mouseselection_true.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (9,30)") << testFile("mouseselection_true.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (13,2)") << testFile("mouseselection_true.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (20,2)") << testFile("mouseselection_true.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (12,9)") << testFile("mouseselection_true.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("off double click (30,9)") << testFile("mouseselection_true.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
 }
 
 void tst_qquicktextedit::mouseSelection()
@@ -1585,6 +1673,9 @@ void tst_qquicktextedit::mouseSelection()
     QFETCH(int, from);
     QFETCH(int, to);
     QFETCH(QString, selectedText);
+    QFETCH(bool, focus);
+    QFETCH(bool, focusOnPress);
+    QFETCH(bool, doubleClick);
 
     QQuickView canvas(QUrl::fromLocalFile(qmlfile));
 
@@ -1597,9 +1688,14 @@ void tst_qquicktextedit::mouseSelection()
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
     QVERIFY(textEditObject != 0);
 
+    textEditObject->setFocus(focus);
+    textEditObject->setFocusOnPress(focusOnPress);
+
     // press-and-drag-and-release from x1 to x2
     QPoint p1 = textEditObject->positionToRectangle(from).center().toPoint();
     QPoint p2 = textEditObject->positionToRectangle(to).center().toPoint();
+    if (doubleClick)
+        QTest::mouseClick(&canvas, Qt::LeftButton, 0, p1);
     QTest::mousePress(&canvas, Qt::LeftButton, 0, p1);
     QTest::mouseMove(&canvas, p2);
     QTest::mouseRelease(&canvas, Qt::LeftButton, 0, p2);
@@ -1608,7 +1704,10 @@ void tst_qquicktextedit::mouseSelection()
 
     // Clicking and shift to clicking between the same points should select the same text.
     textEditObject->setCursorPosition(0);
-    QTest::mouseClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
+    if (doubleClick)
+        QTest::mouseDClick(&canvas, Qt::LeftButton, 0, p1);
+    else
+        QTest::mouseClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
     QTest::mouseClick(&canvas, Qt::LeftButton, Qt::ShiftModifier, p2);
     QTest::qWait(50);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
@@ -2155,7 +2254,7 @@ void tst_qquicktextedit::readOnly()
     QCOMPARE(edit->cursorPosition(), edit->text().length());
 }
 
-void tst_qquicktextedit::simulateKey(QQuickView *view, int key, Qt::KeyboardModifiers modifiers)
+void tst_qquicktextedit::simulateKey(QWindow *view, int key, Qt::KeyboardModifiers modifiers)
 {
     QKeyEvent press(QKeyEvent::KeyPress, key, modifiers);
     QKeyEvent release(QKeyEvent::KeyRelease, key, modifiers);
@@ -2415,17 +2514,19 @@ void tst_qquicktextedit::implicitSize_data()
 {
     QTest::addColumn<QString>("text");
     QTest::addColumn<QString>("wrap");
-    QTest::newRow("plain") << "The quick red fox jumped over the lazy brown dog" << "TextEdit.NoWrap";
-    QTest::newRow("richtext") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "TextEdit.NoWrap";
-    QTest::newRow("plain_wrap") << "The quick red fox jumped over the lazy brown dog" << "TextEdit.Wrap";
-    QTest::newRow("richtext_wrap") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "TextEdit.Wrap";
+    QTest::addColumn<QString>("format");
+    QTest::newRow("plain") << "The quick red fox jumped over the lazy brown dog" << "TextEdit.NoWrap" << "TextEdit.PlainText";
+    QTest::newRow("richtext") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "TextEdit.NoWrap" << "TextEdit.RichText";
+    QTest::newRow("plain_wrap") << "The quick red fox jumped over the lazy brown dog" << "TextEdit.Wrap" << "TextEdit.PlainText";
+    QTest::newRow("richtext_wrap") << "<b>The quick red fox jumped over the lazy brown dog</b>" << "TextEdit.Wrap" << "TextEdit.RichText";
 }
 
 void tst_qquicktextedit::implicitSize()
 {
     QFETCH(QString, text);
     QFETCH(QString, wrap);
-    QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\"; width: 50; wrapMode: " + wrap + " }";
+    QFETCH(QString, format);
+    QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\"; width: 50; wrapMode: " + wrap + "; textFormat: " + format + " }";
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
@@ -2464,6 +2565,34 @@ void tst_qquicktextedit::contentSize()
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
     QCOMPARE(spy.count(), 3);
+}
+
+void tst_qquicktextedit::implicitSizeBinding_data()
+{
+    implicitSize_data();
+}
+
+void tst_qquicktextedit::implicitSizeBinding()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, wrap);
+    QFETCH(QString, format);
+    QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\"; width: implicitWidth; height: implicitHeight; wrapMode: " + wrap + "; textFormat: " + format + " }";
+    QDeclarativeComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit *>(object.data());
+
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+
+    textObject->resetWidth();
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+
+    textObject->resetHeight();
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 }
 
 void tst_qquicktextedit::preeditCursorRectangle()
@@ -3255,63 +3384,118 @@ void tst_qquicktextedit::keySequence_data()
     QTest::addColumn<int>("cursorPosition");
     QTest::addColumn<QString>("expectedText");
     QTest::addColumn<QString>("selectedText");
+    QTest::addColumn<Qt::Key>("layoutDirection");
 
     // standard[0] == "the [4]quick [10]brown [16]fox [20]jumped [27]over [32]the [36]lazy [41]dog"
 
     QTest::newRow("select all")
             << standard.at(0) << QKeySequence(QKeySequence::SelectAll) << 0 << 0
-            << 44 << standard.at(0) << standard.at(0);
+            << 44 << standard.at(0) << standard.at(0)
+            << Qt::Key_Direction_L;
+    QTest::newRow("select start of line")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectStartOfLine) << 5 << 5
+            << 0 << standard.at(0) << standard.at(0).mid(0, 5)
+            << Qt::Key_Direction_L;
+    QTest::newRow("select start of block")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectStartOfBlock) << 5 << 5
+            << 0 << standard.at(0) << standard.at(0).mid(0, 5)
+            << Qt::Key_Direction_L;
     QTest::newRow("select end of line")
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfLine) << 5 << 5
-            << 44 << standard.at(0) << standard.at(0).mid(5);
+            << 44 << standard.at(0) << standard.at(0).mid(5)
+            << Qt::Key_Direction_L;
     QTest::newRow("select end of document")
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfDocument) << 3 << 3
-            << 44 << standard.at(0) << standard.at(0).mid(3);
+            << 44 << standard.at(0) << standard.at(0).mid(3)
+            << Qt::Key_Direction_L;
     QTest::newRow("select end of block")
             << standard.at(0) << QKeySequence(QKeySequence::SelectEndOfBlock) << 18 << 18
-            << 44 << standard.at(0) << standard.at(0).mid(18);
+            << 44 << standard.at(0) << standard.at(0).mid(18)
+            << Qt::Key_Direction_L;
     QTest::newRow("delete end of line")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteEndOfLine) << 24 << 24
-            << 24 << standard.at(0).mid(0, 24) << QString();
+            << 24 << standard.at(0).mid(0, 24) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("move to start of line")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToStartOfLine) << 31 << 31
-            << 0 << standard.at(0) << QString();
+            << 0 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("move to start of block")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToStartOfBlock) << 25 << 25
-            << 0 << standard.at(0) << QString();
+            << 0 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("move to next char")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToNextChar) << 12 << 12
-            << 13 << standard.at(0) << QString();
-    QTest::newRow("move to previous char")
+            << 13 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("move to previous char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 3
-            << 2 << standard.at(0) << QString();
-    QTest::newRow("select next char")
+            << 2 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("move to previous char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 3
+            << 4 << standard.at(0) << QString()
+            << Qt::Key_Direction_R;
+    QTest::newRow("move to previous char with selection")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousChar) << 3 << 7
+            << 3 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("select next char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::SelectNextChar) << 23 << 23
-            << 24 << standard.at(0) << standard.at(0).mid(23, 1);
-    QTest::newRow("select previous char")
+            << 24 << standard.at(0) << standard.at(0).mid(23, 1)
+            << Qt::Key_Direction_L;
+    QTest::newRow("select next char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectNextChar) << 23 << 23
+            << 22 << standard.at(0) << standard.at(0).mid(22, 1)
+            << Qt::Key_Direction_R;
+    QTest::newRow("select previous char (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousChar) << 19 << 19
-            << 18 << standard.at(0) << standard.at(0).mid(18, 1);
-    QTest::newRow("move to next word")
+            << 18 << standard.at(0) << standard.at(0).mid(18, 1)
+            << Qt::Key_Direction_L;
+    QTest::newRow("select previous char (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousChar) << 19 << 19
+            << 20 << standard.at(0) << standard.at(0).mid(19, 1)
+            << Qt::Key_Direction_R;
+    QTest::newRow("move to next word (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
-            << 10 << standard.at(0) << QString();
-    QTest::newRow("move to previous word")
+            << 10 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("move to next word (rtl)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToNextWord) << 7 << 7
+            << 4 << standard.at(0) << QString()
+            << Qt::Key_Direction_R;
+    QTest::newRow("move to previous word (ltr)")
             << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
-            << 4 << standard.at(0) << QString();
+            << 4 << standard.at(0) << QString()
+            << Qt::Key_Direction_L;
+    QTest::newRow("move to previous word (rlt)")
+            << standard.at(0) << QKeySequence(QKeySequence::MoveToPreviousWord) << 7 << 7
+            << 10 << standard.at(0) << QString()
+            << Qt::Key_Direction_R;
+    QTest::newRow("select next word")
+            << standard.at(0) << QKeySequence(QKeySequence::SelectNextWord) << 11 << 11
+            << 16 << standard.at(0) << standard.at(0).mid(11, 5)
+            << Qt::Key_Direction_L;
     QTest::newRow("select previous word")
             << standard.at(0) << QKeySequence(QKeySequence::SelectPreviousWord) << 11 << 11
-            << 10 << standard.at(0) << standard.at(0).mid(10, 1);
+            << 10 << standard.at(0) << standard.at(0).mid(10, 1)
+            << Qt::Key_Direction_L;
     QTest::newRow("delete (selection)")
             << standard.at(0) << QKeySequence(QKeySequence::Delete) << 12 << 15
-            << 12 << (standard.at(0).mid(0, 12) + standard.at(0).mid(15)) << QString();
+            << 12 << (standard.at(0).mid(0, 12) + standard.at(0).mid(15)) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("delete (no selection)")
             << standard.at(0) << QKeySequence(QKeySequence::Delete) << 15 << 15
-            << 15 << (standard.at(0).mid(0, 15) + standard.at(0).mid(16)) << QString();
+            << 15 << (standard.at(0).mid(0, 15) + standard.at(0).mid(16)) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("delete end of word")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteEndOfWord) << 24 << 24
-            << 24 << (standard.at(0).mid(0, 24) + standard.at(0).mid(27)) << QString();
+            << 24 << (standard.at(0).mid(0, 24) + standard.at(0).mid(27)) << QString()
+            << Qt::Key_Direction_L;
     QTest::newRow("delete start of word")
             << standard.at(0) << QKeySequence(QKeySequence::DeleteStartOfWord) << 7 << 7
-            << 4 << (standard.at(0).mid(0, 4) + standard.at(0).mid(7)) << QString();
+            << 4 << (standard.at(0).mid(0, 4) + standard.at(0).mid(7)) << QString()
+            << Qt::Key_Direction_L;
 }
 
 void tst_qquicktextedit::keySequence()
@@ -3323,6 +3507,7 @@ void tst_qquicktextedit::keySequence()
     QFETCH(int, cursorPosition);
     QFETCH(QString, expectedText);
     QFETCH(QString, selectedText);
+    QFETCH(Qt::Key, layoutDirection);
 
     if (sequence.isEmpty()) {
         QSKIP("Key sequence is undefined");
@@ -3340,6 +3525,8 @@ void tst_qquicktextedit::keySequence()
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
     QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+
+    simulateKey(&canvas, layoutDirection);
 
     textEdit->select(selectionStart, selectionEnd);
 
@@ -3466,7 +3653,7 @@ void tst_qquicktextedit::undo_data()
             insertString << " unique instance.";
 
             expectedString << "Ensuring a unique instance.";
-            expectedString << "Ensuring a ";    // ### Not present in TextInput.
+            expectedString << "Ensuring a ";    // ### Not present in TextEdit.
             expectedString << "Ensuring an instan";
             expectedString << "Ensuring instan";
             expectedString << "";
@@ -3754,7 +3941,7 @@ void tst_qquicktextedit::undo_keypressevents_data()
              << "ABC";
 
         expectedString << "ABC";
-        // ### One operation in TextInput.
+        // ### One operation in TextEdit.
         expectedString << "A";
         expectedString << "123";
 
