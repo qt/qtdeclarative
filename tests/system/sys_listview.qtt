@@ -43,6 +43,74 @@
 
 testcase = {
 
+    using_section_delegates: function()
+    {
+        // Test Meta-data
+        testTitle = "Using and changing section delegate properties";
+        testBinary = "sections.qml";
+        testSource: "$QTDIR/qtdeclarative/tests/system/listview";
+        testGoal = "Verify that a Component can be set as a section header, using various properties for different collections.";
+        testPreconditions = "None";
+        testGroups = "BAT,QtQuick 2.0";
+
+        // Test Steps
+        prompt(twiki('---+++ ' + testTitle + '<br><br>
+        *Goal:* ' + testGoal + '<br>
+        *Pre-Requisites:* ' + testPreconditions + '<br>
+        *Tested Binary:* ' + testBinary + '<br>
+    | *Step* | *Verification* |
+    | Run '+testBinary+' | Application has started, showing a ListView |
+    | | The view shows a single character section header for each element |
+    | Press the Criteria button | The section headers now show the full name of each item |
+    | Press Property | The section headers now show the id value for the items |
+    | Press Criteria | The section headers now only show i - the first character of id |
+    | Press Property | The section headers show the first character of the item names |'));
+    },
+
+    updating_sections: function()
+    {
+        // Test Meta-data
+        testTitle = "Updating Collected Sections";
+        testBinary = "sections.qml";
+        testSource: "$QTDIR/qtdeclarative/tests/system/listview";
+        testGoal = "Verify that a section is updated when items are added.";
+        testPreconditions = "None";
+        testGroups = "BAT,QtQuick 2.0";
+
+        // Test Steps
+        prompt(twiki('---+++ ' + testTitle + '<br><br>
+        *Goal:* ' + testGoal + '<br>
+        *Pre-Requisites:* ' + testPreconditions + '<br>
+        *Tested Binary:* ' + testBinary + '<br>
+    | *Step* | *Verification* |
+    | Run '+testBinary+' | Application has started, showing a ListView |
+    | | The view shows a single character section header for each element |
+    | Press the + button | A duplicate of every name is added |
+    |  | Each duplicate is place in the same section as the original |'));
+    },
+
+    changing_section_delegates: function()
+    {
+        // Test Meta-data
+        testTitle = "Changing Section Delegates";
+        testBinary = "sections.qml";
+        testSource: "$QTDIR/qtdeclarative/tests/system/listview";
+        testGoal = "Verify that a section delegate can be changed.";
+        testPreconditions = "None";
+        testGroups = "BAT,QtQuick 2.0";
+
+        // Test Steps
+        prompt(twiki('---+++ ' + testTitle + '<br><br>
+        *Goal:* ' + testGoal + '<br>
+        *Pre-Requisites:* ' + testPreconditions + '<br>
+        *Tested Binary:* ' + testBinary + '<br>
+    | *Step* | *Verification* |
+    | Run '+testBinary+' | Application has started, showing a ListView |
+    | | The view shows a single character section header for each element |
+    | Press the Delegate button | The section headers now show as light blue rectangles |
+    | Press the Criteria button | The headers show as full names, still within light blue rectangles |'));
+    },
+
     altering_listview_primary_properties: function()
     {
         // Test Meta-data
