@@ -829,7 +829,10 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     if (rv) {
         QQmlData *ddata = QQmlData::get(rv);
         Q_ASSERT(ddata);
+        //top level objects should never get JS ownership.
+        //if JS ownership is needed this needs to be explicitly undone (like in component.createObject())
         ddata->indestructible = true;
+        ddata->explicitIndestructibleSet = true;
     }
 
     if (enginePriv->isDebugging && rv) {
@@ -1120,7 +1123,8 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     d->completeCreate();
 
     Q_ASSERT(QQmlData::get(rv));
-    QQmlData::get(rv)->setImplicitDestructible();
+    QQmlData::get(rv)->explicitIndestructibleSet = false;
+    QQmlData::get(rv)->indestructible = false;
 
     if (!rv)
         args->returnValue(v8::Null());
@@ -1255,10 +1259,6 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::
         v8::Handle<v8::Value> args[] = { object, valuemap };
         v8::Handle<v8::Function>::Cast(function)->Call(v8engine->global(), 2, args);
     }
-
-    QQmlData *ddata = QQmlData::get(toCreate);
-    Q_ASSERT(ddata);
-    ddata->setImplicitDestructible();
 }
 
 

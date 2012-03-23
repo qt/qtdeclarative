@@ -133,6 +133,8 @@ private slots:
     void ownership();
     void cppOwnershipReturnValue();
     void ownershipCustomReturnValue();
+    void ownershipRootObject();
+    void ownershipConsistency();
     void qlistqobjectMethods();
     void strictlyEquals();
     void compiled();
@@ -2937,6 +2939,72 @@ void tst_qqmlecmascript::ownershipCustomReturnValue()
     QCoreApplication::processEvents();
 
     QVERIFY(source.value == 0);
+}
+
+//the return value from getObject will be JS ownership,
+//unless strong Cpp ownership has been set
+class OwnershipChangingObject : public QObject
+{
+    Q_OBJECT
+public:
+    OwnershipChangingObject(): object(0) { }
+
+    QPointer<QObject> object;
+
+public slots:
+    QObject *getObject() { return object; }
+    void setObject(QObject *obj) { object = obj; }
+};
+
+void tst_qqmlecmascript::ownershipRootObject()
+{
+    OwnershipChangingObject own;
+    QQmlContext *context = new QQmlContext(engine.rootContext());
+    context->setContextObject(&own);
+
+    QQmlComponent component(&engine, testFileUrl("ownershipRootObject.qml"));
+    QQmlGuard<QObject> object = component.create(context);
+    QVERIFY(object);
+
+    engine.collectGarbage();
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(own.object != 0);
+
+    delete context;
+    delete object;
+}
+
+void tst_qqmlecmascript::ownershipConsistency()
+{
+    OwnershipChangingObject own;
+    QQmlContext *context = new QQmlContext(engine.rootContext());
+    context->setContextObject(&own);
+
+    QString expectedWarning = testFileUrl("ownershipConsistency.qml").toString() + QLatin1String(":19: Error: Invalid attempt to destroy() an indestructible object");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+    expectedWarning = testFileUrl("ownershipConsistency.qml").toString() + QLatin1String(":15: Error: Invalid attempt to destroy() an indestructible object");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+    expectedWarning = testFileUrl("ownershipConsistency.qml").toString() + QLatin1String(":6: Error: Invalid attempt to destroy() an indestructible object");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+    expectedWarning = testFileUrl("ownershipConsistency.qml").toString() + QLatin1String(":10: Error: Invalid attempt to destroy() an indestructible object");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
+
+    QQmlComponent component(&engine, testFileUrl("ownershipConsistency.qml"));
+    QQmlGuard<QObject> object = component.create(context);
+    QVERIFY(object);
+
+    engine.collectGarbage();
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(own.object != 0);
+
+    delete context;
+    delete object;
 }
 
 class QListQObjectMethodsObject : public QObject

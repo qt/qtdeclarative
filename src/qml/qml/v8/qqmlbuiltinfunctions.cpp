@@ -1097,7 +1097,9 @@ v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 
     QObject *obj = component.beginCreate(effectiveContext);
     if (obj) {
-        QQmlData::get(obj, true)->setImplicitDestructible();
+        QQmlData::get(obj, true)->explicitIndestructibleSet = false;
+        QQmlData::get(obj)->indestructible = false;
+
 
         obj->setParent(parentArg);
 
@@ -1208,7 +1210,9 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
     QUrl url = context->resolvedUrl(QUrl(arg));
     QQmlComponent *c = new QQmlComponent(engine, url, compileMode, parentArg);
     QQmlComponentPrivate::get(c)->creationContext = effectiveContext;
-    QQmlData::get(c, true)->setImplicitDestructible();
+    QQmlData::get(c, true)->explicitIndestructibleSet = false;
+    QQmlData::get(c)->indestructible = false;
+
     return v8engine->newQObject(c);
 }
 
