@@ -58,6 +58,9 @@
 #include "qv8domerrors_p.h"
 #include "qv8sqlerrors_p.h"
 
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonvalue.h>
 
 Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QList<int>)
@@ -155,6 +158,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     m_variantWrapper.init(this);
     m_valueTypeWrapper.init(this);
     m_sequenceWrapper.init(this);
+    m_jsonWrapper.init(this);
 
     {
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
@@ -182,6 +186,7 @@ QV8Engine::~QV8Engine()
 
     qPersistentDispose(m_strongReferencer);
 
+    m_jsonWrapper.destroy();
     m_sequenceWrapper.destroy();
     m_valueTypeWrapper.destroy();
     m_variantWrapper.destroy();
@@ -220,6 +225,9 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
     if (typeHint == QVariant::Bool)
         return QVariant(value->BooleanValue());
 
+    if (typeHint == QMetaType::QJsonValue)
+        return QVariant::fromValue(jsonValueFromJS(value));
+
     if (value->IsObject()) {
         QV8ObjectResource *r = (QV8ObjectResource *)value->ToObject()->GetExternalResource();
         if (r) {
@@ -251,6 +259,9 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             case QV8ObjectResource::SequenceType:
                 return m_sequenceWrapper.toVariant(r);
             }
+        } else if (typeHint == QMetaType::QJsonObject
+                   && !value->IsArray() && !value->IsFunction()) {
+            return QVariant::fromValue(jsonObjectFromJS(value));
         }
     }
 
@@ -269,6 +280,8 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             }
 
             return qVariantFromValue<QList<QObject*> >(list);
+        } else if (typeHint == QMetaType::QJsonArray) {
+            return QVariant::fromValue(jsonArrayFromJS(value));
         }
 
         bool succeeded = false;
@@ -368,6 +381,12 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
                 return arrayFromVariantList(this, *reinterpret_cast<const QVariantList *>(ptr));
             case QMetaType::QVariantMap:
                 return objectFromVariantMap(this, *reinterpret_cast<const QVariantMap *>(ptr));
+            case QMetaType::QJsonValue:
+                return jsonValueToJS(*reinterpret_cast<const QJsonValue *>(ptr));
+            case QMetaType::QJsonObject:
+                return jsonObjectToJS(*reinterpret_cast<const QJsonObject *>(ptr));
+            case QMetaType::QJsonArray:
+                return jsonArrayToJS(*reinterpret_cast<const QJsonArray *>(ptr));
 
             default:
                 break;
@@ -1152,6 +1171,15 @@ v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::QVariant:
         result = variantToJS(*reinterpret_cast<const QVariant*>(data));
         break;
+    case QMetaType::QJsonValue:
+        result = jsonValueToJS(*reinterpret_cast<const QJsonValue *>(data));
+        break;
+    case QMetaType::QJsonObject:
+        result = jsonObjectToJS(*reinterpret_cast<const QJsonObject *>(data));
+        break;
+    case QMetaType::QJsonArray:
+        result = jsonArrayToJS(*reinterpret_cast<const QJsonArray *>(data));
+        break;
     default:
         if (type == qMetaTypeId<QJSValue>()) {
             return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->asV8Value(this);
@@ -1267,6 +1295,15 @@ bool QV8Engine::metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data
     case QMetaType::QVariant:
         *reinterpret_cast<QVariant*>(data) = variantFromJS(value);
         return true;
+    case QMetaType::QJsonValue:
+        *reinterpret_cast<QJsonValue *>(data) = jsonValueFromJS(value);
+        return true;
+    case QMetaType::QJsonObject:
+        *reinterpret_cast<QJsonObject *>(data) = jsonObjectFromJS(value);
+        return true;
+    case QMetaType::QJsonArray:
+        *reinterpret_cast<QJsonArray *>(data) = jsonArrayFromJS(value);
+        return true;
     default:
     ;
     }
@@ -1381,6 +1418,36 @@ QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
     return variantMapFromJS(value->ToObject());
+}
+
+v8::Handle<v8::Value> QV8Engine::jsonValueToJS(const QJsonValue &value)
+{
+    return m_jsonWrapper.fromJsonValue(value);
+}
+
+QJsonValue QV8Engine::jsonValueFromJS(v8::Handle<v8::Value> value)
+{
+    return m_jsonWrapper.toJsonValue(value);
+}
+
+v8::Local<v8::Object> QV8Engine::jsonObjectToJS(const QJsonObject &object)
+{
+    return m_jsonWrapper.fromJsonObject(object);
+}
+
+QJsonObject QV8Engine::jsonObjectFromJS(v8::Handle<v8::Value> value)
+{
+    return m_jsonWrapper.toJsonObject(value);
+}
+
+v8::Local<v8::Array> QV8Engine::jsonArrayToJS(const QJsonArray &array)
+{
+    return m_jsonWrapper.fromJsonArray(array);
+}
+
+QJsonArray QV8Engine::jsonArrayFromJS(v8::Handle<v8::Value> value)
+{
+    return m_jsonWrapper.toJsonArray(value);
 }
 
 bool QV8Engine::convertToNativeQObject(v8::Handle<v8::Value> value,

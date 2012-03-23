@@ -8,6 +8,7 @@ PUBLICTESTS += \
     qjsengine \
     qjsvalue \
     qjsvalueiterator \
+    qjsonbinding \
     qmlmin \
     qmlplugindump \
     qqmlcomponent \

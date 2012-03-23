@@ -80,6 +80,7 @@
 #include "qv8variantwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8sequencewrapper_p.h"
+#include "qv8jsonwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -415,6 +416,13 @@ public:
     v8::Handle<v8::Value> variantToJS(const QVariant &value);
     QVariant variantFromJS(v8::Handle<v8::Value> value);
 
+    v8::Handle<v8::Value> jsonValueToJS(const QJsonValue &value);
+    QJsonValue jsonValueFromJS(v8::Handle<v8::Value> value);
+    v8::Local<v8::Object> jsonObjectToJS(const QJsonObject &object);
+    QJsonObject jsonObjectFromJS(v8::Handle<v8::Value> value);
+    v8::Local<v8::Array> jsonArrayToJS(const QJsonArray &array);
+    QJsonArray jsonArrayFromJS(v8::Handle<v8::Value> value);
+
     v8::Handle<v8::Value> metaTypeToJS(int type, const void *data);
     bool metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data);
 
@@ -477,6 +485,7 @@ protected:
     QV8VariantWrapper m_variantWrapper;
     QV8ValueTypeWrapper m_valueTypeWrapper;
     QV8SequenceWrapper m_sequenceWrapper;
+    QV8JsonWrapper m_jsonWrapper;
 
     v8::Persistent<v8::Function> m_getOwnPropertyNames;
     v8::Persistent<v8::Function> m_freezeObject;

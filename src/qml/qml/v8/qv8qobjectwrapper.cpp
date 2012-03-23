@@ -54,6 +54,7 @@
 #include <private/qqmlexpression_p.h>
 
 #include <QtQml/qjsvalue.h>
+#include <QtCore/qjsonvalue.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
@@ -659,6 +660,8 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
         QMetaObject::metacall(object, QMetaObject::ResetProperty, property->coreIndex, a);
     } else if (value->IsUndefined() && property->propType == qMetaTypeId<QVariant>()) {
         PROPERTY_STORE(QVariant, QVariant());
+    } else if (value->IsUndefined() && property->propType == QMetaType::QJsonValue) {
+        PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
     } else if (value->IsUndefined()) {
         QString error = QLatin1String("Cannot assign [undefined] to ") +
                         QLatin1String(QMetaType::typeName(property->propType));
