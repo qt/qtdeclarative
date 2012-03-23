@@ -127,7 +127,7 @@ static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
     }
 
     QScopedPointer<QAccessibleInterface> accessibleInterface(QAccessible::queryAccessibleInterface(item));
-    if (accessibleInterface->childCount() == 0) {
+    if (accessibleInterface && accessibleInterface->childCount() == 0) {
         return (itemScreenRect(item).contains(x, y)) ? item : 0;
     }
 
