@@ -313,10 +313,10 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
     {
         QQmlData *ddata = QQmlData::get(r->type, false);
         if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(propertystring);
+            result = ddata->propertyCache->property(propertystring, 0, 0);
         else
             result = QQmlPropertyCache::property(r->engine->engine(), r->type,
-                                                         propertystring, local);
+                                                         propertystring, 0, local);
     }
 
     if (!result)
@@ -324,7 +324,8 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
 
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
-        return r->engine->qobjectWrapper()->getProperty(r->type, propertystring, QV8QObjectWrapper::IgnoreRevision);
+        QQmlContextData *context = r->engine->callingContext();
+        return r->engine->qobjectWrapper()->getProperty(r->type, propertystring, context, QV8QObjectWrapper::IgnoreRevision);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \

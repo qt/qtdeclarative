@@ -173,20 +173,16 @@ static inline int primeForNumBits(int numBits)
     return (1 << numBits) + prime_deltas[numBits];
 }
 
-void QStringHashData::rehashToSize(int size, IteratorData first,
-                                   IteratorData (*Iterate)(const IteratorData &),
-                                   QStringHashNode *skip)
+void QStringHashData::rehashToSize(int size)
 {
     short bits = qMax(MinNumBits, (int)numBits);
     while (primeForNumBits(bits) < size) bits++;
 
     if (bits > numBits)
-        rehashToBits(bits, first, Iterate, skip);
+        rehashToBits(bits);
 }
 
-void QStringHashData::rehashToBits(short bits, IteratorData first,
-                                   IteratorData (*Iterate)(const IteratorData &),
-                                   QStringHashNode *skip)
+void QStringHashData::rehashToBits(short bits)
 {
     numBits = qMax(MinNumBits, (int)bits);
 
@@ -194,27 +190,36 @@ void QStringHashData::rehashToBits(short bits, IteratorData first,
     if (nb == numBuckets && buckets)
         return;
 
-    numBuckets = nb;
-
 #ifdef QSTRINGHASH_LINK_DEBUG
     if (linkCount)
         qFatal("QStringHash: Illegal attempt to rehash a linked hash.");
 #endif
 
-    delete []  buckets;
-    buckets = new QStringHashNode *[numBuckets]; 
-    ::memset(buckets, 0, sizeof(QStringHashNode *) * numBuckets);
+    QStringHashNode **newBuckets = new QStringHashNode *[nb];
+    ::memset(newBuckets, 0, sizeof(QStringHashNode *) * nb);
 
-    IteratorData nodeList = first;
-    while (nodeList.n) {
-        if (nodeList.n != skip) {
-            int bucket = nodeList.n->hash % numBuckets;
-            nodeList.n->next = buckets[bucket];
-            buckets[bucket] = nodeList.n;
-        }
-
-        nodeList = Iterate(nodeList);
+    // Preserve the existing order within buckets so that items with the
+    // same key will retain the same find/findNext order
+    for (int i = 0; i < numBuckets; ++i) {
+        QStringHashNode *bucket = buckets[i];
+        if (bucket)
+            rehashNode(newBuckets, nb, bucket);
     }
+
+    delete [] buckets;
+    buckets = newBuckets;
+    numBuckets = nb;
+}
+
+void QStringHashData::rehashNode(QStringHashNode **newBuckets, int nb, QStringHashNode *node)
+{
+    QStringHashNode *next = node->next.data();
+    if (next)
+        rehashNode(newBuckets, nb, next);
+
+    int bucket = node->hash % nb;
+    node->next = newBuckets[bucket];
+    newBuckets[bucket] = node;
 }
 
 // Copy of QString's qMemCompare

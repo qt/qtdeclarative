@@ -187,6 +187,7 @@ protected:
 public:
     friend class QQmlVMEMetaObjectEndpoint;
     friend class QQmlVMEVariantQObjectPtr;
+    friend class QQmlPropertyCache;
 
     QObject *object;
     QQmlGuardedContextData ctxt;
@@ -196,6 +197,7 @@ public:
     inline int propOffset() const;
     inline int methodOffset() const;
     inline int signalOffset() const;
+    inline int signalCount() const;
 
     bool hasAssignedMetaObjectData;
     QQmlVMEVariant *data;
@@ -223,6 +225,8 @@ public:
     void writeProperty(int, const QVariant &);
 
     QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
+
+    inline QQmlVMEMetaObject *parentVMEMetaObject() const;
 
     void listChanged(int);
     class List : public QList<QObject*>
@@ -274,6 +278,19 @@ int QQmlVMEMetaObject::methodOffset() const
 int QQmlVMEMetaObject::signalOffset() const
 {
     return cache->signalOffset();
+}
+
+int QQmlVMEMetaObject::signalCount() const
+{
+    return cache->signalCount();
+}
+
+QQmlVMEMetaObject *QQmlVMEMetaObject::parentVMEMetaObject() const
+{
+    if (parent.isT1())
+        return static_cast<QQmlVMEMetaObject *>(parent.asT1());
+
+    return 0;
 }
 
 QT_END_NAMESPACE

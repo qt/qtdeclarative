@@ -72,6 +72,7 @@ class QQmlPropertyData;
 class QQmlAccessors;
 class QMetaObjectBuilder;
 class QQmlPropertyCacheMethodArguments;
+class QQmlVMEMetaObject;
 
 // We have this somewhat awful split between RawData and Data so that RawData can be
 // used in unions.  In normal code, you should always use Data which initializes RawData
@@ -228,6 +229,8 @@ public:
     QString name(QObject *);
     QString name(const QMetaObject *);
 
+    void markAsOverrideOf(QQmlPropertyData *predecessor);
+
 private:
     friend class QQmlPropertyCache;
     void lazyLoad(const QMetaProperty &, QQmlEngine *engine = 0);
@@ -274,10 +277,12 @@ public:
     const QMetaObject *createMetaObject();
     const QMetaObject *firstCppMetaObject() const;
 
-    inline QQmlPropertyData *property(const QHashedV8String &) const;
-    QQmlPropertyData *property(const QHashedStringRef &) const;
-    QQmlPropertyData *property(const QHashedCStringRef &) const;
-    QQmlPropertyData *property(const QString &) const;
+    template<typename K>
+    QQmlPropertyData *property(const K &key, QObject *object, QQmlContextData *context) const
+    {
+        return findProperty(stringCache.find(key), object, context);
+    }
+
     QQmlPropertyData *property(int) const;
     QQmlPropertyData *method(int) const;
     QQmlPropertyData *signal(int) const;
@@ -293,9 +298,9 @@ public:
 
     inline QQmlEngine *qmlEngine() const;
     static QQmlPropertyData *property(QQmlEngine *, QObject *, const QString &,
-                                              QQmlPropertyData &);
+                                              QQmlContextData *, QQmlPropertyData &);
     static QQmlPropertyData *property(QQmlEngine *, QObject *, const QHashedV8String &,
-                                              QQmlPropertyData &);
+                                              QQmlContextData *, QQmlPropertyData &);
     static int *methodParameterTypes(QObject *, int index, QVarLengthArray<int, 9> &dummy,
                                      QByteArray *unknownTypeError);
     static int methodReturnType(QObject *, const QQmlPropertyData &data,
@@ -341,11 +346,30 @@ private:
     v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);
 
     typedef QVector<QQmlPropertyData> IndexCache;
-    typedef QStringHash<QQmlPropertyData *> StringCache;
+    typedef QStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;
     typedef QVector<int> AllowedRevisionCache;
+
+    QQmlPropertyData *findProperty(StringCache::ConstIterator it, QObject *, QQmlContextData *) const;
+    QQmlPropertyData *findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *, QQmlContextData *) const;
+
+    QQmlPropertyData *ensureResolved(QQmlPropertyData*) const;
 
     void resolve(QQmlPropertyData *) const;
     void updateRecur(QQmlEngine *, const QMetaObject *);
+
+    template<typename K>
+    QQmlPropertyData *findNamedProperty(const K &key)
+    {
+        StringCache::mapped_type *it = stringCache.value(key);
+        return it ? it->second : 0;
+    }
+
+    template<typename K>
+    void setNamedProperty(const K &key, int index, QQmlPropertyData *data, bool isOverride)
+    {
+        stringCache.insert(key, qMakePair(index, data));
+        _hasPropertyOverrides |= isOverride;
+    }
 
     QQmlEngine *engine;
 
@@ -361,7 +385,8 @@ private:
     AllowedRevisionCache allowedRevisionCache;
     v8::Persistent<v8::Function> constructor;
 
-    bool _ownMetaObject;
+    bool _hasPropertyOverrides : 1;
+    bool _ownMetaObject : 1;
     const QMetaObject *_metaObject;
     QByteArray _dynamicClassName;
     QByteArray _dynamicStringData;
@@ -463,13 +488,6 @@ bool QQmlPropertyCache::isAllowedInRevision(QQmlPropertyData *data) const
 QQmlEngine *QQmlPropertyCache::qmlEngine() const
 {
     return engine;
-}
-
-QQmlPropertyData *QQmlPropertyCache::property(const QHashedV8String &str) const
-{
-    QQmlPropertyData **rv = stringCache.value(str);
-    if (rv && (*rv)->notFullyResolved()) resolve(*rv);
-    return rv?*rv:0;
 }
 
 int QQmlPropertyCache::propertyCount() const

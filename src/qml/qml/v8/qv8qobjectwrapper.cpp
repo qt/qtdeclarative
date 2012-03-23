@@ -479,6 +479,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
 v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object, 
                                                      v8::Handle<v8::Value> *objectHandle, 
                                                      const QHashedV8String &property,
+                                                     QQmlContextData *context,
                                                      QV8QObjectWrapper::RevisionMode revisionMode)
 {
     // XXX More recent versions of V8 introduced "Callable" objects.  It is possible that these
@@ -525,9 +526,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     {
         QQmlData *ddata = QQmlData::get(object, false);
         if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(property);
+            result = ddata->propertyCache->property(property, object, context);
         else
-            result = QQmlPropertyCache::property(engine->engine(), object, property, local);
+            result = QQmlPropertyCache::property(engine->engine(), object, property, context, local);
     }
 
     if (!result)
@@ -708,7 +709,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     }
 }
 
-bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QHashedV8String &property,
+bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QHashedV8String &property, QQmlContextData *context,
                                     v8::Handle<v8::Value> value, QV8QObjectWrapper::RevisionMode revisionMode)
 {
     if (engine->qobjectWrapper()->m_toStringString == property ||
@@ -720,7 +721,7 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
 
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
-    result = QQmlPropertyCache::property(engine->engine(), object, property, local);
+    result = QQmlPropertyCache::property(engine->engine(), object, property, context, local);
 
     if (!result)
         return false;
@@ -756,16 +757,16 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property,
     QHashedV8String propertystring(property);
 
     QV8Engine *v8engine = resource->engine;
+    QQmlContextData *context = v8engine->callingContext();
+
     v8::Handle<v8::Value> This = info.This();
     v8::Handle<v8::Value> result = GetProperty(v8engine, object, &This, propertystring, 
-                                               QV8QObjectWrapper::IgnoreRevision);
+                                               context, QV8QObjectWrapper::IgnoreRevision);
     if (!result.IsEmpty())
         return result;
 
     if (QV8Engine::startsWithUpper(property)) {
         // Check for attached properties
-        QQmlContextData *context = v8engine->callingContext();
-
         if (context && context->imports) {
             QQmlTypeNameCache::Result r = context->imports->query(propertystring);
 
@@ -800,7 +801,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Local<v8::String> property,
     QHashedV8String propertystring(property);
 
     QV8Engine *v8engine = resource->engine;
-    bool result = SetProperty(v8engine, object, propertystring, value, QV8QObjectWrapper::IgnoreRevision);
+    QQmlContextData *context = v8engine->callingContext();
+    bool result = SetProperty(v8engine, object, propertystring, context, value, QV8QObjectWrapper::IgnoreRevision);
 
     if (!result) {
         QString error = QLatin1String("Cannot assign to non-existent property \"") +
@@ -822,12 +824,13 @@ v8::Handle<v8::Integer> QV8QObjectWrapper::Query(v8::Local<v8::String> property,
 
     QV8Engine *engine = resource->engine;
     QObject *object = resource->object;
+    QQmlContextData *context = engine->callingContext();
 
     QHashedV8String propertystring(property);
 
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
-    result = QQmlPropertyCache::property(engine->engine(), object, propertystring, local);
+    result = QQmlPropertyCache::property(engine->engine(), object, propertystring, context, local);
 
     if (!result)
         return v8::Handle<v8::Integer>();
@@ -960,35 +963,37 @@ v8::Local<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *
     if (constructor.IsEmpty()) {
         v8::Local<v8::FunctionTemplate> ft;
 
-        QString toString = QLatin1String("toString");
-        QString destroy = QLatin1String("destroy");
+        const QHashedString toString(QStringLiteral("toString"));
+        const QHashedString destroy(QStringLiteral("destroy"));
 
-        // As we use hash linking, it is possible that iterating over the values can give duplicates.
-        // To combat this, we must unique'ify our properties.
+        // As we use hash linking, or with property overrides, it is possible that iterating
+        // over the values can yield duplicates.  To combat this, we must unique'ify our properties.
+        const bool checkForDuplicates = stringCache.isLinked() || _hasPropertyOverrides;
+
         StringCache uniqueHash;
-        if (stringCache.isLinked())
+        if (checkForDuplicates)
             uniqueHash.reserve(stringCache.count());
 
         // XXX TODO: Enables fast property accessors.  These more than double the property access 
         // performance, but the  cost of setting up this structure hasn't been measured so 
         // its not guarenteed that this is a win overall.  We need to try and measure the cost.
         for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) {
-            if (stringCache.isLinked()) {
+            if (iter.equals(toString) || iter.equals(destroy))
+                continue;
+
+            if (checkForDuplicates) {
                 if (uniqueHash.contains(iter))
                     continue;
                 uniqueHash.insert(iter);
             }
 
-            QQmlPropertyData *property = *iter;
+            QQmlPropertyData *property = (*iter).second;
             if (property->notFullyResolved()) resolve(property);
 
             if (property->isFunction())
                 continue;
 
             v8::AccessorGetter fastgetter = 0;
-            v8::AccessorSetter fastsetter = FastValueSetter;
-            if (!property->isWritable())
-                fastsetter = FastValueSetterReadOnly;
 
             if (property->isQObject()) 
                 fastgetter = FAST_GETTER_FUNCTION(property, QObject*);
@@ -1006,10 +1011,6 @@ v8::Local<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *
                 fastgetter = FAST_GETTER_FUNCTION(property, double);
 
             if (fastgetter) {
-                QString name = iter.key();
-                if (name == toString || name == destroy)
-                    continue;
-
                 if (ft.IsEmpty()) {
                     ft = v8::FunctionTemplate::New();
                     ft->InstanceTemplate()->SetFallbackPropertyHandler(QV8QObjectWrapper::Getter, 
@@ -1020,11 +1021,15 @@ v8::Local<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *
                     ft->InstanceTemplate()->SetHasExternalResource(true);
                 }
 
+                v8::AccessorSetter fastsetter = FastValueSetter;
+                if (!property->isWritable())
+                    fastsetter = FastValueSetterReadOnly;
+
                 // We wrap the raw QQmlPropertyData pointer here.  This is safe as the
                 // pointer will remain valid at least as long as the lifetime of any QObject's of
                 // this type and the property accessor checks if the object is 0 (deleted) before
                 // dereferencing the pointer.
-                ft->InstanceTemplate()->SetAccessor(engine->toString(name), fastgetter, fastsetter,
+                ft->InstanceTemplate()->SetAccessor(engine->toString(iter.key()), fastgetter, fastsetter,
                                                     v8::External::Wrap(property));
             }
         }
@@ -1371,13 +1376,13 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
-    if (signalIndex == -1)
+    if (signalIndex < 0)
         V8THROW_ERROR("Function.prototype.connect: this object is not a signal");
 
     if (!signalObject)
         V8THROW_ERROR("Function.prototype.connect: cannot connect to deleted QObject");
 
-    if (signalIndex < 0 || signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
+    if (signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
         V8THROW_ERROR("Function.prototype.connect: this object is not a signal");
 
     v8::Local<v8::Value> functionValue;

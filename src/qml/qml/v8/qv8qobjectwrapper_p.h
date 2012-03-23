@@ -100,8 +100,8 @@ public:
     static QObject *toQObject(QV8ObjectResource *);
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
-    inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV8String &, RevisionMode);
-    inline bool setProperty(QObject *, const QHashedV8String &, v8::Handle<v8::Value>, RevisionMode);
+    inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV8String &, QQmlContextData *, RevisionMode);
+    inline bool setProperty(QObject *, const QHashedV8String &, QQmlContextData *, v8::Handle<v8::Value>, RevisionMode);
 
     void registerWeakQObjectReference(QV8QObjectResource *resource)
     {
@@ -121,8 +121,8 @@ private:
     v8::Local<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
     bool deleteWeakQObject(QV8QObjectResource *resource, bool calledFromEngineDtor = false);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
-                                             const QHashedV8String &, QV8QObjectWrapper::RevisionMode);
-    static bool SetProperty(QV8Engine *, QObject *, const QHashedV8String &,
+                                             const QHashedV8String &, QQmlContextData *, QV8QObjectWrapper::RevisionMode);
+    static bool SetProperty(QV8Engine *, QObject *, const QHashedV8String &, QQmlContextData *,
                             v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
     static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
                                         const v8::AccessorInfo &info);
@@ -156,24 +156,24 @@ private:
 };
 
 v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV8String &string,  
-                                                     RevisionMode mode)
+                                                     QQmlContextData *context, RevisionMode mode)
 {
     QQmlData *dd = QQmlData::get(object, false);
     if (!dd || !dd->propertyCache || m_toStringString == string || m_destroyString == string ||
-        dd->propertyCache->property(string)) {
-        return GetProperty(m_engine, object, 0, string, mode);
+        dd->propertyCache->property(string, object, context)) {
+        return GetProperty(m_engine, object, 0, string, context, mode);
     } else {
         return v8::Handle<v8::Value>();
     }
 }
 
 bool QV8QObjectWrapper::setProperty(QObject *object, const QHashedV8String &string, 
-                                    v8::Handle<v8::Value> value, RevisionMode mode)
+                                    QQmlContextData *context, v8::Handle<v8::Value> value, RevisionMode mode)
 {
     QQmlData *dd = QQmlData::get(object, false);
     if (!dd || !dd->propertyCache || m_toStringString == string || m_destroyString == string ||
-        dd->propertyCache->property(string)) {
-        return SetProperty(m_engine, object, string, value, mode);
+        dd->propertyCache->property(string, object, context)) {
+        return SetProperty(m_engine, object, string, context, value, mode);
     } else {
         return false;
     }

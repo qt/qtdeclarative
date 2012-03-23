@@ -82,6 +82,8 @@ public:
     inline T *operator->() const;
     inline T *operator*() const;
 
+    inline T *data() const;
+
 private:
     quintptr ptr_value;
 
@@ -221,6 +223,12 @@ T *QFlagPointer<T>::operator->() const
 
 template<typename T>
 T *QFlagPointer<T>::operator*() const
+{
+    return (T *)(ptr_value & ~FlagsMask);
+}
+
+template<typename T>
+T *QFlagPointer<T>::data() const
 {
     return (T *)(ptr_value & ~FlagsMask);
 }

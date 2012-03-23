@@ -300,6 +300,9 @@ void registerTypes()
     qmlRegisterSingletonType<FallbackBindingsObject>("Qt.test.fallbackBindingsObject", 1, 0, "Fallback", fallback_bindings_object);
     qmlRegisterSingletonType<FallbackBindingsObject>("Qt.test.fallbackBindingsDerived", 1, 0, "Fallback", fallback_bindings_derived);
 
+    qmlRegisterType<FallbackBindingsObject>("Qt.test.fallbackBindingsItem", 1, 0, "FallbackBindingsType");
+    qmlRegisterType<FallbackBindingsDerived>("Qt.test.fallbackBindingsItem", 1, 0, "FallbackBindingsDerivedType");
+
     qmlRegisterType<FallbackBindingsTypeObject>("Qt.test.fallbackBindingsObject", 1, 0, "FallbackBindingsType");
     qmlRegisterType<FallbackBindingsTypeDerived>("Qt.test.fallbackBindingsDerived", 1, 0, "FallbackBindingsType");
 

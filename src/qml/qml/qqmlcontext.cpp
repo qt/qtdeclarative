@@ -385,7 +385,7 @@ QVariant QQmlContext::contextProperty(const QString &name) const
             QObject *obj = data->contextObject;
             QQmlPropertyData local;
             QQmlPropertyData *property =
-                QQmlPropertyCache::property(data->engine, obj, name, local);
+                QQmlPropertyCache::property(data->engine, obj, name, data, local);
 
             if (property) value = obj->metaObject()->property(property->coreIndex).read(obj);
         }

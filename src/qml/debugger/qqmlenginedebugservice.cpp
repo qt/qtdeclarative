@@ -719,7 +719,7 @@ bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
 
     QQmlPropertyData dummy;
     QQmlPropertyData *prop =
-            QQmlPropertyCache::property(context->engine(), object, method, dummy);
+            QQmlPropertyCache::property(context->engine(), object, method, contextData, dummy);
 
     if (!prop || !prop->isVMEFunction())
         return false;

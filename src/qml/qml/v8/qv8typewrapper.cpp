@@ -165,6 +165,8 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
         return v8::Undefined();
 
     QV8Engine *v8engine = resource->engine;
+    QQmlContextData *context = v8engine->callingContext();
+
     QObject *object = resource->object;
 
     QHashedV8String propertystring(property);
@@ -183,7 +185,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
         } else if (resource->object) {
             QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
             if (ao) 
-                return v8engine->qobjectWrapper()->getProperty(ao, propertystring, 
+                return v8engine->qobjectWrapper()->getProperty(ao, propertystring, context,
                                                                QV8QObjectWrapper::IgnoreRevision);
 
             // Fall through to return empty handle
@@ -241,7 +243,8 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                 }
 
                 // check for property.
-                v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(singletonType->qobjectApi, propertystring, QV8QObjectWrapper::IgnoreRevision);
+                v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(singletonType->qobjectApi, propertystring,
+                                                                                   context, QV8QObjectWrapper::IgnoreRevision);
                 return rv;
             } else if (!singletonType->scriptApi.isUndefined()) {
                 // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
@@ -272,6 +275,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
         return value;
 
     QV8Engine *v8engine = resource->engine;
+    QQmlContextData *context = v8engine->callingContext();
 
     QHashedV8String propertystring(property);
 
@@ -280,7 +284,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
         QObject *object = resource->object;
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
         if (ao) 
-            v8engine->qobjectWrapper()->setProperty(ao, propertystring, value, 
+            v8engine->qobjectWrapper()->setProperty(ao, propertystring, context, value,
                                                     QV8QObjectWrapper::IgnoreRevision);
     } else if (resource->typeNamespace) {
         if (QQmlMetaType::SingletonInstance *singletonType = resource->typeNamespace->singletonType(resource->importNamespace)) {
@@ -295,7 +299,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
             }
 
             if (singletonType->qobjectApi) {
-                v8engine->qobjectWrapper()->setProperty(singletonType->qobjectApi, propertystring, value,
+                v8engine->qobjectWrapper()->setProperty(singletonType->qobjectApi, propertystring, context, value,
                                                         QV8QObjectWrapper::IgnoreRevision);
             } else if (!singletonType->scriptApi.isUndefined()) {
                 QScopedPointer<QJSValuePrivate> setvalp(new QJSValuePrivate(v8engine, value));

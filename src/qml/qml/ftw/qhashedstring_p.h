@@ -144,6 +144,7 @@ public:
 
     inline quint32 hash() const;
 
+    inline QChar *data();
     inline const QChar &at(int) const;
     inline const QChar *constData() const;
     bool startsWith(const QString &) const;
@@ -246,36 +247,44 @@ public:
         QStringData *strData;
     };
 
+    inline QHashedString key() const
+    {
+        if (isQString())
+            return QHashedString(QString((QChar *)strData->data(), length), hash);
+
+        return QHashedString(QString::fromLatin1(ckey, length), hash);
+    }
+
     bool isQString() const { return next.flag(); }
     void setQString(bool v) { if (v) next.setFlag(); else next.clearFlag(); }
 
     inline char *cStrData() const { return (char *)ckey; }
     inline uint16_t *utf16Data() const { return (uint16_t *)strData->data(); }
 
-    inline bool equals(v8::Handle<v8::String> string) {
+    inline bool equals(v8::Handle<v8::String> string) const {
         return isQString()?string->Equals(utf16Data(), length):
                            string->Equals(cStrData(), length);
     }
 
-    inline bool symbolEquals(const QHashedV8String &string) {
+    inline bool symbolEquals(const QHashedV8String &string) const {
         Q_ASSERT(string.symbolId() != 0);
         return length == string.length() && hash == string.hash() && 
                (string.symbolId() == symbolId || equals(string.string()));
     }
 
-    inline bool equals(const QHashedV8String &string) {
+    inline bool equals(const QHashedV8String &string) const {
         return length == string.length() && hash == string.hash() && 
                equals(string.string());
     }
 
-    inline bool equals(const QHashedStringRef &string) {
+    inline bool equals(const QHashedStringRef &string) const {
         return length == string.length() && 
                hash == string.hash() && 
                (isQString()?QHashedString::compare(string.constData(), (QChar *)utf16Data(), length):
                             QHashedString::compare(string.constData(), cStrData(), length));
     }
 
-    inline bool equals(const QHashedCStringRef &string) {
+    inline bool equals(const QHashedCStringRef &string) const {
         return length == string.length() && 
                hash == string.hash() && 
                (isQString()?QHashedString::compare((QChar *)utf16Data(), string.constData(), length):
@@ -306,20 +315,61 @@ public:
         QStringHashNode *n;
         void *p;
     };
-    void rehashToBits(short, IteratorData, IteratorData (*Iterate)(const IteratorData &),
-                      QStringHashNode *skip = 0);
-    void rehashToSize(int, IteratorData, IteratorData (*Iterate)(const IteratorData &),
-                      QStringHashNode *skip = 0);
+    void rehashToBits(short);
+    void rehashToSize(int);
+    void rehashNode(QStringHashNode **newBuckets, int nb, QStringHashNode *node);
 
 private:
     QStringHashData(const QStringHashData &);
     QStringHashData &operator=(const QStringHashData &);
 };
 
-template<class T>
-class QStringHash
+// For a supplied key type, in what form do we need to keep a hashed version?
+template<typename T>
+struct HashedForm {};
+
+template<> struct HashedForm<QString> { typedef QHashedString Type; };
+template<> struct HashedForm<QStringRef> { typedef QHashedStringRef Type; };
+template<> struct HashedForm<QHashedString> { typedef const QHashedString &Type; };
+template<> struct HashedForm<QHashedV8String> { typedef const QHashedV8String &Type; };
+template<> struct HashedForm<QHashedStringRef> { typedef const QHashedStringRef &Type; };
+template<> struct HashedForm<QLatin1String> { typedef QHashedCStringRef Type; };
+template<> struct HashedForm<QHashedCStringRef> { typedef const QHashedCStringRef &Type; };
+
+class QStringHashBase
 {
 public:
+    static HashedForm<QString>::Type hashedString(const QString &s) { return QHashedString(s);}
+    static HashedForm<QStringRef>::Type hashedString(const QStringRef &s) { return QHashedStringRef(s.constData(), s.size());}
+    static HashedForm<QHashedString>::Type hashedString(const QHashedString &s) { return s; }
+    static HashedForm<QHashedV8String>::Type hashedString(const QHashedV8String &s) { return s; }
+    static HashedForm<QHashedStringRef>::Type hashedString(const QHashedStringRef &s) { return s; }
+
+    static HashedForm<QLatin1String>::Type hashedString(const QLatin1String &s) { return QHashedCStringRef(s.data(), s.size()); }
+    static HashedForm<QHashedCStringRef>::Type hashedString(const QHashedCStringRef &s) { return s; }
+
+    static const QString &toQString(const QString &s) { return s; }
+    static const QString &toQString(const QHashedString &s) { return s; }
+    static QString toQString(const QHashedV8String &s) { return s.toString(); }
+    static QString toQString(const QHashedStringRef &s) { return s.toString(); }
+
+    static QString toQString(const QLatin1String &s) { return QString(s); }
+    static QString toQString(const QHashedCStringRef &s) { return s.toUtf16(); }
+
+    static inline quint32 hashOf(const QHashedStringRef &s) { return s.hash(); }
+    static inline quint32 hashOf(const QHashedV8String &s) { return s.hash(); }
+
+    template<typename K>
+    static inline quint32 hashOf(const K &key) { return hashedString(key).hash(); }
+};
+
+template<class T>
+class QStringHash : public QStringHashBase
+{
+public:
+    typedef QHashedString key_type;
+    typedef T mapped_type;
+
     struct Node : public QStringHashNode {
         Node(const QHashedString &key, const T &value) : QStringHashNode(key), value(value) {}
         Node(const QHashedCStringRef &key, const T &value) : QStringHashNode(key), value(value) {}
@@ -347,21 +397,29 @@ public:
     ReservedNodePool *nodePool;
     const QStringHash<T> *link;
 
-    inline Node *findNode(const QString &) const;
-    inline Node *findNode(const QHashedString &) const;
-    inline Node *findNode(const QHashedStringRef &) const;
-    inline Node *findNode(const QHashedCStringRef &) const;
-    inline Node *findNode(const QHashedV8String &) const;
-    inline Node *findSymbolNode(const QHashedV8String &) const;
-    inline Node *createNode(const Node &o);
-    inline Node *createNode(const QHashedString &, const T &);
-    inline Node *createNode(const QHashedCStringRef &, const T &);
+    template<typename K>
+    inline Node *findNode(const K &) const;
 
-    inline Node *takeNode(const QHashedString &key, const T &value);
-    inline Node *takeNode(const QHashedCStringRef &key, const T &value);
+    inline Node *findSymbolNode(const QHashedV8String &) const;
+
+    inline Node *createNode(const Node &o);
+
+    template<typename K>
+    inline Node *createNode(const K &, const T &);
+
+    inline Node *insertNode(Node *, quint32);
+
+    inline void initializeNode(Node *, const QHashedString &key);
+    inline void initializeNode(Node *, const QHashedCStringRef &key);
+
+    template<typename K>
+    inline Node *takeNode(const K &key, const T &value);
+
     inline Node *takeNode(const Node &o);
 
     inline void copy(const QStringHash<T> &);
+
+    void copyNode(const QStringHashNode *otherNode);
 
     inline QStringHashData::IteratorData iterateFirst() const;
     static inline QStringHashData::IteratorData iterateNext(const QStringHashData::IteratorData &);
@@ -393,6 +451,9 @@ public:
         inline bool operator==(const ConstIterator &o) const;
         inline bool operator!=(const ConstIterator &o) const;
 
+        template<typename K>
+        inline bool equals(const K &) const;
+
         inline QHashedString key() const;
         inline const T &value() const;
         inline const T &operator*() const;
@@ -402,32 +463,30 @@ public:
         QStringHashData::IteratorData d;
     };
 
-    inline void insert(const QString &, const T &);
-    inline void insert(const QHashedString &, const T &);
-    inline void insert(const QHashedStringRef &, const T &);
-    inline void insert(const QHashedCStringRef &, const T &);
+    template<typename K>
+    inline void insert(const K &, const T &);
+
     inline void insert(const ConstIterator  &);
 
-    inline T *value(const QString &) const;
-    inline T *value(const QHashedString &) const;
-    inline T *value(const QHashedStringRef &) const;
-    inline T *value(const QHashedV8String &) const;
-    inline T *value(const QHashedCStringRef &) const;
+    template<typename K>
+    inline T *value(const K &) const;
+
+    inline T *value(const QHashedV8String &string) const;
     inline T *value(const ConstIterator &) const;
 
-    inline bool contains(const QString &) const;
-    inline bool contains(const QHashedString &) const;
-    inline bool contains(const QHashedStringRef &) const;
-    inline bool contains(const QHashedCStringRef &) const;
-    inline bool contains(const ConstIterator &) const;
+    template<typename K>
+    inline bool contains(const K &) const;
 
-    inline T &operator[](const QString &);
-    inline T &operator[](const QHashedString &);
-    inline T &operator[](const QHashedStringRef &);
-    inline T &operator[](const QHashedCStringRef &);
+    template<typename K>
+    inline T &operator[](const K &);
 
     inline ConstIterator begin() const;
     inline ConstIterator end() const;
+
+    inline ConstIterator iterator(Node *n) const;
+
+    template<typename K>
+    inline ConstIterator find(const K &) const;
 
     inline void reserve(int);
 };
@@ -480,7 +539,7 @@ void QStringHash<T>::linkAndReserve(const QStringHash<T> &other, int additionalR
 
     if (other.count()) {
         data.size = other.data.size;
-        data.rehashToSize(other.count() + additionalReserve, iterateFirst(), iterateNext);
+        data.rehashToSize(other.count() + additionalReserve);
 
         if (data.numBuckets == other.data.numBuckets) {
             nodePool = new ReservedNodePool;
@@ -493,11 +552,8 @@ void QStringHash<T>::linkAndReserve(const QStringHash<T> &other, int additionalR
             const_cast<QStringHash<T>&>(other).data.linkCount++;
 #endif
 
-            for (int ii = 0; ii < data.numBuckets; ++ii) {
-                data.buckets[ii] = 0;
-                Node *n = (Node *)other.data.buckets[ii];
-                data.buckets[ii] = n;
-            }
+            for (int ii = 0; ii < data.numBuckets; ++ii)
+                data.buckets[ii] = (Node *)other.data.buckets[ii];
 
             link = &other;
             return;
@@ -538,7 +594,7 @@ void QStringHash<T>::clear()
         delete c;
     }
     // Delete the pool allocated nodes
-    if (nodePool) delete nodePool; 
+    if (nodePool) delete nodePool;
     delete [] data.buckets;
 
     data.buckets = 0;
@@ -576,37 +632,34 @@ bool QStringHash<T>::isLinked() const
 }
 
 template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::takeNode(const QHashedString &key, const T &value)
+void QStringHash<T>::initializeNode(Node *node, const QHashedString &key)
 {
-    if (nodePool && nodePool->used != nodePool->count) {
-        Node *rv = nodePool->nodes + nodePool->used++;
-        rv->length = key.length();
-        rv->hash = key.hash();
-        rv->strData = const_cast<QHashedString &>(key).data_ptr();
-        rv->strData->ref.ref();
-        rv->setQString(true);
-        rv->value = value;
-        return rv;
-    } else {
-        NewedNode *rv = new NewedNode(key, value);
-        rv->nextNewed = newedNodes;
-        newedNodes = rv;
-        return rv;
-    }
+    node->length = key.length();
+    node->hash = key.hash();
+    node->strData = const_cast<QHashedString &>(key).data_ptr();
+    node->strData->ref.ref();
+    node->setQString(true);
 }
 
 template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::takeNode(const QHashedCStringRef &key, const T &value)
+void QStringHash<T>::initializeNode(Node *node, const QHashedCStringRef &key)
+{
+    node->length = key.length();
+    node->hash = key.hash();
+    node->ckey = key.constData();
+}
+
+template<class T>
+template<class K>
+typename QStringHash<T>::Node *QStringHash<T>::takeNode(const K &key, const T &value)
 {
     if (nodePool && nodePool->used != nodePool->count) {
         Node *rv = nodePool->nodes + nodePool->used++;
-        rv->length = key.length();
-        rv->hash = key.hash();
-        rv->ckey = key.constData();
+        initializeNode(rv, hashedString(key));
         rv->value = value;
         return rv;
     } else {
-        NewedNode *rv = new NewedNode(key, value);
+        NewedNode *rv = new NewedNode(hashedString(key), value);
         rv->nextNewed = newedNodes;
         newedNodes = rv;
         return rv;
@@ -639,6 +692,20 @@ typename QStringHash<T>::Node *QStringHash<T>::takeNode(const Node &o)
 }
 
 template<class T>
+void QStringHash<T>::copyNode(const QStringHashNode *otherNode)
+{
+    // Copy the predecessor before the successor
+    QStringHashNode *next = otherNode->next.data();
+    if (next)
+        copyNode(next);
+
+    Node *mynode = takeNode(*(const Node *)otherNode);
+    int bucket = mynode->hash % data.numBuckets;
+    mynode->next = data.buckets[bucket];
+    data.buckets[bucket] = mynode;
+}
+
+template<class T>
 void QStringHash<T>::copy(const QStringHash<T> &other)
 {
     Q_ASSERT(data.size == 0);
@@ -646,28 +713,13 @@ void QStringHash<T>::copy(const QStringHash<T> &other)
     data.size = other.data.size;
 
     // Ensure buckets array is created
-    data.rehashToBits(data.numBits, iterateFirst(), iterateNext);
+    data.rehashToBits(data.numBits);
 
-    if (other.link) {
-        for (ConstIterator iter = other.begin(); iter != other.end(); ++iter) {
-            Node *o = iter.node();
-            Node *n = o->isQString()?findNode(QHashedStringRef((QChar *)o->strData->data(), o->length, o->hash)):
-                                     findNode(QHashedCStringRef(o->ckey, o->length, o->hash));
-            if (!n) {
-                Node *mynode = takeNode(*o);
-                int bucket = mynode->hash % data.numBuckets;
-                mynode->next = data.buckets[bucket];
-                data.buckets[bucket] = mynode;
-            }
-        }
-    } else {
-        for (ConstIterator iter = other.begin(); iter != other.end(); ++iter) {
-            Node *o = iter.node();
-            Node *mynode = takeNode(*o);
-            int bucket = mynode->hash % data.numBuckets;
-            mynode->next = data.buckets[bucket];
-            data.buckets[bucket] = mynode;
-        }
+    // Preserve the existing order within buckets
+    for (int i = 0; i < other.data.numBuckets; ++i) {
+        QStringHashNode *bucket = other.data.buckets[i];
+        if (bucket)
+            copyNode(bucket);
     }
 }
 
@@ -719,14 +771,61 @@ QStringHashData::IteratorData QStringHash<T>::iterateFirst() const
 }
 
 template<class T>
+typename QStringHash<T>::ConstIterator QStringHash<T>::iterator(Node *n) const
+{
+    if (!n)
+        return ConstIterator();
+
+    const QStringHash<T> *container = this;
+
+    if (link) {
+        // This node could be in the linked hash
+        if ((n >= nodePool->nodes) && (n < (nodePool->nodes + nodePool->used))) {
+            // The node is in this hash
+        } else if ((n >= link->nodePool->nodes) && (n < (link->nodePool->nodes + link->nodePool->used))) {
+            // The node is in the linked hash
+            container = link;
+        } else {
+            const NewedNode *ln = link->newedNodes;
+            while (ln) {
+                if (ln == n) {
+                    // This node is in the linked hash's newed list
+                    container = link;
+                    break;
+                }
+                ln = ln->nextNewed;
+            }
+        }
+    }
+
+    QStringHashData::IteratorData rv;
+    rv.n = n;
+    rv.p = const_cast<QStringHash<T> *>(container);
+    return ConstIterator(rv);
+}
+
+template<class T>
 typename QStringHash<T>::Node *QStringHash<T>::createNode(const Node &o)
 {
     Node *n = takeNode(o);
+    return insertNode(n, n->hash);
+}
 
+template<class T>
+template<class K>
+typename QStringHash<T>::Node *QStringHash<T>::createNode(const K &key, const T &value)
+{
+    Node *n = takeNode(key, value);
+    return insertNode(n, hashOf(key));
+}
+
+template<class T>
+typename QStringHash<T>::Node *QStringHash<T>::insertNode(Node *n, quint32 hash)
+{
     if (data.size >= data.numBuckets)
-        data.rehashToBits(data.numBits + 1, iterateFirst(), iterateNext, n);
+        data.rehashToBits(data.numBits + 1);
 
-    int bucket = n->hash % data.numBuckets;
+    int bucket = hash % data.numBuckets;
     n->next = data.buckets[bucket];
     data.buckets[bucket] = n;
 
@@ -736,52 +835,8 @@ typename QStringHash<T>::Node *QStringHash<T>::createNode(const Node &o)
 }
 
 template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::createNode(const QHashedString &key, const T &value)
-{
-    Node *n = takeNode(key, value);
-
-    if (data.size >= data.numBuckets)
-        data.rehashToBits(data.numBits + 1, iterateFirst(), iterateNext, n);
-
-    int bucket = key.hash() % data.numBuckets;
-    n->next = data.buckets[bucket];
-    data.buckets[bucket] = n;
-
-    data.size++;
-
-    return n;
-}
-
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::createNode(const QHashedCStringRef &key, const T &value)
-{
-    Node *n = takeNode(key, value);
-
-    if (data.size >= data.numBuckets)
-        data.rehashToBits(data.numBits + 1, iterateFirst(), iterateNext, n);
-
-    int bucket = key.hash() % data.numBuckets;
-    n->next = data.buckets[bucket];
-    data.buckets[bucket] = n;
-
-    data.size++; 
-
-    return n;
-}
-
-template<class T>
-void QStringHash<T>::insert(const QString &key, const T &value)
-{
-    QHashedStringRef ch(key);
-    // If this is a linked hash, we can't rely on owning the node, so we always
-    // create a new one.
-    Node *n = link?0:findNode(key);
-    if (n) n->value = value;
-    else createNode(QHashedString(key, ch.hash()), value);
-}
-
-template<class T>
-void QStringHash<T>::insert(const QHashedString &key, const T &value)
+template<class K>
+void QStringHash<T>::insert(const K &key, const T &value)
 {
     // If this is a linked hash, we can't rely on owning the node, so we always
     // create a new one.
@@ -791,83 +846,19 @@ void QStringHash<T>::insert(const QHashedString &key, const T &value)
 }
 
 template<class T>
-void QStringHash<T>::insert(const QHashedStringRef &key, const T &value)
+void QStringHash<T>::insert(const ConstIterator &iter)
 {
-    // If this is a linked hash, we can't rely on owning the node, so we always
-    // create a new one.
-    Node *n = link?0:findNode(key);
-    if (n) n->value = value;
-    else createNode(key, value);
+    insert(iter.key(), iter.value());
 }
 
 template<class T>
-void QStringHash<T>::insert(const QHashedCStringRef &key, const T &value)
+template<class K>
+typename QStringHash<T>::Node *QStringHash<T>::findNode(const K &key) const
 {
-    // If this is a linked hash, we can't rely on owning the node, so we always
-    // create a new one.
-    Node *n = link?0:findNode(key);
-    if (n) n->value = value;
-    else createNode(key, value);
-}
+    QStringHashNode *node = data.numBuckets?data.buckets[hashOf(key) % data.numBuckets]:0;
 
-template<class T>
-void QStringHash<T>::insert(const ConstIterator &key)
-{
-    // If this is a linked hash, we can't rely on owning the node, so we always
-    // create a new one.
-    if (key.node()->isQString()) {
-        QHashedStringRef str((QChar *)key.node()->strData->data(), key.node()->length,
-                             key.node()->hash);
-
-        Node *n = link?0:findNode(str);
-        if (n) n->value = key.node()->value;
-        else createNode(*key.node());
-    } else {
-        QHashedCStringRef str(key.node()->ckey, key.node()->length, key.node()->hash);
-
-        Node *n = link?0:findNode(str);
-        if (n) n->value = key.node()->value;
-        else createNode(str, key.node()->value);
-    }
-}
-
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(const QString &string) const
-{
-    return findNode(QHashedStringRef(string));
-}
-
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedString &string) const
-{
-    return findNode(QHashedStringRef(string.constData(), string.length(), string.hash()));
-}
-
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedStringRef &string) const
-{
-    QStringHashNode *node = data.numBuckets?data.buckets[string.hash() % data.numBuckets]:0;
-    while (node && !node->equals(string))
-        node = (*node->next);
-
-    return (Node *)node;
-}
-
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedCStringRef &string) const
-{
-    QStringHashNode *node = data.numBuckets?data.buckets[string.hash() % data.numBuckets]:0;
-    while (node && !node->equals(string))
-        node = (*node->next);
-
-    return (Node *)node;
-}
-
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedV8String &string) const
-{
-    QStringHashNode *node = data.numBuckets?data.buckets[string.hash() % data.numBuckets]:0;
-    while (node && !node->equals(string))
+    typename HashedForm<K>::Type hashedKey(hashedString(key));
+    while (node && !node->equals(hashedKey))
         node = (*node->next);
 
     return (Node *)node;
@@ -878,7 +869,7 @@ typename QStringHash<T>::Node *QStringHash<T>::findSymbolNode(const QHashedV8Str
 {
     Q_ASSERT(string.symbolId() != 0);
 
-    QStringHashNode *node = data.numBuckets?data.buckets[string.hash() % data.numBuckets]:0;
+    QStringHashNode *node = data.numBuckets?data.buckets[hashOf(string) % data.numBuckets]:0;
     while (node && !node->symbolEquals(string))
         node = (*node->next);
 
@@ -889,28 +880,8 @@ typename QStringHash<T>::Node *QStringHash<T>::findSymbolNode(const QHashedV8Str
 }
 
 template<class T>
-T *QStringHash<T>::value(const QString &key) const
-{
-    Node *n = findNode(key);
-    return n?&n->value:0;
-}
-
-template<class T>
-T *QStringHash<T>::value(const QHashedString &key) const
-{
-    Node *n = findNode(key);
-    return n?&n->value:0;
-}
-
-template<class T>
-T *QStringHash<T>::value(const QHashedStringRef &key) const
-{
-    Node *n = findNode(key);
-    return n?&n->value:0;
-}
-
-template<class T>
-T *QStringHash<T>::value(const QHashedCStringRef &key) const
+template<class K>
+T *QStringHash<T>::value(const K &key) const
 {
     Node *n = findNode(key);
     return n?&n->value:0;
@@ -920,10 +891,7 @@ template<class T>
 T *QStringHash<T>::value(const ConstIterator &iter) const
 {
     Node *n = iter.node();
-    if (n->isQString())
-        return value(QHashedStringRef((QChar *)n->strData->data(), n->length, n->hash));
-    else
-        return value(QHashedCStringRef(n->ckey, n->length, n->hash));
+    return value(n->key());
 }
 
 template<class T>
@@ -934,62 +902,15 @@ T *QStringHash<T>::value(const QHashedV8String &string) const
 }
 
 template<class T>
-bool QStringHash<T>::contains(const QString &s) const
+template<class K>
+bool QStringHash<T>::contains(const K &key) const
 {
-    return 0 != value(s);
+    return 0 != value(key);
 }
 
 template<class T>
-bool QStringHash<T>::contains(const QHashedString &s) const
-{
-    return 0 != value(s);
-}
-
-template<class T>
-bool QStringHash<T>::contains(const QHashedStringRef &s) const
-{
-    return 0 != value(s);
-}
-
-template<class T>
-bool QStringHash<T>::contains(const QHashedCStringRef &s) const
-{
-    return 0 != value(s);
-}
-
-template<class T>
-bool QStringHash<T>::contains(const ConstIterator &s) const
-{
-    return 0 != value(s);
-}
-
-template<class T>
-T &QStringHash<T>::operator[](const QString &key)
-{
-    QHashedStringRef cs(key);
-    Node *n = findNode(cs);
-    if (n) return n->value;
-    else return createNode(QHashedString(key, cs.hash()), T())->value;
-}
-
-template<class T>
-T &QStringHash<T>::operator[](const QHashedString &key)
-{
-    Node *n = findNode(key);
-    if (n) return n->value;
-    else return createNode(key, T())->value;
-}
-
-template<class T>
-T &QStringHash<T>::operator[](const QHashedStringRef &key)
-{
-    Node *n = findNode(key);
-    if (n) return n->value;
-    else return createNode(key, T())->value;
-}
-
-template<class T>
-T &QStringHash<T>::operator[](const QHashedCStringRef &key)
+template<class K>
+T &QStringHash<T>::operator[](const K &key)
 {
     Node *n = findNode(key);
     if (n) return n->value;
@@ -1007,7 +928,7 @@ void QStringHash<T>::reserve(int n)
     nodePool->used = 0;
     nodePool->nodes = new Node[n];
 
-    data.rehashToSize(n, iterateFirst(), iterateNext);
+    data.rehashToSize(n);
 }
 
 template<class T>
@@ -1041,14 +962,17 @@ bool QStringHash<T>::ConstIterator::operator!=(const ConstIterator &o) const
 }
 
 template<class T>
+template<typename K>
+bool QStringHash<T>::ConstIterator::equals(const K &key) const
+{
+    return d.n->equals(key);
+}
+
+template<class T>
 QHashedString QStringHash<T>::ConstIterator::key() const
 {
     Node *n = (Node *)d.n;
-    if (n->isQString()) {
-        return QHashedString(QString((QChar *)n->strData->data(), n->length), n->hash);
-    } else {
-        return QHashedString(QString::fromLatin1(n->ckey, n->length), n->hash);
-    }
+    return n->key();
 }
 template<class T>
 const T &QStringHash<T>::ConstIterator::value() const
@@ -1080,6 +1004,59 @@ typename QStringHash<T>::ConstIterator QStringHash<T>::begin() const
 template<class T>
 typename QStringHash<T>::ConstIterator QStringHash<T>::end() const
 {
+    return ConstIterator();
+}
+
+template<class T>
+template<class K>
+typename QStringHash<T>::ConstIterator QStringHash<T>::find(const K &key) const
+{
+    return iterator(findNode(key));
+}
+
+template<class T>
+class QStringMultiHash : public QStringHash<T>
+{
+public:
+    typedef typename QStringHash<T>::ConstIterator ConstIterator;
+
+    template<typename K>
+    inline void insert(const K &, const T &);
+
+    inline void insert(const ConstIterator &);
+
+    inline ConstIterator findNext(const ConstIterator &) const;
+};
+
+template<class T>
+template<class K>
+void QStringMultiHash<T>::insert(const K &key, const T &value)
+{
+    // Always create a new node
+    QStringHash<T>::createNode(key, value);
+}
+
+template<class T>
+void QStringMultiHash<T>::insert(const ConstIterator &iter)
+{
+    // Always create a new node
+    QStringHash<T>::createNode(iter.key(), iter.value());
+}
+
+template<class T>
+typename QStringHash<T>::ConstIterator QStringMultiHash<T>::findNext(const ConstIterator &iter) const
+{
+    QStringHashNode *node = iter.node();
+    if (node) {
+        QHashedString key(node->key());
+
+        while ((node = *node->next)) {
+            if (node->equals(key)) {
+                return QStringHash<T>::iterator(static_cast<typename QStringHash<T>::Node *>(node));
+            }
+        }
+    }
+
     return ConstIterator();
 }
 
@@ -1309,6 +1286,11 @@ bool QHashedStringRef::operator!=(const QHashedCStringRef &string) const
     return m_length != string.m_length ||
            (m_hash != string.m_hash && m_hash && string.m_hash) ||
            QHashedString::compare(m_data, string.m_data, m_length);
+}
+
+QChar *QHashedStringRef::data()
+{
+    return const_cast<QChar *>(m_data);
 }
 
 const QChar &QHashedStringRef::at(int index) const

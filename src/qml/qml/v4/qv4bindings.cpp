@@ -864,7 +864,7 @@ inline quint32 QV4Bindings::toUint32(double n)
         } \
         QQmlPropertyData *prop = (data && data->propertyCache) ? data->propertyCache->property((index)) : 0; \
         if (prop && prop->isOverridden()) { \
-            int resolvedIndex = data->propertyCache->property(prop->name(obj))->coreIndex; \
+            int resolvedIndex = data->propertyCache->property(prop->name(obj), obj, context)->coreIndex; \
             if ((int)index < resolvedIndex) { \
                 *(inv) = true; \
                 goto programExit; \

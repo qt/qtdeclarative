@@ -2965,7 +2965,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                 // XXX TODO: find a better way to get signal name from the property data :-/
                 for (QQmlPropertyCache::StringCache::ConstIterator iter = parentCache->stringCache.begin();
                         iter != parentCache->stringCache.end(); ++iter) {
-                    if (currPSig == iter.value()) {
+                    if (currPSig == (*iter).second) {
                         seenSignals.insert(iter.key());
                         break;
                     }
@@ -3922,7 +3922,7 @@ QQmlCompiler::property(QQmlScript::Object *object, const QHashedStringRef &name,
 
     QQmlPropertyCache *cache = propertyCacheForObject(object);
 
-    QQmlPropertyData *d = cache->property(name);
+    QQmlPropertyData *d = cache->property(name, 0, 0);
 
     // Find the first property
     while (d && d->isFunction())
@@ -3945,7 +3945,7 @@ QQmlCompiler::signal(QQmlScript::Object *object, const QHashedStringRef &name, b
     QQmlPropertyCache *cache = propertyCacheForObject(object);
 
 
-    QQmlPropertyData *d = cache->property(name);
+    QQmlPropertyData *d = cache->property(name, 0, 0);
     if (notInRevision) *notInRevision = false;
 
     while (d && !(d->isFunction()))

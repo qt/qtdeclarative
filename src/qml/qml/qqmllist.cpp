@@ -139,7 +139,7 @@ QQmlListReference::QQmlListReference(QObject *object, const char *property, QQml
 
     QQmlPropertyData local;
     QQmlPropertyData *data =
-        QQmlPropertyCache::property(engine, object, QLatin1String(property), local);
+        QQmlPropertyCache::property(engine, object, QLatin1String(property), 0, local);
 
     if (!data || !data->isQList()) return;
 

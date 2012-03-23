@@ -466,7 +466,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
                 QQmlPropertyCache *cache = m_expression->context->synthCache;
                 if (!cache) cache = m_expression->context->metatype;
 
-                QQmlPropertyData *data = cache->property(name);
+                QQmlPropertyData *data = cache->property(name, 0, 0);
 
                 if (data && data->hasRevision()) {
                     if (qmlVerboseCompiler()) 
@@ -486,7 +486,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
                 QQmlPropertyCache *cache = m_expression->component->synthCache;
                 if (!cache) cache = m_expression->component->metatype;
 
-                QQmlPropertyData *data = cache->property(name);
+                QQmlPropertyData *data = cache->property(name, 0, 0);
 
                 if (data && data->hasRevision()) {
                     if (qmlVerboseCompiler()) 
@@ -612,7 +612,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                                    << (*baseName->id + QLatin1Char('.') + ast->name.toString());
                 } else if(const QMetaObject *attachedMeta = baseName->declarativeType->attachedPropertiesType()) {
                     QQmlPropertyCache *cache = m_engine->cache(attachedMeta);
-                    QQmlPropertyData *data = cache->property(name);
+                    QQmlPropertyData *data = cache->property(name, 0, 0);
 
                     if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)
@@ -647,7 +647,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 } else {
                     QQmlPropertyCache *cache = baseName->meta.propertyCache(m_engine);
                     if (!cache) return false;
-                    QQmlPropertyData *data = cache->property(name);
+                    QQmlPropertyData *data = cache->property(name, 0, 0);
 
                     if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)
@@ -666,7 +666,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 QQmlPropertyCache *cache = 
                     idObject->synthCache?idObject->synthCache:idObject->metatype;
 
-                QQmlPropertyData *data = cache->property(name);
+                QQmlPropertyData *data = cache->property(name, 0, 0);
 
                 if (!data || data->isFunction())
                     return false; // Don't support methods (or non-existing properties ;)
@@ -690,7 +690,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if (!cache)
                         return false;
 
-                    if (QQmlPropertyData *data = cache->property(name)) {
+                    if (QQmlPropertyData *data = cache->property(name, 0, 0)) {
                         if (!baseName->property->isFinal() || !data->isFinal())
                             _invalidatable = true;
 

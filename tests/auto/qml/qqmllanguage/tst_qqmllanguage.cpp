@@ -186,6 +186,8 @@ private slots:
     void objectDeletionNotify_data();
     void objectDeletionNotify();
 
+    void scopedProperties();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -3109,6 +3111,15 @@ void tst_qqmllanguage::objectDeletionNotify()
     QCOMPARE(object->property("success").toBool(), true);
 
     delete object;
+}
+
+void tst_qqmllanguage::scopedProperties()
+{
+    QQmlComponent component(&engine, testFile("scopedProperties.qml"));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != 0);
+    QVERIFY(o->property("success").toBool());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

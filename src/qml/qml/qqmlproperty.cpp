@@ -284,7 +284,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
         QQmlPropertyData local;
         QQmlPropertyData *property =
-            QQmlPropertyCache::property(engine, obj, pathName, local);
+            QQmlPropertyCache::property(engine, obj, pathName, context, local);
 
         if (!property) return; // Not a property
         if (property->isFunction())
@@ -340,7 +340,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         if (ddata && ddata->propertyCache) {
 
             // Try method
-            QQmlPropertyData *d = ddata->propertyCache->property(signalName);
+            QQmlPropertyData *d = ddata->propertyCache->property(signalName, currentObject, context);
             while (d && !d->isFunction())
                 d = ddata->propertyCache->overrideData(d);
 
@@ -353,7 +353,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
             // Try property
             if (signalName.endsWith(QLatin1String("Changed"))) {
                 QString propName = signalName.mid(0, signalName.length() - 7);
-                QQmlPropertyData *d = ddata->propertyCache->property(propName);
+                QQmlPropertyData *d = ddata->propertyCache->property(propName, currentObject, context);
                 while (d && d->isFunction())
                     d = ddata->propertyCache->overrideData(d);
 
@@ -378,7 +378,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
     // Property
     QQmlPropertyData local;
     QQmlPropertyData *property =
-        QQmlPropertyCache::property(engine, currentObject, terminal, local);
+        QQmlPropertyCache::property(engine, currentObject, terminal, context, local);
     if (property && !property->isFunction()) {
         object = currentObject;
         core = *property;

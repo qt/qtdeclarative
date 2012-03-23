@@ -282,6 +282,7 @@ private slots:
     void overrideDataAssert();
     void fallbackBindings_data();
     void fallbackBindings();
+    void propertyOverride();
     void concatenatedStringPropertyAccess();
 
 private:
@@ -7255,6 +7256,8 @@ void tst_qqmlecmascript::fallbackBindings_data()
     QTest::newRow("SingletonType fallback") << "fallbackBindings.4.qml";
     QTest::newRow("Attached without fallback") << "fallbackBindings.5.qml";
     QTest::newRow("Attached fallback") << "fallbackBindings.6.qml";
+    QTest::newRow("Subproperty without fallback") << "fallbackBindings.7.qml";
+    QTest::newRow("Subproperty fallback") << "fallbackBindings.8.qml";
 }
 
 void tst_qqmlecmascript::fallbackBindings()
@@ -7262,6 +7265,15 @@ void tst_qqmlecmascript::fallbackBindings()
     QFETCH(QString, source);
 
     QQmlComponent component(&engine, testFileUrl(source));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("success").toBool(), true);
+}
+
+void tst_qqmlecmascript::propertyOverride()
+{
+    QQmlComponent component(&engine, testFileUrl("propertyOverride.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != 0);
 
