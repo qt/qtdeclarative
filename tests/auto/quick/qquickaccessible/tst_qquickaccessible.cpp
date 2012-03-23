@@ -345,15 +345,17 @@ void tst_QQuickAccessible::hitTest()
     QAI rootItem = QAI(canvasIface->child(0));
     QRect rootRect = rootItem->rect();
 
-    // hit the root item
-    QAI rootItemIface(canvasIface->childAt(rootRect.x() + 200, rootRect.y() + 50));
-    QVERIFY(rootItemIface);
-    QCOMPARE(rootRect, rootItemIface->rect());
+    // check the root item from app
+    QAI appIface = QAI(QAccessible::queryAccessibleInterface(qApp));
+    QVERIFY(appIface);
+    QAI itemHit(appIface->childAt(rootRect.x() + 200, rootRect.y() + 50));
+    QVERIFY(itemHit);
+    QCOMPARE(rootRect, itemHit->rect());
 
     // hit rect1
     QAI rect1(rootItem->child(0));
     QRect rect1Rect = rect1->rect();
-    rootItemIface = QAI(rootItem->childAt(rect1Rect.x() + 10, rect1Rect.y() + 10));
+    QAI rootItemIface = QAI(rootItem->childAt(rect1Rect.x() + 10, rect1Rect.y() + 10));
     QVERIFY(rootItemIface);
     QCOMPARE(rect1Rect, rootItemIface->rect());
     QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect1"));

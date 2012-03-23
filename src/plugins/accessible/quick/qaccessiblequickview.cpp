@@ -127,7 +127,11 @@ static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
     }
 
     QScopedPointer<QAccessibleInterface> accessibleInterface(QAccessible::queryAccessibleInterface(item));
-    if (accessibleInterface && accessibleInterface->childCount() == 0) {
+    // this item has no Accessible attached property
+    if (!accessibleInterface)
+        return 0;
+
+    if (accessibleInterface->childCount() == 0) {
         return (itemScreenRect(item).contains(x, y)) ? item : 0;
     }
 
@@ -155,6 +159,7 @@ QAccessibleInterface *QAccessibleQuickView::childAt(int x, int y) const
     if (root) {
         if (QQuickItem *item = childAt_helper(root, x, y))
             return QAccessible::queryAccessibleInterface(item);
+        return QAccessible::queryAccessibleInterface(root);
     }
     return 0;
 }

@@ -1633,9 +1633,6 @@ void QQuickItemPrivate::setAccessibleFlagAndListener()
         if (item->d_func()->isAccessible)
             break; // already set - grandparents should have the flag set as well.
 
-        if (item->canvas() && item->canvas()->rootItem() == item)
-            break; // don't add a listener to the canvas root item
-
         item->d_func()->isAccessible = true;
         item = item->d_func()->parentItem;
     }
