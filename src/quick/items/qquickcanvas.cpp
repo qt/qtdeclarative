@@ -389,7 +389,17 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
             bool doubleClick = event->timestamp() - touchMousePressTimestamp
                             < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
             touchMousePressTimestamp = event->timestamp();
+            QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
+            me.setTimestamp(event->timestamp());
+            me.setAccepted(false);
+            me.setCapabilities(event->device()->capabilities());
+            deliverMouseEvent(&me);
+            if (me.isAccepted()) {
+                touchMouseId = p.id();
+                event->setAccepted(true);
+            }
             if (doubleClick) {
+                touchMousePressTimestamp = 0;
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonDblClick, p);
                 me.setTimestamp(event->timestamp());
                 me.setAccepted(false);
@@ -406,15 +416,6 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
                         event->setAccepted(true);
                     }
                 }
-            }
-            QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
-            me.setTimestamp(event->timestamp());
-            me.setAccepted(false);
-            me.setCapabilities(event->device()->capabilities());
-            deliverMouseEvent(&me);
-            if (me.isAccepted()) {
-                touchMouseId = p.id();
-                event->setAccepted(true);
             }
             if (touchMouseId != -1)
                 break;
