@@ -67,7 +67,15 @@
 #define QML_FLICK_DISCARDSAMPLES 1
 #endif
 
+// The default maximum velocity of a flick.
+#ifndef QML_FLICK_DEFAULTMAXVELOCITY
+#define QML_FLICK_DEFAULTMAXVELOCITY 2500
+#endif
+
+
 QT_BEGIN_NAMESPACE
+
+const qreal MinimumFlickVelocity = 75.0;
 
 inline qreal qmlMod(qreal x, qreal y)
 {
@@ -105,6 +113,23 @@ void QQuickPathViewAttached::setValue(const QByteArray &name, const QVariant &va
     m_metaobject->setValue(name, val);
 }
 
+QQuickPathViewPrivate::QQuickPathViewPrivate()
+  : path(0), currentIndex(0), currentItemOffset(0.0), startPc(0), lastDist(0)
+    , lastElapsed(0), offset(0.0), offsetAdj(0.0), mappedRange(1.0)
+    , stealMouse(false), ownModel(false), interactive(true), haveHighlightRange(true)
+    , autoHighlight(true), highlightUp(false), layoutScheduled(false)
+    , moving(false), flicking(false), requestedOnPath(false), inRequest(false)
+    , dragMargin(0), deceleration(100), maximumFlickVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
+    , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
+    , firstIndex(-1), pathItems(-1), requestedIndex(-1), requestedZ(0)
+    , moveReason(Other), moveDirection(Shortest), attType(0), highlightComponent(0), highlightItem(0)
+    , moveHighlight(this, &QQuickPathViewPrivate::setHighlightPosition)
+    , highlightPosition(0)
+    , highlightRangeStart(0), highlightRangeEnd(0)
+    , highlightRangeMode(QQuickPathView::StrictlyEnforceRange)
+    , highlightMoveDuration(300), modelCount(0)
+{
+}
 
 void QQuickPathViewPrivate::init()
 {
@@ -975,6 +1000,28 @@ void QQuickPathView::setFlickDeceleration(qreal dec)
 }
 
 /*!
+    \qmlproperty real QtQuick2::PathView::maximumFlickVelocity
+    This property holds the approximate maximum velocity that the user can flick the view in pixels/second.
+
+    The default value is platform dependent.
+*/
+qreal QQuickPathView::maximumFlickVelocity() const
+{
+    Q_D(const QQuickPathView);
+    return d->maximumFlickVelocity;
+}
+
+void QQuickPathView::setMaximumFlickVelocity(qreal vel)
+{
+    Q_D(QQuickPathView);
+    if (vel == d->maximumFlickVelocity)
+        return;
+    d->maximumFlickVelocity = vel;
+    emit maximumFlickVelocityChanged();
+}
+
+
+/*!
     \qmlproperty bool QtQuick2::PathView::interactive
 
     A user cannot drag or flick a PathView that is not interactive.
@@ -1203,7 +1250,7 @@ void QQuickPathView::mousePressEvent(QMouseEvent *event)
 void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
 {
     Q_Q(QQuickPathView);
-    if (!interactive || !items.count())
+    if (!interactive || !items.count() || !model || !modelCount)
         return;
     velocityBuffer.clear();
     QPointF scenePoint = q->mapToScene(event->localPos());
@@ -1252,7 +1299,7 @@ void QQuickPathView::mouseMoveEvent(QMouseEvent *event)
 void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
 {
     Q_Q(QQuickPathView);
-    if (!interactive || !lastPosTime.isValid())
+    if (!interactive || !lastPosTime.isValid() || !model || !modelCount)
         return;
 
     qreal newPc;
@@ -1306,14 +1353,22 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
     Q_Q(QQuickPathView);
     stealMouse = false;
     q->setKeepMouseGrab(false);
-    if (!interactive || !lastPosTime.isValid())
+    if (!interactive || !lastPosTime.isValid() || !model || !modelCount) {
+        lastPosTime.invalidate();
+        if (!tl.isActive())
+            q->movementEnding();
         return;
+    }
 
     qreal velocity = calcVelocity();
-    if (model && modelCount && qAbs(velocity) > 0.5) {
-        qreal count = pathItems == -1 ? modelCount : pathItems;
-        if (qAbs(velocity) > count * 2) // limit velocity
-            velocity = (velocity > 0 ? count : -count) * 2;
+    qreal count = modelCount*mappedRange;
+    qreal pixelVelocity = (path->path().length()/count) * velocity;
+    if (qAbs(pixelVelocity) > MinimumFlickVelocity) {
+        if (qAbs(pixelVelocity) > maximumFlickVelocity) {
+            // limit velocity
+            qreal maxVel = velocity < 0 ? -maximumFlickVelocity : maximumFlickVelocity;
+            velocity = maxVel / (path->path().length()/count);
+        }
         // Calculate the distance to be travelled
         qreal v2 = velocity*velocity;
         qreal accel = deceleration/10;
