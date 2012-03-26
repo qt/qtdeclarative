@@ -75,6 +75,7 @@ public:
     ~QQuickTextPrivate();
     void init();
 
+    void updateBaseline(qreal baseline, qreal dy);
     void updateSize();
     void updateLayout();
     bool determineHorizontalAlignment();
@@ -163,7 +164,7 @@ public:
 
     void ensureDoc();
 
-    QRectF setupTextLayout(qreal *const naturalWidth);
+    QRectF setupTextLayout(qreal *const naturalWidth,  qreal * const baseline);
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset = 0);
     bool isLinkActivatedConnected();
     QString anchorAt(const QPointF &pos);

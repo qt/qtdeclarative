@@ -131,6 +131,9 @@ private slots:
     void fontFormatSizes_data();
     void fontFormatSizes();
 
+    void baselineOffset_data();
+    void baselineOffset();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -1692,7 +1695,7 @@ void tst_qquicktext::boundingRect()
     QCOMPARE(text->boundingRect().x(), qreal(0));
     QCOMPARE(text->boundingRect().y(), qreal(0));
     QCOMPARE(text->boundingRect().width(), qreal(0));
-    QCOMPARE(text->boundingRect().height(), QFontMetricsF(text->font()).height());
+    QCOMPARE(text->boundingRect().height(), qreal(qCeil(QFontMetricsF(text->font()).height())));
 
     text->setText("Hello World");
 
@@ -2590,6 +2593,251 @@ void tst_qquicktext::fontFormatSizes()
         }
     }
     delete view;
+}
+
+typedef qreal (*ExpectedBaseline)(QQuickText *item);
+Q_DECLARE_METATYPE(ExpectedBaseline)
+
+static qreal expectedBaselineTop(QQuickText *item)
+{
+    QFontMetricsF fm(item->font());
+    return fm.ascent();
+}
+
+static qreal expectedBaselineBottom(QQuickText *item)
+{
+    QFontMetricsF fm(item->font());
+    return item->height() - item->contentHeight() + fm.ascent();
+}
+
+static qreal expectedBaselineCenter(QQuickText *item)
+{
+    QFontMetricsF fm(item->font());
+    return ((item->height() - item->contentHeight()) / 2) + fm.ascent();
+}
+
+static qreal expectedBaselineBold(QQuickText *item)
+{
+    QFont font = item->font();
+    font.setBold(true);
+    QFontMetricsF fm(font);
+    return fm.ascent();
+}
+
+static qreal expectedBaselineImage(QQuickText *item)
+{
+    QFontMetricsF fm(item->font());
+    // The line is positioned so the bottom of the line is aligned with the bottom of the image,
+    // or image height - line height and the baseline is line position + ascent.  Because
+    // QTextLine's height is rounded up this can give slightly different results to image height
+    // - descent.
+    return 181 - qCeil(fm.height()) + fm.ascent();
+}
+
+static qreal expectedBaselineCustom(QQuickText *item)
+{
+    QFontMetricsF fm(item->font());
+    return 16 + fm.ascent();
+}
+
+static qreal expectedBaselineScaled(QQuickText *item)
+{
+    QFont font = item->font();
+    QTextLayout layout(item->text().replace(QLatin1Char('\n'), QChar::LineSeparator));
+    do {
+        layout.setFont(font);
+        qreal width = 0;
+        layout.beginLayout();
+        for (QTextLine line = layout.createLine(); line.isValid(); line = layout.createLine()) {
+            line.setLineWidth(FLT_MAX);
+            width = qMax(line.naturalTextWidth(), width);
+        }
+        layout.endLayout();
+
+        if (width < item->width()) {
+            QFontMetricsF fm(layout.font());
+            return fm.ascent();
+        }
+        font.setPointSize(font.pointSize() - 1);
+    } while (font.pointSize() > 0);
+    return 0;
+}
+
+static qreal expectedBaselineFixedBottom(QQuickText *item)
+{
+    QFontMetricsF fm(item->font());
+    qreal dy = item->text().contains(QLatin1Char('\n'))
+            ? 160
+            : 180;
+    return dy + fm.ascent();
+}
+
+static qreal expectedBaselineProportionalBottom(QQuickText *item)
+{
+    QFontMetricsF fm(item->font());
+    qreal dy = item->text().contains(QLatin1Char('\n'))
+            ? 200 - (qCeil(fm.height()) * 3)
+            : 200 - (qCeil(fm.height()) * 1.5);
+    return dy + fm.ascent();
+}
+
+void tst_qquicktext::baselineOffset_data()
+{
+    qRegisterMetaType<ExpectedBaseline>();
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QString>("wrappedText");
+    QTest::addColumn<QByteArray>("bindings");
+    QTest::addColumn<ExpectedBaseline>("expectedBaseline");
+    QTest::addColumn<ExpectedBaseline>("expectedBaselineEmpty");
+
+    QTest::newRow("top align")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignTop")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+    QTest::newRow("bottom align")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineBottom
+            << &expectedBaselineBottom;
+    QTest::newRow("center align")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignVCenter")
+            << &expectedBaselineCenter
+            << &expectedBaselineCenter;
+
+    QTest::newRow("bold")
+            << "<b>hello world</b>"
+            << "<b>hello<br/>world</b>"
+            << QByteArray("height: 200")
+            << &expectedBaselineTop
+            << &expectedBaselineBold;
+
+    QTest::newRow("richText")
+            << "<b>hello world</b>"
+            << "<b>hello<br/>world</b>"
+            << QByteArray("height: 200; textFormat: Text.RichText")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("elided")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("width: 20; height: 8; elide: Text.ElideRight")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("elided bottom align")
+            << "hello world"
+            << "hello\nworld!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            << QByteArray("width: 200; height: 200; elide: Text.ElideRight; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineBottom
+            << &expectedBaselineBottom;
+
+    QTest::newRow("image")
+            << "hello <img src=\"images/heart200.png\" /> world"
+            << "hello <img src=\"images/heart200.png\" /><br/>world"
+            << QByteArray("height: 200\n; baseUrl: \"") + testFileUrl("reference").toEncoded() + QByteArray("\"")
+            << &expectedBaselineImage
+            << &expectedBaselineTop;
+
+    QTest::newRow("customLine")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; onLineLaidOut: line.y += 16")
+            << &expectedBaselineCustom
+            << &expectedBaselineCustom;
+
+    QTest::newRow("scaled font")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("width: 200; minimumPointSize: 1; font.pointSize: 64; fontSizeMode: Text.HorizontalFit")
+            << &expectedBaselineScaled
+            << &expectedBaselineTop;
+
+    QTest::newRow("fixed line height top align")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; lineHeightMode: Text.FixedHeight; lineHeight: 20; verticalAlignment: Text.AlignTop")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("fixed line height bottom align")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; lineHeightMode: Text.FixedHeight; lineHeight: 20; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineFixedBottom
+            << &expectedBaselineFixedBottom;
+
+    QTest::newRow("proportional line height top align")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; lineHeightMode: Text.ProportionalHeight; lineHeight: 1.5; verticalAlignment: Text.AlignTop")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("proportional line height bottom align")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; lineHeightMode: Text.ProportionalHeight; lineHeight: 1.5; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineProportionalBottom
+            << &expectedBaselineProportionalBottom;
+}
+
+void tst_qquicktext::baselineOffset()
+{
+    QFETCH(QString, text);
+    QFETCH(QString, wrappedText);
+    QFETCH(QByteArray, bindings);
+    QFETCH(ExpectedBaseline, expectedBaseline);
+    QFETCH(ExpectedBaseline, expectedBaselineEmpty);
+
+    QQmlComponent component(&engine);
+    component.setData(
+            "import QtQuick 2.0\n"
+            "Text {\n"
+                + bindings + "\n"
+            "}", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickText *item = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(item);
+
+    {
+        qreal baseline = expectedBaselineEmpty(item);
+
+        QCOMPARE(item->baselineOffset(), baseline);
+
+        item->setText(text);
+        if (expectedBaseline != expectedBaselineEmpty)
+            baseline = expectedBaseline(item);
+
+        QCOMPARE(item->baselineOffset(), baseline);
+
+        item->setText(wrappedText);
+        QCOMPARE(item->baselineOffset(), expectedBaseline(item));
+    }
+
+    QFont font = item->font();
+    font.setPointSize(font.pointSize() + 8);
+
+    {
+        QCOMPARE(item->baselineOffset(), expectedBaseline(item));
+
+        item->setText(text);
+        qreal baseline = expectedBaseline(item);
+        QCOMPARE(item->baselineOffset(), baseline);
+
+        item->setText(QString());
+        if (expectedBaselineEmpty != expectedBaseline)
+            baseline = expectedBaselineEmpty(item);
+
+        QCOMPARE(item->baselineOffset(), baseline);
+    }
 }
 
 QTEST_MAIN(tst_qquicktext)

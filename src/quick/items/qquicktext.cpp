@@ -382,6 +382,22 @@ void QQuickText::imageDownloadFinished()
     }
 }
 
+void QQuickTextPrivate::updateBaseline(qreal baseline, qreal dy)
+{
+    Q_Q(QQuickText);
+
+    qreal yoff = 0;
+
+    if (q->heightValid()) {
+        if (vAlign == QQuickText::AlignBottom)
+            yoff = dy;
+        else if (vAlign == QQuickText::AlignVCenter)
+            yoff = dy/2;
+    }
+
+    q->setBaselineOffset(baseline + yoff);
+}
+
 void QQuickTextPrivate::updateSize()
 {
     Q_Q(QQuickText);
@@ -398,9 +414,19 @@ void QQuickTextPrivate::updateSize()
             return;
     }
 
-    QFontMetricsF fm(font);
-    if (text.isEmpty()) {
-        qreal fontHeight = fm.height();
+    if (text.isEmpty() && !isLineLaidOutConnected() && fontSizeMode() == QQuickText::FixedSize) {
+        // How much more expensive is it to just do a full layout on an empty string here?
+        // There may be subtle differences in the height and baseline calculations between
+        // QTextLayout and QFontMetrics and the number of variables that can affect the size
+        // and position of a line is increasing.
+        QFontMetricsF fm(font);
+        qreal fontHeight = qCeil(fm.height());  // QScriptLine and therefore QTextLine rounds up
+        if (!richText) {                        // line height, so we will as well.
+            fontHeight = lineHeightMode() == QQuickText::FixedHeight
+                    ? lineHeight()
+                    : fontHeight * lineHeight();
+        }
+        updateBaseline(fm.ascent(), q->height() - fontHeight);
         q->setImplicitSize(0, fontHeight);
         layedOutTextRect = QRectF(0, 0, 0, fontHeight);
         emit q->contentSizeChanged();
@@ -411,7 +437,6 @@ void QQuickTextPrivate::updateSize()
 
     qreal naturalWidth = 0;
 
-    qreal dy = q->height();
     QSizeF size(0, 0);
     QSizeF previousSize = layedOutTextRect.size();
 #if defined(Q_OS_MAC)
@@ -420,14 +445,15 @@ void QQuickTextPrivate::updateSize()
 
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
-        QRectF textRect = setupTextLayout(&naturalWidth);
+        qreal baseline = 0;
+        QRectF textRect = setupTextLayout(&naturalWidth, &baseline);
 
         if (internalWidthUpdate)    // probably the result of a binding loop, but by letting it
             return;      // get this far we'll get a warning to that effect if it is.
 
         layedOutTextRect = textRect;
         size = textRect.size();
-        dy -= size.height();
+        updateBaseline(baseline, q->height() - size.height());
     } else {
         singleline = false; // richtext can't elide or be optimized for single-line case
         ensureDoc();
@@ -458,20 +484,13 @@ void QQuickTextPrivate::updateSize()
             extra->doc->setTextWidth(q->width());
         else
             extra->doc->setTextWidth(extra->doc->idealWidth()); // ### Text does not align if width is not set (QTextDoc bug)
-        dy -= extra->doc->size().height();
         QSizeF dsize = extra->doc->size();
         layedOutTextRect = QRectF(QPointF(0,0), dsize);
         size = QSizeF(extra->doc->idealWidth(),dsize.height());
-    }
-    qreal yoff = 0;
 
-    if (q->heightValid()) {
-        if (vAlign == QQuickText::AlignBottom)
-            yoff = dy;
-        else if (vAlign == QQuickText::AlignVCenter)
-            yoff = dy/2;
+        QFontMetricsF fm(font);
+        updateBaseline(fm.ascent(), q->height() - size.height());
     }
-    q->setBaselineOffset(fm.ascent() + yoff);
 
     //### need to comfirm cost of always setting these for richText
     internalWidthUpdate = true;
@@ -669,7 +688,7 @@ QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QT
     already absolutely positioned horizontally).
 */
 
-QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
+QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *const baseline)
 {
     Q_Q(QQuickText);
     layout.setCacheEnabled(true);
@@ -712,9 +731,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
             internalWidthUpdate = wasInLayout;
         }
 
-        QFontMetrics fm(font);
+        QFontMetricsF fm(font);
         qreal height = (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : fm.height() * lineHeight();
-        return QRect(0, 0, 0, height);
+        *baseline = fm.ascent();
+        return QRectF(0, 0, 0, height);
     }
 
     qreal lineWidth = q->widthValid() && q->width() > 0 ? q->width() : FLT_MAX;
@@ -1023,6 +1043,12 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         delete elideLayout;
         elideLayout = 0;
     }
+
+    QTextLine firstLine = visibleCount == 1 && elideLayout
+            ? elideLayout->lineAt(0)
+            : layout.lineAt(0);
+    Q_ASSERT(firstLine.isValid());
+    *baseline = firstLine.y() + firstLine.ascent();
 
     if (!customLayout)
         br.setHeight(height);
