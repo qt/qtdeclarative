@@ -110,6 +110,8 @@ private slots:
     void implicitSizeBinding_data();
     void implicitSizeBinding();
 
+    void boundingRect_data();
+    void boundingRect();
     void lineLaidOut();
 
     void imgTagsBaseUrl_data();
@@ -1667,6 +1669,80 @@ void tst_qquicktext::implicitSizeBinding()
     textObject->resetHeight();
     QCOMPARE(textObject->width(), textObject->implicitWidth());
     QCOMPARE(textObject->height(), textObject->implicitHeight());
+}
+
+void tst_qquicktext::boundingRect_data()
+{
+    QTest::addColumn<QString>("format");
+    QTest::newRow("PlainText") << "Text.PlainText";
+    QTest::newRow("StyledText") << "Text.StyledText";
+    QTest::newRow("RichText") << "Text.RichText";
+}
+
+void tst_qquicktext::boundingRect()
+{
+    QFETCH(QString, format);
+
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0\n Text { textFormat:" + format.toUtf8() + "}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickText *text = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(text);
+
+    QCOMPARE(text->boundingRect().x(), qreal(0));
+    QCOMPARE(text->boundingRect().y(), qreal(0));
+    QCOMPARE(text->boundingRect().width(), qreal(0));
+    QCOMPARE(text->boundingRect().height(), QFontMetricsF(text->font()).height());
+
+    text->setText("Hello World");
+
+    QTextLayout layout(text->text());
+    layout.setFont(text->font());
+
+    if (!qmlDisableDistanceField()) {
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
+    }
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    QCOMPARE(text->boundingRect().x(), qreal(0));
+    QCOMPARE(text->boundingRect().y(), qreal(0));
+    QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+    QCOMPARE(text->boundingRect().height(), line.height());
+
+    // the size of the bounding rect shouldn't be bounded by the size of item.
+    text->setWidth(text->width() / 2);
+    QCOMPARE(text->boundingRect().x(), qreal(0));
+    QCOMPARE(text->boundingRect().y(), qreal(0));
+    QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+    QCOMPARE(text->boundingRect().height(), line.height());
+
+    text->setHeight(text->height() * 2);
+    QCOMPARE(text->boundingRect().x(), qreal(0));
+    QCOMPARE(text->boundingRect().y(), qreal(0));
+    QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+    QCOMPARE(text->boundingRect().height(), line.height());
+
+    text->setHAlign(QQuickText::AlignRight);
+    QCOMPARE(text->boundingRect().x(), text->width() - line.naturalTextWidth());
+    QCOMPARE(text->boundingRect().y(), qreal(0));
+    QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+    QCOMPARE(text->boundingRect().height(), line.height());
+
+    text->setWrapMode(QQuickText::Wrap);
+    QCOMPARE(text->boundingRect().right(), text->width());
+    QCOMPARE(text->boundingRect().y(), qreal(0));
+    QVERIFY(text->boundingRect().width() < line.naturalTextWidth());
+    QVERIFY(text->boundingRect().height() > line.height());
+
+    text->setVAlign(QQuickText::AlignBottom);
+    QCOMPARE(text->boundingRect().right(), text->width());
+    QCOMPARE(text->boundingRect().bottom(), text->height());
+    QVERIFY(text->boundingRect().width() < line.naturalTextWidth());
+    QVERIFY(text->boundingRect().height() > line.height());
 }
 
 void tst_qquicktext::lineLaidOut()
