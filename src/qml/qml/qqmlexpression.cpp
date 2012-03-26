@@ -137,7 +137,8 @@ QQmlExpressionPrivate::create(QQmlContextData *ctxt, QObject *object,
 
 /*!
     \class QQmlExpression
-    \since 4.7
+    \since 5.0
+    \inmodule QtQml
     \brief The QQmlExpression class evaluates JavaScript in a QML context.
 
     For example, given a file \c main.qml like this:
@@ -161,6 +162,8 @@ QQmlExpressionPrivate::create(QQmlContextData *ctxt, QObject *object,
     QQmlExpression *expr = new QQmlExpression(engine->rootContext(), myObject, "width * 2");
     int result = expr->evaluate().toInt();  // result = 400
     \endcode
+
+    Note that the QtQuick 1 version is called QDeclarativeExpression.
 */
 
 /*!

@@ -45,7 +45,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \class QQmlParserStatus
-    \since 4.7
+    \since 5.0
+    \inmodule QtQml
     \brief The QQmlParserStatus class provides updates on the QML parser state.
 
     QQmlParserStatus provides a mechanism for classes instantiated by
@@ -75,6 +76,8 @@ QT_BEGIN_NAMESPACE
         void componentComplete();
     }
     \endcode
+
+    The QtQuick 1.0 version of this class is named QDeclarativeParserStatus.
 */
 
 /*! \internal */

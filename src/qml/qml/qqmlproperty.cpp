@@ -72,7 +72,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
 \class QQmlProperty
-\since 4.7
+\since 5.0
+\inmodule QtQml
 \brief The QQmlProperty class abstracts accessing properties on objects created from  QML.
 
 As QML uses Qt's meta-type system all of the existing QMetaObject classes can be used to introspect
@@ -108,6 +109,8 @@ qWarning() << "Current pixel size:" << property.read().toInt();
 property.write(24);
 qWarning() << "Pixel size should now be 24:" << property.read().toInt();
 \endcode
+
+The QtQuick 1 version of this class was named QDeclarativeProperty.
 */
 
 /*!

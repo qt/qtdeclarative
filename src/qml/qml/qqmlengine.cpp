@@ -473,7 +473,8 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
 
 /*!
   \class QQmlEngine
-  \since 4.7
+  \since 5.0
+  \inmodule QtQml
   \brief The QQmlEngine class provides an environment for instantiating QML components.
   \mainclass
 
@@ -498,6 +499,8 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
 
   In this case, the Text item will be created in the engine's
   \l {QQmlEngine::rootContext()}{root context}.
+
+  Note that the QtQuick 1 version is called QDeclarativeEngine.
 
   \sa QQmlComponent QQmlContext
 */

@@ -45,7 +45,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \class QQmlNetworkAccessManagerFactory
-    \since 4.7
+    \since 5.0
+    \inmodule QtQml
     \brief The QQmlNetworkAccessManagerFactory class creates QNetworkAccessManager instances for a QML engine.
 
     A QML engine uses QNetworkAccessManager for all network access.
@@ -79,7 +80,9 @@ QT_BEGIN_NAMESPACE
     For more information about signals and threads, see
     \l {Threads and QObjects} and \l {Signals and Slots Across Threads}.
 
-    \sa {declarative/cppextensions/networkaccessmanagerfactory}{NetworkAccessManagerFactory example}
+    The QtQuick 1 version of this class is named QDeclarativeNetworkAccessManagerFactory.
+
+    \sa {qml/cppextensions/networkaccessmanagerfactory}{NetworkAccessManagerFactory example}
 */
 
 /*!

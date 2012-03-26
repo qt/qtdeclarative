@@ -49,7 +49,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \class QQmlError
-    \since 4.7
+    \since 5.0
+    \inmodule QtQml
     \brief The QQmlError class encapsulates a QML error.
 
     QQmlError includes a textual description of the error, as well
@@ -68,6 +69,8 @@ QT_BEGIN_NAMESPACE
             y: "hello"
                ^
     \endcode
+
+    Note that the QtQuick 1 version is named QDeclarativeError
 
     \sa QQuickView::errors(), QQmlComponent::errors()
 */
