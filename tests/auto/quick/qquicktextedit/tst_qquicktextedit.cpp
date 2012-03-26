@@ -2568,7 +2568,7 @@ void tst_qquicktextedit::implicitSizeBinding()
     QFETCH(QString, wrap);
     QFETCH(QString, format);
     QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\"; width: implicitWidth; height: implicitHeight; wrapMode: " + wrap + "; textFormat: " + format + " }";
-    QDeclarativeComponent textComponent(&engine);
+    QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(textComponent.create());
     QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit *>(object.data());

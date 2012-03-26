@@ -4948,7 +4948,7 @@ void tst_qquicktextinput::implicitSize()
     QFETCH(QString, text);
     QFETCH(QString, wrap);
     QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; width: 50; wrapMode: " + wrap + " }";
-    QDeclarativeComponent textComponent(&engine);
+    QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
 
@@ -4970,7 +4970,7 @@ void tst_qquicktextinput::implicitSizeBinding()
     QFETCH(QString, text);
     QFETCH(QString, wrap);
     QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; width: implicitWidth; height: implicitHeight; wrapMode: " + wrap + " }";
-    QDeclarativeComponent textComponent(&engine);
+    QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(textComponent.create());
     QQuickTextInput *textObject = qobject_cast<QQuickTextInput *>(object.data());
