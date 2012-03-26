@@ -1503,7 +1503,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
         V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
-    QUrl url = QUrl::fromEncoded(engine->toString(args[1]).toUtf8());
+    QUrl url = QUrl(engine->toString(args[1]));
 
     if (url.isRelative()) 
         url = engine->callingContext()->resolvedUrl(url);
