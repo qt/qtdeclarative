@@ -210,6 +210,14 @@ void QQuickShaderEffectTexture::setItem(QSGNode *item)
     if (item == m_item)
         return;
     m_item = item;
+
+    if (m_live && !m_item) {
+        delete m_fbo;
+        delete m_secondaryFbo;
+        m_fbo = m_secondaryFbo = 0;
+        m_depthStencilBuffer.clear();
+    }
+
     markDirtyTexture();
 }
 
@@ -226,6 +234,14 @@ void QQuickShaderEffectTexture::setSize(const QSize &size)
     if (size == m_size)
         return;
     m_size = size;
+
+    if (m_live && m_size.isNull()) {
+        delete m_fbo;
+        delete m_secondaryFbo;
+        m_fbo = m_secondaryFbo = 0;
+        m_depthStencilBuffer.clear();
+    }
+
     markDirtyTexture();
 }
 
@@ -242,6 +258,14 @@ void QQuickShaderEffectTexture::setLive(bool live)
     if (live == m_live)
         return;
     m_live = live;
+
+    if (m_live && (!m_item || m_size.isNull())) {
+        delete m_fbo;
+        delete m_secondaryFbo;
+        m_fbo = m_secondaryFbo = 0;
+        m_depthStencilBuffer.clear();
+    }
+
     markDirtyTexture();
 }
 
@@ -613,6 +637,8 @@ void QQuickShaderEffectSource::setWrapMode(WrapMode mode)
     \qmlproperty Item ShaderEffectSource::sourceItem
 
     This property holds the element to be rendered into the texture.
+    Setting this to null while \l live is true, will release the texture
+    resources.
 */
 
 QQuickItem *QQuickShaderEffectSource::sourceItem() const
@@ -750,8 +776,8 @@ void QQuickShaderEffectSource::setFormat(QQuickShaderEffectSource::Format format
     \qmlproperty bool ShaderEffectSource::live
 
     If this property is true, the texture is updated whenever the
-    \l sourceItem changes. Otherwise, it will be a frozen image of the
-    \l sourceItem. The property is true by default.
+    \l sourceItem updates. Otherwise, it will be a frozen image, even if
+    \l sourceItem is assigned a new element. The property is true by default.
 */
 
 bool QQuickShaderEffectSource::live() const
