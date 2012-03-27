@@ -74,23 +74,7 @@ class QQuickPathViewPrivate : public QQuickItemPrivate, public QQuickItemChangeL
     Q_DECLARE_PUBLIC(QQuickPathView)
 
 public:
-    QQuickPathViewPrivate()
-      : path(0), currentIndex(0), currentItemOffset(0.0), startPc(0), lastDist(0)
-        , lastElapsed(0), offset(0.0), offsetAdj(0.0), mappedRange(1.0)
-        , stealMouse(false), ownModel(false), interactive(true), haveHighlightRange(true)
-        , autoHighlight(true), highlightUp(false), layoutScheduled(false)
-        , moving(false), flicking(false), requestedOnPath(false), inRequest(false)
-        , dragMargin(0), deceleration(100)
-        , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
-        , firstIndex(-1), pathItems(-1), requestedIndex(-1), requestedZ(0)
-        , moveReason(Other), moveDirection(Shortest), attType(0), highlightComponent(0), highlightItem(0)
-        , moveHighlight(this, &QQuickPathViewPrivate::setHighlightPosition)
-        , highlightPosition(0)
-        , highlightRangeStart(0), highlightRangeEnd(0)
-        , highlightRangeMode(QQuickPathView::StrictlyEnforceRange)
-        , highlightMoveDuration(300), modelCount(0)
-    {
-    }
+    QQuickPathViewPrivate();
 
     void init();
 
@@ -169,6 +153,7 @@ public:
     QPointF lastPos;
     qreal dragMargin;
     qreal deceleration;
+    qreal maximumFlickVelocity;
     QQuickTimeLine tl;
     QQuickTimeLineValueProxy<QQuickPathViewPrivate> moveOffset;
     int flickDuration;

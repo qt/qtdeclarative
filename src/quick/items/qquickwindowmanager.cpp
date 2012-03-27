@@ -1120,7 +1120,8 @@ void QQuickRenderThreadSingleContextWindowManager::maybeUpdate(QQuickCanvas *)
 void QQuickRenderThreadSingleContextWindowManager::wakeup()
 {
     lockInGui();
-    if (isRenderBlocked)
+    isExternalUpdatePending = true;
+    if (isRenderBlocked || isPostingSyncEvent)
         wake();
     unlockInGui();
 }

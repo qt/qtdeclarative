@@ -661,7 +661,7 @@ public:
     void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == "QtQuick.LocalStorage");
-        qmlRegisterModuleApi(uri, 2, 0, module_api_factory);
+        qmlRegisterModuleApi<QQuickLocalStorage>(uri, 2, 0, module_api_factory);
     }
 };
 

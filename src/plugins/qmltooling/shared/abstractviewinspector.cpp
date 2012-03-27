@@ -50,6 +50,7 @@
 #include <QtQml/private/qqmlinspectorservice_p.h>
 
 #include <QtGui/QMouseEvent>
+#include <QtGui/QTouchEvent>
 
 namespace QmlJSDebugger {
 
@@ -220,6 +221,12 @@ bool AbstractViewInspector::eventFilter(QObject *obj, QEvent *event)
         if (wheelEvent(static_cast<QWheelEvent*>(event)))
             return true;
         break;
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+        if (touchEvent(static_cast<QTouchEvent*>(event)))
+            return true;
+        break;
     default:
         break;
     }
@@ -297,6 +304,12 @@ bool AbstractViewInspector::mouseDoubleClickEvent(QMouseEvent *event)
 bool AbstractViewInspector::wheelEvent(QWheelEvent *event)
 {
     m_currentTool->wheelEvent(event);
+    return true;
+}
+
+bool AbstractViewInspector::touchEvent(QTouchEvent *event)
+{
+    m_currentTool->touchEvent(event);
     return true;
 }
 

@@ -84,6 +84,7 @@ private slots:
     void margins();
     void marginsRTL();
     void stretch();
+    void baselineOffset();
 };
 
 void tst_qquickanchors::basicAnchors()
@@ -703,6 +704,29 @@ void tst_qquickanchors::stretch()
     QCOMPARE(rect2->height(), 100.0);
 
     delete view;
+}
+
+void tst_qquickanchors::baselineOffset()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("baselineOffset.qml"));
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickItem *item = qobject_cast<QQuickItem  *>(object.data());
+    QVERIFY(item);
+
+    QQuickItem *anchoredItem = findItem<QQuickItem>(item, QLatin1String("baselineAnchored"));
+
+    QCOMPARE(anchoredItem->baselineOffset(), 0.0);
+    QCOMPARE(anchoredItem->y(), 100.0);
+
+    anchoredItem->setBaselineOffset(5);
+    QCOMPARE(anchoredItem->baselineOffset(), 5.0);
+    QCOMPARE(anchoredItem->y(), 95.0);
+
+    anchoredItem->setBaselineOffset(10);
+    QCOMPARE(anchoredItem->baselineOffset(), 10.0);
+    QCOMPARE(anchoredItem->y(), 90.0);
 }
 
 QTEST_MAIN(tst_qquickanchors)

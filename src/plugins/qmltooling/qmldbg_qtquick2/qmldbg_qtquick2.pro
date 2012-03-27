@@ -15,7 +15,8 @@ SOURCES += \
     selectiontool.cpp \
     qquickviewinspector.cpp \
     ../shared/abstracttool.cpp \
-    ../shared/abstractviewinspector.cpp
+    ../shared/abstractviewinspector.cpp \
+    zoomtool.cpp
 
 HEADERS += \
     qtquick2plugin.h \
@@ -25,7 +26,8 @@ HEADERS += \
     ../shared/abstracttool.h \
     ../shared/abstractviewinspector.h \
     ../shared/qqmlinspectorprotocol.h \
-    ../shared/qmlinspectorconstants.h
+    ../shared/qmlinspectorconstants.h \
+    zoomtool.h
 
 OTHER_FILES += qtquick2plugin.json
 

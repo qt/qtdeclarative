@@ -44,7 +44,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \since 4.7
+    \since 5.0
+    \inmodule QtQml
     \class QQmlExtensionPlugin
     \brief The QQmlExtensionPlugin class provides an abstract base for custom QML extension plugins.
 
@@ -75,7 +76,7 @@ QT_BEGIN_NAMESPACE
     as a new QML element. It provides the current time through \c hour and \c minute 
     properties, like this:
 
-    \snippet examples/declarative/cppextensions/plugins/plugin.cpp 0
+    \snippet examples/qml/cppextensions/plugins/plugin.cpp 0
     \dots
 
     To make this class available as a QML type, create a plugin that registers
@@ -83,9 +84,9 @@ QT_BEGIN_NAMESPACE
     module will be named \c com.nokia.TimeExample (as defined in the project
     file further below).
 
-    \snippet examples/declarative/cppextensions/plugins/plugin.cpp plugin
+    \snippet examples/qml/cppextensions/plugins/plugin.cpp plugin
     \codeline
-    \snippet examples/declarative/cppextensions/plugins/plugin.cpp export
+    \snippet examples/qml/cppextensions/plugins/plugin.cpp export
 
     This registers the \c TimeModel class with the 1.0 version of this 
     plugin library, as a QML type called \c Time. The Q_ASSERT statement 
@@ -120,6 +121,8 @@ QT_BEGIN_NAMESPACE
 
     The \l {Tutorial: Writing QML extensions with C++} also contains a chapter
     on creating QML plugins.
+
+    Note that the QtQuick 1 version is called QDeclarativeExtensionPlugin.
 
     \sa QQmlEngine::importPlugin(), {How to Create Qt Plugins}
 */

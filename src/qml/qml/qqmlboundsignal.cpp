@@ -55,6 +55,8 @@
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
 
+Q_DECLARE_METATYPE(QJSValue)
+
 QT_BEGIN_NAMESPACE
 
 class QQmlBoundSignalParameters : public QObject
@@ -87,42 +89,45 @@ private:
 
 static int evaluateIdx = -1;
 
-QQmlAbstractBoundSignal::QQmlAbstractBoundSignal(QObject *parent)
-: QObject(parent)
+QQmlAbstractBoundSignal::QQmlAbstractBoundSignal()
+: m_prevSignal(0), m_nextSignal(0)
 {
 }
 
 QQmlAbstractBoundSignal::~QQmlAbstractBoundSignal()
 {
+    if (m_prevSignal) {
+        *m_prevSignal = m_nextSignal;
+        if (m_nextSignal) m_nextSignal->m_prevSignal = m_prevSignal;
+        m_prevSignal = 0;
+        m_nextSignal = 0;
+    }
 }
 
-QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal, 
-                               QObject *parent)
-: m_expression(0), m_signal(signal), m_paramsValid(false), m_isEvaluating(false), m_params(0)
+void QQmlAbstractBoundSignal::addToObject()
+{
+    Q_ASSERT(!m_prevSignal);
+    QObject *obj = object();
+    Q_ASSERT(obj);
+
+    QQmlData *data = QQmlData::get(obj, true);
+
+    m_nextSignal = data->signalHandlers;
+    if (m_nextSignal) m_nextSignal->m_prevSignal = &m_nextSignal;
+    m_prevSignal = &data->signalHandlers;
+    data->signalHandlers = this;
+}
+
+QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
+                               QObject *owner)
+: m_expression(0), m_signal(signal), m_paramsValid(false), m_isEvaluating(false), m_params(0), m_owner(owner)
 {
     // This is thread safe.  Although it may be updated by two threads, they
     // will both set it to the same value - so the worst thing that can happen
     // is that they both do the work to figure it out.  Boo hoo.
     if (evaluateIdx == -1) evaluateIdx = metaObject()->methodCount();
 
-    QQml_setParent_noEvent(this, parent);
     QQmlPropertyPrivate::connect(scope, m_signal.methodIndex(), this, evaluateIdx);
-}
-
-QQmlBoundSignal::QQmlBoundSignal(QQmlContext *ctxt, const QString &val, 
-                               QObject *scope, const QMetaMethod &signal,
-                               QObject *parent)
-: m_expression(0), m_signal(signal), m_paramsValid(false), m_isEvaluating(false), m_params(0)
-{
-    // This is thread safe.  Although it may be updated by two threads, they
-    // will both set it to the same value - so the worst thing that can happen
-    // is that they both do the work to figure it out.  Boo hoo.
-    if (evaluateIdx == -1) evaluateIdx = metaObject()->methodCount();
-
-    QQml_setParent_noEvent(this, parent);
-    QQmlPropertyPrivate::connect(scope, m_signal.methodIndex(), this, evaluateIdx);
-
-    m_expression = new QQmlExpression(ctxt, scope, val);
 }
 
 QQmlBoundSignal::~QQmlBoundSignal()
@@ -157,12 +162,6 @@ QQmlExpression *QQmlBoundSignal::setExpression(QQmlExpression *e)
     m_expression = e;
     if (m_expression) m_expression->setNotifyOnValueChanged(false);
     return rv;
-}
-
-QQmlBoundSignal *QQmlBoundSignal::cast(QObject *o)
-{
-    QQmlAbstractBoundSignal *s = qobject_cast<QQmlAbstractBoundSignal*>(o);
-    return static_cast<QQmlBoundSignal *>(s);
 }
 
 int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
@@ -227,10 +226,14 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
             prop.setWritable(false);
         } else {
             QByteArray propType = type;
-            if ((QMetaType::typeFlags(t) & QMetaType::IsEnumeration) == QMetaType::IsEnumeration) {
+            QMetaType::TypeFlags flags = QMetaType::typeFlags(t);
+            if (flags & QMetaType::IsEnumeration) {
                 t = QVariant::Int;
                 propType = "int";
-            } else if (t == QMetaType::UnknownType) {
+            } else if (t == QMetaType::UnknownType ||
+                       (t >= int(QMetaType::User) && !(flags & QMetaType::PointerToQObject) &&
+                        t != qMetaTypeId<QJSValue>())) {
+                //the UserType clause is to catch registered QFlags
                 QByteArray scope;
                 QByteArray name;
                 int scopeIdx = propType.lastIndexOf("::");
@@ -244,7 +247,7 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
                 if (scope == "Qt")
                     meta = &QObject::staticQtMetaObject;
                 else
-                    meta = parent->parent()->metaObject();   //### assumes parent->parent()
+                    meta = static_cast<QQmlBoundSignal*>(parent)->object()->metaObject();
                 for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
                     QMetaEnum m = meta->enumerator(i);
                     if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope))) {
@@ -295,6 +298,71 @@ int QQmlBoundSignalParameters::metaCall(QMetaObject::Call c, int id, void **a)
     } else {
         return qt_metacall(c, id, a);
     }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+QQmlBoundSignalNoParams::QQmlBoundSignalNoParams(QObject *scope, const QMetaMethod &signal,
+                               QObject *owner)
+: m_expression(0), m_owner(owner), m_index(signal.methodIndex()), m_isEvaluating(false)
+{
+    callback = &subscriptionCallback;
+    QQmlNotifierEndpoint::connect(scope, m_index);
+}
+
+QQmlBoundSignalNoParams::~QQmlBoundSignalNoParams()
+{
+    delete m_expression;
+    m_expression = 0;
+}
+
+int QQmlBoundSignalNoParams::index() const
+{
+    return m_index;
+}
+
+/*!
+    Returns the signal expression.
+*/
+QQmlExpression *QQmlBoundSignalNoParams::expression() const
+{
+    return m_expression;
+}
+
+/*!
+    Sets the signal expression to \a e.  Returns the current signal expression,
+    or null if there is no signal expression.
+
+    The QQmlBoundSignalNoParams instance takes ownership of \a e.  The caller is
+    assumes ownership of the returned QQmlExpression.
+*/
+QQmlExpression *QQmlBoundSignalNoParams::setExpression(QQmlExpression *e)
+{
+    QQmlExpression *rv = m_expression;
+    m_expression = e;
+    if (m_expression) m_expression->setNotifyOnValueChanged(false);
+    return rv;
+}
+
+void QQmlBoundSignalNoParams::subscriptionCallback(QQmlNotifierEndpoint *e)
+{
+    QQmlBoundSignalNoParams *s = static_cast<QQmlBoundSignalNoParams*>(e);
+    if (!s->m_expression)
+        return;
+
+    if (QQmlDebugService::isDebuggingEnabled())
+        QV8DebugService::instance()->signalEmitted(QString::fromAscii(s->m_owner->metaObject()->method(s->m_index).methodSignature()));
+
+    QQmlHandlingSignalProfiler prof(s->m_owner, s->m_index, s->m_expression);
+
+    s->m_isEvaluating = true;
+
+    if (s->m_expression && s->m_expression->engine()) {
+        QQmlExpressionPrivate::get(s->m_expression)->value();
+        if (s->m_expression && s->m_expression->hasError())
+            QQmlEnginePrivate::warning(s->m_expression->engine(), s->m_expression->error());
+    }
+    s->m_isEvaluating = false;
 }
 
 QT_END_NAMESPACE

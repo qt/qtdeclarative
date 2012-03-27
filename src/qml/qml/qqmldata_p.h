@@ -63,6 +63,7 @@ template <class Key, class T> class QHash;
 class QQmlGuardImpl;
 class QQmlCompiledData;
 class QQmlAbstractBinding;
+class QQmlAbstractBoundSignal;
 class QQmlContext;
 class QQmlPropertyCache;
 class QQmlContextData;
@@ -79,7 +80,7 @@ public:
     QQmlData()
         : ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false), 
           hasTaintedV8Object(false), isQueuedForDeletion(false), notifyList(0), context(0), outerContext(0),
-          bindings(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0),
+          bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0),
           lineNumber(0), columnNumber(0), deferredComponent(0), deferredIdx(0), v8objectid(0), 
           propertyCache(0), guards(0), extendedData(0) {
           init(); 
@@ -136,6 +137,7 @@ public:
     QQmlContextData *outerContext;
 
     QQmlAbstractBinding *bindings;
+    QQmlAbstractBoundSignal *signalHandlers;
 
     // Linked list for QQmlContext::contextObjects
     QQmlData *nextContextObject;

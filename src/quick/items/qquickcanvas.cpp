@@ -389,7 +389,17 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
             bool doubleClick = event->timestamp() - touchMousePressTimestamp
                             < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
             touchMousePressTimestamp = event->timestamp();
+            QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
+            me.setTimestamp(event->timestamp());
+            me.setAccepted(false);
+            me.setCapabilities(event->device()->capabilities());
+            deliverMouseEvent(&me);
+            if (me.isAccepted()) {
+                touchMouseId = p.id();
+                event->setAccepted(true);
+            }
             if (doubleClick) {
+                touchMousePressTimestamp = 0;
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonDblClick, p);
                 me.setTimestamp(event->timestamp());
                 me.setAccepted(false);
@@ -406,15 +416,6 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
                         event->setAccepted(true);
                     }
                 }
-            }
-            QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
-            me.setTimestamp(event->timestamp());
-            me.setAccepted(false);
-            me.setCapabilities(event->device()->capabilities());
-            deliverMouseEvent(&me);
-            if (me.isAccepted()) {
-                touchMouseId = p.id();
-                event->setAccepted(true);
             }
             if (touchMouseId != -1)
                 break;
@@ -531,7 +532,7 @@ void QQuickCanvasPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, F
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-            qApp->inputMethod()->reset();
+            qApp->inputMethod()->commit();
 #endif
 
             activeFocusItem = 0;
@@ -627,7 +628,7 @@ void QQuickCanvasPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         Q_ASSERT(oldActiveFocusItem);
 
 #ifndef QT_NO_IM
-        qApp->inputMethod()->reset();
+        qApp->inputMethod()->commit();
 #endif
 
         activeFocusItem = 0;
@@ -992,6 +993,10 @@ bool QQuickCanvas::event(QEvent *e)
         break;
     case QEvent::WindowDeactivate:
         rootItem()->windowDeactivateEvent();
+        break;
+    case QEvent::FocusAboutToChange:
+        if (d->activeFocusItem)
+            qGuiApp->inputMethod()->commit();
         break;
     default:
         break;

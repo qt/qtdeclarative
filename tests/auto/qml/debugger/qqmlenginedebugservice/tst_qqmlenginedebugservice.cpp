@@ -202,18 +202,11 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
     foreach (const QmlDebugPropertyReference &p, oref.properties) {
         QCOMPARE(p.objectDebugId, QQmlDebugService::idForObject(o));
 
-        // signal properties are fake - they are generated from QQmlBoundSignal children
+        // signal properties are fake - they are generated from QQmlAbstractBoundSignal children
         if (p.name.startsWith("on") && p.name.length() > 2 && p.name[2].isUpper()) {
-            QList<QQmlBoundSignal*> signalHandlers =
-                    o->findChildren<QQmlBoundSignal*>();
             QString signal = p.value.toString();
-            bool found = false;
-            for (int i = 0; i < signalHandlers.count(); ++i)
-                if (signalHandlers.at(i)->expression()->expression() == signal) {
-                    found = true;
-                    break;
-                }
-            QVERIFY(found);
+            QQmlExpression *expr = QQmlPropertyPrivate::signalExpression(QQmlProperty(o, p.name));
+            QVERIFY(expr && expr->expression() == signal);
             QVERIFY(p.valueTypeName.isEmpty());
             QVERIFY(p.binding.isEmpty());
             QVERIFY(!p.hasNotifySignal);

@@ -72,7 +72,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
 \class QQmlProperty
-\since 4.7
+\since 5.0
+\inmodule QtQml
 \brief The QQmlProperty class abstracts accessing properties on objects created from  QML.
 
 As QML uses Qt's meta-type system all of the existing QMetaObject classes can be used to introspect
@@ -108,6 +109,8 @@ qWarning() << "Current pixel size:" << property.read().toInt();
 property.write(24);
 qWarning() << "Pixel size should now be 24:" << property.read().toInt();
 \endcode
+
+The QtQuick 1 version of this class was named QDeclarativeProperty.
 */
 
 /*!
@@ -923,15 +926,17 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
     if (!(that.type() & QQmlProperty::SignalProperty))
         return 0;
 
-    const QObjectList &children = that.d->object->children();
-    
-    for (int ii = 0; ii < children.count(); ++ii) {
-        QObject *child = children.at(ii);
+    QQmlData *data = QQmlData::get(that.d->object);
+    if (!data)
+        return 0;
 
-        QQmlBoundSignal *signal = QQmlBoundSignal::cast(child);
-        if (signal && signal->index() == that.index()) 
-            return signal->expression();
-    }
+    QQmlAbstractBoundSignal *signalHandler = data->signalHandlers;
+
+    while (signalHandler && signalHandler->index() != that.index())
+        signalHandler = signalHandler->m_nextSignal;
+
+    if (signalHandler)
+        return signalHandler->expression();
 
     return 0;
 }
@@ -952,19 +957,27 @@ QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
         return 0;
     }
 
-    const QObjectList &children = that.d->object->children();
-    
-    for (int ii = 0; ii < children.count(); ++ii) {
-        QObject *child = children.at(ii);
+    QQmlData *data = QQmlData::get(that.d->object, 0 != expr);
+    if (!data)
+        return 0;
 
-        QQmlBoundSignal *signal = QQmlBoundSignal::cast(child);
-        if (signal && signal->index() == that.index()) 
-            return signal->setExpression(expr);
-    }
+    QQmlAbstractBoundSignal *signalHandler = data->signalHandlers;
+
+    while (signalHandler && signalHandler->index() != that.index())
+        signalHandler = signalHandler->m_nextSignal;
+
+    if (signalHandler)
+        return signalHandler->setExpression(expr);
 
     if (expr) {
-        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
-        return signal->setExpression(expr);
+        QQmlAbstractBoundSignal *signal = 0;
+        if (that.method().parameterTypes().count())
+            signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
+        else
+            signal = new QQmlBoundSignalNoParams(that.d->object, that.method(), that.d->object);
+        QQmlExpression *oldExpr = signal->setExpression(expr);
+        signal->addToObject();
+        return oldExpr;
     } else {
         return 0;
     }

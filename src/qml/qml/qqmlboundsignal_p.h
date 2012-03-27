@@ -57,35 +57,47 @@
 
 #include <QtCore/qmetaobject.h>
 
+#include <private/qqmlnotifier_p.h>
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_EXPORT QQmlAbstractBoundSignal : public QObject
+class Q_QML_EXPORT QQmlAbstractBoundSignal
 {
-    Q_OBJECT
 public:
-    QQmlAbstractBoundSignal(QObject *parent = 0);
-    virtual ~QQmlAbstractBoundSignal() = 0;
+    QQmlAbstractBoundSignal();
+    virtual ~QQmlAbstractBoundSignal();
+
+    virtual int index() const = 0;
+    virtual QQmlExpression *expression() const = 0;
+    virtual QQmlExpression *setExpression(QQmlExpression *) = 0;
+    virtual QObject *object() = 0;
+
+    void addToObject();
+
+private:
+    friend class QQmlData;
+    friend class QQmlPropertyPrivate;
+    friend class QQmlEngineDebugService;
+    QQmlAbstractBoundSignal **m_prevSignal;
+    QQmlAbstractBoundSignal  *m_nextSignal;
 };
 
 class QQmlBoundSignalParameters;
-class Q_QML_EXPORT QQmlBoundSignal : public QQmlAbstractBoundSignal
+class Q_QML_EXPORT QQmlBoundSignal : public QObject,
+                                     public QQmlAbstractBoundSignal
 {
 public:
-    QQmlBoundSignal(QObject *scope, const QMetaMethod &signal, QObject *parent);
-    QQmlBoundSignal(QQmlContext *ctxt, const QString &val, QObject *scope, 
-                   const QMetaMethod &signal, QObject *parent);
+    QQmlBoundSignal(QObject *scope, const QMetaMethod &signal, QObject *owner);
     virtual ~QQmlBoundSignal();
 
     int index() const;
 
     QQmlExpression *expression() const;
     QQmlExpression *setExpression(QQmlExpression *);
+    QObject *object() { return m_owner; }
 
     bool isEvaluating() const { return m_isEvaluating; }
-
-    static QQmlBoundSignal *cast(QObject *);
 
 protected:
     virtual int qt_metacall(QMetaObject::Call c, int id, void **a);
@@ -96,7 +108,33 @@ private:
     bool m_paramsValid : 1;
     bool m_isEvaluating : 1;
     QQmlBoundSignalParameters *m_params;
+    QObject *m_owner;
 };
+
+class Q_QML_EXPORT QQmlBoundSignalNoParams : public QQmlAbstractBoundSignal,
+                                             public QQmlNotifierEndpoint
+{
+public:
+    QQmlBoundSignalNoParams(QObject *scope, const QMetaMethod &signal, QObject *owner);
+    virtual ~QQmlBoundSignalNoParams();
+
+    int index() const;
+
+    QQmlExpression *expression() const;
+    QQmlExpression *setExpression(QQmlExpression *);
+    QObject *object() { return m_owner; }
+
+    static void subscriptionCallback(QQmlNotifierEndpoint *e);
+
+    bool isEvaluating() const { return m_isEvaluating; }
+
+private:
+    QQmlExpression *m_expression;
+    QObject *m_owner;
+    int m_index;
+    bool m_isEvaluating;
+};
+
 
 QT_END_NAMESPACE
 

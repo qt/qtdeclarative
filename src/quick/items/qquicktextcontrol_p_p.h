@@ -137,7 +137,6 @@ public:
     QTextCursor cursor;
     QTextCursor selectedWordOnDoubleClick;
     QTextCursor selectedBlockOnTrippleClick;
-    QString tentativeCommit;
     QString highlightedAnchor; // Anchor below cursor
     QString anchorOnMousePress;
     QString linkToCopy;

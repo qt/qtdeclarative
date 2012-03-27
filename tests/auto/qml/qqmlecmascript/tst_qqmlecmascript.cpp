@@ -245,6 +245,7 @@ private slots:
     void revision();
     void invokableWithQObjectDerived();
     void realTypePrecision();
+    void registeredFlagMethod();
 
     void automaticSemicolon();
     void unaryExpression();
@@ -3372,6 +3373,17 @@ void tst_qqmlecmascript::moduleApi_data()
             << QVariantList()
             << QStringList()
             << QVariantList();
+
+    QTest::newRow("legacy module api registration")
+            << testFileUrl("moduleapi/qobjectModuleApiLegacy.qml")
+            << QString()
+            << QStringList() // warning doesn't occur in the test, but in registerTypes()
+            << (QStringList() << "legacyModulePropertyTest" << "legacyModuleMethodTest")
+            << (QVariantList() << 20 << 2)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
 }
 
 void tst_qqmlecmascript::moduleApi()
@@ -6380,6 +6392,20 @@ void tst_qqmlecmascript::realTypePrecision()
     QCOMPARE(object->property("test4").toDouble(), 1234567890.);
     QCOMPARE(object->property("test5").toDouble(), 1234567890.);
     QCOMPARE(object->property("test6").toDouble(), 1234567890.*2);
+}
+
+void tst_qqmlecmascript::registeredFlagMethod()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("registeredFlagMethod.qml"));
+    MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->buttons(), 0);
+    emit object->basicSignal();
+    QCOMPARE(object->buttons(), Qt::RightButton);
+
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

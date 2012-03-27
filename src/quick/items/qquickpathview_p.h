@@ -73,6 +73,7 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
     Q_PROPERTY(int highlightMoveDuration READ highlightMoveDuration WRITE setHighlightMoveDuration NOTIFY highlightMoveDurationChanged)
 
     Q_PROPERTY(qreal dragMargin READ dragMargin WRITE setDragMargin NOTIFY dragMarginChanged)
+    Q_PROPERTY(qreal maximumFlickVelocity READ maximumFlickVelocity WRITE setMaximumFlickVelocity NOTIFY maximumFlickVelocityChanged)
     Q_PROPERTY(qreal flickDeceleration READ flickDeceleration WRITE setFlickDeceleration NOTIFY flickDecelerationChanged)
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged)
 
@@ -126,6 +127,9 @@ public:
     qreal flickDeceleration() const;
     void setFlickDeceleration(qreal dec);
 
+    qreal maximumFlickVelocity() const;
+    void setMaximumFlickVelocity(qreal);
+
     bool isInteractive() const;
     void setInteractive(bool);
 
@@ -160,6 +164,7 @@ Q_SIGNALS:
     void snapPositionChanged();
     void delegateChanged();
     void pathItemCountChanged();
+    void maximumFlickVelocityChanged();
     void flickDecelerationChanged();
     void interactiveChanged();
     void movingChanged();

@@ -2287,16 +2287,6 @@ void tst_qquicktextedit::textInput()
     QQuickTextEditPrivate *editPrivate = static_cast<QQuickTextEditPrivate*>(QQuickItemPrivate::get(edit));
     QCOMPARE(editPrivate->text, QString("Hello world!"));
 
-    // test that tentative commit is included in text property
-    edit->setText("");
-    spy.clear();
-    QList<QInputMethodEvent::Attribute> attributes;
-    QInputMethodEvent event2("preedit", attributes);
-    event2.setTentativeCommitString("string");
-    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event2);
-    QCOMPARE(spy.count(), 1);
-    QCOMPARE(edit->text(), QString("string"));
-
     QInputMethodQueryEvent queryEvent(Qt::ImEnabled);
     QGuiApplication::sendEvent(qGuiApp->focusObject(), &queryEvent);
     QCOMPARE(queryEvent.value(Qt::ImEnabled).toBool(), true);

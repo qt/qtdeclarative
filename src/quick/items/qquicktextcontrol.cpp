@@ -1459,7 +1459,6 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
         }
     }
     layout->setAdditionalFormats(overrides);
-    tentativeCommit = e->tentativeCommitString();
 
     cursor.endEditBlock();
 
@@ -1503,7 +1502,6 @@ void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
     if (e->gotFocus()) {
         setBlinkingCursorEnabled(interactionFlags & (Qt::TextEditable | Qt::TextSelectableByKeyboard));
     } else {
-        commitPreedit();
         setBlinkingCursorEnabled(false);
 
         if (cursorIsFocusIndicator
@@ -1732,14 +1730,12 @@ void QQuickTextControlPrivate::commitPreedit()
     if (!isPreediting())
         return;
 
+    qApp->inputMethod()->commit();
+
+    if (!isPreediting())
+        return;
+
     cursor.beginEditBlock();
-    qApp->inputMethod()->reset();
-
-    if (!tentativeCommit.isEmpty()) {
-        cursor.insertText(tentativeCommit);
-        tentativeCommit.clear();
-    }
-
     preeditCursor = 0;
     QTextBlock block = cursor.block();
     QTextLayout *layout = block.layout();
@@ -1767,17 +1763,12 @@ Qt::TextInteractionFlags QQuickTextControl::textInteractionFlags() const
 
 QString QQuickTextControl::toPlainText() const
 {
-    Q_D(const QQuickTextControl);
-    QString plainText = document()->toPlainText();
-    if (!d->tentativeCommit.isEmpty())
-        plainText.insert(textCursor().position(), d->tentativeCommit);
-    return plainText;
+    return document()->toPlainText();
 }
 
 #ifndef QT_NO_TEXTHTMLPARSER
 QString QQuickTextControl::toHtml() const
 {
-    // note: currently not including tentative commit
     return document()->toHtml();
 }
 #endif

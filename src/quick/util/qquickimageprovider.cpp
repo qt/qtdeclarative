@@ -53,6 +53,7 @@ public:
     \class QQuickTextureFactory
     \since 5.0
     \brief The QQuickTextureFactory class provides an interface for loading custom textures from QML.
+    \inmodule QtQml
 
     The purpose of the texture factory is to provide a placeholder for a image
     data that can be converted into an OpenGL texture.
@@ -110,7 +111,8 @@ QImage QQuickTextureFactory::image() const
 
 /*!
     \class QQuickImageProvider
-    \since 4.7
+    \since 5.0
+    \inmodule QtQuick
     \brief The QQuickImageProvider class provides an interface for supporting pixmaps and threaded image requests in QML.
 
     QQuickImageProvider is used to provide advanced image loading features
@@ -217,6 +219,8 @@ QImage QQuickTextureFactory::image() const
     be fetched from the image provider, and should not be cached at all, set the
     \c cache property to \c false for the relevant \l Image, \l BorderImage or
     \l AnimatedImage object.
+
+    The QtQuick 1 version of this class is named QDeclarativeImageProvider.
 
     \sa QQmlEngine::addImageProvider()
 */

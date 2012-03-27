@@ -908,6 +908,10 @@ int registerModuleApi(const QQmlPrivate::RegisterModuleApi &api)
     import.minor = api.versionMinor;
     import.script = api.scriptApi;
     import.qobject = api.qobjectApi;
+    import.instanceMetaObject = (api.qobjectApi && api.version >= 1) ? api.instanceMetaObject : 0; // BC with version 0.
+
+    if (import.qobject && !import.instanceMetaObject) // BC - check import.iMO rather than api.iMO.
+        qWarning() << "qmlRegisterModuleApi(): sub-optimal: use the templated version of this function instead!";
 
     int index = data->moduleApiCount++;
 

@@ -402,7 +402,7 @@ void QQuickTextPrivate::updateSize()
     if (text.isEmpty()) {
         qreal fontHeight = fm.height();
         q->setImplicitSize(0, fontHeight);
-        layedOutTextRect = QRect(0, 0, 0, fontHeight);
+        layedOutTextRect = QRectF(0, 0, 0, fontHeight);
         emit q->contentSizeChanged();
         updateType = UpdatePaintNode;
         q->update();
@@ -2001,7 +2001,20 @@ QRectF QQuickText::boundingRect() const
 
     // Could include font max left/right bearings to either side of rectangle.
 
-    int h = height();
+    qreal w = width();
+    switch (d->hAlign) {
+    case AlignLeft:
+    case AlignJustify:
+        break;
+    case AlignRight:
+        rect.moveLeft(w - rect.width());
+        break;
+    case AlignHCenter:
+        rect.moveLeft((w - rect.width()) / 2);
+        break;
+    }
+
+    qreal h = height();
     switch (d->vAlign) {
     case AlignTop:
         break;

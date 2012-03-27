@@ -69,6 +69,7 @@
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
 #include <private/qv8profilerservice_p.h>
+#include <private/qqmlboundsignal_p.h>
 
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qsettings.h>
@@ -507,7 +508,8 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
 
 /*!
   \class QQmlEngine
-  \since 4.7
+  \since 5.0
+  \inmodule QtQml
   \brief The QQmlEngine class provides an environment for instantiating QML components.
   \mainclass
 
@@ -532,6 +534,8 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
 
   In this case, the Text item will be created in the engine's
   \l {QQmlEngine::rootContext()}{root context}.
+
+  Note that the QtQuick 1 version is called QDeclarativeEngine.
 
   \sa QQmlComponent QQmlContext
 */
@@ -1020,10 +1024,11 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
 
-QQmlDebuggingEnabler::QQmlDebuggingEnabler()
+QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {
 #ifndef QQML_NO_DEBUG_PROTOCOL
-    if (!QQmlEnginePrivate::qml_debugging_enabled) {
+    if (!QQmlEnginePrivate::qml_debugging_enabled
+            && printWarning) {
         qDebug("QML debugging is enabled. Only use this in a safe environment.");
     }
     QQmlEnginePrivate::qml_debugging_enabled = true;
@@ -1151,6 +1156,15 @@ void QQmlData::destroyed(QObject *object)
         binding->m_nextBinding = 0;
         binding->destroy();
         binding = next;
+    }
+
+    QQmlAbstractBoundSignal *signalHandler = signalHandlers;
+    while (signalHandler) {
+        QQmlAbstractBoundSignal *next = signalHandler->m_nextSignal;
+        signalHandler->m_prevSignal = 0;
+        signalHandler->m_nextSignal = 0;
+        delete signalHandler;
+        signalHandler = next;
     }
 
     if (bindingBits)
@@ -1690,6 +1704,7 @@ QQmlEnginePrivate::moduleApiInstance(const QQmlMetaType::ModuleApi &module)
         a = new QQmlMetaType::ModuleApiInstance;
         a->scriptCallback = module.script;
         a->qobjectCallback = module.qobject;
+        a->instanceMetaObject = module.instanceMetaObject;
         moduleApiInstances.insert(module, a);
     }
 

@@ -107,6 +107,8 @@ public:
 
     void applyChanges(const QQuickChangeSet &changeSet);
 
+    void applyBufferedChanges(const QQuickItemViewChangeSet &other);
+
     int itemCount;
     int newCurrentIndex;
     QQuickChangeSet pendingChanges;
@@ -245,6 +247,7 @@ public:
     int requestedIndex;
     FxViewItem *requestedItem;
     QQuickItemViewChangeSet currentChanges;
+    QQuickItemViewChangeSet bufferedChanges;
 
     QQmlComponent *highlightComponent;
     FxViewItem *highlight;

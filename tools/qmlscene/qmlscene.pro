@@ -12,6 +12,6 @@ macx: CONFIG -= app_bundle
 
 SOURCES += main.cpp
 
-CONFIG += console declarative_debug
+CONFIG += console
 
-DEFINES += QML_RUNTIME_TESTING
+DEFINES += QML_RUNTIME_TESTING QT_DECLARATIVE_DEBUG_NO_WARNING

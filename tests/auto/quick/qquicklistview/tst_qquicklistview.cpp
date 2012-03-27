@@ -189,6 +189,7 @@ private slots:
     void multipleDisplaced();
 
     void flickBeyondBounds();
+    void destroyItemOnCreation();
 
 private:
     template <class T> void items(const QUrl &source, bool forceLayout);
@@ -6245,6 +6246,32 @@ void tst_QQuickListView::flickBeyondBounds()
     delete canvas;
 }
 
+void tst_QQuickListView::destroyItemOnCreation()
+{
+    QmlListModel model;
+    QQuickView *canvas = createView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+
+    canvas->setSource(testFileUrl("destroyItemOnCreation.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QVERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QCOMPARE(canvas->rootObject()->property("createdIndex").toInt(), -1);
+    model.addItem("new item", "");
+    QTRY_COMPARE(canvas->rootObject()->property("createdIndex").toInt(), 0);
+
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
+    QCOMPARE(model.count(), 0);
+
+    delete canvas;
+}
 
 QTEST_MAIN(tst_QQuickListView)
 

@@ -124,6 +124,7 @@ private slots:
     void currentOffsetOnInsertion();
     void asynchronous();
     void cancelDrag();
+    void maximumFlickVelocity();
 };
 
 class TestObject : public QObject
@@ -944,6 +945,13 @@ void tst_QQuickPathView::propertyChanges()
 
     QCOMPARE(snapPositionSpy.count(), 1);
     QCOMPARE(dragMarginSpy.count(), 1);
+
+    QSignalSpy maximumFlickVelocitySpy(pathView, SIGNAL(maximumFlickVelocityChanged()));
+    pathView->setMaximumFlickVelocity(1000);
+    QCOMPARE(maximumFlickVelocitySpy.count(), 1);
+    pathView->setMaximumFlickVelocity(1000);
+    QCOMPARE(maximumFlickVelocitySpy.count(), 1);
+
     delete canvas;
 }
 
@@ -1487,6 +1495,52 @@ void tst_QQuickPathView::cancelDrag()
 
     delete canvas;
 }
+
+void tst_QQuickPathView::maximumFlickVelocity()
+{
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("dragpath.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QVERIFY(pathview != 0);
+
+    pathview->setMaximumFlickVelocity(700);
+    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+    QVERIFY(pathview->isMoving());
+    QVERIFY(pathview->isFlicking());
+    QTRY_VERIFY(!pathview->isMoving());
+
+    double dist1 = 100 - pathview->offset();
+
+    pathview->setOffset(0.);
+    pathview->setMaximumFlickVelocity(300);
+    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+    QVERIFY(pathview->isMoving());
+    QVERIFY(pathview->isFlicking());
+    QTRY_VERIFY(!pathview->isMoving());
+
+    double dist2 = 100 - pathview->offset();
+
+    pathview->setOffset(0.);
+    pathview->setMaximumFlickVelocity(500);
+    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+    QVERIFY(pathview->isMoving());
+    QVERIFY(pathview->isFlicking());
+    QTRY_VERIFY(!pathview->isMoving());
+
+    double dist3 = 100 - pathview->offset();
+
+    QVERIFY(dist1 > dist2);
+    QVERIFY(dist3 > dist2);
+    QVERIFY(dist2 < dist1);
+
+    delete canvas;
+}
+
 
 
 QTEST_MAIN(tst_QQuickPathView)

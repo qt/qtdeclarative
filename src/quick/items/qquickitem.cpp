@@ -3067,10 +3067,6 @@ void QQuickItem::updatePolish()
 {
 }
 
-void QQuickItem::sendAccessibilityUpdate()
-{
-}
-
 void QQuickItemPrivate::addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
 {
     changeListeners.append(ChangeListener(listener, types));
@@ -3316,6 +3312,10 @@ void QQuickItem::setBaselineOffset(qreal offset)
                 anchor->updateVerticalAnchors();
         }
     }
+
+    if (d->_anchors && (d->_anchors->usedAnchors() & QQuickAnchors::BaselineAnchor))
+        QQuickAnchorsPrivate::get(d->_anchors)->updateVerticalAnchors();
+
     emit baselineOffsetChanged(offset);
 }
 

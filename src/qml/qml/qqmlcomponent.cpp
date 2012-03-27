@@ -110,8 +110,9 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
 /*!
     \class QQmlComponent
-    \since 4.7
+    \since 5.0
     \brief The QQmlComponent class encapsulates a QML component definition.
+    \inmodule QtQml
     \mainclass
 
     Components are reusable, encapsulated QML elements with well-defined interfaces.
@@ -178,6 +179,8 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
         }
     }
     \endcode
+
+    Note that the QtQuick 1 version is named QDeclarativeComponent.
 
     \sa {Using QML Bindings in C++ Applications}, {Integrating QML Code with Existing Qt UI Code}
 */

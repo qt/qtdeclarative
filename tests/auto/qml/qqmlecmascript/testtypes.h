@@ -103,7 +103,7 @@ class MyQmlObject : public QObject
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intChanged)
 
 public:
-    MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13), m_intProperty(0) {}
+    MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13), m_intProperty(0), m_buttons(0) {}
 
     enum MyEnum { EnumValue1 = 0, EnumValue2 = 1 };
     enum MyEnum2 { EnumValue3 = 2, EnumValue4 = 3 };
@@ -174,6 +174,7 @@ public:
     };
     QVariant variant() const { return m_variant; }
     QJSValue qjsvalue() const { return m_qjsvalue; }
+    Qt::MouseButtons buttons() const { return m_buttons; }
 
     int intProperty() const { return m_intProperty; }
     void setIntProperty(int i) { m_intProperty = i; emit intChanged(); }
@@ -202,6 +203,7 @@ public slots:
     void variantMethod(const QVariant &v) { m_variant = v; }
     void qjsvalueMethod(const QJSValue &v) { m_qjsvalue = v; }
     void v8function(QQmlV8Function*);
+    void registeredFlagMethod(Qt::MouseButtons v) { m_buttons = v; }
 
 private:
     friend class tst_qqmlecmascript;
@@ -218,6 +220,7 @@ private:
     QVariant m_variant;
     QJSValue m_qjsvalue;
     int m_intProperty;
+    Qt::MouseButtons m_buttons;
 };
 
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)

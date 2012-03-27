@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
 class QMouseEvent;
 class QKeyEvent;
 class QWheelEvent;
+class QTouchEvent;
 QT_END_NAMESPACE
 
 namespace QmlJSDebugger {
@@ -75,6 +76,8 @@ public:
 
     virtual void keyPressEvent(QKeyEvent *event) = 0;
     virtual void keyReleaseEvent(QKeyEvent *keyEvent) = 0;
+
+    virtual void touchEvent(QTouchEvent *) {}
 
 private:
     AbstractViewInspector *m_inspector;

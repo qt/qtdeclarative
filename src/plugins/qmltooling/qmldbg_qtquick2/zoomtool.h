@@ -39,30 +39,73 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUG_H
-#define QQMLDEBUG_H
+#ifndef ZOOMTOOL_H
+#define ZOOMTOOL_H
 
-#include <QtQml/qtqmlglobal.h>
+#include "abstracttool.h"
 
-QT_BEGIN_HEADER
+#include <QtCore/QPointF>
 
-QT_BEGIN_NAMESPACE
+QT_FORWARD_DECLARE_CLASS(QQuickView)
+QT_FORWARD_DECLARE_CLASS(QQuickItem)
 
+namespace QmlJSDebugger {
+namespace QtQuick2 {
 
-struct Q_QML_EXPORT QQmlDebuggingEnabler
+class QQuickViewInspector;
+
+class ZoomTool : public AbstractTool
 {
-    QQmlDebuggingEnabler(bool printWarning = true);
+    Q_OBJECT
+
+public:
+    enum ZoomDirection {
+        ZoomIn,
+        ZoomOut
+    };
+
+    explicit ZoomTool(QQuickViewInspector *inspector, QQuickView *view);
+    virtual ~ZoomTool();
+    void leaveEvent(QEvent *) {}
+
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *event);
+
+    void hoverMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
+
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *event);
+
+    void touchEvent(QTouchEvent *event);
+
+private:
+    qreal nextZoomScale(ZoomDirection direction);
+    void scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter);
+    void zoomTo100();
+    void zoomIn();
+    void zoomOut();
+
+private:
+    bool m_originalSmooth;
+    bool m_dragStarted;
+    bool m_pinchStarted;
+    QQuickItem *m_rootItem;
+    QPointF m_adjustedOrigin;
+    QPointF m_dragStartPosition;
+    QPointF m_mousePosition;
+    QPointF m_originalPosition;
+    qreal m_currentScale;
+    qreal m_smoothScaleFactor;
+    qreal m_minScale;
+    qreal m_maxScale;
+    qreal m_tapScaleCounter;
+    qreal m_originalScale;
 };
 
-// Execute code in constructor before first QQmlEngine is instantiated
-#if defined(QT_DECLARATIVE_DEBUG_NO_WARNING)
-static QQmlDebuggingEnabler qmlEnableDebuggingHelper(false);
-#elif defined(QT_DECLARATIVE_DEBUG)
-static QQmlDebuggingEnabler qmlEnableDebuggingHelper(true);
-#endif
+} // namespace QtQuick2
+} // namespace QmlJSDebugger
 
-QT_END_NAMESPACE
-
-QT_END_HEADER
-
-#endif // QQMLDEBUG_H
+#endif // ZOOMTOOL_H

@@ -188,7 +188,6 @@ public:
     QString m_text;
     QString m_inputMask;
     QString m_cancelText;
-    QString m_tentativeCommit;
     QFont font;
     QFont sourceFont;
 
