@@ -54,7 +54,7 @@
 //
 
 #include <private/qqmldebugservice_p.h>
-#include "qqmlexpression.h"
+#include <private/qqmlboundsignal_p.h>
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmetaobject.h>
@@ -201,7 +201,7 @@ struct QQmlBindingProfiler {
 };
 
 struct QQmlHandlingSignalProfiler {
-    QQmlHandlingSignalProfiler(const QMetaMethod &signal, QQmlExpression *expression)
+    QQmlHandlingSignalProfiler(const QMetaMethod &signal, QQmlBoundSignalExpression *expression)
     {
         enabled = QQmlProfilerService::instance
                 ? QQmlProfilerService::instance->profilingEnabled() : false;
@@ -209,7 +209,7 @@ struct QQmlHandlingSignalProfiler {
             init(signal, expression);
     }
 
-    QQmlHandlingSignalProfiler(QObject *object, int index, QQmlExpression *expression)
+    QQmlHandlingSignalProfiler(QObject *object, int index, QQmlBoundSignalExpression *expression)
     {
         enabled = QQmlProfilerService::instance
                 ? QQmlProfilerService::instance->profilingEnabled() : false;
@@ -226,7 +226,7 @@ struct QQmlHandlingSignalProfiler {
     bool enabled;
 
 private:
-    void init(const QMetaMethod &signal, QQmlExpression *expression)
+    void init(const QMetaMethod &signal, QQmlBoundSignalExpression *expression)
     {
         QQmlProfilerService *service = QQmlProfilerService::instance;
         service->startRange(QQmlProfilerService::HandlingSignal);

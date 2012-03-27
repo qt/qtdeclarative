@@ -920,7 +920,7 @@ QQmlPropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, int valu
     Returns the expression associated with this signal property, or 0 if no 
     signal expression exists.
 */
-QQmlExpression *
+QQmlBoundSignalExpression *
 QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
 {
     if (!(that.type() & QQmlProperty::SignalProperty))
@@ -948,9 +948,9 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
     Ownership of \a expr transfers to QML.  Ownership of the return value is
     assumed by the caller.
 */
-QQmlExpression *
+QQmlBoundSignalExpression *
 QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
-                                                     QQmlExpression *expr) 
+                                         QQmlBoundSignalExpression *expr)
 {
     if (!(that.type() & QQmlProperty::SignalProperty)) {
         delete expr;
@@ -975,7 +975,7 @@ QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
             signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
         else
             signal = new QQmlBoundSignalNoParams(that.d->object, that.method(), that.d->object);
-        QQmlExpression *oldExpr = signal->setExpression(expr);
+        QQmlBoundSignalExpression *oldExpr = signal->setExpression(expr);
         signal->addToObject();
         return oldExpr;
     } else {

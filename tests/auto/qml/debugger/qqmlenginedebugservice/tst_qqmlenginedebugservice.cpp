@@ -205,7 +205,7 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
         // signal properties are fake - they are generated from QQmlAbstractBoundSignal children
         if (p.name.startsWith("on") && p.name.length() > 2 && p.name[2].isUpper()) {
             QString signal = p.value.toString();
-            QQmlExpression *expr = QQmlPropertyPrivate::signalExpression(QQmlProperty(o, p.name));
+            QQmlBoundSignalExpression *expr = QQmlPropertyPrivate::signalExpression(QQmlProperty(o, p.name));
             QVERIFY(expr && expr->expression() == signal);
             QVERIFY(p.valueTypeName.isEmpty());
             QVERIFY(p.binding.isEmpty());

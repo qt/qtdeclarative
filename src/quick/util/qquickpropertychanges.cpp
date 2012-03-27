@@ -55,6 +55,7 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlcontext_p.h>
 #include <private/qquickstate_p_p.h>
+#include <private/qqmlboundsignal_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -139,7 +140,7 @@ class QQuickReplaceSignalHandler : public QQuickActionEvent
 {
 public:
     QQuickReplaceSignalHandler() : expression(0), reverseExpression(0),
-                                rewindExpression(0), ownedExpression(0) {}
+                                rewindExpression(0), ownedExpression(0), ownedExpressionWatcher(0) {}
     ~QQuickReplaceSignalHandler() {
         delete ownedExpression;
     }
@@ -147,22 +148,35 @@ public:
     virtual EventType type() const { return SignalHandler; }
 
     QQmlProperty property;
-    QQmlExpression *expression;
-    QQmlExpression *reverseExpression;
-    QQmlExpression *rewindExpression;
-    QQmlGuard<QQmlExpression> ownedExpression;
+    QQmlBoundSignalExpression *expression;
+    QQmlBoundSignalExpression *reverseExpression;
+    QQmlBoundSignalExpression *rewindExpression;
+    QQmlBoundSignalExpression *ownedExpression;
+    QQmlAbstractExpression::DeleteWatcher *ownedExpressionWatcher; // TODO: refactor the ownership impl.
 
     virtual void execute(Reason) {
         ownedExpression = QQmlPropertyPrivate::setSignalExpression(property, expression);
-        if (ownedExpression == expression)
+        if (ownedExpression == expression) {
+            delete ownedExpressionWatcher;
+            ownedExpressionWatcher = 0;
             ownedExpression = 0;
+        } else if (ownedExpression) {
+            delete ownedExpressionWatcher;
+            ownedExpressionWatcher = new QQmlAbstractExpression::DeleteWatcher(ownedExpression);
+        }
     }
 
     virtual bool isReversable() { return true; }
     virtual void reverse(Reason) {
         ownedExpression = QQmlPropertyPrivate::setSignalExpression(property, reverseExpression);
-        if (ownedExpression == reverseExpression)
+        if (ownedExpression == reverseExpression) {
+            delete ownedExpressionWatcher;
+            ownedExpressionWatcher = 0;
             ownedExpression = 0;
+        } else if (ownedExpression) {
+            delete ownedExpressionWatcher;
+            ownedExpressionWatcher = new QQmlAbstractExpression::DeleteWatcher(ownedExpression);
+        }
     }
 
     virtual void saveOriginals() {
@@ -181,6 +195,8 @@ public:
         if (rsh->ownedExpression == reverseExpression) {
             ownedExpression = rsh->ownedExpression;
             rsh->ownedExpression = 0;
+            delete ownedExpressionWatcher;
+            ownedExpressionWatcher = new QQmlAbstractExpression::DeleteWatcher(ownedExpression);
         }
     }
 
@@ -225,11 +241,17 @@ public:
     public:
         ExpressionChange(const QString &_name,
                          QQmlBinding::Identifier _id,
-                         QQmlExpression *_expr)
-            : name(_name), id(_id), expression(_expr) {}
+                         const QString& _expr,
+                         const QUrl &_url,
+                         int _line,
+                         int _column)
+            : name(_name), id(_id), expression(_expr), url(_url), line(_line), column(_column) {}
         QString name;
         QQmlBinding::Identifier id;
-        QQmlExpression *expression;
+        QString expression;
+        QUrl url;
+        int line;
+        int column;
     };
 
     QList<QPair<QString, QVariant> > properties;
@@ -334,20 +356,36 @@ void QQuickPropertyChangesPrivate::decode()
 
         QQmlProperty prop = property(name);      //### better way to check for signal property?
         if (prop.type() & QQmlProperty::SignalProperty) {
-            QQmlExpression *expression = new QQmlExpression(qmlContext(q), object, data.toString());
+            QString expression = data.toString();
+            QUrl url = QUrl();
+            int line = -1;
+            int column = -1;
+
             QQmlData *ddata = QQmlData::get(q);
-            if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber, ddata->columnNumber);
+            if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty()) {
+                url = ddata->outerContext->url;
+                line = ddata->lineNumber;
+                column = ddata->columnNumber;
+            }
+
             QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
             handler->property = prop;
-            handler->expression = expression;
+            handler->expression = new QQmlBoundSignalExpression(QQmlContextData::get(qmlContext(q)), object, expression, false, url.toString(), line, column);
             signalReplacements << handler;
-        } else if (isScript) {
-            QQmlExpression *expression = new QQmlExpression(qmlContext(q), object, data.toString());
+        } else if (isScript) { // binding
+            QString expression = data.toString();
+            QUrl url = QUrl();
+            int line = -1;
+            int column = -1;
+
             QQmlData *ddata = QQmlData::get(q);
-            if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-                expression->setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber, ddata->columnNumber);
-            expressions << ExpressionChange(name, id, expression);
+            if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty()) {
+                url = ddata->outerContext->url;
+                line = ddata->lineNumber;
+                column = ddata->columnNumber;
+            }
+
+            expressions << ExpressionChange(name, id, expression, url, line, column);
         } else {
             properties << qMakePair(name, data);
         }
@@ -374,8 +412,6 @@ QQuickPropertyChanges::QQuickPropertyChanges()
 QQuickPropertyChanges::~QQuickPropertyChanges()
 {
     Q_D(QQuickPropertyChanges);
-    for(int ii = 0; ii < d->expressions.count(); ++ii)
-        delete d->expressions.at(ii).expression;
     for(int ii = 0; ii < d->signalReplacements.count(); ++ii)
         delete d->signalReplacements.at(ii);
 }
@@ -460,7 +496,8 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 
     for (int ii = 0; ii < d->expressions.count(); ++ii) {
 
-        const QString &property = d->expressions.at(ii).name;
+        QQuickPropertyChangesPrivate::ExpressionChange e = d->expressions.at(ii);
+        const QString &property = e.name;
         QQmlProperty prop = d->property(property);
 
         if (prop.isValid()) {
@@ -471,16 +508,18 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             a.specifiedObject = d->object;
             a.specifiedProperty = property;
 
-            if (d->isExplicit) {
-                a.toValue = d->expressions.at(ii).expression->evaluate();
-            } else {
-                QQmlExpression *e = d->expressions.at(ii).expression;
+            QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this), e.url.toString(), e.column) : 0;
+            if (!newBinding)
+                newBinding = new QQmlBinding(e.expression, false, object(), QQmlContextData::get(qmlContext(this)), e.url.toString(), e.line, e.column);
 
-                QQmlBinding::Identifier id = d->expressions.at(ii).id;
-                QQmlBinding *newBinding = id != QQmlBinding::Invalid ? QQmlBinding::createBinding(id, object(), qmlContext(this), e->sourceFile(), e->lineNumber()) : 0;
-                if (!newBinding)
-                    newBinding = new QQmlBinding(e->expression(), false, object(), QQmlContextData::get(qmlContext(this)),
-                                                 e->sourceFile(), e->lineNumber(), e->columnNumber());
+            if (d->isExplicit) {
+                // in this case, we don't want to assign a binding, per se,
+                // so we evaluate the expression and assign the result.
+                // XXX TODO: add a static QQmlJavaScriptExpression::evaluate(QString)
+                // so that we can avoid creating then destroying the binding in this case.
+                a.toValue = newBinding->evaluate();
+                newBinding->destroy();
+            } else {
                 newBinding->setTarget(prop);
                 a.toBinding = QQmlAbstractBinding::getPointer(newBinding);
                 a.deletableToBinding = true;
@@ -635,14 +674,14 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
 
     QMutableListIterator<ExpressionEntry> expressionIterator(d->expressions);
     while (expressionIterator.hasNext()) {
-        const ExpressionEntry &entry = expressionIterator.next();
+        ExpressionEntry &entry = expressionIterator.next();
         if (entry.name == name) {
-            entry.expression->setExpression(expression);
+            entry.expression = expression;
             if (state() && state()->isStateActive()) {
                 QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(d->property(name));
                 if (oldBinding) {
-                       QQmlPropertyPrivate::setBinding(d->property(name), 0);
-                       oldBinding->destroy();
+                   QQmlPropertyPrivate::setBinding(d->property(name), 0);
+                   oldBinding->destroy();
                 }
 
                 QQmlBinding *newBinding = new QQmlBinding(expression, object(), qmlContext(this));
@@ -653,8 +692,8 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
         }
     }
 
-    QQmlExpression *newExpression = new QQmlExpression(qmlContext(this), d->object, expression);
-    expressionIterator.insert(ExpressionEntry(name, QQmlBinding::Invalid, newExpression));
+    // adding a new expression.
+    expressionIterator.insert(ExpressionEntry(name, QQmlBinding::Invalid, expression, QUrl(), -1, -1));
 
     if (state() && state()->isStateActive()) {
         if (hadValue) {
@@ -675,11 +714,14 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
             action.specifiedObject = object();
             action.specifiedProperty = name;
 
-
+            QQmlBinding *newBinding = new QQmlBinding(expression, object(), qmlContext(this));
             if (d->isExplicit) {
-                action.toValue = newExpression->evaluate();
+                // don't assign the binding, merely evaluate the expression.
+                // XXX TODO: add a static QQmlJavaScriptExpression::evaluate(QString)
+                // so that we can avoid creating then destroying the binding in this case.
+                action.toValue = newBinding->evaluate();
+                newBinding->destroy();
             } else {
-                QQmlBinding *newBinding = new QQmlBinding(newExpression->expression(), object(), qmlContext(this));
                 newBinding->setTarget(d->property(name));
                 action.toBinding = QQmlAbstractBinding::getPointer(newBinding);
                 action.deletableToBinding = true;
@@ -714,7 +756,7 @@ QVariant QQuickPropertyChanges::property(const QString &name) const
     while (expressionIterator.hasNext()) {
         const ExpressionEntry &entry = expressionIterator.next();
         if (entry.name == name) {
-            return QVariant(entry.expression->expression());
+            return QVariant(entry.expression);
         }
     }
 
@@ -773,7 +815,7 @@ QString QQuickPropertyChanges::expression(const QString &name) const
     while (expressionIterator.hasNext()) {
         const ExpressionEntry &entry = expressionIterator.next();
         if (entry.name == name) {
-            return entry.expression->expression();
+            return entry.expression;
         }
     }
 

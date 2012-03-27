@@ -419,6 +419,21 @@ QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString 
     return rewritten;
 }
 
+QString RewriteSignalHandler::operator()(const QString &code, const QString &name, bool *ok)
+{
+    Engine engine;
+    Lexer lexer(&engine);
+    Parser parser(&engine);
+    lexer.setCode(code, 0);
+    parser.parseStatement();
+    if (!parser.statement()) {
+        if (ok) *ok = false;
+        return QString();
+    }
+    if (ok) *ok = true;
+    return operator()(parser.statement(), code, name);
+}
+
 } // namespace QQmlRewrite
 
 QT_END_NAMESPACE

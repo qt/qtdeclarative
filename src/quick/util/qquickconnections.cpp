@@ -280,8 +280,8 @@ void QQuickConnections::connectSignals()
                     location = ddata->outerContext->urlString;
             }
 
-            QQmlExpression *expression = ctxtdata ?
-                QQmlExpressionPrivate::create(ctxtdata, 0, script, true, location, line, column) : 0;
+            QQmlBoundSignalExpression *expression = ctxtdata ?
+                new QQmlBoundSignalExpression(ctxtdata, 0, script, true, location, line, column) : 0;
             signal->setExpression(expression);
             signal->addToObject();
             d->boundsignals += signal;

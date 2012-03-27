@@ -264,7 +264,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
             QQmlObjectProperty prop;
             prop.type = QQmlObjectProperty::SignalProperty;
             prop.hasNotifySignal = false;
-            QQmlExpression *expr = signalHandler->expression();
+            QQmlBoundSignalExpression *expr = signalHandler->expression();
             if (expr) {
                 prop.value = expr->expression();
                 QObject *scope = expr->scopeObject();
@@ -605,9 +605,9 @@ bool QQmlEngineDebugService::setBinding(int objectId,
                 if (isLiteralValue) {
                     property.write(expression);
                 } else if (hasValidSignal(object, propertyName)) {
-                    QQmlExpression *qmlExpression = new QQmlExpression(context, object, expression.toString());
+                    QQmlBoundSignalExpression *qmlExpression = new QQmlBoundSignalExpression(QQmlContextData::get(context), object, expression.toString(),
+                                                                                             false, filename, line, column);
                     QQmlPropertyPrivate::setSignalExpression(property, qmlExpression);
-                    qmlExpression->setSourceLocation(filename, line, column);
                 } else if (property.isProperty()) {
                     QQmlBinding *binding = new QQmlBinding(expression.toString(), false, object, QQmlContextData::get(context), filename, line, column);;
                     binding->setTarget(property);

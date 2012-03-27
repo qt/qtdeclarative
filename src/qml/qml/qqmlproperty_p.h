@@ -64,7 +64,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
-class QQmlExpression;
+class QQmlBoundSignalExpression;
 class QQmlEnginePrivate;
 class QQmlJavaScriptExpression;
 class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCount
@@ -140,9 +140,9 @@ public:
     static QQmlAbstractBinding *setBinding(const QQmlProperty &that,
                                                    QQmlAbstractBinding *,
                                                    WriteFlags flags = DontRemoveBinding);
-    static QQmlExpression *signalExpression(const QQmlProperty &that);
-    static QQmlExpression *setSignalExpression(const QQmlProperty &that, 
-                                                       QQmlExpression *) ;
+    static QQmlBoundSignalExpression *signalExpression(const QQmlProperty &that);
+    static QQmlBoundSignalExpression *setSignalExpression(const QQmlProperty &that,
+                                                          QQmlBoundSignalExpression *) ;
     static bool write(const QQmlProperty &that, const QVariant &, WriteFlags);
     static bool writeBinding(QObject *, const QQmlPropertyData &,
                              QQmlContextData *context,

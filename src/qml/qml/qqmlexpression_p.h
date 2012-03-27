@@ -82,9 +82,9 @@ public:
     void init(QQmlContextData *, const QString &, bool, QObject *, const QString &, int, int);
     void init(QQmlContextData *, const QByteArray &, bool, QObject *, const QString &, int, int);
 
-    QVariant value(QObject *secondaryScope = 0, bool *isUndefined = 0);
+    QVariant value(bool *isUndefined = 0);
 
-    v8::Local<v8::Value> v8value(QObject *secondaryScope = 0, bool *isUndefined = 0);
+    v8::Local<v8::Value> v8value(bool *isUndefined = 0);
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);

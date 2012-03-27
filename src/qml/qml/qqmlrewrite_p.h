@@ -133,6 +133,7 @@ class RewriteSignalHandler: protected AST::Visitor
 public:
     RewriteSignalHandler();
     QString operator()(QQmlJS::AST::Node *node, const QString &code, const QString &name);
+    QString operator()(const QString &code, const QString &name, bool *ok = 0);
 
 protected:
     void rewriteMultilineStrings(QString &code);

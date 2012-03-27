@@ -716,8 +716,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 bs = new QQmlBoundSignal(target, signal, target);
             else
                 bs = new QQmlBoundSignalNoParams(target, signal, target);
-            QQmlExpression *expr =
-                new QQmlExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column, *new QQmlExpressionPrivate);
+            QQmlBoundSignalExpression *expr =
+                new QQmlBoundSignalExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column);
             bs->setExpression(expr);
             bs->addToObject();
         QML_END_INSTR(StoreSignal)

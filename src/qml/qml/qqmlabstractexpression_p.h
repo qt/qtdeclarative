@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlAbstractExpression
+class Q_QML_PRIVATE_EXPORT QQmlAbstractExpression
 {
 public:
     QQmlAbstractExpression();
