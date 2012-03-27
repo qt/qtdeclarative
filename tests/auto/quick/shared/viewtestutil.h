@@ -97,8 +97,8 @@ namespace QQuickViewTestUtil
         void insertItem(int index, const QString &name, const QString &number);
         void insertItems(int index, const QList<QPair<QString, QString> > &items);
 
-        void removeItem(int index);
-        void removeItems(int index, int count);
+        Q_INVOKABLE void removeItem(int index);
+        Q_INVOKABLE void removeItems(int index, int count);
 
         void moveItem(int from, int to);
         void moveItems(int from, int to, int count);

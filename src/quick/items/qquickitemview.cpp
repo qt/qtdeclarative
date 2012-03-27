@@ -186,6 +186,18 @@ void QQuickItemViewChangeSet::applyChanges(const QQuickChangeSet &changeSet)
     }
 }
 
+void QQuickItemViewChangeSet::applyBufferedChanges(const QQuickItemViewChangeSet &other)
+{
+    if (!other.hasPendingChanges())
+        return;
+
+    pendingChanges.apply(other.pendingChanges);
+    itemCount = other.itemCount;
+    newCurrentIndex = other.newCurrentIndex;
+    currentChanged = other.currentChanged;
+    currentRemoved = other.currentRemoved;
+}
+
 void QQuickItemViewChangeSet::prepare(int currentIndex, int count)
 {
     if (active)
@@ -1044,8 +1056,17 @@ void QQuickItemView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
             polish();
         }
     } else {
-        d->currentChanges.prepare(d->currentIndex, d->itemCount);
-        d->currentChanges.applyChanges(changeSet);
+        if (d->disableLayout) {
+            d->bufferedChanges.prepare(d->currentIndex, d->itemCount);
+            d->bufferedChanges.applyChanges(changeSet);
+        } else {
+            if (d->bufferedChanges.hasPendingChanges()) {
+                d->currentChanges.applyBufferedChanges(d->bufferedChanges);
+                d->bufferedChanges.reset();
+            }
+            d->currentChanges.prepare(d->currentIndex, d->itemCount);
+            d->currentChanges.applyChanges(changeSet);
+        }
         polish();
     }
 }
@@ -1756,10 +1777,15 @@ void QQuickItemViewPrivate::layout()
 bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult, ChangeResult *totalRemovalResult)
 {
     Q_Q(QQuickItemView);
-    if (!q->isComponentComplete() || (!currentChanges.hasPendingChanges() && !runDelayedRemoveTransition) || disableLayout)
+    if (!q->isComponentComplete() || (!currentChanges.hasPendingChanges() && !bufferedChanges.hasPendingChanges() && !runDelayedRemoveTransition) || disableLayout)
         return false;
 
     disableLayout = true;
+
+    if (bufferedChanges.hasPendingChanges()) {
+        currentChanges.applyBufferedChanges(bufferedChanges);
+        bufferedChanges.reset();
+    }
 
     updateUnrequestedIndexes();
     moveReason = QQuickItemViewPrivate::Other;
