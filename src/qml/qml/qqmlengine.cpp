@@ -1327,7 +1327,9 @@ void QQmlEnginePrivate::sendQuit()
 
 static void dumpwarning(const QQmlError &error)
 {
-    qWarning().nospace() << qPrintable(error.toString());
+    QMessageLogger(error.url().toString().toLatin1().constData(),
+                   error.line(), 0).warning().nospace()
+            << qPrintable(error.toString());
 }
 
 static void dumpwarning(const QList<QQmlError> &errors)

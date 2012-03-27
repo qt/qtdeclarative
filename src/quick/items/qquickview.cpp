@@ -382,7 +382,8 @@ void QQuickView::continueExecute()
     if (d->component->isError()) {
         QList<QQmlError> errorList = d->component->errors();
         foreach (const QQmlError &error, errorList) {
-            qWarning() << error;
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+                    << error;
         }
         emit statusChanged(status());
         return;
@@ -393,7 +394,8 @@ void QQuickView::continueExecute()
     if (d->component->isError()) {
         QList<QQmlError> errorList = d->component->errors();
         foreach (const QQmlError &error, errorList) {
-            qWarning() << error;
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+                    << error;
         }
         emit statusChanged(status());
         return;
