@@ -51,12 +51,14 @@ QT_BEGIN_NAMESPACE
 
 struct Q_QML_EXPORT QQmlDebuggingEnabler
 {
-    QQmlDebuggingEnabler();
+    QQmlDebuggingEnabler(bool printWarning = true);
 };
 
 // Execute code in constructor before first QQmlEngine is instantiated
-#if defined(QT_DECLARATIVE_DEBUG)
-static QQmlDebuggingEnabler qmlEnableDebuggingHelper;
+#if defined(QT_DECLARATIVE_DEBUG_NO_WARNING)
+static QQmlDebuggingEnabler qmlEnableDebuggingHelper(false);
+#elif defined(QT_DECLARATIVE_DEBUG)
+static QQmlDebuggingEnabler qmlEnableDebuggingHelper(true);
 #endif
 
 QT_END_NAMESPACE

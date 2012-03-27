@@ -1035,10 +1035,11 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
 
-QQmlDebuggingEnabler::QQmlDebuggingEnabler()
+QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {
 #ifndef QQML_NO_DEBUG_PROTOCOL
-    if (!QQmlEnginePrivate::qml_debugging_enabled) {
+    if (!QQmlEnginePrivate::qml_debugging_enabled
+            && printWarning) {
         qDebug("QML debugging is enabled. Only use this in a safe environment.");
     }
     QQmlEnginePrivate::qml_debugging_enabled = true;
