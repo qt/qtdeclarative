@@ -389,6 +389,7 @@ QImage QQuickSpriteEngine::assembledImage()
                 else
                     qmlInfo(state) << "SpriteEngine: Animations too large to fit in one texture, pushed over the edge by:" << state->source().toLocalFile();
                 qmlInfo(state) << "SpriteEngine: Your texture max size today is " << maxSize;
+                return QImage();
             }
             state->m_generatedCount = rowsNeeded;
             h += state->frameHeight() * rowsNeeded;
@@ -407,7 +408,7 @@ QImage QQuickSpriteEngine::assembledImage()
     QPainter p(&image);
     int y = 0;
     foreach (QQuickSprite* state, m_sprites){
-        QImage img(state->source().toLocalFile());
+        QImage img(state->m_pix.image());
         int frameWidth = state->m_frameWidth;
         int frameHeight = state->m_frameHeight;
         if (img.height() == frameHeight && img.width() <  maxSize){//Simple case
