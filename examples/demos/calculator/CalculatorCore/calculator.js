@@ -7,7 +7,7 @@ var timer = 0
 function disabled(op) {
     if (op == "." && display.text.toString().search(/\./) != -1) {
         return true
-    } else if (op == squareRoot &&  display.text.toString().search(/-/) != -1) {
+    } else if (op == window.squareRoot &&  display.text.toString().search(/-/) != -1) {
         return true
     } else {
         return false
@@ -16,9 +16,9 @@ function disabled(op) {
 
 function doOperation(op) {
     if (op == '*')//Keyboard Aliases
-        op = multiplication;
+        op = window.multiplication;
     if (op == '/')
-        op = division;
+        op = window.division;
     if (disabled(op)) {
         return
     }
@@ -40,14 +40,14 @@ function doOperation(op) {
         display.text = Number(display.text.valueOf()) + Number(curVal.valueOf())
     } else if (display.currentOperation.text == "-") {
         display.text = Number(curVal) - Number(display.text.valueOf())
-    } else if (display.currentOperation.text == multiplication) {
+    } else if (display.currentOperation.text == window.multiplication) {
         display.text = Number(curVal) * Number(display.text.valueOf())
-    } else if (display.currentOperation.text == division) {
+    } else if (display.currentOperation.text == window.division) {
         display.text = Number(Number(curVal) / Number(display.text.valueOf())).toString()
     } else if (display.currentOperation.text == "=") {
     }
 
-    if (op == "+" || op == "-" || op == multiplication || op == division) {
+    if (op == "+" || op == "-" || op == window.multiplication || op == window.division) {
         display.currentOperation.text = op
         curVal = display.text.valueOf()
         return
@@ -64,9 +64,9 @@ function doOperation(op) {
         display.text = (Math.abs(display.text.valueOf())).toString()
     } else if (op == "Int") {
         display.text = (Math.floor(display.text.valueOf())).toString()
-    } else if (op == plusminus) {
+    } else if (op == window.plusminus) {
         display.text = (display.text.valueOf() * -1).toString()
-    } else if (op == squareRoot) {
+    } else if (op == window.squareRoot) {
         display.text = (Math.sqrt(display.text.valueOf())).toString()
     } else if (op == "mc") {
         memory = 0;
@@ -76,7 +76,7 @@ function doOperation(op) {
         display.text = memory.toString()
     } else if (op == "m-") {
         memory = display.text.valueOf()
-    } else if (op == leftArrow) {
+    } else if (op == window.leftArrow) {
         display.text = display.text.toString().slice(0, -1)
         if (display.text.length == 0) {
             display.text = "0"

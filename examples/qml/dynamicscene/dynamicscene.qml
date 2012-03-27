@@ -95,7 +95,7 @@ Item {
    // sky
     Rectangle {
         id: sky
-        anchors { left: parent.left; top: toolbox.bottom; right: parent.right;  bottomMargin: -centerOffset; bottom: parent.verticalCenter }
+        anchors { left: parent.left; top: toolbox.bottom; right: parent.right;  bottomMargin: -window.centerOffset; bottom: parent.verticalCenter }
         gradient: Gradient {
             GradientStop { id: gradientStopA; position: 0.0; color: "#0E1533" }
             GradientStop { id: gradientStopB; position: 1.0; color: "#437284" }
@@ -127,21 +127,19 @@ Item {
     Rectangle {
         id: ground
         z: 2    // just above the sun so that the sun can set behind it
-        anchors { left: parent.left; top: parent.verticalCenter; topMargin: centerOffset; right: parent.right; bottom: parent.bottom }
+        anchors { left: parent.left; top: parent.verticalCenter; topMargin: window.centerOffset; right: parent.right; bottom: parent.bottom }
         gradient: Gradient {
             GradientStop { position: 0.0; color: "ForestGreen" }
             GradientStop { position: 1.0; color: "DarkGreen" }
         }
     }
 
-    SystemPalette { id: activePalette }
-
-    // right-hand panel
+    // top panel
     Rectangle {
         id: toolbox
 
-        height: centerOffset * 2
-        color: activePalette.window
+        height: window.centerOffset * 2
+        color: "white"
         anchors { right: parent.right; top: parent.top; left: parent.left}
 
         Column {
@@ -192,7 +190,7 @@ Item {
                 }
             }
 
-            Text { text: "Active Suns: " + activeSuns }
+            Text { text: "Active Suns: " + window.activeSuns }
         }
     }
 
@@ -202,7 +200,7 @@ Item {
         z: 1000
         width: parent.width
         height: popupColumn.height + 16
-        color: activePalette.window
+        color: "white"
 
         property bool poppedUp: false
         property int downY: window.height - (createButton.height + 16)
@@ -213,7 +211,6 @@ Item {
         Column {
             id: popupColumn
             y: 8
-            anchors.centerIn: parent
             spacing: 8
 
             Row {
@@ -250,7 +247,7 @@ Item {
                     selectByMouse: true
                     wrapMode: TextEdit.WordWrap
 
-                    text: "import QtQuick 2.0\nImage {\n    id: smile\n    x: 360 * Math.random()\n    y: 180 * Math.random() \n    source: 'content/images/face-smile.png'\n    NumberAnimation on opacity { \n        to: 0; duration: 1500\n    }\n    Component.onCompleted: smile.destroy(1500);\n}"
+                    text: "import QtQuick 2.0\nImage {\n    id: smile\n    x: 360 * Math.random()\n    y: 40 * Math.random() \n    source: 'content/images/face-smile.png'\n    NumberAnimation on opacity { \n        to: 0; duration: 1500\n    }\n    Component.onCompleted: smile.destroy(1500);\n}"
                 }
             }
         }
