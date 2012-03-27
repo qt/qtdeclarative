@@ -27,10 +27,10 @@
 
 /*!
   \module QtQml
-  \title Qt Qml Module
+  \title Qt QML Module
   \ingroup modules
 
-  \brief The Qt Qml module provides a declarative framework
+  \brief The Qt QML module provides a declarative framework
   for building highly dynamic, custom user interfaces.
 
   To include the definitions of the module's classes, use the
@@ -47,8 +47,8 @@
   QT += qml
   \endcode
 
-  For more information on the Qt Qml module (including the visual
-  elements which are implemented on top of the Qt Qml module) see the
+  For more information on the Qt QML module (including the visual
+  elements which are implemented on top of the Qt QML module) see the
   \l{Qt Quick} documentation.
 */
 
@@ -68,7 +68,7 @@
 
   Declares additional properties of the given \a Type as described by the
   specified \a Flags.
-  
+
   Current the only supported type info is \c QML_HAS_ATTACHED_PROPERTIES which
   declares that the \a Type supports \l {Attached Properties}.
 
@@ -113,7 +113,7 @@
   qmlRegisterType<MySliderItem>("com.mycompany.qmlcomponents", 1, 0, "Slider");
   \endcode
 
-  Once this is registered, the type can be used in QML by importing the 
+  Once this is registered, the type can be used in QML by importing the
   specified module name and version number:
 
   \qml

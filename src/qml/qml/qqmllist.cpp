@@ -88,7 +88,7 @@ void QQmlListReferencePrivate::release()
 /*!
 \class QQmlListReference
 \since 5.0
-\module QtQml
+\inmodule QtQml
 \brief The QQmlListReference class allows the manipulation of QQmlListProperty properties.
 
 QQmlListReference allows C++ programs to read from, and assign values to a QML list property in a
