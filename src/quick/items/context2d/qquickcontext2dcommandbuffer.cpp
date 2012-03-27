@@ -236,7 +236,7 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
 
     reset();
 
-    QTransform originMatrix = p->transform();
+    QTransform originMatrix = p->worldTransform();
 
     QPen pen = makePen(state);
     setPainterState(p, state, pen);
@@ -247,7 +247,7 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
         case QQuickContext2D::UpdateMatrix:
         {
             state.matrix = takeMatrix();
-            p->setTransform(state.matrix * originMatrix);
+            p->setWorldTransform(state.matrix * originMatrix);
             break;
         }
         case QQuickContext2D::ClearRect:
@@ -303,36 +303,42 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
             state.strokeStyle = takeStrokeStyle();
             state.strokePatternRepeatX = takeBool();
             state.strokePatternRepeatY = takeBool();
-            pen.setBrush(state.strokeStyle);
-            p->setPen(pen);
+            QPen nPen = p->pen();
+            nPen.setBrush(state.strokeStyle);
+            p->setPen(nPen);
             break;
         }
         case QQuickContext2D::LineWidth:
         {
             state.lineWidth = takeLineWidth();
-            pen.setWidth(state.lineWidth);
-            p->setPen(pen);
+            QPen nPen = p->pen();
+
+            nPen.setWidthF(state.lineWidth);
+            p->setPen(nPen);
             break;
         }
         case QQuickContext2D::LineCap:
         {
             state.lineCap = takeLineCap();
-            pen.setCapStyle(state.lineCap);
-            p->setPen(pen);
+            QPen nPen = p->pen();
+            nPen.setCapStyle(state.lineCap);
+            p->setPen(nPen);
             break;
         }
         case QQuickContext2D::LineJoin:
         {
             state.lineJoin = takeLineJoin();
-            pen.setJoinStyle(state.lineJoin);
-            p->setPen(pen);
+            QPen nPen = p->pen();
+            nPen.setJoinStyle(state.lineJoin);
+            p->setPen(nPen);
             break;
         }
         case QQuickContext2D::MiterLimit:
         {
             state.miterLimit = takeMiterLimit();
-            pen.setMiterLimit(state.miterLimit);
-            p->setPen(pen);
+            QPen nPen = p->pen();
+            nPen.setMiterLimit(state.miterLimit);
+            p->setPen(nPen);
             break;
         }
         case QQuickContext2D::TextAlign:

@@ -47,7 +47,6 @@
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtGui/qopenglframebufferobject.h>
 
-#include <QtCore/qdebug.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquicksvgparser_p.h>
 #include <private/qquickpath_p.h>
@@ -484,8 +483,6 @@ static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
     r->context->reset();
-    r->context->m_path = QPainterPath();
-    r->context->m_path.setFillRule(Qt::WindingFill);
 
     return args.This();
 }
@@ -551,15 +548,8 @@ static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    if (args.Length() == 1)  {
-        qreal angle = args[0]->NumberValue();
-        if (!qIsFinite(angle))
-            return args.This();
-
-        r->context->state.matrix.rotate(DEGREES(angle));
-        r->context->buffer()->updateMatrix(r->context->state.matrix);
-    }
-
+    if (args.Length() == 1)
+        r->context->rotate(args[0]->NumberValue());
     return args.This();
 }
 
@@ -583,17 +573,8 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
 
-    if (args.Length() == 2) {
-        qreal x, y;
-        x = args[0]->NumberValue();
-        y = args[1]->NumberValue();
-        if (!qIsFinite(x) || !qIsFinite(y))
-            return args.This();
-
-        r->context->state.matrix.scale(x, y);
-        r->context->buffer()->updateMatrix(r->context->state.matrix);
-    }
-
+    if (args.Length() == 2)
+        r->context->scale(args[0]->NumberValue(), args[1]->NumberValue());
     return args.This();
 }
 
@@ -636,25 +617,13 @@ static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
 
-    if (args.Length() == 6) {
-        qreal a = args[0]->NumberValue();
-        qreal b = args[1]->NumberValue();
-        qreal c = args[2]->NumberValue();
-        qreal d = args[3]->NumberValue();
-        qreal e = args[4]->NumberValue();
-        qreal f = args[5]->NumberValue();
-
-        if (!qIsFinite(a)
-         || !qIsFinite(b)
-         || !qIsFinite(c)
-         || !qIsFinite(d)
-         || !qIsFinite(e)
-         || !qIsFinite(f))
-            return args.This();
-
-        r->context->state.matrix = QTransform(a, b, c, d, e, f);
-        r->context->buffer()->updateMatrix(r->context->state.matrix);
-    }
+    if (args.Length() == 6)
+        r->context->setTransform( args[0]->NumberValue()
+                                                        , args[1]->NumberValue()
+                                                        , args[2]->NumberValue()
+                                                        , args[3]->NumberValue()
+                                                        , args[4]->NumberValue()
+                                                        , args[5]->NumberValue());
 
     return args.This();
 }
@@ -675,25 +644,13 @@ static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
 
-    if (args.Length() == 6) {
-        qreal a = args[0]->NumberValue();
-        qreal b = args[1]->NumberValue();
-        qreal c = args[2]->NumberValue();
-        qreal d = args[3]->NumberValue();
-        qreal e = args[4]->NumberValue();
-        qreal f = args[5]->NumberValue();
-
-        if (!qIsFinite(a)
-         || !qIsFinite(b)
-         || !qIsFinite(c)
-         || !qIsFinite(d)
-         || !qIsFinite(e)
-         || !qIsFinite(f))
-            return args.This();
-
-        r->context->state.matrix *= QTransform(a, b, c, d, e, f);
-        r->context->buffer()->updateMatrix(r->context->state.matrix);
-    }
+    if (args.Length() == 6)
+        r->context->transform( args[0]->NumberValue()
+                                                  , args[1]->NumberValue()
+                                                  , args[2]->NumberValue()
+                                                  , args[3]->NumberValue()
+                                                  , args[4]->NumberValue()
+                                                  , args[5]->NumberValue());
 
     return args.This();
 }
@@ -713,17 +670,8 @@ static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
 
-    if (args.Length() == 2) {
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-
-        if (!qIsFinite(x) || !qIsFinite(y))
-            return args.This();
-
-        r->context->state.matrix.translate(x, y);
-        r->context->buffer()->updateMatrix(r->context->state.matrix);
-    }
-
+    if (args.Length() == 2)
+            r->context->translate(args[0]->NumberValue(), args[1]->NumberValue());
     return args.This();
 }
 
@@ -739,8 +687,7 @@ static v8::Handle<v8::Value> ctx2d_resetTransform(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    r->context->state.matrix = QTransform();
-    r->context->buffer()->updateMatrix(r->context->state.matrix);
+    r->context->setTransform(1, 0, 0, 1, 0, 0);
 
     return args.This();
 }
@@ -755,16 +702,9 @@ static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    if (args.Length() == 2) {
-        qreal sh = args[0]->NumberValue();
-        qreal sv = args[1]->NumberValue();
+    if (args.Length() == 2)
+            r->context->shear(args[0]->NumberValue(), args[1]->NumberValue());
 
-        if (!qIsFinite(sh) || !qIsFinite(sv))
-            return args.This();
-
-        r->context->state.matrix.shear(sh, sv);
-        r->context->buffer()->updateMatrix(r->context->state.matrix);
-    }
     return args.This();
 }
 // compositing
@@ -1596,17 +1536,11 @@ static v8::Handle<v8::Value> ctx2d_clearRect(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
 
-    if (args.Length() == 4) {
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-        qreal w = args[2]->NumberValue();
-        qreal h = args[3]->NumberValue();
-
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
-            return args.This();
-
-        r->context->buffer()->clearRect(x, y, w, h);
-    }
+    if (args.Length() == 4)
+        r->context->clearRect(args[0]->NumberValue(),
+                              args[1]->NumberValue(),
+                              args[2]->NumberValue(),
+                              args[3]->NumberValue());
 
     return args.This();
 }
@@ -1621,18 +1555,8 @@ static v8::Handle<v8::Value> ctx2d_fillRect(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    if (args.Length() == 4) {
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-        qreal w = args[2]->NumberValue();
-        qreal h = args[3]->NumberValue();
-
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
-            return args.This();
-
-        r->context->buffer()->fillRect(x, y, w, h);
-    }
-
+    if (args.Length() == 4)
+        r->context->fillRect(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
     return args.This();
 }
 
@@ -1651,18 +1575,8 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
-    if (args.Length() == 4) {
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-        qreal w = args[2]->NumberValue();
-        qreal h = args[3]->NumberValue();
-
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
-            return args.This();
-
-        r->context->buffer()->strokeRect(x, y, w, h);
-    }
+    if (args.Length() == 4)
+        r->context->strokeRect(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
 
     return args.This();
 }
@@ -1687,15 +1601,8 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
             antiClockwise = args[5]->BooleanValue();
 
         qreal radius = args[2]->NumberValue();
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-        qreal sa = args[3]->NumberValue();
-        qreal ea = args[4]->NumberValue();
 
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(sa) || !qIsFinite(ea))
-            return args.This();
-
-        if (radius < 0)
+        if (qIsFinite(radius) && radius < 0)
            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
 
         r->context->arc(args[0]->NumberValue(),
@@ -1734,25 +1641,17 @@ static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
-
     if (args.Length() == 5) {
-        qreal x1 = args[0]->NumberValue();
-        qreal y1 = args[1]->NumberValue();
-        qreal x2 = args[2]->NumberValue();
-        qreal y2 = args[3]->NumberValue();
-
-        if (!qIsFinite(x1) || !qIsFinite(y1) || !qIsFinite(x2) || !qIsFinite(y2))
-            return args.This();
-
         qreal radius = args[4]->NumberValue();
-        if (radius < 0)
+
+        if (qIsFinite(radius) && radius < 0)
            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "Incorrect argument radius");
+
         r->context->arcTo(args[0]->NumberValue(),
                           args[1]->NumberValue(),
                           args[2]->NumberValue(),
                           args[3]->NumberValue(),
-                          args[4]->NumberValue());
+                          radius);
     }
 
     return args.This();
@@ -1845,14 +1744,7 @@ static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    QPainterPath clipPath = r->context->m_path;
-    clipPath.closeSubpath();
-    if (!r->context->state.clipPath.isEmpty())
-        r->context->state.clipPath = clipPath.intersected(r->context->state.clipPath);
-    else
-        r->context->state.clipPath = clipPath;
-    r->context->buffer()->clip(r->context->state.clipPath);
-
+    r->context->clip();
     return args.This();
 }
 
@@ -1887,9 +1779,7 @@ static v8::Handle<v8::Value> ctx2d_fill(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r);
-
-    r->context->buffer()->fill(r->context->m_path);
-
+    r->context->fill();
     return args.This();
 }
 
@@ -1975,19 +1865,8 @@ static v8::Handle<v8::Value> ctx2d_rect(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
-    if (args.Length() == 4) {
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-        qreal w = args[2]->NumberValue();
-        qreal h = args[3]->NumberValue();
-
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
-            return args.This();
-
-        r->context->rect(x, y, w, h);
-    }
-
+    if (args.Length() == 4)
+        r->context->rect(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
     return args.This();
 }
 
@@ -2002,23 +1881,13 @@ static v8::Handle<v8::Value> ctx2d_roundedRect(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-    if (args.Length() == 6) {
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-        qreal w = args[2]->NumberValue();
-        qreal h = args[3]->NumberValue();
-        qreal xr = args[4]->NumberValue();
-        qreal yr = args[5]->NumberValue();
-
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
-            return args.This();
-
-        if (!qIsFinite(xr) || !qIsFinite(yr))
-            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "roundedRect(): Invalid arguments");
-
-        r->context->roundedRect(x, y, w, h, xr, yr);
-    }
-
+    if (args.Length() == 6)
+        r->context->roundedRect(args[0]->NumberValue()
+                              , args[1]->NumberValue()
+                              , args[2]->NumberValue()
+                              , args[3]->NumberValue()
+                              , args[4]->NumberValue()
+                              , args[5]->NumberValue());
     return args.This();
 }
 
@@ -2036,18 +1905,8 @@ static v8::Handle<v8::Value> ctx2d_ellipse(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
 
-    if (args.Length() == 4) {
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-        qreal w = args[2]->NumberValue();
-        qreal h = args[3]->NumberValue();
-
-        if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
-            return args.This();
-
-
-        r->context->ellipse(x, y, w, h);
-    }
+    if (args.Length() == 4)
+        r->context->ellipse(args[0]->NumberValue(), args[1]->NumberValue(), args[2]->NumberValue(), args[3]->NumberValue());
 
     return args.This();
 }
@@ -2089,9 +1948,7 @@ static v8::Handle<v8::Value> ctx2d_stroke(const v8::Arguments &args)
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
     CHECK_CONTEXT(r)
 
-
-    r->context->buffer()->stroke(r->context->m_path);
-
+    r->context->stroke();
     return args.This();
 }
 
@@ -2108,13 +1965,8 @@ static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
     bool pointInPath = false;
-    if (args.Length() == 2) {
-        qreal x = args[0]->NumberValue();
-        qreal y = args[1]->NumberValue();
-        if (!qIsFinite(x) || !qIsFinite(y))
-            return v8::Boolean::New(false);
-        pointInPath = r->context->isPointInPath(x, y);
-    }
+    if (args.Length() == 2)
+        pointInPath = r->context->isPointInPath(args[0]->NumberValue(), args[1]->NumberValue());
     return v8::Boolean::New(pointInPath);
 }
 
@@ -2331,14 +2183,8 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
     QV8Engine *engine = V8ENGINE();
-    if (args.Length() == 3) {
-        qreal x = args[1]->NumberValue();
-        qreal y = args[2]->NumberValue();
-        if (!qIsFinite(x) || !qIsFinite(y))
-            return args.This();
-        QPainterPath textPath = r->context->createTextGlyphs(x, y, engine->toString(args[0]));
-        r->context->buffer()->stroke(textPath);
-    }
+    if (args.Length() == 3)
+        r->context->drawText(engine->toString(args[0]), args[1]->NumberValue(), args[2]->NumberValue(), false);
     return args.This();
 }
 /*!
@@ -2448,6 +2294,10 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     qreal sx, sy, sw, sh, dx, dy, dw, dh;
 
     if (!args.Length())
+        return args.This();
+
+    //FIXME:This function should be moved to QQuickContext2D::drawImage(...)
+    if (!r->context->state.invertibleCTM)
         return args.This();
 
     QImage image;
@@ -2868,16 +2718,221 @@ static v8::Handle<v8::Value> ctx2d_gradient_addColorStop(const v8::Arguments &ar
     return args.This();
 }
 
+void QQuickContext2D::scale(qreal x,  qreal y)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(x) || !qIsFinite(y))
+        return;
+
+    QTransform newTransform = state.matrix;
+    newTransform.scale(x, y);
+
+    if (!newTransform.isInvertible()) {
+        state.invertibleCTM = false;
+        return;
+    }
+
+    state.matrix = newTransform;
+    buffer()->updateMatrix(state.matrix);
+    m_path = QTransform().scale(1.0 / x, 1.0 / y).map(m_path);
+}
+
+void QQuickContext2D::rotate(qreal angle)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(angle))
+        return;
+
+    QTransform newTransform =state.matrix;
+    newTransform.rotate(DEGREES(angle));
+
+    if (!newTransform.isInvertible()) {
+        state.invertibleCTM = false;
+        return;
+    }
+
+    state.matrix = newTransform;
+    buffer()->updateMatrix(state.matrix);
+    m_path = QTransform().rotate(-DEGREES(angle)).map(m_path);
+}
+
+void QQuickContext2D::shear(qreal h, qreal v)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(h) || !qIsFinite(v))
+        return ;
+
+    QTransform newTransform = state.matrix;
+    newTransform.shear(h, v);
+
+    if (!newTransform.isInvertible()) {
+        state.invertibleCTM = false;
+        return;
+    }
+
+    state.matrix = newTransform;
+    buffer()->updateMatrix(state.matrix);
+    m_path = QTransform().shear(-h, -v).map(m_path);
+}
+
+void QQuickContext2D::translate(qreal x, qreal y)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(x) || !qIsFinite(y))
+        return ;
+
+    QTransform newTransform = state.matrix;
+    newTransform.translate(x, y);
+
+    if (!newTransform.isInvertible()) {
+        state.invertibleCTM = false;
+        return;
+    }
+
+    state.matrix = newTransform;
+    buffer()->updateMatrix(state.matrix);
+    m_path = QTransform().translate(-x, -y).map(m_path);
+}
+
+void QQuickContext2D::transform(qreal a, qreal b, qreal c, qreal d, qreal e, qreal f)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(a) || !qIsFinite(b) || !qIsFinite(c) || !qIsFinite(d) || !qIsFinite(e) || !qIsFinite(f))
+        return;
+
+    QTransform transform(a, b, c, d, e, f);
+    QTransform newTransform = state.matrix * transform;
+
+    if (!newTransform.isInvertible()) {
+        state.invertibleCTM = false;
+        return;
+    }
+    state.matrix = newTransform;
+    buffer()->updateMatrix(state.matrix);
+    m_path = transform.inverted().map(m_path);
+}
+
+void QQuickContext2D::setTransform(qreal a, qreal b, qreal c, qreal d, qreal e, qreal f)
+{
+    if (!qIsFinite(a) || !qIsFinite(b) || !qIsFinite(c) || !qIsFinite(d) || !qIsFinite(e) || !qIsFinite(f))
+        return;
+
+    QTransform ctm = state.matrix;
+    if (!ctm.isInvertible())
+        return;
+
+    state.matrix = ctm.inverted() * state.matrix;
+    m_path = ctm.map(m_path);
+    state.invertibleCTM = true;
+    transform(a, b, c, d, e, f);
+}
+
+void QQuickContext2D::fill()
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!m_path.elementCount())
+        return;
+
+    m_path.setFillRule(state.fillRule);
+    buffer()->fill(m_path);
+}
+
+void QQuickContext2D::clip()
+{
+    if (!state.invertibleCTM)
+        return;
+
+    QPainterPath clipPath = m_path;
+    clipPath.closeSubpath();
+    if (!state.clipPath.isEmpty())
+        state.clipPath = clipPath.intersected(state.clipPath);
+    else
+        state.clipPath = clipPath;
+    buffer()->clip(state.clipPath);
+}
+
+void QQuickContext2D::stroke()
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!m_path.elementCount())
+        return;
+
+    buffer()->stroke(m_path);
+}
+
+void QQuickContext2D::fillRect(qreal x, qreal y, qreal w, qreal h)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+        return;
+
+    buffer()->fillRect(x, y, w, h);
+}
+
+void QQuickContext2D::strokeRect(qreal x, qreal y, qreal w, qreal h)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+        return;
+
+    buffer()->strokeRect(x, y, w, h);
+}
+
+void QQuickContext2D::clearRect(qreal x, qreal y, qreal w, qreal h)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+        return;
+
+    buffer()->clearRect(x, y, w, h);
+}
+
+void QQuickContext2D::drawText(const QString& text, qreal x, qreal y, bool fill)
+{
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(x) || !qIsFinite(y))
+        return;
+
+    QPainterPath textPath = createTextGlyphs(x, y, text);
+    if (fill)
+        buffer()->fill(textPath);
+    else
+        buffer()->stroke(textPath);
+}
+
 
 void QQuickContext2D::beginPath()
 {
+    if (!m_path.elementCount())
+        return;
     m_path = QPainterPath();
-    m_path.setFillRule(state.fillRule);
 }
 
 void QQuickContext2D::closePath()
 {
-    if (m_path.isEmpty())
+    if (!m_path.elementCount())
         return;
 
     QRectF boundRect = m_path.boundingRect();
@@ -2889,29 +2944,53 @@ void QQuickContext2D::closePath()
 
 void QQuickContext2D::moveTo( qreal x, qreal y)
 {
+    if (!state.invertibleCTM)
+        return;
+
     //FIXME: moveTo should not close the previous subpath
-    m_path.moveTo(state.matrix.map(QPointF(x, y)));
+    m_path.moveTo(QPointF(x, y));
 }
 
 void QQuickContext2D::lineTo( qreal x, qreal y)
 {
-    m_path.lineTo(state.matrix.map(QPointF(x, y)));
+    if (!state.invertibleCTM)
+        return;
+
+    QPointF pt(x, y);
+
+    if (!m_path.elementCount())
+        m_path.moveTo(pt);
+    else if (m_path.currentPosition() != pt)
+        m_path.lineTo(pt);
 }
 
 void QQuickContext2D::quadraticCurveTo(qreal cpx, qreal cpy,
                                            qreal x, qreal y)
 {
-    m_path.quadTo(state.matrix.map(QPointF(cpx, cpy)),
-                      state.matrix.map(QPointF(x, y)));
+    if (!state.invertibleCTM)
+        return;
+
+    if (!m_path.elementCount())
+        m_path.moveTo(QPointF(cpx, cpy));
+
+    QPointF pt(x, y);
+    if (m_path.currentPosition() != pt)
+        m_path.quadTo(QPointF(cpx, cpy), pt);
 }
 
 void QQuickContext2D::bezierCurveTo(qreal cp1x, qreal cp1y,
                                         qreal cp2x, qreal cp2y,
                                         qreal x, qreal y)
 {
-    m_path.cubicTo(state.matrix.map(QPointF(cp1x, cp1y)),
-                       state.matrix.map(QPointF(cp2x, cp2y)),
-                       state.matrix.map(QPointF(x, y)));
+    if (!state.invertibleCTM)
+        return;
+
+    if (!m_path.elementCount())
+        m_path.moveTo(QPointF(cp1x, cp1y));
+
+    QPointF pt(x, y);
+    if (m_path.currentPosition() != pt)
+        m_path.cubicTo(QPointF(cp1x, cp1y), QPointF(cp2x, cp2y),  pt);
 }
 
 void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, float radius)
@@ -2969,69 +3048,100 @@ void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, float radiu
     if ((sa < ea) && ((ea - sa) > Q_PI))
         anticlockwise = true;
 
-    arc(p.x(), p.y(), radius, sa, ea, anticlockwise, false);
+    arc(p.x(), p.y(), radius, sa, ea, anticlockwise);
 }
 
 void QQuickContext2D::arcTo(qreal x1, qreal y1,
                                 qreal x2, qreal y2,
                                 qreal radius)
 {
-    QPointF st  = state.matrix.map(QPointF(x1, y1));
-    QPointF end = state.matrix.map(QPointF(x2, y2));
+    if (!state.invertibleCTM)
+        return;
 
-    if (!m_path.elementCount()) {
+    if (!qIsFinite(x1) || !qIsFinite(y1) || !qIsFinite(x2) || !qIsFinite(y2) || !qIsFinite(radius))
+        return;
+
+    QPointF st(x1, y1);
+    QPointF end(x2, y2);
+
+    if (!m_path.elementCount())
         m_path.moveTo(st);
-    } else if (st == m_path.currentPosition() || st == end || !radius) {
-        m_path.lineTo(st);
-    } else {
+    else if (st == m_path.currentPosition() || st == end || !radius)
+        lineTo(x1, y1);
+    else
         addArcTo(st, end, radius);
-    }
-}
+ }
 
-void QQuickContext2D::rect(qreal x, qreal y,
-                               qreal w, qreal h)
+void QQuickContext2D::rect(qreal x, qreal y, qreal w, qreal h)
 {
-    m_path.addPolygon(state.matrix.map(QRectF(x, y, w, h)));
+    if (!state.invertibleCTM)
+        return;
+    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+        return;
+
+    if (!w && !h) {
+        m_path.moveTo(x, y);
+        return;
+    }
+    m_path.addRect(x, y, w, h);
 }
 
 void QQuickContext2D::roundedRect(qreal x, qreal y,
                                qreal w, qreal h,
                                qreal xr, qreal yr)
 {
-    QPainterPath path;
-    path.addRoundedRect(QRectF(x, y, w, h), xr, yr, Qt::AbsoluteSize);
-    m_path.addPath(state.matrix.map(path));
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h) || !qIsFinite(xr) || !qIsFinite(yr))
+        return;
+
+    if (!w && !h) {
+        m_path.moveTo(x, y);
+        return;
+    }
+    m_path.addRoundedRect(QRectF(x, y, w, h), xr, yr, Qt::AbsoluteSize);
 }
 
 void QQuickContext2D::ellipse(qreal x, qreal y,
                            qreal w, qreal h)
 {
-    QPainterPath path;
-    path.addEllipse(x, y, w, h);
-    m_path.addPath(state.matrix.map(path));
+    if (!state.invertibleCTM)
+        return;
+
+    if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
+        return;
+
+    if (!w && !h) {
+        m_path.moveTo(x, y);
+        return;
+    }
+
+    m_path.addEllipse(x, y, w, h);
 }
 
 void QQuickContext2D::text(const QString& str, qreal x, qreal y)
 {
+    if (!state.invertibleCTM)
+        return;
+
     QPainterPath path;
     path.addText(x, y, state.font, str);
-    m_path.addPath(state.matrix.map(path));
+    m_path.addPath(path);
 }
 
-void QQuickContext2D::arc(qreal xc,
-                       qreal yc,
-                       qreal radius,
-                       qreal sar,
-                       qreal ear,
-                       bool antiClockWise,
-                       bool transform)
+void QQuickContext2D::arc(qreal xc, qreal yc, qreal radius, qreal sar, qreal ear, bool antiClockWise)
 {
+    if (!state.invertibleCTM)
+        return;
 
-    if (transform) {
-        QPointF point = state.matrix.map(QPointF(xc, yc));
-        xc = point.x();
-        yc = point.y();
-    }
+    if (!qIsFinite(xc) || !qIsFinite(yc) || !qIsFinite(sar) || !qIsFinite(ear) || !qIsFinite(radius))
+        return;
+
+    if (sar == ear)
+        return;
+
+
     //### HACK
 
     // In Qt we don't switch the coordinate system for degrees
@@ -3068,17 +3178,14 @@ void QQuickContext2D::arc(qreal xc,
               qFuzzyCompare(qAbs(span), 360))) {
             span   += ea - sa;
         }
-        if (!m_path.elementCount())
-            m_path.moveTo(xs, ys);
     }
 
-
-    if (transform) {
-        QPointF currentPos = m_path.currentPosition();
-        QPointF startPos = QPointF(xc + radius  * qCos(sar),
-                                   yc - radius  * qSin(sar));
-        if (currentPos != startPos)
-            m_path.lineTo(startPos);
+    // If the path is empty, move to where the arc will start to avoid painting a line from (0,0)
+    if (!m_path.elementCount())
+        m_path.arcMoveTo(xs, ys, width, height, sa);
+    else if (!radius) {
+        m_path.lineTo(xc, yc);
+        return;
     }
 
     m_path.arcTo(xs, ys, width, height, sa, span);
@@ -3142,9 +3249,59 @@ QPainterPath QQuickContext2D::createTextGlyphs(qreal x, qreal y, const QString& 
 }
 
 
+static inline bool areCollinear(const QPointF& a, const QPointF& b, const QPointF& c)
+{
+    // Solved from comparing the slopes of a to b and b to c: (ay-by)/(ax-bx) == (cy-by)/(cx-bx)
+    return qFuzzyCompare((c.y() - b.y()) * (a.x() - b.x()), (a.y() - b.y()) * (c.x() - b.x()));
+}
+
+static inline bool withinRange(qreal p, qreal a, qreal b)
+{
+    return (p >= a && p <= b) || (p >= b && p <= a);
+}
+
 bool QQuickContext2D::isPointInPath(qreal x, qreal y) const
 {
-    return m_path.contains(QPointF(x, y));
+    if (!state.invertibleCTM)
+        return false;
+
+    if (!m_path.elementCount())
+        return false;
+
+    if (!qIsFinite(x) || !qIsFinite(y))
+        return false;
+
+    QPointF point(x, y);
+    QTransform ctm = state.matrix;
+    QPointF p = ctm.inverted().map(point);
+    if (!qIsFinite(p.x()) || !qIsFinite(p.y()))
+        return false;
+
+    const_cast<QQuickContext2D *>(this)->m_path.setFillRule(state.fillRule);
+
+    bool contains = m_path.contains(p);
+
+    if (!contains) {
+        // check whether the point is on the border
+        QPolygonF border = m_path.toFillPolygon();
+
+        QPointF p1 = border.at(0);
+        QPointF p2;
+
+        for (int i = 1; i < border.size(); ++i) {
+            p2 = border.at(i);
+            if (areCollinear(p, p1, p2)
+                    // Once we know that the points are collinear we
+                    // only need to check one of the coordinates
+                    && (qAbs(p2.x() - p1.x()) > qAbs(p2.y() - p1.y()) ?
+                        withinRange(p.x(), p1.x(), p2.x()) :
+                        withinRange(p.y(), p1.y(), p2.y()))) {
+                return true;
+            }
+            p1 = p2;
+        }
+    }
+    return contains;
 }
 
 QQuickContext2D::QQuickContext2D(QObject *parent)
@@ -3405,7 +3562,9 @@ void QQuickContext2D::popState()
 
     if (newState.shadowOffsetY != state.shadowOffsetY)
         buffer()->setShadowOffsetY(newState.shadowOffsetY);
+    m_path = state.matrix.map(m_path);
     state = newState;
+    m_path = state.matrix.inverted().map(m_path);
 }
 void QQuickContext2D::pushState()
 {
@@ -3416,6 +3575,8 @@ void QQuickContext2D::reset()
 {
     QQuickContext2D::State newState;
     newState.matrix = QTransform();
+
+    m_path = QPainterPath();
 
     QPainterPath defaultClipPath;
 
@@ -3431,6 +3592,7 @@ void QQuickContext2D::reset()
     newState.fillPatternRepeatY = false;
     newState.strokePatternRepeatX = false;
     newState.strokePatternRepeatY = false;
+    newState.invertibleCTM = true;
     newState.fillRule = Qt::WindingFill;
     newState.globalAlpha = 1.0;
     newState.lineWidth = 1;

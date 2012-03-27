@@ -118,7 +118,7 @@ Canvas {
            ctx.beginPath();
            ctx.arcTo(100, 50, 200, 50, 0.1);
            ctx.stroke();
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
            ctx.reset();
 
            ctx.fillStyle = '#f00';
@@ -151,8 +151,6 @@ Canvas {
        function test_nonfinite() {
            var ctx = canvas.getContext('2d');
            ctx.reset();
-
-           skip("FIXME");
 
            ctx.moveTo(0, 0);
            ctx.lineTo(100, 0);
@@ -221,7 +219,7 @@ Canvas {
            ctx.lineTo(-1000, 0);
            ctx.fill();
 
-           skip("FIXME");
+           //FIXME
            //verify(Helper.comparePixel(ctx,  0,0, 0,255,0,255));
            //verify(Helper.comparePixel(ctx,  50,0, 0,255,0,255));
            //verify(Helper.comparePixel(ctx,  99,0, 0,255,0,255));
@@ -332,7 +330,8 @@ Canvas {
            ctx.arcTo(200, 25, 200, 50, 10);
            ctx.stroke();
 
-          //verify(Helper.comparePixel(ctx,  1,1, 0,255,0,255));
+           //FIXME
+           //verify(Helper.comparePixel(ctx,  1,1, 0,255,0,255));
            //verify(Helper.comparePixel(ctx,  1,48, 0,255,0,255));
            //verify(Helper.comparePixel(ctx,  50,25, 0,255,0,255));
            //verify(Helper.comparePixel(ctx,  98,1, 0,255,0,255));
@@ -354,16 +353,15 @@ Canvas {
            ctx.lineTo(-100, 0);
            ctx.fill();
 
-           skip("FIXME");
-           //verify(Helper.comparePixel(ctx,  0,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx,  50,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx,  99,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx,  0,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx,  50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx,  99,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx,  0,49, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx,  50,49, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx,  99,49, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  0,0, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  50,0, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  99,0, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  0,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  99,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  0,49, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  50,49, 0,255,0,255));
+           verify(Helper.comparePixel(ctx,  99,49, 0,255,0,255));
         }
        function test_zero() {
            var ctx = canvas.getContext('2d');
