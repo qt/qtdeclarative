@@ -51,6 +51,7 @@
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmltrace_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <private/qqmlproperty_p.h>
 
 #include <QtQml/qqmlinfo.h>
 #include <QtCore/qnumeric.h>
@@ -1655,6 +1656,24 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
 
         if (data.isUndefined()) 
             THROW_EXCEPTION_STR(instr->store.exceptionId, QLatin1String("Unable to assign undefined value"));
+
+        if (data.gettype() == QObjectStarType) {
+            if (QObject *dataObject = data.getQObject()) {
+                const QMetaObject *dataMo = dataObject->metaObject();
+
+                QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
+                QMetaProperty receiver = output->metaObject()->property(instr->store.index);
+                const QMetaObject *receiverMo = QQmlPropertyPrivate::rawMetaObjectForType(ep, receiver.userType());
+
+                // Verify that these types are compatible
+                if (!QQmlPropertyPrivate::canConvert(dataMo, receiverMo)) {
+                    THROW_EXCEPTION_STR(instr->store.exceptionId, QLatin1String("Unable to assign ") +
+                                                                  QLatin1String(dataMo->className()) +
+                                                                  QLatin1String(" to ") +
+                                                                  QLatin1String(receiverMo->className()));
+                }
+            }
+        }
 
         int status = -1;
         void *argv[] = { data.typeDataPtr(), 0, &status, &storeFlags };

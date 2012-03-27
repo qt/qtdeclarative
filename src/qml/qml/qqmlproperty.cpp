@@ -1521,13 +1521,28 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             return true;
 
         const char *valueType = 0;
-        if (value.userType() == QVariant::Invalid) valueType = "null";
-        else valueType = QMetaType::typeName(value.userType());
+        const char *propertyType = 0;
+
+        if (value.userType() == QMetaType::QObjectStar) {
+            if (QObject *o = *(QObject **)value.constData()) {
+                valueType = o->metaObject()->className();
+
+                const QMetaObject *propertyMetaObject = rawMetaObjectForType(QQmlEnginePrivate::get(engine), type);
+                propertyType = propertyMetaObject->className();
+            }
+        } else if (value.userType() != QVariant::Invalid) {
+            valueType = QMetaType::typeName(value.userType());
+        }
+
+        if (!valueType)
+            valueType = "null";
+        if (!propertyType)
+            propertyType = QMetaType::typeName(type);
 
         expression->delayedError()->error.setDescription(QLatin1String("Unable to assign ") +
                                                          QLatin1String(valueType) +
                                                          QLatin1String(" to ") +
-                                                         QLatin1String(QMetaType::typeName(type)));
+                                                         QLatin1String(propertyType));
         return false;
     }
 
