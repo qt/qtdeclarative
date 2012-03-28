@@ -83,6 +83,7 @@ public:
         QString objectType;
         int objectId;
         int contextId;
+        int parentId;
     };
 
     struct QQmlObjectProperty {

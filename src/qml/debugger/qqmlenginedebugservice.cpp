@@ -67,7 +67,7 @@ QQmlEngineDebugService *QQmlEngineDebugService::instance()
 }
 
 QQmlEngineDebugService::QQmlEngineDebugService(QObject *parent)
-    : QQmlDebugService(QStringLiteral("QmlDebugger"), 1, parent),
+    : QQmlDebugService(QStringLiteral("QmlDebugger"), 2, parent),
       m_watch(new QQmlWatcher(this)),
       m_statesDelegate(0)
 {
@@ -86,7 +86,8 @@ QDataStream &operator<<(QDataStream &ds,
                         const QQmlEngineDebugService::QQmlObjectData &data)
 {
     ds << data.url << data.lineNumber << data.columnNumber << data.idString
-       << data.objectName << data.objectType << data.objectId << data.contextId;
+       << data.objectName << data.objectType << data.objectId << data.contextId
+       << data.parentId;
     return ds;
 }
 
@@ -94,7 +95,8 @@ QDataStream &operator>>(QDataStream &ds,
                         QQmlEngineDebugService::QQmlObjectData &data)
 {
     ds >> data.url >> data.lineNumber >> data.columnNumber >> data.idString
-       >> data.objectName >> data.objectType >> data.objectId >> data.contextId;
+       >> data.objectName >> data.objectType >> data.objectId >> data.contextId
+       >> data.parentId;
     return ds;
 }
 
@@ -378,7 +380,7 @@ QQmlEngineDebugService::objectData(QObject *object)
     rv.objectName = object->objectName();
     rv.objectId = QQmlDebugService::idForObject(object);
     rv.contextId = QQmlDebugService::idForObject(qmlContext(object));
-
+    rv.parentId = QQmlDebugService::idForObject(object->parent());
     QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
     if (type) {
         QString typeName = type->qmlTypeName();
