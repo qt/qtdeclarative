@@ -407,7 +407,6 @@ void QQuickShaderEffectNode::markDirtyTexture()
 
 void QQuickShaderEffectNode::textureProviderDestroyed(QObject *object)
 {
-    Q_ASSERT(qobject_cast<QSGTextureProvider *>(object));
     m_material.invalidateTextureProvider(static_cast<QSGTextureProvider *>(object));
 }
 
