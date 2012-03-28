@@ -61,6 +61,9 @@ static IR::Type irTypeFromVariantType(int t, QQmlEnginePrivate *engine, const QM
     case QMetaType::Int:
         return IR::IntType;
 
+    case QMetaType::Float:
+        return IR::FloatType;
+
     case QMetaType::Double:
         return IR::NumberType;
 

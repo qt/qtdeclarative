@@ -65,6 +65,7 @@ inline const char *typeName(Type t)
     case ObjectType: return "object";
     case BoolType: return "bool";
     case IntType: return "int";
+    case FloatType: return "float";
     case NumberType: return "number";
     default: return "invalid";
     }
@@ -90,9 +91,10 @@ IR::Type maxType(IR::Type left, IR::Type right)
         return IR::StringType;
     } else if (left == right)
         return left;
-    else if (isNumberType(left) && isNumberType(right))
-        return qMax(left, right);
-    else if ((isNumberType(left) && isStringType(right)) ||
+    else if (isNumberType(left) && isNumberType(right)) {
+        IR::Type ty = qMax(left, right);
+        return ty == FloatType ? NumberType : ty; // promote floats
+    } else if ((isNumberType(left) && isStringType(right)) ||
              (isNumberType(right) && isStringType(left)))
         return IR::StringType;
     else

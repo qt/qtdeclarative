@@ -95,6 +95,7 @@ protected:
             case QQmlJS::IR::StringType:
             case QQmlJS::IR::BoolType:
             case QQmlJS::IR::IntType:
+            case QQmlJS::IR::FloatType:
             case QQmlJS::IR::NumberType:
                 return true;
 
