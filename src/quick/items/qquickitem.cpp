@@ -52,8 +52,8 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qpen.h>
-#include <QtGui/qcursor.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qinputmethod.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
@@ -4843,7 +4843,7 @@ bool QQuickItem::isUnderMouse() const
     if (!d->canvas)
         return false;
 
-    QPoint cursorPos = QCursor::pos();
+    QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
     if (QRectF(0, 0, width(), height()).contains(mapFromScene(cursorPos))) // ### refactor: d->canvas->mapFromGlobal(cursorPos))))
         return true;
     return false;

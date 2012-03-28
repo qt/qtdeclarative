@@ -55,7 +55,6 @@
 
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputMethod>
-#include <QtGui/QCursor>
 
 #include <private/qabstractanimation_p.h>
 
@@ -952,7 +951,7 @@ bool QQuickCanvasPrivate::clearHover()
     if (hoverItems.isEmpty())
         return false;
 
-    QPointF pos = QCursor::pos(); // ### refactor: q->mapFromGlobal(QCursor::pos());
+    QPointF pos = QGuiApplicationPrivate::lastCursorPosition;; // ### refactor: q->mapFromGlobal(QCursor::pos());
 
     bool accepted = false;
     foreach (QQuickItem* item, hoverItems)
