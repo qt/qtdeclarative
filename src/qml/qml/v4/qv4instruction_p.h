@@ -241,6 +241,7 @@ union Q_AUTOTEST_EXPORT V4Instr {
         qint8 output;
         qint8 reg;
         quint8 exceptionId;
+        quint8 valueType;
         quint32 index;
     };
 

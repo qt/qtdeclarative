@@ -78,6 +78,10 @@ struct Register {
     double getnumber() const { return numberValue; }
     double &getnumberref() { return numberValue; }
 
+    void setfloat(float v) { floatValue = v; dataType = FloatType; }
+    float getfloat() const { return floatValue; }
+    float &getfloatref() { return floatValue; }
+
     void setint(int v) { intValue = v; dataType = IntType; }
     int getint() const { return intValue; }
     int &getintref() { return intValue; }
@@ -107,6 +111,7 @@ struct Register {
     union {
         QObject *qobjectValue;
         double numberValue;
+        float floatValue;
         int intValue;
         bool boolValue;
         void *data[sizeof(QVariant)];
@@ -713,12 +718,20 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 sub->bindings = this;
                 sub->method = subIdx;
             }
-            reg.init((Register::Type)instr->fetchAndSubscribe.valueType);
+
+            const Register::Type valueType = (Register::Type)instr->fetchAndSubscribe.valueType;
+            reg.init(valueType);
             if (instr->fetchAndSubscribe.valueType >= FirstCleanupType)
                 MARK_REGISTER(instr->fetchAndSubscribe.reg);
             QQmlAccessors *accessors = instr->fetchAndSubscribe.property.accessors;
             accessors->read(object, instr->fetchAndSubscribe.property.accessorData,
                             reg.typeDataPtr());
+
+            if (valueType == FloatType) {
+                // promote floats
+                const double v = reg.getfloat();
+                reg.setnumber(v);
+            }
 
             if (accessors->notifier) {
                 QQmlNotifier *notifier = 0;
@@ -902,7 +915,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (src.isUndefined()) {
             output.setUndefined();
         } else {
-            new (output.getstringptr()) QString(QString::number(src.getnumber()));
+            new (output.getstringptr()) QString(QString::number(src.getnumber(), 'g', 16));
             STRING_REGISTER(instr->unaryop.output);
         }
     }
@@ -1551,11 +1564,17 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (!object) {
             THROW_EXCEPTION(instr->fetch.exceptionId);
         } else {
-            reg.init((Register::Type)instr->fetch.valueType);
+            const Register::Type valueType = (Register::Type)instr->fetch.valueType;
+            reg.init(valueType);
             if (instr->fetch.valueType >= FirstCleanupType)
                 MARK_REGISTER(instr->fetch.reg);
             void *argv[] = { reg.typeDataPtr(), 0 };
             QMetaObject::metacall(object, QMetaObject::ReadProperty, instr->fetch.index, argv);
+            if (valueType == FloatType) {
+                // promote floats
+                const double v = reg.getfloat();
+                reg.setnumber(v);
+            }
         }
     }
     QML_V4_END_INSTR(Fetch, fetch)
@@ -1591,6 +1610,12 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                                                                   QLatin1String(receiverMo->className()));
                 }
             }
+        }
+
+        if (instr->store.valueType == FloatType) {
+            // cast numbers to floats
+            const float v = (float) data.getnumber();
+            data.setfloat(v);
         }
 
         int status = -1;

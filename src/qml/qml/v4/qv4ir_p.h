@@ -154,6 +154,7 @@ enum Type {
     NumberType
 };
 Type maxType(IR::Type left, IR::Type right);
+bool isRealType(IR::Type type);
 
 struct ExprVisitor {
     virtual ~ExprVisitor() {}

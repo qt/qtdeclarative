@@ -101,6 +101,10 @@ IR::Type maxType(IR::Type left, IR::Type right)
         return IR::InvalidType;
 }
 
+bool isRealType(IR::Type type)
+{
+    return type == IR::NumberType || type == IR::FloatType;
+}
 
 const char *opname(AluOp op)
 {

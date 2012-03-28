@@ -226,6 +226,7 @@ void QV4CompilerPrivate::visitConst(IR::Const *e)
         gen(i);
         } break;
 
+    case IR::FloatType:
     case IR::NumberType: {
         Instr::LoadNumber i;
         i.reg = currentReg;
@@ -351,6 +352,9 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         QQmlRegisterType regType;
 
         switch (propTy) {
+        case QMetaType::Float:
+            regType = FloatType;
+            break;
         case QMetaType::Double:
             regType = NumberType;
             break;
@@ -458,7 +462,7 @@ void QV4CompilerPrivate::visitUnop(IR::Unop *e)
         } break;
 
     case IR::OpUMinus:
-        if (e->expr->type == IR::NumberType) {
+        if (IR::isRealType(e->expr->type)) {
             Instr::UnaryMinusNumber i;
             i.output = currentReg;
             i.src = src;
@@ -475,7 +479,7 @@ void QV4CompilerPrivate::visitUnop(IR::Unop *e)
         break;
 
     case IR::OpUPlus:
-        if (e->expr->type == IR::NumberType) {
+        if (IR::isRealType(e->expr->type)) {
             Instr::UnaryPlusNumber i;
             i.output = currentReg;
             i.src = src;
@@ -540,6 +544,7 @@ void QV4CompilerPrivate::convertToNumber(IR::Expr *expr, int reg)
         gen(i);
         } break;
 
+    case IR::FloatType:
     case IR::NumberType:
         // nothing to do
         return;
@@ -566,6 +571,7 @@ void QV4CompilerPrivate::convertToInt(IR::Expr *expr, int reg)
         // nothing to do
         return;
 
+    case IR::FloatType:
     case IR::NumberType: {
         Instr::ConvertNumberToInt i;
         i.output = i.src = reg;
@@ -594,6 +600,7 @@ void QV4CompilerPrivate::convertToBool(IR::Expr *expr, int reg)
         gen(i);
         } break;
 
+    case IR::FloatType:
     case IR::NumberType: {
         Instr::ConvertNumberToBool i;
         i.output = i.src = reg;
@@ -813,7 +820,7 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
 {
     if (IR::Name *name = call->base->asName()) {
         IR::Expr *arg = call->onlyArgument();
-        if (arg != 0 && arg->type == IR::NumberType) {
+        if (arg != 0 && IR::isRealType(arg->type)) {
             traceExpression(arg, currentReg);
 
             switch (name->builtin) {
@@ -869,8 +876,8 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
                     IR::Expr *arg1 = call->args->expr;
                     IR::Expr *arg2 = call->args->next->expr;
 
-                    if (arg1 != 0 && arg1->type == IR::NumberType &&
-                        arg2 != 0 && arg2->type == IR::NumberType) {
+                    if (arg1 != 0 && IR::isRealType(arg1->type) &&
+                        arg2 != 0 && IR::isRealType(arg2->type)) {
 
                         traceExpression(arg1, currentReg);
                         traceExpression(arg2, currentReg + 1);
@@ -917,7 +924,17 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
 
     quint8 dest = target->index;
 
-    if (target->type != s->source->type) {
+    IR::Type targetTy = s->target->type;
+    IR::Type sourceTy = s->source->type;
+
+    // promote the floats
+    if (sourceTy == IR::FloatType)
+        sourceTy = IR::NumberType;
+
+    if (targetTy == IR::FloatType)
+        targetTy = IR::NumberType;
+
+    if (sourceTy != targetTy) {
         quint8 src = dest;
 
         if (IR::Temp *t = s->source->asTemp()) 
@@ -926,8 +943,6 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             traceExpression(s->source, dest);
 
         V4Instr::Type opcode = V4Instr::Noop;
-        IR::Type targetTy = s->target->type;
-        IR::Type sourceTy = s->source->type;
 
         if (sourceTy == IR::UrlType) {
             switch (targetTy) {
@@ -972,7 +987,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::StringType: opcode = V4Instr::ConvertStringToInt; break;
             default: break;
             } // switch
-        } else if (targetTy == IR::NumberType) {
+        } else if (IR::isRealType(targetTy)) {
             switch (sourceTy) {
             case IR::BoolType: opcode = V4Instr::ConvertBoolToNumber; break;
             case IR::IntType: opcode = V4Instr::ConvertIntToNumber; break;
@@ -1093,6 +1108,7 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
         case IR::IntType:
             test.regType = QMetaType::Int;
             break;
+        case IR::FloatType:
         case IR::NumberType:
             test.regType = QMetaType::Double;
             break;
@@ -1107,6 +1123,7 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
     store.output = 0;
     store.index = expression->property->index;
     store.reg = storeReg;
+    store.valueType = s->type == IR::FloatType ? FloatType : 0;
     store.exceptionId = exceptionId(s->line, s->column);
     gen(store);
 }
