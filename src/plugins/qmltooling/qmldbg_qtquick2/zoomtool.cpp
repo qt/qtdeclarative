@@ -75,10 +75,12 @@ ZoomTool::ZoomTool(QQuickViewInspector *inspector, QQuickView *view) :
 ZoomTool::~ZoomTool()
 {
     // restoring the original states.
-    m_rootItem->setScale(m_originalScale);
-    m_rootItem->setPos(m_originalPosition);
-    if (!m_originalSmooth)
-        m_rootItem->setSmooth(m_originalSmooth);
+    if (m_rootItem) {
+        m_rootItem->setScale(m_originalScale);
+        m_rootItem->setPos(m_originalPosition);
+        if (!m_originalSmooth)
+            m_rootItem->setSmooth(m_originalSmooth);
+    }
 }
 
 void ZoomTool::mousePressEvent(QMouseEvent *event)

@@ -45,6 +45,7 @@
 #include "abstracttool.h"
 
 #include <QtCore/QPointF>
+#include <QtCore/QPointer>
 
 QT_FORWARD_DECLARE_CLASS(QQuickView)
 QT_FORWARD_DECLARE_CLASS(QQuickItem)
@@ -92,7 +93,7 @@ private:
     bool m_originalSmooth;
     bool m_dragStarted;
     bool m_pinchStarted;
-    QQuickItem *m_rootItem;
+    QPointer<QQuickItem> m_rootItem;
     QPointF m_adjustedOrigin;
     QPointF m_dragStartPosition;
     QPointF m_mousePosition;
