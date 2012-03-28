@@ -103,7 +103,7 @@ public:
 class QQuickVisualAdaptorModel;
 class QVDMIncubationTask;
 
-class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource, public QQmlGuard<QObject>
+class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource, private QQmlGuard<QObject>
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
@@ -126,6 +126,12 @@ public:
     void Dispose();
 
     QObject *modelObject() { return this; }
+
+    inline QObject *object() const { return QQmlGuard<QObject>::object(); }
+    void setObject(QObject *g);
+    void destroyObject();
+
+    static QQuickVisualDataModelItem *dataForObject(QObject *object) { return contextData.value(object, 0); }
 
     int modelIndex() const { return index[0]; }
     void setModelIndex(int idx) { index[0] = idx; emit modelIndexChanged(); }
@@ -151,6 +157,12 @@ Q_SIGNALS:
 
 protected:
     void objectDestroyed(QObject *);
+
+private:
+    // A static hash of context data for all delegate object isn't ideal, but it provides a way
+    // to get the context data when constructing attached objects rather than constructing the
+    // attached objects on suspicion.
+    static QHash<QObject*, QQuickVisualDataModelItem *> contextData;
 };
 
 
@@ -236,7 +248,6 @@ public:
     void connectModel(QQuickVisualAdaptorModel *model);
 
     QObject *object(Compositor::Group group, int index, bool asynchronous, bool reference);
-    void destroy(QObject *object);
     QQuickVisualDataModel::ReleaseFlags release(QObject *object);
     QString stringValue(Compositor::Group group, int index, const QString &name);
     void emitCreatedPackage(QQuickVisualDataModelItem *cacheItem, QQuickPackage *package);
@@ -294,7 +305,6 @@ public:
     QList<QByteArray> m_watchedRoles;
 
     QString m_filterGroup;
-
 
     int m_count;
     int m_groupCount;

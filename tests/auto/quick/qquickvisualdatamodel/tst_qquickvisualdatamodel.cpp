@@ -229,6 +229,7 @@ private slots:
     void resolve();
     void warnings_data();
     void warnings();
+    void invalidAttachment();
 
 private:
     template <int N> void groups_verify(
@@ -3437,6 +3438,31 @@ void tst_qquickvisualdatamodel::warnings()
 
     evaluate<void>(visualModel, expression);
     QCOMPARE(evaluate<int>(listView, "count"), count);
+}
+
+void tst_qquickvisualdatamodel::invalidAttachment()
+{
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("invalidAttachment.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+    QCOMPARE(component.errors().count(), 0);
+
+    QVariant property = object->property("invalidVdm");
+    QCOMPARE(property.userType(), qMetaTypeId<QQuickVisualDataModel *>());
+    QVERIFY(!property.value<QQuickVisualDataModel *>());
+
+    QQuickItem *item = object->findChild<QQuickItem *>("delegate");
+    QVERIFY(item);
+
+    property = item->property("validVdm");
+    QCOMPARE(property.userType(), qMetaTypeId<QQuickVisualDataModel *>());
+    QVERIFY(property.value<QQuickVisualDataModel *>());
+
+    property = item->property("invalidVdm");
+    QCOMPARE(property.userType(), qMetaTypeId<QQuickVisualDataModel *>());
+    QVERIFY(!property.value<QQuickVisualDataModel *>());
 }
 
 

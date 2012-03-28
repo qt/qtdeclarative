@@ -196,14 +196,9 @@ class QQuickVisualDataModelAttached : public QObject
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
     Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged)
 public:
-    QQuickVisualDataModelAttached(QObject *parent)
-        : m_cacheItem(0)
-        , m_previousGroups(0)
-        , m_modelChanged(false)
-    {
-        QQml_setParent_noEvent(this, parent);
-    }
-    ~QQuickVisualDataModelAttached() { attachedProperties.remove(parent()); }
+    QQuickVisualDataModelAttached(QObject *parent);
+    QQuickVisualDataModelAttached(QQuickVisualDataModelItem *cacheItem, QObject *parent);
+    ~QQuickVisualDataModelAttached() {}
 
     void setCacheItem(QQuickVisualDataModelItem *item);
 
@@ -218,16 +213,6 @@ public:
 
     void emitUnresolvedChanged() { emit unresolvedChanged(); }
 
-    static QQuickVisualDataModelAttached *properties(QObject *obj)
-    {
-        QQuickVisualDataModelAttached *rv = attachedProperties.value(obj);
-        if (!rv) {
-            rv = new QQuickVisualDataModelAttached(obj);
-            attachedProperties.insert(obj, rv);
-        }
-        return rv;
-    }
-
 Q_SIGNALS:
     void modelChanged();
     void groupsChanged();
@@ -238,8 +223,6 @@ public:
     int m_previousGroups;
     int m_previousIndex[QQuickListCompositor::MaximumGroupCount];
     bool m_modelChanged;
-
-    static QHash<QObject*, QQuickVisualDataModelAttached*> attachedProperties;
 
     friend class QQuickVisualDataModelAttachedMetaObject;
 };
