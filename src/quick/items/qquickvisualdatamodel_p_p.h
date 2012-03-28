@@ -103,7 +103,7 @@ public:
 class QQuickVisualAdaptorModel;
 class QVDMIncubationTask;
 
-class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource
+class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource, public QQmlGuard<QObject>
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
@@ -135,11 +135,6 @@ public:
     virtual void setValue(const QString &role, const QVariant &value) { Q_UNUSED(role); Q_UNUSED(value); }
     virtual bool resolveIndex(const QQuickVisualAdaptorModel &, int) { return false; }
 
-Q_SIGNALS:
-    void modelIndexChanged();
-
-public:
-    QQmlGuard<QObject> object;
     QQuickVisualDataModelItemMetaType * const metaType;
     QQuickVisualDataModelAttached *attached;
     v8::Persistent<v8::Object> indexHandle;
@@ -150,6 +145,12 @@ public:
     int groups;
     int index[QQuickListCompositor::MaximumGroupCount];
     QVDMIncubationTask *incubationTask;
+
+Q_SIGNALS:
+    void modelIndexChanged();
+
+protected:
+    void objectDestroyed(QObject *);
 };
 
 
@@ -392,28 +393,6 @@ public:
 private:
     QQuickVisualDataModelAttached *attached;
     QQuickVisualDataModelItemMetaType *metaType;
-};
-
-class QQuickVisualDataModelContext : public QQmlContext
-{
-    Q_OBJECT
-public:
-    QQuickVisualDataModelContext(
-            QQuickVisualDataModelItem *cacheItem,
-            QQmlContext *parentContext,
-            QObject *parent = 0)
-        : QQmlContext(parentContext, parent)
-        , cacheItem(cacheItem)
-    {
-        ++cacheItem->scriptRef;
-    }
-
-    ~QQuickVisualDataModelContext()
-    {
-        cacheItem->Dispose();
-    }
-
-    QQuickVisualDataModelItem *cacheItem;
 };
 
 QT_END_NAMESPACE
