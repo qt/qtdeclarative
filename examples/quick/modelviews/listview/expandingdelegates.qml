@@ -106,13 +106,13 @@ Rectangle {
                         font.bold: true; font.pointSize: 16
                     }
 
-                    Text {
+                    SmallText {
                         text: "Ingredients"
-                        font.pointSize: 12; font.bold: true
+                        font.bold: true
                         opacity: recipe.detailsOpacity
                     }
 
-                    Text {
+                    SmallText {
                         text: ingredients
                         wrapMode: Text.WordWrap
                         width: parent.width
@@ -127,7 +127,7 @@ Rectangle {
                 anchors { top: topLayout.bottom; topMargin: 10; bottom: parent.bottom; bottomMargin: 10 }
                 opacity: recipe.detailsOpacity
 
-                Text {
+                SmallText {
                     id: methodTitle
                     anchors.top: parent.top
                     text: "Method"
