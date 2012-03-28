@@ -1409,13 +1409,46 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
     , metaObject(0)
     , groupNames(groupNames)
 {
+    initializeMetaObject();
+}
+
+QQuickVisualDataModelItemMetaType::~QQuickVisualDataModelItemMetaType()
+{
+    free(metaObject);
+    qPersistentDispose(constructor);
+}
+
+void QQuickVisualDataModelItemMetaType::initializeMetaObject()
+{
     QMetaObjectBuilder builder;
     builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
     builder.setClassName(QQuickVisualDataModelAttached::staticMetaObject.className());
     builder.setSuperClass(&QQuickVisualDataModelAttached::staticMetaObject);
 
+    int notifierId = 0;
+    for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
+        QString propertyName = QStringLiteral("in") + groupNames.at(i);
+        propertyName.replace(2, 1, propertyName.at(2).toUpper());
+        builder.addSignal("__" + propertyName.toUtf8() + "Changed()");
+        QMetaPropertyBuilder propertyBuilder = builder.addProperty(
+                propertyName.toUtf8(), "bool", notifierId);
+        propertyBuilder.setWritable(true);
+    }
+    for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
+        const QString propertyName = groupNames.at(i) + QStringLiteral("Index");
+        builder.addSignal("__" + propertyName.toUtf8() + "Changed()");
+        QMetaPropertyBuilder propertyBuilder = builder.addProperty(
+                propertyName.toUtf8(), "int", notifierId);
+        propertyBuilder.setWritable(true);
+    }
+
+    metaObject = builder.toMetaObject();
+}
+
+void QQuickVisualDataModelItemMetaType::initializeConstructor()
+{
     v8::HandleScope handleScope;
-    v8::Context::Scope contextScope(engine->context());
+    v8::Context::Scope contextScope(v8Engine->context());
 
     constructor = qPersistentNew(v8::ObjectTemplate::New());
 
@@ -1428,32 +1461,14 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
         QString propertyName = QStringLiteral("in") + groupNames.at(i);
         propertyName.replace(2, 1, propertyName.at(2).toUpper());
-        builder.addSignal("__" + propertyName.toUtf8() + "Changed()");
-        QMetaPropertyBuilder propertyBuilder = builder.addProperty(
-                propertyName.toUtf8(), "bool", notifierId);
-        propertyBuilder.setWritable(true);
-
         constructor->SetAccessor(
-                engine->toString(propertyName), get_member, set_member, v8::Int32::New(i + 1));
+                v8Engine->toString(propertyName), get_member, set_member, v8::Int32::New(i + 1));
     }
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
         const QString propertyName = groupNames.at(i) + QStringLiteral("Index");
-        builder.addSignal("__" + propertyName.toUtf8() + "Changed()");
-        QMetaPropertyBuilder propertyBuilder = builder.addProperty(
-                propertyName.toUtf8(), "int", notifierId);
-        propertyBuilder.setWritable(true);
-
         constructor->SetAccessor(
-                engine->toString(propertyName), get_index, 0, v8::Int32::New(i + 1));
+                v8Engine->toString(propertyName), get_index, 0, v8::Int32::New(i + 1));
     }
-
-    metaObject = builder.toMetaObject();
-}
-
-QQuickVisualDataModelItemMetaType::~QQuickVisualDataModelItemMetaType()
-{
-    free(metaObject);
-    qPersistentDispose(constructor);
 }
 
 int QQuickVisualDataModelItemMetaType::parseGroups(const QStringList &groups) const
@@ -2049,6 +2064,8 @@ QQmlV8Handle QQuickVisualDataGroup::get(int index)
     }
 
     if (cacheItem->indexHandle.IsEmpty()) {
+        if (model->m_cacheMetaType->constructor.IsEmpty())
+            model->m_cacheMetaType->initializeConstructor();
         cacheItem->indexHandle = qPersistentNew(model->m_cacheMetaType->constructor->NewInstance());
         cacheItem->indexHandle->SetExternalResource(cacheItem);
         cacheItem->indexHandle.MakeWeak(cacheItem, QQuickVisualDataModelItemMetaType::release_index);

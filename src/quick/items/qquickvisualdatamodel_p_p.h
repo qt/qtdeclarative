@@ -72,6 +72,9 @@ public:
     QQuickVisualDataModelItemMetaType(QV8Engine *engine, QQuickVisualDataModel *model, const QStringList &groupNames);
     ~QQuickVisualDataModelItemMetaType();
 
+    void initializeMetaObject();
+    void initializeConstructor();
+
     int parseGroups(const QStringList &groupNames) const;
     int parseGroups(const v8::Local<v8::Value> &groupNames) const;
 
