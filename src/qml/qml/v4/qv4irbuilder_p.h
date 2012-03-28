@@ -95,8 +95,7 @@ protected:
             case QQmlJS::IR::StringType:
             case QQmlJS::IR::BoolType:
             case QQmlJS::IR::IntType:
-            case QQmlJS::IR::RealType:
-            case QQmlJS::IR::RealNaNType:
+            case QQmlJS::IR::NumberType:
                 return true;
 
             default:

@@ -174,7 +174,7 @@ public:
     QByteArray buildSignalTable() const;
     QByteArray buildExceptionData() const;
 
-    void convertToReal(QQmlJS::IR::Expr *expr, int reg);    
+    void convertToNumber(QQmlJS::IR::Expr *expr, int reg);
     void convertToInt(QQmlJS::IR::Expr *expr, int reg);
     void convertToBool(QQmlJS::IR::Expr *expr, int reg);
     quint8 instructionOpcode(QQmlJS::IR::Binop *e);

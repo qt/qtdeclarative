@@ -226,8 +226,8 @@ void QV4CompilerPrivate::visitConst(IR::Const *e)
         gen(i);
         } break;
 
-    case IR::RealType: {
-        Instr::LoadReal i;
+    case IR::NumberType: {
+        Instr::LoadNumber i;
         i.reg = currentReg;
         i.value = e->value;
         gen(i);
@@ -351,8 +351,8 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         QQmlRegisterType regType;
 
         switch (propTy) {
-        case QMetaType::QReal:
-            regType = QRealType;
+        case QMetaType::Double:
+            regType = NumberType;
             break;
         case QMetaType::Bool:
             regType = BoolType;
@@ -458,14 +458,14 @@ void QV4CompilerPrivate::visitUnop(IR::Unop *e)
         } break;
 
     case IR::OpUMinus:
-        if (e->expr->type == IR::RealType) {
-            Instr::UnaryMinusReal i;
+        if (e->expr->type == IR::NumberType) {
+            Instr::UnaryMinusNumber i;
             i.output = currentReg;
             i.src = src;
             gen(i);
         } else if (e->expr->type == IR::IntType) {
-            convertToReal(e->expr, currentReg);
-            Instr::UnaryMinusReal i;
+            convertToNumber(e->expr, currentReg);
+            Instr::UnaryMinusNumber i;
             i.output = currentReg;
             i.src = src;
             gen(i);
@@ -475,14 +475,14 @@ void QV4CompilerPrivate::visitUnop(IR::Unop *e)
         break;
 
     case IR::OpUPlus:
-        if (e->expr->type == IR::RealType) {
-            Instr::UnaryPlusReal i;
+        if (e->expr->type == IR::NumberType) {
+            Instr::UnaryPlusNumber i;
             i.output = currentReg;
             i.src = src;
             gen(i);
         } else if (e->expr->type == IR::IntType) {
-            convertToReal(e->expr, currentReg);
-            Instr::UnaryPlusReal i;
+            convertToNumber(e->expr, currentReg);
+            Instr::UnaryPlusNumber i;
             i.output = currentReg;
             i.src = src;
             gen(i);
@@ -522,25 +522,25 @@ void QV4CompilerPrivate::visitUnop(IR::Unop *e)
     } // switch
 }
 
-void QV4CompilerPrivate::convertToReal(IR::Expr *expr, int reg)
+void QV4CompilerPrivate::convertToNumber(IR::Expr *expr, int reg)
 {
-    if (expr->type == IR::RealType)
+    if (expr->type == IR::NumberType)
         return;
 
     switch (expr->type) {
     case IR::BoolType: {
-        Instr::ConvertBoolToReal i;
+        Instr::ConvertBoolToNumber i;
         i.output = i.src = reg;
         gen(i);
         } break;
 
     case IR::IntType: {
-        Instr::ConvertIntToReal i;
+        Instr::ConvertIntToNumber i;
         i.output = i.src = reg;
         gen(i);
         } break;
 
-    case IR::RealType:
+    case IR::NumberType:
         // nothing to do
         return;
 
@@ -566,8 +566,8 @@ void QV4CompilerPrivate::convertToInt(IR::Expr *expr, int reg)
         // nothing to do
         return;
 
-    case IR::RealType: {
-        Instr::ConvertRealToInt i;
+    case IR::NumberType: {
+        Instr::ConvertNumberToInt i;
         i.output = i.src = reg;
         gen(i);
         } break;
@@ -594,8 +594,8 @@ void QV4CompilerPrivate::convertToBool(IR::Expr *expr, int reg)
         gen(i);
         } break;
 
-    case IR::RealType: {
-        Instr::ConvertRealToBool i;
+    case IR::NumberType: {
+        Instr::ConvertNumberToBool i;
         i.output = i.src = reg;
         gen(i);
         } return;
@@ -643,19 +643,19 @@ quint8 QV4CompilerPrivate::instructionOpcode(IR::Binop *e)
     case IR::OpAdd:
         if (e->type == IR::StringType)
             return V4Instr::AddString;
-        return V4Instr::AddReal;
+        return V4Instr::AddNumber;
 
     case IR::OpSub:
-        return V4Instr::SubReal;
+        return V4Instr::SubNumber;
 
     case IR::OpMul:
-        return V4Instr::MulReal;
+        return V4Instr::MulNumber;
 
     case IR::OpDiv:
-        return V4Instr::DivReal;
+        return V4Instr::DivNumber;
 
     case IR::OpMod:
-        return V4Instr::ModReal;
+        return V4Instr::ModNumber;
 
     case IR::OpLShift:
         return V4Instr::LShiftInt;
@@ -669,50 +669,50 @@ quint8 QV4CompilerPrivate::instructionOpcode(IR::Binop *e)
     case IR::OpGt:
         if (e->left->type == IR::StringType)
             return V4Instr::GtString;
-        return V4Instr::GtReal;
+        return V4Instr::GtNumber;
 
     case IR::OpLt:
         if (e->left->type == IR::StringType)
             return V4Instr::LtString;
-        return V4Instr::LtReal;
+        return V4Instr::LtNumber;
 
     case IR::OpGe:
         if (e->left->type == IR::StringType)
             return V4Instr::GeString;
-        return V4Instr::GeReal;
+        return V4Instr::GeNumber;
 
     case IR::OpLe:
         if (e->left->type == IR::StringType)
             return V4Instr::LeString;
-        return V4Instr::LeReal;
+        return V4Instr::LeNumber;
 
     case IR::OpEqual:
         if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
             return V4Instr::EqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::EqualString;
-        return V4Instr::EqualReal;
+        return V4Instr::EqualNumber;
 
     case IR::OpNotEqual:
         if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
             return V4Instr::NotEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::NotEqualString;
-        return V4Instr::NotEqualReal;
+        return V4Instr::NotEqualNumber;
 
     case IR::OpStrictEqual:
         if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
             return V4Instr::StrictEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::StrictEqualString;
-        return V4Instr::StrictEqualReal;
+        return V4Instr::StrictEqualNumber;
 
     case IR::OpStrictNotEqual:
         if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
             return V4Instr::StrictNotEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::StrictNotEqualString;
-        return V4Instr::StrictNotEqualReal;
+        return V4Instr::StrictNotEqualNumber;
 
     case IR::OpAnd:
     case IR::OpOr:
@@ -766,8 +766,8 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
 
     case IR::OpAdd:
         if (e->type != IR::StringType) {
-            convertToReal(e->left, left);
-            convertToReal(e->right, right);
+            convertToNumber(e->left, left);
+            convertToNumber(e->right, right);
         }
         break;
 
@@ -775,8 +775,8 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
     case IR::OpMul:
     case IR::OpDiv:
     case IR::OpMod:
-        convertToReal(e->left, left);
-        convertToReal(e->right, right);
+        convertToNumber(e->left, left);
+        convertToNumber(e->right, right);
         break;
 
     case IR::OpGt:
@@ -788,8 +788,8 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
     case IR::OpStrictEqual:
     case IR::OpStrictNotEqual:
         if (e->left->type >= IR::FirstNumberType) {
-            convertToReal(e->left, left);
-            convertToReal(e->right, right);
+            convertToNumber(e->left, left);
+            convertToNumber(e->right, right);
         }
         break;
 
@@ -813,7 +813,7 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
 {
     if (IR::Name *name = call->base->asName()) {
         IR::Expr *arg = call->onlyArgument();
-        if (arg != 0 && arg->type == IR::RealType) {
+        if (arg != 0 && arg->type == IR::NumberType) {
             traceExpression(arg, currentReg);
 
             switch (name->builtin) {
@@ -821,37 +821,37 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
                 break;
 
             case IR::MathSinBultinFunction: {
-                Instr::MathSinReal i;
+                Instr::MathSinNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathCosBultinFunction: {
-                Instr::MathCosReal i;
+                Instr::MathCosNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathAbsBuiltinFunction: {
-                Instr::MathAbsReal i;
+                Instr::MathAbsNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathRoundBultinFunction: {
-                Instr::MathRoundReal i;
+                Instr::MathRoundNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathFloorBultinFunction: {
-                Instr::MathFloorReal i;
+                Instr::MathFloorNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathCeilBuiltinFunction: {
-                Instr::MathCeilReal i;
+                Instr::MathCeilNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
@@ -869,21 +869,21 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
                     IR::Expr *arg1 = call->args->expr;
                     IR::Expr *arg2 = call->args->next->expr;
 
-                    if (arg1 != 0 && arg1->type == IR::RealType &&
-                        arg2 != 0 && arg2->type == IR::RealType) {
+                    if (arg1 != 0 && arg1->type == IR::NumberType &&
+                        arg2 != 0 && arg2->type == IR::NumberType) {
 
                         traceExpression(arg1, currentReg);
                         traceExpression(arg2, currentReg + 1);
 
                         if (name->builtin == IR::MathMaxBuiltinFunction) {
-                            Instr::MathMaxReal i;
+                            Instr::MathMaxNumber i;
                             i.left = currentReg;
                             i.right = currentReg + 1;
                             i.output = currentReg;
                             gen(i);
                             return;
                         } else if (name->builtin == IR::MathMinBuiltinFunction) {
-                            Instr::MathMinReal i;
+                            Instr::MathMinNumber i;
                             i.left = currentReg;
                             i.right = currentReg + 1;
                             i.output = currentReg;
@@ -952,7 +952,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
         if (targetTy == IR::BoolType) {
             switch (sourceTy) {
             case IR::IntType: opcode = V4Instr::ConvertIntToBool; break;
-            case IR::RealType: opcode = V4Instr::ConvertRealToBool; break;
+            case IR::NumberType: opcode = V4Instr::ConvertNumberToBool; break;
             case IR::StringType: opcode = V4Instr::ConvertStringToBool; break;
             case IR::UrlType: opcode = V4Instr::ConvertUrlToBool; break;
             case IR::ColorType: opcode = V4Instr::ConvertColorToBool; break;
@@ -962,28 +962,28 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
         } else if (targetTy == IR::IntType) {
             switch (sourceTy) {
             case IR::BoolType: opcode = V4Instr::ConvertBoolToInt; break;
-            case IR::RealType: {
+            case IR::NumberType: {
                 if (s->isMoveForReturn)
-                    opcode = V4Instr::MathRoundReal;
+                    opcode = V4Instr::MathRoundNumber;
                 else
-                    opcode = V4Instr::ConvertRealToInt;
+                    opcode = V4Instr::ConvertNumberToInt;
                 break;
             }
             case IR::StringType: opcode = V4Instr::ConvertStringToInt; break;
             default: break;
             } // switch
-        } else if (targetTy == IR::RealType) {
+        } else if (targetTy == IR::NumberType) {
             switch (sourceTy) {
-            case IR::BoolType: opcode = V4Instr::ConvertBoolToReal; break;
-            case IR::IntType: opcode = V4Instr::ConvertIntToReal; break;
-            case IR::StringType: opcode = V4Instr::ConvertStringToReal; break;
+            case IR::BoolType: opcode = V4Instr::ConvertBoolToNumber; break;
+            case IR::IntType: opcode = V4Instr::ConvertIntToNumber; break;
+            case IR::StringType: opcode = V4Instr::ConvertStringToNumber; break;
             default: break;
             } // switch
         } else if (targetTy == IR::StringType) {
             switch (sourceTy) {
             case IR::BoolType: opcode = V4Instr::ConvertBoolToString; break;
             case IR::IntType:  opcode = V4Instr::ConvertIntToString; break;
-            case IR::RealType: opcode = V4Instr::ConvertRealToString; break;
+            case IR::NumberType: opcode = V4Instr::ConvertNumberToString; break;
             case IR::UrlType: opcode = V4Instr::ConvertUrlToString; break;
             case IR::ColorType: opcode = V4Instr::ConvertColorToString; break;
             default: break;
@@ -997,7 +997,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             switch (sourceTy) {
             case IR::BoolType: gen(V4Instr::ConvertBoolToString, convToString); sourceTy = IR::StringType; break;
             case IR::IntType:  gen(V4Instr::ConvertIntToString,  convToString); sourceTy = IR::StringType; break;
-            case IR::RealType: gen(V4Instr::ConvertRealToString, convToString); sourceTy = IR::StringType; break;
+            case IR::NumberType: gen(V4Instr::ConvertNumberToString, convToString); sourceTy = IR::StringType; break;
             case IR::ColorType: gen(V4Instr::ConvertColorToString, convToString); sourceTy = IR::StringType; break;
             default: break;
             } // switch
@@ -1093,8 +1093,8 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
         case IR::IntType:
             test.regType = QMetaType::Int;
             break;
-        case IR::RealType:
-            test.regType = QMetaType::QReal;
+        case IR::NumberType:
+            test.regType = QMetaType::Double;
             break;
         default:
             discard();

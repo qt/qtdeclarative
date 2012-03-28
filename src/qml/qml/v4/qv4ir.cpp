@@ -65,8 +65,7 @@ inline const char *typeName(Type t)
     case ObjectType: return "object";
     case BoolType: return "bool";
     case IntType: return "int";
-    case RealType: return "qreal";
-    case RealNaNType: return "NaN";
+    case NumberType: return "number";
     default: return "invalid";
     }
 }
@@ -233,7 +232,7 @@ void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint32
         builtin = MathMinBuiltinFunction;
     } else if (id->length() == 7 && *id == QLatin1String("Math.PI")) {
         builtin = MathPIBuiltinConstant;
-        this->type = RealType;
+        this->type = NumberType;
     }
 }
 
@@ -267,7 +266,7 @@ Type Unop::typeForOp(AluOp op, Expr *expr)
     case OpUMinus:
     case OpUPlus:
     case OpCompl:
-        return maxType(expr->type, RealType);
+        return maxType(expr->type, NumberType);
 
     default:
         break;
@@ -309,13 +308,13 @@ Type Binop::typeForOp(AluOp op, Expr *left, Expr *right)
     case OpAdd:
         if (left->type == StringType)
             return StringType;
-        return RealType;
+        return NumberType;
 
     case OpSub:
     case OpMul:
     case OpDiv:
     case OpMod:
-        return RealType;
+        return NumberType;
 
     case OpLShift:
     case OpRShift:
@@ -364,7 +363,7 @@ Type Call::typeForFunction(Expr *base)
         case MathAbsBuiltinFunction:    //### type could also be Int if input was Int
         case MathMaxBuiltinFunction:
         case MathMinBuiltinFunction:
-            return RealType;
+            return NumberType;
 
         case MathRoundBultinFunction:
         case MathFloorBultinFunction:

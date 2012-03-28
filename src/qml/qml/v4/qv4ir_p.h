@@ -150,8 +150,7 @@ enum Type {
     FirstNumberType,
     BoolType = FirstNumberType,
     IntType,
-    RealType,
-    RealNaNType
+    NumberType
 };
 Type maxType(IR::Type left, IR::Type right);
 

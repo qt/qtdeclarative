@@ -87,7 +87,7 @@ enum QQmlRegisterType {
     UndefinedType,
     NullType,
     QObjectStarType,
-    QRealType,
+    NumberType,
     IntType,
     BoolType,
 
