@@ -75,6 +75,25 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef FOCUS_DEBUG
+void printFocusTree(QQuickItem *item, QQuickItem *scope, int depth)
+{
+    qWarning()
+            << QByteArray(depth, '\t').constData()
+            << (scope && QQuickItemPrivate::get(scope)->subFocusItem == item ? '*' : ' ')
+            << item->hasFocus()
+            << item->hasActiveFocus()
+            << item->isFocusScope()
+            << item;
+    foreach (QQuickItem *child, item->childItems()) {
+        printFocusTree(
+                child,
+                item->isFocusScope() || !scope ? item : scope,
+                item->isFocusScope() || !scope ? depth + 1 : depth);
+    }
+}
+#endif
+
 static void QQuickItem_parentNotifier(QObject *o, intptr_t, QQmlNotifier **n)
 {
     QQuickItemPrivate *d = QQuickItemPrivate::get(static_cast<QQuickItem *>(o));
@@ -1990,7 +2009,10 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             while (!scopeItem->isFocusScope() && scopeItem->parentItem())
                 scopeItem = scopeItem->parentItem();
 
-            if (scopeItem->scopedFocusItem()) {
+            if (QQuickItemPrivate::get(scopeItem)->subFocusItem
+                    || (!scopeItem->isFocusScope() && scopeItem->hasFocus())) {
+                if (scopeFocusedItem != this)
+                    QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(this, false);
                 QQuickItemPrivate::get(scopeFocusedItem)->focus = false;
                 emit scopeFocusedItem->focusChanged(false);
             } else {
