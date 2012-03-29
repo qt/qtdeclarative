@@ -740,12 +740,26 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
     int left = currentReg;
     int right = currentReg + 1; 
 
-    traceExpression(e->left, left);
-    traceExpression(e->right, right);
+    if (e->left->asTemp() && e->type != IR::StringType)
+        left = e->left->asTemp()->index;
+    else
+        traceExpression(e->left, left);
 
-    // At this point it is possible that the type of the
-    // subexpressions is different. This can happen because
-    // we keep BINOP expressions in HIR.
+    if (IR::Temp *t = e->right->asTemp())
+        right = t->index;
+    else
+        traceExpression(e->right, right);
+
+    if (e->left->type != e->right->type) {
+        if (qmlVerboseCompiler())
+            qWarning().nospace() << "invalid operands to binary operator " << IR::binaryOperator(e->op)
+                                 << "(`" << IR::binaryOperator(e->left->type)
+                                 << "' and `"
+                                 << IR::binaryOperator(e->right->type)
+                                 << "'";
+        discard();
+        return;
+    }
 
     switch (e->op) {
     case IR::OpInvalid:

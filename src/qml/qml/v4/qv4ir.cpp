@@ -606,6 +606,12 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
                     break;
                 }
             }
+        } else if (op == OpAdd) {
+            if (String *s1 = left->asString()) {
+                if (String *s2 = right->asString()) {
+                    return STRING(function->newString(s1->value.toString() + s2->value));
+                }
+            }
         }
     }
 

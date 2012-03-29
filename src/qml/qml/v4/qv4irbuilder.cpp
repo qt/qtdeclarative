@@ -892,7 +892,14 @@ void QV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left, ExprResult
         _expr.format = ExprResult::cx;
         _block->CJUMP(_block->BINOP(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
     } else {
-        _expr.code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
+        IR::Expr *e = _block->BINOP(IR::binaryOperator(ast->op), left, right);
+        if (e->asConst() != 0 || e->asString() != 0)
+            _expr.code = e;
+        else {
+            IR::Temp *t = _block->TEMP(e->type);
+            _block->MOVE(t, e);
+            _expr.code = t;
+        }
     }
 }
 
