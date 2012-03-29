@@ -377,6 +377,9 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         case QMetaType::QColor:
             regType = QColorType;
             break;
+        case QMetaType::QVariant:
+            regType = QVariantType;
+            break;
 
         default:
             if (propTy == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
@@ -966,6 +969,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             switch (targetTy) {
             case IR::BoolType:
             case IR::StringType:
+            case IR::VariantType:
                 // nothing to do. V4 will generate optimized
                 // url-to-xxx conversions.
                 break;
@@ -1068,6 +1072,20 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::NullType: opcode = V4Instr::ConvertNullToObject; break;
             default: break;
             } // switch
+        } else if (targetTy == IR::VariantType) {
+            if (s->isMoveForReturn) {
+                switch (sourceTy) {
+                case IR::BoolType: opcode = V4Instr::ConvertBoolToVariant; break;
+                case IR::IntType:  opcode = V4Instr::ConvertIntToVariant; break;
+                case IR::NumberType: opcode = V4Instr::ConvertNumberToVariant; break;
+                case IR::UrlType: opcode = V4Instr::ConvertUrlToVariant; break;
+                case IR::ColorType: opcode = V4Instr::ConvertColorToVariant; break;
+                case IR::StringType: opcode = V4Instr::ConvertStringToVariant; break;
+                case IR::ObjectType: opcode = V4Instr::ConvertObjectToVariant; break;
+                case IR::NullType: opcode = V4Instr::ConvertNullToVariant; break;
+                default: break;
+                } // switch
+            }
         }
         if (opcode != V4Instr::Noop) {
             V4Instr conv;
@@ -1140,6 +1158,9 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
             break;
         case IR::ObjectType:
             test.regType = QMetaType::QObjectStar;
+            break;
+        case IR::VariantType:
+            test.regType = QMetaType::QVariant;
             break;
         case IR::BoolType:
             test.regType = QMetaType::Bool;

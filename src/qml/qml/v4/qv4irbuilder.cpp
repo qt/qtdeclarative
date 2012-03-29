@@ -116,8 +116,16 @@ bool QV4IRBuilder::operator()(QQmlJS::IR::Function *function,
 
     //_block->MOVE(_block->TEMP(IR::InvalidType), r.code);
     if (r.code) {
-        const QMetaObject *m = 0;
-        const IR::Type targetType = irTypeFromVariantType(m_expression->property->type, m_engine, m);
+        IR::Type targetType = IR::InvalidType;
+
+        // This is the only operation where variant is supported:
+        QQmlPropertyData *data = &m_expression->property->core;
+        if (data->propType == QMetaType::QVariant) {
+            targetType = (data->isVMEProperty() ? IR::VarType : IR::VariantType);
+        } else {
+            targetType = irTypeFromVariantType(data->propType, m_engine, 0);
+        }
+
         if (targetType != r.type()) {
             IR::Expr *x = _block->TEMP(targetType);
             _block->MOVE(x, r, true);

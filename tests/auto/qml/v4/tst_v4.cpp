@@ -150,6 +150,7 @@ void tst_v4::qtscript_data()
     QTest::newRow("conversion from string") << "conversions.6.qml"; // QTBUG-24706
     QTest::newRow("conversion from url") << "conversions.7.qml"; // QTBUG-24706
     QTest::newRow("conversion from vec3") << "conversions.8.qml";
+    QTest::newRow("variantHandling") << "variantHandling.qml";
 }
 
 void tst_v4::unnecessaryReeval()
@@ -856,23 +857,31 @@ void tst_v4::debuggingDumpInstructions()
     expectedPreAddress << "\t\tConvertBoolToInt\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertBoolToNumber\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertBoolToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertBoolToVariant\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertIntToBool\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertIntToNumber\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertIntToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertIntToVariant\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertNumberToBool\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertNumberToInt\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertNumberToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertNumberToVariant\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertStringToBool\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertStringToInt\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertStringToNumber\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertStringToUrl\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertStringToColor\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertStringToVariant\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertUrlToBool\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertUrlToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertUrlToVariant\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertColorToBool\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertColorToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertColorToVariant\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertObjectToBool\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertObjectToVariant\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tConvertNullToObject\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertNullToVariant\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tResolveUrl\t\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tMathSinNumber\t\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tMathCosNumber\t\tInput_Reg(0) -> Output_Reg(0)";

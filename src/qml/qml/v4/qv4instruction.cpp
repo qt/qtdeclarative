@@ -144,6 +144,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertBoolToString:
         INSTR_DUMP << "\t" << "ConvertBoolToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::ConvertBoolToVariant:
+        INSTR_DUMP << "\t" << "ConvertBoolToVariant" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
     case V4Instr::ConvertIntToBool:
         INSTR_DUMP << "\t" << "ConvertIntToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
@@ -153,6 +156,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertIntToString:
         INSTR_DUMP << "\t" << "ConvertIntToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::ConvertIntToVariant:
+        INSTR_DUMP << "\t" << "ConvertIntToVariant" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
     case V4Instr::ConvertNumberToBool:
         INSTR_DUMP << "\t" << "ConvertNumberToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
@@ -161,6 +167,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
         break;
     case V4Instr::ConvertNumberToString:
         INSTR_DUMP << "\t" << "ConvertNumberToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
+    case V4Instr::ConvertNumberToVariant:
+        INSTR_DUMP << "\t" << "ConvertNumberToVariant" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::ConvertStringToBool:
         INSTR_DUMP << "\t" << "ConvertStringToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
@@ -177,11 +186,17 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertStringToColor:
         INSTR_DUMP << "\t" << "ConvertStringToColor" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::ConvertStringToVariant:
+        INSTR_DUMP << "\t" << "ConvertStringToVariant" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
     case V4Instr::ConvertUrlToBool:
         INSTR_DUMP << "\t" << "ConvertUrlToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::ConvertUrlToString:
         INSTR_DUMP << "\t" << "ConvertUrlToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
+    case V4Instr::ConvertUrlToVariant:
+        INSTR_DUMP << "\t" << "ConvertUrlToVariant" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::ConvertColorToBool:
         INSTR_DUMP << "\t" << "ConvertColorToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
@@ -189,11 +204,20 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertColorToString:
         INSTR_DUMP << "\t" << "ConvertColorToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::ConvertColorToVariant:
+        INSTR_DUMP << "\t" << "ConvertColorToVariant" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
     case V4Instr::ConvertObjectToBool:
         INSTR_DUMP << "\t" << "ConvertObjectToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
+    case V4Instr::ConvertObjectToVariant:
+        INSTR_DUMP << "\t" << "ConvertObjectToVariant" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
     case V4Instr::ConvertNullToObject:
         INSTR_DUMP << "\t" << "ConvertNullToObject" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+        break;
+    case V4Instr::ConvertNullToVariant:
+        INSTR_DUMP << "\t" << "ConvertNullToVariant" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::ResolveUrl:
         INSTR_DUMP << "\t" << "ResolveUrl" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";

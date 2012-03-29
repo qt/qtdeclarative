@@ -83,23 +83,31 @@ QT_BEGIN_NAMESPACE
     F(ConvertBoolToInt, unaryop) \
     F(ConvertBoolToNumber, unaryop) \
     F(ConvertBoolToString, unaryop) \
+    F(ConvertBoolToVariant, unaryop) \
     F(ConvertIntToBool, unaryop) \
     F(ConvertIntToNumber, unaryop) \
     F(ConvertIntToString, unaryop) \
+    F(ConvertIntToVariant, unaryop) \
     F(ConvertNumberToBool, unaryop) \
     F(ConvertNumberToInt, unaryop) \
     F(ConvertNumberToString, unaryop) \
+    F(ConvertNumberToVariant, unaryop) \
     F(ConvertStringToBool, unaryop) \
     F(ConvertStringToInt, unaryop) \
     F(ConvertStringToNumber, unaryop) \
     F(ConvertStringToUrl, unaryop) \
     F(ConvertStringToColor, unaryop) \
+    F(ConvertStringToVariant, unaryop) \
     F(ConvertUrlToBool, unaryop) \
     F(ConvertUrlToString, unaryop) \
+    F(ConvertUrlToVariant, unaryop) \
     F(ConvertColorToBool, unaryop) \
     F(ConvertColorToString, unaryop) \
+    F(ConvertColorToVariant, unaryop) \
     F(ConvertObjectToBool, unaryop) \
+    F(ConvertObjectToVariant, unaryop) \
     F(ConvertNullToObject, unaryop) \
+    F(ConvertNullToVariant, unaryop) \
     F(ResolveUrl, unaryop) \
     F(MathSinNumber, unaryop) \
     F(MathCosNumber, unaryop) \

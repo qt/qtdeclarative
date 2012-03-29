@@ -456,7 +456,7 @@ static void testBindingResult(const QString &binding, int line, int column,
     if (expression.hasError()) {
         iserror = true;
         qtscriptResult = "exception";
-    } else if (value.userType() != resultType) {
+    } else if ((value.userType() != resultType) && (resultType != QMetaType::QVariant)) {
         // Override the QMetaType conversions to make them more JS friendly.
         if (value.userType() == QMetaType::Double && (resultType == QMetaType::QString ||
                                                         resultType == QMetaType::QUrl)) {
@@ -505,6 +505,12 @@ static void testBindingResult(const QString &binding, int line, int column,
             break;
         case QMetaType::Double:
             v4value = result.getnumber();
+            break;
+        case QMetaType::QColor:
+            v4value = *result.getcolorptr();
+            break;
+        case QMetaType::QVariant:
+            v4value = *result.getvariantptr();
             break;
         default:
             if (resultType == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
@@ -882,6 +888,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertBoolToString, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertBoolToVariant, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.getvariantptr()) QVariant(src.getbool());
+            VARIANT_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertBoolToVariant, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertIntToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -906,12 +925,25 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) {
             output.setUndefined();
-        } else { 
+        } else {
             new (output.getstringptr()) QString(QString::number(src.getint()));
             STRING_REGISTER(instr->unaryop.output);
         }
     }
     QML_V4_END_INSTR(ConvertIntToString, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertIntToVariant, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.getvariantptr()) QVariant(src.getint());
+            VARIANT_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertIntToVariant, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertNumberToBool, unaryop)
     {
@@ -944,6 +976,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         }
     }
     QML_V4_END_INSTR(ConvertNumberToString, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertNumberToVariant, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.getvariantptr()) QVariant(src.getnumber());
+            VARIANT_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertNumberToVariant, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertStringToBool, unaryop)
     {
@@ -1048,6 +1093,25 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertStringToUrl, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertStringToVariant, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QString tmp(*src.getstringptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupString();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.getvariantptr()) QVariant(tmp);
+
+            VARIANT_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertStringToVariant, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertUrlToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1085,6 +1149,25 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertUrlToString, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertUrlToVariant, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupUrl();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.getvariantptr()) QVariant(tmp);
+            VARIANT_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertUrlToVariant, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertColorToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1119,6 +1202,25 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertColorToString, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertColorToVariant, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QColor tmp(*src.getcolorptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupColor();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.getvariantptr()) QVariant(tmp);
+            VARIANT_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertColorToVariant, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertObjectToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1131,12 +1233,34 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertObjectToBool, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertObjectToVariant, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined())
+            output.setUndefined();
+        else {
+            new (output.getvariantptr()) QVariant(qVariantFromValue<QObject *>(src.getQObject()));
+            VARIANT_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertObjectToVariant, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertNullToObject, unaryop)
     {
         Register &output = registers[instr->unaryop.output];
         output.setQObject(0);
     }
     QML_V4_END_INSTR(ConvertNullToObject, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertNullToVariant, unaryop)
+    {
+        Register &output = registers[instr->unaryop.output];
+        new (output.getvariantptr()) QVariant();
+        VARIANT_REGISTER(instr->unaryop.output);
+    }
+    QML_V4_END_INSTR(ConvertNullToVariant, unaryop)
 
     QML_V4_BEGIN_INSTR(ResolveUrl, unaryop)
     {

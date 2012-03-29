@@ -63,6 +63,8 @@ const char *typeName(Type t)
     case SGAnchorLineType: return "SGAnchorLine";
     case AttachType: return "AttachType";
     case ObjectType: return "object";
+    case VariantType: return "variant";
+    case VarType: return "var";
     case BoolType: return "bool";
     case IntType: return "int";
     case FloatType: return "float";

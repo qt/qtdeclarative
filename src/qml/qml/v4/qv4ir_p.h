@@ -146,6 +146,8 @@ enum Type {
     SGAnchorLineType,
     AttachType,
     ObjectType,
+    VariantType,
+    VarType,
 
     FirstNumberType,
     BoolType = FirstNumberType,
