@@ -309,6 +309,13 @@ void QQuickLoader::setActive(bool newVal)
                 loadFromSourceComponent();
             }
         } else {
+            // cancel any current incubation
+            if (d->incubator) {
+                d->incubator->clear();
+                delete d->itemContext;
+                d->itemContext = 0;
+            }
+
             if (d->item) {
                 QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);
                 p->removeItemChangeListener(d, watchedChanges);
@@ -642,7 +649,8 @@ void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
         emit q->sourceComponentChanged();
     emit q->statusChanged();
     emit q->progressChanged();
-    emit q->loaded();
+    if (status == QQmlIncubator::Ready)
+        emit q->loaded();
     disposeInitialPropertyValues(); // cleanup
 }
 

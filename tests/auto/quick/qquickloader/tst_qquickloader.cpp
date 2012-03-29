@@ -92,7 +92,7 @@ private slots:
     void noResize();
     void networkRequestUrl();
     void failNetworkRequest();
-//    void networkComponent();
+    void networkComponent();
     void active();
     void initialPropertyValues_data();
     void initialPropertyValues();
@@ -111,6 +111,7 @@ private slots:
     void asynchronous();
     void asynchronous_clear();
     void simultaneousSyncAsync();
+    void loadedSignal();
 
     void parented();
     void sizeBound();
@@ -442,21 +443,21 @@ void tst_QQuickLoader::networkRequestUrl()
     delete loader;
 }
 
-/* XXX Component waits until all dependencies are loaded.  Is this actually possible?
+/* XXX Component waits until all dependencies are loaded.  Is this actually possible? */
 void tst_QQuickLoader::networkComponent()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory("slowdata", TestHTTPServer::Delay);
+    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQmlComponent component(&engine);
     component.setData(QByteArray(
                 "import QtQuick 2.0\n"
                 "import \"http://127.0.0.1:14450/\" as NW\n"
                 "Item {\n"
-                " Component { id: comp; NW.SlowRect {} }\n"
+                " Component { id: comp; NW.Rect120x60 {} }\n"
                 " Loader { sourceComponent: comp } }")
-            , dataDirectoryUrl());
+            , dataDirectory());
 
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
@@ -472,7 +473,6 @@ void tst_QQuickLoader::networkComponent()
 
     delete loader;
 }
-*/
 
 void tst_QQuickLoader::failNetworkRequest()
 {
@@ -998,6 +998,47 @@ void tst_QQuickLoader::simultaneousSyncAsync()
     QCOMPARE(asyncLoader->status(), QQuickLoader::Ready);
 
     delete root;
+}
+
+void tst_QQuickLoader::loadedSignal()
+{
+    {
+        // ensure that triggering loading (by setting active = true)
+        // and then immediately setting active to false, causes the
+        // loader to be deactivated, including disabling the incubator.
+        QQmlComponent component(&engine, testFileUrl("loadedSignal.qml"));
+        QObject *obj = component.create();
+
+        QMetaObject::invokeMethod(obj, "triggerLoading");
+        QTest::qWait(100); // ensure that loading would have finished if it wasn't deactivated
+        QCOMPARE(obj->property("loadCount").toInt(), 0);
+        QVERIFY(obj->property("success").toBool());
+
+        QMetaObject::invokeMethod(obj, "triggerLoading");
+        QTest::qWait(100);
+        QCOMPARE(obj->property("loadCount").toInt(), 0);
+        QVERIFY(obj->property("success").toBool());
+
+        QMetaObject::invokeMethod(obj, "triggerMultipleLoad");
+        QTest::qWait(100);
+        QCOMPARE(obj->property("loadCount").toInt(), 1); // only one loaded signal should be emitted.
+        QVERIFY(obj->property("success").toBool());
+
+        delete obj;
+    }
+
+    {
+        // ensure that an error doesn't result in the onLoaded signal being emitted.
+        QQmlComponent component(&engine, testFileUrl("loadedSignal.2.qml"));
+        QObject *obj = component.create();
+
+        QMetaObject::invokeMethod(obj, "triggerLoading");
+        QTest::qWait(100);
+        QCOMPARE(obj->property("loadCount").toInt(), 0);
+        QVERIFY(obj->property("success").toBool());
+
+        delete obj;
+    }
 }
 
 void tst_QQuickLoader::parented()
