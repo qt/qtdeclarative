@@ -115,7 +115,7 @@ public:
         , selectPressed(false)
         , textLayoutDirty(true)
         , persistentSelection(false)
-        , m_hideCursor(false)
+        , hasImState(false)
         , m_separator(0)
         , m_readOnly(0)
         , m_textDirty(0)
@@ -245,7 +245,7 @@ public:
     bool selectPressed:1;
     bool textLayoutDirty:1;
     bool persistentSelection:1;
-    bool m_hideCursor : 1; // used to hide the m_cursor inside preedit areas
+    bool hasImState : 1;
     bool m_separator : 1;
     bool m_readOnly : 1;
     bool m_textDirty : 1;
@@ -319,6 +319,7 @@ public:
 #endif
 
     void commitPreedit();
+    void cancelPreedit();
 
     Qt::CursorMoveStyle cursorMoveStyle() const { return m_textLayout.cursorMoveStyle(); }
     void setCursorMoveStyle(Qt::CursorMoveStyle style) { m_textLayout.setCursorMoveStyle(style); }

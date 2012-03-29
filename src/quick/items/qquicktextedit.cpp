@@ -871,10 +871,9 @@ void QQuickTextEdit::setCursorVisible(bool on)
     if (d->cursorVisible == on)
         return;
     d->cursorVisible = on;
-    QFocusEvent focusEvent(on ? QEvent::FocusIn : QEvent::FocusOut);
     if (!on && !d->persistentSelection)
         d->control->setCursorIsFocusIndicator(true);
-    d->control->processEvent(&focusEvent, QPointF(0, -d->yoff));
+    d->control->setCursorVisible(on);
     emit cursorVisibleChanged(d->cursorVisible);
 }
 
@@ -1536,15 +1535,18 @@ void QQuickTextEdit::inputMethodEvent(QInputMethodEvent *event)
     Q_D(QQuickTextEdit);
     const bool wasComposing = isInputMethodComposing();
     d->control->processEvent(event, QPointF(0, -d->yoff));
+    setCursorVisible(d->control->cursorVisible());
     if (wasComposing != isInputMethodComposing())
         emit inputMethodComposingChanged();
 }
 
 void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
 {
+    Q_D(QQuickTextEdit);
     if (change == ItemActiveFocusHasChanged) {
         setCursorVisible(value.boolValue); // ### refactor: focus handling && d->canvas && d->canvas->hasFocus());
-
+        QFocusEvent focusEvent(value.boolValue ? QEvent::FocusIn : QEvent::FocusOut);
+        d->control->processEvent(&focusEvent, QPointF(0, -d->yoff));
         if (value.boolValue) {
             q_updateAlignment();
             connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
@@ -1729,9 +1731,7 @@ bool QQuickTextEdit::canRedo() const
 bool QQuickTextEdit::isInputMethodComposing() const
 {
     Q_D(const QQuickTextEdit);
-    if (QTextLayout *layout = d->control->textCursor().block().layout())
-        return layout->preeditAreaText().length() > 0;
-    return false;
+    return d->control->hasImState();
 }
 
 void QQuickTextEditPrivate::init()
