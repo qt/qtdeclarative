@@ -192,7 +192,7 @@ class QQmlNotifier;
 
 namespace QQmlJS {
 
-union V4Instr {
+union Q_AUTOTEST_EXPORT V4Instr {
     enum Type {
         FOR_EACH_V4_INSTR(QML_V4_INSTR_ENUM)
     };
@@ -400,11 +400,11 @@ FOR_EACH_V4_INSTR(QML_V4_INSTR_META_TEMPLATE);
 #undef QML_V4_INSTR_META_TEMPLATE
 
 template<int Instr>
-class V4InstrData : public V4InstrMeta<Instr>::DataType
+class Q_AUTOTEST_EXPORT V4InstrData : public V4InstrMeta<Instr>::DataType
 {
 };
 
-class Bytecode
+class Q_AUTOTEST_EXPORT Bytecode
 {
     Q_DISABLE_COPY(Bytecode)
 

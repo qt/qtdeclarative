@@ -940,10 +940,9 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
                 // generate a UrlToString conversion and fix
                 // the type of the source expression.
                 V4Instr conv;
-                conv.unaryop.output = V4Instr::ConvertUrlToString;
+                conv.unaryop.output = src;
                 conv.unaryop.src = src;
-                gen(opcode, conv);
-
+                gen(V4Instr::ConvertUrlToString, conv);
                 sourceTy = IR::StringType;
                 break;
             }
