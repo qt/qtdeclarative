@@ -178,7 +178,8 @@ public slots:
     {
         if (m_system != arg) {
             m_system = arg;
-            m_system->registerParticleEmitter(this);
+            if (m_system)
+                m_system->registerParticleEmitter(this);
             emit systemChanged(arg);
         }
     }
