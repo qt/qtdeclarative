@@ -1221,7 +1221,7 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
         maybeUpdate(canvas);
 }
 
-void QQuickTrivialWindowManager::exposureChanged(QQuickCanvas *canvas)
+void QQuickTrivialWindowManager::exposureChanged(QQuickCanvas *)
 {
 }
 

@@ -748,7 +748,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
     QTextLine line;
     int visibleCount = 0;
     bool elide;
-    bool widthChanged;
     qreal height = 0;
     QString elideText;
     bool once = true;
@@ -776,7 +775,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
         bool truncateHeight = false;
         truncated = false;
         elide = false;
-        widthChanged = false;
         int characterCount = 0;
         int unwrappedLineCount = 1;
         int maxLineCount = maximumLineCount();
@@ -911,10 +909,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth)
 
             const qreal oldWidth = lineWidth;
             lineWidth = q->widthValid() && q->width() > 0 ? q->width() : FLT_MAX;
-            if (lineWidth != oldWidth && (singlelineElide || multilineElide || canWrap || horizontalFit)) {
-                widthChanged = true;
+            if (lineWidth != oldWidth && (singlelineElide || multilineElide || canWrap || horizontalFit))
                 continue;
-            }
         }
 
         // If the next needs to be elided and there's an abbreviated string available

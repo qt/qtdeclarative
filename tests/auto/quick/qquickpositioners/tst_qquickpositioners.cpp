@@ -636,7 +636,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
 
     QQuickView *canvas = QQuickViewTestUtil::createView();
     QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("enableAddTransition", false);
+    ctxt->setContextProperty("enableAddTransition", QVariant(false));
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);

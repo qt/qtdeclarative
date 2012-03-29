@@ -709,6 +709,7 @@ void tst_qquickitem::changeParent()
     focusState[item].set(true, true);
     focusState.active(item);
     FVERIFY();
+    delete child2;
     }
 }
 
