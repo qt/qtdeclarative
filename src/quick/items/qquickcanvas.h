@@ -102,7 +102,9 @@ public:
 
     QQmlIncubationController *incubationController() const;
 
+#ifndef QT_NO_ACCESSIBILITY
     virtual QAccessibleInterface *accessibleRoot() const;
+#endif
 
     // Scene graph specific functions
     QSGTexture *createTextureFromImage(const QImage &image) const;

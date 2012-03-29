@@ -122,10 +122,12 @@ private:
     bool m_eventSent;
 };
 
+#ifndef QT_NO_ACCESSIBILITY
 QAccessibleInterface *QQuickCanvas::accessibleRoot() const
 {
     return QAccessible::queryAccessibleInterface(const_cast<QQuickCanvas*>(this));
 }
+#endif
 
 
 /*
