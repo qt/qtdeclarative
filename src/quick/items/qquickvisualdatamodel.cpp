@@ -803,7 +803,7 @@ QObject *QQuickVisualDataModelPrivate::object(Compositor::Group group, int index
     }
 
     if (cacheItem->incubationTask) {
-        if (!asynchronous) {
+        if (!asynchronous && cacheItem->incubationTask->incubationMode() == QQmlIncubator::Asynchronous) {
             // previously requested async - now needed immediately
             cacheItem->incubationTask->forceCompletion();
         }
