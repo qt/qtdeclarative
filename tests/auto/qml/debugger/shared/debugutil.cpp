@@ -161,9 +161,6 @@ void QQmlDebugProcess::processAppOutput()
                 m_eventLoop.quit();
                 continue;
             }
-            if (line.contains("Connection established.")) {
-                continue;
-            }
         }
     }
     m_mutex.unlock();
