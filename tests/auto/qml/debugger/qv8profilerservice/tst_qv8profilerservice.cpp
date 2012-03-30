@@ -77,8 +77,11 @@ public:
         V8MaximumMessage
     };
 
+    enum ServiceState { NotRunning, Running } serviceState;
+
     QV8ProfilerClient(QQmlDebugConnection *connection)
         : QQmlDebugClient(QLatin1String("V8Profiler"), connection)
+        , serviceState(NotRunning)
     {
     }
 
@@ -165,12 +168,15 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
 
     switch (messageType) {
     case QV8ProfilerClient::V8Entry: {
+        QCOMPARE(serviceState, Running);
         QV8ProfilerData entry;
         stream >> entry.filename >> entry.functionname >> entry.lineNumber >> entry.totalTime >> entry.selfTime >> entry.treeLevel;
         traceMessages.append(entry);
         break;
     }
     case QV8ProfilerClient::V8Complete:
+        QCOMPARE(serviceState, Running);
+        serviceState = NotRunning;
         emit complete();
         break;
     case QV8ProfilerClient::V8SnapshotChunk: {
@@ -183,6 +189,8 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
         emit snapshot();
         break;
     case QV8ProfilerClient::V8Started:
+        QCOMPARE(serviceState, NotRunning);
+        serviceState = Running;
         emit started();
         break;
     default:
@@ -208,15 +216,16 @@ void tst_QV8ProfilerService::connect(bool block, const QString &testFile)
     m_process = new QQmlDebugProcess(executable);
     m_process->start(QStringList() << arguments);
     if (!m_process->waitForSessionStart()) {
-        QString failMsg = QString("Could not launch app '%1'.\nApplication output:\n%2").arg(
-                    executable, m_process->output());
+        QString failMsg = QString("Could not launch app '%1'.").arg(executable);
         QFAIL(qPrintable(failMsg));
     }
 
-    QQmlDebugConnection *m_connection = new QQmlDebugConnection();
+    m_connection = new QQmlDebugConnection();
     m_client = new QV8ProfilerClient(m_connection);
 
     m_connection->connectToHost(QLatin1String("127.0.0.1"), PORT);
+    if (!m_connection->waitForConnected())
+        QFAIL("Could not connect to debugger port.");
 }
 
 void tst_QV8ProfilerService::cleanup()
@@ -226,7 +235,6 @@ void tst_QV8ProfilerService::cleanup()
 
     delete m_process;
     delete m_connection;
-    delete m_client;
 }
 
 void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
@@ -235,8 +243,6 @@ void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->startProfiling("");
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(started())),
-             "No start signal received in time.");
     m_client->stopProfiling("");
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
@@ -254,8 +260,6 @@ void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
         QFAIL(qPrintable(failMsg));
     }
     m_client->startProfiling("");
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(started())),
-             "No start signal received in time.");
     m_client->stopProfiling("");
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
@@ -267,8 +271,6 @@ void tst_QV8ProfilerService::nonBlockingConnect()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->startProfiling("");
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(started())),
-             "No start signal received in time.");
     m_client->stopProfiling("");
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
@@ -290,9 +292,6 @@ void tst_QV8ProfilerService::profileOnExit()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->startProfiling("");
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(started())),
-             "No start signal received in time.");
-
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
     //QVERIFY(!m_client->traceMessages.isEmpty());
@@ -305,8 +304,6 @@ void tst_QV8ProfilerService::console()
 
     m_client->stopProfiling("");
 
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(started())),
-             "No start signal received in time.");
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())),
              "No trace received in time.");
     QVERIFY(!m_client->traceMessages.isEmpty());

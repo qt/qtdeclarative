@@ -123,7 +123,7 @@ bool QQmlDebugProcess::waitForSessionStart()
         qWarning() << "Could not start up " << m_executable;
         return false;
     }
-    m_eventLoop.exec(QEventLoop::ExcludeUserInputEvents);
+    m_eventLoop.exec();
 
     return m_started;
 }
