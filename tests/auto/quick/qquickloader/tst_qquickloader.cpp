@@ -842,6 +842,18 @@ void tst_QQuickLoader::implicitSize()
     QCOMPARE(item->property("implHeight").toReal(), 100.);
     QCOMPARE(item->property("implWidth").toReal(), 100.);
 
+    QQuickLoader *loader = item->findChild<QQuickLoader*>("loader");
+    QSignalSpy implWidthSpy(loader, SIGNAL(implicitWidthChanged()));
+    QSignalSpy implHeightSpy(loader, SIGNAL(implicitHeightChanged()));
+
+    QMetaObject::invokeMethod(item, "changeImplicitSize");
+
+    QCOMPARE(loader->property("implicitWidth").toReal(), 200.);
+    QCOMPARE(loader->property("implicitHeight").toReal(), 300.);
+
+    QCOMPARE(implWidthSpy.count(), 1);
+    QCOMPARE(implHeightSpy.count(), 1);
+
     delete item;
 }
 

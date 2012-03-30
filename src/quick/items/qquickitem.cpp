@@ -4502,6 +4502,12 @@ void QQuickItem::resetWidth()
 void QQuickItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickItem);
+    for (int ii = 0; ii < changeListeners.count(); ++ii) {
+        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        if (change.types & QQuickItemPrivate::ImplicitWidth) {
+            change.listener->itemImplicitWidthChanged(q);
+        }
+    }
     emit q->implicitWidthChanged();
 }
 
@@ -4624,6 +4630,12 @@ void QQuickItem::resetHeight()
 void QQuickItemPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickItem);
+    for (int ii = 0; ii < changeListeners.count(); ++ii) {
+        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        if (change.types & QQuickItemPrivate::ImplicitHeight) {
+            change.listener->itemImplicitHeightChanged(q);
+        }
+    }
     emit q->implicitHeightChanged();
 }
 

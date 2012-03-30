@@ -302,6 +302,8 @@ public:
         Parent = 0x20,
         Children = 0x40,
         Rotation = 0x80,
+        ImplicitWidth = 0x100,
+        ImplicitHeight = 0x200
     };
 
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)

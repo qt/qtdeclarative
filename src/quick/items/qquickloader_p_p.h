@@ -87,6 +87,8 @@ public:
     ~QQuickLoaderPrivate();
 
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
+    void itemImplicitWidthChanged(QQuickItem *);
+    void itemImplicitHeightChanged(QQuickItem *);
     void clear();
     void initResize();
     void load();
@@ -97,6 +99,9 @@ public:
     QUrl resolveSourceUrl(QQmlV8Function *args);
     v8::Handle<v8::Object> extractInitialPropertyValues(QQmlV8Function *args, QObject *loader, bool *error);
 
+    virtual qreal getImplicitWidth() const;
+    virtual qreal getImplicitHeight() const;
+
     QUrl source;
     QQuickItem *item;
     QQmlComponent *component;
@@ -105,8 +110,6 @@ public:
     v8::Persistent<v8::Object> initialPropertyValues;
     v8::Persistent<v8::Object> qmlGlobalForIpv;
     bool updatingSize: 1;
-    bool itemWidthValid : 1;
-    bool itemHeightValid : 1;
     bool active : 1;
     bool loadingFromSource : 1;
     bool asynchronous : 1;

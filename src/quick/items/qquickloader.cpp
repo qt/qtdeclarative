@@ -52,9 +52,11 @@
 
 QT_BEGIN_NAMESPACE
 
+static const QQuickItemPrivate::ChangeTypes watchedChanges
+    = QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
+
 QQuickLoaderPrivate::QQuickLoaderPrivate()
     : item(0), component(0), itemContext(0), incubator(0), updatingSize(false),
-      itemWidthValid(false), itemHeightValid(false),
       active(true), loadingFromSource(false), asynchronous(false)
 {
 }
@@ -69,14 +71,21 @@ QQuickLoaderPrivate::~QQuickLoaderPrivate()
 
 void QQuickLoaderPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    if (resizeItem == item) {
-        if (!updatingSize && newGeometry.width() != oldGeometry.width())
-            itemWidthValid = true;
-        if (!updatingSize && newGeometry.height() != oldGeometry.height())
-            itemHeightValid = true;
+    if (resizeItem == item)
         _q_updateSize(false);
-    }
     QQuickItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
+}
+
+void QQuickLoaderPrivate::itemImplicitWidthChanged(QQuickItem *)
+{
+    Q_Q(QQuickLoader);
+    q->setImplicitWidth(getImplicitWidth());
+}
+
+void QQuickLoaderPrivate::itemImplicitHeightChanged(QQuickItem *)
+{
+    Q_Q(QQuickLoader);
+    q->setImplicitHeight(getImplicitHeight());
 }
 
 void QQuickLoaderPrivate::clear()
@@ -103,7 +112,7 @@ void QQuickLoaderPrivate::clear()
 
     if (item) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-        p->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+        p->removeItemChangeListener(this, watchedChanges);
 
         // We can't delete immediately because our item may have triggered
         // the Loader to load a different item.
@@ -117,12 +126,30 @@ void QQuickLoaderPrivate::clear()
 void QQuickLoaderPrivate::initResize()
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    p->addItemChangeListener(this, QQuickItemPrivate::Geometry);
-    // We may override the item's size, so we need to remember
-    // whether the item provided its own valid size.
-    itemWidthValid = p->widthValid;
-    itemHeightValid = p->heightValid;
+    p->addItemChangeListener(this, watchedChanges);
     _q_updateSize();
+}
+
+qreal QQuickLoaderPrivate::getImplicitWidth() const
+{
+    Q_Q(const QQuickLoader);
+    // If the Loader has a valid width then Loader has set an explicit width on the
+    // item, and we want the item's implicitWidth.  If the Loader's width has
+    // not been set then its implicitWidth is the width of the item.
+    if (item)
+        return q->widthValid() ? item->implicitWidth() : item->width();
+    return QQuickImplicitSizeItemPrivate::getImplicitWidth();
+}
+
+qreal QQuickLoaderPrivate::getImplicitHeight() const
+{
+    Q_Q(const QQuickLoader);
+    // If the Loader has a valid height then Loader has set an explicit height on the
+    // item, and we want the item's implicitHeight.  If the Loader's height has
+    // not been set then its implicitHeight is the height of the item.
+    if (item)
+        return q->heightValid() ? item->implicitHeight() : item->height();
+    return QQuickImplicitSizeItemPrivate::getImplicitHeight();
 }
 
 /*!
@@ -245,7 +272,7 @@ QQuickLoader::~QQuickLoader()
     Q_D(QQuickLoader);
     if (d->item) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);
-        p->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+        p->removeItemChangeListener(d, watchedChanges);
     }
 }
 
@@ -284,7 +311,7 @@ void QQuickLoader::setActive(bool newVal)
         } else {
             if (d->item) {
                 QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);
-                p->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+                p->removeItemChangeListener(d, watchedChanges);
 
                 // We can't delete immediately because our item may have triggered
                 // the Loader to load a different item.
@@ -553,6 +580,14 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
 
     QQuickItem *item = qobject_cast<QQuickItem*>(obj);
     if (item) {
+        // If the item doesn't have an explicit size, but the Loader
+        // does, then set the item's size now before bindings are
+        // evaluated, otherwise we will end up resizing the item
+        // later and triggering any affected bindings/anchors.
+        if (widthValid && !QQuickItemPrivate::get(item)->widthValid)
+            item->setWidth(q->width());
+        if (heightValid && !QQuickItemPrivate::get(item)->heightValid)
+            item->setHeight(q->height());
         QQml_setParent_noEvent(itemContext, obj);
         QQml_setParent_noEvent(item, q);
         item->setParentItem(q);
@@ -812,14 +847,12 @@ void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
 
     updatingSize = true;
 
-    qreal iWidth = !itemWidthValid ? item->implicitWidth() : item->width();
-    qreal iHeight = !itemHeightValid ? item->implicitHeight() : item->height();
-    q->setImplicitSize(iWidth, iHeight);
-
     if (loaderGeometryChanged && q->widthValid())
         item->setWidth(q->width());
     if (loaderGeometryChanged && q->heightValid())
         item->setHeight(q->height());
+
+    q->setImplicitSize(getImplicitWidth(), getImplicitHeight());
 
     updatingSize = false;
 }
