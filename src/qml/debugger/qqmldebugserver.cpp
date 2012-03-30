@@ -255,7 +255,7 @@ QQmlDebugServer *QQmlDebugServer::instance()
         commandLineTested = true;
 
         QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
-#ifndef QQML_NO_DEBUG_PROTOCOL
+#ifndef QT_QML_NO_DEBUGGER
         // ### remove port definition when protocol is changed
         int port = 0;
         bool block = false;
