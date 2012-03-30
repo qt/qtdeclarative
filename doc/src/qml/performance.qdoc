@@ -70,6 +70,39 @@ This is not generally a problem (in fact, due to some optimizations in the QML e
 however care must be taken to ensure that unnecessary processing isn't triggered
 accidentally.
 
+\section2 Bindings
+
+There are two types of bindings in QML: optimized and non-optimized bindings.
+It is a good idea to keep binding expressions as simple as possible, since the
+QML engine makes use of an optimized binding expression evaluator which can
+evaluate simple binding expressions without needing to switch into a full
+JavaScript execution environment.  These optimized bindings are evaluated far
+more efficiently than more complex (non-optimized) bindings.
+
+Things to avoid in binding expressions to maximize optimizability:
+\list
+  \li declaring intermediate JavaScript variables
+  \li calling JavaScript functions
+  \li constructing closures or defining functions within the binding expression
+  \li accessing properties outside of the immediate context (generally, this means outside the component)
+  \li writing to other properties as side effects
+\endlist
+
+The QML_COMPILER_STATS environment variable may be set when running a QML application
+to print statistics about how many bindings were able to be optimized.
+
+Bindings are quickest when they know the type of objects and properties they are working
+with.  This means that non-final property lookup in a binding expression can be slower
+in some cases, where it is possible that the type of the property being looked up has
+been changed (for example, by a derived type).
+
+Note that if a binding cannot be optimized by the QML engine's optimized binding
+expression evaluator, and thus must be evaluated by the full JavaScript environment,
+some of the tips listed above will no longer apply.  For example, it can sometimes be
+beneficial to cache the result of property resolution in an intermediate JavaScript
+variable, in a very complex binding.  Upcoming sections have more information on these
+sorts of optimizations.
+
 \section2 Type-Conversion
 
 One major cost of using JavaScript is that in most cases when a property from a QML
@@ -165,12 +198,46 @@ Item {
         }
         var t1 = new Date();
         console.log("Took: " + (t1.valueOf() - t0.valueOf()) + " milliseconds for 1000 iterations");
-
     }
 }
 \endqml
 
 Just this simple change results in a significant performance improvement.
+Note that the code above can be improved even further (since the property
+being looked up never changes during the loop processing), by hoisting the
+property resolution out of the loop, as follows:
+
+\qml
+// better.qml
+import QtQuick 2.0
+
+Item {
+    width: 400
+    height: 200
+    Rectangle {
+        id: rect
+        anchors.fill: parent
+        color: "blue"
+    }
+
+    function printValue(which, value) {
+        console.log(which + " = " + value);
+    }
+
+    Component.onCompleted: {
+        var t0 = new Date();
+        var rectColor = rect.color; // resolve the common base outside the tight loop.
+        for (var i = 0; i < 1000; ++i) {
+            printValue("red", rectColor.r);
+            printValue("green", rectColor.g);
+            printValue("blue", rectColor.b);
+            printValue("alpha", rectColor.a);
+        }
+        var t1 = new Date();
+        console.log("Took: " + (t1.valueOf() - t0.valueOf()) + " milliseconds for 1000 iterations");
+    }
+}
+\endqml
 
 \section2 Property Bindings
 
@@ -547,13 +614,13 @@ use-case it must fulfil, some general guidelines are as follows:
 \list
 \li Be as asynchronous as possible
 \li Do all processing in a (low priority) worker thread
-\li Batch up backend operations so that (potentially slow) I/O and IPC is minimised
+\li Batch up backend operations so that (potentially slow) I/O and IPC is minimized
 \li Use a sliding slice window to cache results, whose parameters are determined with the help of profiling
 \endlist
 
 It is important to note that using a low-priority worker thread is recommended to
 minimise the risk of starving the GUI thread (which could result in worse perceived
-performance).  Also, remember that synchronisation and locking mechanisms can be a
+performance).  Also, remember that synchronization and locking mechanisms can be a
 significant cause of slow performance, and so care should be taken to avoid
 unnecessary locking.
 
@@ -567,8 +634,14 @@ it is used correctly.
 
 ListModel elements can be populated in a (low priority) worker thread in JavaScript.  The
 developer must explicitly call "sync()" on the ListModel from within the WorkerScript to
-have the changes synchronised to the main thread.  See the WorkerScript documentation
+have the changes synchronized to the main thread.  See the WorkerScript documentation
 for more information.
+
+Please note that using a WorkerScript element will result in a separate JavaScript engine
+being created (as the JavaScript engine is per-thread).  This will result in increased
+memory usage.  Multiple WorkerScript elements will all use the same worker thread, however,
+so the memory impact of using a second or third WorkerScript element is negligible once
+an application already uses one.
 
 \section3 Don't Use Dynamic Roles
 
@@ -588,7 +661,7 @@ if it is possible to redesign your application to avoid it.
 View delegates should be kept as simple as possible.  Have just enough QML in the delegate
 to display the necessary information.  Any additional functionality which is not immediately
 required (e.g., if it displays more information when clicked) should not be created until
-needed (see the upcoming section on lazy initialisation).
+needed (see the upcoming section on lazy initialization).
 
 The following list is a good summary of things to keep in mind when designing a delegate:
 \list
@@ -596,12 +669,20 @@ The following list is a good summary of things to keep in mind when designing a 
    the faster the view can be scrolled.
 \li Keep the number of bindings in a delegate to a minimum; in particular, use anchors
    rather than bindings for relative positioning within a delegate.
-\li Set a cacheBuffer to allow asynchronous creation of delegates outside the visible area.
-   Be mindful that this creates additional delegates and therefore the size of the
-   cacheBuffer must be balanced against additional memory usage.
 \li Avoid using ShaderEffect elements within delegates.
 \li Never enable clipping on a delegate.
 \endlist
+
+You may set the \c cacheBuffer property of a view to allow asynchronous creation and
+buffering of delegates outside of the visible area.  Utilizing a \c cacheBuffer is
+recommended for view delegates that are non-trivial and unlikely to be created within a
+single frame.
+
+Be mindful that a \c cacheBuffer keeps additional delegates in-memory and therefore the
+value derived from utilizing the \c cacheBuffer must be balanced against additional memory
+usage.  Developers should use benchmarking to find the best value for their use-case, since
+the increased memory pressure caused by utilizing a \c cacheBuffer can, in some rare cases,
+cause reduced frame rate when scrolling.
 
 \section1 Visual Effects
 
@@ -656,9 +737,9 @@ By partitioning an application into simple, modular components, each contained i
 QML file, you can achieve faster application startup time and better control over memory
 usage, and reduce the number of active-but-invisible elements in your application.
 
-\section2 Lazy Initialisation
+\section2 Lazy Initialization
 
-The QML engine does some tricky things to try to ensure that loading and initialisation of
+The QML engine does some tricky things to try to ensure that loading and initialization of
 components doesn't cause frames to be skipped, however there is no better way to reduce
 startup time than to avoid doing work you don't need to do, and delaying the work until
 it is necessary.  This may be achieved by using either \l Loader or creating components
@@ -669,7 +750,7 @@ it is necessary.  This may be achieved by using either \l Loader or creating com
 The Loader is an element which allows dynamic loading and unloading of components.
 
 \list
-\li Using the "active" property of a Loader, initialisation can be delayed until required.
+\li Using the "active" property of a Loader, initialization can be delayed until required.
 \li Using the overloaded version of the "setSource()" function, initial property values can
    be supplied.
 \li Setting the Loader \l {Loader::asynchronous}{asynchronous} property to true may also
@@ -686,7 +767,7 @@ created object manually.  See \l {Dynamic Object Management in QML} for more inf
 \section2 Destroy Unused Elements
 
 Elements which are invisible because they are a child of a non-visible element (e.g., the
-second tab in a tab-widget, while the first tab is shown) should be initialised lazily in
+second tab in a tab-widget, while the first tab is shown) should be initialized lazily in
 most cases, and deleted when no longer in use, to avoid the ongoing cost of leaving them
 active (e.g., rendering, animations, property binding evaluation, etc).
 
@@ -722,7 +803,7 @@ If you have elements which are totally covered by other (opaque) elements, it is
 set their "visible" property to \c false or they will be needlessly drawn.
 
 Similarly, elements which are invisible (e.g., the second tab in a tab widget, while the
-first tab is shown) but need to be initialised at startup time (e.g., if the cost of
+first tab is shown) but need to be initialized at startup time (e.g., if the cost of
 instantiating the second tab takes too long to be able to do it only when the tab is
 activated), should have their "visible" property set to \c false, in order to avoid the
 cost of drawing them (although as previously explained, they will still incur the cost of
@@ -736,5 +817,273 @@ built-in layout elements provided by QtQuick 2.0, and cannot be applied to manua
 
 Therefore, application developers should use the Row, Column, Grid, GridView and ListView
 elements instead of manual layouts wherever possible.
+
+\section1 Memory Allocation And Collection
+
+The amount of memory which will be allocated by an application and the way in which that
+memory will be allocated are very important considerations.  Aside from the obvious
+concerns about out-of-memory conditions on memory-constrained devices, allocating memory
+on the heap is a fairly computationally expensive operation, and certain allocation
+strategies can result in increased fragmentation of data across pages.  JavaScript uses
+a managed memory heap which is automatically garbage collected, and this provides some
+advantages but also has some important implications.
+
+An application written in QML uses memory from both the C++ heap and an automatically
+managed JavaScript heap.  The application developer needs to be aware of the subtleties
+of each in order to maximise performance.
+
+\section2 Tips For QML Application Developers
+
+The tips and suggestions contained in this section are guidelines only, and may not be
+applicable in all circumstances.  Be sure to benchmark and analyse your application
+carefully using empirical metrics, in order to make the best decisions possible.
+
+\section3 Instantiate and initialize components lazily
+
+If your application consists of multiple views (for example, multiple tabs) but only
+one is required at any one time, you can use lazy instantiation to minimize the
+amount of memory you need to have allocated at any given time.  See the prior section
+on \l{Lazy Initialization} for more information.
+
+\section3 Destroy unused objects
+
+If you lazily instantiate components, or dynamically create objects during a JavaScript
+expression, it is often better to manually \c{destroy()} them rather than waiting for
+automatic garbage collection to do so.  See the prior section on
+\l{Controlling Element Lifetime} for more information.
+
+\section3 Don't manually invoke the garbage collector
+
+In most cases, it is not wise to manually invoke the garbage collector, as it will block
+the GUI thread for a substantial period of time.  This can result in skipped frames and
+jerky animations, which should be avoided at all costs.
+
+There are some cases where manually invoking the garbage collector is acceptable (and
+this is explained in greater detail in an upcoming section), but in most cases, invoking
+the garbage collector is unnecessary and counter-productive.
+
+\section3 Avoid complex bindings
+
+Aside from the reduced performance of complex bindings (for example, due to having to
+enter the JavaScript execution context to perform evaluation), they also take up more
+memory both on the C++ heap and the JavaScript heap than bindings which can be
+evaluated by QML's optimized binding expression evaluator.
+
+\section3 Avoid defining multiple identical implicit types
+
+If a QML element has a custom property defined in QML, it becomes its own implicit type.
+This is explained in greater detail in an upcoming section.  If multiple identical
+implicit types are defined inline in a component, some memory will be wasted.  In that
+situation it is usually better to explicitly define a new component which can then be
+reused.
+
+Defining a custom property can often be a beneficial performance optimization (for
+example, to reduce the number of bindings which are required or re-evaluated), or it
+can improve the modularity and maintainability of a component.  In those cases, using
+custom properties is encouraged; however, the new type should, if it is used more than
+once, be split into its own component (.qml file) in order to conserve memory.
+
+\section3 Re-use existing components
+
+If you are considering defining a new component, it's worth double checking that such a
+component doesn't already exist in the component set for your platform.  Otherwise, you
+will be forcing the QML engine to generate and store type-data for a type which is
+essentially a duplicate of another pre-existing and potentially already loaded component.
+
+\section3 Use module APIs instead of pragma library scripts
+
+If you are using a pragma library script to store application-wide instance data,
+consider using a QObject module API instead.  This should result in better performance,
+and will result in less JavaScript heap memory being used.
+
+\section2 Memory Allocation in a QML Application
+
+The memory usage of a QML application may be split into two parts: its C++ heap usage,
+and its JavaScript heap usage.  Some of the memory allocated in each will be unavoidable,
+as it is allocated by the QML engine or the JavaScript engine, while the rest is
+dependent upon decisions made by the application developer.
+
+The C++ heap will contain:
+\list
+  \li the fixed and unavoidable overhead of the QML engine (implementation data
+  structures, context information, and so on)
+  \li per-component compiled data and type information, including per-type property
+  metadata, which is generated by the QML engine depending on which modules are
+  imported by the application and which components the application loads
+  \li per-object C++ data (including property values) plus a per-element metaobject
+  hierarchy, depending on which components the application instantiates
+  \li any data which is allocated specifically by QML imports (libraries)
+\endlist
+
+The JavaScript heap will contain:
+\list
+  \li the fixed and unavoidable overhead of the JavaScript engine itself (including
+  built-in JavaScript types)
+  \li the fixed and unavoidable overhead of our JavaScript integration (constructor
+  functions for loaded types, function templates, and so on)
+  \li per-type layout information and other internal type-data generated by the JavaScript
+  engine at runtime, for each type (see note below, regarding types)
+  \li per-object JavaScript data ("var" properties, JavaScript functions and signal
+  handlers, and non-optimized binding expressions)
+  \li variables allocated during expression evaluation
+\endlist
+
+Furthermore, there will be one JavaScript heap allocated for use in the main thread, and
+optionally one other JavaScript heap allocated for use in the WorkerScript thread.  If an
+application does not use a WorkerScript element, that overhead will not be incurred.  The
+JavaScript heap can be several megabytes in size, and so applications written for
+memory-constrained devices may be best served to avoid using the WorkerScript element
+despite its usefulness in populating list models asynchronously.
+
+Note that both the QML engine and the JavaScript engine will automatically generate their
+own caches of type-data about observed types.  Every component loaded by an application
+is a distinct (explicit) type, and every element (component instance) which defines its
+own custom properties in QML is an implicit type.  Any element (instance of a component)
+which does not define any custom properties is considered by the JavaScript and QML engines
+to be of the type explicitly defined by the component, rather than its own implicit type.
+
+Consider the following example:
+\qml
+import QtQuick 2.0
+
+Item {
+    id: root
+
+    Rectangle {
+        id: r0
+        color: "red"
+    }
+
+    Rectangle {
+        id: r1
+        color: "blue"
+        width: 50
+    }
+
+    Rectangle {
+        id: r2
+        property int customProperty: 5
+    }
+
+    Rectangle {
+        id: r3
+        property string customProperty: "hello"
+    }
+
+    Rectangle {
+        id: r4
+        property string customProperty: "hello"
+    }
+}
+\endqml
+
+In the previous example, the rectangles \c r0 and \c r1 do not have any custom properties,
+and thus the JavaScript and QML engines consider them both to be of the same type.  That
+is, \c r0 and \c r1 are both considered to be of the explicitly defined \c Rectangle type.
+The rectangles \c r2, \c r3 and \c r4 each have custom properties and are each considered
+to be different (implicit) types.  Note that \c r3 and \c r4 are each considered to be of
+different types, even though they have identical property information, simply because the
+custom property was not declared in the component which they are instances of.
+
+If \c r3 and \c r4 were both instances of a \c RectangleWithString component, and that
+component definition included the declaration of a string property named \c customProperty,
+then \c r3 and \c r4 would be considered to be the same type (that is, they would be
+instances of the \c RectangleWithString type, rather than defining their own implicit type).
+
+\section2 In-Depth Memory Allocation Considerations
+
+Whenever making decisions regarding memory allocation or performance trade-offs, it is
+important to keep in mind the impact of CPU-cache performance, operating system paging,
+and JavaScript engine garbage collection.  Potential solutions should be benchmarked
+carefully in order to ensure that the best one is selected.
+
+No set of general guidelines can replace a solid understanding of the underlying
+principles of computer science combined with a practical knowledge of the implementation
+details of the platform for which the application developer is developing.  Furthermore,
+no amount of theoretical calculation can replace a good set of benchmarks and analysis
+tools when making trade-off decisions.
+
+\section3 Fragmentation
+
+Fragmentation is a C++ development issue.  If the application developer is not defining
+any C++ types or plugins, they may safely ignore this section.
+
+Over time, an application will allocate large portions of memory, write data to that
+memory, and subsequently free some portions of that memory once it has finished using
+some of the data.  This can result in "free" memory being located in non-contiguous
+chunks, which cannot be returned to the operating system for other applications to use.
+It also has an impact on the caching and access characteristics of the application, as
+the "living" data may be spread across many different pages of physical memory.  This
+in turn could force the operating system to swap which can cause filesystem I/O - which
+is, comparatively speaking, an extremely slow operation.
+
+Fragmentation can be avoided by utilizing pool allocators (and other contiguous memory
+allocators), by reducing the amount of memory which is allocated at any one time by
+carefully managing object lifetimes, by periodically cleansing and rebuilding caches,
+or by utilizing a memory-managed runtime with garbage collection (such as JavaScript).
+
+\section3 Garbage Collection
+
+JavaScript provides garbage collection.  Memory which is allocated on the JavaScript
+heap (as opposed to the C++ heap) is owned by the JavaScript engine.  The engine will
+periodically collect all unreferenced data on the JavaScript heap, and if fragmentation
+becomes an issue, it will compact its heap by moving all "living" data into a contiguous
+region of memory (allowing the freed memory to be returned to the operating system).
+
+\section4 Implications of Garbage Collection
+
+Garbage collection has advantages and disadvantages.  It ensures that fragmentation is
+less of an issue, and it means that manually managing object lifetime is less important.
+However, it also means that a potentially long-lasting operation may be initiated by the
+JavaScript engine at a time which is out of the application developer's control.  Unless
+JavaScript heap usage is considered carefully by the application developer, the frequency
+and duration of garbage collection may have a negative impact upon the application
+experience.
+
+\section4 Manually Invoking the Garbage Collector
+
+An application written in QML will (most likely) require garbage collection to be
+performed at some stage.  While garbage collection will be automatically triggered by
+the JavaScript engine when the amount of available free memory is low, it is occasionally
+better if the application developer makes decisions about when to invoke the garbage
+collector manually (although usually this is not the case).
+
+The application developer is likely to have the best understanding of when an application
+is going to be idle for substantial periods of time.  If a QML application uses a lot
+of JavaScript heap memory, causing regular and disruptive garbage collection cycles
+during particularly performance-sensitive tasks (for example, list scrolling, animations,
+and so forth), the application developer may be well served to manually invoke the
+garbage collector during periods of zero activity.  Idle periods are ideal for performing
+garbage collection since the user will not notice any degradation of user experience
+(skipped frames, jerky animations, and so on) which would result from invoking the garbage
+collector while activity is occurring.
+
+The garbage collector may be invoked manually by calling \c{gc()} within JavaScript.
+This will cause a comprehensive collection and compaction cycle to be performed, which
+may take from between a few hundred to more than a thousand milliseconds to complete, and
+so should be avoided if at all possible.
+
+\section3 Memory vs Performance Trade-offs
+
+In some situations, it is possible to trade-off increased memory usage for decreased
+processing time.  For example, caching the result of a symbol lookup used in a tight loop
+to a temporary variable in a JavaScript expression will result in a significant performance
+improvement when evaluating that expression, but it involves allocating a temporary variable.
+In some cases, these trade-offs are sensible (such as the case above, which is almost always
+sensible), but in other cases it may be better to allow processing to take slightly longer
+in order to avoid increasing the memory pressure on the system.
+
+In some cases, the impact of increased memory pressure can be extreme.  In some situations,
+trading off memory usage for an assumed performance gain can result in increased page-thrash
+or cache-thrash, causing a huge reduction in performance. It is always necessary to benchmark
+the impact of trade-offs carefully in order to determine which solution is best in a given
+situation.
+
+For in-depth information on cache performance and memory-time trade-offs, please see
+Ulrich Drepper's excellent article "What Every Programmer Should Know About Memory"
+(available at http://ftp.linux.org.ua/pub/docs/developer/general/cpumemory.pdf as at 18th
+April 2012), and for information on C++-specific optimizations, please see Agner Fog's
+excellent manuals on optimizing C++ applications (available at
+http://www.agner.org/optimize/ as at 18th April 2012).
 
 */
