@@ -51,8 +51,8 @@
     element:
 
     \code
-    import QtQuick 1.0
-    import QtQuickTest 1.0
+    import QtQuick 2.0
+    import QtTest 1.0
 
     TestCase {
         name: "MathTests"
@@ -97,14 +97,23 @@
     \section1 Data-driven tests
 
     Table data can be provided to a test using a function name that ends
-    with "_data":
+    with "_data". Alternatively, the \c init_data() function can be used
+    to provide default test data for all test functions in a TestCase element:
+
 
     \code
-    import QtQuick 1.0
-    import QtQuickTest 1.0
+    import QtQuick 2.0
+    import QtTest 1.0
 
     TestCase {
         name: "DataTests"
+
+        function init_data() {
+          return [
+               {tag:"init_data_1", a:1, b:2, answer: 3},
+               {tag:"init_data_2", a:2, b:4, answer: 6}
+          ];
+        }
 
         function test_table_data() {
             return [
@@ -114,6 +123,12 @@
         }
 
         function test_table(data) {
+            //data comes from test_table_data
+            compare(data.a + data.b, data.answer)
+        }
+
+        function test__default_table(data) {
+            //data comes from init_data
             compare(data.a + data.b, data.answer)
         }
     }
