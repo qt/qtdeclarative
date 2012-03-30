@@ -398,7 +398,6 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 iter.value()->stateChanged(newState);
             }
 
-            qDebug("QML Debugger: Connection established.");
             d->messageArrivedCondition.wakeAll();
 
         } else if (op == 1) {

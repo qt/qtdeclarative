@@ -328,7 +328,6 @@ void tst_QQmlEngineDebugService::initTestCase()
     m_conn = new QQmlDebugConnection(this);
     m_conn->connectToHost("127.0.0.1", 3768);
 
-    QTest::ignoreMessage(QtDebugMsg, "QML Debugger: Connection established.");
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
     QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());

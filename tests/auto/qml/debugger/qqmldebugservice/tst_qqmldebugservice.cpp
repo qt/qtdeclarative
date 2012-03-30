@@ -81,8 +81,6 @@ void tst_QQmlDebugService::initTestCase()
 
     m_conn = new QQmlDebugConnection(this);
 
-
-    QTest::ignoreMessage(QtDebugMsg, "QML Debugger: Connection established.");
     for (int i = 0; i < 50; ++i) {
         // try for 5 seconds ...
         m_conn->connectToHost("127.0.0.1", PORT);
