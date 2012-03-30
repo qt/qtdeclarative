@@ -155,6 +155,10 @@ have a scope focused item), and the other items will have their focus cleared.
 // #define TOUCH_DEBUG
 // #define DIRTY_DEBUG
 
+#ifdef FOCUS_DEBUG
+void printFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1);
+#endif
+
 QQuickItem::UpdatePaintNodeData::UpdatePaintNodeData()
 : transformNode(0)
 {

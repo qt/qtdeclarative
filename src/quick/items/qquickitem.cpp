@@ -76,6 +76,7 @@
 QT_BEGIN_NAMESPACE
 
 #ifdef FOCUS_DEBUG
+void printFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1);
 void printFocusTree(QQuickItem *item, QQuickItem *scope, int depth)
 {
     qWarning()
@@ -1958,6 +1959,8 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             if (d->canvas) {
                 QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem,
                                                                 QQuickCanvasPrivate::DontChangeFocusProperty);
+                if (scopeFocusedItem != this)
+                    QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(this, true);
             } else {
                 QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(scopeItem, false);
             }
@@ -4160,7 +4163,7 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuickItemPrivate::get(childItems.at(ii))->setEffectiveEnableRecur(
-                flags & QQuickItem::ItemIsFocusScope ? q : scope, newEffectiveEnable);
+                (flags & QQuickItem::ItemIsFocusScope) && scope ? q : scope, newEffectiveEnable);
     }
 
     if (canvas && scope && effectiveEnable && focus) {
@@ -4808,6 +4811,7 @@ void QQuickItem::setFocus(bool focus)
             QVarLengthArray<QQuickItem *, 20> changed;
             QQuickItem *oldSubFocusItem = QQuickItemPrivate::get(scope)->subFocusItem;
             if (oldSubFocusItem) {
+                QQuickItemPrivate::get(oldSubFocusItem)->updateSubFocusItem(scope, false);
                 QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
                 changed << oldSubFocusItem;
             }

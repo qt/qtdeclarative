@@ -141,6 +141,7 @@ private slots:
     void multipleFocusClears();
     void focusSubItemInNonFocusScope();
     void parentItemWithFocus();
+    void reparentFocusedItem();
 
     void constructor();
     void setParentItem();
@@ -820,6 +821,34 @@ void tst_qquickitem::parentItemWithFocus()
     focusState.active(&grandchild);
     FVERIFY();
     }
+}
+
+void tst_qquickitem::reparentFocusedItem()
+{
+    QQuickCanvas canvas;
+    ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+
+    QQuickItem parent(canvas.rootItem());
+    QQuickItem child(&parent);
+    QQuickItem sibling(&parent);
+    QQuickItem grandchild(&child);
+
+    FocusState focusState;
+    focusState << &parent << &child << &sibling << &grandchild;
+    FVERIFY();
+
+    grandchild.setFocus(true);
+    focusState[&parent].set(false, false);
+    focusState[&child].set(false, false);
+    focusState[&sibling].set(false, false);
+    focusState[&grandchild].set(true, true);
+    focusState.active(&grandchild);
+    FVERIFY();
+
+    // Parenting the item to another item within the same focus scope shouldn't change it's focus.
+    child.setParentItem(&sibling);
+    FVERIFY();
 }
 
 void tst_qquickitem::constructor()
