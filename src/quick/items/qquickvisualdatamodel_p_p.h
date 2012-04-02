@@ -103,7 +103,7 @@ public:
 class QQuickVisualAdaptorModel;
 class QVDMIncubationTask;
 
-class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource, private QQmlGuard<QObject>
+class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource, public QQmlGuard<QObject>
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
@@ -127,11 +127,14 @@ public:
 
     QObject *modelObject() { return this; }
 
-    inline QObject *object() const { return QQmlGuard<QObject>::object(); }
-    void setObject(QObject *g);
+    void incubateObject(
+            QQmlComponent *component,
+            QQmlEngine *engine,
+            QQmlContextData *context,
+            QQmlContextData *forContext);
     void destroyObject();
 
-    static QQuickVisualDataModelItem *dataForObject(QObject *object) { return contextData.value(object, 0); }
+    static QQuickVisualDataModelItem *dataForObject(QObject *object);
 
     int modelIndex() const { return index[0]; }
     void setModelIndex(int idx) { index[0] = idx; emit modelIndexChanged(); }
@@ -142,7 +145,9 @@ public:
     virtual bool resolveIndex(const QQuickVisualAdaptorModel &, int) { return false; }
 
     QQuickVisualDataModelItemMetaType * const metaType;
+    QQmlContextData *contextData;
     QQuickVisualDataModelAttached *attached;
+    QVDMIncubationTask *incubationTask;
     v8::Persistent<v8::Object> indexHandle;
     v8::Persistent<v8::Value> modelHandle;
     QIntrusiveListNode cacheNode;
@@ -150,19 +155,13 @@ public:
     int scriptRef;
     int groups;
     int index[QQuickListCompositor::MaximumGroupCount];
-    QVDMIncubationTask *incubationTask;
+
 
 Q_SIGNALS:
     void modelIndexChanged();
 
 protected:
     void objectDestroyed(QObject *);
-
-private:
-    // A static hash of context data for all delegate object isn't ideal, but it provides a way
-    // to get the context data when constructing attached objects rather than constructing the
-    // attached objects on suspicion.
-    static QHash<QObject*, QQuickVisualDataModelItem *> contextData;
 };
 
 
@@ -173,14 +172,12 @@ public:
     QVDMIncubationTask(QQuickVisualDataModelPrivate *l, IncubationMode mode)
         : QQmlIncubator(mode)
         , incubating(0)
-        , incubatingContext(0)
         , vdm(l) {}
 
     virtual void statusChanged(Status);
     virtual void setInitialState(QObject *);
 
     QQuickVisualDataModelItem *incubating;
-    QQmlContext *incubatingContext;
 
 private:
     QQuickVisualDataModelPrivate *vdm;

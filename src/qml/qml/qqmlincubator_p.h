@@ -69,6 +69,8 @@ public:
     QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m);
     ~QQmlIncubatorPrivate();
 
+    inline static QQmlIncubatorPrivate *get(QQmlIncubator *incubator) { return incubator->d; }
+
     QQmlIncubator *q;
 
     QQmlIncubator::Status calculateStatus() const;

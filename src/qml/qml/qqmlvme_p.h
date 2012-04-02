@@ -90,7 +90,7 @@ namespace QQmlVMETypes {
 }
 Q_DECLARE_TYPEINFO(QQmlVMETypes::List, Q_PRIMITIVE_TYPE  | Q_MOVABLE_TYPE);
 
-class QQmlVME
+class Q_QML_PRIVATE_EXPORT QQmlVME
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlVME)
 public:
