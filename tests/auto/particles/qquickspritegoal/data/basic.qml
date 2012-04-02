@@ -57,12 +57,12 @@ Rectangle {
                 name: "happy"
                 source: "../../shared/squarefacesprite.png"
                 frames: 6
-                duration: 120
+                frameDuration: 120
             }, Sprite {
                 name: "twoHappy"
                 source: "../../shared/squarefacesprite.png"
                 frames: 3
-                duration: 240
+                frameDuration: 240
             }]
         }
 

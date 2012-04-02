@@ -7,6 +7,7 @@ PRIVATETESTS += \
     qquickcustomaffector \
     qquickcustomparticle \
     qquickellipseextruder \
+    qquickgroupgoal \
     qquickfriction \
     qquickgravity \
     qquickimageparticle \
@@ -18,6 +19,7 @@ PRIVATETESTS += \
     qquickpointattractor \
     qquickpointdirection \
     qquickrectangleextruder \
+    qquickspritegoal \
     qquicktargetdirection \
     qquicktrailemitter \
     qquickturbulence \
