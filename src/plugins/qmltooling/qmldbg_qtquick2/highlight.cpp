@@ -81,14 +81,14 @@ void Highlight::adjust()
 }
 
 
-void SelectionHighlight::paint(QPainter *painter)
+void HoverHighlight::paint(QPainter *painter)
 {
     painter->setPen(QColor(108, 141, 221));
     painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
 }
 
 
-void HoverHighlight::paint(QPainter *painter)
+void SelectionHighlight::paint(QPainter *painter)
 {
     painter->setPen(QPen(QColor(0, 22, 159)));
     painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
