@@ -63,6 +63,7 @@ static bool qmlEnableV4 = true;
 using namespace QQmlJS;
 QV4CompilerPrivate::QV4CompilerPrivate()
     : _function(0) , _block(0) , _discarded(false), registerCount(0)
+    , bindingLine(0), bindingColumn(0)
 {
 }
 
@@ -73,6 +74,8 @@ void QV4CompilerPrivate::trace(int line, int column)
 {
     bytecode.clear();
 
+    this->bindingLine = line;
+    this->bindingColumn = column;
     this->currentReg = _function->tempCount;
     this->registerCount = qMax(this->registerCount, this->currentReg);
 
@@ -317,7 +320,7 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         Instr::LoadAttached attached;
         attached.output = currentReg;
         attached.reg = currentReg;
-        attached.exceptionId = exceptionId(e->line, e->column);
+        attached.exceptionId = exceptionId(bindingLine, bindingColumn);
         if (e->declarativeType->attachedPropertiesId() == -1)
             discard();
         attached.id = e->declarativeType->attachedPropertiesId();
@@ -966,6 +969,16 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
                 // url-to-xxx conversions.
                 break;
             default: {
+                if (s->isMoveForReturn) {
+                    V4Instr instr;
+                    instr.throwop.exceptionId = exceptionId(bindingLine, bindingColumn);
+                    registerLiteralString(dest, _function->newString(QString::fromUtf8("Unable to assign %1 to %2")
+                                                                     .arg(QLatin1String(IR::typeName(sourceTy)))
+                                                                     .arg(QLatin1String(IR::typeName(targetTy)))));
+                    instr.throwop.message = dest;
+                    gen(V4Instr::Throw, instr);
+                    return;
+                }
                 // generate a UrlToString conversion and fix
                 // the type of the source expression.
                 V4Instr conv;
@@ -1018,6 +1031,17 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             default: break;
             } // switch
         } else if (targetTy == IR::UrlType) {
+            if (s->isMoveForReturn && sourceTy != IR::StringType) {
+                V4Instr instr;
+                instr.throwop.exceptionId = exceptionId(bindingLine, bindingColumn);
+                registerLiteralString(dest, _function->newString(QString::fromUtf8("Unable to assign %1 to %2")
+                                                                 .arg(QLatin1String(IR::typeName(sourceTy)))
+                                                                 .arg(QLatin1String(IR::typeName(targetTy)))));
+                instr.throwop.message = dest;
+                gen(V4Instr::Throw, instr);
+                return;
+            }
+
             V4Instr convToString;
             convToString.unaryop.output = dest;
             convToString.unaryop.src = src;

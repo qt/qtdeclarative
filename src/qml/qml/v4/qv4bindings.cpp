@@ -592,6 +592,11 @@ inline quint32 QV4Bindings::toUint32(double n)
     goto exceptionExit; \
 } 
 
+#define THROW_VALUE_EXCEPTION_STR(id, str) { \
+    throwException((id), error, program, context, (str)); \
+    goto exceptionExit; \
+}
+
 #define THROW_EXCEPTION(id) THROW_EXCEPTION_STR(id, QString())
 
 #define MARK_REGISTER(reg) cleanupRegisterMask |= (1 << (reg))
@@ -1671,6 +1676,10 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     QML_V4_BEGIN_INSTR(CleanupRegister, cleanup)
         registers[instr->cleanup.reg].cleanup();
     QML_V4_END_INSTR(CleanupRegister, cleanup)
+
+    QML_V4_BEGIN_INSTR(Throw, throwop)
+        THROW_VALUE_EXCEPTION_STR(instr->throwop.exceptionId, *registers[instr->throwop.message].getstringptr());
+    QML_V4_END_INSTR(Throw, throwop)
 
 #ifdef QML_THREADED_INTERPRETER
     // nothing to do

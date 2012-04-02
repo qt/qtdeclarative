@@ -160,6 +160,7 @@ QT_BEGIN_NAMESPACE
     F(BranchFalse, branchop) \
     F(Branch, branchop) \
     F(Block, blockop) \
+    F(Throw, throwop) \
     /* Speculative property resolution */ \
     F(InitString, initstring)
 
@@ -359,6 +360,12 @@ union Q_AUTOTEST_EXPORT V4Instr {
         quint32 block;
     };
 
+    struct instr_throwop {
+        QML_V4_INSTR_HEADER
+        quint8 exceptionId;
+        quint32 message;
+    };
+
     instr_common common;
     instr_id id;
     instr_init init;
@@ -384,6 +391,7 @@ union Q_AUTOTEST_EXPORT V4Instr {
     instr_initstring initstring;
     instr_branchop branchop;
     instr_blockop blockop;
+    instr_throwop throwop;
 };
 
 template<int N>

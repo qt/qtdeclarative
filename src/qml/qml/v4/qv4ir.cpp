@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace IR {
 
-inline const char *typeName(Type t)
+const char *typeName(Type t)
 {
     switch (t) {
     case InvalidType: return "invalid";

@@ -155,6 +155,7 @@ enum Type {
 };
 Type maxType(IR::Type left, IR::Type right);
 bool isRealType(IR::Type type);
+const char *typeName(IR::Type t);
 
 struct ExprVisitor {
     virtual ~ExprVisitor() {}

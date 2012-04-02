@@ -382,6 +382,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::Block:
         INSTR_DUMP << "\t" << "Block" << "\t\t\t" << "Mask(" << QByteArray::number(i->blockop.block, 16).constData()  << ")";
         break;
+    case V4Instr::Throw:
+        INSTR_DUMP << "\t" << "Throw" << "\t\t\t" << "InputReg(" << i->throwop.message  << ")";
+        break;
     default:
         INSTR_DUMP << "\t" << "Unknown";
         break;

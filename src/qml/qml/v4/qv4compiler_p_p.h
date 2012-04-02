@@ -235,6 +235,8 @@ private:
 
     bool usedSubscriptionIdsChanged;
     quint32 currentBlockMask;
+    int bindingLine;
+    int bindingColumn;
 };
 
 
