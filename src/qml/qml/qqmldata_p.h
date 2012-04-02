@@ -133,6 +133,7 @@ public:
     inline QQmlNotifierEndpoint *notify(int index);
     void addNotify(int index, QQmlNotifierEndpoint *);
     int endpointCount(int index);
+    bool signalHasEndpoint(int index);
 
     // The context that created the C++ object
     QQmlContextData *context; 

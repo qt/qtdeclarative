@@ -77,13 +77,13 @@
 #include <QtCore/qmetaobject.h>
 #include <QNetworkAccessManager>
 #include <QDebug>
-#include <QMetaObject>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
 #include <QtNetwork/qnetworkconfigmanager.h>
 
 #include <private/qobject_p.h>
+#include <private/qmetaobject_p.h>
 
 #include <private/qqmllocale_p.h>
 
@@ -1153,6 +1153,21 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
         endpoint->prev = &notifyList->todo;
         notifyList->todo = endpoint;
     }
+}
+
+bool QQml_isSignalConnected(QObject *obj, int signal_index, int index)
+{
+    QQmlData *data = QQmlData::get(obj);
+    return QObjectPrivate::get(obj)->isSignalConnected(signal_index) || (data && data->signalHasEndpoint(index));
+}
+
+/*
+    index MUST be the index returned by QMetaMethod::index()
+    This is different than the index returned by QObjectPrivate::signalIndex()
+*/
+bool QQmlData::signalHasEndpoint(int index)
+{
+    return notifyList && (notifyList->connectionMask & (1ULL << quint64(index % 64)));
 }
 
 QQmlNotifier *QQmlData::objectNameNotifier() const

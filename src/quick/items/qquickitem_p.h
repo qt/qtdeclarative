@@ -710,8 +710,6 @@ public:
         , inIM(false), enabled(true), imeItem(0), item(0)
     {}
 
-    bool isConnected(const char *signalName);
-
     //loop detection
     bool inPress:1;
     bool inRelease:1;
@@ -826,6 +824,8 @@ private:
         }
         return keySignal;
     }
+
+    bool isConnected(const char *signalName);
 
     struct SigMap {
         int key;

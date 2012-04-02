@@ -41,6 +41,7 @@
 
 #include "qquickparticleemitter_p.h"
 #include <private/qqmlengine_p.h>
+#include <private/qqmlglobal_p.h>
 QT_BEGIN_NAMESPACE
 
 
@@ -253,8 +254,7 @@ QQuickParticleEmitter::~QQuickParticleEmitter()
 
 bool QQuickParticleEmitter::isEmitConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("emitParticles(QQmlV8Handle)");
-    return QObjectPrivate::get(this)->isSignalConnected(idx);
+    IS_SIGNAL_CONNECTED(this, "emitParticles(QQmlV8Handle)");
 }
 
 void QQuickParticleEmitter::componentComplete()

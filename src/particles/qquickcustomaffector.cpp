@@ -42,6 +42,7 @@
 #include "qquickcustomaffector_p.h"
 #include <private/qv8engine_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmlglobal_p.h>
 #include <QQmlEngine>
 #include <QDebug>
 QT_BEGIN_NAMESPACE
@@ -102,8 +103,7 @@ QQuickCustomAffector::QQuickCustomAffector(QQuickItem *parent) :
 
 bool QQuickCustomAffector::isAffectConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticles(QQmlV8Handle,qreal)");
-    return QObjectPrivate::get(this)->isSignalConnected(idx);
+    IS_SIGNAL_CONNECTED(this, "affectParticles(QQmlV8Handle,qreal)");
 }
 
 void QQuickCustomAffector::affectSystem(qreal dt)

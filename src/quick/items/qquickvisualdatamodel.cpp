@@ -1748,11 +1748,15 @@ void QQuickVisualDataGroupPrivate::setModel(QQuickVisualDataModel *m, Compositor
     group = g;
 }
 
+static bool isChangedConnected(QObject *obj)
+{
+    IS_SIGNAL_CONNECTED(obj, "changed(QQmlV8Handle,QQmlV8Handle)");
+}
+
 void QQuickVisualDataGroupPrivate::emitChanges(QV8Engine *engine)
 {
     Q_Q(QQuickVisualDataGroup);
-    static int idx = signalIndex("changed(QQmlV8Handle,QQmlV8Handle)");
-    if (isSignalConnected(idx) && !changeSet.isEmpty()) {
+    if (isChangedConnected(q) && !changeSet.isEmpty()) {
         v8::HandleScope handleScope;
         v8::Context::Scope contextScope(engine->context());
         v8::Local<v8::Array> removed  = QQuickVisualDataModelPrivate::buildChangeList(changeSet.removes());

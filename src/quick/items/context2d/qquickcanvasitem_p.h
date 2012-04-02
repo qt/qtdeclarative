@@ -158,6 +158,7 @@ private:
     bool createContext(const QString &contextType);
     void initializeContext(QQuickCanvasContext *context, const QVariantMap &args = QVariantMap());
     QRect tiledRect(const QRectF &window, const QSize &tileSize);
+    bool isPaintConnected();
 };
 
 QT_END_NAMESPACE

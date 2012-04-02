@@ -41,6 +41,7 @@
 
 #include "qquicktrailemitter_p.h"
 #include <private/qqmlengine_p.h>
+#include <private/qqmlglobal_p.h>
 #include <cmath>
 QT_BEGIN_NAMESPACE
 
@@ -126,8 +127,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
 
 bool QQuickTrailEmitter::isEmitFollowConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("emitFollowParticles(QQmlV8Handle,QQmlV8Handle)");
-    return QObjectPrivate::get(this)->isSignalConnected(idx);
+    IS_SIGNAL_CONNECTED(this, "emitFollowParticles(QQmlV8Handle,QQmlV8Handle)");
 }
 
 void QQuickTrailEmitter::recalcParticlesPerSecond(){

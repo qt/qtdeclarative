@@ -594,8 +594,8 @@ void QQuickText::doLayout()
 
 bool QQuickTextPrivate::isLineLaidOutConnected()
 {
-    static int idx = this->signalIndex("lineLaidOut(QQuickTextLine*)");
-    return this->isSignalConnected(idx);
+    Q_Q(QQuickText);
+    IS_SIGNAL_CONNECTED(q, "lineLaidOut(QQuickTextLine*)");
 }
 
 void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset)
@@ -2406,8 +2406,8 @@ QString QQuickTextPrivate::anchorAt(const QPointF &mousePos)
 
 bool QQuickTextPrivate::isLinkActivatedConnected()
 {
-    static int idx = this->signalIndex("linkActivated(QString)");
-    return this->isSignalConnected(idx);
+    Q_Q(QQuickText);
+    IS_SIGNAL_CONNECTED(q, "linkActivated(QString)");
 }
 
 /*!  \internal */

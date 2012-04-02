@@ -89,6 +89,21 @@ QT_BEGIN_NAMESPACE
     QMetaObject::connect(sender, signalIdx, receiver, methodIdx, Qt::DirectConnection); \
 }
 
+bool Q_QML_EXPORT QQml_isSignalConnected(QObject*, int, int);
+
+#define IS_SIGNAL_CONNECTED(Sender, Signal) \
+do { \
+    QObject *sender = (Sender); \
+    const char *signal = (Signal); \
+    static int signalIdx = -1; \
+    static int methodIdx = -1; \
+    if (signalIdx < 0) { \
+        signalIdx = QObjectPrivate::get(sender)->signalIndex(signal); \
+        methodIdx = sender->metaObject()->indexOfSignal(signal); \
+    } \
+    return QQml_isSignalConnected(sender, signalIdx, methodIdx); \
+} while (0)
+
 struct QQmlGraphics_DerivedObject : public QObject
 {
     void setParent_noEvent(QObject *parent) {

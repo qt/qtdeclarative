@@ -45,6 +45,8 @@
 #include "qquickevents_p_p.h"
 #include "qquickdrag_p.h"
 
+#include <private/qqmldata_p.h>
+
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
@@ -218,29 +220,25 @@ void QQuickMouseAreaPrivate::saveEvent(QMouseEvent *event)
 bool QQuickMouseAreaPrivate::isPressAndHoldConnected()
 {
     Q_Q(QQuickMouseArea);
-    static int idx = QObjectPrivate::get(q)->signalIndex("pressAndHold(QQuickMouseEvent*)");
-    return QObjectPrivate::get(q)->isSignalConnected(idx);
+    IS_SIGNAL_CONNECTED(q, "pressAndHold(QQuickMouseEvent*)");
 }
 
 bool QQuickMouseAreaPrivate::isDoubleClickConnected()
 {
     Q_Q(QQuickMouseArea);
-    static int idx = QObjectPrivate::get(q)->signalIndex("doubleClicked(QQuickMouseEvent*)");
-    return QObjectPrivate::get(q)->isSignalConnected(idx);
+    IS_SIGNAL_CONNECTED(q, "doubleClicked(QQuickMouseEvent*)");
 }
 
 bool QQuickMouseAreaPrivate::isClickConnected()
 {
     Q_Q(QQuickMouseArea);
-    static int idx = QObjectPrivate::get(q)->signalIndex("clicked(QQuickMouseEvent*)");
-    return QObjectPrivate::get(q)->isSignalConnected(idx);
+    IS_SIGNAL_CONNECTED(q, "clicked(QQuickMouseEvent*)");
 }
 
 bool QQuickMouseAreaPrivate::isWheelConnected()
 {
     Q_Q(QQuickMouseArea);
-    static int idx = QObjectPrivate::get(q)->signalIndex("wheel(QQuickWheelEvent*)");
-    return QObjectPrivate::get(q)->isSignalConnected(idx);
+    IS_SIGNAL_CONNECTED(q, "wheel(QQuickWheelEvent*)");
 }
 
 void QQuickMouseAreaPrivate::propagate(QQuickMouseEvent* event, PropagateType t)

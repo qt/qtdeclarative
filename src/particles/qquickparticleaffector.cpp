@@ -41,6 +41,7 @@
 
 #include "qquickparticleaffector_p.h"
 #include <QDebug>
+#include <private/qqmlglobal_p.h>
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -146,8 +147,7 @@ QQuickParticleAffector::QQuickParticleAffector(QQuickItem *parent) :
 
 bool QQuickParticleAffector::isAffectedConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("affected(qreal,qreal)");
-    return QObjectPrivate::get(this)->isSignalConnected(idx);
+    IS_SIGNAL_CONNECTED(this, "affected(qreal,qreal)");
 }
 
 

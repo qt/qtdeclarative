@@ -446,6 +446,11 @@ QQuickCanvasContext* QQuickCanvasItem::rawContext() const
     return d_func()->context;
 }
 
+bool QQuickCanvasItem::isPaintConnected()
+{
+    IS_SIGNAL_CONNECTED(this, "paint(QRect)");
+}
+
 void QQuickCanvasItem::sceneGraphInitialized()
 {
     Q_D(QQuickCanvasItem);
@@ -456,7 +461,7 @@ void QQuickCanvasItem::sceneGraphInitialized()
 
     if (!d->contextType.isNull())
         QMetaObject::invokeMethod(this, "delayedCreate", Qt::QueuedConnection);
-    else if (receivers(SIGNAL(paint(QRect))) > 0)
+    else if (isPaintConnected())
         QMetaObject::invokeMethod(this, "requestPaint", Qt::QueuedConnection);
 }
 

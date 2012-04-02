@@ -907,9 +907,13 @@ const QQuickKeysAttached::SigMap QQuickKeysAttached::sigMap[] = {
     { 0, 0 }
 };
 
-bool QQuickKeysAttachedPrivate::isConnected(const char *signalName)
+bool QQuickKeysAttached::isConnected(const char *signalName)
 {
-    return isSignalConnected(signalIndex(signalName));
+    Q_D(QQuickKeysAttached);
+    //### doing two string-based lookups isn't ideal
+    int signal_index = d->signalIndex(signalName);
+    int index = metaObject()->indexOfSignal(signalName);
+    return QQml_isSignalConnected(this, signal_index, index);
 }
 
 /*!
@@ -1369,7 +1373,7 @@ void QQuickKeysAttached::keyPressed(QKeyEvent *event, bool post)
     QByteArray keySignal = keyToSignal(event->key());
     if (!keySignal.isEmpty()) {
         keySignal += "(QQuickKeyEvent*)";
-        if (d->isConnected(keySignal)) {
+        if (isConnected(keySignal)) {
             // If we specifically handle a key then default to accepted
             ke.setAccepted(true);
             int idx = QQuickKeysAttached::staticMetaObject.indexOfSignal(keySignal);
