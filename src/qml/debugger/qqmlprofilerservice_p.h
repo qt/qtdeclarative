@@ -205,16 +205,16 @@ struct QQmlHandlingSignalProfiler {
     {
         enabled = QQmlProfilerService::instance
                 ? QQmlProfilerService::instance->profilingEnabled() : false;
-        if (enabled)
-            init(signal, expression);
-    }
-
-    QQmlHandlingSignalProfiler(QObject *object, int index, QQmlBoundSignalExpression *expression)
-    {
-        enabled = QQmlProfilerService::instance
-                ? QQmlProfilerService::instance->profilingEnabled() : false;
-        if (enabled)
-            init(object->metaObject()->method(index), expression);
+        if (enabled) {
+            QQmlProfilerService *service = QQmlProfilerService::instance;
+            service->startRange(QQmlProfilerService::HandlingSignal);
+            service->rangeData(QQmlProfilerService::HandlingSignal,
+                               QLatin1String(signal.signature()) + QLatin1String(": ")
+                               + expression->expression());
+            service->rangeLocation(QQmlProfilerService::HandlingSignal,
+                                   expression->sourceFile(), expression->lineNumber(),
+                                   expression->columnNumber());
+        }
     }
 
     ~QQmlHandlingSignalProfiler()
@@ -224,19 +224,6 @@ struct QQmlHandlingSignalProfiler {
     }
 
     bool enabled;
-
-private:
-    void init(const QMetaMethod &signal, QQmlBoundSignalExpression *expression)
-    {
-        QQmlProfilerService *service = QQmlProfilerService::instance;
-        service->startRange(QQmlProfilerService::HandlingSignal);
-        service->rangeData(QQmlProfilerService::HandlingSignal,
-                           QLatin1String(signal.signature()) + QLatin1String(": ")
-                           + expression->expression());
-        service->rangeLocation(QQmlProfilerService::HandlingSignal,
-                               expression->sourceFile(), expression->lineNumber(),
-                               expression->columnNumber());
-    }
 };
 
 struct QQmlObjectCreatingProfiler {

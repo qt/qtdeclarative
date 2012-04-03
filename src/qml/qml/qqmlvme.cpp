@@ -711,11 +711,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QMetaMethod signal = target->metaObject()->method(instr.signalIndex);
 
-            QQmlAbstractBoundSignal *bs = 0;
-            if (signal.parameterTypes().count())
-                bs = new QQmlBoundSignal(target, signal, target);
-            else
-                bs = new QQmlBoundSignalNoParams(target, signal, target);
+            QQmlBoundSignal *bs = new QQmlBoundSignal(target, signal, target);
             QQmlBoundSignalExpression *expr =
                 new QQmlBoundSignalExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column);
             bs->setExpression(expr);
