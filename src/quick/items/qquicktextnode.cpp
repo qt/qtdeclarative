@@ -1269,7 +1269,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                 if (preeditLength >= 0 && textPos <= block.position() + preeditPosition) {
                     engine.setPosition(blockPosition);
                     textPos = block.position() + preeditPosition;
-                    QTextLine line = block.layout()->lineForTextPosition(textPos);
+                    QTextLine line = block.layout()->lineForTextPosition(preeditPosition);
                     if (!engine.currentLine().isValid()
                             || line.lineNumber() != engine.currentLine().lineNumber()) {
                         engine.setCurrentLine(line);
