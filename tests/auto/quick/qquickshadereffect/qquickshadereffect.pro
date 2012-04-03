@@ -2,6 +2,7 @@ CONFIG += testcase
 TARGET = tst_qquickshadereffect
 SOURCES += tst_qquickshadereffect.cpp
 
+include (../../shared/util.pri)
 macx:CONFIG -= app_bundle
 
 CONFIG += parallel_test

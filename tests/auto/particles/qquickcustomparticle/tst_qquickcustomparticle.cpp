@@ -55,6 +55,7 @@ public:
 private slots:
     void initTestCase();
     void test_basic();
+    void test_deleteSourceItem();
 };
 
 void tst_qquickcustomparticle::initTestCase()
@@ -92,6 +93,20 @@ void tst_qquickcustomparticle::test_basic()
     }
     delete view;
     QVERIFY(oneNonZero);//Zero is a valid value, but it also needs to be set to a random number
+}
+
+void tst_qquickcustomparticle::test_deleteSourceItem()
+{
+    // purely to ensure that deleting the sourceItem of a shader doesn't cause a crash
+    QQuickView* view = createView(testFileUrl("deleteSourceItem.qml"), 600);
+    QVERIFY(view);
+    QObject *obj = view->rootObject();
+    QVERIFY(obj);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    ensureAnimTime(200, system->m_animation);
+    QMetaObject::invokeMethod(obj, "setDeletedSourceItem");
+    ensureAnimTime(200, system->m_animation);
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickcustomparticle);

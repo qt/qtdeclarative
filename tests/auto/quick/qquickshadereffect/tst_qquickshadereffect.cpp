@@ -45,6 +45,10 @@
 #include <QByteArray>
 #include <private/qquickshadereffect_p.h>
 
+#include <QtQuick/QQuickView>
+#include "../../shared/util.h"
+
+
 class TestShaderEffect : public QQuickShaderEffect
 {
     Q_OBJECT
@@ -68,7 +72,7 @@ private:
     QList<QByteArray> m_signals;
 };
 
-class tst_qquickshadereffect : public QObject
+class tst_qquickshadereffect : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -80,6 +84,9 @@ private slots:
 
     void lookThroughShaderCode_data();
     void lookThroughShaderCode();
+
+    void deleteSourceItem();
+    void deleteShaderEffectSource();
 
 private:
     enum PresenceFlags {
@@ -97,6 +104,7 @@ tst_qquickshadereffect::tst_qquickshadereffect()
 
 void tst_qquickshadereffect::initTestCase()
 {
+    QQmlDataTest::initTestCase();
 }
 
 void tst_qquickshadereffect::cleanupTestCase()
@@ -267,6 +275,36 @@ void tst_qquickshadereffect::lookThroughShaderCode()
 
     // If the uniform was successfully parsed, the notify signal has been connected to an update slot.
     QCOMPARE(item.isConnected(SIGNAL(dummyChanged())), (presenceFlags & PropertyPresent) != 0);
+}
+
+void tst_qquickshadereffect::deleteSourceItem()
+{
+    // purely to ensure that deleting the sourceItem of a shader doesn't cause a crash
+    QQuickView *view = new QQuickView(0);
+    view->setSource(QUrl::fromLocalFile(testFile("deleteSourceItem.qml")));
+    view->show();
+    QTest::qWaitForWindowShown(view);
+    QVERIFY(view);
+    QObject *obj = view->rootObject();
+    QVERIFY(obj);
+    QMetaObject::invokeMethod(obj, "setDeletedSourceItem");
+    QTest::qWait(50);
+    delete view;
+}
+
+void tst_qquickshadereffect::deleteShaderEffectSource()
+{
+    // purely to ensure that deleting the sourceItem of a shader doesn't cause a crash
+    QQuickView *view = new QQuickView(0);
+    view->setSource(QUrl::fromLocalFile(testFile("deleteShaderEffectSource.qml")));
+    view->show();
+    QTest::qWaitForWindowShown(view);
+    QVERIFY(view);
+    QObject *obj = view->rootObject();
+    QVERIFY(obj);
+    QMetaObject::invokeMethod(obj, "setDeletedShaderEffectSource");
+    QTest::qWait(50);
+    delete view;
 }
 
 QTEST_MAIN(tst_qquickshadereffect)
