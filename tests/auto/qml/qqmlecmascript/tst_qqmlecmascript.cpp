@@ -135,6 +135,7 @@ private slots:
     void ownershipCustomReturnValue();
     void ownershipRootObject();
     void ownershipConsistency();
+    void ownershipQmlIncubated();
     void qlistqobjectMethods();
     void strictlyEquals();
     void compiled();
@@ -3015,6 +3016,24 @@ void tst_qqmlecmascript::ownershipConsistency()
     QVERIFY(own.object != 0);
 
     delete context;
+    delete object;
+}
+
+void tst_qqmlecmascript::ownershipQmlIncubated()
+{
+    QQmlComponent component(&engine, testFileUrl("ownershipQmlIncubated.qml"));
+    QObject *object = component.create();
+    QVERIFY(object);
+
+    QTRY_VERIFY(object->property("incubatedItem").value<QObject*>() != 0);
+
+    QMetaObject::invokeMethod(object, "deleteIncubatedItem");
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(object->property("incubatedItem").value<QObject*>() == 0);
+
     delete object;
 }
 

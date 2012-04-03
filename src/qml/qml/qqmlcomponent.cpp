@@ -1396,7 +1396,8 @@ void QV8IncubatorResource::statusChanged(Status s)
 {
     if (s == Ready) {
         Q_ASSERT(QQmlData::get(object()));
-        QQmlData::get(object())->setImplicitDestructible();
+        QQmlData::get(object())->explicitIndestructibleSet = false;
+        QQmlData::get(object())->indestructible = false;
     }
 
     if (!me.IsEmpty()) { // Will be false in synchronous mode
