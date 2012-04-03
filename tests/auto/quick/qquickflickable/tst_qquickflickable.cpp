@@ -443,11 +443,14 @@ void tst_qquickflickable::movingAndDragging()
 
     // Vertical with a quick press-move-release: should cause a flick in release.
     QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
-
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 90));
-    QTest::qWait(10);
-    QTest::mouseMove(canvas, QPoint(50, 40));
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 40));
+    // Use something that generates a huge velocity just to make it testable.
+    // In practice this feature matters on touchscreen devices where the
+    // underlying drivers will hopefully provide a pre-calculated velocity
+    // (based on more data than what the UI gets), thus making this use case
+    // working even with small movements.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 10));
+    QTest::mouseMove(canvas, QPoint(50, 300), 10);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 100), 10);
 
     QCOMPARE(vFlickSpy.count(), 1);
 

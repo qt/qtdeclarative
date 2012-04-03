@@ -88,12 +88,8 @@ void QQuickViewTestUtil::flick(QQuickView *canvas, const QPoint &from, const QPo
     // send press, five equally spaced moves, and release.
     QTest::mousePress(canvas, Qt::LeftButton, 0, from);
 
-    for (int i = 0; i < pointCount; ++i) {
-        QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(canvas, &mv);
-        QTest::qWait(duration/pointCount);
-        QCoreApplication::processEvents();
-    }
+    for (int i = 0; i < pointCount; ++i)
+        QTest::mouseMove(canvas, from + (i+1)*diff/pointCount, duration / pointCount);
 
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
     QTest::qWait(50);

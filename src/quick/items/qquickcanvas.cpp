@@ -1092,8 +1092,12 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
         QQuickMouseEventEx me(event->type(), transform.map(event->windowPos()),
                                 event->windowPos(), event->screenPos(),
                                 event->button(), event->buttons(), event->modifiers());
-        if (QQuickMouseEventEx::extended(event))
-            me.setVelocity(QQuickMouseEventEx::extended(event)->velocity());
+        QQuickMouseEventEx *eventEx = QQuickMouseEventEx::extended(event);
+        if (eventEx) {
+            me.setVelocity(eventEx->velocity());
+            me.setCapabilities(eventEx->capabilities());
+        }
+        me.setTimestamp(event->timestamp());
         me.accept();
         q->sendEvent(mouseGrabberItem, &me);
         event->setAccepted(me.isAccepted());
