@@ -456,9 +456,28 @@ static void testBindingResult(const QString &binding, int line, int column,
     if (expression.hasError()) {
         iserror = true;
         qtscriptResult = "exception";
-    } else {
-        qtscriptResult = testResultToString(value, isUndefined);
+    } else if (value.userType() != resultType) {
+        // Override the QMetaType conversions to make them more JS friendly.
+        if (value.userType() == QMetaType::Double && (resultType == QMetaType::QString ||
+                                                        resultType == QMetaType::QUrl)) {
+            // number to string-like conversion.
+            value = QVariant::fromValue<QString>(QString::number(value.toDouble(), 'g', 16));
+        } else if (value.userType() == QMetaType::QUrl && resultType == QMetaType::Bool) {
+            // url to bool conversion
+            value = QVariant::fromValue<bool>(!value.toUrl().isEmpty());
+        }
+
+        if (!value.isNull() && !value.convert(resultType)) {
+            iserror = true;
+            qtscriptResult = "exception";
+        } else if (resultType == QMetaType::QUrl) {
+            // a V8 value was converted to QUrl.
+            value = QVariant::fromValue<QUrl>(context->resolvedUrl(value.toUrl()));
+        }
     }
+
+    if (! iserror)
+        qtscriptResult = testResultToString(value, isUndefined);
 
     if (isUndefined && result.isUndefined()) {
         return;

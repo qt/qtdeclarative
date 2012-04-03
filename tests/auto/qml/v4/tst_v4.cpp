@@ -141,13 +141,13 @@ void tst_v4::qtscript_data()
     QTest::newRow("unary minus") << "unaryMinus.qml";
     QTest::newRow("null qobject") << "nullQObject.qml";
     QTest::newRow("qobject -> bool") << "objectToBool.qml";
-    //QTest::newRow("conversion from bool") << "conversions.1.qml"; // QTBUG-24706
-    //QTest::newRow("conversion from int") << "conversions.2.qml"; // QTBUG-24706
+    QTest::newRow("conversion from bool") << "conversions.1.qml"; // QTBUG-24706
+    QTest::newRow("conversion from int") << "conversions.2.qml"; // QTBUG-24706
     QTest::newRow("conversion from float") << "conversions.3.qml";
-    //QTest::newRow("conversion from double") << "conversions.4.qml"; // QTBUG-24706
-    //QTest::newRow("conversion from real") << "conversions.5.qml"; // QTBUG-24706
-    //QTest::newRow("conversion from string") << "conversions.6.qml"; // QTBUG-24706
-    //QTest::newRow("conversion from url") << "conversions.7.qml"; // QTBUG-24706
+    QTest::newRow("conversion from double") << "conversions.4.qml"; // QTBUG-24706
+    QTest::newRow("conversion from real") << "conversions.5.qml"; // QTBUG-24706
+    QTest::newRow("conversion from string") << "conversions.6.qml"; // QTBUG-24706
+    QTest::newRow("conversion from url") << "conversions.7.qml"; // QTBUG-24706
     QTest::newRow("conversion from vec3") << "conversions.8.qml";
 }
 
@@ -658,58 +658,58 @@ void tst_v4::conversions_data()
     QTest::addColumn<QVector3D>("vec3Prop");
 
     QTest::newRow("from bool") << testFileUrl("conversions.1.qml")
-            << (QStringList())
+            << (QStringList() << (testFileUrl("conversions.1.qml").toString() + QLatin1String(":11:15: Unable to assign bool to QUrl")))
             << true
             << (int)true
             << (float)1.0
             << (double)1.0
             << (qreal)1.0
             << QString(QLatin1String("true"))
-            << QUrl(testFileUrl("").toString() + QString(QLatin1String("true")))
+            << QUrl() // cannot assign bool to url.
             << QVector3D(1, 1, 1);
 
     QTest::newRow("from integer") << testFileUrl("conversions.2.qml")
-            << (QStringList())
+            << (QStringList() << (testFileUrl("conversions.2.qml").toString() + QLatin1String(":11:15: Unable to assign int to QUrl")))
             << (bool)4
             << 4
             << (float)4.0
             << (double)4.0
             << (qreal)4.0
             << QString(QLatin1String("4"))
-            << QUrl(testFileUrl("").toString() + QString(QLatin1String("4")))
+            << QUrl() // cannot assign int to url.
             << QVector3D(4, 4, 4);
 
     QTest::newRow("from float") << testFileUrl("conversions.3.qml")
-            << (QStringList() << (testFileUrl("conversions.3.qml").toString() + QLatin1String(":11: Unable to assign double to QUrl")))
+            << (QStringList() << (testFileUrl("conversions.3.qml").toString() + QLatin1String(":11:15: Unable to assign number to QUrl")))
             << (bool)4.4
             << (int)4.4
             << (float)4.4
             << (double)((float)4.4)
             << (qreal)((float)4.4)
-            << QString::number((double)((float)4.4), 'g', 15)
-            << QUrl() // cannot assign double to url.
+            << QString::number((double)((float)4.4), 'g', 16)
+            << QUrl() // cannot assign number to url.
             << QVector3D(4.4, 4.4, 4.4);
 
     QTest::newRow("from double") << testFileUrl("conversions.4.qml")
-            << (QStringList())
+            << (QStringList() << (testFileUrl("conversions.4.qml").toString() + QLatin1String(":11:15: Unable to assign number to QUrl")))
             << (bool)4.444444444
             << (int)4.444444444
             << (float)4.444444444
             << (double)4.444444444
             << (qreal)4.444444444
-            << QString::number((double)4.444444444)
-            << QUrl(testFileUrl("").toString() + QString::number((double)4.444444444))
+            << QString::number((double)4.444444444, 'g', 16)
+            << QUrl() // cannot assign number to url.
             << QVector3D(4.444444444, 4.444444444, 4.444444444);
 
     QTest::newRow("from qreal") << testFileUrl("conversions.5.qml")
-            << (QStringList())
+            << (QStringList() << (testFileUrl("conversions.5.qml").toString() + QLatin1String(":11:15: Unable to assign number to QUrl")))
             << (bool)4.44
             << (int)4.44
             << (float)4.44
             << (double)4.44
             << (qreal)4.44
             << QString(QLatin1String("4.44"))
-            << QUrl(testFileUrl("").toString() + QString(QLatin1String("4.44")))
+            << QUrl() // cannot assign number to url.
             << QVector3D(4.44, 4.44, 4.44);
 
     QTest::newRow("from string") << testFileUrl("conversions.6.qml")
@@ -723,19 +723,20 @@ void tst_v4::conversions_data()
             << QUrl(testFileUrl("").toString() + QString(QLatin1String("4")))
             << QVector3D(4, 4, 4);
 
-    /*
-    //XXX TODO: QTBUG-24706
+    // QTBUG-24706
     QTest::newRow("from url") << testFileUrl("conversions.7.qml")
-            << (QStringList() << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":7: Unable to assign QUrl to float")))
+            << (QStringList() << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":6:14: Unable to assign QUrl to int"))
+                              << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":7:16: Unable to assign QUrl to number"))
+                              << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":8:17: Unable to assign QUrl to number"))
+                              << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":9:16: Unable to assign QUrl to number")))
             << true
-            << 0            // a url like "4" actually gets the value "file:///path/to/test/4"
-            << (float)0     // and the url.toString().toInt()/toDouble() of that is zero/qQNaN().
-            << (double)0
-            << (qreal)0
+            << 0
+            << (float) 0
+            << (double) 0
+            << (qreal) 0
             << QString(testFileUrl("").toString() + QString(QLatin1String("4")))
             << QUrl(testFileUrl("").toString() + QString(QLatin1String("4")))
-            << QVector3D(0, 0, 0);
-    */
+            << QVector3D(qQNaN(), qQNaN(), qQNaN());
 
     QTest::newRow("from vector") << testFileUrl("conversions.8.qml")
             << (QStringList() << (testFileUrl("conversions.8.qml").toString() + QLatin1String(":11: Unable to assign QVector3D to QUrl"))
@@ -753,6 +754,12 @@ void tst_v4::conversions_data()
             << QUrl()
             << QVector3D(4, 4, 4); // except this one.
 }
+
+#define COMPARE_NUMBER(type, prop, expected) \
+    if (qIsNaN(expected)) \
+        QVERIFY(qIsNaN(qvariant_cast<type>(prop))); \
+    else \
+        QCOMPARE((prop), QVariant::fromValue<type>(expected));
 
 void tst_v4::conversions()
 {
@@ -775,12 +782,16 @@ void tst_v4::conversions()
     QVERIFY(o != 0);
     QCOMPARE(o->property("boolProp"), QVariant::fromValue<bool>(boolProp));
     QCOMPARE(o->property("intProp"), QVariant::fromValue<int>(intProp));
-    QCOMPARE(o->property("floatProp"), QVariant::fromValue<float>(floatProp));
-    QCOMPARE(o->property("doubleProp"), QVariant::fromValue<double>(doubleProp));
-    QCOMPARE(o->property("qrealProp"), QVariant::fromValue<qreal>(qrealProp));
+    COMPARE_NUMBER(float, o->property("floatProp"), floatProp);
+    COMPARE_NUMBER(double, o->property("doubleProp"), doubleProp);
+    COMPARE_NUMBER(qreal, o->property("qrealProp"), qrealProp);
     QCOMPARE(o->property("qstringProp"), QVariant::fromValue<QString>(qstringProp));
     QCOMPARE(o->property("qurlProp"), QVariant::fromValue<QUrl>(qurlProp));
-    QCOMPARE(o->property("vec3Prop"), QVariant::fromValue<QVector3D>(vec3Prop));
+
+    QVector3D vec3 = qvariant_cast<QVector3D>(o->property("vec3Prop"));
+    COMPARE_NUMBER(qreal, QVariant::fromValue<qreal>(vec3.x()), vec3Prop.x());
+    COMPARE_NUMBER(qreal, QVariant::fromValue<qreal>(vec3.y()), vec3Prop.y());
+    COMPARE_NUMBER(qreal, QVariant::fromValue<qreal>(vec3.z()), vec3Prop.z());
     delete o;
 }
 
@@ -905,6 +916,7 @@ void tst_v4::debuggingDumpInstructions()
     expectedPreAddress << "\t\tBranchFalse\t\tAddress(UNIT_TEST_BRANCH_ADDRESS) [if false == Input_Reg(0)]";  //(address + size() + i->branchop.offset)
     expectedPreAddress << "\t\tBranch\t\t\tAddress(UNIT_TEST_BRANCH_ADDRESS)";                                //(address + size() + i->branchop.offset)
     expectedPreAddress << "\t\tBlock\t\t\tMask(0)";
+    expectedPreAddress << "\t\tThrow\t\t\tInputReg(0)";
     expectedPreAddress << "\t\tInitString\t\tString_DataIndex(0) -> String_Slot(0)";
     QStringList expected;
 
@@ -920,7 +932,7 @@ void tst_v4::debuggingDumpInstructions()
     const char *codeAddr = start;
     int whichExpected = 0;
 #define DUMP_INSTR_SIZE_IN_UNIT_TEST(I, FMT) {                              \
-            QString currExpected = expectedPreAddress.at(whichExpected++);  \
+            QString currExpected = whichExpected < expectedPreAddress.size() ? expectedPreAddress.at(whichExpected++) : QString();  \
             currExpected.prepend(getLeading(codeAddr - start));             \
             expected.append(currExpected);                                  \
             codeAddr += QQmlJS::V4Instr::size(static_cast<QQmlJS::V4Instr::Type>(QQmlJS::V4Instr::I)); \
