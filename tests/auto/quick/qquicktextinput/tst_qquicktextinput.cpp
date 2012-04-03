@@ -2402,7 +2402,7 @@ void tst_qquicktextinput::cursorVisible()
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 5);
 
-    QQuickView alternateView;
+    QWindow alternateView;
     alternateView.show();
     alternateView.requestActivateWindow();
     QTest::qWaitForWindowShown(&alternateView);
