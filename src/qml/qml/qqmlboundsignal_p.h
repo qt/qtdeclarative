@@ -107,9 +107,10 @@ public:
     virtual int index() const = 0;
     virtual QQmlBoundSignalExpression *expression() const = 0;
     virtual QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *) = 0;
-    virtual QObject *object() = 0;
+    virtual QObject *scope() = 0;
 
-    void addToObject();
+protected:
+    void addToObject(QObject *owner);
 
 private:
     friend class QQmlData;
@@ -131,7 +132,7 @@ public:
 
     QQmlBoundSignalExpression *expression() const;
     QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *);
-    QObject *object() { return m_owner; }
+    QObject *scope() { return m_scope; }
 
     bool isEvaluating() const { return m_isEvaluating; }
 
@@ -140,11 +141,11 @@ protected:
 
 private:
     QQmlBoundSignalExpression *m_expression;
+    QQmlBoundSignalParameters *m_params;
+    QObject *m_scope;
     QMetaMethod m_signal;
     bool m_paramsValid : 1;
     bool m_isEvaluating : 1;
-    QQmlBoundSignalParameters *m_params;
-    QObject *m_owner;
 };
 
 QT_END_NAMESPACE

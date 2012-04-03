@@ -204,10 +204,9 @@ QQmlAbstractBoundSignal::~QQmlAbstractBoundSignal()
     }
 }
 
-void QQmlAbstractBoundSignal::addToObject()
+void QQmlAbstractBoundSignal::addToObject(QObject *obj)
 {
     Q_ASSERT(!m_prevSignal);
-    QObject *obj = object();
     Q_ASSERT(obj);
 
     QQmlData *data = QQmlData::get(obj, true);
@@ -220,12 +219,14 @@ void QQmlAbstractBoundSignal::addToObject()
 
 QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
                                QObject *owner)
-: m_expression(0), m_signal(signal), m_paramsValid(false), m_isEvaluating(false), m_params(0), m_owner(owner)
+: m_expression(0), m_params(0), m_scope(scope), m_signal(signal), m_paramsValid(false), m_isEvaluating(false)
 {
     // This is thread safe.  Although it may be updated by two threads, they
     // will both set it to the same value - so the worst thing that can happen
     // is that they both do the work to figure it out.  Boo hoo.
     if (evaluateIdx == -1) evaluateIdx = metaObject()->methodCount();
+
+    addToObject(owner);
 
     QQmlPropertyPrivate::connect(scope, m_signal.methodIndex(), this, evaluateIdx);
 }
@@ -347,7 +348,7 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
                 if (scope == "Qt")
                     meta = &QObject::staticQtMetaObject;
                 else
-                    meta = static_cast<QQmlBoundSignal*>(parent)->object()->metaObject();
+                    meta = static_cast<QQmlBoundSignal*>(parent)->scope()->metaObject();
                 for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
                     QMetaEnum m = meta->enumerator(i);
                     if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope))) {
