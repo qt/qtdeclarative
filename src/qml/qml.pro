@@ -4,7 +4,6 @@ TARGET     = QtQml
 QPRO_PWD   = $$PWD
 
 CONFIG += module
-MODULE_PRI += ../../modules/qt_qml.pri
 
 QT = core-private network
 
@@ -21,6 +20,7 @@ exists("qqml_enable_gcov") {
     LIBS += -lgcov
 }
 
+MODULE_DEFINES = QQmlImageProvider=QQuickImageProvider
 load(qt_module_config)
 
 # private dependencies

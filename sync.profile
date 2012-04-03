@@ -18,13 +18,6 @@
     "qml" => "#include <QtQml/QtQml>\n",
     "quick" => "#include <QtQuick/QtQuick>\n",
 );
-%modulepris = (
-    "QtQml" => "$basedir/modules/qt_qml.pri",
-    "QtQuick" => "$basedir/modules/qt_quick.pri",
-    "QtQuickParticles" => "$basedir/modules/qt_quickparticles.pri",
-    "QtQuickTest" => "$basedir/modules/qt_qmltest.pri",
-    "QtQmlDevTools" => "$basedir/modules/qt_qmldevtools.pri",
-);
 %deprecatedheaders = (
     "QtQml" => {
         "QQmlImageProvider" => "QtQuick/QQuickImageProvider",

@@ -7,8 +7,6 @@ DESTDIR    = $$QMAKE_LIBDIR_QT
 CONFIG += module
 CONFIG += staticlib
 
-MODULE_PRI = ../../modules/qt_qmldevtools.pri
-
 DEFINES += QT_BUILD_QMLDEVTOOLS_LIB
 
 load(qt_module_config)

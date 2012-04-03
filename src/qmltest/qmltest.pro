@@ -5,7 +5,6 @@ QPRO_PWD   = $$PWD
 
 CONFIG += module
 CONFIG += dll warn_on
-MODULE_PRI += ../../modules/qt_qmltest.pri
 
 QT += qml testlib-private gui-private
 DEFINES += QT_BUILD_QUICK_TEST_LIB QT_NO_URL_CAST_FROM_STRING

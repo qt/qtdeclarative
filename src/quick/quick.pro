@@ -4,7 +4,6 @@ TARGET = QtQuick
 
 CONFIG += module
 CONFIG += dll warn_on
-MODULE_PRI = ../../modules/qt_quick.pri
 
 QT = core-private gui-private qml-private
 

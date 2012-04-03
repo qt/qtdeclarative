@@ -4,7 +4,6 @@ TARGET = QtQuickParticles
 
 CONFIG += module
 CONFIG += dll warn_on
-MODULE_PRI = ../../modules/qt_quickparticles.pri
 
 QT = core-private gui-private qml-private quick-private
 
