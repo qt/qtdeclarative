@@ -1219,12 +1219,6 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
 
                 int textPos = block.position();
                 QTextBlock::iterator blockIterator = block.begin();
-                if (blockIterator.atEnd() && preeditLength) {
-                    engine.setPosition(blockPosition);
-                    textPos = engine.addText(block, block.charFormat(), textColor, colorChanges,
-                                             textPos, textPos + preeditLength,
-                                             selectionStart, selectionEnd);
-                }
 
                 while (!blockIterator.atEnd()) {
                     QTextFragment fragment = blockIterator.fragment();
@@ -1273,6 +1267,19 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                     }
 
                     ++blockIterator;
+                }
+
+                if (preeditLength >= 0 && textPos <= block.position() + preeditPosition) {
+                    engine.setPosition(blockPosition);
+                    textPos = block.position() + preeditPosition;
+                    QTextLine line = block.layout()->lineForTextPosition(textPos);
+                    if (!engine.currentLine().isValid()
+                            || line.lineNumber() != engine.currentLine().lineNumber()) {
+                        engine.setCurrentLine(line);
+                    }
+                    textPos = engine.addText(block, block.charFormat(), textColor, colorChanges,
+                                             textPos, textPos + preeditLength,
+                                             selectionStart, selectionEnd);
                 }
 
                 engine.setCurrentLine(QTextLine()); // Reset current line because the text layout changed
