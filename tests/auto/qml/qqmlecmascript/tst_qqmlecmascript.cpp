@@ -246,7 +246,7 @@ private slots:
     void invokableWithQObjectDerived();
     void realTypePrecision();
     void registeredFlagMethod();
-
+    void deleteLaterObjectMethodCall();
     void automaticSemicolon();
     void unaryExpression();
     void switchStatement();
@@ -5999,6 +5999,13 @@ void tst_qqmlecmascript::dynamicString()
     QVERIFY(object != 0);
     QCOMPARE(object->property("stringProperty").toString(),
              QString::fromLatin1("string:Hello World false:0 true:1 uint32:100 int32:-100 double:3.14159 date:2011-02-11 05::30:50!"));
+}
+
+void tst_qqmlecmascript::deleteLaterObjectMethodCall()
+{
+    QQmlComponent component(&engine, testFileUrl("deleteLaterObjectMethodCall.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
 }
 
 void tst_qqmlecmascript::automaticSemicolon()

@@ -269,7 +269,7 @@ static v8::Handle<v8::Value> GenericValueGetter(v8::Local<v8::String>, const v8:
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(This);
 
     QObject *object = resource->object;
-    if (!object) return v8::Undefined();
+    if (QQmlData::wasDeleted(object)) return v8::Undefined();
 
     QQmlPropertyData *property =
         (QQmlPropertyData *)v8::External::Unwrap(info.Data());
@@ -476,6 +476,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
                objectHandle?*objectHandle:engine->newQObject(object),
                v8::Integer::New(index)
            };
+           Q_ASSERT(argv[0]->IsObject());
            return engine->qobjectWrapper()->m_methodConstructor->Call(engine->global(), 2, argv);
        }
        static v8::Handle<v8::Value> createWithGlobal(QV8Engine *engine, QObject *object, 
@@ -486,9 +487,13 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
                v8::Integer::New(index),
                v8::Context::GetCallingQmlGlobal()
            };
+           Q_ASSERT(argv[0]->IsObject());
            return engine->qobjectWrapper()->m_methodConstructor->Call(engine->global(), 3, argv);
        }
     };
+
+    if (QQmlData::wasDeleted(object))
+        return v8::Handle<v8::Value>();
 
     {
         // Comparing the hash first actually makes a measurable difference here, at least on x86
@@ -665,6 +670,9 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
         engine->qobjectWrapper()->m_destroyString == property)
         return true;
 
+    if (QQmlData::wasDeleted(object))
+        return false;
+
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     result = QQmlPropertyCache::property(engine->engine(), object, property, local);
@@ -695,7 +703,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property,
 {
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (resource->object.isNull()) 
+    if (QQmlData::wasDeleted(resource->object))
         return v8::Handle<v8::Value>();
 
     QObject *object = resource->object;
@@ -739,7 +747,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Local<v8::String> property,
 {
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (resource->object.isNull()) 
+    if (QQmlData::wasDeleted(resource->object))
         return value;
 
     QObject *object = resource->object;
@@ -833,7 +841,7 @@ static void FastValueSetter(v8::Local<v8::String>, v8::Local<v8::Value> value,
 {
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (resource->object.isNull()) 
+    if (QQmlData::wasDeleted(resource->object))
         return; 
 
     QObject *object = resource->object;
@@ -860,7 +868,7 @@ static void FastValueSetterReadOnly(v8::Local<v8::String> property, v8::Local<v8
 {
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (resource->object.isNull()) 
+    if (QQmlData::wasDeleted(resource->object))
         return; 
 
     QV8Engine *v8engine = resource->engine;
