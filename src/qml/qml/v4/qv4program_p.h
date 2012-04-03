@@ -65,7 +65,6 @@ struct QV4Program {
     quint32 signalTableOffset;
     quint32 exceptionDataOffset;
     quint16 subscriptions;
-    quint16 identifiers;
     quint16 instructionCount;
 
     struct BindingReference {

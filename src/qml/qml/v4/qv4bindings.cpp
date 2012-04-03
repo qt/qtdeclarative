@@ -1680,18 +1680,6 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         executedBlocks |= instr->blockop.block;
     QML_V4_END_INSTR(Block, blockop)
 
-    // XXX not applicable in v8
-    QML_V4_BEGIN_INSTR(InitString, initstring)
-//        if (!identifiers[instr->initstring.offset].identifier) {
-//            quint32 len = *(quint32 *)(data + instr->initstring.dataIdx);
-//            QChar *strdata = (QChar *)(data + instr->initstring.dataIdx + sizeof(quint32));
-
-//            QString str = QString::fromRawData(strdata, len);
-
-//            // identifiers[instr->initstring.offset] = engine->objectClass->createPersistentIdentifier(str);
-//        }
-    QML_V4_END_INSTR(InitString, initstring)
-
     QML_V4_BEGIN_INSTR(CleanupRegister, cleanup)
         registers[instr->cleanup.reg].cleanup();
     QML_V4_END_INSTR(CleanupRegister, cleanup)

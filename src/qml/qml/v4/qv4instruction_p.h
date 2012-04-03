@@ -160,9 +160,7 @@ QT_BEGIN_NAMESPACE
     F(BranchFalse, branchop) \
     F(Branch, branchop) \
     F(Block, blockop) \
-    F(Throw, throwop) \
-    /* Speculative property resolution */ \
-    F(InitString, initstring)
+    F(Throw, throwop)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define QML_THREADED_INTERPRETER

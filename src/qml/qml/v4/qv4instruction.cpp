@@ -376,9 +376,6 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::Branch:
         INSTR_DUMP << "\t" << "Branch" << "\t\t\t" << "Address(" << (address + size() + i->branchop.offset) << ")";
         break;
-    case V4Instr::InitString:
-        INSTR_DUMP << "\t" << "InitString" << "\t\t" << "String_DataIndex(" << i->initstring.dataIdx << ") -> String_Slot(" << i->initstring.offset << ")";
-        break;
     case V4Instr::Block:
         INSTR_DUMP << "\t" << "Block" << "\t\t\t" << "Mask(" << QByteArray::number(i->blockop.block, 16).constData()  << ")";
         break;

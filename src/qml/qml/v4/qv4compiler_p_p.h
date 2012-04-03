@@ -128,8 +128,6 @@ public:
     bool compile(QQmlJS::AST::Node *);
 
     int registerLiteralString(quint8 reg, const QStringRef &);
-    int registerString(const QString &);
-    QQmlAssociationList<QString, QPair<int, int> > registeredStrings;
     QByteArray data;
 
     bool blockNeedsSubscription(const QStringList &);
@@ -165,8 +163,6 @@ public:
         QByteArray data;
         QQmlAssociationList<QString, int> subscriptionIds;
         QVector<quint64> exceptions;
-
-        QQmlAssociationList<QString, QPair<int, int> > registeredStrings;
 
         int count() const { return offsets.count(); }
     } committed;

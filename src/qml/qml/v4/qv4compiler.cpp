@@ -1173,7 +1173,6 @@ void QV4Compiler::dump(const QByteArray &programData)
     qWarning() << "Program.bindings:" << program->bindings;
     qWarning() << "Program.dataLength:" << program->dataLength;
     qWarning() << "Program.subscriptions:" << program->subscriptions;
-    qWarning() << "Program.indentifiers:" << program->identifiers;
 
     const int programSize = program->instructionCount;
     const char *start = program->instructions();
@@ -1192,7 +1191,6 @@ void QV4CompilerPrivate::resetInstanceState()
     exceptions = committed.exceptions;
     usedSubscriptionIds.clear();
     subscriptionIds = committed.subscriptionIds;
-    registeredStrings = committed.registeredStrings;
     bytecode.clear();
     patches.clear();
     pool.clear();
@@ -1214,7 +1212,6 @@ int QV4CompilerPrivate::commitCompile()
     committed.data = data;
     committed.exceptions = exceptions;
     committed.subscriptionIds = subscriptionIds;
-    committed.registeredStrings = registeredStrings;
     return rv;
 }
 
@@ -1266,7 +1263,7 @@ bool QV4CompilerPrivate::compile(QQmlJS::AST::Node *node)
         qerr << endl;
     }
 
-    if (discarded || subscriptionIds.count() > 0xFFFF || registeredStrings.count() > 0xFFFF || registerCount > 31)
+    if (discarded || subscriptionIds.count() > 0xFFFF || registerCount > 31)
         return false;
 
     return true;
@@ -1288,32 +1285,6 @@ int QV4CompilerPrivate::registerLiteralString(quint8 reg, const QStringRef &str)
     gen(string);
 
     return reg;
-}
-
-// Returns an identifier offset
-int QV4CompilerPrivate::registerString(const QString &string)
-{
-    Q_ASSERT(!string.isEmpty());
-
-    QPair<int, int> *iter = registeredStrings.value(string);
-
-    if (!iter) {
-        quint32 len = string.length();
-        QByteArray lendata((const char *)&len, sizeof(quint32));
-        QByteArray strdata((const char *)string.constData(), string.length() * sizeof(QChar));
-        strdata.prepend(lendata);
-        int rv = data.count();
-        data += strdata;
-
-        iter = &registeredStrings[string];
-        *iter = qMakePair(registeredStrings.count(), rv);
-    } 
-
-    Instr::InitString reg;
-    reg.offset = iter->first;
-    reg.dataIdx = iter->second;
-    gen(reg);
-    return reg.offset;
 }
 
 /*!
@@ -1498,7 +1469,6 @@ QByteArray QV4Compiler::program() const
 
         prog.dataLength = 4 * ((data.size() + 3) / 4);
         prog.subscriptions = d->committed.subscriptionIds.count();
-        prog.identifiers = d->committed.registeredStrings.count();
         prog.instructionCount = bytecode.count();
         int size = sizeof(QV4Program) + bytecode.count();
         size += prog.dataLength;
