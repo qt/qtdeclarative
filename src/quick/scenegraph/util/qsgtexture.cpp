@@ -402,7 +402,7 @@ QSGPlainTexture::~QSGPlainTexture()
 }
 
 #ifdef QT_OPENGL_ES
-static void swizzleBGRAToRGBA(QImage *image)
+void qsg_swizzleBGRAToRGBA(QImage *image)
 {
     const int width = image->width();
     const int height = image->height();
@@ -500,7 +500,7 @@ void QSGPlainTexture::bind()
     updateBindOptions(m_dirty_bind_options);
 
 #ifdef QT_OPENGL_ES
-        swizzleBGRAToRGBA(&tmp);
+        qsg_swizzleBGRAToRGBA(&tmp);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.constBits());
 #else
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp.constBits());

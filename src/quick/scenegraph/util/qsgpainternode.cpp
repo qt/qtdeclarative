@@ -73,6 +73,10 @@ QSGPainterTexture::QSGPainterTexture()
 
 }
 
+#ifdef QT_OPENGL_ES
+extern void qsg_swizzleBGRAToRGBA(QImage *image);
+#endif
+
 void QSGPainterTexture::bind()
 {
     if (m_dirty_rect.isNull()) {
@@ -91,6 +95,7 @@ void QSGPainterTexture::bind()
     int h = m_dirty_rect.height();
 
 #ifdef QT_OPENGL_ES
+    qsg_swizzleBGRAToRGBA(&subImage);
     glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
                     GL_RGBA, GL_UNSIGNED_BYTE, subImage.constBits());
 #else
