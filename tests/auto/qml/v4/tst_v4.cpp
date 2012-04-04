@@ -86,6 +86,7 @@ private slots:
 
     void conversions_data();
     void conversions();
+    void subscriptions();
 
     void debuggingDumpInstructions(); // this test should be last.
 
@@ -795,6 +796,22 @@ void tst_v4::conversions()
     delete o;
 }
 
+void tst_v4::subscriptions()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("subscriptions.1.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        QObject *ro = qobject_cast<QObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->property("targetHeight"), QVariant::fromValue<qreal>(201));
+
+        delete o;
+    }
+}
 
 static QStringList messages;
 static void msgHandler(QtMsgType, const char *msg)

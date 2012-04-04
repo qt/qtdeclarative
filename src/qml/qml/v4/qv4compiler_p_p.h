@@ -139,7 +139,7 @@ public:
     QVector<quint64> exceptions;
 
     QQmlAssociationList<int, quint32> usedSubscriptionIds;
-
+    int subscriptionOffset;
     QQmlAssociationList<QString, int> subscriptionIds;
     QQmlJS::Bytecode bytecode;
 
@@ -154,15 +154,17 @@ public:
     QQmlPool pool;
 
     // Committed binding data
-    struct {
+    struct Committed {
+        Committed(): subscriptionCount(0) {}
         QList<int> offsets;
         QList<QQmlAssociationList<int, quint32> > dependencies;
 
         //QQmlJS::Bytecode bytecode;
         QByteArray bytecode;
         QByteArray data;
-        QQmlAssociationList<QString, int> subscriptionIds;
         QVector<quint64> exceptions;
+        int subscriptionCount;
+        QList<QQmlAssociationList<QString, int> > subscriptions;
 
         int count() const { return offsets.count(); }
     } committed;

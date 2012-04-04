@@ -62,7 +62,8 @@ static bool qmlEnableV4 = true;
 
 using namespace QQmlJS;
 QV4CompilerPrivate::QV4CompilerPrivate()
-    : _function(0) , _block(0) , _discarded(false), registerCount(0)
+    : subscriptionOffset(0)
+    , _function(0) , _block(0) , _discarded(false), registerCount(0)
     , bindingLine(0), bindingColumn(0)
 {
 }
@@ -1190,7 +1191,8 @@ void QV4CompilerPrivate::resetInstanceState()
     data = committed.data;
     exceptions = committed.exceptions;
     usedSubscriptionIds.clear();
-    subscriptionIds = committed.subscriptionIds;
+    subscriptionIds.clear();
+    subscriptionOffset = committed.subscriptionCount;
     bytecode.clear();
     patches.clear();
     pool.clear();
@@ -1211,7 +1213,9 @@ int QV4CompilerPrivate::commitCompile()
     committed.bytecode.append(bytecode.constData(), bytecode.size());
     committed.data = data;
     committed.exceptions = exceptions;
-    committed.subscriptionIds = subscriptionIds;
+    committed.subscriptionCount = subscriptionOffset + subscriptionIds.count();
+    if (bindingsDump())
+        committed.subscriptions.append(subscriptionIds);
     return rv;
 }
 
@@ -1310,7 +1314,7 @@ int QV4CompilerPrivate::subscriptionIndex(const QStringList &sub)
     QString str = sub.join(QLatin1String("."));
     int *iter = subscriptionIds.value(str);
     if (!iter) {
-        int count = subscriptionIds.count();
+        int count = subscriptionOffset + subscriptionIds.count();
         iter = &subscriptionIds[str];
         *iter = count;
     }
@@ -1409,8 +1413,8 @@ QByteArray QV4CompilerPrivate::buildSignalTable() const
 
     QVector<quint32> header;
     QVector<quint32> data;
-    for (int ii = 0; ii < committed.subscriptionIds.count(); ++ii) {
-        header.append(committed.subscriptionIds.count() + data.count());
+    for (int ii = 0; ii < committed.subscriptionCount; ++ii) {
+        header.append(committed.subscriptionCount + data.count());
         const QList<QPair<int, quint32> > &bindings = table[ii];
         data.append(bindings.count());
         for (int jj = 0; jj < bindings.count(); ++jj) {
@@ -1468,7 +1472,7 @@ QByteArray QV4Compiler::program() const
         data += d->buildExceptionData();
 
         prog.dataLength = 4 * ((data.size() + 3) / 4);
-        prog.subscriptions = d->committed.subscriptionIds.count();
+        prog.subscriptions = d->committed.subscriptionCount;
         prog.instructionCount = bytecode.count();
         int size = sizeof(QV4Program) + bytecode.count();
         size += prog.dataLength;
@@ -1485,12 +1489,13 @@ QByteArray QV4Compiler::program() const
     if (bindingsDump()) {
         qWarning().nospace() << "Subscription slots:";
 
-        for (QQmlAssociationList<QString, int>::ConstIterator iter = d->committed.subscriptionIds.begin();
-                iter != d->committed.subscriptionIds.end();
-                ++iter) {
-            qWarning().nospace() << "    " << iter->first << "\t-> " << iter->second;
+        QQmlAssociationList<QString, int> subscriptionIds;
+        foreach (subscriptionIds, d->committed.subscriptions) {
+            for (QQmlAssociationList<QString, int>::ConstIterator iter = subscriptionIds.begin();
+                 iter != subscriptionIds.end(); ++iter) {
+                qWarning().nospace() << "    " << iter->first << "\t-> " << iter->second;
+            }
         }
-
         QV4Compiler::dump(programData);
     }
 
