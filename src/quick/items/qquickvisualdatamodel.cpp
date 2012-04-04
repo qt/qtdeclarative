@@ -55,6 +55,48 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickVisualDataModelEngineData : public QV8Engine::Deletable
+{
+public:
+    enum
+    {
+        Model,
+        Groups,
+        IsUnresolved,
+        ItemsIndex,
+        PersistedItemsIndex,
+        InItems,
+        InPersistedItems,
+        StringCount
+    };
+
+    QQuickVisualDataModelEngineData(QV8Engine *engine);
+    ~QQuickVisualDataModelEngineData();
+
+    v8::Local<v8::Object> array(
+            QV8Engine *engine, const QVector<QQuickChangeSet::Remove> &changes);
+    v8::Local<v8::Object> array(
+            QV8Engine *engine, const QVector<QQuickChangeSet::Insert> &changes);
+    v8::Local<v8::Object> array(
+            QV8Engine *engine, const QVector<QQuickChangeSet::Change> &changes);
+
+
+    inline v8::Local<v8::String> model() { return strings->Get(Model)->ToString(); }
+    inline v8::Local<v8::String> groups() { return strings->Get(Groups)->ToString(); }
+    inline v8::Local<v8::String> isUnresolved() { return strings->Get(IsUnresolved)->ToString(); }
+    inline v8::Local<v8::String> itemsIndex() { return strings->Get(ItemsIndex)->ToString(); }
+    inline v8::Local<v8::String> persistedItemsIndex() { return strings->Get(PersistedItemsIndex)->ToString(); }
+    inline v8::Local<v8::String> inItems() { return strings->Get(InItems)->ToString(); }
+    inline v8::Local<v8::String> inPersistedItems() { return strings->Get(InPersistedItems)->ToString(); }
+
+    v8::Persistent<v8::Array> strings;
+    v8::Persistent<v8::Function> constructorChange;
+    v8::Persistent<v8::Function> constructorChangeArray;
+};
+
+V8_DEFINE_EXTENSION(QQuickVisualDataModelEngineData, engineData)
+
+
 void QQuickVisualDataModelPartsMetaObject::propertyCreated(int, QMetaPropertyBuilder &prop)
 {
     prop.setWritable(false);
@@ -1453,21 +1495,26 @@ void QQuickVisualDataModelItemMetaType::initializeConstructor()
     v8::HandleScope handleScope;
     v8::Context::Scope contextScope(v8Engine->context());
 
+    QQuickVisualDataModelEngineData *data = engineData(v8Engine);
+
     constructor = qPersistentNew(v8::ObjectTemplate::New());
 
     constructor->SetHasExternalResource(true);
-    constructor->SetAccessor(v8::String::New("model"), get_model);
-    constructor->SetAccessor(v8::String::New("groups"), get_groups, set_groups);
-    constructor->SetAccessor(v8::String::New("isUnresolved"), get_member, 0, v8::Int32::New(30));
+    constructor->SetAccessor(data->model(), get_model);
+    constructor->SetAccessor(data->groups(), get_groups, set_groups);
+    constructor->SetAccessor(data->isUnresolved(), get_member, 0, v8::Int32::New(30));
+    constructor->SetAccessor(data->inItems(), get_member, set_member, v8::Int32::New(1));
+    constructor->SetAccessor(data->inPersistedItems(), get_member, set_member, v8::Int32::New(2));
+    constructor->SetAccessor(data->itemsIndex(), get_index, 0, v8::Int32::New(1));
+    constructor->SetAccessor(data->persistedItemsIndex(), get_index, 0, v8::Int32::New(2));
 
-    int notifierId = 0;
-    for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
+    for (int i = 2; i < groupNames.count(); ++i) {
         QString propertyName = QStringLiteral("in") + groupNames.at(i);
         propertyName.replace(2, 1, propertyName.at(2).toUpper());
         constructor->SetAccessor(
                 v8Engine->toString(propertyName), get_member, set_member, v8::Int32::New(i + 1));
     }
-    for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
+    for (int i = 2; i < groupNames.count(); ++i) {
         const QString propertyName = groupNames.at(i) + QStringLiteral("Index");
         constructor->SetAccessor(
                 v8Engine->toString(propertyName), get_index, 0, v8::Int32::New(i + 1));
@@ -1988,10 +2035,9 @@ void QQuickVisualDataGroupPrivate::emitChanges(QV8Engine *engine)
     if (isChangedConnected(q) && !changeSet.isEmpty()) {
         v8::HandleScope handleScope;
         v8::Context::Scope contextScope(engine->context());
-        v8::Local<v8::Array> removed  = QQuickVisualDataModelPrivate::buildChangeList(changeSet.removes());
-        v8::Local<v8::Array> inserted = QQuickVisualDataModelPrivate::buildChangeList(changeSet.inserts());
-        emit q->changed(
-                QQmlV8Handle::fromHandle(removed), QQmlV8Handle::fromHandle(inserted));
+        v8::Local<v8::Object> removed  = engineData(engine)->array(engine, changeSet.removes());
+        v8::Local<v8::Object> inserted = engineData(engine)->array(engine, changeSet.inserts());
+        emit q->changed(QQmlV8Handle::fromHandle(removed), QQmlV8Handle::fromHandle(inserted));
     }
     if (changeSet.difference() != 0)
         emit q->countChanged();
@@ -2857,6 +2903,148 @@ void QQuickVisualPartsModel::emitModelUpdated(const QQuickChangeSet &changeSet, 
         emit countChanged();
 }
 
+//============================================================================
+
+v8::Handle<v8::Value> get_change_index(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    return info.This()->GetInternalField(0);
+}
+
+v8::Handle<v8::Value> get_change_count(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    return info.This()->GetInternalField(1);
+}
+
+v8::Handle<v8::Value> get_change_moveId(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    return info.This()->GetInternalField(2);
+}
+
+class QQuickVisualDataGroupChangeArray : public QV8ObjectResource
+{
+    V8_RESOURCE_TYPE(ChangeSetArrayType)
+public:
+    QQuickVisualDataGroupChangeArray(QV8Engine *engine)
+        : QV8ObjectResource(engine)
+    {
+    }
+
+    virtual quint32 count() const = 0;
+    virtual const QQuickChangeSet::Change &at(int index) const = 0;
+
+    static v8::Handle<v8::Value> get_change(quint32 index, const v8::AccessorInfo &info)
+    {
+        QQuickVisualDataGroupChangeArray *array = v8_resource_cast<QQuickVisualDataGroupChangeArray>(info.This());
+        if (!array)
+            V8THROW_ERROR("Not a valid change array");
+
+        if (index >= array->count())
+            return v8::Undefined();
+
+        const QQuickChangeSet::Change &change = array->at(index);
+
+        v8::Local<v8::Object> object = engineData(array->engine)->constructorChange->NewInstance();
+        object->SetInternalField(0, v8::Int32::New(change.index));
+        object->SetInternalField(1, v8::Int32::New(change.count));
+        if (change.isMove())
+            object->SetInternalField(2, v8::Int32::New(change.moveId));
+
+        return object;
+    }
+
+    static v8::Handle<v8::Value> get_length(v8::Local<v8::String>, const v8::AccessorInfo &info)
+    {
+        QQuickVisualDataGroupChangeArray *array = v8_resource_cast<QQuickVisualDataGroupChangeArray>(info.This());
+        if (!array)
+            V8THROW_ERROR("Not a valid change array");
+
+        return v8::Integer::New(array->count());
+    }
+
+    static v8::Local<v8::Function> constructor()
+    {
+        v8::Local<v8::FunctionTemplate> changeArray = v8::FunctionTemplate::New();
+        changeArray->InstanceTemplate()->SetHasExternalResource(true);
+        changeArray->InstanceTemplate()->SetIndexedPropertyHandler(get_change);
+        changeArray->InstanceTemplate()->SetAccessor(v8::String::New("length"), get_length);
+        return changeArray->GetFunction();
+    }
+};
+
+class QQuickVisualDataGroupRemoveArray : public QQuickVisualDataGroupChangeArray
+{
+public:
+    QQuickVisualDataGroupRemoveArray(QV8Engine *engine, const QVector<QQuickChangeSet::Remove> &changes)
+        : QQuickVisualDataGroupChangeArray(engine)
+        , changes(changes)
+    {
+    }
+
+    quint32 count() const { return changes.count(); }
+    const QQuickChangeSet::Change &at(int index) const { return changes.at(index); }
+
+private:
+    QVector<QQuickChangeSet::Remove> changes;
+};
+
+class QQuickVisualDataGroupInsertArray : public QQuickVisualDataGroupChangeArray
+{
+public:
+    QQuickVisualDataGroupInsertArray(QV8Engine *engine, const QVector<QQuickChangeSet::Insert> &changes)
+        : QQuickVisualDataGroupChangeArray(engine)
+        , changes(changes)
+    {
+    }
+
+    quint32 count() const { return changes.count(); }
+    const QQuickChangeSet::Change &at(int index) const { return changes.at(index); }
+
+private:
+    QVector<QQuickChangeSet::Insert> changes;
+};
+
+QQuickVisualDataModelEngineData::QQuickVisualDataModelEngineData(QV8Engine *)
+{
+    strings = qPersistentNew(v8::Array::New(StringCount));
+    strings->Set(Model, v8::String::New("model"));
+    strings->Set(Groups, v8::String::New("groups"));
+    strings->Set(IsUnresolved, v8::String::New("isUnresolved"));
+    strings->Set(ItemsIndex, v8::String::New("itemsIndex"));
+    strings->Set(PersistedItemsIndex, v8::String::New("persistedItemsIndex"));
+    strings->Set(InItems, v8::String::New("inItems"));
+    strings->Set(InPersistedItems, v8::String::New("inPersistedItems"));
+
+    v8::Local<v8::FunctionTemplate> change = v8::FunctionTemplate::New();
+    change->InstanceTemplate()->SetAccessor(v8::String::New("index"), get_change_index);
+    change->InstanceTemplate()->SetAccessor(v8::String::New("count"), get_change_count);
+    change->InstanceTemplate()->SetAccessor(v8::String::New("moveId"), get_change_moveId);
+    change->InstanceTemplate()->SetInternalFieldCount(3);
+    constructorChange = qPersistentNew(change->GetFunction());
+    constructorChangeArray = qPersistentNew(QQuickVisualDataGroupChangeArray::constructor());
+}
+
+QQuickVisualDataModelEngineData::~QQuickVisualDataModelEngineData()
+{
+    qPersistentDispose(strings);
+    qPersistentDispose(constructorChange);
+    qPersistentDispose(constructorChangeArray);
+}
+
+v8::Local<v8::Object> QQuickVisualDataModelEngineData::array(
+        QV8Engine *engine, const QVector<QQuickChangeSet::Remove> &changes)
+{
+    v8::Local<v8::Object> array = constructorChangeArray->NewInstance();
+    array->SetExternalResource(new QQuickVisualDataGroupRemoveArray(engine, changes));
+    return array;
+}
+
+v8::Local<v8::Object> QQuickVisualDataModelEngineData::array(
+        QV8Engine *engine, const QVector<QQuickChangeSet::Insert> &changes)
+{
+    v8::Local<v8::Object> array = constructorChangeArray->NewInstance();
+    array->SetExternalResource(new QQuickVisualDataGroupInsertArray(engine, changes));
+    return array;
+}
 
 QT_END_NAMESPACE
 

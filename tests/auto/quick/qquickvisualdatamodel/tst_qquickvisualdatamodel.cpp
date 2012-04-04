@@ -290,7 +290,6 @@ void tst_qquickvisualdatamodel::initTestCase()
 
 void tst_qquickvisualdatamodel::cleanupTestCase()
 {
-
 }
 
 tst_qquickvisualdatamodel::tst_qquickvisualdatamodel()

@@ -126,7 +126,6 @@ QT_BEGIN_NAMESPACE
         return rv; \
     } \
 
-
 template<class T>
 inline T *v8_resource_cast(v8::Handle<v8::Object> object) {
     QV8ObjectResource *resource = static_cast<QV8ObjectResource *>(object->GetExternalResource());
