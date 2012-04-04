@@ -60,7 +60,6 @@ public:
         AnimationPausedChanged = 19, // highest value
         ChangeTool             = 1,
         ClearComponentCache    = 2,
-        ColorChanged           = 3,
         CreateObject           = 5,
         CurrentObjectsChanged  = 6,
         DestroyObject          = 7,
@@ -77,8 +76,7 @@ public:
     };
 
     enum Tool {
-        ColorPickerTool,
-        SelectMarqueeTool,
+        SelectMarqueeTool = 1,
         InspectTool
     };
 

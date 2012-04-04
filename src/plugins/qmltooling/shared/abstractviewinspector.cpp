@@ -163,11 +163,6 @@ void AbstractViewInspector::setShowAppOnTop(bool appOnTop)
     emit showAppOnTopChanged(appOnTop);
 }
 
-void AbstractViewInspector::changeToColorPickerTool()
-{
-    changeTool(InspectorProtocol::ColorPickerTool);
-}
-
 void AbstractViewInspector::changeToInspectTool()
 {
     changeTool(InspectorProtocol::InspectTool);
@@ -273,9 +268,6 @@ bool AbstractViewInspector::keyReleaseEvent(QKeyEvent *event)
 //    case Qt::Key_M:
 //        changeTool(InspectorProtocol::SelectMarqueeTool);
 //        break;
-    case Qt::Key_I:
-        changeTool(InspectorProtocol::ColorPickerTool);
-        break;
     case Qt::Key_Space:
         setAnimationPaused(!animationPaused());
         break;
@@ -485,17 +477,6 @@ void AbstractViewInspector::sendShowAppOnTop(bool showAppOnTop)
     QDataStream ds(&message, QIODevice::WriteOnly);
 
     ds << InspectorProtocol::ShowAppOnTop << showAppOnTop;
-
-    m_debugService->sendMessage(message);
-}
-
-void AbstractViewInspector::sendColorChanged(const QColor &color)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-
-    ds << InspectorProtocol::ColorChanged
-       << color;
 
     m_debugService->sendMessage(message);
 }

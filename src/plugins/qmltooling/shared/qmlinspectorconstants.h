@@ -53,7 +53,6 @@ enum DesignTool {
     MarqueeSelectionToolMode = 2,
     MoveToolMode = 3,
     ResizeToolMode = 4,
-    ColorPickerMode = 5,
     ZoomMode = 6
 };
 

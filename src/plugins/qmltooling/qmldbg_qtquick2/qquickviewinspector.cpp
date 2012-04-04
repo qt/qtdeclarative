@@ -163,10 +163,6 @@ void QQuickViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
 void QQuickViewInspector::changeTool(InspectorProtocol::Tool tool)
 {
     switch (tool) {
-    case InspectorProtocol::ColorPickerTool:
-        // TODO
-        emit colorPickerActivated();
-        break;
     case InspectorProtocol::SelectMarqueeTool:
         // TODO
         emit marqueeSelectToolActivated();
