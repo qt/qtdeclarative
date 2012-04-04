@@ -1522,8 +1522,9 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             if (QObject *o = *(QObject **)value.constData()) {
                 valueType = o->metaObject()->className();
 
-                const QMetaObject *propertyMetaObject = rawMetaObjectForType(QQmlEnginePrivate::get(engine), type);
-                propertyType = propertyMetaObject->className();
+                if (const QMetaObject *propertyMetaObject = rawMetaObjectForType(QQmlEnginePrivate::get(engine), type)) {
+                    propertyType = propertyMetaObject->className();
+                }
             }
         } else if (value.userType() != QVariant::Invalid) {
             valueType = QMetaType::typeName(value.userType());

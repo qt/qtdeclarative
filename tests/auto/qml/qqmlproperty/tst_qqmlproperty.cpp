@@ -1736,6 +1736,10 @@ void tst_qqmlproperty::warnOnInvalidBinding()
     expectedWarning = testUrl.toString() + QString::fromLatin1(":7:36: Unable to assign QQuickText to QQuickRectangle");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
+    // V8 error message for invalid binding to anchor
+    expectedWarning = testUrl.toString() + QString::fromLatin1(":14: Unable to assign QQuickItem_QML_7 to QQuickAnchorLine");
+    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
+
     QQmlComponent component(&engine, testUrl);
     QObject *obj = component.create();
     QVERIFY(obj);

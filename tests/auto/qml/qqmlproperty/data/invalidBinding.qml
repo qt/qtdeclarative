@@ -10,5 +10,7 @@ Item {
 
     Text {
         id: myText
+
+        anchors.verticalCenter: parent // invalid binding
     }
 }
