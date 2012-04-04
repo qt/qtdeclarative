@@ -57,7 +57,6 @@ private slots:
     void restoreBinding();
     void restoreBindingWithLoop();
     void deletedObject();
-    void replaceBinding();
 
 private:
     QQmlEngine engine;
@@ -191,17 +190,6 @@ void tst_qquickbinding::deletedObject()
     rect->setProperty("activateBinding", true);
 
     delete rect;
-}
-
-void tst_qquickbinding::replaceBinding()
-{
-    QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("replaceBinding.qml"));
-    QObject *obj = c.create();
-    QVERIFY(obj != 0);
-
-    QVERIFY(obj->property("success").toBool());
-    delete obj;
 }
 
 QTEST_MAIN(tst_qquickbinding)

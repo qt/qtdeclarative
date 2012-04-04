@@ -79,15 +79,7 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtQml/qjsvalue.h>
 
-#include <utility>
-
 QT_BEGIN_NAMESPACE
-
-template <typename T1, typename T2>
-uint qHash(const std::pair<T1, T2> &p)
-{
-    return qHash(p.first) ^ qHash(p.second);
-}
 
 using namespace QQmlVMETypes;
 
@@ -1224,40 +1216,18 @@ QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
     {
     QQmlTrace trace("VME Binding Enable");
     trace.event("begin binding eval");
+    while (!bindValues.isEmpty()) {
+        QQmlAbstractBinding *b = bindValues.pop();
 
-    size_t bindValuesRemaining = bindValues.count();
-    if (bindValuesRemaining > 0) {
-        typedef std::pair<QObject *, int> TargetProperty;
-
-        QSet<TargetProperty> boundProperties;
-        boundProperties.reserve(bindValuesRemaining - 1);
-
-        while (bindValuesRemaining > 0) {
-            QQmlAbstractBinding *b = bindValues.pop();
-            --bindValuesRemaining;
-
-            if (b) {
-                b->m_mePtr = 0;
-
-                TargetProperty property(std::make_pair(b->object(), b->propertyIndex()));
-                if (!boundProperties.contains(property)) {
-                    // We have not assigned a binding to this property yet
-                    b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
-                                        QQmlPropertyPrivate::DontRemoveBinding);
-
-                    if (bindValuesRemaining > 0) {
-                        boundProperties.insert(property);
-                    }
-                } else {
-                    b->destroy();
-                }
-            }
-
-            if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-                return 0;
+        if (b) {
+            b->m_mePtr = 0;
+            b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
+                                QQmlPropertyPrivate::DontRemoveBinding);
         }
-    }
 
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
+            return 0;
+    }
     bindValues.deallocate();
     }
 
