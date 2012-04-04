@@ -252,6 +252,7 @@ private slots:
     void switchStatement();
     void withStatement();
     void tryStatement();
+    void replaceBinding();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -6414,6 +6415,18 @@ void tst_qqmlecmascript::registeredFlagMethod()
     QCOMPARE(object->buttons(), Qt::RightButton);
 
     delete object;
+}
+
+// QTBUG-23138
+void tst_qqmlecmascript::replaceBinding()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("replaceBinding.qml"));
+    QObject *obj = c.create();
+    QVERIFY(obj != 0);
+
+    QVERIFY(obj->property("success").toBool());
+    delete obj;
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

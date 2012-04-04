@@ -205,13 +205,19 @@ inline bool fastHasBinding(QObject *o, int index)
 {
     QQmlData *ddata = static_cast<QQmlData *>(QObjectPrivate::get(o)->declarativeData);
 
+    index &= 0xFFFFFF; // To handle value types
+
     return ddata && (ddata->bindingBitsSize > index) && 
            (ddata->bindingBits[index / 32] & (1 << (index % 32)));
 }
 
 static void removeBindingOnProperty(QObject *o, int index)
 {
-    QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, index, -1, 0);
+    int coreIndex = index & 0xFFFFFF;
+    int valueTypeIndex = index & 0xFF000000;
+    if (!valueTypeIndex) valueTypeIndex = -1;
+
+    QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, coreIndex, valueTypeIndex, 0);
     if (binding) binding->destroy();
 }
 
@@ -782,6 +788,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 Q_ASSERT(bind->propertyIndex() == QDPP::bindingIndex(instr.property));
                 Q_ASSERT(bind->object() == target);
 
+                CLEAN_PROPERTY(target, QDPP::bindingIndex(instr.property));
+
                 bind->addToObject();
             }
         QML_END_INSTR(StoreBinding)
@@ -804,6 +812,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             Q_ASSERT(binding->propertyIndex() == (property & 0xFF00FFFF));
             Q_ASSERT(binding->object() == target);
+
+            CLEAN_PROPERTY(target, property & 0xFF00FFFF);
 
             binding->addToObject();
         QML_END_INSTR(StoreV4Binding)
@@ -834,6 +844,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                     typedef QQmlPropertyPrivate QDPP;
                     Q_ASSERT(binding->propertyIndex() == QDPP::bindingIndex(instr.property));
                     Q_ASSERT(binding->object() == target);
+
+                    CLEAN_PROPERTY(target, QDPP::bindingIndex(instr.property));
 
                     binding->addToObject();
                 }
