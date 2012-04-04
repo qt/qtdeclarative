@@ -168,14 +168,9 @@ void AbstractViewInspector::changeToColorPickerTool()
     changeTool(InspectorProtocol::ColorPickerTool);
 }
 
-void AbstractViewInspector::changeToZoomTool()
+void AbstractViewInspector::changeToInspectTool()
 {
-    changeTool(InspectorProtocol::ZoomTool);
-}
-
-void AbstractViewInspector::changeToSingleSelectTool()
-{
-    changeTool(InspectorProtocol::SelectTool);
+    changeTool(InspectorProtocol::InspectTool);
 }
 
 void AbstractViewInspector::changeToMarqueeSelectTool()
@@ -272,7 +267,7 @@ bool AbstractViewInspector::keyReleaseEvent(QKeyEvent *event)
 {
     switch (event->key()) {
     case Qt::Key_V:
-        changeTool(InspectorProtocol::SelectTool);
+        changeTool(InspectorProtocol::InspectTool);
         break;
 // disabled because multiselection does not do anything useful without design mode
 //    case Qt::Key_M:
@@ -280,9 +275,6 @@ bool AbstractViewInspector::keyReleaseEvent(QKeyEvent *event)
 //        break;
     case Qt::Key_I:
         changeTool(InspectorProtocol::ColorPickerTool);
-        break;
-    case Qt::Key_Z:
-        changeTool(InspectorProtocol::ZoomTool);
         break;
     case Qt::Key_Space:
         setAnimationPaused(!animationPaused());

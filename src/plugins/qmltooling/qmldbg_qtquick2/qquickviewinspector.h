@@ -55,9 +55,8 @@ QT_END_NAMESPACE
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
-class SelectionTool;
+class InspectTool;
 class SelectionHighlight;
-class ZoomTool;
 
 class QQuickViewInspector : public AbstractViewInspector
 {
@@ -99,8 +98,7 @@ private:
     QQuickView *m_view;
     QQuickItem *m_overlay;
 
-    SelectionTool *m_selectionTool;
-    ZoomTool *m_zoomTool;
+    InspectTool *m_inspectTool;
 
     QList<QWeakPointer<QQuickItem> > m_selectedItems;
     QHash<QQuickItem*, SelectionHighlight*> m_highlightItems;

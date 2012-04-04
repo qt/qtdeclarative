@@ -109,8 +109,7 @@ signals:
     void showAppOnTopChanged(bool showAppOnTop);
     void reloadRequested();
     void marqueeSelectToolActivated();
-    void selectToolActivated();
-    void zoomToolActivated();
+    void inspectToolActivated();
     void colorPickerActivated();
     void selectedColorChanged(const QColor &color);
 
@@ -140,7 +139,7 @@ private:
 
     void changeToColorPickerTool();
     void changeToZoomTool();
-    void changeToSingleSelectTool();
+    void changeToInspectTool();
     void changeToMarqueeSelectTool();
 
     virtual void setDesignModeBehavior(bool value);

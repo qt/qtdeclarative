@@ -79,8 +79,7 @@ public:
     enum Tool {
         ColorPickerTool,
         SelectMarqueeTool,
-        SelectTool,
-        ZoomTool
+        InspectTool
     };
 
     static inline QString toString(Message message)

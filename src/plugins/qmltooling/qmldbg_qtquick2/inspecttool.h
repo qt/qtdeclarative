@@ -39,54 +39,80 @@
 **
 ****************************************************************************/
 
-#include "selectiontool.h"
+#ifndef INSPECTTOOL_H
+#define INSPECTTOOL_H
 
-#include "highlight.h"
-#include "qquickviewinspector.h"
+#include "abstracttool.h"
 
-#include <QtGui/QMouseEvent>
-#include <QtQuick/QQuickView>
-#include <QtQuick/QQuickItem>
+#include <QtCore/QPointF>
+#include <QtCore/QPointer>
+
+QT_FORWARD_DECLARE_CLASS(QQuickView)
+QT_FORWARD_DECLARE_CLASS(QQuickItem)
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
-SelectionTool::SelectionTool(QQuickViewInspector *inspector) :
-    AbstractTool(inspector),
-    m_hoverHighlight(new HoverHighlight(inspector->overlay()))
-{
-}
+class QQuickViewInspector;
+class HoverHighlight;
 
-void SelectionTool::leaveEvent(QEvent *)
+class InspectTool : public AbstractTool
 {
-    m_hoverHighlight->setVisible(false);
-}
+    Q_OBJECT
+public:
+    enum ZoomDirection {
+        ZoomIn,
+        ZoomOut
+    };
 
-void SelectionTool::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        if (QQuickItem *item = inspector()->topVisibleItemAt(event->pos()))
-            inspector()->setSelectedItems(QList<QQuickItem*>() << item);
-    } else if (event->button() == Qt::RightButton) {
-        // todo: Show context menu
-    }
-}
+    InspectTool(QQuickViewInspector *inspector, QQuickView *view);
+    ~InspectTool();
 
-void SelectionTool::hoverMoveEvent(QMouseEvent *event)
-{
-    QQuickItem *item = inspector()->topVisibleItemAt(event->pos());
-    if (!item) {
-        m_hoverHighlight->setVisible(false);
-    } else {
-        m_hoverHighlight->setItem(item);
-        m_hoverHighlight->setVisible(true);
-    }
-}
+    void leaveEvent(QEvent *);
 
-QQuickViewInspector *SelectionTool::inspector() const
-{
-    return static_cast<QQuickViewInspector*>(AbstractTool::inspector());
-}
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *) {}
+
+    void hoverMoveEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *);
+
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *);
+
+    void touchEvent(QTouchEvent *event);
+
+private:
+    QQuickViewInspector *inspector() const;
+    qreal nextZoomScale(ZoomDirection direction);
+    void scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter);
+    void zoomTo100();
+    void zoomIn();
+    void zoomOut();
+    void initializeDrag(const QPointF &pos);
+    void dragItemToPosition();
+    void moveItem(bool valid);
+
+private:
+    bool m_originalSmooth;
+    bool m_dragStarted;
+    bool m_pinchStarted;
+    QPointer<QQuickItem> m_rootItem;
+    QPointF m_adjustedOrigin;
+    QPointF m_dragStartPosition;
+    QPointF m_mousePosition;
+    QPointF m_originalPosition;
+    qreal m_currentScale;
+    qreal m_smoothScaleFactor;
+    qreal m_minScale;
+    qreal m_maxScale;
+    qreal m_originalScale;
+
+    HoverHighlight *m_hoverHighlight;
+};
 
 } // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+#endif // INSPECTTOOL_H

@@ -39,14 +39,19 @@
 **
 ****************************************************************************/
 
-#include "zoomtool.h"
+#include "inspecttool.h"
+
+#include "highlight.h"
 #include "qquickviewinspector.h"
 
 #include <QtCore/QLineF>
+
 #include <QtGui/QMouseEvent>
 #include <QtGui/QWheelEvent>
 #include <QtGui/QTouchEvent>
 #include <QtGui/QKeyEvent>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QStyleHints>
 
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
@@ -54,15 +59,15 @@
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
-ZoomTool::ZoomTool(QQuickViewInspector *inspector, QQuickView *view) :
+InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     AbstractTool(inspector),
     m_dragStarted(false),
     m_pinchStarted(false),
     m_currentScale(1.0f),
-    m_smoothScaleFactor(0.05f),
+    m_smoothScaleFactor(Constants::ZoomSnapDelta),
     m_minScale(0.125f),
     m_maxScale(48.0f),
-    m_tapScaleCounter(0)
+    m_hoverHighlight(new HoverHighlight(inspector->overlay()))
 {
     m_rootItem = view->rootItem();
     m_originalSmooth = m_rootItem->smooth();
@@ -72,7 +77,7 @@ ZoomTool::ZoomTool(QQuickViewInspector *inspector, QQuickView *view) :
     m_originalScale = m_rootItem->scale();
 }
 
-ZoomTool::~ZoomTool()
+InspectTool::~InspectTool()
 {
     // restoring the original states.
     if (m_rootItem) {
@@ -83,40 +88,41 @@ ZoomTool::~ZoomTool()
     }
 }
 
-void ZoomTool::mousePressEvent(QMouseEvent *event)
+void InspectTool::leaveEvent(QEvent *)
+{
+    m_hoverHighlight->setVisible(false);
+}
+
+void InspectTool::mousePressEvent(QMouseEvent *event)
 {
     m_mousePosition = event->posF();
-    if (event->buttons() & Qt::LeftButton) {
-        m_dragStartPosition = event->posF();
-        m_dragStarted = false;
+    if (event->button() == Qt::LeftButton) {
+        if (QQuickItem *item = inspector()->topVisibleItemAt(event->pos()))
+            inspector()->setSelectedItems(QList<QQuickItem*>() << item);
+        initializeDrag(event->posF());
+    } else if (event->button() == Qt::RightButton) {
+        // todo: Show context menu
     }
 }
 
-void ZoomTool::mouseMoveEvent(QMouseEvent *event)
+void InspectTool::mouseMoveEvent(QMouseEvent *event)
 {
-    if (m_pinchStarted)
-        return;
-
     m_mousePosition = event->posF();
-    if (!m_dragStarted
-            && event->buttons() & Qt::LeftButton
-            && ((m_dragStartPosition - event->posF()).manhattanLength()
-                > Constants::DragStartDistance)) {
-        m_dragStarted = true;
-    }
-    if (m_dragStarted) {
-        m_adjustedOrigin += event->posF() - m_dragStartPosition;
-        m_dragStartPosition = event->posF();
-        m_rootItem->setPos(m_adjustedOrigin);
+    moveItem(event->buttons() & Qt::LeftButton);
+}
+
+void InspectTool::hoverMoveEvent(QMouseEvent *event)
+{
+    QQuickItem *item = inspector()->topVisibleItemAt(event->pos());
+    if (!item) {
+        m_hoverHighlight->setVisible(false);
+    } else {
+        m_hoverHighlight->setItem(item);
+        m_hoverHighlight->setVisible(true);
     }
 }
 
-void ZoomTool::hoverMoveEvent(QMouseEvent *event)
-{
-    m_mousePosition = event->posF();
-}
-
-void ZoomTool::wheelEvent(QWheelEvent *event)
+void InspectTool::wheelEvent(QWheelEvent *event)
 {
     if (event->orientation() != Qt::Vertical)
         return;
@@ -135,13 +141,7 @@ void ZoomTool::wheelEvent(QWheelEvent *event)
     }
 }
 
-void ZoomTool::mouseDoubleClickEvent(QMouseEvent *event)
-{
-    m_mousePosition = event->posF();
-    zoomTo100();
-}
-
-void ZoomTool::keyReleaseEvent(QKeyEvent *event)
+void InspectTool::keyReleaseEvent(QKeyEvent *event)
 {
     switch (event->key()) {
     case Qt::Key_Plus:
@@ -168,16 +168,24 @@ void ZoomTool::keyReleaseEvent(QKeyEvent *event)
     }
 }
 
-void ZoomTool::touchEvent(QTouchEvent *event)
+void InspectTool::touchEvent(QTouchEvent *event)
 {
     QList<QTouchEvent::TouchPoint> touchPoints = event->touchPoints();
 
     switch (event->type()) {
     case QEvent::TouchBegin:
-        // fall through..
+        if (touchPoints.count() == 1 && (event->touchPointStates() & Qt::TouchPointPressed)) {
+            m_mousePosition = touchPoints.first().pos();
+            initializeDrag(touchPoints.first().pos());
+        }
+        break;
     case QEvent::TouchUpdate: {
-        if ((touchPoints.count() == 2)
-                && (!(event->touchPointStates() & Qt::TouchPointReleased))) {
+        if ((touchPoints.count() == 1)
+                && (event->touchPointStates() & Qt::TouchPointMoved)) {
+            m_mousePosition = touchPoints.first().pos();
+            moveItem(true);
+        } else if ((touchPoints.count() == 2)
+                   && (!(event->touchPointStates() & Qt::TouchPointReleased))) {
             // determine scale factor
             const QTouchEvent::TouchPoint &touchPoint0 = touchPoints.first();
             const QTouchEvent::TouchPoint &touchPoint1 = touchPoints.last();
@@ -190,7 +198,6 @@ void ZoomTool::touchEvent(QTouchEvent *event)
             QPointF newcenter = (touchPoint0.pos() + touchPoint1.pos()) / 2;
 
             m_pinchStarted = true;
-            m_tapScaleCounter = 0;
             scaleView(touchScaleFactor, newcenter, oldcenter);
         }
         break;
@@ -198,12 +205,6 @@ void ZoomTool::touchEvent(QTouchEvent *event)
     case QEvent::TouchEnd: {
         if (m_pinchStarted) {
             m_pinchStarted = false;
-        } else if ((touchPoints.count() == 1)
-                   &&(!m_dragStarted)) {
-            ++m_tapScaleCounter;
-            qreal factor = 1.0f + (1.0f / (m_tapScaleCounter + 1));
-            scaleView(factor, touchPoints.first().pos(),
-                      touchPoints.first().pos());
         }
         break;
     }
@@ -212,7 +213,7 @@ void ZoomTool::touchEvent(QTouchEvent *event)
     }
 }
 
-void ZoomTool::scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter)
+void InspectTool::scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter)
 {
     if (((m_currentScale * factor) > m_maxScale)
             || ((m_currentScale * factor) < m_minScale)) {
@@ -226,29 +227,28 @@ void ZoomTool::scaleView(const qreal &factor, const QPointF &newcenter, const QP
     m_rootItem->setPos(m_adjustedOrigin);
 }
 
-void ZoomTool::zoomIn()
+void InspectTool::zoomIn()
 {
     qreal newScale = nextZoomScale(ZoomIn);
     scaleView(newScale / m_currentScale, m_mousePosition, m_mousePosition);
 }
 
-void ZoomTool::zoomOut()
+void InspectTool::zoomOut()
 {
     qreal newScale = nextZoomScale(ZoomOut);
     scaleView(newScale / m_currentScale, m_mousePosition, m_mousePosition);
 }
 
-void ZoomTool::zoomTo100()
+void InspectTool::zoomTo100()
 {
     m_currentScale = 1.0;
     m_adjustedOrigin = QPointF(0, 0);
-    m_tapScaleCounter = 0;
 
     m_rootItem->setPos(m_adjustedOrigin);
     m_rootItem->setScale(m_currentScale);
 }
 
-qreal ZoomTool::nextZoomScale(ZoomDirection direction)
+qreal InspectTool::nextZoomScale(ZoomDirection direction)
 {
     static QList<qreal> zoomScales =
             QList<qreal>()
@@ -286,6 +286,39 @@ qreal ZoomTool::nextZoomScale(ZoomDirection direction)
     }
 
     return 1.0f;
+}
+
+void InspectTool::initializeDrag(const QPointF &pos)
+{
+    m_dragStartPosition = pos;
+    m_dragStarted = false;
+}
+
+void InspectTool::dragItemToPosition()
+{
+    m_adjustedOrigin += m_mousePosition - m_dragStartPosition;
+    m_dragStartPosition = m_mousePosition;
+    m_rootItem->setPos(m_adjustedOrigin);
+}
+
+void InspectTool::moveItem(bool valid)
+{
+    if (m_pinchStarted)
+        return;
+
+    if (!m_dragStarted
+            && valid
+            && ((m_dragStartPosition - m_mousePosition).manhattanLength()
+                > qApp->styleHints()->startDragDistance())) {
+        m_dragStarted = true;
+    }
+    if (m_dragStarted)
+        dragItemToPosition();
+}
+
+QQuickViewInspector *InspectTool::inspector() const
+{
+    return static_cast<QQuickViewInspector*>(AbstractTool::inspector());
 }
 
 } // namespace QtQuick2

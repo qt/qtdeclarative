@@ -57,10 +57,6 @@ enum DesignTool {
     ZoomMode = 6
 };
 
-static const int DragStartTime = 50;
-
-static const int DragStartDistance = 20;
-
 static const double ZoomSnapDelta = 0.04;
 
 static const int EditorItemDataKey = 1000;
