@@ -1048,19 +1048,12 @@ released the handle.
 */
 v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 {
-    if (!object)
+    if (QQmlData::wasDeleted(object))
         return v8::Null();
-
-    if (QObjectPrivate::get(object)->wasDeleted)
-       return v8::Null();
 
     QQmlData *ddata = QQmlData::get(object, true);
-
     if (!ddata) 
         return v8::Undefined();
-
-    if (ddata->isQueuedForDeletion)
-        return v8::Null();
 
     if (ddata->v8objectid == m_id && !ddata->v8object.IsEmpty()) {
         // We own the v8object 
