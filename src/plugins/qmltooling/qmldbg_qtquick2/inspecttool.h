@@ -46,6 +46,7 @@
 
 #include <QtCore/QPointF>
 #include <QtCore/QPointer>
+#include <QtCore/QTimer>
 
 QT_FORWARD_DECLARE_CLASS(QQuickView)
 QT_FORWARD_DECLARE_CLASS(QQuickItem)
@@ -72,8 +73,8 @@ public:
 
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
-    void mouseReleaseEvent(QMouseEvent *) {}
-    void mouseDoubleClickEvent(QMouseEvent *) {}
+    void mouseReleaseEvent(QMouseEvent *);
+    void mouseDoubleClickEvent(QMouseEvent *);
 
     void hoverMoveEvent(QMouseEvent *);
     void wheelEvent(QWheelEvent *);
@@ -87,17 +88,23 @@ private:
     QQuickViewInspector *inspector() const;
     qreal nextZoomScale(ZoomDirection direction);
     void scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter);
-    void zoomTo100();
     void zoomIn();
     void zoomOut();
     void initializeDrag(const QPointF &pos);
     void dragItemToPosition();
     void moveItem(bool valid);
+    void selectNextItem();
+    void selectItem();
+
+private slots:
+    void zoomTo100();
 
 private:
     bool m_originalSmooth;
     bool m_dragStarted;
     bool m_pinchStarted;
+    bool m_didPressAndHold;
+    bool m_tapEvent;
     QPointer<QQuickItem> m_rootItem;
     QPointF m_adjustedOrigin;
     QPointF m_dragStartPosition;
@@ -108,8 +115,12 @@ private:
     qreal m_minScale;
     qreal m_maxScale;
     qreal m_originalScale;
+    ulong m_touchTimestamp;
+    QTimer m_pressAndHoldTimer;
 
     HoverHighlight *m_hoverHighlight;
+    QQuickItem *m_lastItem;
+    QQuickItem *m_lastClickedItem;
 };
 
 } // namespace QtQuick2
