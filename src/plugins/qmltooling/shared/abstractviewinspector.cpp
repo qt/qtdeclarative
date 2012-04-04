@@ -100,6 +100,7 @@ void AbstractViewInspector::setDesignModeBehavior(bool value)
         return;
 
     m_designModeBehavior = value;
+    m_currentTool->enable(m_designModeBehavior);
     emit designModeBehaviorChanged(value);
     sendDesignModeBehavior(value);
 }

@@ -61,40 +61,52 @@ namespace QtQuick2 {
 
 InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     AbstractTool(inspector),
+    m_originalSmooth(view->rootItem()->smooth()),
     m_dragStarted(false),
     m_pinchStarted(false),
     m_didPressAndHold(false),
     m_tapEvent(false),
+    m_rootItem(view->rootItem()),
+    m_originalPosition(view->rootItem()->pos()),
     m_currentScale(1.0f),
     m_smoothScaleFactor(Constants::ZoomSnapDelta),
     m_minScale(0.125f),
     m_maxScale(48.0f),
+    m_originalScale(view->rootItem()->scale()),
     m_touchTimestamp(0),
     m_hoverHighlight(new HoverHighlight(inspector->overlay())),
     m_lastItem(0),
     m_lastClickedItem(0)
 {
-    m_rootItem = view->rootItem();
-    m_originalSmooth = m_rootItem->smooth();
-    if (!m_originalSmooth)
-        m_rootItem->setSmooth(true);
-    m_originalPosition = m_rootItem->pos();
-    m_originalScale = m_rootItem->scale();
-
     //Press and Hold Timer
     m_pressAndHoldTimer.setSingleShot(true);
     m_pressAndHoldTimer.setInterval(Constants::PressAndHoldTimeout);
     connect(&m_pressAndHoldTimer, SIGNAL(timeout()), SLOT(zoomTo100()));
+    enable(true);
 }
 
 InspectTool::~InspectTool()
 {
-    // restoring the original states.
-    if (m_rootItem) {
-        m_rootItem->setScale(m_originalScale);
-        m_rootItem->setPos(m_originalPosition);
-        if (!m_originalSmooth)
+    enable(false);
+}
+
+void InspectTool::enable(bool enable)
+{
+    if (!enable) {
+        inspector()->setSelectedItems(QList<QQuickItem*>());
+        // restoring the original states.
+        if (m_rootItem) {
+            m_rootItem->setScale(m_originalScale);
+            m_rootItem->setPos(m_originalPosition);
             m_rootItem->setSmooth(m_originalSmooth);
+        }
+    } else {
+        if (m_rootItem) {
+            m_originalSmooth = m_rootItem->smooth();
+            m_originalScale = m_rootItem->scale();
+            m_originalPosition = m_rootItem->pos();
+            m_rootItem->setSmooth(true);
+        }
     }
 }
 

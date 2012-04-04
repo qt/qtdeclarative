@@ -69,6 +69,8 @@ public:
     InspectTool(QQuickViewInspector *inspector, QQuickView *view);
     ~InspectTool();
 
+    void enable(bool enable);
+
     void leaveEvent(QEvent *);
 
     void mousePressEvent(QMouseEvent *);
