@@ -66,46 +66,46 @@ namespace {
 struct Register {
     typedef QQmlRegisterType Type;
 
-    void setUndefined() { dataType = UndefinedType; }
-    void setNull() { dataType = NullType; }
-    void setNaN() { setnumber(qSNaN()); }
-    bool isUndefined() const { return dataType == UndefinedType; }
+    inline void setUndefined() { dataType = UndefinedType; }
+    inline void setNull() { dataType = NullType; }
+    inline void setNaN() { setnumber(qSNaN()); }
+    inline bool isUndefined() const { return dataType == UndefinedType; }
 
-    void setQObject(QObject *o) { qobjectValue = o; dataType = QObjectStarType; }
-    QObject *getQObject() const { return qobjectValue; }
+    inline void setQObject(QObject *o) { qobjectValue = o; dataType = QObjectStarType; }
+    inline QObject *getQObject() const { return qobjectValue; }
 
-    void setnumber(double v) { numberValue = v; dataType = NumberType; }
-    double getnumber() const { return numberValue; }
-    double &getnumberref() { return numberValue; }
+    inline void setnumber(double v) { numberValue = v; dataType = NumberType; }
+    inline double getnumber() const { return numberValue; }
+    inline double &getnumberref() { return numberValue; }
 
-    void setfloat(float v) { floatValue = v; dataType = FloatType; }
-    float getfloat() const { return floatValue; }
-    float &getfloatref() { return floatValue; }
+    inline void setfloat(float v) { floatValue = v; dataType = FloatType; }
+    inline float getfloat() const { return floatValue; }
+    inline float &getfloatref() { return floatValue; }
 
-    void setint(int v) { intValue = v; dataType = IntType; }
-    int getint() const { return intValue; }
-    int &getintref() { return intValue; }
+    inline void setint(int v) { intValue = v; dataType = IntType; }
+    inline int getint() const { return intValue; }
+    inline int &getintref() { return intValue; }
 
-    void setbool(bool v) { boolValue = v; dataType = BoolType; }
-    bool getbool() const { return boolValue; }
-    bool &getboolref() { return boolValue; }
+    inline void setbool(bool v) { boolValue = v; dataType = BoolType; }
+    inline bool getbool() const { return boolValue; }
+    inline bool &getboolref() { return boolValue; }
 
-    QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
-    QString *getstringptr() { return (QString *)typeDataPtr(); }
-    QUrl *geturlptr() { return (QUrl *)typeDataPtr(); }
-    QColor *getcolorptr() { return (QColor *)typeDataPtr(); }
-    const QVariant *getvariantptr() const { return (QVariant *)typeDataPtr(); }
-    const QString *getstringptr() const { return (QString *)typeDataPtr(); }
-    const QUrl *geturlptr() const { return (QUrl *)typeDataPtr(); }
-    const QColor *getcolorptr() const { return (QColor *)typeDataPtr(); }
+    inline QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
+    inline QString *getstringptr() { return (QString *)typeDataPtr(); }
+    inline QUrl *geturlptr() { return (QUrl *)typeDataPtr(); }
+    inline QColor *getcolorptr() { return (QColor *)typeDataPtr(); }
+    inline const QVariant *getvariantptr() const { return (QVariant *)typeDataPtr(); }
+    inline const QString *getstringptr() const { return (QString *)typeDataPtr(); }
+    inline const QUrl *geturlptr() const { return (QUrl *)typeDataPtr(); }
+    inline const QColor *getcolorptr() const { return (QColor *)typeDataPtr(); }
 
-    void *typeDataPtr() { return (void *)&data; }
-    void *typeMemory() { return (void *)data; }
-    const void *typeDataPtr() const { return (void *)&data; }
-    const void *typeMemory() const { return (void *)data; }
+    inline void *typeDataPtr() { return (void *)&data; }
+    inline void *typeMemory() { return (void *)data; }
+    inline const void *typeDataPtr() const { return (void *)&data; }
+    inline const void *typeMemory() const { return (void *)data; }
 
-    Type gettype() const { return dataType; }
-    void settype(Type t) { dataType = t; }
+    inline Type gettype() const { return dataType; }
+    inline void settype(Type t) { dataType = t; }
 
     Type dataType;     // Type of data
     union {
