@@ -121,11 +121,6 @@ public:
     void extractVersion(int *maj, int *min) const;
 
     QQmlScript::LocationSpan location;
-
-    bool operator<(const Import& other) const {
-        // Shorter URIs first, so 'import X' is before 'import X.Y'
-        return (uri.length() < other.uri.length());
-    }
 };
 
 class Object;

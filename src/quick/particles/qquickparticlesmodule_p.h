@@ -39,16 +39,16 @@
 **
 ****************************************************************************/
 
-#ifndef QQuickPARTICLESMODULE_H
-#define QQuickPARTICLESMODULE_H
+#ifndef QQUICKPARTICLESMODULE_H
+#define QQUICKPARTICLESMODULE_H
 
-#include <qqml.h>
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickParticlesModule
+class Q_QUICK_PRIVATE_EXPORT QQuickParticlesModule
 {
 public:
     static void defineModule();
@@ -58,4 +58,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QQuickPARTICLESMODULE_H
+#endif // QQUICKPARTICLESMODULE_H

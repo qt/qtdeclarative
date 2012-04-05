@@ -1345,11 +1345,6 @@ bool QQmlScript::Parser::parse(const QByteArray &qmldata, const QUrl &url,
             _errors[ii].setUrl(url);
     }
 
-    if (_errors.isEmpty()) {
-        // Sort the imports into desired order
-        qStableSort(_imports.begin(), _imports.end());
-    }
-
     return _errors.isEmpty();
 }
 

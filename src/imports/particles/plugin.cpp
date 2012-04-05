@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the plugins of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,24 +39,27 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKWINDOWMODULE_H
-#define QQUICKWINDOWMODULE_H
+#include <QtQml/qqmlextensionplugin.h>
 
-#include <private/qtquickglobal_p.h>
-
-QT_BEGIN_HEADER
+#include <private/qquickparticlesmodule_p.h>
 
 QT_BEGIN_NAMESPACE
 
-
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowModule
+//![class decl]
+class QtQuick2ParticlesPlugin : public QQmlExtensionPlugin
 {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 public:
-    static void defineModule();
+    virtual void registerTypes(const char *uri)
+    {
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Particles"));
+        Q_UNUSED(uri);
+        QQuickParticlesModule::defineModule();
+    }
 };
+//![class decl]
 
 QT_END_NAMESPACE
 
-QT_END_HEADER
-
-#endif
+#include "plugin.moc"

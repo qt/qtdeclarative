@@ -354,12 +354,12 @@ void tst_qqmlmoduleplugin::importsNested_data()
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("errorFile");
 
-    // Note: specific order required to induce failure (no other test case should import the
-    // plugin used for this test, or the alternate order test will pass spuriously)
-    QTest::newRow("alternateOrder") << "importsNested.1.qml" << QString();
-    QTest::newRow("expectedOrder") << "importsNested.2.qml" << QString();
+    // Note: no other test case should import the plugin used for this test, or the
+    // wrong order test will pass spuriously
+    QTest::newRow("wrongOrder") << "importsNested.1.qml" << "importsNested.1.errors.txt";
     QTest::newRow("missingImport") << "importsNested.3.qml" << "importsNested.3.errors.txt";
     QTest::newRow("invalidVersion") << "importsNested.4.qml" << "importsNested.4.errors.txt";
+    QTest::newRow("correctOrder") << "importsNested.2.qml" << QString();
 }
 void tst_qqmlmoduleplugin::importsNested()
 {

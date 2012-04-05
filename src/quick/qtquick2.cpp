@@ -44,8 +44,6 @@
 #include <private/qquickutilmodule_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <private/qquickitemsmodule_p.h>
-#include <private/qquickparticlesmodule_p.h>
-#include <private/qquickwindowmodule_p.h>
 
 #include <private/qqmlenginedebugservice_p.h>
 #include <private/qqmldebugstatesdelegate_p.h>
@@ -175,8 +173,6 @@ void QQmlQtQuick2Module::defineModule()
     QQuickUtilModule::defineModule();
     QQmlEnginePrivate::defineModule();
     QQuickItemsModule::defineModule();
-    QQuickParticlesModule::defineModule();
-    QQuickWindowModule::defineModule();
     QQmlValueTypeFactory::registerValueTypes();
 
     if (QQmlEngineDebugService::isDebuggingEnabled()) {

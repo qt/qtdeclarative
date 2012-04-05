@@ -1881,21 +1881,19 @@ void tst_qqmllanguage::importsOrder_data()
            << (!qmlCheckTypes()?"QQuickRectangle":"")
            << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest/ in version 1.0 and 1.4")
            << false;
-
-    // Note: imports are now reordered by increasing order of URI length
     QTest::newRow("installed import versus builtin 1") <<
-           "import com.nokia.installedtest0 1.5\n"
            "import com.nokia.installedtest 1.5\n"
+           "import QtQuick 2.0\n"
            "Rectangle {}"
            << (!qmlCheckTypes()?"QQuickRectangle":"")
-           << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in lib/com/nokia/installedtest0/ and in ")
+           << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in file://")
            << true;
     QTest::newRow("installed import versus builtin 2") <<
            "import QtQuick 2.0\n"
            "import com.nokia.installedtest 1.5\n"
            "Rectangle {}"
            << (!qmlCheckTypes()?"QQuickText":"")
-           << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in lib/com/nokia/installedtest/ and in ")
+           << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in lib/com/nokia/installedtest/ and in file://")
            << true;
     QTest::newRow("namespaces cannot be overridden by types 1") <<
            "import QtQuick 2.0 as Rectangle\n"
