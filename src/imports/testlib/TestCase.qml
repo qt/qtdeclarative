@@ -475,7 +475,6 @@ Item {
     function cleanupTestCase() {}
     function init() {}
     function cleanup() {}
-    function init_data() {}
 
     function qtest_runInternal(prop, arg) {
         try {
@@ -609,7 +608,7 @@ Item {
             }
             qtest_results.functionName = prop
 
-            if (!testCase.hasOwnProperty(datafunc))
+            if (!(datafunc in testCase))
                 datafunc = "init_data";
 
             if (datafunc in testCase) {
@@ -629,9 +628,13 @@ Item {
                             qtest_runFunction(prop, row)
                         qtest_results.dataTag = ""
                     }
-                    if (!haveData && datafunc != "init_data")
-                        qtest_results.warn("no data supplied for " + prop + "() by " + datafunc + "()"
-                                           , util.callerFile(), util.callerLine());
+                    if (!haveData) {
+                        if (datafunc === "init_data")
+                           qtest_runFunction(prop, null, isBenchmark)
+                        else
+                           qtest_results.warn("no data supplied for " + prop + "() by " + datafunc + "()"
+                                            , util.callerFile(), util.callerLine());
+                    }
                     qtest_results.clearTestTable()
                 }
             } else if (isBenchmark) {
