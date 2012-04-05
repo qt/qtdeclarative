@@ -2083,19 +2083,15 @@ void QQuickItem::stackBefore(const QQuickItem *sibling)
 
     QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(d->parentItem);
 
-    int myIndex = parentPrivate->childItems.indexOf(this);
-    int siblingIndex = parentPrivate->childItems.indexOf(const_cast<QQuickItem *>(sibling));
+    int myIndex = parentPrivate->childItems.lastIndexOf(this);
+    int siblingIndex = parentPrivate->childItems.lastIndexOf(const_cast<QQuickItem *>(sibling));
 
     Q_ASSERT(myIndex != -1 && siblingIndex != -1);
 
     if (myIndex == siblingIndex - 1)
         return;
 
-    parentPrivate->childItems.removeAt(myIndex);
-
-    if (myIndex < siblingIndex) --siblingIndex;
-
-    parentPrivate->childItems.insert(siblingIndex, this);
+    parentPrivate->childItems.move(myIndex, myIndex < siblingIndex ? siblingIndex - 1 : siblingIndex);
 
     parentPrivate->dirty(QQuickItemPrivate::ChildrenStackingChanged);
     parentPrivate->markSortedChildrenDirty(this);
@@ -2114,19 +2110,15 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
 
     QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(d->parentItem);
 
-    int myIndex = parentPrivate->childItems.indexOf(this);
-    int siblingIndex = parentPrivate->childItems.indexOf(const_cast<QQuickItem *>(sibling));
+    int myIndex = parentPrivate->childItems.lastIndexOf(this);
+    int siblingIndex = parentPrivate->childItems.lastIndexOf(const_cast<QQuickItem *>(sibling));
 
     Q_ASSERT(myIndex != -1 && siblingIndex != -1);
 
     if (myIndex == siblingIndex + 1)
         return;
 
-    parentPrivate->childItems.removeAt(myIndex);
-
-    if (myIndex < siblingIndex) --siblingIndex;
-
-    parentPrivate->childItems.insert(siblingIndex + 1, this);
+    parentPrivate->childItems.move(myIndex, myIndex > siblingIndex ? siblingIndex + 1 : siblingIndex);
 
     parentPrivate->dirty(QQuickItemPrivate::ChildrenStackingChanged);
     parentPrivate->markSortedChildrenDirty(this);
