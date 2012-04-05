@@ -287,7 +287,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
     This handler is called when the global drag threshold has been reached.
 
     This function is typically used when a MultiPointTouchAreas has been nested in a Flickable or another MultiPointTouchArea.
-    Wnen the threshold has been reached, and the handler called, you can determine whether or not the touch
+    When the threshold has been reached, and the handler called, you can determine whether or not the touch
     area should grab the current touch points. By default they will not be grabbed; to grab them call \c gesture.grab(). If the
     gesture is not grabbed, the nesting Flickable, for example, would also have an opportunity to grab.
 
