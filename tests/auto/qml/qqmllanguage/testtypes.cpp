@@ -81,6 +81,8 @@ void registerTypes()
     qmlRegisterType<MyEnum1Class>("Test",1,0,"MyEnum1Class");
     qmlRegisterType<MyEnum2Class>("Test",1,0,"MyEnum2Class");
     qmlRegisterType<MyEnumDerivedClass>("Test",1,0,"MyEnumDerivedClass");
+
+    qmlRegisterType<MyReceiversTestObject>("Test",1,0,"MyReceiversTestObject");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

@@ -146,6 +146,7 @@ private slots:
     void nestedComponentRoots();
     void registrationOrder();
     void readonly();
+    void receivers();
 
     void basicRemote_data();
     void basicRemote();
@@ -2281,6 +2282,18 @@ void tst_qqmllanguage::readonly()
     QCOMPARE(o->property("test1").toInt(), 10);
     QCOMPARE(o->property("test2").toInt(), 22);
     QCOMPARE(o->property("test3").toInt(), 2);
+
+    delete o;
+}
+
+void tst_qqmllanguage::receivers()
+{
+    QQmlComponent component(&engine, TEST_FILE("receivers.qml"));
+
+    MyReceiversTestObject *o = qobject_cast<MyReceiversTestObject*>(component.create());
+    QVERIFY(o != 0);
+    QCOMPARE(o->mySignalCount(), 1);
+    QCOMPARE(o->propChangedCount(), 2);
 
     delete o;
 }

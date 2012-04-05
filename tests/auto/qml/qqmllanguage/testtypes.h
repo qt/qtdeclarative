@@ -526,6 +526,24 @@ public:
     UnavailableType() {}
 };
 
+class MyReceiversTestObject : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(int prop READ prop NOTIFY propChanged)
+public:
+    MyReceiversTestObject()  {}
+
+    int prop() const { return 5; }
+
+    int mySignalCount() { return receivers(SIGNAL(mySignal())); }
+    int propChangedCount() { return receivers(SIGNAL(propChanged())); }
+
+signals:
+    void mySignal();
+    void propChanged();
+};
+
 class MyDotPropertyObject : public QObject
 {
     Q_OBJECT
@@ -907,6 +925,7 @@ QML_DECLARE_TYPE(MyRevisionedBaseClassUnregistered)
 QML_DECLARE_TYPE(MyRevisionedClass)
 QML_DECLARE_TYPE(MyRevisionedSubclass)
 QML_DECLARE_TYPE(MySubclass)
+QML_DECLARE_TYPE(MyReceiversTestObject)
 
 void registerTypes();
 

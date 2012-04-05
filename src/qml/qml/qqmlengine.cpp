@@ -457,6 +457,25 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     if (ep) QQmlNotifier::emitNotify(ep);
 }
 
+int QQmlData::receivers(QAbstractDeclarativeData *d, const QObject *, int index)
+{
+    return static_cast<QQmlData *>(d)->endpointCount(index);
+}
+
+int QQmlData::endpointCount(int index)
+{
+    int count = 0;
+    QQmlNotifierEndpoint *ep = notify(index);
+    if (!ep)
+        return count;
+    ++count;
+    while (ep->next) {
+        ++count;
+        ep = ep->next;
+    }
+    return count;
+}
+
 void QQmlEnginePrivate::init()
 {
     Q_Q(QQmlEngine);

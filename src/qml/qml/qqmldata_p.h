@@ -91,12 +91,14 @@ public:
         QAbstractDeclarativeData::parentChanged = parentChanged;
         QAbstractDeclarativeData::objectNameChanged = objectNameChanged;
         QAbstractDeclarativeData::signalEmitted = signalEmitted;
+        QAbstractDeclarativeData::receivers = receivers;
     }
 
     static void destroyed(QAbstractDeclarativeData *, QObject *);
     static void parentChanged(QAbstractDeclarativeData *, QObject *, QObject *);
     static void objectNameChanged(QAbstractDeclarativeData *, QObject *);
     static void signalEmitted(QAbstractDeclarativeData *, QObject *, int, void **);
+    static int receivers(QAbstractDeclarativeData *, const QObject *, int);
 
     void destroyed(QObject *);
     void parentChanged(QObject *, QObject *);
@@ -130,6 +132,7 @@ public:
     
     inline QQmlNotifierEndpoint *notify(int index);
     void addNotify(int index, QQmlNotifierEndpoint *);
+    int endpointCount(int index);
 
     // The context that created the C++ object
     QQmlContextData *context; 
