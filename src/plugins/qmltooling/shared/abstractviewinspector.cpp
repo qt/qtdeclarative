@@ -324,8 +324,8 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
             if (QObject *obj = QQmlDebugService::objectForId(debugId))
                 selectedObjects << obj;
         }
-
-        changeCurrentObjects(selectedObjects);
+        if (m_designModeBehavior)
+            changeCurrentObjects(selectedObjects);
         break;
     }
     case InspectorProtocol::Reload: {
