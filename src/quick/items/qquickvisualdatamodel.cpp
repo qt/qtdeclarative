@@ -204,6 +204,7 @@ QQuickVisualDataModel::~QQuickVisualDataModel()
             cacheItem->contextData = 0;
             cacheItem->scriptRef -= 1;
         }
+        cacheItem->groups &= ~Compositor::UnresolvedFlag;
         cacheItem->objectRef = 0;
         if (!cacheItem->isReferenced())
             delete cacheItem;
