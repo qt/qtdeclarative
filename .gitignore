@@ -127,6 +127,8 @@ tst_*~
 *.idb
 *.ilk
 *.pdb
+*.dll
+*.exp
 *.sln
 *.suo
 *.vcproj
@@ -254,6 +256,8 @@ src/qmltest/qtquicktestversion.h
 src/qtquick1/qtquick1version.h
 src/qmldevtools/qtqmldevtoolsversion.h
 src/quick/qtquickversion.h
+src/compatibility/qtdeclarativeversion.h
+src/qml/qtqmlversion.h
 
 tests/auto/*/*.o
 tests/auto/*/*.moc
