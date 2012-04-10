@@ -65,6 +65,7 @@
 #include <QtCore/qdebug.h>
 #include <private/qobject_p.h>
 #include <QSslError>
+#include <QQmlFile>
 
 #define IMAGEREQUEST_MAX_REQUEST_COUNT       8
 #define IMAGEREQUEST_MAX_REDIRECT_RECURSION 16
@@ -556,7 +557,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
         }
 
     } else {
-        QString lf = QQmlEnginePrivate::urlToLocalFileOrQrc(url);
+        QString lf = QQmlFile::urlToLocalFileOrQrc(url);
         if (!lf.isEmpty()) {
             // Image is local - load/decode immediately
             QImage image;
@@ -975,7 +976,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
             QQuickPixmap::tr("Failed to get image from provider: %1").arg(url.toString()));
     }
 
-    QString localFile = QQmlEnginePrivate::urlToLocalFileOrQrc(url);
+    QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
     if (localFile.isEmpty()) 
         return 0;
 

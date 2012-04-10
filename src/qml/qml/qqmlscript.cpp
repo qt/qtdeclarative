@@ -451,22 +451,6 @@ QStringList QQmlScript::Variant::asStringList() const
 //
 // Actual parser classes
 //
-void QQmlScript::Import::extractVersion(int *maj, int *min) const
-{
-    *maj = -1; *min = -1;
-
-    if (!version.isEmpty()) {
-        int dot = version.indexOf(QLatin1Char('.'));
-        if (dot < 0) {
-            *maj = version.toInt();
-            *min = 0;
-        } else {
-            *maj = version.left(dot).toInt();
-            *min = version.mid(dot+1).toInt();
-        }
-    }
-}
-
 namespace {
 
 class ProcessAST: protected AST::Visitor
@@ -525,6 +509,8 @@ public:
     virtual ~ProcessAST();
 
     void operator()(const QString &code, AST::Node *node);
+
+    static void extractVersion(QStringRef string, int *maj, int *min);
 
 protected:
 
@@ -659,6 +645,26 @@ Property *ProcessAST::currentProperty() const
 QString ProcessAST::qualifiedNameId() const
 {
     return _scope.join(QLatin1String("/"));
+}
+
+void ProcessAST::extractVersion(QStringRef string, int *maj, int *min)
+{
+    *maj = -1; *min = -1;
+
+    if (!string.isEmpty()) {
+
+        int dot = string.indexOf(QLatin1Char('.'));
+
+        if (dot < 0) {
+            *maj = string.toString().toInt();
+            *min = 0;
+        } else {
+            const QString *s = string.string();
+            int p = string.position();
+            *maj = QStringRef(s, p, dot).toString().toInt();
+            *min = QStringRef(s, p + dot + 1, string.size() - dot - 1).toString().toInt();
+        }
+    }
 }
 
 QString ProcessAST::asString(AST::UiQualifiedId *node) const
@@ -898,7 +904,7 @@ bool ProcessAST::visit(AST::UiImport *node)
     }
 
     if (node->versionToken.isValid()) {
-        import.version = textAt(node->versionToken);
+        extractVersion(textRefAt(node->versionToken), &import.majorVersion, &import.minorVersion);
     } else if (import.type == QQmlScript::Import::Library) {
         QQmlError error;
         error.setDescription(QCoreApplication::translate("QQmlParser","Library import requires a version"));
@@ -1290,8 +1296,13 @@ public:
 };
 }
 
-bool QQmlScript::Parser::parse(const QByteArray &qmldata, const QUrl &url,
-                                       const QString &urlString)
+QByteArray QQmlScript::Parser::preparseData() const
+{
+    return QByteArray();
+}
+
+bool QQmlScript::Parser::parse(const QString &qmlcode, const QByteArray &preparseData,
+                               const QUrl &url, const QString &urlString)
 {
     clear();
 
@@ -1302,11 +1313,7 @@ bool QQmlScript::Parser::parse(const QByteArray &qmldata, const QUrl &url,
         _scriptFile = urlString;
     }
 
-    QTextStream stream(qmldata, QIODevice::ReadOnly);
-#ifndef QT_NO_TEXTCODEC
-    stream.setCodec("UTF-8");
-#endif
-    QString *code = _pool.NewString(stream.readAll());
+    QString *code = _pool.NewString(qmlcode);
 
     data = new QQmlScript::ParserJsASTData(_scriptFile);
 
@@ -1573,7 +1580,6 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
             } else {
                 // URI
                 QString uri;
-                QString version;
 
                 while (true) {
                     if (!isUriToken(token))
@@ -1593,7 +1599,9 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
                 }
 
                 CHECK_TOKEN(T_NUMERIC_LITERAL);
-                version = script.mid(l.tokenOffset(), l.tokenLength());
+                int vmaj, vmin;
+                ProcessAST::extractVersion(QStringRef(&script, l.tokenOffset(), l.tokenLength()),
+                                           &vmaj, &vmin);
 
                 token = l.lex();
 
@@ -1624,7 +1632,8 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
                 Import import;
                 import.type = Import::Library;
                 import.uri = uri;
-                import.version = version;
+                import.majorVersion = vmaj;
+                import.minorVersion = vmin;
                 import.qualifier = importId;
                 import.location = location;
 

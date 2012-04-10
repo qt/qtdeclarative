@@ -109,16 +109,16 @@ struct LocationSpan
 class Import
 {
 public:
-    Import() : type(Library) {}
+    Import() : type(Library), majorVersion(-1), minorVersion(-1) {}
 
     enum Type { Library, File, Script };
     Type type;
 
     QString uri;
     QString qualifier;
-    QString version;
 
-    void extractVersion(int *maj, int *min) const;
+    int majorVersion;
+    int minorVersion;
 
     QQmlScript::LocationSpan location;
 };
@@ -469,14 +469,16 @@ public:
 };
 
 class ParserJsASTData;
-class Q_AUTOTEST_EXPORT Parser
+class Q_QML_EXPORT Parser
 {
 public:
     Parser();
     ~Parser();
 
-    bool parse(const QByteArray &data, const QUrl &url = QUrl(),
-               const QString &urlString = QString());
+    bool parse(const QString &data, const QByteArray &preparseData,
+               const QUrl &url = QUrl(), const QString &urlString = QString());
+
+    QByteArray preparseData() const;
 
     QList<TypeReference*> referencedTypes() const;
 

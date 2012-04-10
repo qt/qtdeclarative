@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 class QQmlTypeNameCache;
 class QQmlEngine;
 class QDir;
-class QQmlImportedNamespace;
+class QQmlImportNamespace;
 class QQmlImportsPrivate;
 class QQmlImportDatabase;
 class QQmlTypeLoader;
@@ -86,18 +86,22 @@ public:
     bool resolveType(const QString& type,
                      QQmlType** type_return, QString* url_return,
                      int *version_major, int *version_minor,
-                     QQmlImportedNamespace** ns_return,
+                     QQmlImportNamespace** ns_return,
                      QList<QQmlError> *errors = 0) const;
-    bool resolveType(QQmlImportedNamespace*, 
+    bool resolveType(QQmlImportNamespace*,
                      const QString& type,
                      QQmlType** type_return, QString* url_return,
                      int *version_major, int *version_minor) const;
 
-    QString addImport(QQmlImportDatabase *,
+    bool addImplicitImport(QQmlImportDatabase *importDb,
+                           const QQmlDirComponents &qmldircomponentsnetwork,
+                           QList<QQmlError> *errors);
+
+    bool addImport(QQmlImportDatabase *,
                    const QString& uri, const QString& prefix, int vmaj, int vmin, 
                    QQmlScript::Import::Type importType,
                    const QQmlDirComponents &qmldircomponentsnetwork, 
-                   QList<QQmlError> *errors);
+                   QString *url, QList<QQmlError> *errors);
 
     void populateCache(QQmlTypeNameCache *cache, QQmlEngine *) const;
 
@@ -142,6 +146,16 @@ private:
                           const QString &qmldirPath, const QString &qmldirPluginPath,
                           const QString &baseName);
 
+    struct QmldirCache {
+        int versionMajor;
+        int versionMinor;
+        QString qmldirFilePath;
+        QString qmldirPathUrl;
+        QmldirCache *next;
+    };
+    // Maps from an import to a linked list of qmldir info.
+    // Used in QQmlImportsPrivate::locateQmldir()
+    QStringHash<QmldirCache *> qmldirCache;
 
     // XXX thread
     QStringList filePluginPath;

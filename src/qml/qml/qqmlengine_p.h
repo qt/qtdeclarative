@@ -256,9 +256,6 @@ public:
     inline static QQmlEnginePrivate *get(QQmlContextData *c);
     inline static QQmlEngine *get(QQmlEnginePrivate *p);
 
-    static QString urlToLocalFileOrQrc(const QUrl& url);
-    static QString urlToLocalFileOrQrc(const QString& url);
-
     static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
     static void defineModule();
 

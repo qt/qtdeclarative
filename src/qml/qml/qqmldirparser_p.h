@@ -60,6 +60,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlError;
+class QQmlEngine;
 class QQmlDirParser
 {
     Q_DISABLE_COPY(QQmlDirParser)
@@ -68,12 +69,6 @@ public:
     QQmlDirParser();
     ~QQmlDirParser();
 
-    QUrl url() const;
-    void setUrl(const QUrl &url);
-
-    QString fileSource() const;
-    void setFileSource(const QString &filePath);
-
     QString source() const;
     void setSource(const QString &source);
 
@@ -81,6 +76,7 @@ public:
     bool parse();
 
     bool hasError() const;
+    void setError(const QQmlError &);
     QList<QQmlError> errors(const QString &uri) const;
 
     struct Plugin
@@ -146,9 +142,7 @@ private:
 
 private:
     QList<QQmlError> _errors;
-    QUrl _url;
     QString _source;
-    QString _filePathSouce;
     QList<Component> _components;
     QList<Script> _scripts;
     QList<Plugin> _plugins;

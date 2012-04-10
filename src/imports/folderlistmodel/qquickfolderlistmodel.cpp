@@ -44,7 +44,7 @@
 #include "fileinfothread_p.h"
 #include "fileproperty_p.h"
 #include <qqmlcontext.h>
-#include <private/qqmlengine_p.h>
+#include <qqmlfile.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -369,7 +369,7 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
     if (folder == d->currentDir)
         return;
 
-    QString localPath = QQmlEnginePrivate::urlToLocalFileOrQrc(folder);
+    QString localPath = QQmlFile::urlToLocalFileOrQrc(folder);
     QString resolvedPath = QDir::cleanPath(QUrl(localPath).path());
 
     beginResetModel();
@@ -412,7 +412,7 @@ void QQuickFolderListModel::setRootFolder(const QUrl &path)
     if (path.isEmpty())
         return;
 
-    QString localPath = QQmlEnginePrivate::urlToLocalFileOrQrc(path);
+    QString localPath = QQmlFile::urlToLocalFileOrQrc(path);
     QString resolvedPath = QDir::cleanPath(QUrl(localPath).path());
 
     QFileInfo info(resolvedPath);

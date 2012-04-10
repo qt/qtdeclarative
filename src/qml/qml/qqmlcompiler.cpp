@@ -1742,7 +1742,7 @@ bool QQmlCompiler::buildProperty(QQmlScript::Property *prop,
         }
 
         QQmlType *type = 0;
-        QQmlImportedNamespace *typeNamespace = 0;
+        QQmlImportNamespace *typeNamespace = 0;
         unit->imports().resolveType(prop->name().toString(), &type, 0, 0, 0, &typeNamespace);
 
         if (typeNamespace) {
@@ -1849,10 +1849,10 @@ bool QQmlCompiler::buildProperty(QQmlScript::Property *prop,
     return true;
 }
 
-bool QQmlCompiler::buildPropertyInNamespace(QQmlImportedNamespace *ns,
-                                                    QQmlScript::Property *nsProp, 
-                                                    QQmlScript::Object *obj, 
-                                                    const BindingContext &ctxt)
+bool QQmlCompiler::buildPropertyInNamespace(QQmlImportNamespace *ns,
+                                            QQmlScript::Property *nsProp,
+                                            QQmlScript::Object *obj,
+                                            const BindingContext &ctxt)
 {
     if (!nsProp->value)
         COMPILE_EXCEPTION(nsProp, tr("Invalid use of namespace"));

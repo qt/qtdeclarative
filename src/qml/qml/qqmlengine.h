@@ -104,6 +104,8 @@ public:
     void setPluginPathList(const QStringList &paths);
     void addPluginPath(const QString& dir);
 
+    bool addNamedBundle(const QString &name, const QString &fileName);
+
     bool importPlugin(const QString &filePath, const QString &uri, QString *errorString); // XXX: Qt 5: Remove this function
     bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);
 
@@ -136,7 +138,6 @@ public:
     enum ObjectOwnership { CppOwnership, JavaScriptOwnership };
     static void setObjectOwnership(QObject *, ObjectOwnership);
     static ObjectOwnership objectOwnership(QObject *);
-
 protected:
     virtual bool event(QEvent *);
 

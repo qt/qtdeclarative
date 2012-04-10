@@ -55,6 +55,7 @@
 #include <QtCore/qdatetime.h>
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlfile.h>
 #include "qqmlnetworkaccessmanagerfactory.h"
 
 #include <private/qv8engine_p.h>
@@ -362,7 +363,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     if (url.isRelative())
         return;
 
-    QString fileName = QQmlEnginePrivate::urlToLocalFileOrQrc(url);
+    QString fileName = QQmlFile::urlToLocalFileOrQrc(url);
 
     QFile f(fileName);
     if (f.open(QIODevice::ReadOnly)) {

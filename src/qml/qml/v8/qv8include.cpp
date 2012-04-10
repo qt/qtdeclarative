@@ -45,6 +45,7 @@
 #include <QtNetwork/qnetworkrequest.h>
 #include <QtNetwork/qnetworkreply.h>
 #include <QtCore/qfile.h>
+#include <QtQml/qqmlfile.h>
 
 #include <private/qqmlengine_p.h>
 
@@ -185,7 +186,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
     if (args.Length() >= 2 && args[1]->IsFunction())
         callbackFunction = v8::Local<v8::Function>::Cast(args[1]);
 
-    QString localFile = QQmlEnginePrivate::urlToLocalFileOrQrc(url);
+    QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
     v8::Local<v8::Object> result;
 

@@ -45,11 +45,11 @@
 #ifndef QT_NO_MOVIE
 
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlengine.h>
 #include <QtGui/qmovie.h>
 #include <QtNetwork/qnetworkrequest.h>
 #include <QtNetwork/qnetworkreply.h>
-
-#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 /*!
@@ -264,7 +264,7 @@ void QQuickAnimatedImage::load()
         if (d->progress != oldProgress)
             emit progressChanged(d->progress);
     } else {
-        QString lf = QQmlEnginePrivate::urlToLocalFileOrQrc(d->url);
+        QString lf = QQmlFile::urlToLocalFileOrQrc(d->url);
         if (!lf.isEmpty()) {
             //### should be unified with movieRequestFinished
             d->_movie = new QMovie(lf);

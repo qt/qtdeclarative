@@ -1303,44 +1303,6 @@ void QQmlData::setBindingBit(QObject *obj, int bit)
     bindingBits[bit / 32] |= (1 << (bit % 32));
 }
 
-QString QQmlEnginePrivate::urlToLocalFileOrQrc(const QUrl& url)
-{
-    if (url.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) == 0) {
-        if (url.authority().isEmpty())
-            return QLatin1Char(':') + url.path();
-        return QString();
-    }
-    return url.toLocalFile();
-}
-
-
-static QString toLocalFile(const QString &url)
-{
-    if (!url.startsWith(QLatin1String("file://"), Qt::CaseInsensitive))
-        return QString();
-
-    QString file = url.mid(7);
-
-    //XXX TODO: handle windows hostnames: "//servername/path/to/file.txt"
-
-    // magic for drives on windows
-    if (file.length() > 2 && file.at(0) == QLatin1Char('/') && file.at(2) == QLatin1Char(':'))
-        file.remove(0, 1);
-
-    return file;
-}
-
-QString QQmlEnginePrivate::urlToLocalFileOrQrc(const QString& url)
-{
-    if (url.startsWith(QLatin1String("qrc:"), Qt::CaseInsensitive)) {
-        if (url.length() > 4)
-            return QLatin1Char(':') + url.mid(4);
-        return QString();
-    }
-
-    return toLocalFile(url);
-}
-
 void QQmlEnginePrivate::sendQuit()
 {
     Q_Q(QQmlEngine);

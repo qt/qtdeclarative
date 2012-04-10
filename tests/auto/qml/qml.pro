@@ -47,6 +47,7 @@ PRIVATETESTS += \
     qquicklistmodel \
     qquicklistmodelworkerscript \
     qquickworkerscript \
+    qqmlbundle \
     v4
 
 SUBDIRS += $$PUBLICTESTS

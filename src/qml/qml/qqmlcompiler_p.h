@@ -318,7 +318,7 @@ private:
                      const QQmlCompilerTypes::BindingContext &);
     bool buildProperty(QQmlScript::Property *prop, QQmlScript::Object *obj, 
                        const QQmlCompilerTypes::BindingContext &);
-    bool buildPropertyInNamespace(QQmlImportedNamespace *ns,
+    bool buildPropertyInNamespace(QQmlImportNamespace *ns,
                                   QQmlScript::Property *prop, 
                                   QQmlScript::Object *obj, 
                                   const QQmlCompilerTypes::BindingContext &);

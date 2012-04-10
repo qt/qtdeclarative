@@ -43,6 +43,7 @@
 #include "qqmlerror.h"
 #include "qqmlglobal_p.h"
 
+#include <QtQml/qqmlfile.h>
 #include <QtCore/QTextStream>
 #include <QtCore/QFile>
 #include <QtCore/QtDebug>
@@ -56,26 +57,6 @@ QQmlDirParser::QQmlDirParser()
 
 QQmlDirParser::~QQmlDirParser()
 {
-}
-
-QUrl QQmlDirParser::url() const
-{
-    return _url;
-}
-
-void QQmlDirParser::setUrl(const QUrl &url)
-{
-    _url = url;
-}
-
-QString QQmlDirParser::fileSource() const
-{
-    return _filePathSouce;
-}
-
-void QQmlDirParser::setFileSource(const QString &filePath)
-{
-    _filePathSouce = filePath;
 }
 
 QString QQmlDirParser::source() const
@@ -94,6 +75,9 @@ bool QQmlDirParser::isParsed() const
     return _isParsed;
 }
 
+/*!
+\a url is used for generating errors.
+*/
 bool QQmlDirParser::parse()
 {
     if (_isParsed)
@@ -104,23 +88,6 @@ bool QQmlDirParser::parse()
     _plugins.clear();
     _components.clear();
     _scripts.clear();
-
-    if (_source.isEmpty() && !_filePathSouce.isEmpty()) {
-        QFile file(_filePathSouce);
-        if (!QQml_isFileCaseCorrect(_filePathSouce)) {
-            QQmlError error;
-            error.setDescription(QString::fromUtf8("cannot load module \"$$URI$$\": File name case mismatch for \"%1\"").arg(_filePathSouce));
-            _errors.prepend(error);
-            return false;
-        } else if (file.open(QFile::ReadOnly)) {
-            _source = QString::fromUtf8(file.readAll());
-        } else {
-            QQmlError error;
-            error.setDescription(QString::fromUtf8("module \"$$URI$$\" definition \"%1\" not readable").arg(_filePathSouce));
-            _errors.prepend(error);
-            return false;
-        }
-    }
 
     QTextStream stream(&_source);
     int lineNumber = 0;
@@ -246,7 +213,6 @@ bool QQmlDirParser::parse()
 void QQmlDirParser::reportError(int line, int column, const QString &description)
 {
     QQmlError error;
-    error.setUrl(_url);
     error.setLine(line);
     error.setColumn(column);
     error.setDescription(description);
@@ -259,6 +225,12 @@ bool QQmlDirParser::hasError() const
         return true;
 
     return false;
+}
+
+void QQmlDirParser::setError(const QQmlError &e)
+{
+    _errors.clear();
+    _errors.append(e);
 }
 
 QList<QQmlError> QQmlDirParser::errors(const QString &uri) const

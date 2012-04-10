@@ -52,8 +52,8 @@
 #include <QFontDatabase>
 
 #include <private/qobject_p.h>
-#include <private/qqmlengine_p.h>
 #include <qqmlinfo.h>
+#include <qqmlfile.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -196,7 +196,7 @@ void QQuickFontLoader::setSource(const QUrl &url)
     d->url = url;
     emit sourceChanged();
 
-    QString localFile = QQmlEnginePrivate::urlToLocalFileOrQrc(d->url);
+    QString localFile = QQmlFile::urlToLocalFileOrQrc(d->url);
     if (!localFile.isEmpty()) {
         if (!d->fonts.contains(d->url)) {
             int id = QFontDatabase::addApplicationFont(localFile);

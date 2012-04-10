@@ -58,6 +58,7 @@
 #include <QtNetwork/qnetworkreply.h>
 #include <QtQml/qqmlerror.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlfile.h>
 
 #include <private/qv8_p.h>
 #include <private/qhashedstring_p.h>
@@ -65,6 +66,8 @@
 #include <private/qqmlimport_p.h>
 #include <private/qqmlcleanup_p.h>
 #include <private/qqmldirparser_p.h>
+#include <private/qqmlbundle_p.h>
+#include <private/qflagpointer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -117,6 +120,25 @@ public:
 
     QList<QQmlError> errors() const;
 
+    class Data {
+    public:
+        inline const char *data() const;
+        inline int size() const;
+
+        inline QByteArray asByteArray() const;
+
+        inline bool isFile() const;
+        inline QQmlFile *asFile() const;
+
+    private:
+        friend class QQmlDataBlob;
+        friend class QQmlDataLoader;
+        inline Data();
+        Data(const Data &);
+        Data &operator=(const Data &);
+        QBiPointer<const QByteArray, QQmlFile> d;
+    };
+
 protected:
     // Can be called from within callbacks
     void setError(const QQmlError &);
@@ -124,7 +146,7 @@ protected:
     void addDependency(QQmlDataBlob *);
 
     // Callbacks made in load thread
-    virtual void dataReceived(const QByteArray &) = 0;
+    virtual void dataReceived(const Data &) = 0;
     virtual void done();
     virtual void networkError(QNetworkReply::NetworkError);
     virtual void dependencyError(QQmlDataBlob *);
@@ -216,10 +238,20 @@ private:
     typedef QHash<QNetworkReply *, QQmlDataBlob *> NetworkReplies;
 
     void setData(QQmlDataBlob *, const QByteArray &);
+    void setData(QQmlDataBlob *, QQmlFile *);
+    void setData(QQmlDataBlob *, const QQmlDataBlob::Data &);
 
     QQmlEngine *m_engine;
     QQmlDataLoaderThread *m_thread;
     NetworkReplies m_networkReplies;
+};
+
+class QQmlBundleData : public QQmlBundle,
+                       public QQmlRefCount
+{
+public:
+    QQmlBundleData(const QString &);
+    QString fileName;
 };
 
 // Exported for QtQuick1
@@ -243,22 +275,36 @@ public:
     QQmlScriptBlob *getScript(const QUrl &);
     QQmlQmldirData *getQmldir(const QUrl &);
 
+    QQmlBundleData *getBundle(const QString &);
+    QQmlBundleData *getBundle(const QHashedStringRef &);
+    void addBundle(const QString &, const QString &);
+
     QString absoluteFilePath(const QString &path);
     bool directoryExists(const QString &path);
-    const QQmlDirParser *qmlDirParser(const QString &absoluteFilePath);
+    const QQmlDirParser *qmlDirParser(const QString &filePath, const QString &uriHint, QString *outUrl);
+
 private:
+    void addBundleNoLock(const QString &, const QString &);
+    QString bundleIdForQmldir(const QString &qmldir, const QString &uriHint);
+
+    struct DirParser : public QQmlDirParser { QString adjustedUrl; };
+
     typedef QHash<QUrl, QQmlTypeData *> TypeCache;
     typedef QHash<QUrl, QQmlScriptBlob *> ScriptCache;
     typedef QHash<QUrl, QQmlQmldirData *> QmldirCache;
     typedef QStringHash<bool> StringSet;
     typedef QStringHash<StringSet*> ImportDirCache;
-    typedef QStringHash<QQmlDirParser*> ImportQmlDirCache;
+    typedef QStringHash<DirParser*> ImportQmlDirCache;
+    typedef QStringHash<QQmlBundleData *> BundleCache;
+    typedef QStringHash<QString> QmldirBundleIdCache;
 
     TypeCache m_typeCache;
     ScriptCache m_scriptCache;
     QmldirCache m_qmldirCache;
     ImportDirCache m_importDirCache;
     ImportQmlDirCache m_importQmlDirCache;
+    BundleCache m_bundleCache;
+    QmldirBundleIdCache m_qmldirBundleIdCache;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlTypeLoader::Options)
@@ -312,7 +358,7 @@ public:
 protected:
     virtual void done();
     virtual void completed();
-    virtual void dataReceived(const QByteArray &);
+    virtual void dataReceived(const Data &);
     virtual void allDependenciesDone();
     virtual void downloadProgressChanged(qreal);
 
@@ -349,8 +395,7 @@ private:
 // reference that was created is released but final deletion only occurs once all the
 // references as released.  This is all intended to ensure that the v8 resources are
 // only created and destroyed in the main thread :)
-class Q_AUTOTEST_EXPORT QQmlScriptData : public QQmlCleanup, 
-                                                 public QQmlRefCount
+class Q_AUTOTEST_EXPORT QQmlScriptData : public QQmlCleanup, public QQmlRefCount
 {
 public:
     QQmlScriptData();
@@ -402,7 +447,7 @@ public:
     QQmlScriptData *scriptData() const;
 
 protected:
-    virtual void dataReceived(const QByteArray &);
+    virtual void dataReceived(const Data &);
     virtual void done();
 
 private:
@@ -424,12 +469,51 @@ public:
     const QQmlDirComponents &dirComponents() const;
 
 protected:
-    virtual void dataReceived(const QByteArray &);
+    virtual void dataReceived(const Data &);
 
 private:
     QQmlDirComponents m_components;
 
 };
+
+QQmlDataBlob::Data::Data()
+{
+}
+
+const char *QQmlDataBlob::Data::data() const
+{
+    Q_ASSERT(!d.isNull());
+
+    if (d.isT1()) return d.asT1()->constData();
+    else return d.asT2()->data();
+}
+
+int QQmlDataBlob::Data::size() const
+{
+    Q_ASSERT(!d.isNull());
+
+    if (d.isT1()) return d.asT1()->size();
+    else return d.asT2()->size();
+}
+
+bool QQmlDataBlob::Data::isFile() const
+{
+    return d.isT2();
+}
+
+QByteArray QQmlDataBlob::Data::asByteArray() const
+{
+    Q_ASSERT(!d.isNull());
+
+    if (d.isT1()) return *d.asT1();
+    else return d.asT2()->dataByteArray();
+}
+
+QQmlFile *QQmlDataBlob::Data::asFile() const
+{
+    if (d.isT2()) return d.asT2();
+    else return 0;
+}
 
 QT_END_NAMESPACE
 

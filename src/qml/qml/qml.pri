@@ -51,6 +51,8 @@ SOURCES += \
     $$PWD/qqmlabstractbinding.cpp \
     $$PWD/qqmlvaluetypeproxybinding.cpp \
     $$PWD/qqmlglobal.cpp \
+    $$PWD/qqmlfile.cpp \
+    $$PWD/qqmlbundle.cpp \
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -122,6 +124,8 @@ HEADERS += \
     $$PWD/qqmljavascriptexpression_p.h \
     $$PWD/qqmlabstractbinding_p.h \
     $$PWD/qqmlvaluetypeproxybinding_p.h \
+    $$PWD/qqmlfile.h \
+    $$PWD/qqmlbundle_p.h \
 
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)

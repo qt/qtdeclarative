@@ -44,10 +44,12 @@
 #include "qquickninepatchnode_p.h"
 
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlengine.h>
+#include <QtNetwork/qnetworkreply.h>
 #include <QtCore/qfile.h>
 
 #include <private/qqmlglobal_p.h>
-#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -306,7 +308,7 @@ void QQuickBorderImage::load()
     } else {
         d->status = Loading;
         if (d->url.path().endsWith(QLatin1String("sci"))) {
-            QString lf = QQmlEnginePrivate::urlToLocalFileOrQrc(d->url);
+            QString lf = QQmlFile::urlToLocalFileOrQrc(d->url);
             if (!lf.isEmpty()) {
                 QFile file(lf);
                 file.open(QIODevice::ReadOnly);
