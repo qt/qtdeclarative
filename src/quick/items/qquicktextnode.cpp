@@ -1292,7 +1292,8 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
                                 QQuickText::TextStyle style, const QColor &styleColor,
                                 const QColor &anchorColor,
                                 const QColor &selectionColor, const QColor &selectedTextColor,
-                                int selectionStart, int selectionEnd)
+                                int selectionStart, int selectionEnd,
+                                int lineStart, int lineCount)
 {
     SelectionEngine engine;
     engine.setTextColor(color);
@@ -1307,7 +1308,11 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     QVarLengthArray<QTextLayout::FormatRange> colorChanges;
     mergeFormats(textLayout, &colorChanges);
 
-    for (int i=0; i<textLayout->lineCount(); ++i) {
+    lineCount = lineCount >= 0
+            ? qMin(lineStart + lineCount, textLayout->lineCount())
+            : textLayout->lineCount();
+
+    for (int i=lineStart; i<lineCount; ++i) {
         QTextLine line = textLayout->lineAt(i);
 
         int start = line.textStart();

@@ -84,7 +84,8 @@ public:
                        QQuickText::TextStyle style = QQuickText::Normal, const QColor &styleColor = QColor(),
                        const QColor &anchorColor = QColor(),
                        const QColor &selectionColor = QColor(), const QColor &selectedTextColor = QColor(),
-                       int selectionStart = -1, int selectionEnd = -1);
+                       int selectionStart = -1, int selectionEnd = -1,
+                       int lineStart = 0, int lineCount = -1);
     void addTextDocument(const QPointF &position, QTextDocument *textDocument, const QColor &color = QColor(),
                          QQuickText::TextStyle style = QQuickText::Normal, const QColor &styleColor = QColor(),
                          const QColor &anchorColor = QColor(),

@@ -822,20 +822,16 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
                 height = preLayoutHeight;
 
                 characterCount = line.textStart() + line.textLength();
+                visibleCount -= 1;
 
-                QTextLine previousLine = layout.lineAt(visibleCount - 2);
+                QTextLine previousLine = layout.lineAt(visibleCount - 1);
                 elideText = layoutText.at(line.textStart() - 1) != QChar::LineSeparator
                         ? elidedText(lineWidth, previousLine, &line)
                         : elidedText(lineWidth, previousLine);
                 elideStart = previousLine.textStart();
                 // elideEnd isn't required for right eliding.
 
-                // The previous line is the last one visible so move the current one off somewhere
-                // out of the way and back everything up one line.
-                line.setLineWidth(0);
-                line.setPosition(QPointF(FLT_MAX, FLT_MAX));
                 line = previousLine;
-                --visibleCount;
                 height -= (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : previousLine.height() * lineHeight();
                 break;
             }
@@ -889,8 +885,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
                     } else {
                         br = br.united(line.naturalTextRect());
                     }
-                    nextLine.setLineWidth(0);
-                    nextLine.setPosition(QPointF(FLT_MAX, FLT_MAX));
                     break;
                 }
             }
@@ -991,8 +985,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
         truncated = true;
 
     if (elide) {
-        if (!elideLayout)
+        if (!elideLayout) {
             elideLayout = new QTextLayout;
+            elideLayout->setCacheEnabled(true);
+        }
         if (styledText) {
             QList<QTextLayout::FormatRange> formats;
             switch (elideMode) {
@@ -1036,9 +1032,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
 
         br = br.united(elidedLine.naturalTextRect());
 
-        if (visibleCount > 1)
-            line.setPosition(QPointF(FLT_MAX, FLT_MAX));
-        else
+        if (visibleCount == 1)
             layout.clearLayout();
     } else {
         delete elideLayout;
@@ -2156,7 +2150,17 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         d->ensureDoc();
         node->addTextDocument(bounds.topLeft(), d->extra->doc, color, d->style, styleColor, linkColor);
     } else if (d->elideMode == QQuickText::ElideNone || bounds.width() > 0.) {
-        node->addTextLayout(QPoint(0, bounds.y()), &d->layout, color, d->style, styleColor, linkColor);
+        int unelidedLineCount = d->lineCount;
+        if (d->elideLayout)
+            unelidedLineCount -= 1;
+        if (unelidedLineCount > 0) {
+            node->addTextLayout(
+                        QPoint(0, bounds.y()),
+                        &d->layout,
+                        d->color, d->style, d->styleColor, d->linkColor,
+                        QColor(), QColor(), -1, -1,
+                        0, unelidedLineCount);
+        }
         if (d->elideLayout)
             node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, color, d->style, styleColor, linkColor);
     }
