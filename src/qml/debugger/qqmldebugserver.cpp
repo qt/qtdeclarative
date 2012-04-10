@@ -457,14 +457,14 @@ void QQmlDebugServerPrivate::_q_sendMessages(const QList<QByteArray> &messages)
 
 QList<QQmlDebugService*> QQmlDebugServer::services() const
 {
-    const Q_D(QQmlDebugServer);
+    Q_D(const QQmlDebugServer);
     QReadLocker(&d->pluginsLock);
     return d->plugins.values();
 }
 
 QStringList QQmlDebugServer::serviceNames() const
 {
-    const Q_D(QQmlDebugServer);
+    Q_D(const QQmlDebugServer);
     QReadLocker(&d->pluginsLock);
     return d->plugins.keys();
 }
