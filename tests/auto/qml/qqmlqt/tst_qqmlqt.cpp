@@ -478,6 +478,10 @@ void tst_qqmlqt::dateTimeConversion()
     QDateTime dateTime4(QDate(2001,2,2), QTime(0,0,0,0));
     QDateTime dateTime5(QDate(1999,1,1), QTime(2,3,4,0));
     QDateTime dateTime6(QDate(2008,2,24), QTime(14,15,38,200));
+    QDateTime dateTime7(QDate(1970,1,1), QTime(0,0,0,0), Qt::UTC);
+    QDateTime dateTime8(QDate(1586,2,2), QTime(0,0,0,0), Qt::UTC);
+    QDateTime dateTime9(QDate(955,1,1), QTime(0,0,0,0), Qt::UTC);
+    QDateTime dateTime10(QDate(113,2,24), QTime(14,15,38,200), Qt::UTC);
 
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("dateTimeConversion.qml"));
@@ -491,6 +495,10 @@ void tst_qqmlqt::dateTimeConversion()
     QCOMPARE(obj->property("qdatetime4").toDateTime(), dateTime4);
     QCOMPARE(obj->property("qdatetime5").toDateTime(), dateTime5);
     QCOMPARE(obj->property("qdatetime6").toDateTime(), dateTime6);
+    QCOMPARE(obj->property("qdatetime7").toDateTime(), dateTime7);
+    QCOMPARE(obj->property("qdatetime8").toDateTime(), dateTime8);
+    QCOMPARE(obj->property("qdatetime9").toDateTime(), dateTime9);
+    QCOMPARE(obj->property("qdatetime10").toDateTime(), dateTime10);
 }
 
 void tst_qqmlqt::dateTimeFormatting()
