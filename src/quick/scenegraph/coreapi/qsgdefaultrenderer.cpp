@@ -231,11 +231,11 @@ void QSGDefaultRenderer::render()
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(true);
-    glDepthFunc(GL_GREATER);
+    glDepthFunc(GL_LESS);
 #if defined(QT_OPENGL_ES)
-    glClearDepthf(0);
+    glClearDepthf(1);
 #else
-    glClearDepth(0);
+    glClearDepth(1);
 #endif
 
     glDisable(GL_SCISSOR_TEST);
@@ -297,9 +297,6 @@ void QSGDefaultRenderer::render()
 #ifdef RENDERER_DEBUG
     int debugtimeSorting = debugTimer.elapsed();
 #endif
-
-    m_renderOrderMatrix.setToIdentity();
-    m_renderOrderMatrix.scale(1, 1, qreal(1) / m_currentRenderOrder);
 
     int opaqueStart = 0;
     int transparentStart = 0;
@@ -523,16 +520,16 @@ void QSGDefaultRenderer::renderNodes(QSGNode *const *nodes, int count)
             }
             if (changes & QSGRenderNode::DepthState) {
 #if defined(QT_OPENGL_ES)
-                glClearDepthf(0);
+                glClearDepthf(1);
 #else
-                glClearDepth(0);
+                glClearDepth(1);
 #endif
                 if (m_clear_mode & QSGRenderer::ClearDepthBuffer) {
                     glDepthMask(true);
                     glClear(GL_DEPTH_BUFFER_BIT);
                 }
                 glDepthMask(false);
-                glDepthFunc(GL_GREATER);
+                glDepthFunc(GL_LESS);
             }
             if (changes & QSGRenderNode::ColorState)
                 bindable()->reactivate();
@@ -617,7 +614,7 @@ void QSGDefaultRenderer::renderNodes(QSGNode *const *nodes, int count)
             if (changeRenderOrder) {
                 currentRenderOrder = geomNode->renderOrder();
                 m_current_projection_matrix.setColumn(3, projection.column(3)
-                                                      + currentRenderOrder
+                                                      + (m_currentRenderOrder - 1 - 2 * currentRenderOrder)
                                                       * m_current_projection_matrix.column(2));
                 updates |= QSGMaterialShader::RenderState::DirtyMatrix;
             }

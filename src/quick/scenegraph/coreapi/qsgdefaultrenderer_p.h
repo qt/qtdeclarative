@@ -96,7 +96,6 @@ private:
     QSGMaterial *m_currentMaterial;
     QSGMaterialShader *m_currentProgram;
     const QMatrix4x4 *m_currentMatrix;
-    QMatrix4x4 m_renderOrderMatrix;
     QDataBuffer<QSGNode *> m_opaqueNodes;
     QDataBuffer<QSGNode *> m_transparentNodes;
     QDataBuffer<QSGNode *> m_tempNodes;

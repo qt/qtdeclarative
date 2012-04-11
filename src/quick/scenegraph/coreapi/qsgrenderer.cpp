@@ -313,7 +313,7 @@ void QSGRenderer::setProjectionMatrixToRect(const QRectF &rect)
                  rect.x() + rect.width(),
                  rect.y() + rect.height(),
                  rect.y(),
-                 qreal(0.01),
+                 1,
                  -1);
     setProjectionMatrix(matrix);
 }
