@@ -144,10 +144,7 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         if (!watcher.wasDeleted() && !destroyedFlag()) {
 
             if (needsErrorData) {
-                QUrl url = parent->url();
-                if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
-
-                delayedError()->error.setUrl(url);
+                delayedError()->error.setUrl(parent->url());
                 delayedError()->error.setLine(instruction->line);
                 delayedError()->error.setColumn(-1);
             }

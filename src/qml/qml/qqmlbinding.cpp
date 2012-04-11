@@ -230,8 +230,6 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
                 if (needsErrorData) {
                     QUrl url = QUrl(m_url);
 
-                    if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
-
                     delayedError()->error.setUrl(url);
                     delayedError()->error.setLine(m_lineNumber);
                     delayedError()->error.setColumn(m_columnNumber);

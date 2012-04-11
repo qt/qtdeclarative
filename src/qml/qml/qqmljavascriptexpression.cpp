@@ -263,7 +263,7 @@ void QQmlJavaScriptExpression::exceptionToError(v8::Handle<v8::Message> message,
 
     v8::Local<v8::String> file = name->IsString()?name->ToString():v8::Local<v8::String>();
     if (file.IsEmpty() || file->Length() == 0)
-        error.setUrl(QUrl(QLatin1String("<Unknown File>")));
+        error.setUrl(QUrl());
     else
         error.setUrl(QUrl(QV8Engine::toStringStatic(file)));
 
