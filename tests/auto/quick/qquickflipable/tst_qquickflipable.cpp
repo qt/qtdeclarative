@@ -58,6 +58,7 @@ private slots:
     void create();
     void checkFrontAndBack();
     void setFrontAndBack();
+    void flipFlipable();
 
     // below here task issues
     void QTBUG_9161_crash();
@@ -106,6 +107,20 @@ void tst_qquickflipable::setFrontAndBack()
     message = c.url().toString() + ":3:1: QML Flipable: back is a write-once property";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
     obj->setBack(new QQuickRectangle());
+    delete obj;
+}
+
+void tst_qquickflipable::flipFlipable()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("flip-flipable.qml"));
+    QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
+    QVERIFY(obj != 0);
+    QVERIFY(obj->side() == QQuickFlipable::Front);
+    obj->setProperty("flipped", QVariant(true));
+    QTRY_VERIFY(obj->side() == QQuickFlipable::Back);
+    QTRY_VERIFY(obj->side() == QQuickFlipable::Front);
+    QTRY_VERIFY(obj->side() == QQuickFlipable::Back);
     delete obj;
 }
 

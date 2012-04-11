@@ -271,6 +271,7 @@ Rectangle {
            ctx = c.getContext('2D');
            verify(ctx);
            compare(ctx.canvas, c);
+           ignoreWarning(Qt.resolvedUrl("tst_canvas.qml") + ":10:9: QML Canvas: Canvas already initialized with a different context type");
            ctx = c.getContext('invalid');
            verify(!ctx);
            c.destroy();

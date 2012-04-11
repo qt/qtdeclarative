@@ -70,6 +70,8 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     Alternatively, these functions provide a way for other types of C++ types
     to be visible in the QML context.
     \list
+    \li \l qmlRegisterModuleApi() is suited for registering either a QJSValue
+    or QObject module API (shared instance) into a namespace
     \li \l qmlRegisterUncreatableType() is suited for attached
     properties and enum types.
     \li \l qmlRegisterTypeNotAvailable() is for

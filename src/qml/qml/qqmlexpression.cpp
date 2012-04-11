@@ -60,7 +60,7 @@ static QQmlJavaScriptExpression::VTable QQmlExpressionPrivate_jsvtable = {
 QQmlExpressionPrivate::QQmlExpressionPrivate()
 : QQmlJavaScriptExpression(&QQmlExpressionPrivate_jsvtable),
   expressionFunctionValid(true), expressionFunctionRewritten(false),
-  extractExpressionFromFunction(false), line(-1), dataRef(0)
+  line(-1)
 {
 }
 
@@ -68,8 +68,6 @@ QQmlExpressionPrivate::~QQmlExpressionPrivate()
 {
     qPersistentDispose(v8qmlscope);
     qPersistentDispose(v8function);
-    if (dataRef) dataRef->release();
-    dataRef = 0;
 }
 
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QObject *me)
@@ -321,13 +319,7 @@ QQmlContext *QQmlExpression::context() const
 QString QQmlExpression::expression() const
 {
     Q_D(const QQmlExpression);
-    if (d->extractExpressionFromFunction && context()->engine()) {
-        QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(context()->engine());
-        v8::HandleScope handle_scope;
-        v8::Context::Scope scope(v8engine->context());
-
-        return v8engine->toString(v8::Handle<v8::Value>(d->v8function));
-    } else if (!d->expressionUtf8.isEmpty()) {
+    if (!d->expressionUtf8.isEmpty()) {
         return QString::fromUtf8(d->expressionUtf8);
     } else {
         return d->expression;
@@ -351,7 +343,7 @@ void QQmlExpression::setExpression(const QString &expression)
 }
 
 // Must be called with a valid handle scope
-v8::Local<v8::Value> QQmlExpressionPrivate::v8value(QObject *secondaryScope, bool *isUndefined)
+v8::Local<v8::Value> QQmlExpressionPrivate::v8value(bool *isUndefined)
 {
     if (!expressionFunctionValid) {
         bool ok = true;
@@ -369,21 +361,10 @@ v8::Local<v8::Value> QQmlExpressionPrivate::v8value(QObject *secondaryScope, boo
         expressionFunctionValid = true;
     }
 
-
-    if (secondaryScope) {
-        v8::Local<v8::Value> result;
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
-        QObject *restoreSecondaryScope = 0;
-        restoreSecondaryScope = ep->v8engine()->contextWrapper()->setSecondaryScope(v8qmlscope, secondaryScope);
-        result = evaluate(context(), v8function, isUndefined);
-        ep->v8engine()->contextWrapper()->setSecondaryScope(v8qmlscope, restoreSecondaryScope);
-        return result;
-    } else {
-        return evaluate(context(), v8function, isUndefined);
-    }
+    return evaluate(context(), v8function, isUndefined);
 }
 
-QVariant QQmlExpressionPrivate::value(QObject *secondaryScope, bool *isUndefined)
+QVariant QQmlExpressionPrivate::value(bool *isUndefined)
 {
     Q_Q(QQmlExpression);
 
@@ -400,7 +381,7 @@ QVariant QQmlExpressionPrivate::value(QObject *secondaryScope, bool *isUndefined
     {
         v8::HandleScope handle_scope;
         v8::Context::Scope context_scope(ep->v8engine()->context());
-        v8::Local<v8::Value> result = v8value(secondaryScope, isUndefined);
+        v8::Local<v8::Value> result = v8value(isUndefined);
         rv = ep->v8engine()->toVariant(result, qMetaTypeId<QList<QObject*> >());
     }
 
@@ -421,7 +402,7 @@ QVariant QQmlExpressionPrivate::value(QObject *secondaryScope, bool *isUndefined
 QVariant QQmlExpression::evaluate(bool *valueIsUndefined)
 {
     Q_D(QQmlExpression);
-    return d->value(0, valueIsUndefined);
+    return d->value(valueIsUndefined);
 }
 
 /*!

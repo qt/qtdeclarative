@@ -55,8 +55,14 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 struct QQuickShaderEffectMaterialKey {
-    QByteArray vertexCode;
-    QByteArray fragmentCode;
+    enum ShaderType
+    {
+        VertexShader,
+        FragmentShader,
+        ShaderTypeCount
+    };
+
+    QByteArray sourceCode[ShaderTypeCount];
     const char *className;
 
     bool operator == (const QQuickShaderEffectMaterialKey &other) const;
@@ -64,24 +70,21 @@ struct QQuickShaderEffectMaterialKey {
 
 uint qHash(const QQuickShaderEffectMaterialKey &key);
 
-// TODO: Implement support for multisampling.
-struct QQuickShaderEffectProgram : public QQuickShaderEffectMaterialKey
-{
-    QQuickShaderEffectProgram() : respectsOpacity(false), respectsMatrix(false) {}
-
-    QVector<QByteArray> attributeNames;
-    QSet<QByteArray> uniformNames;
-
-    uint respectsOpacity : 1;
-    uint respectsMatrix : 1;
-};
-
 
 class QQuickCustomMaterialShader;
 class QQuickShaderEffectNode;
 class QQuickShaderEffectMaterial : public QSGMaterial
 {
 public:
+    struct UniformData
+    {
+        enum SpecialType { None, Sampler, Opacity, Matrix };
+
+        QByteArray name;
+        QVariant value;
+        SpecialType specialType;
+    };
+
     enum CullMode
     {
         NoCulling,
@@ -94,13 +97,12 @@ public:
     virtual QSGMaterialShader *createShader() const;
     virtual int compare(const QSGMaterial *other) const;
 
-    void setCullMode(CullMode face);
-    CullMode cullMode() const;
+    QVector<QByteArray> attributes;
+    QVector<UniformData> uniforms[QQuickShaderEffectMaterialKey::ShaderTypeCount];
+    QVector<QPair<QByteArray, QSGTextureProvider *> > textureProviders;
+    CullMode cullMode;
 
-    void setProgramSource(const QQuickShaderEffectProgram &);
-    void setUniforms(const QVector<QPair<QByteArray, QVariant> > &uniformValues);
-    void setTextureProviders(const QVector<QPair<QByteArray, QSGTextureProvider *> > &textures);
-    const QVector<QPair<QByteArray, QSGTextureProvider *> > &textureProviders() const;
+    void setProgramSource(const QQuickShaderEffectMaterialKey &source);
     void updateTextures() const;
     void invalidateTextureProvider(QSGTextureProvider *provider);
 
@@ -114,11 +116,8 @@ protected:
     // one. To guarantee that the type pointer is unique, the type object must live as long as
     // there are any CustomMaterialShaders of that type.
     QSharedPointer<QSGMaterialType> m_type;
+    QQuickShaderEffectMaterialKey m_source;
 
-    QQuickShaderEffectProgram m_source;
-    QVector<QPair<QByteArray, QVariant> > m_uniformValues;
-    QVector<QPair<QByteArray, QSGTextureProvider *> > m_textures;
-    CullMode m_cullMode;
     QQuickShaderEffectNode *m_node;
     bool m_emittedLogChanged;
 
@@ -137,17 +136,12 @@ public:
 
     virtual void preprocess();
 
-    QQuickShaderEffectMaterial *shaderMaterial() { return &m_material; }
-
 Q_SIGNALS:
     void logAndStatusChanged(const QString &, int status);
 
 private Q_SLOTS:
     void markDirtyTexture();
     void textureProviderDestroyed(QObject *object);
-
-private:
-    QQuickShaderEffectMaterial m_material;
 };
 
 QT_END_NAMESPACE

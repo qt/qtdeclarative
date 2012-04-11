@@ -44,14 +44,12 @@
 #include <private/qquickutilmodule_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <private/qquickitemsmodule_p.h>
-#include <private/qquickparticlesmodule_p.h>
-#include <private/qquickwindowmodule_p.h>
-#include <private/qquickapplication_p.h>
 
 #include <private/qqmlenginedebugservice_p.h>
 #include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlcontext_p.h>
+#include <private/qquickapplication_p.h>
 #include <QtQuick/private/qquickpropertychanges_p.h>
 #include <QtQuick/private/qquickstate_p.h>
 #include <qqmlproperty.h>
@@ -176,8 +174,6 @@ void QQmlQtQuick2Module::defineModule()
     QQuickUtilModule::defineModule();
     QQmlEnginePrivate::defineModule();
     QQuickItemsModule::defineModule();
-    QQuickParticlesModule::defineModule();
-    QQuickWindowModule::defineModule();
 
     qmlRegisterUncreatableType<QQuickApplication>("QtQuick",2,0,"Application", QQuickApplication::tr("Application is an abstract class"));
 

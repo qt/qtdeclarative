@@ -254,9 +254,6 @@ namespace {
             decorations |= (backgroundColor.isValid() ? QQuickTextNode::Background : QQuickTextNode::NoDecoration);
 
             qreal ascent = glyphRun.rawFont().ascent();
-            // ### QTBUG-22919 The bounding rect returned by QGlyphRun appears to start on the
-            // baseline, move it by the ascent so all bounding rects are at baseline - ascent.
-            searchRect.translate(0, -ascent);
             insert(binaryTree, BinaryTreeNode(glyphRun, selectionState, searchRect, decorations,
                                               textColor, backgroundColor, position, ascent));
         }
@@ -1219,12 +1216,6 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
 
                 int textPos = block.position();
                 QTextBlock::iterator blockIterator = block.begin();
-                if (blockIterator.atEnd() && preeditLength) {
-                    engine.setPosition(blockPosition);
-                    textPos = engine.addText(block, block.charFormat(), textColor, colorChanges,
-                                             textPos, textPos + preeditLength,
-                                             selectionStart, selectionEnd);
-                }
 
                 while (!blockIterator.atEnd()) {
                     QTextFragment fragment = blockIterator.fragment();
@@ -1273,6 +1264,19 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                     }
 
                     ++blockIterator;
+                }
+
+                if (preeditLength >= 0 && textPos <= block.position() + preeditPosition) {
+                    engine.setPosition(blockPosition);
+                    textPos = block.position() + preeditPosition;
+                    QTextLine line = block.layout()->lineForTextPosition(preeditPosition);
+                    if (!engine.currentLine().isValid()
+                            || line.lineNumber() != engine.currentLine().lineNumber()) {
+                        engine.setCurrentLine(line);
+                    }
+                    textPos = engine.addText(block, block.charFormat(), textColor, colorChanges,
+                                             textPos, textPos + preeditLength,
+                                             selectionStart, selectionEnd);
                 }
 
                 engine.setCurrentLine(QTextLine()); // Reset current line because the text layout changed

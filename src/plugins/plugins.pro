@@ -1,3 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS +=  qmltooling
-SUBDIRS +=  accessible
+contains(QT_CONFIG, accessibility) {
+    SUBDIRS += accessible
+}

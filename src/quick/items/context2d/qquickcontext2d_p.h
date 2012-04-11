@@ -116,6 +116,7 @@ public:
             , fillPatternRepeatY(false)
             , strokePatternRepeatX(false)
             , strokePatternRepeatY(false)
+            , invertibleCTM(true)
             , fillRule(Qt::WindingFill)
             , globalAlpha(1.0)
             , lineWidth(1)
@@ -141,6 +142,7 @@ public:
         bool fillPatternRepeatY:1;
         bool strokePatternRepeatX:1;
         bool strokePatternRepeatY:1;
+        bool invertibleCTM:1;
         Qt::FillRule fillRule;
         qreal globalAlpha;
         qreal lineWidth;
@@ -180,7 +182,23 @@ public:
     void pushState();
     void reset();
 
-    // path API
+    void fill();
+    void clip();
+    void stroke();
+    void fillRect(qreal x, qreal y, qreal w, qreal h);
+    void strokeRect(qreal x, qreal y, qreal w, qreal h);
+    void clearRect(qreal x, qreal y, qreal w, qreal h);
+    void drawText(const QString& text, qreal x, qreal y, bool fill);
+
+    //Transform APIs
+    void scale(qreal x,  qreal y);
+    void rotate(qreal angle);
+    void shear(qreal h, qreal v);
+    void translate(qreal x, qreal y);
+    void transform(qreal a, qreal b, qreal c, qreal d, qreal e, qreal f);
+    void setTransform(qreal a, qreal b, qreal c, qreal d, qreal e, qreal f);
+
+    // Path APIs
     void beginPath();
     void closePath();
     void moveTo(qreal x, qreal y);
@@ -195,7 +213,7 @@ public:
     void text(const QString& str, qreal x, qreal y);
     void arc(qreal x, qreal y, qreal radius,
              qreal startAngle, qreal endAngle,
-             bool anticlockwise, bool transform=true);
+             bool anticlockwise);
     void addArcTo(const QPointF& p1, const QPointF& p2, float radius);
 
     bool isPointInPath(qreal x, qreal y) const;

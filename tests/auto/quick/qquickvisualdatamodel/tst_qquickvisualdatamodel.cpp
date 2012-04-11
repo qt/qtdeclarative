@@ -2707,9 +2707,6 @@ void tst_qquickvisualdatamodel::resolve_data()
     const QUrl stringListSource[] = {
         testFileUrl("stringlistproperties.qml"),
         testFileUrl("stringlistproperties-package.qml") };
-    const QUrl objectListSource[] = {
-        testFileUrl("objectlistproperties.qml"),
-        testFileUrl("objectlistproperties-package.qml") };
 
     for (int i = 0; i < 2; ++i) {
         // List Model.

@@ -236,7 +236,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 
     \list
     \li setting \c touchPoints to provide touch point objects with properties that can be bound to
-    \li using the onTouchUpdated or onTouchPointsPressed, onTouchPointsUpdated and onTouchPointsReleased handlers
+    \li using the onTouchUpdated or onPressed, onUpdated and onReleased handlers
     \endlist
 
     While a MultiPointTouchArea \e can take exclusive ownership of certain touch points, it is also possible to have

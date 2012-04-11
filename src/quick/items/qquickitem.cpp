@@ -52,8 +52,8 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qpen.h>
-#include <QtGui/qcursor.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qinputmethod.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
@@ -74,6 +74,26 @@
 // XXX todo Check that elements that create items handle memory correctly after visual ownership change
 
 QT_BEGIN_NAMESPACE
+
+#ifdef FOCUS_DEBUG
+void printFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1);
+void printFocusTree(QQuickItem *item, QQuickItem *scope, int depth)
+{
+    qWarning()
+            << QByteArray(depth, '\t').constData()
+            << (scope && QQuickItemPrivate::get(scope)->subFocusItem == item ? '*' : ' ')
+            << item->hasFocus()
+            << item->hasActiveFocus()
+            << item->isFocusScope()
+            << item;
+    foreach (QQuickItem *child, item->childItems()) {
+        printFocusTree(
+                child,
+                item->isFocusScope() || !scope ? item : scope,
+                item->isFocusScope() || !scope ? depth + 1 : depth);
+    }
+}
+#endif
 
 static void QQuickItem_parentNotifier(QObject *o, intptr_t, QQmlNotifier **n)
 {
@@ -1613,9 +1633,6 @@ void QQuickItemPrivate::setAccessibleFlagAndListener()
         if (item->d_func()->isAccessible)
             break; // already set - grandparents should have the flag set as well.
 
-        if (item->canvas() && item->canvas()->rootItem() == item)
-            break; // don't add a listener to the canvas root item
-
         item->d_func()->isAccessible = true;
         item = item->d_func()->parentItem;
     }
@@ -1939,6 +1956,8 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             if (d->canvas) {
                 QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem,
                                                                 QQuickCanvasPrivate::DontChangeFocusProperty);
+                if (scopeFocusedItem != this)
+                    QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(this, true);
             } else {
                 QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(scopeItem, false);
             }
@@ -1990,7 +2009,10 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             while (!scopeItem->isFocusScope() && scopeItem->parentItem())
                 scopeItem = scopeItem->parentItem();
 
-            if (scopeItem->scopedFocusItem()) {
+            if (QQuickItemPrivate::get(scopeItem)->subFocusItem
+                    || (!scopeItem->isFocusScope() && scopeItem->hasFocus())) {
+                if (scopeFocusedItem != this)
+                    QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(this, false);
                 QQuickItemPrivate::get(scopeFocusedItem)->focus = false;
                 emit scopeFocusedItem->focusChanged(false);
             } else {
@@ -4145,7 +4167,7 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuickItemPrivate::get(childItems.at(ii))->setEffectiveEnableRecur(
-                flags & QQuickItem::ItemIsFocusScope ? q : scope, newEffectiveEnable);
+                (flags & QQuickItem::ItemIsFocusScope) && scope ? q : scope, newEffectiveEnable);
     }
 
     if (canvas && scope && effectiveEnable && focus) {
@@ -4509,6 +4531,12 @@ void QQuickItem::resetWidth()
 void QQuickItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickItem);
+    for (int ii = 0; ii < changeListeners.count(); ++ii) {
+        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        if (change.types & QQuickItemPrivate::ImplicitWidth) {
+            change.listener->itemImplicitWidthChanged(q);
+        }
+    }
     emit q->implicitWidthChanged();
 }
 
@@ -4631,6 +4659,12 @@ void QQuickItem::resetHeight()
 void QQuickItemPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickItem);
+    for (int ii = 0; ii < changeListeners.count(); ++ii) {
+        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        if (change.types & QQuickItemPrivate::ImplicitHeight) {
+            change.listener->itemImplicitHeightChanged(q);
+        }
+    }
     emit q->implicitHeightChanged();
 }
 
@@ -4781,6 +4815,7 @@ void QQuickItem::setFocus(bool focus)
             QVarLengthArray<QQuickItem *, 20> changed;
             QQuickItem *oldSubFocusItem = QQuickItemPrivate::get(scope)->subFocusItem;
             if (oldSubFocusItem) {
+                QQuickItemPrivate::get(oldSubFocusItem)->updateSubFocusItem(scope, false);
                 QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
                 changed << oldSubFocusItem;
             }
@@ -4850,7 +4885,7 @@ bool QQuickItem::isUnderMouse() const
     if (!d->canvas)
         return false;
 
-    QPoint cursorPos = QCursor::pos();
+    QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
     if (QRectF(0, 0, width(), height()).contains(mapFromScene(cursorPos))) // ### refactor: d->canvas->mapFromGlobal(cursorPos))))
         return true;
     return false;
@@ -5669,10 +5704,11 @@ void QQuickItemLayer::activateEffect()
     Q_ASSERT(m_effectComponent);
     Q_ASSERT(!m_effect);
 
-    QObject *created = m_effectComponent->create();
+    QObject *created = m_effectComponent->beginCreate(m_effectComponent->creationContext());
     m_effect = qobject_cast<QQuickItem *>(created);
     if (!m_effect) {
         qWarning("Item: layer.effect is not a QML Item.");
+        m_effectComponent->completeCreate();
         delete created;
         return;
     }
@@ -5683,6 +5719,7 @@ void QQuickItemLayer::activateEffect()
     }
     m_effect->setVisible(m_item->isVisible());
     m_effect->setProperty(m_name, qVariantFromValue<QObject *>(m_effectSource));
+    m_effectComponent->completeCreate();
 }
 
 void QQuickItemLayer::deactivateEffect()

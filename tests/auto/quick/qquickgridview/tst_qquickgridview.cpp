@@ -2094,15 +2094,17 @@ void tst_QQuickGridView::componentChanges()
     QTRY_VERIFY(gridView);
 
     QQmlComponent component(canvas->engine());
-    component.setData("import QtQuick 1.0; Rectangle { color: \"blue\"; }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0; Rectangle { color: \"blue\"; }", QUrl::fromLocalFile(""));
 
     QQmlComponent delegateComponent(canvas->engine());
-    delegateComponent.setData("import QtQuick 1.0; Text { text: '<b>Name:</b> ' + name }", QUrl::fromLocalFile(""));
+    delegateComponent.setData("import QtQuick 2.0; Text { text: '<b>Name:</b> ' + name }", QUrl::fromLocalFile(""));
 
     QSignalSpy highlightSpy(gridView, SIGNAL(highlightChanged()));
     QSignalSpy delegateSpy(gridView, SIGNAL(delegateChanged()));
     QSignalSpy headerSpy(gridView, SIGNAL(headerChanged()));
     QSignalSpy footerSpy(gridView, SIGNAL(footerChanged()));
+    QSignalSpy headerItemSpy(gridView, SIGNAL(headerItemChanged()));
+    QSignalSpy footerItemSpy(gridView, SIGNAL(footerItemChanged()));
 
     gridView->setHighlight(&component);
     gridView->setDelegate(&delegateComponent);
@@ -2114,10 +2116,15 @@ void tst_QQuickGridView::componentChanges()
     QTRY_COMPARE(gridView->header(), &component);
     QTRY_COMPARE(gridView->footer(), &component);
 
+    QVERIFY(gridView->headerItem());
+    QVERIFY(gridView->footerItem());
+
     QTRY_COMPARE(highlightSpy.count(),1);
     QTRY_COMPARE(delegateSpy.count(),1);
     QTRY_COMPARE(headerSpy.count(),1);
     QTRY_COMPARE(footerSpy.count(),1);
+    QTRY_COMPARE(headerItemSpy.count(),1);
+    QTRY_COMPARE(footerItemSpy.count(),1);
 
     gridView->setHighlight(&component);
     gridView->setDelegate(&delegateComponent);
@@ -2128,6 +2135,8 @@ void tst_QQuickGridView::componentChanges()
     QTRY_COMPARE(delegateSpy.count(),1);
     QTRY_COMPARE(headerSpy.count(),1);
     QTRY_COMPARE(footerSpy.count(),1);
+    QTRY_COMPARE(headerItemSpy.count(),1);
+    QTRY_COMPARE(footerItemSpy.count(),1);
 
     delete canvas;
 }

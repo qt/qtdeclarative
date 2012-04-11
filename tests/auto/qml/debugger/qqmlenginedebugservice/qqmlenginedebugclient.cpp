@@ -50,12 +50,14 @@ struct QmlObjectData {
     QString objectType;
     int objectId;
     int contextId;
+    int parentId;
 };
 
 QDataStream &operator>>(QDataStream &ds, QmlObjectData &data)
 {
     ds >> data.url >> data.lineNumber >> data.columnNumber >> data.idString
-       >> data.objectName >> data.objectType >> data.objectId >> data.contextId;
+       >> data.objectName >> data.objectType >> data.objectId >> data.contextId
+       >> data.parentId;
     return ds;
 }
 

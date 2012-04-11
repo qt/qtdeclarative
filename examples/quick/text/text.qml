@@ -42,7 +42,7 @@ import QtQuick 2.0
 import "../../shared"
 /*!
     \title QML Examples - Text
-    \example declarative/text
+    \example quick/text
     \brief This is a collection of QML examples
     \image qml-text-example.png
 

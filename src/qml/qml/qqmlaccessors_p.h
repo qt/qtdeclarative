@@ -47,7 +47,7 @@
 #include <QtCore/qhash.h>
 #include <QtCore/QReadWriteLock>
 
-#ifdef Q_OS_QNX
+#if defined(Q_OS_QNX) || defined(Q_OS_LINUX)
 #include <stdint.h>
 #endif
 

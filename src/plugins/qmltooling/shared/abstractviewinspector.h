@@ -45,7 +45,6 @@
 #include <QtCore/QHash>
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
-#include <QtGui/QColor>
 
 #include "qqmlinspectorprotocol.h"
 #include "qmlinspectorconstants.h"
@@ -109,10 +108,7 @@ signals:
     void showAppOnTopChanged(bool showAppOnTop);
     void reloadRequested();
     void marqueeSelectToolActivated();
-    void selectToolActivated();
-    void zoomToolActivated();
-    void colorPickerActivated();
-    void selectedColorChanged(const QColor &color);
+    void inspectToolActivated();
 
     void animationSpeedChanged(qreal factor);
     void animationPausedChanged(bool paused);
@@ -132,15 +128,11 @@ protected:
     virtual bool wheelEvent(QWheelEvent *event);
     virtual bool touchEvent(QTouchEvent *event);
 
-private slots:
-    void sendColorChanged(const QColor &color);
-
 private:
     void sendDesignModeBehavior(bool inDesignMode);
 
-    void changeToColorPickerTool();
     void changeToZoomTool();
-    void changeToSingleSelectTool();
+    void changeToInspectTool();
     void changeToMarqueeSelectTool();
 
     virtual void setDesignModeBehavior(bool value);

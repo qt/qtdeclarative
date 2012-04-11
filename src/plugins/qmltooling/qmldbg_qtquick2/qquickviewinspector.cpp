@@ -43,8 +43,7 @@
 
 #include "qqmlinspectorprotocol.h"
 #include "highlight.h"
-#include "selectiontool.h"
-#include "zoomtool.h"
+#include "inspecttool.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -120,8 +119,7 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
     AbstractViewInspector(parent),
     m_view(view),
     m_overlay(new QQuickItem),
-    m_selectionTool(new SelectionTool(this)),
-    m_zoomTool(0),
+    m_inspectTool(new InspectTool(this, view)),
     m_designMode(true)
 {
     // Try to make sure the overlay is always on top
@@ -131,7 +129,7 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
         m_overlay->setParentItem(root);
 
     view->installEventFilter(this);
-    setCurrentTool(m_selectionTool);
+    setCurrentTool(m_inspectTool);
 }
 
 void QQuickViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
@@ -165,23 +163,13 @@ void QQuickViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
 void QQuickViewInspector::changeTool(InspectorProtocol::Tool tool)
 {
     switch (tool) {
-    case InspectorProtocol::ColorPickerTool:
-        // TODO
-        emit colorPickerActivated();
-        break;
     case InspectorProtocol::SelectMarqueeTool:
         // TODO
         emit marqueeSelectToolActivated();
         break;
-    case InspectorProtocol::SelectTool:
-        setCurrentTool(m_selectionTool);
-        emit selectToolActivated();
-        break;
-    case InspectorProtocol::ZoomTool:
-        if (!m_zoomTool)
-            m_zoomTool = new ZoomTool(this, m_view);
-        setCurrentTool(m_zoomTool);
-        emit zoomToolActivated();
+    case InspectorProtocol::InspectTool:
+        setCurrentTool(m_inspectTool);
+        emit inspectToolActivated();
         break;
     }
 }

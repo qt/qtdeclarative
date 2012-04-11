@@ -27,9 +27,9 @@
 
 /*!
     \title QML Demo - Calculator
-    \example declarative/calculator
+    \example demos/calculator
     \brief This is an example calculator application written in QML.
-    \image qml-calculator-demo-small.png
+    \image qml-calculator-example-small.png
 
     The Calculator demo implements a simple calculator in QML. It is written for desktop and portrait devices,
     although on device it supports orientation changes.

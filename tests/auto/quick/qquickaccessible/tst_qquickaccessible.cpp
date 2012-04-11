@@ -340,23 +340,25 @@ void tst_QQuickAccessible::hitTest()
     canvas->setSource(testFileUrl("hittest.qml"));
     canvas->show();
 
-    QAI iface = QAI(QAccessible::queryAccessibleInterface(canvas));
-    QVERIFY(iface.data());
-    QAI rootItem = QAI(iface->child(0));
+    QAI canvasIface = QAI(QAccessible::queryAccessibleInterface(canvas));
+    QVERIFY(canvasIface.data());
+    QAI rootItem = QAI(canvasIface->child(0));
     QRect rootRect = rootItem->rect();
 
-    // hit the root item
-    QAI itemHit(iface->childAt(rootRect.x() + 200, rootRect.y() + 50));
+    // check the root item from app
+    QAI appIface = QAI(QAccessible::queryAccessibleInterface(qApp));
+    QVERIFY(appIface);
+    QAI itemHit(appIface->childAt(rootRect.x() + 200, rootRect.y() + 50));
     QVERIFY(itemHit);
     QCOMPARE(rootRect, itemHit->rect());
 
     // hit rect1
-    QAI rect1(rootItem->child(1));
+    QAI rect1(rootItem->child(0));
     QRect rect1Rect = rect1->rect();
-    itemHit = QAI(rootItem->childAt(rect1Rect.x() + 10, rect1Rect.y() + 10));
-    QVERIFY(itemHit);
-    QCOMPARE(rect1Rect, itemHit->rect());
-    QCOMPARE(itemHit->text(QAccessible::Name), QLatin1String("rect1"));
+    QAI rootItemIface = QAI(rootItem->childAt(rect1Rect.x() + 10, rect1Rect.y() + 10));
+    QVERIFY(rootItemIface);
+    QCOMPARE(rect1Rect, rootItemIface->rect());
+    QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect1"));
 
     // should also work from top level (app)
     QAI app(QAccessible::queryAccessibleInterface(qApp));
@@ -366,16 +368,20 @@ void tst_QQuickAccessible::hitTest()
     QCOMPARE(itemHit2->text(QAccessible::Name), QLatin1String("rect1"));
 
     // hit rect201
-    QAI rect2(rootItem->child(2));
-    QAI rect20(rect2->child(1));
-    QAI rect201(rect20->child(2));
+    QAI rect2(rootItem->child(1));
+    QVERIFY(rect2);
+    // FIXME: This is seems broken on mac
+    // QCOMPARE(rect2->rect().translated(rootItem->rect().x(), rootItem->rect().y()), QRect(0, 50, 100, 100));
+    QAI rect20(rect2->child(0));
+    QVERIFY(rect20);
+    QAI rect201(rect20->child(1));
     QVERIFY(rect201);
 
     QRect rect201Rect = rect201->rect();
-    itemHit = QAI(iface->childAt(rect201Rect.x() + 20, rect201Rect.y() + 20));
-    QVERIFY(itemHit);
-    QCOMPARE(itemHit->rect(), rect201Rect);
-    QCOMPARE(itemHit->text(QAccessible::Name), QLatin1String("rect201"));
+    rootItemIface = QAI(canvasIface->childAt(rect201Rect.x() + 20, rect201Rect.y() + 20));
+    QVERIFY(rootItemIface);
+    QCOMPARE(rootItemIface->rect(), rect201Rect);
+    QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect201"));
 
     delete canvas;
 }

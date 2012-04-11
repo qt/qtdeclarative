@@ -60,7 +60,6 @@ public:
         AnimationPausedChanged = 19, // highest value
         ChangeTool             = 1,
         ClearComponentCache    = 2,
-        ColorChanged           = 3,
         CreateObject           = 5,
         CurrentObjectsChanged  = 6,
         DestroyObject          = 7,
@@ -77,10 +76,8 @@ public:
     };
 
     enum Tool {
-        ColorPickerTool,
-        SelectMarqueeTool,
-        SelectTool,
-        ZoomTool
+        SelectMarqueeTool = 1,
+        InspectTool
     };
 
     static inline QString toString(Message message)

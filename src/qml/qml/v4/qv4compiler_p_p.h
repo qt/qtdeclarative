@@ -128,8 +128,6 @@ public:
     bool compile(QQmlJS::AST::Node *);
 
     int registerLiteralString(quint8 reg, const QStringRef &);
-    int registerString(const QString &);
-    QQmlAssociationList<QString, QPair<int, int> > registeredStrings;
     QByteArray data;
 
     bool blockNeedsSubscription(const QStringList &);
@@ -141,7 +139,7 @@ public:
     QVector<quint64> exceptions;
 
     QQmlAssociationList<int, quint32> usedSubscriptionIds;
-
+    int subscriptionOffset;
     QQmlAssociationList<QString, int> subscriptionIds;
     QQmlJS::Bytecode bytecode;
 
@@ -156,17 +154,17 @@ public:
     QQmlPool pool;
 
     // Committed binding data
-    struct {
+    struct Committed {
+        Committed(): subscriptionCount(0) {}
         QList<int> offsets;
         QList<QQmlAssociationList<int, quint32> > dependencies;
 
         //QQmlJS::Bytecode bytecode;
         QByteArray bytecode;
         QByteArray data;
-        QQmlAssociationList<QString, int> subscriptionIds;
         QVector<quint64> exceptions;
-
-        QQmlAssociationList<QString, QPair<int, int> > registeredStrings;
+        int subscriptionCount;
+        QList<QQmlAssociationList<QString, int> > subscriptions;
 
         int count() const { return offsets.count(); }
     } committed;
@@ -174,7 +172,7 @@ public:
     QByteArray buildSignalTable() const;
     QByteArray buildExceptionData() const;
 
-    void convertToReal(QQmlJS::IR::Expr *expr, int reg);    
+    void convertToNumber(QQmlJS::IR::Expr *expr, int reg);
     void convertToInt(QQmlJS::IR::Expr *expr, int reg);
     void convertToBool(QQmlJS::IR::Expr *expr, int reg);
     quint8 instructionOpcode(QQmlJS::IR::Binop *e);
@@ -235,6 +233,8 @@ private:
 
     bool usedSubscriptionIdsChanged;
     quint32 currentBlockMask;
+    int bindingLine;
+    int bindingColumn;
 };
 
 

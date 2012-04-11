@@ -123,14 +123,14 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::UnaryNot:
         INSTR_DUMP << "\t" << "UnaryNot" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::UnaryMinusReal:
-        INSTR_DUMP << "\t" << "UnaryMinusReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::UnaryMinusNumber:
+        INSTR_DUMP << "\t" << "UnaryMinusNumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::UnaryMinusInt:
         INSTR_DUMP << "\t" << "UnaryMinusInt" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::UnaryPlusReal:
-        INSTR_DUMP << "\t" << "UnaryPlusReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::UnaryPlusNumber:
+        INSTR_DUMP << "\t" << "UnaryPlusNumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::UnaryPlusInt:
         INSTR_DUMP << "\t" << "UnaryPlusInt" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
@@ -138,8 +138,8 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertBoolToInt:
         INSTR_DUMP << "\t" << "ConvertBoolToInt" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::ConvertBoolToReal:
-        INSTR_DUMP << "\t" << "ConvertBoolToReal" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::ConvertBoolToNumber:
+        INSTR_DUMP << "\t" << "ConvertBoolToNumber" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::ConvertBoolToString:
         INSTR_DUMP << "\t" << "ConvertBoolToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
@@ -147,20 +147,20 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertIntToBool:
         INSTR_DUMP << "\t" << "ConvertIntToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::ConvertIntToReal:
-        INSTR_DUMP << "\t" << "ConvertIntToReal" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::ConvertIntToNumber:
+        INSTR_DUMP << "\t" << "ConvertIntToNumber" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::ConvertIntToString:
         INSTR_DUMP << "\t" << "ConvertIntToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::ConvertRealToBool:
-        INSTR_DUMP << "\t" << "ConvertRealToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::ConvertNumberToBool:
+        INSTR_DUMP << "\t" << "ConvertNumberToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::ConvertRealToInt:
-        INSTR_DUMP << "\t" << "ConvertRealToInt" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::ConvertNumberToInt:
+        INSTR_DUMP << "\t" << "ConvertNumberToInt" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::ConvertRealToString:
-        INSTR_DUMP << "\t" << "ConvertRealToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::ConvertNumberToString:
+        INSTR_DUMP << "\t" << "ConvertNumberToString" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::ConvertStringToBool:
         INSTR_DUMP << "\t" << "ConvertStringToBool" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
@@ -168,8 +168,8 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertStringToInt:
         INSTR_DUMP << "\t" << "ConvertStringToInt" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::ConvertStringToReal:
-        INSTR_DUMP << "\t" << "ConvertStringToReal" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::ConvertStringToNumber:
+        INSTR_DUMP << "\t" << "ConvertStringToNumber" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::ConvertStringToUrl:
         INSTR_DUMP << "\t" << "ConvertStringToUrl" << "\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
@@ -198,32 +198,32 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ResolveUrl:
         INSTR_DUMP << "\t" << "ResolveUrl" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::MathSinReal:
-        INSTR_DUMP << "\t" << "MathSinReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::MathSinNumber:
+        INSTR_DUMP << "\t" << "MathSinNumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::MathCosReal:
-        INSTR_DUMP << "\t" << "MathCosReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::MathCosNumber:
+        INSTR_DUMP << "\t" << "MathCosNumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::MathAbsReal:
-        INSTR_DUMP << "\t" << "MathAbsReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::MathAbsNumber:
+        INSTR_DUMP << "\t" << "MathAbsNumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::MathRoundReal:
-        INSTR_DUMP << "\t" << "MathRoundReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::MathRoundNumber:
+        INSTR_DUMP << "\t" << "MathRoundNumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::MathFloorReal:
-        INSTR_DUMP << "\t" << "MathFloorReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::MathFloorNumber:
+        INSTR_DUMP << "\t" << "MathFloorNumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::MathCeilReal:
-        INSTR_DUMP << "\t" << "MathCeilReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::MathCeilNumber:
+        INSTR_DUMP << "\t" << "MathCeilNumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
-    case V4Instr::MathPIReal:
-        INSTR_DUMP << "\t" << "MathPIReal" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
+    case V4Instr::MathPINumber:
+        INSTR_DUMP << "\t" << "MathPINumber" << "\t\t" << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ")";
         break;
     case V4Instr::LoadNull:
         INSTR_DUMP << "\t" << "LoadNull" << "\t\t" << "Constant(null) -> Output_Reg(" << i->null_value.reg << ")";
         break;
-    case V4Instr::LoadReal:
-        INSTR_DUMP << "\t" << "LoadReal" << "\t\t" << "Constant(" << i->real_value.value << ") -> Output_Reg(" << i->real_value.reg << ")";
+    case V4Instr::LoadNumber:
+        INSTR_DUMP << "\t" << "LoadNumber" << "\t\t" << "Constant(" << i->number_value.value << ") -> Output_Reg(" << i->number_value.reg << ")";
         break;
     case V4Instr::LoadInt:
         INSTR_DUMP << "\t" << "LoadInt" << "\t\t\t" << "Constant(" << i->int_value.value << ") -> Output_Reg(" << i->int_value.reg << ")";
@@ -249,23 +249,23 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::BitXorInt:
         INSTR_DUMP << "\t" << "BitXorInt" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::AddReal:
-        INSTR_DUMP << "\t" << "AddReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::AddNumber:
+        INSTR_DUMP << "\t" << "AddNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
     case V4Instr::AddString:
         INSTR_DUMP << "\t" << "AddString" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::SubReal:
-        INSTR_DUMP << "\t" << "SubReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::SubNumber:
+        INSTR_DUMP << "\t" << "SubNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::MulReal:
-        INSTR_DUMP << "\t" << "MulReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::MulNumber:
+        INSTR_DUMP << "\t" << "MulNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::DivReal:
-        INSTR_DUMP << "\t" << "DivReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::DivNumber:
+        INSTR_DUMP << "\t" << "DivNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::ModReal:
-        INSTR_DUMP << "\t" << "ModReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::ModNumber:
+        INSTR_DUMP << "\t" << "ModNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
     case V4Instr::LShiftInt:
         INSTR_DUMP << "\t" << "LShiftInt" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
@@ -276,29 +276,29 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::URShiftInt:
         INSTR_DUMP << "\t" << "URShiftInt" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::GtReal:
-        INSTR_DUMP << "\t" << "GtReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::GtNumber:
+        INSTR_DUMP << "\t" << "GtNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::LtReal:
-        INSTR_DUMP << "\t" << "LtReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::LtNumber:
+        INSTR_DUMP << "\t" << "LtNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::GeReal:
-        INSTR_DUMP << "\t" << "GeReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::GeNumber:
+        INSTR_DUMP << "\t" << "GeNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::LeReal:
-        INSTR_DUMP << "\t" << "LeReal" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::LeNumber:
+        INSTR_DUMP << "\t" << "LeNumber" << "\t\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::EqualReal:
-        INSTR_DUMP << "\t" << "EqualReal" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::EqualNumber:
+        INSTR_DUMP << "\t" << "EqualNumber" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::NotEqualReal:
-        INSTR_DUMP << "\t" << "NotEqualReal" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::NotEqualNumber:
+        INSTR_DUMP << "\t" << "NotEqualNumber" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::StrictEqualReal:
-        INSTR_DUMP << "\t" << "StrictEqualReal" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::StrictEqualNumber:
+        INSTR_DUMP << "\t" << "StrictEqualNumber" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::StrictNotEqualReal:
-        INSTR_DUMP << "\t" << "StrictNotEqualReal" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::StrictNotEqualNumber:
+        INSTR_DUMP << "\t" << "StrictNotEqualNumber" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
     case V4Instr::GtString:
         INSTR_DUMP << "\t" << "GtString" << "\t\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
@@ -336,11 +336,11 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::StrictNotEqualObject:
         INSTR_DUMP << "\t" << "StrictNotEqualObject" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::MathMaxReal:
-        INSTR_DUMP << "\t" << "MathMaxReal" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::MathMaxNumber:
+        INSTR_DUMP << "\t" << "MathMaxNumber" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
-    case V4Instr::MathMinReal:
-        INSTR_DUMP << "\t" << "MathMinReal" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
+    case V4Instr::MathMinNumber:
+        INSTR_DUMP << "\t" << "MathMinNumber" << "\t" << "Input_Reg(" << i->binaryop.left << ") Input_Reg(" << i->binaryop.right << ") -> Output_Reg(" << i->binaryop.output << ")";
         break;
     case V4Instr::NewString:
         INSTR_DUMP << "\t" << "NewString" << "\t\t" << "Register(" << i->construct.reg << ")";
@@ -376,11 +376,11 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::Branch:
         INSTR_DUMP << "\t" << "Branch" << "\t\t\t" << "Address(" << (address + size() + i->branchop.offset) << ")";
         break;
-    case V4Instr::InitString:
-        INSTR_DUMP << "\t" << "InitString" << "\t\t" << "String_DataIndex(" << i->initstring.dataIdx << ") -> String_Slot(" << i->initstring.offset << ")";
-        break;
     case V4Instr::Block:
         INSTR_DUMP << "\t" << "Block" << "\t\t\t" << "Mask(" << QByteArray::number(i->blockop.block, 16).constData()  << ")";
+        break;
+    case V4Instr::Throw:
+        INSTR_DUMP << "\t" << "Throw" << "\t\t\t" << "InputReg(" << i->throwop.message  << ")";
         break;
     default:
         INSTR_DUMP << "\t" << "Unknown";

@@ -545,27 +545,27 @@ QString QQmlImportsPrivate::add(const QQmlDirComponents &qmldircomponentsnetwork
             }
         }
 
-        // TODO: Should this search be omitted if found == true?
+        if (!found) {
+            // step 2: search for extension with encoded version major
+            foreach (const QString &p, database->fileImportPath) {
+                dir = p+Slash+url;
 
-        // step 2: search for extension with encoded version major
-        foreach (const QString &p, database->fileImportPath) {
-            dir = p+Slash+url;
+                QFileInfo fi(dir+QString(QLatin1String(".%1")).arg(vmaj)+QLatin1String("/qmldir"));
+                const QString absoluteFilePath = fi.absoluteFilePath();
 
-            QFileInfo fi(dir+QString(QLatin1String(".%1")).arg(vmaj)+QLatin1String("/qmldir"));
-            const QString absoluteFilePath = fi.absoluteFilePath();
+                if (fi.isFile()) {
+                    found = true;
 
-            if (fi.isFile()) {
-                found = true;
-
-                const QString absolutePath = fi.absolutePath();
-                if (absolutePath.at(0) == QLatin1Char(':'))
-                    url = QLatin1String("qrc://") + absolutePath.mid(1);
-                else
-                    url = QUrl::fromLocalFile(fi.absolutePath()).toString();
-                uri = resolvedUri(dir, database);
-                if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, &qmldirscripts, errors))
-                    return QString();
-                break;
+                    const QString absolutePath = fi.absolutePath();
+                    if (absolutePath.at(0) == QLatin1Char(':'))
+                        url = QLatin1String("qrc://") + absolutePath.mid(1);
+                    else
+                        url = QUrl::fromLocalFile(fi.absolutePath()).toString();
+                    uri = resolvedUri(dir, database);
+                    if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, &qmldirscripts, errors))
+                        return QString();
+                    break;
+                }
             }
         }
 

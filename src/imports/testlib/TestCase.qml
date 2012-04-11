@@ -607,6 +607,10 @@ Item {
                 functionsToRun.splice(index, 1)
             }
             qtest_results.functionName = prop
+
+            if (!(datafunc in testCase))
+                datafunc = "init_data";
+
             if (datafunc in testCase) {
                 if (qtest_runInternal(datafunc)) {
                     var table = qtest_testCaseResult
@@ -624,9 +628,13 @@ Item {
                             qtest_runFunction(prop, row)
                         qtest_results.dataTag = ""
                     }
-                    if (!haveData)
-                        qtest_results.warn("no data supplied for " + prop + "() by " + datafunc + "()"
-                                           , util.callerFile(), util.callerLine());
+                    if (!haveData) {
+                        if (datafunc === "init_data")
+                           qtest_runFunction(prop, null, isBenchmark)
+                        else
+                           qtest_results.warn("no data supplied for " + prop + "() by " + datafunc + "()"
+                                            , util.callerFile(), util.callerLine());
+                    }
                     qtest_results.clearTestTable()
                 }
             } else if (isBenchmark) {

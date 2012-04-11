@@ -64,6 +64,8 @@ public:
 
     AbstractViewInspector *inspector() const { return m_inspector; }
 
+    virtual void enable(bool enable) = 0;
+
     virtual void leaveEvent(QEvent *event) = 0;
 
     virtual void mousePressEvent(QMouseEvent *event) = 0;

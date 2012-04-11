@@ -74,6 +74,8 @@ public:
     virtual void itemChildRemoved(QQuickItem *, QQuickItem *) {}
     virtual void itemParentChanged(QQuickItem *, QQuickItem *) {}
     virtual void itemRotationChanged(QQuickItem *) {}
+    virtual void itemImplicitWidthChanged(QQuickItem *) {}
+    virtual void itemImplicitHeightChanged(QQuickItem *) {}
 
     virtual QQuickAnchorsPrivate *anchorPrivate() { return 0; }
 };

@@ -51,8 +51,7 @@ QAnimationGroupJob::QAnimationGroupJob()
 
 QAnimationGroupJob::~QAnimationGroupJob()
 {
-    while (firstChild() != 0)
-        delete firstChild();
+    clear();
 }
 
 void QAnimationGroupJob::topLevelAnimationLoopChanged()
@@ -123,9 +122,16 @@ void QAnimationGroupJob::removeAnimation(QAbstractAnimationJob *animation)
 
 void QAnimationGroupJob::clear()
 {
-    //### should this remove and delete, or just remove?
-    while (firstChild() != 0)
-        delete firstChild(); //removeAnimation(firstChild());
+    QAbstractAnimationJob *child = firstChild();
+    QAbstractAnimationJob *nextSibling = 0;
+    while (child != 0) {
+         child->m_group = 0;
+         nextSibling = child->nextSibling();
+         delete child;
+         child = nextSibling;
+    }
+    m_firstChild = 0;
+    m_lastChild = 0;
 }
 
 void QAnimationGroupJob::resetUncontrolledAnimationsFinishTime()

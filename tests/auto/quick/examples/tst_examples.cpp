@@ -249,10 +249,6 @@ void tst_examples::sgexamples()
 {
     QFETCH(QString, file);
 
-#if defined(QTEST_CROSS_COMPILED)
-    QSKIP("sources not available when cross compiled");
-#endif
-
     QQmlComponent component(&engine, QUrl::fromLocalFile(file));
     if (component.status() == QQmlComponent::Error)
         qWarning() << component.errors();
@@ -292,10 +288,6 @@ void tst_examples::sgsnippets_data()
 void tst_examples::sgsnippets()
 {
     QFETCH(QString, file);
-
-#if defined(QTEST_CROSS_COMPILED)
-    QSKIP("sources not available when cross compiled");
-#endif
 
     QQmlComponent component(&engine, QUrl::fromLocalFile(file));
     if (component.status() == QQmlComponent::Error)

@@ -46,6 +46,7 @@
 
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
 #include <qaccessibleplugin.h>
@@ -86,8 +87,11 @@ QAccessibleInterface *AccessibleQuickFactory::create(const QString &classname, Q
     if (classname == QLatin1String("QQuickView")) {
         return new QAccessibleQuickView(qobject_cast<QQuickView *>(object)); // FIXME
     } else if (classname == QLatin1String("QQuickItem")) {
-        QQuickItem * item = qobject_cast<QQuickItem *>(object);
+        QQuickItem *item = qobject_cast<QQuickItem *>(object);
         Q_ASSERT(item);
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        if (!itemPrivate->isAccessible)
+            return 0;
 
         QVariant v = QQuickAccessibleAttached::property(item, "role");
         bool ok;

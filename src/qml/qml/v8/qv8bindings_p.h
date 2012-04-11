@@ -53,12 +53,13 @@
 // We mean it.
 //
 
+#include <private/qpointervaluepair_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmlinstruction_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlcompiler_p.h>
-#include <private/qqmlbinding_p.h>
 #include <private/qflagpointer_p.h>
+#include <private/qqmlbinding_p.h>
 
 QT_BEGIN_HEADER
 
@@ -96,17 +97,26 @@ public:
         virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags);
         virtual void update(QQmlPropertyPrivate::WriteFlags flags);
         virtual void destroy();
-        virtual int propertyIndex() const;
         virtual QObject *object() const;
+        virtual int propertyIndex() const;
+        virtual void retargetBinding(QObject *, int);
 
-        QObject *target;
         QV8Bindings *parent;
 
+        struct Retarget {
+            QObject *target;
+            int targetProperty;
+        };
+
         // To save memory, we store flags inside the instruction pointer.
-        //    flag1: enabled
-        //    flag2: updating
+        //    target.flag1: destroyed
+        //    instruction.flag1: enabled
+        //    instruction.flag2: updating
+        QPointerValuePair<QObject, Retarget> target;
         QFlagPointer<const QQmlInstruction::instr_assignBinding> instruction;
 
+        inline bool destroyedFlag() const { return target.flag(); }
+        inline void setDestroyedFlag(bool v) { return target.setFlagValue(v); }
         inline bool enabledFlag() const { return instruction.flag(); }
         inline void setEnabledFlag(bool v) { instruction.setFlagValue(v); }
         inline bool updatingFlag() const { return instruction.flag2(); }

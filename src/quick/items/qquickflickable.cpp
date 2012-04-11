@@ -1108,7 +1108,8 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
         d->clearDelayedPress();
         d->handleMouseReleaseEvent(event);
         event->accept();
-        ungrabMouse();
+        if (canvas() && canvas()->mouseGrabberItem() == this)
+            ungrabMouse();
     } else {
         QQuickItem::mouseReleaseEvent(event);
     }

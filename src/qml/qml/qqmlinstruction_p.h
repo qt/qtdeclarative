@@ -114,7 +114,6 @@ QT_BEGIN_NAMESPACE
     F(BeginObject, begin) \
     F(InitV8Bindings, initV8Bindings) \
     F(StoreBinding, assignBinding) \
-    F(StoreBindingOnAlias, assignBinding) \
     F(StoreV8Binding, assignBinding) \
     F(StoreV4Binding, assignV4Binding) \
     F(StoreValueSource, assignValueSource) \
@@ -251,6 +250,7 @@ union QQmlInstruction
         short context;
         short owner;
         bool isRoot;
+        bool isAlias;
         ushort line;
         ushort column;
     };

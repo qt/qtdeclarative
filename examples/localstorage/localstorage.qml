@@ -43,7 +43,7 @@ import "../shared" as Examples
 
 /*!
     \title QtQuick Examples - Local Storage
-    \example qtquick/localstorage
+    \example localstorage
     \brief This is a collection of QML local storage examples
     \image qml-localstorage-example.png
 

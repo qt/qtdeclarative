@@ -12,22 +12,20 @@ INCLUDEPATH *= $$PWD $$PWD/../shared
 SOURCES += \
     qtquick2plugin.cpp \
     highlight.cpp \
-    selectiontool.cpp \
     qquickviewinspector.cpp \
     ../shared/abstracttool.cpp \
     ../shared/abstractviewinspector.cpp \
-    zoomtool.cpp
+    inspecttool.cpp
 
 HEADERS += \
     qtquick2plugin.h \
     highlight.h \
-    selectiontool.h \
     qquickviewinspector.h \
     ../shared/abstracttool.h \
     ../shared/abstractviewinspector.h \
     ../shared/qqmlinspectorprotocol.h \
     ../shared/qmlinspectorconstants.h \
-    zoomtool.h
+    inspecttool.h
 
 OTHER_FILES += qtquick2plugin.json
 

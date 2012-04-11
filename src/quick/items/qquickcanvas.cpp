@@ -55,7 +55,6 @@
 
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputMethod>
-#include <QtGui/QCursor>
 
 #include <private/qabstractanimation_p.h>
 
@@ -123,10 +122,12 @@ private:
     bool m_eventSent;
 };
 
+#ifndef QT_NO_ACCESSIBILITY
 QAccessibleInterface *QQuickCanvas::accessibleRoot() const
 {
     return QAccessible::queryAccessibleInterface(const_cast<QQuickCanvas*>(this));
 }
+#endif
 
 
 /*
@@ -153,6 +154,10 @@ have a scope focused item), and the other items will have their focus cleared.
 // #define MOUSE_DEBUG
 // #define TOUCH_DEBUG
 // #define DIRTY_DEBUG
+
+#ifdef FOCUS_DEBUG
+void printFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1);
+#endif
 
 QQuickItem::UpdatePaintNodeData::UpdatePaintNodeData()
 : transformNode(0)
@@ -952,7 +957,7 @@ bool QQuickCanvasPrivate::clearHover()
     if (hoverItems.isEmpty())
         return false;
 
-    QPointF pos = QCursor::pos(); // ### refactor: q->mapFromGlobal(QCursor::pos());
+    QPointF pos = QGuiApplicationPrivate::lastCursorPosition;; // ### refactor: q->mapFromGlobal(QCursor::pos());
 
     bool accepted = false;
     foreach (QQuickItem* item, hoverItems)
@@ -1087,8 +1092,12 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
         QQuickMouseEventEx me(event->type(), transform.map(event->windowPos()),
                                 event->windowPos(), event->screenPos(),
                                 event->button(), event->buttons(), event->modifiers());
-        if (QQuickMouseEventEx::extended(event))
-            me.setVelocity(QQuickMouseEventEx::extended(event)->velocity());
+        QQuickMouseEventEx *eventEx = QQuickMouseEventEx::extended(event);
+        if (eventEx) {
+            me.setVelocity(eventEx->velocity());
+            me.setCapabilities(eventEx->capabilities());
+        }
+        me.setTimestamp(event->timestamp());
         me.accept();
         q->sendEvent(mouseGrabberItem, &me);
         event->setAccepted(me.isAccepted());

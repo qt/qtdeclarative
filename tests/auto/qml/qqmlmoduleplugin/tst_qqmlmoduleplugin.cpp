@@ -70,6 +70,8 @@ private slots:
     void versionNotInstalled_data();
     void implicitQmldir();
     void implicitQmldir_data();
+    void importsNested();
+    void importsNested_data();
 
 private:
     QString m_importsDirectory;
@@ -347,6 +349,47 @@ void tst_qqmlmoduleplugin::implicitQmldir()
     delete obj;
 }
 
+void tst_qqmlmoduleplugin::importsNested_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("errorFile");
+
+    // Note: no other test case should import the plugin used for this test, or the
+    // wrong order test will pass spuriously
+    QTest::newRow("wrongOrder") << "importsNested.1.qml" << "importsNested.1.errors.txt";
+    QTest::newRow("missingImport") << "importsNested.3.qml" << "importsNested.3.errors.txt";
+    QTest::newRow("invalidVersion") << "importsNested.4.qml" << "importsNested.4.errors.txt";
+    QTest::newRow("correctOrder") << "importsNested.2.qml" << QString();
+}
+void tst_qqmlmoduleplugin::importsNested()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, errorFile);
+
+    // Note: because imports are cached between test case data rows (and the plugins remain loaded),
+    // these tests should really be run in new instances of the app...
+
+    QQmlEngine engine;
+    engine.addImportPath(m_importsDirectory);
+
+    if (!errorFile.isEmpty()) {
+        QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
+    }
+
+    QQmlComponent component(&engine, testFile(file));
+    QObject *obj = component.create();
+
+    if (errorFile.isEmpty()) {
+        if (qgetenv("DEBUG") != "" && !component.errors().isEmpty())
+            qWarning() << "Unexpected Errors:" << component.errors();
+        QVERIFY(obj);
+        delete obj;
+    } else {
+        QList<QQmlError> errors = component.errors();
+        VERIFY_ERRORS(errorFile.toLatin1().constData());
+        QVERIFY(!obj);
+    }
+}
 
 QTEST_MAIN(tst_qqmlmoduleplugin)
 

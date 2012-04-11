@@ -54,15 +54,13 @@ Rectangle {
     gradient: Gradient {
         GradientStop {
             position: 0.0
-            color: !mouseArea.pressed ? activePalette.light : activePalette.button
+            color: !mouseArea.pressed ? "#eeeeee" : "#888888"
         }
         GradientStop {
             position: 1.0
-            color: !mouseArea.pressed ? activePalette.button : activePalette.dark
+            color: !mouseArea.pressed ? "#888888" : "#333333"
         }
     }
-
-    SystemPalette { id: activePalette }
 
     MouseArea {
         id: mouseArea
@@ -75,6 +73,5 @@ Rectangle {
         anchors.centerIn:parent
         font.pointSize: 10
         text: parent.text
-        color: activePalette.buttonText
     }
 }

@@ -62,7 +62,9 @@ static bool qmlEnableV4 = true;
 
 using namespace QQmlJS;
 QV4CompilerPrivate::QV4CompilerPrivate()
-    : _function(0) , _block(0) , _discarded(false), registerCount(0)
+    : subscriptionOffset(0)
+    , _function(0) , _block(0) , _discarded(false), registerCount(0)
+    , bindingLine(0), bindingColumn(0)
 {
 }
 
@@ -73,6 +75,8 @@ void QV4CompilerPrivate::trace(int line, int column)
 {
     bytecode.clear();
 
+    this->bindingLine = line;
+    this->bindingColumn = column;
     this->currentReg = _function->tempCount;
     this->registerCount = qMax(this->registerCount, this->currentReg);
 
@@ -226,8 +230,9 @@ void QV4CompilerPrivate::visitConst(IR::Const *e)
         gen(i);
         } break;
 
-    case IR::RealType: {
-        Instr::LoadReal i;
+    case IR::FloatType:
+    case IR::NumberType: {
+        Instr::LoadNumber i;
         i.reg = currentReg;
         i.value = e->value;
         gen(i);
@@ -316,7 +321,7 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         Instr::LoadAttached attached;
         attached.output = currentReg;
         attached.reg = currentReg;
-        attached.exceptionId = exceptionId(e->line, e->column);
+        attached.exceptionId = exceptionId(bindingLine, bindingColumn);
         if (e->declarativeType->attachedPropertiesId() == -1)
             discard();
         attached.id = e->declarativeType->attachedPropertiesId();
@@ -351,8 +356,11 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         QQmlRegisterType regType;
 
         switch (propTy) {
-        case QMetaType::QReal:
-            regType = QRealType;
+        case QMetaType::Float:
+            regType = FloatType;
+            break;
+        case QMetaType::Double:
+            regType = NumberType;
             break;
         case QMetaType::Bool:
             regType = BoolType;
@@ -373,7 +381,7 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         default:
             if (propTy == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
                 regType = PODValueType;
-            } else if (QQmlMetaType::isQObject(propTy)) {
+            } else if (engine->metaObjectForType(propTy)) {
                 regType = QObjectStarType;
             } else {
                 if (qmlVerboseCompiler())
@@ -458,14 +466,14 @@ void QV4CompilerPrivate::visitUnop(IR::Unop *e)
         } break;
 
     case IR::OpUMinus:
-        if (e->expr->type == IR::RealType) {
-            Instr::UnaryMinusReal i;
+        if (IR::isRealType(e->expr->type)) {
+            Instr::UnaryMinusNumber i;
             i.output = currentReg;
             i.src = src;
             gen(i);
         } else if (e->expr->type == IR::IntType) {
-            convertToReal(e->expr, currentReg);
-            Instr::UnaryMinusReal i;
+            convertToNumber(e->expr, currentReg);
+            Instr::UnaryMinusNumber i;
             i.output = currentReg;
             i.src = src;
             gen(i);
@@ -475,14 +483,14 @@ void QV4CompilerPrivate::visitUnop(IR::Unop *e)
         break;
 
     case IR::OpUPlus:
-        if (e->expr->type == IR::RealType) {
-            Instr::UnaryPlusReal i;
+        if (IR::isRealType(e->expr->type)) {
+            Instr::UnaryPlusNumber i;
             i.output = currentReg;
             i.src = src;
             gen(i);
         } else if (e->expr->type == IR::IntType) {
-            convertToReal(e->expr, currentReg);
-            Instr::UnaryPlusReal i;
+            convertToNumber(e->expr, currentReg);
+            Instr::UnaryPlusNumber i;
             i.output = currentReg;
             i.src = src;
             gen(i);
@@ -522,25 +530,26 @@ void QV4CompilerPrivate::visitUnop(IR::Unop *e)
     } // switch
 }
 
-void QV4CompilerPrivate::convertToReal(IR::Expr *expr, int reg)
+void QV4CompilerPrivate::convertToNumber(IR::Expr *expr, int reg)
 {
-    if (expr->type == IR::RealType)
+    if (expr->type == IR::NumberType)
         return;
 
     switch (expr->type) {
     case IR::BoolType: {
-        Instr::ConvertBoolToReal i;
+        Instr::ConvertBoolToNumber i;
         i.output = i.src = reg;
         gen(i);
         } break;
 
     case IR::IntType: {
-        Instr::ConvertIntToReal i;
+        Instr::ConvertIntToNumber i;
         i.output = i.src = reg;
         gen(i);
         } break;
 
-    case IR::RealType:
+    case IR::FloatType:
+    case IR::NumberType:
         // nothing to do
         return;
 
@@ -566,8 +575,9 @@ void QV4CompilerPrivate::convertToInt(IR::Expr *expr, int reg)
         // nothing to do
         return;
 
-    case IR::RealType: {
-        Instr::ConvertRealToInt i;
+    case IR::FloatType:
+    case IR::NumberType: {
+        Instr::ConvertNumberToInt i;
         i.output = i.src = reg;
         gen(i);
         } break;
@@ -594,8 +604,9 @@ void QV4CompilerPrivate::convertToBool(IR::Expr *expr, int reg)
         gen(i);
         } break;
 
-    case IR::RealType: {
-        Instr::ConvertRealToBool i;
+    case IR::FloatType:
+    case IR::NumberType: {
+        Instr::ConvertNumberToBool i;
         i.output = i.src = reg;
         gen(i);
         } return;
@@ -643,19 +654,19 @@ quint8 QV4CompilerPrivate::instructionOpcode(IR::Binop *e)
     case IR::OpAdd:
         if (e->type == IR::StringType)
             return V4Instr::AddString;
-        return V4Instr::AddReal;
+        return V4Instr::AddNumber;
 
     case IR::OpSub:
-        return V4Instr::SubReal;
+        return V4Instr::SubNumber;
 
     case IR::OpMul:
-        return V4Instr::MulReal;
+        return V4Instr::MulNumber;
 
     case IR::OpDiv:
-        return V4Instr::DivReal;
+        return V4Instr::DivNumber;
 
     case IR::OpMod:
-        return V4Instr::ModReal;
+        return V4Instr::ModNumber;
 
     case IR::OpLShift:
         return V4Instr::LShiftInt;
@@ -669,50 +680,50 @@ quint8 QV4CompilerPrivate::instructionOpcode(IR::Binop *e)
     case IR::OpGt:
         if (e->left->type == IR::StringType)
             return V4Instr::GtString;
-        return V4Instr::GtReal;
+        return V4Instr::GtNumber;
 
     case IR::OpLt:
         if (e->left->type == IR::StringType)
             return V4Instr::LtString;
-        return V4Instr::LtReal;
+        return V4Instr::LtNumber;
 
     case IR::OpGe:
         if (e->left->type == IR::StringType)
             return V4Instr::GeString;
-        return V4Instr::GeReal;
+        return V4Instr::GeNumber;
 
     case IR::OpLe:
         if (e->left->type == IR::StringType)
             return V4Instr::LeString;
-        return V4Instr::LeReal;
+        return V4Instr::LeNumber;
 
     case IR::OpEqual:
         if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
             return V4Instr::EqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::EqualString;
-        return V4Instr::EqualReal;
+        return V4Instr::EqualNumber;
 
     case IR::OpNotEqual:
         if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
             return V4Instr::NotEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::NotEqualString;
-        return V4Instr::NotEqualReal;
+        return V4Instr::NotEqualNumber;
 
     case IR::OpStrictEqual:
         if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
             return V4Instr::StrictEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::StrictEqualString;
-        return V4Instr::StrictEqualReal;
+        return V4Instr::StrictEqualNumber;
 
     case IR::OpStrictNotEqual:
         if (e->left->type == IR::ObjectType || e->right->type == IR::ObjectType)
             return V4Instr::StrictNotEqualObject;
         if (e->left->type == IR::StringType)
             return V4Instr::StrictNotEqualString;
-        return V4Instr::StrictNotEqualReal;
+        return V4Instr::StrictNotEqualNumber;
 
     case IR::OpAnd:
     case IR::OpOr:
@@ -733,12 +744,26 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
     int left = currentReg;
     int right = currentReg + 1; 
 
-    traceExpression(e->left, left);
-    traceExpression(e->right, right);
+    if (e->left->asTemp() && e->type != IR::StringType)
+        left = e->left->asTemp()->index;
+    else
+        traceExpression(e->left, left);
 
-    // At this point it is possible that the type of the
-    // subexpressions is different. This can happen because
-    // we keep BINOP expressions in HIR.
+    if (IR::Temp *t = e->right->asTemp())
+        right = t->index;
+    else
+        traceExpression(e->right, right);
+
+    if (e->left->type != e->right->type) {
+        if (qmlVerboseCompiler())
+            qWarning().nospace() << "invalid operands to binary operator " << IR::binaryOperator(e->op)
+                                 << "(`" << IR::binaryOperator(e->left->type)
+                                 << "' and `"
+                                 << IR::binaryOperator(e->right->type)
+                                 << "'";
+        discard();
+        return;
+    }
 
     switch (e->op) {
     case IR::OpInvalid:
@@ -766,8 +791,8 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
 
     case IR::OpAdd:
         if (e->type != IR::StringType) {
-            convertToReal(e->left, left);
-            convertToReal(e->right, right);
+            convertToNumber(e->left, left);
+            convertToNumber(e->right, right);
         }
         break;
 
@@ -775,8 +800,8 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
     case IR::OpMul:
     case IR::OpDiv:
     case IR::OpMod:
-        convertToReal(e->left, left);
-        convertToReal(e->right, right);
+        convertToNumber(e->left, left);
+        convertToNumber(e->right, right);
         break;
 
     case IR::OpGt:
@@ -788,8 +813,8 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
     case IR::OpStrictEqual:
     case IR::OpStrictNotEqual:
         if (e->left->type >= IR::FirstNumberType) {
-            convertToReal(e->left, left);
-            convertToReal(e->right, right);
+            convertToNumber(e->left, left);
+            convertToNumber(e->right, right);
         }
         break;
 
@@ -813,7 +838,7 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
 {
     if (IR::Name *name = call->base->asName()) {
         IR::Expr *arg = call->onlyArgument();
-        if (arg != 0 && arg->type == IR::RealType) {
+        if (arg != 0 && IR::isRealType(arg->type)) {
             traceExpression(arg, currentReg);
 
             switch (name->builtin) {
@@ -821,37 +846,37 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
                 break;
 
             case IR::MathSinBultinFunction: {
-                Instr::MathSinReal i;
+                Instr::MathSinNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathCosBultinFunction: {
-                Instr::MathCosReal i;
+                Instr::MathCosNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathAbsBuiltinFunction: {
-                Instr::MathAbsReal i;
+                Instr::MathAbsNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathRoundBultinFunction: {
-                Instr::MathRoundReal i;
+                Instr::MathRoundNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathFloorBultinFunction: {
-                Instr::MathFloorReal i;
+                Instr::MathFloorNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
 
             case IR::MathCeilBuiltinFunction: {
-                Instr::MathCeilReal i;
+                Instr::MathCeilNumber i;
                 i.output = i.src = currentReg;
                 gen(i);
                 } return;
@@ -869,21 +894,21 @@ void QV4CompilerPrivate::visitCall(IR::Call *call)
                     IR::Expr *arg1 = call->args->expr;
                     IR::Expr *arg2 = call->args->next->expr;
 
-                    if (arg1 != 0 && arg1->type == IR::RealType &&
-                        arg2 != 0 && arg2->type == IR::RealType) {
+                    if (arg1 != 0 && IR::isRealType(arg1->type) &&
+                        arg2 != 0 && IR::isRealType(arg2->type)) {
 
                         traceExpression(arg1, currentReg);
                         traceExpression(arg2, currentReg + 1);
 
                         if (name->builtin == IR::MathMaxBuiltinFunction) {
-                            Instr::MathMaxReal i;
+                            Instr::MathMaxNumber i;
                             i.left = currentReg;
                             i.right = currentReg + 1;
                             i.output = currentReg;
                             gen(i);
                             return;
                         } else if (name->builtin == IR::MathMinBuiltinFunction) {
-                            Instr::MathMinReal i;
+                            Instr::MathMinNumber i;
                             i.left = currentReg;
                             i.right = currentReg + 1;
                             i.output = currentReg;
@@ -917,7 +942,17 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
 
     quint8 dest = target->index;
 
-    if (target->type != s->source->type) {
+    IR::Type targetTy = s->target->type;
+    IR::Type sourceTy = s->source->type;
+
+    // promote the floats
+    if (sourceTy == IR::FloatType)
+        sourceTy = IR::NumberType;
+
+    if (targetTy == IR::FloatType)
+        targetTy = IR::NumberType;
+
+    if (sourceTy != targetTy) {
         quint8 src = dest;
 
         if (IR::Temp *t = s->source->asTemp()) 
@@ -926,8 +961,6 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             traceExpression(s->source, dest);
 
         V4Instr::Type opcode = V4Instr::Noop;
-        IR::Type targetTy = s->target->type;
-        IR::Type sourceTy = s->source->type;
 
         if (sourceTy == IR::UrlType) {
             switch (targetTy) {
@@ -937,13 +970,22 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
                 // url-to-xxx conversions.
                 break;
             default: {
+                if (s->isMoveForReturn) {
+                    V4Instr instr;
+                    instr.throwop.exceptionId = exceptionId(bindingLine, bindingColumn);
+                    registerLiteralString(dest, _function->newString(QString::fromUtf8("Unable to assign %1 to %2")
+                                                                     .arg(QLatin1String(IR::typeName(sourceTy)))
+                                                                     .arg(QLatin1String(IR::typeName(targetTy)))));
+                    instr.throwop.message = dest;
+                    gen(V4Instr::Throw, instr);
+                    return;
+                }
                 // generate a UrlToString conversion and fix
                 // the type of the source expression.
                 V4Instr conv;
-                conv.unaryop.output = V4Instr::ConvertUrlToString;
+                conv.unaryop.output = src;
                 conv.unaryop.src = src;
-                gen(opcode, conv);
-
+                gen(V4Instr::ConvertUrlToString, conv);
                 sourceTy = IR::StringType;
                 break;
             }
@@ -953,7 +995,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
         if (targetTy == IR::BoolType) {
             switch (sourceTy) {
             case IR::IntType: opcode = V4Instr::ConvertIntToBool; break;
-            case IR::RealType: opcode = V4Instr::ConvertRealToBool; break;
+            case IR::NumberType: opcode = V4Instr::ConvertNumberToBool; break;
             case IR::StringType: opcode = V4Instr::ConvertStringToBool; break;
             case IR::UrlType: opcode = V4Instr::ConvertUrlToBool; break;
             case IR::ColorType: opcode = V4Instr::ConvertColorToBool; break;
@@ -963,33 +1005,44 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
         } else if (targetTy == IR::IntType) {
             switch (sourceTy) {
             case IR::BoolType: opcode = V4Instr::ConvertBoolToInt; break;
-            case IR::RealType: {
+            case IR::NumberType: {
                 if (s->isMoveForReturn)
-                    opcode = V4Instr::MathRoundReal;
+                    opcode = V4Instr::MathRoundNumber;
                 else
-                    opcode = V4Instr::ConvertRealToInt;
+                    opcode = V4Instr::ConvertNumberToInt;
                 break;
             }
             case IR::StringType: opcode = V4Instr::ConvertStringToInt; break;
             default: break;
             } // switch
-        } else if (targetTy == IR::RealType) {
+        } else if (IR::isRealType(targetTy)) {
             switch (sourceTy) {
-            case IR::BoolType: opcode = V4Instr::ConvertBoolToReal; break;
-            case IR::IntType: opcode = V4Instr::ConvertIntToReal; break;
-            case IR::StringType: opcode = V4Instr::ConvertStringToReal; break;
+            case IR::BoolType: opcode = V4Instr::ConvertBoolToNumber; break;
+            case IR::IntType: opcode = V4Instr::ConvertIntToNumber; break;
+            case IR::StringType: opcode = V4Instr::ConvertStringToNumber; break;
             default: break;
             } // switch
         } else if (targetTy == IR::StringType) {
             switch (sourceTy) {
             case IR::BoolType: opcode = V4Instr::ConvertBoolToString; break;
             case IR::IntType:  opcode = V4Instr::ConvertIntToString; break;
-            case IR::RealType: opcode = V4Instr::ConvertRealToString; break;
+            case IR::NumberType: opcode = V4Instr::ConvertNumberToString; break;
             case IR::UrlType: opcode = V4Instr::ConvertUrlToString; break;
             case IR::ColorType: opcode = V4Instr::ConvertColorToString; break;
             default: break;
             } // switch
         } else if (targetTy == IR::UrlType) {
+            if (s->isMoveForReturn && sourceTy != IR::StringType) {
+                V4Instr instr;
+                instr.throwop.exceptionId = exceptionId(bindingLine, bindingColumn);
+                registerLiteralString(dest, _function->newString(QString::fromUtf8("Unable to assign %1 to %2")
+                                                                 .arg(QLatin1String(IR::typeName(sourceTy)))
+                                                                 .arg(QLatin1String(IR::typeName(targetTy)))));
+                instr.throwop.message = dest;
+                gen(V4Instr::Throw, instr);
+                return;
+            }
+
             V4Instr convToString;
             convToString.unaryop.output = dest;
             convToString.unaryop.src = src;
@@ -998,7 +1051,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             switch (sourceTy) {
             case IR::BoolType: gen(V4Instr::ConvertBoolToString, convToString); sourceTy = IR::StringType; break;
             case IR::IntType:  gen(V4Instr::ConvertIntToString,  convToString); sourceTy = IR::StringType; break;
-            case IR::RealType: gen(V4Instr::ConvertRealToString, convToString); sourceTy = IR::StringType; break;
+            case IR::NumberType: gen(V4Instr::ConvertNumberToString, convToString); sourceTy = IR::StringType; break;
             case IR::ColorType: gen(V4Instr::ConvertColorToString, convToString); sourceTy = IR::StringType; break;
             default: break;
             } // switch
@@ -1094,8 +1147,9 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
         case IR::IntType:
             test.regType = QMetaType::Int;
             break;
-        case IR::RealType:
-            test.regType = QMetaType::QReal;
+        case IR::FloatType:
+        case IR::NumberType:
+            test.regType = QMetaType::Double;
             break;
         default:
             discard();
@@ -1108,6 +1162,7 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
     store.output = 0;
     store.index = expression->property->index;
     store.reg = storeReg;
+    store.valueType = s->type == IR::FloatType ? FloatType : 0;
     store.exceptionId = exceptionId(s->line, s->column);
     gen(store);
 }
@@ -1119,7 +1174,6 @@ void QV4Compiler::dump(const QByteArray &programData)
     qWarning() << "Program.bindings:" << program->bindings;
     qWarning() << "Program.dataLength:" << program->dataLength;
     qWarning() << "Program.subscriptions:" << program->subscriptions;
-    qWarning() << "Program.indentifiers:" << program->identifiers;
 
     const int programSize = program->instructionCount;
     const char *start = program->instructions();
@@ -1137,8 +1191,8 @@ void QV4CompilerPrivate::resetInstanceState()
     data = committed.data;
     exceptions = committed.exceptions;
     usedSubscriptionIds.clear();
-    subscriptionIds = committed.subscriptionIds;
-    registeredStrings = committed.registeredStrings;
+    subscriptionIds.clear();
+    subscriptionOffset = committed.subscriptionCount;
     bytecode.clear();
     patches.clear();
     pool.clear();
@@ -1159,8 +1213,9 @@ int QV4CompilerPrivate::commitCompile()
     committed.bytecode.append(bytecode.constData(), bytecode.size());
     committed.data = data;
     committed.exceptions = exceptions;
-    committed.subscriptionIds = subscriptionIds;
-    committed.registeredStrings = registeredStrings;
+    committed.subscriptionCount = subscriptionOffset + subscriptionIds.count();
+    if (bindingsDump())
+        committed.subscriptions.append(subscriptionIds);
     return rv;
 }
 
@@ -1212,7 +1267,7 @@ bool QV4CompilerPrivate::compile(QQmlJS::AST::Node *node)
         qerr << endl;
     }
 
-    if (discarded || subscriptionIds.count() > 0xFFFF || registeredStrings.count() > 0xFFFF || registerCount > 31)
+    if (discarded || subscriptionIds.count() > 0xFFFF || registerCount > 31)
         return false;
 
     return true;
@@ -1234,32 +1289,6 @@ int QV4CompilerPrivate::registerLiteralString(quint8 reg, const QStringRef &str)
     gen(string);
 
     return reg;
-}
-
-// Returns an identifier offset
-int QV4CompilerPrivate::registerString(const QString &string)
-{
-    Q_ASSERT(!string.isEmpty());
-
-    QPair<int, int> *iter = registeredStrings.value(string);
-
-    if (!iter) {
-        quint32 len = string.length();
-        QByteArray lendata((const char *)&len, sizeof(quint32));
-        QByteArray strdata((const char *)string.constData(), string.length() * sizeof(QChar));
-        strdata.prepend(lendata);
-        int rv = data.count();
-        data += strdata;
-
-        iter = &registeredStrings[string];
-        *iter = qMakePair(registeredStrings.count(), rv);
-    } 
-
-    Instr::InitString reg;
-    reg.offset = iter->first;
-    reg.dataIdx = iter->second;
-    gen(reg);
-    return reg.offset;
 }
 
 /*!
@@ -1285,7 +1314,7 @@ int QV4CompilerPrivate::subscriptionIndex(const QStringList &sub)
     QString str = sub.join(QLatin1String("."));
     int *iter = subscriptionIds.value(str);
     if (!iter) {
-        int count = subscriptionIds.count();
+        int count = subscriptionOffset + subscriptionIds.count();
         iter = &subscriptionIds[str];
         *iter = count;
     }
@@ -1384,8 +1413,8 @@ QByteArray QV4CompilerPrivate::buildSignalTable() const
 
     QVector<quint32> header;
     QVector<quint32> data;
-    for (int ii = 0; ii < committed.subscriptionIds.count(); ++ii) {
-        header.append(committed.subscriptionIds.count() + data.count());
+    for (int ii = 0; ii < committed.subscriptionCount; ++ii) {
+        header.append(committed.subscriptionCount + data.count());
         const QList<QPair<int, quint32> > &bindings = table[ii];
         data.append(bindings.count());
         for (int jj = 0; jj < bindings.count(); ++jj) {
@@ -1443,8 +1472,7 @@ QByteArray QV4Compiler::program() const
         data += d->buildExceptionData();
 
         prog.dataLength = 4 * ((data.size() + 3) / 4);
-        prog.subscriptions = d->committed.subscriptionIds.count();
-        prog.identifiers = d->committed.registeredStrings.count();
+        prog.subscriptions = d->committed.subscriptionCount;
         prog.instructionCount = bytecode.count();
         int size = sizeof(QV4Program) + bytecode.count();
         size += prog.dataLength;
@@ -1461,12 +1489,13 @@ QByteArray QV4Compiler::program() const
     if (bindingsDump()) {
         qWarning().nospace() << "Subscription slots:";
 
-        for (QQmlAssociationList<QString, int>::ConstIterator iter = d->committed.subscriptionIds.begin();
-                iter != d->committed.subscriptionIds.end();
-                ++iter) {
-            qWarning().nospace() << "    " << iter->first << "\t-> " << iter->second;
+        QQmlAssociationList<QString, int> subscriptionIds;
+        foreach (subscriptionIds, d->committed.subscriptions) {
+            for (QQmlAssociationList<QString, int>::ConstIterator iter = subscriptionIds.begin();
+                 iter != subscriptionIds.end(); ++iter) {
+                qWarning().nospace() << "    " << iter->first << "\t-> " << iter->second;
+            }
         }
-
         QV4Compiler::dump(programData);
     }
 

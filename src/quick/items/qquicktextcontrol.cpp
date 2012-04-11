@@ -44,6 +44,7 @@
 
 #ifndef QT_NO_TEXTCONTROL
 
+#include <qcoreapplication.h>
 #include <qfont.h>
 #include <qpainter.h>
 #include <qevent.h>
@@ -107,11 +108,12 @@ QQuickTextControlPrivate::QQuickTextControlPrivate()
       ignoreAutomaticScrollbarAdjustement(false),
       overwriteMode(false),
       acceptRichText(true),
-      hideCursor(false),
+      cursorVisible(false),
       hasFocus(false),
       isEnabled(true),
       hadSelectionOnMousePress(false),
-      wordSelectionEnabled(false)
+      wordSelectionEnabled(false),
+      hasImState(false)
 {}
 
 bool QQuickTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
@@ -291,6 +293,8 @@ void QQuickTextControlPrivate::init(Qt::TextFormat format, const QString &text, 
 void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &text, QTextDocument *document)
 {
     Q_Q(QQuickTextControl);
+
+    cancelPreedit();
 
     // for use when called from setPlainText. we may want to re-use the currently
     // set char format then.
@@ -1441,13 +1445,16 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
     QList<QTextLayout::FormatRange> overrides;
     const int oldPreeditCursor = preeditCursor;
     preeditCursor = e->preeditString().length();
-    hideCursor = false;
+    hasImState = !e->preeditString().isEmpty();
+    cursorVisible = true;
     for (int i = 0; i < e->attributes().size(); ++i) {
         const QInputMethodEvent::Attribute &a = e->attributes().at(i);
         if (a.type == QInputMethodEvent::Cursor) {
+            hasImState = true;
             preeditCursor = a.start;
-            hideCursor = !a.length;
+            cursorVisible = a.length != 0;
         } else if (a.type == QInputMethodEvent::TextFormat) {
+            hasImState = true;
             QTextCharFormat f = qvariant_cast<QTextFormat>(a.value).toCharFormat();
             if (f.isValid()) {
                 QTextLayout::FormatRange o;
@@ -1512,6 +1519,37 @@ void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
             emit q->selectionChanged();
         }
     }
+}
+
+bool QQuickTextControl::hasImState() const
+{
+    Q_D(const QQuickTextControl);
+    return d->hasImState;
+}
+
+bool QQuickTextControl::cursorVisible() const
+{
+    Q_D(const QQuickTextControl);
+    return d->cursorVisible;
+}
+
+void QQuickTextControl::setCursorVisible(bool visible)
+{
+    Q_D(QQuickTextControl);
+    d->cursorVisible = visible;
+    d->setBlinkingCursorEnabled(d->cursorVisible
+            && (d->interactionFlags & (Qt::TextEditable | Qt::TextSelectableByKeyboard)));
+}
+
+QTextCursor QQuickTextControl::cursorForPosition(const QPointF &pos) const
+{
+    Q_D(const QQuickTextControl);
+    int cursorPos = hitTest(pos, Qt::FuzzyHit);
+    if (cursorPos == -1)
+        cursorPos = 0;
+    QTextCursor c(d->doc);
+    c.setPosition(cursorPos);
+    return c;
 }
 
 QRectF QQuickTextControl::cursorRect(const QTextCursor &cursor) const
@@ -1727,21 +1765,31 @@ bool QQuickTextControlPrivate::isPreediting() const
 
 void QQuickTextControlPrivate::commitPreedit()
 {
-    if (!isPreediting())
+    Q_Q(QQuickTextControl);
+
+    if (!hasImState)
         return;
 
     qApp->inputMethod()->commit();
 
-    if (!isPreediting())
+    if (!hasImState)
         return;
 
-    cursor.beginEditBlock();
-    preeditCursor = 0;
-    QTextBlock block = cursor.block();
-    QTextLayout *layout = block.layout();
-    layout->setPreeditArea(-1, QString());
-    layout->clearAdditionalFormats();
-    cursor.endEditBlock();
+    QInputMethodEvent event;
+    QCoreApplication::sendEvent(q->parent(), &event);
+}
+
+void QQuickTextControlPrivate::cancelPreedit()
+{
+    Q_Q(QQuickTextControl);
+
+    if (!hasImState)
+        return;
+
+    qApp->inputMethod()->reset();
+
+    QInputMethodEvent event;
+    QCoreApplication::sendEvent(q->parent(), &event);
 }
 
 void QQuickTextControl::setTextInteractionFlags(Qt::TextInteractionFlags flags)

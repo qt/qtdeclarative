@@ -158,9 +158,7 @@ private slots:
     void focusOutClearSelection();
 
     void echoMode();
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
     void passwordEchoDelay();
-#endif
     void geometrySignals();
     void contentSize();
 
@@ -2368,15 +2366,15 @@ void tst_qquicktextinput::cursorDelegate()
 
 void tst_qquicktextinput::cursorVisible()
 {
+    QQuickTextInput input;
+    input.componentComplete();
+    QSignalSpy spy(&input, SIGNAL(cursorVisibleChanged(bool)));
+
     QQuickView view(testFileUrl("cursorVisible.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
     QTRY_COMPARE(&view, qGuiApp->focusWindow());
-
-    QQuickTextInput input;
-    input.componentComplete();
-    QSignalSpy spy(&input, SIGNAL(cursorVisibleChanged(bool)));
 
     QCOMPARE(input.isCursorVisible(), false);
 
@@ -2404,7 +2402,7 @@ void tst_qquicktextinput::cursorVisible()
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 5);
 
-    QQuickView alternateView;
+    QWindow alternateView;
     alternateView.show();
     alternateView.requestActivateWindow();
     QTest::qWaitForWindowShown(&alternateView);
@@ -2416,6 +2414,46 @@ void tst_qquicktextinput::cursorVisible()
     QTest::qWaitForWindowShown(&view);
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
+
+    {   // Cursor attribute with 0 length hides cursor.
+        QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, QVariant()));
+        QCoreApplication::sendEvent(&input, &ev);
+    }
+    QCOMPARE(input.isCursorVisible(), false);
+    QCOMPARE(spy.count(), 8);
+
+    {   // Cursor attribute with non zero length shows cursor.
+        QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 1, QVariant()));
+        QCoreApplication::sendEvent(&input, &ev);
+    }
+    QCOMPARE(input.isCursorVisible(), true);
+    QCOMPARE(spy.count(), 9);
+
+    {   // If the cursor is hidden by the input method and the text is changed it should be visible again.
+        QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, QVariant()));
+        QCoreApplication::sendEvent(&input, &ev);
+    }
+    QCOMPARE(input.isCursorVisible(), false);
+    QCOMPARE(spy.count(), 10);
+
+    input.setText("something");
+    QCOMPARE(input.isCursorVisible(), true);
+    QCOMPARE(spy.count(), 11);
+
+    {   // If the cursor is hidden by the input method and the cursor position is changed it should be visible again.
+        QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, QVariant()));
+        QCoreApplication::sendEvent(&input, &ev);
+    }
+    QCOMPARE(input.isCursorVisible(), false);
+    QCOMPARE(spy.count(), 12);
+
+    input.setCursorPosition(5);
+    QCOMPARE(input.isCursorVisible(), true);
+    QCOMPARE(spy.count(), 13);
 }
 
 void tst_qquicktextinput::cursorRectangle_data()
@@ -2716,9 +2754,11 @@ void tst_qquicktextinput::echoMode()
     QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), initial);
 }
 
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
 void tst_qquicktextinput::passwordEchoDelay()
 {
+    int maskDelay = qGuiApp->styleHints()->passwordMaskDelay();
+    if (maskDelay <= 0)
+        QSKIP("No mask delay in use");
     QQuickView canvas(testFileUrl("echoMode.qml"));
     canvas.show();
     canvas.requestActivateWindow();
@@ -2747,7 +2787,7 @@ void tst_qquicktextinput::passwordEchoDelay()
     QCOMPARE(input->displayText(), QString(4, fillChar));
     QTest::keyPress(&canvas, '4');
     QCOMPARE(input->displayText(), QString(4, fillChar) + QLatin1Char('4'));
-    QTest::qWait(QT_GUI_PASSWORD_ECHO_DELAY);
+    QTest::qWait(maskDelay);
     QTRY_COMPARE(input->displayText(), QString(5, fillChar));
     QTest::keyPress(&canvas, '5');
     QCOMPARE(input->displayText(), QString(5, fillChar) + QLatin1Char('5'));
@@ -2772,7 +2812,6 @@ void tst_qquicktextinput::passwordEchoDelay()
     QTest::keyPress(&canvas, Qt::Key_Backspace);
     QCOMPARE(input->displayText(), QString(8, fillChar));
 }
-#endif
 
 
 void tst_qquicktextinput::simulateKey(QWindow *view, int key)
@@ -3281,6 +3320,75 @@ void tst_qquicktextinput::inputMethodComposing()
     }
     QCOMPARE(input->isInputMethodComposing(), false);
     QCOMPARE(spy.count(), 2);
+
+    // Changing the text while not composing doesn't alter the composing state.
+    input->setText(text.mid(0, 16));
+    QCOMPARE(input->isInputMethodComposing(), false);
+    QCOMPARE(spy.count(), 2);
+
+    {
+        QInputMethodEvent event(text.mid(16), QList<QInputMethodEvent::Attribute>());
+        QGuiApplication::sendEvent(input, &event);
+    }
+    QCOMPARE(input->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 3);
+
+    // Changing the text while composing cancels composition.
+    input->setText(text.mid(0, 12));
+    QCOMPARE(input->isInputMethodComposing(), false);
+    QCOMPARE(spy.count(), 4);
+
+    {   // Preedit cursor positioned outside (empty) preedit; composing.
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, -2, 1, QVariant()));
+        QGuiApplication::sendEvent(input, &event);
+    }
+    QCOMPARE(input->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 5);
+
+
+    {   // Cursor hidden; composing
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, QVariant()));
+        QGuiApplication::sendEvent(input, &event);
+    }
+    QCOMPARE(input->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 5);
+
+    {   // Default cursor attributes; composing.
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 1, QVariant()));
+        QGuiApplication::sendEvent(input, &event);
+    }
+    QCOMPARE(input->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 5);
+
+    {   // Selections are persisted: not composing
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, -5, 4, QVariant()));
+        QGuiApplication::sendEvent(input, &event);
+    }
+    QCOMPARE(input->isInputMethodComposing(), false);
+    QCOMPARE(spy.count(), 6);
+
+    input->setCursorPosition(12);
+
+    {   // Formatting applied; composing.
+        QTextCharFormat format;
+        format.setUnderlineStyle(QTextCharFormat::SingleUnderline);
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::TextFormat, -5, 4, format));
+        QGuiApplication::sendEvent(input, &event);
+    }
+    QCOMPARE(input->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 7);
+
+    {
+        QInputMethodEvent event;
+        QGuiApplication::sendEvent(input, &event);
+    }
+    QCOMPARE(input->isInputMethodComposing(), false);
+    QCOMPARE(spy.count(), 8);
 }
 
 void tst_qquicktextinput::inputMethodUpdate()
@@ -4949,7 +5057,7 @@ void tst_qquicktextinput::implicitSize()
     QFETCH(QString, text);
     QFETCH(QString, wrap);
     QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; width: 50; wrapMode: " + wrap + " }";
-    QDeclarativeComponent textComponent(&engine);
+    QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
 
@@ -4971,7 +5079,7 @@ void tst_qquicktextinput::implicitSizeBinding()
     QFETCH(QString, text);
     QFETCH(QString, wrap);
     QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + text + "\"; width: implicitWidth; height: implicitHeight; wrapMode: " + wrap + " }";
-    QDeclarativeComponent textComponent(&engine);
+    QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(textComponent.create());
     QQuickTextInput *textObject = qobject_cast<QQuickTextInput *>(object.data());

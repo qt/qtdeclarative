@@ -95,7 +95,7 @@ Rectangle {
                 Row {
                     spacing: 6
                     Button { width: column.w; height: column.h; color: 'purple'; operation: "Off" }
-                    Button { width: column.w; height: column.h; color: 'purple'; operation: leftArrow }
+                    Button { width: column.w; height: column.h; color: 'purple'; operation: window.leftArrow }
                     Button { width: column.w; height: column.h; color: 'purple'; operation: "C" }
                     Button { width: column.w; height: column.h; color: 'purple'; operation: "AC" }
                 }
@@ -118,12 +118,12 @@ Rectangle {
                     Button { width: grid.w; height: column.h; operation: "7"; color: 'blue' }
                     Button { width: grid.w; height: column.h; operation: "8"; color: 'blue' }
                     Button { width: grid.w; height: column.h; operation: "9"; color: 'blue' }
-                    Button { width: grid.w; height: column.h; operation: division }
-                    Button { width: grid.w; height: column.h; operation: squareRoot }
+                    Button { width: grid.w; height: column.h; operation: window.division }
+                    Button { width: grid.w; height: column.h; operation: window.squareRoot }
                     Button { width: grid.w; height: column.h; operation: "4"; color: 'blue' }
                     Button { width: grid.w; height: column.h; operation: "5"; color: 'blue' }
                     Button { width: grid.w; height: column.h; operation: "6"; color: 'blue' }
-                    Button { width: grid.w; height: column.h; operation: multiplication }
+                    Button { width: grid.w; height: column.h; operation: window.multiplication }
                     Button { width: grid.w; height: column.h; operation: "x^2" }
                     Button { width: grid.w; height: column.h; operation: "1"; color: 'blue' }
                     Button { width: grid.w; height: column.h; operation: "2"; color: 'blue' }
@@ -132,7 +132,7 @@ Rectangle {
                     Button { width: grid.w; height: column.h; operation: "1/x" }
                     Button { width: grid.w; height: column.h; operation: "0"; color: 'blue' }
                     Button { width: grid.w; height: column.h; operation: "." }
-                    Button { width: grid.w; height: column.h; operation: plusminus }
+                    Button { width: grid.w; height: column.h; operation: window.plusminus }
                     Button { width: grid.w; height: column.h; operation: "+" }
                     Button { width: grid.w; height: column.h; operation: "="; color: 'red' }
                 }

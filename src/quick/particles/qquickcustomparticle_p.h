@@ -43,6 +43,7 @@
 #define CUSTOM_PARTICLE_H
 #include "qquickparticlepainter_p.h"
 #include <private/qquickshadereffectnode_p.h>
+#include <private/qquickshadereffect_p.h>
 #include <QSignalMapper>
 
 QT_BEGIN_HEADER
@@ -65,53 +66,50 @@ public:
     explicit QQuickCustomParticle(QQuickItem* parent=0);
     ~QQuickCustomParticle();
 
-    QByteArray fragmentShader() const { return m_source.fragmentCode; }
+    QByteArray fragmentShader() const { return m_common.source.sourceCode[Key::FragmentShader]; }
     void setFragmentShader(const QByteArray &code);
 
-    QByteArray vertexShader() const { return m_source.vertexCode; }
+    QByteArray vertexShader() const { return m_common.source.sourceCode[Key::VertexShader]; }
     void setVertexShader(const QByteArray &code);
-public Q_SLOTS:
-    void updateData();
-    void changeSource(int);
+
 Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();
+
 protected:
     virtual void initialize(int gIdx, int pIdx);
     virtual void commit(int gIdx, int pIdx);
 
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-    void prepareNextFrame();
-    void setSource(const QVariant &var, int index);
-    void disconnectPropertySignals();
-    void connectPropertySignals();
+    QQuickShaderEffectNode *prepareNextFrame(QQuickShaderEffectNode *rootNode);
     void reset();
     void resize(int oldCount, int newCount);
-    void updateProperties();
-    void lookThroughShaderCode(const QByteArray &code);
     virtual void componentComplete();
     QQuickShaderEffectNode *buildCustomNodes();
-    void performPendingResize();
 
     void sceneGraphInvalidated();
+    void itemChange(ItemChange change, const ItemChangeData &value);
+
+private Q_SLOTS:
+    void sourceDestroyed(QObject *object);
+    void propertyChanged(int mappedId);
 
 private:
-    void buildData();
+    typedef QQuickShaderEffectMaterialKey Key;
+    typedef QQuickShaderEffectMaterial::UniformData UniformData;
 
-    bool m_dirtyData;
-    QQuickShaderEffectProgram m_source;
-    struct SourceData
-    {
-        QSignalMapper *mapper;
-        QPointer<QQuickItem> item;
-        QByteArray name;
-    };
-    QVector<SourceData> m_sources;
-    QQuickShaderEffectMaterialObject *m_material;
-    QQuickShaderEffectNode* m_rootNode;
+    void buildData(QQuickShaderEffectNode *rootNode);
+    void updateVertexShader();
+
+    QQuickShaderEffectCommon m_common;
+
     QHash<int, QQuickShaderEffectNode*> m_nodes;
     qreal m_lastTime;
 
+    uint m_dirtyUniforms : 1;
+    uint m_dirtyUniformValues : 1;
+    uint m_dirtyTextureProviders : 1;
+    uint m_dirtyProgram : 1;
 };
 
 QT_END_NAMESPACE

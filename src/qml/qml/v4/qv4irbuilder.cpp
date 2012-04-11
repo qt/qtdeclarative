@@ -61,8 +61,11 @@ static IR::Type irTypeFromVariantType(int t, QQmlEnginePrivate *engine, const QM
     case QMetaType::Int:
         return IR::IntType;
 
-    case QMetaType::QReal:
-        return IR::RealType;
+    case QMetaType::Float:
+        return IR::FloatType;
+
+    case QMetaType::Double:
+        return IR::NumberType;
 
     case QMetaType::QString:
         return IR::StringType;
@@ -542,7 +545,7 @@ bool QV4IRBuilder::visit(AST::NumericLiteral *ast)
         _expr.format = ExprResult::cx;
         _block->JUMP(ast->value ? _expr.iftrue : _expr.iffalse);
     } else {
-        _expr.code = _block->CONST(IR::RealType, ast->value);
+        _expr.code = _block->CONST(IR::NumberType, ast->value);
     }
     return false;
 }
@@ -889,7 +892,14 @@ void QV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left, ExprResult
         _expr.format = ExprResult::cx;
         _block->CJUMP(_block->BINOP(IR::binaryOperator(ast->op), left, right), _expr.iftrue, _expr.iffalse);
     } else {
-        _expr.code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
+        IR::Expr *e = _block->BINOP(IR::binaryOperator(ast->op), left, right);
+        if (e->asConst() != 0 || e->asString() != 0)
+            _expr.code = e;
+        else {
+            IR::Temp *t = _block->TEMP(e->type);
+            _block->MOVE(t, e);
+            _expr.code = t;
+        }
     }
 }
 
@@ -977,8 +987,8 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
         if (left.type() == IR::StringType && right.type() == IR::StringType) {
             binop(ast, left, right);
         } else if (left.isValid() && right.isValid()) {
-            implicitCvt(left, IR::RealType);
-            implicitCvt(right, IR::RealType);
+            implicitCvt(left, IR::NumberType);
+            implicitCvt(right, IR::NumberType);
             binop(ast, left, right);
         }
     } break;
@@ -998,8 +1008,8 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
             }
         } else if ((left.type() == IR::StringType && right.type() >= IR::FirstNumberType) ||
                    (left.type() >= IR::FirstNumberType && right.type() == IR::StringType)) {
-            implicitCvt(left, IR::RealType);
-            implicitCvt(right, IR::RealType);
+            implicitCvt(left, IR::NumberType);
+            implicitCvt(right, IR::NumberType);
             binop(ast, left, right);
         } else if (left.isValid() && right.isValid()) {
             binop(ast, left, right);
@@ -1086,8 +1096,8 @@ bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
 
         IR::Type t = maxType(left.type(), right.type());
         if (t >= IR::FirstNumberType) {
-            implicitCvt(left, IR::RealType);
-            implicitCvt(right, IR::RealType);
+            implicitCvt(left, IR::NumberType);
+            implicitCvt(right, IR::NumberType);
 
             IR::Expr *code = _block->BINOP(IR::binaryOperator(ast->op), left, right);
             _expr.code = _block->TEMP(code->type);

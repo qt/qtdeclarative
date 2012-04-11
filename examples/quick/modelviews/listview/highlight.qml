@@ -56,9 +56,9 @@ Rectangle {
             id: wrapper
             width: 200; height: 55
             Column {
-                Text { text: 'Name: ' + name }
-                Text { text: 'Type: ' + type }
-                Text { text: 'Age: ' + age }
+                SmallText { text: 'Name: ' + name }
+                SmallText { text: 'Type: ' + type }
+                SmallText { text: 'Age: ' + age }
             }
             // indent the item if it is the current item
             states: State {

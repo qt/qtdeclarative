@@ -181,10 +181,24 @@ public:
     QQmlNotifier *objectNameNotifier() const;
     QHash<int, QObject *> *attachedProperties() const;
 
+    static inline bool wasDeleted(QObject *);
 private:
     // For objectNameNotifier and attachedProperties
     mutable QQmlDataExtended *extendedData;
 };
+
+bool QQmlData::wasDeleted(QObject *object)
+{
+    if (!object)
+        return true;
+
+    QObjectPrivate *priv = QObjectPrivate::get(const_cast<QObject *>(object));
+    if (priv->wasDeleted)
+        return true;
+
+    return priv->declarativeData &&
+           static_cast<QQmlData *>(priv->declarativeData)->isQueuedForDeletion;
+}
 
 QQmlNotifierEndpoint *QQmlData::notify(int index)
 {

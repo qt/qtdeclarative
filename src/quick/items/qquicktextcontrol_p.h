@@ -98,6 +98,10 @@ public:
     QString toHtml() const;
 #endif
 
+    bool hasImState() const;
+    bool cursorVisible() const;
+    void setCursorVisible(bool visible);
+    QTextCursor cursorForPosition(const QPointF &pos) const;
     QRectF cursorRect(const QTextCursor &cursor) const;
     QRectF cursorRect() const;
     QRectF selectionRect(const QTextCursor &cursor) const;

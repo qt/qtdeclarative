@@ -1999,14 +1999,15 @@ void tst_qquicktextedit::cursorDelegate()
 
 void tst_qquicktextedit::cursorVisible()
 {
+    QQuickTextEdit edit;
+    edit.componentComplete();
+    QSignalSpy spy(&edit, SIGNAL(cursorVisibleChanged(bool)));
+
     QQuickView view(testFileUrl("cursorVisible.qml"));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
     QTRY_COMPARE(&view, qGuiApp->focusWindow());
-
-    QQuickTextEdit edit;
-    QSignalSpy spy(&edit, SIGNAL(cursorVisibleChanged(bool)));
 
     QCOMPARE(edit.isCursorVisible(), false);
 
@@ -2034,7 +2035,7 @@ void tst_qquicktextedit::cursorVisible()
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 5);
 
-    QQuickView alternateView;
+    QWindow alternateView;
     alternateView.show();
     alternateView.requestActivateWindow();
     QTest::qWaitForWindowShown(&alternateView);
@@ -2046,6 +2047,47 @@ void tst_qquicktextedit::cursorVisible()
     QTest::qWaitForWindowShown(&view);
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
+
+    {   // Cursor attribute with 0 length hides cursor.
+        QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, QVariant()));
+        QCoreApplication::sendEvent(&edit, &ev);
+    }
+    QCOMPARE(edit.isCursorVisible(), false);
+    QCOMPARE(spy.count(), 8);
+
+    {   // Cursor attribute with non zero length shows cursor.
+        QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 1, QVariant()));
+        QCoreApplication::sendEvent(&edit, &ev);
+    }
+    QCOMPARE(edit.isCursorVisible(), true);
+    QCOMPARE(spy.count(), 9);
+
+
+    {   // If the cursor is hidden by the input method and the text is changed it should be visible again.
+        QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, QVariant()));
+        QCoreApplication::sendEvent(&edit, &ev);
+    }
+    QCOMPARE(edit.isCursorVisible(), false);
+    QCOMPARE(spy.count(), 10);
+
+    edit.setText("something");
+    QCOMPARE(edit.isCursorVisible(), true);
+    QCOMPARE(spy.count(), 11);
+
+    {   // If the cursor is hidden by the input method and the cursor position is changed it should be visible again.
+        QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, QVariant()));
+        QCoreApplication::sendEvent(&edit, &ev);
+    }
+    QCOMPARE(edit.isCursorVisible(), false);
+    QCOMPARE(spy.count(), 12);
+
+    edit.setCursorPosition(5);
+    QCOMPARE(edit.isCursorVisible(), true);
+    QCOMPARE(spy.count(), 13);
 }
 
 void tst_qquicktextedit::delegateLoading_data()
@@ -2568,7 +2610,7 @@ void tst_qquicktextedit::implicitSizeBinding()
     QFETCH(QString, wrap);
     QFETCH(QString, format);
     QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + text + "\"; width: implicitWidth; height: implicitHeight; wrapMode: " + wrap + "; textFormat: " + format + " }";
-    QDeclarativeComponent textComponent(&engine);
+    QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QScopedPointer<QObject> object(textComponent.create());
     QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit *>(object.data());
@@ -2682,6 +2724,74 @@ void tst_qquicktextedit::inputMethodComposing()
     }
     QCOMPARE(edit->isInputMethodComposing(), false);
     QCOMPARE(spy.count(), 2);
+
+    // Changing the text while not composing doesn't alter the composing state.
+    edit->setText(text.mid(0, 16));
+    QCOMPARE(edit->isInputMethodComposing(), false);
+    QCOMPARE(spy.count(), 2);
+
+    {
+        QInputMethodEvent event(text.mid(16), QList<QInputMethodEvent::Attribute>());
+        QGuiApplication::sendEvent(edit, &event);
+    }
+    QCOMPARE(edit->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 3);
+
+    // Changing the text while composing cancels composition.
+    edit->setText(text.mid(0, 12));
+    QCOMPARE(edit->isInputMethodComposing(), false);
+    QCOMPARE(spy.count(), 4);
+
+    {   // Preedit cursor positioned outside (empty) preedit; composing.
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, -2, 1, QVariant()));
+        QGuiApplication::sendEvent(edit, &event);
+    }
+    QCOMPARE(edit->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 5);
+
+    {   // Cursor hidden; composing
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 0, QVariant()));
+        QGuiApplication::sendEvent(edit, &event);
+    }
+    QCOMPARE(edit->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 5);
+
+    {   // Default cursor attributes; composing.
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, 1, QVariant()));
+        QGuiApplication::sendEvent(edit, &event);
+    }
+    QCOMPARE(edit->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 5);
+
+    {   // Selections are persisted: not composing
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::Selection, 2, 4, QVariant()));
+        QGuiApplication::sendEvent(edit, &event);
+    }
+    QCOMPARE(edit->isInputMethodComposing(), false);
+    QCOMPARE(spy.count(), 6);
+
+    edit->setCursorPosition(0);
+
+    {   // Formatting applied; composing.
+        QTextCharFormat format;
+        format.setUnderlineStyle(QTextCharFormat::SingleUnderline);
+        QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
+                << QInputMethodEvent::Attribute(QInputMethodEvent::TextFormat, 2, 4, format));
+        QGuiApplication::sendEvent(edit, &event);
+    }
+    QCOMPARE(edit->isInputMethodComposing(), true);
+    QCOMPARE(spy.count(), 7);
+
+    {
+        QInputMethodEvent event;
+        QGuiApplication::sendEvent(edit, &event);
+    }
+    QCOMPARE(edit->isInputMethodComposing(), false);
+    QCOMPARE(spy.count(), 8);
 }
 
 void tst_qquicktextedit::cursorRectangleSize()

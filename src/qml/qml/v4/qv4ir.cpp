@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace IR {
 
-inline const char *typeName(Type t)
+const char *typeName(Type t)
 {
     switch (t) {
     case InvalidType: return "invalid";
@@ -58,15 +58,15 @@ inline const char *typeName(Type t)
     case NullType: return "null";
     case VoidType: return "void";
     case StringType: return "string";
-    case UrlType: return "url";
-    case ColorType: return "color";
+    case UrlType: return "QUrl";
+    case ColorType: return "QColor";
     case SGAnchorLineType: return "SGAnchorLine";
     case AttachType: return "AttachType";
     case ObjectType: return "object";
     case BoolType: return "bool";
     case IntType: return "int";
-    case RealType: return "qreal";
-    case RealNaNType: return "NaN";
+    case FloatType: return "float";
+    case NumberType: return "number";
     default: return "invalid";
     }
 }
@@ -91,15 +91,20 @@ IR::Type maxType(IR::Type left, IR::Type right)
         return IR::StringType;
     } else if (left == right)
         return left;
-    else if (isNumberType(left) && isNumberType(right))
-        return qMax(left, right);
-    else if ((isNumberType(left) && isStringType(right)) ||
+    else if (isNumberType(left) && isNumberType(right)) {
+        IR::Type ty = qMax(left, right);
+        return ty == FloatType ? NumberType : ty; // promote floats
+    } else if ((isNumberType(left) && isStringType(right)) ||
              (isNumberType(right) && isStringType(left)))
         return IR::StringType;
     else
         return IR::InvalidType;
 }
 
+bool isRealType(IR::Type type)
+{
+    return type == IR::NumberType || type == IR::FloatType;
+}
 
 const char *opname(AluOp op)
 {
@@ -233,7 +238,7 @@ void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint32
         builtin = MathMinBuiltinFunction;
     } else if (id->length() == 7 && *id == QLatin1String("Math.PI")) {
         builtin = MathPIBuiltinConstant;
-        this->type = RealType;
+        this->type = NumberType;
     }
 }
 
@@ -267,7 +272,7 @@ Type Unop::typeForOp(AluOp op, Expr *expr)
     case OpUMinus:
     case OpUPlus:
     case OpCompl:
-        return maxType(expr->type, RealType);
+        return maxType(expr->type, NumberType);
 
     default:
         break;
@@ -309,13 +314,13 @@ Type Binop::typeForOp(AluOp op, Expr *left, Expr *right)
     case OpAdd:
         if (left->type == StringType)
             return StringType;
-        return RealType;
+        return NumberType;
 
     case OpSub:
     case OpMul:
     case OpDiv:
     case OpMod:
-        return RealType;
+        return NumberType;
 
     case OpLShift:
     case OpRShift:
@@ -364,7 +369,7 @@ Type Call::typeForFunction(Expr *base)
         case MathAbsBuiltinFunction:    //### type could also be Int if input was Int
         case MathMaxBuiltinFunction:
         case MathMinBuiltinFunction:
-            return RealType;
+            return NumberType;
 
         case MathRoundBultinFunction:
         case MathFloorBultinFunction:
@@ -599,6 +604,12 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
                 case OpCompl:
                 case OpInvalid:
                     break;
+                }
+            }
+        } else if (op == OpAdd) {
+            if (String *s1 = left->asString()) {
+                if (String *s2 = right->asString()) {
+                    return STRING(function->newString(s1->value.toString() + s2->value));
                 }
             }
         }

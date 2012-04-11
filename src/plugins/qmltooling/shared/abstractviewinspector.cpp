@@ -100,6 +100,7 @@ void AbstractViewInspector::setDesignModeBehavior(bool value)
         return;
 
     m_designModeBehavior = value;
+    m_currentTool->enable(m_designModeBehavior);
     emit designModeBehaviorChanged(value);
     sendDesignModeBehavior(value);
 }
@@ -163,19 +164,9 @@ void AbstractViewInspector::setShowAppOnTop(bool appOnTop)
     emit showAppOnTopChanged(appOnTop);
 }
 
-void AbstractViewInspector::changeToColorPickerTool()
+void AbstractViewInspector::changeToInspectTool()
 {
-    changeTool(InspectorProtocol::ColorPickerTool);
-}
-
-void AbstractViewInspector::changeToZoomTool()
-{
-    changeTool(InspectorProtocol::ZoomTool);
-}
-
-void AbstractViewInspector::changeToSingleSelectTool()
-{
-    changeTool(InspectorProtocol::SelectTool);
+    changeTool(InspectorProtocol::InspectTool);
 }
 
 void AbstractViewInspector::changeToMarqueeSelectTool()
@@ -272,18 +263,12 @@ bool AbstractViewInspector::keyReleaseEvent(QKeyEvent *event)
 {
     switch (event->key()) {
     case Qt::Key_V:
-        changeTool(InspectorProtocol::SelectTool);
+        changeTool(InspectorProtocol::InspectTool);
         break;
 // disabled because multiselection does not do anything useful without design mode
 //    case Qt::Key_M:
 //        changeTool(InspectorProtocol::SelectMarqueeTool);
 //        break;
-    case Qt::Key_I:
-        changeTool(InspectorProtocol::ColorPickerTool);
-        break;
-    case Qt::Key_Z:
-        changeTool(InspectorProtocol::ZoomTool);
-        break;
     case Qt::Key_Space:
         setAnimationPaused(!animationPaused());
         break;
@@ -332,8 +317,8 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
             if (QObject *obj = QQmlDebugService::objectForId(debugId))
                 selectedObjects << obj;
         }
-
-        changeCurrentObjects(selectedObjects);
+        if (m_designModeBehavior)
+            changeCurrentObjects(selectedObjects);
         break;
     }
     case InspectorProtocol::Reload: {
@@ -493,17 +478,6 @@ void AbstractViewInspector::sendShowAppOnTop(bool showAppOnTop)
     QDataStream ds(&message, QIODevice::WriteOnly);
 
     ds << InspectorProtocol::ShowAppOnTop << showAppOnTop;
-
-    m_debugService->sendMessage(message);
-}
-
-void AbstractViewInspector::sendColorChanged(const QColor &color)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-
-    ds << InspectorProtocol::ColorChanged
-       << color;
 
     m_debugService->sendMessage(message);
 }

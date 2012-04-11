@@ -10,6 +10,10 @@ Item {
         width: 200
         height: 50
         text : "Hello Accessibility"
+
+        // Setting any value of the attached property
+        // makes an item accessible.
+        Accessible.name: text
     }
 
     Text {

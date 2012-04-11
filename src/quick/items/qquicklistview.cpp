@@ -577,7 +577,7 @@ void QQuickListViewPrivate::initializeViewItem(FxViewItem *item)
     itemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
 
     if (sectionCriteria && sectionCriteria->delegate()) {
-        if (item->attached->m_prevSection != item->attached->m_section)
+        if (QString::compare(item->attached->m_prevSection, item->attached->m_section, Qt::CaseInsensitive))
             updateInlineSection(static_cast<FxListItemSG*>(item));
     }
 }
@@ -962,7 +962,7 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
 {
     if (!sectionCriteria || !sectionCriteria->delegate())
         return;
-    if (listItem->attached->m_prevSection != listItem->attached->m_section
+    if (QString::compare(listItem->attached->m_prevSection, listItem->attached->m_section, Qt::CaseInsensitive)
             && (sectionCriteria->labelPositioning() & QQuickViewSection::InlineLabels
                 || (listItem->index == 0 && sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart))) {
         if (!listItem->section()) {
@@ -1022,7 +1022,7 @@ void QQuickListViewPrivate::updateStickySections()
     if (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart && isValid() && visibleItems.count()) {
         if (!currentSectionItem) {
             currentSectionItem = getSectionItem(currentSection);
-        } else if (currentStickySection != currentSection) {
+        } else if (QString::compare(currentStickySection, currentSection, Qt::CaseInsensitive)) {
             QQmlContext *context = QQmlEngine::contextForObject(currentSectionItem)->parentContext();
             context->setContextProperty(QLatin1String("section"), currentSection);
         }
@@ -1055,7 +1055,7 @@ void QQuickListViewPrivate::updateStickySections()
     if (sectionCriteria->labelPositioning() & QQuickViewSection::NextLabelAtEnd && isValid() && visibleItems.count()) {
         if (!nextSectionItem) {
             nextSectionItem = getSectionItem(nextSection);
-        } else if (nextStickySection != nextSection) {
+        } else if (QString::compare(nextStickySection, nextSection, Qt::CaseInsensitive)) {
             QQmlContext *context = QQmlEngine::contextForObject(nextSectionItem)->parentContext();
             context->setContextProperty(QLatin1String("section"), nextSection);
         }
@@ -2039,6 +2039,9 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     character of the \c section.property value (for example, 'A', 'B', 'C'
     sections, etc. for an address book)
     \endlist
+
+    A case insensitive comparison is used when determining section
+    boundaries.
 
     \c section.delegate holds the delegate component for each section.
 

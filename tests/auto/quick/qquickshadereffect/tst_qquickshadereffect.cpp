@@ -257,13 +257,12 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     if ((presenceFlags & TexCoordPresent) == 0)
         expected += "Warning: Missing reference to \'qt_MultiTexCoord0\'.\n";
     if ((presenceFlags & MatrixPresent) == 0)
-        expected += "Warning: Missing reference to \'qt_Matrix\'.\n";
+        expected += "Warning: Vertex shader is missing reference to \'qt_Matrix\'.\n";
     if ((presenceFlags & OpacityPresent) == 0)
-        expected += "Warning: Missing reference to \'qt_Opacity\'.\n";
+        expected += "Warning: Shaders are missing reference to \'qt_Opacity\'.\n";
 
     item.setVertexShader(vertexShader);
     item.setFragmentShader(fragmentShader);
-    item.ensureCompleted();
     QCOMPARE(item.parseLog(), expected);
 
     // If the uniform was successfully parsed, the notify signal has been connected to an update slot.

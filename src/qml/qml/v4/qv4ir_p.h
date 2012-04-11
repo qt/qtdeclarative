@@ -150,10 +150,12 @@ enum Type {
     FirstNumberType,
     BoolType = FirstNumberType,
     IntType,
-    RealType,
-    RealNaNType
+    FloatType,
+    NumberType
 };
 Type maxType(IR::Type left, IR::Type right);
+bool isRealType(IR::Type type);
+const char *typeName(IR::Type t);
 
 struct ExprVisitor {
     virtual ~ExprVisitor() {}

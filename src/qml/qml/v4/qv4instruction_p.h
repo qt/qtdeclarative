@@ -76,22 +76,22 @@ QT_BEGIN_NAMESPACE
     F(LoadModuleObject, load) \
     F(LoadAttached, attached) \
     F(UnaryNot, unaryop) \
-    F(UnaryMinusReal, unaryop) \
+    F(UnaryMinusNumber, unaryop) \
     F(UnaryMinusInt, unaryop) \
-    F(UnaryPlusReal, unaryop) \
+    F(UnaryPlusNumber, unaryop) \
     F(UnaryPlusInt, unaryop) \
     F(ConvertBoolToInt, unaryop) \
-    F(ConvertBoolToReal, unaryop) \
+    F(ConvertBoolToNumber, unaryop) \
     F(ConvertBoolToString, unaryop) \
     F(ConvertIntToBool, unaryop) \
-    F(ConvertIntToReal, unaryop) \
+    F(ConvertIntToNumber, unaryop) \
     F(ConvertIntToString, unaryop) \
-    F(ConvertRealToBool, unaryop) \
-    F(ConvertRealToInt, unaryop) \
-    F(ConvertRealToString, unaryop) \
+    F(ConvertNumberToBool, unaryop) \
+    F(ConvertNumberToInt, unaryop) \
+    F(ConvertNumberToString, unaryop) \
     F(ConvertStringToBool, unaryop) \
     F(ConvertStringToInt, unaryop) \
-    F(ConvertStringToReal, unaryop) \
+    F(ConvertStringToNumber, unaryop) \
     F(ConvertStringToUrl, unaryop) \
     F(ConvertStringToColor, unaryop) \
     F(ConvertUrlToBool, unaryop) \
@@ -101,15 +101,15 @@ QT_BEGIN_NAMESPACE
     F(ConvertObjectToBool, unaryop) \
     F(ConvertNullToObject, unaryop) \
     F(ResolveUrl, unaryop) \
-    F(MathSinReal, unaryop) \
-    F(MathCosReal, unaryop) \
-    F(MathAbsReal, unaryop) \
-    F(MathRoundReal, unaryop) \
-    F(MathFloorReal, unaryop) \
-    F(MathCeilReal, unaryop) \
-    F(MathPIReal, unaryop) \
+    F(MathSinNumber, unaryop) \
+    F(MathCosNumber, unaryop) \
+    F(MathAbsNumber, unaryop) \
+    F(MathRoundNumber, unaryop) \
+    F(MathFloorNumber, unaryop) \
+    F(MathCeilNumber, unaryop) \
+    F(MathPINumber, unaryop) \
     F(LoadNull, null_value) \
-    F(LoadReal, real_value) \
+    F(LoadNumber, number_value) \
     F(LoadInt, int_value) \
     F(LoadBool, bool_value) \
     F(LoadString, string_value) \
@@ -118,23 +118,23 @@ QT_BEGIN_NAMESPACE
     F(BitAndInt, binaryop) \
     F(BitOrInt, binaryop) \
     F(BitXorInt, binaryop) \
-    F(AddReal, binaryop) \
+    F(AddNumber, binaryop) \
     F(AddString, binaryop) \
-    F(SubReal, binaryop) \
-    F(MulReal, binaryop) \
-    F(DivReal, binaryop) \
-    F(ModReal, binaryop) \
+    F(SubNumber, binaryop) \
+    F(MulNumber, binaryop) \
+    F(DivNumber, binaryop) \
+    F(ModNumber, binaryop) \
     F(LShiftInt, binaryop) \
     F(RShiftInt, binaryop) \
     F(URShiftInt, binaryop) \
-    F(GtReal, binaryop) \
-    F(LtReal, binaryop) \
-    F(GeReal, binaryop) \
-    F(LeReal, binaryop) \
-    F(EqualReal, binaryop) \
-    F(NotEqualReal, binaryop) \
-    F(StrictEqualReal, binaryop) \
-    F(StrictNotEqualReal, binaryop) \
+    F(GtNumber, binaryop) \
+    F(LtNumber, binaryop) \
+    F(GeNumber, binaryop) \
+    F(LeNumber, binaryop) \
+    F(EqualNumber, binaryop) \
+    F(NotEqualNumber, binaryop) \
+    F(StrictEqualNumber, binaryop) \
+    F(StrictNotEqualNumber, binaryop) \
     F(GtString, binaryop) \
     F(LtString, binaryop) \
     F(GeString, binaryop) \
@@ -147,8 +147,8 @@ QT_BEGIN_NAMESPACE
     F(NotEqualObject, binaryop) \
     F(StrictEqualObject, binaryop) \
     F(StrictNotEqualObject, binaryop) \
-    F(MathMaxReal, binaryop) \
-    F(MathMinReal, binaryop) \
+    F(MathMaxNumber, binaryop) \
+    F(MathMinNumber, binaryop) \
     F(NewString, construct) \
     F(NewUrl, construct) \
     F(CleanupRegister, cleanup) \
@@ -160,8 +160,7 @@ QT_BEGIN_NAMESPACE
     F(BranchFalse, branchop) \
     F(Branch, branchop) \
     F(Block, blockop) \
-    /* Speculative property resolution */ \
-    F(InitString, initstring)
+    F(Throw, throwop)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define QML_THREADED_INTERPRETER
@@ -192,7 +191,7 @@ class QQmlNotifier;
 
 namespace QQmlJS {
 
-union V4Instr {
+union Q_AUTOTEST_EXPORT V4Instr {
     enum Type {
         FOR_EACH_V4_INSTR(QML_V4_INSTR_ENUM)
     };
@@ -241,6 +240,7 @@ union V4Instr {
         qint8 output;
         qint8 reg;
         quint8 exceptionId;
+        quint8 valueType;
         quint32 index;
     };
 
@@ -283,10 +283,10 @@ union V4Instr {
         qint8 reg;
     };
 
-    struct instr_real_value {
+    struct instr_number_value {
         QML_V4_INSTR_HEADER
         qint8 reg;
-        qreal value; // XXX Makes the instruction 12 bytes
+        double value; // XXX Makes the instruction 12 bytes
     };
 
     struct instr_int_value {
@@ -358,6 +358,12 @@ union V4Instr {
         quint32 block;
     };
 
+    struct instr_throwop {
+        QML_V4_INSTR_HEADER
+        quint8 exceptionId;
+        quint32 message;
+    };
+
     instr_common common;
     instr_id id;
     instr_init init;
@@ -371,7 +377,7 @@ union V4Instr {
     instr_copy copy;
     instr_construct construct;
     instr_null_value null_value;
-    instr_real_value real_value;
+    instr_number_value number_value;
     instr_int_value int_value;
     instr_bool_value bool_value;
     instr_string_value string_value;
@@ -383,6 +389,7 @@ union V4Instr {
     instr_initstring initstring;
     instr_branchop branchop;
     instr_blockop blockop;
+    instr_throwop throwop;
 };
 
 template<int N>
@@ -400,11 +407,11 @@ FOR_EACH_V4_INSTR(QML_V4_INSTR_META_TEMPLATE);
 #undef QML_V4_INSTR_META_TEMPLATE
 
 template<int Instr>
-class V4InstrData : public V4InstrMeta<Instr>::DataType
+class Q_AUTOTEST_EXPORT V4InstrData : public V4InstrMeta<Instr>::DataType
 {
 };
 
-class Bytecode
+class Q_AUTOTEST_EXPORT Bytecode
 {
     Q_DISABLE_COPY(Bytecode)
 

@@ -297,16 +297,16 @@ QList<QQmlDirParser::TypeInfo> QQmlDirParser::typeInfos() const
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)
 {
-    return debug << qPrintable(QString("{%1 %2.%3}").arg(component.typeName)
-                                                    .arg(component.majorVersion)
-                                                    .arg(component.minorVersion));
+    const QString output = QString::fromLatin1("{%1 %2.%3}").
+        arg(component.typeName).arg(component.majorVersion).arg(component.minorVersion);
+    return debug << qPrintable(output);
 }
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Script &script)
 {
-    return debug << qPrintable(QString("{%1 %2.%3}").arg(script.nameSpace)
-                                                    .arg(script.majorVersion)
-                                                    .arg(script.minorVersion));
+    const QString output = QString::fromLatin1("{%1 %2.%3}").
+        arg(script.nameSpace).arg(script.majorVersion).arg(script.minorVersion);
+    return debug << qPrintable(output);
 }
 
 QT_END_NAMESPACE

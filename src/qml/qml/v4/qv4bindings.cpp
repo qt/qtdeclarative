@@ -52,6 +52,7 @@
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmltrace_p.h>
 #include <private/qqmlstringconverters_p.h>
+#include <private/qqmlproperty_p.h>
 
 #include <QtQml/qqmlinfo.h>
 #include <QtCore/qnumeric.h>
@@ -66,46 +67,53 @@ namespace {
 struct Register {
     typedef QQmlRegisterType Type;
 
-    void setUndefined() { dataType = UndefinedType; }
-    void setNull() { dataType = NullType; }
-    void setNaN() { setqreal(qSNaN()); }
-    bool isUndefined() const { return dataType == UndefinedType; }
+    inline void setUndefined() { dataType = UndefinedType; }
+    inline void setNull() { dataType = NullType; }
+    inline void setNaN() { setnumber(qSNaN()); }
+    inline bool isUndefined() const { return dataType == UndefinedType; }
 
-    void setQObject(QObject *o) { qobjectValue = o; dataType = QObjectStarType; }
-    QObject *getQObject() const { return qobjectValue; }
+    inline void setQObject(QObject *o) { qobjectValue = o; dataType = QObjectStarType; }
+    inline QObject *getQObject() const { return qobjectValue; }
 
-    void setqreal(qreal v) { qrealValue = v; dataType = QRealType; }
-    qreal getqreal() const { return qrealValue; }
-    qreal &getqrealref() { return qrealValue; }
+    inline void setnumber(double v) { numberValue = v; dataType = NumberType; }
+    inline double getnumber() const { return numberValue; }
+    inline double &getnumberref() { return numberValue; }
 
-    void setint(int v) { intValue = v; dataType = IntType; }
-    int getint() const { return intValue; }
-    int &getintref() { return intValue; }
+    inline void setfloat(float v) { floatValue = v; dataType = FloatType; }
+    inline float getfloat() const { return floatValue; }
+    inline float &getfloatref() { return floatValue; }
 
-    void setbool(bool v) { boolValue = v; dataType = BoolType; }
-    bool getbool() const { return boolValue; }
-    bool &getboolref() { return boolValue; }
+    inline void setint(int v) { intValue = v; dataType = IntType; }
+    inline int getint() const { return intValue; }
+    inline int &getintref() { return intValue; }
 
-    QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
-    QString *getstringptr() { return (QString *)typeDataPtr(); }
-    QUrl *geturlptr() { return (QUrl *)typeDataPtr(); }
-    const QVariant *getvariantptr() const { return (QVariant *)typeDataPtr(); }
-    const QString *getstringptr() const { return (QString *)typeDataPtr(); }
-    const QUrl *geturlptr() const { return (QUrl *)typeDataPtr(); }
+    inline void setbool(bool v) { boolValue = v; dataType = BoolType; }
+    inline bool getbool() const { return boolValue; }
+    inline bool &getboolref() { return boolValue; }
+
+    inline QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
+    inline QString *getstringptr() { return (QString *)typeDataPtr(); }
+    inline QUrl *geturlptr() { return (QUrl *)typeDataPtr(); }
+    inline QColor *getcolorptr() { return (QColor *)typeDataPtr(); }
+    inline const QVariant *getvariantptr() const { return (QVariant *)typeDataPtr(); }
+    inline const QString *getstringptr() const { return (QString *)typeDataPtr(); }
+    inline const QUrl *geturlptr() const { return (QUrl *)typeDataPtr(); }
+    inline const QColor *getcolorptr() const { return (QColor *)typeDataPtr(); }
 
     size_t dataSize() { return sizeof(data); }
-    void *typeDataPtr() { return (void *)&data; }
-    void *typeMemory() { return (void *)data; }
-    const void *typeDataPtr() const { return (void *)&data; }
-    const void *typeMemory() const { return (void *)data; }
+    inline void *typeDataPtr() { return (void *)&data; }
+    inline void *typeMemory() { return (void *)data; }
+    inline const void *typeDataPtr() const { return (void *)&data; }
+    inline const void *typeMemory() const { return (void *)data; }
 
-    Type gettype() const { return dataType; }
-    void settype(Type t) { dataType = t; }
+    inline Type gettype() const { return dataType; }
+    inline void settype(Type t) { dataType = t; }
 
     Type dataType;     // Type of data
     union {
         QObject *qobjectValue;
-        qreal qrealValue;
+        double numberValue;
+        float floatValue;
         int intValue;
         bool boolValue;
         void *data[sizeof(QVariant)];
@@ -387,85 +395,6 @@ void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex)
         sub->disconnect();
 }
 
-// Conversion functions - these MUST match the QtScript expression path
-inline static qreal toReal(Register *reg, int type, bool *ok = 0)
-{
-    if (ok) *ok = true;
-
-    if (type == QMetaType::QReal) {
-        return reg->getqreal();
-    } else if (type == qMetaTypeId<QVariant>()) {
-        return reg->getvariantptr()->toReal();
-    } else {
-        if (ok) *ok = false;
-        return 0;
-    }
-}
-
-inline static QString toString(Register *reg, int type, bool *ok = 0)
-{
-    if (ok) *ok = true;
-
-    if (type == QMetaType::QReal) {
-        return QString::number(reg->getqreal());
-    } else if (type == QMetaType::Int) {
-        return QString::number(reg->getint());
-    } else if (type == qMetaTypeId<QVariant>()) {
-        return reg->getvariantptr()->toString();
-    } else if (type == QMetaType::QString) {
-        return *reg->getstringptr();
-    } else {
-        if (ok) *ok = false;
-        return QString();
-    }
-}
-
-inline static bool toBool(Register *reg, int type, bool *ok = 0)
-{
-    if (ok) *ok = true;
-
-    if (type == QMetaType::Bool) {
-        return reg->getbool();
-    } else if (type == qMetaTypeId<QVariant>()) {
-        return reg->getvariantptr()->toBool();
-    } else {
-        if (ok) *ok = false;
-        return false;
-    }
-}
-
-inline static QUrl toUrl(Register *reg, int type, QQmlContextData *context, bool *ok = 0)
-{
-    if (ok) *ok = true;
-
-    QUrl base;
-    if (type == qMetaTypeId<QVariant>()) {
-        QVariant *var = reg->getvariantptr();
-        int vt = var->type();
-        if (vt == QVariant::Url) {
-            base = var->toUrl();
-        } else if (vt == QVariant::ByteArray) {
-            // Preserve any valid percent-encoded octets supplied by the source
-            base.setEncodedUrl(var->toByteArray(), QUrl::TolerantMode);
-        } else if (vt == QVariant::String) {
-            base.setEncodedUrl(var->toString().toUtf8(), QUrl::TolerantMode);
-        } else {
-            if (ok) *ok = false;
-            return QUrl();
-        }
-    } else if (type == QMetaType::QString) {
-        base.setEncodedUrl(reg->getstringptr()->toUtf8(), QUrl::TolerantMode);
-    } else {
-        if (ok) *ok = false;
-        return QUrl();
-    }
-
-    if (!base.isEmpty() && base.isRelative())
-        return context->url.resolved(base);
-    else
-        return base;
-}
-
 static bool testCompareVariants(const QVariant &qtscriptRaw, const QVariant &v4)
 {
     QVariant qtscript = qtscriptRaw;
@@ -529,9 +458,28 @@ static void testBindingResult(const QString &binding, int line, int column,
     if (expression.hasError()) {
         iserror = true;
         qtscriptResult = "exception";
-    } else {
-        qtscriptResult = testResultToString(value, isUndefined);
+    } else if (value.userType() != resultType) {
+        // Override the QMetaType conversions to make them more JS friendly.
+        if (value.userType() == QMetaType::Double && (resultType == QMetaType::QString ||
+                                                        resultType == QMetaType::QUrl)) {
+            // number to string-like conversion.
+            value = QVariant::fromValue<QString>(QString::number(value.toDouble(), 'g', 16));
+        } else if (value.userType() == QMetaType::QUrl && resultType == QMetaType::Bool) {
+            // url to bool conversion
+            value = QVariant::fromValue<bool>(!value.toUrl().isEmpty());
+        }
+
+        if (!value.isNull() && !value.convert(resultType)) {
+            iserror = true;
+            qtscriptResult = "exception";
+        } else if (resultType == QMetaType::QUrl) {
+            // a V8 value was converted to QUrl.
+            value = QVariant::fromValue<QUrl>(context->resolvedUrl(value.toUrl()));
+        }
     }
+
+    if (! iserror)
+        qtscriptResult = testResultToString(value, isUndefined);
 
     if (isUndefined && result.isUndefined()) {
         return;
@@ -557,8 +505,8 @@ static void testBindingResult(const QString &binding, int line, int column,
         case QMetaType::Int:
             v4value = result.getint();
             break;
-        case QMetaType::QReal:
-            v4value = result.getqreal();
+        case QMetaType::Double:
+            v4value = result.getnumber();
             break;
         default:
             if (resultType == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
@@ -621,15 +569,15 @@ static void throwException(int id, QQmlDelayedError *error,
         QQmlEnginePrivate::warning(context->engine, error->error);
 }
 
-const qreal QV4Bindings::D32 = 4294967296.0;
+const double QV4Bindings::D32 = 4294967296.0;
 
-qint32 QV4Bindings::toInt32(qreal n)
+qint32 QV4Bindings::toInt32(double n)
 {
     if (qIsNaN(n) || qIsInf(n) || (n == 0))
         return 0;
 
     double sign = (n < 0) ? -1.0 : 1.0;
-    qreal abs_n = fabs(n);
+    double abs_n = fabs(n);
 
     n = ::fmod(sign * ::floor(abs_n), D32);
     const double D31 = D32 / 2.0;
@@ -643,13 +591,13 @@ qint32 QV4Bindings::toInt32(qreal n)
     return qint32 (n);
 }
 
-inline quint32 QV4Bindings::toUint32(qreal n)
+inline quint32 QV4Bindings::toUint32(double n)
 {
     if (qIsNaN(n) || qIsInf(n) || (n == 0))
         return 0;
 
     double sign = (n < 0) ? -1.0 : 1.0;
-    qreal abs_n = fabs(n);
+    double abs_n = fabs(n);
 
     n = ::fmod(sign * ::floor(abs_n), D32);
 
@@ -664,6 +612,11 @@ inline quint32 QV4Bindings::toUint32(qreal n)
     throwException((id), error, program, context, (str)); \
     goto exceptionExit; \
 } 
+
+#define THROW_VALUE_EXCEPTION_STR(id, str) { \
+    throwException((id), error, program, context, (str)); \
+    goto exceptionExit; \
+}
 
 #define THROW_EXCEPTION(id) THROW_EXCEPTION_STR(id, QString())
 
@@ -791,12 +744,20 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 sub->bindings = this;
                 sub->method = subIdx;
             }
-            reg.init((Register::Type)instr->fetchAndSubscribe.valueType);
+
+            const Register::Type valueType = (Register::Type)instr->fetchAndSubscribe.valueType;
+            reg.init(valueType);
             if (instr->fetchAndSubscribe.valueType >= FirstCleanupType)
                 MARK_REGISTER(instr->fetchAndSubscribe.reg);
             QQmlAccessors *accessors = instr->fetchAndSubscribe.property.accessors;
             accessors->read(object, instr->fetchAndSubscribe.property.accessorData,
                             reg.typeDataPtr());
+
+            if (valueType == FloatType) {
+                // promote floats
+                const double v = reg.getfloat();
+                reg.setnumber(v);
+            }
 
             if (accessors->notifier) {
                 QQmlNotifier *notifier = 0;
@@ -868,11 +829,11 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(UnaryNot, unaryop)
 
-    QML_V4_BEGIN_INSTR(UnaryMinusReal, unaryop)
+    QML_V4_BEGIN_INSTR(UnaryMinusNumber, unaryop)
     {
-        registers[instr->unaryop.output].setqreal(-registers[instr->unaryop.src].getqreal());
+        registers[instr->unaryop.output].setnumber(-registers[instr->unaryop.src].getnumber());
     }
-    QML_V4_END_INSTR(UnaryMinusReal, unaryop)
+    QML_V4_END_INSTR(UnaryMinusNumber, unaryop)
 
     QML_V4_BEGIN_INSTR(UnaryMinusInt, unaryop)
     {
@@ -880,11 +841,11 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(UnaryMinusInt, unaryop)
 
-    QML_V4_BEGIN_INSTR(UnaryPlusReal, unaryop)
+    QML_V4_BEGIN_INSTR(UnaryPlusNumber, unaryop)
     {
-        registers[instr->unaryop.output].setqreal(+registers[instr->unaryop.src].getqreal());
+        registers[instr->unaryop.output].setnumber(+registers[instr->unaryop.src].getnumber());
     }
-    QML_V4_END_INSTR(UnaryPlusReal, unaryop)
+    QML_V4_END_INSTR(UnaryPlusNumber, unaryop)
 
     QML_V4_BEGIN_INSTR(UnaryPlusInt, unaryop)
     {
@@ -901,14 +862,14 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertBoolToInt, unaryop)
 
-    QML_V4_BEGIN_INSTR(ConvertBoolToReal, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertBoolToNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setqreal(src.getbool());
+        else output.setnumber(src.getbool());
     }
-    QML_V4_END_INSTR(ConvertBoolToReal, unaryop)
+    QML_V4_END_INSTR(ConvertBoolToNumber, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertBoolToString, unaryop)
     {
@@ -932,14 +893,14 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertIntToBool, unaryop)
 
-    QML_V4_BEGIN_INSTR(ConvertIntToReal, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertIntToNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setqreal(qreal(src.getint()));
+        else output.setnumber(double(src.getint()));
     }
-    QML_V4_END_INSTR(ConvertIntToReal, unaryop)
+    QML_V4_END_INSTR(ConvertIntToNumber, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertIntToString, unaryop)
     {
@@ -954,25 +915,25 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertIntToString, unaryop)
 
-    QML_V4_BEGIN_INSTR(ConvertRealToBool, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertNumberToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setbool(src.getqreal() != 0);
+        else output.setbool(src.getnumber() != 0);
     }
-    QML_V4_END_INSTR(ConvertRealToBool, unaryop)
+    QML_V4_END_INSTR(ConvertNumberToBool, unaryop)
 
-    QML_V4_BEGIN_INSTR(ConvertRealToInt, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertNumberToInt, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setint(toInt32(src.getqreal()));
+        else output.setint(toInt32(src.getnumber()));
     }
-    QML_V4_END_INSTR(ConvertRealToInt, unaryop)
+    QML_V4_END_INSTR(ConvertNumberToInt, unaryop)
 
-    QML_V4_BEGIN_INSTR(ConvertRealToString, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertNumberToString, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
@@ -980,11 +941,11 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (src.isUndefined()) {
             output.setUndefined();
         } else {
-            new (output.getstringptr()) QString(QString::number(src.getqreal()));
+            new (output.getstringptr()) QString(QString::number(src.getnumber(), 'g', 16));
             STRING_REGISTER(instr->unaryop.output);
         }
     }
-    QML_V4_END_INSTR(ConvertRealToString, unaryop)
+    QML_V4_END_INSTR(ConvertNumberToString, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertStringToBool, unaryop)
     {
@@ -1026,7 +987,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertStringToInt, unaryop)
 
-    QML_V4_BEGIN_INSTR(ConvertStringToReal, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertStringToNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
@@ -1041,10 +1002,10 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
             }
-            output.setqreal(tmp.toNumber());
+            output.setnumber(tmp.toNumber());
         }
     }
-    QML_V4_END_INSTR(ConvertStringToReal, unaryop)
+    QML_V4_END_INSTR(ConvertStringToNumber, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertStringToUrl, unaryop)
     {
@@ -1190,75 +1151,75 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ResolveUrl, unaryop)
 
-    QML_V4_BEGIN_INSTR(MathSinReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathSinNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setqreal(qSin(src.getqreal()));
+        else output.setnumber(qSin(src.getnumber()));
     }
-    QML_V4_END_INSTR(MathSinReal, unaryop)
+    QML_V4_END_INSTR(MathSinNumber, unaryop)
 
-    QML_V4_BEGIN_INSTR(MathCosReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathCosNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setqreal(qCos(src.getqreal()));
+        else output.setnumber(qCos(src.getnumber()));
     }
-    QML_V4_END_INSTR(MathCosReal, unaryop)
+    QML_V4_END_INSTR(MathCosNumber, unaryop)
 
-    QML_V4_BEGIN_INSTR(MathAbsReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathAbsNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setqreal(qAbs(src.getqreal()));
+        else output.setnumber(qAbs(src.getnumber()));
     }
-    QML_V4_END_INSTR(MathAbsReal, unaryop)
+    QML_V4_END_INSTR(MathAbsNumber, unaryop)
 
-    QML_V4_BEGIN_INSTR(MathRoundReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathRoundNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setint(qRound(src.getqreal()));
+        else output.setint(qRound(src.getnumber()));
     }
-    QML_V4_END_INSTR(MathRoundReal, unaryop)
+    QML_V4_END_INSTR(MathRoundNumber, unaryop)
 
-    QML_V4_BEGIN_INSTR(MathFloorReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathFloorNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setint(qFloor(src.getqreal()));
+        else output.setint(qFloor(src.getnumber()));
     }
-    QML_V4_END_INSTR(MathFloorReal, unaryop)
+    QML_V4_END_INSTR(MathFloorNumber, unaryop)
 
-    QML_V4_BEGIN_INSTR(MathCeilReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathCeilNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setint(qCeil(src.getqreal()));
+        else output.setint(qCeil(src.getnumber()));
     }
-    QML_V4_END_INSTR(MathCeilReal, unaryop)
+    QML_V4_END_INSTR(MathCeilNumber, unaryop)
 
-    QML_V4_BEGIN_INSTR(MathPIReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathPINumber, unaryop)
     {
-        static const qreal qmlPI = 2.0 * qAsin(1.0);
+        static const double qmlPI = 2.0 * qAsin(1.0);
         Register &output = registers[instr->unaryop.output];
-        output.setqreal(qmlPI);
+        output.setnumber(qmlPI);
     }
-    QML_V4_END_INSTR(MathPIReal, unaryop)
+    QML_V4_END_INSTR(MathPINumber, unaryop)
 
     QML_V4_BEGIN_INSTR(LoadNull, null_value)
         registers[instr->null_value.reg].setNull();
     QML_V4_END_INSTR(LoadNull, null_value)
 
-    QML_V4_BEGIN_INSTR(LoadReal, real_value)
-        registers[instr->real_value.reg].setqreal(instr->real_value.value);
-    QML_V4_END_INSTR(LoadReal, real_value)
+    QML_V4_BEGIN_INSTR(LoadNumber, number_value)
+        registers[instr->number_value.reg].setnumber(instr->number_value.value);
+    QML_V4_END_INSTR(LoadNumber, number_value)
 
     QML_V4_BEGIN_INSTR(LoadInt, int_value)
         registers[instr->int_value.reg].setint(instr->int_value.value);
@@ -1305,12 +1266,12 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(BitXorInt, binaryop)
 
-    QML_V4_BEGIN_INSTR(AddReal, binaryop)
+    QML_V4_BEGIN_INSTR(AddNumber, binaryop)
     {
-        registers[instr->binaryop.output].setqreal(registers[instr->binaryop.left].getqreal() + 
-                                                   registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setnumber(registers[instr->binaryop.left].getnumber() +
+                                                   registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(AddReal, binaryop)
+    QML_V4_END_INSTR(AddNumber, binaryop)
 
     QML_V4_BEGIN_INSTR(AddString, binaryop)
     {
@@ -1324,36 +1285,33 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(AddString, binaryop)
 
-    QML_V4_BEGIN_INSTR(SubReal, binaryop)
+    QML_V4_BEGIN_INSTR(SubNumber, binaryop)
     {
-        registers[instr->binaryop.output].setqreal(registers[instr->binaryop.left].getqreal() - 
-                                                   registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setnumber(registers[instr->binaryop.left].getnumber() -
+                                                   registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(SubReal, binaryop)
+    QML_V4_END_INSTR(SubNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(MulReal, binaryop)
+    QML_V4_BEGIN_INSTR(MulNumber, binaryop)
     {
-        registers[instr->binaryop.output].setqreal(registers[instr->binaryop.left].getqreal() * 
-                                                   registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setnumber(registers[instr->binaryop.left].getnumber() *
+                                                   registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(MulReal, binaryop)
+    QML_V4_END_INSTR(MulNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(DivReal, binaryop)
+    QML_V4_BEGIN_INSTR(DivNumber, binaryop)
     {
-        registers[instr->binaryop.output].setqreal(registers[instr->binaryop.left].getqreal() / 
-                                                   registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setnumber(registers[instr->binaryop.left].getnumber() /
+                                                   registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(DivReal, binaryop)
+    QML_V4_END_INSTR(DivNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(ModReal, binaryop)
+    QML_V4_BEGIN_INSTR(ModNumber, binaryop)
     {
         Register &target = registers[instr->binaryop.output];
         const Register &left = registers[instr->binaryop.left];
         const Register &right = registers[instr->binaryop.right];
-        if (QMetaType::QReal == QMetaType::Float)
-            target.setqreal(::fmodf(left.getqreal(), right.getqreal()));
-        else
-            target.setqreal(::fmod(left.getqreal(), right.getqreal()));
+        target.setnumber(::fmod(left.getnumber(), right.getnumber()));
     }
     QML_V4_END_INSTR(ModInt, binaryop)
 
@@ -1378,61 +1336,61 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(URShiftInt, binaryop)
 
-    QML_V4_BEGIN_INSTR(GtReal, binaryop)
+    QML_V4_BEGIN_INSTR(GtNumber, binaryop)
     {
-        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() > 
-                                                  registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getnumber() >
+                                                  registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(GtReal, binaryop)
+    QML_V4_END_INSTR(GtNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(LtReal, binaryop)
+    QML_V4_BEGIN_INSTR(LtNumber, binaryop)
     {
-        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() < 
-                                                  registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getnumber() <
+                                                  registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(LtReal, binaryop)
+    QML_V4_END_INSTR(LtNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(GeReal, binaryop)
+    QML_V4_BEGIN_INSTR(GeNumber, binaryop)
     {
-        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() >= 
-                                                  registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getnumber() >=
+                                                  registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(GeReal, binaryop)
+    QML_V4_END_INSTR(GeNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(LeReal, binaryop)
+    QML_V4_BEGIN_INSTR(LeNumber, binaryop)
     {
-        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() <= 
-                                                  registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getnumber() <=
+                                                  registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(LeReal, binaryop)
+    QML_V4_END_INSTR(LeNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(EqualReal, binaryop)
+    QML_V4_BEGIN_INSTR(EqualNumber, binaryop)
     {
-        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() == 
-                                                  registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getnumber() ==
+                                                  registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(EqualReal, binaryop)
+    QML_V4_END_INSTR(EqualNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(NotEqualReal, binaryop)
+    QML_V4_BEGIN_INSTR(NotEqualNumber, binaryop)
     {
-        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() != 
-                                                  registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getnumber() !=
+                                                  registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(NotEqualReal, binaryop)
+    QML_V4_END_INSTR(NotEqualNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(StrictEqualReal, binaryop)
+    QML_V4_BEGIN_INSTR(StrictEqualNumber, binaryop)
     {
-        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() == 
-                                                  registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getnumber() ==
+                                                  registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(StrictEqualReal, binaryop)
+    QML_V4_END_INSTR(StrictEqualNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(StrictNotEqualReal, binaryop)
+    QML_V4_BEGIN_INSTR(StrictNotEqualNumber, binaryop)
     {
-        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() != 
-                                                  registers[instr->binaryop.right].getqreal());
+        registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getnumber() !=
+                                                  registers[instr->binaryop.right].getnumber());
     }
-    QML_V4_END_INSTR(StrictNotEqualReal, binaryop)
+    QML_V4_END_INSTR(StrictNotEqualNumber, binaryop)
 
     QML_V4_BEGIN_INSTR(GtString, binaryop)
     {
@@ -1578,25 +1536,25 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(StrictNotEqualObject, binaryop)
 
-    QML_V4_BEGIN_INSTR(MathMaxReal, binaryop)
+    QML_V4_BEGIN_INSTR(MathMaxNumber, binaryop)
     {
         const Register &left = registers[instr->binaryop.left];
         const Register &right = registers[instr->binaryop.right];
         Register &output = registers[instr->binaryop.output];
         if (left.isUndefined() || right.isUndefined()) output.setUndefined();
-        else output.setqreal(qMax(left.getqreal(), right.getqreal()));
+        else output.setnumber(qMax(left.getnumber(), right.getnumber()));
     }
-    QML_V4_END_INSTR(MathMaxReal, binaryop)
+    QML_V4_END_INSTR(MathMaxNumber, binaryop)
 
-    QML_V4_BEGIN_INSTR(MathMinReal, binaryop)
+    QML_V4_BEGIN_INSTR(MathMinNumber, binaryop)
     {
         const Register &left = registers[instr->binaryop.left];
         const Register &right = registers[instr->binaryop.right];
         Register &output = registers[instr->binaryop.output];
         if (left.isUndefined() || right.isUndefined()) output.setUndefined();
-        else output.setqreal(qMin(left.getqreal(), right.getqreal()));
+        else output.setnumber(qMin(left.getnumber(), right.getnumber()));
     }
-    QML_V4_END_INSTR(MathMinReal, binaryop)
+    QML_V4_END_INSTR(MathMinNumber, binaryop)
 
     QML_V4_BEGIN_INSTR(NewString, construct)
     {
@@ -1625,11 +1583,17 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (!object) {
             THROW_EXCEPTION(instr->fetch.exceptionId);
         } else {
-            reg.init((Register::Type)instr->fetch.valueType);
+            const Register::Type valueType = (Register::Type)instr->fetch.valueType;
+            reg.init(valueType);
             if (instr->fetch.valueType >= FirstCleanupType)
                 MARK_REGISTER(instr->fetch.reg);
             void *argv[] = { reg.typeDataPtr(), 0 };
             QMetaObject::metacall(object, QMetaObject::ReadProperty, instr->fetch.index, argv);
+            if (valueType == FloatType) {
+                // promote floats
+                const double v = reg.getfloat();
+                reg.setnumber(v);
+            }
         }
     }
     QML_V4_END_INSTR(Fetch, fetch)
@@ -1648,6 +1612,30 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
 
         if (data.isUndefined()) 
             THROW_EXCEPTION_STR(instr->store.exceptionId, QLatin1String("Unable to assign undefined value"));
+
+        if (data.gettype() == QObjectStarType) {
+            if (QObject *dataObject = data.getQObject()) {
+                const QMetaObject *dataMo = dataObject->metaObject();
+
+                QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
+                QMetaProperty receiver = output->metaObject()->property(instr->store.index);
+                const QMetaObject *receiverMo = QQmlPropertyPrivate::rawMetaObjectForType(ep, receiver.userType());
+
+                // Verify that these types are compatible
+                if (!QQmlPropertyPrivate::canConvert(dataMo, receiverMo)) {
+                    THROW_EXCEPTION_STR(instr->store.exceptionId, QLatin1String("Unable to assign ") +
+                                                                  QLatin1String(dataMo->className()) +
+                                                                  QLatin1String(" to ") +
+                                                                  QLatin1String(receiverMo->className()));
+                }
+            }
+        }
+
+        if (instr->store.valueType == FloatType) {
+            // cast numbers to floats
+            const float v = (float) data.getnumber();
+            data.setfloat(v);
+        }
 
         int status = -1;
         void *argv[] = { data.typeDataPtr(), 0, &status, &storeFlags };
@@ -1687,21 +1675,13 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         executedBlocks |= instr->blockop.block;
     QML_V4_END_INSTR(Block, blockop)
 
-    // XXX not applicable in v8
-    QML_V4_BEGIN_INSTR(InitString, initstring)
-//        if (!identifiers[instr->initstring.offset].identifier) {
-//            quint32 len = *(quint32 *)(data + instr->initstring.dataIdx);
-//            QChar *strdata = (QChar *)(data + instr->initstring.dataIdx + sizeof(quint32));
-
-//            QString str = QString::fromRawData(strdata, len);
-
-//            // identifiers[instr->initstring.offset] = engine->objectClass->createPersistentIdentifier(str);
-//        }
-    QML_V4_END_INSTR(InitString, initstring)
-
     QML_V4_BEGIN_INSTR(CleanupRegister, cleanup)
         registers[instr->cleanup.reg].cleanup();
     QML_V4_END_INSTR(CleanupRegister, cleanup)
+
+    QML_V4_BEGIN_INSTR(Throw, throwop)
+        THROW_VALUE_EXCEPTION_STR(instr->throwop.exceptionId, *registers[instr->throwop.message].getstringptr());
+    QML_V4_END_INSTR(Throw, throwop)
 
 #ifdef QML_THREADED_INTERPRETER
     // nothing to do

@@ -52,11 +52,9 @@ Rectangle {
     radius: 10
 
     gradient: Gradient {
-        GradientStop { id: gradientStop; position: 0.0; color: palette.light }
-        GradientStop { position: 1.0; color: palette.button }
+        GradientStop { id: gradientStop; position: 0.0; color: "#eeeeee" }
+        GradientStop { position: 1.0; color: "#888888" }
     }
-
-    SystemPalette { id: palette }
 
     MouseArea {
         id: mouseArea
@@ -72,7 +70,7 @@ Rectangle {
     states: State {
         name: "pressed"
         when: mouseArea.pressed
-        PropertyChanges { target: gradientStop; color: palette.dark }
+        PropertyChanges { target: gradientStop; color: "#333333" }
     }
 }
 

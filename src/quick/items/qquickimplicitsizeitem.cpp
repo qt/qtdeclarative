@@ -47,12 +47,24 @@ QT_BEGIN_NAMESPACE
 void QQuickImplicitSizeItemPrivate::implicitWidthChanged()
 {
     Q_Q(QQuickImplicitSizeItem);
+    for (int ii = 0; ii < changeListeners.count(); ++ii) {
+        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        if (change.types & QQuickItemPrivate::ImplicitWidth) {
+            change.listener->itemImplicitWidthChanged(q);
+        }
+    }
     emit q->implicitWidthChanged();
 }
 
 void QQuickImplicitSizeItemPrivate::implicitHeightChanged()
 {
     Q_Q(QQuickImplicitSizeItem);
+    for (int ii = 0; ii < changeListeners.count(); ++ii) {
+        const QQuickItemPrivate::ChangeListener &change = changeListeners.at(ii);
+        if (change.types & QQuickItemPrivate::ImplicitHeight) {
+            change.listener->itemImplicitHeightChanged(q);
+        }
+    }
     emit q->implicitHeightChanged();
 }
 

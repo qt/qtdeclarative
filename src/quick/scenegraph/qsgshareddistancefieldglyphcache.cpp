@@ -86,11 +86,11 @@ QSGSharedDistanceFieldGlyphCache::QSGSharedDistanceFieldGlyphCache(const QByteAr
     connect(sharedGraphicsCache, SIGNAL(itemsMissing(QByteArray,QVector<quint32>)),
             this, SLOT(reportItemsMissing(QByteArray,QVector<quint32>)),
             Qt::DirectConnection);
-    connect(sharedGraphicsCache, SIGNAL(itemsAvailable(QByteArray,void*,QSize,QVector<quint32>,QVector<QPoint>)),
-            this, SLOT(reportItemsAvailable(QByteArray,void*,QSize,QVector<quint32>,QVector<QPoint>)),
+    connect(sharedGraphicsCache, SIGNAL(itemsAvailable(QByteArray,void*,QVector<quint32>,QVector<QPoint>)),
+            this, SLOT(reportItemsAvailable(QByteArray,void*,QVector<quint32>,QVector<QPoint>)),
             Qt::DirectConnection);
-    connect(sharedGraphicsCache, SIGNAL(itemsUpdated(QByteArray,void*,QSize,QVector<quint32>,QVector<QPoint>)),
-            this, SLOT(reportItemsUpdated(QByteArray,void*,QSize,QVector<quint32>,QVector<QPoint>)),
+    connect(sharedGraphicsCache, SIGNAL(itemsUpdated(QByteArray,void*,QVector<quint32>,QVector<QPoint>)),
+            this, SLOT(reportItemsUpdated(QByteArray,void*,QVector<quint32>,QVector<QPoint>)),
             Qt::DirectConnection);
     connect(sharedGraphicsCache, SIGNAL(itemsInvalidated(QByteArray,QVector<quint32>)),
             this, SLOT(reportItemsInvalidated(QByteArray,QVector<quint32>)),
@@ -537,7 +537,7 @@ void QSGSharedDistanceFieldGlyphCache::processPendingGlyphs()
                 while (it != textureContentForBuffer.constEnd()) {
                     Texture texture;
                     texture.textureId = m_sharedGraphicsCache->textureIdForBuffer(it.key());
-                    texture.size = it.value().size;
+                    texture.size = m_sharedGraphicsCache->sizeOfBuffer(it.key());
 
 #if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG_)
                     saveTexture(texture.textureId, texture.size.width(), texture.size.height());
@@ -557,7 +557,6 @@ void QSGSharedDistanceFieldGlyphCache::processPendingGlyphs()
 
 void QSGSharedDistanceFieldGlyphCache::reportItemsAvailable(const QByteArray &cacheId,
                                                             void *bufferId,
-                                                            const QSize &bufferSize,
                                                             const QVector<quint32> &itemIds,
                                                             const QVector<QPoint> &positions)
 {
@@ -568,8 +567,8 @@ void QSGSharedDistanceFieldGlyphCache::reportItemsAvailable(const QByteArray &ca
             return;
 
 #if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG)
-            qDebug("QSGSharedDistanceFieldGlyphCache::reportItemsAvailable() called for %s (%d glyphs, bufferSize: %dx%d)",
-                   cacheId.constData(), itemIds.size(), bufferSize.width(), bufferSize.height());
+            qDebug("QSGSharedDistanceFieldGlyphCache::reportItemsAvailable() called for %s (%d glyphs)",
+                   cacheId.constData(), itemIds.size());
 #endif
 
         for (int i=0; i<itemIds.size(); ++i) {
@@ -581,11 +580,11 @@ void QSGSharedDistanceFieldGlyphCache::reportItemsAvailable(const QByteArray &ca
     }
 
     if (requestedItemsInList)
-        reportItemsUpdated(cacheId, bufferId, bufferSize, itemIds, positions);
+        reportItemsUpdated(cacheId, bufferId,itemIds, positions);
 }
 
 void QSGSharedDistanceFieldGlyphCache::reportItemsUpdated(const QByteArray &cacheId,
-                                                          void *bufferId, const QSize &bufferSize,
+                                                          void *bufferId,
                                                           const QVector<quint32> &itemIds,
                                                           const QVector<QPoint> &positions)
 {
@@ -597,19 +596,17 @@ void QSGSharedDistanceFieldGlyphCache::reportItemsUpdated(const QByteArray &cach
         Q_ASSERT(itemIds.size() == positions.size());
 
 #if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG)
-        qDebug("QSGSharedDistanceFieldGlyphCache::reportItemsUpdated() called for %s (%d glyphs, bufferSize: %dx%d)",
-               cacheId.constData(), itemIds.size(), bufferSize.width(), bufferSize.height());
+        qDebug("QSGSharedDistanceFieldGlyphCache::reportItemsUpdated() called for %s (%d glyphs)",
+               cacheId.constData(), itemIds.size());
 #endif
 
         for (int i=0; i<itemIds.size(); ++i) {
             if (m_requestedGlyphs.contains(itemIds.at(i))) {
                 PendingGlyph &pendingGlyph = m_pendingReadyGlyphs[itemIds.at(i)];
                 void *oldBuffer = pendingGlyph.buffer;
-                Q_ASSERT(bufferSize.height() >= pendingGlyph.bufferSize.height());
 
                 pendingGlyph.buffer = bufferId;
                 pendingGlyph.position = positions.at(i);
-                pendingGlyph.bufferSize = bufferSize;
 
                 m_sharedGraphicsCache->referenceBuffer(bufferId);
                 if (oldBuffer != 0)

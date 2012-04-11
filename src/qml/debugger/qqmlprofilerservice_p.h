@@ -54,7 +54,7 @@
 //
 
 #include <private/qqmldebugservice_p.h>
-#include "qqmlexpression.h"
+#include <private/qqmlboundsignal_p.h>
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmetaobject.h>
@@ -201,20 +201,20 @@ struct QQmlBindingProfiler {
 };
 
 struct QQmlHandlingSignalProfiler {
-    QQmlHandlingSignalProfiler(const QMetaMethod &signal, QQmlExpression *expression)
+    QQmlHandlingSignalProfiler(const QMetaMethod &signal, QQmlBoundSignalExpression *expression)
     {
         enabled = QQmlProfilerService::instance
                 ? QQmlProfilerService::instance->profilingEnabled() : false;
-        if (enabled)
-            init(signal, expression);
-    }
-
-    QQmlHandlingSignalProfiler(QObject *object, int index, QQmlExpression *expression)
-    {
-        enabled = QQmlProfilerService::instance
-                ? QQmlProfilerService::instance->profilingEnabled() : false;
-        if (enabled)
-            init(object->metaObject()->method(index), expression);
+        if (enabled) {
+            QQmlProfilerService *service = QQmlProfilerService::instance;
+            service->startRange(QQmlProfilerService::HandlingSignal);
+            service->rangeData(QQmlProfilerService::HandlingSignal,
+                               QString::fromLatin1(signal.methodSignature()) + QLatin1String(": ")
+                               + expression->expression());
+            service->rangeLocation(QQmlProfilerService::HandlingSignal,
+                                   expression->sourceFile(), expression->lineNumber(),
+                                   expression->columnNumber());
+        }
     }
 
     ~QQmlHandlingSignalProfiler()
@@ -224,19 +224,6 @@ struct QQmlHandlingSignalProfiler {
     }
 
     bool enabled;
-
-private:
-    void init(const QMetaMethod &signal, QQmlExpression *expression)
-    {
-        QQmlProfilerService *service = QQmlProfilerService::instance;
-        service->startRange(QQmlProfilerService::HandlingSignal);
-        service->rangeData(QQmlProfilerService::HandlingSignal,
-                           QString::fromLatin1(signal.methodSignature()) + QLatin1String(": ")
-                           + expression->expression());
-        service->rangeLocation(QQmlProfilerService::HandlingSignal,
-                               expression->sourceFile(), expression->lineNumber(),
-                               expression->columnNumber());
-    }
 };
 
 struct QQmlObjectCreatingProfiler {

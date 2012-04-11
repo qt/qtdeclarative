@@ -42,14 +42,14 @@
 #ifndef QQUICKWINDOWMODULE_H
 #define QQUICKWINDOWMODULE_H
 
-#include <qqml.h>
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 
-class QQuickWindowModule
+class Q_QUICK_PRIVATE_EXPORT QQuickWindowModule
 {
 public:
     static void defineModule();

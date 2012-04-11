@@ -45,6 +45,7 @@
 
 #include <private/qqmlglobal_p.h>
 
+#include <QtCore/qcoreapplication.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QTextBoundaryFinder>
@@ -61,10 +62,6 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
-static const int qt_passwordEchoDelay = QT_GUI_PASSWORD_ECHO_DELAY;
-#endif
 
 /*!
     \qmlclass TextInput QQuickTextInput
@@ -128,8 +125,8 @@ void QQuickTextInput::setText(const QString &s)
     Q_D(QQuickTextInput);
     if (s == text())
         return;
-    if (d->composeMode())
-        qApp->inputMethod()->reset();
+
+    d->cancelPreedit();
     d->internalSetText(s, -1, false);
 }
 
@@ -678,9 +675,7 @@ QRectF QQuickTextInput::cursorRectangle() const
 {
     Q_D(const QQuickTextInput);
 
-    int c = d->m_cursor;
-    if (d->m_preeditCursor != -1)
-        c += d->m_preeditCursor;
+    int c = d->m_cursor + d->m_preeditCursor;
     if (d->m_echoMode == NoEcho)
         c = 0;
     QTextLine l = d->m_textLayout.lineForTextPosition(c);
@@ -1402,7 +1397,7 @@ void QQuickTextInput::keyPressEvent(QKeyEvent* ev)
 void QQuickTextInput::inputMethodEvent(QInputMethodEvent *ev)
 {
     Q_D(QQuickTextInput);
-    const bool wasComposing = d->preeditAreaText().length() > 0;
+    const bool wasComposing = d->hasImState;
     if (d->m_readOnly) {
         ev->ignore();
     } else {
@@ -1411,7 +1406,7 @@ void QQuickTextInput::inputMethodEvent(QInputMethodEvent *ev)
     if (!ev->isAccepted())
         QQuickImplicitSizeItem::inputMethodEvent(ev);
 
-    if (wasComposing != (d->m_textLayout.preeditAreaText().length() > 0))
+    if (wasComposing != d->hasImState)
         emit inputMethodComposingChanged();
 }
 
@@ -1929,11 +1924,11 @@ void QQuickTextInput::redo()
 void QQuickTextInput::insert(int position, const QString &text)
 {
     Q_D(QQuickTextInput);
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
-    if (d->m_echoMode == QQuickTextInput::Password)
-        d->m_passwordEchoTimer.start(qt_passwordEchoDelay, this);
-#endif
-
+    if (d->m_echoMode == QQuickTextInput::Password) {
+        int delay = qGuiApp->styleHints()->passwordMaskDelay();
+        if (delay > 0)
+            d->m_passwordEchoTimer.start(delay, this);
+    }
     if (position < 0 || position > d->m_text.length())
         return;
 
@@ -2484,11 +2479,7 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
     if (change == ItemActiveFocusHasChanged) {
         bool hasFocus = value.boolValue;
         setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
         if (!hasFocus && (d->m_passwordEchoEditing || d->m_passwordEchoTimer.isActive())) {
-#else
-        if (!hasFocus && d->m_passwordEchoEditing) {
-#endif
             d->updatePasswordEchoEditing(false);//QQuickTextInputPrivate sets it on key events, but doesn't deal with focus events
         }
 
@@ -2521,7 +2512,7 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
 bool QQuickTextInput::isInputMethodComposing() const
 {
     Q_D(const QQuickTextInput);
-    return d->preeditAreaText().length() > 0;
+    return d->hasImState;
 }
 
 void QQuickTextInputPrivate::init()
@@ -2660,7 +2651,6 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
 
     if (m_echoMode == QQuickTextInput::Password) {
          str.fill(m_passwordCharacter);
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
         if (m_passwordEchoTimer.isActive() && m_cursor > 0 && m_cursor <= m_text.length()) {
             int cursor = m_cursor - 1;
             QChar uc = m_text.at(cursor);
@@ -2673,7 +2663,6 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
                     str[cursor - 1] = uc;
             }
         }
-#endif
     } else if (m_echoMode == QQuickTextInput::PasswordEchoOnEdit && !m_passwordEchoEditing) {
         str.fill(m_passwordCharacter);
     }
@@ -2830,18 +2819,31 @@ void QQuickTextInputPrivate::paste(QClipboard::Mode clipboardMode)
 */
 void QQuickTextInputPrivate::commitPreedit()
 {
-    if (!composeMode())
+    Q_Q(QQuickTextInput);
+
+    if (!hasImState)
         return;
 
     qApp->inputMethod()->commit();
 
-    if (!composeMode())
+    if (!hasImState)
         return;
 
-    m_preeditCursor = 0;
-    m_textLayout.setPreeditArea(-1, QString());
-    m_textLayout.clearAdditionalFormats();
-    updateLayout();
+    QInputMethodEvent ev;
+    QCoreApplication::sendEvent(q, &ev);
+}
+
+void QQuickTextInputPrivate::cancelPreedit()
+{
+    Q_Q(QQuickTextInput);
+
+    if (!hasImState)
+        return;
+
+    qApp->inputMethod()->reset();
+
+    QInputMethodEvent ev;
+    QCoreApplication::sendEvent(q, &ev);
 }
 
 /*!
@@ -3123,15 +3125,19 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     m_textLayout.setPreeditArea(m_cursor, event->preeditString());
 #endif //QT_NO_IM
     const int oldPreeditCursor = m_preeditCursor;
+    const bool oldCursorVisible = cursorVisible;
     m_preeditCursor = event->preeditString().length();
-    m_hideCursor = false;
+    hasImState = !event->preeditString().isEmpty();
+    cursorVisible = true;
     QList<QTextLayout::FormatRange> formats;
     for (int i = 0; i < event->attributes().size(); ++i) {
         const QInputMethodEvent::Attribute &a = event->attributes().at(i);
         if (a.type == QInputMethodEvent::Cursor) {
+            hasImState = true;
             m_preeditCursor = a.start;
-            m_hideCursor = !a.length;
+            cursorVisible = a.length != 0;
         } else if (a.type == QInputMethodEvent::TextFormat) {
+            hasImState = true;
             QTextCharFormat f = qvariant_cast<QTextFormat>(a.value).toCharFormat();
             if (f.isValid()) {
                 QTextLayout::FormatRange o;
@@ -3153,6 +3159,9 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
 
     if (isGettingInput)
         finishChange(priorState);
+
+    if (cursorVisible != oldCursorVisible)
+        emit q->cursorVisibleChanged(cursorVisible);
 
     if (selectionChange) {
         emit q->selectionChanged();
@@ -3333,11 +3342,12 @@ void QQuickTextInputPrivate::addCommand(const Command &cmd)
 */
 void QQuickTextInputPrivate::internalInsert(const QString &s)
 {
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
     Q_Q(QQuickTextInput);
-    if (m_echoMode == QQuickTextInput::Password)
-        m_passwordEchoTimer.start(qt_passwordEchoDelay, q);
-#endif
+    if (m_echoMode == QQuickTextInput::Password) {
+        int delay = qGuiApp->styleHints()->passwordMaskDelay();
+        if (delay > 0)
+            m_passwordEchoTimer.start(delay, q);
+    }
     if (hasSelectedText())
         addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
     if (m_maskData) {
@@ -3962,11 +3972,9 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
         d->m_blinkStatus = !d->m_blinkStatus;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         update();
-#ifdef QT_GUI_PASSWORD_ECHO_DELAY
     } else if (event->timerId() == d->m_passwordEchoTimer.timerId()) {
         d->m_passwordEchoTimer.stop();
         d->updateDisplayText();
-#endif
     }
 }
 

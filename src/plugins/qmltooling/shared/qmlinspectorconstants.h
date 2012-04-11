@@ -53,13 +53,10 @@ enum DesignTool {
     MarqueeSelectionToolMode = 2,
     MoveToolMode = 3,
     ResizeToolMode = 4,
-    ColorPickerMode = 5,
     ZoomMode = 6
 };
 
-static const int DragStartTime = 50;
-
-static const int DragStartDistance = 20;
+static const int PressAndHoldTimeout = 800;
 
 static const double ZoomSnapDelta = 0.04;
 

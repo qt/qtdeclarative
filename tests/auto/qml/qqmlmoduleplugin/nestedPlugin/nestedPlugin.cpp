@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -38,49 +38,52 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include <QStringList>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
+#include <QDebug>
 
-#ifndef SELECTIONTOOL_H
-#define SELECTIONTOOL_H
-
-#include "abstracttool.h"
-
-#include <QtCore/QList>
-#include <QtCore/QPoint>
-
-QT_FORWARD_DECLARE_CLASS(QQuickItem)
-
-namespace QmlJSDebugger {
-namespace QtQuick2 {
-
-class QQuickViewInspector;
-class HoverHighlight;
-
-class SelectionTool : public AbstractTool
+class MyPluginType : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QString value READ value)
+
 public:
-    explicit SelectionTool(QQuickViewInspector *inspector);
+    MyPluginType(QObject *parent=0) : QObject(parent) {}
 
-    void leaveEvent(QEvent *);
-
-    void mousePressEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *) {}
-    void mouseReleaseEvent(QMouseEvent *) {}
-    void mouseDoubleClickEvent(QMouseEvent *) {}
-
-    void hoverMoveEvent(QMouseEvent *);
-    void wheelEvent(QWheelEvent *) {}
-
-    void keyPressEvent(QKeyEvent *) {}
-    void keyReleaseEvent(QKeyEvent *) {}
-
-private:
-    QQuickViewInspector *inspector() const;
-
-    HoverHighlight *m_hoverHighlight;
+    QString value() const { return "Hello"; }
 };
 
-} // namespace QtQuick2
-} // namespace QmlJSDebugger
+class MyNestedPluginType : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString value READ value)
 
-#endif // SELECTIONTOOL_H
+public:
+    MyNestedPluginType(QObject *parent=0) : QObject(parent) {}
+
+    QString value() const { return "Goodbye"; }
+};
+
+
+class MyPlugin : public QQmlExtensionPlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface" FILE "../empty.json")
+
+public:
+    MyPlugin() {}
+
+    void registerTypes(const char *uri)
+    {
+        Q_ASSERT(QLatin1String(uri) == "com.nokia.AutoTestQmlNestedPluginType");
+        qmlRegisterType<MyPluginType>(uri, 1, 0, "MyPluginType");
+
+        QString nestedUri(uri);
+        nestedUri += QLatin1String(".Nested");
+
+        qmlRegisterType<MyNestedPluginType>(nestedUri.toLatin1().constData(), 1, 0, "MyNestedPluginType");
+    }
+};
+
+#include "nestedPlugin.moc"

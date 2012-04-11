@@ -127,6 +127,7 @@ public:
 
     bool isPreediting() const;
     void commitPreedit();
+    void cancelPreedit();
 
     QPointF trippleClickPoint;
     QPointF mousePressPos;
@@ -155,11 +156,12 @@ public:
     bool ignoreAutomaticScrollbarAdjustement : 1;
     bool overwriteMode : 1;
     bool acceptRichText : 1;
-    bool hideCursor : 1; // used to hide the cursor in the preedit area
+    bool cursorVisible : 1; // used to hide the cursor in the preedit area
     bool hasFocus : 1;
     bool isEnabled : 1;
     bool hadSelectionOnMousePress : 1;
     bool wordSelectionEnabled : 1;
+    bool hasImState : 1;
 
     void _q_copyLink();
     void _q_updateBlock(const QTextBlock &);

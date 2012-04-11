@@ -139,6 +139,9 @@ private slots:
     void addedToCanvas();
     void changeParent();
     void multipleFocusClears();
+    void focusSubItemInNonFocusScope();
+    void parentItemWithFocus();
+    void reparentFocusedItem();
 
     void constructor();
     void setParentItem();
@@ -707,6 +710,7 @@ void tst_qquickitem::changeParent()
     focusState[item].set(true, true);
     focusState.active(item);
     FVERIFY();
+    delete child2;
     }
 }
 
@@ -718,6 +722,133 @@ void tst_qquickitem::multipleFocusClears()
     view->show();
     ensureFocus(view);
     QTRY_VERIFY(QGuiApplication::focusWindow() == view);
+}
+
+void tst_qquickitem::focusSubItemInNonFocusScope()
+{
+    QQuickView *view = new QQuickView;
+    view->setSource(testFileUrl("focusSubItemInNonFocusScope.qml"));
+    view->show();
+    qApp->processEvents();
+
+    QQuickItem *dummyItem = view->rootObject()->findChild<QQuickItem *>("dummyItem");
+    QVERIFY(dummyItem);
+
+    QQuickItem *textInput = view->rootObject()->findChild<QQuickItem *>("textInput");
+    QVERIFY(textInput);
+
+    QVERIFY(dummyItem->hasFocus());
+    QVERIFY(!textInput->hasFocus());
+    QVERIFY(dummyItem->hasActiveFocus());
+
+    QVERIFY(QMetaObject::invokeMethod(textInput, "forceActiveFocus"));
+
+    QVERIFY(!dummyItem->hasFocus());
+    QVERIFY(textInput->hasFocus());
+    QVERIFY(textInput->hasActiveFocus());
+
+    delete view;
+}
+
+void tst_qquickitem::parentItemWithFocus()
+{
+    QQuickCanvas canvas;
+    ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    {
+    QQuickItem parent;
+    QQuickItem child;
+
+    FocusState focusState;
+    focusState << &parent << &child;
+    FVERIFY();
+
+    parent.setFocus(true);
+    child.setFocus(true);
+    focusState[&parent].set(true, false);
+    focusState[&child].set(true, false);
+    FVERIFY();
+
+    child.setParentItem(&parent);
+    focusState[&parent].set(true, false);
+    focusState[&child].set(false, false);
+    FVERIFY();
+
+    parent.setParentItem(canvas.rootItem());
+    focusState[&parent].set(true, true);
+    focusState[&child].set(false, false);
+    focusState.active(&parent);
+    FVERIFY();
+
+    child.forceActiveFocus();
+    focusState[&parent].set(false, false);
+    focusState[&child].set(true, true);
+    focusState.active(&child);
+    FVERIFY();
+    } {
+    QQuickItem parent;
+    QQuickItem child;
+    QQuickItem grandchild(&child);
+
+    FocusState focusState;
+    focusState << &parent << &child << &grandchild;
+    FVERIFY();
+
+    parent.setFocus(true);
+    grandchild.setFocus(true);
+    focusState[&parent].set(true, false);
+    focusState[&child].set(false, false);
+    focusState[&grandchild].set(true, false);
+    FVERIFY();
+
+    child.setParentItem(&parent);
+    focusState[&parent].set(true, false);
+    focusState[&child].set(false, false);
+    focusState[&grandchild].set(false, false);
+    FVERIFY();
+
+    parent.setParentItem(canvas.rootItem());
+    focusState[&parent].set(true, true);
+    focusState[&child].set(false, false);
+    focusState[&grandchild].set(false, false);
+    focusState.active(&parent);
+    FVERIFY();
+
+    grandchild.forceActiveFocus();
+    focusState[&parent].set(false, false);
+    focusState[&child].set(false, false);
+    focusState[&grandchild].set(true, true);
+    focusState.active(&grandchild);
+    FVERIFY();
+    }
+}
+
+void tst_qquickitem::reparentFocusedItem()
+{
+    QQuickCanvas canvas;
+    ensureFocus(&canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+
+    QQuickItem parent(canvas.rootItem());
+    QQuickItem child(&parent);
+    QQuickItem sibling(&parent);
+    QQuickItem grandchild(&child);
+
+    FocusState focusState;
+    focusState << &parent << &child << &sibling << &grandchild;
+    FVERIFY();
+
+    grandchild.setFocus(true);
+    focusState[&parent].set(false, false);
+    focusState[&child].set(false, false);
+    focusState[&sibling].set(false, false);
+    focusState[&grandchild].set(true, true);
+    focusState.active(&grandchild);
+    FVERIFY();
+
+    // Parenting the item to another item within the same focus scope shouldn't change it's focus.
+    child.setParentItem(&sibling);
+    FVERIFY();
 }
 
 void tst_qquickitem::constructor()

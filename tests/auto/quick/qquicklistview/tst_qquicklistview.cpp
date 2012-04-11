@@ -2120,13 +2120,13 @@ void tst_QQuickListView::sectionsPositioning()
     QVERIFY(bottomItem);
     QCOMPARE(bottomItem->y(), 380.);
 
-    // Change current section
+    // Change current section, and verify case insensitive comparison
     listview->setContentY(10);
     model.modifyItem(0, "One", "aaa");
-    model.modifyItem(1, "Two", "aaa");
-    model.modifyItem(2, "Three", "aaa");
-    model.modifyItem(3, "Four", "aaa");
-    model.modifyItem(4, "Five", "aaa");
+    model.modifyItem(1, "Two", "AAA");
+    model.modifyItem(2, "Three", "aAa");
+    model.modifyItem(3, "Four", "aaA");
+    model.modifyItem(4, "Five", "Aaa");
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QTRY_COMPARE(listview->currentSection(), QString("aaa"));

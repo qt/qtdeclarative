@@ -46,6 +46,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtCore/qdebug.h>
 #include <QtGui/qcolor.h>
+#include <QtCore/qnumeric.h>
 
 #include <private/qv4compiler_p.h>
 
@@ -82,6 +83,12 @@ private slots:
     void mathMax();
     void mathMin();
     void moduleApi();
+
+    void conversions_data();
+    void conversions();
+    void subscriptions();
+
+    void debuggingDumpInstructions(); // this test should be last.
 
 private:
     QQmlEngine engine;
@@ -135,6 +142,14 @@ void tst_v4::qtscript_data()
     QTest::newRow("unary minus") << "unaryMinus.qml";
     QTest::newRow("null qobject") << "nullQObject.qml";
     QTest::newRow("qobject -> bool") << "objectToBool.qml";
+    QTest::newRow("conversion from bool") << "conversions.1.qml"; // QTBUG-24706
+    QTest::newRow("conversion from int") << "conversions.2.qml"; // QTBUG-24706
+    QTest::newRow("conversion from float") << "conversions.3.qml";
+    QTest::newRow("conversion from double") << "conversions.4.qml"; // QTBUG-24706
+    QTest::newRow("conversion from real") << "conversions.5.qml"; // QTBUG-24706
+    QTest::newRow("conversion from string") << "conversions.6.qml"; // QTBUG-24706
+    QTest::newRow("conversion from url") << "conversions.7.qml"; // QTBUG-24706
+    QTest::newRow("conversion from vec3") << "conversions.8.qml";
 }
 
 void tst_v4::unnecessaryReeval()
@@ -629,6 +644,334 @@ void tst_v4::moduleApi()
     QCOMPARE(o->property("testProp2").toInt(), 4);
     delete o;
 }
+
+void tst_v4::conversions_data()
+{
+    QTest::addColumn<QUrl>("file");
+    QTest::addColumn<QStringList>("warnings");
+    QTest::addColumn<bool>("boolProp");
+    QTest::addColumn<int>("intProp");
+    QTest::addColumn<float>("floatProp");
+    QTest::addColumn<double>("doubleProp");
+    QTest::addColumn<qreal>("qrealProp");
+    QTest::addColumn<QString>("qstringProp");
+    QTest::addColumn<QUrl>("qurlProp");
+    QTest::addColumn<QVector3D>("vec3Prop");
+
+    QTest::newRow("from bool") << testFileUrl("conversions.1.qml")
+            << (QStringList() << (testFileUrl("conversions.1.qml").toString() + QLatin1String(":11:15: Unable to assign bool to QUrl")))
+            << true
+            << (int)true
+            << (float)1.0
+            << (double)1.0
+            << (qreal)1.0
+            << QString(QLatin1String("true"))
+            << QUrl() // cannot assign bool to url.
+            << QVector3D(1, 1, 1);
+
+    QTest::newRow("from integer") << testFileUrl("conversions.2.qml")
+            << (QStringList() << (testFileUrl("conversions.2.qml").toString() + QLatin1String(":11:15: Unable to assign int to QUrl")))
+            << (bool)4
+            << 4
+            << (float)4.0
+            << (double)4.0
+            << (qreal)4.0
+            << QString(QLatin1String("4"))
+            << QUrl() // cannot assign int to url.
+            << QVector3D(4, 4, 4);
+
+    QTest::newRow("from float") << testFileUrl("conversions.3.qml")
+            << (QStringList() << (testFileUrl("conversions.3.qml").toString() + QLatin1String(":11:15: Unable to assign number to QUrl")))
+            << (bool)4.4
+            << (int)4.4
+            << (float)4.4
+            << (double)((float)4.4)
+            << (qreal)((float)4.4)
+            << QString::number((double)((float)4.4), 'g', 16)
+            << QUrl() // cannot assign number to url.
+            << QVector3D(4.4, 4.4, 4.4);
+
+    QTest::newRow("from double") << testFileUrl("conversions.4.qml")
+            << (QStringList() << (testFileUrl("conversions.4.qml").toString() + QLatin1String(":11:15: Unable to assign number to QUrl")))
+            << (bool)4.444444444
+            << (int)4.444444444
+            << (float)4.444444444
+            << (double)4.444444444
+            << (qreal)4.444444444
+            << QString::number((double)4.444444444, 'g', 16)
+            << QUrl() // cannot assign number to url.
+            << QVector3D(4.444444444, 4.444444444, 4.444444444);
+
+    QTest::newRow("from qreal") << testFileUrl("conversions.5.qml")
+            << (QStringList() << (testFileUrl("conversions.5.qml").toString() + QLatin1String(":11:15: Unable to assign number to QUrl")))
+            << (bool)4.44
+            << (int)4.44
+            << (float)4.44
+            << (double)4.44
+            << (qreal)4.44
+            << QString(QLatin1String("4.44"))
+            << QUrl() // cannot assign number to url.
+            << QVector3D(4.44, 4.44, 4.44);
+
+    QTest::newRow("from string") << testFileUrl("conversions.6.qml")
+            << (QStringList())
+            << true
+            << 4
+            << (float)4.0
+            << (double)4.0
+            << (qreal)4.0
+            << QString(QLatin1String("4"))
+            << QUrl(testFileUrl("").toString() + QString(QLatin1String("4")))
+            << QVector3D(4, 4, 4);
+
+    // QTBUG-24706
+    QTest::newRow("from url") << testFileUrl("conversions.7.qml")
+            << (QStringList() << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":6:14: Unable to assign QUrl to int"))
+                              << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":7:16: Unable to assign QUrl to number"))
+                              << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":8:17: Unable to assign QUrl to number"))
+                              << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":9:16: Unable to assign QUrl to number")))
+            << true
+            << 0
+            << (float) 0
+            << (double) 0
+            << (qreal) 0
+            << QString(testFileUrl("").toString() + QString(QLatin1String("4")))
+            << QUrl(testFileUrl("").toString() + QString(QLatin1String("4")))
+            << QVector3D(qQNaN(), qQNaN(), qQNaN());
+
+    QTest::newRow("from vector") << testFileUrl("conversions.8.qml")
+            << (QStringList() << (testFileUrl("conversions.8.qml").toString() + QLatin1String(":11: Unable to assign QVector3D to QUrl"))
+                              << (testFileUrl("conversions.8.qml").toString() + QLatin1String(":10: Unable to assign QVector3D to QString"))
+                              << (testFileUrl("conversions.8.qml").toString() + QLatin1String(":9: Unable to assign QVector3D to double"))
+                              << (testFileUrl("conversions.8.qml").toString() + QLatin1String(":8: Unable to assign QVector3D to double"))
+                              << (testFileUrl("conversions.8.qml").toString() + QLatin1String(":7: Unable to assign QVector3D to float"))
+                              << (testFileUrl("conversions.8.qml").toString() + QLatin1String(":6: Unable to assign QVector3D to int")))
+            << true                // non-null therefore true
+            << (int)0              // the other values should be the default-ctor values.
+            << (float)0
+            << (double)0
+            << (qreal)0
+            << QString()
+            << QUrl()
+            << QVector3D(4, 4, 4); // except this one.
+}
+
+#define COMPARE_NUMBER(type, prop, expected) \
+    if (qIsNaN(expected)) \
+        QVERIFY(qIsNaN(qvariant_cast<type>(prop))); \
+    else \
+        QCOMPARE((prop), QVariant::fromValue<type>(expected));
+
+void tst_v4::conversions()
+{
+    QFETCH(QUrl, file);
+    QFETCH(QStringList, warnings);
+    QFETCH(bool, boolProp);
+    QFETCH(int, intProp);
+    QFETCH(float, floatProp);
+    QFETCH(double, doubleProp);
+    QFETCH(qreal, qrealProp);
+    QFETCH(QString, qstringProp);
+    QFETCH(QUrl, qurlProp);
+    QFETCH(QVector3D, vec3Prop);
+
+    foreach (const QString &w, warnings)
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(w));
+
+    QQmlComponent component(&engine, file);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("boolProp"), QVariant::fromValue<bool>(boolProp));
+    QCOMPARE(o->property("intProp"), QVariant::fromValue<int>(intProp));
+    COMPARE_NUMBER(float, o->property("floatProp"), floatProp);
+    COMPARE_NUMBER(double, o->property("doubleProp"), doubleProp);
+    COMPARE_NUMBER(qreal, o->property("qrealProp"), qrealProp);
+    QCOMPARE(o->property("qstringProp"), QVariant::fromValue<QString>(qstringProp));
+    QCOMPARE(o->property("qurlProp"), QVariant::fromValue<QUrl>(qurlProp));
+
+    QVector3D vec3 = qvariant_cast<QVector3D>(o->property("vec3Prop"));
+    COMPARE_NUMBER(qreal, QVariant::fromValue<qreal>(vec3.x()), vec3Prop.x());
+    COMPARE_NUMBER(qreal, QVariant::fromValue<qreal>(vec3.y()), vec3Prop.y());
+    COMPARE_NUMBER(qreal, QVariant::fromValue<qreal>(vec3.z()), vec3Prop.z());
+    delete o;
+}
+
+void tst_v4::subscriptions()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("subscriptions.1.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        QObject *ro = qobject_cast<QObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->property("targetHeight"), QVariant::fromValue<qreal>(201));
+
+        delete o;
+    }
+}
+
+static QStringList messages;
+static void msgHandler(QtMsgType, const char *msg)
+{
+    messages << QLatin1String(msg);
+}
+
+static QByteArray getAddress(int address)
+{
+    return QByteArray::number(address);
+}
+
+static QByteArray getLeading(int address)
+{
+    QByteArray leading;
+    if (address != -1) {
+        leading = getAddress(address);
+        leading.prepend(QByteArray(8 - leading.count(), ' '));
+    }
+    return leading;
+}
+
+#include <private/qv4instruction_p.h>
+void tst_v4::debuggingDumpInstructions()
+{
+    QStringList expectedPreAddress;
+    expectedPreAddress << "\t\tNoop";
+    expectedPreAddress << "\t0:0:";
+    expectedPreAddress << "\t\tSubscribe\t\tObject_Reg(0) Notify_Signal(0) -> Subscribe_Slot(0)";
+    expectedPreAddress << "\t\tSubscribeId\t\tId_Offset(0) -> Subscribe_Slot(0)";
+    expectedPreAddress << "\t\tFetchAndSubscribe\tObject_Reg(0) Fast_Accessor(0x0) -> Output_Reg(0) Subscription_Slot(0)";
+    expectedPreAddress << "\t\tLoadId\t\t\tId_Offset(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadScope\t\t-> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadRoot\t\t-> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadModuleObject\t\t) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadAttached\t\tObject_Reg(0) Attached_Index(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tUnaryNot\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tUnaryMinusNumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tUnaryMinusInt\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tUnaryPlusNumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tUnaryPlusInt\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertBoolToInt\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertBoolToNumber\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertBoolToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertIntToBool\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertIntToNumber\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertIntToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertNumberToBool\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertNumberToInt\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertNumberToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertStringToBool\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertStringToInt\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertStringToNumber\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertStringToUrl\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertStringToColor\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertUrlToBool\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertUrlToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertColorToBool\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertColorToString\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertObjectToBool\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tConvertNullToObject\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tResolveUrl\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathSinNumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathCosNumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathAbsNumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathRoundNumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathFloorNumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathCeilNumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathPINumber\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadNull\t\tConstant(null) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadNumber\t\tConstant(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadInt\t\t\tConstant(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadBool\t\tConstant(false) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadString\t\tString_DataIndex(0) String_Length(0) -> Output_Register(0)";
+    expectedPreAddress << "\t\tEnableV4Test\t\tString_DataIndex(0) String_Length(0)";
+    expectedPreAddress << "\t\tTestV4Store\t\tInput_Reg(0) Reg_Type(0)";
+    expectedPreAddress << "\t\tBitAndInt\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tBitOrInt\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tBitXorInt\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tAddNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tAddString\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tSubNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMulNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tDivNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tModNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLShiftInt\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tRShiftInt\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tURShiftInt\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tGtNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLtNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tGeNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLeNumber\t\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tEqualNumber\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tNotEqualNumber\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tStrictEqualNumber\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tStrictNotEqualNumber\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tGtString\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLtString\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tGeString\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLeString\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tEqualString\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tNotEqualString\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tStrictEqualString\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tStrictNotEqualString\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tEqualObject\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tNotEqualObject\t\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tStrictEqualObject\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tStrictNotEqualObject\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathMaxNumber\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tMathMinNumber\tInput_Reg(0) Input_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tNewString\t\tRegister(0)";
+    expectedPreAddress << "\t\tNewUrl\t\t\tRegister(0)";
+    expectedPreAddress << "\t\tCleanupRegister\t\tRegister(0)";
+    expectedPreAddress << "\t\tCopy\t\t\tInput_Reg(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tFetch\t\t\tObject_Reg(0) Property_Index(0) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tStore\t\t\tInput_Reg(0) -> Object_Reg(0) Property_Index(0)";
+    expectedPreAddress << "\t\tJump\t\t\tAddress(UNIT_TEST_JUMP_ADDRESS) [if false == Input_Reg(0)]";         //(address + size() + i->jump.count)
+    expectedPreAddress << "\t\tBranchTrue\t\tAddress(UNIT_TEST_BRANCH_ADDRESS) [if true == Input_Reg(0)]";    //(address + size() + i->branchop.offset)
+    expectedPreAddress << "\t\tBranchFalse\t\tAddress(UNIT_TEST_BRANCH_ADDRESS) [if false == Input_Reg(0)]";  //(address + size() + i->branchop.offset)
+    expectedPreAddress << "\t\tBranch\t\t\tAddress(UNIT_TEST_BRANCH_ADDRESS)";                                //(address + size() + i->branchop.offset)
+    expectedPreAddress << "\t\tBlock\t\t\tMask(0)";
+    expectedPreAddress << "\t\tThrow\t\t\tInputReg(0)";
+    expectedPreAddress << "\t\tInitString\t\tString_DataIndex(0) -> String_Slot(0)";
+    QStringList expected;
+
+    messages = QStringList();
+    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+
+    QQmlJS::Bytecode bc;
+#define DUMP_INSTR_IN_UNIT_TEST(I, FMT) { QQmlJS::V4InstrData<QQmlJS::V4Instr::I> i; memset(&i, 0, sizeof(i)); bc.append(i); }
+    FOR_EACH_V4_INSTR(DUMP_INSTR_IN_UNIT_TEST);
+#undef DUMP_INSTR_IN_UNIT_TEST // NOTE: we memset in order to ensure stable output.
+    const char *start = bc.constData();
+    const char *end = start + bc.size();
+    const char *codeAddr = start;
+    int whichExpected = 0;
+#define DUMP_INSTR_SIZE_IN_UNIT_TEST(I, FMT) {                              \
+            QString currExpected = whichExpected < expectedPreAddress.size() ? expectedPreAddress.at(whichExpected++) : QString();  \
+            currExpected.prepend(getLeading(codeAddr - start));             \
+            expected.append(currExpected);                                  \
+            codeAddr += QQmlJS::V4Instr::size(static_cast<QQmlJS::V4Instr::Type>(QQmlJS::V4Instr::I)); \
+        }
+    FOR_EACH_V4_INSTR(DUMP_INSTR_SIZE_IN_UNIT_TEST);
+#undef DUMP_INSTR_SIZE_IN_UNIT_TEST // so that we generate the correct address for each instruction comparison
+    bc.dump(start, end);
+
+    // ensure that the output was expected.
+    qInstallMsgHandler(old);
+    QCOMPARE(messages.count(), expected.count());
+    for (int ii = 0; ii < messages.count(); ++ii) {
+        // Calculating the destination address of a null jump/branch instruction is tricky
+        // so instead we simply don't compare that part of those instructions.
+        QRegExp ignoreAddress("\\bAddress\\((\\w*)\\)");
+        ignoreAddress.setMinimal(true);
+        QString expectOut = expected.at(ii); expectOut.replace(ignoreAddress, "");
+        QString actualOut = messages.at(ii); actualOut.replace(ignoreAddress, "");
+        QCOMPARE(actualOut, expectOut);
+    }
+}
+
 
 QTEST_MAIN(tst_v4)
 

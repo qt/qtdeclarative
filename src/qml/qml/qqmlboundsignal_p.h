@@ -53,14 +53,50 @@
 // We mean it.
 //
 
-#include "qqmlexpression.h"
-
 #include <QtCore/qmetaobject.h>
 
-#include <private/qqmlnotifier_p.h>
+#include <private/qqmlabstractexpression_p.h>
+#include <private/qqmljavascriptexpression_p.h>
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
+
+class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlAbstractExpression, public QQmlJavaScriptExpression
+{
+public:
+    QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
+                              bool isRewritten, const QString &fileName, int line, int column);
+    QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QString &expression,
+                              bool isRewritten, const QString &fileName, int line, int column);
+    ~QQmlBoundSignalExpression();
+
+    // "inherited" from QQmlJavaScriptExpression.
+    static QString expressionIdentifier(QQmlJavaScriptExpression *);
+    static void expressionChanged(QQmlJavaScriptExpression *);
+
+    // evaluation of a bound signal expression doesn't return any value
+    void evaluate(QObject *secondaryScope = 0);
+
+    QString sourceFile() const { return m_fileName; }
+    int lineNumber() const { return m_line; }
+    int columnNumber() const { return m_column; }
+    QString expression() const { return m_expression; }
+
+    QQmlEngine *engine() const { return context() ? context()->engine : 0; }
+
+private:
+    v8::Persistent<v8::Object> m_v8qmlscope;
+    v8::Persistent<v8::Function> m_v8function;
+
+    QString m_expression;
+    QString m_functionName; // hint for debugger
+    QString m_fileName;
+    int m_line;
+    int m_column;
+
+    bool m_expressionFunctionValid:1;
+    bool m_expressionFunctionRewritten:1;
+};
 
 class Q_QML_EXPORT QQmlAbstractBoundSignal
 {
@@ -69,11 +105,12 @@ public:
     virtual ~QQmlAbstractBoundSignal();
 
     virtual int index() const = 0;
-    virtual QQmlExpression *expression() const = 0;
-    virtual QQmlExpression *setExpression(QQmlExpression *) = 0;
-    virtual QObject *object() = 0;
+    virtual QQmlBoundSignalExpression *expression() const = 0;
+    virtual QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *) = 0;
+    virtual QObject *scope() = 0;
 
-    void addToObject();
+protected:
+    void addToObject(QObject *owner);
 
 private:
     friend class QQmlData;
@@ -93,9 +130,9 @@ public:
 
     int index() const;
 
-    QQmlExpression *expression() const;
-    QQmlExpression *setExpression(QQmlExpression *);
-    QObject *object() { return m_owner; }
+    QQmlBoundSignalExpression *expression() const;
+    QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *);
+    QObject *scope() { return m_scope; }
 
     bool isEvaluating() const { return m_isEvaluating; }
 
@@ -103,38 +140,13 @@ protected:
     virtual int qt_metacall(QMetaObject::Call c, int id, void **a);
 
 private:
-    QQmlExpression *m_expression;
+    QQmlBoundSignalExpression *m_expression;
+    QQmlBoundSignalParameters *m_params;
+    QObject *m_scope;
     QMetaMethod m_signal;
     bool m_paramsValid : 1;
     bool m_isEvaluating : 1;
-    QQmlBoundSignalParameters *m_params;
-    QObject *m_owner;
 };
-
-class Q_QML_EXPORT QQmlBoundSignalNoParams : public QQmlAbstractBoundSignal,
-                                             public QQmlNotifierEndpoint
-{
-public:
-    QQmlBoundSignalNoParams(QObject *scope, const QMetaMethod &signal, QObject *owner);
-    virtual ~QQmlBoundSignalNoParams();
-
-    int index() const;
-
-    QQmlExpression *expression() const;
-    QQmlExpression *setExpression(QQmlExpression *);
-    QObject *object() { return m_owner; }
-
-    static void subscriptionCallback(QQmlNotifierEndpoint *e);
-
-    bool isEvaluating() const { return m_isEvaluating; }
-
-private:
-    QQmlExpression *m_expression;
-    QObject *m_owner;
-    int m_index;
-    bool m_isEvaluating;
-};
-
 
 QT_END_NAMESPACE
 

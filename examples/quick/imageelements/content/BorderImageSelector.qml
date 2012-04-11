@@ -56,7 +56,7 @@ Item {
          curIdx += steps;
     }
     Image {
-        source: "../../../shared/images/back.png"
+        source: "arrow.png"
         MouseArea{
             anchors.fill: parent
             onClicked: selector.advance(-1)
@@ -68,7 +68,7 @@ Item {
         Behavior on opacity {NumberAnimation{}}
     }
     Image {
-        source: "../../../shared/images/back.png"
+        source: "arrow.png"
         mirror: true
         MouseArea{
             anchors.fill: parent

@@ -141,9 +141,9 @@ private:
     inline void subscribeId(QQmlContextData *p, int idIndex, int subIndex);
     inline void subscribe(QObject *o, int notifyIndex, int subIndex);
 
-    inline static qint32 toInt32(qreal n);
-    static const qreal D32;
-    static quint32 toUint32(qreal n);
+    inline static qint32 toInt32(double n);
+    static const double D32;
+    static quint32 toUint32(double n);
 
 };
 

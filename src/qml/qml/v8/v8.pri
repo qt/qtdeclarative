@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD/../../../3rdparty/javascriptcore
-
 include(script.pri)
 
 HEADERS += \
@@ -20,7 +18,6 @@ HEADERS += \
     $$PWD/qv8include_p.h \
     $$PWD/qv8worker_p.h \
     $$PWD/qv8bindings_p.h \
-    $$PWD/../../../3rdparty/javascriptcore/DateMath.h \
     $$PWD/qv8engine_impl_p.h \
     $$PWD/qv8domerrors_p.h \
     $$PWD/qv8sqlerrors_p.h \
@@ -39,7 +36,6 @@ SOURCES += \
     $$PWD/qv8include.cpp \
     $$PWD/qv8worker.cpp \
     $$PWD/qv8bindings.cpp \
-    $$PWD/../../../3rdparty/javascriptcore/DateMath.cpp \
     $$PWD/qv8domerrors.cpp \
     $$PWD/qv8sqlerrors.cpp \
     $$PWD/qqmlbuiltinfunctions.cpp

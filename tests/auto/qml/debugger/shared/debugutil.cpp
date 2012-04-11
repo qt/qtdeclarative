@@ -123,7 +123,7 @@ bool QQmlDebugProcess::waitForSessionStart()
         qWarning() << "Could not start up " << m_executable;
         return false;
     }
-    m_eventLoop.exec(QEventLoop::ExcludeUserInputEvents);
+    m_eventLoop.exec();
 
     return m_started;
 }
@@ -159,9 +159,6 @@ void QQmlDebugProcess::processAppOutput()
             if (line.contains("Waiting for connection ")) {
                 m_started = true;
                 m_eventLoop.quit();
-                continue;
-            }
-            if (line.contains("Connection established.")) {
                 continue;
             }
         }

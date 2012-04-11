@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,54 +39,40 @@
 **
 ****************************************************************************/
 
-#include "selectiontool.h"
+import QtQuick 2.0
+import QtTest 1.0
 
-#include "highlight.h"
-#include "qquickviewinspector.h"
+Item {
+  TestCase {
+    name:"data-driven-empty-init-data"
+    property int tests:0;
+    property int init_data_called_times:0;
+    function init_data() {init_data_called_times++;}
+    function initTestCase() {tests = 0; init_data_called_times = 0;}
+    function cleanupTestCase() {compare(tests, 2); compare(init_data_called_times, 2);}
 
-#include <QtGui/QMouseEvent>
-#include <QtQuick/QQuickView>
-#include <QtQuick/QQuickItem>
+    function test_test1() {tests++;}
+    function test_test2() {tests++;}
+  }
+  TestCase {
+    name:"data-driven-no-init-data"
+    property int tests:0;
+    function initTestCase() {tests = 0;}
+    function cleanupTestCase() {compare(tests, 2);}
 
-namespace QmlJSDebugger {
-namespace QtQuick2 {
+    function test_test1() {tests++;}
+    function test_test2() {tests++;}
+  }
+  TestCase {
+    name:"data-driven-init-data"
+    property int tests:0;
+    property int init_data_called_times:0;
+    function initTestCase() {tests = 0; init_data_called_times = 0;}
+    function cleanupTestCase() {compare(tests, 2); compare(init_data_called_times, 1);}
+    function init_data() {init_data_called_times++; return [{tag:"data1", data:"test data 1"}];}
 
-SelectionTool::SelectionTool(QQuickViewInspector *inspector) :
-    AbstractTool(inspector),
-    m_hoverHighlight(new HoverHighlight(inspector->overlay()))
-{
+    function test_test1(row) {tests++; compare(row.data, "test data 1");}
+    function test_test2_data() {return [{tag:"data2", data:"test data 2"}]; }
+    function test_test2(row) {tests++; compare(row.data, "test data 2");}
+  }
 }
-
-void SelectionTool::leaveEvent(QEvent *)
-{
-    m_hoverHighlight->setVisible(false);
-}
-
-void SelectionTool::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        if (QQuickItem *item = inspector()->topVisibleItemAt(event->pos()))
-            inspector()->setSelectedItems(QList<QQuickItem*>() << item);
-    } else if (event->button() == Qt::RightButton) {
-        // todo: Show context menu
-    }
-}
-
-void SelectionTool::hoverMoveEvent(QMouseEvent *event)
-{
-    QQuickItem *item = inspector()->topVisibleItemAt(event->pos());
-    if (!item) {
-        m_hoverHighlight->setVisible(false);
-    } else {
-        m_hoverHighlight->setItem(item);
-        m_hoverHighlight->setVisible(true);
-    }
-}
-
-QQuickViewInspector *SelectionTool::inspector() const
-{
-    return static_cast<QQuickViewInspector*>(AbstractTool::inspector());
-}
-
-} // namespace QtQuick2
-} // namespace QmlJSDebugger

@@ -51,6 +51,8 @@ DEFINE_BOOL_CONFIG_OPTION(rewriteDump, QML_REWRITE_DUMP);
 
 namespace QQmlRewrite {
 
+QString SharedBindingTester::evalString("eval");
+
 static void rewriteStringLiteral(AST::StringLiteral *ast, const QString *code, int startPosition, TextWriter *writer)
 {
     const unsigned position = ast->firstSourceLocation().begin() - startPosition + 1;
@@ -417,6 +419,21 @@ QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString 
     }
 
     return rewritten;
+}
+
+QString RewriteSignalHandler::operator()(const QString &code, const QString &name, bool *ok)
+{
+    Engine engine;
+    Lexer lexer(&engine);
+    Parser parser(&engine);
+    lexer.setCode(code, 0);
+    parser.parseStatement();
+    if (!parser.statement()) {
+        if (ok) *ok = false;
+        return QString();
+    }
+    if (ok) *ok = true;
+    return operator()(parser.statement(), code, name);
 }
 
 } // namespace QQmlRewrite

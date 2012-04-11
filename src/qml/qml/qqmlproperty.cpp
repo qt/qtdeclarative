@@ -920,7 +920,7 @@ QQmlPropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, int valu
     Returns the expression associated with this signal property, or 0 if no 
     signal expression exists.
 */
-QQmlExpression *
+QQmlBoundSignalExpression *
 QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
 {
     if (!(that.type() & QQmlProperty::SignalProperty))
@@ -948,9 +948,9 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
     Ownership of \a expr transfers to QML.  Ownership of the return value is
     assumed by the caller.
 */
-QQmlExpression *
+QQmlBoundSignalExpression *
 QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
-                                                     QQmlExpression *expr) 
+                                         QQmlBoundSignalExpression *expr)
 {
     if (!(that.type() & QQmlProperty::SignalProperty)) {
         delete expr;
@@ -970,13 +970,8 @@ QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
         return signalHandler->setExpression(expr);
 
     if (expr) {
-        QQmlAbstractBoundSignal *signal = 0;
-        if (that.method().parameterTypes().count())
-            signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
-        else
-            signal = new QQmlBoundSignalNoParams(that.d->object, that.method(), that.d->object);
-        QQmlExpression *oldExpr = signal->setExpression(expr);
-        signal->addToObject();
+        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
+        QQmlBoundSignalExpression *oldExpr = signal->setExpression(expr);
         return oldExpr;
     } else {
         return 0;
@@ -1531,13 +1526,29 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             return true;
 
         const char *valueType = 0;
-        if (value.userType() == QVariant::Invalid) valueType = "null";
-        else valueType = QMetaType::typeName(value.userType());
+        const char *propertyType = 0;
+
+        if (value.userType() == QMetaType::QObjectStar) {
+            if (QObject *o = *(QObject **)value.constData()) {
+                valueType = o->metaObject()->className();
+
+                if (const QMetaObject *propertyMetaObject = rawMetaObjectForType(QQmlEnginePrivate::get(engine), type)) {
+                    propertyType = propertyMetaObject->className();
+                }
+            }
+        } else if (value.userType() != QVariant::Invalid) {
+            valueType = QMetaType::typeName(value.userType());
+        }
+
+        if (!valueType)
+            valueType = "null";
+        if (!propertyType)
+            propertyType = QMetaType::typeName(type);
 
         expression->delayedError()->error.setDescription(QLatin1String("Unable to assign ") +
                                                          QLatin1String(valueType) +
                                                          QLatin1String(" to ") +
-                                                         QLatin1String(QMetaType::typeName(type)));
+                                                         QLatin1String(propertyType));
         return false;
     }
 

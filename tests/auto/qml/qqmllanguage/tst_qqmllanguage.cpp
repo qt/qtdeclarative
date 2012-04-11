@@ -181,7 +181,7 @@ private slots:
 
 private:
     QQmlEngine engine;
-    void testType(const QString& qml, const QString& type, const QString& error);
+    void testType(const QString& qml, const QString& type, const QString& error, bool partialMatch = false);
 };
 
 #define DETERMINE_ERRORS(errorfile,expected,actual)\
@@ -1480,7 +1480,7 @@ void tst_qqmllanguage::reservedWords()
 }
 
 // Check that first child of qml is of given type. Empty type insists on error.
-void tst_qqmllanguage::testType(const QString& qml, const QString& type, const QString& expectederror)
+void tst_qqmllanguage::testType(const QString& qml, const QString& type, const QString& expectederror, bool partialMatch)
 {
     QQmlComponent component(&engine);
     component.setData(qml.toUtf8(), TEST_FILE("empty.qml")); // just a file for relative local imports
@@ -1495,7 +1495,7 @@ void tst_qqmllanguage::testType(const QString& qml, const QString& type, const Q
                 actualerror.append("; ");
             actualerror.append(e.description());
         }
-        QCOMPARE(actualerror,expectederror);
+        QCOMPARE(actualerror.left(partialMatch ? expectederror.length(): -1),expectederror);
     } else {
         VERIFY_ERRORS(0);
         QObject *object = component.create();
@@ -1616,13 +1616,13 @@ void tst_qqmllanguage::importsBuiltin_data()
            "import com.nokia.Test 1.12\n"
            "Test {}"
         << (!qmlCheckTypes()?"TestType2":"")
-        << (!qmlCheckTypes()?"":"Test is ambiguous. Found in com/nokia/Test in version 1.12 and 1.11");
+        << (!qmlCheckTypes()?"":"Test is ambiguous. Found in com/nokia/Test/ in version 1.12 and 1.11");
     QTest::newRow("multiversion 2")
         << "import com.nokia.Test 1.11\n"
            "import com.nokia.Test 1.12\n"
            "OldTest {}"
         << (!qmlCheckTypes()?"TestType":"")
-        << (!qmlCheckTypes()?"":"OldTest is ambiguous. Found in com/nokia/Test in version 1.12 and 1.11");
+        << (!qmlCheckTypes()?"":"OldTest is ambiguous. Found in com/nokia/Test/ in version 1.12 and 1.11");
     QTest::newRow("qualified multiversion 3")
         << "import com.nokia.Test 1.0 as T0\n"
            "import com.nokia.Test 1.8 as T8\n"
@@ -1691,7 +1691,7 @@ void tst_qqmllanguage::importsLocal_data()
            "import com.nokia.Test 1.0\n"
            "Test {}"
         << (!qmlCheckTypes()?"TestType":"")
-        << (!qmlCheckTypes()?"":"Test is ambiguous. Found in com/nokia/Test and in subdir");
+        << (!qmlCheckTypes()?"":"Test is ambiguous. Found in com/nokia/Test/ and in subdir/");
 }
 
 void tst_qqmllanguage::importsLocal()
@@ -1841,32 +1841,37 @@ void tst_qqmllanguage::importsOrder_data()
     QTest::addColumn<QString>("qml");
     QTest::addColumn<QString>("type");
     QTest::addColumn<QString>("error");
+    QTest::addColumn<bool>("partialMatch");
 
     QTest::newRow("double import") <<
            "import com.nokia.installedtest 1.4\n"
            "import com.nokia.installedtest 1.4\n"
            "InstalledTest {}"
            << (!qmlCheckTypes()?"QQuickText":"")
-           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.4 and 1.4");
+           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest/ in version 1.4 and 1.4")
+           << false;
     QTest::newRow("installed import overrides 1") <<
            "import com.nokia.installedtest 1.0\n"
            "import com.nokia.installedtest 1.4\n"
            "InstalledTest {}"
            << (!qmlCheckTypes()?"QQuickText":"")
-           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.4 and 1.0");
+           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest/ in version 1.4 and 1.0")
+           << false;
     QTest::newRow("installed import overrides 2") <<
            "import com.nokia.installedtest 1.4\n"
            "import com.nokia.installedtest 1.0\n"
            "InstalledTest {}"
            << (!qmlCheckTypes()?"QQuickRectangle":"")
-           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.0 and 1.4");
+           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest/ in version 1.0 and 1.4")
+           << false;
     QTest::newRow("installed import re-overrides 1") <<
            "import com.nokia.installedtest 1.4\n"
            "import com.nokia.installedtest 1.0\n"
            "import com.nokia.installedtest 1.4\n"
            "InstalledTest {}"
            << (!qmlCheckTypes()?"QQuickText":"")
-           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.4 and 1.0");
+           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest/ in version 1.4 and 1.0")
+           << false;
     QTest::newRow("installed import re-overrides 2") <<
            "import com.nokia.installedtest 1.4\n"
            "import com.nokia.installedtest 1.0\n"
@@ -1874,41 +1879,47 @@ void tst_qqmllanguage::importsOrder_data()
            "import com.nokia.installedtest 1.0\n"
            "InstalledTest {}"
            << (!qmlCheckTypes()?"QQuickRectangle":"")
-           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.0 and 1.4");
-
+           << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest/ in version 1.0 and 1.4")
+           << false;
     QTest::newRow("installed import versus builtin 1") <<
            "import com.nokia.installedtest 1.5\n"
            "import QtQuick 2.0\n"
            "Rectangle {}"
            << (!qmlCheckTypes()?"QQuickRectangle":"")
-           << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in Qt and in lib/com/nokia/installedtest");
+           << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in file://")
+           << true;
     QTest::newRow("installed import versus builtin 2") <<
            "import QtQuick 2.0\n"
            "import com.nokia.installedtest 1.5\n"
            "Rectangle {}"
            << (!qmlCheckTypes()?"QQuickText":"")
-           << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in lib/com/nokia/installedtest and in Qt");
+           << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in lib/com/nokia/installedtest/ and in file://")
+           << true;
     QTest::newRow("namespaces cannot be overridden by types 1") <<
            "import QtQuick 2.0 as Rectangle\n"
            "import com.nokia.installedtest 1.5\n"
            "Rectangle {}"
-        << ""
-        << "Namespace Rectangle cannot be used as a type";
+           << ""
+           << "Namespace Rectangle cannot be used as a type"
+           << false;
     QTest::newRow("namespaces cannot be overridden by types 2") <<
            "import QtQuick 2.0 as Rectangle\n"
            "import com.nokia.installedtest 1.5\n"
            "Rectangle.Image {}"
-        << "QQuickImage"
-        << "";
+           << "QQuickImage"
+           << ""
+           << false;
     QTest::newRow("local last 1") <<
            "LocalLast {}"
-        << "QQuickText"
-        << "";
+           << "QQuickText"
+           << ""
+           << false;
     QTest::newRow("local last 2") <<
            "import com.nokia.installedtest 1.0\n"
            "LocalLast {}"
            << (!qmlCheckTypes()?"QQuickRectangle":"")// i.e. from com.nokia.installedtest, not data/LocalLast.qml
-           << (!qmlCheckTypes()?"":"LocalLast is ambiguous. Found in lib/com/nokia/installedtest and in local directory");
+           << (!qmlCheckTypes()?"":"LocalLast is ambiguous. Found in lib/com/nokia/installedtest/ and in ")
+           << false;
 }
 
 void tst_qqmllanguage::importsOrder()
@@ -1916,7 +1927,8 @@ void tst_qqmllanguage::importsOrder()
     QFETCH(QString, qml);
     QFETCH(QString, type);
     QFETCH(QString, error);
-    testType(qml,type,error);
+    QFETCH(bool, partialMatch);
+    testType(qml,type,error,partialMatch);
 }
 
 void tst_qqmllanguage::importIncorrectCase()

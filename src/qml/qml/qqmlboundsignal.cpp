@@ -49,6 +49,7 @@
 #include "qqml.h"
 #include "qqmlcontext.h"
 #include "qqmlglobal_p.h"
+#include "qqmlrewrite_p.h"
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qv8debugservice_p.h>
 
@@ -58,6 +59,105 @@
 Q_DECLARE_METATYPE(QJSValue)
 
 QT_BEGIN_NAMESPACE
+
+static QQmlJavaScriptExpression::VTable QQmlBoundSignalExpression_jsvtable = {
+    QQmlBoundSignalExpression::expressionIdentifier,
+    QQmlBoundSignalExpression::expressionChanged
+};
+
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
+                                                     bool isRewritten, const QString &fileName, int line, int column)
+    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable)
+{
+    setNotifyOnValueChanged(false);
+    setContext(ctxt);
+    setScopeObject(scope);
+    m_expression = QString::fromUtf8(expression);
+    m_expressionFunctionValid = false;
+    m_expressionFunctionRewritten = isRewritten;
+    m_fileName = fileName;
+    m_line = line;
+    m_column = column;
+}
+
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QString &expression,
+                                                     bool isRewritten, const QString &fileName, int line, int column)
+    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable)
+{
+    setNotifyOnValueChanged(false);
+    setContext(ctxt);
+    setScopeObject(scope);
+    m_expression = expression;
+    m_expressionFunctionValid = false;
+    m_expressionFunctionRewritten = isRewritten;
+    m_fileName = fileName;
+    m_line = line;
+    m_column = column;
+}
+
+QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
+{
+    qPersistentDispose(m_v8function);
+    qPersistentDispose(m_v8qmlscope);
+}
+
+QString QQmlBoundSignalExpression::expressionIdentifier(QQmlJavaScriptExpression *e)
+{
+    QQmlBoundSignalExpression *This = static_cast<QQmlBoundSignalExpression *>(e);
+    return QLatin1String("\"") + This->m_expression + QLatin1String("\"");
+}
+
+void QQmlBoundSignalExpression::expressionChanged(QQmlJavaScriptExpression *)
+{
+    // bound signals do not notify on change.
+}
+
+// This mirrors code in QQmlExpressionPrivate::value() and v8value().
+// Any change made here should be made there and vice versa.
+void QQmlBoundSignalExpression::evaluate(QObject *secondaryScope)
+{
+    Q_ASSERT (context() && engine());
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
+
+    ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
+    {
+        v8::HandleScope handle_scope;
+        v8::Context::Scope context_scope(ep->v8engine()->context());
+        if (!m_expressionFunctionValid) {
+            bool ok = true;
+            QString code;
+            if (m_expressionFunctionRewritten) {
+                code = m_expression;
+            } else {
+                QQmlRewrite::RewriteSignalHandler rewriteSignalHandler;
+                code = rewriteSignalHandler(m_expression, m_functionName, &ok);
+            }
+
+            if (ok)
+                m_v8function = evalFunction(context(), scopeObject(), code, m_fileName, m_line, &m_v8qmlscope);
+
+            if (m_v8function.IsEmpty() || m_v8function->IsNull()) {
+                ep->dereferenceScarceResources();
+                return; // could not evaluate function.  Not valid.
+            }
+
+            setUseSharedContext(false);
+            m_expressionFunctionValid = true;
+        }
+
+        if (secondaryScope) {
+            QObject *restoreSecondaryScope = 0;
+            restoreSecondaryScope = ep->v8engine()->contextWrapper()->setSecondaryScope(m_v8qmlscope, secondaryScope);
+            QQmlJavaScriptExpression::evaluate(context(), m_v8function, 0);
+            ep->v8engine()->contextWrapper()->setSecondaryScope(m_v8qmlscope, restoreSecondaryScope);
+        } else {
+            QQmlJavaScriptExpression::evaluate(context(), m_v8function, 0);
+        }
+    }
+    ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
+}
+
+////////////////////////////////////////////////////////////////////////
 
 class QQmlBoundSignalParameters : public QObject
 {
@@ -104,10 +204,9 @@ QQmlAbstractBoundSignal::~QQmlAbstractBoundSignal()
     }
 }
 
-void QQmlAbstractBoundSignal::addToObject()
+void QQmlAbstractBoundSignal::addToObject(QObject *obj)
 {
     Q_ASSERT(!m_prevSignal);
-    QObject *obj = object();
     Q_ASSERT(obj);
 
     QQmlData *data = QQmlData::get(obj, true);
@@ -120,12 +219,14 @@ void QQmlAbstractBoundSignal::addToObject()
 
 QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
                                QObject *owner)
-: m_expression(0), m_signal(signal), m_paramsValid(false), m_isEvaluating(false), m_params(0), m_owner(owner)
+: m_expression(0), m_params(0), m_scope(scope), m_signal(signal), m_paramsValid(false), m_isEvaluating(false)
 {
     // This is thread safe.  Although it may be updated by two threads, they
     // will both set it to the same value - so the worst thing that can happen
     // is that they both do the work to figure it out.  Boo hoo.
     if (evaluateIdx == -1) evaluateIdx = metaObject()->methodCount();
+
+    addToObject(owner);
 
     QQmlPropertyPrivate::connect(scope, m_signal.methodIndex(), this, evaluateIdx);
 }
@@ -144,7 +245,7 @@ int QQmlBoundSignal::index() const
 /*!
     Returns the signal expression.
 */
-QQmlExpression *QQmlBoundSignal::expression() const
+QQmlBoundSignalExpression *QQmlBoundSignal::expression() const
 {
     return m_expression;
 }
@@ -156,9 +257,9 @@ QQmlExpression *QQmlBoundSignal::expression() const
     The QQmlBoundSignal instance takes ownership of \a e.  The caller is 
     assumes ownership of the returned QQmlExpression.
 */
-QQmlExpression *QQmlBoundSignal::setExpression(QQmlExpression *e)
+QQmlBoundSignalExpression *QQmlBoundSignal::setExpression(QQmlBoundSignalExpression *e)
 {
-    QQmlExpression *rv = m_expression;
+    QQmlBoundSignalExpression *rv = m_expression;
     m_expression = e;
     if (m_expression) m_expression->setNotifyOnValueChanged(false);
     return rv;
@@ -183,8 +284,8 @@ int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
         }
 
         if (m_params) m_params->setValues(a);
-        if (m_expression && m_expression->engine()) {
-            QQmlExpressionPrivate::get(m_expression)->value(m_params);
+        if (m_expression && m_expression->context() && m_expression->engine()) {
+            m_expression->evaluate(m_params);
             if (m_expression && m_expression->hasError())
                 QQmlEnginePrivate::warning(m_expression->engine(), m_expression->error());
         }
@@ -247,7 +348,7 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
                 if (scope == "Qt")
                     meta = &QObject::staticQtMetaObject;
                 else
-                    meta = static_cast<QQmlBoundSignal*>(parent)->object()->metaObject();
+                    meta = static_cast<QQmlBoundSignal*>(parent)->scope()->metaObject();
                 for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
                     QMetaEnum m = meta->enumerator(i);
                     if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope))) {
@@ -298,71 +399,6 @@ int QQmlBoundSignalParameters::metaCall(QMetaObject::Call c, int id, void **a)
     } else {
         return qt_metacall(c, id, a);
     }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-QQmlBoundSignalNoParams::QQmlBoundSignalNoParams(QObject *scope, const QMetaMethod &signal,
-                               QObject *owner)
-: m_expression(0), m_owner(owner), m_index(signal.methodIndex()), m_isEvaluating(false)
-{
-    callback = &subscriptionCallback;
-    QQmlNotifierEndpoint::connect(scope, m_index);
-}
-
-QQmlBoundSignalNoParams::~QQmlBoundSignalNoParams()
-{
-    delete m_expression;
-    m_expression = 0;
-}
-
-int QQmlBoundSignalNoParams::index() const
-{
-    return m_index;
-}
-
-/*!
-    Returns the signal expression.
-*/
-QQmlExpression *QQmlBoundSignalNoParams::expression() const
-{
-    return m_expression;
-}
-
-/*!
-    Sets the signal expression to \a e.  Returns the current signal expression,
-    or null if there is no signal expression.
-
-    The QQmlBoundSignalNoParams instance takes ownership of \a e.  The caller is
-    assumes ownership of the returned QQmlExpression.
-*/
-QQmlExpression *QQmlBoundSignalNoParams::setExpression(QQmlExpression *e)
-{
-    QQmlExpression *rv = m_expression;
-    m_expression = e;
-    if (m_expression) m_expression->setNotifyOnValueChanged(false);
-    return rv;
-}
-
-void QQmlBoundSignalNoParams::subscriptionCallback(QQmlNotifierEndpoint *e)
-{
-    QQmlBoundSignalNoParams *s = static_cast<QQmlBoundSignalNoParams*>(e);
-    if (!s->m_expression)
-        return;
-
-    if (QQmlDebugService::isDebuggingEnabled())
-        QV8DebugService::instance()->signalEmitted(QString::fromAscii(s->m_owner->metaObject()->method(s->m_index).methodSignature()));
-
-    QQmlHandlingSignalProfiler prof(s->m_owner, s->m_index, s->m_expression);
-
-    s->m_isEvaluating = true;
-
-    if (s->m_expression && s->m_expression->engine()) {
-        QQmlExpressionPrivate::get(s->m_expression)->value();
-        if (s->m_expression && s->m_expression->hasError())
-            QQmlEnginePrivate::warning(s->m_expression->engine(), s->m_expression->error());
-    }
-    s->m_isEvaluating = false;
 }
 
 QT_END_NAMESPACE

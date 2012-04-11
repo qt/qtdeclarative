@@ -204,13 +204,19 @@ inline bool fastHasBinding(QObject *o, int index)
 {
     QQmlData *ddata = static_cast<QQmlData *>(QObjectPrivate::get(o)->declarativeData);
 
+    index &= 0xFFFFFF; // To handle value types
+
     return ddata && (ddata->bindingBitsSize > index) && 
            (ddata->bindingBits[index / 32] & (1 << (index % 32)));
 }
 
 static void removeBindingOnProperty(QObject *o, int index)
 {
-    QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, index, -1, 0);
+    int coreIndex = index & 0xFFFFFF;
+    int valueTypeIndex = index & 0xFF000000;
+    if (!valueTypeIndex) valueTypeIndex = -1;
+
+    QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, coreIndex, valueTypeIndex, 0);
     if (binding) binding->destroy();
 }
 
@@ -724,15 +730,10 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QMetaMethod signal = target->metaObject()->method(instr.signalIndex);
 
-            QQmlAbstractBoundSignal *bs = 0;
-            if (signal.parameterTypes().count())
-                bs = new QQmlBoundSignal(target, signal, target);
-            else
-                bs = new QQmlBoundSignalNoParams(target, signal, target);
-            QQmlExpression *expr =
-                new QQmlExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column, *new QQmlExpressionPrivate);
+            QQmlBoundSignal *bs = new QQmlBoundSignal(target, signal, target);
+            QQmlBoundSignalExpression *expr =
+                new QQmlBoundSignalExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column);
             bs->setExpression(expr);
-            bs->addToObject();
         QML_END_INSTR(StoreSignal)
 
         QML_BEGIN_INSTR(StoreImportedScript)
@@ -788,35 +789,23 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             bind->m_mePtr = &bindValues.top();
             bind->setTarget(target, instr.property, CTXT);
 
-            typedef QQmlPropertyPrivate QDPP;
-            Q_ASSERT(bind->propertyIndex() == QDPP::bindingIndex(instr.property));
-            Q_ASSERT(bind->object() == target);
+            if (instr.isAlias) {
+                QQmlAbstractBinding *old =
+                    QQmlPropertyPrivate::setBindingNoEnable(target,
+                                                            instr.property.coreIndex,
+                                                            instr.property.getValueTypeCoreIndex(),
+                                                            bind);
+                if (old) { old->destroy(); }
+            } else {
+                typedef QQmlPropertyPrivate QDPP;
+                Q_ASSERT(bind->propertyIndex() == QDPP::bindingIndex(instr.property));
+                Q_ASSERT(bind->object() == target);
 
-            bind->addToObject();
+                CLEAN_PROPERTY(target, QDPP::bindingIndex(instr.property));
+
+                bind->addToObject();
+            }
         QML_END_INSTR(StoreBinding)
-
-        QML_BEGIN_INSTR(StoreBindingOnAlias)
-            QObject *target = 
-                objects.at(objects.count() - 1 - instr.owner);
-            QObject *context = 
-                objects.at(objects.count() - 1 - instr.context);
-
-            if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
-                QML_NEXT_INSTR(StoreBindingOnAlias);
-
-            QQmlBinding *bind = new QQmlBinding(PRIMITIVES.at(instr.value), true,
-                                                context, CTXT, COMP->name, instr.line,
-                                                instr.column);
-            bindValues.push(bind);
-            bind->m_mePtr = &bindValues.top();
-            bind->setTarget(target, instr.property, CTXT);
-
-            QQmlAbstractBinding *old =
-                QQmlPropertyPrivate::setBindingNoEnable(target, instr.property.coreIndex,
-                                                                instr.property.getValueTypeCoreIndex(),
-                                                                bind);
-            if (old) { old->destroy(); }
-        QML_END_INSTR(StoreBindingOnAlias)
 
         QML_BEGIN_INSTR(StoreV4Binding)
             QObject *target = 
@@ -837,6 +826,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             Q_ASSERT(binding->propertyIndex() == (property & 0xFF00FFFF));
             Q_ASSERT(binding->object() == target);
 
+            CLEAN_PROPERTY(target, property & 0xFF00FFFF);
+
             binding->addToObject();
         QML_END_INSTR(StoreV4Binding)
 
@@ -855,11 +846,22 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 bindValues.push(binding);
                 binding->m_mePtr = &bindValues.top();
 
-                typedef QQmlPropertyPrivate QDPP;
-                Q_ASSERT(binding->propertyIndex() == QDPP::bindingIndex(instr.property));
-                Q_ASSERT(binding->object() == target);
+                if (instr.isAlias) {
+                    QQmlAbstractBinding *old =
+                        QQmlPropertyPrivate::setBindingNoEnable(target,
+                                                                instr.property.coreIndex,
+                                                                instr.property.getValueTypeCoreIndex(),
+                                                                binding);
+                    if (old) { old->destroy(); }
+                } else {
+                    typedef QQmlPropertyPrivate QDPP;
+                    Q_ASSERT(binding->propertyIndex() == QDPP::bindingIndex(instr.property));
+                    Q_ASSERT(binding->object() == target);
 
-                binding->addToObject();
+                    CLEAN_PROPERTY(target, QDPP::bindingIndex(instr.property));
+
+                    binding->addToObject();
+                }
             }
         QML_END_INSTR(StoreV8Binding)
 
@@ -1242,9 +1244,9 @@ QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
     while (!bindValues.isEmpty()) {
         QQmlAbstractBinding *b = bindValues.pop();
 
-        if(b) {
+        if (b) {
             b->m_mePtr = 0;
-            b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor | 
+            b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
                                 QQmlPropertyPrivate::DontRemoveBinding);
         }
 

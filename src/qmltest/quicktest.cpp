@@ -100,10 +100,10 @@ static inline QString stripQuotes(const QString &s)
         return s;
 }
 
-template <class View> void handleCompileErrors(const QFileInfo &fi, const View &view)
+void handleCompileErrors(const QFileInfo &fi, QQuickView *view)
 {
     // Error compiling the test - flag failure in the log and continue.
-    const QList<QQmlError> errors = view.errors();
+    const QList<QQmlError> errors = view->errors();
     QuickTestResult results;
     results.setTestCaseName(fi.baseName());
     results.startLogging();
@@ -125,8 +125,8 @@ template <class View> void handleCompileErrors(const QFileInfo &fi, const View &
         str << ": " << e.description() << '\n';
     }
     str << "  Working directory: " << QDir::toNativeSeparators(QDir::current().absolutePath()) << '\n';
-    if (QQmlEngine *engine = view.engine()) {
-        str << "  View: " << view.metaObject()->className() << ", import paths:\n";
+    if (QQmlEngine *engine = view->engine()) {
+        str << "  View: " << view->metaObject()->className() << ", import paths:\n";
         foreach (const QString &i, engine->importPathList())
             str << "    '" << QDir::toNativeSeparators(i) << "'\n";
         const QStringList pluginPaths = engine->pluginPathList();
@@ -249,17 +249,17 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
 
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a QQuickView.
-    QQuickView view;
+    QQuickView *view = new QQuickView;
     QTestRootObject rootobj;
     QEventLoop eventLoop;
-    QObject::connect(view.engine(), SIGNAL(quit()),
+    QObject::connect(view->engine(), SIGNAL(quit()),
                      &rootobj, SLOT(quit()));
-    QObject::connect(view.engine(), SIGNAL(quit()),
+    QObject::connect(view->engine(), SIGNAL(quit()),
                      &eventLoop, SLOT(quit()));
-    view.rootContext()->setContextProperty
+    view->rootContext()->setContextProperty
         (QLatin1String("qtest"), &rootobj);
     foreach (const QString &path, imports)
-        view.engine()->addImportPath(path);
+        view->engine()->addImportPath(path);
 
     foreach (QString file, files) {
         QFileInfo fi(file);
@@ -271,13 +271,13 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
         rootobj.hasQuit = false;
         QString path = fi.absoluteFilePath();
         if (path.startsWith(QLatin1String(":/")))
-            view.setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
+            view->setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
         else
-            view.setSource(QUrl::fromLocalFile(path));
+            view->setSource(QUrl::fromLocalFile(path));
 
         if (QTest::printAvailableFunctions)
             continue;
-        if (view.status() == QQuickView::Error) {
+        if (view->status() == QQuickView::Error) {
             handleCompileErrors(fi, view);
             continue;
         }
@@ -286,8 +286,8 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
             // synchronously during setSource().  Otherwise it is
             // an asynchronous test and we need to show the window
             // and wait for the quit indication.
-            view.show();
-            QTest::qWaitForWindowShown(&view);
+            view->show();
+            QTest::qWaitForWindowShown(view);
             rootobj.setWindowShown(true);
             if (!rootobj.hasQuit && rootobj.hasTestCase())
                 eventLoop.exec();
@@ -296,10 +296,8 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
 
     // Flush the current logging stream.
     QuickTestResult::setProgramName(0);
-
-    //Sometimes delete app cause crash here with some qpa plugins,
-    //so we comment the follow line out to make them happy.
-    //delete app;
+    delete view;
+    delete app;
 
     // Return the number of failures as the exit code.
     return QuickTestResult::exitCode();

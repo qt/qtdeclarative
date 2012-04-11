@@ -46,7 +46,6 @@
 #include "qv8sequencewrapper_p.h"
 #include "qv8include_p.h"
 #include "qjsengine_p.h"
-#include "../../../3rdparty/javascriptcore/DateMath.h"
 
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmllist_p.h>
@@ -765,23 +764,19 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
 
 double QV8Engine::qtDateTimeToJsDate(const QDateTime &dt)
 {
-    // from QScriptEngine::DateTimeToMs()
     if (!dt.isValid()) {
         return qSNaN();
     }
-    QDateTime utc = dt.toUTC();
-    QDate date = utc.date();
-    QTime time = utc.time();
-    QV8DateConverter::JSC::GregorianDateTime tm;
-    tm.year = date.year() - 1900;
-    tm.month = date.month() - 1;
-    tm.monthDay = date.day();
-    tm.weekDay = date.dayOfWeek();
-    tm.yearDay = date.dayOfYear();
-    tm.hour = time.hour();
-    tm.minute = time.minute();
-    tm.second = time.second();
-    return QV8DateConverter::JSC::gregorianDateTimeToMS(tm, time.msec());
+
+    return dt.toMSecsSinceEpoch();
+}
+
+QDateTime QV8Engine::qtDateTimeFromJsDate(double jsDate)
+{
+    if (qIsNaN(jsDate))
+        return QDateTime();
+
+    return QDateTime::fromMSecsSinceEpoch(jsDate);
 }
 
 v8::Persistent<v8::Object> *QV8Engine::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
@@ -813,24 +808,6 @@ v8::Persistent<v8::Object> *QV8Engine::findOwnerAndStrength(QObject *object, boo
         *shouldBeStrong = true;
         return 0;
     }
-}
-
-QDateTime QV8Engine::qtDateTimeFromJsDate(double jsDate)
-{
-    // from QScriptEngine::MsToDateTime()
-    if (qIsNaN(jsDate))
-        return QDateTime();
-    QV8DateConverter::JSC::GregorianDateTime tm;
-    QV8DateConverter::JSC::msToGregorianDateTime(jsDate, tm);
-
-    // from QScriptEngine::MsFromTime()
-    int ms = int(::fmod(jsDate, 1000.0));
-    if (ms < 0)
-        ms += int(1000.0);
-
-    QDateTime convertedUTC = QDateTime(QDate(tm.year + 1900, tm.month + 1, tm.monthDay),
-                                       QTime(tm.hour, tm.minute, tm.second, ms), Qt::UTC);
-    return convertedUTC.toLocalTime();
 }
 
 void QV8Engine::addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle)

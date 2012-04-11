@@ -351,7 +351,7 @@
 
    // third, register the module API provider with QML by calling this function in an initialization function.
    ...
-   qmlRegisterModuleApi("Qt.example.qobjectApi", 1, 0, example_qobject_module_api_provider);
+   qmlRegisterModuleApi<ModuleApiExample>("Qt.example.qobjectApi", 1, 0, example_qobject_module_api_provider);
    ...
    \endcode
 

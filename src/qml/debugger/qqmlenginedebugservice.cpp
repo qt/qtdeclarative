@@ -67,7 +67,7 @@ QQmlEngineDebugService *QQmlEngineDebugService::instance()
 }
 
 QQmlEngineDebugService::QQmlEngineDebugService(QObject *parent)
-    : QQmlDebugService(QStringLiteral("QmlDebugger"), 1, parent),
+    : QQmlDebugService(QStringLiteral("QmlDebugger"), 2, parent),
       m_watch(new QQmlWatcher(this)),
       m_statesDelegate(0)
 {
@@ -86,7 +86,8 @@ QDataStream &operator<<(QDataStream &ds,
                         const QQmlEngineDebugService::QQmlObjectData &data)
 {
     ds << data.url << data.lineNumber << data.columnNumber << data.idString
-       << data.objectName << data.objectType << data.objectId << data.contextId;
+       << data.objectName << data.objectType << data.objectId << data.contextId
+       << data.parentId;
     return ds;
 }
 
@@ -94,7 +95,8 @@ QDataStream &operator>>(QDataStream &ds,
                         QQmlEngineDebugService::QQmlObjectData &data)
 {
     ds >> data.url >> data.lineNumber >> data.columnNumber >> data.idString
-       >> data.objectName >> data.objectType >> data.objectId >> data.contextId;
+       >> data.objectName >> data.objectType >> data.objectId >> data.contextId
+       >> data.parentId;
     return ds;
 }
 
@@ -264,7 +266,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
             QQmlObjectProperty prop;
             prop.type = QQmlObjectProperty::SignalProperty;
             prop.hasNotifySignal = false;
-            QQmlExpression *expr = signalHandler->expression();
+            QQmlBoundSignalExpression *expr = signalHandler->expression();
             if (expr) {
                 prop.value = expr->expression();
                 QObject *scope = expr->scopeObject();
@@ -376,7 +378,7 @@ QQmlEngineDebugService::objectData(QObject *object)
     rv.objectName = object->objectName();
     rv.objectId = QQmlDebugService::idForObject(object);
     rv.contextId = QQmlDebugService::idForObject(qmlContext(object));
-
+    rv.parentId = QQmlDebugService::idForObject(object->parent());
     QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
     if (type) {
         QString typeName = type->qmlTypeName();
@@ -603,9 +605,9 @@ bool QQmlEngineDebugService::setBinding(int objectId,
                 if (isLiteralValue) {
                     property.write(expression);
                 } else if (hasValidSignal(object, propertyName)) {
-                    QQmlExpression *qmlExpression = new QQmlExpression(context, object, expression.toString());
+                    QQmlBoundSignalExpression *qmlExpression = new QQmlBoundSignalExpression(QQmlContextData::get(context), object, expression.toString(),
+                                                                                             false, filename, line, column);
                     QQmlPropertyPrivate::setSignalExpression(property, qmlExpression);
-                    qmlExpression->setSourceLocation(filename, line, column);
                 } else if (property.isProperty()) {
                     QQmlBinding *binding = new QQmlBinding(expression.toString(), false, object, QQmlContextData::get(context), filename, line, column);;
                     binding->setTarget(property);

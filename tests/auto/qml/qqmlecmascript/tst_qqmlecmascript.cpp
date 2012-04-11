@@ -135,6 +135,7 @@ private slots:
     void ownershipCustomReturnValue();
     void ownershipRootObject();
     void ownershipConsistency();
+    void ownershipQmlIncubated();
     void qlistqobjectMethods();
     void strictlyEquals();
     void compiled();
@@ -183,7 +184,7 @@ private slots:
     void assignSequenceTypes();
     void qtbug_22464();
     void qtbug_21580();
-
+    void singleV8BindingDestroyedDuringEvaluation();
     void bug1();
     void bug2();
     void dynamicCreationCrash();
@@ -246,12 +247,13 @@ private slots:
     void invokableWithQObjectDerived();
     void realTypePrecision();
     void registeredFlagMethod();
-
+    void deleteLaterObjectMethodCall();
     void automaticSemicolon();
     void unaryExpression();
     void switchStatement();
     void withStatement();
     void tryStatement();
+    void replaceBinding();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -1902,6 +1904,16 @@ void tst_qqmlecmascript::qtbug_21580()
     delete object;
 }
 
+// Causes a v8 binding, but not all v8 bindings to be destroyed during evaluation
+void tst_qqmlecmascript::singleV8BindingDestroyedDuringEvaluation()
+{
+    QQmlComponent component(&engine, testFileUrl("singleV8BindingDestroyedDuringEvaluation.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    delete object;
+}
+
 // QTBUG-6781
 void tst_qqmlecmascript::bug1()
 {
@@ -3006,6 +3018,24 @@ void tst_qqmlecmascript::ownershipConsistency()
     QVERIFY(own.object != 0);
 
     delete context;
+    delete object;
+}
+
+void tst_qqmlecmascript::ownershipQmlIncubated()
+{
+    QQmlComponent component(&engine, testFileUrl("ownershipQmlIncubated.qml"));
+    QObject *object = component.create();
+    QVERIFY(object);
+
+    QTRY_VERIFY(object->property("incubatedItem").value<QObject*>() != 0);
+
+    QMetaObject::invokeMethod(object, "deleteIncubatedItem");
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(object->property("incubatedItem").value<QObject*>() == 0);
+
     delete object;
 }
 
@@ -6000,6 +6030,13 @@ void tst_qqmlecmascript::dynamicString()
              QString::fromLatin1("string:Hello World false:0 true:1 uint32:100 int32:-100 double:3.14159 date:2011-02-11 05::30:50!"));
 }
 
+void tst_qqmlecmascript::deleteLaterObjectMethodCall()
+{
+    QQmlComponent component(&engine, testFileUrl("deleteLaterObjectMethodCall.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+}
+
 void tst_qqmlecmascript::automaticSemicolon()
 {
     QQmlComponent component(&engine, testFileUrl("automaticSemicolon.qml"));
@@ -6406,6 +6443,18 @@ void tst_qqmlecmascript::registeredFlagMethod()
     QCOMPARE(object->buttons(), Qt::RightButton);
 
     delete object;
+}
+
+// QTBUG-23138
+void tst_qqmlecmascript::replaceBinding()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("replaceBinding.qml"));
+    QObject *obj = c.create();
+    QVERIFY(obj != 0);
+
+    QVERIFY(obj->property("success").toBool());
+    delete obj;
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

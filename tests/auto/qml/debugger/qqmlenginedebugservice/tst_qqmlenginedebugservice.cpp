@@ -205,7 +205,7 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
         // signal properties are fake - they are generated from QQmlAbstractBoundSignal children
         if (p.name.startsWith("on") && p.name.length() > 2 && p.name[2].isUpper()) {
             QString signal = p.value.toString();
-            QQmlExpression *expr = QQmlPropertyPrivate::signalExpression(QQmlProperty(o, p.name));
+            QQmlBoundSignalExpression *expr = QQmlPropertyPrivate::signalExpression(QQmlProperty(o, p.name));
             QVERIFY(expr && expr->expression() == signal);
             QVERIFY(p.valueTypeName.isEmpty());
             QVERIFY(p.binding.isEmpty());
@@ -328,7 +328,6 @@ void tst_QQmlEngineDebugService::initTestCase()
     m_conn = new QQmlDebugConnection(this);
     m_conn->connectToHost("127.0.0.1", 3768);
 
-    QTest::ignoreMessage(QtDebugMsg, "QML Debugger: Connection established.");
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
     QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());

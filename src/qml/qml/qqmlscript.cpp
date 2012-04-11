@@ -66,6 +66,11 @@ QQmlScript::Object::Object()
 : type(-1), idIndex(-1), metatype(0), synthCache(0), defaultProperty(0), parserStatusCast(-1),
   componentCompileState(0), nextAliasingObject(0), nextIdObject(0)
 {
+    // initialize the members in the meta object
+    extObject.d.superdata = 0;
+    extObject.d.stringdata = 0;
+    extObject.d.data = 0;
+    extObject.d.extradata = 0;
 }
 
 QQmlScript::Object::~Object() 

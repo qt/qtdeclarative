@@ -46,4 +46,5 @@ void registerTypes()
 {
     qmlRegisterType<ResultObject>("Qt.v4", 1,0, "Result");
     qmlRegisterType<NestedObject>();
+    qmlRegisterType<ConversionObject>("Qt.v4", 1, 0, "Conversion");
 }

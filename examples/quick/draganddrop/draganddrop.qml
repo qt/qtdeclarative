@@ -43,7 +43,7 @@ import "../../shared" as Examples
 
 /*!
     \title QtQuick Examples - Drag and Drop
-    \example qtquick/draganddrop
+    \example quick/draganddrop
     \brief This is a collection of QML drag and drop examples
     \image qml-draganddrop-example.png
 

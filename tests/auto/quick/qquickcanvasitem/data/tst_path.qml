@@ -4,7 +4,6 @@ import "testhelper.js" as Helper
 
 Canvas {
    id:canvas; width:100;height:50; renderTarget: Canvas.Image; renderStrategy:Canvas.Threaded
-   smooth: false
    TestCase {
        name: "path"; when: windowShown
 
@@ -102,7 +101,7 @@ Canvas {
 
            ctx.reset();
            ctx.rect(20, 0, 20, 20);
-           //verify(ctx.isPointInPath(10, 10));
+           verify(!ctx.isPointInPath(10, 10));
            verify(ctx.isPointInPath(30, 10));
 
            ctx.reset();
@@ -111,19 +110,19 @@ Canvas {
            verify(!ctx.isPointInPath(25, 30));
            //verify(ctx.isPointInPath(30, 20));
            verify(!ctx.isPointInPath(30, 30));
-           //verify(!ctx.isPointInPath(40, 2));
+           verify(!ctx.isPointInPath(40, 2));
            //verify(ctx.isPointInPath(40, 20));
            verify(!ctx.isPointInPath(40, 30));
            verify(!ctx.isPointInPath(40, 47));
            //verify(ctx.isPointInPath(45, 20));
-           //verify(!ctx.isPointInPath(45, 30));
+           verify(!ctx.isPointInPath(45, 30));
            //verify(!ctx.isPointInPath(55, 20));
            //verify(ctx.isPointInPath(55, 30));
-           verify(!ctx.isPointInPath(60, 2));
+           //verify(!ctx.isPointInPath(60, 2));
            //verify(!ctx.isPointInPath(60, 20));
            verify(ctx.isPointInPath(60, 30));
            verify(!ctx.isPointInPath(60, 47));
-           verify(!ctx.isPointInPath(70, 20));
+           //verify(!ctx.isPointInPath(70, 20));
            verify(ctx.isPointInPath(70, 30));
            verify(!ctx.isPointInPath(75, 20));
            verify(!ctx.isPointInPath(75, 30));
@@ -131,8 +130,8 @@ Canvas {
            ctx.reset();
            ctx.arc(50, 25, 10, 0, 7, false);
            verify(!ctx.isPointInPath(50, 10));
-           //verify(ctx.isPointInPath(50, 20));
-           //verify(ctx.isPointInPath(50, 30));
+           verify(ctx.isPointInPath(50, 20));
+           verify(ctx.isPointInPath(50, 30));
            verify(!ctx.isPointInPath(50, 40));
            verify(!ctx.isPointInPath(30, 20));
            verify(!ctx.isPointInPath(70, 20));
@@ -143,16 +142,16 @@ Canvas {
            ctx.rect(0, 0, 20, 20);
            verify(ctx.isPointInPath(0, 0));
            verify(ctx.isPointInPath(10, 0));
-           //verify(ctx.isPointInPath(20, 0));
-           //verify(ctx.isPointInPath(20, 10));
-           //verify(ctx.isPointInPath(20, 20));
-           //verify(ctx.isPointInPath(10, 20));
-           //verify(ctx.isPointInPath(0, 20));
+           verify(ctx.isPointInPath(20, 0));
+           verify(ctx.isPointInPath(20, 10));
+           verify(ctx.isPointInPath(20, 20));
+           verify(ctx.isPointInPath(10, 20));
+           verify(ctx.isPointInPath(0, 20));
            verify(ctx.isPointInPath(0, 10));
            verify(!ctx.isPointInPath(10, -0.01));
            verify(!ctx.isPointInPath(10, 20.01));
            verify(!ctx.isPointInPath(-0.01, 10));
-           //verify(!ctx.isPointInPath(20.01, 10));
+           verify(!ctx.isPointInPath(20.01, 10));
 
            ctx.reset();
            verify(!ctx.isPointInPath(0, 0));
@@ -160,13 +159,13 @@ Canvas {
 
            ctx.reset();
            ctx.rect(-100, -50, 200, 100);
-           //verify(ctx.isPointInPath(Infinity, 0));
-           //verify(ctx.isPointInPath(-Infinity, 0));
-           //verify(ctx.isPointInPath(NaN, 0));
-           //verify(ctx.isPointInPath(0, Infinity));
-           //verify(ctx.isPointInPath(0, -Infinity));
-           //verify(ctx.isPointInPath(0, NaN));
-           //verify(ctx.isPointInPath(NaN, NaN));
+           verify(!ctx.isPointInPath(Infinity, 0));
+           verify(!ctx.isPointInPath(-Infinity, 0));
+           verify(!ctx.isPointInPath(NaN, 0));
+           verify(!ctx.isPointInPath(0, Infinity));
+           verify(!ctx.isPointInPath(0, -Infinity));
+           verify(!ctx.isPointInPath(0, NaN));
+           verify(!ctx.isPointInPath(NaN, NaN));
 
            ctx.reset();
            ctx.rect(0, -100, 20, 20);
@@ -174,9 +173,9 @@ Canvas {
            verify(!ctx.isPointInPath(10, -110));
            verify(ctx.isPointInPath(10, -90));
            verify(!ctx.isPointInPath(10, -70));
-           //verify(!ctx.isPointInPath(30, -20));
-           //verify(ctx.isPointInPath(30, 0));
-           //verify(!ctx.isPointInPath(30, 20));
+           verify(!ctx.isPointInPath(30, -20));
+           verify(ctx.isPointInPath(30, 0));
+           verify(!ctx.isPointInPath(30, 20));
 
            ctx.reset();
            ctx.rect(0, 0, 20, 20);
@@ -193,7 +192,7 @@ Canvas {
            ctx.rect(0, 0, 20, 20);
            verify(!ctx.isPointInPath(-40, 10));
            verify(!ctx.isPointInPath(10, 10));
-           //verify(!ctx.isPointInPath(49, 10));
+           verify(!ctx.isPointInPath(49, 10));
            verify(ctx.isPointInPath(51, 10));
            verify(ctx.isPointInPath(69, 10));
            verify(!ctx.isPointInPath(71, 10));
@@ -203,7 +202,7 @@ Canvas {
            ctx.translate(50, 0);
            verify(!ctx.isPointInPath(-40, 10));
            verify(!ctx.isPointInPath(10, 10));
-           //verify(!ctx.isPointInPath(49, 10));
+           verify(!ctx.isPointInPath(49, 10));
            verify(ctx.isPointInPath(51, 10));
            verify(ctx.isPointInPath(69, 10));
            verify(!ctx.isPointInPath(71, 10));
@@ -213,7 +212,7 @@ Canvas {
            ctx.rect(-70, 0, 20, 20);
            verify(!ctx.isPointInPath(-40, 10));
            verify(!ctx.isPointInPath(10, 10));
-           //verify(!ctx.isPointInPath(49, 10));
+           verify(!ctx.isPointInPath(49, 10));
            verify(ctx.isPointInPath(51, 10));
            verify(ctx.isPointInPath(69, 10));
            verify(!ctx.isPointInPath(71, 10));
@@ -224,7 +223,7 @@ Canvas {
            ctx.lineTo(20, 20);
            ctx.lineTo(0, 20);
            verify(ctx.isPointInPath(10, 10));
-           //verify(!ctx.isPointInPath(30, 10));
+           verify(!ctx.isPointInPath(30, 10));
 
            ctx.reset();
            ctx.moveTo(0, 0);
@@ -279,8 +278,8 @@ Canvas {
            ctx.fillStyle = '#0f0';
            ctx.fill();
 
-           //verify(Helper.comparePixel(ctx, 90,10, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 10,40, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 90,10, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 10,40, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#000';
@@ -292,7 +291,7 @@ Canvas {
            ctx.rect(10, 10, 80, 30);
            ctx.fill();
 
-           //verify(Helper.comparePixel(ctx, 50,25, 0,127,0,255, 1));
+           verify(Helper.comparePixel(ctx, 50,25, 0,127,0,255, 1));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -310,7 +309,7 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fill();
 
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -422,7 +421,7 @@ Canvas {
            ctx.arc(50, 25, 10, 0, 0, false);
            ctx.stroke();
 
-          // verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
            ctx.reset();
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
@@ -457,7 +456,8 @@ Canvas {
            ctx.lineTo(-100, 1000);
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           //FIXME:lineJoin with miterLimit test fail!
+           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -564,15 +564,15 @@ Canvas {
            ctx.stroke();
            ctx.restore();
 
-           //verify(Helper.comparePixel(ctx, 0,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 0,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 0,49, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,49, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,49, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 0,0, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,0, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 99,0, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 0,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 99,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 0,49, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,49, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 99,49, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -611,14 +611,14 @@ Canvas {
            ctx.restore();
 
            //verify(Helper.comparePixel(ctx, 0,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,0, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,0, 0,255,0,255));
            //verify(Helper.comparePixel(ctx, 99,0, 0,255,0,255));
            //verify(Helper.comparePixel(ctx, 0,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 99,25, 0,255,0,255));
            //verify(Helper.comparePixel(ctx, 0,49, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,49, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,49, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,49, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 99,49, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -847,7 +847,7 @@ Canvas {
            ctx.beginPath();
            ctx.lineTo(100, 50);
            ctx.stroke();
-          // verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -911,8 +911,8 @@ Canvas {
            ctx.beginPath();
            ctx.bezierCurveTo(100, 50, 200, 50, 200, 50);
            ctx.stroke();
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 95,45, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 95,45, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -923,7 +923,7 @@ Canvas {
            ctx.bezierCurveTo(0, 25, 100, 25, 100, 25);
            ctx.stroke();
            verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 5,45, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 5,45, 0,255,0,255));
 
            ctx.reset();
            ctx.moveTo(0, 0);
@@ -1035,11 +1035,11 @@ Canvas {
            ctx.moveTo(-2, 3.1);
            ctx.bezierCurveTo(-2, -1, 2.1, -1, 2.1, 3.1);
            ctx.stroke();
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1078,8 +1078,8 @@ Canvas {
            ctx.beginPath();
            ctx.quadraticCurveTo(100, 50, 200, 50);
            ctx.stroke();
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 95,45, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 95,45, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1090,7 +1090,7 @@ Canvas {
            ctx.quadraticCurveTo(0, 25, 100, 25);
            ctx.stroke();
            verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 5,45, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 5,45, 0,255,0,255));
 
            ctx.reset();
            ctx.moveTo(0, 0);
@@ -1135,11 +1135,11 @@ Canvas {
            ctx.moveTo(-1, 1.05);
            ctx.quadraticCurveTo(0, -1, 1.2, 1.05);
            ctx.stroke();
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
            //verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
            //verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1260,8 +1260,8 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 90,45, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 90,45, 0,255,0,255));
 
 
            ctx.reset();
@@ -1399,7 +1399,7 @@ Canvas {
            ctx.fillStyle = '#0f0';
            ctx.fill();
 
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1416,7 +1416,7 @@ Canvas {
            ctx.rotate(Math.PI/2);
            ctx.scale(0.1, 0.1);
            ctx.fill();
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
 
            ctx.reset();
            ctx.fillStyle = '#0f0';

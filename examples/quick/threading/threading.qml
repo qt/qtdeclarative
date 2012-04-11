@@ -43,7 +43,7 @@ import "../../shared" as Examples
 
 /*!
     \title QtQuick Examples - Threading
-    \example qtquick/threading
+    \example quick/threading
     \brief This is a collection of QML Multithreading examples.
     \image qml-threading-example.png
 

@@ -3468,6 +3468,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         store.value = js.compiledIndex;
         store.context = js.bindingContext.stack;
         store.owner = js.bindingContext.owner;
+        store.isAlias = prop->isAlias;
         if (valueTypeProperty) {
             store.isRoot = (compileState->root == valueTypeProperty->parent);
         } else {
@@ -3488,30 +3489,29 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
     } else if (ref.dataType == BindingReference::QtScript) {
         const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
 
-        QQmlInstruction store;
-        store.assignBinding.value = output->indexForString(js.rewrittenExpression);
-        store.assignBinding.context = js.bindingContext.stack;
-        store.assignBinding.owner = js.bindingContext.owner;
-        store.assignBinding.line = binding->location.start.line;
-        store.assignBinding.column = binding->location.start.column;
+        Instruction::StoreBinding store;
+        store.value = output->indexForString(js.rewrittenExpression);
+        store.context = js.bindingContext.stack;
+        store.owner = js.bindingContext.owner;
+        store.line = binding->location.start.line;
+        store.column = binding->location.start.column;
+        store.isAlias = prop->isAlias;
 
         if (valueTypeProperty) {
-            store.assignBinding.isRoot = (compileState->root == valueTypeProperty->parent);
+            store.isRoot = (compileState->root == valueTypeProperty->parent);
         } else {
-            store.assignBinding.isRoot = (compileState->root == obj);
+            store.isRoot = (compileState->root == obj);
         }
 
         Q_ASSERT(js.bindingContext.owner == 0 ||
                  (js.bindingContext.owner != 0 && valueTypeProperty));
         if (js.bindingContext.owner) {
-            store.assignBinding.property = genValueTypeData(prop, valueTypeProperty);
+            store.property = genValueTypeData(prop, valueTypeProperty);
         } else {
-            store.assignBinding.property = prop->core;
+            store.property = prop->core;
         }
-        output->addInstructionHelper(
-            !prop->isAlias ? QQmlInstruction::StoreBinding
-                           : QQmlInstruction::StoreBindingOnAlias
-            , store);
+
+        output->addInstruction(store);
     } else {
         Q_ASSERT(!"Unhandled BindingReference::DataType type");
     }
@@ -3588,8 +3588,7 @@ bool QQmlCompiler::completeComponentBuild()
         bool isSharable = false;
         binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
 
-        if (isSharable && !binding.property->isAlias /* See above re alias */ &&
-            binding.property->type != qMetaTypeId<QQmlBinding*>()) {
+        if (isSharable && binding.property->type != qMetaTypeId<QQmlBinding*>()) {
             binding.dataType = BindingReference::V8;
             sharedBindings.append(b);
 

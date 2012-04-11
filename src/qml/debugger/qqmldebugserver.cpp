@@ -255,7 +255,7 @@ QQmlDebugServer *QQmlDebugServer::instance()
         commandLineTested = true;
 
         QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
-#ifndef QQML_NO_DEBUG_PROTOCOL
+#ifndef QT_QML_NO_DEBUGGER
         // ### remove port definition when protocol is changed
         int port = 0;
         bool block = false;
@@ -398,7 +398,6 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                 iter.value()->stateChanged(newState);
             }
 
-            qDebug("QML Debugger: Connection established.");
             d->messageArrivedCondition.wakeAll();
 
         } else if (op == 1) {
@@ -458,14 +457,14 @@ void QQmlDebugServerPrivate::_q_sendMessages(const QList<QByteArray> &messages)
 
 QList<QQmlDebugService*> QQmlDebugServer::services() const
 {
-    const Q_D(QQmlDebugServer);
+    Q_D(const QQmlDebugServer);
     QReadLocker(&d->pluginsLock);
     return d->plugins.values();
 }
 
 QStringList QQmlDebugServer::serviceNames() const
 {
-    const Q_D(QQmlDebugServer);
+    Q_D(const QQmlDebugServer);
     QReadLocker(&d->pluginsLock);
     return d->plugins.keys();
 }

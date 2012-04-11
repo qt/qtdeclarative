@@ -43,11 +43,12 @@ import QtQuick 2.0
 import "content"
 
 Rectangle {
+    id: root
     width: 320
     height: 480
 /*!
     \title QML Examples - Shader Effects
-    \example declarative/shadereffects
+    \example quick/shadereffects
     \image qml-shadereffects-example.png
     \brief This is a shader effects example
 
@@ -56,10 +57,10 @@ Rectangle {
 */
     property color col: "lightsteelblue"
     gradient: Gradient {
-        GradientStop { position: 0.0; color: Qt.tint(col, "#20FFFFFF") }
-        GradientStop { position: 0.1; color: Qt.tint(col, "#20AAAAAA") }
-        GradientStop { position: 0.9; color: Qt.tint(col, "#20666666") }
-        GradientStop { position: 1.0; color: Qt.tint(col, "#20000000") }
+        GradientStop { position: 0.0; color: Qt.tint(root.col, "#20FFFFFF") }
+        GradientStop { position: 0.1; color: Qt.tint(root.col, "#20AAAAAA") }
+        GradientStop { position: 0.9; color: Qt.tint(root.col, "#20666666") }
+        GradientStop { position: 1.0; color: Qt.tint(root.col, "#20000000") }
     }
 
     ShaderEffectSource {
@@ -241,7 +242,7 @@ Rectangle {
             width: 160
             height: 160
             property variant source: theSource
-            property color tint: sliderToColor(colorizeSlider.value)
+            property color tint: root.sliderToColor(colorizeSlider.value)
             fragmentShader: "
                 uniform sampler2D source;
                 uniform lowp vec4 tint;
