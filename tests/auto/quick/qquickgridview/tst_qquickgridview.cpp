@@ -89,8 +89,10 @@ private slots:
     void clear();
     void moved();
     void moved_data();
-    void multipleChanges();
-    void multipleChanges_data();
+    void multipleChanges_condensed() { multipleChanges(true); }
+    void multipleChanges_condensed_data() { multipleChanges_data(); }
+    void multipleChanges_uncondensed() { multipleChanges(false); }
+    void multipleChanges_uncondensed_data() { multipleChanges_data(); }
     void swapWithFirstItem();
     void changeFlow();
     void currentIndex();
@@ -153,6 +155,9 @@ private:
     void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
     void matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes);
     void matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems);
+
+    void multipleChanges(bool condensed);
+    void multipleChanges_data();
 
 #ifdef SHARE_VIEWS
     QQuickView *getView() {
@@ -1323,7 +1328,7 @@ void tst_QQuickGridView::moved_data()
             << -1.0;   // 16,17,18 move to above item 0, all items move up by 1 row
 }
 
-void tst_QQuickGridView::multipleChanges()
+void tst_QQuickGridView::multipleChanges(bool condensed)
 {
     QFETCH(int, startCount);
     QFETCH(QList<ListChange>, changes);
@@ -1361,26 +1366,26 @@ void tst_QQuickGridView::multipleChanges()
             }
             case ListChange::Removed:
                 model.removeItems(changes[i].index, changes[i].count);
-                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
                 break;
             case ListChange::Moved:
                 model.moveItems(changes[i].index, changes[i].to, changes[i].count);
-                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
                 break;
             case ListChange::SetCurrent:
                 gridview->setCurrentIndex(changes[i].index);
-                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
                 break;
             case ListChange::SetContentY:
                 gridview->setContentY(changes[i].pos);
-                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
                 break;
         }
+        if (condensed) {
+            QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        }
     }
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
-    QTRY_COMPARE(gridview->count(), newCount);
+    QCOMPARE(gridview->count(), newCount);
     QCOMPARE(gridview->count(), model.count());
-    QTRY_COMPARE(gridview->currentIndex(), newCurrentIndex);
+    QCOMPARE(gridview->currentIndex(), newCurrentIndex);
 
     QQuickText *name;
     QQuickText *number;
@@ -1549,6 +1554,28 @@ void tst_QQuickGridView::multipleChanges_data()
             << ListChange::remove(0, 5)
             << ListChange::insert(0, 5)
             ) << 5 << -1;
+
+    QTest::newRow("remove, scroll") << 30 << (QList<ListChange>()
+            << ListChange::remove(20, 5)
+            << ListChange::setContentY(20)
+            ) << 25 << 0;
+
+    QTest::newRow("insert, scroll") << 10 << (QList<ListChange>()
+            << ListChange::insert(9, 5)
+            << ListChange::setContentY(20)
+            ) << 15 << 0;
+
+    QTest::newRow("move, scroll") << 20 << (QList<ListChange>()
+            << ListChange::move(15, 8, 3)
+            << ListChange::setContentY(0)
+            ) << 20 << 0;
+
+    QTest::newRow("clear, insert, scroll") << 30 << (QList<ListChange>()
+            << ListChange::setContentY(20)
+            << ListChange::remove(0, 30)
+            << ListChange::insert(0, 2)
+            << ListChange::setContentY(0)
+            ) << 2 << 0;
 }
 
 

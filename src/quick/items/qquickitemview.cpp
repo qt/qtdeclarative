@@ -442,7 +442,7 @@ void QQuickItemView::setCacheBuffer(int b)
         d->buffer = b;
         if (isComponentComplete()) {
             d->bufferMode = QQuickItemViewPrivate::BufferBefore | QQuickItemViewPrivate::BufferAfter;
-            d->refill();
+            d->refillOrLayout();
         }
         emit cacheBufferChanged();
     }
@@ -1075,7 +1075,7 @@ void QQuickItemView::animStopped()
 {
     Q_D(QQuickItemView);
     d->bufferMode = QQuickItemViewPrivate::BufferBefore | QQuickItemViewPrivate::BufferAfter;
-    d->refill();
+    d->refillOrLayout();
     if (d->haveHighlightRange && d->highlightRange == QQuickItemView::StrictlyEnforceRange)
         d->updateHighlight();
 }
@@ -1777,7 +1777,7 @@ void QQuickItemViewPrivate::layout()
 bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult, ChangeResult *totalRemovalResult)
 {
     Q_Q(QQuickItemView);
-    if (!q->isComponentComplete() || (!currentChanges.hasPendingChanges() && !bufferedChanges.hasPendingChanges() && !runDelayedRemoveTransition) || disableLayout)
+    if (!q->isComponentComplete() || !hasPendingChanges() || disableLayout)
         return false;
 
     disableLayout = true;

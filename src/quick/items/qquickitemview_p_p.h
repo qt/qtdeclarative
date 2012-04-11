@@ -229,6 +229,19 @@ public:
             hData.markExtentsDirty();
     }
 
+    bool hasPendingChanges() const {
+        return currentChanges.hasPendingChanges()
+                || bufferedChanges.hasPendingChanges()
+                ||runDelayedRemoveTransition;
+    }
+
+    void refillOrLayout() {
+        if (hasPendingChanges())
+            layout();
+        else
+            refill();
+    }
+
     QQmlGuard<QQuickVisualModel> model;
     QVariant modelVariant;
     int itemCount;

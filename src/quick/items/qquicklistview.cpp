@@ -2557,7 +2557,7 @@ void QQuickListView::viewportMoved()
     else
         d->bufferMode = d->hData.smoothVelocity < 0 ? QQuickListViewPrivate::BufferBefore : QQuickListViewPrivate::BufferAfter;
 
-    d->refill();
+    d->refillOrLayout();
 
     // Set visibility of items to eliminate cost of items outside the visible area.
     qreal from = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();

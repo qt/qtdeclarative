@@ -105,8 +105,10 @@ private slots:
     void qAbstractItemModel_moved();
     void qAbstractItemModel_moved_data();
 
-    void multipleChanges();
-    void multipleChanges_data();
+    void multipleChanges_condensed() { multipleChanges(true); }
+    void multipleChanges_condensed_data() { multipleChanges_data(); }
+    void multipleChanges_uncondensed() { multipleChanges(false); }
+    void multipleChanges_uncondensed_data() { multipleChanges_data(); }
 
     void qListModelInterface_clear();
     void qListModelInterface_package_clear();
@@ -201,6 +203,9 @@ private:
     template <class T> void moved(const QUrl &source);
     template <class T> void clear(const QUrl &source);
     template <class T> void sections(const QUrl &source);
+
+    void multipleChanges(bool condensed);
+    void multipleChanges_data();
 
     QList<int> toIntList(const QVariantList &list);
     void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
@@ -1403,7 +1408,7 @@ void tst_QQuickListView::moved_data()
             << -20.0 * 3;   // to minimize movement, 16,17,18 move to above item 0, and other items do not move
 }
 
-void tst_QQuickListView::multipleChanges()
+void tst_QQuickListView::multipleChanges(bool condensed)
 {
     QFETCH(int, startCount);
     QFETCH(QList<ListChange>, changes);
@@ -1439,31 +1444,32 @@ void tst_QQuickListView::multipleChanges()
                 for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
                     items << qMakePair(QString("new item %1").arg(j), QString::number(j));
                 model.insertItems(changes[i].index, items);
-                QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
                 break;
             }
             case ListChange::Removed:
                 model.removeItems(changes[i].index, changes[i].count);
-                QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
                 break;
             case ListChange::Moved:
                 model.moveItems(changes[i].index, changes[i].to, changes[i].count);
-                QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
                 break;
             case ListChange::SetCurrent:
                 listview->setCurrentIndex(changes[i].index);
-                QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
                 break;
             case ListChange::SetContentY:
                 listview->setContentY(changes[i].pos);
-                QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
                 break;
+            default:
+                continue;
+        }
+        if (!condensed) {
+            QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
         }
     }
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
-    QTRY_COMPARE(listview->count(), newCount);
+    QCOMPARE(listview->count(), newCount);
     QCOMPARE(listview->count(), model.count());
-    QTRY_COMPARE(listview->currentIndex(), newCurrentIndex);
+    QCOMPARE(listview->currentIndex(), newCurrentIndex);
 
     QQuickText *name;
     QQuickText *number;
@@ -1626,13 +1632,34 @@ void tst_QQuickListView::multipleChanges_data()
             << ListChange::insert(3, 5)
             ) << 15 << 8;
 
-
     QTest::newRow("clear current") << 0 << (QList<ListChange>()
             << ListChange::insert(0, 5)
             << ListChange::setCurrent(-1)
             << ListChange::remove(0, 5)
             << ListChange::insert(0, 5)
             ) << 5 << -1;
+
+    QTest::newRow("remove, scroll") << 30 << (QList<ListChange>()
+            << ListChange::remove(20, 5)
+            << ListChange::setContentY(20)
+            ) << 25 << 0;
+
+    QTest::newRow("insert, scroll") << 10 << (QList<ListChange>()
+            << ListChange::insert(9, 5)
+            << ListChange::setContentY(20)
+            ) << 15 << 0;
+
+    QTest::newRow("move, scroll") << 20 << (QList<ListChange>()
+            << ListChange::move(15, 8, 3)
+            << ListChange::setContentY(0)
+            ) << 20 << 0;
+
+    QTest::newRow("clear, insert, scroll") << 30 << (QList<ListChange>()
+            << ListChange::setContentY(20)
+            << ListChange::remove(0, 30)
+            << ListChange::insert(0, 2)
+            << ListChange::setContentY(0)
+            ) << 2 << 0;
 }
 
 void tst_QQuickListView::swapWithFirstItem()
