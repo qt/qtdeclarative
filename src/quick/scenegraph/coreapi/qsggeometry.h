@@ -56,7 +56,7 @@ class Q_QUICK_EXPORT QSGGeometry
 {
 public:
 
-    struct Attribute
+    struct Q_QUICK_EXPORT Attribute
     {
         int position;
         int tupleSize;

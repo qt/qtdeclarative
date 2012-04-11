@@ -1,6 +1,7 @@
 %modules = ( # path to module name map
     "QtQml" => "$basedir/src/qml",
     "QtQuick" => "$basedir/src/quick",
+    "QtQuickParticles" => "$basedir/src/particles",
     "QtQuickTest" => "$basedir/src/qmltest",
     "QtQmlDevTools" => "$basedir/src/qmldevtools",
     "QtDeclarative" => "$basedir/src/compatibility",
@@ -18,10 +19,12 @@
     "network" => "#include <QtNetwork/QtNetwork>\n",
     "testlib" => "#include <QtTest/QtTest>\n",
     "qml" => "#include <QtQml/QtQml>\n",
+    "quick" => "#include <QtQuick/QtQuick>\n",
 );
 %modulepris = (
     "QtQml" => "$basedir/modules/qt_qml.pri",
     "QtQuick" => "$basedir/modules/qt_quick.pri",
+    "QtQuickParticles" => "$basedir/modules/qt_quickparticles.pri",
     "QtQuickTest" => "$basedir/modules/qt_qmltest.pri",
     "QtQmlDevTools" => "$basedir/modules/qt_qmldevtools.pri",
     "QtDeclarative" => "$basedir/modules/qt_declarative.pri",

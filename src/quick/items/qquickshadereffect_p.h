@@ -45,6 +45,7 @@
 #include <QtQuick/qquickitem.h>
 
 #include <QtQuick/qsgmaterial.h>
+#include <private/qtquickglobal_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qquickshadereffectnode_p.h>
 #include "qquickshadereffectmesh_p.h"
@@ -63,7 +64,7 @@ class QSignalMapper;
 class QQuickCustomMaterialShader;
 
 // Common class for QQuickShaderEffect and QQuickCustomParticle.
-struct QQuickShaderEffectCommon
+struct Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectCommon
 {
     typedef QQuickShaderEffectMaterialKey Key;
     typedef QQuickShaderEffectMaterial::UniformData UniformData;

@@ -5,7 +5,7 @@ include(../qimportbase.pri)
 SOURCES += \
     plugin.cpp
 
-QT += quick-private qml-private
+QT += quick-private quickparticles-private qml-private
 
 OTHER_FILES += \
     qmldir

@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 CONFIG += ordered
-SUBDIRS += qml quick plugins
+SUBDIRS += qml quick particles plugins
 
 contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
 

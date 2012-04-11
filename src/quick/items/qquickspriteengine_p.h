@@ -50,14 +50,15 @@
 #include <QQmlListProperty>
 #include <QImage>
 #include <QPair>
-#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <private/qquickpixmapcache_p.h>
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QQuickSprite;
-class Q_AUTOTEST_EXPORT QQuickStochasticState : public QObject //Currently for internal use only - Sprite and ParticleGroup
+class Q_QUICK_PRIVATE_EXPORT QQuickStochasticState : public QObject //Currently for internal use only - Sprite and ParticleGroup
 {
     Q_OBJECT
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
@@ -173,7 +174,7 @@ private:
     bool m_randomStart;
 };
 
-class Q_AUTOTEST_EXPORT QQuickStochasticEngine : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject
 {
     Q_OBJECT
     //TODO: Optimize single state case?
@@ -252,7 +253,7 @@ protected:
     bool m_addAdvance;
 };
 
-class QQuickSpriteEngine : public QQuickStochasticEngine
+class Q_QUICK_PRIVATE_EXPORT QQuickSpriteEngine : public QQuickStochasticEngine
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)

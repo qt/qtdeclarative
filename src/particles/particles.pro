@@ -1,14 +1,14 @@
 load(qt_module)
 
-TARGET = QtQuick
+TARGET = QtQuickParticles
 
 CONFIG += module
 CONFIG += dll warn_on
-MODULE_PRI = ../../modules/qt_quick.pri
+MODULE_PRI = ../../modules/qt_quickparticles.pri
 
-QT = core-private gui gui-private network v8-private qml qml-private
+QT = core-private gui-private v8-private qml-private quick-private
 
-DEFINES   += QT_BUILD_QUICK_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
+DEFINES   += QT_BUILD_QUICKPARTICLES_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 
@@ -17,19 +17,10 @@ exists("qqml_enable_gcov") {
     LIBS += -lgcov
 }
 
+MODULE = quickparticles
 load(qt_module_config)
 
-include(util/util.pri)
-include(scenegraph/scenegraph.pri)
-include(items/items.pri)
-include(designer/designer.pri)
-
-HEADERS += \
-    qtquickglobal.h \
-    qtquickglobal_p.h \
-    qtquick2_p.h
-
-SOURCES += qtquick2.cpp
+include(particles.pri)
 
 mac {
     # FIXME: this is a workaround for broken qmake logic in qtAddModule()
@@ -42,5 +33,8 @@ mac {
     LIBS -= -lQtQml        # in non-framework builds, these should be re-added
     LIBS -= -lQtQml_debug  # within the qtAddLibrary if appropriate, so no
     qtAddLibrary(QtQml)    # harm done :)
+    LIBS -= -lQtQuick
+    LIBS -= -lQtQuick_debug
+    qtAddLibrary(QtQuick)
 }
 

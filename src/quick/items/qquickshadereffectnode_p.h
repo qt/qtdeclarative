@@ -46,6 +46,7 @@
 #include <QtQuick/qsgmaterial.h>
 #include <QtQuick/qsgtextureprovider.h>
 #include <QtQuick/qquickitem.h>
+#include <private/qtquickglobal_p.h>
 
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qpointer.h>
@@ -73,7 +74,7 @@ uint qHash(const QQuickShaderEffectMaterialKey &key);
 
 class QQuickCustomMaterialShader;
 class QQuickShaderEffectNode;
-class QQuickShaderEffectMaterial : public QSGMaterial
+class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectMaterial : public QSGMaterial
 {
 public:
     struct UniformData
@@ -127,7 +128,7 @@ protected:
 
 class QSGShaderEffectMesh;
 
-class QQuickShaderEffectNode : public QObject, public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectNode : public QObject, public QSGGeometryNode
 {
     Q_OBJECT
 public:

@@ -28,7 +28,8 @@ HEADERS += \
     $$PWD/qquickv8particledata_p.h \
     $$PWD/qquickrectangleextruder_p.h \
     $$PWD/qquickparticlegroup_p.h \
-    $$PWD/qquickgroupgoal_p.h
+    $$PWD/qquickgroupgoal_p.h \
+    $$PWD/qtquickparticlesglobal_p.h
 
 SOURCES += \
     $$PWD/qquickangledirection.cpp \
