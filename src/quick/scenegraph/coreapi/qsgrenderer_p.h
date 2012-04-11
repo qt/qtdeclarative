@@ -108,7 +108,7 @@ public:
     qreal determinant() const { return m_current_determinant; }
 
     void setProjectionMatrixToDeviceRect();
-    void setProjectionMatrixToRect(const QRectF &rect);
+    virtual void setProjectionMatrixToRect(const QRectF &rect);
     void setProjectionMatrix(const QMatrix4x4 &matrix);
     QMatrix4x4 projectionMatrix() const { return m_projection_matrix; }
     bool isMirrored() const { return m_mirrored; }
