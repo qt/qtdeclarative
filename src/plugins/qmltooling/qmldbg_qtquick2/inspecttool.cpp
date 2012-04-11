@@ -83,6 +83,7 @@ InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     m_pressAndHoldTimer.setInterval(Constants::PressAndHoldTimeout);
     connect(&m_pressAndHoldTimer, SIGNAL(timeout()), SLOT(zoomTo100()));
     enable(true);
+    inspector->addToUnselectableItems(m_hoverHighlight);
 }
 
 InspectTool::~InspectTool()
@@ -128,16 +129,20 @@ void InspectTool::mouseReleaseEvent(QMouseEvent *event)
 {
     m_mousePosition = event->posF();
     m_pressAndHoldTimer.stop();
-    if (event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton && !m_dragStarted) {
         selectItem();
+        m_hoverHighlight->setVisible(false);
+    }
 }
 
 void InspectTool::mouseDoubleClickEvent(QMouseEvent *event)
 {
     m_mousePosition = event->posF();
     m_pressAndHoldTimer.stop();
-    if (event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton) {
         selectNextItem();
+        m_hoverHighlight->setVisible(false);
+    }
 }
 
 void InspectTool::mouseMoveEvent(QMouseEvent *event)
@@ -154,6 +159,10 @@ void InspectTool::hoverMoveEvent(QMouseEvent *event)
     if (!item || item == m_lastClickedItem) {
         m_hoverHighlight->setVisible(false);
     } else {
+        if (item->parentItem())
+            m_hoverHighlight->setParentItem(item->parentItem());
+        else
+            m_hoverHighlight->setParentItem(inspector()->overlay());
         m_hoverHighlight->setItem(item);
         m_hoverHighlight->setVisible(true);
     }

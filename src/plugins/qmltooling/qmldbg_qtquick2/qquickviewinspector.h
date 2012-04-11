@@ -84,6 +84,8 @@ public:
 
     QString titleForItem(QQuickItem *item) const;
 
+    void addToUnselectableItems(QQuickItem *item);
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
 
@@ -97,6 +99,7 @@ private:
 
     QQuickView *m_view;
     QQuickItem *m_overlay;
+    QList<QQuickItem *> m_unselectableItems;
 
     InspectTool *m_inspectTool;
 

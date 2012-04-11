@@ -58,10 +58,11 @@ namespace QtQuick2 {
 /*
  * Collects all the items at the given position, from top to bottom.
  */
-static void collectItemsAt(QQuickItem *item, const QPointF &pos, QQuickItem *overlay,
+static void collectItemsAt(QQuickItem *item, const QPointF &pos,
+                           const QList<QQuickItem *> &unselectableItems,
                            QList<QQuickItem *> &resultList)
 {
-    if (item == overlay)
+    if (unselectableItems.contains(item))
         return;
 
     if (item->flags() & QQuickItem::ItemClipsChildrenToShape) {
@@ -72,7 +73,7 @@ static void collectItemsAt(QQuickItem *item, const QPointF &pos, QQuickItem *ove
     QList<QQuickItem *> children = QQuickItemPrivate::get(item)->paintOrderChildItems();
     for (int i = children.count() - 1; i >= 0; --i) {
         QQuickItem *child = children.at(i);
-        collectItemsAt(child, item->mapToItem(child, pos), overlay, resultList);
+        collectItemsAt(child, item->mapToItem(child, pos), unselectableItems, resultList);
     }
 
     if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
@@ -85,9 +86,10 @@ static void collectItemsAt(QQuickItem *item, const QPointF &pos, QQuickItem *ove
  * Returns the first visible item at the given position, or 0 when no such
  * child exists.
  */
-static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos, QQuickItem *overlay)
+static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos,
+                          const QList<QQuickItem *> &unselectableItems)
 {
-    if (item == overlay)
+    if (unselectableItems.contains(item))
         return 0;
 
     if (!item->isVisible() || item->opacity() == 0.0)
@@ -101,7 +103,8 @@ static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos, QQuickItem *over
     QList<QQuickItem *> children = QQuickItemPrivate::get(item)->paintOrderChildItems();
     for (int i = children.count() - 1; i >= 0; --i) {
         QQuickItem *child = children.at(i);
-        if (QQuickItem *betterCandidate = itemAt(child, item->mapToItem(child, pos), overlay))
+        if (QQuickItem *betterCandidate = itemAt(child, item->mapToItem(child, pos),
+                                                 unselectableItems))
             return betterCandidate;
     }
 
@@ -128,6 +131,7 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
     if (QQuickItem *root = view->rootItem())
         m_overlay->setParentItem(root);
 
+    m_unselectableItems.append(m_overlay);
     view->installEventFilter(this);
     setCurrentTool(m_inspectTool);
 }
@@ -171,6 +175,8 @@ void QQuickViewInspector::changeTool(InspectorProtocol::Tool tool)
         setCurrentTool(m_inspectTool);
         emit inspectToolActivated();
         break;
+    default:
+        break;
     }
 }
 
@@ -206,14 +212,15 @@ QQmlEngine *QQuickViewInspector::declarativeEngine() const
 QQuickItem *QQuickViewInspector::topVisibleItemAt(const QPointF &pos) const
 {
     QQuickItem *root = m_view->rootItem();
-    return itemAt(root, root->mapFromScene(pos), m_overlay);
+    return itemAt(root, root->mapFromScene(pos), m_unselectableItems);
 }
 
 QList<QQuickItem *> QQuickViewInspector::itemsAt(const QPointF &pos) const
 {
     QQuickItem *root = m_view->rootItem();
     QList<QQuickItem *> resultList;
-    collectItemsAt(root, root->mapFromScene(pos), m_overlay, resultList);
+    collectItemsAt(root, root->mapFromScene(pos), m_unselectableItems,
+                   resultList);
     return resultList;
 }
 
@@ -253,6 +260,7 @@ bool QQuickViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
         selectionChanged = true;
         item.data()->disconnect(this);
         m_selectedItems.removeOne(item);
+        m_unselectableItems.removeOne(m_highlightItems.value(item.data()));
         delete m_highlightItems.take(item.data());
     }
 
@@ -264,7 +272,13 @@ bool QQuickViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
         selectionChanged = true;
         connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(removeFromSelectedItems(QObject*)));
         m_selectedItems.append(item);
-        m_highlightItems.insert(item, new SelectionHighlight(item, m_overlay));
+        SelectionHighlight *selectionHighlightItem;
+        if (item->parentItem())
+            selectionHighlightItem = new SelectionHighlight(item, item->parentItem());
+        else
+            selectionHighlightItem = new SelectionHighlight(item, m_overlay);
+        m_unselectableItems.append(selectionHighlightItem);
+        m_highlightItems.insert(item, selectionHighlightItem);
     }
 
     return selectionChanged;
@@ -273,8 +287,11 @@ bool QQuickViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
 void QQuickViewInspector::removeFromSelectedItems(QObject *object)
 {
     if (QQuickItem *item = qobject_cast<QQuickItem*>(object)) {
-        if (m_selectedItems.removeOne(item))
-            delete m_highlightItems.take(item);
+        if (m_selectedItems.removeOne(item)) {
+            QQuickItem *highlightItem = m_highlightItems.take(item);
+            m_unselectableItems.removeOne(highlightItem);
+            delete highlightItem;
+        }
     }
 }
 
@@ -318,6 +335,11 @@ QString QQuickViewInspector::titleForItem(QQuickItem *item) const
     }
 
     return constructedName;
+}
+
+void QQuickViewInspector::addToUnselectableItems(QQuickItem *item)
+{
+    m_unselectableItems.append(item);
 }
 
 } // namespace QtQuick2
