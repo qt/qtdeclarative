@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultRenderer : public QSGRenderer
+class Q_QUICK_EXPORT QSGDefaultRenderer : public QSGRenderer
 {
     Q_OBJECT
 public:
