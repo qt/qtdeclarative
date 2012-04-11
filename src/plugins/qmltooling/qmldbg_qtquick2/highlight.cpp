@@ -90,6 +90,14 @@ void HoverHighlight::paint(QPainter *painter)
 
 void SelectionHighlight::paint(QPainter *painter)
 {
+    if (height() >= 10 && width() >= 10) {
+        QColor colorHighlight = Qt::green;
+
+        painter->fillRect(QRectF(0, 0, width(), 5), colorHighlight);
+        painter->fillRect(QRectF(0, height()-5, width(), 5), colorHighlight);
+        painter->fillRect(QRectF(0, 5, 5, height() - 10), colorHighlight);
+        painter->fillRect(QRectF(width()-5, 5, 5, height() - 10), colorHighlight);
+    }
     painter->setPen(QPen(QColor(0, 22, 159)));
     painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
     painter->setPen(QColor(158, 199, 255));
