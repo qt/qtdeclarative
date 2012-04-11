@@ -370,6 +370,9 @@ QQmlDebugServer::~QQmlDebugServer()
 
 void QQmlDebugServer::receiveMessage(const QByteArray &message)
 {
+    // to be executed in debugger thread
+    Q_ASSERT(QThread::currentThread() == thread());
+
     Q_D(QQmlDebugServer);
 
     QDataStream in(message);
@@ -512,6 +515,10 @@ QStringList QQmlDebugServer::serviceNames() const
 bool QQmlDebugServer::addService(QQmlDebugService *service)
 {
     Q_D(QQmlDebugServer);
+
+    // to be executed in GUI thread
+    Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread());
+
     {
         QWriteLocker(&d->pluginsLock);
         if (!service || d->plugins.contains(service->name()))
@@ -532,6 +539,10 @@ bool QQmlDebugServer::addService(QQmlDebugService *service)
 bool QQmlDebugServer::removeService(QQmlDebugService *service)
 {
     Q_D(QQmlDebugServer);
+
+    // to be executed in GUI thread
+    Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread());
+
     {
         QWriteLocker(&d->pluginsLock);
         QQmlDebugService::State newState = QQmlDebugService::NotConnected;
@@ -568,6 +579,9 @@ void QQmlDebugServer::sendMessages(QQmlDebugService *service,
 
 bool QQmlDebugServer::waitForMessage(QQmlDebugService *service)
 {
+    // to be executed in GUI thread
+    Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread());
+
     Q_D(QQmlDebugServer);
     QReadLocker(&d->pluginsLock);
 
