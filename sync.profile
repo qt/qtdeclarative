@@ -8,16 +8,6 @@
 %moduleheaders = ( # restrict the module headers to those found in relative path
     "QtQmlDevTools" => "../qml/qml/parser",
 );
-%classnames = (
-    "qtqmlversion.h" => "QtQmlVersion",
-);
-%mastercontent = (
-    "gui" => "#include <QtGui/QtGui>\n",
-    "network" => "#include <QtNetwork/QtNetwork>\n",
-    "testlib" => "#include <QtTest/QtTest>\n",
-    "qml" => "#include <QtQml/QtQml>\n",
-    "quick" => "#include <QtQuick/QtQuick>\n",
-);
 %deprecatedheaders = (
     "QtQml" => {
         "QQmlImageProvider" => "QtQuick/QQuickImageProvider",

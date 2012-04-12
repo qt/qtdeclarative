@@ -1,13 +1,12 @@
-load(qt_module)
+load(qt_build_config)
 
 TARGET = QtQuickParticles
 
-CONFIG += module
 CONFIG += dll warn_on
 
 QT = core-private gui-private qml-private quick-private
 
-DEFINES   += QT_BUILD_QUICKPARTICLES_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
+DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 

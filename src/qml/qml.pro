@@ -1,19 +1,13 @@
-load(qt_module)
+load(qt_build_config)
 
 TARGET     = QtQml
-QPRO_PWD   = $$PWD
-
-CONFIG += module
-
 QT = core-private network
 
-DEFINES   += QT_BUILD_QML_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
+DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
 win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
-
-unix|win32-g++*:QMAKE_PKGCONFIG_REQUIRES = QtCore QtGui
 
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
@@ -26,12 +20,8 @@ load(qt_module_config)
 # private dependencies
 QT += v8-private
 
-HEADERS += qtqmlversion.h \
-           qtqmlglobal.h \
+HEADERS += qtqmlglobal.h \
            qtqmlglobal_p.h
-
-#INCLUDEPATH -= $$QMAKE_INCDIR_QT/$$TARGET
-#DESTDIR=.
 
 #modules
 include(util/util.pri)
