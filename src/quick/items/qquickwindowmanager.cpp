@@ -404,7 +404,7 @@ void QQuickRenderThreadSingleContextWindowManager::handleAddedWindow(QQuickCanva
     CanvasData *data = new CanvasData;
     data->sizeWasChanged = false;
     data->windowSize = canvas->size();
-    data->isVisible = canvas->visible();
+    data->isVisible = canvas->isVisible();
     m_rendered_windows[canvas] = data;
 
     isExternalUpdatePending = true;
@@ -516,7 +516,7 @@ void QQuickRenderThreadSingleContextWindowManager::canvasVisibilityChanged()
         CanvasTracker &t = const_cast<CanvasTracker &>(m_tracked_windows.at(i));
         QQuickCanvas *win = t.canvas;
 
-        Q_ASSERT(win->visible() || QQuickCanvasPrivate::get(win)->renderWithoutShowing || t.toBeRemoved);
+        Q_ASSERT(win->isVisible() || QQuickCanvasPrivate::get(win)->renderWithoutShowing || t.toBeRemoved);
         bool canvasVisible = win->width() > 0 && win->height() > 0;
         anyoneShowing |= (canvasVisible && !t.toBeRemoved);
 
@@ -1173,11 +1173,11 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
     CanvasData &data = const_cast<CanvasData &>(m_windows[canvas]);
 
     QQuickCanvas *masterCanvas = 0;
-    if (!canvas->visible()) {
+    if (!canvas->isVisible()) {
         // Find a "proper surface" to bind...
         for (QHash<QQuickCanvas *, CanvasData>::const_iterator it = m_windows.constBegin();
              it != m_windows.constEnd() && !masterCanvas; ++it) {
-            if (it.key()->visible())
+            if (it.key()->isVisible())
                 masterCanvas = it.key();
         }
     } else {
@@ -1211,7 +1211,7 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
         data.grabOnly = false;
     }
 
-    if (alsoSwap && canvas->visible()) {
+    if (alsoSwap && canvas->isVisible()) {
         gl->swapBuffers(canvas);
         cd->fireFrameSwapped();
     }
