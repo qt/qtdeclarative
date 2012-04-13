@@ -380,14 +380,8 @@ public:
         m_passwordEchoTimer.stop();
     }
 
-    Qt::LayoutDirection layoutDirection() const {
-        if (m_layoutDirection == Qt::LayoutDirectionAuto) {
-            if (m_text.isEmpty())
-                return qApp->inputMethod()->inputDirection();
-            return m_text.isRightToLeft() ? Qt::RightToLeft : Qt::LeftToRight;
-        }
-        return m_layoutDirection;
-    }
+    Qt::LayoutDirection textDirection() const;
+    Qt::LayoutDirection layoutDirection() const;
     void setLayoutDirection(Qt::LayoutDirection direction)
     {
         if (direction != m_layoutDirection) {

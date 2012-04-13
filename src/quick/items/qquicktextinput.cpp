@@ -467,16 +467,48 @@ bool QQuickTextInputPrivate::setHAlign(QQuickTextInput::HAlignment alignment, bo
     return false;
 }
 
+Qt::LayoutDirection QQuickTextInputPrivate::textDirection() const
+{
+    QString text = m_text;
+    if (text.isEmpty())
+        text = m_textLayout.preeditAreaText();
+
+    const QChar *character = text.constData();
+    while (!character->isNull()) {
+        switch (character->direction()) {
+        case QChar::DirL:
+            return Qt::LeftToRight;
+        case QChar::DirR:
+        case QChar::DirAL:
+        case QChar::DirAN:
+            return Qt::RightToLeft;
+        default:
+            break;
+        }
+        character++;
+    }
+    return Qt::LayoutDirectionAuto;
+}
+
+Qt::LayoutDirection QQuickTextInputPrivate::layoutDirection() const
+{
+    Qt::LayoutDirection direction = m_layoutDirection;
+    if (direction == Qt::LayoutDirectionAuto) {
+        direction = textDirection();
+        if (direction == Qt::LayoutDirectionAuto)
+            direction = qApp->inputMethod()->inputDirection();
+    }
+    return (direction == Qt::LayoutDirectionAuto) ? Qt::LeftToRight : direction;
+}
+
 bool QQuickTextInputPrivate::determineHorizontalAlignment()
 {
     if (hAlignImplicit) {
         // if no explicit alignment has been set, follow the natural layout direction of the text
-        QString text = q_func()->text();
-        if (text.isEmpty())
-            text = m_textLayout.preeditAreaText();
-        bool isRightToLeft = text.isEmpty() ? qApp->inputMethod()->inputDirection() == Qt::RightToLeft
-                                            : text.isRightToLeft();
-        return setHAlign(isRightToLeft ? QQuickTextInput::AlignRight : QQuickTextInput::AlignLeft);
+        Qt::LayoutDirection direction = textDirection();
+        if (direction == Qt::LayoutDirectionAuto)
+            direction = qApp->inputMethod()->inputDirection();
+        return setHAlign(direction == Qt::RightToLeft ? QQuickTextInput::AlignRight : QQuickTextInput::AlignLeft);
     }
     return false;
 }

@@ -1432,6 +1432,15 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(textInput->boundingRect().right() >= textInput->width() - 1);
     QVERIFY(textInput->boundingRect().right() <= textInput->width() + 1);
+
+    // neutral text should fall back to input direction
+    textInput->setFocus(true);
+    textInput->resetHAlign();
+    textInput->setText(" ()((=<>");
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignLeft);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignRight);
 }
 
 void tst_qquicktextinput::verticalAlignment()
