@@ -43,7 +43,9 @@
 #define HIGHLIGHT_H
 
 #include <QtCore/QWeakPointer>
+#include <QtGui/QTransform>
 #include <QtQuick/QQuickPaintedItem>
+
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {
@@ -57,12 +59,17 @@ public:
     Highlight(QQuickItem *item, QQuickItem *parent);
 
     void setItem(QQuickItem *item);
+    QQuickItem *item() {return m_item.data();}
+
+protected:
+    QTransform transform() {return m_transform;}
 
 private slots:
     void adjust();
 
 private:
     QWeakPointer<QQuickItem> m_item;
+    QTransform m_transform;
 };
 
 /**

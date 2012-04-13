@@ -42,6 +42,7 @@
 #include "highlight.h"
 
 #include <QtGui/QPainter>
+#include <QtQuick/QQuickCanvas>
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {
@@ -66,7 +67,17 @@ void Highlight::setItem(QQuickItem *item)
         connect(item, SIGNAL(transformOriginChanged(TransformOrigin)),
                 SLOT(adjust()));
     }
-
+    QQuickCanvas *view = item->canvas();
+    QQuickItem * rootItem = view->rootItem();
+    if (rootItem) {
+        connect(rootItem, SIGNAL(xChanged()), SLOT(adjust()));
+        connect(rootItem, SIGNAL(yChanged()), SLOT(adjust()));
+        connect(rootItem, SIGNAL(widthChanged()), SLOT(adjust()));
+        connect(rootItem, SIGNAL(heightChanged()), SLOT(adjust()));
+        connect(rootItem, SIGNAL(rotationChanged()), SLOT(adjust()));
+        connect(rootItem, SIGNAL(transformOriginChanged(TransformOrigin)),
+                SLOT(adjust()));
+    }
     m_item = item;
     adjust();
 }
@@ -74,34 +85,64 @@ void Highlight::setItem(QQuickItem *item)
 void Highlight::adjust()
 {
     const QQuickItem *item = m_item.data();
+    if (!item)
+        return;
+
+    bool success = false;
+    m_transform = item->itemTransform(0, &success);
+    if (!success)
+        m_transform = QTransform();
+
     setSize(QSizeF(item->width(), item->height()));
-    setPos(parentItem()->mapFromItem(item->parentItem(), item->pos()));
-    setRotation(item->rotation());
-    setTransformOrigin(item->transformOrigin());
+    qreal scaleFactor = 1;
+    QPointF originOffset = QPointF(0,0);
+    QQuickCanvas *view = item->canvas();
+    if (view->rootItem()) {
+        scaleFactor = view->rootItem()->scale();
+        originOffset -= view->rootItem()->pos();
+    }
+    // The scale transform for the overlay needs to be cancelled
+    // as the Item's transform which will be applied to the painter
+    // takes care of it.
+    parentItem()->setScale(1/scaleFactor);
+    setPos(originOffset);
+    setContentsSize(view->size());
+    update();
 }
 
 
 void HoverHighlight::paint(QPainter *painter)
 {
+    if (!item())
+        return;
+
+    painter->save();
+    painter->setTransform(transform());
     painter->setPen(QColor(108, 141, 221));
-    painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+    painter->drawRect(QRect(0, 0, item()->width() - 1, item()->height() - 1));
+    painter->restore();
 }
 
 
 void SelectionHighlight::paint(QPainter *painter)
 {
-    if (height() >= 10 && width() >= 10) {
-        QColor colorHighlight = Qt::green;
+    if (!item())
+        return;
 
-        painter->fillRect(QRectF(0, 0, width(), 5), colorHighlight);
-        painter->fillRect(QRectF(0, height()-5, width(), 5), colorHighlight);
-        painter->fillRect(QRectF(0, 5, 5, height() - 10), colorHighlight);
-        painter->fillRect(QRectF(width()-5, 5, 5, height() - 10), colorHighlight);
+    painter->save();
+    painter->setTransform(transform());
+    if (item()->height() >= 10 && item()->width() >= 10) {
+        QColor colorHighlight = Qt::green;
+        painter->fillRect(QRectF(0, 0, item()->width(), 5), colorHighlight);
+        painter->fillRect(QRectF(0, item()->height()-5, item()->width(), 5), colorHighlight);
+        painter->fillRect(QRectF(0, 5, 5, item()->height() - 10), colorHighlight);
+        painter->fillRect(QRectF(item()->width()-5, 5, 5, item()->height() - 10), colorHighlight);
     }
     painter->setPen(QPen(QColor(0, 22, 159)));
-    painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
+    painter->drawRect(QRect(1, 1, item()->width() - 3, item()->height() - 3));
     painter->setPen(QColor(158, 199, 255));
-    painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+    painter->drawRect(QRect(0, 0, item()->width() - 1, item()->height() - 1));
+    painter->restore();
 }
 
 } // namespace QtQuick2
