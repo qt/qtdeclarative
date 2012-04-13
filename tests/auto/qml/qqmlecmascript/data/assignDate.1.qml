@@ -3,9 +3,9 @@ import QtQuick 2.0
 
 MyTypeObject {
     Component.onCompleted: {
-        var dateVar = new Date("2009-05-12")
-        var dateTimeVar = new Date("2009-05-12T00:00:01")
-        var dateTimeVar2 = new Date("2009-05-12T23:59:59")
+        var dateVar = new Date(Date.UTC(2009, 4, 12))
+        var dateTimeVar = new Date(Date.UTC(2009, 4, 12, 0, 0, 1))
+        var dateTimeVar2 = new Date(Date.UTC(2009, 4, 12, 23, 59, 59))
 
         dateProperty = dateVar
         dateTimeProperty = dateTimeVar

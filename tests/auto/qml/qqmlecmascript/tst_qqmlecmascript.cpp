@@ -332,7 +332,9 @@ void tst_qqmlecmascript::assignBasicTypes()
 void tst_qqmlecmascript::assignDate_data()
 {
     QTest::addColumn<QUrl>("source");
-    QTest::newRow("Component.onComplete JS") << testFileUrl("assignDate.qml");
+
+    QTest::newRow("Component.onComplete JS Parse") << testFileUrl("assignDate.qml");
+    QTest::newRow("Component.onComplete JS") << testFileUrl("assignDate.1.qml");
     QTest::newRow("Binding JS") << testFileUrl("assignDate.2.qml");
     QTest::newRow("Binding UTC") << testFileUrl("assignDate.3.qml");
     QTest::newRow("Binding JS UTC") << testFileUrl("assignDate.4.qml");
@@ -343,12 +345,21 @@ void tst_qqmlecmascript::assignDate_data()
 void tst_qqmlecmascript::assignDate()
 {
     QFETCH(QUrl, source);
+
     QQmlComponent component(&engine, source);
     QScopedPointer<QObject> obj(component.create());
     MyTypeObject *object = qobject_cast<MyTypeObject *>(obj.data());
     QVERIFY(object != 0);
-    QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
-    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
+
+    // Dates received from JS are automatically converted to local time
+    QDate expectedDate(QDateTime(QDate(2009, 5, 12), QTime(0, 0, 0), Qt::UTC).toLocalTime().date());
+    QDateTime expectedDateTime(QDateTime(QDate(2009, 5, 12), QTime(0, 0, 1), Qt::UTC).toLocalTime());
+    QDateTime expectedDateTime2(QDateTime(QDate(2009, 5, 12), QTime(23, 59, 59), Qt::UTC).toLocalTime());
+
+    QCOMPARE(object->dateProperty(), expectedDate);
+    QCOMPARE(object->dateTimeProperty(), expectedDateTime);
+    QCOMPARE(object->dateTimeProperty2(), expectedDateTime2);
+    QCOMPARE(object->boolProperty(), true);
 }
 
 void tst_qqmlecmascript::idShortcutInvalidates()

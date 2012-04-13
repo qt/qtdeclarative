@@ -360,6 +360,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QDate dateProperty READ dateProperty WRITE setDateProperty)
     Q_PROPERTY(QTime timeProperty READ timeProperty WRITE setTimeProperty)
     Q_PROPERTY(QDateTime dateTimeProperty READ dateTimeProperty WRITE setDateTimeProperty)
+    Q_PROPERTY(QDateTime dateTimeProperty2 READ dateTimeProperty2 WRITE setDateTimeProperty2)
     Q_PROPERTY(QPoint pointProperty READ pointProperty WRITE setPointProperty)
     Q_PROPERTY(QPointF pointFProperty READ pointFProperty WRITE setPointFProperty)
     Q_PROPERTY(QSize sizeProperty READ sizeProperty WRITE setSizeProperty)
@@ -499,6 +500,14 @@ public:
     }
     void setDateTimeProperty(const QDateTime &v) {
         dateTimePropertyValue = v;
+    }
+
+    QDateTime dateTimePropertyValue2;
+    QDateTime dateTimeProperty2() const {
+       return dateTimePropertyValue2;
+    }
+    void setDateTimeProperty2(const QDateTime &v) {
+        dateTimePropertyValue2 = v;
     }
 
     QPoint pointPropertyValue;
