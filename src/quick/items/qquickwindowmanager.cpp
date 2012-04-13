@@ -1121,7 +1121,7 @@ void QQuickRenderThreadSingleContextWindowManager::wakeup()
 {
     lockInGui();
     isExternalUpdatePending = true;
-    if (isRenderBlocked || isPostingSyncEvent)
+    if (isRenderBlocked)
         wake();
     unlockInGui();
 }
