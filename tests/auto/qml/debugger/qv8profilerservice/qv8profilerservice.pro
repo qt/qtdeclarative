@@ -13,3 +13,5 @@ OTHER_FILES += data/test.qml
 CONFIG += parallel_test declarative_debug
 
 QT += qml testlib
+
+macx:CONFIG += insignificant_test   # QTBUG-25288
