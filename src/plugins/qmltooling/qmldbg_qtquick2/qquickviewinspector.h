@@ -44,7 +44,7 @@
 
 #include "abstractviewinspector.h"
 
-#include <QtCore/QWeakPointer>
+#include <QtCore/QPointer>
 #include <QtCore/QHash>
 
 QT_BEGIN_NAMESPACE
@@ -100,7 +100,7 @@ private:
 
     InspectTool *m_inspectTool;
 
-    QList<QWeakPointer<QQuickItem> > m_selectedItems;
+    QList<QPointer<QQuickItem> > m_selectedItems;
     QHash<QQuickItem*, SelectionHighlight*> m_highlightItems;
 
     bool m_designMode;

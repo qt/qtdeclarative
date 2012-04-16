@@ -56,7 +56,7 @@ Highlight::Highlight(QQuickItem *item, QQuickItem *parent)
 void Highlight::setItem(QQuickItem *item)
 {
     if (m_item)
-        m_item.data()->disconnect(this);
+        m_item->disconnect(this);
 
     if (item) {
         connect(item, SIGNAL(xChanged()), SLOT(adjust()));
@@ -84,19 +84,18 @@ void Highlight::setItem(QQuickItem *item)
 
 void Highlight::adjust()
 {
-    const QQuickItem *item = m_item.data();
-    if (!item)
+    if (!m_item)
         return;
 
     bool success = false;
-    m_transform = item->itemTransform(0, &success);
+    m_transform = m_item->itemTransform(0, &success);
     if (!success)
         m_transform = QTransform();
 
-    setSize(QSizeF(item->width(), item->height()));
+    setSize(QSizeF(m_item->width(), m_item->height()));
     qreal scaleFactor = 1;
     QPointF originOffset = QPointF(0,0);
-    QQuickCanvas *view = item->canvas();
+    QQuickCanvas *view = m_item->canvas();
     if (view->rootItem()) {
         scaleFactor = view->rootItem()->scale();
         originOffset -= view->rootItem()->pos();

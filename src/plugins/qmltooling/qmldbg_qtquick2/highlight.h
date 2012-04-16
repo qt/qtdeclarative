@@ -42,7 +42,7 @@
 #ifndef HIGHLIGHT_H
 #define HIGHLIGHT_H
 
-#include <QtCore/QWeakPointer>
+#include <QtCore/QPointer>
 #include <QtGui/QTransform>
 #include <QtQuick/QQuickPaintedItem>
 
@@ -59,7 +59,7 @@ public:
     Highlight(QQuickItem *item, QQuickItem *parent);
 
     void setItem(QQuickItem *item);
-    QQuickItem *item() {return m_item.data();}
+    QQuickItem *item() {return m_item;}
 
 protected:
     QTransform transform() {return m_transform;}
@@ -68,7 +68,7 @@ private slots:
     void adjust();
 
 private:
-    QWeakPointer<QQuickItem> m_item;
+    QPointer<QQuickItem> m_item;
     QTransform m_transform;
 };
 

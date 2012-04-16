@@ -225,9 +225,9 @@ QList<QQuickItem *> QQuickViewInspector::itemsAt(const QPointF &pos) const
 QList<QQuickItem*> QQuickViewInspector::selectedItems() const
 {
     QList<QQuickItem *> selection;
-    foreach (const QWeakPointer<QQuickItem> &selectedItem, m_selectedItems) {
+    foreach (const QPointer<QQuickItem> &selectedItem, m_selectedItems) {
         if (selectedItem)
-            selection << selectedItem.data();
+            selection << selectedItem;
     }
     return selection;
 }
@@ -249,16 +249,16 @@ bool QQuickViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
     bool selectionChanged = false;
 
     // Disconnect and remove items that are no longer selected
-    foreach (const QWeakPointer<QQuickItem> &item, m_selectedItems) {
+    foreach (const QPointer<QQuickItem> &item, m_selectedItems) {
         if (!item) // Don't see how this can happen due to handling of destroyed()
             continue;
-        if (items.contains(item.data()))
+        if (items.contains(item))
             continue;
 
         selectionChanged = true;
-        item.data()->disconnect(this);
+        item->disconnect(this);
         m_selectedItems.removeOne(item);
-        delete m_highlightItems.take(item.data());
+        delete m_highlightItems.take(item);
     }
 
     // Connect and add newly selected items
