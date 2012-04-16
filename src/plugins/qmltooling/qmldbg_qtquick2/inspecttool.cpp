@@ -68,7 +68,6 @@ InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     m_tapEvent(false),
     m_rootItem(view->rootItem()),
     m_originalPosition(view->rootItem()->pos()),
-    m_currentScale(1.0f),
     m_smoothScaleFactor(Constants::ZoomSnapDelta),
     m_minScale(0.125f),
     m_maxScale(48.0f),
@@ -171,8 +170,8 @@ void InspectTool::wheelEvent(QWheelEvent *event)
     Qt::KeyboardModifier smoothZoomModifier = Qt::ControlModifier;
     if (event->modifiers() & smoothZoomModifier) {
         int numDegrees = event->delta() / 8;
-        qreal newScale = m_currentScale + m_smoothScaleFactor * (numDegrees / 15.0f);
-        scaleView(newScale / m_currentScale, m_mousePosition, m_mousePosition);
+        qreal newScale = m_rootItem->scale() + m_smoothScaleFactor * (numDegrees / 15.0f);
+        scaleView(newScale / m_rootItem->scale(), m_mousePosition, m_mousePosition);
     } else if (!event->modifiers()) {
         if (event->delta() > 0) {
             zoomIn();
@@ -201,7 +200,7 @@ void InspectTool::keyReleaseEvent(QKeyEvent *event)
     case Qt::Key_8:
     case Qt::Key_9: {
         qreal newScale = ((event->key() - Qt::Key_0) * 1.0f);
-        scaleView(newScale / m_currentScale, m_mousePosition, m_mousePosition);
+        scaleView(newScale / m_rootItem->scale(), m_mousePosition, m_mousePosition);
         break;
     }
     default:
@@ -277,38 +276,34 @@ void InspectTool::touchEvent(QTouchEvent *event)
 void InspectTool::scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter)
 {
     m_pressAndHoldTimer.stop();
-    if (((m_currentScale * factor) > m_maxScale)
-            || ((m_currentScale * factor) < m_minScale)) {
+    if (((m_rootItem->scale() * factor) > m_maxScale)
+            || ((m_rootItem->scale() * factor) < m_minScale)) {
         return;
     }
     //New position = new center + scalefactor * (oldposition - oldcenter)
-    m_adjustedOrigin = newcenter + (factor * (m_adjustedOrigin - oldcenter));
-    m_currentScale *= factor;
-
-    m_rootItem->setScale(m_currentScale);
-    m_rootItem->setPos(m_adjustedOrigin);
+    QPointF newPosition = newcenter + (factor * (m_rootItem->pos() - oldcenter));
+    m_rootItem->setScale(m_rootItem->scale() * factor);
+    m_rootItem->setPos(newPosition);
 }
 
 void InspectTool::zoomIn()
 {
     qreal newScale = nextZoomScale(ZoomIn);
-    scaleView(newScale / m_currentScale, m_mousePosition, m_mousePosition);
+    scaleView(newScale / m_rootItem->scale(), m_mousePosition, m_mousePosition);
 }
 
 void InspectTool::zoomOut()
 {
     qreal newScale = nextZoomScale(ZoomOut);
-    scaleView(newScale / m_currentScale, m_mousePosition, m_mousePosition);
+    scaleView(newScale / m_rootItem->scale(), m_mousePosition, m_mousePosition);
 }
 
 void InspectTool::zoomTo100()
 {
     m_didPressAndHold = true;
-    m_currentScale = 1.0;
-    m_adjustedOrigin = QPointF(0, 0);
 
-    m_rootItem->setPos(m_adjustedOrigin);
-    m_rootItem->setScale(m_currentScale);
+    m_rootItem->setPos(QPointF(0, 0));
+    m_rootItem->setScale(1.0);
 }
 
 qreal InspectTool::nextZoomScale(ZoomDirection direction)
@@ -336,13 +331,13 @@ qreal InspectTool::nextZoomScale(ZoomDirection direction)
 
     if (direction == ZoomIn) {
         for (int i = 0; i < zoomScales.length(); ++i) {
-            if (zoomScales[i] > m_currentScale)
+            if (zoomScales[i] > m_rootItem->scale())
                 return zoomScales[i];
         }
         return zoomScales.last();
     } else {
         for (int i = zoomScales.length() - 1; i >= 0; --i) {
-            if (zoomScales[i] < m_currentScale)
+            if (zoomScales[i] < m_rootItem->scale())
                 return zoomScales[i];
         }
         return zoomScales.first();
@@ -359,9 +354,9 @@ void InspectTool::initializeDrag(const QPointF &pos)
 
 void InspectTool::dragItemToPosition()
 {
-    m_adjustedOrigin += m_mousePosition - m_dragStartPosition;
+    QPointF newPosition = m_rootItem->pos() + m_mousePosition - m_dragStartPosition;
     m_dragStartPosition = m_mousePosition;
-    m_rootItem->setPos(m_adjustedOrigin);
+    m_rootItem->setPos(newPosition);
 }
 
 void InspectTool::moveItem(bool valid)

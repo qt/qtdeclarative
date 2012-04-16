@@ -108,11 +108,9 @@ private:
     bool m_didPressAndHold;
     bool m_tapEvent;
     QPointer<QQuickItem> m_rootItem;
-    QPointF m_adjustedOrigin;
     QPointF m_dragStartPosition;
     QPointF m_mousePosition;
     QPointF m_originalPosition;
-    qreal m_currentScale;
     qreal m_smoothScaleFactor;
     qreal m_minScale;
     qreal m_maxScale;
