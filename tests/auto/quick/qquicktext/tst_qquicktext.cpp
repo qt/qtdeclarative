@@ -137,6 +137,9 @@ private slots:
     void baselineOffset_data();
     void baselineOffset();
 
+    void htmlLists();
+    void htmlLists_data();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -1198,80 +1201,41 @@ void tst_qquicktext::weight()
 
 void tst_qquicktext::underline()
 {
-    {
-        QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
-        QQmlComponent textComponent(&engine);
-        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-
-        QVERIFY(textObject != 0);
-        QCOMPARE(textObject->font().underline(), false);
-
-        delete textObject;
-    }
-    {
-        QString componentStr = "import QtQuick 2.0\nText { font.underline: true; text: \"Hello world!\" }";
-        QQmlComponent textComponent(&engine);
-        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-
-        QVERIFY(textObject != 0);
-        QCOMPARE(textObject->font().underline(), true);
-
-        delete textObject;
-    }
+    QQuickView view(testFileUrl("underline.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+    QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(textObject != 0);
+    QCOMPARE(textObject->font().overline(), false);
+    QCOMPARE(textObject->font().underline(), true);
+    QCOMPARE(textObject->font().strikeOut(), false);
 }
 
 void tst_qquicktext::overline()
 {
-    {
-        QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
-        QQmlComponent textComponent(&engine);
-        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-
-        QVERIFY(textObject != 0);
-        QCOMPARE(textObject->font().overline(), false);
-
-        delete textObject;
-    }
-    {
-        QString componentStr = "import QtQuick 2.0\nText { font.overline: true; text: \"Hello world!\" }";
-        QQmlComponent textComponent(&engine);
-        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-
-        QVERIFY(textObject != 0);
-        QCOMPARE(textObject->font().overline(), true);
-
-        delete textObject;
-    }
+    QQuickView view(testFileUrl("overline.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+    QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(textObject != 0);
+    QCOMPARE(textObject->font().overline(), true);
+    QCOMPARE(textObject->font().underline(), false);
+    QCOMPARE(textObject->font().strikeOut(), false);
 }
 
 void tst_qquicktext::strikeout()
 {
-    {
-        QString componentStr = "import QtQuick 2.0\nText { text: \"Hello world!\" }";
-        QQmlComponent textComponent(&engine);
-        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-
-        QVERIFY(textObject != 0);
-        QCOMPARE(textObject->font().strikeOut(), false);
-
-        delete textObject;
-    }
-    {
-        QString componentStr = "import QtQuick 2.0\nText { font.strikeout: true; text: \"Hello world!\" }";
-        QQmlComponent textComponent(&engine);
-        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-
-        QVERIFY(textObject != 0);
-        QCOMPARE(textObject->font().strikeOut(), true);
-
-        delete textObject;
-    }
+    QQuickView view(testFileUrl("strikeout.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+    QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(textObject != 0);
+    QCOMPARE(textObject->font().overline(), false);
+    QCOMPARE(textObject->font().underline(), false);
+    QCOMPARE(textObject->font().strikeOut(), true);
 }
 
 void tst_qquicktext::capitalization()
@@ -1520,11 +1484,13 @@ void tst_qquicktext::embeddedImages()
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
 
-    QQmlComponent textComponent(&engine, qmlfile);
-    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+    QQuickView *view = new QQuickView(qmlfile);
+    view->show();
+    view->requestActivateWindow();
+    QTest::qWaitForWindowShown(view);
+    QQuickText *textObject = qobject_cast<QQuickText*>(view->rootObject());
 
     QVERIFY(textObject != 0);
-
     QTRY_COMPARE(textObject->resourcesLoading(), 0);
 
     QPixmap pm(testFile("http/exists.png"));
@@ -1537,7 +1503,7 @@ void tst_qquicktext::embeddedImages()
         QCOMPARE(textObject->height(), 16.0);
     }
 
-    delete textObject;
+    delete view;
 }
 
 void tst_qquicktext::lineCount()
@@ -2937,6 +2903,49 @@ void tst_qquicktext::baselineOffset()
 
         QCOMPARE(item->baselineOffset(), baseline);
     }
+}
+
+void tst_qquicktext::htmlLists()
+{
+    QFETCH(QString, text);
+    QFETCH(int, nbLines);
+
+    QQuickView *view = createView(testFile("htmlLists.qml"));
+    QQuickText *textObject = view->rootObject()->findChild<QQuickText*>("myText");
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
+    QVERIFY(textPrivate != 0);
+    QVERIFY(textPrivate->extra.isAllocated());
+
+    QVERIFY(textObject != 0);
+    textObject->setText(text);
+
+    view->show();
+    view->requestActivateWindow();
+    QTest::qWaitForWindowShown(view);
+
+    QCOMPARE(textPrivate->extra->doc->lineCount(), nbLines);
+
+    delete view;
+}
+
+void tst_qquicktext::htmlLists_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<int>("nbLines");
+
+    QTest::newRow("ordered list") << "<ol><li>one<li>two<li>three" << 3;
+    QTest::newRow("ordered list closed") << "<ol><li>one</li></ol>" << 1;
+    QTest::newRow("ordered list alpha") << "<ol type=\"a\"><li>one</li><li>two</li></ol>" << 2;
+    QTest::newRow("ordered list upper alpha") << "<ol type=\"A\"><li>one</li><li>two</li></ol>" << 2;
+    QTest::newRow("ordered list roman") << "<ol type=\"i\"><li>one</li><li>two</li></ol>" << 2;
+    QTest::newRow("ordered list upper roman") << "<ol type=\"I\"><li>one</li><li>two</li></ol>" << 2;
+    QTest::newRow("ordered list bad") << "<ol type=\"z\"><li>one</li><li>two</li></ol>" << 2;
+    QTest::newRow("unordered list") << "<ul><li>one<li>two" << 2;
+    QTest::newRow("unordered list closed") << "<ul><li>one</li><li>two</li></ul>" << 2;
+    QTest::newRow("unordered list disc") << "<ul type=\"disc\"><li>one</li><li>two</li></ul>" << 2;
+    QTest::newRow("unordered list square") << "<ul type=\"square\"><li>one</li><li>two</li></ul>" << 2;
+    QTest::newRow("unordered list bad") << "<ul type=\"bad\"><li>one</li><li>two</li></ul>" << 2;
 }
 
 QTEST_MAIN(tst_qquicktext)
