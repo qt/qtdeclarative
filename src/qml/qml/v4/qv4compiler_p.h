@@ -57,6 +57,10 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlcompiler_p.h>
 
+#include <private/qv8_p.h>
+
+Q_DECLARE_METATYPE(v8::Handle<v8::Value>)
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE

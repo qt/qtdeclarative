@@ -97,7 +97,8 @@ enum QQmlRegisterType {
     QStringType = FirstCleanupType,
     QUrlType,
     QVariantType,
-    QColorType
+    QColorType,
+    V8HandleType
 };
 
 const char *QV4Program::data() const 

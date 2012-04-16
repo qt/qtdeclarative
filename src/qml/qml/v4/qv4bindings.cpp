@@ -47,12 +47,18 @@
 #include "qv4compiler_p_p.h"
 
 #include <private/qqmlglobal_p.h>
+
+#include <private/qv8_p.h>
+#include <private/qjsconverter_p.h>
+#include <private/qjsconverter_impl_p.h>
+
 #include <private/qqmlaccessors_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmltrace_p.h>
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmlproperty_p.h>
+#include <private/qqmlvmemetaobject_p.h>
 
 #include <QtQml/qqmlinfo.h>
 #include <QtCore/qnumeric.h>
@@ -91,12 +97,15 @@ struct Register {
     inline bool getbool() const { return boolValue; }
     inline bool &getboolref() { return boolValue; }
 
-    inline QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
-    inline QString *getstringptr() { return (QString *)typeDataPtr(); }
-    inline QUrl *geturlptr() { return (QUrl *)typeDataPtr(); }
-    inline const QVariant *getvariantptr() const { return (QVariant *)typeDataPtr(); }
-    inline const QString *getstringptr() const { return (QString *)typeDataPtr(); }
-    inline const QUrl *geturlptr() const { return (QUrl *)typeDataPtr(); }
+    inline QVariant *getvariantptr() { return reinterpret_cast<QVariant *>(typeDataPtr()); }
+    inline QString *getstringptr() { return reinterpret_cast<QString *>(typeDataPtr()); }
+    inline QUrl *geturlptr() { return reinterpret_cast<QUrl *>(typeDataPtr()); }
+    inline v8::Handle<v8::Value> *gethandleptr() { return reinterpret_cast<v8::Handle<v8::Value> *>(typeDataPtr()); }
+
+    inline const QVariant *getvariantptr() const { return reinterpret_cast<const QVariant *>(typeDataPtr()); }
+    inline const QString *getstringptr() const { return reinterpret_cast<const QString *>(typeDataPtr()); }
+    inline const QUrl *geturlptr() const { return reinterpret_cast<const QUrl *>(typeDataPtr()); }
+    inline const v8::Handle<v8::Value> *gethandleptr() const { return reinterpret_cast<const v8::Handle<v8::Value> *>(typeDataPtr()); }
 
     size_t dataSize() { return sizeof(data); }
     inline void *typeDataPtr() { return (void *)&data; }
@@ -124,6 +133,7 @@ struct Register {
     inline void cleanupUrl();
     inline void cleanupColor();
     inline void cleanupVariant();
+    inline void cleanupHandle();
 
     inline void copy(const Register &other);
     inline void init(Type type);
@@ -137,6 +147,24 @@ struct Register {
             qWarning("Register leaked of type %d", dataType);
     }
 #endif
+
+    template <typename T>
+    inline static void copyConstructPointee(T *p, const T *other)
+    {
+        new (p) T(*other);
+    }
+
+    template <typename T>
+    inline static void defaultConstructPointee(T *p)
+    {
+        new (p) T();
+    }
+
+    template <typename T>
+    inline static void destroyPointee(T *p)
+    {
+        p->~T();
+    }
 };
 
 void Register::cleanup()
@@ -150,6 +178,8 @@ void Register::cleanup()
             QQml_valueTypeProvider()->destroyValueType(QMetaType::QColor, typeDataPtr(), dataSize());
         } else if (dataType == QVariantType) {
             getvariantptr()->~QVariant();
+        } else if (dataType == qMetaTypeId<v8::Handle<v8::Value> >()) {
+            destroyPointee(gethandleptr());
         }
     }
     setUndefined();
@@ -179,6 +209,12 @@ void Register::cleanupVariant()
     setUndefined();
 }
 
+void Register::cleanupHandle()
+{
+    destroyPointee(gethandleptr());
+    setUndefined();
+}
+
 void Register::copy(const Register &other)
 {
     *this = other;
@@ -191,6 +227,8 @@ void Register::copy(const Register &other)
             QQml_valueTypeProvider()->copyValueType(QMetaType::QColor, other.typeDataPtr(), typeDataPtr(), dataSize());
         else if (other.dataType == QVariantType)
             new (getvariantptr()) QVariant(*other.getvariantptr());
+        else if (other.dataType == qMetaTypeId<v8::Handle<v8::Value> >())
+            copyConstructPointee(gethandleptr(), other.gethandleptr());
     } 
 }
 
@@ -206,6 +244,8 @@ void Register::init(Type type)
             QQml_valueTypeProvider()->initValueType(QMetaType::QColor, typeDataPtr(), dataSize());
         else if (dataType == QVariantType)
             new (getvariantptr()) QVariant();
+        else if (dataType == qMetaTypeId<v8::Handle<v8::Value> >())
+            defaultConstructPointee(gethandleptr());
     }
 }
 
@@ -356,7 +396,18 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
 
         vt->write(binding->target, binding->property & 0xFFFF, flags);
     } else {
-        run(binding->index, binding->executedBlocks, context, binding, binding->scope, binding->target, flags);
+        QQmlData *data = QQmlData::get(binding->target);
+        QQmlPropertyData *propertyData = (data && data->propertyCache ? data->propertyCache->property(binding->property) : 0);
+
+        if (propertyData && propertyData->isVMEProperty()) {
+            // We will allocate a V8 handle in this conversion/store
+            v8::HandleScope handle_scope;
+            v8::Context::Scope context_scope(QQmlEnginePrivate::get(context->engine)->v8engine()->context());
+
+            run(binding->index, binding->executedBlocks, context, binding, binding->scope, binding->target, flags);
+        } else {
+            run(binding->index, binding->executedBlocks, context, binding, binding->scope, binding->target, flags);
+        }
     }
     binding->updating = false;
 }
@@ -453,10 +504,14 @@ static void testBindingResult(const QString &binding, int line, int column,
     QByteArray qtscriptResult;
     QByteArray v4Result;
 
+    const int handleType = qMetaTypeId<v8::Handle<v8::Value> >();
+
     if (expression.hasError()) {
         iserror = true;
         qtscriptResult = "exception";
-    } else if ((value.userType() != resultType) && (resultType != QMetaType::QVariant)) {
+    } else if ((value.userType() != resultType) &&
+               (resultType != QMetaType::QVariant) &&
+               (resultType != handleType)) {
         // Override the QMetaType conversions to make them more JS friendly.
         if (value.userType() == QMetaType::Double && (resultType == QMetaType::QString ||
                                                         resultType == QMetaType::QUrl)) {
@@ -515,6 +570,9 @@ static void testBindingResult(const QString &binding, int line, int column,
         default:
             if (resultType == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
                 v4value = QVariant(QQmlMetaType::QQuickAnchorLineMetaTypeId(), result.typeDataPtr());
+            } else if (resultType == handleType) {
+                QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
+                v4value = ep->v8engine()->toVariant(*result.gethandleptr(), resultType);
             } else {
                 iserror = true;
                 v4Result = "Unknown V4 type";
@@ -644,6 +702,11 @@ inline quint32 QV4Bindings::toUint32(double n)
 
 #define VARIANT_REGISTER(reg) { \
     registers[(reg)].settype(QVariantType); \
+    MARK_REGISTER(reg); \
+}
+
+#define V8HANDLE_REGISTER(reg) { \
+    registers[(reg)].settype(V8HandleType); \
     MARK_REGISTER(reg); \
 }
 
@@ -901,6 +964,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertBoolToVariant, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertBoolToVar, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.gethandleptr()) v8::Handle<v8::Value>(v8::Boolean::New(src.getbool()));
+            V8HANDLE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertBoolToVar, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertIntToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -944,6 +1020,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         }
     }
     QML_V4_END_INSTR(ConvertIntToVariant, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertIntToVar, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.gethandleptr()) v8::Handle<v8::Value>(v8::Integer::New(src.getint()));
+            V8HANDLE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertIntToVar, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertNumberToBool, unaryop)
     {
@@ -989,6 +1078,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         }
     }
     QML_V4_END_INSTR(ConvertNumberToVariant, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertNumberToVar, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.gethandleptr()) v8::Handle<v8::Value>(v8::Number::New(src.getnumber()));
+            V8HANDLE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertNumberToVar, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertStringToBool, unaryop)
     {
@@ -1109,6 +1211,24 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertStringToVariant, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertStringToVar, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QString tmp(*src.getstringptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupString();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.gethandleptr()) v8::Handle<v8::Value>(QJSConverter::toString(tmp));
+            V8HANDLE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertStringToVar, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertUrlToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1165,6 +1285,25 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertUrlToVariant, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertUrlToVar, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupUrl();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.gethandleptr()) v8::Handle<v8::Value>(QJSConverter::toString(tmp.toString()));
+            V8HANDLE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertUrlToVar, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertColorToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1212,6 +1351,28 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertColorToVariant, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertColorToVar, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QVariant tmp(QMetaType::QColor, src.typeDataPtr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupColor();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
+            QQmlValueType *vt = ep->valueTypes[QMetaType::QColor];
+            new (output.gethandleptr()) v8::Handle<v8::Value>(ep->v8engine()->valueTypeWrapper()->newValueType(tmp, vt));
+            V8HANDLE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertColorToVar, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertObjectToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1238,6 +1399,21 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertObjectToVariant, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertObjectToVar, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        // ### NaN
+        if (src.isUndefined())
+            output.setUndefined();
+        else {
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
+            new (output.gethandleptr()) v8::Handle<v8::Value>(ep->v8engine()->newQObject(src.getQObject()));
+            V8HANDLE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertObjectToVar, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertNullToObject, unaryop)
     {
         Register &output = registers[instr->unaryop.output];
@@ -1252,6 +1428,14 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         VARIANT_REGISTER(instr->unaryop.output);
     }
     QML_V4_END_INSTR(ConvertNullToVariant, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertNullToVar, unaryop)
+    {
+        Register &output = registers[instr->unaryop.output];
+        new (output.gethandleptr()) v8::Handle<v8::Value>(v8::Null());
+        V8HANDLE_REGISTER(instr->unaryop.output);
+    }
+    QML_V4_END_INSTR(ConvertNullToVar, unaryop)
 
     QML_V4_BEGIN_INSTR(ResolveUrl, unaryop)
     {
@@ -1757,10 +1941,16 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
             data.setfloat(v);
         }
 
-        int status = -1;
-        void *argv[] = { data.typeDataPtr(), 0, &status, &storeFlags };
-        QMetaObject::metacall(output, QMetaObject::WriteProperty,
-                              instr->store.index, argv);
+        if (data.gettype() == V8HandleType) {
+            // This property must be a VME var property
+            QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(output->metaObject()));
+            vmemo->setVMEProperty(instr->store.index, *data.gethandleptr());
+        } else {
+            int status = -1;
+            void *argv[] = { data.typeDataPtr(), 0, &status, &storeFlags };
+            QMetaObject::metacall(output, QMetaObject::WriteProperty,
+                                  instr->store.index, argv);
+        }
 
         goto programExit;
     }

@@ -970,6 +970,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::BoolType:
             case IR::StringType:
             case IR::VariantType:
+            case IR::VarType:
                 // nothing to do. V4 will generate optimized
                 // url-to-xxx conversions.
                 break;
@@ -1086,6 +1087,20 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
                 default: break;
                 } // switch
             }
+        } else if (targetTy == IR::VarType) {
+            if (s->isMoveForReturn) {
+                switch (sourceTy) {
+                case IR::BoolType: opcode = V4Instr::ConvertBoolToVar; break;
+                case IR::IntType:  opcode = V4Instr::ConvertIntToVar; break;
+                case IR::NumberType: opcode = V4Instr::ConvertNumberToVar; break;
+                case IR::UrlType: opcode = V4Instr::ConvertUrlToVar; break;
+                case IR::ColorType: opcode = V4Instr::ConvertColorToVar; break;
+                case IR::StringType: opcode = V4Instr::ConvertStringToVar; break;
+                case IR::ObjectType: opcode = V4Instr::ConvertObjectToVar; break;
+                case IR::NullType: opcode = V4Instr::ConvertNullToVar; break;
+                default: break;
+                } // switch
+            }
         }
         if (opcode != V4Instr::Noop) {
             V4Instr conv;
@@ -1161,6 +1176,9 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
             break;
         case IR::VariantType:
             test.regType = QMetaType::QVariant;
+            break;
+        case IR::VarType:
+            test.regType = qMetaTypeId<v8::Handle<v8::Value> >();
             break;
         case IR::BoolType:
             test.regType = QMetaType::Bool;
