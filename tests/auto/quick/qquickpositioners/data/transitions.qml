@@ -7,6 +7,8 @@ Rectangle {
 
     property int duration: 50
 
+    property real incrementalSize: 5
+
     property int targetTransitionsDone
     property int displaceTransitionsDone
 
@@ -88,8 +90,8 @@ Rectangle {
             Rectangle {
                 property string nameData: name
                 objectName: "wrapper"
-                width: 30 + index*5
-                height: 30 + index*5
+                width: 30 + index*root.incrementalSize
+                height: 30 + index*root.incrementalSize
                 border.width: 1
                 Column {
                     Text { text: index }
@@ -117,8 +119,8 @@ Rectangle {
             Rectangle {
                 property string nameData: name
                 objectName: "wrapper"
-                width: 30 + index*5
-                height: 30 + index*5
+                width: 30 + index*root.incrementalSize
+                height: 30 + index*root.incrementalSize
                 border.width: 1
                 Column {
                     Text { text: index }
@@ -146,8 +148,8 @@ Rectangle {
             Rectangle {
                 property string nameData: name
                 objectName: "wrapper"
-                width: 30 + index*5
-                height: 30 + index*5
+                width: 30 + index*root.incrementalSize
+                height: 30 + index*root.incrementalSize
                 border.width: 1
                 Column {
                     Text { text: index }
@@ -176,8 +178,8 @@ Rectangle {
             Rectangle {
                 property string nameData: name
                 objectName: "wrapper"
-                width: 30 + index*5
-                height: 30 + index*5
+                width: 30 + index*root.incrementalSize
+                height: 30 + index*root.incrementalSize
                 border.width: 1
                 Column {
                     Text { text: index }

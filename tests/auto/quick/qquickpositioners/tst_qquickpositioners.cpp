@@ -596,7 +596,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
         matchItemLists(canvas->rootObject()->property("displacedTrans_targetItems").toList(), targetItems);
     }
 
-    checkItemPositions(positioner, &model, 5.0);   // XXX fetch from qml?
+    checkItemPositions(positioner, &model, canvas->rootObject()->property("incrementalSize").toInt());
 
     delete canvas;
 }
@@ -702,7 +702,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
         QCOMPARE(canvas->rootObject()->property("displacedTrans_targetItems").toList(), listOfEmptyObjectLists);
     }
 
-    checkItemPositions(positioner, &model, 5.0);
+    checkItemPositions(positioner, &model, canvas->rootObject()->property("incrementalSize").toInt());
 
     delete canvas;
 }
