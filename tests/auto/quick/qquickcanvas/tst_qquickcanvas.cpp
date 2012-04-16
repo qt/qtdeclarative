@@ -620,7 +620,7 @@ void tst_qquickcanvas::multipleWindows()
         c->setPos(100 + i * 30, 100 + i * 20);
         c->show();
         windows << c;
-        QVERIFY(c->visible());
+        QVERIFY(c->isVisible());
     }
 
     // move them
@@ -647,15 +647,15 @@ void tst_qquickcanvas::animationsWhileHidden()
 
     QQuickCanvas* canvas = qobject_cast<QQuickCanvas*>(created);
     QVERIFY(canvas);
-    QVERIFY(canvas->visible());
+    QVERIFY(canvas->isVisible());
 
     // Now hide the window and verify that it went off screen
     canvas->hide();
     QTest::qWait(10);
-    QVERIFY(!canvas->visible());
+    QVERIFY(!canvas->isVisible());
 
     // Running animaiton should cause it to become visible again shortly.
-    QTRY_VERIFY(canvas->visible());
+    QTRY_VERIFY(canvas->isVisible());
 
     delete canvas;
 }
@@ -672,7 +672,7 @@ void tst_qquickcanvas::headless()
     QVERIFY(canvas);
 
     QTest::qWaitForWindowShown(canvas);
-    QVERIFY(canvas->visible());
+    QVERIFY(canvas->isVisible());
 
     QSignalSpy initialized(canvas, SIGNAL(sceneGraphInitialized()));
     QSignalSpy invalidated(canvas, SIGNAL(sceneGraphInvalidated()));
