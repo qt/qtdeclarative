@@ -362,10 +362,7 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
 
     QQmlAccessorProperties::Properties accessorProperties;
 
-    // Special case QObject as we don't want to add a qt_HasQmlAccessors classinfo to it
-    if (metaObject == &QObject::staticMetaObject) {
-        accessorProperties = QQmlAccessorProperties::properties(metaObject);
-    } else if (classInfoCount) {
+    if (classInfoCount) {
         int classInfoOffset = metaObject->classInfoOffset();
         bool hasFastProperty = false;
         for (int ii = 0; ii < classInfoCount; ++ii) {
@@ -392,9 +389,12 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
         }
     }
 
-    // qMax(defaultMethods, methodOffset) to block the signals and slots of QObject::staticMetaObject
-    // incl. destroyed signals, objectNameChanged signal, deleteLater slot, _q_reregisterTimers slot.
-    int methodOffset = qMax(QObject::staticMetaObject.methodCount(), metaObject->methodOffset());
+    //Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
+    static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
+    static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
+    static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
+
+    int methodOffset = metaObject->methodOffset();
     int signalOffset = signalCount - QMetaObjectPrivate::get(metaObject)->signalCount;
 
     // update() should have reserved enough space in the vector that this doesn't cause a realloc
@@ -403,6 +403,8 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
     signalHandlerIndexCache.resize(signalCount - signalHanderIndexCacheStart);
     int signalHandlerIndex = signalOffset;
     for (int ii = methodOffset; ii < methodCount; ++ii) {
+        if (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx)
+            continue;
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private) 
             continue;
@@ -824,11 +826,15 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject,
         }
     }
 
+    //Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
+    static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
+    static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
+    static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
+
     int methodCount = metaObject->methodCount();
-    int defaultMethods = QObject::staticMetaObject.methodCount();
-    for (int ii = methodCount - 1; ii >= defaultMethods; --ii) {
-        // >=defaultMethods to block the signals and slots of QObject::staticMetaObject
-        // incl. destroyed signals, objectNameChanged signal, deleteLater slot, _q_reregisterTimers slot.
+    for (int ii = methodCount - 1; ii >= 0; --ii) {
+        if (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx)
+            continue;
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private)
             continue;

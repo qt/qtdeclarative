@@ -567,13 +567,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
         return rv;
     }
 
-    if (ep && !result->isConstant()) {
-
-        if (result->coreIndex == 0)
-            ep->captureProperty(QQmlData::get(object, true)->objectNameNotifier());
-        else
-            ep->captureProperty(object, result->coreIndex, result->notifyIndex);
-    }
+    if (ep && !result->isConstant())
+        ep->captureProperty(object, result->coreIndex, result->notifyIndex);
 
     if (result->isVMEProperty()) {
         typedef QQmlVMEMetaObject VMEMO;

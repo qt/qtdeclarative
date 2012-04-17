@@ -215,6 +215,8 @@ private slots:
     void qobjectConnectionListExceptionHandling();
     void nonscriptable();
     void deleteLater();
+    void objectNameChangedSignal();
+    void destroyedSignal();
     void in();
     void typeOf();
     void qtbug_24448();
@@ -5846,6 +5848,28 @@ void tst_qqmlecmascript::deleteLater()
     QVERIFY(o != 0);
     QCOMPARE(o->property("test").toBool(), true);
     delete o;
+}
+
+// objectNameChanged() should be usable from QML
+void tst_qqmlecmascript::objectNameChangedSignal()
+{
+    QQmlComponent component(&engine, testFileUrl("objectNameChangedSignal.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("test").toBool(), false);
+    o->setObjectName("obj");
+    QCOMPARE(o->property("test").toBool(), true);
+    delete o;
+}
+
+// destroyed() should not be usable from QML
+void tst_qqmlecmascript::destroyedSignal()
+{
+    QQmlComponent component(&engine, testFileUrl("destroyedSignal.qml"));
+    QVERIFY(component.isError());
+
+    QString expectedErrorString = component.url().toString() + QLatin1String(":5:5: Cannot assign to non-existent property \"onDestroyed\"");
+    QCOMPARE(component.errors().at(0).toString(), expectedErrorString);
 }
 
 void tst_qqmlecmascript::in()

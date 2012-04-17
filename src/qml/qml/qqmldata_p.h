@@ -92,7 +92,6 @@ public:
             initialized = true;
             QAbstractDeclarativeData::destroyed = destroyed;
             QAbstractDeclarativeData::parentChanged = parentChanged;
-            QAbstractDeclarativeData::objectNameChanged = objectNameChanged;
             QAbstractDeclarativeData::signalEmitted = signalEmitted;
             QAbstractDeclarativeData::receivers = receivers;
         }
@@ -100,13 +99,11 @@ public:
 
     static void destroyed(QAbstractDeclarativeData *, QObject *);
     static void parentChanged(QAbstractDeclarativeData *, QObject *, QObject *);
-    static void objectNameChanged(QAbstractDeclarativeData *, QObject *);
     static void signalEmitted(QAbstractDeclarativeData *, QObject *, int, void **);
     static int receivers(QAbstractDeclarativeData *, const QObject *, int);
 
     void destroyed(QObject *);
     void parentChanged(QObject *, QObject *);
-    void objectNameChanged(QObject *);
 
     void setImplicitDestructible() {
         if (!explicitIndestructibleSet) indestructible = false;
@@ -191,7 +188,6 @@ public:
     }
 
     bool hasExtendedData() const { return extendedData != 0; }
-    QQmlNotifier *objectNameNotifier() const;
     QHash<int, QObject *> *attachedProperties() const;
 
     static inline bool wasDeleted(QObject *);
@@ -200,7 +196,7 @@ public:
     static inline void setQueuedForDeletion(QObject *);
 
 private:
-    // For objectNameNotifier and attachedProperties
+    // For attachedProperties
     mutable QQmlDataExtended *extendedData;
 };
 

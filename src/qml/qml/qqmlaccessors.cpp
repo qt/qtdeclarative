@@ -55,20 +55,6 @@ struct AccessorProperties {
 
 Q_GLOBAL_STATIC(AccessorProperties, accessorProperties)
 
-QML_PRIVATE_ACCESSOR(QObject, QString, objectName, objectName)
-
-static void QObject_objectNameNotifier(QObject *object, intptr_t, QQmlNotifier **notifier)
-{
-    *notifier = QQmlData::get(object, true)->objectNameNotifier();
-}
-
-static QQmlAccessors QObject_objectName = { QObject_objectNameRead,
-                                                    QObject_objectNameNotifier };
-
-QML_DECLARE_PROPERTIES(QObject) {
-    { QML_PROPERTY_NAME(objectName), 0, &QObject_objectName }
-};
-
 static void buildNameMask(QQmlAccessorProperties::Properties &properties)
 {
     quint32 mask = 0;
@@ -85,12 +71,6 @@ static void buildNameMask(QQmlAccessorProperties::Properties &properties)
 
 AccessorProperties::AccessorProperties()
 {
-    // Pre-seed QObject::objectName accessor
-    typedef QQmlAccessorProperties::Properties P;
-    properties.insert(&QObject::staticMetaObject,
-                      P(qqml_accessor_properties_QObject,
-                        sizeof(qqml_accessor_properties_QObject) /
-                        sizeof(QQmlAccessorProperties::Property)));
 }
 
 QQmlAccessorProperties::Properties::Properties(Property *properties, int count)

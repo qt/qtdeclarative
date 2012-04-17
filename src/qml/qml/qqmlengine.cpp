@@ -439,11 +439,6 @@ void QQmlData::parentChanged(QAbstractDeclarativeData *d, QObject *o, QObject *p
     static_cast<QQmlData *>(d)->parentChanged(o, p);
 }
 
-void QQmlData::objectNameChanged(QAbstractDeclarativeData *d, QObject *o)
-{
-    static_cast<QQmlData *>(d)->objectNameChanged(o);
-}
-
 void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int index, void **a)
 {
     QQmlData *ddata = QQmlData::get(object, false);
@@ -1080,7 +1075,6 @@ public:
     ~QQmlDataExtended();
 
     QHash<int, QObject *> attachedProperties;
-    QQmlNotifier objectNameNotifier;
 };
 
 QQmlDataExtended::QQmlDataExtended()
@@ -1180,12 +1174,6 @@ bool QQmlData::signalHasEndpoint(int index)
     return notifyList && (notifyList->connectionMask & (1ULL << quint64(index % 64)));
 }
 
-QQmlNotifier *QQmlData::objectNameNotifier() const
-{
-    if (!extendedData) extendedData = new QQmlDataExtended;
-    return &extendedData->objectNameNotifier;
-}
-
 QHash<int, QObject *> *QQmlData::attachedProperties() const
 {
     if (!extendedData) extendedData = new QQmlDataExtended;
@@ -1260,11 +1248,6 @@ void QQmlData::parentChanged(QObject *object, QObject *parent)
 {
     Q_UNUSED(object);
     Q_UNUSED(parent);
-}
-
-void QQmlData::objectNameChanged(QObject *)
-{
-    if (extendedData) objectNameNotifier()->notify();
 }
 
 bool QQmlData::hasBindingBit(int bit) const
