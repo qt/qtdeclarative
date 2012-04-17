@@ -1,4 +1,4 @@
-QT += qml quick widgets
+QT += qml quick
 CONFIG -= app_bundle
 
 SOURCES += main.cpp

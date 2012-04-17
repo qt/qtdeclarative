@@ -145,9 +145,8 @@ void handleCompileErrors(const QFileInfo &fi, QQuickView *view)
     results.stopLogging();
 }
 
-int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport_create createViewport, const char *sourceDir)
+int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir)
 {
-    Q_UNUSED(createViewport);
     QGuiApplication* app = 0;
     if (!QCoreApplication::instance()) {
         app = new QGuiApplication(argc, argv);

@@ -45,31 +45,7 @@
 #include <QtOpenGL/qgl.h>
 #endif
 
-#ifdef QT_OPENGL_LIB
-
-static QWidget *qmltestrunner_create_gl_viewport()
-{
-    return new QGLWidget();
-}
-
-#endif
-
 int main(int argc, char **argv)
 {
-#ifdef QT_OPENGL_LIB
-    bool isOpenGL = false;
-    for (int index = 1; index < argc; ++index) {
-        if (strcmp(argv[index], "-opengl") == 0) {
-            isOpenGL = true;
-            break;
-        }
-    }
-    if (isOpenGL) {
-        return quick_test_main(argc, argv, "qmltestrunner",
-                               qmltestrunner_create_gl_viewport, ".");
-    } else
-#endif
-    {
-        return quick_test_main(argc, argv, "qmltestrunner", 0, ".");
-    }
+    return quick_test_main(argc, argv, "qmltestrunner", ".");
 }

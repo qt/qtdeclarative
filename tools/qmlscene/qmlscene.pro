@@ -3,7 +3,7 @@ TARGET = qmlscene
 DESTDIR= $$QT.qml.bins
 
 QT += qml quick core-private
-!isEmpty(QT.widgets.name): QT += widgets
+!contains(QT_CONFIG, no-widgets):QT += widgets
 
 target.path = $$[QT_INSTALL_BINS]
 INSTALLS += target

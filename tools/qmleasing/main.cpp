@@ -41,7 +41,7 @@
 
 #include <QPainter>
 #include <QtQuick/QQuickView>
-#include <QApplication>
+#include <QGuiApplication>
 #include <QEasingCurve>
 #include <QtQuick/QQuickPaintedItem>
 
@@ -102,7 +102,7 @@ void EasingPlot::paint(QPainter *painter)
 
 int main(int argc, char ** argv)
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     qmlRegisterType<EasingPlot>("EasingPlot", 1, 0, "EasingPlot");
 

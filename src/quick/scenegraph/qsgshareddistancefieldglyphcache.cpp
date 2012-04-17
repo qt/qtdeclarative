@@ -54,8 +54,6 @@
 
 #include <QtQuick/qquickcanvas.h>
 
-#include <QtOpenGL/qglframebufferobject.h>
-
 // #define QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG
 
 Q_DECLARE_METATYPE(QVector<quint32>)

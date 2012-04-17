@@ -43,35 +43,25 @@
 #define QUICKTEST_H
 
 #include <QtQuickTest/quicktestglobal.h>
-#include <QtWidgets/qwidget.h>
-#ifdef QT_OPENGL_LIB
-#include <QtGui/qopengl.h>
-#endif
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-typedef QWidget *(*quick_test_viewport_create)();
-
-Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport_create createViewport, const char *sourceDir);
+Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir);
 
 #ifdef QUICK_TEST_SOURCE_DIR
 
 #define QUICK_TEST_MAIN(name) \
     int main(int argc, char **argv) \
     { \
-        return quick_test_main(argc, argv, #name, 0, QUICK_TEST_SOURCE_DIR); \
+        return quick_test_main(argc, argv, #name, QUICK_TEST_SOURCE_DIR); \
     }
 
 #define QUICK_TEST_OPENGL_MAIN(name) \
-    static QWidget *name##_create_viewport() \
-    { \
-        return new QOpenGLWidget(); \
-    } \
     int main(int argc, char **argv) \
     { \
-        return quick_test_main(argc, argv, #name, name##_create_viewport, QUICK_TEST_SOURCE_DIR); \
+        return quick_test_main(argc, argv, #name, QUICK_TEST_SOURCE_DIR); \
     }
 
 #else
@@ -79,17 +69,13 @@ Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name,
 #define QUICK_TEST_MAIN(name) \
     int main(int argc, char **argv) \
     { \
-        return quick_test_main(argc, argv, #name, 0, 0); \
+        return quick_test_main(argc, argv, #name, 0); \
     }
 
 #define QUICK_TEST_OPENGL_MAIN(name) \
-    static QWidget *name##_create_viewport() \
-    { \
-        return new QOpenGLWidget(); \
-    } \
     int main(int argc, char **argv) \
     { \
-        return quick_test_main(argc, argv, #name, name##_create_viewport, 0); \
+        return quick_test_main(argc, argv, #name, 0); \
     }
 
 #endif
