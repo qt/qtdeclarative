@@ -27,7 +27,7 @@
 
 
 /*!
-\page qmlexampletoggleswitch.html
+\page qmlexampletoggleswitch.html tutorial
 \title QML Example - Toggle Switch
 \brief A reusable switch component made in QML
 This example shows how to create a reusable switch component in QML.

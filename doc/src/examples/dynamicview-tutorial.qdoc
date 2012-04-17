@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\page qml-dynamicview-tutorial.html
+\page qml-dynamicview-tutorial.html tutorial
 \inqmlmodule QtQuick 2
 \title QML Dynamic View Ordering Tutorial
 \brief A tutorial describing how to re-arrange items in a QML ListView

@@ -26,8 +26,8 @@
 ****************************************************************************/
 
 /*!
-\page qml-extending-tutorial-index.html
-\title Tutorial: Writing QML Extensions with C++
+\page qml-extending-tutorial-index.html tutorial
+\title Writing QML Extensions with C++
 \brief tutorial about extending QML with Qt C++
 
 The Qt Declarative module provides a set of APIs for extending QML through
