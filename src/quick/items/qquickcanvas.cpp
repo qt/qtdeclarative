@@ -330,6 +330,7 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     Q_Q(QQuickCanvas);
 
     rootItem = new QQuickRootItem;
+    QQmlEngine::setObjectOwnership(rootItem, QQmlEngine::CppOwnership);
     QQuickItemPrivate *rootItemPrivate = QQuickItemPrivate::get(rootItem);
     rootItemPrivate->canvas = q;
     rootItemPrivate->canvasRefCount = 1;

@@ -50,6 +50,7 @@
 #include <QtGui/QWindowSystemInterface>
 #include "../../shared/util.h"
 #include <QSignalSpy>
+#include <private/qquickcanvas_p.h>
 
 struct TouchEventData {
     QEvent::Type type;
@@ -107,6 +108,36 @@ static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPoin
         COMPARE_TOUCH_POINTS(d1.touchPoints[i], d2.touchPoints[i]); \
     } \
 }
+
+
+class RootItemAccessor : public QQuickItem
+{
+    Q_OBJECT
+public:
+    RootItemAccessor()
+        : m_rootItemDestroyed(false)
+        , m_rootItem(0)
+    {
+    }
+    Q_INVOKABLE QQuickItem *rootItem()
+    {
+        if (!m_rootItem) {
+            QQuickCanvasPrivate *c = QQuickCanvasPrivate::get(canvas());
+            m_rootItem = c->rootItem;
+            QObject::connect(m_rootItem, SIGNAL(destroyed()), this, SLOT(rootItemDestroyed()));
+        }
+        return m_rootItem;
+    }
+    bool isRootItemDestroyed() {return m_rootItemDestroyed;}
+public slots:
+    void rootItemDestroyed() {
+        m_rootItemDestroyed = true;
+    }
+
+private:
+    bool m_rootItemDestroyed;
+    QQuickItem *m_rootItem;
+};
 
 class TestTouchItem : public QQuickRectangle
 {
@@ -214,6 +245,7 @@ private slots:
 
     void ignoreUnhandledMouseEvents();
 
+    void ownershipRootItem();
 private:
     QTouchDevice *touchDevice;
 };
@@ -770,6 +802,28 @@ void tst_qquickcanvas::ignoreUnhandledMouseEvents()
     delete canvas;
 }
 
+
+void tst_qquickcanvas::ownershipRootItem()
+{
+    qmlRegisterType<RootItemAccessor>("QtQuick", 2, 0, "RootItemAccessor");
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("ownershipRootItem.qml"));
+    QObject* created = component.create();
+
+    QQuickCanvas* canvas = qobject_cast<QQuickCanvas*>(created);
+    QVERIFY(canvas);
+    QTest::qWaitForWindowShown(canvas);
+
+    RootItemAccessor* accessor = canvas->findChild<RootItemAccessor*>("accessor");
+    QVERIFY(accessor);
+    engine.collectGarbage();
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    QVERIFY(!accessor->isRootItemDestroyed());
+}
 QTEST_MAIN(tst_qquickcanvas)
 
 #include "tst_qquickcanvas.moc"
