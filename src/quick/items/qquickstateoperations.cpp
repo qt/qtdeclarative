@@ -146,6 +146,36 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
         target->stackBefore(stackBefore);
 }
 
+/*!
+    \qmlclass ParentChange QQuickParentChange
+    \inqmlmodule QtQuick 2
+    \ingroup qml-state-elements
+    \brief The ParentChange element allows you to reparent an Item in a state change.
+
+    ParentChange reparents an item while preserving its visual appearance (position, size,
+    rotation, and scale) on screen. You can then specify a transition to move/resize/rotate/scale
+    the item to its final intended appearance.
+
+    ParentChange can only preserve visual appearance if no complex transforms are involved.
+    More specifically, it will not work if the transform property has been set for any
+    items involved in the reparenting (i.e. items in the common ancestor tree
+    for the original and new parent).
+
+    The example below displays a large red rectangle and a small blue rectangle, side by side.
+    When the \c blueRect is clicked, it changes to the "reparented" state: its parent is changed to \c redRect and it is
+    positioned at (10, 10) within the red rectangle, as specified in the ParentChange.
+
+    \snippet doc/src/snippets/qml/parentchange.qml 0
+
+    \image parentchange.png
+
+    You can specify at which point in a transition you want a ParentChange to occur by
+    using a ParentAnimation.
+
+    Note that unlike PropertyChanges, ParentChange expects an Item-based target; it will not work with
+    arbitrary objects (for example, you couldn't use it to reparent a Timer).
+*/
+
 QQuickParentChange::QQuickParentChange(QObject *parent)
     : QQuickStateOperation(*(new QQuickParentChangePrivate), parent)
 {
@@ -155,6 +185,16 @@ QQuickParentChange::~QQuickParentChange()
 {
 }
 
+/*!
+    \qmlproperty real ParentChange::x
+    \qmlproperty real ParentChange::y
+    \qmlproperty real ParentChange::width
+    \qmlproperty real ParentChange::height
+    \qmlproperty real ParentChange::scale
+    \qmlproperty real ParentChange::rotation
+    These properties hold the new position, size, scale, and rotation
+    for the item in this state.
+*/
 QQmlScriptString QQuickParentChange::x() const
 {
     Q_D(const QQuickParentChange);
@@ -269,6 +309,10 @@ QQuickItem *QQuickParentChange::originalParent() const
     return d->origParent;
 }
 
+/*!
+    \qmlproperty Item ParentChange::target
+    This property holds the item to be reparented
+*/
 QQuickItem *QQuickParentChange::object() const
 {
     Q_D(const QQuickParentChange);
@@ -281,6 +325,10 @@ void QQuickParentChange::setObject(QQuickItem *target)
     d->target = target;
 }
 
+/*!
+    \qmlproperty Item ParentChange::parent
+    This property holds the new parent for the item in this state.
+*/
 QQuickItem *QQuickParentChange::parent() const
 {
     Q_D(const QQuickParentChange);
@@ -508,6 +556,38 @@ void QQuickParentChange::rewind()
     Q_D(QQuickParentChange);
     d->doChange(d->rewindParent, d->rewindStackBefore);
 }
+
+/*!
+    \qmlclass AnchorChanges QQuickAnchorChanges
+    \inqmlmodule QtQuick 2
+    \ingroup qml-state-elements
+    \brief The AnchorChanges element allows you to change the anchors of an item in a state.
+
+    The AnchorChanges element is used to modify the anchors of an item in a \l State.
+
+    AnchorChanges cannot be used to modify the margins on an item. For this, use
+    PropertyChanges intead.
+
+    In the following example we change the top and bottom anchors of an item
+    using AnchorChanges, and the top and bottom anchor margins using
+    PropertyChanges:
+
+    \snippet doc/src/snippets/qml/anchorchanges.qml 0
+
+    \image anchorchanges.png
+
+    AnchorChanges can be animated using AnchorAnimation.
+    \qml
+    //animate our anchor changes
+    Transition {
+        AnchorAnimation {}
+    }
+    \endqml
+
+    Changes to anchor margins can be animated using NumberAnimation.
+
+    For more information on anchors see \l {anchor-layout}{Anchor Layouts}.
+*/
 
 class QQuickAnchorSetPrivate : public QObjectPrivate
 {
@@ -886,6 +966,10 @@ QQuickAnchorSet *QQuickAnchorChanges::anchors()
     return d->anchorSet;
 }
 
+/*!
+    \qmlproperty Item AnchorChanges::target
+    This property holds the \l Item for which the anchor changes will be applied.
+*/
 QQuickItem *QQuickAnchorChanges::object() const
 {
     Q_D(const QQuickAnchorChanges);
@@ -897,6 +981,27 @@ void QQuickAnchorChanges::setObject(QQuickItem *target)
     Q_D(QQuickAnchorChanges);
     d->target = target;
 }
+
+/*!
+    \qmlproperty AnchorLine AnchorChanges::anchors.left
+    \qmlproperty AnchorLine AnchorChanges::anchors.right
+    \qmlproperty AnchorLine AnchorChanges::anchors.horizontalCenter
+    \qmlproperty AnchorLine AnchorChanges::anchors.top
+    \qmlproperty AnchorLine AnchorChanges::anchors.bottom
+    \qmlproperty AnchorLine AnchorChanges::anchors.verticalCenter
+    \qmlproperty AnchorLine AnchorChanges::anchors.baseline
+
+    These properties change the respective anchors of the item.
+
+    To reset an anchor you can assign \c undefined:
+    \qml
+    AnchorChanges {
+        target: myItem
+        anchors.left: undefined          //remove myItem's left anchor
+        anchors.right: otherItem.right
+    }
+    \endqml
+*/
 
 void QQuickAnchorChanges::execute(Reason reason)
 {
