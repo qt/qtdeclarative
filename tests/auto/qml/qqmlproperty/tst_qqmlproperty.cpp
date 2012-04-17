@@ -164,7 +164,7 @@ void tst_qqmlproperty::qmlmetaproperty()
     QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
     QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
     QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-    QVERIFY(prop.method().signature() == 0);
+    QVERIFY(!prop.method().isValid());
     QCOMPARE(prop.type(), QQmlProperty::Invalid);
     QCOMPARE(prop.isProperty(), false);
     QCOMPARE(prop.isWritable(), false);
@@ -268,7 +268,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QVERIFY(prop.method().signature() == 0);
+        QVERIFY(!prop.method().isValid());
         QCOMPARE(prop.type(), QQmlProperty::Invalid);
         QCOMPARE(prop.isProperty(), false);
         QCOMPARE(prop.isWritable(), false);
@@ -316,7 +316,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QVERIFY(prop.method().signature() == 0);
+        QVERIFY(!prop.method().isValid());
         QCOMPARE(prop.type(), QQmlProperty::Property);
         QCOMPARE(prop.isProperty(), true);
         QCOMPARE(prop.isWritable(), false);
@@ -371,7 +371,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QVERIFY(prop.method().signature() == 0);
+        QVERIFY(!prop.method().isValid());
         QCOMPARE(prop.type(), QQmlProperty::Invalid);
         QCOMPARE(prop.isProperty(), false);
         QCOMPARE(prop.isWritable(), false);
@@ -419,7 +419,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QVERIFY(prop.method().signature() == 0);
+        QVERIFY(!prop.method().isValid());
         QCOMPARE(prop.type(), QQmlProperty::Property);
         QCOMPARE(prop.isProperty(), true);
         QCOMPARE(prop.isWritable(), false);
@@ -469,7 +469,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QCOMPARE(QString(prop.method().signature()), QString("clicked()"));
+        QCOMPARE(QString(prop.method().methodSignature()), QString("clicked()"));
         QCOMPARE(prop.type(), QQmlProperty::SignalProperty);
         QCOMPARE(prop.isProperty(), false);
         QCOMPARE(prop.isWritable(), false);
@@ -518,7 +518,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QCOMPARE(QString(prop.method().signature()), QString("oddlyNamedNotifySignal()"));
+        QCOMPARE(QString(prop.method().methodSignature()), QString("oddlyNamedNotifySignal()"));
         QCOMPARE(prop.type(), QQmlProperty::SignalProperty);
         QCOMPARE(prop.isProperty(), false);
         QCOMPARE(prop.isWritable(), false);
@@ -572,7 +572,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QVERIFY(prop.method().signature() == 0);
+        QVERIFY(!prop.method().isValid());
         QCOMPARE(prop.type(), QQmlProperty::Invalid);
         QCOMPARE(prop.isProperty(), false);
         QCOMPARE(prop.isWritable(), false);
@@ -620,7 +620,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QVERIFY(prop.method().signature() == 0);
+        QVERIFY(!prop.method().isValid());
         QCOMPARE(prop.type(), QQmlProperty::Property);
         QCOMPARE(prop.isProperty(), true);
         QCOMPARE(prop.isWritable(), false);
@@ -675,7 +675,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QVERIFY(prop.method().signature() == 0);
+        QVERIFY(!prop.method().isValid());
         QCOMPARE(prop.type(), QQmlProperty::Invalid);
         QCOMPARE(prop.isProperty(), false);
         QCOMPARE(prop.isWritable(), false);
@@ -723,7 +723,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QVERIFY(prop.method().signature() == 0);
+        QVERIFY(!prop.method().isValid());
         QCOMPARE(prop.type(), QQmlProperty::Property);
         QCOMPARE(prop.isProperty(), true);
         QCOMPARE(prop.isWritable(), false);
@@ -773,7 +773,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QCOMPARE(QString(prop.method().signature()), QString("clicked()"));
+        QCOMPARE(QString(prop.method().methodSignature()), QString("clicked()"));
         QCOMPARE(prop.type(), QQmlProperty::SignalProperty);
         QCOMPARE(prop.isProperty(), false);
         QCOMPARE(prop.isWritable(), false);
@@ -822,7 +822,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.connectNotifySignal(0, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, obj->metaObject()->indexOfMethod("deleteLater()")), false);
         QCOMPARE(prop.connectNotifySignal(obj, -1), false);
-        QCOMPARE(QString(prop.method().signature()), QString("oddlyNamedNotifySignal()"));
+        QCOMPARE(QString(prop.method().methodSignature()), QString("oddlyNamedNotifySignal()"));
         QCOMPARE(prop.type(), QQmlProperty::SignalProperty);
         QCOMPARE(prop.isProperty(), false);
         QCOMPARE(prop.isWritable(), false);
@@ -1431,10 +1431,10 @@ void tst_qqmlproperty::urlHandling_data()
         << QByteArray("http://www.example.com/main%20file.qml");
 
     QTest::newRow("preencodedName")
-        << QByteArray("http://www.example.com/resources%7cmain%20file.qml")
+        << QByteArray("http://www.example.com/resources%7Cmain%20file.qml")
         << QString("http")
         << QString("/resources|main file.qml")
-        << QByteArray("http://www.example.com/resources%7cmain%20file.qml");
+        << QByteArray("http://www.example.com/resources%7Cmain%20file.qml");
 
     QTest::newRow("encodableQuery")
         << QByteArray("http://www.example.com/main.qml?type=text/qml&comment=now working?")
@@ -1443,10 +1443,10 @@ void tst_qqmlproperty::urlHandling_data()
         << QByteArray("http://www.example.com/main.qml?type=text/qml&comment=now%20working?");
 
     QTest::newRow("preencodedQuery")
-        << QByteArray("http://www.example.com/main.qml?type=text%2fqml&comment=now working%3f")
+        << QByteArray("http://www.example.com/main.qml?type=text%2Fqml&comment=now working%3F")
         << QString("http")
         << QString("/main.qml")
-        << QByteArray("http://www.example.com/main.qml?type=text%2fqml&comment=now%20working%3f");
+        << QByteArray("http://www.example.com/main.qml?type=text%2Fqml&comment=now%20working%3F");
 
     QTest::newRow("encodableFragment")
         << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000|volume+50%")
@@ -1454,11 +1454,11 @@ void tst_qqmlproperty::urlHandling_data()
         << QString("/main.qml")
         << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7Cvolume+50%25");
 
-    QTest::newRow("preencodedFragment")
-        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7cvolume%2b50%")
+    QTest::newRow("improperlyEncodedFragment")
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7Cvolume%2B50%")
         << QString("http")
         << QString("/main.qml")
-        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%7cvolume%2b50%25");
+        << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000%257Cvolume%252B50%25");
 }
 
 void tst_qqmlproperty::urlHandling()
@@ -1480,6 +1480,7 @@ void tst_qqmlproperty::urlHandling()
 
         QCOMPARE(byteArrayResult.scheme(), scheme);
         QCOMPARE(byteArrayResult.path(), path);
+        QCOMPARE(byteArrayResult.toString(QUrl::FullyEncoded), QString::fromUtf8(encoded));
         QCOMPARE(byteArrayResult.toEncoded(), encoded);
     }
 
@@ -1493,6 +1494,7 @@ void tst_qqmlproperty::urlHandling()
 
         QCOMPARE(stringResult.scheme(), scheme);
         QCOMPARE(stringResult.path(), path);
+        QCOMPARE(stringResult.toString(QUrl::FullyEncoded), QString::fromUtf8(encoded));
         QCOMPARE(stringResult.toEncoded(), encoded);
     }
 }

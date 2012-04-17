@@ -42,16 +42,16 @@
 #include <qqmlextensionplugin.h>
 
 #include <qqmlengine.h>
-#include <qqmlimageprovider.h>
+#include <qquickimageprovider.h>
 #include <QImage>
 #include <QPainter>
 
 //![0]
-class ColorImageProvider : public QQmlImageProvider
+class ColorImageProvider : public QQuickImageProvider
 {
 public:
     ColorImageProvider()
-        : QQmlImageProvider(QQmlImageProvider::Pixmap)
+        : QQuickImageProvider(QQuickImageProvider::Pixmap)
     {
     }
 

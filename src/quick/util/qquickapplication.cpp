@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,9 +40,9 @@
 ****************************************************************************/
 
 #include "qquickapplication_p.h"
+
 #include <private/qobject_p.h>
 #include <QtGui/QGuiApplication>
-#include <QtGui/QInputMethod>
 #include <QtCore/QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -51,21 +51,28 @@ class QQuickApplicationPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickApplication)
 public:
-    QQuickApplicationPrivate() : active(QGuiApplication::activeWindow() != 0),
-    layoutDirection(QGuiApplication::layoutDirection()) {}
-    bool active;
-    Qt::LayoutDirection layoutDirection;
+    QQuickApplicationPrivate()
+        : isActive(QGuiApplication::focusWindow() != 0),
+          direction(QGuiApplication::layoutDirection())
+    {
+    }
+
+private:
+    bool isActive;
+    Qt::LayoutDirection direction;
 };
 
 /*
     This object and its properties are documented as part of the Qt object,
-    in qdeclarativengine.cpp
+    in qqmlengine.cpp
 */
 
-QQuickApplication::QQuickApplication(QObject *parent) : QObject(*new QQuickApplicationPrivate(), parent)
+QQuickApplication::QQuickApplication(QObject *parent)
+    : QObject(*new QQuickApplicationPrivate(), parent)
 {
-    if (qApp)
+    if (qApp) {
         qApp->installEventFilter(this);
+    }
 }
 
 QQuickApplication::~QQuickApplication()
@@ -75,13 +82,13 @@ QQuickApplication::~QQuickApplication()
 bool QQuickApplication::active() const
 {
     Q_D(const QQuickApplication);
-    return d->active;
+    return d->isActive;
 }
 
 Qt::LayoutDirection QQuickApplication::layoutDirection() const
 {
     Q_D(const QQuickApplication);
-    return d->layoutDirection;
+    return d->direction;
 }
 
 QObject *QQuickApplication::inputPanel() const
@@ -91,30 +98,23 @@ QObject *QQuickApplication::inputPanel() const
         qWarning() << "Qt.application.inputPanel is deprecated, use Qt.inputMethod instead";
         warned = true;
     }
-    return qApp ? qApp->inputMethod() : 0;
+    return qGuiApp->inputMethod();
 }
 
-bool QQuickApplication::eventFilter(QObject *obj, QEvent *event)
+bool QQuickApplication::eventFilter(QObject *, QEvent *event)
 {
-    Q_UNUSED(obj)
     Q_D(QQuickApplication);
-    if (event->type() == QEvent::ApplicationActivate
-     || event->type() == QEvent::ApplicationDeactivate) {
-        bool active = d->active;
-        if (event->type() == QEvent::ApplicationActivate)
-            active  = true;
-        else if (event->type() == QEvent::ApplicationDeactivate)
-            active  = false;
-
-        if (d->active != active) {
-            d->active = active;
+    if ((event->type() == QEvent::ApplicationActivate) ||
+        (event->type() == QEvent::ApplicationDeactivate)) {
+        bool wasActive = d->isActive;
+        d->isActive = (event->type() == QEvent::ApplicationActivate);
+        if (d->isActive != wasActive) {
             emit activeChanged();
         }
-    }
-    if (event->type() == QEvent::LayoutDirectionChange) {
-        Qt::LayoutDirection direction = QGuiApplication::layoutDirection();
-        if (d->layoutDirection != direction) {
-            d->layoutDirection = direction;
+    } else if (event->type() == QEvent::LayoutDirectionChange) {
+        Qt::LayoutDirection newDirection = QGuiApplication::layoutDirection();
+        if (d->direction != newDirection) {
+            d->direction = newDirection;
             emit layoutDirectionChanged();
         }
     }

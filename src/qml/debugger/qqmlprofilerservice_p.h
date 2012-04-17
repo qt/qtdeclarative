@@ -209,7 +209,7 @@ struct QQmlHandlingSignalProfiler {
             QQmlProfilerService *service = QQmlProfilerService::instance;
             service->startRange(QQmlProfilerService::HandlingSignal);
             service->rangeData(QQmlProfilerService::HandlingSignal,
-                               QLatin1String(signal.signature()) + QLatin1String(": ")
+                               QString::fromLatin1(signal.methodSignature()) + QLatin1String(": ")
                                + expression->expression());
             service->rangeLocation(QQmlProfilerService::HandlingSignal,
                                    expression->sourceFile(), expression->lineNumber(),

@@ -80,6 +80,7 @@
 #include "qv8variantwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8sequencewrapper_p.h"
+#include "qv8jsonwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -357,6 +358,9 @@ public:
     // a QVariant wrapper
     inline v8::Handle<v8::Value> newQVariant(const QVariant &);
 
+    // Return the JS string key for the "function is a binding" flag
+    inline v8::Handle<v8::String> bindingFlagKey() const;
+
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
     // instance (like in WorkerScript).
@@ -412,6 +416,13 @@ public:
     v8::Handle<v8::Value> variantToJS(const QVariant &value);
     QVariant variantFromJS(v8::Handle<v8::Value> value);
 
+    v8::Handle<v8::Value> jsonValueToJS(const QJsonValue &value);
+    QJsonValue jsonValueFromJS(v8::Handle<v8::Value> value);
+    v8::Local<v8::Object> jsonObjectToJS(const QJsonObject &object);
+    QJsonObject jsonObjectFromJS(v8::Handle<v8::Value> value);
+    v8::Local<v8::Array> jsonArrayToJS(const QJsonArray &array);
+    QJsonArray jsonArrayFromJS(v8::Handle<v8::Value> value);
+
     v8::Handle<v8::Value> metaTypeToJS(int type, const void *data);
     bool metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data);
 
@@ -440,6 +451,9 @@ public:
     void addRelationshipForGC(QObject *object, v8::Persistent<v8::Value> handle);
     void addRelationshipForGC(QObject *object, QObject *other);
 
+    static v8::Handle<v8::Value> getApplication(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> getInputMethod(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+
     struct ThreadData {
         ThreadData();
         ~ThreadData();
@@ -461,6 +475,8 @@ protected:
     v8::Persistent<v8::Context> m_context;
     QScriptOriginalGlobalObject m_originalGlobalObject;
 
+    v8::Persistent<v8::String> m_bindingFlagKey;
+
     QV8StringWrapper m_stringWrapper;
     QV8ContextWrapper m_contextWrapper;
     QV8QObjectWrapper m_qobjectWrapper;
@@ -469,6 +485,7 @@ protected:
     QV8VariantWrapper m_variantWrapper;
     QV8ValueTypeWrapper m_valueTypeWrapper;
     QV8SequenceWrapper m_sequenceWrapper;
+    QV8JsonWrapper m_jsonWrapper;
 
     v8::Persistent<v8::Function> m_getOwnPropertyNames;
     v8::Persistent<v8::Function> m_freezeObject;
@@ -486,6 +503,8 @@ protected:
     QHash<QString, qint64> m_startedTimers;
 
     QHash<QString, quint32> m_consoleCount;
+
+    QObject *m_application;
 
     QVariant toBasicVariant(v8::Handle<v8::Value>);
 
@@ -607,6 +626,11 @@ v8::Handle<v8::Value> QV8Engine::newValueType(const QVariant &value, QQmlValueTy
 v8::Handle<v8::Value> QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
 {
     return m_sequenceWrapper.newSequence(sequenceType, object, property, succeeded);
+}
+
+v8::Handle<v8::String> QV8Engine::bindingFlagKey() const
+{
+    return m_bindingFlagKey;
 }
 
 // XXX Can this be made more optimal?  It is called prior to resolving each and every 

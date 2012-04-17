@@ -337,7 +337,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         signalName[0] = signalName.at(0).toLower();
 
         QMetaMethod method = findSignalByName(currentObject->metaObject(), signalName.toLatin1().constData());
-        if (method.signature()) {
+        if (method.isValid()) {
             object = currentObject;
             core.load(method);
             return;
@@ -1156,7 +1156,7 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
                 return false;
         } else if (v.userType() != QVariant::Int && v.userType() != QVariant::UInt) {
             int enumMetaTypeId = QMetaType::type(QByteArray(menum.scope() + QByteArray("::") + menum.name()));
-            if ((enumMetaTypeId == 0) || (v.userType() != enumMetaTypeId) || !v.constData())
+            if ((enumMetaTypeId == QMetaType::UnknownType) || (v.userType() != enumMetaTypeId) || !v.constData())
                 return false;
             v = QVariant(*reinterpret_cast<const int *>(v.constData()));
         }
@@ -1495,6 +1495,17 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
 
     if (expression->hasError()) {
         return false;
+    } else if (isVmeProperty) {
+        typedef QQmlVMEMetaObject VMEMO;
+        if (!result.IsEmpty() && result->IsFunction()
+                && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
+            // we explicitly disallow this case to avoid confusion.  Users can still store one
+            // in an array in a var property if they need to, but the common case is user error.
+            expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+            return false;
+        }
+        VMEMO *vmemo = static_cast<VMEMO *>(const_cast<QMetaObject *>(object->metaObject()));
+        vmemo->setVMEProperty(core.coreIndex, result);
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { 0 };
         QMetaObject::metacall(object, QMetaObject::ResetProperty, core.coreIndex, args);
@@ -1504,12 +1515,11 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         expression->delayedError()->error.setDescription(QLatin1String("Unable to assign [undefined] to ") + QLatin1String(QMetaType::typeName(type)));
         return false;
     } else if (result->IsFunction()) {
-        expression->delayedError()->error.setDescription(QLatin1String("Unable to assign a function to a property."));
+        if (!result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty())
+            expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+        else
+            expression->delayedError()->error.setDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));
         return false;
-    } else if (isVmeProperty) {
-        typedef QQmlVMEMetaObject VMEMO;
-        VMEMO *vmemo = static_cast<VMEMO *>(const_cast<QMetaObject *>(object->metaObject()));
-        vmemo->setVMEProperty(core.coreIndex, result);
     } else if (!writeValueProperty(object, engine, core, value, context, flags)) {
 
         if (watcher.wasDeleted()) 
@@ -1704,7 +1714,7 @@ bool QQmlProperty::connectNotifySignal(QObject *dest, const char *slot) const
 
     QMetaProperty prop = d->object->metaObject()->property(d->core.coreIndex);
     if (prop.hasNotifySignal()) {
-        QByteArray signal(QByteArray("2") + prop.notifySignal().signature());
+        QByteArray signal(QByteArray("2") + prop.notifySignal().methodSignature());
         return QObject::connect(d->object, signal.constData(), dest, slot);
     } else  {
         return false;
@@ -1810,11 +1820,8 @@ QMetaMethod QQmlPropertyPrivate::findSignalByName(const QMetaObject *mo, const Q
     int methods = mo->methodCount();
     for (int ii = methods - 1; ii >= 2; --ii) { // >= 2 to block the destroyed signal
         QMetaMethod method = mo->method(ii);
-        QByteArray methodName = method.signature();
-        int idx = methodName.indexOf('(');
-        methodName = methodName.left(idx);
 
-        if (methodName == name)
+        if (method.name() == name)
             return method;
     }
 

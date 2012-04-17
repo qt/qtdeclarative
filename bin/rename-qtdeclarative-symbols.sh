@@ -154,8 +154,6 @@ QML_SYMBOLS="\
     QDeclarativeGuardedContextData
     QDeclarativeGuardImpl
     QDeclarativeHandlingSignalProfiler
-    QDeclarativeImageProvider
-    QDeclarativeImageProviderPrivate
     QDeclarativeImportDatabase
     QDeclarativeImportedNamespace
     QDeclarativeImports
@@ -319,6 +317,8 @@ QUICK_SYMBOLS="\
     QDeclarativeGestureAreaParser
     QDeclarativeGestureAreaPrivate
     QDeclarativeGraphics
+    QDeclarativeImageProvider
+    QDeclarativeImageProviderPrivate
     QDeclarativeItem
     QDeclarativeItemAccessor
     QDeclarativeItemChangeListener

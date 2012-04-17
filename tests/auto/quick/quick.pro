@@ -16,6 +16,7 @@ PRIVATETESTS += \
     qquickapplication \
     qquickbehaviors \
     qquickfontloader \
+    qquickimageprovider \
     qquickpath \
     qquicksmoothedanimation \
     qquickspringanimation \

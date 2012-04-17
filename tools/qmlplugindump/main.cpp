@@ -386,10 +386,10 @@ public:
             // for QObject, hide deleteLater() and onDestroyed
             for (int index = meta->methodOffset(); index < meta->methodCount(); ++index) {
                 QMetaMethod method = meta->method(index);
-                const char *signature(method.signature());
-                if (signature == QLatin1String("destroyed(QObject*)")
-                        || signature == QLatin1String("destroyed()")
-                        || signature == QLatin1String("deleteLater()"))
+                QByteArray signature = method.methodSignature();
+                if (signature == QByteArrayLiteral("destroyed(QObject*)")
+                        || signature == QByteArrayLiteral("destroyed()")
+                        || signature == QByteArrayLiteral("deleteLater()"))
                     continue;
                 dump(method, implicitSignals);
             }
@@ -500,12 +500,7 @@ private:
             return; // nothing to do.
         }
 
-        QByteArray name = meth.signature();
-        int lparenIndex = name.indexOf('(');
-        if (lparenIndex == -1) {
-            return; // invalid signature
-        }
-        name = name.left(lparenIndex);
+        QByteArray name = meth.name();
         const QString typeName = convertToId(meth.typeName());
 
         if (implicitSignals.contains(name)

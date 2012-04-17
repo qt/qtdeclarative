@@ -60,32 +60,31 @@
 
 QT_BEGIN_NAMESPACE
 
-class QColor;
 class QPointF;
 class QSizeF;
 class QRectF;
 class QString;
 class QByteArray;
-class QVector3D;
-class QVector4D;
 
 // XXX - Bauhaus currently uses these methods which is why they're exported
 namespace QQmlStringConverters
 {
-    QVariant Q_QML_PRIVATE_EXPORT variantFromString(const QString &);
-    QVariant Q_QML_PRIVATE_EXPORT variantFromString(const QString &, int preferredType, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QVariant variantFromString(const QString &);
+    Q_QML_PRIVATE_EXPORT QVariant variantFromString(const QString &, int preferredType, bool *ok = 0);
 
-    QColor Q_QML_PRIVATE_EXPORT colorFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QVariant colorFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT unsigned rgbaFromString(const QString &, bool *ok = 0);
+
 #ifndef QT_NO_DATESTRING
-    QDate Q_QML_PRIVATE_EXPORT dateFromString(const QString &, bool *ok = 0); 
-    QTime Q_QML_PRIVATE_EXPORT timeFromString(const QString &, bool *ok = 0);
-    QDateTime Q_QML_PRIVATE_EXPORT dateTimeFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QDate dateFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QTime timeFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QDateTime dateTimeFromString(const QString &, bool *ok = 0);
 #endif
-    QPointF Q_QML_PRIVATE_EXPORT pointFFromString(const QString &, bool *ok = 0);
-    QSizeF Q_QML_PRIVATE_EXPORT sizeFFromString(const QString &, bool *ok = 0);
-    QRectF Q_QML_PRIVATE_EXPORT rectFFromString(const QString &, bool *ok = 0);
-    QVector3D Q_QML_PRIVATE_EXPORT vector3DFromString(const QString &, bool *ok = 0);
-    QVector4D Q_QML_PRIVATE_EXPORT vector4DFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QPointF pointFFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QSizeF sizeFFromString(const QString &, bool *ok = 0);
+    Q_QML_PRIVATE_EXPORT QRectF rectFFromString(const QString &, bool *ok = 0);
+
+    Q_QML_PRIVATE_EXPORT bool createFromString(int, const QString &, void *, size_t);
 }
 
 QT_END_NAMESPACE

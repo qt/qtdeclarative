@@ -1,5 +1,4 @@
 SOURCES += \
-    $$PWD/qquickapplication.cpp \
     $$PWD/qqmlinstruction.cpp \
     $$PWD/qquicklistmodel.cpp \
     $$PWD/qquicklistmodelworkeragent.cpp \
@@ -40,7 +39,6 @@ SOURCES += \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
     $$PWD/qquickworkerscript.cpp \
-    $$PWD/qqmlimageprovider.cpp \
     $$PWD/qqmlnetworkaccessmanagerfactory.cpp \
     $$PWD/qqmldirparser.cpp \
     $$PWD/qqmlextensionplugin.cpp \
@@ -52,6 +50,7 @@ SOURCES += \
     $$PWD/qqmljavascriptexpression.cpp \
     $$PWD/qqmlabstractbinding.cpp \
     $$PWD/qqmlvaluetypeproxybinding.cpp \
+    $$PWD/qqmlglobal.cpp \
 
 HEADERS += \
     $$PWD/qqmlglobal_p.h \
@@ -62,7 +61,6 @@ HEADERS += \
     $$PWD/qqmlopenmetaobject_p.h \
     $$PWD/qqmlvmemetaobject_p.h \
     $$PWD/qqml.h \
-    $$PWD/qquickapplication_p.h \
     $$PWD/qqmlbinding_p.h \
     $$PWD/qqmlproperty.h \
     $$PWD/qqmlcomponent.h \
@@ -109,7 +107,6 @@ HEADERS += \
     $$PWD/qqmlscriptstring.h \
     $$PWD/qquickworkerscript_p.h \
     $$PWD/qqmlguard_p.h \
-    $$PWD/qqmlimageprovider.h \
     $$PWD/qqmlnetworkaccessmanagerfactory.h \
     $$PWD/qqmldirparser_p.h \
     $$PWD/qqmlextensioninterface.h \

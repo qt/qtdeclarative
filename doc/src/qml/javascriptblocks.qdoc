@@ -72,7 +72,7 @@ Rectangle {
     id: button
     width: 200; height: 80; color: "lightsteelblue"
 
-    MouseArea {
+    MouseArea {
         id: mousearea
         anchors.fill: parent
 
@@ -103,7 +103,7 @@ Rectangle {
 
     color: mousearea.pressed ? "steelblue" : "lightsteelblue"
 
-    MouseArea {
+    MouseArea {
         id: mousearea
         anchors.fill: parent
     }
@@ -364,6 +364,15 @@ handler to execute at startup, they are run sequentially in an undefined order.
 
 Likewise, the \l {Component::onDestruction} attached property is triggered on
 component destruction.
+
+
+\section1 JavaScript and Property Binding
+
+Property bindings can be created in JavaScript by assigning the property the value returned
+by calling Qt.binding() where the parameter to Qt.binding() is a \c function
+that returns the required value.
+
+See \l {qml-javascript-assignment}{Property Assignment versus Property Binding} for details.
 
 
 \section1 QML JavaScript Restrictions

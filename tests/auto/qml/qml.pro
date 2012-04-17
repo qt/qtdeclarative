@@ -8,6 +8,7 @@ PUBLICTESTS += \
     qjsengine \
     qjsvalue \
     qjsvalueiterator \
+    qjsonbinding \
     qmlmin \
     qmlplugindump \
     qqmlcomponent \
@@ -32,7 +33,7 @@ PRIVATETESTS += \
     qqmlecmascript \
     qqmlcontext \
     qqmlexpression \
-    qqmlimageprovider \
+    qqmlglobal \
     qqmlinstruction \
     qqmllanguage \
     qqmlproperty \

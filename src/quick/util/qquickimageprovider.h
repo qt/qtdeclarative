@@ -39,49 +39,53 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKAPPLICATION_P_H
-#define QQUICKAPPLICATION_P_H
+#ifndef QQUICKIMAGEPROVIDER_H
+#define QQUICKIMAGEPROVIDER_H
 
-#include <QtCore/QObject>
-#include <qqml.h>
-#include <private/qtqmlglobal_p.h>
+#include <QtQuick/qtquickglobal.h>
+#include <QtGui/qimage.h>
+#include <QtGui/qpixmap.h>
+#include <QtQml/qqmlengine.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 
-class QQuickApplicationPrivate;
-class Q_QML_PRIVATE_EXPORT QQuickApplication : public QObject
+class QQuickImageProviderPrivate;
+class QSGTexture;
+class QQuickCanvas;
+
+class Q_QUICK_EXPORT QQuickTextureFactory : public QObject
 {
-    Q_OBJECT
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection NOTIFY layoutDirectionChanged)
-    Q_PROPERTY(QObject *inputPanel READ inputPanel CONSTANT)
-
 public:
-    explicit QQuickApplication(QObject *parent = 0);
-    virtual ~QQuickApplication();
-    bool active() const;
-    Qt::LayoutDirection layoutDirection() const;
-    QT_DEPRECATED QObject *inputPanel() const;
+    QQuickTextureFactory();
+    virtual ~QQuickTextureFactory();
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *event);
+    virtual QSGTexture *createTexture(QQuickCanvas *canvas) const = 0;
+    virtual QSize textureSize() const = 0;
+    virtual int textureByteCount() const = 0;
+    virtual QImage image() const;
+};
 
-Q_SIGNALS:
-    void activeChanged();
-    void layoutDirectionChanged();
+class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
+{
+public:
+    QQuickImageProvider(ImageType type);
+    virtual ~QQuickImageProvider();
+
+    ImageType imageType() const;
+
+    virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize);
+    virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize);
+    virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
 
 private:
-    Q_DISABLE_COPY(QQuickApplication)
-    Q_DECLARE_PRIVATE(QQuickApplication)
+    QQuickImageProviderPrivate *d;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickApplication)
-
 QT_END_HEADER
 
-#endif // QQUICKAPPLICATION_P_H
+#endif // QQUICKIMAGEPROVIDER_H

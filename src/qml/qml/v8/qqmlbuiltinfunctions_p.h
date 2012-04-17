@@ -103,6 +103,7 @@ v8::Handle<v8::Value> qsTrId(const v8::Arguments &args);
 v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args);
 v8::Handle<v8::Value> stringArg(const v8::Arguments &args);
 v8::Handle<v8::Value> locale(const v8::Arguments &args);
+v8::Handle<v8::Value> binding(const v8::Arguments &args);
 }
 
 QT_END_NAMESPACE

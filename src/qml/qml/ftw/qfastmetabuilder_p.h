@@ -80,13 +80,15 @@ public:
 
         inline bool isEmpty() const;
         inline QFastMetaBuilder *builder() const;
-        inline int offset() const;
+        inline int index() const;
         inline char *data();
         inline int length() const;
+        inline void loadByteArrayData();
     private:
         friend class QFastMetaBuilder;
 
         QFastMetaBuilder *_b;
+        int _i;
         int _o;
         int _l;
     };
@@ -95,7 +97,8 @@ public:
     // Returns class name
     StringRef init(int classNameLength,
                    int propertyCount, int methodCount, 
-                   int signalCount, int classInfoCount);
+                   int signalCount, int classInfoCount,
+                   int paramDataSize, int *paramIndex);
 
     void setClassInfo(int index, const StringRef &key, const StringRef &value);
 
@@ -106,48 +109,55 @@ public:
         Constant = 0x00000400,
         Final = 0x00000800
     };
-    // void setProperty(int index, const StringRef &name, QMetaType::Type type, int notifySignal = -1);
-    void setProperty(int index, const StringRef &name, const StringRef &type, 
-                     QMetaType::Type mtype, PropertyFlag flags, int notifySignal = -1);
-    void setProperty(int index, const StringRef &name, const StringRef &type, 
+    void setProperty(int index, const StringRef &name, int type,
                      PropertyFlag flags, int notifySignal = -1);
-    void setMethod(int index, const StringRef &signature,
-                   const StringRef &parameterNames = StringRef(), 
-                   const StringRef &type = StringRef());
-    void setSignal(int index, const StringRef &signature, 
-                   const StringRef &parameterNames = StringRef(), 
-                   const StringRef &type = StringRef());
+    void setMethod(int index, const StringRef &name, int paramIndex, int argc = 0,
+                   const int *types = 0, const StringRef *parameterNames = 0,
+                   QMetaType::Type type = QMetaType::Void);
+    void setSignal(int index, const StringRef &name, int paramIndex, int argc = 0,
+                   const int *types = 0, const StringRef *parameterNames = 0,
+                   QMetaType::Type type = QMetaType::Void);
 
     int metaObjectIndexForSignal(int) const;
     int metaObjectIndexForMethod(int) const;
 
-    QByteArray toData() const { return m_data; }
+    QByteArray toData() const {
+        if (m_stringCountLoaded == m_stringCount - 1) {
+            // zero-string is lazily loaded last
+            const_cast<StringRef &>(m_zeroString).loadByteArrayData();
+        }
+        Q_ASSERT(m_stringCountLoaded == m_stringCount);
+        return m_data;
+    }
     static void fromData(QMetaObject *, const QMetaObject *parent, const QByteArray &);
 private:
     friend struct StringRef;
 
     QByteArray m_data;
-    int m_zeroPtr;
+    StringRef m_zeroString;
 
     void allocateStringData();
-    char *m_stringData;
+    QByteArrayData *m_stringData;
+    int m_stringCount;
     int m_stringDataLength;
-    int m_stringDataAllocated;
+    int m_stringCountAllocated;
+    int m_stringCountLoaded;
 };
 
 QFastMetaBuilder::StringRef::StringRef()
-: _b(0), _o(0), _l(0)
+: _b(0), _i(0), _o(0), _l(0)
 {
 }
 
 QFastMetaBuilder::StringRef::StringRef(const StringRef &o)
-: _b(o._b), _o(o._o), _l(o._l)
+: _b(o._b), _i(o._i), _o(o._o), _l(o._l)
 {
 }
 
 QFastMetaBuilder::StringRef &QFastMetaBuilder::StringRef::operator=(const StringRef &o)
 {
     _b = o._b;
+    _i = o._i;
     _o = o._o;
     _l = o._l;
     return *this;
@@ -163,17 +173,17 @@ QFastMetaBuilder *QFastMetaBuilder::StringRef::builder() const
     return _b;
 }
 
-int QFastMetaBuilder::StringRef::offset() const
+int QFastMetaBuilder::StringRef::index() const
 {
-    return _o;
+    return _i;
 }
 
 char *QFastMetaBuilder::StringRef::data()
 {
     Q_ASSERT(_b);
-    if (_b->m_stringDataLength != _b->m_stringDataAllocated)
-        _b->allocateStringData();
-    return _b->m_stringData + _o;
+    if (_b->m_stringCountAllocated < _b->m_stringCount)
+         _b->allocateStringData();
+    return reinterpret_cast<char *>(&_b->m_stringData[_b->m_stringCount]) + _o;
 }
 
 int QFastMetaBuilder::StringRef::length() const
@@ -186,18 +196,36 @@ void QFastMetaBuilder::StringRef::load(const QHashedStringRef &str)
     Q_ASSERT(str.utf8length() == _l);
     str.writeUtf8(data());
     *(data() + _l) = 0;
+    loadByteArrayData();
 }
 
 void QFastMetaBuilder::StringRef::load(const QByteArray &str)
 {
     Q_ASSERT(str.length() == _l);
     strcpy(data(), str.constData());
+    loadByteArrayData();
 }
 
 void QFastMetaBuilder::StringRef::load(const char *str)
 {
     Q_ASSERT(strlen(str) == (uint)_l);
     strcpy(data(), str);
+    loadByteArrayData();
+}
+
+void QFastMetaBuilder::StringRef::loadByteArrayData()
+{
+    if (_b->m_stringCountAllocated < _b->m_stringCount)
+         _b->allocateStringData();
+    Q_ASSERT(_b->m_stringCountLoaded < _b->m_stringCount);
+
+    int offsetofCstrings = _b->m_stringCount * sizeof(QByteArrayData);
+    qptrdiff offset = offsetofCstrings + _o - _i * sizeof(QByteArrayData);
+
+    const QByteArrayData bad = { Q_REFCOUNT_INITIALIZE_STATIC, _l, 0, 0, offset };
+    memcpy(&_b->m_stringData[_i], &bad, sizeof(QByteArrayData));
+
+    ++_b->m_stringCountLoaded;
 }
 
 QT_END_NAMESPACE

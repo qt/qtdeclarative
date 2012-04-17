@@ -41,8 +41,6 @@
 
 #include "qv8engine_p.h"
 
-#include <QtGui/QGuiApplication>
-
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8sequencewrapper_p.h"
@@ -52,14 +50,17 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qquickapplication_p.h>
 #include <private/qqmlxmlhttprequest_p.h>
 #include <private/qqmllocale_p.h>
+#include <private/qqmlglobal_p.h>
 
 #include "qscript_impl_p.h"
 #include "qv8domerrors_p.h"
 #include "qv8sqlerrors_p.h"
 
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonvalue.h>
 
 Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QList<int>)
@@ -124,6 +125,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     , m_ownsV8Context(ownership == QJSEngine::CreateNewContext)
     , m_xmlHttpRequestData(0)
     , m_listModelData(0)
+    , m_application(0)
 {
     qMetaTypeId<QJSValue>();
     qMetaTypeId<QList<int> >();
@@ -146,6 +148,8 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     QV8GCCallback::registerGcPrologueCallback();
     m_strongReferencer = qPersistentNew(v8::Object::New());
 
+    m_bindingFlagKey = qPersistentNew(v8::String::New("qml::binding"));
+
     m_stringWrapper.init();
     m_contextWrapper.init(this);
     m_qobjectWrapper.init(this);
@@ -154,6 +158,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     m_variantWrapper.init(this);
     m_valueTypeWrapper.init(this);
     m_sequenceWrapper.init(this);
+    m_jsonWrapper.init(this);
 
     {
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
@@ -181,6 +186,7 @@ QV8Engine::~QV8Engine()
 
     qPersistentDispose(m_strongReferencer);
 
+    m_jsonWrapper.destroy();
     m_sequenceWrapper.destroy();
     m_valueTypeWrapper.destroy();
     m_variantWrapper.destroy();
@@ -189,6 +195,8 @@ QV8Engine::~QV8Engine()
     m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
     m_stringWrapper.destroy();
+
+    qPersistentDispose(m_bindingFlagKey);
 
     m_originalGlobalObject.destroy();
 
@@ -216,6 +224,9 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
 
     if (typeHint == QVariant::Bool)
         return QVariant(value->BooleanValue());
+
+    if (typeHint == QMetaType::QJsonValue)
+        return QVariant::fromValue(jsonValueFromJS(value));
 
     if (value->IsObject()) {
         QV8ObjectResource *r = (QV8ObjectResource *)value->ToObject()->GetExternalResource();
@@ -248,6 +259,9 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             case QV8ObjectResource::SequenceType:
                 return m_sequenceWrapper.toVariant(r);
             }
+        } else if (typeHint == QMetaType::QJsonObject
+                   && !value->IsArray() && !value->IsFunction()) {
+            return QVariant::fromValue(jsonObjectFromJS(value));
         }
     }
 
@@ -266,6 +280,8 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             }
 
             return qVariantFromValue<QList<QObject*> >(list);
+        } else if (typeHint == QMetaType::QJsonArray) {
+            return QVariant::fromValue(jsonArrayFromJS(value));
         }
 
         bool succeeded = false;
@@ -313,6 +329,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
 
     if (type < QMetaType::User) {
         switch (QMetaType::Type(type)) {
+            case QMetaType::UnknownType:
             case QMetaType::Void:
                 return v8::Undefined();
             case QMetaType::Bool:
@@ -364,6 +381,12 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
                 return arrayFromVariantList(this, *reinterpret_cast<const QVariantList *>(ptr));
             case QMetaType::QVariantMap:
                 return objectFromVariantMap(this, *reinterpret_cast<const QVariantMap *>(ptr));
+            case QMetaType::QJsonValue:
+                return jsonValueToJS(*reinterpret_cast<const QJsonValue *>(ptr));
+            case QMetaType::QJsonObject:
+                return jsonObjectToJS(*reinterpret_cast<const QJsonObject *>(ptr));
+            case QMetaType::QJsonArray:
+                return jsonArrayToJS(*reinterpret_cast<const QJsonArray *>(ptr));
 
             default:
                 break;
@@ -532,9 +555,6 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 
 
 
-#include <QtGui/qvector3d.h>
-#include <QtGui/qvector4d.h>
-
 struct StaticQtMetaObject : public QObject
 {
     static const QMetaObject *get()
@@ -597,10 +617,11 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("atob"), V8FUNCTION(atob, this));
     qt->Set(v8::String::New("resolvedUrl"), V8FUNCTION(resolvedUrl, this));
     qt->Set(v8::String::New("locale"), V8FUNCTION(locale, this));
+    qt->Set(v8::String::New("binding"), V8FUNCTION(binding, this));
 
     if (m_engine) {
-        qt->Set(v8::String::New("application"), newQObject(new QQuickApplication(m_engine)));
-        qt->Set(v8::String::New("inputMethod"), newQObject(qGuiApp->inputMethod(), CppOwnership));
+        qt->SetAccessor(v8::String::New("application"), getApplication, 0, v8::External::New(this));
+        qt->SetAccessor(v8::String::New("inputMethod"), getInputMethod, 0, v8::External::New(this));
         qt->Set(v8::String::New("lighter"), V8FUNCTION(lighter, this));
         qt->Set(v8::String::New("darker"), V8FUNCTION(darker, this));
         qt->Set(v8::String::New("tint"), V8FUNCTION(tint, this));
@@ -1089,6 +1110,7 @@ v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
 
     // check if it's one of the types we know
     switch (QMetaType::Type(type)) {
+    case QMetaType::UnknownType:
     case QMetaType::Void:
         return v8::Undefined();
     case QMetaType::Bool:
@@ -1148,6 +1170,15 @@ v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
         break;
     case QMetaType::QVariant:
         result = variantToJS(*reinterpret_cast<const QVariant*>(data));
+        break;
+    case QMetaType::QJsonValue:
+        result = jsonValueToJS(*reinterpret_cast<const QJsonValue *>(data));
+        break;
+    case QMetaType::QJsonObject:
+        result = jsonObjectToJS(*reinterpret_cast<const QJsonObject *>(data));
+        break;
+    case QMetaType::QJsonArray:
+        result = jsonArrayToJS(*reinterpret_cast<const QJsonArray *>(data));
         break;
     default:
         if (type == qMetaTypeId<QJSValue>()) {
@@ -1264,6 +1295,15 @@ bool QV8Engine::metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data
     case QMetaType::QVariant:
         *reinterpret_cast<QVariant*>(data) = variantFromJS(value);
         return true;
+    case QMetaType::QJsonValue:
+        *reinterpret_cast<QJsonValue *>(data) = jsonValueFromJS(value);
+        return true;
+    case QMetaType::QJsonObject:
+        *reinterpret_cast<QJsonObject *>(data) = jsonObjectFromJS(value);
+        return true;
+    case QMetaType::QJsonArray:
+        *reinterpret_cast<QJsonArray *>(data) = jsonArrayFromJS(value);
+        return true;
     default:
     ;
     }
@@ -1378,6 +1418,36 @@ QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
     return variantMapFromJS(value->ToObject());
+}
+
+v8::Handle<v8::Value> QV8Engine::jsonValueToJS(const QJsonValue &value)
+{
+    return m_jsonWrapper.fromJsonValue(value);
+}
+
+QJsonValue QV8Engine::jsonValueFromJS(v8::Handle<v8::Value> value)
+{
+    return m_jsonWrapper.toJsonValue(value);
+}
+
+v8::Local<v8::Object> QV8Engine::jsonObjectToJS(const QJsonObject &object)
+{
+    return m_jsonWrapper.fromJsonObject(object);
+}
+
+QJsonObject QV8Engine::jsonObjectFromJS(v8::Handle<v8::Value> value)
+{
+    return m_jsonWrapper.toJsonObject(value);
+}
+
+v8::Local<v8::Array> QV8Engine::jsonArrayToJS(const QJsonArray &array)
+{
+    return m_jsonWrapper.fromJsonArray(array);
+}
+
+QJsonArray QV8Engine::jsonArrayFromJS(v8::Handle<v8::Value> value)
+{
+    return m_jsonWrapper.toJsonArray(value);
 }
 
 bool QV8Engine::convertToNativeQObject(v8::Handle<v8::Value> value,
@@ -1499,6 +1569,22 @@ int QV8Engine::consoleCountHelper(const QString &file, int line, int column)
     number++;
     m_consoleCount.insert(key, number);
     return number;
+}
+
+v8::Handle<v8::Value> QV8Engine::getApplication(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Unwrap(info.Data()));
+    if (!engine->m_application) {
+        // Only allocate an application object once
+        engine->m_application = QQml_guiProvider()->application(engine->m_engine);
+    }
+    return engine->newQObject(engine->m_application);
+}
+
+v8::Handle<v8::Value> QV8Engine::getInputMethod(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Engine *engine = reinterpret_cast<QV8Engine*>(v8::External::Unwrap(info.Data()));
+    return engine->newQObject(QQml_guiProvider()->inputMethod(), CppOwnership);
 }
 
 void QV8GCCallback::registerGcPrologueCallback()

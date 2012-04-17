@@ -63,7 +63,6 @@
 #include "qqmlbinding_p.h"
 #include <private/qv4compiler_p.h>
 
-#include <QColor>
 #include <QDebug>
 #include <QPointF>
 #include <QSizeF>
@@ -71,6 +70,7 @@
 #include <QAtomicInt>
 #include <QtCore/qdebug.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qvarlengtharray.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<qreal>)
@@ -349,16 +349,16 @@ bool QQmlCompiler::testLiteralAssignment(QQmlScript::Property *prop,
             break;
         case QVariant::Vector3D:
             {
-            bool ok;
-            QQmlStringConverters::vector3DFromString(value.asString(), &ok);
-            if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 3D vector expected"));
+            QQmlInstruction::instr_storeVector3D::QVector3D v3;
+            if (!QQmlStringConverters::createFromString(QMetaType::QVector3D, value.asString(), &v3, sizeof(v3)))
+                COMPILE_EXCEPTION(v, tr("Invalid property assignment: 3D vector expected"));
             }
             break;
         case QVariant::Vector4D:
             {
-            bool ok;
-            QQmlStringConverters::vector4DFromString(value.asString(), &ok);
-            if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 4D vector expected"));
+            QQmlInstruction::instr_storeVector4D::QVector4D v4;
+            if (!QQmlStringConverters::createFromString(QMetaType::QVector4D, value.asString(), &v4, sizeof(v4)))
+                COMPILE_EXCEPTION(v, tr("Invalid property assignment: 4D vector expected"));
             }
             break;
         default:
@@ -563,9 +563,8 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
         case QVariant::Color:
             {
             Instruction::StoreColor instr;
-            QColor c = QQmlStringConverters::colorFromString(v->value.asString());
             instr.propertyIndex = prop->index;
-            instr.value = c.rgba();
+            instr.value = QQmlStringConverters::rgbaFromString(v->value.asString());
             output->addInstruction(instr);
             }
             break;
@@ -684,25 +683,16 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
         case QVariant::Vector3D:
             {
             Instruction::StoreVector3D instr;
-            bool ok;
-            QVector3D vector = QQmlStringConverters::vector3DFromString(v->value.asString(), &ok);
             instr.propertyIndex = prop->index;
-            instr.vector.xp = vector.x();
-            instr.vector.yp = vector.y();
-            instr.vector.zp = vector.z();
+            QQmlStringConverters::createFromString(QMetaType::QVector3D, v->value.asString(), &instr.vector, sizeof(instr.vector));
             output->addInstruction(instr);
             }
             break;
     case QVariant::Vector4D:
             {
             Instruction::StoreVector4D instr;
-            bool ok;
-            QVector4D vector = QQmlStringConverters::vector4DFromString(v->value.asString(), &ok);
             instr.propertyIndex = prop->index;
-            instr.vector.xp = vector.x();
-            instr.vector.yp = vector.y();
-            instr.vector.zp = vector.z();
-            instr.vector.wp = vector.w();
+            QQmlStringConverters::createFromString(QMetaType::QVector4D, v->value.asString(), &instr.vector, sizeof(instr.vector));
             output->addInstruction(instr);
             }
             break;
@@ -2842,32 +2832,37 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         }
     }
 
+    // Size of the array that describes parameter types & names
+    int paramDataSize = (obj->aggregateDynamicSignalParameterCount() + obj->aggregateDynamicSlotParameterCount()) * 2
+            + obj->dynamicProperties.count() // for Changed() signals return types
+            // Return "parameters" don't have names
+            - (obj->dynamicSignals.count() + obj->dynamicSlots.count());
+
     QFastMetaBuilder builder;
+    int paramIndex;
     QFastMetaBuilder::StringRef classNameRef = builder.init(newClassName.length(), 
             obj->dynamicProperties.count() - (resolveAlias?0:aliasCount),
             obj->dynamicSlots.count(),
             obj->dynamicSignals.count() + obj->dynamicProperties.count(),
-            defaultProperty?1:0);
+            defaultProperty?1:0, paramDataSize, &paramIndex);
 
     struct TypeData {
         Object::DynamicProperty::Type dtype;
         int metaType;
-        const char *cppType;
     } builtinTypes[] = {
-        { Object::DynamicProperty::Var, QMetaType::QVariant, "QVariant" },
-        { Object::DynamicProperty::Variant, QMetaType::QVariant, "QVariant" },
-        { Object::DynamicProperty::Int, QMetaType::Int, "int" },
-        { Object::DynamicProperty::Bool, QMetaType::Bool, "bool" },
-        { Object::DynamicProperty::Real, QMetaType::Double, "double" },
-        { Object::DynamicProperty::String, QMetaType::QString, "QString" },
-        { Object::DynamicProperty::Url, QMetaType::QUrl, "QUrl" },
-        { Object::DynamicProperty::Color, QMetaType::QColor, "QColor" },
-        { Object::DynamicProperty::Time, QMetaType::QTime, "QTime" },
-        { Object::DynamicProperty::Date, QMetaType::QDate, "QDate" },
-        { Object::DynamicProperty::DateTime, QMetaType::QDateTime, "QDateTime" },
+        { Object::DynamicProperty::Var, QMetaType::QVariant },
+        { Object::DynamicProperty::Variant, QMetaType::QVariant },
+        { Object::DynamicProperty::Int, QMetaType::Int },
+        { Object::DynamicProperty::Bool, QMetaType::Bool },
+        { Object::DynamicProperty::Real, QMetaType::Double },
+        { Object::DynamicProperty::String, QMetaType::QString },
+        { Object::DynamicProperty::Url, QMetaType::QUrl },
+        { Object::DynamicProperty::Color, QMetaType::QColor },
+        { Object::DynamicProperty::Time, QMetaType::QTime },
+        { Object::DynamicProperty::Date, QMetaType::QDate },
+        { Object::DynamicProperty::DateTime, QMetaType::QDateTime },
     };
     static const int builtinTypeCount = sizeof(builtinTypes) / sizeof(TypeData);
-    QFastMetaBuilder::StringRef typeRefs[builtinTypeCount]; 
 
     // Reserve dynamic properties
     if (obj->dynamicProperties.count()) {
@@ -2880,18 +2875,16 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
             if (p->type != Object::DynamicProperty::Alias || resolveAlias)
                 p->nameRef = builder.newString(p->name.utf8length());
 
-            int propertyType = 0;
+            int metaType = 0;
+            int propertyType = 0; // for VMD
             bool readonly = false;
-            QFastMetaBuilder::StringRef typeRef;
 
             if (p->type == Object::DynamicProperty::Alias) {
                 continue;
             } else if (p->type < builtinTypeCount) {
                 Q_ASSERT(builtinTypes[p->type].dtype == p->type);
-                propertyType = builtinTypes[p->type].metaType;
-                if (typeRefs[p->type].isEmpty()) 
-                    typeRefs[p->type] = builder.newString(strlen(builtinTypes[p->type].cppType));
-                typeRef = typeRefs[p->type];
+                metaType = builtinTypes[p->type].metaType;
+                propertyType = metaType;
 
             } else {
                 Q_ASSERT(p->type == Object::DynamicProperty::CustomList ||
@@ -2927,9 +2920,9 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                     propertyType = qMetaTypeId<QQmlListProperty<QObject> >();
                 }
 
-                p->resolvedCustomTypeName = pool->NewByteArray(customTypeName);
-                p->typeRef = builder.newString(customTypeName.length());
-                typeRef = p->typeRef;
+                metaType = QMetaType::type(customTypeName);
+                Q_ASSERT(metaType != QMetaType::UnknownType);
+                Q_ASSERT(metaType != QMetaType::Void);
             }
 
             if (p->type == Object::DynamicProperty::Var)
@@ -2944,17 +2937,13 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                 (vmd->propertyData() + effectivePropertyIndex)->propertyType = propertyType;
             }
 
-            if (p->type < builtinTypeCount)
-                builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef, (QMetaType::Type)propertyType, 
-                                    readonly?QFastMetaBuilder::None:QFastMetaBuilder::Writable, 
-                                    effectivePropertyIndex);
-            else 
-                builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef, 
-                                    readonly?QFastMetaBuilder::None:QFastMetaBuilder::Writable, 
-                                    effectivePropertyIndex);
+            builder.setProperty(effectivePropertyIndex, p->nameRef, metaType,
+                                readonly?QFastMetaBuilder::None:QFastMetaBuilder::Writable,
+                                effectivePropertyIndex);
 
-            p->changedSignatureRef = builder.newString(p->name.utf8length() + strlen("Changed()"));
-            builder.setSignal(effectivePropertyIndex, p->changedSignatureRef);
+            p->changedNameRef = builder.newString(p->name.utf8length() + strlen("Changed"));
+            builder.setSignal(effectivePropertyIndex, p->changedNameRef, paramIndex);
+            paramIndex++;
 
             effectivePropertyIndex++;
         }
@@ -2967,19 +2956,19 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
             totalPropCount = varPropCount + effectivePropertyIndex;
             for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
                 if (p->type == Object::DynamicProperty::Var) {
-                    QFastMetaBuilder::StringRef typeRef = typeRefs[p->type];
                     if (buildData) {
                         vmd->propertyCount++;
                         (vmd->propertyData() + effectivePropertyIndex)->propertyType = QMetaType::QVariant;
                     }
 
-                    builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef,
+                    builder.setProperty(effectivePropertyIndex, p->nameRef,
                                         QMetaType::QVariant,
                                         p->isReadOnly?QFastMetaBuilder::None:QFastMetaBuilder::Writable,
                                         effectivePropertyIndex);
 
-                    p->changedSignatureRef = builder.newString(p->name.utf8length() + strlen("Changed()"));
-                    builder.setSignal(effectivePropertyIndex, p->changedSignatureRef);
+                    p->changedNameRef = builder.newString(p->name.utf8length() + strlen("Changed"));
+                    builder.setSignal(effectivePropertyIndex, p->changedNameRef, paramIndex);
+                    paramIndex++;
 
                     effectivePropertyIndex++;
                 }
@@ -2998,8 +2987,9 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                     }
                     // Even if we aren't resolving the alias, we need a fake signal so that the 
                     // metaobject remains consistent across the resolve and non-resolve alias runs
-                    p->changedSignatureRef = builder.newString(p->name.utf8length() + strlen("Changed()"));
-                    builder.setSignal(effectivePropertyIndex, p->changedSignatureRef);
+                    p->changedNameRef = builder.newString(p->name.utf8length() + strlen("Changed"));
+                    builder.setSignal(effectivePropertyIndex, p->changedNameRef, paramIndex);
+                    paramIndex++;
                     effectivePropertyIndex++;
                     aliasIndex++;
                 }
@@ -3018,49 +3008,56 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     int signalIndex = 0;
     for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
 
+        s->nameRef = builder.newString(s->name.utf8length());
+
         int paramCount = s->parameterNames.count();
-
-        int signatureSize = s->name.utf8length() + 2 /* paren */;
-        int namesSize = 0;
-        if (paramCount) signatureSize += s->parameterTypesLength() + (paramCount - 1) /* commas */;
-        if (paramCount) namesSize += s->parameterNamesLength() + (paramCount - 1) /* commas */;
-
-        s->signatureRef = builder.newString(signatureSize);
-        if (namesSize) s->parameterNamesRef = builder.newString(namesSize);
+        QVarLengthArray<int, 10> paramTypes(paramCount);
+        if (paramCount) {
+            s->parameterNamesRef = pool->NewRawList<QFastMetaBuilder::StringRef>(paramCount);
+            for (int i = 0; i < paramCount; ++i) {
+                s->parameterNamesRef[i] = builder.newString(s->parameterNames.at(i).utf8length());
+                Q_ASSERT(s->parameterTypes.at(i) < builtinTypeCount);
+                paramTypes[i] = builtinTypes[s->parameterTypes.at(i)].metaType;
+            }
+        }
 
         if (buildData)
             ((QQmlVMEMetaData *)dynamicData.data())->signalCount++;
         
-        builder.setSignal(signalIndex + obj->dynamicProperties.count(), s->signatureRef, s->parameterNamesRef);
+        builder.setSignal(signalIndex + obj->dynamicProperties.count(), s->nameRef,
+                          paramIndex, paramCount, paramTypes.constData(), s->parameterNamesRef.data());
+        paramIndex += paramCount*2 + 1;
         ++signalIndex;
     }
 
     // Reserve dynamic slots
     if (obj->dynamicSlots.count()) {
 
-        // Allocate QVariant string
-        if (typeRefs[0].isEmpty()) 
-            typeRefs[0] = builder.newString(strlen(builtinTypes[0].cppType));
-
         typedef QQmlVMEMetaData VMD;
 
         int methodIndex = 0;
         for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
+            s->nameRef = builder.newString(s->name.utf8length());
             int paramCount = s->parameterNames.count();
 
-            int signatureSize = s->name.utf8length() + 2 /* paren */;
-            int namesSize = 0; 
-            if (paramCount) signatureSize += (paramCount * strlen("QVariant") + (paramCount - 1));
-            if (paramCount) namesSize += s->parameterNamesLength() + (paramCount - 1 /* commas */); 
+            QVarLengthArray<int, 10> paramTypes(paramCount);
+            if (paramCount) {
+                s->parameterNamesRef = pool->NewRawList<QFastMetaBuilder::StringRef>(paramCount);
+                for (int i = 0; i < paramCount; ++i) {
+                    s->parameterNamesRef[i] = builder.newString(s->parameterNames.at(i).size());
+                    paramTypes[i] = QMetaType::QVariant;
+                }
+            }
 
-            s->signatureRef = builder.newString(signatureSize);
-            if (namesSize) s->parameterNamesRef = builder.newString(namesSize);
-
-            builder.setMethod(methodIndex, s->signatureRef, s->parameterNamesRef, typeRefs[0]);
+            builder.setMethod(methodIndex, s->nameRef, paramIndex, paramCount,
+                              paramTypes.constData(), s->parameterNamesRef.data(), QMetaType::QVariant);
+            paramIndex += paramCount*2 + 1;
 
             if (buildData) {
                 QString funcScript;
-                funcScript.reserve(strlen("(function ") + s->name.length() + 1 /* lparen */ + 
+                int namesSize = 0;
+                if (paramCount) namesSize += s->parameterNamesLength() + (paramCount - 1 /* commas */);
+                funcScript.reserve(strlen("(function ") + s->name.length() + 1 /* lparen */ +
                         namesSize + 1 /* rparen */ + s->body.length() + 1 /* rparen */);
                 funcScript = QLatin1String("(function ") + s->name.toString() + QLatin1Char('(');
                 for (int jj = 0; jj < paramCount; ++jj) {
@@ -3089,28 +3086,18 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         }
     }
 
-    // Now allocate used builtin types
-    for (int ii = 0; ii < builtinTypeCount; ++ii) {
-        if (!typeRefs[ii].isEmpty())
-            typeRefs[ii].load(builtinTypes[ii].cppType);
-    }
-
     // Now allocate properties
     for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
 
-        char *d = p->changedSignatureRef.data();
+        char *d = p->changedNameRef.data();
         p->name.writeUtf8(d);
-        strcpy(d + p->name.utf8length(), "Changed()");
+        strcpy(d + p->name.utf8length(), "Changed");
+        p->changedNameRef.loadByteArrayData();
 
         if (p->type == Object::DynamicProperty::Alias && !resolveAlias)
             continue;
 
         p->nameRef.load(p->name);
-
-        if (p->type >= builtinTypeCount) {
-            Q_ASSERT(p->resolvedCustomTypeName);
-            p->typeRef.load(*p->resolvedCustomTypeName);
-        }
     }
 
     // Allocate default property if necessary
@@ -3120,39 +3107,18 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     // Now allocate signals
     for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
 
-        char *d = s->signatureRef.data();
-        char *d2 = s->parameterNamesRef.isEmpty()?0:s->parameterNamesRef.data();
-        s->name.writeUtf8(d); d += s->name.utf8length();
-        *d++ = '('; 
+        s->nameRef.load(s->name);
 
-        for (int jj = 0; jj < s->parameterNames.count(); ++jj) {
-            if (jj != 0) { *d++ = ','; *d2++ = ','; }
-            strcpy(d, s->parameterTypes.at(jj).constData());
-            d += s->parameterTypes.at(jj).length();
-            s->parameterNames.at(jj).writeUtf8(d2);
-            d2 += s->parameterNames.at(jj).utf8length();
-        }
-        *d++ = ')';
-        *d = 0;
-        if (d2) *d2 = 0;
+        for (int jj = 0; jj < s->parameterNames.count(); ++jj)
+            s->parameterNamesRef[jj].load(s->parameterNames.at(jj));
     }
 
     // Now allocate methods
     for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
-        char *d = s->signatureRef.data();
-        char *d2 = s->parameterNamesRef.isEmpty()?0:s->parameterNamesRef.data();
-        s->name.writeUtf8(d); d += s->name.utf8length();
-        *d++ = '('; 
-        for (int jj = 0; jj < s->parameterNames.count(); ++jj) {
-            if (jj != 0) { *d++ = ','; *d2++ = ','; }
-            strcpy(d, "QVariant");
-            d += strlen("QVariant");
-            strcpy(d2, s->parameterNames.at(jj).constData());
-            d2 += s->parameterNames.at(jj).length();
-        }
-        *d++ = ')';
-        *d = 0;
-        if (d2) *d2 = 0;
+        s->nameRef.load(s->name);
+
+        for (int jj = 0; jj < s->parameterNames.count(); ++jj)
+            s->parameterNamesRef[jj].load(s->parameterNames.at(jj).constData());
     }
 
     // Now allocate class name
@@ -3245,7 +3211,6 @@ bool QQmlCompiler::compileAlias(QFastMetaBuilder &builder,
                                         Object::DynamicProperty &prop)
 {
     Q_ASSERT(!prop.nameRef.isEmpty());
-    Q_ASSERT(prop.typeRef.isEmpty());
     if (!prop.defaultValue)
         COMPILE_EXCEPTION(obj, tr("No property alias location"));
 
@@ -3290,9 +3255,7 @@ bool QQmlCompiler::compileAlias(QFastMetaBuilder &builder,
         writable = aliasProperty.isWritable() && !prop.isReadOnly;
         resettable = aliasProperty.isResettable() && !prop.isReadOnly;
 
-        if (aliasProperty.type() < QVariant::UserType
-            || uint(aliasProperty.type()) == QMetaType::QVariant)
-            type = aliasProperty.type();
+        type = aliasProperty.userType();
 
         if (alias.count() == 3) {
             QQmlValueType *valueType = enginePrivate->valueTypes[aliasProperty.type()];
@@ -3310,9 +3273,7 @@ bool QQmlCompiler::compileAlias(QFastMetaBuilder &builder,
             propIdx |= (valueTypeIndex << 16);
 
             // update the property type
-            type = aliasProperty.type();
-            if (type >= (int)QVariant::UserType)
-                type = 0;
+            type = aliasProperty.userType();
         }
 
         if (aliasProperty.isEnumType()) 
@@ -3334,14 +3295,18 @@ bool QQmlCompiler::compileAlias(QFastMetaBuilder &builder,
     if (typeName.endsWith('*'))
         flags |= QML_ALIAS_FLAG_PTR;
 
+    if (type == QMetaType::UnknownType) {
+        Q_ASSERT(!typeName.isEmpty());
+        type = QMetaType::type(typeName);
+        Q_ASSERT(type != QMetaType::UnknownType);
+        Q_ASSERT(type != QMetaType::Void);
+    }
+
     QQmlVMEMetaData::AliasData aliasData = { idObject->idIndex, propIdx, flags };
 
     typedef QQmlVMEMetaData VMD;
     VMD *vmd = (QQmlVMEMetaData *)data.data();
     *(vmd->aliasData() + aliasIndex) = aliasData;
-
-    prop.resolvedCustomTypeName = pool->NewByteArray(typeName);
-    prop.typeRef = builder.newString(typeName.length());
 
     int propertyFlags = 0;
     if (writable)
@@ -3349,7 +3314,7 @@ bool QQmlCompiler::compileAlias(QFastMetaBuilder &builder,
     if (resettable)
         propertyFlags |= QFastMetaBuilder::Resettable;
 
-    builder.setProperty(propIndex, prop.nameRef, prop.typeRef, (QMetaType::Type)type, 
+    builder.setProperty(propIndex, prop.nameRef, type,
                         (QFastMetaBuilder::PropertyFlag)propertyFlags,
                         propIndex);
 

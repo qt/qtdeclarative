@@ -79,7 +79,8 @@ static inline const QFastMetaBuilderHeader *header(const QByteArray &data)
 { return reinterpret_cast<const QFastMetaBuilderHeader*>(data.constData()); }
 
 QFastMetaBuilder::QFastMetaBuilder()
-: m_zeroPtr(0), m_stringData(0), m_stringDataLength(0), m_stringDataAllocated(0)
+    : m_stringData(0), m_stringCount(0), m_stringDataLength(0),
+      m_stringCountAllocated(0), m_stringCountLoaded(0)
 {
 }
 
@@ -89,7 +90,8 @@ QFastMetaBuilder::~QFastMetaBuilder()
 
 QFastMetaBuilder::StringRef QFastMetaBuilder::init(int classNameLength,
                                                    int propertyCount, int methodCount, 
-                                                   int signalCount, int classInfoCount)
+                                                   int signalCount, int classInfoCount,
+                                                   int paramDataSize, int *paramIndex)
 {
     Q_ASSERT(m_data.isEmpty());
     Q_ASSERT(classNameLength > 0);
@@ -97,20 +99,29 @@ QFastMetaBuilder::StringRef QFastMetaBuilder::init(int classNameLength,
     Q_ASSERT(methodCount >= 0);
     Q_ASSERT(signalCount >= 0);
     Q_ASSERT(classInfoCount >= 0);
+    Q_ASSERT(paramDataSize >= 0);
+    Q_ASSERT((paramIndex != 0) || (methodCount + signalCount == 0));
 
     int fieldCount = FMBHEADER_FIELD_COUNT +
                      HEADER_FIELD_COUNT + 
                      propertyCount * (PROPERTY_FIELD_COUNT + PROPERTY_NOTIFY_FIELD_COUNT) +
                      methodCount * (METHOD_FIELD_COUNT) +
                      signalCount * (METHOD_FIELD_COUNT) +
+                     paramDataSize +
                      classInfoCount * CLASSINFO_FIELD_COUNT;
+    // Ensure stringdata alignment (void*)
+    fieldCount += fieldCount % (sizeof(void*) / sizeof(uint));
 
-    m_data.resize(fieldCount * sizeof(uint) + classNameLength + 1);
-    m_stringData = m_data.data() + m_data.size() - classNameLength - 1;
+    m_stringCount = 2; // class name and zero string
     m_stringDataLength = classNameLength + 1;
-    m_stringDataAllocated = classNameLength + 1;
-    m_stringData[classNameLength] = 0;
-    m_zeroPtr = classNameLength;
+    m_data.resize(fieldCount * sizeof(uint) + m_stringCount * sizeof(QByteArrayData) + m_stringDataLength);
+    m_stringCountAllocated = m_stringCount;
+    m_stringData = reinterpret_cast<QByteArrayData *>(m_data.data() + fieldCount * sizeof(uint));
+
+    m_zeroString._b = this;
+    m_zeroString._i = 1;
+    m_zeroString._o = classNameLength;
+    m_zeroString._l = 0;
 
     header(m_data)->fieldCount = fieldCount;
 
@@ -118,7 +129,7 @@ QFastMetaBuilder::StringRef QFastMetaBuilder::init(int classNameLength,
 
     int dataIndex = HEADER_FIELD_COUNT;
 
-    p->revision = 6;
+    p->revision = 7;
     p->className = 0;
 
     // Class infos
@@ -135,6 +146,8 @@ QFastMetaBuilder::StringRef QFastMetaBuilder::init(int classNameLength,
     if (p->methodCount) {
         p->methodData = dataIndex;
         dataIndex += p->methodCount * METHOD_FIELD_COUNT;
+        *paramIndex = dataIndex;
+        dataIndex += paramDataSize;
     } else {
         p->methodData = 0;
     }
@@ -160,6 +173,7 @@ QFastMetaBuilder::StringRef QFastMetaBuilder::init(int classNameLength,
 
     StringRef className;
     className._b = this;
+    className._i = 0;
     className._o = 0;
     className._l = classNameLength;
     return className;
@@ -169,12 +183,16 @@ QFastMetaBuilder::StringRef QFastMetaBuilder::init(int classNameLength,
 QFastMetaBuilder::StringRef QFastMetaBuilder::newString(int length)
 {
     Q_ASSERT(length > 0);
+    Q_ASSERT_X(m_stringCountLoaded == 0, Q_FUNC_INFO,
+               "All strings must be created before string loading begins");
 
     StringRef sr;
     sr._b = this;
+    sr._i = m_stringCount;
     sr._o = m_stringDataLength;
     sr._l = length;
 
+    ++m_stringCount;
     m_stringDataLength += length + 1 /* for null terminator */;
 
     return sr;
@@ -190,47 +208,24 @@ void QFastMetaBuilder::setClassInfo(int index, const StringRef &key, const Strin
 
     uint *ptr = fieldPointer(m_data) + p->classInfoData + index * CLASSINFO_FIELD_COUNT;
     // classinfo: key, value
-    ptr[0] = key.offset(); ptr[1] = value.offset();
+    ptr[0] = key.index(); ptr[1] = value.index();
 }
 
-void QFastMetaBuilder::setProperty(int index, const StringRef &name, const StringRef &type, 
-                                   QMetaType::Type mtype, PropertyFlag flags, int notifySignal)
+void QFastMetaBuilder::setProperty(int index, const StringRef &name, int type,
+                                   PropertyFlag flags, int notifySignal)
 {
     Q_ASSERT(!m_data.isEmpty());
     Q_ASSERT(!name.isEmpty());
-    Q_ASSERT(!type.isEmpty());
+    Q_ASSERT(type != 0);
+    Q_ASSERT(QMetaType::isRegistered(type));
 
     QMetaObjectPrivate *p = priv(m_data);
     Q_ASSERT(index < p->propertyCount);
 
     uint *ptr = fieldPointer(m_data) + p->propertyData + index * PROPERTY_FIELD_COUNT;
     // properties: name, type, flags
-    ptr[0] = name.offset();
-    ptr[1] = type.offset();
-    if (notifySignal == -1) {
-        ptr[2] = mtype << 24;
-        ptr[2] |= flags | Scriptable | Readable;
-        *(fieldPointer(m_data) + p->propertyData + p->propertyCount * PROPERTY_FIELD_COUNT + index) = 0;
-    } else {
-        ptr[2] = mtype << 24;
-        ptr[2] |= flags | Scriptable | Readable | Notify;
-        *(fieldPointer(m_data) + p->propertyData + p->propertyCount * PROPERTY_FIELD_COUNT + index) = notifySignal;
-    }
-}
-
-void QFastMetaBuilder::setProperty(int index, const StringRef &name, const StringRef &type, 
-                                   QFastMetaBuilder::PropertyFlag flags, int notifySignal)
-{
-    Q_ASSERT(!m_data.isEmpty());
-    Q_ASSERT(!name.isEmpty() && !type.isEmpty());
-
-    QMetaObjectPrivate *p = priv(m_data);
-    Q_ASSERT(index < p->propertyCount);
-
-    uint *ptr = fieldPointer(m_data) + p->propertyData + index * PROPERTY_FIELD_COUNT;
-    // properties: name, type, flags
-    ptr[0] = name.offset();
-    ptr[1] = type.offset();
+    ptr[0] = name.index();
+    ptr[1] = type;
     if (notifySignal == -1) {
         ptr[2] = flags | Scriptable | Readable;
         *(fieldPointer(m_data) + p->propertyData + p->propertyCount * PROPERTY_FIELD_COUNT + index) = 0;
@@ -240,42 +235,72 @@ void QFastMetaBuilder::setProperty(int index, const StringRef &name, const Strin
     }
 }
 
-void QFastMetaBuilder::setSignal(int index, const StringRef &signature,
-                                 const StringRef &parameterNames,
-                                 const StringRef &type)
+void QFastMetaBuilder::setSignal(int index, const StringRef &name,
+                                 int paramIndex, int argc, const int *types,
+                                 const StringRef *parameterNames,
+                                 QMetaType::Type type)
 {
     Q_ASSERT(!m_data.isEmpty());
-    Q_ASSERT(!signature.isEmpty());
+    Q_ASSERT(!name.isEmpty());
+    Q_ASSERT(QMetaType::isRegistered(type));
 
     QMetaObjectPrivate *p = priv(m_data);
     int mindex = metaObjectIndexForSignal(index);
 
     uint *ptr = fieldPointer(m_data) + p->methodData + mindex * METHOD_FIELD_COUNT;
-    // methods: signature, parameters, type, tag, flags
-    ptr[0] = signature.offset();
-    ptr[1] = parameterNames.isEmpty()?m_zeroPtr:parameterNames.offset();
-    ptr[2] = type.isEmpty()?m_zeroPtr:type.offset();
-    ptr[3] = m_zeroPtr;
+    // methods: name, arc, parameters, tag, flags
+    ptr[0] = name.index();
+    ptr[1] = argc;
+    ptr[2] = paramIndex;
+    ptr[3] = m_zeroString.index();
     ptr[4] = AccessProtected | MethodSignal;
+
+    uint *paramPtr = fieldPointer(m_data) + paramIndex;
+    paramPtr[0] = type;
+    if (argc) {
+        Q_ASSERT(types != 0);
+        Q_ASSERT(parameterNames != 0);
+        for (int i = 0; i < argc; ++i) {
+            Q_ASSERT(types[i] != 0);
+            Q_ASSERT(QMetaType::isRegistered(types[i]));
+            paramPtr[1+i] = types[i];
+            paramPtr[1+argc+i] = parameterNames[i].index();
+        }
+    }
 }
 
-void QFastMetaBuilder::setMethod(int index, const StringRef &signature,
-                                 const StringRef &parameterNames,
-                                 const StringRef &type)
+void QFastMetaBuilder::setMethod(int index, const StringRef &name,
+                                 int paramIndex, int argc, const int *types,
+                                 const StringRef *parameterNames,
+                                 QMetaType::Type type)
 {
     Q_ASSERT(!m_data.isEmpty());
-    Q_ASSERT(!signature.isEmpty());
+    Q_ASSERT(!name.isEmpty());
+    Q_ASSERT(QMetaType::isRegistered(type));
 
     QMetaObjectPrivate *p = priv(m_data);
     int mindex = metaObjectIndexForMethod(index);
 
     uint *ptr = fieldPointer(m_data) + p->methodData + mindex * METHOD_FIELD_COUNT;
-    // methods: signature, parameters, type, tag, flags
-    ptr[0] = signature.offset();
-    ptr[1] = parameterNames.isEmpty()?m_zeroPtr:parameterNames.offset();
-    ptr[2] = type.isEmpty()?m_zeroPtr:type.offset();
-    ptr[3] = m_zeroPtr;
+    // methods: name, arc, parameters, tag, flags
+    ptr[0] = name.index();
+    ptr[1] = argc;
+    ptr[2] = paramIndex;
+    ptr[3] = m_zeroString.index();
     ptr[4] = AccessProtected | MethodSlot;
+
+    uint *paramPtr = fieldPointer(m_data) + paramIndex;
+    paramPtr[0] = type;
+    if (argc) {
+        Q_ASSERT(types != 0);
+        Q_ASSERT(parameterNames != 0);
+        for (int i = 0; i < argc; ++i) {
+            Q_ASSERT(types[i] != 0);
+            Q_ASSERT(QMetaType::isRegistered(types[i]));
+            paramPtr[1+i] = types[i];
+            paramPtr[1+argc+i] = parameterNames[i].index();
+        }
+    }
 }
 
 int QFastMetaBuilder::metaObjectIndexForSignal(int index) const
@@ -296,17 +321,19 @@ int QFastMetaBuilder::metaObjectIndexForMethod(int index) const
 
 void QFastMetaBuilder::allocateStringData()
 {
-    if (m_stringDataAllocated < m_stringDataLength) {
-        m_data.resize(m_data.size() + m_stringDataLength - m_stringDataAllocated);
-        m_stringDataAllocated = m_stringDataLength;
-        m_stringData = m_data.data() + header(m_data)->fieldCount * sizeof(uint);
+    if (m_stringCountAllocated < m_stringCount) {
+        m_data.resize(header(m_data)->fieldCount * sizeof(uint)
+                      + m_stringCount * sizeof(QByteArrayData) + m_stringDataLength);
+        m_stringCountAllocated = m_stringCount;
+        char *rawStringData = m_data.data() + header(m_data)->fieldCount * sizeof(uint);
+        m_stringData = reinterpret_cast<QByteArrayData *>(rawStringData);
     }
 }
 
 void QFastMetaBuilder::fromData(QMetaObject *output, const QMetaObject *parent, const QByteArray &data)
 {
     output->d.superdata = parent;
-    output->d.stringdata = data.constData() + header(data)->fieldCount * sizeof(uint);
+    output->d.stringdata = reinterpret_cast<const QByteArrayData *>(data.constData() + header(data)->fieldCount * sizeof(uint));
     output->d.data = fieldPointer(data);
     output->d.extradata = 0;
 }

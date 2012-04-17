@@ -211,10 +211,10 @@ void tst_QQmlMetaObject::property()
     QCOMPARE(prop.name(), "test");
 
     QCOMPARE(QByteArray(prop.typeName()), cppTypeName);
-    QEXPECT_FAIL("QtObject", "prop.type() returns UserType for QtObject properties", Continue);
-    QEXPECT_FAIL("alias-2", "prop.type() returns UserType for QtObject properties", Continue);
     if (prop.userType() < QMetaType::User)
         QCOMPARE(prop.type(), QVariant::Type(cppType));
+    else
+        QCOMPARE(prop.type(), QVariant::UserType);
     QCOMPARE(prop.userType(), cppType);
 
     QVERIFY(!prop.isConstant());
@@ -244,12 +244,15 @@ void tst_QQmlMetaObject::property()
     QVERIFY(prop.notifySignalIndex() != -1);
     QMetaMethod signal = prop.notifySignal();
     QCOMPARE(signal.methodType(), QMetaMethod::Signal);
-    QCOMPARE(signal.signature(), "testChanged()");
+    QCOMPARE(signal.name(), QByteArray("testChanged"));
+    QCOMPARE(signal.methodSignature(), QByteArray("testChanged()"));
     QCOMPARE(signal.access(), QMetaMethod::Protected);
+    QCOMPARE(signal.parameterCount(), 0);
     QCOMPARE(signal.parameterTypes(), QList<QByteArray>());
     QCOMPARE(signal.parameterNames(), QList<QByteArray>());
     QCOMPARE(signal.tag(), "");
-    QCOMPARE(signal.typeName(), "");
+    QCOMPARE(signal.typeName(), "void");
+    QCOMPARE(signal.returnType(), int(QMetaType::Void));
 
     QSignalSpy changedSpy(object, SIGNAL(testChanged()));
     QObject::connect(object, SIGNAL(testChanged()), object, SLOT(deleteLater()));
@@ -277,62 +280,73 @@ void tst_QQmlMetaObject::method_data()
     QTest::addColumn<QString>("testFile");
     QTest::addColumn<QString>("signature");
     QTest::addColumn<QMetaMethod::MethodType>("methodType");
+    QTest::addColumn<int>("returnType");
     QTest::addColumn<QString>("returnTypeName");
+    QTest::addColumn<QList<int> >("parameterTypes");
     QTest::addColumn<QList<QByteArray> >("parameterTypeNames");
     QTest::addColumn<QList<QByteArray> >("parameterNames");
 
     QTest::newRow("testFunction()") << "method.1.qml"
             << "testFunction()"
             << QMetaMethod::Slot
-            << "QVariant"
+            << int(QMetaType::QVariant) << "QVariant"
+            << QList<int>()
             << QList<QByteArray>()
             << QList<QByteArray>();
     QTest::newRow("testFunction(foo)") << "method.2.qml"
             << "testFunction(QVariant)"
             << QMetaMethod::Slot
-            << "QVariant"
+            << int(QMetaType::QVariant) << "QVariant"
+            << (QList<int>() << QMetaType::QVariant)
             << (QList<QByteArray>() << "QVariant")
             << (QList<QByteArray>() << "foo");
     QTest::newRow("testFunction(foo, bar, baz)") << "method.3.qml"
             << "testFunction(QVariant,QVariant,QVariant)"
             << QMetaMethod::Slot
-            << "QVariant"
+            << int(QMetaType::QVariant) << "QVariant"
+            << (QList<int>() << QMetaType::QVariant << QMetaType::QVariant << QMetaType::QVariant)
             << (QList<QByteArray>() << "QVariant" << "QVariant" << "QVariant")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
     QTest::newRow("testSignal") << "signal.1.qml"
             << "testSignal()"
             << QMetaMethod::Signal
-            << ""
+            << int(QMetaType::Void) << "void"
+            << QList<int>()
             << QList<QByteArray>()
             << QList<QByteArray>();
     QTest::newRow("testSignal(string foo)") << "signal.2.qml"
             << "testSignal(QString)"
             << QMetaMethod::Signal
-            << ""
+            << int(QMetaType::Void) << "void"
+            << (QList<int>() << QMetaType::QString)
             << (QList<QByteArray>() << "QString")
             << (QList<QByteArray>() << "foo");
     QTest::newRow("testSignal(int foo, bool bar, real baz)") << "signal.3.qml"
             << "testSignal(int,bool,double)"
             << QMetaMethod::Signal
-            << ""
+            << int(QMetaType::Void) << "void"
+            << (QList<int>() << QMetaType::Int << QMetaType::Bool << QMetaType::Double)
             << (QList<QByteArray>() << "int" << "bool" << "double")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
     QTest::newRow("testSignal(variant foo, var bar)") << "signal.4.qml"
             << "testSignal(QVariant,QVariant)"
             << QMetaMethod::Signal
-            << ""
+            << int(QMetaType::Void) << "void"
+            << (QList<int>() << QMetaType::QVariant << QMetaType::QVariant)
             << (QList<QByteArray>() << "QVariant" << "QVariant")
             << (QList<QByteArray>() << "foo" << "bar");
     QTest::newRow("testSignal(color foo, date bar, url baz)") << "signal.5.qml"
             << "testSignal(QColor,QDateTime,QUrl)"
             << QMetaMethod::Signal
-            << ""
+            << int(QMetaType::Void) << "void"
+            << (QList<int>() << QMetaType::QColor << QMetaType::QDateTime << QMetaType::QUrl)
             << (QList<QByteArray>() << "QColor" << "QDateTime" << "QUrl")
             << (QList<QByteArray>() << "foo" << "bar" << "baz");
     QTest::newRow("testSignal(double foo)") << "signal.6.qml"
             << "testSignal(double)"
             << QMetaMethod::Signal
-            << ""
+            << int(QMetaType::Void) << "void"
+            << (QList<int>() << QMetaType::Double)
             << (QList<QByteArray>() << "double")
             << (QList<QByteArray>() << "foo");
 }
@@ -342,10 +356,13 @@ void tst_QQmlMetaObject::method()
     QFETCH(QString, testFile);
     QFETCH(QString, signature);
     QFETCH(QMetaMethod::MethodType, methodType);
+    QFETCH(int, returnType);
     QFETCH(QString, returnTypeName);
+    QFETCH(QList<int>, parameterTypes);
     QFETCH(QList<QByteArray>, parameterTypeNames);
     QFETCH(QList<QByteArray>, parameterNames);
 
+    QCOMPARE(parameterTypes.size(), parameterTypeNames.size());
     QCOMPARE(parameterTypeNames.size(), parameterNames.size());
 
     QQmlEngine engine;
@@ -361,12 +378,21 @@ void tst_QQmlMetaObject::method()
 
     QMetaMethod method = mo->method(mo->methodOffset());
     QCOMPARE(method.methodType(), methodType);
-    QCOMPARE(QString::fromUtf8(method.signature()), signature);
+    QCOMPARE(QString::fromUtf8(method.methodSignature().constData()), signature);
     QCOMPARE(method.access(), QMetaMethod::Protected);
+
+    QString computedName = signature.left(signature.indexOf('('));
+    QCOMPARE(QString::fromUtf8(method.name()), computedName);
+
+    QCOMPARE(method.parameterCount(), parameterTypes.size());
+    for (int i = 0; i < parameterTypes.size(); ++i)
+        QCOMPARE(method.parameterType(i), parameterTypes.at(i));
     QCOMPARE(method.parameterTypes(), parameterTypeNames);
     QCOMPARE(method.parameterNames(), parameterNames);
     QCOMPARE(method.tag(), "");
+
     QCOMPARE(QString::fromUtf8(method.typeName()), returnTypeName);
+    QCOMPARE(method.returnType(), returnType);
 
     delete object;
 }

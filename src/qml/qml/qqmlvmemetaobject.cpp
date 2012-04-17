@@ -51,6 +51,7 @@
 #include "qqmlpropertyvalueinterceptor_p.h"
 
 #include <private/qv8variantresource_p.h>
+#include <private/qqmlglobal_p.h>
 
 Q_DECLARE_METATYPE(QJSValue);
 
@@ -87,6 +88,7 @@ public:
     inline const void *dataPtr() const;
     inline void *dataPtr();
     inline int dataType() const;
+    inline size_t dataSize() const;
 
     inline QObject *asQObject();
     inline const QVariant &asQVariant();
@@ -95,7 +97,6 @@ public:
     inline double asDouble();
     inline const QString &asQString();
     inline const QUrl &asQUrl();
-    inline const QColor &asQColor();
     inline const QTime &asQTime();
     inline const QDate &asQDate();
     inline const QDateTime &asQDateTime();
@@ -108,11 +109,13 @@ public:
     inline void setValue(double);
     inline void setValue(const QString &);
     inline void setValue(const QUrl &);
-    inline void setValue(const QColor &);
     inline void setValue(const QTime &);
     inline void setValue(const QDate &);
     inline void setValue(const QDateTime &);
     inline void setValue(const QJSValue &);
+
+    inline void setDataType(int t);
+
 private:
     int type;
     void *data[6]; // Large enough to hold all types
@@ -157,9 +160,6 @@ void QQmlVMEVariant::cleanup()
     } else if (type == QMetaType::QUrl) {
         ((QUrl *)dataPtr())->~QUrl();
         type = QVariant::Invalid;
-    } else if (type == QMetaType::QColor) {
-        ((QColor *)dataPtr())->~QColor();
-        type = QVariant::Invalid;
     } else if (type == QMetaType::QTime) {
         ((QTime *)dataPtr())->~QTime();
         type = QVariant::Invalid;
@@ -175,8 +175,11 @@ void QQmlVMEVariant::cleanup()
     } else if (type == qMetaTypeId<QJSValue>()) {
         ((QJSValue *)dataPtr())->~QJSValue();
         type = QVariant::Invalid;
+    } else {
+        if (QQml_valueTypeProvider()->destroyValueType(type, dataPtr(), dataSize())) {
+            type = QVariant::Invalid;
+        }
     }
-
 }
 
 int QQmlVMEVariant::dataType() const
@@ -192,6 +195,11 @@ const void *QQmlVMEVariant::dataPtr() const
 void *QQmlVMEVariant::dataPtr() 
 {
     return &data;
+}
+
+size_t QQmlVMEVariant::dataSize() const
+{
+    return sizeof(data);
 }
 
 QObject *QQmlVMEVariant::asQObject() 
@@ -248,14 +256,6 @@ const QUrl &QQmlVMEVariant::asQUrl()
         setValue(QUrl());
 
     return *(QUrl *)(dataPtr());
-}
-
-const QColor &QQmlVMEVariant::asQColor() 
-{
-    if (type != QMetaType::QColor)
-        setValue(QColor());
-
-    return *(QColor *)(dataPtr());
 }
 
 const QTime &QQmlVMEVariant::asQTime() 
@@ -360,17 +360,6 @@ void QQmlVMEVariant::setValue(const QUrl &v)
     }
 }
 
-void QQmlVMEVariant::setValue(const QColor &v)
-{
-    if (type != QMetaType::QColor) {
-        cleanup();
-        type = QMetaType::QColor;
-        new (dataPtr()) QColor(v);
-    } else {
-        *(QColor *)(dataPtr()) = v;
-    }
-}
-
 void QQmlVMEVariant::setValue(const QTime &v)
 {
     if (type != QMetaType::QTime) {
@@ -413,6 +402,11 @@ void QQmlVMEVariant::setValue(const QJSValue &v)
     } else {
         *(QJSValue *)(dataPtr()) = v;
     }
+}
+
+void QQmlVMEVariant::setDataType(int t)
+{
+    type = t;
 }
 
 QQmlVMEMetaObjectEndpoint::QQmlVMEMetaObjectEndpoint()
@@ -587,9 +581,6 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         case QVariant::Url:
                             *reinterpret_cast<QUrl *>(a[0]) = data[id].asQUrl();
                             break;
-                        case QVariant::Color:
-                            *reinterpret_cast<QColor *>(a[0]) = data[id].asQColor();
-                            break;
                         case QVariant::Date:
                             *reinterpret_cast<QDate *>(a[0]) = data[id].asQDate();
                             break;
@@ -603,6 +594,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                             break;
                         default:
+                            QQml_valueTypeProvider()->readValueType(data[id].dataType(), data[id].dataPtr(), t, a[0]);
                             break;
                         }
                         if (t == qMetaTypeId<QQmlListProperty<QObject> >()) {
@@ -637,10 +629,6 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             needActivate = *reinterpret_cast<QUrl *>(a[0]) != data[id].asQUrl();
                             data[id].setValue(*reinterpret_cast<QUrl *>(a[0]));
                             break;
-                        case QVariant::Color:
-                            needActivate = *reinterpret_cast<QColor *>(a[0]) != data[id].asQColor();
-                            data[id].setValue(*reinterpret_cast<QColor *>(a[0]));
-                            break;
                         case QVariant::Date:
                             needActivate = *reinterpret_cast<QDate *>(a[0]) != data[id].asQDate();
                             data[id].setValue(*reinterpret_cast<QDate *>(a[0]));
@@ -657,6 +645,10 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                             break;
                         default:
+                            needActivate = QQml_valueTypeProvider()->writeValueType(t, a[0], data[id].dataPtr(), data[id].dataSize());
+                            if (needActivate) {
+                                data[id].setDataType(t);
+                            }
                             break;
                         }
                     }
@@ -760,7 +752,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     // performance reasons; see QTBUG-24064) and thus compilation will have failed.
                     QQmlError e;
                     e.setDescription(QString(QLatin1String("Exception occurred during compilation of function: %1")).
-                                     arg(QLatin1String(QMetaObject::method(_id).signature())));
+                                     arg(QLatin1String(QMetaObject::method(_id).methodSignature().constData())));
                     ep->warning(e);
                     return -1; // The dynamic method with that id is not available.
                 }

@@ -54,6 +54,25 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 
+class Q_QML_EXPORT QQmlImageProviderBase
+{
+public:
+    enum ImageType {
+        Image,
+        Pixmap,
+        Texture,
+        Invalid
+    };
+
+    virtual ~QQmlImageProviderBase();
+
+    virtual ImageType imageType() const = 0;
+
+private:
+    friend class QQuickImageProvider;
+    QQmlImageProviderBase();
+};
+
 class QQmlComponent;
 class QQmlEnginePrivate;
 class QQmlImportsPrivate;
@@ -62,7 +81,6 @@ class QQmlContext;
 class QQmlType;
 class QUrl;
 class QScriptContext;
-class QQmlImageProvider;
 class QNetworkAccessManager;
 class QQmlNetworkAccessManagerFactory;
 class QQmlIncubationController;
@@ -94,8 +112,8 @@ public:
 
     QNetworkAccessManager *networkAccessManager() const;
 
-    void addImageProvider(const QString &id, QQmlImageProvider *);
-    QQmlImageProvider *imageProvider(const QString &id) const;
+    void addImageProvider(const QString &id, QQmlImageProviderBase *);
+    QQmlImageProviderBase *imageProvider(const QString &id) const;
     void removeImageProvider(const QString &id);
 
     void setIncubationController(QQmlIncubationController *);

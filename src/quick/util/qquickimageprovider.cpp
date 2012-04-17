@@ -39,14 +39,14 @@
 **
 ****************************************************************************/
 
-#include "qqmlimageprovider.h"
+#include "qquickimageprovider.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQmlImageProviderPrivate
+class QQuickImageProviderPrivate
 {
 public:
-    QQmlImageProvider::ImageType type;
+    QQuickImageProvider::ImageType type;
 };
 
 /*!
@@ -110,12 +110,12 @@ QImage QQuickTextureFactory::image() const
 
 
 /*!
-    \class QQmlImageProvider
+    \class QQuickImageProvider
     \since 5.0
-    \inmodule QtQml
-    \brief The QQmlImageProvider class provides an interface for supporting pixmaps and threaded image requests in QML.
+    \inmodule QtQuick
+    \brief The QQuickImageProvider class provides an interface for supporting pixmaps and threaded image requests in QML.
 
-    QQmlImageProvider is used to provide advanced image loading features
+    QQuickImageProvider is used to provide advanced image loading features
     in QML applications. It allows images in QML to be:
 
     \list
@@ -212,7 +212,7 @@ QImage QQuickTextureFactory::image() const
 
     \section2 Image caching
 
-    Images returned by a QQmlImageProvider are automatically cached,
+    Images returned by a QQuickImageProvider are automatically cached,
     similar to any image loaded by the QML engine. When an image with a
     "image://" prefix is loaded from cache, requestImage() and requestPixmap()
     will not be called for the relevant image provider. If an image should always
@@ -226,33 +226,20 @@ QImage QQuickTextureFactory::image() const
 */
 
 /*!
-    \enum QQmlImageProvider::ImageType
-
-    Defines the type of image supported by this image provider.
-
-    \value Image The Image Provider provides QImage images. The 
-        requestImage() method will be called for all image requests.
-    \value Pixmap The Image Provider provides QPixmap images. The 
-        requestPixmap() method will be called for all image requests.
-    \value Texture The Image Provider provides QSGTextureProvider based images.
-        The requestTexture() method will be called for all image requests. \omitvalue
-*/
-
-/*!
     Creates an image provider that will provide images of the given \a type.
 */
-QQmlImageProvider::QQmlImageProvider(ImageType type)
-    : d(new QQmlImageProviderPrivate)
+QQuickImageProvider::QQuickImageProvider(ImageType type)
+    : d(new QQuickImageProviderPrivate)
 {
     d->type = type;
 }
 
 /*!
-    Destroys the QQmlImageProvider
+    Destroys the QQuickImageProvider
 
     \note The destructor of your derived class need to be thread safe.
 */
-QQmlImageProvider::~QQmlImageProvider()
+QQuickImageProvider::~QQuickImageProvider()
 {
     delete d;
 }
@@ -260,7 +247,7 @@ QQmlImageProvider::~QQmlImageProvider()
 /*!
     Returns the image type supported by this provider.
 */
-QQmlImageProvider::ImageType QQmlImageProvider::imageType() const
+QQuickImageProvider::ImageType QQuickImageProvider::imageType() const
 {
     return d->type;
 }
@@ -284,7 +271,7 @@ QQmlImageProvider::ImageType QQmlImageProvider::imageType() const
     \note this method may be called by multiple threads, so ensure the
     implementation of this method is reentrant.
 */
-QImage QQmlImageProvider::requestImage(const QString &id, QSize *size, const QSize& requestedSize)
+QImage QQuickImageProvider::requestImage(const QString &id, QSize *size, const QSize& requestedSize)
 {
     Q_UNUSED(id);
     Q_UNUSED(size);
@@ -310,7 +297,7 @@ QImage QQmlImageProvider::requestImage(const QString &id, QSize *size, const QSi
     is used to set the \l {Item::}{width} and \l {Item::}{height} of the
     relevant \l Image if these values have not been set explicitly.
 */
-QPixmap QQmlImageProvider::requestPixmap(const QString &id, QSize *size, const QSize& requestedSize)
+QPixmap QQuickImageProvider::requestPixmap(const QString &id, QSize *size, const QSize& requestedSize)
 {
     Q_UNUSED(id);
     Q_UNUSED(size);
@@ -341,7 +328,7 @@ QPixmap QQmlImageProvider::requestPixmap(const QString &id, QSize *size, const Q
     implementation of this method is reentrant.
 */
 
-QQuickTextureFactory *QQmlImageProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize)
+QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize)
 {
     Q_UNUSED(id);
     Q_UNUSED(size);

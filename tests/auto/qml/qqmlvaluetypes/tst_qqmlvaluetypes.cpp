@@ -43,12 +43,12 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QDebug>
-#include <private/qqmlvaluetype_p.h>
+#include <private/qquickvaluetypes_p.h>
 #include "../../shared/util.h"
 #include "testtypes.h"
 
 QT_BEGIN_NAMESPACE
-extern int qt_defaultDpi();
+extern int qt_defaultDpi(void);
 QT_END_NAMESPACE
 
 class tst_qqmlvaluetypes : public QQmlDataTest
@@ -871,17 +871,37 @@ void tst_qqmlvaluetypes::color()
 // Test bindings can write to value types
 void tst_qqmlvaluetypes::bindingAssignment()
 {
+    // binding declaration
+    {
     QQmlComponent component(&engine, testFileUrl("bindingAssignment.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
 
     QCOMPARE(object->rect().x(), 10);
+    QCOMPARE(object->rect().y(), 15);
 
     object->setProperty("value", QVariant(92));
 
     QCOMPARE(object->rect().x(), 92);
+    QCOMPARE(object->rect().y(), 97);
 
     delete object;
+    }
+
+    // function assignment should fail without crashing
+    {
+    QString warning1 = testFileUrl("bindingAssignment.2.qml").toString() + QLatin1String(":6:13: Invalid use of Qt.binding() in a binding declaration.");
+    QString warning2 = testFileUrl("bindingAssignment.2.qml").toString() + QLatin1String(":10: Error: Cannot assign JavaScript function to value-type property");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QQmlComponent component(&engine, testFileUrl("bindingAssignment.2.qml"));
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->rect().x(), 5);
+    object->setProperty("value", QVariant(92));
+    QCOMPARE(object->rect().x(), 5);
+    delete object;
+    }
 }
 
 // Test bindings can read from value types
@@ -1109,13 +1129,13 @@ void tst_qqmlvaluetypes::cppClasses()
     CPP_TEST(QQmlSizeFValueType, QSizeF(-100.7, 18.2));
     CPP_TEST(QQmlRectValueType, QRect(13, 39, 10928, 88));
     CPP_TEST(QQmlRectFValueType, QRectF(88.2, -90.1, 103.2, 118));
-    CPP_TEST(QQmlVector2DValueType, QVector2D(19.7, 1002));
-    CPP_TEST(QQmlVector3DValueType, QVector3D(18.2, 19.7, 1002));
-    CPP_TEST(QQmlVector4DValueType, QVector4D(18.2, 19.7, 1002, 54));
-    CPP_TEST(QQmlQuaternionValueType, QQuaternion(18.2, 19.7, 1002, 54));
-    CPP_TEST(QQmlMatrix4x4ValueType,
+    CPP_TEST(QQuickVector2DValueType, QVector2D(19.7, 1002));
+    CPP_TEST(QQuickVector3DValueType, QVector3D(18.2, 19.7, 1002));
+    CPP_TEST(QQuickVector4DValueType, QVector4D(18.2, 19.7, 1002, 54));
+    CPP_TEST(QQuickQuaternionValueType, QQuaternion(18.2, 19.7, 1002, 54));
+    CPP_TEST(QQuickMatrix4x4ValueType,
              QMatrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
-    CPP_TEST(QQmlFontValueType, QFont("Helvetica"));
+    CPP_TEST(QQuickFontValueType, QFont("Helvetica"));
 
 }
 

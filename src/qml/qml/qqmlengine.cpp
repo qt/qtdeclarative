@@ -59,14 +59,12 @@
 #include "qquickworkerscript_p.h"
 #include "qqmlcomponent_p.h"
 #include "qqmlnetworkaccessmanagerfactory.h"
-#include "qqmlimageprovider.h"
 #include "qqmldirparser_p.h"
 #include "qqmlextensioninterface.h"
 #include "qqmllist_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
 #include <private/qqmlprofilerservice_p.h>
-#include <private/qquickapplication_p.h>
 #include <private/qv8debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
 #include "qqmlincubator.h"
@@ -176,9 +174,46 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
 void QQmlEnginePrivate::defineModule()
 {
     registerBaseTypes("QtQuick", 2, 0);
-    qmlRegisterUncreatableType<QQuickApplication>("QtQuick",2,0,"Application", QQuickApplication::tr("Application is an abstract class"));
     qmlRegisterUncreatableType<QQmlLocale>("QtQuick",2,0,"Locale",QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 }
+
+
+/*!
+    \class QQmlImageProviderBase
+    \brief The QQmlImageProviderBase class is used to register image providers in the QML engine.
+    \mainclass
+
+    Image providers must be registered with the QML engine.  The only information the QML
+    engine knows about image providers is the type of image data they provide.  To use an
+    image provider to acquire image data, you must cast the QQmlImageProviderBase pointer
+    to a QQuickImageProvider pointer.
+
+    \sa QQuickImageProvider, QQuickTextureFactory
+*/
+
+/*!
+    \enum QQmlImageProviderBase::ImageType
+
+    Defines the type of image supported by this image provider.
+
+    \value Image The Image Provider provides QImage images.
+        The QQuickImageProvider::requestImage() method will be called for all image requests.
+    \value Pixmap The Image Provider provides QPixmap images.
+        The QQuickImageProvider::requestPixmap() method will be called for all image requests.
+    \value Texture The Image Provider provides QSGTextureProvider based images.
+        The QQuickImageProvider::requestTexture() method will be called for all image requests. \omitvalue
+*/
+
+/*! \internal */
+QQmlImageProviderBase::QQmlImageProviderBase()
+{
+}
+
+/*! \internal */
+QQmlImageProviderBase::~QQmlImageProviderBase()
+{
+}
+
 
 /*!
 \qmlclass Qt QQmlEnginePrivate
@@ -682,27 +717,29 @@ QNetworkAccessManager *QQmlEngine::networkAccessManager() const
   takes ownership of \a provider.
 
   Image providers enable support for pixmap and threaded image
-  requests. See the QQmlImageProvider documentation for details on
+  requests. See the QQuickImageProvider documentation for details on
   implementing and using image providers.
 
   All required image providers should be added to the engine before any
   QML sources files are loaded.
 
-  \sa removeImageProvider()
+  \sa removeImageProvider(), QQuickImageProvider, QQmlImageProviderBase
 */
-void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProvider *provider)
+void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProviderBase *provider)
 {
     Q_D(QQmlEngine);
     QMutexLocker locker(&d->mutex);
-    d->imageProviders.insert(providerId.toLower(), QSharedPointer<QQmlImageProvider>(provider));
+    d->imageProviders.insert(providerId.toLower(), QSharedPointer<QQmlImageProviderBase>(provider));
 }
 
 /*!
-  Returns the QQmlImageProvider set for \a providerId.
+  Returns the image provider set for \a providerId.
 
   Returns the provider if it was found; otherwise returns 0.
+
+  \sa QQuickImageProvider
 */
-QQmlImageProvider *QQmlEngine::imageProvider(const QString &providerId) const
+QQmlImageProviderBase *QQmlEngine::imageProvider(const QString &providerId) const
 {
     Q_D(const QQmlEngine);
     QMutexLocker locker(&d->mutex);
@@ -710,63 +747,15 @@ QQmlImageProvider *QQmlEngine::imageProvider(const QString &providerId) const
 }
 
 /*!
-  Removes the QQmlImageProvider for \a providerId.
+  Removes the image provider for \a providerId.
 
-  \sa addImageProvider()
+  \sa addImageProvider(), QQuickImageProvider
 */
 void QQmlEngine::removeImageProvider(const QString &providerId)
 {
     Q_D(QQmlEngine);
     QMutexLocker locker(&d->mutex);
     d->imageProviders.take(providerId);
-}
-
-QQmlImageProvider::ImageType QQmlEnginePrivate::getImageProviderType(const QUrl &url)
-{
-    QMutexLocker locker(&mutex);
-    QSharedPointer<QQmlImageProvider> provider = imageProviders.value(url.host());
-    locker.unlock();
-    if (provider)
-        return provider->imageType();
-    return QQmlImageProvider::Invalid;
-}
-
-QQuickTextureFactory *QQmlEnginePrivate::getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
-{
-    QMutexLocker locker(&mutex);
-    QSharedPointer<QQmlImageProvider> provider = imageProviders.value(url.host());
-    locker.unlock();
-    if (provider) {
-        QString imageId = url.toString(QUrl::RemoveScheme | QUrl::RemoveAuthority).mid(1);
-        return provider->requestTexture(imageId, size, req_size);
-    }
-    return 0;
-}
-
-QImage QQmlEnginePrivate::getImageFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
-{
-    QMutexLocker locker(&mutex);
-    QImage image;
-    QSharedPointer<QQmlImageProvider> provider = imageProviders.value(url.host());
-    locker.unlock();
-    if (provider) {
-        QString imageId = url.toString(QUrl::RemoveScheme | QUrl::RemoveAuthority).mid(1);
-        image = provider->requestImage(imageId, size, req_size);
-    }
-    return image;
-}
-
-QPixmap QQmlEnginePrivate::getPixmapFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
-{
-    QMutexLocker locker(&mutex);
-    QPixmap pixmap;
-    QSharedPointer<QQmlImageProvider> provider = imageProviders.value(url.host());
-    locker.unlock();
-    if (provider) {
-        QString imageId = url.toString(QUrl::RemoveScheme | QUrl::RemoveAuthority).mid(1);
-        pixmap = provider->requestPixmap(imageId, size, req_size);
-    }
-    return pixmap;
 }
 
 /*!

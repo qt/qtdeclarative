@@ -187,33 +187,30 @@ Property *QQmlScript::Object::getProperty(const QString &name, bool create)
     }
 }
 
+int QQmlScript::Object::aggregateDynamicSignalParameterCount() const
+{
+    int sum = 0;
+    for (DynamicSignal *s = dynamicSignals.first(); s; s = dynamicSignals.next(s))
+        sum += s->parameterTypes.count() + 1; // +1 for return type
+    return sum;
+}
+
+int QQmlScript::Object::aggregateDynamicSlotParameterCount() const
+{
+    int sum = 0;
+    for (DynamicSlot *s = dynamicSlots.first(); s; s = dynamicSlots.next(s))
+        sum += s->parameterNames.count() + 1; // +1 for return type
+    return sum;
+}
+
 QQmlScript::Object::DynamicProperty::DynamicProperty()
-: isDefaultProperty(false), isReadOnly(false), type(Variant), defaultValue(0), nextProperty(0),
-  resolvedCustomTypeName(0)
+: isDefaultProperty(false), isReadOnly(false), type(Variant), defaultValue(0), nextProperty(0)
 {
 }
 
 QQmlScript::Object::DynamicSignal::DynamicSignal()
 : nextSignal(0)
 {
-}
-
-// Returns length in utf8 bytes
-int QQmlScript::Object::DynamicSignal::parameterTypesLength() const
-{
-    int rv = 0;
-    for (int ii = 0; ii < parameterTypes.count(); ++ii)
-        rv += parameterTypes.at(ii).length();
-    return rv;
-}
-
-// Returns length in utf8 bytes
-int QQmlScript::Object::DynamicSignal::parameterNamesLength() const
-{
-    int rv = 0;
-    for (int ii = 0; ii < parameterNames.count(); ++ii)
-        rv += parameterNames.at(ii).utf8length();
-    return rv;
 }
 
 QQmlScript::Object::DynamicSlot::DynamicSlot()
@@ -924,25 +921,23 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         const char *name;
         int nameLength;
         Object::DynamicProperty::Type type;
-        const char *qtName;
-        int qtNameLength;
     } propTypeNameToTypes[] = {
-        { "int", strlen("int"), Object::DynamicProperty::Int, "int", strlen("int") },
-        { "bool", strlen("bool"), Object::DynamicProperty::Bool, "bool", strlen("bool") },
-        { "double", strlen("double"), Object::DynamicProperty::Real, "double", strlen("double") },
-        { "real", strlen("real"), Object::DynamicProperty::Real, "double", strlen("double") },
-        { "string", strlen("string"), Object::DynamicProperty::String, "QString", strlen("QString") },
-        { "url", strlen("url"), Object::DynamicProperty::Url, "QUrl", strlen("QUrl") },
-        { "color", strlen("color"), Object::DynamicProperty::Color, "QColor", strlen("QColor") },
+        { "int", strlen("int"), Object::DynamicProperty::Int },
+        { "bool", strlen("bool"), Object::DynamicProperty::Bool },
+        { "double", strlen("double"), Object::DynamicProperty::Real },
+        { "real", strlen("real"), Object::DynamicProperty::Real },
+        { "string", strlen("string"), Object::DynamicProperty::String },
+        { "url", strlen("url"), Object::DynamicProperty::Url },
+        { "color", strlen("color"), Object::DynamicProperty::Color },
         // Internally QTime, QDate and QDateTime are all supported.
         // To be more consistent with JavaScript we expose only
         // QDateTime as it matches closely with the Date JS type.
         // We also call it "date" to match.
-        // { "time", strlen("time"), Object::DynamicProperty::Time, "QTime", strlen("QTime") },
-        // { "date", strlen("date"), Object::DynamicProperty::Date, "QDate", strlen("QDate") },
-        { "date", strlen("date"), Object::DynamicProperty::DateTime, "QDateTime", strlen("QDateTime") },
-        { "variant", strlen("variant"), Object::DynamicProperty::Variant, "QVariant", strlen("QVariant") },
-        { "var", strlen("var"), Object::DynamicProperty::Var, "QVariant", strlen("QVariant") }
+        // { "time", strlen("time"), Object::DynamicProperty::Time },
+        // { "date", strlen("date"), Object::DynamicProperty::Date },
+        { "date", strlen("date"), Object::DynamicProperty::DateTime },
+        { "variant", strlen("variant"), Object::DynamicProperty::Variant },
+        { "var", strlen("var"), Object::DynamicProperty::Var }
     };
     static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
                                                 sizeof(propTypeNameToTypes[0]);
@@ -957,7 +952,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         p = node->parameters;
 
         if (paramLength) {
-            signal->parameterTypes = _parser->_pool.NewRawList<QHashedCStringRef>(paramLength);
+            signal->parameterTypes = _parser->_pool.NewRawList<Object::DynamicProperty::Type>(paramLength);
             signal->parameterNames = _parser->_pool.NewRawList<QHashedStringRef>(paramLength);
         }
 
@@ -984,7 +979,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
                 return false;
             }
             
-            signal->parameterTypes[index] = QHashedCStringRef(type->qtName, type->qtNameLength);
+            signal->parameterTypes[index] = type->type;
             signal->parameterNames[index] = QHashedStringRef(p->name);
             p = p->next;
             index++;

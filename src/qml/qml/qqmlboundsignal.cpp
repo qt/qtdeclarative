@@ -272,7 +272,7 @@ int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
             return -1;
 
         if (QQmlDebugService::isDebuggingEnabled())
-            QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.signature()));
+            QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.methodSignature().constData()));
 
         QQmlHandlingSignalProfiler prof(m_signal, m_expression);
 
@@ -320,7 +320,7 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
             continue;
         }
 
-        QVariant::Type t = (QVariant::Type)QMetaType::type(type.constData());
+        int t = QMetaType::type(type.constData());
         if (QQmlMetaType::isQObject(t)) {
             types[ii] = QMetaType::QObjectStar;
             QMetaPropertyBuilder prop = mob.addProperty(name, "QObject*");
@@ -331,8 +331,8 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
             if (flags & QMetaType::IsEnumeration) {
                 t = QVariant::Int;
                 propType = "int";
-            } else if (t == QVariant::Invalid ||
-                       (t >= QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+            } else if (t == QMetaType::UnknownType ||
+                       (t >= int(QMetaType::User) && !(flags & QMetaType::PointerToQObject) &&
                         t != qMetaTypeId<QJSValue>())) {
                 //the UserType clause is to catch registered QFlags
                 QByteArray scope;

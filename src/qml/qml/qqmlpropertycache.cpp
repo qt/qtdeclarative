@@ -176,19 +176,11 @@ void QQmlPropertyData::load(const QMetaMethod &m)
     flags |= IsFunction;
     if (m.methodType() == QMetaMethod::Signal)
         flags |= IsSignal;
-    propType = QVariant::Invalid;
+    propType = m.returnType();
 
-    const char *returnType = m.typeName();
-    if (returnType) 
-        propType = QMetaType::type(returnType);
-
-    const char *signature = m.signature();
-    while (*signature != '(') { Q_ASSERT(*signature != 0); ++signature; }
-
-    ++signature;
-    if (*signature != ')') {
+    if (m.parameterCount()) {
         flags |= HasArguments;
-        if (0 == ::strcmp(signature, "QQmlV8Function*)")) {
+        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV8Function*")) {
             flags |= IsV8Function;
         }
     }
@@ -204,21 +196,18 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
     flags |= IsFunction;
     if (m.methodType() == QMetaMethod::Signal)
         flags |= IsSignal;
-    propType = QVariant::Invalid;
+    propType = QMetaType::Void;
 
     const char *returnType = m.typeName();
-    if (returnType && *returnType) {
+    Q_ASSERT(returnType != 0);
+    if ((*returnType != 'v') || (qstrcmp(returnType+1, "oid") != 0)) {
         propTypeName = returnType;
         flags |= NotFullyResolved;
     }
 
-    const char *signature = m.signature();
-    while (*signature != '(') { Q_ASSERT(*signature != 0); ++signature; }
-
-    ++signature;
-    if (*signature != ')') {
+    if (m.parameterCount()) {
         flags |= HasArguments;
-        if (0 == ::strcmp(signature, "QQmlV8Function*)")) {
+        if ((m.parameterCount() == 1) && (m.parameterTypes().first() == "QQmlV8Function*")) {
             flags |= IsV8Function;
         }
     }
@@ -414,10 +403,17 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
             continue;
 
         // Extract method name
-        const char *signature = m.signature();
+        const char *signature;
+        if (QMetaObjectPrivate::get(metaObject)->revision >= 7) {
+            // Safe to use the raw name pointer
+            signature = m.name().constData();
+        } else {
+            // Safe to use the raw signature pointer
+            signature = m.methodSignature().constData();
+        }
         const char *cptr = signature;
         char utf8 = 0;
-        while (*cptr != '(') {
+        while (*cptr && *cptr != '(') {
             Q_ASSERT(*cptr != 0);
             utf8 |= *cptr & 0x80;
             ++cptr;
@@ -663,11 +659,7 @@ QString QQmlPropertyData::name(const QMetaObject *metaObject)
     if (flags & IsFunction) {
         QMetaMethod m = metaObject->method(coreIndex);
 
-        QString name = QString::fromUtf8(m.signature());
-        int parenIdx = name.indexOf(QLatin1Char('('));
-        if (parenIdx != -1)
-            name = name.left(parenIdx);
-        return name;
+        return QString::fromUtf8(m.name().constData());
     } else {
         QMetaProperty p = metaObject->property(coreIndex);
         return QString::fromUtf8(p.name());
@@ -738,22 +730,26 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         const QMetaObject *metaObject = object->metaObject();
         QMetaMethod m = metaObject->method(index);
-        QList<QByteArray> argTypeNames = m.parameterTypes();
 
-        A *args = static_cast<A *>(malloc(sizeof(A) + (argTypeNames.count() + 1) * sizeof(int)));
-        args->arguments[0] = argTypeNames.count();
+        int argc = m.parameterCount();
+        A *args = static_cast<A *>(malloc(sizeof(A) + (argc + 1) * sizeof(int)));
+        args->arguments[0] = argc;
+        QList<QByteArray> argTypeNames; // Only loaded if needed
 
-        for (int ii = 0; ii < argTypeNames.count(); ++ii) {
-            int type = QMetaType::type(argTypeNames.at(ii));
+        for (int ii = 0; ii < argc; ++ii) {
+            int type = m.parameterType(ii);
             QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
             if (flags & QMetaType::IsEnumeration)
                 type = QVariant::Int;
-            else if (type == QVariant::Invalid ||
+            else if (type == QMetaType::UnknownType ||
                      (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
-                      type != qMetaTypeId<QJSValue>()))
+                      type != qMetaTypeId<QJSValue>())) {
                 //the UserType clause is to catch registered QFlags
+                if (argTypeNames.isEmpty())
+                    argTypeNames = m.parameterTypes();
                 type = EnumType(object->metaObject(), argTypeNames.at(ii), type);
-            if (type == QVariant::Invalid) {
+            }
+            if (type == QMetaType::UnknownType) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
                 free(args);
                 return 0;
@@ -768,21 +764,25 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
     } else {
         QMetaMethod m = object->metaObject()->method(index);
-        QList<QByteArray> argTypeNames = m.parameterTypes();
-        dummy.resize(argTypeNames.count() + 1);
-        dummy[0] = argTypeNames.count();
+        int argc = m.parameterCount();
+        dummy.resize(argc + 1);
+        dummy[0] = argc;
+        QList<QByteArray> argTypeNames; // Only loaded if needed
 
-        for (int ii = 0; ii < argTypeNames.count(); ++ii) {
-            int type = QMetaType::type(argTypeNames.at(ii));
+        for (int ii = 0; ii < argc; ++ii) {
+            int type = m.parameterType(ii);
             QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
             if (flags & QMetaType::IsEnumeration)
                 type = QVariant::Int;
-            else if (type == QVariant::Invalid ||
+            else if (type == QMetaType::UnknownType ||
                      (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
-                      type != qMetaTypeId<QJSValue>()))
+                      type != qMetaTypeId<QJSValue>())) {
                 //the UserType clause is to catch registered QFlags)
+                if (argTypeNames.isEmpty())
+                    argTypeNames = m.parameterTypes();
                 type = EnumType(object->metaObject(), argTypeNames.at(ii), type);
-            if (type == QVariant::Invalid) {
+            }
+            if (type == QMetaType::UnknownType) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
                 return 0;
             }
@@ -827,13 +827,9 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject,
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private)
             continue;
-        QString methodName = QString::fromUtf8(m.signature());
+        QString methodName = QString::fromUtf8(m.name().constData());
 
-        int parenIdx = methodName.indexOf(QLatin1Char('('));
-        Q_ASSERT(parenIdx != -1);
-        QStringRef methodNameRef = methodName.leftRef(parenIdx);
-
-        if (methodNameRef == property) {
+        if (methodName == property) {
             rv.load(m);
             return rv;
         }

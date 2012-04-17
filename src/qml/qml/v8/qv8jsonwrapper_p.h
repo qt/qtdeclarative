@@ -39,59 +39,55 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLIMAGEPROVIDER_H
-#define QQMLIMAGEPROVIDER_H
+#ifndef QV8JSONWRAPPER_P_H
+#define QV8JSONWRAPPER_P_H
 
-#include <QtQml/qtqmlglobal.h>
-#include <QtGui/qimage.h>
-#include <QtGui/qpixmap.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-QT_BEGIN_HEADER
+#include <QtCore/qglobal.h>
+#include <QtCore/qset.h>
+#include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
+class QJsonValue;
+class QJsonObject;
+class QJsonArray;
 
-class QQmlImageProviderPrivate;
-class QSGTexture;
-class QQuickCanvas;
-
-class Q_QML_EXPORT QQuickTextureFactory : public QObject
+class QV8Engine;
+class QV8JsonWrapper
 {
 public:
-    QQuickTextureFactory();
-    virtual ~QQuickTextureFactory();
+    QV8JsonWrapper();
+    ~QV8JsonWrapper();
 
-    virtual QSGTexture *createTexture(QQuickCanvas *canvas) const = 0;
-    virtual QSize textureSize() const = 0;
-    virtual int textureByteCount() const = 0;
-    virtual QImage image() const;
-};
+    void init(QV8Engine *);
+    void destroy();
 
-class Q_QML_EXPORT QQmlImageProvider
-{
-public:
-    enum ImageType {
-        Image,
-        Pixmap,
-        Texture,
-        Invalid
-    };
+    v8::Handle<v8::Value> fromJsonValue(const QJsonValue &value);
+    QJsonValue toJsonValue(v8::Handle<v8::Value> value);
 
-    QQmlImageProvider(ImageType type);
-    virtual ~QQmlImageProvider();
+    v8::Local<v8::Object> fromJsonObject(const QJsonObject &object);
+    QJsonObject toJsonObject(v8::Handle<v8::Value> value);
 
-    ImageType imageType() const;
-
-    virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize);
-    virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize);
-    virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
+    v8::Local<v8::Array> fromJsonArray(const QJsonArray &array);
+    QJsonArray toJsonArray(v8::Handle<v8::Value> value);
 
 private:
-    QQmlImageProviderPrivate *d;
+    QV8Engine *m_engine;
+    QSet<int> m_visitedConversionObjects;
 };
 
 QT_END_NAMESPACE
 
-QT_END_HEADER
+#endif // QV8JSONWRAPPER_P_H
 
-#endif // QQMLIMAGEPROVIDER

@@ -266,7 +266,7 @@ void tst_qquickcanvas::touchEvent_basic()
 
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
-    canvas->move(100, 100);
+    canvas->setPos(100, 100);
     canvas->show();
 
     TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
@@ -387,7 +387,7 @@ void tst_qquickcanvas::touchEvent_propagation()
 
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
-    canvas->move(100, 100);
+    canvas->setPos(100, 100);
     canvas->show();
 
     TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
@@ -515,7 +515,7 @@ void tst_qquickcanvas::touchEvent_cancel()
 
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
-    canvas->move(100, 100);
+    canvas->setPos(100, 100);
     canvas->show();
 
     TestTouchItem *item = new TestTouchItem(canvas->rootItem());
@@ -561,7 +561,7 @@ void tst_qquickcanvas::mouseFiltering()
 
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
-    canvas->move(100, 100);
+    canvas->setPos(100, 100);
     canvas->show();
 
     TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
@@ -618,7 +618,7 @@ void tst_qquickcanvas::clearColor()
     //### Can we examine rendering to make sure it is really blue?
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
-    canvas->move(100, 100);
+    canvas->setPos(100, 100);
     canvas->setClearColor(Qt::blue);
     canvas->show();
     QTest::qWaitForWindowShown(canvas);

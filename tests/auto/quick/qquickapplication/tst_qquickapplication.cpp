@@ -69,7 +69,15 @@ tst_qquickapplication::tst_qquickapplication()
 void tst_qquickapplication::active()
 {
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; Item { property bool active: Qt.application.active }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0; "
+                      "Item { "
+                      "    property bool active: Qt.application.active; "
+                      "    property bool active2: false; "
+                      "    Connections { "
+                      "        target: Qt.application; "
+                      "        onActiveChanged: active2 = Qt.application.active; "
+                      "    } "
+                      "}", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
     QQuickView view;
@@ -77,6 +85,7 @@ void tst_qquickapplication::active()
 
     // not active
     QVERIFY(!item->property("active").toBool());
+    QVERIFY(!item->property("active2").toBool());
     QCOMPARE(item->property("active").toBool(), QGuiApplication::activeWindow() != 0);
 
     // active
@@ -86,6 +95,7 @@ void tst_qquickapplication::active()
     QEXPECT_FAIL("", "QTBUG-21573", Abort);
     QTRY_COMPARE(view.status(), QQuickView::Ready);
     QCOMPARE(item->property("active").toBool(), QGuiApplication::activeWindow() != 0);
+    QCOMPARE(item->property("active2").toBool(), QGuiApplication::activeWindow() != 0);
 
 #if 0
     // QGuiApplication has no equivalent of setActiveWindow(0). QTBUG-21573
@@ -128,6 +138,9 @@ void tst_qquickapplication::layoutDirection()
 
 void tst_qquickapplication::inputPanel()
 {
+    const QLatin1String expected("Qt.application.inputPanel is deprecated, use Qt.inputMethod instead ");
+    QTest::ignoreMessage(QtWarningMsg, expected.data());
+
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; Item { property variant inputPanel: Qt.application.inputPanel }", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());

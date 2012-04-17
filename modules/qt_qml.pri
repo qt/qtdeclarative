@@ -12,6 +12,6 @@ QT.qml.libs = $$QT_MODULE_LIB_BASE
 QT.qml.plugins = $$QT_MODULE_PLUGIN_BASE
 QT.qml.imports = $$QT_MODULE_IMPORT_BASE
 QT.qml.depends = gui network xmlpatterns
-QT.qml.DEFINES = QT_QML_LIB
+QT.qml.DEFINES = QT_QML_LIB QQmlImageProvider=QQuickImageProvider
 
 QT_CONFIG += qml

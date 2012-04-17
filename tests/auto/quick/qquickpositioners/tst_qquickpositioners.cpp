@@ -1875,11 +1875,15 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
 QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait)
 {
     QQuickView *canvas = new QQuickView(0);
+    qDebug() << "1";
 
     canvas->setSource(QUrl::fromLocalFile(filename));
+    qDebug() << "2";
     canvas->show();
+    qDebug() << "3";
     if (wait)
         QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
+    qDebug() << "4";
 
     return canvas;
 }

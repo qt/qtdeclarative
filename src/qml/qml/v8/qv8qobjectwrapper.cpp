@@ -54,6 +54,7 @@
 #include <private/qqmlexpression_p.h>
 
 #include <QtQml/qjsvalue.h>
+#include <QtCore/qjsonvalue.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
@@ -449,7 +450,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
             return retn;
     }
 
-    if (property.propType == QVariant::Invalid) {
+    if (property.propType == QMetaType::UnknownType) {
         QMetaProperty p = object->metaObject()->property(property.coreIndex);
         qWarning("QMetaProperty::read: Unable to handle unregistered datatype '%s' for property "
                  "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
@@ -524,7 +525,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             return v8::Handle<v8::Value>();
     }
 
-    if (result->isFunction()) {
+    if (result->isFunction() && !result->isVMEProperty()) {
         if (result->isVMEFunction()) {
             return ((QQmlVMEMetaObject *)(object->metaObject()))->vmeMethod(result->coreIndex);
         } else if (result->isV8Function()) {
@@ -584,29 +585,65 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
                                  v8::Handle<v8::Value> value)
 {
     QQmlBinding *newBinding = 0;
-
     if (value->IsFunction()) {
-        QQmlContextData *context = engine->callingContext();
-        v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
+        if (value->ToObject()->GetHiddenValue(engine->bindingFlagKey()).IsEmpty()) {
+            if (!property->isVMEProperty()) {
+                // XXX TODO: uncomment the following lines
+                // assigning a JS function to a non-var-property is not allowed.
+                //QString error = QLatin1String("Cannot assign JavaScript function to ") +
+                //                QLatin1String(QMetaType::typeName(property->propType));
+                //v8::ThrowException(v8::Exception::Error(engine->toString(error)));
+                //return;
+                // XXX TODO: remove the following transition behaviour
+                // Temporarily allow assignment of functions to non-var properties
+                // to mean binding assignment (as per old behaviour).
+                QQmlContextData *context = engine->callingContext();
+                v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
 
-        v8::Local<v8::StackTrace> trace = 
-            v8::StackTrace::CurrentStackTrace(1, (v8::StackTrace::StackTraceOptions)(v8::StackTrace::kLineNumber | 
-                                                                                     v8::StackTrace::kScriptName));
-        v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
-        int lineNumber = frame->GetLineNumber();
-        int columnNumber = frame->GetColumn();
-        QString url = engine->toString(frame->GetScriptName());
+                v8::Local<v8::StackTrace> trace =
+                    v8::StackTrace::CurrentStackTrace(1, (v8::StackTrace::StackTraceOptions)(v8::StackTrace::kLineNumber |
+                                                                                             v8::StackTrace::kScriptName));
+                v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
+                int lineNumber = frame->GetLineNumber();
+                int columnNumber = frame->GetColumn();
+                QString url = engine->toString(frame->GetScriptName());
 
-        newBinding = new QQmlBinding(&function, object, context, url, lineNumber, columnNumber);
-        newBinding->setTarget(object, *property, context);
-        newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
-                                     QQmlBinding::RequiresThisObject);
+                newBinding = new QQmlBinding(&function, object, context, url, lineNumber, columnNumber);
+                newBinding->setTarget(object, *property, context);
+                newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
+                                             QQmlBinding::RequiresThisObject);
+                qWarning("WARNING: function assignment is DEPRECATED and will be removed!  Wrap RHS in Qt.binding(): %s:%d", qPrintable(engine->toString(frame->GetScriptName())), frame->GetLineNumber());
+            }
+        } else {
+            // binding assignment.
+            QQmlContextData *context = engine->callingContext();
+            v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
+
+            v8::Local<v8::StackTrace> trace =
+                v8::StackTrace::CurrentStackTrace(1, (v8::StackTrace::StackTraceOptions)(v8::StackTrace::kLineNumber |
+                                                                                         v8::StackTrace::kScriptName));
+            v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
+            int lineNumber = frame->GetLineNumber();
+            int columnNumber = frame->GetColumn();
+            QString url = engine->toString(frame->GetScriptName());
+
+            newBinding = new QQmlBinding(&function, object, context, url, lineNumber, columnNumber);
+            newBinding->setTarget(object, *property, context);
+            newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
+                                         QQmlBinding::RequiresThisObject);
+        }
     }
 
     QQmlAbstractBinding *oldBinding = 
         QQmlPropertyPrivate::setBinding(object, property->coreIndex, -1, newBinding);
     if (oldBinding)
         oldBinding->destroy();
+
+    if (!newBinding && property->isVMEProperty()) {
+        // allow assignment of "special" values (null, undefined, function) to var properties
+        static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(object->metaObject()))->setVMEProperty(property->coreIndex, value);
+        return;
+    }
 
 #define PROPERTY_STORE(cpptype, value) \
     cpptype o = value; \
@@ -623,6 +660,8 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
         QMetaObject::metacall(object, QMetaObject::ResetProperty, property->coreIndex, a);
     } else if (value->IsUndefined() && property->propType == qMetaTypeId<QVariant>()) {
         PROPERTY_STORE(QVariant, QVariant());
+    } else if (value->IsUndefined() && property->propType == QMetaType::QJsonValue) {
+        PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
     } else if (value->IsUndefined()) {
         QString error = QLatin1String("Cannot assign [undefined] to ") +
                         QLatin1String(QMetaType::typeName(property->propType));
@@ -654,10 +693,14 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
             if (v.userType() == QVariant::Invalid) valueType = "null";
             else valueType = QMetaType::typeName(v.userType());
 
+            const char *targetTypeName = QMetaType::typeName(property->propType);
+            if (!targetTypeName)
+                targetTypeName = "an unregistered type";
+
             QString error = QLatin1String("Cannot assign ") +
                             QLatin1String(valueType) +
                             QLatin1String(" to ") +
-                            QLatin1String(QMetaType::typeName(property->propType));
+                            QLatin1String(targetTypeName);
             v8::ThrowException(v8::Exception::Error(engine->toString(error)));
         }
     }
@@ -1641,16 +1684,6 @@ static inline int QMetaObject_methods(const QMetaObject *metaObject)
     return reinterpret_cast<const Private *>(metaObject->d.data)->methodCount;
 }
 
-static QByteArray QMetaMethod_name(const QMetaMethod &m)
-{
-    QByteArray sig = m.signature();
-    int paren = sig.indexOf('(');
-    if (paren == -1)
-        return sig;
-    else
-        return sig.left(paren);
-}
-
 /*!
 Returns the next related method, if one, or 0.
 */
@@ -1679,9 +1712,9 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
         dummy.load(method);
         
         // Look for overloaded methods
-        QByteArray methodName = QMetaMethod_name(method);
+        QByteArray methodName = method.name();
         for (int ii = current->overrideIndex - 1; ii >= methodOffset; --ii) {
-            if (methodName == QMetaMethod_name(mo->method(ii))) {
+            if (methodName == mo->method(ii).name()) {
                 dummy.setFlags(dummy.getFlags() | QQmlPropertyData::IsOverload);
                 dummy.overrideIndexIsProperty = 0;
                 dummy.overrideIndex = ii;
@@ -1795,7 +1828,7 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QQmlPropertyD
         const QQmlPropertyData *candidate = &data;
         while (candidate) {
             error += QLatin1String("\n    ") + 
-                     QString::fromUtf8(object->metaObject()->method(candidate->coreIndex).signature());
+                     QString::fromUtf8(object->metaObject()->method(candidate->coreIndex).methodSignature().constData());
             candidate = RelatedMethod(object, candidate, dummy);
         }
 
@@ -1964,7 +1997,7 @@ void *CallArgument::dataPtr()
 void CallArgument::initAsType(int callType)
 {
     if (type != 0) { cleanup(); type = 0; }
-    if (callType == 0) return;
+    if (callType == QMetaType::UnknownType) return;
 
     if (callType == qMetaTypeId<QJSValue>()) {
         qjsValuePtr = new (&allocData) QJSValue();
@@ -1990,6 +2023,9 @@ void CallArgument::initAsType(int callType)
     } else if (callType == qMetaTypeId<QQmlV8Handle>()) {
         type = callType;
         handlePtr = new (&allocData) QQmlV8Handle;
+    } else if (callType == QMetaType::Void) {
+        type = -1;
+        qvariantPtr = new (&allocData) QVariant();
     } else {
         type = -1;
         qvariantPtr = new (&allocData) QVariant(callType, (void *)0);
@@ -2044,6 +2080,8 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
     } else if (callType == qMetaTypeId<QQmlV8Handle>()) {
         handlePtr = new (&allocData) QQmlV8Handle(QQmlV8Handle::fromHandle(value));
         type = callType;
+    } else if (callType == QMetaType::Void) {
+        *qvariantPtr = QVariant();
     } else {
         qvariantPtr = new (&allocData) QVariant();
         type = -1;

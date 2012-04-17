@@ -58,7 +58,6 @@
 #include <QtCore/QMetaObject>
 #include <QtCore/QBitArray>
 #include <QtCore/QPair>
-#include <QtGui/QColor>
 #include <QtCore/QDate>
 #include <QtCore/qlist.h>
 #include <QtCore/qdebug.h>

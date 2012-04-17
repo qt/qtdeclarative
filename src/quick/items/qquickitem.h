@@ -266,6 +266,7 @@ public:
     void setFlags(Flags flags);
 
     virtual QRectF boundingRect() const;
+    virtual QRectF clipRect() const;
 
     bool hasActiveFocus() const;
     bool hasFocus() const;

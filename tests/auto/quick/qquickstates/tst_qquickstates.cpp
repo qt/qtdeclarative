@@ -245,7 +245,7 @@ void tst_qquickstates::basicChanges()
 
         QMetaProperty prop = rect->metaObject()->property(rect->metaObject()->indexOfProperty("propertyWithNotify"));
         QVERIFY(prop.hasNotifySignal());
-        QString notifySignal = QByteArray(prop.notifySignal().signature());
+        QString notifySignal = prop.notifySignal().methodSignature();
         QVERIFY(!notifySignal.startsWith("propertyWithNotifyChanged("));
 
         QCOMPARE(rect->color(), QColor(Qt::red));

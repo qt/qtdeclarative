@@ -56,7 +56,6 @@
 #include <QOpenGLContext>
 #include <QtGui/qopenglframebufferobject.h>
 
-#include <QQmlImageProvider>
 #include <private/qqmlglobal_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>

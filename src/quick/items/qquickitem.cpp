@@ -3777,12 +3777,19 @@ void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
 
 /*! \internal */
 // XXX todo - do we want/need this anymore?
-// Note that it's now used for varying clip rect
 QRectF QQuickItem::boundingRect() const
 {
     Q_D(const QQuickItem);
     return QRectF(0, 0, d->width, d->height);
 }
+
+/*! \internal */
+QRectF QQuickItem::clipRect() const
+{
+    Q_D(const QQuickItem);
+    return QRectF(0, 0, d->width, d->height);
+}
+
 
 QQuickItem::TransformOrigin QQuickItem::transformOrigin() const
 {
@@ -6001,7 +6008,7 @@ void QQuickItemLayer::updateGeometry()
 {
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
     Q_ASSERT(l);
-    QRectF bounds = m_item->boundingRect();
+    QRectF bounds = m_item->clipRect();
     l->setWidth(bounds.width());
     l->setHeight(bounds.height());
     l->setX(bounds.x() + m_item->x());
