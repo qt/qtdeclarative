@@ -147,11 +147,11 @@ public:
     QQuickItem *item;
     QQuickItemViewTransitionJob *transition;
     QQuickItemViewTransitioner::TransitionType nextTransitionType;
-    bool isTransitionTarget;
-    bool nextTransitionToSet;
-    bool nextTransitionFromSet;
-    bool lastMovedToSet;
-    bool prepared;
+    bool isTransitionTarget : 1;
+    bool nextTransitionToSet : 1;
+    bool nextTransitionFromSet : 1;
+    bool lastMovedToSet : 1;
+    bool prepared : 1;
 
 private:
     friend class QQuickItemViewTransitioner;
