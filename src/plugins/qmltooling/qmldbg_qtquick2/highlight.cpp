@@ -47,10 +47,22 @@
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
+Highlight::Highlight(QQuickItem *parent) : QQuickPaintedItem(parent)
+{
+    initRenderDetails();
+}
+
 Highlight::Highlight(QQuickItem *item, QQuickItem *parent)
     : QQuickPaintedItem(parent)
 {
+    initRenderDetails();
     setItem(item);
+}
+
+void Highlight::initRenderDetails()
+{
+    setRenderTarget(QQuickPaintedItem::FramebufferObject);
+    setPerformanceHint(QQuickPaintedItem::FastFBOResizing, true);
 }
 
 void Highlight::setItem(QQuickItem *item)
@@ -79,6 +91,7 @@ void Highlight::setItem(QQuickItem *item)
                 SLOT(adjust()));
     }
     m_item = item;
+    setContentsSize(view->size());
     adjust();
 }
 
@@ -105,7 +118,6 @@ void Highlight::adjust()
     // takes care of it.
     parentItem()->setScale(1/scaleFactor);
     setPos(originOffset);
-    setContentsSize(view->size());
     update();
 }
 
@@ -127,20 +139,14 @@ void SelectionHighlight::paint(QPainter *painter)
 {
     if (!item())
         return;
-
     painter->save();
+    painter->fillRect(QRectF(0,0,contentsSize().width(), contentsSize().height()),
+                      QColor(0,0,0,127));
     painter->setTransform(transform());
-    if (item()->height() >= 10 && item()->width() >= 10) {
-        QColor colorHighlight = Qt::green;
-        painter->fillRect(QRectF(0, 0, item()->width(), 5), colorHighlight);
-        painter->fillRect(QRectF(0, item()->height()-5, item()->width(), 5), colorHighlight);
-        painter->fillRect(QRectF(0, 5, 5, item()->height() - 10), colorHighlight);
-        painter->fillRect(QRectF(item()->width()-5, 5, 5, item()->height() - 10), colorHighlight);
-    }
-    painter->setPen(QPen(QColor(0, 22, 159)));
-    painter->drawRect(QRect(1, 1, item()->width() - 3, item()->height() - 3));
-    painter->setPen(QColor(158, 199, 255));
-    painter->drawRect(QRect(0, 0, item()->width() - 1, item()->height() - 1));
+    // Setting the composition mode such that the transparency will
+    // be erased as per the selected item.
+    painter->setCompositionMode(QPainter::CompositionMode_Clear);
+    painter->fillRect(0, 0, item()->width(), item()->height(), Qt::black);
     painter->restore();
 }
 

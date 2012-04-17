@@ -55,7 +55,7 @@ class Highlight : public QQuickPaintedItem
     Q_OBJECT
 
 public:
-    Highlight(QQuickItem *parent) : QQuickPaintedItem(parent) {}
+    Highlight(QQuickItem *parent);
     Highlight(QQuickItem *item, QQuickItem *parent);
 
     void setItem(QQuickItem *item);
@@ -63,6 +63,9 @@ public:
 
 protected:
     QTransform transform() {return m_transform;}
+
+private:
+    void initRenderDetails();
 
 private slots:
     void adjust();
