@@ -48,6 +48,7 @@
 #include <QThread>
 #include <QTest>
 #include <QProcess>
+#include <QMutex>
 
 #include <QtQml/qqmlengine.h>
 
