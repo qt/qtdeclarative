@@ -27,9 +27,8 @@
 
 /*!
 \page qtquick-states.html
-\ingroup qml-features
-\title QML States
-\brief creating and setting states in QML
+\title States
+\brief Creating and setting states
 
 \target qmlstates
 \section1 States Elements

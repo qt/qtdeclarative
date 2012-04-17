@@ -27,9 +27,7 @@
 
 /*!
 \page qtquick-texthandling.html
-\ingroup QML Features
-
-\title QML Text Handling and Validators
+\title Text Handling and Validators
 \brief elements that accept and handle text input
 
 \tableofcontents

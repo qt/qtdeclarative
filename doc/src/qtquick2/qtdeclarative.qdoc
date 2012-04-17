@@ -122,7 +122,7 @@ winning App across mobile, embedded, and desktop platforms.
             Graphics and Special Effects
         \enddiv
         \list
-        \li \l{Qt Quick Basic Elements}{Basic Elements}
+        \li \l{Basic Elements}{Basic Elements}
         \li \l{Painting with Canvas API}
         \li \l{Using the Qt Quick Particle System}{Particle Effects}
         \li \l{Shader Effects in QML}{Shader Effects}
@@ -135,7 +135,7 @@ winning App across mobile, embedded, and desktop platforms.
         \list
         \li \l{Component Layouts}
         \li \l{Layouts with Anchors}
-        \li \l{QML Right-to-left User Interfaces}{Right-to-left User Interfaces}
+        \li \l{Right-to-left User Interfaces}{Right-to-left User Interfaces}
         \endlist
     \enddiv
     \div {class="threecolumn_piece"}
@@ -143,8 +143,8 @@ winning App across mobile, embedded, and desktop platforms.
             Mouse and Keyboard Input
         \enddiv
         \list
-        \li \l{QML Mouse Events}{Mouse Events}
-        \li \l{QML Text Handling and Validators}{Text Handling and Validators}
+        \li \l{Mouse Events}{Mouse Events}
+        \li \l{Text Handling and Validators}{Text Handling and Validators}
         \li \l{Keyboard Focus in QML}{Keyboard Focus}
         \endlist
     \enddiv
@@ -153,7 +153,7 @@ winning App across mobile, embedded, and desktop platforms.
             States and Transitions
         \enddiv
         \list
-        \li \l{QML States}{States}
+        \li \l{States}{States}
         \li \l{QML Animation and Transitions}{Animation and Transitions}
         \endlist
     \enddiv
@@ -162,15 +162,15 @@ winning App across mobile, embedded, and desktop platforms.
             Data with Models and Views
         \enddiv
         \list
-        \li \l{QML Models and Views}{Models and Views}
-        \endlist
+        \li {Models and Views}
+       \endlist
     \enddiv
     \div {class="threecolumn_piece"}
         \div {class="heading"}
             Data Storage and Resources
         \enddiv
         \list
-        \li \l{QML Local Storage}{SQL Local Storage}
+        \li \l{Local Storage}{SQL Local Storage}
         \li \l{Resource Loading and Network Transparency in QML}{Resources and Network Transparency}
         \endlist
     \enddiv

@@ -624,7 +624,7 @@ siblings, care must be taken when referencing items in complex or deeply-nested
 user interfaces. Where there are lots of items to be arranged, it can be more
 productive to use \l{#Positioners}{positioners} and
 \l{Generating Items with Repeaters}{repeaters}, or
-\l{QML Models and Views}{models and views}.
+\l{Models and Views}{models and views}.
 
 Connections between anchors cannot be deleted and will override explicit
 declarations of positions and sizes using the \l{Item::}{x}, \l{Item::}{y},

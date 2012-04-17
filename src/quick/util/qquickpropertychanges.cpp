@@ -69,28 +69,28 @@ QT_BEGIN_NAMESPACE
     \ingroup qml-state-elements
     \brief The PropertyChanges element describes new property bindings or values for a state.
 
-    PropertyChanges is used to define the property values or bindings in a 
+    PropertyChanges is used to define the property values or bindings in a
     \l State. This enables an item's property values to be changed when it
-    \l {QML States}{changes between states}.
+    \l {States}{changes between states}.
 
-    To create a PropertyChanges object, specify the \l target item whose 
+    To create a PropertyChanges object, specify the \l target item whose
     properties are to be modified, and define the new property values or
     bindings. For example:
-    
-    \snippet doc/src/snippets/qml/propertychanges.qml import 
+
+    \snippet doc/src/snippets/qml/propertychanges.qml import
     \codeline
     \snippet doc/src/snippets/qml/propertychanges.qml 0
 
     When the mouse is pressed, the \l Rectangle changes to the \e resized
-    state. In this state, the PropertyChanges object sets the rectangle's 
+    state. In this state, the PropertyChanges object sets the rectangle's
     color to blue and the \c height value to that of \c container.height.
 
-    Note this automatically binds \c rect.height to \c container.height 
+    Note this automatically binds \c rect.height to \c container.height
     in the \e resized state. If a property binding should not be
     established, and the height should just be set to the value of
     \c container.height at the time of the state change, set the \l explicit
     property to \c true.
-   
+
     A PropertyChanges object can also override the default signal handler
     for an object to implement a signal handler specific to the new state:
 
@@ -205,7 +205,7 @@ public:
         if (ownedExpression == rewindExpression)
             ownedExpression = 0;
     }
-    virtual void saveCurrentValues() { 
+    virtual void saveCurrentValues() {
         rewindExpression = QQmlPropertyPrivate::signalExpression(property);
     }
 
@@ -432,7 +432,7 @@ void QQuickPropertyChanges::setObject(QObject *o)
     \qmlproperty bool QtQuick2::PropertyChanges::restoreEntryValues
 
     This property holds whether the previous values should be restored when
-    leaving the state. 
+    leaving the state.
 
     The default value is \c true. Setting this value to \c false creates a
     temporary state that has permanent effects on property values.

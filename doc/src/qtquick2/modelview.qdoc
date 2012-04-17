@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtquick-modelview.html
-\title QML Models and Views
+\title Models and Views
 \brief how to display and form data in QML
 
 Simply put, applications need to form data and display the data. QML has the

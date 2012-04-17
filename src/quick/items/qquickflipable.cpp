@@ -122,7 +122,7 @@ public:
     default states, the NumberAnimation animates the angle between
     its old and new values.
 
-    See \l {QML States} for details on state changes and the default
+    See \l {States} for details on state changes and the default
     state, and \l {QML Animation and Transitions} for more information on how
     animations work within transitions.
 

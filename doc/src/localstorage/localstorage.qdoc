@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qml-localstorage.html
-\title QML Local Storage
+\title Local Storage
 \brief SQL storage for QML
 
 The local storage API provides a JavaScript interface to an SQL relational

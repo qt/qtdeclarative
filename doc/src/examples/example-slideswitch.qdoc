@@ -97,7 +97,7 @@ We define the two states of the switch:
 \li In the \e off state the knob is on the left (\c x position is 1) and the \c on property is \c false.
 \endlist
 
-For more information on states see \l{qmlstates}{QML States}.
+For more information on states see \l{States}.
 
 \section2 Functions
 

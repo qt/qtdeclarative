@@ -718,7 +718,7 @@ particles you can render at 60 FPS.
 It should be noted that a particle system can be disabled when not in use
 (e.g., on a non-visible element) to avoid doing unnecessary simulation.
 
-See the \l{Qt Quick Particle System Performance Guide} for more in-depth information.
+See the \l{Particle System Performance Guide} for more in-depth information.
 
 \section2 Shaders
 

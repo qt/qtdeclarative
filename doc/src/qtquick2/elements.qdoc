@@ -27,27 +27,22 @@
 
 /*!
 \page qtquick-elements.html
-\title QML Elements
-\brief a listing of standard QML elements
+\title Qt Quick Elements
+\brief a listing of standard elements in Qt Quick
 
 
 \target elements
 
-These are the functionally grouped lists of QML elements as part of
+These are the functionally grouped lists of Qt Quick elements as part of
 \l{Qt Quick}. You can also browse the module pages for \l{QtQuick 2} and \l{QtQuick.Particles 2}
 
 Elements are declared with the their name and two curly braces. Elements may
 be nested in elements, thereby creating a parent-child relationship between the
 two elements.
 
-To see the QML elements listed by functional area, see the
-\l{Groups Of Related QML Elements} page.
-
-\section1 Basic QML Elements
+\section1 Basic Elements
 \list
-\li \l {Item} - Basic item element inherited by QML elements
-\li \l {Component} - Encapsulates QML elements during importing
-\li \l {QtObject} {QtObject} - Basic element containing only the \c {objectName} property
+\li \l {Item} - Basic item element inherited by visual elements
 \endlist
 
 \section1 Graphics
@@ -177,8 +172,6 @@ Elements that provide lower-level animation control
 \list
 \li \l {Connections} - Explicitly connects signals and signal handlers
 \li \l {Timer} - Provides timed triggers
-\li \l {QmlGlobalQtObject}{Qt} - The QML global Qt object provides useful enums and functions from Qt.
-\li \l {WorkerScript} - Enables the use of threads in QML
 \li \l {Loader} - Controls the loading of items or components
 \endlist
 
@@ -194,166 +187,5 @@ Elements that provide lower-level animation control
 \list
 \li \l {Accessible} - Attached property to make components accessible
 \endlist
-
-*/
-
-
-/*!
-    \group qml-groups
-    \title Groups Of Related QML Elements
-
-    \brief If you know what kind of QML element you want (Basic Visual,
-    Interaction, Animation, etc), look here.
-
-    This is a list of functional groups of QML elements.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-basic-visual-elements
-    \title Basic QML Visual Elements
-    \ingroup qml-groups
-
-    \brief Elements for constructing basic visual items.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-basic-interaction-elements
-    \title Basic QML Interaction Elements
-    \ingroup qml-groups
-
-    \brief Elements for handling basic interactions.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-state-elements
-    \title QML State Elements
-    \ingroup qml-groups
-
-    \brief Elements for handling state changes.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-event-elements
-    \title QML Event Elements
-    \ingroup qml-groups
-
-    \brief Elements for handling events.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-animation-transition
-    \title QML Animation and Transition Elements
-    \ingroup qml-groups
-
-    \brief Elements for handling animations and transitions.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-working-with-data
-    \title Working With Data in QML
-    \ingroup qml-groups
-
-    \brief Elements for working with data.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-view-elements
-    \title QML View Elements
-    \ingroup qml-groups
-
-    \brief Elements for handling views.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-positioning-elements
-    \title QML Positioning Elements
-    \ingroup qml-groups
-
-    \brief Elements for positioning items.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-utility-elements
-    \title QML Utility Elements
-    \ingroup qml-groups
-
-    \brief Elements for handling misc operations.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-transform-elements
-    \title QML Transform Elements
-    \ingroup qml-groups
-
-    \brief Elements for handling transformations.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-particle-elements
-    \title QML Particle Elements
-    \ingroup qml-groups
-
-    \brief Elements for handling particle effects.
-
-    This is the QtQuick 1.0 particle system, incompatible with QtQuick 2.0
-
-    There is a completely separate \l{QtQuick.Particles 2}{QtQuick 2.0 particle system}
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-shader-elements
-    \title QML Shader Elements
-    \ingroup qml-groups
-
-    \brief Elements for using OpenGL shading language code together with the QML code.
-
-    \generatelist{related}
-
-*/
-
-/*!
-    \group qml-shader-elements
-    \title QML Shader Elements
-    \ingroup qml-groups
-
-    \brief Elements for using OpenGL shading language code together with the QML code.
-
-    \generatelist{related}
 
 */

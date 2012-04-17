@@ -28,7 +28,7 @@
 /*!
 \page qtquick-mouseevents.html
 \ingroup QML Features
-\title QML Mouse Events
+\title Mouse Events
 \brief handling mouse events in QML
 
 \tableofcontents

@@ -71,7 +71,7 @@ Components may incorporate any \l{Qt Quick}{QML feature} such as:
 \li \l{JavaScript Expressions in QML}{JavaScript functions} - for performing routines and logic
 \li \l{QML Signal and Handler Event System}{Signals and handlers} - t notify other
 objects about events
-\li \l{QML States}{States} and \l{QML Animation and Transitions}{Transitions}
+\li \l{States} and \l{QML Animation and Transitions}{Transitions}
 \li many others
 \endlist
 For information about these features, visit the respective overviews or the

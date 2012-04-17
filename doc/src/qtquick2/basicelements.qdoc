@@ -28,7 +28,7 @@
 /*!
 \page qtquick-basicelements.html
 \ingroup qml-features
-\title Qt Quick Basic Elements
+\title Basic Elements
 \brief introduction to the Qt Quick Elements
 
 Qt Quick includes \e elements for placing components. These can be combined
@@ -104,7 +104,7 @@ For more information on how to build upon QML elements, see the
 
 \section1 Additional Elements
 
-The \l{QML Local Storage}{SQL Local Storage API} provides a JavaScript interface to an SQL relational
+The \l{Local Storage}{SQL Local Storage API} provides a JavaScript interface to an SQL relational
 database. The import statement needs a namespace
 
 \code

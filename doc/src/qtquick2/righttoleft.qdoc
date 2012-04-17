@@ -28,7 +28,7 @@
 /*!
 \page qtquick-righttoleft.html
 \ingroup qml-features
-\title QML Right-to-left User Interfaces
+\title Right-to-left User Interfaces
 \brief switching text flow and layout
 \section1 Overview
 
@@ -91,7 +91,7 @@ views that takes the mirroring into account can be read from the \c effectiveLay
 The attached property \l LayoutMirroring is provided as a convenience for easily implementing right-to-left
 support for existing left-to-right Qt Quick applications. It mirrors the behavior of \l {anchor-layout}
 {Item anchors}, the layout direction of \l{Composing User Interfaces with QML#Positioners}{positioners} and
-\l{QML Models and Views}{model views}, and the explicit text alignment of QML text elements.
+\l{Models and Views}{model views}, and the explicit text alignment of QML text elements.
 
 You can enable layout mirroring for a particular \l Item:
 

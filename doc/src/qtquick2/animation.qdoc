@@ -27,11 +27,9 @@
 
 /*!
 \page qtquick-animation.html
-\ingroup qml-features
-\title QML Animation and Transitions
+\title Animation and Transitions
 \brief the animation system in Qt Quick
 
-\keyword qml-animation-elements
 \section1 Animation and Transitions Elements
 \list
 \li \l {Transition} - Animates transitions during state changes
@@ -45,7 +43,6 @@
 \li \l {ScriptAction} - Runs scripts during an animation
 \endlist
 
-\keyword qml-property-animation-elements
 Elements that animate properties based on data types
 \list
 \li \l {PropertyAnimation} - Animates property changes
@@ -57,7 +54,7 @@ Elements that animate properties based on data types
 \li \l {AnchorAnimation} - Animates anchor changes
 \endlist
 
-In QML, animations are created by applying animation elements to property
+Animations are created by applying animation elements to property
 values. Animation elements will interpolate property values to create smooth
 transitions. As well, state transitions may assign animations to state changes.
 
@@ -65,12 +62,10 @@ To create an animation, use an appropriate animation element for the type of
 the property that is to be animated, and apply the animation depending on the
 type of behavior that is required.
 
-\keyword qml-triggering-animations
 \section1 Triggering Animations
 
 There are several ways of setting animation to an object.
 
-\keyword qml-direct-animation
 \section2 Direct Property Animation
 
 To create an immediate movement or animated movement, set the property value
@@ -96,7 +91,7 @@ information about the different animation properties.
 \keyword qml-transition-animations
 \section2 Transitions during State Changes
 
-\l{QML States}{States} are property configurations where a property may have different values to reflect different states. State changes introduce
+\l{States}{States} are property configurations where a property may have different values to reflect different states. State changes introduce
 abrupt property changes; animations smooth transitions to produce visually
 appealing state changes.
 

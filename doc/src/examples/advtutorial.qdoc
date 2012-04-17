@@ -34,7 +34,7 @@
 
 This tutorial walks step-by-step through the creation of a full application using QML.
 It assumes that you already know the basics of QML (for example, from reading the
-\l{QML Tutorial}{simple tutorial}). 
+\l{QML Tutorial}{simple tutorial}).
 
 In this tutorial we write a game, \e {Same Game}, based on the Same Game application
 included in the declarative \c examples directory, which looks like this:
@@ -42,7 +42,7 @@ included in the declarative \c examples directory, which looks like this:
 \image declarative-samegame.png
 
 We will cover concepts for producing a fully functioning application, including
-JavaScript integration, using QML  \l{State}{States} and \l{Behavior}{Behaviors} to 
+JavaScript integration, using QML  \l{State}{States} and \l{Behavior}{Behaviors} to
 manage components and enhance your interface, and storing persistent application data.
 
 An understanding of JavaScript is helpful to understand parts of this tutorial, but if you don't
@@ -123,7 +123,7 @@ This means that when we dynamically create and resize the block items
 later on in the tutorial, the image will be scaled automatically to the
 correct size.
 
-Notice the relative path for the Image element's \c source property. 
+Notice the relative path for the Image element's \c source property.
 This path is relative to the location of the file that contains the \l Image element.
 Alternatively, you could set the Image source to an absolute file path or a URL
 that contains an image.
@@ -150,7 +150,7 @@ Now that we've written some basic elements, let's start writing the game.
 The first task is to generate the game blocks. Each time the New Game button
 is clicked, the game canvas is populated with a new, random set of
 blocks. Since we need to dynamically generate new blocks for each new game,
-we cannot use \l Repeater to define the blocks. Instead, we will 
+we cannot use \l Repeater to define the blocks. Instead, we will
 create the blocks in JavaScript.
 
 Here is the JavaScript code for generating the blocks, contained in a new
@@ -195,7 +195,7 @@ the JavaScript file as a \l{Modules#QML Modules}{module}:
 \snippet declarative/tutorials/samegame/samegame2/samegame.qml 2
 
 This allows us to refer to any functions within \c samegame.js using "SameGame"
-as a prefix: for example, \c SameGame.startNewGame() or \c SameGame.createBlock().  
+as a prefix: for example, \c SameGame.startNewGame() or \c SameGame.createBlock().
 This means we can now connect the New Game button's \c onClicked handler to the \c startNewGame()
 function, like this:
 
@@ -235,7 +235,7 @@ To do this, we have added the following functions to \c samegame.js:
 \li \c{floodMoveCheck(xIdx, yIdx, type)}
 \endlist
 
-As this is a tutorial about QML, not game design, we will only discuss \c handleClick() and \c victoryCheck() below since they interface directly with the QML elements. Note that although the game logic here is written in JavaScript, it could have been written in C++ and then exposed to QML. 
+As this is a tutorial about QML, not game design, we will only discuss \c handleClick() and \c victoryCheck() below since they interface directly with the QML elements. Note that although the game logic here is written in JavaScript, it could have been written in C++ and then exposed to QML.
 
 \section3 Enabling mouse click interaction
 
@@ -345,7 +345,7 @@ element in \c BoomBlock.qml:
 
 Note the \c{opacity: 0} which means the block is transparent when it is first created. We could set the opacity
 in \c samegame.js when we create and destroy the blocks,
-but instead we'll use \l{QML States}{states}, since this is useful for the next animation we're going to add. 
+but instead we'll use \l{States}{states}, since this is useful for the next animation we're going to add.
 Initially, we add these States to the root element of \c{BoomBlock.qml}:
 \code
     property bool dying: false
@@ -410,7 +410,7 @@ Now the dialog can be used in \c samegame.qml:
 
 \snippet declarative/tutorials/samegame/samegame4/samegame.qml 0
 
-When the dialog emits the \c closed signal, we call the new \c saveHighScore() function in \c samegame.js, which stores the high score locally in an SQL database and also send the score to an online database if possible. 
+When the dialog emits the \c closed signal, we call the new \c saveHighScore() function in \c samegame.js, which stores the high score locally in an SQL database and also send the score to an online database if possible.
 
 The \c nameInputDialog is activated in the \c victoryCheck() function in \c samegame.js:
 
@@ -461,7 +461,7 @@ By following this tutorial you've seen how you can write a fully functional appl
 \list
 \li Build your application with \l {{QML Elements}}{QML elements}
 \li Add application logic \l{JavaScript Expressions in QML}{with JavaScript code}
-\li Add animations with \l {Behavior}{Behaviors} and \l{QML States}{states}
+\li Add animations with \l {Behavior}{Behaviors} and \l{States}{states}
 \li Store persistent application data using, for example, the \l{Offline Storage API} or \l XMLHttpRequest
 \endlist
 

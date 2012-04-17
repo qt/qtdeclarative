@@ -132,7 +132,7 @@
 /*!
     \page qml-particlesystem-performance.html
 \inqmlmodule QtQuick 2
-    \title Qt Quick Particle System Performance Guide
+    \title Particle System Performance Guide
 
     The performance of the particle system scales with the number of particles it is maintaining. After prototyping the desired
     effect, performance can be improved by lowering the particle count. Conversely, if performance is well within the acceptable
