@@ -56,7 +56,8 @@ public:
         enum Type {
             Bold = 0x01,
             Underline = 0x02,
-            Italic = 0x04
+            Italic = 0x04,
+            Anchor = 0x08
         };
         Format(int t, int s, int l)
             : type(t), start(s), length(l) {}
@@ -73,6 +74,9 @@ public:
 private slots:
     void textOutput();
     void textOutput_data();
+    void anchors();
+    void anchors_data();
+    void longString();
 };
 
 Q_DECLARE_METATYPE(tst_qquickstyledtext::FormatList);
@@ -90,7 +94,13 @@ void tst_qquickstyledtext::textOutput_data()
     QTest::addColumn<FormatList>("formats");
     QTest::addColumn<bool>("modifiesFontSize");
 
+    QTest::newRow("empty") << "" << "" << FormatList() << false;
+    QTest::newRow("empty tag") << "<>test</>" << "test" << FormatList() << false;
+    QTest::newRow("nest opening") << "<b<b>>test</b>" << ">test" << FormatList() << false;
+    QTest::newRow("nest closing") << "<b>test<</b>/b>" << "test/b>" << (FormatList() << Format(Format::Bold, 0, 7)) << false;
     QTest::newRow("bold") << "<b>bold</b>" << "bold" << (FormatList() << Format(Format::Bold, 0, 4)) << false;
+    QTest::newRow("bold 2") << "<b>>>>>bold</b>" << ">>>>bold" << (FormatList() << Format(Format::Bold, 0, 8)) << false;
+    QTest::newRow("bold 3") << "<b>bold<>/b>" << "bold/b>" << (FormatList() << Format(Format::Bold, 0, 7)) << false;
     QTest::newRow("italic") << "<i>italic</i>" << "italic" << (FormatList() << Format(Format::Italic, 0, 6)) << false;
     QTest::newRow("underline") << "<u>underline</u>" << "underline" << (FormatList() << Format(Format::Underline, 0, 9)) << false;
     QTest::newRow("strong") << "<strong>strong</strong>" << "strong" << (FormatList() << Format(Format::Bold, 0, 6)) << false;
@@ -111,11 +121,10 @@ void tst_qquickstyledtext::textOutput_data()
     QTest::newRow("extra space") << "<b >text</b>" << "text" << (FormatList() << Format(Format::Bold, 0, 4)) << false;
     QTest::newRow("entities") << "&lt;b&gt;this &amp; that&lt;/b&gt;" << "<b>this & that</b>" << FormatList() << false;
     QTest::newRow("newline") << "text<br>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList() << false;
+    QTest::newRow("self-closing newline") << "text<br/>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList() << false;
     QTest::newRow("paragraph") << "text<p>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList() << false;
     QTest::newRow("paragraph closed") << "text<p>more text</p>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text")  + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList() << false;
     QTest::newRow("paragraph closed bold") << "<b>text<p>more text</p>more text</b>" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text")  + QChar(QChar::LineSeparator) + QLatin1String("more text") << (FormatList() << Format(Format::Bold, 0, 24)) << false;
-    QTest::newRow("self-closing newline") << "text<br/>more text" << QLatin1String("text") + QChar(QChar::LineSeparator) + QLatin1String("more text") << FormatList() << false;
-    QTest::newRow("empty") << "" << "" << FormatList() << false;
     QTest::newRow("unknown tag") << "<a href='#'><foo>underline</foo></a> not" << "underline not" << (FormatList() << Format(Format::Underline, 0, 9)) << false;
     QTest::newRow("ordered list") << "<ol><li>one<li>two" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("1.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("2.") + QString(2, QChar::Nbsp) + QLatin1String("two") << FormatList() << false;
     QTest::newRow("ordered list closed") << "<ol><li>one</li><li>two</li></ol>" << QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("1.") + QString(2, QChar::Nbsp) + QLatin1String("one") + QChar(QChar::LineSeparator) + QString(6, QChar::Nbsp) + QLatin1String("2.") + QString(2, QChar::Nbsp) + QLatin1String("two") + QChar(QChar::LineSeparator) << FormatList() << false;
@@ -151,6 +160,7 @@ void tst_qquickstyledtext::textOutput_data()
     QTest::newRow("space leading bold") << "this is<b> bold</b>" << "this is bold" << (FormatList() << Format(Format::Bold, 7, 5)) << false;
     QTest::newRow("space trailing bold") << "this is <b>bold </b>" << "this is bold " << (FormatList() << Format(Format::Bold, 8, 5)) << false;
     QTest::newRow("img") << "a<img src=\"blah.png\"/>b" << "a  b" << FormatList() << false;
+    QTest::newRow("tag mix") << "<f6>ds<b></img><pro>gfh</b><w><w>ghj</stron><ql><sl><pl>dfg</j6><img><bol><r><prp>dfg<bkj></b><up><string>ewrq</al><bl>jklhj<zl>" << "dsgfhghjdfgdfgewrqjklhj" << (FormatList() << Format(Format::Bold, 2, 3)) << false;
 }
 
 void tst_qquickstyledtext::textOutput()
@@ -183,6 +193,60 @@ void tst_qquickstyledtext::textOutput()
     QCOMPARE(fontSizeModified, modifiesFontSize);
 }
 
+void tst_qquickstyledtext::anchors()
+{
+    QFETCH(QString, input);
+    QFETCH(QString, output);
+    QFETCH(FormatList, formats);
+
+    QTextLayout layout;
+    QList<QQuickStyledTextImgTag*> imgTags;
+    bool fontSizeModified = false;
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+
+    QCOMPARE(layout.text(), output);
+
+    QList<QTextLayout::FormatRange> layoutFormats = layout.additionalFormats();
+
+    QCOMPARE(layoutFormats.count(), formats.count());
+    for (int i = 0; i < formats.count(); ++i) {
+        QCOMPARE(layoutFormats.at(i).start, formats.at(i).start);
+        QCOMPARE(layoutFormats.at(i).length, formats.at(i).length);
+        QVERIFY(layoutFormats.at(i).format.isAnchor() == bool(formats.at(i).type & Format::Anchor));
+    }
+}
+
+void tst_qquickstyledtext::anchors_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("output");
+    QTest::addColumn<FormatList>("formats");
+
+    QTest::newRow("empty 1") << "Test string with <a href=>url</a>." << "Test string with url." << FormatList();
+    QTest::newRow("empty 2") << "Test string with <a href="">url</a>." << "Test string with url." << FormatList();
+    QTest::newRow("unknown attr") << "Test string with <a hfre=\"http://strange<username>@ok-hostname\">url</a>." << "Test string with url." << FormatList();
+    QTest::newRow("close") << "Test string with <a href=\"http://strange<username>@ok-hostname\"/>url." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 4));
+    QTest::newRow("username") << "Test string with <a href=\"http://strange<username>@ok-hostname\">url</a>." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 3));
+    QTest::newRow("query") << "Test string with <a href=\"http://www.foo.bar?hello=world\">url</a>." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 3));
+    QTest::newRow("ipv6") << "Test string with <a href=\"//user:pass@[56::56:56:56:127.0.0.1]:99\">url</a>." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 3));
+    QTest::newRow("uni") << "Test string with <a href=\"data:text/javascript,d5%20%3D%20'five\\u0027s'%3B\">url</a>." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 3));
+    QTest::newRow("utf8") << "Test string with <a href=\"http://www.räksmörgås.se/pub?a=b&a=dø&a=f#vræl\">url</a>." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 3));
+}
+
+void tst_qquickstyledtext::longString()
+{
+    QTextLayout layout;
+    QList<QQuickStyledTextImgTag*> imgTags;
+    bool fontSizeModified = false;
+
+    QString input(9999999, QChar('.'));
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QCOMPARE(layout.text(), input);
+
+    input = QString(9999999, QChar('\t')); // whitespace
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QCOMPARE(layout.text(), QString(""));
+}
 
 QTEST_MAIN(tst_qquickstyledtext)
 
