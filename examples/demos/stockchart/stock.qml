@@ -39,7 +39,7 @@
 ****************************************************************************/
 import QtQuick 2.0
 import com.nokia.StockChartExample 1.0
-import "../contents"
+import "./contents"
 
 Rectangle {
     id:container
