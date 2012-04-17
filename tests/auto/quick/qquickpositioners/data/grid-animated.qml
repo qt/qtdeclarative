@@ -9,6 +9,11 @@ Item {
         objectName: "grid"
         columns: 3
         layoutDirection: testRightToLeft ? Qt.RightToLeft : Qt.LeftToRight
+        populate: Transition {
+            NumberAnimation {
+                properties: "x,y";
+            }
+        }
         add: Transition {
             NumberAnimation {
                 properties: "x,y";

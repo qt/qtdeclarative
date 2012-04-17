@@ -93,6 +93,15 @@ private slots:
     void test_attachedproperties();
     void test_attachedproperties_data();
     void test_attachedproperties_dynamic();
+
+    void populateTransitions_row();
+    void populateTransitions_row_data();
+    void populateTransitions_column();
+    void populateTransitions_column_data();
+    void populateTransitions_grid();
+    void populateTransitions_grid_data();
+    void populateTransitions_flow();
+    void populateTransitions_flow_data();
     void addTransitions_row();
     void addTransitions_row_data();
     void addTransitions_column();
@@ -113,6 +122,8 @@ private slots:
 private:
     QQuickView *createView(const QString &filename, bool wait=true);
 
+    void populateTransitions(const QString &positionerObjectName);
+    void populateTransitions_data();
     void addTransitions(const QString &positionerObjectName);
     void addTransitions_data();
     void moveTransitions(const QString &positionerObjectName);
@@ -122,6 +133,46 @@ private:
     void matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems);
     void checkItemPositions(QQuickItem *positioner, QaimModel *model, qreal incrementalSize);
 };
+
+void tst_qquickpositioners::populateTransitions_row()
+{
+    populateTransitions("row");
+}
+
+void tst_qquickpositioners::populateTransitions_row_data()
+{
+    populateTransitions_data();
+}
+
+void tst_qquickpositioners::populateTransitions_column()
+{
+    populateTransitions("column");
+}
+
+void tst_qquickpositioners::populateTransitions_column_data()
+{
+    populateTransitions_data();
+}
+
+void tst_qquickpositioners::populateTransitions_grid()
+{
+    populateTransitions("grid");
+}
+
+void tst_qquickpositioners::populateTransitions_grid_data()
+{
+    populateTransitions_data();
+}
+
+void tst_qquickpositioners::populateTransitions_flow()
+{
+    populateTransitions("flow");
+}
+
+void tst_qquickpositioners::populateTransitions_flow_data()
+{
+    populateTransitions_data();
+}
 
 void tst_qquickpositioners::addTransitions_row()
 {
@@ -509,6 +560,90 @@ void tst_qquickpositioners::test_horizontal_animated_disabled()
     delete canvas;
 }
 
+void tst_qquickpositioners::populateTransitions(const QString &positionerObjectName)
+{
+    QFETCH(bool, dynamicallyPopulate);
+    QFETCH(bool, usePopulateTransition);
+
+    QPointF targetItems_transitionFrom(-50, -50);
+    QPointF displacedItems_transitionVia(100, 100);
+
+    QaimModel model;
+    if (!dynamicallyPopulate) {
+        for (int i = 0; i < 30; i++)
+            model.addItem("Original item" + QString::number(i), "");
+    }
+
+    QaimModel model_targetItems_transitionFrom;
+    QaimModel model_displacedItems_transitionVia;
+
+    QQuickView *canvas = QQuickViewTestUtil::createView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("usePopulateTransition", usePopulateTransition);
+    ctxt->setContextProperty("enableAddTransition", true);
+    ctxt->setContextProperty("dynamicallyPopulate", dynamicallyPopulate);
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
+    ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
+    ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
+    ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
+    ctxt->setContextProperty("testedPositioner", positionerObjectName);
+    canvas->setSource(testFileUrl("transitions.qml"));
+
+    QQuickItem *positioner = canvas->rootObject()->findChild<QQuickItem*>(positionerObjectName);
+    QVERIFY(positioner);
+    canvas->show();
+    qApp->processEvents();
+
+    if (!dynamicallyPopulate && usePopulateTransition) {
+        QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), model.count());
+        QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), 0);
+
+        QList<QPair<QString, QString> > targetData;
+        QList<int> targetIndexes;
+        for (int i=0; i<model.count(); i++) {
+            targetData << qMakePair(model.name(i), model.number(i));
+            targetIndexes << i;
+        }
+        QList<QQuickItem *> targetItems = findItems<QQuickItem>(positioner, "wrapper", targetIndexes);
+        model_targetItems_transitionFrom.matchAgainst(targetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
+        matchItemsAndIndexes(canvas->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
+        matchIndexLists(canvas->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
+        matchItemLists(canvas->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
+
+    } else if (dynamicallyPopulate) {
+        QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), 0);
+        QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), model.count());
+    } else {
+        QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+        QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), 0);
+        QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), 0);
+    }
+
+    checkItemPositions(positioner, &model, canvas->rootObject()->property("incrementalSize").toInt());
+
+    // add an item and check this is done with add transition, not populate
+    canvas->rootObject()->setProperty("populateTransitionsDone", 0);
+    canvas->rootObject()->setProperty("addTransitionsDone", 0);
+    model.insertItem(0, "new item", "");
+    QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), 1);
+    QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), 0);
+
+    delete canvas;
+}
+
+void tst_qquickpositioners::populateTransitions_data()
+{
+    QTest::addColumn<bool>("dynamicallyPopulate");
+    QTest::addColumn<bool>("usePopulateTransition");
+
+    QTest::newRow("statically populate") << false << true;
+    QTest::newRow("statically populate, no populate transition") << false << false;
+
+    QTest::newRow("dynamically populate") << true << true;
+    QTest::newRow("dynamically populate, no populate transition") << true << false;
+}
+
 void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
 {
     QFETCH(int, initialItemCount);
@@ -520,13 +655,12 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     QPointF displacedItems_transitionVia(100, 100);
 
     QaimModel model;
-    for (int i = 0; i < initialItemCount; i++)
-        model.addItem("Original item" + QString::number(i), "");
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
     QQuickView *canvas = QQuickViewTestUtil::createView();
     QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("usePopulateTransition", false);
     ctxt->setContextProperty("enableAddTransition", true);
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
@@ -536,12 +670,15 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     canvas->show();
     qApp->processEvents();
 
-    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
-
     QQuickItem *positioner = canvas->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
+    QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
 
+    for (int i = 0; i < initialItemCount; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
     QList<QPair<QString, QString> > targetData;
     QList<int> targetIndexes;
     for (int i=0; i<model.count(); i++) {
@@ -550,9 +687,9 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     }
     QList<QQuickItem *> targetItems = findItems<QQuickItem>(positioner, "wrapper", targetIndexes);
 
-    // check initial add transition
-    // (positioners run the add transition on all items that are initially created for the view)
-    QTRY_COMPARE(canvas->rootObject()->property("targetTransitionsDone").toInt(), initialItemCount);
+    // check add transition was run for first lot of added items
+    QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), 0);
+    QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), initialItemCount);
     QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), 0);
     model_targetItems_transitionFrom.matchAgainst(targetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
     matchItemsAndIndexes(canvas->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
@@ -560,7 +697,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     matchItemLists(canvas->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
 
     model_targetItems_transitionFrom.clear();
-    canvas->rootObject()->setProperty("targetTransitionsDone", 0);
+    canvas->rootObject()->setProperty("addTransitionsDone", 0);
     canvas->rootObject()->setProperty("targetTrans_items", QVariantMap());
     canvas->rootObject()->setProperty("targetTrans_targetIndexes", QVariantList());
     canvas->rootObject()->setProperty("targetTrans_targetItems", QVariantList());
@@ -577,7 +714,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
 
     targetItems = findItems<QQuickItem>(positioner, "wrapper", targetIndexes);
 
-    QTRY_COMPARE(canvas->rootObject()->property("targetTransitionsDone").toInt(), targetData.count());
+    QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), targetData.count());
     QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), expectedDisplacedIndexes.count());
 
     // check the target and displaced items were animated
@@ -636,6 +773,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
 
     QQuickView *canvas = QQuickViewTestUtil::createView();
     QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("usePopulateTransition", false);
     ctxt->setContextProperty("enableAddTransition", QVariant(false));
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
@@ -669,7 +807,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     }
 
     QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), expectedDisplacedIndexes.count());
-    QCOMPARE(canvas->rootObject()->property("targetTransitionsDone").toInt(), 0);
+    QCOMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), 0);
 
     // check the target and displaced items were animated
     QCOMPARE(model_targetItems_transitionFrom.count(), 0);

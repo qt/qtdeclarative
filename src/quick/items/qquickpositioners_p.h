@@ -93,6 +93,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeIte
     Q_OBJECT
 
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
+    Q_PROPERTY(QQuickTransition *populate READ populate WRITE setPopulate NOTIFY populateChanged)
     Q_PROPERTY(QQuickTransition *move READ move WRITE setMove NOTIFY moveChanged)
     Q_PROPERTY(QQuickTransition *add READ add WRITE setAdd NOTIFY addChanged)
 public:
@@ -103,6 +104,9 @@ public:
 
     qreal spacing() const;
     void setSpacing(qreal);
+
+    QQuickTransition *populate() const;
+    void setPopulate(QQuickTransition *);
 
     QQuickTransition *move() const;
     void setMove(QQuickTransition *);
@@ -123,6 +127,7 @@ protected:
 
 Q_SIGNALS:
     void spacingChanged();
+    void populateChanged();
     void moveChanged();
     void addChanged();
 

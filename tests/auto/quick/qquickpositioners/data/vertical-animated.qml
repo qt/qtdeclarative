@@ -5,6 +5,11 @@ Item {
     height: 480
     Column {
         objectName: "column"
+        populate: Transition {
+            NumberAnimation {
+                properties: "y";
+            }
+        }
         add: Transition {
             NumberAnimation {
                 properties: "y";

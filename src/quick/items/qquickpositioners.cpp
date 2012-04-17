@@ -195,6 +195,23 @@ void QQuickBasePositioner::setSpacing(qreal s)
     emit spacingChanged();
 }
 
+QQuickTransition *QQuickBasePositioner::populate() const
+{
+    Q_D(const QQuickBasePositioner);
+    return d->transitioner ? d->transitioner->populateTransition : 0;
+}
+
+void QQuickBasePositioner::setPopulate(QQuickTransition *transition)
+{
+    Q_D(QQuickBasePositioner);
+    if (!d->transitioner)
+        d->transitioner = new QQuickItemViewTransitioner;
+    if (d->transitioner->populateTransition != transition) {
+        d->transitioner->populateTransition = transition;
+        emit populateChanged();
+    }
+}
+
 QQuickTransition *QQuickBasePositioner::move() const
 {
     Q_D(const QQuickBasePositioner);
@@ -233,9 +250,14 @@ void QQuickBasePositioner::setAdd(QQuickTransition *add)
 
 void QQuickBasePositioner::componentComplete()
 {
+    Q_D(QQuickBasePositioner);
     QQuickItem::componentComplete();
+    if (d->transitioner)
+        d->transitioner->setPopulateTransitionEnabled(true);
     positionedItems.reserve(childItems().count());
     prePositioning();
+    if (d->transitioner)
+        d->transitioner->setPopulateTransitionEnabled(false);
 }
 
 void QQuickBasePositioner::itemChange(ItemChange change, const ItemChangeData &value)
@@ -301,7 +323,10 @@ void QQuickBasePositioner::prePositioning()
                     if (addedIndex < 0)
                         addedIndex = posItem.index;
                     PositionedItem *theItem = &positionedItems[positionedItems.count()-1];
-                    theItem->transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::AddTransition, true);
+                    if (d->transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true))
+                        theItem->transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::PopulateTransition, true);
+                    else if (!d->transitioner->populateTransitionEnabled())
+                        theItem->transitionNextReposition(d->transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 }
             }
         } else {
@@ -354,7 +379,7 @@ void QQuickBasePositioner::prePositioning()
     }
 
     if (d->transitioner) {
-        QRectF viewBounds;
+        QRectF viewBounds(QPointF(), contentSize);
         for (int i=0; i<positionedItems.count(); i++)
             positionedItems[i].prepareTransition(d->transitioner, viewBounds);
         for (int i=0; i<positionedItems.count(); i++)
@@ -602,13 +627,27 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \sa Row, Grid, Flow, Positioner, {qml/positioners}{Positioners example}
 */
 /*!
+    \qmlproperty Transition QtQuick2::Column::populate
+
+    This property holds the transition to be run for items that are part of
+    this positioner at the time of its creation. The transition is run when the positioner
+    is first created.
+
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being added. See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
+
+    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
+*/
+/*!
     \qmlproperty Transition QtQuick2::Column::add
 
     This property holds the transition to be run for items that are added to this
     positioner. For a positioner, this applies to:
 
     \list
-    \li Items that are created or reparented as a child of the positioner
+    \li Items that are created or reparented as a child of the positioner after the
+        positioner has been created
     \li Child items that change their \l visible property from false to true, and thus
        are now visible
     \endlist
@@ -617,7 +656,10 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     the item that is being added. See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \sa move, ViewTransition, {declarative/positioners}{Positioners example}
+    \note This transition is not applied to the items that already part of the positioner
+    at the time of its creation. In this case, the \l populate transition is applied instead.
+
+    \sa populate, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Column::move
@@ -635,9 +677,12 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     the item that is being moved. Note, however, that for this move transition, the
     ViewTransition.targetIndexes and ViewTransition.targetItems lists are only set when
     this transition is triggered by the addition of other items in the positioner; in other
-    cases, these lists will be empty.
+    cases, these lists will be empty.  See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
 
-    See the \l ViewTransition documentation for more details and examples on using these transitions.
+    \note In QtQuick 1, this transition was applied to all items that were part of the
+    positioner at the time of its creation. From QtQuick 2 onwards, positioners apply the
+    \l populate transition to these items instead.
 
     \sa add, ViewTransition, {qml/positioners}{Positioners example}
 */
@@ -735,13 +780,27 @@ void QQuickColumn::reportConflictingAnchors()
     \sa Column, Grid, Flow, Positioner, {qml/positioners}{Positioners example}
 */
 /*!
+    \qmlproperty Transition QtQuick2::Row::populate
+
+    This property holds the transition to be run for items that are part of
+    this positioner at the time of its creation. The transition is run when the positioner
+    is first created.
+
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being added. See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
+
+    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
+*/
+/*!
     \qmlproperty Transition QtQuick2::Row::add
 
     This property holds the transition to be run for items that are added to this
     positioner. For a positioner, this applies to:
 
     \list
-    \li Items that are created or reparented as a child of the positioner
+    \li Items that are created or reparented as a child of the positioner after the
+        positioner has been created
     \li Child items that change their \l visible property from false to true, and thus
        are now visible
     \endlist
@@ -750,7 +809,10 @@ void QQuickColumn::reportConflictingAnchors()
     the item that is being added. See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \sa move, ViewTransition, {declarative/positioners}{Positioners example}
+    \note This transition is not applied to the items that already part of the positioner
+    at the time of its creation. In this case, the \l populate transition is applied instead.
+
+    \sa populate, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Row::move
@@ -768,9 +830,12 @@ void QQuickColumn::reportConflictingAnchors()
     the item that is being moved. Note, however, that for this move transition, the
     ViewTransition.targetIndexes and ViewTransition.targetItems lists are only set when
     this transition is triggered by the addition of other items in the positioner; in other
-    cases, these lists will be empty.
+    cases, these lists will be empty.  See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
 
-    See the \l ViewTransition documentation for more details and examples on using these transitions.
+    \note In QtQuick 1, this transition was applied to all items that were part of the
+    positioner at the time of its creation. From QtQuick 2 onwards, positioners apply the
+    \l populate transition to these items instead.
 
     \sa add, ViewTransition, {qml/positioners}{Positioners example}
 */
@@ -947,13 +1012,27 @@ void QQuickRow::reportConflictingAnchors()
     \sa Flow, Row, Column, Positioner, {qml/positioners}{Positioners example}
 */
 /*!
+    \qmlproperty Transition QtQuick2::Grid::populate
+
+    This property holds the transition to be run for items that are part of
+    this positioner at the time of its creation. The transition is run when the positioner
+    is first created.
+
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being added. See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
+
+    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
+*/
+/*!
     \qmlproperty Transition QtQuick2::Grid::add
 
     This property holds the transition to be run for items that are added to this
     positioner. For a positioner, this applies to:
 
     \list
-    \li Items that are created or reparented as a child of the positioner
+    \li Items that are created or reparented as a child of the positioner after the
+        positioner has been created
     \li Child items that change their \l visible property from false to true, and thus
        are now visible
     \endlist
@@ -962,7 +1041,10 @@ void QQuickRow::reportConflictingAnchors()
     the item that is being added. See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \sa move, ViewTransition, {declarative/positioners}{Positioners example}
+    \note This transition is not applied to the items that already part of the positioner
+    at the time of its creation. In this case, the \l populate transition is applied instead.
+
+    \sa populate, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Grid::move
@@ -980,9 +1062,12 @@ void QQuickRow::reportConflictingAnchors()
     the item that is being moved. Note, however, that for this move transition, the
     ViewTransition.targetIndexes and ViewTransition.targetItems lists are only set when
     this transition is triggered by the addition of other items in the positioner; in other
-    cases, these lists will be empty.
+    cases, these lists will be empty.  See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
 
-    See the \l ViewTransition documentation for more details and examples on using these transitions.
+    \note In QtQuick 1, this transition was applied to all items that were part of the
+    positioner at the time of its creation. From QtQuick 2 onwards, positioners apply the
+    \l populate transition to these items instead.
 
     \sa add, ViewTransition, {qml/positioners}{Positioners example}
 */
@@ -1360,13 +1445,27 @@ void QQuickGrid::reportConflictingAnchors()
   \sa Column, Row, Grid, Positioner, {qml/positioners}{Positioners example}
 */
 /*!
+    \qmlproperty Transition QtQuick2::Flow::populate
+
+    This property holds the transition to be run for items that are part of
+    this positioner at the time of its creation. The transition is run when the positioner
+    is first created.
+
+    The transition can use the \l ViewTransition property to access more details about
+    the item that is being added. See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
+
+    \sa add, ViewTransition, {declarative/positioners}{Positioners example}
+*/
+/*!
     \qmlproperty Transition QtQuick2::Flow::add
 
     This property holds the transition to be run for items that are added to this
     positioner. For a positioner, this applies to:
 
     \list
-    \li Items that are created or reparented as a child of the positioner
+    \li Items that are created or reparented as a child of the positioner after the
+        positioner has been created
     \li Child items that change their \l visible property from false to true, and thus
        are now visible
     \endlist
@@ -1375,7 +1474,10 @@ void QQuickGrid::reportConflictingAnchors()
     the item that is being added. See the \l ViewTransition documentation for more details
     and examples on using these transitions.
 
-    \sa move, ViewTransition, {declarative/positioners}{Positioners example}
+    \note This transition is not applied to the items that already part of the positioner
+    at the time of its creation. In this case, the \l populate transition is applied instead.
+
+    \sa populate, ViewTransition, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Flow::move
@@ -1393,9 +1495,12 @@ void QQuickGrid::reportConflictingAnchors()
     the item that is being moved. Note, however, that for this move transition, the
     ViewTransition.targetIndexes and ViewTransition.targetItems lists are only set when
     this transition is triggered by the addition of other items in the positioner; in other
-    cases, these lists will be empty.
+    cases, these lists will be empty.  See the \l ViewTransition documentation for more details
+    and examples on using these transitions.
 
-    See the \l ViewTransition documentation for more details and examples on using these transitions.
+    \note In QtQuick 1, this transition was applied to all items that were part of the
+    positioner at the time of its creation. From QtQuick 2 onwards, positioners apply the
+    \l populate transition to these items instead.
 
     \sa add, ViewTransition, {qml/positioners}{Positioners example}
 */

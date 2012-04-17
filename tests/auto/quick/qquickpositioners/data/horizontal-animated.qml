@@ -9,6 +9,12 @@ Item {
     Row {
         objectName: "row"
         layoutDirection: testRightToLeft ? Qt.RightToLeft : Qt.LeftToRight
+        populate: Transition {
+            enabled: testEnabled ? false : true
+            NumberAnimation {
+                properties: "x";
+            }
+        }
         add: Transition {
             enabled: testEnabled ? false : true
             NumberAnimation {

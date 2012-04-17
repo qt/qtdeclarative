@@ -44,6 +44,7 @@ Rectangle {
     id: page
     width: 320; height: 480
     property real effectiveOpacity: 1.0
+
     Timer {
         interval: 2000
         running: true
@@ -52,13 +53,16 @@ Rectangle {
     }
 
     Column {
-        id: layout1
         y: 0
-        move: Transition {
-            NumberAnimation { properties: "y"; easing.type: Easing.OutBounce }
+
+        populate: Transition {
+            NumberAnimation { properties: "x,y"; from: 200; duration: 1500; easing.type: Easing.OutBounce }
         }
         add: Transition {
             NumberAnimation { properties: "y"; easing.type: Easing.OutQuad }
+        }
+        move: Transition {
+            NumberAnimation { properties: "y"; easing.type: Easing.OutBounce }
         }
 
         Rectangle { color: "red"; width: 100; height: 50; border.color: "black"; radius: 15 }
@@ -92,13 +96,16 @@ Rectangle {
     }
 
     Row {
-        id: layout2
         y: 320
-        move: Transition {
-            NumberAnimation { properties: "x"; easing.type: Easing.OutBounce }
+
+        populate: Transition {
+            NumberAnimation { properties: "x,y"; from: 200; duration: 1500; easing.type: Easing.OutBounce }
         }
         add: Transition {
             NumberAnimation { properties: "x"; easing.type: Easing.OutQuad }
+        }
+        move: Transition {
+            NumberAnimation { properties: "x"; easing.type: Easing.OutBounce }
         }
 
         Rectangle { color: "red"; width: 50; height: 100; border.color: "black"; radius: 15 }
@@ -135,13 +142,16 @@ Rectangle {
         x: 120; y: 0
         columns: 3
 
+        populate: Transition {
+            NumberAnimation { properties: "x,y"; from: 200; duration: 1500; easing.type: Easing.OutBounce }
+        }
+        add: Transition {
+            NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
+        }
         move: Transition {
             NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
         }
 
-        add: Transition {
-            NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
-        }
 
         Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
 
@@ -188,7 +198,6 @@ Rectangle {
     }
 
     Flow {
-        id: layout4
         x: 120; y: 160; width: 150
 
         //! [move]
@@ -202,6 +211,12 @@ Rectangle {
             NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
         }
         //! [add]
+
+        //! [populate]
+        populate: Transition {
+            NumberAnimation { properties: "x,y"; from: 200; duration: 1500; easing.type: Easing.OutBounce }
+        }
+        //! [populate]
 
         Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
 

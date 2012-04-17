@@ -9,7 +9,8 @@ Rectangle {
 
     property real incrementalSize: 5
 
-    property int targetTransitionsDone
+    property int populateTransitionsDone
+    property int addTransitionsDone
     property int displaceTransitionsDone
 
     property var targetTrans_items: new Object()
@@ -35,16 +36,23 @@ Rectangle {
             model_displacedItems_transitionVia.addItem(name, "")
     }
 
+    Component.onCompleted: {
+        if (dynamicallyPopulate) {
+            for (var i=0; i<30; i++)
+                testModel.addItem("item " + i, "")
+        }
+    }
+
     Transition {
-        id: targetTransition
-        enabled: enableAddTransition
+        id: populateTransition
+        enabled: usePopulateTransition
 
         SequentialAnimation {
             ScriptAction {
                 script: {
-                    root.targetTrans_items[targetTransition.ViewTransition.item.nameData] = targetTransition.ViewTransition.index
-                    root.targetTrans_targetIndexes.push(targetTransition.ViewTransition.targetIndexes)
-                    root.targetTrans_targetItems.push(root.copyList(targetTransition.ViewTransition.targetItems))
+                    root.targetTrans_items[populateTransition.ViewTransition.item.nameData] = populateTransition.ViewTransition.index
+                    root.targetTrans_targetIndexes.push(populateTransition.ViewTransition.targetIndexes)
+                    root.targetTrans_targetItems.push(root.copyList(populateTransition.ViewTransition.targetItems))
                 }
             }
             ParallelAnimation {
@@ -52,7 +60,28 @@ Rectangle {
                 NumberAnimation { properties: "y"; from: targetItems_transitionFrom.y; duration: root.duration }
             }
 
-            ScriptAction { script: root.targetTransitionsDone += 1 }
+            ScriptAction { script: root.populateTransitionsDone += 1 }
+        }
+    }
+
+    Transition {
+        id: addTransition
+        enabled: enableAddTransition
+
+        SequentialAnimation {
+            ScriptAction {
+                script: {
+                    root.targetTrans_items[addTransition.ViewTransition.item.nameData] = addTransition.ViewTransition.index
+                    root.targetTrans_targetIndexes.push(addTransition.ViewTransition.targetIndexes)
+                    root.targetTrans_targetItems.push(root.copyList(addTransition.ViewTransition.targetItems))
+                }
+            }
+            ParallelAnimation {
+                NumberAnimation { properties: "x"; from: targetItems_transitionFrom.x; duration: root.duration }
+                NumberAnimation { properties: "y"; from: targetItems_transitionFrom.y; duration: root.duration }
+            }
+
+            ScriptAction { script: root.addTransitionsDone += 1 }
         }
     }
 
@@ -87,6 +116,7 @@ Rectangle {
         width: 400; height: 400
         Repeater {
             objectName: "repeater"
+            model: testedPositioner == "row" ? testModel : undefined
             Rectangle {
                 property string nameData: name
                 objectName: "wrapper"
@@ -103,7 +133,8 @@ Rectangle {
             }
         }
 
-        add: targetTransition
+        populate: populateTransition
+        add: addTransition
         move: displaced
     }
 
@@ -116,6 +147,7 @@ Rectangle {
         width: 400; height: 400
         Repeater {
             objectName: "repeater"
+            model: testedPositioner == "column" ? testModel : undefined
             Rectangle {
                 property string nameData: name
                 objectName: "wrapper"
@@ -132,7 +164,8 @@ Rectangle {
             }
         }
 
-        add: targetTransition
+        populate: populateTransition
+        add: addTransition
         move: displaced
     }
 
@@ -145,6 +178,7 @@ Rectangle {
         width: 400; height: 400
         Repeater {
             objectName: "repeater"
+            model: testedPositioner == "grid" ? testModel : undefined
             Rectangle {
                 property string nameData: name
                 objectName: "wrapper"
@@ -162,7 +196,8 @@ Rectangle {
             }
         }
 
-        add: targetTransition
+        populate: populateTransition
+        add: addTransition
         move: displaced
     }
 
@@ -175,6 +210,7 @@ Rectangle {
         width: 400; height: 400
         Repeater {
             objectName: "repeater"
+            model: testedPositioner == "flow" ? testModel : undefined
             Rectangle {
                 property string nameData: name
                 objectName: "wrapper"
@@ -191,7 +227,8 @@ Rectangle {
             }
         }
 
-        add: targetTransition
+        populate: populateTransition
+        add: addTransition
         move: displaced
     }
 }

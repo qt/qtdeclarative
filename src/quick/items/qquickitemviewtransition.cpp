@@ -577,8 +577,8 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     operations:
 
     \list
-    \li \c populate - the transition to run when a view is created, or when the model changes
-    \li \c add - the transition to apply to items that are added to the view
+    \li \c populate - the transition to apply to the items created initially for the view, or when the model changes
+    \li \c add - the transition to apply to items that are added to the view after it has been created
     \li \c remove - the transition to apply to items that are removed from the view
     \li \c move - the transition to apply to items that are moved within the view (i.e. as a result
        of a move operation in the model)
@@ -593,7 +593,9 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     items rather than data models, the following properties are used instead:
 
     \list
-    \li \c add - the transition to apply to items that are created for the positioner, added to
+    \li \c populate - the transition to apply to items that have been added to the positioner at the
+       time of its creation
+    \li \c add - the transition to apply to items that are added to
        or reparented to the positioner, or items that have become \l {Item::}{visible}
     \li \c move - the transition to apply to items that have moved within the positioner, including
        when they are displaced due to the addition or removal of other items, or when items are otherwise
