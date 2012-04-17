@@ -1582,18 +1582,20 @@ void tst_qquicktext::implicitSize()
     QFETCH(QString, wrap);
     QFETCH(QString, elide);
     QString componentStr = "import QtQuick 2.0\nText { "
+            "property real iWidth: implicitWidth; "
             "text: \"" + text + "\"; "
             "width: " + width + "; "
             "textFormat: " + format + "; "
             "wrapMode: " + wrap + "; "
             "elide: " + elide + "; "
-            "maximumLineCount: 1 }";
+            "maximumLineCount: 2 }";
     QQmlComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject->width() < textObject->implicitWidth());
     QVERIFY(textObject->height() == textObject->implicitHeight());
+    QCOMPARE(textObject->property("iWidth").toReal(), textObject->implicitWidth());
 
     textObject->resetWidth();
     QVERIFY(textObject->width() == textObject->implicitWidth());

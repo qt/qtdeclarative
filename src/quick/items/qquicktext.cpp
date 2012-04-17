@@ -913,12 +913,13 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
                 QTextLayout widthLayout(layoutText.mid(characterCount), scaledFont);
                 widthLayout.setTextOption(layout.textOption());
 
+                widthLayout.beginLayout();
                 for (; unwrappedLineCount <= maxLineCount; ++unwrappedLineCount) {
                     QTextLine line = widthLayout.createLine();
                     if (!line.isValid())
                         break;
                 }
-
+                widthLayout.endLayout();
                 *naturalWidth = qMax(*naturalWidth, widthLayout.maximumWidth());
             }
 
