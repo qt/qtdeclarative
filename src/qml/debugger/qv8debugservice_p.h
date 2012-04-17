@@ -74,7 +74,7 @@ public:
     static QV8DebugService *instance();
     static void initialize(const QV8Engine *engine);
 
-    void debugMessageHandler(const QString &message, const v8::DebugEvent &event);
+    void debugMessageHandler(const QString &message);
 
     void signalEmitted(const QString &signal);
 

@@ -67,7 +67,6 @@ const char *V8_DEBUGGER_KEY_DISCONNECT = "disconnect";
 const char *V8_DEBUGGER_KEY_REQUEST = "v8request";
 const char *V8_DEBUGGER_KEY_V8MESSAGE = "v8message";
 const char *V8_DEBUGGER_KEY_BREAK_ON_SIGNAL = "breakonsignal";
-const char *V8_DEBUGGER_KEY_BREAK_AFTER_COMPILE = "breakaftercompile";
 
 QT_BEGIN_NAMESPACE
 
@@ -92,10 +91,15 @@ void DebugMessageHandler(const v8::Debug::Message& message)
 {
     v8::DebugEvent event = message.GetEvent();
 
-    if (event != v8::Break && event != v8::Exception &&
-            event != v8::AfterCompile && event != v8::BeforeCompile)
+    if (message.IsEvent()) {
+        if (event == v8::AfterCompile || event == v8::BeforeCompile)
             return;
-    v8ServiceInstancePtr->debugMessageHandler(QJSConverter::toString(message.GetJSON()), event);
+    } else if (event != v8::Break && event != v8::Exception &&
+               event != v8::AfterCompile && event != v8::BeforeCompile) {
+        return;
+    }
+
+    v8ServiceInstancePtr->debugMessageHandler(QJSConverter::toString(message.GetJSON()));
 }
 
 class QV8DebugServicePrivate : public QQmlDebugServicePrivate
@@ -103,7 +107,6 @@ class QV8DebugServicePrivate : public QQmlDebugServicePrivate
 public:
     QV8DebugServicePrivate()
         : connectReceived(false)
-        , breakAfterCompile(false)
         , engine(0)
     {
     }
@@ -113,7 +116,6 @@ public:
     static QByteArray packMessage(const QString &type, const QString &message = QString());
 
     bool connectReceived;
-    bool breakAfterCompile;
     QMutex initializeMutex;
     QStringList breakOnSignals;
     const QV8Engine *engine;
@@ -160,12 +162,9 @@ void QV8DebugService::setEngine(const QV8Engine *engine)
     d->engine = engine;
 }
 
-void QV8DebugService::debugMessageHandler(const QString &message, const v8::DebugEvent &event)
+void QV8DebugService::debugMessageHandler(const QString &message)
 {
-    Q_D(QV8DebugService);
     sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_V8MESSAGE), message));
-    if (event == v8::AfterCompile && d->breakAfterCompile)
-        scheduledDebugBreak(true);
 }
 
 void QV8DebugService::signalEmitted(const QString &signal)
@@ -261,11 +260,6 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             else
                 d->breakOnSignals.removeOne(signalName);
             sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_BREAK_ON_SIGNAL)));
-
-        } else if (command == V8_DEBUGGER_KEY_BREAK_AFTER_COMPILE) {
-            QDataStream rs(data);
-            rs >> d->breakAfterCompile;
-            sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_BREAK_AFTER_COMPILE)));
 
         }
     }

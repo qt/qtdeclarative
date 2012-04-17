@@ -50,5 +50,11 @@ Item {
             var c
             var d = 12
     }
+    function foo() {
+        var a = [1, 2]
+        var b = {a: "hello", d: 1 }
+        var c
+        var d = 12
+    }
 }
 

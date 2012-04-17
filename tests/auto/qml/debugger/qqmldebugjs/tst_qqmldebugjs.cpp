@@ -107,7 +107,6 @@ const char *GARBAGECOLLECTOR = "gc";
 
 const char *CONNECT = "connect";
 const char *INTERRUPT = "interrupt";
-const char *BREAKAFTERCOMPILE = "breakaftercompile";
 
 const char *REQUEST = "request";
 const char *IN = "in";
@@ -173,7 +172,6 @@ private slots:
 
     void connect();
     void interrupt();
-    void breakAfterCompile();
     void getVersion();
     void getVersionWhenAttaching();
 
@@ -270,7 +268,6 @@ public:
 
     void connect();
     void interrupt();
-    void breakAfterCompile(bool enabled);
 
     void continueDebugging(StepAction stepAction, int stepCount = 1);
     void evaluate(QString expr, bool global = false, bool disableBreak = false, int frame = -1, const QVariantMap &addContext = QVariantMap());
@@ -301,7 +298,6 @@ signals:
     void enabled();
     void connected();
     void interruptRequested();
-    void breakAfterCompileRequested();
     void result();
     void stopped();
     void scriptsResult();
@@ -332,14 +328,6 @@ void QJSDebugClient::connect()
 void QJSDebugClient::interrupt()
 {
     sendMessage(packMessage(INTERRUPT));
-}
-
-void QJSDebugClient::breakAfterCompile(bool enabled)
-{
-    QByteArray request;
-    QDataStream rs(&request, QIODevice::WriteOnly);
-    rs << enabled;
-    sendMessage(packMessage(BREAKAFTERCOMPILE, request));
 }
 
 void QJSDebugClient::continueDebugging(StepAction action, int count)
@@ -957,9 +945,6 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
                     emit stopped();
                 }
 
-        } else if (type == BREAKAFTERCOMPILE) {
-            emit breakAfterCompileRequested();
-
         }
     }
 }
@@ -1074,18 +1059,6 @@ void tst_QQmlDebugJS::interrupt()
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(interruptRequested())));
 }
 
-void tst_QQmlDebugJS::breakAfterCompile()
-{
-    //void breakAfterCompile(bool enabled)
-
-    QVERIFY(init());
-    client->breakAfterCompile(true);
-    client->connect();
-
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(breakAfterCompileRequested())));
-    QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
-}
-
 void tst_QQmlDebugJS::getVersion()
 {
     //void version()
@@ -1146,9 +1119,9 @@ void tst_QQmlDebugJS::listBreakpoints()
 {
     //void listBreakpoints()
 
-    int sourceLine1 = 47;
-    int sourceLine2 = 48;
-    int sourceLine3 = 49;
+    int sourceLine1 = 53;
+    int sourceLine2 = 54;
+    int sourceLine3 = 55;
 
     QVERIFY(init());
     client->connect();
