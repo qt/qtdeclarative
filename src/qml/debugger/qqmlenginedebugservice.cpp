@@ -750,12 +750,13 @@ void QQmlEngineDebugService::objectCreated(QQmlEngine *engine, QObject *object)
 
     int engineId = QQmlDebugService::idForObject(engine);
     int objectId = QQmlDebugService::idForObject(object);
+    int parentId = QQmlDebugService::idForObject(object->parent());
 
     QByteArray reply;
     QDataStream rs(&reply, QIODevice::WriteOnly);
 
     //unique queryId -1
-    rs << QByteArray("OBJECT_CREATED") << -1 << engineId << objectId;
+    rs << QByteArray("OBJECT_CREATED") << -1 << engineId << objectId << parentId;
     sendMessage(reply);
 }
 
