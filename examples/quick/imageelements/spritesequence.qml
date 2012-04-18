@@ -46,6 +46,7 @@ Item {
         onClicked: anim.start();
         anchors.fill: parent
     }
+//! [animation]
     SequentialAnimation {
         id: anim
         ScriptAction { script: image.goalSprite = "falling"; }
@@ -53,6 +54,7 @@ Item {
         ScriptAction { script: {image.goalSprite = ""; image.jumpTo("still");} }
         PropertyAction { target: image; property: "y"; value: 0 }
     }
+//! [animation]
     SpriteSequence {
         id: image
         width: 256
@@ -60,6 +62,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         interpolate: false
         goalSprite: ""
+//! [still]
         Sprite{
             name: "still"
             source: "content/BearSheet.png"
@@ -69,6 +72,7 @@ Item {
             frameDuration: 100
             to: {"still":1, "blink":0.1, "floating":0}
         }
+//! [still]
         Sprite{
             name: "blink"
             source: "content/BearSheet.png"

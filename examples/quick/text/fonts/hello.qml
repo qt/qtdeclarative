@@ -58,6 +58,7 @@ Rectangle {
             font.pixelSize: 32
             smooth: true
 
+//! [letterspacing]
             SequentialAnimation on font.letterSpacing {
                 loops: Animation.Infinite;
                 NumberAnimation { from: 0; to: 50; easing.type: Easing.InQuad; duration: 3000 }
@@ -68,6 +69,7 @@ Rectangle {
                     }
                 }
             }
+//! [letterspacing]
 
             SequentialAnimation on opacity {
                 loops: Animation.Infinite;

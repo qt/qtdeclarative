@@ -46,9 +46,15 @@ Rectangle {
     width: 320; height: 480
     color: "steelblue"
 
+//! [fontloader]
     FontLoader { id: fixedFont; name: "Courier" }
+//! [fontloader]
+//! [fontloaderlocal]
     FontLoader { id: localFont; source: "content/fonts/tarzeau_ocr_a.ttf" }
+//! [fontloaderlocal]
+//! [fontloaderremote]
     FontLoader { id: webFont; source: "http://www.princexml.com/fonts/steffmann/Starburst.ttf" }
+//! [fontloaderremote]
 
     Column {
         anchors { fill: parent; leftMargin: 10; rightMargin: 10; topMargin: 10 }
@@ -59,7 +65,10 @@ Rectangle {
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
-            font.family: "Times"; font.pixelSize: 20
+//! [name]
+            font.family: "Times"
+//! [name]
+            font.pixelSize: 20
         }
         Text {
             text: myText

@@ -46,6 +46,8 @@ Item {
         anchors.fill: parent
         color: "white"
     }
+
+//! [sprite]
     AnimatedSprite {
         id: sprite
         width: 170
@@ -58,6 +60,8 @@ Item {
         frameHeight: 170
         loops: 3
     }
+//! [sprite]
+
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
