@@ -45,6 +45,7 @@ PRIVATETESTS += \
     qquickconnection \
     qquicklistcompositor \
     qquicklistmodel \
+    qquicklistmodelworkerscript \
     qquickworkerscript \
     v4
 
