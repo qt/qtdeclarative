@@ -270,11 +270,18 @@ bool QQuickViewInspector::syncSelectedItems(const QList<QQuickItem *> &items)
         connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(removeFromSelectedItems(QObject*)));
         m_selectedItems.append(item);
         SelectionHighlight *selectionHighlightItem;
-        selectionHighlightItem = new SelectionHighlight(item, m_overlay);
+        selectionHighlightItem = new SelectionHighlight(titleForItem(item), item, m_overlay);
         m_highlightItems.insert(item, selectionHighlightItem);
     }
 
     return selectionChanged;
+}
+
+void QQuickViewInspector::showSelectedItemName(QQuickItem *item, const QPointF &point)
+{
+    SelectionHighlight *highlightItem = m_highlightItems.value(item, 0);
+    if (highlightItem)
+        highlightItem->showName(point);
 }
 
 void QQuickViewInspector::removeFromSelectedItems(QObject *object)

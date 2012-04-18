@@ -41,7 +41,9 @@
 
 #include "highlight.h"
 
+#include <QtCore/QTimer>
 #include <QtGui/QPainter>
+#include <QtGui/QStaticText>
 #include <QtQuick/QQuickCanvas>
 
 namespace QmlJSDebugger {
@@ -135,6 +137,13 @@ void HoverHighlight::paint(QPainter *painter)
 }
 
 
+SelectionHighlight::SelectionHighlight(const QString &name, QQuickItem *item, QQuickItem *parent)
+    : Highlight(item, parent),
+      m_name(name),
+      m_nameDisplayActive(false)
+{
+}
+
 void SelectionHighlight::paint(QPainter *painter)
 {
     if (!item())
@@ -148,6 +157,48 @@ void SelectionHighlight::paint(QPainter *painter)
     painter->setCompositionMode(QPainter::CompositionMode_Clear);
     painter->fillRect(0, 0, item()->width(), item()->height(), Qt::black);
     painter->restore();
+
+    // Use the painter with the original transform and not with the
+    // item's transform for display of name.
+    if (!m_nameDisplayActive)
+        return;
+
+    // Paint the text in gray background if display name is active..
+    QRect textRect = painter->boundingRect(QRect(10, contentsSize().height() - 10 ,
+                                 contentsSize().width() - 20, contentsSize().height()),
+                                 Qt::AlignCenter | Qt::ElideRight, m_name);
+
+    qreal xPosition = m_displayPoint.x();
+    if (xPosition + textRect.width() > contentsSize().width())
+        xPosition = contentsSize().width() - textRect.width();
+    if (xPosition < 0) {
+        xPosition = 0;
+        textRect.setWidth(contentsSize().width());
+    }
+    qreal yPosition = m_displayPoint.y() - textRect.height() - 20;
+    if (yPosition < 50 )
+        yPosition = 50;
+
+    painter->fillRect(QRectF(xPosition - 5, yPosition - 5,
+                      textRect.width() + 10, textRect.height() + 10), Qt::gray);
+    painter->drawRect(QRectF(xPosition - 5, yPosition - 5,
+                      textRect.width() + 10, textRect.height() + 10));
+
+    painter->drawStaticText(xPosition, yPosition, QStaticText(m_name));
+}
+
+void SelectionHighlight::showName(const QPointF &displayPoint)
+{
+    m_displayPoint = displayPoint;
+    m_nameDisplayActive = true;
+    QTimer::singleShot(1500, this, SLOT(disableNameDisplay()));
+    update();
+}
+
+void SelectionHighlight::disableNameDisplay()
+{
+    m_nameDisplayActive = false;
+    update();
 }
 
 } // namespace QtQuick2

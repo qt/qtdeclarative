@@ -43,6 +43,7 @@
 #define HIGHLIGHT_H
 
 #include <QtCore/QPointer>
+#include <QtCore/QPointF>
 #include <QtGui/QTransform>
 #include <QtQuick/QQuickPaintedItem>
 
@@ -80,12 +81,20 @@ private:
  */
 class SelectionHighlight : public Highlight
 {
-public:
-    SelectionHighlight(QQuickItem *item, QQuickItem *parent)
-        : Highlight(item, parent)
-    {}
+    Q_OBJECT
 
+public:
+    SelectionHighlight(const QString &name, QQuickItem *item, QQuickItem *parent);
     void paint(QPainter *painter);
+    void showName(const QPointF &displayPoint);
+
+private slots:
+    void disableNameDisplay();
+
+private:
+    QPointF m_displayPoint;
+    QString m_name;
+    bool m_nameDisplayActive;
 };
 
 /**

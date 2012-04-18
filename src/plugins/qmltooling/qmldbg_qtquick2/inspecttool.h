@@ -100,6 +100,7 @@ private:
 
 private slots:
     void zoomTo100();
+    void showSelectedItemName();
 
 private:
     bool m_originalSmooth;
@@ -117,6 +118,7 @@ private:
     qreal m_originalScale;
     ulong m_touchTimestamp;
     QTimer m_pressAndHoldTimer;
+    QTimer m_nameDisplayTimer;
 
     HoverHighlight *m_hoverHighlight;
     QQuickItem *m_lastItem;

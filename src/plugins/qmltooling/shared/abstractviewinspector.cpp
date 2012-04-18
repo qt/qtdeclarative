@@ -48,6 +48,7 @@
 #include <QtQml/QQmlComponent>
 #include <QtCore/private/qabstractanimation_p.h>
 #include <QtQml/private/qqmlinspectorservice_p.h>
+#include <QtQml/private/qqmlcontext_p.h>
 
 #include <QtGui/QMouseEvent>
 #include <QtGui/QTouchEvent>
@@ -484,8 +485,13 @@ void AbstractViewInspector::sendShowAppOnTop(bool showAppOnTop)
 
 QString AbstractViewInspector::idStringForObject(QObject *obj) const
 {
-    const int id = QQmlDebugService::idForObject(obj);
-    return m_stringIdForObjectId.value(id);
+    QQmlContext *context = qmlContext(obj);
+    if (context) {
+        QQmlContextData *cdata = QQmlContextData::get(context);
+        if (cdata)
+            return cdata->findObjectId(obj);
+    }
+    return QString();
 }
 
 } // namespace QmlJSDebugger

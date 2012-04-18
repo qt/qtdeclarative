@@ -81,6 +81,10 @@ InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     m_pressAndHoldTimer.setSingleShot(true);
     m_pressAndHoldTimer.setInterval(Constants::PressAndHoldTimeout);
     connect(&m_pressAndHoldTimer, SIGNAL(timeout()), SLOT(zoomTo100()));
+    //Timer to display selected item's name
+    m_nameDisplayTimer.setSingleShot(true);
+    m_nameDisplayTimer.setInterval(qApp->styleHints()->mouseDoubleClickInterval());
+    connect(&m_nameDisplayTimer, SIGNAL(timeout()), SLOT(showSelectedItemName()));
     enable(true);
 }
 
@@ -259,10 +263,13 @@ void InspectTool::touchEvent(QTouchEvent *event)
             m_tapEvent = false;
             bool doubleTap = event->timestamp() - m_touchTimestamp
                     < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
-            if (doubleTap)
+            if (doubleTap) {
+                m_nameDisplayTimer.stop();
                 selectNextItem();
-            else
+            }
+            else {
                 selectItem();
+            }
             m_touchTimestamp = event->timestamp();
         }
         m_didPressAndHold = false;
@@ -387,6 +394,7 @@ void InspectTool::selectNextItem()
             else
                 m_lastItem = items[0];
             inspector()->setSelectedItems(QList<QQuickItem*>() << m_lastItem);
+            showSelectedItemName();
             break;
         }
     }
@@ -396,16 +404,24 @@ void InspectTool::selectItem()
 {
     if (!inspector()->topVisibleItemAt(m_mousePosition))
         return;
-    if (m_lastClickedItem == inspector()->topVisibleItemAt(m_mousePosition))
+    if (m_lastClickedItem == inspector()->topVisibleItemAt(m_mousePosition)) {
+        m_nameDisplayTimer.start();
         return;
+    }
     m_lastClickedItem = inspector()->topVisibleItemAt(m_mousePosition);
     m_lastItem = m_lastClickedItem;
     inspector()->setSelectedItems(QList<QQuickItem*>() << m_lastClickedItem);
+    showSelectedItemName();
 }
 
 QQuickViewInspector *InspectTool::inspector() const
 {
     return static_cast<QQuickViewInspector*>(AbstractTool::inspector());
+}
+
+void InspectTool::showSelectedItemName()
+{
+    inspector()->showSelectedItemName(m_lastItem, m_mousePosition);
 }
 
 } // namespace QtQuick2

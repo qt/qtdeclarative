@@ -83,6 +83,7 @@ public:
     void setSelectedItems(const QList<QQuickItem*> &items);
 
     QString titleForItem(QQuickItem *item) const;
+    void showSelectedItemName(QQuickItem *item, const QPointF &point);
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
