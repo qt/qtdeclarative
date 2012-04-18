@@ -1659,12 +1659,19 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
     bool added = addVisibleItems(fillFrom, fillTo, false);
     bool removed = removeNonVisibleItems(bufferFrom, bufferTo);
 
-    if (buffer && bufferMode != NoBuffer) {
-        if (bufferMode & BufferAfter)
-            fillTo = bufferTo;
-        if (bufferMode & BufferBefore)
-            fillFrom = bufferFrom;
-        added |= addVisibleItems(fillFrom, fillTo, true);
+    if (requestedIndex == -1 && buffer && bufferMode != NoBuffer) {
+        if (added) {
+            // We've already created a new delegate this frame.
+            // Just schedule a buffer refill.
+            fillCacheBuffer = true;
+            q->polish();
+        } else {
+            if (bufferMode & BufferAfter)
+                fillTo = bufferTo;
+            if (bufferMode & BufferBefore)
+                fillFrom = bufferFrom;
+            added |= addVisibleItems(fillFrom, fillTo, true);
+        }
     }
 
     if (added || removed) {
