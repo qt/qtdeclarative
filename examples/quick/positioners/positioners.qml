@@ -51,8 +51,15 @@ import "../../shared" as Examples
     a small QML file emphasizing a particular element or feature.
 
     Transitions shows animated transistions when showing or hiding items in a positioner.
+    It consists of a scene populated with items in a variety of positioners: Column, Row, Grid and Flow.
+    Each positioner has animations described as Transitions.
+    \snippet examples/quick/positioners/positioners-transitions.qml move
+    The move transition specifies how items inside the positioner will animate when they are displaced by items appearing or disappearing.
+    \snippet examples/quick/positioners/positioners-transitions.qml add
+    The add transition specifies how items will appear when they are added to the positioner.
 
     Attached Properties show using the attached property to determine where in a positioner an item is.
+    \snippet examples/quick/positioners/positioners-attachedproperties.qml 0
 */
 
 Item {

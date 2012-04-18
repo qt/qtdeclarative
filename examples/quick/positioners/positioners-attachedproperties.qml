@@ -48,6 +48,7 @@ Rectangle {
   Column {
     id: column
 
+    //! [0]
     Rectangle {
       id: red
       color: "red"
@@ -69,6 +70,7 @@ Rectangle {
         onClicked: column.showInfo(red.Positioner)
       }
     }
+    //! [0]
 
     Rectangle {
       id: green

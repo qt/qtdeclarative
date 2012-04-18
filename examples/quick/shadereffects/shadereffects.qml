@@ -54,6 +54,21 @@ Rectangle {
 
     This example demonstrates a couple of visual effects that you can perform
     with shaders in QtQuick 2.0
+
+    ShaderEffects typically operate on other elements, using a ShaderEffectSource
+    \snippet examples/quick/shadereffects/shadereffects.qml source
+    In the above snippet, theItem is the id of a complex QML element in the file.
+
+    ShaderEffects can use this ShaderEffectSource as a texture in their fragment shader.
+    \snippet examples/quick/shadereffects/shadereffects.qml fragment
+
+    You can use any custom property on the ShaderEffect in your shader. This makes
+    animated shader code very easy.
+    \snippet examples/quick/shadereffects/shadereffects.qml properties
+
+    ShaderEffects can also have a custom vertext shader. Setting the mesh property on ShaderEffect
+    provides more vertices for you to manipulate, enabling many effects.
+    \snippet examples/quick/shadereffects/shadereffects.qml vertex
 */
     property color col: "lightsteelblue"
     gradient: Gradient {
@@ -63,11 +78,13 @@ Rectangle {
         GradientStop { position: 1.0; color: Qt.tint(root.col, "#20000000") }
     }
 
+    //! [source]
     ShaderEffectSource {
         id: theSource
         sourceItem: theItem
         smooth: true
     }
+    //! [source]
 
     function saturate(x) {
         return Math.min(Math.max(x, 0), 1)
@@ -127,6 +144,7 @@ Rectangle {
             property real frequency: 20
             property real time: 0
             NumberAnimation on time { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 600 }
+            //! [fragment]
             fragmentShader:
                 "uniform lowp float qt_Opacity;" +
                 "uniform highp float amplitude;" +
@@ -138,6 +156,7 @@ Rectangle {
                 "    highp vec2 p = sin(time + frequency * qt_TexCoord0);" +
                 "    gl_FragColor = texture2D(source, qt_TexCoord0 + amplitude * vec2(p.y, -p.x)) * qt_Opacity;" +
                 "}"
+            //! [fragment]
             Slider {
                 id: wobbleSlider
                 anchors.left: parent.left
@@ -265,7 +284,7 @@ Rectangle {
         ShaderEffect {
             width: 160
             height: 160
-            mesh: Qt.size(10, 10)
+            //! [properties]
             property variant source: theSource
             property real bend: 0
             property real minimize: 0
@@ -285,6 +304,9 @@ Rectangle {
                 NumberAnimation { to: 0; duration: 700; easing.type: Easing.InOutSine }
                 PauseAnimation { duration: 1300 }
             }
+            //! [properties]
+            //! [vertex]
+            mesh: Qt.size(10, 10)
             vertexShader: "
                 uniform highp mat4 qt_Matrix;
                 uniform highp float bend;
@@ -304,6 +326,7 @@ Rectangle {
                     pos.x = mix(qt_Vertex.x, side * width, t * bend);
                     gl_Position = qt_Matrix * pos;
                 }"
+            //! [vertex]
             Slider {
                 id: genieSlider
                 anchors.left: parent.left

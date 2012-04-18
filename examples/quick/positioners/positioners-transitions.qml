@@ -191,13 +191,17 @@ Rectangle {
         id: layout4
         x: 120; y: 160; width: 150
 
+        //! [move]
         move: Transition {
             NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
         }
+        //! [move]
 
+        //! [add]
         add: Transition {
             NumberAnimation { properties: "x,y"; easing.type: Easing.OutBounce }
         }
+        //! [add]
 
         Rectangle { color: "red"; width: 50; height: 50; border.color: "black"; radius: 15 }
 
