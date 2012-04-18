@@ -2993,7 +2993,7 @@ void tst_qquicktextinput::openInputPanel()
     QVERIFY(input->focusOnPress());
     QVERIFY(!input->hasActiveFocus());
     QVERIFY(qApp->focusObject() != input);
-    QCOMPARE(qApp->inputMethod()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->isVisible(), false);
 
     // input panel should open on focus
     QPoint centerPoint(view.width()/2, view.height()/2);
@@ -3002,16 +3002,16 @@ void tst_qquicktextinput::openInputPanel()
     QGuiApplication::processEvents();
     QVERIFY(input->hasActiveFocus());
     QCOMPARE(qApp->focusObject(), input);
-    QCOMPARE(qApp->inputMethod()->visible(), true);
+    QCOMPARE(qApp->inputMethod()->isVisible(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
 
     // input panel should be re-opened when pressing already focused TextInput
     qApp->inputMethod()->hide();
-    QCOMPARE(qApp->inputMethod()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->isVisible(), false);
     QVERIFY(input->hasActiveFocus());
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
-    QCOMPARE(qApp->inputMethod()->visible(), true);
+    QCOMPARE(qApp->inputMethod()->isVisible(), true);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
 
     // input panel should stay visible if focus is lost to another text inputor
@@ -3020,7 +3020,7 @@ void tst_qquicktextinput::openInputPanel()
     anotherInput.componentComplete();
     anotherInput.setParentItem(view.rootObject());
     anotherInput.setFocus(true);
-    QCOMPARE(qApp->inputMethod()->visible(), true);
+    QCOMPARE(qApp->inputMethod()->isVisible(), true);
     QCOMPARE(qApp->focusObject(), qobject_cast<QObject*>(&anotherInput));
     QCOMPARE(inputPanelVisibilitySpy.count(), 0);
 
@@ -3034,28 +3034,28 @@ void tst_qquicktextinput::openInputPanel()
     // input panel should not be opened if TextInput is read only
     input->setReadOnly(true);
     input->setFocus(true);
-    QCOMPARE(qApp->inputMethod()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->isVisible(), false);
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
-    QCOMPARE(qApp->inputMethod()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->isVisible(), false);
 
     // input panel should not be opened if focusOnPress is set to false
     input->setFocusOnPress(false);
     input->setFocus(false);
     input->setFocus(true);
-    QCOMPARE(qApp->inputMethod()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->isVisible(), false);
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
-    QCOMPARE(qApp->inputMethod()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->isVisible(), false);
 
     // input panel should open when openSoftwareInputPanel is called
     input->openSoftwareInputPanel();
-    QCOMPARE(qApp->inputMethod()->visible(), true);
+    QCOMPARE(qApp->inputMethod()->isVisible(), true);
 
     // input panel should close when closeSoftwareInputPanel is called
     input->closeSoftwareInputPanel();
-    QCOMPARE(qApp->inputMethod()->visible(), false);
+    QCOMPARE(qApp->inputMethod()->isVisible(), false);
 }
 
 class MyTextInput : public QQuickTextInput
