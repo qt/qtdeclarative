@@ -527,6 +527,14 @@ QImage QQuickShaderEffectTexture::toImage() const
     border width falls outside the texture. To get the whole border, you can
     extend the \l sourceRect.
 
+    \note The ShaderEffectSource relies on FBO multisampling support
+    to antialias edges. If the underlying hardware does not support this,
+    which is the case for most embedded graphics chips, edges rendered
+    inside a ShaderEffectSource will not be antialiased. One way to remedy
+    this is to double the size of the effect source and render it with
+    \c {smooth: true}. This will be equivalent to 4x multisampling, at
+    the cost of lower performance and higher memory use.
+
     \warning In most cases, using a ShaderEffectSource will decrease
     performance, and in all cases, it will increase video memory usage.
     Rendering through a ShaderEffectSource might also lead to lower quality
