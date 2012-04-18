@@ -48,11 +48,7 @@ QtObject {
                 if (x.status == expectedStatus)
                     done = true;
 
-                if (expectedStatus != 200) {
-                    dataOK = (x.responseText == "");
-                } else {
-                    dataOK = (x.responseText == "QML Rocks!\n");
-                }
+                dataOK = (x.responseText == "QML Rocks!\n");
 
                 x.open("GET", url);
                 x.setRequestHeader("Accept-Language", "en-US");

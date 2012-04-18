@@ -1281,13 +1281,10 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
 {
     v8::HandleScope handle_scope;
 
-    Q_UNUSED(error)
     m_status =
         m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     m_statusText =
         QString::fromUtf8(m_network->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toByteArray());
-
-    m_responseEntityBody = QByteArray();
 
     m_request = QNetworkRequest();
     m_data.clear();
@@ -1310,6 +1307,7 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
         if (tc.HasCaught()) printError(tc.Message());
     } else {
         m_errorFlag = true;
+        m_responseEntityBody = QByteArray();
     } 
 
     m_state = Done;
