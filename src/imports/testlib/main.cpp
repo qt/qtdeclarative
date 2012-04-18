@@ -62,7 +62,6 @@ class QuickTestUtil : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
-    Q_PROPERTY(bool wrapper READ wrapper NOTIFY wrapperChanged)
     Q_PROPERTY(int dragThreshold READ dragThreshold NOTIFY dragThresholdChanged)
 public:
     QuickTestUtil(QObject *parent = 0)
@@ -75,15 +74,10 @@ public:
     {
         return QTest::printAvailableFunctions;
     }
-    bool wrapper() const
-    {
-        return true;
-    }
     int dragThreshold() const { return qApp->styleHints()->startDragDistance(); }
 
 Q_SIGNALS:
     void printAvailableFunctionsChanged();
-    void wrapperChanged();
     void dragThresholdChanged();
 
 public Q_SLOTS:
@@ -91,7 +85,6 @@ public Q_SLOTS:
     QQmlV8Handle typeName(const QVariant& v) const
     {
         QString name(v.typeName());
-        //qDebug() << "type:" << name  << " string value:" << v.toString() << " value:" << v;
         if (v.canConvert<QObject*>()) {
             QQmlType *type = 0;
             const QMetaObject *mo = v.value<QObject*>()->metaObject();

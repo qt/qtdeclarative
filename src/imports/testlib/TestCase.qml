@@ -66,10 +66,7 @@ Item {
     // other test failed which this one depends on).
     property bool optional: false
 
-    // Property that is set to true when the main window is shown.
-    // We need to set the property value in an odd way to handle
-    // both qmlviewer and the QtQuickTest module test wrapper.
-    property bool windowShown: util.wrapper ? qtest.windowShown : false
+    property bool windowShown: qtest.windowShown
 
     // Internal private state.  Identifiers prefixed with qtest are reserved.
     property bool qtest_prevWhen: true
@@ -688,15 +685,6 @@ Item {
         }
     }
 
-    // The test framework will set util.windowShown when the
-    // window is actually shown.  If we are running with qmlviewer,
-    // then this won't happen.  So we use a timer instead.
-    Timer {
-        id: qtest_windowShowTimer
-        interval: 100
-        repeat: false
-        onTriggered: { windowShown = true }
-    }
 
     Component.onCompleted: {
         qtest.hasTestCase = true;
@@ -724,9 +712,6 @@ Item {
         if (optional)
             TestLogger.log_optional_test(qtest_testId)
         qtest_prevWhen = when
-        var isQmlViewer = util.wrapper ? false : true
-        if (isQmlViewer)
-            qtest_windowShowTimer.running = true
         if (when && !completed && !running)
             qtest_run()
     }
