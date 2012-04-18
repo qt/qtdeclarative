@@ -31,7 +31,10 @@
 
   \brief Elements for the Qt Quick particle system
 
-  This QML module contains a particle system for Qt Quick.
+  This QML module contains a particle system for Qt Quick. To use these elements, you will need to import the module with the following line:
+  \code
+  import QtQuick.Particles 2.0
+  \endcode
 
   For a simple overview of how the system can be used, see \l{qml-particlesystem.html}{Using the Qt Quick Particle System}.
 
@@ -43,6 +46,12 @@
     \page qml-particlesystem.html
 \inqmlmodule QtQuick.Particles 2
     \title Using the Qt Quick Particle System
+
+
+  Note that to use elements from the particles module, you will need to import the types with the following line:
+  \code
+  import QtQuick.Particles 2.0
+  \endcode
 
     \section1 The ParticleSystem
     This particle system contains four main types of QML Elements: ParticleSystem, Painters, Emitters and Affectors.

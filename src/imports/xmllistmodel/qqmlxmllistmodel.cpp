@@ -599,6 +599,12 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
     \ingroup qml-working-with-data
     \brief The XmlListModel element is used to specify a read-only model using XPath expressions.
 
+
+    To use this element, you will need to import the module with the following line:
+    \code
+    import QtQuick.XmlListModel 2.0
+    \endcode
+
     XmlListModel is used to create a read-only model from XML data. It can be used as a data source
     for view elements (such as ListView, PathView, GridView) and other elements that interact with model
     data (such as \l Repeater).
@@ -626,6 +632,7 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
 
     \qml
     import QtQuick 2.0
+    import QtQuick.XmlListModel 2.0
 
     XmlListModel {
         id: xmlModel

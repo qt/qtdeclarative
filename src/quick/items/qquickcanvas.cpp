@@ -729,6 +729,13 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 
     The Window object creates a new top-level window for a QtQuick scene. It automatically sets up the
     window for use with QtQuick 2.0 graphical elements.
+
+    To use this element, you will need to import the module with the following line:
+    \code
+    import QtQuick.Window 2.0
+    \endcode
+
+    Restricting this import will allow you to have a QML environment without access to window system features.
 */
 /*!
     \class QQuickCanvas

@@ -56,6 +56,13 @@ QT_BEGIN_NAMESPACE
 
     The Screen attached object is only valid inside Item or Item derived elements. Inside these elements
     it refers to the screen that the element is currently being displayed on.
+
+    To use this element, you will need to import the module with the following line:
+    \code
+    import QtQuick.Window 2.0
+    \endcode
+
+    Restricting this import will allow you to have a QML environment without access to window system features.
 */
 
 /*!
