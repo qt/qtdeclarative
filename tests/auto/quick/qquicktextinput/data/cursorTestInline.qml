@@ -6,6 +6,7 @@ Rectangle { width: 300; height: 300; color: "white"
         text: "Hello world!"
         id: textInputObject
         objectName: "textInputObject"
+        wrapMode: TextInput.WordWrap
         cursorDelegate: Item {
             id:cursorInstance
             objectName: "cursorInstance"

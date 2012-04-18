@@ -119,6 +119,8 @@ public:
     void setCursorIsFocusIndicator(bool b);
     void setWordSelectionEnabled(bool enabled);
 
+    void updateCursorRectangle(bool force);
+
     virtual int hitTest(const QPointF &point, Qt::HitTestAccuracy accuracy) const;
     virtual QRectF blockBoundingRect(const QTextBlock &block) const;
 

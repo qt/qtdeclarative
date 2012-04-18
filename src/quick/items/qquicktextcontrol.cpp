@@ -110,7 +110,8 @@ QQuickTextControlPrivate::QQuickTextControlPrivate()
       isEnabled(true),
       hadSelectionOnMousePress(false),
       wordSelectionEnabled(false),
-      hasImState(false)
+      hasImState(false),
+      cursorRectangleChanged(false)
 {}
 
 bool QQuickTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
@@ -253,7 +254,7 @@ bool QQuickTextControlPrivate::cursorMoveKeyEvent(QKeyEvent *e)
     if (moved) {
         if (cursor.position() != oldCursorPos)
             emit q->cursorPositionChanged();
-        emit q->cursorRectangleChanged();
+        q->updateCursorRectangle(true);
     } else if (isNavigationEvent && oldSelection.anchor() == cursor.anchor()) {
         return false;
     }
@@ -275,7 +276,7 @@ void QQuickTextControlPrivate::updateCurrentCharFormat()
     lastCharFormat = fmt;
 
     emit q->currentCharFormatChanged(fmt);
-    emit q->cursorRectangleChanged();
+    cursorRectangleChanged = true;
 }
 
 void QQuickTextControlPrivate::init(Qt::TextFormat format, const QString &text, QTextDocument *document)
@@ -366,7 +367,7 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
     if (!document)
         doc->setModified(false);
 
-    emit q->cursorRectangleChanged();
+    q->updateCursorRectangle(true);
     emit q->cursorPositionChanged();
 }
 
@@ -443,7 +444,7 @@ void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /
             qGuiApp->inputMethod()->update(Qt::ImCurrentSelection);
         emit q->selectionChanged();
     }
-    emit q->cursorRectangleChanged();
+    q->updateCursorRectangle(true);
 }
 
 void QQuickTextControlPrivate::_q_updateCurrentCharFormatAndSelection()
@@ -469,7 +470,7 @@ void QQuickTextControlPrivate::_q_emitCursorPosChanged(const QTextCursor &someCu
     Q_Q(QQuickTextControl);
     if (someCursor.isCopyOf(cursor)) {
         emit q->cursorPositionChanged();
-        emit q->cursorRectangleChanged();
+        cursorRectangleChanged = true;
     }
 }
 
@@ -592,7 +593,7 @@ void QQuickTextControl::undo()
     d->doc->undo(&d->cursor);
     if (d->cursor.position() != oldCursorPos)
         emit cursorPositionChanged();
-    emit cursorRectangleChanged();
+    updateCursorRectangle(true);
 }
 
 void QQuickTextControl::redo()
@@ -601,9 +602,9 @@ void QQuickTextControl::redo()
     d->repaintSelection();
     const int oldCursorPos = d->cursor.position();
     d->doc->redo(&d->cursor);
-        if (d->cursor.position() != oldCursorPos)
+    if (d->cursor.position() != oldCursorPos)
         emit cursorPositionChanged();
-    emit cursorRectangleChanged();
+    updateCursorRectangle(true);
 }
 
 QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
@@ -623,6 +624,15 @@ QTextDocument *QQuickTextControl::document() const
     return d->doc;
 }
 
+void QQuickTextControl::updateCursorRectangle(bool force)
+{
+    Q_D(QQuickTextControl);
+    const bool update = d->cursorRectangleChanged || force;
+    d->cursorRectangleChanged = false;
+    if (update)
+        emit cursorRectangleChanged();
+}
+
 void QQuickTextControl::setTextCursor(const QTextCursor &cursor)
 {
     Q_D(QQuickTextControl);
@@ -633,7 +643,7 @@ void QQuickTextControl::setTextCursor(const QTextCursor &cursor)
     d->cursor = cursor;
     d->cursorOn = d->hasFocus && (d->interactionFlags & Qt::TextEditable);
     d->_q_updateCurrentCharFormatAndSelection();
-    emit cursorRectangleChanged();
+    updateCursorRectangle(true);
     d->repaintOldAndNewSelection(oldSelection);
     if (posChanged)
         emit cursorPositionChanged();
@@ -956,8 +966,7 @@ process:
     e->accept();
     cursorOn = true;
 
-    emit q->cursorRectangleChanged();
-
+    q->updateCursorRectangle(true);
     updateCurrentCharFormat();
 }
 
@@ -1198,14 +1207,14 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
     }
 
     if (interactionFlags & Qt::TextEditable) {
-        emit q->cursorRectangleChanged();
+        q->updateCursorRectangle(true);
         if (cursor.position() != oldCursorPos)
             emit q->cursorPositionChanged();
         _q_updateCurrentCharFormatAndSelection();
     } else {
         if (cursor.position() != oldCursorPos) {
             emit q->cursorPositionChanged();
-            emit q->cursorRectangleChanged();
+            q->updateCursorRectangle(true);
         }
         selectionChanged();
     }
@@ -1316,7 +1325,7 @@ void QQuickTextControlPrivate::mouseReleaseEvent(QMouseEvent *e, const QPointF &
 
     if (cursor.position() != oldCursorPos) {
         emit q->cursorPositionChanged();
-        emit q->cursorRectangleChanged();
+        q->updateCursorRectangle(true);
     }
 
     if (interactionFlags & Qt::LinksAccessibleByMouse) {
@@ -1435,7 +1444,6 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
             int blockStart = a.start + cursor.block().position();
             cursor.setPosition(blockStart, QTextCursor::MoveAnchor);
             cursor.setPosition(blockStart + a.length, QTextCursor::KeepAnchor);
-            emit q->cursorRectangleChanged();
             repaintOldAndNewSelection(oldCursor);
             forceSelectionChanged = true;
         }
@@ -1475,8 +1483,7 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
     QTextCursorPrivate *cursor_d = QTextCursorPrivate::getPrivate(&cursor);
     if (cursor_d)
         cursor_d->setX();
-    if (oldPreeditCursor != preeditCursor)
-        emit q->cursorRectangleChanged();
+    q->updateCursorRectangle(oldPreeditCursor != preeditCursor || forceSelectionChanged);
     selectionChanged(forceSelectionChanged);
 }
 
@@ -1609,7 +1616,7 @@ void QQuickTextControl::moveCursor(QTextCursor::MoveOperation op, QTextCursor::M
     const QTextCursor oldSelection = d->cursor;
     const bool moved = d->cursor.movePosition(op, mode);
     d->_q_updateCurrentCharFormatAndSelection();
-    emit cursorRectangleChanged();
+    updateCursorRectangle(true);
     d->repaintOldAndNewSelection(oldSelection);
     if (moved)
         emit cursorPositionChanged();
@@ -1690,7 +1697,7 @@ void QQuickTextControl::insertFromMimeData(const QMimeData *source)
 
     if (hasData)
         d->cursor.insertFragment(fragment);
-    emit cursorRectangleChanged();
+    updateCursorRectangle(true);
 }
 
 void QQuickTextControlPrivate::activateLinkUnderCursor(QString href)

@@ -5,6 +5,7 @@ Rectangle { width: 300; height: 300; color: "white"
     TextEdit {
         text: "Hello world!"
         id: textEditObject
+        wrapMode: TextEdit.Wrap
         objectName: "textEditObject"
         cursorDelegate: Item {
             id:cursorInstance

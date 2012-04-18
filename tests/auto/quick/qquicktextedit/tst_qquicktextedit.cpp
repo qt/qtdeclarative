@@ -1944,10 +1944,6 @@ void tst_qquicktextedit::cursorDelegate()
         QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
         QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
     }
-    // Clear preedit text;
-    QInputMethodEvent event;
-    QGuiApplication::sendEvent(&view, &event);
-
 
     // Test delegate gets moved on mouse press.
     textEditObject->setSelectByMouse(true);
@@ -1992,6 +1988,25 @@ void tst_qquicktextedit::cursorDelegate()
     textEditObject->setCursorPosition(0);
     QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
+
+    // Delegate moved when text is entered
+    textEditObject->setText(QString());
+    for (int i = 0; i < 20; ++i) {
+        QTest::keyClick(&view, Qt::Key_A);
+        QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
+    }
+
+    // Delegate moved when text is entered by im.
+    textEditObject->setText(QString());
+    for (int i = 0; i < 20; ++i) {
+        QInputMethodEvent event;
+        event.setCommitString("a");
+        QGuiApplication::sendEvent(&view, &event);
+        QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
+    }
+
     //Test Delegate gets deleted
     textEditObject->setCursorDelegate(0);
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
@@ -2645,14 +2660,17 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
 
+    QQuickItem *cursor = edit->findChild<QQuickItem *>("cursor");
+    QVERIFY(cursor);
+
     QSignalSpy editSpy(edit, SIGNAL(cursorRectangleChanged()));
     QSignalSpy panelSpy(qGuiApp->inputMethod(), SIGNAL(cursorRectangleChanged()));
 
-    QRect currentRect;
+    QRectF currentRect;
 
     QInputMethodQueryEvent query(Qt::ImCursorRectangle);
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
-    QRect previousRect = query.value(Qt::ImCursorRectangle).toRect();
+    QRectF previousRect = query.value(Qt::ImCursorRectangle).toRectF();
 
     // Verify that the micro focus rect is positioned the same for position 0 as
     // it would be if there was no preedit text.
@@ -2660,10 +2678,12 @@ void tst_qquicktextedit::preeditCursorRectangle()
             << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, preeditText.length(), QVariant()));
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
-    currentRect = query.value(Qt::ImCursorRectangle).toRect();
+    currentRect = query.value(Qt::ImCursorRectangle).toRectF();
+    QCOMPARE(edit->cursorRectangle(), currentRect);
+    QCOMPARE(cursor->pos(), currentRect.topLeft());
     QCOMPARE(currentRect, previousRect);
-    QCOMPARE(editSpy.count(), 0);
-    QCOMPARE(panelSpy.count(), 0);
+    QCOMPARE(editSpy.count(), 0); editSpy.clear();
+    QCOMPARE(panelSpy.count(), 0); panelSpy.clear();
 
     // Verify that the micro focus rect moves to the left as the cursor position
     // is incremented.
@@ -2672,10 +2692,12 @@ void tst_qquicktextedit::preeditCursorRectangle()
                 << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, i, preeditText.length(), QVariant()));
         QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
         QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
-        currentRect = query.value(Qt::ImCursorRectangle).toRect();
+        currentRect = query.value(Qt::ImCursorRectangle).toRectF();
+        QCOMPARE(edit->cursorRectangle(), currentRect);
+        QCOMPARE(cursor->pos(), currentRect.topLeft());
         QVERIFY(previousRect.left() < currentRect.left());
-        QVERIFY(editSpy.count() > 0); editSpy.clear();
-        QVERIFY(panelSpy.count() > 0); panelSpy.clear();
+        QCOMPARE(editSpy.count(), 1); editSpy.clear();
+        QCOMPARE(panelSpy.count(), 1); panelSpy.clear();
         previousRect = currentRect;
     }
 
@@ -2687,10 +2709,12 @@ void tst_qquicktextedit::preeditCursorRectangle()
     {   QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
         QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent); }
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
-    currentRect = query.value(Qt::ImCursorRectangle).toRect();
+    currentRect = query.value(Qt::ImCursorRectangle).toRectF();
+    QCOMPARE(edit->cursorRectangle(), currentRect);
+    QCOMPARE(cursor->pos(), currentRect.topLeft());
     QCOMPARE(currentRect, previousRect);
-    QVERIFY(editSpy.count() > 0);
-    QVERIFY(panelSpy.count() > 0);
+    QCOMPARE(editSpy.count(), 1);
+    QCOMPARE(panelSpy.count(), 1);
 }
 
 void tst_qquicktextedit::inputMethodComposing()

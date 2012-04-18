@@ -2359,6 +2359,70 @@ void tst_qquicktextinput::cursorDelegate()
     textInputObject->setCursorPosition(0);
     QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+
+
+    // Test delegate gets moved on mouse press.
+    textInputObject->setSelectByMouse(true);
+    textInputObject->setCursorPosition(0);
+    const QPoint point1 = textInputObject->positionToRectangle(5).center().toPoint();
+    QTest::qWait(400);  //ensure this isn't treated as a double-click
+    QTest::mouseClick(&view, Qt::LeftButton, 0, point1);
+    QTest::qWait(50);
+    QTRY_VERIFY(textInputObject->cursorPosition() != 0);
+    QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+
+    // Test delegate gets moved on mouse drag
+    textInputObject->setCursorPosition(0);
+    const QPoint point2 = textInputObject->positionToRectangle(10).center().toPoint();
+    QTest::qWait(400);  //ensure this isn't treated as a double-click
+    QTest::mousePress(&view, Qt::LeftButton, 0, point1);
+    QMouseEvent mv(QEvent::MouseMove, point2, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+    QGuiApplication::sendEvent(&view, &mv);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, point2);
+    QTest::qWait(50);
+    QTRY_COMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+
+    textInputObject->setReadOnly(true);
+    textInputObject->setCursorPosition(0);
+    QTest::qWait(400);  //ensure this isn't treated as a double-click
+    QTest::mouseClick(&view, Qt::LeftButton, 0, textInputObject->positionToRectangle(5).center().toPoint());
+    QTest::qWait(50);
+    QTRY_VERIFY(textInputObject->cursorPosition() != 0);
+    QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+
+    textInputObject->setCursorPosition(0);
+    QTest::qWait(400);  //ensure this isn't treated as a double-click
+    QTest::mouseClick(&view, Qt::LeftButton, 0, textInputObject->positionToRectangle(5).center().toPoint());
+    QTest::qWait(50);
+    QTRY_VERIFY(textInputObject->cursorPosition() != 0);
+    QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+
+    textInputObject->setCursorPosition(0);
+    QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+    QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+
+    // Delegate moved when text is entered
+    textInputObject->setText(QString());
+    for (int i = 0; i < 20; ++i) {
+        QTest::keyClick(&view, Qt::Key_A);
+        QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+    }
+
+    // Delegate moved when text is entered by im.
+    textInputObject->setText(QString());
+    for (int i = 0; i < 20; ++i) {
+        QInputMethodEvent event;
+        event.setCommitString("a");
+        QGuiApplication::sendEvent(&view, &event);
+        QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+    }
+
     //Test Delegate gets deleted
     textInputObject->setCursorDelegate(0);
     QVERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
@@ -3201,18 +3265,23 @@ void tst_qquicktextinput::preeditCursorRectangle()
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(view.rootObject());
     QVERIFY(input);
 
-    QRect currentRect;
+    QQuickItem *cursor = input->findChild<QQuickItem *>("cursor");
+    QVERIFY(cursor);
+
+    QRectF currentRect;
 
     QInputMethodQueryEvent query(Qt::ImCursorRectangle);
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
-    QRect previousRect = query.value(Qt::ImCursorRectangle).toRect();
+    QRectF previousRect = query.value(Qt::ImCursorRectangle).toRectF();
 
     // Verify that the micro focus rect is positioned the same for position 0 as
     // it would be if there was no preedit text.
     sendPreeditText(preeditText, 0);
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
-    currentRect = query.value(Qt::ImCursorRectangle).toRect();
+    currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(currentRect, previousRect);
+    QCOMPARE(input->cursorRectangle(), currentRect);
+    QCOMPARE(cursor->pos(), currentRect.topLeft());
 
     QSignalSpy inputSpy(input, SIGNAL(cursorRectangleChanged()));
     QSignalSpy panelSpy(qGuiApp->inputMethod(), SIGNAL(cursorRectangleChanged()));
@@ -3222,8 +3291,10 @@ void tst_qquicktextinput::preeditCursorRectangle()
     for (int i = 1; i <= 5; ++i) {
         sendPreeditText(preeditText, i);
         QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
-        currentRect = query.value(Qt::ImCursorRectangle).toRect();
+        currentRect = query.value(Qt::ImCursorRectangle).toRectF();
         QVERIFY(previousRect.left() < currentRect.left());
+        QCOMPARE(input->cursorRectangle(), currentRect);
+        QCOMPARE(cursor->pos(), currentRect.topLeft());
         QVERIFY(inputSpy.count() > 0); inputSpy.clear();
         QVERIFY(panelSpy.count() > 0); panelSpy.clear();
         previousRect = currentRect;
@@ -3235,8 +3306,10 @@ void tst_qquicktextinput::preeditCursorRectangle()
     QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
-    currentRect = query.value(Qt::ImCursorRectangle).toRect();
+    currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(currentRect, previousRect);
+    QCOMPARE(input->cursorRectangle(), currentRect);
+    QCOMPARE(cursor->pos(), currentRect.topLeft());
     QVERIFY(inputSpy.count() > 0);
     QVERIFY(panelSpy.count() > 0);
 }

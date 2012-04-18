@@ -897,6 +897,7 @@ void QQuickTextEdit::setCursorPosition(int pos)
         return;
     cursor.setPosition(pos);
     d->control->setTextCursor(cursor);
+    d->control->updateCursorRectangle(true);
 }
 
 /*!
@@ -1143,9 +1144,12 @@ void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
     Q_D(QQuickTextEdit);
-    if (newGeometry.width() != oldGeometry.width() && d->wrapMode != NoWrap && !d->inLayout)
+    if (newGeometry.width() != oldGeometry.width() && d->wrapMode != NoWrap && !d->inLayout) {
         updateSize();
+        moveCursorDelegate();
+    }
     QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
+
 }
 
 /*!
@@ -2169,6 +2173,7 @@ void QQuickTextEdit::insert(int position, const QString &text)
     } else {
         cursor.insertText(text);
     }
+    d->control->updateCursorRectangle(false);
 }
 
 /*!
@@ -2186,6 +2191,7 @@ void QQuickTextEdit::remove(int start, int end)
     cursor.setPosition(start, QTextCursor::MoveAnchor);
     cursor.setPosition(end, QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
+    d->control->updateCursorRectangle(false);
 }
 
 QT_END_NAMESPACE
