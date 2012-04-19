@@ -4904,18 +4904,20 @@ void tst_qqmlecmascript::handleReferenceManagement()
         QQmlEngine::setObjectOwnership(second1, QQmlEngine::JavaScriptOwnership);
         QQmlEngine::setObjectOwnership(first2, QQmlEngine::JavaScriptOwnership);
         QQmlEngine::setObjectOwnership(second2, QQmlEngine::JavaScriptOwnership);
-        gc(engine);
+        gc(*hrmEngine1);
+        gc(*hrmEngine2);
         QCOMPARE(dtorCount, 0);
-        delete hrmEngine2;
-        gc(engine);
-        QCOMPARE(dtorCount, 0);
+        delete hrmEngine2; // should trigger deletion of objects with JS ownership tracked by this engine
+        gc(*hrmEngine1);
+        QCOMPARE(dtorCount, 2); // first2 and second2 should have been deleted.
         delete object1;
         delete object2;
-        hrmEngine1->collectGarbage();
+        gc(*hrmEngine1);
+        QCOMPARE(dtorCount, 6); // deleting object1 and object2 should trigger deletion of first1 and first2.
+        delete hrmEngine1;
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
-        QCOMPARE(dtorCount, 6);
-        delete hrmEngine1;
+        QCOMPARE(dtorCount, 6); // all objects should have been cleaned up prior to deleting hrmEngine1.
     }
 }
 

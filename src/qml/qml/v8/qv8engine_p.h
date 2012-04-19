@@ -72,6 +72,7 @@
 
 #include <private/qqmlpropertycache_p.h>
 
+#include "qv8objectresource_p.h"
 #include "qv8contextwrapper_p.h"
 #include "qv8qobjectwrapper_p.h"
 #include "qv8stringwrapper_p.h"
@@ -90,12 +91,6 @@ QT_BEGIN_NAMESPACE
 // with qPersistentDispose() are tracked.  If you try and do something illegal, like double disposing
 // a handle, qFatal() is called.
 // #define QML_GLOBAL_HANDLE_DEBUGGING
-
-#define V8_RESOURCE_TYPE(resourcetype) \
-public: \
-    enum { V8ResourceType = QV8ObjectResource:: resourcetype }; \
-    virtual QV8ObjectResource::ResourceType resourceType() const { return QV8ObjectResource:: resourcetype; } \
-private: 
 
 #define V8ENGINE() ((QV8Engine *)v8::External::Unwrap(args.Data()))
 #define V8FUNCTION(function, engine) v8::FunctionTemplate::New(function, v8::External::Wrap((QV8Engine*)engine))->GetFunction()
@@ -131,21 +126,6 @@ private:
         return rv; \
     } \
 
-
-class QV8Engine;
-class QV8ObjectResource : public v8::Object::ExternalResource
-{
-public:
-    QV8ObjectResource(QV8Engine *engine) : engine(engine) { Q_ASSERT(engine); }
-    enum ResourceType { ContextType, QObjectType, TypeType, ListType, VariantType, 
-                        ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
-                        ListModelType, Context2DType, Context2DStyleType, Context2DPixelArrayType, 
-                        ParticleDataType, SignalHandlerType, IncubatorType, VisualDataItemType,
-                        SequenceType, LocaleDataType };
-    virtual ResourceType resourceType() const = 0;
-
-    QV8Engine *engine;
-};
 
 template<class T>
 inline T *v8_resource_cast(v8::Handle<v8::Object> object) {

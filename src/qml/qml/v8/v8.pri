@@ -22,7 +22,8 @@ HEADERS += \
     $$PWD/qv8engine_impl_p.h \
     $$PWD/qv8domerrors_p.h \
     $$PWD/qv8sqlerrors_p.h \
-    $$PWD/qqmlbuiltinfunctions_p.h
+    $$PWD/qqmlbuiltinfunctions_p.h \
+    $$PWD/qv8objectresource_p.h
 
 SOURCES += \
     $$PWD/qv8stringwrapper.cpp \

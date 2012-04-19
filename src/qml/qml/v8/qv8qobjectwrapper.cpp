@@ -80,16 +80,6 @@ QT_BEGIN_NAMESPACE
 // XXX TODO: Need to review all calls to QQmlEngine *engine() to confirm QObjects work
 // correctly in a worker thread
 
-class QV8QObjectResource : public QV8ObjectResource
-{
-    V8_RESOURCE_TYPE(QObjectType);
-
-public:
-    QV8QObjectResource(QV8Engine *engine, QObject *object);
-
-    QQmlGuard<QObject> object;
-};
-
 class QV8QObjectInstance : public QQmlGuard<QObject>
 {
 public:
@@ -223,6 +213,13 @@ void QV8QObjectWrapper::destroy()
     qPersistentDispose(m_signalHandlerConstructor);
     qPersistentDispose(m_methodConstructor);
     qPersistentDispose(m_constructor);
+
+    QIntrusiveList<QV8QObjectResource, &QV8QObjectResource::weakResource>::iterator i = m_javaScriptOwnedWeakQObjects.begin();
+    for (; i != m_javaScriptOwnedWeakQObjects.end(); ++i) {
+        QV8QObjectResource *resource = *i;
+        Q_ASSERT(resource);
+        deleteWeakQObject(resource);
+    }
 }
 
 struct ReadAccessor {
@@ -930,25 +927,14 @@ static void FastValueSetterReadOnly(v8::Local<v8::String> property, v8::Local<v8
     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
 }
 
-static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void *)
+void QV8QObjectWrapper::WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void *wrapper)
 {
     Q_ASSERT(handle->IsObject());
-    
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(handle->ToObject());
-
     Q_ASSERT(resource);
 
-    QObject *object = resource->object;
-    if (object) {
-        QQmlData *ddata = QQmlData::get(object, false);
-        if (ddata) {
-            ddata->v8object.Clear();
-            if (!object->parent() && !ddata->indestructible) {
-                ddata->isQueuedForDeletion = true;
-                object->deleteLater();
-            }
-        }
-    }
+    static_cast<QV8QObjectWrapper*>(wrapper)->unregisterWeakQObjectReference(resource);
+    static_cast<QV8QObjectWrapper*>(wrapper)->deleteWeakQObject(resource);
 
     qPersistentDispose(handle);
 }
@@ -1117,8 +1103,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 
         v8::Local<v8::Object> rv = newQObject(object, ddata, m_engine);
         ddata->v8object = qPersistentNew<v8::Object>(rv);
-        ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
+        ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
         ddata->v8objectid = m_id;
+        QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(rv);
+        registerWeakQObjectReference(resource);
         return rv;
 
     } else {
@@ -1133,8 +1121,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         if ((!found || (*iter)->v8object.IsEmpty()) && ddata->v8object.IsEmpty()) {
             v8::Local<v8::Object> rv = newQObject(object, ddata, m_engine);
             ddata->v8object = qPersistentNew<v8::Object>(rv);
-            ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
+            ddata->v8object.MakeWeak(this, WeakQObjectReferenceCallback);
             ddata->v8objectid = m_id;
+            QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(rv);
+            registerWeakQObjectReference(resource);
 
             if (found) {
                 delete (*iter);
@@ -1155,6 +1145,20 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         }
 
         return v8::Local<v8::Object>::New((*iter)->v8object);
+    }
+}
+void QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource)
+{
+    QObject *object = resource->object;
+    if (object) {
+        QQmlData *ddata = QQmlData::get(object, false);
+        if (ddata) {
+            ddata->v8object.Clear();
+            if (!object->parent() && !ddata->indestructible) {
+                ddata->isQueuedForDeletion = true;
+                object->deleteLater();
+            }
+        }
     }
 }
 

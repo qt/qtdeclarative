@@ -120,6 +120,7 @@ private slots:
 #endif
     void newQObject_promoteNonObject();
     void newQObject_promoteNonQScriptObject();
+    void newQObject_deletedEngine();
 #if 0 // ### FIXME: No QScript Metaobject support right now
     void newQMetaObject();
     void newActivationObject();
@@ -1118,6 +1119,19 @@ void tst_QJSEngine::newQObject_promoteNonQScriptObject()
         QVERIFY(ret.isUndefined());
     }
 #endif
+}
+
+void tst_QJSEngine::newQObject_deletedEngine()
+{
+    QJSValue object;
+    QObject *ptr = new QObject();
+    QSignalSpy spy(ptr, SIGNAL(destroyed()));
+    {
+        QJSEngine engine;
+        object = engine.newQObject(ptr);
+        engine.globalObject().setProperty("obj", object);
+    }
+    QTRY_VERIFY(spy.count());
 }
 
 #if 0 // ### FIXME: No QScript Metaobject support right now

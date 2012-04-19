@@ -61,6 +61,8 @@
 #include <private/qhashedstring_p.h>
 #include <private/qqmldata_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include <private/qintrusivelist_p.h>
+#include "qv8objectresource_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -71,6 +73,18 @@ class QV8ObjectResource;
 class QV8QObjectInstance;
 class QV8QObjectConnectionList;
 class QQmlPropertyCache;
+
+class QV8QObjectResource : public QV8ObjectResource
+{
+    V8_RESOURCE_TYPE(QObjectType);
+
+public:
+    QV8QObjectResource(QV8Engine *engine, QObject *object);
+
+    QQmlGuard<QObject> object;
+    QIntrusiveListNode weakResource;
+};
+
 class Q_QML_EXPORT QV8QObjectWrapper
 {
 public:
@@ -89,12 +103,23 @@ public:
     inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV8String &, RevisionMode);
     inline bool setProperty(QObject *, const QHashedV8String &, v8::Handle<v8::Value>, RevisionMode);
 
+    void registerWeakQObjectReference(QV8QObjectResource *resource)
+    {
+        m_javaScriptOwnedWeakQObjects.insert(resource);
+    }
+
+    void unregisterWeakQObjectReference(QV8QObjectResource *resource)
+    {
+        m_javaScriptOwnedWeakQObjects.remove(resource);
+    }
+
 private:
     friend class QQmlPropertyCache;
     friend class QV8QObjectConnectionList;
     friend class QV8QObjectInstance;
 
     v8::Local<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
+    void deleteWeakQObject(QV8QObjectResource *resource);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
                                              const QHashedV8String &, QV8QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV8String &,
@@ -112,6 +137,7 @@ private:
     static v8::Handle<v8::Value> Invoke(const v8::Arguments &args);
     static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, v8::Handle<v8::Function>);
     static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, v8::Handle<v8::Object>);
+    static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void *wrapper);
 
     QV8Engine *m_engine;
     quint32 m_id;
@@ -126,6 +152,7 @@ private:
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
     TaintedHash m_taintedObjects;
+    QIntrusiveList<QV8QObjectResource, &QV8QObjectResource::weakResource> m_javaScriptOwnedWeakQObjects;
 };
 
 v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV8String &string,  

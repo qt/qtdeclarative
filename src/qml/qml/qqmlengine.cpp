@@ -592,9 +592,6 @@ QQmlEngine::~QQmlEngine()
         }
     }
 
-    // ensure we clean up QObjects with JS ownership
-    d->v8engine()->gc();
-
     if (d->incubationController)
         d->incubationController->d = 0;
 }
@@ -899,10 +896,13 @@ void QQmlEngine::setContextForObject(QObject *object, QQmlContext *context)
 
   \value JavaScriptOwnership The object is owned by JavaScript.
   When the object is returned to QML as the return value of a method
-  call or property access, QML will delete the object if there are no
-  remaining JavaScript references to it and it has no
-  QObject::parent().  This option is similar to
-  QScriptEngine::ScriptOwnership.
+  call or property access, QML will track it, and delete the object
+  if there are no remaining JavaScript references to it and it has no
+  QObject::parent().  An object tracked by one QQmlEngine
+  will be deleted during that QQmlEngine's destructor, and thus
+  JavaScript references between objects with JavaScriptOwnership from
+  two different engines will not be valid after the deletion of one of
+  those engines.  This option is similar to QScriptEngine::ScriptOwnership.
 
   Generally an application doesn't need to set an object's ownership
   explicitly.  QML uses a heuristic to set the default object

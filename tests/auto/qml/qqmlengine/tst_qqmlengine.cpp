@@ -46,6 +46,7 @@
 #include <QPointer>
 #include <QDir>
 #include <QStandardPaths>
+#include <QSignalSpy>
 #include <QDebug>
 #include <QQmlComponent>
 #include <QQmlNetworkAccessManagerFactory>
@@ -67,6 +68,13 @@ private slots:
     void outputWarningsToStandardError();
     void objectOwnership();
     void multipleEngines();
+
+public slots:
+    QObject *createAQObjectForOwnershipTest ()
+    {
+        static QObject *ptr = new QObject();
+        return ptr;
+    }
 };
 
 void tst_qqmlengine::rootContext()
@@ -326,7 +334,37 @@ void tst_qqmlengine::objectOwnership()
 
     delete o;
     }
-
+    {
+        QObject *ptr = createAQObjectForOwnershipTest();
+        QSignalSpy spy(ptr, SIGNAL(destroyed()));
+        {
+            QQmlEngine engine;
+            QQmlComponent c(&engine);
+            engine.rootContext()->setContextProperty("test", this);
+            QQmlEngine::setObjectOwnership(ptr, QQmlEngine::JavaScriptOwnership);
+            c.setData("import QtQuick 2.0; Item { property int data: test.createAQObjectForOwnershipTest() ? 0 : 1 }", QUrl());
+            QVERIFY(c.isReady());
+            QObject *o = c.create();
+            QVERIFY(o != 0);
+        }
+        QTRY_VERIFY(spy.count());
+    }
+    {
+        QObject *ptr = new QObject();
+        QSignalSpy spy(ptr, SIGNAL(destroyed()));
+        {
+            QQmlEngine engine;
+            QQmlComponent c(&engine);
+            engine.rootContext()->setContextProperty("test", ptr);
+            QQmlEngine::setObjectOwnership(ptr, QQmlEngine::JavaScriptOwnership);
+            c.setData("import QtQuick 2.0; QtObject { property var object: { var i = test; test ? 0 : 1 }  }", QUrl());
+            QVERIFY(c.isReady());
+            QObject *o = c.create();
+            QVERIFY(o != 0);
+            engine.rootContext()->setContextProperty("test", 0);
+        }
+        QTRY_VERIFY(spy.count());
+    }
 }
 
 // Test an object can be accessed by multiple engines
