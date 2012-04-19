@@ -1728,7 +1728,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
     d->textNode = node;
 
-    if (!d->textLayoutDirty) {
+    if (!d->textLayoutDirty && oldNode != 0) {
         QSGSimpleRectNode *cursorNode = node->cursorNode();
         if (cursorNode != 0 && !isReadOnly()) {
             cursorNode->setRect(cursorRectangle());
