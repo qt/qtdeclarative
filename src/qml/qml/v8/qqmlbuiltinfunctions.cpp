@@ -1141,7 +1141,7 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
     // Default to engine parent; this will be removed in the near future (QTBUG-24841)
     QObject *parentArg = engine;
 
-    unsigned consumedCount = 1;
+    int consumedCount = 1;
     if (args.Length() > 1) {
         const v8::Local<v8::Value> &lastArg = args[args.Length()-1];
 

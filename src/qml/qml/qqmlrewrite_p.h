@@ -73,8 +73,6 @@ public:
     inline virtual bool visit(AST::FunctionDeclaration *);
     inline virtual bool visit(AST::FunctionExpression *);
     inline virtual bool visit(AST::IdentifierExpression *);
-
-    static QString evalString;
 };
 
 class RewriteBinding: protected AST::Visitor
@@ -159,6 +157,7 @@ bool SharedBindingTester::visit(AST::FunctionExpression *)
 
 bool SharedBindingTester::visit(AST::IdentifierExpression *e)
 {
+    static const QString evalString = QStringLiteral("eval");
     if (e->name == evalString)
         _sharable = false;
 
