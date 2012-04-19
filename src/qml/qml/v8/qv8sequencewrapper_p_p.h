@@ -200,9 +200,7 @@ static QString convertQStringToString(QV8Engine *, const QString &v)
 
 static QUrl convertV8ValueToUrl(QV8Engine *e, v8::Handle<v8::Value> v)
 {
-    QUrl u;
-    u.setEncodedUrl(e->toString(v->ToString()).toUtf8(), QUrl::TolerantMode);
-    return u;
+    return QUrl(e->toString(v->ToString()));
 }
 
 static v8::Handle<v8::Value> convertUrlToV8Value(QV8Engine *e, const QUrl &v)

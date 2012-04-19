@@ -1084,22 +1084,6 @@ QVariant QQmlPropertyPrivate::readValueProperty()
     }
 }
 
-static QUrl urlFromUserString(const QByteArray &data)
-{
-    QUrl u;
-    if (!data.isEmpty())
-    {
-        // Preserve any valid percent-encoded octets supplied by the source
-        u.setEncodedUrl(data, QUrl::TolerantMode);
-    }
-    return u;
-}
-
-static QUrl urlFromUserString(const QString &data)
-{
-    return urlFromUserString(data.toUtf8());
-}
-
 // helper function to allow assignment / binding to QList<QUrl> properties.
 static QVariant resolvedUrlSequence(const QVariant &value, QQmlContextData *context)
 {
@@ -1107,19 +1091,19 @@ static QVariant resolvedUrlSequence(const QVariant &value, QQmlContextData *cont
     if (value.userType() == qMetaTypeId<QUrl>()) {
         urls.append(value.toUrl());
     } else if (value.userType() == qMetaTypeId<QString>()) {
-        urls.append(urlFromUserString(value.toString()));
+        urls.append(QUrl(value.toString()));
     } else if (value.userType() == qMetaTypeId<QByteArray>()) {
-        urls.append(urlFromUserString(value.toByteArray()));
+        urls.append(QUrl(QString::fromUtf8(value.toByteArray())));
     } else if (value.userType() == qMetaTypeId<QList<QUrl> >()) {
         urls = value.value<QList<QUrl> >();
     } else if (value.userType() == qMetaTypeId<QStringList>()) {
         QStringList urlStrings = value.value<QStringList>();
         for (int i = 0; i < urlStrings.size(); ++i)
-            urls.append(urlFromUserString(urlStrings.at(i)));
+            urls.append(QUrl(urlStrings.at(i)));
     } else if (value.userType() == qMetaTypeId<QList<QString> >()) {
         QList<QString> urlStrings = value.value<QList<QString> >();
         for (int i = 0; i < urlStrings.size(); ++i)
-            urls.append(urlFromUserString(urlStrings.at(i)));
+            urls.append(QUrl(urlStrings.at(i)));
     } // note: QList<QByteArray> is not currently supported.
 
     QList<QUrl> resolvedUrls;
@@ -1259,10 +1243,10 @@ bool QQmlPropertyPrivate::write(QObject *object,
             u = value.toUrl();
             found = true;
         } else if (variantType == QVariant::ByteArray) {
-            u = urlFromUserString(value.toByteArray());
+            u = QUrl(QString::fromUtf8(value.toByteArray()));
             found = true;
         } else if (variantType == QVariant::String) {
-            u = urlFromUserString(value.toString());
+            u = QUrl(value.toString());
             found = true;
         }
 

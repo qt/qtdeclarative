@@ -1063,9 +1063,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
             }
-            QUrl *urlPtr = output.geturlptr();
-            new (urlPtr) QUrl();
-            urlPtr->setEncodedUrl(tmp.toUtf8(), QUrl::TolerantMode);
+            new (output.geturlptr()) QUrl(tmp);
 
             URL_REGISTER(instr->unaryop.output);
         }
