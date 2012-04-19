@@ -47,6 +47,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
+#include <QtQml/qqmlcontext.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
@@ -1265,7 +1266,7 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QDeclarativeContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
     ctxt->setContextProperty("testRightToLeft", horizLayout == Qt::RightToLeft);

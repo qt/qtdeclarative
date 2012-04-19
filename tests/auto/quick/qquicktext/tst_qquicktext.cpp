@@ -1688,7 +1688,7 @@ void tst_qquicktext::boundingRect()
 {
     QFETCH(QString, format);
 
-    QDeclarativeComponent component(&engine);
+    QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0\n Text { textFormat:" + format.toUtf8() + "}", QUrl());
     QScopedPointer<QObject> object(component.create());
     QQuickText *text = qobject_cast<QQuickText *>(object.data());
