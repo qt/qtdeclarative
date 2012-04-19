@@ -63,6 +63,9 @@ static bool greaterThan(const QString &s1, const QString &s2)
 
 QString resolveLocalUrl(const QString &url, const QString &relative)
 {
+    return QUrl(url).resolved(QUrl(relative)).toString();
+
+    //XXX Find out why this broke with new QUrl.
     if (relative.contains(QLatin1Char(':'))) {
         // contains a host name
         return QUrl(url).resolved(QUrl(relative)).toString();
