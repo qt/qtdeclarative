@@ -395,15 +395,19 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
             bool doubleClick = event->timestamp() - touchMousePressTimestamp
                             < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
             touchMousePressTimestamp = event->timestamp();
+            // Store the id already here and restore it to -1 if the event does not get
+            // accepted. Cannot defer setting the new value because otherwise if the event
+            // handler spins the event loop all subsequent moves and releases get lost.
+            touchMouseId = p.id();
             QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
             me.setTimestamp(event->timestamp());
             me.setAccepted(false);
             me.setCapabilities(event->device()->capabilities());
             deliverMouseEvent(&me);
-            if (me.isAccepted()) {
-                touchMouseId = p.id();
+            if (me.isAccepted())
                 event->setAccepted(true);
-            }
+            else
+                touchMouseId = -1;
             if (doubleClick) {
                 touchMousePressTimestamp = 0;
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonDblClick, p);
@@ -411,16 +415,16 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
                 me.setAccepted(false);
                 me.setCapabilities(event->device()->capabilities());
                 if (!mouseGrabberItem) {
-                    if (deliverInitialMousePressEvent(rootItem, &me)) {
-                        touchMouseId = p.id();
+                    if (deliverInitialMousePressEvent(rootItem, &me))
                         event->setAccepted(true);
-                    }
+                    else
+                        touchMouseId = -1;
                 } else {
                     deliverMouseEvent(&me);
-                    if (me.isAccepted()) {
-                        touchMouseId = p.id();
+                    if (me.isAccepted())
                         event->setAccepted(true);
-                    }
+                    else
+                        touchMouseId = -1;
                 }
             }
             if (touchMouseId != -1)
