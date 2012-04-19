@@ -336,6 +336,8 @@ void QFastMetaBuilder::fromData(QMetaObject *output, const QMetaObject *parent, 
     output->d.stringdata = reinterpret_cast<const QByteArrayData *>(data.constData() + header(data)->fieldCount * sizeof(uint));
     output->d.data = fieldPointer(data);
     output->d.extradata = 0;
+    output->d.static_metacall = 0;
+    output->d.relatedMetaObjects = 0;
 }
 
 QT_END_NAMESPACE
