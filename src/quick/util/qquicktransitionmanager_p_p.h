@@ -64,7 +64,7 @@ class Q_AUTOTEST_EXPORT QQuickTransitionManager
 {
 public:
     QQuickTransitionManager();
-    ~QQuickTransitionManager();
+    virtual ~QQuickTransitionManager();
 
     bool isRunning() const;
 

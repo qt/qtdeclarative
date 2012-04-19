@@ -556,7 +556,7 @@ struct BasicBlock {
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Expr *expr, Type type, quint32 line, quint32 column);
 
-    virtual void dump(QTextStream &out);
+    void dump(QTextStream &out);
 };
 
 #ifdef DEBUG_IR_STRUCTURE
