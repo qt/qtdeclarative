@@ -2210,6 +2210,7 @@ void QQuickTextInput::setPersistentSelection(bool on)
     emit persistentSelectionChanged();
 }
 
+#ifndef QT_NO_CLIPBOARD
 /*!
     \qmlproperty bool QtQuick2::TextInput::canPaste
 
@@ -2226,6 +2227,7 @@ bool QQuickTextInput::canPaste() const
     }
     return d->canPaste;
 }
+#endif
 
 /*!
     \qmlproperty bool QtQuick2::TextInput::canUndo
