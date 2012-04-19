@@ -114,6 +114,7 @@ private slots:
 
     void boundingRect_data();
     void boundingRect();
+    void clipRect();
     void lineLaidOut();
 
     void imgTagsBaseUrl_data();
@@ -1800,6 +1801,50 @@ void tst_qquicktext::boundingRect()
     QCOMPARE(text->boundingRect().bottom(), text->height());
     QVERIFY(text->boundingRect().width() < line.naturalTextWidth());
     QVERIFY(text->boundingRect().height() > line.height());
+}
+
+void tst_qquicktext::clipRect()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n Text {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickText *text = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(text);
+
+    QTextLayout layout;
+    layout.setFont(text->font());
+
+    QCOMPARE(text->clipRect().x(), qreal(0));
+    QCOMPARE(text->clipRect().y(), qreal(0));
+    QCOMPARE(text->clipRect().width(), text->width());
+    QCOMPARE(text->clipRect().height(), text->height());
+
+    text->setText("Hello World");
+
+    QCOMPARE(text->clipRect().x(), qreal(0));
+    QCOMPARE(text->clipRect().y(), qreal(0));
+    QCOMPARE(text->clipRect().width(), text->width());
+    QCOMPARE(text->clipRect().height(), text->height());
+
+    // Clip rect follows the item not content dimensions.
+    text->setWidth(text->width() / 2);
+    QCOMPARE(text->clipRect().x(), qreal(0));
+    QCOMPARE(text->clipRect().y(), qreal(0));
+    QCOMPARE(text->clipRect().width(), text->width());
+    QCOMPARE(text->clipRect().height(), text->height());
+
+    text->setHeight(text->height() * 2);
+    QCOMPARE(text->clipRect().x(), qreal(0));
+    QCOMPARE(text->clipRect().y(), qreal(0));
+    QCOMPARE(text->clipRect().width(), text->width());
+    QCOMPARE(text->clipRect().height(), text->height());
+
+    // Setting a style adds a small amount of padding to the clip rect.
+    text->setStyle(QQuickText::Outline);
+    QCOMPARE(text->clipRect().x(), qreal(-1));
+    QCOMPARE(text->clipRect().y(), qreal(0));
+    QCOMPARE(text->clipRect().width(), text->width() + 2);
+    QCOMPARE(text->clipRect().height(), text->height() + 2);
 }
 
 void tst_qquicktext::lineLaidOut()

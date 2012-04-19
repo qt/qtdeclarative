@@ -197,6 +197,7 @@ public:
     qreal contentHeight() const;
 
     QRectF boundingRect() const;
+    QRectF clipRect() const;
     Q_INVOKABLE void doLayout();
 
 Q_SIGNALS:

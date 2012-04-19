@@ -1655,7 +1655,7 @@ void QQuickTextInputPrivate::updateVerticalScroll()
     Q_Q(QQuickTextInput);
     const int preeditLength = m_textLayout.preeditAreaText().length();
     const qreal height = qMax<qreal>(0, q->height());
-    qreal heightUsed = boundingRect.height();
+    qreal heightUsed = contentSize.height();
     qreal previousScroll = vscroll;
 
     if (!autoScroll || heightUsed <=  height) {
@@ -2265,7 +2265,7 @@ bool QQuickTextInput::canRedo() const
 qreal QQuickTextInput::contentWidth() const
 {
     Q_D(const QQuickTextInput);
-    return d->boundingRect.width();
+    return d->contentSize.width();
 }
 
 /*!
@@ -2278,7 +2278,7 @@ qreal QQuickTextInput::contentWidth() const
 qreal QQuickTextInput::contentHeight() const
 {
     Q_D(const QQuickTextInput);
-    return d->boundingRect.height();
+    return d->contentSize.height();
 }
 
 void QQuickTextInput::moveCursorSelection(int position)
@@ -2597,10 +2597,36 @@ QRectF QQuickTextInput::boundingRect() const
 {
     Q_D(const QQuickTextInput);
 
+    int cursorWidth = d->cursorItem ? 0 : 1;
+
+    qreal hscroll = d->hscroll;
+    if (!d->autoScroll || d->contentSize.width() < width()) {
+        switch (effectiveHAlign()) {
+        case AlignLeft:
+            break;
+        case AlignRight:
+            hscroll += d->contentSize.width() - width();
+            break;
+        case AlignHCenter:
+            hscroll += (d->contentSize.width() - width()) / 2;
+            break;
+        }
+    }
+
+    // Could include font max left/right bearings to either side of rectangle.
+    QRectF r(-hscroll, -d->vscroll, d->contentSize.width(), d->contentSize.height());
+    r.setRight(r.right() + cursorWidth);
+    return r;
+}
+
+QRectF QQuickTextInput::clipRect() const
+{
+    Q_D(const QQuickTextInput);
+
     int cursorWidth = d->cursorItem ? d->cursorItem->width() : 1;
 
     // Could include font max left/right bearings to either side of rectangle.
-    QRectF r = QQuickImplicitSizeItem::boundingRect();
+    QRectF r = QQuickImplicitSizeItem::clipRect();
     r.setRight(r.right() + cursorWidth);
     return r;
 }
@@ -2727,7 +2753,6 @@ void QQuickTextInputPrivate::updateLayout()
     if (!q->isComponentComplete())
         return;
 
-    const QRectF previousRect = boundingRect;
 
     QTextOption option = m_textLayout.textOption();
     option.setTextDirection(layoutDirection());
@@ -2736,8 +2761,8 @@ void QQuickTextInputPrivate::updateLayout()
     m_textLayout.setTextOption(option);
     m_textLayout.setFont(font);
 
-    boundingRect = QRectF();
     m_textLayout.beginLayout();
+
     QTextLine line = m_textLayout.createLine();
     if (requireImplicitWidth) {
         line.setLineWidth(INT_MAX);
@@ -2750,12 +2775,14 @@ void QQuickTextInputPrivate::updateLayout()
     }
     qreal lineWidth = q->widthValid() ? q->width() : INT_MAX;
     qreal height = 0;
+    qreal width = 0;
     do {
         line.setLineWidth(lineWidth);
-        line.setPosition(QPointF(line.position().x(), height));
-        boundingRect = boundingRect.united(line.naturalTextRect());
+        line.setPosition(QPointF(0, height));
 
         height += line.height();
+        width = qMax(width, line.naturalTextWidth());
+
         line = m_textLayout.createLine();
     } while (line.isValid());
     m_textLayout.endLayout();
@@ -2765,15 +2792,18 @@ void QQuickTextInputPrivate::updateLayout()
 
     textLayoutDirty = true;
 
+    const QSizeF previousSize = contentSize;
+    contentSize = QSizeF(width, height);
+
     updateType = UpdatePaintNode;
     q->update();
 
     if (!requireImplicitWidth && !q->widthValid())
-        q->setImplicitSize(qCeil(boundingRect.width()), qCeil(boundingRect.height()));
+        q->setImplicitSize(width, height);
     else
-        q->setImplicitHeight(qCeil(boundingRect.height()));
+        q->setImplicitHeight(height);
 
-    if (previousRect != boundingRect)
+    if (previousSize != contentSize)
         emit q->contentSizeChanged();
 }
 

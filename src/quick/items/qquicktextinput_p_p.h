@@ -172,7 +172,7 @@ public:
     };
 
     QElapsedTimer tripleClickTimer;
-    QRectF boundingRect;
+    QSizeF contentSize;
     QPointF pressPos;
     QPointF tripleClickStartPoint;
 

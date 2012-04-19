@@ -2039,6 +2039,16 @@ QRectF QQuickText::boundingRect() const
     return rect;
 }
 
+QRectF QQuickText::clipRect() const
+{
+    Q_D(const QQuickText);
+
+    QRectF rect = QQuickImplicitSizeItem::clipRect();
+    if (d->style != Normal)
+        rect.adjust(-1, 0, 1, 2);
+    return rect;
+}
+
 /*! \internal */
 void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {

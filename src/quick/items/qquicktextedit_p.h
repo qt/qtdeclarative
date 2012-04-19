@@ -229,6 +229,7 @@ public:
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
 
     QRectF boundingRect() const;
+    QRectF clipRect() const;
 
     bool isInputMethodComposing() const;
 

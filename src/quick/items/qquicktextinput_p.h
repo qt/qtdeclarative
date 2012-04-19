@@ -245,6 +245,8 @@ public:
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
 
     QRectF boundingRect() const;
+    QRectF clipRect() const;
+
 #ifndef QT_NO_CLIPBOARD
     bool canPaste() const;
 #endif

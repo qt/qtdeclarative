@@ -152,6 +152,8 @@ private slots:
     void implicitSize_data();
     void implicitSize();
     void contentSize();
+    void boundingRect();
+    void clipRect();
     void implicitSizeBinding_data();
     void implicitSizeBinding();
 
@@ -2655,6 +2657,152 @@ void tst_qquicktextedit::implicitSizeBinding()
     textObject->resetHeight();
     QCOMPARE(textObject->width(), textObject->implicitWidth());
     QCOMPARE(textObject->height(), textObject->implicitHeight());
+}
+
+void tst_qquicktextedit::clipRect()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextEdit {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+    QVERIFY(edit);
+
+    QCOMPARE(edit->clipRect().x(), qreal(0));
+    QCOMPARE(edit->clipRect().y(), qreal(0));
+
+    QCOMPARE(edit->clipRect().width(), edit->width() + edit->cursorRectangle().width());
+    QCOMPARE(edit->clipRect().height(), edit->height());
+
+    edit->setText("Hello World");
+    QCOMPARE(edit->clipRect().x(), qreal(0));
+    QCOMPARE(edit->clipRect().y(), qreal(0));
+    // XXX: TextEdit allows an extra 3 pixels boundary for the cursor beyond it's width for non
+    // empty text. TextInput doesn't.
+    QCOMPARE(edit->clipRect().width(), edit->width() + edit->cursorRectangle().width() + 3);
+    QCOMPARE(edit->clipRect().height(), edit->height());
+
+    // clip rect shouldn't exceed the size of the item, expect for the cursor width;
+    edit->setWidth(edit->width() / 2);
+    QCOMPARE(edit->clipRect().x(), qreal(0));
+    QCOMPARE(edit->clipRect().y(), qreal(0));
+    QCOMPARE(edit->clipRect().width(), edit->width() + edit->cursorRectangle().width() + 3);
+    QCOMPARE(edit->clipRect().height(), edit->height());
+
+    edit->setHeight(edit->height() * 2);
+    QCOMPARE(edit->clipRect().x(), qreal(0));
+    QCOMPARE(edit->clipRect().y(), qreal(0));
+    QCOMPARE(edit->clipRect().width(), edit->width() + edit->cursorRectangle().width() + 3);
+    QCOMPARE(edit->clipRect().height(), edit->height());
+
+    QQmlComponent cursorComponent(&engine);
+    cursorComponent.setData("import QtQuick 2.0\nRectangle { height: 20; width: 8 }", QUrl());
+
+    edit->setCursorDelegate(&cursorComponent);
+
+    // If a cursor delegate is used it's size should determine the excess width.
+    QCOMPARE(edit->clipRect().x(), qreal(0));
+    QCOMPARE(edit->clipRect().y(), qreal(0));
+    QCOMPARE(edit->clipRect().width(), edit->width() + 8 + 3);
+    QCOMPARE(edit->clipRect().height(), edit->height());
+
+    // Alignment and wrapping don't affect the clip rect.
+    edit->setHAlign(QQuickTextEdit::AlignRight);
+    QCOMPARE(edit->clipRect().x(), qreal(0));
+    QCOMPARE(edit->clipRect().y(), qreal(0));
+    QCOMPARE(edit->clipRect().width(), edit->width() + 8 + 3);
+    QCOMPARE(edit->clipRect().height(), edit->height());
+
+    edit->setWrapMode(QQuickTextEdit::Wrap);
+    QCOMPARE(edit->clipRect().x(), qreal(0));
+    QCOMPARE(edit->clipRect().y(), qreal(0));
+    QCOMPARE(edit->clipRect().width(), edit->width() + 8 + 3);
+    QCOMPARE(edit->clipRect().height(), edit->height());
+
+    edit->setVAlign(QQuickTextEdit::AlignBottom);
+    QCOMPARE(edit->clipRect().x(), qreal(0));
+    QCOMPARE(edit->clipRect().y(), qreal(0));
+    QCOMPARE(edit->clipRect().width(), edit->width() + 8 + 3);
+    QCOMPARE(edit->clipRect().height(), edit->height());
+}
+
+void tst_qquicktextedit::boundingRect()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextEdit {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+    QVERIFY(edit);
+
+    QTextLayout layout;
+    layout.setFont(edit->font());
+
+    if (!qmlDisableDistanceField()) {
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
+    }
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    QCOMPARE(edit->boundingRect().x(), qreal(0));
+    QCOMPARE(edit->boundingRect().y(), qreal(0));
+    QCOMPARE(edit->boundingRect().width(), edit->cursorRectangle().width());
+    QCOMPARE(edit->boundingRect().height(), line.height());
+
+    edit->setText("Hello World");
+
+    layout.setText(edit->text());
+    layout.beginLayout();
+    line = layout.createLine();
+    layout.endLayout();
+
+    QCOMPARE(edit->boundingRect().x(), qreal(0));
+    QCOMPARE(edit->boundingRect().y(), qreal(0));
+    QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth() + edit->cursorRectangle().width() + 3);
+    QCOMPARE(edit->boundingRect().height(), line.height());
+
+    // the size of the bounding rect shouldn't be bounded by the size of item.
+    edit->setWidth(edit->width() / 2);
+    QCOMPARE(edit->boundingRect().x(), qreal(0));
+    QCOMPARE(edit->boundingRect().y(), qreal(0));
+    QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth() + edit->cursorRectangle().width() + 3);
+    QCOMPARE(edit->boundingRect().height(), line.height());
+
+    edit->setHeight(edit->height() * 2);
+    QCOMPARE(edit->boundingRect().x(), qreal(0));
+    QCOMPARE(edit->boundingRect().y(), qreal(0));
+    QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth() + edit->cursorRectangle().width() + 3);
+    QCOMPARE(edit->boundingRect().height(), line.height());
+
+    QQmlComponent cursorComponent(&engine);
+    cursorComponent.setData("import QtQuick 2.0\nRectangle { height: 20; width: 8 }", QUrl());
+
+    edit->setCursorDelegate(&cursorComponent);
+
+    // Don't include the size of a cursor delegate as it has its own bounding rect.
+    QCOMPARE(edit->boundingRect().x(), qreal(0));
+    QCOMPARE(edit->boundingRect().y(), qreal(0));
+    QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth());
+    QCOMPARE(edit->boundingRect().height(), line.height());
+
+    edit->setHAlign(QQuickTextEdit::AlignRight);
+    QCOMPARE(edit->boundingRect().x(), edit->width() - line.naturalTextWidth());
+    QCOMPARE(edit->boundingRect().y(), qreal(0));
+    QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth());
+    QCOMPARE(edit->boundingRect().height(), line.height());
+
+    edit->setWrapMode(QQuickTextEdit::Wrap);
+    QCOMPARE(edit->boundingRect().right(), edit->width());
+    QCOMPARE(edit->boundingRect().y(), qreal(0));
+    QVERIFY(edit->boundingRect().width() < line.naturalTextWidth());
+    QVERIFY(edit->boundingRect().height() > line.height());
+
+    edit->setVAlign(QQuickTextEdit::AlignBottom);
+    QCOMPARE(edit->boundingRect().right(), edit->width());
+    QCOMPARE(edit->boundingRect().bottom(), edit->height());
+    QVERIFY(edit->boundingRect().width() < line.naturalTextWidth());
+    QVERIFY(edit->boundingRect().height() > line.height());
 }
 
 void tst_qquicktextedit::preeditCursorRectangle()

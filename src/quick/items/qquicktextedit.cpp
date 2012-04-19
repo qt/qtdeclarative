@@ -1818,7 +1818,48 @@ void QQuickTextEdit::updateSelectionMarkers()
 QRectF QQuickTextEdit::boundingRect() const
 {
     Q_D(const QQuickTextEdit);
-    QRectF r = QQuickImplicitSizeItem::boundingRect();
+    QRectF r(0, -d->yoff, d->contentSize.width(), d->contentSize.height());
+    int cursorWidth = 1;
+    if (d->cursor)
+        cursorWidth = 0;
+    else if (!d->document->isEmpty())
+        cursorWidth += 3;// ### Need a better way of accounting for space between char and cursor
+
+    // Could include font max left/right bearings to either side of rectangle.
+
+    r.setRight(r.right() + cursorWidth);
+
+    qreal h = height();
+    switch (d->vAlign) {
+    case AlignTop:
+        break;
+    case AlignBottom:
+        r.moveTop(h - r.height());
+        break;
+    case AlignVCenter:
+        r.moveTop((h - r.height()) / 2);
+        break;
+    }
+
+    qreal w = width();
+    switch (d->hAlign) {
+    case AlignLeft:
+        break;
+    case AlignRight:
+        r.moveLeft(w - r.width());
+        break;
+    case AlignHCenter:
+        r.moveLeft((w - r.width()) / 2);
+        break;
+    }
+
+    return r;
+}
+
+QRectF QQuickTextEdit::clipRect() const
+{
+    Q_D(const QQuickTextEdit);
+    QRectF r = QQuickImplicitSizeItem::clipRect();
     int cursorWidth = 1;
     if (d->cursor)
         cursorWidth = d->cursor->width();
@@ -1828,7 +1869,7 @@ QRectF QQuickTextEdit::boundingRect() const
     // Could include font max left/right bearings to either side of rectangle.
 
     r.setRight(r.right() + cursorWidth);
-    return r.translated(0,d->yoff);
+    return r;
 }
 
 qreal QQuickTextEditPrivate::getImplicitWidth() const
@@ -1903,7 +1944,7 @@ void QQuickTextEdit::updateSize()
         if (!widthValid() && !d->requireImplicitWidth)
             iWidth = newWidth;
 
-        qreal newHeight = d->document->isEmpty() ? fm.height() : d->document->size().height();
+        qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
 
         if (iWidth > -1)
             setImplicitSize(iWidth, newHeight);
