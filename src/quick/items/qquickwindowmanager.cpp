@@ -1167,7 +1167,7 @@ void QQuickTrivialWindowManager::canvasDestroyed(QQuickCanvas *canvas)
 
 void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
 {
-    if (!m_windows.contains(canvas))
+    if (!canvas->isExposed() || !m_windows.contains(canvas))
         return;
 
     CanvasData &data = const_cast<CanvasData &>(m_windows[canvas]);
@@ -1221,8 +1221,10 @@ void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
         maybeUpdate(canvas);
 }
 
-void QQuickTrivialWindowManager::exposureChanged(QQuickCanvas *)
+void QQuickTrivialWindowManager::exposureChanged(QQuickCanvas *canvas)
 {
+    if (canvas->isExposed())
+        renderCanvas(canvas);
 }
 
 QImage QQuickTrivialWindowManager::grab(QQuickCanvas *canvas)
