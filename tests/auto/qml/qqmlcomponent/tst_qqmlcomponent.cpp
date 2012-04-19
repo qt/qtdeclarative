@@ -111,6 +111,7 @@ private slots:
     void qmlCreateParentReference();
     void async();
     void asyncHierarchy();
+    void componentUrlCanonicalization();
 
 private:
     QQmlEngine engine;
@@ -312,6 +313,42 @@ void tst_qqmlcomponent::asyncHierarchy()
     QVERIFY(root->property("success").toBool());
 
     delete root;
+}
+
+void tst_qqmlcomponent::componentUrlCanonicalization()
+{
+    // ensure that url canonicalization succeeds so that type information
+    // is not generated multiple times for the same component.
+    {
+        // load components via import
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QVERIFY(object->property("success").toBool());
+        delete object;
+    }
+
+    {
+        // load one of the components dynamically, which would trigger
+        // import of the other if it were not already loaded.
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.2.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QVERIFY(object->property("success").toBool());
+        delete object;
+    }
+
+    {
+        // load components with more deeply nested imports
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.3.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QVERIFY(object->property("success").toBool());
+        delete object;
+    }
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
