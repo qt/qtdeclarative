@@ -104,6 +104,8 @@ void removeRecursive(const QString& dirname)
 
 void tst_qqmlsqldatabase::initTestCase()
 {
+    if (engine->offlineStoragePath().isEmpty())
+        QSKIP("offlineStoragePath is empty, skip this test.");
     QQmlDataTest::initTestCase();
     removeRecursive(dbDir());
     QDir().mkpath(dbDir());
@@ -111,6 +113,8 @@ void tst_qqmlsqldatabase::initTestCase()
 
 void tst_qqmlsqldatabase::cleanupTestCase()
 {
+    if (engine->offlineStoragePath().isEmpty())
+        QSKIP("offlineStoragePath is empty, skip this test.");
     removeRecursive(dbDir());
 }
 
@@ -123,6 +127,9 @@ QString tst_qqmlsqldatabase::dbDir() const
 
 void tst_qqmlsqldatabase::checkDatabasePath()
 {
+    if (engine->offlineStoragePath().isEmpty())
+        QSKIP("offlineStoragePath is empty, skip this test.");
+
     // Check default storage path (we can't use it since we don't want to mess with user's data)
     QVERIFY(engine->offlineStoragePath().contains("tst_qqmlsqldatabase"));
     QVERIFY(engine->offlineStoragePath().contains("OfflineStorage"));
@@ -193,6 +200,9 @@ void tst_qqmlsqldatabase::validateAgainstWebkit()
 
 void tst_qqmlsqldatabase::testQml()
 {
+    if (engine->offlineStoragePath().isEmpty())
+        QSKIP("offlineStoragePath is empty, skip this test.");
+
     // Tests QML SQL Database support with tests
     // that have been validated against Webkit.
     //
@@ -222,6 +232,9 @@ void tst_qqmlsqldatabase::testQml_cleanopen_data()
 
 void tst_qqmlsqldatabase::testQml_cleanopen()
 {
+    if (engine->offlineStoragePath().isEmpty())
+        QSKIP("offlineStoragePath is empty, skip this test.");
+
     // Same as testQml, but clean connections between tests,
     // making it more like the tests are running in new processes.
     testQml();
@@ -235,6 +248,9 @@ void tst_qqmlsqldatabase::testQml_cleanopen()
 
 void tst_qqmlsqldatabase::totalDatabases()
 {
+    if (engine->offlineStoragePath().isEmpty())
+        QSKIP("offlineStoragePath is empty, skip this test.");
+
     QCOMPARE(QDir(dbDir()+"/Databases").entryInfoList(QDir::Files|QDir::NoDotAndDotDot).count(), total_databases_created_by_tests*2);
 }
 

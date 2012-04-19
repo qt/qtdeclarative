@@ -177,7 +177,11 @@ void tst_qqmlengine::offlineStoragePath()
 
     QQmlEngine engine;
 
-    QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+
+    QCOMPARE(dataLocation.isEmpty(), engine.offlineStoragePath().isEmpty());
+
+    QDir dir(dataLocation);
     dir.mkpath("QML");
     dir.cd("QML");
     dir.mkpath("OfflineStorage");
