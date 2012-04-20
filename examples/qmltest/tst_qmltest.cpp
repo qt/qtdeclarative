@@ -40,4 +40,4 @@
 ****************************************************************************/
 
 #include <QtQuickTest/quicktest.h>
-QUICK_TEST_MAIN(qmltest)
+QUICK_TEST_MAIN(qmltestexample)
