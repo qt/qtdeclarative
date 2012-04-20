@@ -700,8 +700,9 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
     layout.setTextOption(textOption);
     layout.setFont(font);
 
-    if ((q->widthValid() && q->width() <= 0. && elideMode != QQuickText::ElideNone)
-            || (q->heightValid() && q->height() <= 0. && wrapMode != QQuickText::NoWrap && elideMode == QQuickText::ElideRight)) {
+    if (!requireImplicitWidth
+            && ((q->widthValid() && q->width() <= 0. && elideMode != QQuickText::ElideNone)
+            || (q->heightValid() && q->height() <= 0. && wrapMode != QQuickText::NoWrap && elideMode == QQuickText::ElideRight))) {
         // we are elided and we have a zero width or height
         if (!truncated) {
             truncated = true;
@@ -710,25 +711,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
         if (lineCount) {
             lineCount = 0;
             emit q->lineCountChanged();
-        }
-
-        if (requireImplicitWidth) {
-            // Layout to determine the implicit width.
-            layout.beginLayout();
-
-            for (int i = 0; i < maximumLineCount(); ++i) {
-                QTextLine line = layout.createLine();
-                if (!line.isValid())
-                    break;
-            }
-            layout.endLayout();
-            *naturalWidth = layout.maximumWidth();
-            layout.clearLayout();
-
-            bool wasInLayout = internalWidthUpdate;
-            internalWidthUpdate = true;
-            q->setImplicitWidth(*naturalWidth);
-            internalWidthUpdate = wasInLayout;
         }
 
         QFontMetricsF fm(font);
@@ -743,15 +725,16 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
     const bool customLayout = isLineLaidOutConnected();
     const bool wasTruncated = truncated;
 
-    const bool singlelineElide = elideMode != QQuickText::ElideNone && q->widthValid();
-    const bool multilineElide = elideMode == QQuickText::ElideRight
+    bool singlelineElide = elideMode != QQuickText::ElideNone && q->widthValid();
+    bool multilineElide = elideMode == QQuickText::ElideRight
             && q->widthValid()
             && (q->heightValid() || maximumLineCountValid);
-    const bool canWrap = wrapMode != QQuickText::NoWrap && q->widthValid();
+    bool canWrap = wrapMode != QQuickText::NoWrap && q->widthValid();
 
-    const bool horizontalFit = fontSizeMode() & QQuickText::HorizontalFit && q->widthValid();
-    const bool verticalFit = fontSizeMode() & QQuickText::VerticalFit
+    bool horizontalFit = fontSizeMode() & QQuickText::HorizontalFit && q->widthValid();
+    bool verticalFit = fontSizeMode() & QQuickText::VerticalFit
             && (q->heightValid() || (maximumLineCountValid && canWrap));
+
     const bool pixelSize = font.pixelSize() != -1;
     QString layoutText = layout.text();
 
@@ -921,6 +904,16 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
             internalWidthUpdate = true;
             q->setImplicitWidth(*naturalWidth);
             internalWidthUpdate = wasInLayout;
+
+            singlelineElide = elideMode != QQuickText::ElideNone && q->widthValid();
+            multilineElide = elideMode == QQuickText::ElideRight
+                    && q->widthValid()
+                    && (q->heightValid() || maximumLineCountValid);
+            canWrap = wrapMode != QQuickText::NoWrap && q->widthValid();
+
+            horizontalFit = fontSizeMode() & QQuickText::HorizontalFit && q->widthValid();
+            verticalFit = fontSizeMode() & QQuickText::VerticalFit
+                    && (q->heightValid() || (maximumLineCountValid && canWrap));
 
             const qreal oldWidth = lineWidth;
             lineWidth = q->widthValid() && q->width() > 0 ? q->width() : FLT_MAX;

@@ -1350,6 +1350,48 @@ void tst_QQuickItem::implicitSize()
     QCOMPARE(item->width(), qreal(150));
     QCOMPARE(item->height(), qreal(80));
 
+    QMetaObject::invokeMethod(item, "assignImplicitBinding");
+
+    QCOMPARE(item->implicitWidth(), qreal(150));
+    QCOMPARE(item->implicitHeight(), qreal(80));
+    QCOMPARE(item->width(), qreal(150));
+    QCOMPARE(item->height(), qreal(80));
+
+    QMetaObject::invokeMethod(item, "increaseImplicit");
+
+    QCOMPARE(item->implicitWidth(), qreal(200));
+    QCOMPARE(item->implicitHeight(), qreal(100));
+    QCOMPARE(item->width(), qreal(175));
+    QCOMPARE(item->height(), qreal(90));
+
+    QMetaObject::invokeMethod(item, "changeImplicit");
+
+    QCOMPARE(item->implicitWidth(), qreal(150));
+    QCOMPARE(item->implicitHeight(), qreal(80));
+    QCOMPARE(item->width(), qreal(150));
+    QCOMPARE(item->height(), qreal(80));
+
+    QMetaObject::invokeMethod(item, "assignUndefinedBinding");
+
+    QCOMPARE(item->implicitWidth(), qreal(150));
+    QCOMPARE(item->implicitHeight(), qreal(80));
+    QCOMPARE(item->width(), qreal(150));
+    QCOMPARE(item->height(), qreal(80));
+
+    QMetaObject::invokeMethod(item, "increaseImplicit");
+
+    QCOMPARE(item->implicitWidth(), qreal(200));
+    QCOMPARE(item->implicitHeight(), qreal(100));
+    QCOMPARE(item->width(), qreal(175));
+    QCOMPARE(item->height(), qreal(90));
+
+    QMetaObject::invokeMethod(item, "changeImplicit");
+
+    QCOMPARE(item->implicitWidth(), qreal(150));
+    QCOMPARE(item->implicitHeight(), qreal(80));
+    QCOMPARE(item->width(), qreal(150));
+    QCOMPARE(item->height(), qreal(80));
+
     delete canvas;
 }
 

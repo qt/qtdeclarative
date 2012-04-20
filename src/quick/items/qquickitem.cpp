@@ -4600,7 +4600,9 @@ void QQuickItem::setImplicitWidth(qreal w)
     if (d->width == w || widthValid()) {
         if (changed)
             d->implicitWidthChanged();
-        return;
+        if (d->width == w || widthValid())
+            return;
+        changed = false;
     }
 
     qreal oldWidth = d->width;
@@ -4695,7 +4697,9 @@ void QQuickItem::setImplicitHeight(qreal h)
     if (d->height == h || heightValid()) {
         if (changed)
             d->implicitHeightChanged();
-        return;
+        if (d->height == h || heightValid())
+            return;
+        changed = false;
     }
 
     qreal oldHeight = d->height;
@@ -4724,12 +4728,14 @@ void QQuickItem::setImplicitSize(qreal w, qreal h)
     if (d->width == w || widthValid()) {
         if (wChanged)
             d->implicitWidthChanged();
-        wDone = true;
+        wDone = d->width == w || widthValid();
+        wChanged = false;
     }
     if (d->height == h || heightValid()) {
         if (hChanged)
             d->implicitHeightChanged();
-        hDone = true;
+        hDone = d->height == h || heightValid();
+        hChanged = false;
     }
     if (wDone && hDone)
         return;

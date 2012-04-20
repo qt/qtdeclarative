@@ -72,6 +72,8 @@ private slots:
     void elide();
     void multilineElide_data();
     void multilineElide();
+    void implicitElide_data();
+    void implicitElide();
     void textFormat();
 
     void alignments_data();
@@ -529,6 +531,56 @@ void tst_qquicktext::multilineElide()
     QCOMPARE(myText->lineCount(), 1);
 
     delete canvas;
+}
+
+void tst_qquicktext::implicitElide_data()
+{
+    QTest::addColumn<QString>("width");
+    QTest::addColumn<QString>("initialText");
+    QTest::addColumn<QString>("text");
+
+    QTest::newRow("maximum width, empty")
+            << "Math.min(implicitWidth, 100)"
+            << "";
+    QTest::newRow("maximum width, short")
+            << "Math.min(implicitWidth, 100)"
+            << "the";
+    QTest::newRow("maximum width, long")
+            << "Math.min(implicitWidth, 100)"
+            << "the quick brown fox jumped over the lazy dog";
+    QTest::newRow("reset width, empty")
+            << "implicitWidth > 100 ? 100 : undefined"
+            << "";
+    QTest::newRow("reset width, short")
+            << "implicitWidth > 100 ? 100 : undefined"
+            << "the";
+    QTest::newRow("reset width, long")
+            << "implicitWidth > 100 ? 100 : undefined"
+            << "the quick brown fox jumped over the lazy dog";
+}
+
+void tst_qquicktext::implicitElide()
+{
+    QFETCH(QString, width);
+    QFETCH(QString, initialText);
+
+    QString componentStr =
+            "import QtQuick 2.0\n"
+            "Text {\n"
+                "width: " + width + "\n"
+                "text: \"" + initialText + "\"\n"
+                "elide: Text.ElideRight\n"
+            "}";
+    QQmlComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+    QVERIFY(textObject->contentWidth() <= textObject->width());
+
+    textObject->setText("the quick brown fox jumped over");
+
+    QVERIFY(textObject->contentWidth() > 0);
+    QVERIFY(textObject->contentWidth() <= textObject->width());
 }
 
 void tst_qquicktext::textFormat()
