@@ -455,6 +455,20 @@ static inline QBezier nextBezier(const QPainterPath &path, int *current, qreal *
     return QBezier();
 }
 
+static inline int segmentCount(const QPainterPath &path, qreal pathLength)
+{
+    // In the really simple case of a single straight line we can interpolate without jitter
+    // between just two points.
+    if (path.elementCount() == 2
+            && path.elementAt(0).type == QPainterPath::MoveToElement
+            && path.elementAt(1).type == QPainterPath::LineToElement) {
+        return 1;
+    }
+    // more points means less jitter between items as they move along the
+    // path, but takes longer to generate
+    return qCeil(pathLength*5);
+}
+
 //derivative of the equation
 static inline qreal slopeAt(qreal t, qreal a, qreal b, qreal c, qreal d)
 {
@@ -467,11 +481,10 @@ void QQuickPath::createPointCache() const
     qreal pathLength = d->pathLength;
     if (pathLength <= 0 || qIsNaN(pathLength))
         return;
-    // more points means less jitter between items as they move along the
-    // path, but takes longer to generate
-    const int points = qCeil(pathLength*5);
+
+    const int segments = segmentCount(d->_path, pathLength);
     const int lastElement = d->_path.elementCount() - 1;
-    d->_pointCache.resize(points+1);
+    d->_pointCache.resize(segments+1);
 
     int currElement = -1;
     qreal bezLength = 0;
@@ -484,7 +497,7 @@ void QQuickPath::createPointCache() const
         qreal prevPercent = 0;
         qreal prevOrigPercent = 0;
         for (int ii = 0; ii < d->_attributePoints.count(); ++ii) {
-            qreal percent = qreal(i)/points;
+            qreal percent = qreal(i)/segments;
             const AttributePoint &point = d->_attributePoints.at(ii);
             if (percent < point.percent || ii == d->_attributePoints.count() - 1) { //### || is special case for very last item
                 qreal elementPercent = (percent - prevPercent);
@@ -657,12 +670,12 @@ QPointF QQuickPath::pointAt(qreal p) const
             return QPointF();
     }
 
-    const int pointCacheSize = d->_pointCache.size();
-    qreal idxf = p*pointCacheSize;
+    const int segmentCount = d->_pointCache.size() - 1;
+    qreal idxf = p*segmentCount;
     int idx1 = qFloor(idxf);
     qreal delta = idxf - idx1;
-    if (idx1 >= pointCacheSize)
-        idx1 = pointCacheSize - 1;
+    if (idx1 > segmentCount)
+        idx1 = segmentCount;
     else if (idx1 < 0)
         idx1 = 0;
 
@@ -671,8 +684,8 @@ QPointF QQuickPath::pointAt(qreal p) const
 
     // interpolate between the two points.
     int idx2 = qCeil(idxf);
-    if (idx2 >= pointCacheSize)
-        idx2 = pointCacheSize - 1;
+    if (idx2 > segmentCount)
+        idx2 = segmentCount;
     else if (idx2 < 0)
         idx2 = 0;
 

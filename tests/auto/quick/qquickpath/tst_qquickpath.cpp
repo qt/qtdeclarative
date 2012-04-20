@@ -57,6 +57,7 @@ private slots:
     void catmullromCurve();
     void closedCatmullromCurve();
     void svg();
+    void line();
 };
 
 void tst_QuickPath::arc()
@@ -191,6 +192,43 @@ void tst_QuickPath::svg()
     QCOMPARE(pos.toPoint(), QPoint(800,425)); //fuzzy compare
     pos = obj->pointAt(1);
     QCOMPARE(pos, QPointF(1000,300));
+}
+
+void tst_QuickPath::line()
+{
+    QQmlEngine engine;
+    QQmlComponent c1(&engine);
+    c1.setData(
+            "import QtQuick 2.0\n"
+            "Path {\n"
+                "startX: 0; startY: 0\n"
+                "PathLine { x: 100; y: 100 }\n"
+            "}", QUrl());
+    QScopedPointer<QObject> o1(c1.create());
+    QQuickPath *path1 = qobject_cast<QQuickPath *>(o1.data());
+    QVERIFY(path1);
+
+    QQmlComponent c2(&engine);
+    c2.setData(
+            "import QtQuick 2.0\n"
+            "Path {\n"
+                "startX: 0; startY: 0\n"
+                "PathLine { x: 50; y: 50 }\n"
+                "PathLine { x: 100; y: 100 }\n"
+            "}", QUrl());
+    QScopedPointer<QObject> o2(c2.create());
+    QQuickPath *path2 = qobject_cast<QQuickPath *>(o2.data());
+    QVERIFY(path2);
+
+    for (int i = 0; i < 167; ++i) {
+        qreal t = i / 167.0;
+
+        QPointF p1 = path1->pointAt(t);
+        QCOMPARE(p1.x(), p1.y());
+
+        QPointF p2 = path2->pointAt(t);
+        QCOMPARE(p1, p2);
+    }
 }
 
 
