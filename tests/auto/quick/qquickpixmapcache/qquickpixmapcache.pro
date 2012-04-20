@@ -15,6 +15,6 @@ TESTDATA = data/*
 # LIBS += -lgcov
 
 CONFIG += parallel_test
-CONFIG += insignificant_test # QTBUG-25307
+linux-*:system(". /etc/lsb-release && [ $DISTRIB_CODENAME = lucid ]"):CONFIG += insignificant_test # QTBUG-25307
 
 QT += core-private gui-private qml-private quick-private network testlib concurrent
