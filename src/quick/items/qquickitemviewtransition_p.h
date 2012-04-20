@@ -90,6 +90,8 @@ public:
     const QList<QObject *> &targetItems(QQuickItemViewTransitioner::TransitionType type) const;
 
     inline void setPopulateTransitionEnabled(bool b) { usePopulateTransition = b; }
+    inline bool populateTransitionEnabled() const { return usePopulateTransition; }
+
     inline void setChangeListener(QQuickItemViewTransitionChangeListener *obj) { changeListener = obj; }
 
     QSet<QQuickItemViewTransitionJob *> runningJobs;

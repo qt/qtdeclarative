@@ -1752,8 +1752,10 @@ void QQuickItemViewPrivate::layout()
     forceLayout = false;
 
     if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) {
-        for (int i=0; i<visibleItems.count(); i++)
-            visibleItems.at(i)->transitionNextReposition(transitioner, QQuickItemViewTransitioner::PopulateTransition, true);
+        for (int i=0; i<visibleItems.count(); i++) {
+            if (!visibleItems.at(i)->transitionScheduledOrRunning())
+                visibleItems.at(i)->transitionNextReposition(transitioner, QQuickItemViewTransitioner::PopulateTransition, true);
+        }
     }
     layoutVisibleItems();
 

@@ -5260,22 +5260,19 @@ void tst_QQuickListView::populateTransitions()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem);
 
-    if (staticallyPopulate || dynamicallyPopulate) {
-        // check the populate transition is run
-        if (usePopulateTransition) {
-            QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), 17);
-        } else {
-            QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
-            QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), 0);
-        }
+    if (staticallyPopulate && usePopulateTransition) {
+        QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), 16);
         QTRY_COMPARE(listview->property("countAddTransitions").toInt(), 0);
+    } else if (dynamicallyPopulate) {
+        QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), 0);
+        QTRY_COMPARE(listview->property("countAddTransitions").toInt(), 16);
     } else {
         QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+        QCOMPARE(listview->property("countPopulateTransitions").toInt(), 0);
+        QCOMPARE(listview->property("countAddTransitions").toInt(), 0);
     }
 
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    if (usePopulateTransition)
-        QCOMPARE(itemCount, listview->property("countPopulateTransitions").toInt());
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -5286,11 +5283,13 @@ void tst_QQuickListView::populateTransitions()
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    // add an item and check this is done with add trantion, not populate
+    listview->setProperty("countPopulateTransitions", 0);
+    listview->setProperty("countAddTransitions", 0);
+
+    // add an item and check this is done with add transition, not populate
     model.insertItem(0, "another item", "");
     QTRY_COMPARE(listview->property("countAddTransitions").toInt(), 1);
-    QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(),
-                 (usePopulateTransition && (staticallyPopulate || dynamicallyPopulate)) ? 17 : 0);
+    QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), 0);
 
     // clear the model
     canvas->rootContext()->setContextProperty("testModel", QVariant());
@@ -5304,12 +5303,10 @@ void tst_QQuickListView::populateTransitions()
     for (int i = 0; i < 30; i++)
         model.addItem("item" + QString::number(i), "");
     canvas->rootContext()->setContextProperty("testModel", &model);
-    QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 17 : 0);
+    QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 16 : 0);
     QTRY_COMPARE(listview->property("countAddTransitions").toInt(), 0);
 
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    if (usePopulateTransition)
-        QCOMPARE(itemCount, listview->property("countPopulateTransitions").toInt());
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -5324,12 +5321,10 @@ void tst_QQuickListView::populateTransitions()
     listview->setProperty("countPopulateTransitions", 0);
     listview->setProperty("countAddTransitions", 0);
     model.reset();
-    QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 17 : 0);
+    QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 16 : 0);
     QTRY_COMPARE(listview->property("countAddTransitions").toInt(), 0);
 
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    if (usePopulateTransition)
-        QCOMPARE(itemCount, listview->property("countPopulateTransitions").toInt());
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));

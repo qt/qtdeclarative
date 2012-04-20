@@ -189,8 +189,6 @@ bool QQuickItemViewTransitioner::canTransition(QQuickItemViewTransitioner::Trans
         return usePopulateTransition
                 && populateTransition && populateTransition->enabled();
     case AddTransition:
-        if (usePopulateTransition)
-            return false;
         if (asTarget)
             return addTransition && addTransition->enabled();
         else
@@ -437,7 +435,7 @@ bool QQuickItemViewTransitionableItem::prepareTransition(QQuickItemViewTransitio
     }
     case QQuickItemViewTransitioner::PopulateTransition:
     {
-        doTransition = true;
+        doTransition = viewBounds.intersects(QRectF(nextTransitionTo.x(), nextTransitionTo.y(), item->width(), item->height()));
         break;
     }
     case QQuickItemViewTransitioner::AddTransition:

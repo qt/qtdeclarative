@@ -4531,37 +4531,37 @@ void tst_QQuickGridView::populateTransitions()
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem);
 
-    if (staticallyPopulate || dynamicallyPopulate) {
-        // check the populate transition is run
-        if (usePopulateTransition) {
-            QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 19);
-        } else {
-            QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
-            QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 0);
-        }
+    // check the populate transition is run
+    if (staticallyPopulate && usePopulateTransition) {
+        QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 18);
         QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
+    } else if (dynamicallyPopulate) {
+        QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 0);
+        QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 18);
     } else {
         QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QCOMPARE(gridview->property("countPopulateTransitions").toInt(), 0);
+        QCOMPARE(gridview->property("countAddTransitions").toInt(), 0);
     }
 
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    if (usePopulateTransition)
-        QCOMPARE(itemCount, gridview->property("countPopulateTransitions").toInt());
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QCOMPARE(item->x(), (i%3)*80.0);
-        QCOMPARE(item->y(), (i/3)*60.0);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
+    gridview->setProperty("countPopulateTransitions", 0);
+    gridview->setProperty("countAddTransitions", 0);
+
     // add an item and check this is done with add transition, not populate
     model.insertItem(0, "another item", "");
     QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 1);
-    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(),
-                 (usePopulateTransition && (staticallyPopulate || dynamicallyPopulate)) ? 19 : 0);
+    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 0);
 
     // clear the model
     canvas->rootContext()->setContextProperty("testModel", QVariant());
@@ -4577,17 +4577,15 @@ void tst_QQuickGridView::populateTransitions()
     canvas->rootContext()->setContextProperty("testModel", &model);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
-    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 19 : 0);
+    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 18 : 0);
     QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
 
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    if (usePopulateTransition)
-        QCOMPARE(itemCount, gridview->property("countPopulateTransitions").toInt());
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QCOMPARE(item->x(), (i%3)*80.0);
-        QCOMPARE(item->y(), (i/3)*60.0);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
@@ -4597,17 +4595,15 @@ void tst_QQuickGridView::populateTransitions()
     gridview->setProperty("countPopulateTransitions", 0);
     gridview->setProperty("countAddTransitions", 0);
     model.reset();
-    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 19 : 0);
+    QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 18 : 0);
     QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
 
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    if (usePopulateTransition)
-        QCOMPARE(itemCount, gridview->property("countPopulateTransitions").toInt());
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
-        QCOMPARE(item->x(), (i%3)*80.0);
-        QCOMPARE(item->y(), (i/3)*60.0);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
