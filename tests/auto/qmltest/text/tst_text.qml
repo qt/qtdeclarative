@@ -75,6 +75,7 @@ Item {
         text: first
         width: 100
         wrapMode: Text.WrapAnywhere
+        font.pixelSize: 16
     }
 
     TestCase {
