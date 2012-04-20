@@ -410,8 +410,6 @@ void tst_qquickflickable::movingAndDragging()
     QTest::mouseMove(canvas, QPoint(50, 70));
     QTest::mouseMove(canvas, QPoint(50, 60));
 
-    QMouseEvent moveEvent(QEvent::MouseMove, QPoint(50, 80), Qt::LeftButton, Qt::LeftButton, 0);
-
     QVERIFY(!flickable->isDraggingHorizontally());
     QVERIFY(flickable->isDraggingVertically());
     QVERIFY(flickable->isDragging());
@@ -441,6 +439,9 @@ void tst_qquickflickable::movingAndDragging()
     // wait for any motion to end
     QTRY_VERIFY(flickable->isMoving() == false);
 
+    // Stop on a full pixel after user interaction
+    QCOMPARE(flickable->contentY(), (qreal)qRound(flickable->contentY()));
+
     // Vertical with a quick press-move-release: should cause a flick in release.
     QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
     // Use something that generates a huge velocity just to make it testable.
@@ -456,6 +457,9 @@ void tst_qquickflickable::movingAndDragging()
 
     // wait for any motion to end
     QTRY_VERIFY(flickable->isMoving() == false);
+
+    // Stop on a full pixel after user interaction
+    QCOMPARE(flickable->contentY(), (qreal)qRound(flickable->contentY()));
 
     //Horizontal
     vDragSpy.clear();
@@ -505,6 +509,8 @@ void tst_qquickflickable::movingAndDragging()
 #endif
 
     QTRY_VERIFY(!flickable->isMoving());
+    // Stop on a full pixel after user interaction
+    QCOMPARE(flickable->contentX(), (qreal)qRound(flickable->contentX()));
 
     vMoveSpy.clear();
     hMoveSpy.clear();
@@ -541,6 +547,8 @@ void tst_qquickflickable::movingAndDragging()
     QVERIFY(!flickable->isFlickingVertically());
     QTRY_VERIFY(!flickable->isMoving());
     QVERIFY(!flickable->isMovingVertically());
+    // Stop on a full pixel after user interaction
+    QCOMPARE(flickable->contentX(), (qreal)qRound(flickable->contentX()));
 
     delete canvas;
 }

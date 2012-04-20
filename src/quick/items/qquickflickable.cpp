@@ -300,11 +300,22 @@ void QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
             else
                 v = maxVelocity;
         }
+
+        // adjust accel so that we hit a full pixel
+        qreal accel = deceleration;
+        qreal v2 = v * v;
+        qreal dist = v2 / (accel * 2.0);
+        if (v > 0)
+            dist = -dist;
+        qreal target = qRound(data.move.value() - dist);
+        dist = -target + data.move.value();
+        accel = v2 / (2.0f * qAbs(dist));
+
         timeline.reset(data.move);
         if (boundsBehavior == QQuickFlickable::DragAndOvershootBounds)
-            timeline.accel(data.move, v, deceleration);
+            timeline.accel(data.move, v, accel);
         else
-            timeline.accel(data.move, v, deceleration, maxDistance);
+            timeline.accel(data.move, v, accel, maxDistance);
         timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
         if (!hData.flicking && q->xflick() && (&data == &hData)) {
             hData.flicking = true;
@@ -390,6 +401,19 @@ void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExt
                 data.fixingUp = true;
             }
         }
+    } else if (qRound(data.move.value()) != data.move.value()) {
+        // We could animate, but since it is less than 0.5 pixel it's probably not worthwhile.
+        timeline.reset(data.move);
+        qreal val = data.move.value();
+        if (qAbs(qRound(val) - val) < 0.25) // round small differences
+            val = qRound(val);
+        else if (data.smoothVelocity.value() > 0) // continue direction of motion for larger
+            val = qFloor(val);
+        else if (data.smoothVelocity.value() < 0)
+            val = qCeil(val);
+        else // otherwise round
+            val = qRound(val);
+        timeline.set(data.move, val);
     }
     data.inOvershoot = false;
     fixupMode = Normal;
