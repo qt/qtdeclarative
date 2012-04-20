@@ -92,10 +92,12 @@ Rectangle {
                 NumberAnimation { easing.type: Easing.OutElastic; easing.amplitude: 3.0; easing.period: 2.0; duration: 300 }
             }
 
+            //! [0]
             // Set an 'elastic' behavior on the focusRect's y property.
             Behavior on y {
                 NumberAnimation { easing.type: Easing.OutElastic; easing.amplitude: 3.0; easing.period: 2.0; duration: 300 }
             }
+            //! [0]
 
             Text {
                 id: focusText

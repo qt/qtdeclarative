@@ -48,6 +48,7 @@ Item {
     // Let's draw the sky...
     Rectangle {
         anchors { left: parent.left; top: parent.top; right: parent.right; bottom: parent.verticalCenter }
+        //! [0]
         gradient: Gradient {
             GradientStop {
                 position: 0.0
@@ -66,6 +67,7 @@ Item {
                 }
             }
         }
+        //! [0]
     }
 
     // the sun, moon, and stars

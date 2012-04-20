@@ -47,6 +47,13 @@ import "content"
     \example quick/accessibility
     \brief This example has accessible buttons.
 
+    Elements in this example are augmented with meta-data for accessiblity systems.
+
+    For example, the button identifies itself and its functionality to the accessibility system:
+    \snippet examples/quick/accessibility/content/Button.qml button
+
+    As do Text elements inside the example:
+    \snippet examples/quick/accessibility/accessibility.qml text
 */
 
 Rectangle {
@@ -74,8 +81,10 @@ Rectangle {
             height: column.h
             Text {
                 id: subjectLabel
+                //! [text]
                 Accessible.role: Accessible.StaticText
                 Accessible.name: text
+                //! [text]
                 text: "Subject:"
             }
             Rectangle {

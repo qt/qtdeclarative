@@ -86,8 +86,10 @@ Rectangle {
             id: letter
             property variant follow
 
+//! [0]
             x: follow ? follow.x + follow.width : container.width / 6
             y: follow ? follow.y : container.height / 2
+//! [0]
 
             font.pixelSize: 40; font.bold: true
             color: "#999999"; styleColor: "#222222"; style: Text.Raised
@@ -99,8 +101,10 @@ Rectangle {
                 onReleased: letter.color = "#999999"
             }
 
+//! [1]
             Behavior on x { enabled: container.animated; SpringAnimation { spring: 3; damping: 0.3; mass: 1.0 } }
             Behavior on y { enabled: container.animated; SpringAnimation { spring: 3; damping: 0.3; mass: 1.0 } }
+//! [1]
         }
     }
 

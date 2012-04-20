@@ -105,6 +105,7 @@ Rectangle {
         }
     ]
 
+    // ![0]
     // Transitions define how the properties change when the item moves between each state
     transitions: [
 
@@ -126,5 +127,6 @@ Rectangle {
         Transition {
             NumberAnimation { properties: "x,y"; duration: 200 }
         }
+    // ![0]
     ]
 }

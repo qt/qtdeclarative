@@ -59,6 +59,7 @@ Rectangle {
         }
     }
 
+    //! [0]
     PathInterpolator {
         id: motionPath
 
@@ -89,6 +90,7 @@ Rectangle {
             }
         }
     }
+    //! [0]
 
     Rectangle {
         id: box

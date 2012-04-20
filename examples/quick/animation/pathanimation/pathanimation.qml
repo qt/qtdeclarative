@@ -64,6 +64,7 @@ Rectangle {
         loops: -1
 
         PauseAnimation { duration: 1000 }
+        //! [0]
         PathAnimation {
             id: pathAnim
 
@@ -87,6 +88,7 @@ Rectangle {
                 onChanged: canvas.requestPaint()
             }
         }
+        //! [0]
     }
 
     Rectangle {

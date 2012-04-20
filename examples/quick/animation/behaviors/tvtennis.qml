@@ -86,8 +86,10 @@ Rectangle {
         id: leftBat
         color: "Lime"
         x: 2; width: 20; height: 90
+        // ![0]
         y: ball.direction == 'left' ? ball.y - 45 : page.height/2 -45;
         Behavior on y { SpringAnimation{ velocity: 300 } }
+        // ![0]
     }
     Rectangle {
         id: rightBat

@@ -46,12 +46,14 @@ Rectangle {
 
     property bool checked: false
     property alias text : buttonText.text
+    //! [button]
     Accessible.name: text
     Accessible.description: "This button does " + text
     Accessible.role: Accessible.Button
     function accessiblePressAction() {
         button.clicked()
     }
+    //! [button]
 
     signal clicked
 

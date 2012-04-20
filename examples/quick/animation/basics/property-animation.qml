@@ -81,6 +81,7 @@ Item {
         y: minHeight
         source: "images/face-smile.png"
 
+        //! [0]
         // Animate the y property. Setting loops to Animation.Infinite makes the
         // animation repeat indefinitely, otherwise it would only run once.
         SequentialAnimation on y {
@@ -101,5 +102,6 @@ Item {
             // Then pause for 500ms
             PauseAnimation { duration: 500 }
         }
+        //! [0]
     }
 }

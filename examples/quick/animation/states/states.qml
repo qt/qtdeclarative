@@ -86,6 +86,7 @@ Rectangle {
     }
 
     states: [
+        // ![0]
         // In state 'middleRight', move the image to middleRightRect
         State {
             name: "middleRight"
@@ -97,5 +98,6 @@ Rectangle {
             name: "bottomLeft"
             PropertyChanges { target: userIcon; x: bottomLeftRect.x; y: bottomLeftRect.y  }
         }
+        // ![0]
     ]
 }
