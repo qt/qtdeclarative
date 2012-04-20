@@ -453,7 +453,7 @@ void QSGDefaultRenderer::buildLists(QSGNode *node)
             }
             Q_ASSERT(m_tempNodes.size() == m_transparentNodes.size() - baseCount);
 
-            qMemCopy(&m_transparentNodes.at(baseCount), &m_tempNodes.at(0), m_tempNodes.size() * sizeof(QSGGeometryNode *));
+            memcpy(&m_transparentNodes.at(baseCount), &m_tempNodes.at(0), m_tempNodes.size() * sizeof(QSGGeometryNode *));
         }
     } else {
         for (QSGNode *c = node->firstChild(); c; c = c->nextSibling())

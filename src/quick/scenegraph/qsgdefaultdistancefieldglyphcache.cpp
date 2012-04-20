@@ -164,7 +164,7 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
             uchar *inBits = glyph.scanLine(0);
             uchar *outBits = texInfo->image.scanLine(int(c.y)) + int(c.x);
             for (int y = 0; y < glyph.height(); ++y) {
-                qMemCopy(outBits, inBits, glyph.width());
+                memcpy(outBits, inBits, glyph.width());
                 inBits += glyph.bytesPerLine();
                 outBits += texInfo->image.bytesPerLine();
             }

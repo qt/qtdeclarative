@@ -170,7 +170,7 @@ void QRecyclePoolPrivate<T, Step>::releaseIfPossible()
     Page *p = currentPage;
     while (p) {
         Page *n = p->nextPage;
-        qFree(p);
+        free(p);
         p = n;
     }
 
@@ -188,7 +188,7 @@ T *QRecyclePoolPrivate<T, Step>::allocate()
         rv = (PoolType *)(currentPage->array + (Step - currentPage->free) * sizeof(PoolType));
         currentPage->free--;
     } else {
-        Page *p = (Page *)qMalloc(sizeof(Page));
+        Page *p = (Page *)malloc(sizeof(Page));
         p->nextPage = currentPage;
         p->free = Step;
         currentPage = p;

@@ -952,7 +952,7 @@ ListElement::ListElement()
     m_objectCache = 0;
     uid = uidCounter.fetchAndAddOrdered(1);
     next = 0;
-    qMemSet(data, 0, sizeof(data));
+    memset(data, 0, sizeof(data));
 }
 
 ListElement::ListElement(int existingUid)
@@ -960,7 +960,7 @@ ListElement::ListElement(int existingUid)
     m_objectCache = 0;
     uid = existingUid;
     next = 0;
-    qMemSet(data, 0, sizeof(data));
+    memset(data, 0, sizeof(data));
 }
 
 ListElement::~ListElement()

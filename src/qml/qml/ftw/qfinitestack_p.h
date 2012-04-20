@@ -160,7 +160,7 @@ void QFiniteStack<T>::allocate(int size)
 
     if (!size) return;
 
-    _array = (T *)qMalloc(size * sizeof(T));
+    _array = (T *)malloc(size * sizeof(T));
     _alloc = size;
 }
 
@@ -173,7 +173,7 @@ void QFiniteStack<T>::deallocate()
             (--i)->~T();
     }
 
-    qFree(_array);
+    free(_array);
 
     _array = 0;
     _alloc = 0;

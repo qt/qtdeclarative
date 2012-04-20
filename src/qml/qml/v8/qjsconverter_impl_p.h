@@ -106,7 +106,7 @@ QString QJSConverter::toString(double value)
     int resultLen = endresult - result;
     if (decpt <= 0 && decpt > -6) {
         buf.resize(-decpt + 2 + sign);
-        qMemSet(buf.data(), '0', -decpt + 2 + sign);
+        memset(buf.data(), '0', -decpt + 2 + sign);
         if (sign) // fix the sign.
             buf[0] = '-';
         buf[sign + 1] = '.';
