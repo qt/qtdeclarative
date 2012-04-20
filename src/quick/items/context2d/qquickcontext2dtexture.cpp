@@ -520,7 +520,7 @@ QImage QQuickContext2DFBOTexture::toImage(const QRectF& region)
 void QQuickContext2DFBOTexture::compositeTile(QQuickContext2DTile* tile)
 {
     QQuickContext2DFBOTile* t = static_cast<QQuickContext2DFBOTile*>(tile);
-    QRect target = t->rect().intersect(m_canvasWindow);
+    QRect target = t->rect().intersected(m_canvasWindow);
     if (target.isValid()) {
         QRect source = target;
 
@@ -730,7 +730,7 @@ void QQuickContext2DImageTexture::compositeTile(QQuickContext2DTile* tile)
 {
     Q_ASSERT(!tile->dirty());
     QQuickContext2DImageTile* t = static_cast<QQuickContext2DImageTile*>(tile);
-    QRect target = t->rect().intersect(m_canvasWindow);
+    QRect target = t->rect().intersected(m_canvasWindow);
     if (target.isValid()) {
         QRect source = target;
         source.moveTo(source.topLeft() - t->rect().topLeft());

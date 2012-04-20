@@ -439,7 +439,7 @@ void QQmlEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
 QVariantList QQmlEasingValueType::bezierCurve() const
 {
     QVariantList rv;
-    QList<QPointF> points = v.cubicBezierSpline();
+    QVector<QPointF> points = v.toCubicSpline();
     for (int ii = 0; ii < points.count(); ++ii)
         rv << QVariant(points.at(ii).x()) << QVariant(points.at(ii).y());
     return rv;

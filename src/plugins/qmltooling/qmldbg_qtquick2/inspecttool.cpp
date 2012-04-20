@@ -120,16 +120,16 @@ void InspectTool::leaveEvent(QEvent *)
 
 void InspectTool::mousePressEvent(QMouseEvent *event)
 {
-    m_mousePosition = event->posF();
+    m_mousePosition = event->localPos();
     if (event->button() == Qt::LeftButton) {
         m_pressAndHoldTimer.start();
-        initializeDrag(event->posF());
+        initializeDrag(event->localPos());
     }
 }
 
 void InspectTool::mouseReleaseEvent(QMouseEvent *event)
 {
-    m_mousePosition = event->posF();
+    m_mousePosition = event->localPos();
     m_pressAndHoldTimer.stop();
     if (event->button() == Qt::LeftButton && !m_dragStarted) {
         selectItem();
@@ -139,7 +139,7 @@ void InspectTool::mouseReleaseEvent(QMouseEvent *event)
 
 void InspectTool::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    m_mousePosition = event->posF();
+    m_mousePosition = event->localPos();
     m_pressAndHoldTimer.stop();
     if (event->button() == Qt::LeftButton) {
         selectNextItem();
@@ -149,13 +149,13 @@ void InspectTool::mouseDoubleClickEvent(QMouseEvent *event)
 
 void InspectTool::mouseMoveEvent(QMouseEvent *event)
 {
-    m_mousePosition = event->posF();
+    m_mousePosition = event->localPos();
     moveItem(event->buttons() & Qt::LeftButton);
 }
 
 void InspectTool::hoverMoveEvent(QMouseEvent *event)
 {
-    m_mousePosition = event->posF();
+    m_mousePosition = event->localPos();
     m_pressAndHoldTimer.stop();
     QQuickItem *item = inspector()->topVisibleItemAt(event->pos());
     if (!item || item == m_lastClickedItem) {

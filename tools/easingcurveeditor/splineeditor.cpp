@@ -659,7 +659,7 @@ void SplineEditor::setEasingCurve(const QEasingCurve &easingCurve)
         return;
     m_block = true;
     m_easingCurve = easingCurve;
-    m_controlPoints = m_easingCurve.cubicBezierSpline().toVector();
+    m_controlPoints = m_easingCurve.toCubicSpline();
     m_numberOfSegments = m_controlPoints.count() / 3;
     update();
     emit easingCurveChanged();
