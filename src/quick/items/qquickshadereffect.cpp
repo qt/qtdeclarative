@@ -222,7 +222,7 @@ void QQuickShaderEffectCommon::disconnectPropertySignals(QQuickItem *item, Key::
         QObject::disconnect(item, 0, mapper, SLOT(map()));
         QObject::disconnect(mapper, SIGNAL(mapped(int)), item, SLOT(propertyChanged(int)));
         if (d.specialType == UniformData::Sampler) {
-            QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+            QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
             if (source) {
                 if (item->canvas())
                     QQuickItemPrivate::get(source)->derefCanvas();
@@ -256,7 +256,7 @@ void QQuickShaderEffectCommon::connectPropertySignals(QQuickItem *item, Key::Sha
         }
 
         if (d.specialType == UniformData::Sampler) {
-            QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+            QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
             if (source) {
                 if (item->canvas())
                     QQuickItemPrivate::get(source)->refCanvas(item->canvas());
@@ -422,7 +422,7 @@ void QQuickShaderEffectCommon::updateMaterial(QQuickShaderEffectNode *node,
                 Q_ASSERT(material->textureProviders.at(index).first == d.name);
                 QSGTextureProvider *oldProvider = material->textureProviders.at(index).second;
                 QSGTextureProvider *newProvider = 0;
-                QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+                QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                 if (source && source->isTextureProvider())
                     newProvider = source->textureProvider();
                 if (newProvider != oldProvider) {
@@ -458,7 +458,7 @@ void QQuickShaderEffectCommon::updateCanvas(QQuickCanvas *canvas)
             for (int i = 0; i < uniformData[shaderType].size(); ++i) {
                 const UniformData &d = uniformData[shaderType].at(i);
                 if (d.specialType == UniformData::Sampler) {
-                    QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+                    QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                     if (source)
                         QQuickItemPrivate::get(source)->refCanvas(canvas);
                 }
@@ -469,7 +469,7 @@ void QQuickShaderEffectCommon::updateCanvas(QQuickCanvas *canvas)
             for (int i = 0; i < uniformData[shaderType].size(); ++i) {
                 const UniformData &d = uniformData[shaderType].at(i);
                 if (d.specialType == UniformData::Sampler) {
-                    QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+                    QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                     if (source)
                         QQuickItemPrivate::get(source)->derefCanvas();
                 }
@@ -483,8 +483,8 @@ void QQuickShaderEffectCommon::sourceDestroyed(QObject *object)
     for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
         for (int i = 0; i < uniformData[shaderType].size(); ++i) {
             UniformData &d = uniformData[shaderType][i];
-            if (d.specialType == UniformData::Sampler && qVariantCanConvert<QObject *>(d.value)) {
-                if (qVariantValue<QObject *>(d.value) == object)
+            if (d.specialType == UniformData::Sampler && d.value.canConvert<QObject *>()) {
+                if (qvariant_cast<QObject *>(d.value) == object)
                     d.value = QVariant();
             }
         }
@@ -499,7 +499,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     int index = mappedId & 0xffff;
     UniformData &d = uniformData[shaderType][index];
     if (d.specialType == UniformData::Sampler) {
-        QQuickItem *source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+        QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
         if (source) {
             if (item->canvas())
                 QQuickItemPrivate::get(source)->derefCanvas();
@@ -508,7 +508,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
 
         d.value = item->property(d.name.constData());
 
-        source = qobject_cast<QQuickItem *>(qVariantValue<QObject *>(d.value));
+        source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
         if (source) {
             // 'source' needs a canvas to get a scene graph node. It usually gets one through its
             // parent, but if the source item is "inline" rather than a reference -- i.e.
@@ -740,7 +740,7 @@ QVariant QQuickShaderEffect::mesh() const
 
 void QQuickShaderEffect::setMesh(const QVariant &mesh)
 {
-    QQuickShaderEffectMesh *newMesh = qobject_cast<QQuickShaderEffectMesh *>(qVariantValue<QObject *>(mesh));
+    QQuickShaderEffectMesh *newMesh = qobject_cast<QQuickShaderEffectMesh *>(qvariant_cast<QObject *>(mesh));
     if (newMesh && newMesh == m_mesh)
         return;
     if (m_mesh)
@@ -749,7 +749,7 @@ void QQuickShaderEffect::setMesh(const QVariant &mesh)
     if (m_mesh) {
         connect(m_mesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
     } else {
-        if (qVariantCanConvert<QSize>(mesh)) {
+        if (mesh.canConvert<QSize>()) {
             m_meshResolution = mesh.toSize();
         } else {
             QList<QByteArray> res = mesh.toByteArray().split('x');
