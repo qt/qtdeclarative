@@ -9,4 +9,4 @@ importFiles.files = borderimage  buttonclick  createbenchmark  events  qqmlbindi
 importFiles.path = .
 DEPLOYMENT += importFiles
 
-CONFIG+=insignificant_test # QTBUG-25306
+mac:CONFIG+=insignificant_test # QTBUG-25306
