@@ -144,7 +144,6 @@ public:
 
     bool maximumLineCountValid:1;
     bool updateOnComponentComplete:1;
-    bool updateLayoutOnPolish:1;
     bool richText:1;
     bool styledText:1;
     bool singleline:1;

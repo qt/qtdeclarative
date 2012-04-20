@@ -2169,10 +2169,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 void QQuickText::updatePolish()
 {
     Q_D(QQuickText);
-    if (d->updateLayoutOnPolish)
-        d->updateLayout();
-    else
-        d->updateSize();
+    d->updateSize();
 }
 
 /*!
