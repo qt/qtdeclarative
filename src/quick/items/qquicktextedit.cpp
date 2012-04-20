@@ -1144,7 +1144,7 @@ void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
     Q_D(QQuickTextEdit);
-    if (newGeometry.width() != oldGeometry.width() && d->wrapMode != NoWrap && widthValid() && !d->inLayout) {
+    if (newGeometry.width() != oldGeometry.width() && widthValid() && !d->inLayout) {
         updateSize();
         moveCursorDelegate();
     }

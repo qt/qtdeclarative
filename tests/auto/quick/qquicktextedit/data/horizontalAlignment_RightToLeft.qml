@@ -8,6 +8,7 @@ Rectangle {
     property string text: "اختبا"
 
     Rectangle {
+        id: arabicContainer
         anchors.centerIn: parent
         width: 200
         height: 20
@@ -19,6 +20,21 @@ Rectangle {
             anchors.fill: parent
             text: top.text
             focus: true
+            textFormat: TextEdit.AutoText
+        }
+    }
+
+    Rectangle {
+        anchors.top: arabicContainer.bottom
+        anchors.left: arabicContainer.left
+        width: 200
+        height: 20
+        color: "green"
+
+        TextEdit {
+            id: emptyTextEdit
+            objectName: "emptyTextEdit"
+            anchors.fill: parent
             textFormat: TextEdit.AutoText
         }
     }

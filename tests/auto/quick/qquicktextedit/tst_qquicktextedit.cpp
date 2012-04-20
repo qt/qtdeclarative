@@ -772,6 +772,14 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     textEdit->setHAlign(QQuickTextEdit::AlignRight);
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
     QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
+
+    // make sure editor doesn't rely on input for updating size
+    QQuickTextEdit *emptyEdit = canvas.rootObject()->findChild<QQuickTextEdit*>("emptyTextEdit");
+    QVERIFY(emptyEdit != 0);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    emptyEdit->setFocus(true);
+    QCOMPARE(emptyEdit->hAlign(), QQuickTextEdit::AlignRight);
+    QVERIFY(emptyEdit->cursorRectangle().left() > canvas.width()/2);
 }
 
 void tst_qquicktextedit::vAlign()

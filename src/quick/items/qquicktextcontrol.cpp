@@ -1206,18 +1206,14 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
         }
     }
 
-    if (interactionFlags & Qt::TextEditable) {
+    if (cursor.position() != oldCursorPos) {
         q->updateCursorRectangle(true);
-        if (cursor.position() != oldCursorPos)
-            emit q->cursorPositionChanged();
-        _q_updateCurrentCharFormatAndSelection();
-    } else {
-        if (cursor.position() != oldCursorPos) {
-            emit q->cursorPositionChanged();
-            q->updateCursorRectangle(true);
-        }
-        selectionChanged();
+        emit q->cursorPositionChanged();
     }
+    if (interactionFlags & Qt::TextEditable)
+        _q_updateCurrentCharFormatAndSelection();
+    else
+        selectionChanged();
     repaintOldAndNewSelection(oldSelection);
     hadSelectionOnMousePress = cursor.hasSelection();
 }
