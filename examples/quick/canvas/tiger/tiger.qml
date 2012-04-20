@@ -92,26 +92,27 @@ Item {
             ctx.strokeStyle = Qt.rgba(.3, .3, .3,1);
             ctx.lineWidth = 1;
 
-
+            //! [0]
             for (var i = 0; i < canvas.frame && i < Tiger.tiger.length; i++) {
-            if (Tiger.tiger[i].width != undefined)
-            ctx.lineWidth = Tiger.tiger[i].width;
+                if (Tiger.tiger[i].width != undefined)
+                    ctx.lineWidth = Tiger.tiger[i].width;
 
-            if (Tiger.tiger[i].path != undefined)
-            ctx.path = Tiger.tiger[i].path;
+                if (Tiger.tiger[i].path != undefined)
+                    ctx.path = Tiger.tiger[i].path;
 
-            if (Tiger.tiger[i].fill != undefined) {
-            ctx.fillStyle = Tiger.tiger[i].fill;
-            ctx.fill();
+                if (Tiger.tiger[i].fill != undefined) {
+                    ctx.fillStyle = Tiger.tiger[i].fill;
+                    ctx.fill();
+                }
+
+                if (Tiger.tiger[i].stroke != undefined) {
+                    ctx.strokeStyle = Tiger.tiger[i].stroke;
+                    ctx.stroke();
+                }
             }
-
-            if (Tiger.tiger[i].stroke != undefined) {
-            ctx.strokeStyle = Tiger.tiger[i].stroke;
-            ctx.stroke();
-            }
-        }
+            //! [0]
             ctx.restore();
-    }
+        }
     }
     Rectangle {
         id:controls

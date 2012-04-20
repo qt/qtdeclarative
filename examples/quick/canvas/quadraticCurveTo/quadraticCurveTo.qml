@@ -88,6 +88,7 @@ Item {
           ctx.lineWidth = canvas.lineWidth;
           ctx.scale(canvas.scaleX, canvas.scaleY);
           ctx.rotate(canvas.rotate);
+          // ![0]
           ctx.beginPath();
           ctx.moveTo(75,25);
           ctx.quadraticCurveTo(25,25,25,62.5);
@@ -97,16 +98,19 @@ Item {
           ctx.quadraticCurveTo(125,100,125,62.5);
           ctx.quadraticCurveTo(125,25,75,25);
           ctx.closePath();
+          // ![0]
           if (canvas.fill)
              ctx.fill();
           if (canvas.stroke)
              ctx.stroke();
 
 
+          // ![1]
           ctx.fillStyle="green";
           ctx.font = "Bold 15px";
 
           ctx.fillText("QML酷毙了", 30, 60);
+          // ![1]
           ctx.restore();
       }
     }

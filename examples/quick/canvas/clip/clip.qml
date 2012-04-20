@@ -126,9 +126,11 @@ Item {
       if (canvas.fill) {
           ctx.fill();
       }
+      //! [0]
       ctx.clip();
 
       ctx.drawImage(canvas.imagefile, 0, 0);
+      //! [0]
       ctx.restore();
     }
   }

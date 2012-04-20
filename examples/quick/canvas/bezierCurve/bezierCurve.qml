@@ -90,6 +90,7 @@ Item {
       ctx.lineWidth = canvas.lineWidth;
       ctx.scale(canvas.scaleX, canvas.scaleY);
       ctx.rotate(canvas.rotate);
+      //! [0]
       ctx.beginPath();
       ctx.moveTo(75,40);
       ctx.bezierCurveTo(75,37,70,25,50,25);
@@ -99,6 +100,7 @@ Item {
       ctx.bezierCurveTo(130,62.5,130,25,100,25);
       ctx.bezierCurveTo(85,25,75,37,75,40);
       ctx.closePath();
+      //! [0]
       if (canvas.fill)
          ctx.fill();
       if (canvas.stroke)
