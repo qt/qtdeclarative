@@ -96,6 +96,7 @@ public:
     void stop();
 
 private slots:
+    void timeout();
     void processAppOutput();
 
 private:

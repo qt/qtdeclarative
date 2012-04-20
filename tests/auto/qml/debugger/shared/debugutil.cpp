@@ -65,7 +65,7 @@ QByteArray QQmlDebugTestClient::waitForResponse()
     lastMsg.clear();
     QQmlDebugTest::waitForSignal(this, SIGNAL(serverMessage(QByteArray)));
     if (lastMsg.isEmpty()) {
-        qWarning() << "tst_QQmlDebugTestClient: no response from server!";
+        qWarning() << "no response from server!";
         return QByteArray();
     }
     return lastMsg;
@@ -91,7 +91,7 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable)
     m_timer.setSingleShot(true);
     m_timer.setInterval(5000);
     connect(&m_process, SIGNAL(readyReadStandardOutput()), this, SLOT(processAppOutput()));
-    connect(&m_timer, SIGNAL(timeout()), &m_eventLoop, SLOT(quit()));
+    connect(&m_timer, SIGNAL(timeout()), SLOT(timeout()));
 }
 
 QQmlDebugProcess::~QQmlDebugProcess()
@@ -115,6 +115,13 @@ void QQmlDebugProcess::stop()
         m_process.kill();
         m_process.waitForFinished(5000);
     }
+}
+
+void QQmlDebugProcess::timeout()
+{
+    qWarning() << "Timeout while waiting for QML debugging messages "
+                  "in application output";
+    m_eventLoop.quit();
 }
 
 bool QQmlDebugProcess::waitForSessionStart()
@@ -153,11 +160,14 @@ void QQmlDebugProcess::processAppOutput()
         const QString line = m_outputBuffer.left(nlIndex);
         m_outputBuffer = m_outputBuffer.right(m_outputBuffer.size() - nlIndex - 1);
 
-        if (line.startsWith("QML debugging is enabled")) // ignore
-            continue;
         if (line.startsWith("QML Debugger:")) {
             if (line.contains("Waiting for connection ")) {
                 m_started = true;
+                m_eventLoop.quit();
+                continue;
+            }
+            if (line.contains("Unable to listen")) {
+                qWarning() << "App was unable to bind to port!";
                 m_eventLoop.quit();
                 continue;
             }

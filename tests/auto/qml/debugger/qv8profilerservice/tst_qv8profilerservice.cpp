@@ -142,7 +142,7 @@ private:
     QQmlDebugConnection *m_connection;
     QV8ProfilerClient *m_client;
 
-    void connect(bool block, const QString &testFile);
+    bool connect(bool block, const QString &testFile, QString *error);
 
 private slots:
     void cleanup();
@@ -201,7 +201,8 @@ void QV8ProfilerClient::messageReceived(const QByteArray &message)
     QVERIFY(stream.atEnd());
 }
 
-void tst_QV8ProfilerService::connect(bool block, const QString &testFile)
+bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
+                                     QString *error)
 {
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
     QStringList arguments;
@@ -213,19 +214,22 @@ void tst_QV8ProfilerService::connect(bool block, const QString &testFile)
 
     arguments << QQmlDataTest::instance()->testFile(testFile);
 
-    m_process = new QQmlDebugProcess(executable);
-    m_process->start(QStringList() << arguments);
-    if (!m_process->waitForSessionStart()) {
-        QString failMsg = QString("Could not launch app '%1'.").arg(executable);
-        QFAIL(qPrintable(failMsg));
-    }
-
     m_connection = new QQmlDebugConnection();
     m_client = new QV8ProfilerClient(m_connection);
 
+    m_process = new QQmlDebugProcess(executable);
+    m_process->start(QStringList() << arguments);
+    if (!m_process->waitForSessionStart()) {
+        *error = QLatin1String("Could not launch app ") + executable;
+        return false;
+    }
+
     m_connection->connectToHost(QLatin1String("127.0.0.1"), PORT);
-    if (!m_connection->waitForConnected())
-        QFAIL("Could not connect to debugger port.");
+    if (!m_connection->waitForConnected()) {
+        *error = QLatin1String("Could not connect to debugger port.");
+        return false;
+    }
+    return true;
 }
 
 void tst_QV8ProfilerService::cleanup()
@@ -233,13 +237,17 @@ void tst_QV8ProfilerService::cleanup()
     if (QTest::currentTestFailed())
         qDebug() << "Application Output:" << m_process->output();
 
+    delete m_client;
     delete m_process;
     delete m_connection;
 }
 
 void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
 {
-    connect(true, "test.qml");
+    QString error;
+    if (!connect(true, "test.qml", &error))
+        QFAIL(qPrintable(error));
+
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->startProfiling("");
@@ -250,7 +258,10 @@ void tst_QV8ProfilerService::blockingConnectWithTraceEnabled()
 
 void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
 {
-    connect(true, "test.qml");
+    QString error;
+    if (!connect(true, "test.qml", &error))
+        QFAIL(qPrintable(error));
+
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->stopProfiling("");
@@ -267,7 +278,10 @@ void tst_QV8ProfilerService::blockingConnectWithTraceDisabled()
 
 void tst_QV8ProfilerService::nonBlockingConnect()
 {
-    connect(false, "test.qml");
+    QString error;
+    if (!connect(false, "test.qml", &error))
+        QFAIL(qPrintable(error));
+
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->startProfiling("");
@@ -278,7 +292,10 @@ void tst_QV8ProfilerService::nonBlockingConnect()
 
 void tst_QV8ProfilerService::snapshot()
 {
-    connect(false, "test.qml");
+    QString error;
+    if (!connect(false, "test.qml", &error))
+        QFAIL(qPrintable(error));
+
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->takeSnapshot();
@@ -288,7 +305,10 @@ void tst_QV8ProfilerService::snapshot()
 
 void tst_QV8ProfilerService::profileOnExit()
 {
-    connect(true, "exit.qml");
+    QString error;
+    if (!connect(true, "exit.qml", &error))
+        QFAIL(qPrintable(error));
+
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->startProfiling("");
@@ -299,7 +319,10 @@ void tst_QV8ProfilerService::profileOnExit()
 
 void tst_QV8ProfilerService::console()
 {
-    connect(true, "console.qml");
+    QString error;
+    if (!connect(true, "console.qml", &error))
+        QFAIL(qPrintable(error));
+
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->stopProfiling("");
