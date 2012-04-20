@@ -63,9 +63,6 @@ static bool greaterThan(const QString &s1, const QString &s2)
 
 QString resolveLocalUrl(const QString &url, const QString &relative)
 {
-    return QUrl(url).resolved(QUrl(relative)).toString();
-
-    //XXX Find out why this broke with new QUrl.
     if (relative.contains(QLatin1Char(':'))) {
         // contains a host name
         return QUrl(url).resolved(QUrl(relative)).toString();
@@ -74,11 +71,41 @@ QString resolveLocalUrl(const QString &url, const QString &relative)
     } else if (relative.at(0) == QLatin1Char('/') || !url.contains(QLatin1Char('/'))) {
         return relative;
     } else {
+        QString base(url.left(url.lastIndexOf(QLatin1Char('/')) + 1));
+
         if (relative == QLatin1String("."))
-            return url.left(url.lastIndexOf(QLatin1Char('/')) + 1);
-        else if (relative.startsWith(QLatin1String("./")))
-            return url.left(url.lastIndexOf(QLatin1Char('/')) + 1) + relative.mid(2);
-        return url.left(url.lastIndexOf(QLatin1Char('/')) + 1) + relative;
+            return base;
+
+        base.append(relative);
+
+        // Remove any relative directory elements in the path
+        const QLatin1Char dot('.');
+        const QLatin1Char slash('/');
+
+        int length = base.length();
+        int index = 0;
+        while ((index = base.indexOf(QLatin1String("/."), index)) != -1) {
+            if ((length > (index + 2)) && (base.at(index + 2) == dot) &&
+                (length == (index + 3) || (base.at(index + 3) == slash))) {
+                // Either "/../" or "/..<END>"
+                int previous = base.lastIndexOf(slash, index - 1);
+                if (previous == -1)
+                    break;
+
+                int removeLength = (index - previous) + 3;
+                base.remove(previous + 1, removeLength);
+                length -= removeLength;
+                index = previous;
+            } else if ((length == (index + 2)) || (base.at(index + 2) == slash)) {
+                // Either "/./" or "/.<END>"
+                base.remove(index, 2);
+                length -= 2;
+            } else {
+                ++index;
+            }
+        }
+
+        return base;
     }
 }
 

@@ -323,10 +323,9 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         // load components via import
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.qml"));
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != 0);
         QVERIFY(object->property("success").toBool());
-        delete object;
     }
 
     {
@@ -334,20 +333,36 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         // import of the other if it were not already loaded.
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.2.qml"));
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != 0);
         QVERIFY(object->property("success").toBool());
-        delete object;
     }
 
     {
         // load components with more deeply nested imports
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.3.qml"));
-        QObject *object = component.create();
+        QScopedPointer<QObject> object(component.create());
         QVERIFY(object != 0);
         QVERIFY(object->property("success").toBool());
-        delete object;
+    }
+
+    {
+        // load components with unusually specified import paths
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.4.qml"));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != 0);
+        QVERIFY(object->property("success").toBool());
+    }
+
+    {
+        // Do not crash with various nonsense import paths
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.5.qml"));
+        QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component is not ready").data());
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object == 0);
     }
 }
 
