@@ -174,6 +174,7 @@ private:
 class QQuickVisualDataGroupEmitter
 {
 public:
+    virtual ~QQuickVisualDataGroupEmitter() {}
     virtual void emitModelUpdated(const QQuickChangeSet &changeSet, bool reset) = 0;
     virtual void createdPackage(int, QQuickPackage *) {}
     virtual void initPackage(int, QQuickPackage *) {}
