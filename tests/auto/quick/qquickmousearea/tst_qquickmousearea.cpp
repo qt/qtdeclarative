@@ -48,6 +48,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
 #include "../../shared/util.h"
+#include <QtGui/qstylehints.h>
 
 //#define OLDWAY
 
@@ -626,7 +627,9 @@ void tst_QQuickMouseArea::clickThrough()
     QTRY_COMPARE(canvas->rootObject()->property("presses").toInt(), 0);
     QTRY_COMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
 
-    QTest::qWait(800); // to avoid generating a double click.
+    // to avoid generating a double click.
+    int doubleClickInterval = qApp->styleHints()->mouseDoubleClickInterval() + 10;
+    QTest::qWait(doubleClickInterval);
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(1000);
@@ -659,7 +662,7 @@ void tst_QQuickMouseArea::clickThrough()
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
     QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 0);
 
-    QTest::qWait(800); // to avoid generating a double click.
+    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(1000);
@@ -680,14 +683,14 @@ void tst_QQuickMouseArea::clickThrough()
 
     canvas->rootObject()->setProperty("letThrough", QVariant(true));
 
-    QTest::qWait(800); // to avoid generating a double click.
+    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
     QTRY_COMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
 
-    QTest::qWait(800); // to avoid generating a double click.
+    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(1000);
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
@@ -707,11 +710,11 @@ void tst_QQuickMouseArea::clickThrough()
 
     canvas->rootObject()->setProperty("noPropagation", QVariant(true));
 
-    QTest::qWait(800); // to avoid generating a double click.
+    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
 
-    QTest::qWait(800); // to avoid generating a double click.
+    QTest::qWait(doubleClickInterval); // to avoid generating a double click.
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(1000);
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
