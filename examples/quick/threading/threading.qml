@@ -48,8 +48,20 @@ import "../../shared" as Examples
     \image qml-threading-example.png
 
     Threaded ListModel contains a ListView and a ListModel. The ListModel is updated asynchronusly in another thread, and the results propagate back to the main thread.
+    A timer requests updates from the worker thread periodically:
+    \snippet examples/threading/threadedlistmodel/timedisplay.qml 0
+
+    Inside the worker thread, the ListModel is synchronized once the data is finished loading:
+    \snippet examples/threading/threadedlistmodel/dataloader.js 0
 
     WorkerScript contains an example of using a WorkerScript to offload expensive calculations into another thread. This keeps the UI from being blocked. This example calculates numbers in Pascal's Triangle, and not in a very optimal way, so it will often take several seconds to complete the calculation. By doing this in a WorkerScript in another thread, the UI is not blocked during this time.
+
+    When the UI needs another value, a request is sent to the WorkerScript:
+    \snippet examples/threading/workerscript/workerscript.qml 0
+    The workerscript then is free to take a really long time to calculate it:
+    \snippet examples/threading/workerscript/workerscript.js 0
+    When it's done, the result returns to the main scene via the WorkerScript element:
+    \snippet examples/threading/workerscript/workerscript.qml 1
 */
 
 Item {

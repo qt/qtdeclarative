@@ -57,6 +57,7 @@ Rectangle {
 
             property real initialWidth
             property real initialHeight
+            //![0]
             onPinchStarted: {
                 initialWidth = flick.contentWidth
                 initialHeight = flick.contentHeight
@@ -75,6 +76,7 @@ Rectangle {
                 // Move its content within bounds.
                 flick.returnToBounds()
             }
+            //![0]
 
             Rectangle {
                 width: flick.contentWidth

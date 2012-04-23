@@ -45,6 +45,7 @@ Rectangle {
     height: 480
     color: "black"
 
+//! [0]
     MultiPointTouchArea {
         anchors.fill: parent
         minimumTouchPoints: 1
@@ -57,13 +58,16 @@ Rectangle {
             TouchPoint { id: touch31 }
         ]
     }
+//! [0]
 
+//! [1]
     ParticleFlame {
         color: "red"
         x: touch1.x
         y: touch1.y
         emitting: touch1.pressed
     }
+//! [1]
     ParticleFlame {
         color: "green"
         x: touch2.x

@@ -47,6 +47,17 @@ import QtQuick 2.0
     \image qml-mousearea-example.png
 
     This example shows you how to respond to clicks and drags with a MouseArea.
+
+    When you click inside the red square, the Text element will list several properties
+    of that click which are available to QML.
+
+    Signals are emitted by the MouseArea when clicks or other discrete operations occur within it
+    \snippet examples/quick/mousearea/mousearea.qml clicks
+
+    The MouseArea can also be used to drag elements around. By setting the parameters of the drag property,
+    the target item will be dragged around if the user starts to drag within the MouseArea.
+    \snippet examples/quick/mousearea/mousearea.qml drag
+
 */
 
 Rectangle {
@@ -141,9 +152,11 @@ Rectangle {
                 posInfo.text = ''
             }
 
+            //! [clicks]
             onPressAndHold: btn.text = 'Press and hold'
             onClicked: btn.text = 'Clicked (wasHeld=' + mouse.wasHeld + ')'
             onDoubleClicked: btn.text = 'Double clicked'
+            //! [clicks]
         }
     }
 
@@ -157,12 +170,14 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
+            //! [drag]
             drag.target: blueSquare
             drag.axis: Drag.XandYAxis
             drag.minimumX: 0
             drag.maximumX: box.width - parent.width
             drag.minimumY: 0
             drag.maximumY: box.height - parent.width
+            //! [drag]
         }
     }
 

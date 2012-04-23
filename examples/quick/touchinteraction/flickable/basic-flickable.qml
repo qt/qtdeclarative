@@ -40,6 +40,7 @@
 
 import QtQuick 2.0
 
+    //![0]
 Rectangle {
     width: 320
     height: 480
@@ -50,6 +51,7 @@ Rectangle {
         Rectangle {
             width: 1000
             height: 1000
+    //![0]
             x: 100
             y: 100
             radius: 128

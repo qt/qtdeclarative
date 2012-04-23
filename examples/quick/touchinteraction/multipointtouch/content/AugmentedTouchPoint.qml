@@ -40,6 +40,7 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
+//! [0]
 TouchPoint {
     id: container
     property ParticleSystem system
@@ -68,3 +69,4 @@ TouchPoint {
         goalState: "falling"
     }
 }
+//! [0]

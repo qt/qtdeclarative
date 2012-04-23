@@ -38,7 +38,6 @@
 **
 ****************************************************************************/
 
-// ![0]
 import QtQuick 2.0
 
 Rectangle {
@@ -60,6 +59,7 @@ Rectangle {
             source: "dataloader.js"
         }
 
+// ![0]
         Timer {
             id: timer
             interval: 2000; repeat: true
@@ -71,6 +71,6 @@ Rectangle {
                 worker.sendMessage(msg);
             }
         }
+// ![0]
     }
 }
-// ![0]

@@ -43,6 +43,7 @@ import QtQuick 2.0
 Rectangle {
     width: 320; height: 480
 
+//! [1]
     WorkerScript {
         id: myWorker
         source: "workerscript.js"
@@ -56,10 +57,12 @@ Rectangle {
             }
         }
     }
+//! [1]
     Row {
         y: 24
         spacing: 24
         anchors.horizontalCenter: parent.horizontalCenter
+//! [0]
         Spinner {
             id: rowSpinner
             label: "Row"
@@ -68,6 +71,7 @@ Rectangle {
                 myWorker.sendMessage( { row: rowSpinner.value, column: columnSpinner.value } );
             }
         }
+//! [0]
 
         Spinner {
             id: columnSpinner

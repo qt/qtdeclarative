@@ -49,15 +49,26 @@ import "../../shared"
 
     This is a collection of small QML examples relating to touch interaction methods.
 
-    Multipoint Flames demonstrates distinguishing different fingers in a MultiPointTouchArea, by assignning a different colored flame to each touch point.
+    Multipoint Flames demonstrates distinguishing different fingers in a MultiPointTouchArea, by assigning a different colored flame to each touch point.
+    The MultipointTouchArea sets up multiple touch points:
+    \snippet examples/quick/touchinteraction/multipointtouch/multiflame.qml 0
+    The flames are then simply bound to the coordiates of the touch point, and whether it is currently pressed, like so:
+    \snippet examples/quick/touchinteraction/multipointtouch/multiflame.qml 1
 
-    Bear-Whack demonstrates using a MultiPointTouchArea to add multiple finger support to a simple game.
+    Bear-Whack demonstrates using a MultiPointTouchArea to add multiple finger support to a simple game. The interaction with the game
+    is done through a SpriteGoal that follows the TouchPoint. The TouchPoints added to the MultiPointTouchArea are a component with all
+    this logic embedded into it:
+    \snippet examples/quick/touchinteraction/multipointtouch/bearwhack/content/AugmentedTouchPoint.qml 0
 
-    Flick Resize uses a PinchArea to allow Pinch-to-Resize behavior.
+    Flick Resize uses a PinchArea to allow Pinch-to-Resize behavior. This is easily achieved just by listening to the PinchArea signals and responding
+    to user input.
+    \snippet examples/quick/touchinteraction/pincharea/flickresize.qml 0
 
-    Flickable is a simple example demonstrating the Flickable element.
+    Flickable is a simple example demonstrating the Flickable element. The element inside the flickable is very big, but the flickable itself is very small:
+    \snippet examples/quick/touchinteraction/flickable/basic-flickable.qml 0
 
     Corkboards shows a more complex Flickable usecase, with elements on the flickable that respond to mouse and keyboard interaction.
+    This doesn't require special code, the QtQuick elements automatically cooperate with Flickable for accepting the touch events.
 */
 
 Item {

@@ -12,7 +12,7 @@ function triangle(row, column) {
         return 1;
     return triangle(row-1, column-1) + triangle(row-1, column);
 }
-
+//! [0]
 WorkerScript.onMessage = function(message) {
     //Calculate result (may take a while, using a naive algorithm)
     var calculatedResult = triangle(message.row, message.column);
@@ -21,4 +21,4 @@ WorkerScript.onMessage = function(message) {
                                 column: message.column,
                                 result: calculatedResult} );
 }
-
+//! [0]
