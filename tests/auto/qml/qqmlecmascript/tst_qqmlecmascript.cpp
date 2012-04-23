@@ -73,6 +73,8 @@ private slots:
     void assignBasicTypes();
     void assignDate_data();
     void assignDate();
+    void exportDate_data();
+    void exportDate();
     void idShortcutInvalidates();
     void boolPropertiesEvaluateAsBool();
     void methods();
@@ -359,6 +361,62 @@ void tst_qqmlecmascript::assignDate()
     QCOMPARE(object->dateProperty(), expectedDate);
     QCOMPARE(object->dateTimeProperty(), expectedDateTime);
     QCOMPARE(object->dateTimeProperty2(), expectedDateTime2);
+    QCOMPARE(object->boolProperty(), true);
+}
+
+void tst_qqmlecmascript::exportDate_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::addColumn<QDateTime>("datetime");
+
+    // Verify that we can export datetime information to QML and that consumers can access
+    // the data correctly provided they know the TZ info associated with the value
+
+    const QDate date(2009, 5, 12);
+    const QTime early(0, 0, 1);
+    const QTime late(23, 59, 59);
+    const int offset(((11 * 60) + 30) * 60);
+
+    QTest::newRow("Localtime early") << testFileUrl("exportDate.qml") << QDateTime(date, early, Qt::LocalTime);
+    QTest::newRow("Localtime late") << testFileUrl("exportDate.2.qml") << QDateTime(date, late, Qt::LocalTime);
+    QTest::newRow("UTC early") << testFileUrl("exportDate.3.qml") << QDateTime(date, early, Qt::UTC);
+    QTest::newRow("UTC late") << testFileUrl("exportDate.4.qml") << QDateTime(date, late, Qt::UTC);
+    {
+        QDateTime dt(date, early, Qt::OffsetFromUTC);
+        dt.setUtcOffset(offset);
+        QTest::newRow("+11:30 early") << testFileUrl("exportDate.5.qml") << dt;
+    }
+    {
+        QDateTime dt(date, late, Qt::OffsetFromUTC);
+        dt.setUtcOffset(offset);
+        QTest::newRow("+11:30 late") << testFileUrl("exportDate.6.qml") << dt;
+    }
+    {
+        QDateTime dt(date, early, Qt::OffsetFromUTC);
+        dt.setUtcOffset(-offset);
+        QTest::newRow("-11:30 early") << testFileUrl("exportDate.7.qml") << dt;
+    }
+    {
+        QDateTime dt(date, late, Qt::OffsetFromUTC);
+        dt.setUtcOffset(-offset);
+        QTest::newRow("-11:30 late") << testFileUrl("exportDate.8.qml") << dt;
+    }
+}
+
+void tst_qqmlecmascript::exportDate()
+{
+    QFETCH(QUrl, source);
+    QFETCH(QDateTime, datetime);
+
+    DateTimeExporter exporter(datetime);
+
+    QQmlEngine e;
+    e.rootContext()->setContextProperty("datetimeExporter", &exporter);
+
+    QQmlComponent component(&e, source);
+    QScopedPointer<QObject> obj(component.create());
+    MyTypeObject *object = qobject_cast<MyTypeObject *>(obj.data());
+    QVERIFY(object != 0);
     QCOMPARE(object->boolProperty(), true);
 }
 

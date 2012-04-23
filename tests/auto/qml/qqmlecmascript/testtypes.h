@@ -1332,6 +1332,43 @@ private:
     MyQmlObject *m_nestedObject;
 };
 
+class DateTimeExporter : public QObject
+{
+    Q_OBJECT
+
+public:
+    DateTimeExporter(const QDateTime &dt) : m_datetime(dt), m_offset(0), m_timespec("UTC")
+    {
+        switch (m_datetime.timeSpec()) {
+        case Qt::LocalTime:
+            {
+            QDateTime utc(m_datetime.toUTC());
+            utc.setTimeSpec(Qt::LocalTime);
+            m_offset = m_datetime.secsTo(utc) / 60;
+            m_timespec = "LocalTime";
+            }
+            break;
+        case Qt::OffsetFromUTC:
+            m_offset = m_datetime.utcOffset() / 60;
+            m_timespec = QString("%1%2:%3").arg(m_offset < 0 ? '-' : '+')
+                                           .arg(abs(m_offset) / 60)
+                                           .arg(abs(m_offset) % 60);
+        default:
+            break;
+        }
+    }
+
+    Q_INVOKABLE QDate getDate() const { return m_datetime.date(); }
+    Q_INVOKABLE QDateTime getDateTime() const { return m_datetime; }
+    Q_INVOKABLE int getDateTimeOffset() const { return m_offset; }
+    Q_INVOKABLE QString getTimeSpec() const { return m_timespec; }
+
+private:
+    QDateTime m_datetime;
+    int m_offset;
+    QString m_timespec;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
