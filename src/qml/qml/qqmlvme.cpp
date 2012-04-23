@@ -513,6 +513,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QQmlData *ddata = QQmlData::get(o);
             Q_ASSERT(ddata);
 
+            if (states.count() == 1)
+                ddata->inCreation = true;
+
             if (instr.isRoot) {
                 if (ddata->context) {
                     Q_ASSERT(ddata->context != CTXT);
@@ -546,6 +549,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QQmlData *ddata = new (memory) QQmlData;
             ddata->ownMemory = false;
             QObjectPrivate::get(o)->declarativeData = ddata;
+
+            if (states.count() == 1)
+                ddata->inCreation = true;
 
             if (type.typePropertyCache && !ddata->propertyCache) {
                 ddata->propertyCache = type.typePropertyCache;

@@ -1153,6 +1153,11 @@ void QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource)
     if (object) {
         QQmlData *ddata = QQmlData::get(object, false);
         if (ddata) {
+            if (ddata->inCreation) {
+                ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
+                return;
+            }
+
             ddata->v8object.Clear();
             if (!object->parent() && !ddata->indestructible) {
                 ddata->isQueuedForDeletion = true;
@@ -1888,7 +1893,7 @@ static v8::Handle<v8::Value> ToString(QV8Engine *engine, QObject *object, int, v
 static v8::Handle<v8::Value> Destroy(QV8Engine *, QObject *object, int argCount, v8::Handle<v8::Object> args)
 {
     QQmlData *ddata = QQmlData::get(object, false);
-    if (!ddata || ddata->indestructible) {
+    if (!ddata || ddata->indestructible || ddata->inCreation) {
         const char *error = "Invalid attempt to destroy() an indestructible object";
         v8::ThrowException(v8::Exception::Error(v8::String::New(error)));
         return v8::Undefined();

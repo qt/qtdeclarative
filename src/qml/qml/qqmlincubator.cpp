@@ -296,6 +296,7 @@ void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
             //see QQmlComponent::beginCreate for explanation of indestructible
             ddata->indestructible = true;
             ddata->explicitIndestructibleSet = true;
+            ddata->inCreation = false;
             q->setInitialState(result);
         }
 

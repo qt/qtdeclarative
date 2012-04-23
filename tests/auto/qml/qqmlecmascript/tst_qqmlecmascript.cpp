@@ -256,7 +256,7 @@ private slots:
     void withStatement();
     void tryStatement();
     void replaceBinding();
-
+    void deleteRootObjectInCreation();
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     QQmlEngine engine;
@@ -6616,6 +6616,19 @@ void tst_qqmlecmascript::replaceBinding()
     QVERIFY(obj != 0);
 
     QVERIFY(obj->property("success").toBool());
+    delete obj;
+}
+
+void tst_qqmlecmascript::deleteRootObjectInCreation()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("deleteRootObjectInCreation.qml"));
+    QObject *obj = c.create();
+    QVERIFY(obj != 0);
+    QVERIFY(obj->property("rootIndestructible").toBool());
+    QVERIFY(!obj->property("childDestructible").toBool());
+    QTest::qWait(1);
+    QVERIFY(obj->property("childDestructible").toBool());
     delete obj;
 }
 
