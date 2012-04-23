@@ -222,8 +222,10 @@ void QQmlAbstractBoundSignal::removeFromObject()
 
 QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
                                QObject *owner)
-: m_expression(0), m_params(0), m_scope(scope), m_index(signal.methodIndex()), m_paramsValid(false), m_isEvaluating(false)
+: m_expression(0), m_params(0), m_scope(scope), m_index(signal.methodIndex())
 {
+    setParamsValid(false);
+    setIsEvaluating(false);
     addToObject(owner);
     callback = &subscriptionCallback;
     QQmlNotifierEndpoint::connect(scope, m_index);
@@ -273,15 +275,15 @@ void QQmlBoundSignal::subscriptionCallback(QQmlNotifierEndpoint *e, void **a)
     if (QQmlDebugService::isDebuggingEnabled())
         QV8DebugService::instance()->signalEmitted(QString::fromAscii(s->m_scope->metaObject()->method(s->m_index).methodSignature()));
 
-    QQmlHandlingSignalProfiler prof(s->m_scope, s->m_index, s->m_expression);
+    QQmlHandlingSignalProfiler prof(*(s->m_scope), s->m_index, s->m_expression);
 
-    s->m_isEvaluating = true;
+    s->setIsEvaluating(true);
 
-    if (!s->m_paramsValid) {
+    if (!s->paramsValid()) {
         QMetaMethod signal = s->m_scope->metaObject()->method(s->m_index);
         if (!signal.parameterTypes().isEmpty())
             s->m_params = new QQmlBoundSignalParameters(signal, s);
-        s->m_paramsValid = true;
+        s->setParamsValid(true);
     }
 
     if (s->m_params) s->m_params->setValues(a);
@@ -292,7 +294,7 @@ void QQmlBoundSignal::subscriptionCallback(QQmlNotifierEndpoint *e, void **a)
     }
     if (s->m_params) s->m_params->clearValues();
 
-    s->m_isEvaluating = false;
+    s->setIsEvaluating(false);
 }
 
 QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method, 

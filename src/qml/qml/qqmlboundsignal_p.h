@@ -58,6 +58,7 @@
 #include <private/qqmlabstractexpression_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qqmlnotifier_p.h>
+#include <private/qflagpointer_p.h>
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -134,19 +135,24 @@ public:
 
     QQmlBoundSignalExpression *expression() const;
     QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *);
-    QObject *scope() { return m_scope; }
+    QObject *scope() { return *m_scope; }
 
     static void subscriptionCallback(QQmlNotifierEndpoint *e, void **);
 
-    bool isEvaluating() const { return m_isEvaluating; }
+    bool isEvaluating() const { return m_scope.flag(); }
 
 private:
     QQmlBoundSignalExpression *m_expression;
     QQmlBoundSignalParameters *m_params;
-    QObject *m_scope;
+    // We store some flag bits in the following flag pointer.
+    //    m_scope:flag1 - m_isEvaluating
+    //    m_scope:flag2 - m_paramsValid
+    QFlagPointer<QObject> m_scope;
     int m_index;
-    bool m_paramsValid : 1;
-    bool m_isEvaluating : 1;
+
+    void setIsEvaluating(bool v) { m_scope.setFlagValue(v); }
+    void setParamsValid(bool v) { m_scope.setFlag2Value(v); }
+    bool paramsValid() const { return m_scope.flag2(); }
 };
 
 
