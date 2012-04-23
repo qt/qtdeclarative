@@ -117,6 +117,8 @@ private slots:
     // void network_errors()
     // void readyState()
 
+    void stateChangeCallingContext();
+
 private:
     QQmlEngine engine;
 };
@@ -165,7 +167,7 @@ void tst_qqmlxmlhttprequest::callbackException()
 
     QFETCH(QString, which);
     QFETCH(int, line);
-    
+
     QString expect = testFileUrl("callbackException.qml").toString() + ":"+QString::number(line)+": Error: Exception from Callback";
     QTest::ignoreMessage(QtWarningMsg, expect.toLatin1());
 
@@ -1152,6 +1154,22 @@ void tst_qqmlxmlhttprequest::cdata()
 
     QCOMPARE(object->property("xmlTest").toBool(), true);
 
+    delete object;
+}
+
+void tst_qqmlxmlhttprequest::stateChangeCallingContext()
+{
+    // ensure that we don't crash by attempting to evaluate
+    // without a valid calling context.
+
+    TestHTTPServer server(SERVER_PORT);
+    QVERIFY(server.isValid());
+    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
+
+    QQmlComponent component(&engine, testFileUrl("stateChangeCallingContext.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QTRY_VERIFY(object->property("success").toBool() == true);
     delete object;
 }
 

@@ -98,6 +98,14 @@ static inline QQmlXMLHttpRequestData *xhrdata(QV8Engine *engine)
     return (QQmlXMLHttpRequestData *)engine->xmlHttpRequestData();
 }
 
+static v8::Local<v8::Object> constructMeObject(v8::Handle<v8::Object> thisObj, QV8Engine *e)
+{
+    v8::Local<v8::Object> meObj = v8::Object::New();
+    meObj->Set(v8::String::New("ThisObject"), thisObj);
+    meObj->Set(v8::String::New("ActivationObject"), e->qmlScope(e->callingContext(), 0));
+    return meObj;
+}
+
 QQmlXMLHttpRequestData::QQmlXMLHttpRequestData()
 {
 }
@@ -1075,7 +1083,9 @@ v8::Handle<v8::Value> QQmlXMLHttpRequest::open(v8::Handle<v8::Object> me, const 
     m_method = method;
     m_url = url;
     m_state = Opened;
+    v8::TryCatch tc;
     dispatchCallback(me);
+    if (tc.HasCaught()) printError(tc.Message());
     return v8::Undefined();
 }
 
@@ -1216,7 +1226,9 @@ v8::Handle<v8::Value> QQmlXMLHttpRequest::abort(v8::Handle<v8::Object> me)
 
         m_state = Done;
         m_sendFlag = false;
+        v8::TryCatch tc;
         dispatchCallback(me);
+        if (tc.HasCaught()) printError(tc.Message());
     }
 
     m_state = Unsent;
@@ -1355,7 +1367,6 @@ void QQmlXMLHttpRequest::finished()
         }
     }
 
-
     m_data.clear();
     destroyNetwork();
     if (m_state < Loading) {
@@ -1451,12 +1462,42 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 // Requires a TryCatch scope
 void QQmlXMLHttpRequest::dispatchCallback(v8::Handle<v8::Object> me)
 {
-    v8::Local<v8::Value> callback = me->Get(v8::String::New("onreadystatechange"));
-    if (callback->IsFunction()) {
-        v8::Local<v8::Function> f = v8::Local<v8::Function>::Cast(callback);
+    v8::HandleScope hs;
+    v8::Context::Scope scope(engine->context());
 
-        f->Call(me, 0, 0);
+    if (me.IsEmpty() || me->IsNull()) {
+        v8::ThrowException(v8::Exception::Error(v8::String::New("Unable to dispatch QQmlXmlHttpRequest callback: invalid object")));
+        return;
     }
+
+    if (me->Get(v8::String::New("ThisObject")).IsEmpty()) {
+        v8::ThrowException(v8::Exception::Error(v8::String::New("QQmlXMLHttpRequest: internal error: empty ThisObject")));
+        return;
+    }
+
+    v8::Local<v8::Object> thisObj = me->Get(v8::String::New("ThisObject"))->ToObject();
+    v8::Local<v8::Value> callback = thisObj->Get(v8::String::New("onreadystatechange"));
+    if (!callback->IsFunction()) {
+        // not an error, but no onreadystatechange function to call.
+        return;
+    }
+
+    if (me->Get(v8::String::New("ActivationObject")).IsEmpty()) {
+        v8::ThrowException(v8::Exception::Error(v8::String::New("QQmlXMLHttpRequest: internal error: empty ActivationObject")));
+        return;
+    }
+
+    v8::Local<v8::Object> activationObject = me->Get(v8::String::New("ActivationObject"))->ToObject();
+    QQmlContextData *callingContext = engine->contextWrapper()->context(activationObject);
+    if (callingContext) {
+        v8::Local<v8::Function> f = v8::Local<v8::Function>::Cast(callback);
+        f->Call(activationObject, 0, 0); // valid activation object.
+    }
+
+    // if the callingContext object is no longer valid, then it has been
+    // deleted explicitly (e.g., by a Loader deleting the itemContext when
+    // the source is changed).  We do nothing in this case, as the evaluation
+    // cannot succeed.
 }
 
 // Must have a handle scope
@@ -1523,7 +1564,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
     if (!username.isNull()) url.setUserName(username);
     if (!password.isNull()) url.setPassword(password);
 
-    return r->open(args.This(), method, url);
+    return r->open(constructMeObject(args.This(), engine), method, url);
 }
 
 static v8::Handle<v8::Value> qmlxmlhttprequest_setRequestHeader(const v8::Arguments &args)
@@ -1589,7 +1630,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_send(const v8::Arguments &args)
     if (args.Length() > 0)
         data = engine->toString(args[0]).toUtf8();
 
-    return r->send(args.This(), data);
+    return r->send(constructMeObject(args.This(), engine), data);
 }
 
 static v8::Handle<v8::Value> qmlxmlhttprequest_abort(const v8::Arguments &args)
@@ -1598,7 +1639,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_abort(const v8::Arguments &args)
     if (!r)
         V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    return r->abort(args.This());
+    return r->abort(constructMeObject(args.This(), r->engine));
 }
 
 static v8::Handle<v8::Value> qmlxmlhttprequest_getResponseHeader(const v8::Arguments &args)
