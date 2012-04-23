@@ -261,4 +261,28 @@ void QQmlDebugService::messageReceived(const QByteArray &)
 {
 }
 
+QQmlDebugStream::QQmlDebugStream()
+    : QDataStream()
+{
+    setVersion(QQmlDebugServer::s_dataStreamVersion);
+}
+
+QQmlDebugStream::QQmlDebugStream(QIODevice *d)
+    : QDataStream(d)
+{
+    setVersion(QQmlDebugServer::s_dataStreamVersion);
+}
+
+QQmlDebugStream::QQmlDebugStream(QByteArray *ba, QIODevice::OpenMode flags)
+    : QDataStream(ba, flags)
+{
+    setVersion(QQmlDebugServer::s_dataStreamVersion);
+}
+
+QQmlDebugStream::QQmlDebugStream(const QByteArray &ba)
+    : QDataStream(ba)
+{
+    setVersion(QQmlDebugServer::s_dataStreamVersion);
+}
+
 QT_END_NAMESPACE

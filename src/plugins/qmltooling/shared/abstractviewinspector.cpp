@@ -268,7 +268,7 @@ bool AbstractViewInspector::touchEvent(QTouchEvent *event)
 void AbstractViewInspector::handleMessage(const QByteArray &message)
 {
     bool success = true;
-    QDataStream ds(message);
+    QQmlDebugStream ds(message);
 
     QByteArray type;
     ds >> type;
@@ -342,7 +342,7 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
     }
 
     QByteArray response;
-    QDataStream rs(&response, QIODevice::WriteOnly);
+    QQmlDebugStream rs(&response, QIODevice::WriteOnly);
     rs << QByteArray(RESPONSE) << requestId << success;
     m_debugService->sendMessage(response);
 }
@@ -350,7 +350,7 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
 void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
 {
     QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
+    QQmlDebugStream ds(&message, QIODevice::WriteOnly);
 
     ds << QByteArray(EVENT) << m_eventId++ << QByteArray(SELECT);
 

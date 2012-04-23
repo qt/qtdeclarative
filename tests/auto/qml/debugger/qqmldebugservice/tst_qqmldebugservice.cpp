@@ -52,8 +52,8 @@
 #include "qqmldebugclient.h"
 #include "qqmldebugtestservice.h"
 
-#define PORT 13769
-#define STR_PORT "13769"
+#define PORT 3769
+#define STR_PORT "3769"
 
 class tst_QQmlDebugService : public QObject
 {
@@ -61,9 +61,10 @@ class tst_QQmlDebugService : public QObject
 private:
     QQmlDebugConnection *m_conn;
 
-private slots:
-    void initTestCase();
 
+private slots:
+
+    void initTestCase();
     void name();
     void version();
     void state();
@@ -71,6 +72,8 @@ private slots:
     void idForObject();
     void objectForId();
     void objectToString();
+    void checkSupportForDataStreamVersion();
+    void checkSupportForOldDataStreamVersion();
 };
 
 void tst_QQmlDebugService::initTestCase()
@@ -147,6 +150,22 @@ void tst_QQmlDebugService::sendMessage()
     duplicate.sendMessage("msg");
 }
 
+void tst_QQmlDebugService::checkSupportForDataStreamVersion()
+{
+    QQmlDebugTestService service("tst_QQmlDebugService::sendMessage2()");
+    QQmlDebugTestClient client("tst_QQmlDebugService::sendMessage2()", m_conn);
+
+    QByteArray msg = "hello!";
+
+    QTRY_COMPARE(client.state(), QQmlDebugClient::Enabled);
+    QTRY_COMPARE(service.state(), QQmlDebugService::Enabled);
+
+    client.sendMessage(msg);
+    QByteArray resp = client.waitForResponse();
+    QCOMPARE(resp, msg);
+    QCOMPARE(m_conn->dataStreamVersion(), int(QDataStream::Qt_5_0));
+}
+
 void tst_QQmlDebugService::idForObject()
 {
     QCOMPARE(QQmlDebugService::idForObject(0), -1);
@@ -192,6 +211,36 @@ void tst_QQmlDebugService::objectToString()
     obj->setObjectName("Hello");
     QCOMPARE(QQmlDebugService::objectToString(obj), QString("QObject: Hello"));
     delete obj;
+}
+
+void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()
+{
+    //create a new connection;
+    delete m_conn;
+    m_conn = new QQmlDebugConnection(this);
+    m_conn->setDataStreamVersion(QDataStream::Qt_4_7);
+    for (int i = 0; i < 50; ++i) {
+        // try for 5 seconds ...
+        m_conn->connectToHost("127.0.0.1", PORT);
+        if (m_conn->waitForConnected())
+            break;
+        QTest::qSleep(100);
+    }
+    QVERIFY(m_conn->isConnected());
+
+    QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());
+    QQmlDebugTestService service("tst_QQmlDebugService::sendMessage2()");
+    QQmlDebugTestClient client("tst_QQmlDebugService::sendMessage2()", m_conn);
+
+    QByteArray msg = "hello!";
+
+    QTRY_COMPARE(client.state(), QQmlDebugClient::Enabled);
+    QTRY_COMPARE(service.state(), QQmlDebugService::Enabled);
+
+    client.sendMessage(msg);
+    QByteArray resp = client.waitForResponse();
+    QCOMPARE(resp, msg);
+    QCOMPARE(m_conn->dataStreamVersion(), int(QDataStream::Qt_4_7));
 }
 
 

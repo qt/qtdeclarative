@@ -61,11 +61,11 @@ QT_BEGIN_NAMESPACE
 
   handshake:
     1. Client sends
-         "QDeclarativeDebugServer" 0 version pluginNames
+         "QDeclarativeDebugServer" 0 version pluginNames [QDataStream version]
        version: an int representing the highest protocol version the client knows
        pluginNames: plugins available on client side
     2. Server sends
-         "QDeclarativeDebugClient" 0 version pluginNames pluginVersions
+         "QDeclarativeDebugClient" 0 version pluginNames pluginVersions [QDataStream version]
        version: an int representing the highest protocol version the client & server know
        pluginNames: plugins available on server side. plugins both in the client and server message are enabled.
   client plugin advertisement
@@ -79,6 +79,7 @@ QT_BEGIN_NAMESPACE
   */
 
 const int protocolVersion = 1;
+int QQmlDebugServer::s_dataStreamVersion = QDataStream::Qt_4_7;
 
 // print detailed information about loading of plugins
 DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
@@ -158,7 +159,7 @@ void QQmlDebugServerPrivate::advertisePlugins()
 
     QByteArray message;
     {
-        QDataStream out(&message, QIODevice::WriteOnly);
+        QQmlDebugStream out(&message, QIODevice::WriteOnly);
         QStringList pluginNames;
         QList<float> pluginVersions;
         foreach (QQmlDebugService *service, plugins.values()) {
@@ -384,7 +385,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
 
     Q_D(QQmlDebugServer);
 
-    QDataStream in(message);
+    QQmlDebugStream in(message);
 
     QString name;
 
@@ -396,11 +397,17 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             int version;
             in >> version >> d->clientPlugins;
 
+            //Get the supported QDataStream version
+            if (!in.atEnd()) {
+                in >> s_dataStreamVersion;
+                if (s_dataStreamVersion > QDataStream().version())
+                    s_dataStreamVersion = QDataStream().version();
+            }
             // Send the hello answer immediately, since it needs to arrive before
             // the plugins below start sending messages.
             QByteArray helloAnswer;
             {
-                QDataStream out(&helloAnswer, QIODevice::WriteOnly);
+                QQmlDebugStream out(&helloAnswer, QIODevice::WriteOnly);
                 QStringList pluginNames;
                 QList<float> pluginVersions;
                 foreach (QQmlDebugService *service, d->plugins.values()) {
@@ -408,7 +415,8 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
                     pluginVersions << service->version();
                 }
 
-                out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion << pluginNames << pluginVersions;
+                out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
+                    << pluginNames << pluginVersions << s_dataStreamVersion;
             }
             d->connection->send(QList<QByteArray>() << helloAnswer);
 
@@ -577,7 +585,7 @@ void QQmlDebugServer::sendMessages(QQmlDebugService *service,
     QList<QByteArray> prefixedMessages;
     foreach (const QByteArray &message, messages) {
         QByteArray prefixed;
-        QDataStream out(&prefixed, QIODevice::WriteOnly);
+        QQmlDebugStream out(&prefixed, QIODevice::WriteOnly);
         out << service->name() << message;
         prefixedMessages << prefixed;
     }

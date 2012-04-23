@@ -401,15 +401,16 @@ void QQmlEngineDebugService::messageReceived(const QByteArray &message)
 
 void QQmlEngineDebugService::processMessage(const QByteArray &message)
 {
-    QDataStream ds(message);
+    QQmlDebugStream ds(message);
 
     QByteArray type;
     int queryId;
     ds >> type >> queryId;
 
+    QByteArray reply;
+    QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
+
     if (type == "LIST_ENGINES") {
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("LIST_ENGINES_R");
         rs << queryId << m_engines.count();
 
@@ -422,7 +423,6 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
             rs << engineName << engineId;
         }
 
-        sendMessage(reply);
     } else if (type == "LIST_OBJECTS") {
         int engineId = -1;
         ds >> engineId;
@@ -430,8 +430,6 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         QQmlEngine *engine =
                 qobject_cast<QQmlEngine *>(QQmlDebugService::objectForId(engineId));
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("LIST_OBJECTS_R") << queryId;
 
         if (engine) {
@@ -448,7 +446,6 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
             buildStatesList(true, ctxtPriv->instances);
         }
 
-        sendMessage(reply);
     } else if (type == "FETCH_OBJECT") {
         int objectId;
         bool recurse;
@@ -458,8 +455,6 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
 
         QObject *object = QQmlDebugService::objectForId(objectId);
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("FETCH_OBJECT_R") << queryId;
 
         if (object) {
@@ -468,18 +463,14 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
             buildObjectDump(rs, object, recurse, dumpProperties);
         }
 
-        sendMessage(reply);
     } else if (type == "WATCH_OBJECT") {
         int objectId;
 
         ds >> objectId;
         bool ok = m_watch->addWatch(queryId, objectId);
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("WATCH_OBJECT_R") << queryId << ok;
 
-        sendMessage(reply);
     } else if (type == "WATCH_PROPERTY") {
         int objectId;
         QByteArray property;
@@ -487,11 +478,8 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         ds >> objectId >> property;
         bool ok = m_watch->addWatch(queryId, objectId, property);
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("WATCH_PROPERTY_R") << queryId << ok;
 
-        sendMessage(reply);
     } else if (type == "WATCH_EXPR_OBJECT") {
         int debugId;
         QString expr;
@@ -499,17 +487,13 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         ds >> debugId >> expr;
         bool ok = m_watch->addWatch(queryId, debugId, expr);
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("WATCH_EXPR_OBJECT_R") << queryId << ok;
-        sendMessage(reply);
+
     } else if (type == "NO_WATCH") {
         bool ok = m_watch->removeWatch(queryId);
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("NO_WATCH_R") << queryId << ok;
-        sendMessage(reply);
+
     } else if (type == "EVAL_EXPRESSION") {
         int objectId;
         QString expr;
@@ -531,11 +515,8 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
             result = QString(QStringLiteral("<unknown context>"));
         }
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("EVAL_EXPRESSION_R") << queryId << result;
 
-        sendMessage(reply);
     } else if (type == "SET_BINDING") {
         int objectId;
         QString propertyName;
@@ -548,22 +529,16 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         bool ok = setBinding(objectId, propertyName, expr, isLiteralValue,
                              filename, line);
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("SET_BINDING_R") << queryId << ok;
 
-        sendMessage(reply);
     } else if (type == "RESET_BINDING") {
         int objectId;
         QString propertyName;
         ds >> objectId >> propertyName;
         bool ok = resetBinding(objectId, propertyName);
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("RESET_BINDING_R") << queryId << ok;
 
-        sendMessage(reply);
     } else if (type == "SET_METHOD_BODY") {
         int objectId;
         QString methodName;
@@ -571,12 +546,10 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         ds >> objectId >> methodName >> methodBody;
         bool ok = setMethodBody(objectId, methodName, methodBody);
 
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
         rs << QByteArray("SET_METHOD_BODY_R") << queryId << ok;
 
-        sendMessage(reply);
     }
+    sendMessage(reply);
 }
 
 bool QQmlEngineDebugService::setBinding(int objectId,
@@ -720,7 +693,7 @@ bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
 void QQmlEngineDebugService::propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value)
 {
     QByteArray reply;
-    QDataStream rs(&reply, QIODevice::WriteOnly);
+    QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
 
     rs << QByteArray("UPDATE_WATCH") << id << objectId << QByteArray(property.name()) << valueContents(value);
 
@@ -753,7 +726,7 @@ void QQmlEngineDebugService::objectCreated(QQmlEngine *engine, QObject *object)
     int parentId = QQmlDebugService::idForObject(object->parent());
 
     QByteArray reply;
-    QDataStream rs(&reply, QIODevice::WriteOnly);
+    QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
 
     //unique queryId -1
     rs << QByteArray("OBJECT_CREATED") << -1 << engineId << objectId << parentId;

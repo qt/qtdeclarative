@@ -61,7 +61,7 @@ public:
     WriteResult WriteAsciiChunk(char *rawData, int size)
     {
         QByteArray data;
-        QDataStream ds(&data, QIODevice::WriteOnly);
+        QQmlDebugStream ds(&data, QIODevice::WriteOnly);
         ds << QV8ProfilerService::V8SnapshotChunk << QByteArray(rawData, size);
         messages.append(data);
         return kContinue;
@@ -74,7 +74,7 @@ QByteArray QV8ProfilerData::toByteArray() const
 {
     QByteArray data;
     //### using QDataStream is relatively expensive
-    QDataStream ds(&data, QIODevice::WriteOnly);
+    QQmlDebugStream ds(&data, QIODevice::WriteOnly);
     ds << messageType << filename << functionname << lineNumber << totalTime << selfTime << treeLevel;
 
     return data;
@@ -156,7 +156,7 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
 {
     Q_D(QV8ProfilerService);
 
-    QDataStream ds(message);
+    QQmlDebugStream ds(message);
     QByteArray command;
     QByteArray option;
     QByteArray title;
@@ -206,7 +206,7 @@ void QV8ProfilerService::startProfiling(const QString &title)
 
     // indicate profiling started
     QByteArray data;
-    QDataStream ds(&data, QIODevice::WriteOnly);
+    QQmlDebugStream ds(&data, QIODevice::WriteOnly);
     ds << (int)QV8ProfilerService::V8Started;
 
     sendMessage(data);
@@ -231,7 +231,7 @@ void QV8ProfilerService::stopProfiling(const QString &title)
     } else {
         // indicate completion, even without data
         QByteArray data;
-        QDataStream ds(&data, QIODevice::WriteOnly);
+        QQmlDebugStream ds(&data, QIODevice::WriteOnly);
         ds << (int)QV8ProfilerService::V8Complete;
 
         sendMessage(data);
@@ -290,7 +290,7 @@ void QV8ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType
 
     //indicate completion
     QByteArray data;
-    QDataStream ds(&data, QIODevice::WriteOnly);
+    QQmlDebugStream ds(&data, QIODevice::WriteOnly);
     ds << (int)QV8ProfilerService::V8SnapshotComplete;
     messages.append(data);
 
@@ -308,7 +308,7 @@ void QV8ProfilerServicePrivate::sendMessages()
 
     //indicate completion
     QByteArray data;
-    QDataStream ds(&data, QIODevice::WriteOnly);
+    QQmlDebugStream ds(&data, QIODevice::WriteOnly);
     ds << (int)QV8ProfilerService::V8Complete;
     messages.append(data);
 

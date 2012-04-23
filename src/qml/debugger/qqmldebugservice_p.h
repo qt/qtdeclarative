@@ -43,6 +43,7 @@
 #define QQMLDEBUGSERVICE_H
 
 #include <QtCore/qobject.h>
+#include <QtCore/QDataStream>
 
 #include <private/qtqmlglobal_p.h>
 
@@ -103,6 +104,15 @@ protected:
 private:
     friend class QQmlDebugServer;
     friend class QQmlDebugServerPrivate;
+};
+
+class Q_QML_PRIVATE_EXPORT QQmlDebugStream : public QDataStream
+{
+public:
+    QQmlDebugStream();
+    explicit QQmlDebugStream(QIODevice *d);
+    QQmlDebugStream(QByteArray *ba, QIODevice::OpenMode flags);
+    QQmlDebugStream(const QByteArray &ba);
 };
 
 QT_END_NAMESPACE

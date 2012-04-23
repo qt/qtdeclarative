@@ -99,7 +99,7 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type,
     //We just eavesdrop and forward the messages to a port
     //only if a client is connected to it.
     QByteArray message;
-    QDataStream ws(&message, QIODevice::WriteOnly);
+    QQmlDebugStream ws(&message, QIODevice::WriteOnly);
     ws << QByteArray("MESSAGE") << type << QString::fromLocal8Bit(buf).toUtf8();
     ws << QString::fromLatin1(ctxt.file).toUtf8();
     ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();

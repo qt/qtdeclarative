@@ -223,7 +223,7 @@ void QV8DebugService::messageReceived(const QByteArray &message)
     Q_D(QV8DebugService);
     QMutexLocker lock(&d->initializeMutex);
 
-    QDataStream ds(message);
+    QQmlDebugStream ds(message);
     QByteArray header;
     ds >> header;
 
@@ -250,7 +250,7 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             sendDebugMessage(QString::fromUtf8(data));
 
         } else if (command == V8_DEBUGGER_KEY_BREAK_ON_SIGNAL) {
-            QDataStream rs(data);
+            QQmlDebugStream rs(data);
             QByteArray signal;
             bool enabled;
             rs >> signal >> enabled;
@@ -281,7 +281,7 @@ void QV8DebugService::processDebugMessages()
 QByteArray QV8DebugServicePrivate::packMessage(const QString &type, const QString &message)
 {
     QByteArray reply;
-    QDataStream rs(&reply, QIODevice::WriteOnly);
+    QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
     QByteArray cmd("V8DEBUG");
     rs << cmd << type.toUtf8() << message.toUtf8();
     return reply;

@@ -64,7 +64,7 @@ QByteArray QQmlProfilerData::toByteArray() const
 {
     QByteArray data;
     //### using QDataStream is relatively expensive
-    QDataStream ds(&data, QIODevice::WriteOnly);
+    QQmlDebugStream ds(&data, QIODevice::WriteOnly);
     ds << time << messageType << detailType;
     if (messageType == (int)QQmlProfilerService::RangeData)
         ds << detailData;
@@ -276,7 +276,7 @@ void QQmlProfilerService::sendMessages()
 
     //indicate completion
     QByteArray data;
-    QDataStream ds(&data, QIODevice::WriteOnly);
+    QQmlDebugStream ds(&data, QIODevice::WriteOnly);
     ds << (qint64)-1 << (int)Complete;
     messages << data;
 
@@ -308,7 +308,7 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
     QMutexLocker lock(&m_initializeMutex);
 
     QByteArray rwData = message;
-    QDataStream stream(&rwData, QIODevice::ReadOnly);
+    QQmlDebugStream stream(&rwData, QIODevice::ReadOnly);
 
     bool enabled;
     stream >> enabled;

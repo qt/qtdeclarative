@@ -55,6 +55,9 @@ public:
 
     void connectToHost(const QString &hostName, quint16 port);
 
+    void setDataStreamVersion(int dataStreamVersion);
+    int dataStreamVersion();
+
     qint64 bytesAvailable() const;
     bool isConnected() const;
     QAbstractSocket::SocketState state() const;
@@ -74,8 +77,10 @@ protected:
 
 private:
     QQmlDebugConnectionPrivate *d;
+    int m_dataStreamVersion;
     friend class QQmlDebugClient;
     friend class QQmlDebugClientPrivate;
+    friend class QQmlDebugConnectionPrivate;
 };
 
 class QQmlDebugClientPrivate;

@@ -112,7 +112,8 @@ void QQmlDebugConnectionPrivate::advertisePlugins()
 void QQmlDebugConnectionPrivate::connected()
 {
     QPacket pack;
-    pack << serverId << 0 << protocolVersion << plugins.keys();
+    pack << serverId << 0 << protocolVersion << plugins.keys()
+         << q->m_dataStreamVersion;
     protocol->send(pack);
     q->flush();
 }
@@ -148,6 +149,7 @@ void QQmlDebugConnectionPrivate::readyRead()
                         serverPlugins.insert(pluginNames.at(i), pluginVersion);
                     }
 
+                    pack >> q->m_dataStreamVersion;
                     validHello = true;
                 }
             }
@@ -247,7 +249,8 @@ void QQmlDebugConnectionPrivate::handshakeTimeout()
 }
 
 QQmlDebugConnection::QQmlDebugConnection(QObject *parent)
-    : QIODevice(parent), d(new QQmlDebugConnectionPrivate(this))
+    : QIODevice(parent), d(new QQmlDebugConnectionPrivate(this)),
+      m_dataStreamVersion(QDataStream::Qt_5_0)
 {
 }
 
@@ -258,6 +261,16 @@ QQmlDebugConnection::~QQmlDebugConnection()
         iter.value()->d->connection = 0;
         iter.value()->stateChanged(QQmlDebugClient::NotConnected);
     }
+}
+
+void QQmlDebugConnection::setDataStreamVersion(int dataStreamVersion)
+{
+    m_dataStreamVersion = dataStreamVersion;
+}
+
+int QQmlDebugConnection::dataStreamVersion()
+{
+    return m_dataStreamVersion;
 }
 
 bool QQmlDebugConnection::isConnected() const
