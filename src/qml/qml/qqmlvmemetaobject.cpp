@@ -127,7 +127,7 @@ class QQmlVMEMetaObjectEndpoint : public QQmlNotifierEndpoint
 {
 public:
     QQmlVMEMetaObjectEndpoint();
-    static void vmecallback(QQmlNotifierEndpoint *);
+    static void vmecallback(QQmlNotifierEndpoint *, void **);
     void tryConnect();
 
     QFlagPointer<QQmlVMEMetaObject> metaObject;
@@ -414,7 +414,7 @@ QQmlVMEMetaObjectEndpoint::QQmlVMEMetaObjectEndpoint()
     callback = &vmecallback;
 }
 
-void QQmlVMEMetaObjectEndpoint::vmecallback(QQmlNotifierEndpoint *e)
+void QQmlVMEMetaObjectEndpoint::vmecallback(QQmlNotifierEndpoint *e, void **)
 {
     QQmlVMEMetaObjectEndpoint *vmee = static_cast<QQmlVMEMetaObjectEndpoint*>(e);
     vmee->tryConnect();

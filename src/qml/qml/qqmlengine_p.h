@@ -109,7 +109,7 @@ class QQmlJavaScriptExpressionGuard : public QQmlNotifierEndpoint
 public:
     inline QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpression *);
 
-    static inline void endpointCallback(QQmlNotifierEndpoint *);
+    static inline void endpointCallback(QQmlNotifierEndpoint *, void **);
     static inline QQmlJavaScriptExpressionGuard *New(QQmlJavaScriptExpression *e,
                                                              QQmlEngine *engine);
     inline void Delete();

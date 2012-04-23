@@ -44,20 +44,20 @@
 
 QT_BEGIN_NAMESPACE
 
-void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint)
+void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
 {
     QQmlNotifierEndpoint **oldDisconnected = endpoint->disconnected;
     endpoint->disconnected = &endpoint;
     endpoint->notifying = 1;
 
     if (endpoint->next)
-        emitNotify(endpoint->next);
+        emitNotify(endpoint->next, a);
 
     if (endpoint) {
 
         Q_ASSERT(endpoint->callback);
         
-        endpoint->callback(endpoint);
+        endpoint->callback(endpoint, a);
 
         if (endpoint) 
             endpoint->disconnected = oldDisconnected;

@@ -201,7 +201,7 @@ struct QQmlBindingProfiler {
 };
 
 struct QQmlHandlingSignalProfiler {
-    QQmlHandlingSignalProfiler(const QMetaMethod &signal, QQmlBoundSignalExpression *expression)
+    QQmlHandlingSignalProfiler(QObject *object, int index, QQmlBoundSignalExpression *expression)
     {
         enabled = QQmlProfilerService::instance
                 ? QQmlProfilerService::instance->profilingEnabled() : false;
@@ -209,7 +209,7 @@ struct QQmlHandlingSignalProfiler {
             QQmlProfilerService *service = QQmlProfilerService::instance;
             service->startRange(QQmlProfilerService::HandlingSignal);
             service->rangeData(QQmlProfilerService::HandlingSignal,
-                               QString::fromLatin1(signal.methodSignature()) + QLatin1String(": ")
+                               QLatin1String(object->metaObject()->method(index).methodSignature()) + QLatin1String(": ")
                                + expression->expression());
             service->rangeLocation(QQmlProfilerService::HandlingSignal,
                                    expression->sourceFile(), expression->lineNumber(),

@@ -448,13 +448,13 @@ void QQmlData::objectNameChanged(QAbstractDeclarativeData *d, QObject *o)
     static_cast<QQmlData *>(d)->objectNameChanged(o);
 }
 
-void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int index, void **)
+void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int index, void **a)
 {
     QQmlData *ddata = QQmlData::get(object, false);
     if (!ddata) return; // Probably being deleted
 
     QQmlNotifierEndpoint *ep = ddata->notify(index);
-    if (ep) QQmlNotifier::emitNotify(ep);
+    if (ep) QQmlNotifier::emitNotify(ep, a);
 }
 
 int QQmlData::receivers(QAbstractDeclarativeData *d, const QObject *, int index)

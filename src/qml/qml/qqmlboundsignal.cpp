@@ -163,7 +163,7 @@ class QQmlBoundSignalParameters : public QObject
 {
 Q_OBJECT
 public:
-    QQmlBoundSignalParameters(const QMetaMethod &, QObject * = 0);
+    QQmlBoundSignalParameters(const QMetaMethod &, QQmlAbstractBoundSignal*);
     ~QQmlBoundSignalParameters();
 
     void setValues(void **);
@@ -187,8 +187,6 @@ private:
     QMetaObject *myMetaObject;
 };
 
-static int evaluateIdx = -1;
-
 QQmlAbstractBoundSignal::QQmlAbstractBoundSignal()
 : m_prevSignal(0), m_nextSignal(0)
 {
@@ -196,12 +194,7 @@ QQmlAbstractBoundSignal::QQmlAbstractBoundSignal()
 
 QQmlAbstractBoundSignal::~QQmlAbstractBoundSignal()
 {
-    if (m_prevSignal) {
-        *m_prevSignal = m_nextSignal;
-        if (m_nextSignal) m_nextSignal->m_prevSignal = m_prevSignal;
-        m_prevSignal = 0;
-        m_nextSignal = 0;
-    }
+    removeFromObject();
 }
 
 void QQmlAbstractBoundSignal::addToObject(QObject *obj)
@@ -217,29 +210,35 @@ void QQmlAbstractBoundSignal::addToObject(QObject *obj)
     data->signalHandlers = this;
 }
 
+void QQmlAbstractBoundSignal::removeFromObject()
+{
+    if (m_prevSignal) {
+        *m_prevSignal = m_nextSignal;
+        if (m_nextSignal) m_nextSignal->m_prevSignal = m_prevSignal;
+        m_prevSignal = 0;
+        m_nextSignal = 0;
+    }
+}
+
 QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
                                QObject *owner)
-: m_expression(0), m_params(0), m_scope(scope), m_signal(signal), m_paramsValid(false), m_isEvaluating(false)
+: m_expression(0), m_params(0), m_scope(scope), m_index(signal.methodIndex()), m_paramsValid(false), m_isEvaluating(false)
 {
-    // This is thread safe.  Although it may be updated by two threads, they
-    // will both set it to the same value - so the worst thing that can happen
-    // is that they both do the work to figure it out.  Boo hoo.
-    if (evaluateIdx == -1) evaluateIdx = metaObject()->methodCount();
-
     addToObject(owner);
-
-    QQmlPropertyPrivate::connect(scope, m_signal.methodIndex(), this, evaluateIdx);
+    callback = &subscriptionCallback;
+    QQmlNotifierEndpoint::connect(scope, m_index);
 }
 
 QQmlBoundSignal::~QQmlBoundSignal()
 {
     delete m_expression;
     m_expression = 0;
+    delete m_params;
 }
 
-int QQmlBoundSignal::index() const 
-{ 
-    return m_signal.methodIndex();
+int QQmlBoundSignal::index() const
+{
+    return m_index;
 }
 
 /*!
@@ -265,41 +264,40 @@ QQmlBoundSignalExpression *QQmlBoundSignal::setExpression(QQmlBoundSignalExpress
     return rv;
 }
 
-int QQmlBoundSignal::qt_metacall(QMetaObject::Call c, int id, void **a)
+void QQmlBoundSignal::subscriptionCallback(QQmlNotifierEndpoint *e, void **a)
 {
-    if (c == QMetaObject::InvokeMetaMethod && id == evaluateIdx) {
-        if (!m_expression)
-            return -1;
+    QQmlBoundSignal *s = static_cast<QQmlBoundSignal*>(e);
+    if (!s->m_expression)
+        return;
 
-        if (QQmlDebugService::isDebuggingEnabled())
-            QV8DebugService::instance()->signalEmitted(QString::fromAscii(m_signal.methodSignature().constData()));
+    if (QQmlDebugService::isDebuggingEnabled())
+        QV8DebugService::instance()->signalEmitted(QString::fromAscii(s->m_scope->metaObject()->method(s->m_index).methodSignature()));
 
-        QQmlHandlingSignalProfiler prof(m_signal, m_expression);
+    QQmlHandlingSignalProfiler prof(s->m_scope, s->m_index, s->m_expression);
 
-        m_isEvaluating = true;
-        if (!m_paramsValid) {
-            if (!m_signal.parameterTypes().isEmpty())
-                m_params = new QQmlBoundSignalParameters(m_signal, this);
-            m_paramsValid = true;
-        }
+    s->m_isEvaluating = true;
 
-        if (m_params) m_params->setValues(a);
-        if (m_expression && m_expression->context() && m_expression->engine()) {
-            m_expression->evaluate(m_params);
-            if (m_expression && m_expression->hasError())
-                QQmlEnginePrivate::warning(m_expression->engine(), m_expression->error());
-        }
-        if (m_params) m_params->clearValues();
-        m_isEvaluating = false;
-        return -1;
-    } else {
-        return QObject::qt_metacall(c, id, a);
+    if (!s->m_paramsValid) {
+        QMetaMethod signal = s->m_scope->metaObject()->method(s->m_index);
+        if (!signal.parameterTypes().isEmpty())
+            s->m_params = new QQmlBoundSignalParameters(signal, s);
+        s->m_paramsValid = true;
     }
+
+    if (s->m_params) s->m_params->setValues(a);
+    if (s->m_expression && s->m_expression->engine()) {
+        s->m_expression->evaluate(s->m_params);
+        if (s->m_expression && s->m_expression->hasError())
+            QQmlEnginePrivate::warning(s->m_expression->engine(), s->m_expression->error());
+    }
+    if (s->m_params) s->m_params->clearValues();
+
+    s->m_isEvaluating = false;
 }
 
 QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method, 
-                                                                     QObject *parent)
-: QObject(parent), types(0), values(0)
+                                                     QQmlAbstractBoundSignal *owner)
+: types(0), values(0)
 {
     MetaObject *mo = new MetaObject(this);
 
@@ -348,7 +346,7 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
                 if (scope == "Qt")
                     meta = &QObject::staticQtMetaObject;
                 else
-                    meta = static_cast<QQmlBoundSignal*>(parent)->scope()->metaObject();
+                    meta = owner->scope()->metaObject();
                 for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
                     QMetaEnum m = meta->enumerator(i);
                     if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope))) {

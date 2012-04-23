@@ -288,7 +288,7 @@ QObject *QV4Bindings::Binding::object() const
     return target;
 }
 
-void QV4Bindings::Subscription::subscriptionCallback(QQmlNotifierEndpoint *e) 
+void QV4Bindings::Subscription::subscriptionCallback(QQmlNotifierEndpoint *e, void **)
 {
     Subscription *s = static_cast<Subscription *>(e);
     s->bindings->subscriptionNotify(s->method);

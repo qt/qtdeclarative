@@ -59,7 +59,7 @@ private:
     friend class QQmlData;
     friend class QQmlNotifierEndpoint;
 
-    static void emitNotify(QQmlNotifierEndpoint *);
+    static void emitNotify(QQmlNotifierEndpoint *, void **a);
     QQmlNotifierEndpoint *endpoints;
 };
 
@@ -69,7 +69,7 @@ public:
     inline QQmlNotifierEndpoint();
     inline ~QQmlNotifierEndpoint();
 
-    typedef void (*Callback)(QQmlNotifierEndpoint *);
+    typedef void (*Callback)(QQmlNotifierEndpoint *, void **);
     Callback callback;
 
     inline bool isConnected();
@@ -124,7 +124,8 @@ QQmlNotifier::~QQmlNotifier()
 
 void QQmlNotifier::notify()
 {
-    if (endpoints) emitNotify(endpoints);
+    void *args[] = { 0 };
+    if (endpoints) emitNotify(endpoints, args);
 }
 
 QQmlNotifierEndpoint::QQmlNotifierEndpoint()

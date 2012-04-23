@@ -151,6 +151,16 @@ QObject *QQuickConnections::target() const
     return d->targetSet ? d->target : parent();
 }
 
+class QQmlBoundSignalDeleter : public QObject
+{
+public:
+    QQmlBoundSignalDeleter(QQmlBoundSignal *signal) : m_signal(signal) { m_signal->removeFromObject(); }
+    ~QQmlBoundSignalDeleter() { delete m_signal; }
+
+private:
+    QQmlBoundSignal *m_signal;
+};
+
 void QQuickConnections::setTarget(QObject *obj)
 {
     Q_D(QQuickConnections);
@@ -161,7 +171,7 @@ void QQuickConnections::setTarget(QObject *obj)
         // It is possible that target is being changed due to one of our signal
         // handlers -> use deleteLater().
         if (s->isEvaluating())
-            s->deleteLater();
+            (new QQmlBoundSignalDeleter(s))->deleteLater();
         else
             delete s;
     }

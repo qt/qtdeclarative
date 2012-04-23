@@ -57,6 +57,7 @@
 
 #include <private/qqmlabstractexpression_p.h>
 #include <private/qqmljavascriptexpression_p.h>
+#include <private/qqmlnotifier_p.h>
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -109,6 +110,7 @@ public:
     virtual QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *) = 0;
     virtual QObject *scope() = 0;
 
+    void removeFromObject();
 protected:
     void addToObject(QObject *owner);
 
@@ -121,8 +123,8 @@ private:
 };
 
 class QQmlBoundSignalParameters;
-class Q_QML_EXPORT QQmlBoundSignal : public QObject,
-                                     public QQmlAbstractBoundSignal
+class Q_QML_EXPORT QQmlBoundSignal : public QQmlAbstractBoundSignal,
+                                     public QQmlNotifierEndpoint
 {
 public:
     QQmlBoundSignal(QObject *scope, const QMetaMethod &signal, QObject *owner);
@@ -134,19 +136,19 @@ public:
     QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *);
     QObject *scope() { return m_scope; }
 
-    bool isEvaluating() const { return m_isEvaluating; }
+    static void subscriptionCallback(QQmlNotifierEndpoint *e, void **);
 
-protected:
-    virtual int qt_metacall(QMetaObject::Call c, int id, void **a);
+    bool isEvaluating() const { return m_isEvaluating; }
 
 private:
     QQmlBoundSignalExpression *m_expression;
     QQmlBoundSignalParameters *m_params;
     QObject *m_scope;
-    QMetaMethod m_signal;
+    int m_index;
     bool m_paramsValid : 1;
     bool m_isEvaluating : 1;
 };
+
 
 QT_END_NAMESPACE
 

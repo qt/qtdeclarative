@@ -112,7 +112,7 @@ private:
     {
     public:
         Subscription() : bindings(0), method(-1) { callback = &subscriptionCallback; }
-        static void subscriptionCallback(QQmlNotifierEndpoint *e);
+        static void subscriptionCallback(QQmlNotifierEndpoint *e, void**);
         QV4Bindings *bindings;
         int method;
     };

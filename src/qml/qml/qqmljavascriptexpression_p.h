@@ -256,7 +256,7 @@ QQmlJavaScriptExpressionGuard::QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpre
     callback = &endpointCallback;
 }
 
-void QQmlJavaScriptExpressionGuard::endpointCallback(QQmlNotifierEndpoint *e)
+void QQmlJavaScriptExpressionGuard::endpointCallback(QQmlNotifierEndpoint *e, void **)
 {
     QQmlJavaScriptExpression *expression =
         static_cast<QQmlJavaScriptExpressionGuard *>(e)->expression;
