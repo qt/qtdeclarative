@@ -1188,14 +1188,14 @@ void tst_qqmllocale::stringLocaleCompare_data()
     // Copied from QString::localeAwareCompare tests
     // We don't actually change locale - we just care that String.localeCompare()
     // matches QString::localeAwareCompare();
-    QTest::newRow("swedish1") << QString("\xe5") << QString("\xe4");
-    QTest::newRow("swedish2") << QString("\xe4") << QString("\xf6");
-    QTest::newRow("swedish3") << QString("\xe5") << QString("\xf6");
-    QTest::newRow("swedish4") << QString("z") << QString("\xe5");
+    QTest::newRow("swedish1") << QString::fromLatin1("\xe5") << QString::fromLatin1("\xe4");
+    QTest::newRow("swedish2") << QString::fromLatin1("\xe4") << QString::fromLatin1("\xf6");
+    QTest::newRow("swedish3") << QString::fromLatin1("\xe5") << QString::fromLatin1("\xf6");
+    QTest::newRow("swedish4") << QString::fromLatin1("z") << QString::fromLatin1("\xe5");
 
-    QTest::newRow("german1") << QString("z") << QString("\xe4");
-    QTest::newRow("german2") << QString("\xe4") << QString("\xf6");
-    QTest::newRow("german3") << QString("z") << QString("\xf6");
+    QTest::newRow("german1") << QString::fromLatin1("z") << QString::fromLatin1("\xe4");
+    QTest::newRow("german2") << QString::fromLatin1("\xe4") << QString::fromLatin1("\xf6");
+    QTest::newRow("german3") << QString::fromLatin1("z") << QString::fromLatin1("\xf6");
 }
 
 void tst_qqmllocale::stringLocaleCompare()
