@@ -153,7 +153,6 @@ private:
     bool m_animationPaused;
     qreal m_slowDownFactor;
 
-    QHash<int, QString> m_stringIdForObjectId;
     QQmlInspectorService *m_debugService;
 };
 

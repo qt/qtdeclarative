@@ -64,7 +64,6 @@ public:
         CurrentObjectsChanged  = 6,
         DestroyObject          = 7,
         MoveObject             = 8,
-        ObjectIdList           = 9,
         Reload                 = 10,
         Reloaded               = 11,
         SetAnimationSpeed      = 12,

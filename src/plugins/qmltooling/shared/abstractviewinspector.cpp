@@ -380,20 +380,6 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
                           QQmlDebugService::objectForId(newParent));
         break;
     }
-    case InspectorProtocol::ObjectIdList: {
-        int itemCount;
-        ds >> itemCount;
-        m_stringIdForObjectId.clear();
-        for (int i = 0; i < itemCount; ++i) {
-            int itemDebugId;
-            QString itemIdString;
-            ds >> itemDebugId
-               >> itemIdString;
-
-            m_stringIdForObjectId.insert(itemDebugId, itemIdString);
-        }
-        break;
-    }
     case InspectorProtocol::ClearComponentCache: {
         clearComponentCache();
         break;
