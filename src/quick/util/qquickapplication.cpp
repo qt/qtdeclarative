@@ -91,16 +91,6 @@ Qt::LayoutDirection QQuickApplication::layoutDirection() const
     return d->direction;
 }
 
-QObject *QQuickApplication::inputPanel() const
-{
-    static bool warned = false;
-    if (!warned) {
-        qWarning() << "Qt.application.inputPanel is deprecated, use Qt.inputMethod instead";
-        warned = true;
-    }
-    return qGuiApp->inputMethod();
-}
-
 bool QQuickApplication::eventFilter(QObject *, QEvent *event)
 {
     Q_D(QQuickApplication);

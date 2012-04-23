@@ -65,8 +65,6 @@
 
 void QQuickUtilModule::defineModule()
 {
-    qmlRegisterUncreatableType<QInputMethod>("QtQuick",2,0,"InputPanel",
-                                             QInputMethod::tr("InputPanel is an abstract class")); // deprecated
     qmlRegisterUncreatableType<QInputMethod>("QtQuick",2,0,"InputMethod",
                                              QInputMethod::tr("InputMethod is an abstract class"));
     qmlRegisterUncreatableType<QQuickAbstractAnimation>("QtQuick",2,0,"Animation",QQuickAbstractAnimation::tr("Animation is an abstract class"));

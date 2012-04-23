@@ -326,14 +326,6 @@ of their use.
                         from right to left.
     \endlist
 
-    \row
-    \li \c application.inputPanel
-    \li
-    This read-only property allows access to application's QInputPanel object
-    and all its properties and slots. See the QInputPanel documentation for
-    further details. Deprecated in favor of Qt.InputMethod
-    \endtable
-
     The following example uses the \c application object to indicate
     whether the application is currently active:
 

@@ -55,7 +55,6 @@ public:
 private slots:
     void active();
     void layoutDirection();
-    void inputPanel();
     void inputMethod();
 
 private:
@@ -134,22 +133,6 @@ void tst_qquickapplication::layoutDirection()
     // not mirrored again
     QGuiApplication::setLayoutDirection(Qt::LeftToRight);
     QCOMPARE(Qt::LayoutDirection(item->property("layoutDirection").toInt()), Qt::LeftToRight);
-}
-
-void tst_qquickapplication::inputPanel()
-{
-    const QLatin1String expected("Qt.application.inputPanel is deprecated, use Qt.inputMethod instead ");
-    QTest::ignoreMessage(QtWarningMsg, expected.data());
-
-    QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; Item { property variant inputPanel: Qt.application.inputPanel }", QUrl::fromLocalFile(""));
-    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
-    QVERIFY(item);
-    QQuickView view;
-    item->setParentItem(view.rootObject());
-
-    // check that the inputPanel property maches with application's input panel
-    QCOMPARE(qvariant_cast<QObject*>(item->property("inputPanel")), qApp->inputMethod());
 }
 
 void tst_qquickapplication::inputMethod()

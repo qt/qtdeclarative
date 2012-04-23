@@ -57,14 +57,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickApplication : public QObject
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection NOTIFY layoutDirectionChanged)
-    Q_PROPERTY(QObject *inputPanel READ inputPanel CONSTANT)
 
 public:
     explicit QQuickApplication(QObject *parent = 0);
     virtual ~QQuickApplication();
     bool active() const;
     Qt::LayoutDirection layoutDirection() const;
-    QT_DEPRECATED QObject *inputPanel() const;
 
 Q_SIGNALS:
     void activeChanged();
