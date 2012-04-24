@@ -918,27 +918,27 @@ QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
         buffer.open(QIODevice::WriteOnly);
         QString mime = mimeType.toLower();
         QString type;
-        if (mime == QLatin1Literal("image/png")) {
-            type = QLatin1Literal("PNG");
-        } else if (mime == QLatin1Literal("image/bmp"))
-            type = QLatin1Literal("BMP");
-        else if (mime == QLatin1Literal("image/jpeg"))
-            type = QLatin1Literal("JPEG");
-        else if (mime == QLatin1Literal("image/x-portable-pixmap"))
-            type = QLatin1Literal("PPM");
-        else if (mime == QLatin1Literal("image/tiff"))
-            type = QLatin1Literal("TIFF");
-        else if (mime == QLatin1Literal("image/xpm"))
-            type = QLatin1Literal("XPM");
+        if (mime == QLatin1String("image/png")) {
+            type = QStringLiteral("PNG");
+        } else if (mime == QLatin1String("image/bmp"))
+            type = QStringLiteral("BMP");
+        else if (mime == QLatin1String("image/jpeg"))
+            type = QStringLiteral("JPEG");
+        else if (mime == QLatin1String("image/x-portable-pixmap"))
+            type = QStringLiteral("PPM");
+        else if (mime == QLatin1String("image/tiff"))
+            type = QStringLiteral("TIFF");
+        else if (mime == QLatin1String("image/xpm"))
+            type = QStringLiteral("XPM");
         else
-            return QLatin1Literal("data:,");
+            return QStringLiteral("data:,");
 
         image.save(&buffer, type.toLatin1());
         buffer.close();
-        QString dataUrl = QLatin1Literal("data:%1;base64,%2");
+        QString dataUrl = QStringLiteral("data:%1;base64,%2");
         return dataUrl.arg(mime).arg(QLatin1String(ba.toBase64().constData()));
     }
-    return QLatin1Literal("data:,");
+    return QStringLiteral("data:,");
 }
 
 void QQuickCanvasItem::delayedCreate()
