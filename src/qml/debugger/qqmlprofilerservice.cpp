@@ -78,16 +78,17 @@ QByteArray QQmlProfilerData::toByteArray() const
 
 QQmlProfilerService::QQmlProfilerService()
     : QQmlDebugService(QStringLiteral("CanvasFrameRate"), 1),
-      m_enabled(false), m_messageReceived(false)
+      m_enabled(false)
 {
     m_timer.start();
 
-    if (registerService() == Enabled) {
-        // wait for first message indicating whether to trace or not
-        while (!m_messageReceived)
-            waitForMessage();
+    // don't execute stateAboutToBeChanged(), messageReceived() in parallel
+    QMutexLocker lock(&m_initializeMutex);
 
-        QUnifiedTimer::instance()->registerProfilerCallback( &animationFrame );
+    if (registerService() == Enabled) {
+        QUnifiedTimer::instance()->registerProfilerCallback(&animationFrame);
+        if (blockingMode())
+            m_initializeCondition.wait(&m_initializeMutex);
     }
 }
 
@@ -248,7 +249,7 @@ void QQmlProfilerService::animationFrameImpl(qint64 delta)
 */
 void QQmlProfilerService::processMessage(const QQmlProfilerData &message)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_dataMutex);
     m_data.append(message);
 }
 
@@ -267,7 +268,7 @@ void QQmlProfilerService::setProfilingEnabled(bool enable)
 */
 void QQmlProfilerService::sendMessages()
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_dataMutex);
     QList<QByteArray> messages;
     for (int i = 0; i < m_data.count(); ++i)
         messages << m_data.at(i).toByteArray();
@@ -284,6 +285,8 @@ void QQmlProfilerService::sendMessages()
 
 void QQmlProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
 {
+    QMutexLocker lock(&m_initializeMutex);
+
     if (state() == newState)
         return;
 
@@ -292,17 +295,23 @@ void QQmlProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState
         stopProfilingImpl();
         sendMessages();
     }
+
+    if (state() != Enabled) {
+        // wake up constructor in blocking mode
+        // (we might got disabled before first message arrived)
+        m_initializeCondition.wakeAll();
+    }
 }
 
 void QQmlProfilerService::messageReceived(const QByteArray &message)
 {
+    QMutexLocker lock(&m_initializeMutex);
+
     QByteArray rwData = message;
     QDataStream stream(&rwData, QIODevice::ReadOnly);
 
     bool enabled;
     stream >> enabled;
-
-    m_messageReceived = true;
 
     if (enabled) {
         startProfilingImpl();
@@ -310,6 +319,9 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
         if (stopProfilingImpl())
             sendMessages();
     }
+
+    // wake up constructor in blocking mode
+    m_initializeCondition.wakeAll();
 }
 
 QT_END_NAMESPACE

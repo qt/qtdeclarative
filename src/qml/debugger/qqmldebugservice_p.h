@@ -81,7 +81,6 @@ public:
 
     void sendMessage(const QByteArray &);
     void sendMessages(const QList<QByteArray> &);
-    bool waitForMessage();
 
     static int idForObject(QObject *);
     static QObject *objectForId(int);
@@ -90,6 +89,7 @@ public:
 
     static bool isDebuggingEnabled();
     static bool hasDebuggingClient();
+    static bool blockingMode();
 
 protected:
     QQmlDebugService(QQmlDebugServicePrivate &dd, const QString &name, float version, QObject *parent = 0);

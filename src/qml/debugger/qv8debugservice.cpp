@@ -48,6 +48,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QFileInfo>
 #include <QtCore/QMutex>
+#include <QtCore/QWaitCondition>
 
 //V8 DEBUG SERVICE PROTOCOL
 // <HEADER><COMMAND><DATA>
@@ -106,8 +107,7 @@ class QV8DebugServicePrivate : public QQmlDebugServicePrivate
 {
 public:
     QV8DebugServicePrivate()
-        : connectReceived(false)
-        , engine(0)
+        : engine(0)
     {
     }
 
@@ -115,8 +115,8 @@ public:
 
     static QByteArray packMessage(const QString &type, const QString &message = QString());
 
-    bool connectReceived;
     QMutex initializeMutex;
+    QWaitCondition initializeCondition;
     QStringList breakOnSignals;
     const QV8Engine *engine;
 };
@@ -127,16 +127,13 @@ QV8DebugService::QV8DebugService(QObject *parent)
 {
     Q_D(QV8DebugService);
     v8ServiceInstancePtr = this;
-    // wait for stateChanged() -> initialize()
-    d->initializeMutex.lock();
+    // don't execute stateChanged, messageReceived in parallel
+    QMutexLocker lock(&d->initializeMutex);
+
     if (registerService() == Enabled) {
         init();
-        // ,block mode, client attached
-        while (!d->connectReceived) {
-            waitForMessage();
-        }
-    } else {
-        d->initializeMutex.unlock();
+        if (blockingMode())
+            d->initializeCondition.wait(&d->initializeMutex);
     }
 }
 
@@ -189,11 +186,9 @@ void QV8DebugService::signalEmitted(const QString &signal)
 // executed in the gui thread
 void QV8DebugService::init()
 {
-    Q_D(QV8DebugService);
     v8::Debug::SetMessageHandler2(DebugMessageHandler);
     v8::Debug::SetDebugMessageDispatchHandler(DebugMessageDispatchHandler);
     QV4Compiler::enableV4(false);
-    d->initializeMutex.unlock();
 }
 
 // executed in the gui thread
@@ -209,10 +204,16 @@ void QV8DebugService::scheduledDebugBreak(bool schedule)
 void QV8DebugService::stateChanged(QQmlDebugService::State newState)
 {
     Q_D(QV8DebugService);
+    QMutexLocker lock(&d->initializeMutex);
+
     if (newState == Enabled) {
-        // execute in GUI thread
-        d->initializeMutex.lock();
-        QMetaObject::invokeMethod(this, "init", Qt::QueuedConnection);
+        // execute in GUI thread, bock to make sure messageReceived isn't called
+        // before it finished.
+        QMetaObject::invokeMethod(this, "init", Qt::BlockingQueuedConnection);
+    } else {
+        // wake up constructor in blocking mode
+        // (we might got disabled before first message arrived)
+        d->initializeCondition.wakeAll();
     }
 }
 
@@ -220,6 +221,7 @@ void QV8DebugService::stateChanged(QQmlDebugService::State newState)
 void QV8DebugService::messageReceived(const QByteArray &message)
 {
     Q_D(QV8DebugService);
+    QMutexLocker lock(&d->initializeMutex);
 
     QDataStream ds(message);
     QByteArray header;
@@ -231,10 +233,9 @@ void QV8DebugService::messageReceived(const QByteArray &message)
         ds >> command >> data;
 
         if (command == V8_DEBUGGER_KEY_CONNECT) {
-            QMutexLocker locker(&d->initializeMutex);
-            d->connectReceived = true;
             sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_CONNECT)));
-
+            // wake up constructor in blocking mode
+            d->initializeCondition.wakeAll();
         } else if (command == V8_DEBUGGER_KEY_INTERRUPT) {
             // break has to be executed in gui thread
             QMetaObject::invokeMethod(this, "scheduledDebugBreak", Qt::QueuedConnection, Q_ARG(bool, true));
@@ -260,7 +261,6 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             else
                 d->breakOnSignals.removeOne(signalName);
             sendMessage(QV8DebugServicePrivate::packMessage(QLatin1String(V8_DEBUGGER_KEY_BREAK_ON_SIGNAL)));
-
         }
     }
 }

@@ -43,6 +43,7 @@
 #include "qqmldebugservice_p_p.h"
 
 #include <QDataStream>
+#include <QMutex>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,6 +66,7 @@ public:
 
     QMessageHandler oldMsgHandler;
     QQmlDebugService::State prevState;
+    QMutex initMutex;
 };
 
 QDebugMessageService::QDebugMessageService(QObject *parent) :
@@ -73,6 +75,8 @@ QDebugMessageService::QDebugMessageService(QObject *parent) :
 {
     Q_D(QDebugMessageService);
 
+    // don't execute stateChanged() in parallel
+    QMutexLocker lock(&d->initMutex);
     registerService();
     if (state() == Enabled) {
         d->oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
@@ -108,6 +112,7 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type,
 void QDebugMessageService::stateChanged(State state)
 {
     Q_D(QDebugMessageService);
+    QMutexLocker lock(&d->initMutex);
 
     if (state != Enabled && d->prevState == Enabled) {
         QMessageHandler handler = qInstallMessageHandler(d->oldMsgHandler);
@@ -117,7 +122,6 @@ void QDebugMessageService::stateChanged(State state)
 
     } else if (state == Enabled && d->prevState != Enabled) {
         d->oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
-
     }
 
     d->prevState = state;

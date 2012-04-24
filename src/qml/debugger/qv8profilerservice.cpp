@@ -45,6 +45,8 @@
 #include <private/qv8profiler_p.h>
 
 #include <QtCore/QHash>
+#include <QtCore/QMutex>
+#include <QtCore/QWaitCondition>
 
 QT_BEGIN_NAMESPACE
 
@@ -96,6 +98,8 @@ public:
     QList<QV8ProfilerData> m_data;
 
     bool initialized;
+    QMutex initializeMutex;
+    QWaitCondition initializeCondition;
     QList<QString> m_ongoing;
 };
 
@@ -104,10 +108,12 @@ QV8ProfilerService::QV8ProfilerService(QObject *parent)
 {
     Q_D(QV8ProfilerService);
 
-    if (registerService() == Enabled) {
-        // ,block mode, client attached
-        while (!d->initialized)
-            waitForMessage();
+    QMutexLocker lock(&d->initializeMutex);
+
+    if (registerService() == Enabled
+            && QQmlDebugService::blockingMode()) {
+        // let's wait for first message ...
+        d->initializeCondition.wait(&d->initializeMutex);
     }
 }
 
@@ -139,6 +145,10 @@ void QV8ProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
                                       Q_ARG(QString, title));
         }
         QMetaObject::invokeMethod(this, "sendProfilingData", Qt::BlockingQueuedConnection);
+    } else {
+        // wake up constructor in blocking mode
+        // (we might got disabled before first message arrived)
+        d->initializeCondition.wakeAll();
     }
 }
 
@@ -151,6 +161,8 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
     QByteArray option;
     QByteArray title;
     ds >> command >> option;
+
+    QMutexLocker lock(&d->initializeMutex);
 
     if (command == "V8PROFILER") {
         ds >>  title;
@@ -171,6 +183,9 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
             QMetaObject::invokeMethod(this, "deleteSnapshots", Qt::QueuedConnection);
         }
     }
+
+    // wake up constructor in blocking mode
+    d->initializeCondition.wakeAll();
 
     QQmlDebugService::messageReceived(message);
 }

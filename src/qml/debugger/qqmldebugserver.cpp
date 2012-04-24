@@ -99,6 +99,7 @@ public:
     mutable QReadWriteLock pluginsLock;
     QStringList clientPlugins;
     bool gotHello;
+    bool blockingMode;
 
     QMutex messageArrivedMutex;
     QWaitCondition messageArrivedCondition;
@@ -139,6 +140,7 @@ private:
 QQmlDebugServerPrivate::QQmlDebugServerPrivate() :
     connection(0),
     gotHello(false),
+    blockingMode(false),
     thread(0)
 {
     // used in _q_sendMessages
@@ -244,6 +246,12 @@ bool QQmlDebugServer::hasDebuggingClient() const
             && d->gotHello;
 }
 
+bool QQmlDebugServer::blockingMode() const
+{
+    Q_D(const QQmlDebugServer);
+    return d->blockingMode;
+}
+
 static QQmlDebugServer *qQmlDebugServer = 0;
 
 
@@ -305,10 +313,12 @@ QQmlDebugServer *QQmlDebugServer::instance()
                 thread->setPort(port, block, hostAddress);
 
                 QQmlDebugServerPrivate *d = qQmlDebugServer->d_func();
+                d->blockingMode = block;
+
                 QMutexLocker locker(&d->messageArrivedMutex);
                 thread->start();
 
-                if (block)
+                if (d->blockingMode)
                     d->messageArrivedCondition.wait(&d->messageArrivedMutex);
 
             } else {
@@ -574,27 +584,6 @@ void QQmlDebugServer::sendMessages(QQmlDebugService *service,
 
     QMetaObject::invokeMethod(this, "_q_sendMessages", Qt::QueuedConnection,
                               Q_ARG(QList<QByteArray>, prefixedMessages));
-}
-
-bool QQmlDebugServer::waitForMessage(QQmlDebugService *service)
-{
-    // to be executed in GUI thread
-    Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread());
-
-    Q_D(QQmlDebugServer);
-    QReadLocker lock(&d->pluginsLock);
-
-    if (!service
-            || !d->plugins.contains(service->name()))
-        return false;
-
-    d->messageArrivedMutex.lock();
-    d->waitingForMessageNames << service->name();
-    do {
-        d->messageArrivedCondition.wait(&d->messageArrivedMutex);
-    } while (d->waitingForMessageNames.contains(service->name()));
-    d->messageArrivedMutex.unlock();
-    return true;
 }
 
 QT_END_NAMESPACE

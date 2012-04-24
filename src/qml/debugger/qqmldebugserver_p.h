@@ -76,6 +76,7 @@ public:
     void setConnection(QQmlDebugServerConnection *connection);
 
     bool hasDebuggingClient() const;
+    bool blockingMode() const;
 
     QList<QQmlDebugService*> services() const;
     QStringList serviceNames() const;
@@ -86,7 +87,6 @@ public:
 
     void receiveMessage(const QByteArray &message);
 
-    bool waitForMessage(QQmlDebugService *service);
     void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages);
 
 private:

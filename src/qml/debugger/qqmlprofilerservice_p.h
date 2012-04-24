@@ -61,6 +61,7 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/qwaitcondition.h>
 
 
 QT_BEGIN_HEADER
@@ -164,9 +165,10 @@ private:
 private:
     QElapsedTimer m_timer;
     bool m_enabled;
-    bool m_messageReceived;
     QVector<QQmlProfilerData> m_data;
-    QMutex m_mutex;
+    QMutex m_dataMutex;
+    QMutex m_initializeMutex;
+    QWaitCondition m_initializeCondition;
 
     static QQmlProfilerService *instance;
 

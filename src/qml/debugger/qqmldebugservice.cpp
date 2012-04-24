@@ -213,6 +213,12 @@ bool QQmlDebugService::hasDebuggingClient()
             && QQmlDebugServer::instance()->hasDebuggingClient();
 }
 
+bool QQmlDebugService::blockingMode()
+{
+    return QQmlDebugServer::instance() != 0
+            && QQmlDebugServer::instance()->blockingMode();
+}
+
 QString QQmlDebugService::objectToString(QObject *obj)
 {
     if(!obj)
@@ -241,16 +247,6 @@ void QQmlDebugService::sendMessages(const QList<QByteArray> &messages)
         return;
 
     d->server->sendMessages(this, messages);
-}
-
-bool QQmlDebugService::waitForMessage()
-{
-    Q_D(QQmlDebugService);
-
-    if (state() != Enabled)
-        return false;
-
-    return d->server->waitForMessage(this);
 }
 
 void QQmlDebugService::stateAboutToBeChanged(State)
