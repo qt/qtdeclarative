@@ -45,13 +45,10 @@
 #include <QDebug>
 #include <QThread>
 
-#include "../../../../../src/plugins/qmltooling/shared/qqmlinspectorprotocol.h"
 #include "../shared/debugutil_p.h"
 
-using namespace QmlJSDebugger;
-
-#define PORT 13772
-#define STR_PORT "13772"
+#define PORT 3772
+#define STR_PORT "3772"
 
 class QQmlInspectorClient : public QQmlDebugClient
 {
@@ -59,22 +56,27 @@ class QQmlInspectorClient : public QQmlDebugClient
 
 public:
     QQmlInspectorClient(QQmlDebugConnection *connection)
-        : QQmlDebugClient(QLatin1String("QDeclarativeObserverMode"), connection)
+        : QQmlDebugClient(QLatin1String("QmlInspector"), connection)
         , m_showAppOnTop(false)
+        , m_requestId(0)
+        , m_requestResult(false)
     {
     }
 
-    bool showAppOnTop() const { return m_showAppOnTop; }
     void setShowAppOnTop(bool showOnTop);
 
 signals:
-    void showAppOnTopChanged();
+    void responseReceived();
 
 protected:
     void messageReceived(const QByteArray &message);
 
 private:
     bool m_showAppOnTop;
+    int m_requestId;
+
+public:
+    bool m_requestResult;
 };
 
 class tst_QQmlInspector : public QObject
@@ -110,7 +112,8 @@ void QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
 {
     QByteArray message;
     QDataStream ds(&message, QIODevice::WriteOnly);
-    ds << InspectorProtocol::ShowAppOnTop << showOnTop;
+    ds << QByteArray("request") << m_requestId++
+       << QByteArray("showAppOnTop") << showOnTop;
 
     sendMessage(message);
 }
@@ -118,17 +121,18 @@ void QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
 void QQmlInspectorClient::messageReceived(const QByteArray &message)
 {
     QDataStream ds(message);
-    InspectorProtocol::Message type;
+    QByteArray type;
     ds >> type;
 
-    switch (type) {
-    case InspectorProtocol::ShowAppOnTop:
-        ds >> m_showAppOnTop;
-        emit showAppOnTopChanged();
-        break;
-    default:
-        qDebug() << "Unhandled message " << (int)type;
+    if (type != QByteArray("response")) {
+        qDebug() << "Unhandled message of type" << type;
+        return;
     }
+
+    m_requestResult = false;
+    int requestId;
+    ds >> requestId >> m_requestResult;
+    emit responseReceived();
 }
 
 void tst_QQmlInspector::initTestCase()
@@ -180,12 +184,12 @@ void tst_QQmlInspector::showAppOnTop()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setShowAppOnTop(true);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(showAppOnTopChanged())));
-    QCOMPARE(m_client->showAppOnTop(), true);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
+    QCOMPARE(m_client->m_requestResult, true);
 
     m_client->setShowAppOnTop(false);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(showAppOnTopChanged())));
-    QCOMPARE(m_client->showAppOnTop(), false);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
+    QCOMPARE(m_client->m_requestResult, true);
 }
 
 QTEST_MAIN(tst_QQmlInspector)

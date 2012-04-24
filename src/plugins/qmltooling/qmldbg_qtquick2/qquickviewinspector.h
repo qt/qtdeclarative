@@ -66,9 +66,7 @@ public:
 
     // AbstractViewInspector
     void changeCurrentObjects(const QList<QObject*> &objects);
-    void reloadView();
     void reparentQmlObject(QObject *object, QObject *newParent);
-    void changeTool(InspectorProtocol::Tool tool);
     Qt::WindowFlags windowFlags() const;
     void setWindowFlags(Qt::WindowFlags flags);
     QQmlEngine *declarativeEngine() const;
@@ -103,8 +101,6 @@ private:
 
     QList<QPointer<QQuickItem> > m_selectedItems;
     QHash<QQuickItem*, SelectionHighlight*> m_highlightItems;
-
-    bool m_designMode;
 };
 
 } // namespace QtQuick2

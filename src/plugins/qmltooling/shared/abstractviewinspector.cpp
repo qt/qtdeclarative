@@ -42,8 +42,8 @@
 #include "abstractviewinspector.h"
 
 #include "abstracttool.h"
-#include "qqmlinspectorprotocol.h"
 
+#include <QtCore/QDebug>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 #include <QtCore/private/qabstractanimation_p.h>
@@ -53,17 +53,41 @@
 #include <QtGui/QMouseEvent>
 #include <QtGui/QTouchEvent>
 
+//INSPECTOR SERVICE PROTOCOL
+// <HEADER><COMMAND><DATA>
+// <HEADER> : <type{request, response, event}><requestId/eventId>[<response_success_bool>]
+// <COMMAND> : {"enable", "disable", "select", "setAnimationSpeed",
+//              "showAppOnTop", "createObject", "destroyObject", "moveObject",
+//              "clearCache"}
+// <DATA> : select: <debugIds_int_list>
+//          setAnimationSpeed: <speed_real>
+//          showAppOnTop: <set_bool>
+//          createObject: <qml_string><parentId_int><imports_string_list><filename_string>
+//          destroyObject: <debugId_int>
+//          moveObject: <debugId_int><newParentId_int>
+//          clearCache: void
+
+const char REQUEST[] = "request";
+const char RESPONSE[] = "response";
+const char EVENT[] = "event";
+const char ENABLE[] = "enable";
+const char DISABLE[] = "disable";
+const char SELECT[] = "select";
+const char SET_ANIMATION_SPEED[] = "setAnimationSpeed";
+const char SHOW_APP_ON_TOP[] = "showAppOnTop";
+const char CREATE_OBJECT[] = "createObject";
+const char DESTROY_OBJECT[] = "destroyObject";
+const char MOVE_OBJECT[] = "moveObject";
+const char CLEAR_CACHE[] = "clearCache";
+
 namespace QmlJSDebugger {
 
 
 AbstractViewInspector::AbstractViewInspector(QObject *parent) :
     QObject(parent),
-    m_currentTool(0),
-    m_showAppOnTop(false),
-    m_designModeBehavior(false),
-    m_animationPaused(false),
-    m_slowDownFactor(1.0),
-    m_debugService(QQmlInspectorService::instance())
+    m_enabled(false),
+    m_debugService(QQmlInspectorService::instance()),
+    m_eventId(0)
 {
 }
 
@@ -95,58 +119,20 @@ void AbstractViewInspector::clearComponentCache()
     declarativeEngine()->clearComponentCache();
 }
 
-void AbstractViewInspector::setDesignModeBehavior(bool value)
+void AbstractViewInspector::setEnabled(bool value)
 {
-    if (m_designModeBehavior == value)
+    if (m_enabled == value)
         return;
 
-    m_designModeBehavior = value;
-    m_currentTool->enable(m_designModeBehavior);
-    emit designModeBehaviorChanged(value);
-    sendDesignModeBehavior(value);
+    m_enabled = value;
+    foreach (AbstractTool *tool, m_tools)
+        tool->enable(m_enabled);
 }
 
 void AbstractViewInspector::setAnimationSpeed(qreal slowDownFactor)
 {
-    Q_ASSERT(slowDownFactor > 0);
-    if (m_slowDownFactor == slowDownFactor)
-        return;
-
-    animationSpeedChangeRequested(slowDownFactor);
-    sendAnimationSpeed(slowDownFactor);
-}
-
-void AbstractViewInspector::setAnimationPaused(bool paused)
-{
-    if (m_animationPaused == paused)
-        return;
-
-    animationPausedChangeRequested(paused);
-    sendAnimationPaused(paused);
-}
-
-void AbstractViewInspector::animationSpeedChangeRequested(qreal factor)
-{
-    if (m_slowDownFactor != factor) {
-        m_slowDownFactor = factor;
-        emit animationSpeedChanged(factor);
-    }
-
-    const float effectiveFactor = m_animationPaused ? 0 : factor;
-    QUnifiedTimer::instance()->setSlowModeEnabled(effectiveFactor != 1.0);
-    QUnifiedTimer::instance()->setSlowdownFactor(effectiveFactor);
-}
-
-void AbstractViewInspector::animationPausedChangeRequested(bool paused)
-{
-    if (m_animationPaused != paused) {
-        m_animationPaused = paused;
-        emit animationPausedChanged(paused);
-    }
-
-    const float effectiveFactor = paused ? 0 : m_slowDownFactor;
-    QUnifiedTimer::instance()->setSlowModeEnabled(effectiveFactor != 1.0);
-    QUnifiedTimer::instance()->setSlowdownFactor(effectiveFactor);
+    QUnifiedTimer::instance()->setSlowModeEnabled(slowDownFactor != 1.0);
+    QUnifiedTimer::instance()->setSlowdownFactor(slowDownFactor);
 }
 
 void AbstractViewInspector::setShowAppOnTop(bool appOnTop)
@@ -158,26 +144,11 @@ void AbstractViewInspector::setShowAppOnTop(bool appOnTop)
         flags &= ~Qt::WindowStaysOnTopHint;
 
     setWindowFlags(flags);
-
-    m_showAppOnTop = appOnTop;
-    sendShowAppOnTop(appOnTop);
-
-    emit showAppOnTopChanged(appOnTop);
-}
-
-void AbstractViewInspector::changeToInspectTool()
-{
-    changeTool(InspectorProtocol::InspectTool);
-}
-
-void AbstractViewInspector::changeToMarqueeSelectTool()
-{
-    changeTool(InspectorProtocol::SelectMarqueeTool);
 }
 
 bool AbstractViewInspector::eventFilter(QObject *obj, QEvent *event)
 {
-    if (!designModeBehavior())
+    if (!enabled())
         return QObject::eventFilter(obj, event);
 
     switch (event->type()) {
@@ -228,176 +199,152 @@ bool AbstractViewInspector::eventFilter(QObject *obj, QEvent *event)
 
 bool AbstractViewInspector::leaveEvent(QEvent *event)
 {
-    m_currentTool->leaveEvent(event);
+    foreach (AbstractTool *tool, m_tools)
+        tool->leaveEvent(event);
     return true;
 }
 
 bool AbstractViewInspector::mousePressEvent(QMouseEvent *event)
 {
-    m_currentTool->mousePressEvent(event);
+    foreach (AbstractTool *tool, m_tools)
+        tool->mousePressEvent(event);
     return true;
 }
 
 bool AbstractViewInspector::mouseMoveEvent(QMouseEvent *event)
 {
     if (event->buttons()) {
-        m_currentTool->mouseMoveEvent(event);
+        foreach (AbstractTool *tool, m_tools)
+            tool->mouseMoveEvent(event);
     } else {
-        m_currentTool->hoverMoveEvent(event);
+        foreach (AbstractTool *tool, m_tools)
+            tool->hoverMoveEvent(event);
     }
     return true;
 }
 
 bool AbstractViewInspector::mouseReleaseEvent(QMouseEvent *event)
 {
-    m_currentTool->mouseReleaseEvent(event);
+    foreach (AbstractTool *tool, m_tools)
+        tool->mouseReleaseEvent(event);
     return true;
 }
 
 bool AbstractViewInspector::keyPressEvent(QKeyEvent *event)
 {
-    m_currentTool->keyPressEvent(event);
+    foreach (AbstractTool *tool, m_tools)
+        tool->keyPressEvent(event);
     return true;
 }
 
 bool AbstractViewInspector::keyReleaseEvent(QKeyEvent *event)
 {
-    switch (event->key()) {
-    case Qt::Key_V:
-        changeTool(InspectorProtocol::InspectTool);
-        break;
-// disabled because multiselection does not do anything useful without design mode
-//    case Qt::Key_M:
-//        changeTool(InspectorProtocol::SelectMarqueeTool);
-//        break;
-    case Qt::Key_Space:
-        setAnimationPaused(!animationPaused());
-        break;
-    default:
-        break;
-    }
-
-    m_currentTool->keyReleaseEvent(event);
+    foreach (AbstractTool *tool, m_tools)
+        tool->keyReleaseEvent(event);
     return true;
 }
 
 bool AbstractViewInspector::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    m_currentTool->mouseDoubleClickEvent(event);
+    foreach (AbstractTool *tool, m_tools)
+        tool->mouseDoubleClickEvent(event);
     return true;
 }
 
 bool AbstractViewInspector::wheelEvent(QWheelEvent *event)
 {
-    m_currentTool->wheelEvent(event);
+    foreach (AbstractTool *tool, m_tools)
+        tool->wheelEvent(event);
     return true;
 }
 
 bool AbstractViewInspector::touchEvent(QTouchEvent *event)
 {
-    m_currentTool->touchEvent(event);
+    foreach (AbstractTool *tool, m_tools)
+        tool->touchEvent(event);
     return true;
 }
 
 void AbstractViewInspector::handleMessage(const QByteArray &message)
 {
+    bool success = true;
     QDataStream ds(message);
 
-    InspectorProtocol::Message type;
+    QByteArray type;
     ds >> type;
 
-    switch (type) {
-    case InspectorProtocol::SetCurrentObjects: {
-        int itemCount = 0;
-        ds >> itemCount;
+    int requestId = -1;
+    if (type == REQUEST) {
+        QByteArray command;
+        ds >> requestId >> command;
 
-        QList<QObject*> selectedObjects;
-        for (int i = 0; i < itemCount; ++i) {
-            int debugId = -1;
+        if (command == ENABLE) {
+            setEnabled(true);
+
+        } else if (command == DISABLE) {
+            setEnabled(false);
+
+        } else if (command == SELECT) {
+            QList<int> debugIds;
+            ds >> debugIds;
+
+            QList<QObject*> selectedObjects;
+            foreach (int debugId, debugIds) {
+                if (QObject *obj = QQmlDebugService::objectForId(debugId))
+                    selectedObjects << obj;
+            }
+            if (m_enabled)
+                changeCurrentObjects(selectedObjects);
+
+        } else if (command == SET_ANIMATION_SPEED) {
+            qreal speed;
+            ds >> speed;
+            setAnimationSpeed(speed);
+
+        } else if (command == SHOW_APP_ON_TOP) {
+            bool showOnTop;
+            ds >> showOnTop;
+            setShowAppOnTop(showOnTop);
+
+        } else if (command == CREATE_OBJECT) {
+            QString qml;
+            int parentId;
+            QString filename;
+            QStringList imports;
+            ds >> qml >> parentId >> imports >> filename;
+            createQmlObject(qml, QQmlDebugService::objectForId(parentId),
+                            imports, filename);
+
+        } else if (command == DESTROY_OBJECT) {
+            int debugId;
             ds >> debugId;
             if (QObject *obj = QQmlDebugService::objectForId(debugId))
-                selectedObjects << obj;
+                obj->deleteLater();
+
+        } else if (command == MOVE_OBJECT) {
+            int debugId, newParent;
+            ds >> debugId >> newParent;
+            reparentQmlObject(QQmlDebugService::objectForId(debugId),
+                              QQmlDebugService::objectForId(newParent));
+
+        } else if (command == CLEAR_CACHE) {
+            clearComponentCache();
+
+        } else {
+            qWarning() << "Warning: Not handling command:" << command;
+            success = false;
+
         }
-        if (m_designModeBehavior)
-            changeCurrentObjects(selectedObjects);
-        break;
-    }
-    case InspectorProtocol::Reload: {
-        reloadView();
-        break;
-    }
-    case InspectorProtocol::SetAnimationSpeed: {
-        qreal speed;
-        ds >> speed;
-        animationSpeedChangeRequested(speed);
-        break;
-    }
-    case InspectorProtocol::SetAnimationPaused: {
-        bool paused;
-        ds >> paused;
-        animationPausedChangeRequested(paused);
-        break;
-    }
-    case InspectorProtocol::ChangeTool: {
-        InspectorProtocol::Tool tool;
-        ds >> tool;
-        changeTool(tool);
-        break;
-    }
-    case InspectorProtocol::SetDesignMode: {
-        bool inDesignMode;
-        ds >> inDesignMode;
-        setDesignModeBehavior(inDesignMode);
-        break;
-    }
-    case InspectorProtocol::ShowAppOnTop: {
-        bool showOnTop;
-        ds >> showOnTop;
-        setShowAppOnTop(showOnTop);
-        break;
-    }
-    case InspectorProtocol::CreateObject: {
-        QString qml;
-        int parentId;
-        QString filename;
-        QStringList imports;
-        ds >> qml >> parentId >> imports >> filename;
-        createQmlObject(qml, QQmlDebugService::objectForId(parentId),
-                        imports, filename);
-        break;
-    }
-    case InspectorProtocol::DestroyObject: {
-        int debugId;
-        ds >> debugId;
-        if (QObject *obj = QQmlDebugService::objectForId(debugId))
-            obj->deleteLater();
-        break;
-    }
-    case InspectorProtocol::MoveObject: {
-        int debugId, newParent;
-        ds >> debugId >> newParent;
-        reparentQmlObject(QQmlDebugService::objectForId(debugId),
-                          QQmlDebugService::objectForId(newParent));
-        break;
-    }
-    case InspectorProtocol::ClearComponentCache: {
-        clearComponentCache();
-        break;
-    }
-    default:
-        qWarning() << "Warning: Not handling message:" << type;
-    }
-}
+    } else {
+        qWarning() << "Warning: Not handling type:" << type << REQUEST;
+        success = false;
 
-void AbstractViewInspector::sendDesignModeBehavior(bool inDesignMode)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
+    }
 
-    ds << InspectorProtocol::SetDesignMode
-       << inDesignMode;
-
-    m_debugService->sendMessage(message);
+    QByteArray response;
+    QDataStream rs(&response, QIODevice::WriteOnly);
+    rs << QByteArray(RESPONSE) << requestId << success;
+    m_debugService->sendMessage(response);
 }
 
 void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
@@ -405,66 +352,12 @@ void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
     QByteArray message;
     QDataStream ds(&message, QIODevice::WriteOnly);
 
-    ds << InspectorProtocol::CurrentObjectsChanged
-       << objects.length();
+    ds << QByteArray(EVENT) << m_eventId++ << QByteArray(SELECT);
 
-    foreach (QObject *object, objects) {
-        int id = QQmlDebugService::idForObject(object);
-        ds << id;
-    }
-
-    m_debugService->sendMessage(message);
-}
-
-void AbstractViewInspector::sendCurrentTool(Constants::DesignTool toolId)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-
-    ds << InspectorProtocol::ToolChanged
-       << toolId;
-
-    m_debugService->sendMessage(message);
-}
-
-void AbstractViewInspector::sendAnimationSpeed(qreal slowDownFactor)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-
-    ds << InspectorProtocol::AnimationSpeedChanged
-       << slowDownFactor;
-
-    m_debugService->sendMessage(message);
-}
-
-void AbstractViewInspector::sendAnimationPaused(bool paused)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-
-    ds << InspectorProtocol::AnimationPausedChanged
-       << paused;
-
-    m_debugService->sendMessage(message);
-}
-
-void AbstractViewInspector::sendReloaded()
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-
-    ds << InspectorProtocol::Reloaded;
-
-    m_debugService->sendMessage(message);
-}
-
-void AbstractViewInspector::sendShowAppOnTop(bool showAppOnTop)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-
-    ds << InspectorProtocol::ShowAppOnTop << showAppOnTop;
+    QList<int> debugIds;
+    foreach (QObject *object, objects)
+        debugIds << QQmlDebugService::idForObject(object);
+    ds << debugIds;
 
     m_debugService->sendMessage(message);
 }
@@ -478,6 +371,16 @@ QString AbstractViewInspector::idStringForObject(QObject *obj) const
             return cdata->findObjectId(obj);
     }
     return QString();
+}
+
+void AbstractViewInspector::appendTool(AbstractTool *tool)
+{
+    m_tools.append(tool);
+}
+
+void AbstractViewInspector::removeTool(AbstractTool *tool)
+{
+    m_tools.removeOne(tool);
 }
 
 } // namespace QmlJSDebugger

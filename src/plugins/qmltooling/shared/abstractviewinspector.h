@@ -46,7 +46,6 @@
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
 
-#include "qqmlinspectorprotocol.h"
 #include "qmlinspectorconstants.h"
 
 QT_BEGIN_NAMESPACE
@@ -80,42 +79,22 @@ public:
                          const QString &filename = QString());
     void clearComponentCache();
 
-    bool showAppOnTop() const { return m_showAppOnTop; }
-    bool designModeBehavior() const { return m_designModeBehavior; }
-
-    bool animationPaused() const { return m_animationPaused; }
-    qreal slowDownFactor() const { return m_slowDownFactor; }
+    bool enabled() const { return m_enabled; }
 
     void sendCurrentObjects(const QList<QObject*> &);
-    void sendAnimationSpeed(qreal slowDownFactor);
-    void sendAnimationPaused(bool paused);
-    void sendCurrentTool(Constants::DesignTool toolId);
-    void sendReloaded();
-    void sendShowAppOnTop(bool showAppOnTop);
 
     QString idStringForObject(QObject *obj) const;
 
     virtual void changeCurrentObjects(const QList<QObject*> &objects) = 0;
-    virtual void reloadView() = 0;
     virtual void reparentQmlObject(QObject *object, QObject *newParent) = 0;
-    virtual void changeTool(InspectorProtocol::Tool tool) = 0;
     virtual Qt::WindowFlags windowFlags() const = 0;
     virtual void setWindowFlags(Qt::WindowFlags flags) = 0;
     virtual QQmlEngine *declarativeEngine() const = 0;
 
-signals:
-    void designModeBehaviorChanged(bool inDesignMode);
-    void showAppOnTopChanged(bool showAppOnTop);
-    void reloadRequested();
-    void marqueeSelectToolActivated();
-    void inspectToolActivated();
-
-    void animationSpeedChanged(qreal factor);
-    void animationPausedChanged(bool paused);
+    void appendTool(AbstractTool *tool);
+    void removeTool(AbstractTool *tool);
 
 protected:
-    AbstractTool *currentTool() const { return m_currentTool; }
-    void setCurrentTool(AbstractTool *tool) { m_currentTool = tool; }
     bool eventFilter(QObject *, QEvent *);
 
     virtual bool leaveEvent(QEvent *);
@@ -129,31 +108,17 @@ protected:
     virtual bool touchEvent(QTouchEvent *event);
 
 private:
-    void sendDesignModeBehavior(bool inDesignMode);
-
-    void changeToZoomTool();
-    void changeToInspectTool();
-    void changeToMarqueeSelectTool();
-
-    virtual void setDesignModeBehavior(bool value);
+    void setEnabled(bool value);
 
     void setShowAppOnTop(bool appOnTop);
 
     void setAnimationSpeed(qreal factor);
-    void setAnimationPaused(bool paused);
 
-    void animationSpeedChangeRequested(qreal factor);
-    void animationPausedChangeRequested(bool paused);
-
-    AbstractTool *m_currentTool;
-
-    bool m_showAppOnTop;
-    bool m_designModeBehavior;
-
-    bool m_animationPaused;
-    qreal m_slowDownFactor;
+    bool m_enabled;
 
     QQmlInspectorService *m_debugService;
+    QList<AbstractTool *> m_tools;
+    int m_eventId;
 };
 
 } // namespace QmlJSDebugger

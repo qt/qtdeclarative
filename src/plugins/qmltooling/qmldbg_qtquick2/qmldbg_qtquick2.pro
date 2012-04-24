@@ -23,7 +23,6 @@ HEADERS += \
     qquickviewinspector.h \
     ../shared/abstracttool.h \
     ../shared/abstractviewinspector.h \
-    ../shared/qqmlinspectorprotocol.h \
     ../shared/qmlinspectorconstants.h \
     inspecttool.h
 

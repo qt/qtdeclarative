@@ -41,7 +41,6 @@
 
 #include "qquickviewinspector.h"
 
-#include "qqmlinspectorprotocol.h"
 #include "highlight.h"
 #include "inspecttool.h"
 
@@ -121,8 +120,7 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
     AbstractViewInspector(parent),
     m_view(view),
     m_overlay(new QQuickItem),
-    m_inspectTool(new InspectTool(this, view)),
-    m_designMode(true)
+    m_inspectTool(new InspectTool(this, view))
 {
     // Try to make sure the overlay is always on top
     m_overlay->setZ(FLT_MAX);
@@ -131,7 +129,7 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
         m_overlay->setParentItem(root);
 
     view->installEventFilter(this);
-    setCurrentTool(m_inspectTool);
+    appendTool(m_inspectTool);
 }
 
 void QQuickViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
@@ -144,12 +142,6 @@ void QQuickViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
     syncSelectedItems(items);
 }
 
-void QQuickViewInspector::reloadView()
-{
-    // TODO
-    emit reloadRequested();
-}
-
 void QQuickViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
 {
     if (!newParent)
@@ -160,22 +152,6 @@ void QQuickViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
     QQuickItem *item = qobject_cast<QQuickItem*>(object);
     if (newParentItem && item)
         item->setParentItem(newParentItem);
-}
-
-void QQuickViewInspector::changeTool(InspectorProtocol::Tool tool)
-{
-    switch (tool) {
-    case InspectorProtocol::SelectMarqueeTool:
-        // TODO
-        emit marqueeSelectToolActivated();
-        break;
-    case InspectorProtocol::InspectTool:
-        setCurrentTool(m_inspectTool);
-        emit inspectToolActivated();
-        break;
-    default:
-        break;
-    }
 }
 
 QWindow *getMasterWindow(QWindow *w)
