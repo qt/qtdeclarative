@@ -645,6 +645,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                             break;
                         default:
+                            if (! data[id].dataType())
+                                QQml_valueTypeProvider()->initValueType(t, data[id].dataPtr(), data[id].dataSize());
                             needActivate = QQml_valueTypeProvider()->writeValueType(t, a[0], data[id].dataPtr(), data[id].dataSize());
                             if (needActivate) {
                                 data[id].setDataType(t);
