@@ -165,6 +165,75 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 
 #endif // QT_NO_DEBUG
 
+/*!
+    \class QSGTexture
+
+    \inmodule QtQuick
+
+    \brief The QSGTexture class is a baseclass for textures used in
+    the scene graph.
+
+
+    Users can freely implement their own texture classes to support
+    arbitrary input textures, such as YUV video frames or 8 bit alpha
+    masks. The scene graph backend provides a default implementation
+    of normal color textures. As the implementation of these may be
+    hardware specific, they are are constructed via the factory
+    function QQuickCanvas::createTextureFromImage().
+
+    The texture is a wrapper around an OpenGL texture, which texture
+    id is given by textureId() and which size in pixels is given by
+    textureSize(). hasAlphaChannel() reports if the texture contains
+    opacity values and hasMipmaps() reports if the texture contains
+    mipmap levels.
+
+    To use a texture, call the bind() function. The texture parameters
+    specifying how the texture is bound, can be specified with
+    setMipmapFiltering(), setFiltering(), setHorizontalWrapMode() and
+    setVerticalWrapMode(). The texture will internally try to store
+    these values to minimize the OpenGL state changes when the texture
+    is bound.
+
+    \section1 Texture Atlasses
+
+    Some scene graph backens use texture atlasses, grouping multiple
+    small textures into one large texture. If this is the case, the
+    function isAtlasTexture() will return true. Atlasses are used to
+    aid the rendering algorithm to do better sorting which increases
+    performance. The location of the texture inside the atlas is
+    given with the normalizedTextureSubRect() function.
+
+    If the texture is used in such a way that atlas is not preferable,
+    the function removedFromAtlas() can be used to extract a
+    non-atlassed copy.
+ */
+
+/*!
+    \enum QSGTexture::WrapMode
+
+    Specifies how the texture should treat texture coordinates.
+
+    \value Repeat Only the factional part of the texture coordiante is
+    used, causing values above 1 and below 0 to repeat.
+
+    \value ClampToEdge Values above 1 are clamped to 1 and values
+    below 0 are clamped to 0.
+ */
+
+/*!
+    \enum QSGTexture::Filtering
+
+    Specifies how sampling of texels should filter when texture
+    coordinates are not pixel aligned.
+
+    \value None No filtering should occur. This value is only used
+    together with setMipmapFiltering().
+
+    \value Nearest Sampling returns the nearest texel.
+
+    \value Linear Sampling returns a linear interpolation of the
+    neighboring texels.
+*/
 
 QSGTexture::QSGTexture()
     : QObject(*(new QSGTexturePrivate))

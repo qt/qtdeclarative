@@ -1683,11 +1683,40 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     common across visual items - such as the x and y position, the
     width and height, \l {anchor-layout}{anchoring} and key handling.
 
-    You can subclass QQuickItem to provide your own custom visual item that inherits
-    these features. Note that, because it does not draw anything, QQuickItem sets the
-    QGraphicsItem::ItemHasNoContents flag. If you subclass QQuickItem to create a visual
-    item, you will need to unset this flag.
+    You can subclass QQuickItem to provide your own custom visual item
+    that inherits these features.
 
+    \section1 Custom Items using Scene Graph
+
+    All visual QML items are rendered using the scene graph, a
+    low-level, high-performance rendering stack, closely tied to
+    OpenGL. It is possible for subclasses of QQuickItem to add their
+    own custom content into the scene graph by setting the
+    QQuickItem::ItemHasContents flag and reimplementing the
+    QQuickItem::updatePaintNode() function.
+
+    \warning It is crucial that OpenGL operations and interaction with
+    the scene graph happens exclusively on the rendering thread,
+    primarily during the updatePaintNode() call. The best rule of
+    thumb is to only use classes with the "QSG" prefix inside the
+    QQuickItem::updatePaintNode() function.
+
+    To read more about how the scene graph rendering works, see
+    \l{Scene Graph and Rendering}
+
+    \section1 Custom Items using QPainter
+
+    The QQuickItem provides a subclass, QQuickPaintedItem, which
+    allows the users to render content using QPainter.
+
+    \warning Using QQuickPaintedItem uses an indirect 2D surface to
+    render its content, either using software rasterization or using
+    an OpenGL framebuffer object (FBO), so the rendering is a two-step
+    operation. First rasterize the surface, then draw the
+    surface. Using scene graph API directly is always significantly
+    faster.
+
+    \sa QQuickCanvas, QQuickPaintedItem
 */
 
 /*!
@@ -3049,16 +3078,40 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
 }
 
 /*!
-    Called by the rendering thread when it is time to sync the state of the QML objects with the
-    scene graph objects. The function should return the root of the scene graph subtree for
-    this item. \a oldNode is the node that was returned the last time the function was called.
+    Called by the rendering thread, as a result of
+    QQuickItem::update(), when it is time to sync the state of the QML
+    objects with the scene graph objects.
+
+    The function should return the root of the scene graph subtree for
+    this item. Most implementations will return a single
+    QSGGeometryNode containing the visual representation of this item.
+    \a oldNode is the node that was returned the last time the
+    function was called.
+
+    \code
+    QSGNode *MyItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
+    {
+        QSGSimpleRectNode *n = static_cast<QSGSimpleRectNode *>(node);
+        if (!n) {
+            n = new QSGSimpleRectNode();
+            n->setColor(Qt::red);
+        }
+        n->setRect(boundingRect());
+        return n;
+    }
+    \endcode
 
     The main thread is blocked while this function is executed so it is safe to read
     values from the QQuickItem instance and other objects in the main thread.
 
-    \warning This is the only function in which it is allowed to make use of scene graph
-    objects from the main thread. Use of scene graph objects outside this function will
-    result in race conditions and potential crashes.
+    \warning It is crucial that OpenGL operations and interaction with
+    the scene graph happens exclusively on the rendering thread,
+    primarily during the QQuickItem::updatePaintNode() call. The best
+    rule of thumb is to only use classes with the "QSG" prefix inside
+    the QQuickItem::updatePaintNode() function.
+
+    \sa QSGMaterial, QSGSimpleMaterial, QSGGeometryNode, QSGGeometry,
+    QSGFlatColorMaterial, QSGTextureMaterial
  */
 
 QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)

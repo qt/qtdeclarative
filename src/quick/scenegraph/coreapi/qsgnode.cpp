@@ -562,6 +562,25 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
     the vertices and their structure, to be drawn. The Material defines how the shape is
     filled.
 
+    The following is a code snipped illustrating how to create a red
+    line using a QSGGeometryNode:
+    \code
+        QSGGeometry *geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 2);
+        geometry->setDrawingMode(GL_LINES);
+        geometry->setLineWidth(3);
+        geometry->vertexDataAsPoint2D()[0].set(0, 0);
+        geometry->vertexDataAsPoint2D()[1].set(width(), height());
+
+        QSGFlatColorMaterial *material = new QSGFlatColorMaterial;
+        material->setColor(QColor(255, 0, 0));
+
+        QSGGeometryNode *node = new QSGGeometryNode;
+        node->setGeometry(geometry);
+        node->setFlag(QSGNode::OwnsGeometry);
+        node->setMaterial(material);
+        node->setFlag(QSGNode::OwnsMaterial);
+    \endcode
+
     A geometry node must have both geometry and a normal material before it is added to
     the scene graph.
 
@@ -571,6 +590,7 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
     to avoid an extra operation in the fragment shader can have significant performance
     impact on embedded graphics chips. The opaque material is optional.
 
+    \sa QSGGeometry, QSGMaterial, QSGSimpleMaterial
  */
 
 

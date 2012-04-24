@@ -750,7 +750,6 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 
     For easily displaying a scene from a QML file, see \l{QQuickView}.
 
-
     \section1 Scene Graph and Rendering
 
     The QQuickCanvas uses a scene graph on top of OpenGL to render. This scene graph is disconnected
@@ -762,18 +761,46 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
     rendered to the screen for the first time. If the rendering scene graph has been released
     the signal will be emitted again before the next frame is rendered.
 
-    Rendering is done by first copying the QML scene's state into the rendering scene graph. This is
-    done by calling QQuickItem::updatePaintNode() functions on all items that have changed. This phase
-    is run on the rendering thread with the GUI thread blocked, when a separate rendering thread
-    is being used. The scene can then be rendered.
+    The rendering of each frame is broken down into the following
+    steps, in the given order:
 
-    Before the scene graph is rendered, the beforeRendering() signal is emitted. The OpenGL context
-    is bound at this point and the application is free to do its own rendering. Also
-    make sure to disable the clearing of the color buffer, using setClearBeforeRendering(). The
-    default clear color is white and can be changed with setClearColor(). After the scene has
-    been rendered, the afterRendering() signal is emitted. The application can use this to render
-    OpenGL on top of a QML application. Once the frame is fully done and has been swapped,
-    the frameSwapped() signal is emitted.
+    \list
+
+    \li Synchronzation of the QML state into the scene graph. This is
+    done by calling the QQuickItem::updatePaintNode() function on all
+    items that have changed since the previous frame. When a dedicated
+    rendering thread is used, the GUI thread is blocked during this
+    synchroniation. This is the only time the QML items and the nodes
+    in the scene graph interact.
+
+    \li The canvas to be rendered is made current using
+    QOpenGLContext::makeCurrent().
+
+    \li The QQuickCanvas::beforeRendering() signal is
+    emitted. Applications can make direct connections
+    (Qt::DirectConnection) to this signal to use custom OpenGL calls
+    which will then stack visually beneath the QML scene.
+
+    \li Items that have specified QSGNode::UsesPreprocess, will have their
+    QSGNode::preprocess() function invoked.
+
+    \li The QQuickCanvas is cleared according to what is specified
+    using QQuickCanvas::setClearBeforeRenderig() and
+    QQuickCanvas::setClearColor().
+
+    \li The scene graph is rendered.
+
+    \li The QQuickCanvas::afterRendering() signal is
+    emitted. Applications can make direct connections
+    (Qt::DirectConnection) to this signal to use custom OpenGL calls
+    which will then stack visually over the QML scene.
+
+    \li The rendered frame is swapped and QQuickCanvas::frameSwapped()
+    is emitted.
+
+    \endlist
+
+    All of the above happen on the rendering thread, when applicable.
 
     While the scene graph is being rendered on the rendering thread, the GUI will process animations
     for the next frame. This means that as long as users are not using scene graph API
@@ -790,7 +817,7 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
     connections should be made using Qt::DirectConnection
 
 
-    \section1 Resource Management
+    \section2 Resource Management
 
     QML will typically try to cache images, scene graph nodes, etc to improve performance, but in
     some low-memory scenarios it might be required to aggressively release these resources. The
