@@ -1493,14 +1493,19 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
             touchEvent.setTouchPoints(eventPoints);
             touchEvent.setTimestamp(event->timestamp());
 
+            for (int i = 0; i < matchingPoints.count(); ++i)
+                itemForTouchPointId[matchingPoints[i].id()] = item;
+
             touchEvent.accept();
             q->sendEvent(item, &touchEvent);
 
             if (touchEvent.isAccepted()) {
-                for (int i=0; i<matchingPoints.count(); i++) {
-                    itemForTouchPointId[matchingPoints[i].id()] = item;
+                for (int i = 0; i < matchingPoints.count(); ++i)
                     acceptedNewPoints->insert(matchingPoints[i].id());
-                }
+            } else {
+                for (int i = 0; i < matchingPoints.count(); ++i)
+                    if (itemForTouchPointId.value(matchingPoints[i].id()) == item)
+                        itemForTouchPointId.remove(matchingPoints[i].id());
             }
         }
     }

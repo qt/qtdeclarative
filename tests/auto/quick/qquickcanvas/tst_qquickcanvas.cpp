@@ -144,7 +144,8 @@ class TestTouchItem : public QQuickRectangle
     Q_OBJECT
 public:
     TestTouchItem(QQuickItem *parent = 0)
-        : QQuickRectangle(parent), acceptEvents(true), mousePressId(0)
+        : QQuickRectangle(parent), acceptEvents(true), mousePressId(0),
+          spinLoopWhenPressed(false), touchEventCount(0)
     {
         border()->setWidth(1);
         setAcceptedMouseButtons(Qt::LeftButton);
@@ -164,17 +165,29 @@ public:
         mousePressNum = 0;
     }
 
+    void clearTouchEventCounter()
+    {
+        touchEventCount = 0;
+    }
+
     bool acceptEvents;
     TouchEventData lastEvent;
     int mousePressId;
+    bool spinLoopWhenPressed;
+    int touchEventCount;
+
 protected:
     virtual void touchEvent(QTouchEvent *event) {
         if (!acceptEvents) {
             event->ignore();
             return;
         }
+        ++touchEventCount;
         lastEvent = makeTouchData(event->type(), event->window(), event->touchPointStates(), event->touchPoints());
         event->accept();
+        if (spinLoopWhenPressed && event->touchPointStates().testFlag(Qt::TouchPointPressed)) {
+            QCoreApplication::processEvents();
+        }
     }
 
     virtual void mousePressEvent(QMouseEvent *) {
@@ -230,6 +243,7 @@ private slots:
     void touchEvent_propagation();
     void touchEvent_propagation_data();
     void touchEvent_cancel();
+    void touchEvent_reentrant();
 
     void clearCanvas();
 
@@ -535,6 +549,42 @@ void tst_qquickcanvas::touchEvent_cancel()
     QCoreApplication::processEvents();
     d = makeTouchData(QEvent::TouchCancel, canvas);
     COMPARE_TOUCH_DATA(item->lastEvent, d);
+
+    delete item;
+    delete canvas;
+}
+
+void tst_qquickcanvas::touchEvent_reentrant()
+{
+    TestTouchItem::clearMousePressCounter();
+
+    QQuickCanvas *canvas = new QQuickCanvas;
+    canvas->resize(250, 250);
+    canvas->setPos(100, 100);
+    canvas->show();
+
+    TestTouchItem *item = new TestTouchItem(canvas->rootItem());
+
+    item->spinLoopWhenPressed = true; // will call processEvents() from the touch handler
+
+    item->setPos(QPointF(50, 50));
+    item->setSize(QSizeF(150, 150));
+    QPointF pos(60, 60);
+
+    // None of these should commit from the dtor.
+    QTest::QTouchEventSequence press = QTest::touchEvent(canvas, touchDevice, false).press(0, pos.toPoint(), canvas);
+    pos += QPointF(2, 2);
+    QTest::QTouchEventSequence move = QTest::touchEvent(canvas, touchDevice, false).move(0, pos.toPoint(), canvas);
+    QTest::QTouchEventSequence release = QTest::touchEvent(canvas, touchDevice, false).release(0, pos.toPoint(), canvas);
+
+    // Now commit (i.e. call QWindowSystemInterface::handleTouchEvent), but do not process the events yet.
+    press.commit(false);
+    move.commit(false);
+    release.commit(false);
+
+    QCoreApplication::processEvents();
+
+    QTRY_COMPARE(item->touchEventCount, 3);
 
     delete item;
     delete canvas;
