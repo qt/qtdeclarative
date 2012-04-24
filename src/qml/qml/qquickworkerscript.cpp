@@ -282,7 +282,7 @@ v8::Handle<v8::Value> QQuickWorkerScriptEnginePrivate::sendMessage(const v8::Arg
 
     QByteArray data = QV8Worker::serialize(args[2], engine);
 
-    QMutexLocker(&engine->p->m_lock);
+    QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
     if (!script)
         return v8::Undefined();
@@ -405,7 +405,7 @@ void QQuickWorkerScriptEnginePrivate::reportScriptException(WorkerScript *script
 {
     QQuickWorkerScriptEnginePrivate *p = QQuickWorkerScriptEnginePrivate::get(workerEngine);
 
-    QMutexLocker(&p->m_lock);
+    QMutexLocker locker(&p->m_lock);
     if (script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerErrorEvent(error));
 }
