@@ -47,7 +47,12 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \class QSGMaterialShader
-    \brief The QSGMaterialShader class implements a material renders geometry.
+    \brief The QSGMaterialShader class represents an OpenGL shader program
+    in the renderer.
+
+    The QSGMaterialShader API is very low-level. A more convenient API, which
+    provides almost all the same features, is available through
+    QSGSimpleMaterialShader.
 
     The QSGMaterial and QSGMaterialShader form a tight relationship. For one
     scene graph (including nested graphs), there is one unique QSGMaterialShader
@@ -436,6 +441,10 @@ static void qt_print_material_count()
 /*!
     \class QSGMaterial
     \brief The QSGMaterial class encapsulates rendering state for a shader program.
+
+    The QSGMaterial API is very low-level. A more convenient API, which
+    provides almost all the same features, is available through
+    QSGSimpleMaterialShader.
 
     The QSGMaterial and QSGMaterialShader subclasses form a tight relationship. For
     one scene graph (including nested graphs), there is one unique QSGMaterialShader

@@ -18,7 +18,8 @@ SOURCES += \
     $$PWD/coreapi/qsgnode.cpp \
     $$PWD/coreapi/qsgnodeupdater.cpp \
     $$PWD/coreapi/qsgrenderer.cpp \
-    $$PWD/coreapi/qsgrendernode.cpp
+    $$PWD/coreapi/qsgrendernode.cpp \
+    scenegraph/util/qsgsimplematerial.cpp
 
 # Util API
 HEADERS += \
@@ -79,6 +80,7 @@ SOURCES += \
     $$PWD/qsgdefaultrectanglenode.cpp \
     $$PWD/qsgflashnode.cpp \
     $$PWD/qsgshareddistancefieldglyphcache.cpp
+
 
 
 
