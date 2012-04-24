@@ -537,20 +537,39 @@ bool QQuickTextEditPrivate::setHAlign(QQuickTextEdit::HAlignment alignment, bool
     return false;
 }
 
+
+Qt::LayoutDirection QQuickTextEditPrivate::textDirection(const QString &text) const
+{
+    const QChar *character = text.constData();
+    while (!character->isNull()) {
+        switch (character->direction()) {
+        case QChar::DirL:
+            return Qt::LeftToRight;
+        case QChar::DirR:
+        case QChar::DirAL:
+        case QChar::DirAN:
+            return Qt::RightToLeft;
+        default:
+            break;
+        }
+        character++;
+    }
+    return Qt::LayoutDirectionAuto;
+}
+
 bool QQuickTextEditPrivate::determineHorizontalAlignment()
 {
     Q_Q(QQuickTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
-        bool alignToRight;
-        if (document->isEmpty()) {
+        Qt::LayoutDirection direction = contentDirection;
+        if (direction == Qt::LayoutDirectionAuto) {
             const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
-            alignToRight = preeditText.isEmpty()
-                    ? qApp->inputMethod()->inputDirection() == Qt::RightToLeft
-                    : preeditText.isRightToLeft();
-        } else {
-            alignToRight = rightToLeftText;
+            direction = textDirection(preeditText);
         }
-        return setHAlign(alignToRight ? QQuickTextEdit::AlignRight : QQuickTextEdit::AlignLeft);
+        if (direction == Qt::LayoutDirectionAuto)
+            direction = qGuiApp->inputMethod()->inputDirection();
+
+        return setHAlign(direction == Qt::RightToLeft ? QQuickTextEdit::AlignRight : QQuickTextEdit::AlignLeft);
     }
     return false;
 }
@@ -1781,7 +1800,11 @@ void QQuickTextEdit::q_textChanged()
 {
     Q_D(QQuickTextEdit);
     d->textCached = false;
-    d->rightToLeftText = d->document->begin().layout()->engine()->isRightToLeft();
+    for (QTextBlock it = d->document->begin(); it != d->document->end(); it = it.next()) {
+        d->contentDirection = d->textDirection(it.text());
+        if (d->contentDirection != Qt::LayoutDirectionAuto)
+            break;
+    }
     d->determineHorizontalAlignment();
     d->updateDefaultTextOption();
     updateSize();
@@ -2016,24 +2039,34 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
     Q_Q(QQuickTextEdit);
     QTextOption opt = document->defaultTextOption();
     int oldAlignment = opt.alignment();
+    Qt::LayoutDirection oldTextDirection = opt.textDirection();
 
     QQuickTextEdit::HAlignment horizontalAlignment = q->effectiveHAlign();
-    if (rightToLeftText) {
+    if (contentDirection == Qt::RightToLeft) {
         if (horizontalAlignment == QQuickTextEdit::AlignLeft)
             horizontalAlignment = QQuickTextEdit::AlignRight;
         else if (horizontalAlignment == QQuickTextEdit::AlignRight)
             horizontalAlignment = QQuickTextEdit::AlignLeft;
     }
-    opt.setAlignment((Qt::Alignment)(int)(horizontalAlignment | vAlign));
+    if (!hAlignImplicit)
+        opt.setAlignment((Qt::Alignment)(int)(horizontalAlignment | vAlign));
+    else
+        opt.setAlignment(Qt::Alignment(vAlign));
+
+    if (contentDirection == Qt::LayoutDirectionAuto) {
+        opt.setTextDirection(qGuiApp->inputMethod()->inputDirection());
+    } else {
+        opt.setTextDirection(contentDirection);
+    }
 
     QTextOption::WrapMode oldWrapMode = opt.wrapMode();
     opt.setWrapMode(QTextOption::WrapMode(wrapMode));
     opt.setUseDesignMetrics(true);
 
-    if (oldWrapMode == opt.wrapMode() && oldAlignment == opt.alignment())
-        return;
-
-    document->setDefaultTextOption(opt);
+    if (oldWrapMode != opt.wrapMode() || oldAlignment != opt.alignment()
+        || oldTextDirection != opt.textDirection()) {
+        document->setDefaultTextOption(opt);
+    }
 }
 
 

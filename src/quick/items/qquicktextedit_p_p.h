@@ -73,12 +73,13 @@ public:
         , lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
+        , contentDirection(Qt::LayoutDirectionAuto)
         , mouseSelectionMode(QQuickTextEdit::SelectCharacters), inputMethodHints(Qt::ImhNone)
         , updateType(UpdatePaintNode)
         , documentDirty(true), dirty(false), richText(false), cursorVisible(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
-        , rightToLeftText(false), textCached(false), inLayout(false)
+        , textCached(false), inLayout(false)
     {
     }
 
@@ -93,6 +94,7 @@ public:
     bool setHAlign(QQuickTextEdit::HAlignment, bool forceAlign = false);
     void mirrorChange();
     qreal getImplicitWidth() const;
+    Qt::LayoutDirection textDirection(const QString &text) const;
 
     QColor color;
     QColor selectionColor;
@@ -127,6 +129,7 @@ public:
     QQuickTextEdit::VAlignment vAlign;
     QQuickTextEdit::TextFormat format;
     QQuickTextEdit::WrapMode wrapMode;
+    Qt::LayoutDirection contentDirection;
     QQuickTextEdit::SelectionMode mouseSelectionMode;
     Qt::InputMethodHints inputMethodHints;
     UpdateType updateType;
@@ -142,7 +145,6 @@ public:
     bool canPaste:1;
     bool canPasteValid:1;
     bool hAlignImplicit:1;
-    bool rightToLeftText:1;
     bool textCached:1;
     bool inLayout:1;
 };

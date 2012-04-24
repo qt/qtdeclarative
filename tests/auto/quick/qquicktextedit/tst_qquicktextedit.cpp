@@ -751,6 +751,16 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
     QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
 
+    // neutral text follows also input method direction
+    textEdit->resetHAlign();
+    textEdit->setText(" ()((=<>");
+    platformInputContext.setInputDirection(Qt::LeftToRight);
+    QCOMPARE(textEdit->effectiveHAlign(), QQuickTextEdit::AlignLeft);
+    QVERIFY(textEdit->cursorRectangle().left() < canvas.width()/2);
+    platformInputContext.setInputDirection(Qt::RightToLeft);
+    QCOMPARE(textEdit->effectiveHAlign(), QQuickTextEdit::AlignRight);
+    QVERIFY(textEdit->cursorRectangle().left() > canvas.width()/2);
+
     // set input direction while having content
     platformInputContext.setInputDirection(Qt::LeftToRight);
     textEdit->setText("a");
