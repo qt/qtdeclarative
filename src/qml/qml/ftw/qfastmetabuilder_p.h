@@ -222,7 +222,7 @@ void QFastMetaBuilder::StringRef::loadByteArrayData()
     int offsetofCstrings = _b->m_stringCount * sizeof(QByteArrayData);
     qptrdiff offset = offsetofCstrings + _o - _i * sizeof(QByteArrayData);
 
-    const QByteArrayData bad = { Q_REFCOUNT_INITIALIZE_STATIC, _l, 0, 0, offset };
+    const QByteArrayData bad = Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(_l, offset);
     memcpy(&_b->m_stringData[_i], &bad, sizeof(QByteArrayData));
 
     ++_b->m_stringCountLoaded;
