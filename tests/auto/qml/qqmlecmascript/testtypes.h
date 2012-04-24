@@ -54,6 +54,9 @@
 #include <QtGui/QFont>
 #include <QtGui/QPixmap>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonvalue.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlcomponent.h>
@@ -677,6 +680,14 @@ public:
     Q_INVOKABLE int method_default(int a, int b = 19) { invoke(20); m_actuals << a << b; return b; }
 
     Q_INVOKABLE void method_QVariant(QVariant a, QVariant b = QVariant()) { invoke(21); m_actuals << a << b; }
+
+    Q_INVOKABLE void method_QJsonObject(const QJsonObject &a) { invoke(22); m_actuals << QVariant::fromValue(a); }
+    Q_INVOKABLE void method_QJsonArray(const QJsonArray &a) { invoke(23); m_actuals << QVariant::fromValue(a); }
+    Q_INVOKABLE void method_QJsonValue(const QJsonValue &a) { invoke(24); m_actuals << QVariant::fromValue(a); }
+
+    Q_INVOKABLE void method_overload(const QJsonObject &a) { invoke(25); m_actuals << QVariant::fromValue(a); }
+    Q_INVOKABLE void method_overload(const QJsonArray &a) { invoke(26); m_actuals << QVariant::fromValue(a); }
+    Q_INVOKABLE void method_overload(const QJsonValue &a) { invoke(27); m_actuals << QVariant::fromValue(a); }
 
 private:
     friend class MyInvokableBaseObject;

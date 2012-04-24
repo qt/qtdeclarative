@@ -2607,6 +2607,97 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o.actuals().count(), 2);
     QCOMPARE(o.actuals().at(0), QVariant(QString("Hello")));
     QCOMPARE(o.actuals().at(1), QVariant(QString("World")));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonObject({foo:123})", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 22);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonObject>(o.actuals().at(0)), QJsonDocument::fromJson("{\"foo\":123}").object());
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonArray([123])", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 23);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonArray>(o.actuals().at(0)), QJsonDocument::fromJson("[123]").array());
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(123)", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 24);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(123));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(42.35)", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 24);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(42.35));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonValue('ciao')", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 24);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QStringLiteral("ciao")));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(true)", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 24);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(true));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(false)", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 24);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(false));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(null)", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 24);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Null));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(undefined)", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 24);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Undefined));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload({foo:123})", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 25);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonObject>(o.actuals().at(0)), QJsonDocument::fromJson("{\"foo\":123}").object());
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload([123])", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 26);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonArray>(o.actuals().at(0)), QJsonDocument::fromJson("[123]").array());
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload(null)", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 27);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Null));
+
+    o.reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload(undefined)", v8::Undefined()));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), 27);
+    QCOMPARE(o.actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Undefined));
 }
 
 // QTBUG-13047 (check that you can pass registered object types as args)

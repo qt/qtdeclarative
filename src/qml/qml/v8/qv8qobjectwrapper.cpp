@@ -54,6 +54,8 @@
 #include <private/qqmlexpression_p.h>
 
 #include <QtQml/qjsvalue.h>
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qtimer.h>
@@ -124,14 +126,15 @@ public:
 
 namespace {
 
-template<typename A, typename B, typename C, typename D, typename E>
-class MaxSizeOf5 {
+template<typename A, typename B, typename C, typename D, typename E,
+         typename F, typename G, typename H>
+class MaxSizeOf8 {
     template<typename Z, typename X>
     struct SMax {
-        static const size_t Size = sizeof(Z) > sizeof(X) ? sizeof(Z) : sizeof(X);
+        char dummy[sizeof(Z) > sizeof(X) ? sizeof(Z) : sizeof(X)];
     };
 public:
-    static const size_t Size = SMax<A, SMax<B, SMax<C, SMax<D, E> > > >::Size;
+    static const size_t Size = sizeof(SMax<A, SMax<B, SMax<C, SMax<D, SMax<E, SMax<F, SMax<G, H> > > > > > >);
 };
 
 struct CallArgument {
@@ -155,11 +158,14 @@ private:
         bool boolValue;
         QObject *qobjectPtr;
 
-        char allocData[MaxSizeOf5<QVariant,
+        char allocData[MaxSizeOf8<QVariant,
                                 QString,
                                 QList<QObject *>,
                                 QJSValue,
-                                QQmlV8Handle>::Size];
+                                QQmlV8Handle,
+                                QJsonArray,
+                                QJsonObject,
+                                QJsonValue>::Size];
         qint64 q_for_alignment;
     };
 
@@ -170,6 +176,9 @@ private:
         QList<QObject *> *qlistPtr;
         QJSValue *qjsValuePtr;
         QQmlV8Handle *handlePtr;
+        QJsonArray *jsonArrayPtr;
+        QJsonObject *jsonObjectPtr;
+        QJsonValue *jsonValuePtr;
     };
 
     int type;
@@ -1588,6 +1597,8 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         case QMetaType::Char:
         case QMetaType::UChar:
             return 6;
+        case QMetaType::QJsonValue:
+            return 5;
         default:
             return 10;
         }
@@ -1595,6 +1606,8 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         switch (conversionType) {
         case QMetaType::QString:
             return 0;
+        case QMetaType::QJsonValue:
+            return 5;
         default:
             return 10;
         }
@@ -1602,6 +1615,8 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         switch (conversionType) {
         case QMetaType::Bool:
             return 0;
+        case QMetaType::QJsonValue:
+            return 5;
         default:
             return 10;
         }
@@ -1625,6 +1640,8 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         }
     } else if (actual->IsArray()) {
         switch (conversionType) {
+        case QMetaType::QJsonArray:
+            return 3;
         case QMetaType::QStringList:
         case QMetaType::QVariantList:
             return 5;
@@ -1635,6 +1652,7 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         switch (conversionType) {
         case QMetaType::VoidStar:
         case QMetaType::QObjectStar:
+        case QMetaType::QJsonValue:
             return 0;
         default: {
             const char *typeName = QMetaType::typeName(conversionType);
@@ -1662,6 +1680,8 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
                 return 0;
             else
                 return 10;
+        } else if (conversionType == QMetaType::QJsonObject) {
+            return 5;
         } else {
             return 10;
         }
@@ -1983,6 +2003,12 @@ void CallArgument::cleanup()
         qjsValuePtr->~QJSValue();
     } else if (type == qMetaTypeId<QList<QObject *> >()) {
         qlistPtr->~QList<QObject *>();
+    }  else if (type == QMetaType::QJsonArray) {
+        jsonArrayPtr->~QJsonArray();
+    }  else if (type == QMetaType::QJsonObject) {
+        jsonObjectPtr->~QJsonObject();
+    }  else if (type == QMetaType::QJsonValue) {
+        jsonValuePtr->~QJsonValue();
     } 
 }
 
@@ -2023,6 +2049,15 @@ void CallArgument::initAsType(int callType)
     } else if (callType == qMetaTypeId<QQmlV8Handle>()) {
         type = callType;
         handlePtr = new (&allocData) QQmlV8Handle;
+    } else if (callType == QMetaType::QJsonArray) {
+        type = callType;
+        jsonArrayPtr = new (&allocData) QJsonArray();
+    } else if (callType == QMetaType::QJsonObject) {
+        type = callType;
+        jsonObjectPtr = new (&allocData) QJsonObject();
+    } else if (callType == QMetaType::QJsonValue) {
+        type = callType;
+        jsonValuePtr = new (&allocData) QJsonValue();
     } else if (callType == QMetaType::Void) {
         type = -1;
         qvariantPtr = new (&allocData) QVariant();
@@ -2079,6 +2114,15 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         type = callType;
     } else if (callType == qMetaTypeId<QQmlV8Handle>()) {
         handlePtr = new (&allocData) QQmlV8Handle(QQmlV8Handle::fromHandle(value));
+        type = callType;
+    } else if (callType == QMetaType::QJsonArray) {
+        jsonArrayPtr = new (&allocData) QJsonArray(engine->jsonArrayFromJS(value));
+        type = callType;
+    } else if (callType == QMetaType::QJsonObject) {
+        jsonObjectPtr = new (&allocData) QJsonObject(engine->jsonObjectFromJS(value));
+        type = callType;
+    } else if (callType == QMetaType::QJsonValue) {
+        jsonValuePtr = new (&allocData) QJsonValue(engine->jsonValueFromJS(value));
         type = callType;
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
@@ -2141,6 +2185,12 @@ v8::Handle<v8::Value> CallArgument::toValue(QV8Engine *engine)
         return array;
     } else if (type == qMetaTypeId<QQmlV8Handle>()) {
         return handlePtr->toHandle();
+    } else if (type == QMetaType::QJsonArray) {
+        return engine->jsonArrayToJS(*jsonArrayPtr);
+    } else if (type == QMetaType::QJsonObject) {
+        return engine->jsonObjectToJS(*jsonObjectPtr);
+    } else if (type == QMetaType::QJsonValue) {
+        return engine->jsonValueToJS(*jsonValuePtr);
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
         v8::Handle<v8::Value> rv = engine->fromVariant(value);
