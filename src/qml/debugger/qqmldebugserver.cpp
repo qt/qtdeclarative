@@ -303,14 +303,13 @@ QQmlDebugServer *QQmlDebugServer::instance()
                 qQmlDebugServer->moveToThread(thread);
                 thread->setPluginName(pluginName);
                 thread->setPort(port, block, hostAddress);
+
+                QQmlDebugServerPrivate *d = qQmlDebugServer->d_func();
+                QMutexLocker locker(&d->messageArrivedMutex);
                 thread->start();
 
-                if (block) {
-                    QQmlDebugServerPrivate *d = qQmlDebugServer->d_func();
-                    d->messageArrivedMutex.lock();
+                if (block)
                     d->messageArrivedCondition.wait(&d->messageArrivedMutex);
-                    d->messageArrivedMutex.unlock();
-                }
 
             } else {
                 qWarning() << QString(QLatin1String(
