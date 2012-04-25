@@ -10,7 +10,7 @@ include(../shared/debugutil.pri)
 
 OTHER_FILES += data/test.qml
 
-CONFIG += parallel_test declarative_debug
+CONFIG += parallel_test
 
 QT += qml testlib
 

@@ -7,6 +7,6 @@ SOURCES += tst_qqmlinspector.cpp
 INCLUDEPATH += ../shared
 include(../shared/debugutil.pri)
 
-CONFIG += parallel_test declarative_debug
+CONFIG += parallel_test
 
 QT += qml testlib

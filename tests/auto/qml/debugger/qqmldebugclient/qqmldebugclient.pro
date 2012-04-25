@@ -10,6 +10,8 @@ SOURCES += tst_qqmldebugclient.cpp \
 INCLUDEPATH += ../shared
 include(../shared/debugutil.pri)
 
-CONFIG += declarative_debug
+DEFINES += QT_QML_DEBUG_NO_WARNING
+
+CONFIG += qml_debug
 
 QT += qml-private testlib

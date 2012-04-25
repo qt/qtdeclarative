@@ -2,7 +2,7 @@ TARGET = app
 DESTDIR = $$OUT_PWD
 QT += qml quick
 
-CONFIG += declarative_debug
+CONFIG += qml_debug
 macx:CONFIG -= app_bundle
 
 SOURCES += main.cpp

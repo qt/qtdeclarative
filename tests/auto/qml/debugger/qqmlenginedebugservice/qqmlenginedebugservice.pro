@@ -13,6 +13,8 @@ INCLUDEPATH += ../shared
 include(../../../shared/util.pri)
 include(../shared/debugutil.pri)
 
-CONFIG += parallel_test declarative_debug
+CONFIG += parallel_test
+
+DEFINES += QT_QML_DEBUG_NO_WARNING
 
 QT += core-private qml-private quick-private v8-private testlib
