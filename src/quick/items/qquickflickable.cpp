@@ -1804,11 +1804,11 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
             break;
         case QEvent::MouseButtonRelease:
             if (d->delayedPressEvent) {
-                // We replay the mouse press but the grabber we had might not be interessted by the event (e.g. overlay)
+                // We replay the mouse press but the grabber we had might not be interested in the event (e.g. overlay)
                 // so we reset the grabber
                 if (c->mouseGrabberItem() == d->delayedPressTarget)
                     d->delayedPressTarget->ungrabMouse();
-                //Use the event handler that will take care of finding the proper item to propagate the event
+                // Use the event handler that will take care of finding the proper item to propagate the event
                 QQuickCanvasPrivate::get(canvas())->deliverMouseEvent(d->delayedPressEvent);
                 d->clearDelayedPress();
                 // We send the release
