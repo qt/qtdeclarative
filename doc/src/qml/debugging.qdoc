@@ -47,7 +47,7 @@ function f(a, b) {
 The output is generated using the qDebug, qWarning, qCritical methods in C++
 (see also http://doc.qt.nokia.com/latest/debug.html#warning-and-debugging-messages).
 
-\hint Setting the environment variable QML_CONSOLE_EXTENDED also prints the source
+Setting the environment variable QML_CONSOLE_EXTENDED also prints the source
 code location of the call.
 
 \section2 Assert

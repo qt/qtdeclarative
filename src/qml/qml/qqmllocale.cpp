@@ -812,7 +812,7 @@ V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
     This product includes software developed by the University of
     California, Berkeley and its contributors.
 
-    \sa {QtQuick2::Date}{Date} {QtQuick2::Number}{Number}
+    \sa {QtQuick2::Date}{Date}, {QtQuick2::Number}{Number}
 */
 
 QQmlLocale::QQmlLocale()

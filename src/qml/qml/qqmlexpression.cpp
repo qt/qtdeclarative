@@ -201,7 +201,7 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt,
 /*!
     Create a QQmlExpression object that is a child of \a parent.
 
-    The \script provides the expression to be evaluated, the context to evaluate it in,
+    The \a script provides the expression to be evaluated, the context to evaluate it in,
     and the scope object to evaluate it with.
 
     This constructor is functionally equivalent to the following, but in most cases

@@ -1382,7 +1382,6 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
 
     \snippet doc/src/snippets/qml/listmodel.qml 0
 
-    \clearfloat
     Roles (properties) in each element must begin with a lower-case letter and
     should be common to all elements in a model. The ListElement documentation
     provides more guidelines for how elements should be defined.
@@ -1407,7 +1406,6 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
 
     \snippet doc/src/snippets/qml/listmodel-nested.qml delegate
 
-    \clearfloat
     \section1 Modifying List Models
 
     The content of a ListModel may be created and modified using the clear(),
@@ -1769,7 +1767,7 @@ int QQuickListModel::count() const
 
     Deletes all content from the model.
 
-    \sa append() remove()
+    \sa append(), remove()
 */
 void QQuickListModel::clear()
 {
@@ -1833,7 +1831,7 @@ void QQuickListModel::remove(QQmlV8Function *args)
     The \a index must be to an existing item in the list, or one past
     the end of the list (equivalent to append).
 
-    \sa set() append()
+    \sa set(), append()
 */
 
 void QQuickListModel::insert(QQmlV8Function *args)
@@ -1944,7 +1942,7 @@ void QQuickListModel::move(int from, int to, int n)
         fruitModel.append({"cost": 5.95, "name":"Pizza"})
     \endcode
 
-    \sa set() remove()
+    \sa set(), remove()
 */
 void QQuickListModel::append(QQmlV8Function *args)
 {

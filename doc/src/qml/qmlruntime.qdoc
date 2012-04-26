@@ -37,7 +37,7 @@ and it also provides access to third-party QML elements and modules.
 Applications that use QML need to invoke the QML runtime in order to
 execute QML documents. This can be done by creating a QQuickView
 or a QQmlEngine, as described below. In addition, the Declarative UI
-package includes the \QQV tool, which loads \c .qml files. This tool is
+package includes the qmlscene tool, which loads \c .qml files. This tool is
 useful for developing and testing QML code without the need to write
 a C++ application to load the QML runtime.
 
@@ -134,12 +134,10 @@ as details on including QML files through \l{The Qt Resource System}{Qt's Resour
 
 \section1 Developing and Prototyping with QML Viewer
 
-The Declarative UI package includes a QML runtime tool, the \QQV, which loads
+The Declarative UI package includes a QML runtime tool, qmlscene, which loads
 and displays QML documents. This is useful during the application development
 phase for prototyping QML-based applications without writing your own C++
 applications to invoke the QML runtime.
-
-See the \l{QML Viewer} documentation for more details.
 
 */
 
