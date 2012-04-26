@@ -175,6 +175,20 @@ QVariant QQmlValueTypeProvider::createVariantFromString(int type, const QString 
     return QVariant();
 }
 
+bool QQmlValueTypeProvider::equalValueType(int type, const void *lhs, const void *rhs)
+{
+    Q_ASSERT(lhs);
+    Q_ASSERT(rhs);
+
+    QQmlValueTypeProvider *p = this;
+    do {
+        if (p->equal(type, lhs, rhs))
+            return true;
+    } while ((p = p->next));
+
+    return false;
+}
+
 bool QQmlValueTypeProvider::storeValueType(int type, const void *src, void *dst, size_t n)
 {
     Q_ASSERT(src);
@@ -226,6 +240,7 @@ bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_
 bool QQmlValueTypeProvider::createStringFrom(int, const void *, QString *) { return false; }
 bool QQmlValueTypeProvider::variantFromString(const QString &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::variantFromString(int, const QString &, QVariant *) { return false; }
+bool QQmlValueTypeProvider::equal(int, const void *, const void *) { return false; }
 bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::read(int, const void *, int, void *) { return false; }
 bool QQmlValueTypeProvider::write(int, const void *, void *, size_t) { return false; }

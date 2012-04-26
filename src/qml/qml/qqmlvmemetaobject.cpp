@@ -116,6 +116,8 @@ public:
 
     inline void setDataType(int t);
 
+    inline void ensureValueType(int);
+
 private:
     int type;
     void *data[6]; // Large enough to hold all types
@@ -409,6 +411,15 @@ void QQmlVMEVariant::setDataType(int t)
     type = t;
 }
 
+void QQmlVMEVariant::ensureValueType(int t)
+{
+    if (type != t) {
+        cleanup();
+        type = t;
+        QQml_valueTypeProvider()->initValueType(t, dataPtr(), dataSize());
+    }
+}
+
 QQmlVMEMetaObjectEndpoint::QQmlVMEMetaObjectEndpoint()
 {
     callback = &vmecallback;
@@ -645,12 +656,9 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                             break;
                         default:
-                            if (! data[id].dataType())
-                                QQml_valueTypeProvider()->initValueType(t, data[id].dataPtr(), data[id].dataSize());
-                            needActivate = QQml_valueTypeProvider()->writeValueType(t, a[0], data[id].dataPtr(), data[id].dataSize());
-                            if (needActivate) {
-                                data[id].setDataType(t);
-                            }
+                            data[id].ensureValueType(t);
+                            needActivate = !QQml_valueTypeProvider()->equalValueType(t, a[0], data[id].dataPtr());
+                            QQml_valueTypeProvider()->writeValueType(t, a[0], data[id].dataPtr(), data[id].dataSize());
                             break;
                         }
                     }

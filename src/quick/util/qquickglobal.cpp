@@ -178,6 +178,13 @@ private:
 };
 
 
+// Note: The functions in this class provide handling only for the types
+// that the QML engine will currently actually call them for, so many
+// appear incompletely implemented.  For some functions, the implementation
+// would be obvious, but for others (particularly create and createFromString)
+// the exact semantics are unknown.  For this reason unused functionality
+// has been omitted.
+
 class QQuickValueTypeProvider : public QQmlValueTypeProvider
 {
 public:
@@ -399,6 +406,26 @@ public:
         case QMetaType::QVector4D:
             *v = QVariant::fromValue(vector4DFromString(s, &ok));
             return true;
+        }
+
+        return false;
+    }
+
+    template<typename T>
+    bool typedEqual(const void *lhs, const void *rhs)
+    {
+        return (*(reinterpret_cast<const T *>(lhs)) == *(reinterpret_cast<const T *>(rhs)));
+    }
+
+    bool equal(int type, const void *lhs, const void *rhs)
+    {
+        switch (type) {
+        case QMetaType::QColor:
+            return typedEqual<QColor>(lhs, rhs);
+        case QMetaType::QVector3D:
+            return typedEqual<QVector3D>(lhs, rhs);
+        case QMetaType::QVector4D:
+            return typedEqual<QVector4D>(lhs, rhs);
         }
 
         return false;

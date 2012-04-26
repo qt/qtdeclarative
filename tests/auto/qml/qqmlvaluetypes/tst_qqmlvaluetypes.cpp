@@ -94,6 +94,7 @@ private slots:
     void varAssignment();
     void bindingsSpliceCorrectly();
     void nonValueTypeComparison();
+    void initializeByWrite();
 
 private:
     QQmlEngine engine;
@@ -1330,6 +1331,17 @@ void tst_qqmlvaluetypes::nonValueTypeComparison()
 
     QCOMPARE(object->property("test1").toBool(), true);
     QCOMPARE(object->property("test2").toBool(), true);
+
+    delete object;
+}
+
+void tst_qqmlvaluetypes::initializeByWrite()
+{
+    QQmlComponent component(&engine, testFileUrl("initializeByWrite.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
 
     delete object;
 }

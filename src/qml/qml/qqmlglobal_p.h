@@ -158,6 +158,7 @@ public:
     QVariant createVariantFromString(const QString &);
     QVariant createVariantFromString(int, const QString &, bool *);
 
+    bool equalValueType(int, const void *, const void *);
     bool storeValueType(int, const void *, void *, size_t);
     bool readValueType(int, const void *, int, void *);
     bool writeValueType(int, const void *, void *, size_t);
@@ -176,6 +177,7 @@ private:
     virtual bool variantFromString(const QString &, QVariant *);
     virtual bool variantFromString(int, const QString &, QVariant *);
 
+    virtual bool equal(int, const void *, const void *);
     virtual bool store(int, const void *, void *, size_t);
     virtual bool read(int, const void *, int, void *);
     virtual bool write(int, const void *, void *, size_t);
