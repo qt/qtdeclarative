@@ -258,6 +258,7 @@ private slots:
     void replaceBinding();
     void deleteRootObjectInCreation();
     void onDestruction();
+    void bindingSuppression();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -6656,6 +6657,35 @@ void tst_qqmlecmascript::onDestruction()
         QObject *obj = c.create();
         QVERIFY(obj != 0);
     }
+}
+
+struct EventProcessor : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE void process()
+    {
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+    }
+};
+
+void tst_qqmlecmascript::bindingSuppression()
+{
+    QQmlEngine engine;
+    EventProcessor processor;
+    engine.rootContext()->setContextProperty("pendingEvents", &processor);
+
+    transientErrorsMsgCount = 0;
+    QtMsgHandler old = qInstallMsgHandler(transientErrorsMsgHandler);
+
+    QQmlComponent c(&engine, testFileUrl("bindingSuppression.qml"));
+    QObject *obj = c.create();
+    QVERIFY(obj != 0);
+    delete obj;
+
+    qInstallMsgHandler(old);
+    QCOMPARE(transientErrorsMsgCount, 0);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

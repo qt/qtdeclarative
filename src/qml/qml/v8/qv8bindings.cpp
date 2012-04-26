@@ -106,6 +106,14 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
     if (!enabledFlag())
         return;
 
+    QQmlContextData *context = parent->context();
+    if (!context || !context->isValid())
+        return;
+
+    // Check that the target has not been deleted
+    if (QQmlData::wasDeleted(object()))
+        return;
+
     QQmlTrace trace("V8 Binding Update");
     trace.addDetail("URL", parent->url());
     trace.addDetail("Line", instruction->line);
@@ -113,12 +121,9 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
 
     QQmlBindingProfiler prof(parent->urlString(), instruction->line, instruction->column);
 
-    QQmlContextData *context = parent->context();
-    if (!context || !context->isValid())
-        return;
-
     if (!updatingFlag()) {
         setUpdatingFlag(true);
+
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
 
         bool isUndefined = false;

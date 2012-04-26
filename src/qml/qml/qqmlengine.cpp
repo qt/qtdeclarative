@@ -422,6 +422,10 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
             d->context->destroy();
             d->context = 0;
         }
+
+        // Mark this object as in the process of deletion to
+        // prevent it resolving in bindings
+        QQmlData::markAsDeleted(o);
     }
 }
 
@@ -466,6 +470,16 @@ int QQmlData::endpointCount(int index)
         ep = ep->next;
     }
     return count;
+}
+
+void QQmlData::markAsDeleted(QObject *o)
+{
+    QQmlData::setQueuedForDeletion(o);
+
+    QObjectPrivate *p = QObjectPrivate::get(o);
+    for (QList<QObject *>::iterator it = p->children.begin(), end = p->children.end(); it != end; ++it) {
+        QQmlData::markAsDeleted(*it);
+    }
 }
 
 void QQmlEnginePrivate::init()

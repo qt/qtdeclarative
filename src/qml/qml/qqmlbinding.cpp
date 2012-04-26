@@ -186,6 +186,10 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     if (!enabledFlag() || !context() || !context()->isValid())
         return;
 
+    // Check that the target has not been deleted
+    if (QQmlData::wasDeleted(object()))
+        return;
+
     QQmlTrace trace("General Binding Update");
     trace.addDetail("URL", m_url);
     trace.addDetail("Line", m_lineNumber);

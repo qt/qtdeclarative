@@ -358,6 +358,10 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
     if (!context || !context->isValid()) 
         return;
 
+    // Check that the target has not been deleted
+    if (QQmlData::wasDeleted(binding->target))
+        return;
+
     QQmlTrace trace("V4 Binding Update");
     trace.addDetail("URL", context->url);
     trace.addDetail("Line", binding->line);
