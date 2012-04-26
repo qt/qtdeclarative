@@ -1760,10 +1760,6 @@ void tst_QQmlDebugJS::getScripts()
 {
     //void scripts(int types = -1, QList<int> ids = QList<int>(), bool includeSource = false, QVariant filter = QVariant());
 
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-23475 - Unreliable test on Mac OS X");
-#endif
-
     QVERIFY(init());
 
     client->connect();
