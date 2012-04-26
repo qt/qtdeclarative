@@ -59,17 +59,17 @@ class TestShaderEffect : public QQuickShaderEffect
 
 public:
     QVariant dummyRead() const { return QVariant(); }
-    bool isConnected(const char *signal) const { return m_signals.contains(signal); }
+    bool isConnected(const QMetaMethod &signal) const { return m_signals.contains(signal); }
 
 protected:
-    void connectNotify(const char *signal) { m_signals.append(signal); }
-    void disconnectNotify(const char *signal) { m_signals.removeOne(signal); }
+    void connectNotify(const QMetaMethod &signal) { m_signals.append(signal); }
+    void disconnectNotify(const QMetaMethod &signal) { m_signals.removeOne(signal); }
 
 signals:
     void dummyChanged();
 
 private:
-    QList<QByteArray> m_signals;
+    QList<QMetaMethod> m_signals;
 };
 
 class tst_qquickshadereffect : public QQmlDataTest
@@ -257,7 +257,8 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     QFETCH(int, presenceFlags);
 
     TestShaderEffect item;
-    QVERIFY(!item.isConnected(SIGNAL(dummyChanged()))); // Nothing connected yet.
+    QMetaMethod dummyChangedSignal = QMetaMethod::fromSignal(&TestShaderEffect::dummyChanged);
+    QVERIFY(!item.isConnected(dummyChangedSignal)); // Nothing connected yet.
 
     QString expected;
     if ((presenceFlags & VertexPresent) == 0)
@@ -274,7 +275,7 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     QCOMPARE(item.parseLog(), expected);
 
     // If the uniform was successfully parsed, the notify signal has been connected to an update slot.
-    QCOMPARE(item.isConnected(SIGNAL(dummyChanged())), (presenceFlags & PropertyPresent) != 0);
+    QCOMPARE(item.isConnected(dummyChangedSignal), (presenceFlags & PropertyPresent) != 0);
 }
 
 void tst_qquickshadereffect::deleteSourceItem()
