@@ -14,4 +14,3 @@ CONFIG += parallel_test
 
 QT += qml testlib
 
-macx:CONFIG += insignificant_test   # QTBUG-25288
