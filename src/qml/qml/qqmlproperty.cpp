@@ -943,17 +943,34 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
 
 /*!
     Set the signal expression associated with this signal property to \a expr.
-    Returns the existing signal expression (if any), otherwise 0.
+    Returns the existing signal expression (if any), otherwise null.
 
-    Ownership of \a expr transfers to QML.  Ownership of the return value is
-    assumed by the caller.
+    A reference to \a expr will be added by QML.  Ownership of the return value
+    reference is assumed by the caller.
 */
-QQmlBoundSignalExpression *
+QQmlBoundSignalExpressionPointer
 QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
                                          QQmlBoundSignalExpression *expr)
 {
+    if (expr)
+        expr->addref();
+    return QQmlPropertyPrivate::takeSignalExpression(that, expr);
+}
+
+/*!
+    Set the signal expression associated with this signal property to \a expr.
+    Returns the existing signal expression (if any), otherwise null.
+
+    Ownership of \a expr transfers to QML.  Ownership of the return value
+    reference is assumed by the caller.
+*/
+QQmlBoundSignalExpressionPointer
+QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
+                                         QQmlBoundSignalExpression *expr)
+{
     if (!(that.type() & QQmlProperty::SignalProperty)) {
-        delete expr;
+        if (expr)
+            expr->release();
         return 0;
     }
 
@@ -967,15 +984,13 @@ QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
         signalHandler = signalHandler->m_nextSignal;
 
     if (signalHandler)
-        return signalHandler->setExpression(expr);
+        return signalHandler->takeExpression(expr);
 
     if (expr) {
         QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
-        QQmlBoundSignalExpression *oldExpr = signal->setExpression(expr);
-        return oldExpr;
-    } else {
-        return 0;
+        signal->takeExpression(expr);
     }
+    return 0;
 }
 
 /*!

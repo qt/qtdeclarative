@@ -233,7 +233,6 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
 
 QQmlBoundSignal::~QQmlBoundSignal()
 {
-    delete m_expression;
     m_expression = 0;
     delete m_params;
 }
@@ -255,13 +254,28 @@ QQmlBoundSignalExpression *QQmlBoundSignal::expression() const
     Sets the signal expression to \a e.  Returns the current signal expression,
     or null if there is no signal expression.
 
-    The QQmlBoundSignal instance takes ownership of \a e.  The caller is 
-    assumes ownership of the returned QQmlExpression.
+    The QQmlBoundSignal instance adds a reference to \a e.  The caller
+    assumes ownership of the returned QQmlBoundSignalExpression reference.
 */
-QQmlBoundSignalExpression *QQmlBoundSignal::setExpression(QQmlBoundSignalExpression *e)
+QQmlBoundSignalExpressionPointer QQmlBoundSignal::setExpression(QQmlBoundSignalExpression *e)
 {
-    QQmlBoundSignalExpression *rv = m_expression;
+    QQmlBoundSignalExpressionPointer rv = m_expression;
     m_expression = e;
+    if (m_expression) m_expression->setNotifyOnValueChanged(false);
+    return rv;
+}
+
+/*!
+    Sets the signal expression to \a e.  Returns the current signal expression,
+    or null if there is no signal expression.
+
+    The QQmlBoundSignal instance takes ownership of \a e (and does not add a reference).  The caller
+    assumes ownership of the returned QQmlBoundSignalExpression reference.
+*/
+QQmlBoundSignalExpressionPointer QQmlBoundSignal::takeExpression(QQmlBoundSignalExpression *e)
+{
+    QQmlBoundSignalExpressionPointer rv = m_expression;
+    m_expression.take(e);
     if (m_expression) m_expression->setNotifyOnValueChanged(false);
     return rv;
 }
@@ -399,6 +413,52 @@ int QQmlBoundSignalParameters::metaCall(QMetaObject::Call c, int id, void **a)
     } else {
         return qt_metacall(c, id, a);
     }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+QQmlBoundSignalExpressionPointer::QQmlBoundSignalExpressionPointer(QQmlBoundSignalExpression *o)
+: o(o)
+{
+    if (o) o->addref();
+}
+
+QQmlBoundSignalExpressionPointer::QQmlBoundSignalExpressionPointer(const QQmlBoundSignalExpressionPointer &other)
+: o(other.o)
+{
+    if (o) o->addref();
+}
+
+QQmlBoundSignalExpressionPointer::~QQmlBoundSignalExpressionPointer()
+{
+    if (o) o->release();
+}
+
+QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::operator=(const QQmlBoundSignalExpressionPointer &other)
+{
+    if (other.o) other.o->addref();
+    if (o) o->release();
+    o = other.o;
+    return *this;
+}
+
+QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::operator=(QQmlBoundSignalExpression *other)
+{
+    if (other) other->addref();
+    if (o) o->release();
+    o = other;
+    return *this;
+}
+
+/*!
+Takes ownership of \a other.  take() does *not* add a reference, as it assumes ownership
+of the callers reference of other.
+*/
+QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::take(QQmlBoundSignalExpression *other)
+{
+    if (o) o->release();
+    o = other;
+    return *this;
 }
 
 QT_END_NAMESPACE

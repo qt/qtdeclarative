@@ -139,44 +139,23 @@ QT_BEGIN_NAMESPACE
 class QQuickReplaceSignalHandler : public QQuickActionEvent
 {
 public:
-    QQuickReplaceSignalHandler() : expression(0), reverseExpression(0),
-                                rewindExpression(0), ownedExpression(0), ownedExpressionWatcher(0) {}
-    ~QQuickReplaceSignalHandler() {
-        delete ownedExpression;
-    }
+    QQuickReplaceSignalHandler() {}
+    ~QQuickReplaceSignalHandler() {}
 
     virtual EventType type() const { return SignalHandler; }
 
     QQmlProperty property;
-    QQmlBoundSignalExpression *expression;
-    QQmlBoundSignalExpression *reverseExpression;
-    QQmlBoundSignalExpression *rewindExpression;
-    QQmlBoundSignalExpression *ownedExpression;
-    QQmlAbstractExpression::DeleteWatcher *ownedExpressionWatcher; // TODO: refactor the ownership impl.
+    QQmlBoundSignalExpressionPointer expression;
+    QQmlBoundSignalExpressionPointer reverseExpression;
+    QQmlBoundSignalExpressionPointer rewindExpression;
 
     virtual void execute(Reason) {
-        ownedExpression = QQmlPropertyPrivate::setSignalExpression(property, expression);
-        if (ownedExpression == expression) {
-            delete ownedExpressionWatcher;
-            ownedExpressionWatcher = 0;
-            ownedExpression = 0;
-        } else if (ownedExpression) {
-            delete ownedExpressionWatcher;
-            ownedExpressionWatcher = new QQmlAbstractExpression::DeleteWatcher(ownedExpression);
-        }
+        QQmlPropertyPrivate::setSignalExpression(property, expression);
     }
 
     virtual bool isReversable() { return true; }
     virtual void reverse(Reason) {
-        ownedExpression = QQmlPropertyPrivate::setSignalExpression(property, reverseExpression);
-        if (ownedExpression == reverseExpression) {
-            delete ownedExpressionWatcher;
-            ownedExpressionWatcher = 0;
-            ownedExpression = 0;
-        } else if (ownedExpression) {
-            delete ownedExpressionWatcher;
-            ownedExpressionWatcher = new QQmlAbstractExpression::DeleteWatcher(ownedExpression);
-        }
+        QQmlPropertyPrivate::setSignalExpression(property, reverseExpression);
     }
 
     virtual void saveOriginals() {
@@ -192,18 +171,10 @@ public:
         if (rsh == this)
             return;
         reverseExpression = rsh->reverseExpression;
-        if (rsh->ownedExpression == reverseExpression) {
-            ownedExpression = rsh->ownedExpression;
-            rsh->ownedExpression = 0;
-            delete ownedExpressionWatcher;
-            ownedExpressionWatcher = new QQmlAbstractExpression::DeleteWatcher(ownedExpression);
-        }
     }
 
     virtual void rewind() {
-        ownedExpression = QQmlPropertyPrivate::setSignalExpression(property, rewindExpression);
-        if (ownedExpression == rewindExpression)
-            ownedExpression = 0;
+        QQmlPropertyPrivate::setSignalExpression(property, rewindExpression);
     }
     virtual void saveCurrentValues() {
         rewindExpression = QQmlPropertyPrivate::signalExpression(property);
@@ -370,7 +341,7 @@ void QQuickPropertyChangesPrivate::decode()
 
             QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
             handler->property = prop;
-            handler->expression = new QQmlBoundSignalExpression(QQmlContextData::get(qmlContext(q)), object, expression, false, url.toString(), line, column);
+            handler->expression.take(new QQmlBoundSignalExpression(QQmlContextData::get(qmlContext(q)), object, expression, false, url.toString(), line, column));
             signalReplacements << handler;
         } else if (isScript) { // binding
             QString expression = data.toString();
@@ -390,7 +361,6 @@ void QQuickPropertyChangesPrivate::decode()
             properties << qMakePair(name, data);
         }
     }
-
     decoded = true;
     data.clear();
 }

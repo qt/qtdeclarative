@@ -580,7 +580,7 @@ bool QQmlEngineDebugService::setBinding(int objectId,
                 } else if (hasValidSignal(object, propertyName)) {
                     QQmlBoundSignalExpression *qmlExpression = new QQmlBoundSignalExpression(QQmlContextData::get(context), object, expression.toString(),
                                                                                              false, filename, line, column);
-                    QQmlPropertyPrivate::setSignalExpression(property, qmlExpression);
+                    QQmlPropertyPrivate::takeSignalExpression(property, qmlExpression);
                 } else if (property.isProperty()) {
                     QQmlBinding *binding = new QQmlBinding(expression.toString(), false, object, QQmlContextData::get(context), filename, line, column);;
                     binding->setTarget(property);

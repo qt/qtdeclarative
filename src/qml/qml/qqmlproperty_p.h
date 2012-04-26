@@ -60,11 +60,11 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmlguard_p.h>
+#include <private/qqmlboundsignalexpressionpointer_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
-class QQmlBoundSignalExpression;
 class QQmlEnginePrivate;
 class QQmlJavaScriptExpression;
 class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCount
@@ -141,8 +141,10 @@ public:
                                                    QQmlAbstractBinding *,
                                                    WriteFlags flags = DontRemoveBinding);
     static QQmlBoundSignalExpression *signalExpression(const QQmlProperty &that);
-    static QQmlBoundSignalExpression *setSignalExpression(const QQmlProperty &that,
-                                                          QQmlBoundSignalExpression *) ;
+    static QQmlBoundSignalExpressionPointer setSignalExpression(const QQmlProperty &that,
+                                                                QQmlBoundSignalExpression *);
+    static QQmlBoundSignalExpressionPointer takeSignalExpression(const QQmlProperty &that,
+                                                                 QQmlBoundSignalExpression *);
     static bool write(const QQmlProperty &that, const QVariant &, WriteFlags);
     static bool writeBinding(QObject *, const QQmlPropertyData &,
                              QQmlContextData *context,

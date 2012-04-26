@@ -112,6 +112,7 @@ private slots:
     void signalOverrideCrash();
     void signalOverrideCrash2();
     void signalOverrideCrash3();
+    void signalOverrideCrash4();
     void parentChange();
     void parentChangeErrors();
     void anchorChanges();
@@ -475,6 +476,8 @@ void tst_qquickstates::signalOverride()
         QQuickItemPrivate::get(rect)->setState("green");
         rect->doSomething();
         QCOMPARE(rect->color(),QColor("green"));
+
+        delete rect;
     }
 
     {
@@ -492,6 +495,8 @@ void tst_qquickstates::signalOverride()
         QCOMPARE(rect->color(),QColor("blue"));
         QCOMPARE(innerRect->color(),QColor("green"));
         QCOMPARE(innerRect->property("extendedColor").value<QColor>(),QColor("green"));
+
+        delete rect;
     }
 }
 
@@ -534,6 +539,24 @@ void tst_qquickstates::signalOverrideCrash3()
     QQuickItemPrivate::get(rect)->setState("");
     QQuickItemPrivate::get(rect)->setState("state2");
     QQuickItemPrivate::get(rect)->setState("");
+
+    delete rect;
+}
+
+void tst_qquickstates::signalOverrideCrash4()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("signalOverrideCrash4.qml"));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
+
+    rectPrivate->setState("state1");
+    rectPrivate->setState("state2");
+    rectPrivate->setState("state1");
+    rectPrivate->setState("state2");
+    rectPrivate->setState("");
 
     delete rect;
 }

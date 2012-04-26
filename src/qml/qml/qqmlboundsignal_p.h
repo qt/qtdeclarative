@@ -57,20 +57,21 @@
 
 #include <private/qqmlabstractexpression_p.h>
 #include <private/qqmljavascriptexpression_p.h>
+#include <private/qqmlboundsignalexpressionpointer_p.h>
 #include <private/qqmlnotifier_p.h>
 #include <private/qflagpointer_p.h>
+#include <private/qqmlrefcount_p.h>
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlAbstractExpression, public QQmlJavaScriptExpression
+class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlAbstractExpression, public QQmlJavaScriptExpression, public QQmlRefCount
 {
 public:
     QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
                               bool isRewritten, const QString &fileName, int line, int column);
     QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QString &expression,
                               bool isRewritten, const QString &fileName, int line, int column);
-    ~QQmlBoundSignalExpression();
 
     // "inherited" from QQmlJavaScriptExpression.
     static QString expressionIdentifier(QQmlJavaScriptExpression *);
@@ -87,6 +88,8 @@ public:
     QQmlEngine *engine() const { return context() ? context()->engine : 0; }
 
 private:
+    ~QQmlBoundSignalExpression();
+
     v8::Persistent<v8::Object> m_v8qmlscope;
     v8::Persistent<v8::Function> m_v8function;
 
@@ -108,7 +111,8 @@ public:
 
     virtual int index() const = 0;
     virtual QQmlBoundSignalExpression *expression() const = 0;
-    virtual QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *) = 0;
+    virtual QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *) = 0;
+    virtual QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *) = 0;
     virtual QObject *scope() = 0;
 
     void removeFromObject();
@@ -134,7 +138,8 @@ public:
     int index() const;
 
     QQmlBoundSignalExpression *expression() const;
-    QQmlBoundSignalExpression *setExpression(QQmlBoundSignalExpression *);
+    QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *);
+    QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *);
     QObject *scope() { return *m_scope; }
 
     static void subscriptionCallback(QQmlNotifierEndpoint *e, void **);
@@ -142,7 +147,7 @@ public:
     bool isEvaluating() const { return m_scope.flag(); }
 
 private:
-    QQmlBoundSignalExpression *m_expression;
+    QQmlBoundSignalExpressionPointer m_expression;
     QQmlBoundSignalParameters *m_params;
     // We store some flag bits in the following flag pointer.
     //    m_scope:flag1 - m_isEvaluating

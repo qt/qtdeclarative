@@ -292,7 +292,7 @@ void QQuickConnections::connectSignals()
 
             QQmlBoundSignalExpression *expression = ctxtdata ?
                 new QQmlBoundSignalExpression(ctxtdata, 0, script, true, location, line, column) : 0;
-            signal->setExpression(expression);
+            signal->takeExpression(expression);
             d->boundsignals += signal;
         } else {
             if (!d->ignoreUnknownSignals)

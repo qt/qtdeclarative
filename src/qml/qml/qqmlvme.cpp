@@ -739,7 +739,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QQmlBoundSignal *bs = new QQmlBoundSignal(target, signal, target);
             QQmlBoundSignalExpression *expr =
                 new QQmlBoundSignalExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column);
-            bs->setExpression(expr);
+            bs->takeExpression(expr);
         QML_END_INSTR(StoreSignal)
 
         QML_BEGIN_INSTR(StoreImportedScript)
