@@ -60,6 +60,13 @@ QT_BEGIN_NAMESPACE
     when the \c font is assigned, and relayout again when the \c width is assigned,
     and so on).
 
+    Be aware that QQmlParserStatus methods are only called when a class is instantiated
+    by a QQmlEngine. If you create the same class directly from C++, these methods will
+    not be called automatically. To avoid this problem, it is recommended that you start
+    deferring operations from classBegin instead of from the initial creation of your class.
+    This will still prevent multiple revaluations during initial binding assignment in QML,
+    but will not defer operations invoked from C++.
+
     To use QQmlParserStatus, you must inherit both a QObject-derived class
     and QQmlParserStatus, and use the Q_INTERFACES() macro.
 
