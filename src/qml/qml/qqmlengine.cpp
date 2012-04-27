@@ -1225,6 +1225,7 @@ void QQmlData::destroyed(QObject *object)
         }
         free(notifyList->notifies);
         free(notifyList);
+        notifyList = 0;
     }
 
     if (extendedData)
