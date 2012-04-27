@@ -71,7 +71,7 @@ import "../../shared"
     When the scene is clicked, an animation sets the sprite sequence to the
     'falling' states and animates the bear's y property.
     \snippet examples/quick/imageelements/spritesequence.qml animation
-    At the end of the amimation the bear is set back to its initial state.
+    At the end of the animation the bear is set back to its initial state.
 */
 
 Item {
