@@ -41,6 +41,7 @@
 import QtQuick 2.0
 import "content"
 
+//! [0]
 Rectangle {
     id: root
     property int current: 0
@@ -57,6 +58,7 @@ Rectangle {
             to: 0
         }
     }
+//! [0]
     MouseArea{
         id: ma
         z: 1
@@ -89,7 +91,7 @@ Rectangle {
     // The first ListView sets root.current whenever its currentIndex changes
     // due to keyboard interaction.
     // Flicking the third ListView with the mouse also changes root.current.
-
+//! [1]
     ListView {
         id: list1
         height: 160; width: parent.width
@@ -131,7 +133,7 @@ Rectangle {
         preferredHighlightBegin: 125; preferredHighlightEnd: 125
         highlightRangeMode: ListView.StrictlyEnforceRange
     }
-
+//! [1]
     // The delegate for each list
     Component {
         id: petDelegate
@@ -151,4 +153,6 @@ Rectangle {
             }
         }
     }
+//! [2]
 }
+//! [2]

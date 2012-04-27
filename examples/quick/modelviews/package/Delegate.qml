@@ -40,7 +40,7 @@
 
 import QtQuick 2.0
 
-//![0]
+//! [0]
 Package {
     Text { id: listDelegate; width: parent.width; height: 25; text: 'Empty'; Package.name: 'list' }
     Text { id: gridDelegate; width: parent.width / 2; height: 50; text: 'Empty'; Package.name: 'grid' }
@@ -75,4 +75,4 @@ Package {
         ]
     }
 }
-//![0]
+//! [0]

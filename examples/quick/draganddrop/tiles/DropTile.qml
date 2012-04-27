@@ -40,6 +40,7 @@
 
 import QtQuick 2.0
 
+//! [0]
 DropArea {
     id: dragTarget
 
@@ -66,3 +67,4 @@ DropArea {
         ]
     }
 }
+//! [0]

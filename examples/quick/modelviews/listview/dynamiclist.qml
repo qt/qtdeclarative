@@ -84,8 +84,9 @@ Rectangle {
     // The delegate for each fruit in the model:
     Component {
         id: listDelegate
-        
+//! [0]
         Item {
+//! [0]
             id: delegateItem
             width: listView.width; height: 100
             clip: true
@@ -169,7 +170,7 @@ Rectangle {
             }
 
             // Animate adding and removing of items:
-
+//! [1]
             ListView.onAdd: SequentialAnimation {
                 PropertyAction { target: delegateItem; property: "height"; value: 0 }
                 NumberAnimation { target: delegateItem; property: "height"; to: 55; duration: 250; easing.type: Easing.InOutQuad }
@@ -183,6 +184,7 @@ Rectangle {
                 PropertyAction { target: delegateItem; property: "ListView.delayRemove"; value: false }
             }
         }
+//! [1]
     }
 
     // The view:

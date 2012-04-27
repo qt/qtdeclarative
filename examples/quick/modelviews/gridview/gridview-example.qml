@@ -54,11 +54,16 @@ Rectangle {
         ListElement { name: "Todo List"; icon: "pics/TodoList_48.png" }
         ListElement { name: "Contacts"; icon: "pics/AddressBook_48.png" }
     }
+//! [0]
+    GridView {
+        anchors.fill: parent
+        cellWidth: 100; cellHeight: 100
+        focus: true
+        model: appModel
 
-    Component {
-        id: appDelegate
+        highlight: Rectangle { width: 80; height: 80; color: "lightsteelblue" }
 
-        Item {
+        delegate: Item {
             width: 100; height: 100
 
             Image {
@@ -76,18 +81,5 @@ Rectangle {
             }
         }
     }
-
-    Component {
-        id: appHighlight
-        Rectangle { width: 80; height: 80; color: "lightsteelblue" }
-    }
-
-    GridView {
-        anchors.fill: parent
-        cellWidth: 100; cellHeight: 100
-        highlight: appHighlight
-        focus: true
-        model: appModel
-        delegate: appDelegate
-    }
+//! [0]
 }

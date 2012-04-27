@@ -49,9 +49,27 @@ import "../../shared" as Examples
 
     This is a collection of small QML examples relating to drag and drop functionality.
 
-    Tiles adds drag and drog to simple rectangles, which you can drag into a specific grid.
+    \section2 Tiles adds drag and drop to simple rectangles, which you can drag into a specific grid.
 
-    GridView adds drag and drog to a GridView, allowing you to reorder the list.
+    It has a DragTile component which uses a MouseArea to move an item when dragged:
+
+    \snippet examples/quick/draganddrop/tiles/DragTile.qml 0
+    \snippet examples/quick/draganddrop/tiles/DragTile.qml 1
+
+    And a DropTile component which the dragged tiles can be dropped onto:
+
+    \snippet examples/quick/draganddrop/tiles/DropTile.qml 0
+
+    The keys property of the DropArea will only allow an item with matching key in
+    it's Drag.keys property to be dropped on it.
+
+    \section2 GridView adds drag and drop to a GridView, allowing you to reorder the list.
+
+    It uses a VisualDataModel to move a delegate item to the position of another item
+    it is dragged over.
+
+    \snippet examples/quick/draganddrop/views/gridview.qml 0
+    \snippet examples/quick/draganddrop/views/gridview.qml 1
 */
 
 Item {
@@ -61,8 +79,8 @@ Item {
         id: ll
         anchors.fill: parent
         Component.onCompleted: {
-            addExample("Tiles", "",  Qt.resolvedUrl("tiles/tiles.qml"));
-            addExample("GridView", "", Qt.resolvedUrl("views/gridview.qml"));
+            addExample("Tiles", "Press and drag tiles to move them into the matching colored boxes",  Qt.resolvedUrl("tiles/tiles.qml"));
+            addExample("GridView", "Press and drag to re-order items in the grid", Qt.resolvedUrl("views/gridview.qml"));
         }
     }
 }

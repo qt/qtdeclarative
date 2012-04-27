@@ -53,7 +53,7 @@ Rectangle {
     // 2. Details mode, which also shows the ingredients and method.
     Component {
         id: recipeDelegate
-
+//! [0]
         Item {
             id: recipe
 
@@ -62,7 +62,7 @@ Rectangle {
             // rather than having a "PropertyChanges" line for each element we
             // want to fade.
             property real detailsOpacity : 0
-
+//! [0]
             width: listView.width
             height: 70
 
@@ -78,6 +78,7 @@ Rectangle {
             // This mouse region covers the entire delegate.
             // When clicked it changes mode to 'Details'.  If we are already
             // in Details mode, then no change will happen.
+//! [1]
             MouseArea {
                 anchors.fill: parent
                 onClicked: recipe.state = 'Details';
@@ -86,6 +87,7 @@ Rectangle {
             // Lay out the page: picture, title and ingredients at the top, and method at the
             // bottom.  Note that elements that should not be visible in the list
             // mode have their opacity set to recipe.detailsOpacity.
+
             Row {
                 id: topLayout
                 x: 10; y: 10; height: recipeImage.height; width: parent.width
@@ -96,7 +98,7 @@ Rectangle {
                     width: 50; height: 50
                     source: picture
                 }
-
+//! [1]
                 Column {
                     width: background.width - recipeImage.width - 20; height: recipeImage.height
                     spacing: 5
@@ -121,12 +123,14 @@ Rectangle {
                 }
             }
 
+//! [2]
             Item {
                 id: details
                 x: 10; width: parent.width - 20
+
                 anchors { top: topLayout.bottom; topMargin: 10; bottom: parent.bottom; bottomMargin: 10 }
                 opacity: recipe.detailsOpacity
-
+//! [2]
                 SmallText {
                     id: methodTitle
                     anchors.top: parent.top
@@ -155,6 +159,7 @@ Rectangle {
                     source: "content/pics/moreDown.png"
                     opacity: flick.atYEnd ? 0 : 1
                 }
+//! [3]
             }
 
             // A button to close the detailed view, i.e. set the state back to default ('').
@@ -190,6 +195,7 @@ Rectangle {
                 }
             }
         }
+//! [3]
     }
 
     // The actual list

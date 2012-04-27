@@ -49,7 +49,9 @@ GridView {
         NumberAnimation { properties: "x,y"; easing.type: Easing.OutQuad }
     }
 
+//! [0]
     model: VisualDataModel {
+//! [0]
         id: visualModel
         model: ListModel {
             id: colorModel
@@ -78,7 +80,7 @@ GridView {
             ListElement { color: "crimson" }
             ListElement { color: "teal" }
         }
-
+//! [1]
         delegate: MouseArea {
             id: delegateRoot
 
@@ -125,5 +127,6 @@ GridView {
                 onEntered: visualModel.items.move(drag.source.visualIndex, delegateRoot.visualIndex)
             }
         }
+//! [1]
     }
 }

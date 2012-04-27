@@ -40,6 +40,7 @@
 
 import QtQuick 2.0
 
+//! [0]
 Item {
     id: root
     property string colorKey
@@ -69,7 +70,7 @@ Item {
             Drag.active: mouseArea.drag.active
             Drag.hotSpot.x: 32
             Drag.hotSpot.y: 32
-
+//! [0]
             Text {
                 anchors.fill: parent
                 color: "white"
@@ -78,13 +79,15 @@ Item {
                 horizontalAlignment:Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-
+//! [1]
             states: State {
                 when: mouseArea.drag.active
                 ParentChange { target: tile; parent: root }
                 AnchorChanges { target: tile; anchors.verticalCenter: undefined; anchors.horizontalCenter: undefined }
             }
+
         }
     }
 }
+//! [1]
 

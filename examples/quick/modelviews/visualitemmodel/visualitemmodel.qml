@@ -50,6 +50,7 @@ Rectangle {
     height: 480
     property bool printDestruction: false
 
+//! [0]
     VisualItemModel {
         id: itemModel
 
@@ -86,7 +87,7 @@ Rectangle {
         snapMode: ListView.SnapOneItem; flickDeceleration: 2000
         cacheBuffer: 200
     }
-
+//! [0]
     Rectangle {
         width: root.width; height: 30
         anchors { top: view.bottom; bottom: parent.bottom }
