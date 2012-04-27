@@ -2172,7 +2172,7 @@ void tst_qquicktextedit::navigation()
 
     QVERIFY(canvas.rootObject() != 0);
 
-    QQuickItem *input = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(canvas.rootObject()->property("myInput")));
+    QQuickTextEdit *input = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(canvas.rootObject()->property("myInput")));
 
     QVERIFY(input != 0);
     QTRY_VERIFY(input->hasActiveFocus() == true);
@@ -2186,6 +2186,16 @@ void tst_qquicktextedit::navigation()
     QVERIFY(input->hasActiveFocus() == false);
     simulateKey(&canvas, Qt::Key_Left);
     QVERIFY(input->hasActiveFocus() == true);
+
+    // Test left and right navigation works if the TextEdit is empty (QTBUG-25447).
+    input->setText(QString());
+    QCOMPARE(input->cursorPosition(), 0);
+    simulateKey(&canvas, Qt::Key_Right);
+    QCOMPARE(input->hasActiveFocus(), false);
+    simulateKey(&canvas, Qt::Key_Left);
+    QCOMPARE(input->hasActiveFocus(), true);
+    simulateKey(&canvas, Qt::Key_Left);
+    QCOMPARE(input->hasActiveFocus(), false);
 }
 
 void tst_qquicktextedit::copyAndPaste() {

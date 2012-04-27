@@ -2079,6 +2079,16 @@ void tst_qquicktextinput::navigation()
     QCOMPARE(input->cursorPosition(),2);
     simulateKey(&canvas, Qt::Key_Down);
     QCOMPARE(input->cursorPosition(),2);
+
+    // Test left and right navigation works if the TextInput is empty (QTBUG-25447).
+    input->setText(QString());
+    QCOMPARE(input->cursorPosition(), 0);
+    simulateKey(&canvas, Qt::Key_Right);
+    QCOMPARE(input->hasActiveFocus(), false);
+    simulateKey(&canvas, Qt::Key_Left);
+    QCOMPARE(input->hasActiveFocus(), true);
+    simulateKey(&canvas, Qt::Key_Left);
+    QCOMPARE(input->hasActiveFocus(), false);
 }
 
 void tst_qquicktextinput::navigation_RTL()
