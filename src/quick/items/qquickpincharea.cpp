@@ -260,14 +260,14 @@ QQuickPinchArea::~QQuickPinchArea()
 bool QQuickPinchArea::isEnabled() const
 {
     Q_D(const QQuickPinchArea);
-    return d->absorb;
+    return d->enabled;
 }
 
 void QQuickPinchArea::setEnabled(bool a)
 {
     Q_D(QQuickPinchArea);
-    if (a != d->absorb) {
-        d->absorb = a;
+    if (a != d->enabled) {
+        d->enabled = a;
         emit enabledChanged();
     }
 }
@@ -275,7 +275,7 @@ void QQuickPinchArea::setEnabled(bool a)
 void QQuickPinchArea::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
-    if (!d->absorb || !isVisible()) {
+    if (!d->enabled || !isVisible()) {
         QQuickItem::event(event);
         return;
     }
@@ -464,7 +464,7 @@ void QQuickPinchArea::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickPinchArea);
     d->stealMouse = false;
-    if (!d->absorb)
+    if (!d->enabled)
         QQuickItem::mousePressEvent(event);
     else {
         setKeepMouseGrab(false);
@@ -475,7 +475,7 @@ void QQuickPinchArea::mousePressEvent(QMouseEvent *event)
 void QQuickPinchArea::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickPinchArea);
-    if (!d->absorb) {
+    if (!d->enabled) {
         QQuickItem::mouseMoveEvent(event);
         return;
     }
@@ -485,7 +485,7 @@ void QQuickPinchArea::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickPinchArea);
     d->stealMouse = false;
-    if (!d->absorb) {
+    if (!d->enabled) {
         QQuickItem::mouseReleaseEvent(event);
     } else {
         QQuickCanvas *c = canvas();
@@ -544,7 +544,7 @@ bool QQuickPinchArea::sendMouseEvent(QMouseEvent *event)
 bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickPinchArea);
-    if (!d->absorb || !isVisible())
+    if (!d->enabled || !isVisible())
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::MouseButtonPress:

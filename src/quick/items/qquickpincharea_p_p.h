@@ -66,7 +66,7 @@ class QQuickPinchAreaPrivate : public QQuickItemPrivate
     Q_DECLARE_PUBLIC(QQuickPinchArea)
 public:
     QQuickPinchAreaPrivate()
-      : absorb(true), stealMouse(false), inPinch(false)
+      : enabled(true), stealMouse(false), inPinch(false)
       , pinchRejected(false), pinchActivated(false), initPinch(false)
       , pinch(0), pinchStartDist(0), pinchStartScale(1.0)
       , pinchLastScale(1.0), pinchStartRotation(0.0), pinchStartAngle(0.0)
@@ -83,7 +83,7 @@ public:
         q->setFiltersChildMouseEvents(true);
     }
 
-    bool absorb : 1;
+    bool enabled : 1;
     bool stealMouse : 1;
     bool inPinch : 1;
     bool pinchRejected : 1;

@@ -85,7 +85,7 @@ public:
     bool isClickConnected();
     bool isWheelConnected();
 
-    bool absorb : 1;
+    bool enabled : 1;
     bool hovered : 1;
     bool pressed : 1;
     bool longPress : 1;
