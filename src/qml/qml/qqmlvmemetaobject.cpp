@@ -809,6 +809,11 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
 v8::Handle<v8::Function> QQmlVMEMetaObject::method(int index)
 {
+    if (!ctxt || !ctxt->isValid()) {
+        qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
+        return v8::Handle<v8::Function>();
+    }
+
     if (!v8methods) 
         v8methods = new v8::Persistent<v8::Function>[metaData->methodCount];
 

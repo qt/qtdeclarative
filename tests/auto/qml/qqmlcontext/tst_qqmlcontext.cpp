@@ -71,6 +71,8 @@ private slots:
     void refreshExpressionsRootContext();
 
     void qtbug_22535();
+    void evalAfterInvalidate();
+
 private:
     QQmlEngine engine;
 };
@@ -645,6 +647,16 @@ void tst_qqmlcontext::qtbug_22535()
 
     // Don't crash!
     delete o;
+}
+
+void tst_qqmlcontext::evalAfterInvalidate()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("evalAfterInvalidate.qml"));
+    QScopedPointer<QObject> o(component.create());
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
 }
 
 QTEST_MAIN(tst_qqmlcontext)
