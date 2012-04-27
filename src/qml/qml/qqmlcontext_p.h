@@ -118,6 +118,7 @@ class Q_QML_EXPORT QQmlContextData
 public:
     QQmlContextData();
     QQmlContextData(QQmlContext *);
+    void emitDestruction();
     void clearContext();
     void destroy();
     void invalidate();
@@ -146,7 +147,8 @@ public:
     quint32 isJSContext:1;
     quint32 isPragmaLibraryContext:1;
     quint32 unresolvedNames:1; // True if expressions in this context failed to resolve a toplevel name
-    quint32 dummy:27;
+    quint32 hasEmittedDestruction:1;
+    quint32 dummy:26;
     QQmlContext *publicContext;
 
     // VME data that is constructing this context if any

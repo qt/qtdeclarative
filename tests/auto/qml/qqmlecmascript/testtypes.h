@@ -1021,6 +1021,8 @@ public:
     Q_INVOKABLE void setTrackedObjectProperty(const QString &propName) const { m_trackedObject->setProperty(qPrintable(propName), QVariant(5)); }
     Q_INVOKABLE QVariant trackedObjectProperty(const QString &propName) const { return m_trackedObject->property(qPrintable(propName)); }
 
+    Q_INVOKABLE void setSpecificProperty(QObject *obj, const QString & propName, const QVariant & v) const { obj->setProperty(qPrintable(propName), v); }
+
     int qobjectTestProperty() const { return m_testProperty; }
     void setQObjectTestProperty(int tp) { m_testProperty = tp; emit qobjectTestPropertyChanged(tp); }
 

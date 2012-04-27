@@ -257,6 +257,8 @@ private slots:
     void tryStatement();
     void replaceBinding();
     void deleteRootObjectInCreation();
+    void onDestruction();
+
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     QQmlEngine engine;
@@ -6630,6 +6632,30 @@ void tst_qqmlecmascript::deleteRootObjectInCreation()
     QTest::qWait(1);
     QVERIFY(obj->property("childDestructible").toBool());
     delete obj;
+}
+
+void tst_qqmlecmascript::onDestruction()
+{
+    {
+        // Delete object manually to invoke the associated handlers,
+        // prior to engine destruction.
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("onDestruction.qml"));
+        QObject *obj = c.create();
+        QVERIFY(obj != 0);
+        delete obj;
+    }
+
+    {
+        // In this case, the teardown of the engine causes deletion
+        // of contexts and child items.  This triggers the
+        // onDestruction handler of a (previously .destroy()ed)
+        // component instance.  This shouldn't crash.
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("onDestruction.qml"));
+        QObject *obj = c.create();
+        QVERIFY(obj != 0);
+    }
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

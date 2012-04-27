@@ -575,6 +575,11 @@ QQmlEngine::~QQmlEngine()
         QQmlEngineDebugService::instance()->remEngine(this);
     }
 
+    // Emit onDestruction signals for the root context before
+    // we destroy the contexts, engine, Module APIs etc. that
+    // may be required to handle the destruction signal.
+    QQmlContextData::get(rootContext())->emitDestruction();
+
     // if we are the parent of any of the qobject module api instances,
     // we need to remove them from our internal list, in order to prevent
     // a segfault in engine private dtor.

@@ -112,6 +112,8 @@ private slots:
     void async();
     void asyncHierarchy();
     void componentUrlCanonicalization();
+    void onDestructionLookup();
+    void onDestructionCount();
 
 private:
     QQmlEngine engine;
@@ -364,6 +366,47 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QScopedPointer<QObject> object(component.create());
         QVERIFY(object == 0);
     }
+}
+
+void tst_qqmlcomponent::onDestructionLookup()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("onDestructionLookup.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+    QVERIFY(object->property("success").toBool());
+}
+
+void tst_qqmlcomponent::onDestructionCount()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("onDestructionCount.qml"));
+
+    QLatin1String warning("Component.onDestruction");
+
+    {
+        // Warning should be emitted during create()
+        QTest::ignoreMessage(QtWarningMsg, warning.data());
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != 0);
+    }
+
+    // Warning should not be emitted any further
+    QCOMPARE(engine.outputWarningsToStandardError(), true);
+
+    warnings.clear();
+    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    qInstallMsgHandler(old);
+
+    engine.setOutputWarningsToStandardError(false);
+    QCOMPARE(engine.outputWarningsToStandardError(), false);
+
+    QCOMPARE(warnings.count(), 0);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

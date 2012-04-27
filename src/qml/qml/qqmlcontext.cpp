@@ -513,7 +513,8 @@ QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, int ind
 
 QQmlContextData::QQmlContextData()
 : parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
-  isPragmaLibraryContext(false), unresolvedNames(false), publicContext(0), activeVMEData(0),
+  isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false),
+  publicContext(0), activeVMEData(0),
   propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
   expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
   componentAttached(0), v4bindings(0), v8bindings(0)
@@ -522,25 +523,45 @@ QQmlContextData::QQmlContextData()
 
 QQmlContextData::QQmlContextData(QQmlContext *ctxt)
 : parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
-  isPragmaLibraryContext(false), unresolvedNames(false), publicContext(ctxt), activeVMEData(0),
+  isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false),
+  publicContext(ctxt), activeVMEData(0),
   propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0),
   expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0),
   componentAttached(0), v4bindings(0), v8bindings(0)
 {
 }
 
+void QQmlContextData::emitDestruction()
+{
+    if (!hasEmittedDestruction) {
+        hasEmittedDestruction = true;
+
+        // Emit the destruction signal - must be emitted before invalidate so that the
+        // context is still valid if bindings or resultant expression evaluation requires it
+        if (engine) {
+            while (componentAttached) {
+                QQmlComponentAttached *a = componentAttached;
+                componentAttached = a->next;
+                if (componentAttached) componentAttached->prev = &componentAttached;
+
+                a->next = 0;
+                a->prev = 0;
+
+                emit a->destruction();
+            }
+
+            QQmlContextData * child = childContexts;
+            while (child) {
+                child->emitDestruction();
+                child = child->nextChild;
+            }
+        }
+    }
+}
+
 void QQmlContextData::invalidate()
 {
-    while (componentAttached) {
-        QQmlComponentAttached *a = componentAttached;
-        componentAttached = a->next;
-        if (componentAttached) componentAttached->prev = &componentAttached;
-
-        a->next = 0;
-        a->prev = 0;
-
-        emit a->destruction();
-    }
+    emitDestruction();
 
     while (childContexts) {
         if (childContexts->ownedByParent) {
@@ -563,18 +584,7 @@ void QQmlContextData::invalidate()
 
 void QQmlContextData::clearContext()
 {
-    if (engine) {
-        while (componentAttached) {
-            QQmlComponentAttached *a = componentAttached;
-            componentAttached = a->next;
-            if (componentAttached) componentAttached->prev = &componentAttached;
-
-            a->next = 0;
-            a->prev = 0;
-
-            emit a->destruction();
-        }
-    }
+    emitDestruction();
 
     QQmlAbstractExpression *expression = expressions;
     while (expression) {

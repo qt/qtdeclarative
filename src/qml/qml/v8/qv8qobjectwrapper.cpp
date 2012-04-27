@@ -1160,6 +1160,9 @@ void QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource)
 
             ddata->v8object.Clear();
             if (!object->parent() && !ddata->indestructible) {
+                // This object is notionally destroyed now
+                if (ddata->ownContext && ddata->context)
+                    ddata->context->emitDestruction();
                 ddata->isQueuedForDeletion = true;
                 object->deleteLater();
             }
