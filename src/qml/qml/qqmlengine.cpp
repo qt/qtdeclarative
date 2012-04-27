@@ -371,7 +371,7 @@ the same object as is returned from the Qt.include() call.
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0), isDebugging(false),
   outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
-  cleanup(0), erroredBindings(0), inProgressCreations(0), 
+  cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0), activeVME(0),
   networkAccessManager(0), networkAccessManagerFactory(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
@@ -670,7 +670,7 @@ QQmlNetworkAccessManagerFactory *QQmlEngine::networkAccessManagerFactory() const
     return d->networkAccessManagerFactory;
 }
 
-void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index) 
+void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 {
     if (activeVME) {
         activeVME->finalizeCallbacks.append(qMakePair(QQmlGuard<QObject>(obj), index));
@@ -955,7 +955,7 @@ QQmlEngine::ObjectOwnership QQmlEngine::objectOwnership(QObject *object)
 bool QQmlEngine::event(QEvent *e)
 {
     Q_D(QQmlEngine);
-    if (e->type() == QEvent::User) 
+    if (e->type() == QEvent::User)
         d->doDeleteInEngineThread();
 
     return QJSEngine::event(e);
@@ -1095,13 +1095,13 @@ void QQmlData::NotifyList::layout()
         QQmlNotifierEndpoint **old = notifies;
         const int reallocSize = (maximumTodoIndex + 1) * sizeof(QQmlNotifierEndpoint*);
         notifies = (QQmlNotifierEndpoint**)realloc(notifies, reallocSize);
-        const int memsetSize = (maximumTodoIndex - notifiesSize + 1) * 
+        const int memsetSize = (maximumTodoIndex - notifiesSize + 1) *
                                sizeof(QQmlNotifierEndpoint*);
         memset(notifies + notifiesSize, 0, memsetSize);
 
         if (notifies != old) {
             for (int ii = 0; ii < notifiesSize; ++ii)
-                if (notifies[ii]) 
+                if (notifies[ii])
                     notifies[ii]->prev = &notifies[ii];
         }
 

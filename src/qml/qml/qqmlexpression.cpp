@@ -176,7 +176,7 @@ QQmlExpression::QQmlExpression()
 }
 
 /*!  \internal */
-QQmlExpression::QQmlExpression(QQmlContextData *ctxt, 
+QQmlExpression::QQmlExpression(QQmlContextData *ctxt,
                                                QObject *object, const QString &expr, bool isRewritten,
                                                const QString &url, int lineNumber, int columnNumber,
                                                QQmlExpressionPrivate &dd)
@@ -265,7 +265,7 @@ QQmlExpression::QQmlExpression(QQmlContext *ctxt,
     d->init(QQmlContextData::get(ctxt), expression, scope);
 }
 
-/*! 
+/*!
     \internal
 */
 QQmlExpression::QQmlExpression(QQmlContextData *ctxt, QObject *scope,
@@ -448,7 +448,7 @@ QString QQmlExpression::sourceFile() const
 }
 
 /*!
-    Returns the source file line number for this expression.  The source location 
+    Returns the source file line number for this expression.  The source location
     must have been previously set by calling setSourceLocation().
 */
 int QQmlExpression::lineNumber() const
@@ -494,7 +494,7 @@ QObject *QQmlExpression::scopeObject() const
 /*!
     Returns true if the last call to evaluate() resulted in an error,
     otherwise false.
-    
+
     \sa error(), clearError()
 */
 bool QQmlExpression::hasError() const
