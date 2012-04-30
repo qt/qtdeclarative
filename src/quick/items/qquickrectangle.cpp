@@ -216,7 +216,7 @@ void QQuickGradientStop::updateGradient()
     of solid color fills or images. Consider using gradients for static items
     in a user interface.
 
-    In Qt 4.7, only vertical, linear gradients can be applied to items. If you
+    In Qt 5.0, only vertical, linear gradients can be applied to items. If you
     need to apply different orientations of gradients, a combination of rotation
     and clipping will need to be applied to the relevant items. This can
     introduce additional performance requirements for your application.
