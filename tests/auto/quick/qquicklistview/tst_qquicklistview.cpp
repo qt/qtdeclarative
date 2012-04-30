@@ -163,6 +163,8 @@ private slots:
     void QTBUG_14821();
     void resizeDelegate();
     void resizeFirstDelegate();
+    void repositionResizedDelegate();
+    void repositionResizedDelegate_data();
     void QTBUG_16037();
     void indexAt_itemAt_data();
     void indexAt_itemAt();
@@ -4054,6 +4056,111 @@ void tst_QQuickListView::resizeFirstDelegate()
 
     delete testObject;
     delete canvas;
+}
+
+void tst_QQuickListView::repositionResizedDelegate()
+{
+    QFETCH(QQuickListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
+    QFETCH(QPointF, contentPos_itemFirstHalfVisible);
+    QFETCH(QPointF, contentPos_itemStart);
+    QFETCH(QPointF, contentPos_itemSecondHalfVisible);
+    QFETCH(QRectF, origPositionerRect);
+    QFETCH(QRectF, resizedPositionerRect);
+
+    QQuickView *canvas = getView();
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testHorizontal", orientation == QQuickListView::Horizontal);
+    ctxt->setContextProperty("testRightToLeft", layoutDirection == Qt::RightToLeft);
+    ctxt->setContextProperty("testBottomToTop", verticalLayoutDirection == QQuickListView::BottomToTop);
+    canvas->setSource(testFileUrl("repositionResizedDelegate.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
+    QTRY_VERIFY(listview != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QQuickItem *positioner = findItem<QQuickItem>(canvas->rootObject(), "positioner");
+    QVERIFY(positioner);
+    QTRY_COMPARE(positioner->boundingRect().size(), origPositionerRect.size());
+    QTRY_COMPARE(positioner->pos(), origPositionerRect.topLeft());
+    QSignalSpy spy(listview, orientation == QQuickListView::Vertical ? SIGNAL(contentYChanged()) : SIGNAL(contentXChanged()));
+    int prevSpyCount = 0;
+
+    // When an item is resized while it is partially visible, it should resize in the
+    // direction of the content flow. If a RightToLeft or BottomToTop layout is used,
+    // the item should also be re-positioned so its end position stays the same.
+
+    listview->setContentX(contentPos_itemFirstHalfVisible.x());
+    listview->setContentY(contentPos_itemFirstHalfVisible.y());
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    prevSpyCount = spy.count();
+    QVERIFY(QMetaObject::invokeMethod(canvas->rootObject(), "incrementRepeater"));
+    QTRY_COMPARE(positioner->boundingRect().size(), resizedPositionerRect.size());
+    QTRY_COMPARE(positioner->pos(), resizedPositionerRect.topLeft());
+    QCOMPARE(listview->contentX(), contentPos_itemFirstHalfVisible.x());
+    QCOMPARE(listview->contentY(), contentPos_itemFirstHalfVisible.y());
+    QCOMPARE(spy.count(), prevSpyCount);
+
+    QVERIFY(QMetaObject::invokeMethod(canvas->rootObject(), "decrementRepeater"));
+    QTRY_COMPARE(positioner->boundingRect().size(), origPositionerRect.size());
+    QTRY_COMPARE(positioner->pos(), origPositionerRect.topLeft());
+    QCOMPARE(listview->contentX(), contentPos_itemFirstHalfVisible.x());
+    QCOMPARE(listview->contentY(), contentPos_itemFirstHalfVisible.y());
+
+    listview->setContentX(contentPos_itemSecondHalfVisible.x());
+    listview->setContentY(contentPos_itemSecondHalfVisible.y());
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    prevSpyCount = spy.count();
+
+    QVERIFY(QMetaObject::invokeMethod(canvas->rootObject(), "incrementRepeater"));
+    positioner = findItem<QQuickItem>(canvas->rootObject(), "positioner");
+    QTRY_COMPARE(positioner->boundingRect().size(), resizedPositionerRect.size());
+    QTRY_COMPARE(positioner->pos(), resizedPositionerRect.topLeft());
+    QCOMPARE(listview->contentX(), contentPos_itemSecondHalfVisible.x());
+    QCOMPARE(listview->contentY(), contentPos_itemSecondHalfVisible.y());
+    qApp->processEvents();
+    QCOMPARE(spy.count(), prevSpyCount);
+
+    releaseView(canvas);
+}
+
+void tst_QQuickListView::repositionResizedDelegate_data()
+{
+    QTest::addColumn<QQuickListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QQuickListView::VerticalLayoutDirection>("verticalLayoutDirection");
+    QTest::addColumn<QPointF>("contentPos_itemFirstHalfVisible");
+    QTest::addColumn<QPointF>("contentPos_itemStart");
+    QTest::addColumn<QPointF>("contentPos_itemSecondHalfVisible");
+    QTest::addColumn<QRectF>("origPositionerRect");
+    QTest::addColumn<QRectF>("resizedPositionerRect");
+
+    QTest::newRow("vertical")
+            << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
+            << QPointF(0, 60) << QPointF(0, 200) << QPointF(0, 200 + 60)
+            << QRectF(0, 200, 120, 120)
+            << QRectF(0, 200, 120, 120 * 2);
+
+    QTest::newRow("vertical, BottomToTop")
+            << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
+            << QPointF(0, -200 - 60) << QPointF(0, -200 - 200) << QPointF(0, -200 - 260)
+            << QRectF(0, -200 - 120, 120, 120)
+            << QRectF(0, -200 - 120*2, 120, 120 * 2);
+
+    QTest::newRow("horizontal")
+            << QQuickListView::Horizontal<< Qt::LeftToRight << QQuickItemView::TopToBottom
+            << QPointF(60, 0) << QPointF(200, 0) << QPointF(260, 0)
+            << QRectF(200, 0, 120, 120)
+            << QRectF(200, 0, 120 * 2, 120);
+
+    QTest::newRow("horizontal, rtl")
+            << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
+            << QPointF(-200 - 60, 0) << QPointF(-200 - 200, 0) << QPointF(-200 - 260, 0)
+            << QRectF(-200 - 120, 0, 120, 120)
+            << QRectF(-200 - 120 * 2, 0, 120 * 2, 120);
 }
 
 void tst_QQuickListView::QTBUG_16037()

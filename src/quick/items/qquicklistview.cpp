@@ -1336,9 +1336,29 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
     QQuickItemViewPrivate::itemGeometryChanged(item, newGeometry, oldGeometry);
     if (!q->isComponentComplete())
         return;
+
     if (item != contentItem && (!highlight || item != highlight->item)) {
         if ((orient == QQuickListView::Vertical && newGeometry.height() != oldGeometry.height())
             || (orient == QQuickListView::Horizontal && newGeometry.width() != oldGeometry.width())) {
+
+            // if visibleItems.first() has resized, adjust its pos since it is used to
+            // position all subsequent items
+            if (visibleItems.count() && item == visibleItems.first()->item) {
+                FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.first());
+                if (orient == Qt::Vertical) {
+                    qreal diff = newGeometry.height() - oldGeometry.height();
+                    if (verticalLayoutDirection == QQuickListView::TopToBottom && listItem->endPosition() < q->contentY())
+                        listItem->setPosition(listItem->position() - diff, true);
+                    else if (verticalLayoutDirection == QQuickListView::BottomToTop && listItem->endPosition() > q->contentY())
+                        listItem->setPosition(listItem->position() + diff, true);
+                } else {
+                    qreal diff = newGeometry.width() - oldGeometry.width();
+                    if (q->effectiveLayoutDirection() == Qt::LeftToRight && listItem->endPosition() < q->contentX())
+                        listItem->setPosition(listItem->position() - diff, true);
+                    else if (q->effectiveLayoutDirection() == Qt::RightToLeft && listItem->endPosition() > q->contentX())
+                        listItem->setPosition(listItem->position() + diff, true);
+                }
+            }
             forceLayout = true;
             q->polish();
         }
