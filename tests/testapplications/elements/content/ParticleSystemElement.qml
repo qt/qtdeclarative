@@ -87,7 +87,7 @@ Item {
                 "Advance to resume simulation." }
         },
         State { name: "resumed"; when: statenum == 3
-            PropertyChanges { target: bugpanel; bugnumber: "21539" }
+            // PropertyChanges { target: bugpanel; bugnumber: "21539" } FIXED
             PropertyChanges { target: particlesystemelement; paused: false }
             PropertyChanges { target: particlesystemelementtest
                 testtext: "The simulation should now be active.\n"+

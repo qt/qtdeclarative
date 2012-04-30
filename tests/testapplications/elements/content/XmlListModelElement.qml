@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.XmlListModel 2.0
 
 Item {
     id: xmllistmodelelementtest
@@ -110,7 +111,7 @@ Item {
                     width: parent.width; wrapMode: Text.WordWrap; visible: opacity != 0; text: methodtext
                     anchors.horizontalCenter: parent.horizontalCenter; anchors.top: ingredientlist.bottom
                     Behavior on opacity { NumberAnimation { duration: 250 } }
-                    Component.onCompleted: { console.log(model.method); methodtext = model.method; console.log(recipemethod.textFormat); }
+                    Component.onCompleted: { methodtext = model.method; }
                 }
                 MouseArea { anchors.fill: parent; onClicked: delbox.state = delbox.state == "open" ? "closed" : "open" }
                 Behavior on height { NumberAnimation { duration: 250 } }
