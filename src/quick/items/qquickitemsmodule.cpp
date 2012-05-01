@@ -205,7 +205,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickSprite>("QtQuick", 2, 0, "Sprite");
     qmlRegisterType<QQuickAnimatedSprite>("QtQuick", 2, 0, "AnimatedSprite");
     qmlRegisterType<QQuickSpriteSequence>("QtQuick", 2, 0, "SpriteSequence");
-    qmlRegisterType<QQuickSpriteSequence>("QtQuick", 2, 0, "SpriteImage");//Deprecation in progress
 
     qmlRegisterType<QQuickParentChange>(uri, major, minor,"ParentChange");
     qmlRegisterType<QQuickAnchorChanges>(uri, major, minor,"AnchorChanges");

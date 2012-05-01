@@ -91,8 +91,8 @@ The \l{QtQuick.Particles 2}{QtQuick.Particles} module contains elements that can
 
 \section2 Element API/Behavior Changes
 
-New \l SpriteImage element renders animated sprites and can transition between animations.
-It uses the \l Sprite element to represent each animation.
+New \l SpriteSequence element renders animated sprites and can transition between animations.
+It uses the \l Sprite element to represent each animation. For single sprites, there is also \l AnimatedSprite.
 
 MouseArea now propagates clicked, doubleClicked and pressAndHold differently to pressed.
 These will now be propagated to the highest-stacking-order enabled MouseArea which has a handler for them.

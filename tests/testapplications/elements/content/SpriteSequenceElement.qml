@@ -45,61 +45,61 @@ Item {
     id: spriteimageelementtest
     anchors.fill: parent
     property string testtext: ""
-    SpriteImage {
+    SpriteSequence {
         id: spriteimage
         sprites: [Sprite {
             name: "happy"
             source: "pics/squarefacesprite2.png"
             frames: 6
-            duration: 120
+            frameDuration: 120
             to: {"silly": 1, "sad":0}
         }, Sprite {
             name: "silly"
             source: "pics/squarefacesprite.png"
             frames: 6
-            duration: 120
+            frameDuration: 120
             to: {"happy": 1, "sad": 0}
         }, Sprite {
             name: "sad"
             source: "pics/squarefacesprite3.png"
             frames: 6
-            duration: 120
+            frameDuration: 120
             to: {"evil": 0.5, "sad": 1, "cyclops" : 0}
         }, Sprite {
             name: "cyclops"
             source: "pics/squarefacesprite4.png"
             frames: 6
-            duration: 120
+            frameDuration: 120
             to: {"love": 0.1, "boggled": 0.1, "cyclops" : 0.1}
         }, Sprite {
             name: "evil"
             source: "pics/squarefacesprite5.png"
             frames: 6
-            duration: 120
+            frameDuration: 120
             to: {"sad": 1.0, "cyclops" : 0}
         }, Sprite {
             name: "love"
             source: "pics/squarefacesprite6.png"
             frames: 6
-            duration: 120
+            frameDuration: 120
             to: {"love": 0.1, "boggled": 0.1, "cyclops" : 0.1}
         }, Sprite {
             name: "boggled"
             source: "pics/squarefacesprite7.png"
             frames: 6
-            duration: 120
+            frameDuration: 120
             to: {"love": 0.1, "boggled": 0.1, "cyclops" : 0.1, "dying":0}
         }, Sprite {
             name: "dying"
             source: "pics/squarefacespriteX.png"
             frames: 4
-            duration: 120
+            frameDuration: 120
             to: {"dead":1.0}
         }, Sprite {
             name: "dead"
             source: "pics/squarefacespriteXX.png"
             frames: 1
-            duration: 10000
+            frameDuration: 10000
         }]
 
         width: 300
@@ -118,7 +118,7 @@ Item {
         State { name: "start"; when: statenum == 1
             StateChangeScript { script: spriteimage.jumpTo("happy"); }
             PropertyChanges { target: spriteimageelementtest
-                testtext: "This is a SpriteImage element. It should be animating currently."+
+                testtext: "This is a SpriteSequence element. It should be animating currently."+
                 "It should alternate between winking and sticking out its tongue." }
         },
         State { name: "stochastic2"; when: statenum == 2
@@ -136,7 +136,7 @@ Item {
                 "When it does, it should first animate to and play through the 'big eyes' animation (if it is not currently playing that animation) before it enters the dying animation."}
         },
         State { name: "dead"; when: statenum == 4
-            PropertyChanges { target: spriteimage; goalState: "dead" }
+            PropertyChanges { target: spriteimage; goalSprite: "dead" }
             PropertyChanges { target: spriteimageelementtest
                 testtext: "After a brief dying animation, the image should now be static.\n"+
                 "Advance to restart the test." }
