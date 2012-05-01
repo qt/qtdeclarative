@@ -128,7 +128,6 @@ void QQuickMaskExtruder::ensureInitialized(const QRectF &r)
     m_mask.clear();
 
     m_img = m_pix.image().createAlphaMask();
-    m_pix.clear();
     m_img = m_img.convertToFormat(QImage::Format_Mono);//Else LSB, but I think that's easier
     m_img = m_img.scaled(r.size().toSize());//TODO: Do they need aspect ratio stuff? Or tiling?
     for (int i=0; i<r.width(); i++){
