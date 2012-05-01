@@ -54,13 +54,16 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Window 2
     \brief The Screen attached object provides information about the Screen an Item is displayed on.
 
-    The Screen attached object is only valid inside Item or Item derived elements. Inside these elements
-    it refers to the screen that the element is currently being displayed on.
+    The Screen attached object is only valid inside Item or Item derived elements, after component completion.
+    Inside these elements it refers to the screen that the element is currently being displayed on.
 
     To use this element, you will need to import the module with the following line:
     \code
     import QtQuick.Window 2.0
     \endcode
+
+    Note that the Screen element is not valid at Component.onCompleted, because the Item has not been displayed on
+    a screen by this time.
 
     Restricting this import will allow you to have a QML environment without access to window system features.
 */
