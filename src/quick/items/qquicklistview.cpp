@@ -1345,7 +1345,7 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
             // position all subsequent items
             if (visibleItems.count() && item == visibleItems.first()->item) {
                 FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.first());
-                if (orient == Qt::Vertical) {
+                if (orient == QQuickListView::Vertical) {
                     qreal diff = newGeometry.height() - oldGeometry.height();
                     if (verticalLayoutDirection == QQuickListView::TopToBottom && listItem->endPosition() < q->contentY())
                         listItem->setPosition(listItem->position() - diff, true);
