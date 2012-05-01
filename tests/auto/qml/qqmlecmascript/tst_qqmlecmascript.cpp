@@ -262,6 +262,8 @@ private slots:
     void onDestruction();
     void bindingSuppression();
 
+    void signalEmitted();
+
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     QQmlEngine engine;
@@ -6710,6 +6712,52 @@ void tst_qqmlecmascript::bindingSuppression()
 
     qInstallMsgHandler(old);
     QCOMPARE(transientErrorsMsgCount, 0);
+}
+
+void tst_qqmlecmascript::signalEmitted()
+{
+    {
+        // calling destroy on the parent.
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("signalEmitted.qml"));
+        QObject *obj = c.create();
+        QVERIFY(obj != 0);
+        QTRY_VERIFY(obj->property("success").toBool());
+        delete obj;
+    }
+
+    {
+        // calling destroy on the sibling.
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("signalEmitted.2.qml"));
+        QObject *obj = c.create();
+        QVERIFY(obj != 0);
+        QTRY_VERIFY(obj->property("success").toBool());
+        delete obj;
+    }
+
+    {
+        // allowing gc to clean up the sibling.
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("signalEmitted.3.qml"));
+        QObject *obj = c.create();
+        QVERIFY(obj != 0);
+        gc(engine); // should collect c1.
+        QTRY_VERIFY(obj->property("success").toBool());
+        delete obj;
+    }
+
+    {
+        // allowing gc to clean up the sibling after manually destroying target.
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("signalEmitted.4.qml"));
+        QObject *obj = c.create();
+        QVERIFY(obj != 0);
+        gc(engine); // should collect c1.
+        QMetaObject::invokeMethod(obj, "destroyC2");
+        QTRY_VERIFY(obj->property("success").toBool());
+        delete obj;
+    }
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

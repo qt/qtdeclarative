@@ -477,6 +477,20 @@ void QQmlData::markAsDeleted(QObject *o)
     }
 }
 
+void QQmlData::setQueuedForDeletion(QObject *object)
+{
+    if (object) {
+        if (QObjectPrivate *priv = QObjectPrivate::get(object)) {
+            if (!priv->wasDeleted && priv->declarativeData) {
+                QQmlData *ddata = QQmlData::get(object, false);
+                if (ddata->ownContext && ddata->context)
+                    ddata->context->emitDestruction();
+                ddata->isQueuedForDeletion = true;
+            }
+        }
+    }
+}
+
 void QQmlEnginePrivate::init()
 {
     Q_Q(QQmlEngine);
