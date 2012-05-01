@@ -295,6 +295,7 @@ private:
     QList<QQuickSprite*> m_sprites;
     bool m_startedImageAssembly;
     bool m_loaded;
+    bool m_errorsPrinted;
 };
 
 //Common use is to have your own list property which is transparently an engine

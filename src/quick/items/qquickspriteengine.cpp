@@ -348,6 +348,7 @@ void QQuickSpriteEngine::startAssemblingImage()
     if (m_startedImageAssembly)
         return;
     m_loaded = false;
+    m_errorsPrinted = false;
 
     //This could also trigger the start of the image loading in Sprites, however that currently happens in Sprite::setSource
 
@@ -370,10 +371,12 @@ void QQuickSpriteEngine::startAssemblingImage()
 QImage QQuickSpriteEngine::assembledImage()
 {
     QQuickPixmap::Status stat = status();
-    if (stat == QQuickPixmap::Error)
+    if (!m_errorsPrinted && stat == QQuickPixmap::Error) {
         foreach (QQuickSprite* s, m_sprites)
             if (s->m_pix.isError())
                 qmlInfo(s) << s->m_pix.error();
+        m_errorsPrinted = true;
+    }
 
     if (stat != QQuickPixmap::Ready)
         return QImage();
