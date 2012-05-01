@@ -341,13 +341,20 @@ void QQuickSpriteEngine::startAssemblingImage()
         return;
 
     //This could also trigger the start of the image loading in Sprites, however that currently happens in Sprite::setSource
+
+    QList<QQuickStochasticState*> removals;
+
     foreach (QQuickStochasticState* s, m_states){
         QQuickSprite* sprite = qobject_cast<QQuickSprite*>(s);
-        if (sprite)
+        if (sprite) {
             m_sprites << sprite;
-        else
+        } else {
+            removals << s;
             qDebug() << "Error: Non-sprite in QQuickSpriteEngine";
+        }
     }
+    foreach (QQuickStochasticState* s, removals)
+        m_states.removeAll(s);
     m_startedImageAssembly = true;
 }
 
