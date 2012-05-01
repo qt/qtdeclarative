@@ -83,7 +83,6 @@ public:
           bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0),
           lineNumber(0), columnNumber(0), deferredComponent(0), deferredIdx(0), v8objectid(0), 
           propertyCache(0), guards(0), extendedData(0) {
-          init(); 
     }
 
     static inline void init() {

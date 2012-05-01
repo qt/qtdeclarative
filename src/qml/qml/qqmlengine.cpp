@@ -468,6 +468,15 @@ int QQmlData::endpointCount(int index)
     return count;
 }
 
+namespace {
+    class QQmlDataInitializer {
+    public:
+        QQmlDataInitializer() {
+            QQmlData::init();
+        }
+    } _initializer;
+}
+
 void QQmlEnginePrivate::init()
 {
     Q_Q(QQmlEngine);
@@ -486,8 +495,6 @@ void QQmlEnginePrivate::init()
     qRegisterMetaType<QList<QObject*> >("QList<QObject*>");
     qRegisterMetaType<QList<int> >("QList<int>");
     qRegisterMetaType<QQmlV8Handle>("QQmlV8Handle");
-
-    QQmlData::init();
 
     v8engine()->setEngine(q);
 
