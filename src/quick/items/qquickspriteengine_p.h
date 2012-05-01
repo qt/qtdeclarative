@@ -294,6 +294,7 @@ private:
     int pseudospriteProgress(int,int,int*rd=0);
     QList<QQuickSprite*> m_sprites;
     bool m_startedImageAssembly;
+    bool m_loaded;
 };
 
 //Common use is to have your own list property which is transparently an engine

@@ -107,12 +107,12 @@ QQuickStochasticEngine::~QQuickStochasticEngine()
 }
 
 QQuickSpriteEngine::QQuickSpriteEngine(QObject *parent)
-    : QQuickStochasticEngine(parent), m_startedImageAssembly(false)
+    : QQuickStochasticEngine(parent), m_startedImageAssembly(false), m_loaded(false)
 {
 }
 
 QQuickSpriteEngine::QQuickSpriteEngine(QList<QQuickSprite*> sprites, QObject *parent)
-    : QQuickStochasticEngine(parent), m_startedImageAssembly(false)
+    : QQuickStochasticEngine(parent), m_startedImageAssembly(false), m_loaded(false)
 {
     foreach (QQuickSprite* sprite, sprites)
         m_states << (QQuickStochasticState*)sprite;
@@ -156,6 +156,8 @@ int QQuickSpriteEngine::pseudospriteProgress(int sprite, int state, int* rowDura
 
 int QQuickSpriteEngine::spriteState(int sprite)
 {
+    if (!m_loaded)
+        return 0;
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return state;
@@ -175,7 +177,7 @@ int QQuickSpriteEngine::spriteState(int sprite)
 
 int QQuickSpriteEngine::spriteStart(int sprite)
 {
-    if (!m_duration[sprite])
+    if (!m_duration[sprite] || !m_loaded)
         return m_timeOffset;
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
@@ -189,6 +191,8 @@ int QQuickSpriteEngine::spriteStart(int sprite)
 
 int QQuickSpriteEngine::spriteFrames(int sprite)
 {
+    if (!m_loaded)
+        return 1;
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->frames();
@@ -212,7 +216,7 @@ int QQuickSpriteEngine::spriteFrames(int sprite)
 
 int QQuickSpriteEngine::spriteDuration(int sprite)//Full duration, not per frame
 {
-    if (!m_duration[sprite])
+    if (!m_duration[sprite] || !m_loaded)
         return m_duration[sprite];
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
@@ -230,6 +234,8 @@ int QQuickSpriteEngine::spriteDuration(int sprite)//Full duration, not per frame
 
 int QQuickSpriteEngine::spriteY(int sprite)
 {
+    if (!m_loaded)
+        return 0;
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->m_rowY;
@@ -250,6 +256,8 @@ int QQuickSpriteEngine::spriteY(int sprite)
 
 int QQuickSpriteEngine::spriteX(int sprite)
 {
+    if (!m_loaded)
+        return 0;
     int state = m_things[sprite];
     if (!m_sprites[state]->m_generatedCount)
         return m_sprites[state]->m_rowStartX;
@@ -339,6 +347,7 @@ void QQuickSpriteEngine::startAssemblingImage()
 {
     if (m_startedImageAssembly)
         return;
+    m_loaded = false;
 
     //This could also trigger the start of the image loading in Sprites, however that currently happens in Sprite::setSource
 
@@ -477,6 +486,8 @@ QImage QQuickSpriteEngine::assembledImage()
     qDebug() << "Assembled image output to: " << fPath.arg(acc);
 #endif
 
+    m_loaded = true;
+    m_startedImageAssembly = false;
     return image;
 }
 
@@ -530,7 +541,7 @@ void QQuickStochasticEngine::restart(int index)
 void QQuickSpriteEngine::restart(int index) //Reimplemented to recognize and handle pseudostates
 {
     bool randomStart = (m_startTimes[index] == NINF);
-    if (m_sprites[m_things[index]]->frameSync()) {//Manually advanced
+    if (m_loaded && m_sprites[m_things[index]]->frameSync()) {//Manually advanced
         m_startTimes[index] = 0;
         if (randomStart && m_sprites[m_things[index]]->m_generatedCount)
             m_startTimes[index] += qrand() % m_sprites[m_things[index]]->m_generatedCount;
@@ -567,6 +578,11 @@ void QQuickStochasticEngine::advance(int idx)
 
 void QQuickSpriteEngine::advance(int idx) //Reimplemented to recognize and handle pseudostates
 {
+    if (!m_loaded) {
+        qWarning() << QLatin1String("QQuickSpriteEngine: Trying to advance sprites before sprites finish loading. Ignoring directive");
+        return;
+    }
+
     if (idx >= m_things.count())
         return;//TODO: Proper fix(because this has happened and I just ignored it)
     if (m_duration[idx] == 0) {

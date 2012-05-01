@@ -52,6 +52,7 @@ public:
 private slots:
     void test_properties();
     void test_framerateAdvance();//Separate codepath for QQuickSpriteEngine
+    void test_jumpToCrash();
 };
 
 void tst_qquickspritesequence::test_properties()
@@ -90,6 +91,18 @@ void tst_qquickspritesequence::test_framerateAdvance()
     QVERIFY(sprite);
 
     QTRY_COMPARE(sprite->currentSprite(), QLatin1String("secondState"));
+    delete canvas;
+}
+
+void tst_qquickspritesequence::test_jumpToCrash()
+{
+    QQuickView *canvas = new QQuickView(0);
+
+    canvas->setSource(testFileUrl("crashonstart.qml"));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+    //verify: Don't crash
+
     delete canvas;
 }
 
