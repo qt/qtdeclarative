@@ -1253,6 +1253,9 @@ QStringList QQmlImportDatabase::pluginPathList() const
 */
 void QQmlImportDatabase::setPluginPathList(const QStringList &paths)
 {
+    if (qmlImportTrace())
+        qDebug().nospace() << "QQmlImportDatabase::setPluginPathList: " << paths;
+
     filePluginPath = paths;
 }
 
@@ -1315,6 +1318,9 @@ QStringList QQmlImportDatabase::importPathList() const
 */
 void QQmlImportDatabase::setImportPathList(const QStringList &paths)
 {
+    if (qmlImportTrace())
+        qDebug().nospace() << "QQmlImportDatabase::setImportPathList: " << paths;
+
     fileImportPath = paths;
 }
 
