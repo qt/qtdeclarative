@@ -1867,6 +1867,7 @@ QRectF QQuickTextEdit::boundingRect() const
     qreal w = width();
     switch (d->hAlign) {
     case AlignLeft:
+    case AlignJustify:
         break;
     case AlignRight:
         r.moveLeft(w - r.width());
