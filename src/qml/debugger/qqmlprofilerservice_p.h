@@ -80,6 +80,7 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData
     int column;         //used by RangeLocation
     int framerate;      //used by animation events
     int animationcount; //used by animation events
+    int bindingType;
 
     QByteArray toByteArray() const;
 };
@@ -125,6 +126,14 @@ public:
         MaximumRangeType
     };
 
+    enum BindingType {
+        QmlBinding,
+        V8Binding,
+        V4Binding,
+
+        MaximumBindingType
+    };
+
     static void initialize();
 
     static bool startProfiling();
@@ -149,7 +158,7 @@ private:
     void addEventImpl(EventType);
     void animationFrameImpl(qint64);
 
-    void startRange(RangeType);
+    void startRange(RangeType, BindingType bindingType = QmlBinding);
     void rangeData(RangeType, const QString &);
     void rangeData(RangeType, const QUrl &);
     void rangeLocation(RangeType, const QString &, int, int);
@@ -183,12 +192,12 @@ private:
 //
 
 struct QQmlBindingProfiler {
-    QQmlBindingProfiler(const QString &url, int line, int column)
+    QQmlBindingProfiler(const QString &url, int line, int column, QQmlProfilerService::BindingType bindingType)
     {
         QQmlProfilerService *instance = QQmlProfilerService::instance;
         enabled = instance ? instance->profilingEnabled() : false;
         if (enabled) {
-            instance->startRange(QQmlProfilerService::Binding);
+            instance->startRange(QQmlProfilerService::Binding, bindingType);
             instance->rangeLocation(QQmlProfilerService::Binding, url, line, column);
         }
     }

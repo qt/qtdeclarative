@@ -59,17 +59,19 @@ namespace Constants {
 struct QmlRangeEventData {
     QmlRangeEventData() {} // never called
     QmlRangeEventData(const QString &_displayName,
+                 const QQmlProfilerService::BindingType &_bindingType,
                  const QString &_eventHashStr,
                  const QmlEventLocation &_location,
                  const QString &_details,
                  const QQmlProfilerService::RangeType &_eventType)
         : displayName(_displayName),eventHashStr(_eventHashStr),location(_location),
-          details(_details),eventType(_eventType) {}
+          details(_details),eventType(_eventType),bindingType(_bindingType) {}
     QString displayName;
     QString eventHashStr;
     QmlEventLocation location;
     QString details;
     QQmlProfilerService::RangeType eventType;
+    QQmlProfilerService::BindingType bindingType;
 };
 
 struct QmlRangeEventStartInstance {
@@ -221,6 +223,7 @@ qint64 QmlProfilerData::traceEndTime() const
 }
 
 void QmlProfilerData::addQmlEvent(QQmlProfilerService::RangeType type,
+                                  QQmlProfilerService::BindingType bindingType,
                                   qint64 startTime,
                                   qint64 duration,
                                   const QStringList &data,
@@ -262,7 +265,7 @@ void QmlProfilerData::addQmlEvent(QQmlProfilerService::RangeType type,
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
-        newEvent = new QmlRangeEventData(displayName, eventHashStr, location, details, type);
+        newEvent = new QmlRangeEventData(displayName, bindingType, eventHashStr, location, details, type);
         d->eventDescriptions.insert(eventHashStr, newEvent);
     }
 
@@ -283,7 +286,7 @@ void QmlProfilerData::addFrameEvent(qint64 time, int framerate, int animationcou
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
-        newEvent = new QmlRangeEventData(displayName, eventHashStr, QmlEventLocation(), details, QQmlProfilerService::Painting);
+        newEvent = new QmlRangeEventData(displayName, QQmlProfilerService::QmlBinding, eventHashStr, QmlEventLocation(), details, QQmlProfilerService::Painting);
         d->eventDescriptions.insert(eventHashStr, newEvent);
     }
 
@@ -495,6 +498,8 @@ bool QmlProfilerData::save(const QString &filename)
             stream.writeTextElement(QStringLiteral("column"), QString::number(eventData->location.column));
         }
         stream.writeTextElement(QStringLiteral("details"), eventData->details);
+        if (eventData->eventType == QQmlProfilerService::Binding)
+            stream.writeTextElement(QStringLiteral("bindingType"), QString::number((int)eventData->bindingType));
         stream.writeEndElement();
     }
     stream.writeEndElement(); // eventData

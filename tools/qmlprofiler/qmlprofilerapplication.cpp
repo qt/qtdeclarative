@@ -104,8 +104,8 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
 
     connect(&m_qmlProfilerClient, SIGNAL(enabledChanged()), this, SLOT(traceClientEnabled()));
     connect(&m_qmlProfilerClient, SIGNAL(recordingChanged(bool)), this, SLOT(recordingChanged()));
-    connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerService::RangeType,qint64,qint64,QStringList,QmlEventLocation)),
-            &m_profilerData, SLOT(addQmlEvent(QQmlProfilerService::RangeType,qint64,qint64,QStringList,QmlEventLocation)));
+    connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerService::RangeType,QQmlProfilerService::BindingType,qint64,qint64,QStringList,QmlEventLocation)),
+            &m_profilerData, SLOT(addQmlEvent(QQmlProfilerService::RangeType,QQmlProfilerService::BindingType,qint64,qint64,QStringList,QmlEventLocation)));
     connect(&m_qmlProfilerClient, SIGNAL(traceFinished(qint64)), &m_profilerData, SLOT(setTraceEndTime(qint64)));
     connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), &m_profilerData, SLOT(setTraceStartTime(qint64)));
     connect(&m_qmlProfilerClient, SIGNAL(frame(qint64,int,int)), &m_profilerData, SLOT(addFrameEvent(qint64,int,int)));

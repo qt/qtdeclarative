@@ -97,8 +97,10 @@ public slots:
 signals:
     void traceFinished( qint64 time );
     void traceStarted( qint64 time );
-    void range(QQmlProfilerService::RangeType type, qint64 startTime,
-               qint64 length, const QStringList &data,
+    void range(QQmlProfilerService::RangeType type,
+               QQmlProfilerService::BindingType bindingType,
+               qint64 startTime, qint64 length,
+               const QStringList &data,
                const QmlEventLocation &location);
     void frame(qint64 time, int frameRate, int animationCount);
 

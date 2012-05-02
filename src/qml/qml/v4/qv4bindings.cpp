@@ -367,7 +367,7 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
     trace.addDetail("Line", binding->line);
     trace.addDetail("Column", binding->column);
 
-    QQmlBindingProfiler prof(context->urlString, binding->line, binding->column);
+    QQmlBindingProfiler prof(context->urlString, binding->line, binding->column, QQmlProfilerService::V4Binding);
 
     if (binding->updating) {
         QString name;

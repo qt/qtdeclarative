@@ -82,8 +82,10 @@ public slots:
     void clear();
     void setTraceEndTime(qint64 time);
     void setTraceStartTime(qint64 time);
-    void addQmlEvent(QQmlProfilerService::RangeType type, qint64 startTime, qint64 duration,
-                        const QStringList &data, const QmlEventLocation &location);
+    void addQmlEvent(QQmlProfilerService::RangeType type,
+                     QQmlProfilerService::BindingType bindingType,
+                     qint64 startTime, qint64 duration, const QStringList &data,
+                     const QmlEventLocation &location);
     void addV8Event(int depth, const QString &function, const QString &filename,
                     int lineNumber, double totalTime, double selfTime);
     void addFrameEvent(qint64 time, int framerate, int animationcount);

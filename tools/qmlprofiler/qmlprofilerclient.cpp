@@ -118,6 +118,7 @@ public:
     QStack<qint64> rangeStartTimes[QQmlProfilerService::MaximumRangeType];
     QStack<QStringList> rangeDatas[QQmlProfilerService::MaximumRangeType];
     QStack<QmlEventLocation> rangeLocations[QQmlProfilerService::MaximumRangeType];
+    QStack<QQmlProfilerService::BindingType> bindingTypes;
     int rangeCount[QQmlProfilerService::MaximumRangeType];
     qint64 maximumTime;
 };
@@ -138,6 +139,7 @@ void QmlProfilerClient::clearData()
 {
     ::memset(d->rangeCount, 0,
              QQmlProfilerService::MaximumRangeType * sizeof(int));
+    d->bindingTypes.clear();
     ProfilerClient::clearData();
 }
 
@@ -195,6 +197,14 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
             d->rangeStartTimes[range].push(time);
             d->inProgressRanges |= (static_cast<qint64>(1) << range);
             ++d->rangeCount[range];
+
+            // read binding type
+            if (range == (int)QQmlProfilerService::Binding) {
+                int bindingType = (int)QQmlProfilerService::QmlBinding;
+                if (!stream.atEnd())
+                    stream >> bindingType;
+                d->bindingTypes.push((QQmlProfilerService::BindingType)bindingType);
+            }
         } else if (messageType == QQmlProfilerService::RangeData) {
             QString data;
             stream >> data;
@@ -232,8 +242,11 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
                             d->rangeLocations[range].pop() : QmlEventLocation();
 
                 qint64 startTime = d->rangeStartTimes[range].pop();
+                QQmlProfilerService::BindingType bindingType = QQmlProfilerService::QmlBinding;
+                if (range == (int)QQmlProfilerService::Binding)
+                    bindingType = d->bindingTypes.pop();
                 emit this->range((QQmlProfilerService::RangeType)range,
-                                 startTime, time - startTime, data, location);
+                                 bindingType, startTime, time - startTime, data, location);
                 if (d->rangeCount[range] == 0) {
                     int count = d->rangeDatas[range].count() +
                                 d->rangeStartTimes[range].count() +

@@ -119,7 +119,7 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
     trace.addDetail("Line", instruction->line);
     trace.addDetail("Column", instruction->column);
 
-    QQmlBindingProfiler prof(parent->urlString(), instruction->line, instruction->column);
+    QQmlBindingProfiler prof(parent->urlString(), instruction->line, instruction->column, QQmlProfilerService::V8Binding);
 
     if (!updatingFlag()) {
         setUpdatingFlag(true);

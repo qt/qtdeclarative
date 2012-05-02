@@ -196,7 +196,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     trace.addDetail("Column", m_columnNumber);
 
     if (!updatingFlag()) {
-        QQmlBindingProfiler prof(m_url, m_lineNumber, m_columnNumber);
+        QQmlBindingProfiler prof(m_url, m_lineNumber, m_columnNumber, QQmlProfilerService::QmlBinding);
         setUpdatingFlag(true);
 
         QQmlAbstractExpression::DeleteWatcher watcher(this);

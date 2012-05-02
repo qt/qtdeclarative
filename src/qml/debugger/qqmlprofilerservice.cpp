@@ -66,6 +66,9 @@ QByteArray QQmlProfilerData::toByteArray() const
     //### using QDataStream is relatively expensive
     QQmlDebugStream ds(&data, QIODevice::WriteOnly);
     ds << time << messageType << detailType;
+    if (messageType == (int)QQmlProfilerService::RangeStart &&
+            detailType == (int)QQmlProfilerService::Binding)
+        ds << bindingType;
     if (messageType == (int)QQmlProfilerService::RangeData)
         ds << detailData;
     if (messageType == (int)QQmlProfilerService::RangeLocation)
@@ -160,7 +163,8 @@ void QQmlProfilerService::sendStartedProfilingMessageImpl()
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)StartTrace, QString(), -1, -1, 0, 0};
+    QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)StartTrace,
+                           QString(), -1, -1, 0, 0, 0};
     QQmlDebugService::sendMessage(ed.toByteArray());
 }
 
@@ -169,16 +173,18 @@ void QQmlProfilerService::addEventImpl(EventType event)
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)event, QString(), -1, -1, 0, 0};
+    QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)event,
+                           QString(), -1, -1, 0, 0, 0};
     processMessage(ed);
 }
 
-void QQmlProfilerService::startRange(RangeType range)
+void QQmlProfilerService::startRange(RangeType range, BindingType bindingType)
 {
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeStart, (int)range, QString(), -1, -1, 0, 0};
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeStart, (int)range,
+                           QString(), -1, -1, 0, 0, (int)bindingType};
     processMessage(rd);
 }
 
@@ -187,7 +193,8 @@ void QQmlProfilerService::rangeData(RangeType range, const QString &rData)
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData, -1, -1, 0, 0};
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range,
+                           rData, -1, -1, 0, 0, 0};
     processMessage(rd);
 }
 
@@ -196,7 +203,8 @@ void QQmlProfilerService::rangeData(RangeType range, const QUrl &rData)
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData.toString(), -1, -1, 0, 0};
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range,
+                           rData.toString(), -1, -1, 0, 0, 0};
     processMessage(rd);
 }
 
@@ -205,7 +213,8 @@ void QQmlProfilerService::rangeLocation(RangeType range, const QString &fileName
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName, line, column, 0, 0};
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range,
+                           fileName, line, column, 0, 0, 0};
     processMessage(rd);
 }
 
@@ -214,7 +223,8 @@ void QQmlProfilerService::rangeLocation(RangeType range, const QUrl &fileName, i
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName.toString(), line, column, 0, 0};
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range,
+                           fileName.toString(), line, column, 0, 0, 0};
     processMessage(rd);
 }
 
@@ -223,7 +233,8 @@ void QQmlProfilerService::endRange(RangeType range)
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range, QString(), -1, -1, 0, 0};
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeEnd, (int)range,
+                           QString(), -1, -1, 0, 0, 0};
     processMessage(rd);
 }
 
@@ -238,7 +249,8 @@ void QQmlProfilerService::animationFrameImpl(qint64 delta)
     if (animCount > 0 && delta > 0) {
         // trim fps to integer
         int fps = 1000 / delta;
-        QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)AnimationFrame, QString(), -1, -1, fps, animCount};
+        QQmlProfilerData ed = {m_timer.nsecsElapsed(), (int)Event, (int)AnimationFrame,
+                               QString(), -1, -1, fps, animCount, 0};
         processMessage(ed);
     }
 }
