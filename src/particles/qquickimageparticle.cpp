@@ -1438,7 +1438,7 @@ void QQuickImageParticle::finishBuildParticleNodes()
         }
         getState<ImageMaterialData>(m_material)->texture->setFiltering(QSGTexture::Linear);
         getState<ImageMaterialData>(m_material)->entry = (qreal) m_entryEffect;
-        m_material->setFlag(QSGMaterial::Blending);
+        m_material->setFlag(QSGMaterial::Blending | QSGMaterial::RequiresFullMatrix);
     }
 
     m_nodes.clear();
