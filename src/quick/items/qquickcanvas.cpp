@@ -469,11 +469,13 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
 
 void QQuickCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
 {
+    QMatrix4x4 transformMatrix(transform);
     for (int i=0; i<touchPoints.count(); i++) {
         QTouchEvent::TouchPoint &touchPoint = touchPoints[i];
         touchPoint.setRect(transform.mapRect(touchPoint.sceneRect()));
         touchPoint.setStartPos(transform.map(touchPoint.startScenePos()));
         touchPoint.setLastPos(transform.map(touchPoint.lastScenePos()));
+        touchPoint.setVelocity(transformMatrix.mapVector(touchPoint.velocity()).toVector2D());
     }
 }
 
@@ -1133,7 +1135,7 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
                                 event->button(), event->buttons(), event->modifiers());
         QQuickMouseEventEx *eventEx = QQuickMouseEventEx::extended(event);
         if (eventEx) {
-            me.setVelocity(eventEx->velocity());
+            me.setVelocity(QMatrix4x4(transform).mapVector(eventEx->velocity()).toVector2D());
             me.setCapabilities(eventEx->capabilities());
         }
         me.setTimestamp(event->timestamp());
