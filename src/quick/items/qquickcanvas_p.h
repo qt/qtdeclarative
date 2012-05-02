@@ -174,7 +174,6 @@ public:
 
     void fireFrameSwapped() { emit q_func()->frameSwapped(); }
 
-    QSGEngine *engine;
     QSGContext *context;
     QSGRenderer *renderer;
 

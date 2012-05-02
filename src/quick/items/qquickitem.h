@@ -89,7 +89,6 @@ class QQuickKeyEvent;
 class QQuickAnchors;
 class QQuickItemPrivate;
 class QQuickCanvas;
-class QSGEngine;
 class QTouchEvent;
 class QSGNode;
 class QSGTransformNode;
@@ -194,8 +193,6 @@ public:
 
     QQuickItem(QQuickItem *parent = 0);
     virtual ~QQuickItem();
-
-    QSGEngine *sceneGraphEngine() const;
 
     QQuickCanvas *canvas() const;
     QQuickItem *parentItem() const;

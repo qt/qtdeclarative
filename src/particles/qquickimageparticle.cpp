@@ -51,7 +51,6 @@
 #include <private/qquicksprite_p.h>
 #include <private/qquickspriteengine_p.h>
 #include <QOpenGLFunctions>
-#include <QtQuick/qsgengine.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtQml/qqmlinfo.h>

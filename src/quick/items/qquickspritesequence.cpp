@@ -45,7 +45,6 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/qsgnode.h>
-#include <QtQuick/qsgengine.h>
 #include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
 #include <QtQuick/qquickcanvas.h>

@@ -52,7 +52,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QSGEngine;
 class QQuickItem;
 class QSGTexture;
 class QInputMethodEvent;
@@ -88,8 +87,6 @@ public:
     QQuickItem *mouseGrabberItem() const;
 
     bool sendEvent(QQuickItem *, QEvent *);
-
-    QSGEngine *sceneGraphEngine() const;
 
     QImage grabFrameBuffer();
 

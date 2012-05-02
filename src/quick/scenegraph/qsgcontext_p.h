@@ -68,7 +68,6 @@ class QQuickCanvas;
 class QSGTexture;
 class QSGMaterial;
 class QSGMaterialShader;
-class QSGEngine;
 class QQuickWindowManager;
 
 class QOpenGLContext;

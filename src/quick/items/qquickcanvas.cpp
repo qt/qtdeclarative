@@ -49,7 +49,6 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgflashnode_p.h>
-#include <QtQuick/qsgengine.h>
 
 #include <private/qquickwindowmanager_p.h>
 
@@ -350,10 +349,6 @@ void QQuickCanvasPrivate::init(QQuickCanvas *c)
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
-
-    // ### TODO: remove QSGEngine
-    engine = new QSGEngine();
-    engine->setCanvas(q);
 }
 
 QQmlListProperty<QObject> QQuickCanvasPrivate::data()
@@ -2125,26 +2120,6 @@ QOpenGLContext *QQuickCanvas::openglContext() const
 
     This signal will be emitted from the scene graph rendering thread.
  */
-
-/*!
-    Returns the QSGEngine used for this scene.
-
-    The engine will only be available once the scene graph has been
-    initialized. Register for the sceneGraphEngine() signal to get
-    notification about this.
-
-    \deprecated
- */
-
-QSGEngine *QQuickCanvas::sceneGraphEngine() const
-{
-    Q_D(const QQuickCanvas);
-    qWarning("QQuickCanvas::sceneGraphEngine() is deprecated, use members of QQuickCanvas instead");
-    if (d->context && d->context->isReady())
-        return d->engine;
-    return 0;
-}
-
 
 
 /*!

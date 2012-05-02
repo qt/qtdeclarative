@@ -2144,11 +2144,6 @@ QQuickItem *QQuickItem::parentItem() const
     return d->parentItem;
 }
 
-QSGEngine *QQuickItem::sceneGraphEngine() const
-{
-    return canvas()->sceneGraphEngine();
-}
-
 QQuickCanvas *QQuickItem::canvas() const
 {
     Q_D(const QQuickItem);
