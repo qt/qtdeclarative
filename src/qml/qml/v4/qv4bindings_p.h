@@ -56,6 +56,7 @@
 #include "private/qqmlexpression_p.h"
 #include "private/qqmlbinding_p.h"
 #include "private/qv4instruction_p.h"
+#include "private/qpointervaluepair_p.h"
 
 QT_BEGIN_HEADER
 
@@ -91,7 +92,13 @@ private:
         virtual void update(QQmlPropertyPrivate::WriteFlags flags);
         virtual void destroy();
         virtual int propertyIndex() const;
+        virtual void retargetBinding(QObject *, int);
         virtual QObject *object() const;
+
+        struct Retarget {
+            QObject *target;
+            int targetProperty;
+        };
 
         int index:30;
         bool enabled:1;
@@ -102,7 +109,7 @@ private:
         QObject *scope;
         int line;
         int column;
-        QObject *target;
+        QPointerValuePair<QObject, Retarget> target;
         quint32 executedBlocks;
 
         QV4Bindings *parent;

@@ -831,12 +831,21 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
 
-            Q_ASSERT(binding->propertyIndex() == (property & 0xFF00FFFF));
-            Q_ASSERT(binding->object() == target);
+            if (instr.isAlias) {
+                QQmlAbstractBinding *old =
+                    QQmlPropertyPrivate::setBindingNoEnable(target,
+                                                            instr.property & 0xFFFF,
+                                                            instr.property >> 24,
+                                                            binding);
+                if (old) { old->destroy(); }
+            } else {
+                Q_ASSERT(binding->propertyIndex() == (property & 0xFF00FFFF));
+                Q_ASSERT(binding->object() == target);
 
-            CLEAN_PROPERTY(target, property & 0xFF00FFFF);
+                CLEAN_PROPERTY(target, property & 0xFF00FFFF);
 
-            binding->addToObject();
+                binding->addToObject();
+            }
         QML_END_INSTR(StoreV4Binding)
 
         QML_BEGIN_INSTR(StoreV8Binding)

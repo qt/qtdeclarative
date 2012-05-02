@@ -240,6 +240,7 @@ union QQmlInstruction
         short context;
         short owner;
         bool isRoot;
+        bool isAlias;
         ushort line;
         ushort column;
     };

@@ -99,9 +99,8 @@ protected:
     void clear();
 
     // Called by QQmlPropertyPrivate to "move" a binding to a different property.
-    // This is only used for alias properties, and only used by QQmlBinding not
-    // V8 or V4 bindings.  The default implementation qFatal()'s to ensure that the
-    // method is never called for V4 or V8 bindings.
+    // This is only used for alias properties. The default implementation qFatal()'s
+    // to ensure that the method is never called for binding types that don't support it.
     virtual void retargetBinding(QObject *, int);
 private:
     Pointer weakPointer();

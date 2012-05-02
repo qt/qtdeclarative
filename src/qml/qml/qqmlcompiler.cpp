@@ -3428,6 +3428,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         store.value = js.compiledIndex;
         store.context = js.bindingContext.stack;
         store.owner = js.bindingContext.owner;
+        store.isAlias = prop->isAlias;
         if (valueTypeProperty) {
             store.property = (valueTypeProperty->index & 0xFFFF) |
                              ((valueTypeProperty->type & 0xFF)) << 16 |
@@ -3542,21 +3543,18 @@ bool QQmlCompiler::completeComponentBuild()
 
         JSBindingReference &binding = *b;
 
-        // ### We don't currently optimize for bindings on alias's - because 
-        // of the solution to QTBUG-13719
-        if (!binding.property->isAlias) {
-            expr.context = binding.bindingContext.object;
-            expr.property = binding.property;
-            expr.expression = binding.expression;
+        // First try v4
+        expr.context = binding.bindingContext.object;
+        expr.property = binding.property;
+        expr.expression = binding.expression;
 
-            int index = bindingCompiler.compile(expr, enginePrivate);
-            if (index != -1) {
-                binding.dataType = BindingReference::V4;
-                binding.compiledIndex = index;
-                if (componentStats)
-                    componentStats->componentStat.optimizedBindings.append(b->value->location);
-                continue;
-            } 
+        int index = bindingCompiler.compile(expr, enginePrivate);
+        if (index != -1) {
+            binding.dataType = BindingReference::V4;
+            binding.compiledIndex = index;
+            if (componentStats)
+                componentStats->componentStat.optimizedBindings.append(b->value->location);
+            continue;
         }
 
         // Pre-rewrite the expression

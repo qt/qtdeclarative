@@ -319,13 +319,21 @@ void QV4Bindings::Binding::destroy()
 
 int QV4Bindings::Binding::propertyIndex() const
 {
+    if (target.hasValue()) return target.constValue()->targetProperty;
     //mask out the type information set for value types
-    return property & 0xFF00FFFF;
+    else return property & 0xFF00FFFF;
 }
 
 QObject *QV4Bindings::Binding::object() const
 {
-    return target;
+    if (target.hasValue()) return target.constValue()->target;
+    return *target;
+}
+
+void QV4Bindings::Binding::retargetBinding(QObject *t, int i)
+{
+    target.value().target = t;
+    target.value().targetProperty = i;
 }
 
 void QV4Bindings::Subscription::subscriptionCallback(QQmlNotifierEndpoint *e, void **)
@@ -359,7 +367,7 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
         return;
 
     // Check that the target has not been deleted
-    if (QQmlData::wasDeleted(binding->target))
+    if (QQmlData::wasDeleted(*binding->target))
         return;
 
     QQmlTrace trace("V4 Binding Update");
@@ -383,7 +391,7 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
         } else {
             name = QLatin1String(binding->target->metaObject()->property(binding->property).name());
         }
-        qmlInfo(binding->target) << tr("Binding loop detected for property \"%1\"").arg(name);
+        qmlInfo(*binding->target) << tr("Binding loop detected for property \"%1\"").arg(name);
         return;
     }
 
@@ -393,14 +401,14 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
 
         QQmlValueType *vt = ep->valueTypes[(binding->property >> 16) & 0xFF];
         Q_ASSERT(vt);
-        vt->read(binding->target, binding->property & 0xFFFF);
+        vt->read(*binding->target, binding->property & 0xFFFF);
 
         QObject *target = vt;
         run(binding->index, binding->executedBlocks, context, binding, binding->scope, target, flags);
 
-        vt->write(binding->target, binding->property & 0xFFFF, flags);
+        vt->write(*binding->target, binding->property & 0xFFFF, flags);
     } else {
-        QQmlData *data = QQmlData::get(binding->target);
+        QQmlData *data = QQmlData::get(*binding->target);
         QQmlPropertyData *propertyData = (data && data->propertyCache ? data->propertyCache->property(binding->property) : 0);
 
         if (propertyData && propertyData->isVMEProperty()) {
@@ -408,9 +416,9 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
             v8::HandleScope handle_scope;
             v8::Context::Scope context_scope(QQmlEnginePrivate::get(context->engine)->v8engine()->context());
 
-            run(binding->index, binding->executedBlocks, context, binding, binding->scope, binding->target, flags);
+            run(binding->index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags);
         } else {
-            run(binding->index, binding->executedBlocks, context, binding, binding->scope, binding->target, flags);
+            run(binding->index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags);
         }
     }
     binding->updating = false;
