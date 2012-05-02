@@ -468,15 +468,6 @@ int QQmlData::endpointCount(int index)
     return count;
 }
 
-namespace {
-    class QQmlDataInitializer {
-    public:
-        QQmlDataInitializer() {
-            QQmlData::init();
-        }
-    } _initializer;
-}
-
 void QQmlEnginePrivate::init()
 {
     Q_Q(QQmlEngine);
@@ -485,6 +476,7 @@ void QQmlEnginePrivate::init()
     if (firstTime) {
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component");
 
+        QQmlData::init();
         firstTime = false;
     }
 
