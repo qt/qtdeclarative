@@ -282,12 +282,10 @@ void tst_qquickimage::smooth()
 
 void tst_qquickimage::mirror()
 {
-    QSKIP("Test is broken on multiple levels, will need incremental fixes");
-
     QMap<QQuickImage::FillMode, QImage> screenshots;
     QList<QQuickImage::FillMode> fillModes;
     fillModes << QQuickImage::Stretch << QQuickImage::PreserveAspectFit << QQuickImage::PreserveAspectCrop
-              << QQuickImage::Tile << QQuickImage::TileVertically << QQuickImage::TileHorizontally;
+              << QQuickImage::Tile << QQuickImage::TileVertically << QQuickImage::TileHorizontally << QQuickImage::Pad;
 
     qreal width = 300;
     qreal height = 250;
@@ -302,6 +300,8 @@ void tst_qquickimage::mirror()
         obj->setFillMode(fillMode);
         obj->setProperty("mirror", true);
         canvas->show();
+        canvas->requestActivateWindow();
+        QTest::qWaitForWindowShown(canvas);
 
         QImage screenshot = canvas->grabFrameBuffer();
         screenshots[fillMode] = screenshot;
@@ -319,6 +319,8 @@ void tst_qquickimage::mirror()
         transform.translate(width, 0).scale(-1, 1.0);
         p_e.setTransform(transform);
 
+        QPoint offset(width / 2 - srcPixmap.width() / 2, height / 2 - srcPixmap.height() / 2);
+
         switch (fillMode) {
         case QQuickImage::Stretch:
             p_e.drawPixmap(QRect(0, 0, width, height), srcPixmap, QRect(0, 0, srcPixmap.width(), srcPixmap.height()));
@@ -335,24 +337,24 @@ void tst_qquickimage::mirror()
             break;
         }
         case QQuickImage::Tile:
-            p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap);
+            p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap, -offset);
             break;
         case QQuickImage::TileVertically:
             transform.scale(width / srcPixmap.width(), 1.0);
             p_e.setTransform(transform);
-            p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap);
+            p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap, QPoint(0, -offset.y()));
             break;
         case QQuickImage::TileHorizontally:
             transform.scale(1.0, height / srcPixmap.height());
             p_e.setTransform(transform);
-            p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap);
+            p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap, QPoint(-offset.x(), 0));
             break;
         case QQuickImage::Pad:
+            p_e.drawPixmap(offset, srcPixmap);
             break;
         }
 
         QImage img = expected.toImage();
-        QEXPECT_FAIL("", "QTBUG-21005 fails", Continue);
         QCOMPARE(screenshots[fillMode], img);
     }
 }
@@ -467,41 +469,24 @@ void tst_qquickimage::big()
     delete obj;
 }
 
-// As tiling_QTBUG_6716 doesn't complete, it doesn't delete the
-// canvas which causes leak warnings.  Use this delete on stack
-// destruction pattern to work around this.
-template<typename T>
-struct AutoDelete {
-    AutoDelete(T *t) : t(t) {}
-    ~AutoDelete() { delete t; }
-private:
-    T *t;
-};
-
 void tst_qquickimage::tiling_QTBUG_6716()
 {
-    QSKIP("Test is broken on multiple levels, will need incremental fixes");
-
     QFETCH(QString, source);
 
-    QQuickView *canvas = new QQuickView(0);
-    AutoDelete<QQuickView> del(canvas);
+    QQuickView view(testFileUrl(source));
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
 
-    canvas->setSource(testFileUrl(source));
-    canvas->show();
-    qApp->processEvents();
-
-    QQuickImage *tiling = findItem<QQuickImage>(canvas->rootObject(), "tiling");
+    QQuickImage *tiling = findItem<QQuickImage>(view.rootObject(), "tiling");
 
     QVERIFY(tiling != 0);
-    QImage img = canvas->grabFrameBuffer();
+    QImage img = view.grabFrameBuffer();
     for (int x = 0; x < tiling->width(); ++x) {
         for (int y = 0; y < tiling->height(); ++y) {
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
         }
     }
-
-    delete canvas;
 }
 
 void tst_qquickimage::tiling_QTBUG_6716_data()

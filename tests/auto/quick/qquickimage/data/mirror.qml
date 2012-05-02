@@ -5,6 +5,7 @@ Rectangle {
     height: 250
     Image {
         objectName: "image"
+        smooth: false
         anchors.fill: parent
         source: "pattern.png"
     }
