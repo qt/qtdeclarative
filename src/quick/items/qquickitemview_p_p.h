@@ -293,7 +293,7 @@ public:
 
     bool ownModel : 1;
     bool wrap : 1;
-    bool disableLayout : 1;
+    bool inLayout : 1;
     bool inViewportMoved : 1;
     bool forceLayout : 1;
     bool currentIndexCleared : 1;

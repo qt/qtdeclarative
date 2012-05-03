@@ -1093,14 +1093,14 @@ void QQuickItemViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
     if (currentItem && currentItem->item == item) {
         // don't allow item movement transitions to trigger a re-layout and
         // start new transitions
-        bool prevDisableLayout = disableLayout;
-        if (!disableLayout) {
+        bool prevInLayout = inLayout;
+        if (!inLayout) {
             FxViewItem *actualItem = transitioner ? visibleItem(currentIndex) : 0;
             if (actualItem && actualItem->transitionRunning())
-                disableLayout = true;
+                inLayout = true;
         }
         updateHighlight();
-        disableLayout = prevDisableLayout;
+        inLayout = prevInLayout;
     }
 
     if (trackedItem && trackedItem->item == item)
@@ -1154,7 +1154,7 @@ void QQuickItemView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
             polish();
         }
     } else {
-        if (d->disableLayout) {
+        if (d->inLayout) {
             d->bufferedChanges.prepare(d->currentIndex, d->itemCount);
             d->bufferedChanges.applyChanges(changeSet);
         } else {
@@ -1419,7 +1419,7 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , transitioner(0)
     , minExtent(0), maxExtent(0)
     , ownModel(false), wrap(false)
-    , disableLayout(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
+    , inLayout(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
     , fillCacheBuffer(false), inRequest(false), requestedAsync(false)
     , runDelayedRemoveTransition(false)
@@ -1721,14 +1721,17 @@ void QQuickItemViewPrivate::updateViewport()
 void QQuickItemViewPrivate::layout()
 {
     Q_Q(QQuickItemView);
-    if (disableLayout)
+    if (inLayout)
         return;
+
+    inLayout = true;
 
     if (!isValid() && !visibleItems.count()) {
         clear();
         setPosition(contentStartOffset());
         if (transitioner)
             transitioner->setPopulateTransitionEnabled(false);
+        inLayout = false;
         return;
     }
 
@@ -1747,6 +1750,7 @@ void QQuickItemViewPrivate::layout()
             fillCacheBuffer = false;
             refill();
         }
+        inLayout = false;
         return;
     }
     forceLayout = false;
@@ -1806,15 +1810,14 @@ void QQuickItemViewPrivate::layout()
     }
 
     runDelayedRemoveTransition = false;
+    inLayout = false;
 }
 
 bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult, ChangeResult *totalRemovalResult)
 {
     Q_Q(QQuickItemView);
-    if (!q->isComponentComplete() || !hasPendingChanges() || disableLayout)
+    if (!q->isComponentComplete() || !hasPendingChanges())
         return false;
-
-    disableLayout = true;
 
     if (bufferedChanges.hasPendingChanges()) {
         currentChanges.applyBufferedChanges(bufferedChanges);
@@ -1957,7 +1960,6 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     if (!visibleAffected && viewportChanged)
         updateViewport();
 
-    disableLayout = false;
     return visibleAffected;
 }
 
