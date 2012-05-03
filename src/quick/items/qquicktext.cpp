@@ -916,8 +916,12 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
                     && (q->heightValid() || (maximumLineCountValid && canWrap));
 
             const qreal oldWidth = lineWidth;
-            lineWidth = q->widthValid() && q->width() > 0 ? q->width() : FLT_MAX;
+            lineWidth = q->widthValid() && q->width() > 0 ? q->width() : *naturalWidth;
             if (lineWidth != oldWidth && (singlelineElide || multilineElide || canWrap || horizontalFit))
+                continue;
+            // If the horizontal alignment is not left and the width was not valid we need to relayout
+            // now that we know the maximum line width.
+            if (!q->widthValid() && maxLineCount > 1 && q->effectiveHAlign() != QQuickText::AlignLeft)
                 continue;
         }
 
