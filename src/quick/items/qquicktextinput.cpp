@@ -3217,7 +3217,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     updateDisplayText(/*force*/ true);
     if (cursorPositionChanged) {
         emitCursorPositionChanged();
-    } else if (m_preeditCursor != oldPreeditCursor) {
+    } else if (m_preeditCursor != oldPreeditCursor || isGettingInput) {
         q->updateCursorRectangle();
     }
 
@@ -3332,7 +3332,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
         emit q->selectionChanged();
     }
 
-    inputMethodAttributesChanged |= (m_cursor == m_lastCursorPos);
+    inputMethodAttributesChanged |= (m_cursor != m_lastCursorPos);
     if (inputMethodAttributesChanged)
         q->updateInputMethod();
     emitUndoRedoChanged();

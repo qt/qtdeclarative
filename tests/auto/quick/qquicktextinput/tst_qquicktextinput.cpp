@@ -3437,18 +3437,31 @@ void tst_qquicktextinput::preeditCursorRectangle()
         previousRect = currentRect;
     }
 
+    // Verify that if the cursor rectangle is updated if the pre-edit text changes
+    // but the (non-zero) cursor position is the same.
+    inputSpy.clear();
+    panelSpy.clear();
+    sendPreeditText("wwwww", 5);
+    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
+    currentRect = query.value(Qt::ImCursorRectangle).toRectF();
+    QCOMPARE(input->cursorRectangle(), currentRect);
+    QCOMPARE(cursor->pos(), currentRect.topLeft());
+    QCOMPARE(inputSpy.count(), 1);
+    QCOMPARE(panelSpy.count(), 1);
+
     // Verify that if there is no preedit cursor then the micro focus rect is the
     // same as it would be if it were positioned at the end of the preedit text.
-    sendPreeditText(preeditText, 0);
-    QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
+    inputSpy.clear();
+    panelSpy.clear();
+    {   QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
+        QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent); }
     QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(currentRect, previousRect);
     QCOMPARE(input->cursorRectangle(), currentRect);
     QCOMPARE(cursor->pos(), currentRect.topLeft());
-    QVERIFY(inputSpy.count() > 0);
-    QVERIFY(panelSpy.count() > 0);
+    QCOMPARE(inputSpy.count(), 1);
+    QCOMPARE(panelSpy.count(), 1);
 }
 
 void tst_qquicktextinput::inputContextMouseHandler()

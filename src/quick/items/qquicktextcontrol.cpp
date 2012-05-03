@@ -1479,7 +1479,7 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
     QTextCursorPrivate *cursor_d = QTextCursorPrivate::getPrivate(&cursor);
     if (cursor_d)
         cursor_d->setX();
-    q->updateCursorRectangle(oldPreeditCursor != preeditCursor || forceSelectionChanged);
+    q->updateCursorRectangle(oldPreeditCursor != preeditCursor || forceSelectionChanged || isGettingInput);
     selectionChanged(forceSelectionChanged);
 }
 
