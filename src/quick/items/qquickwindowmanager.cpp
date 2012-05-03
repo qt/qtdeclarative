@@ -137,6 +137,7 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP);
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
+DEFINE_BOOL_CONFIG_OPTION(qmlForceThreadedRenderer, QML_FORCE_THREADED_RENDERER); // Might trigger graphics driver threading bugs, use at own risk
 
 //#define THREAD_DEBUG
 
@@ -332,6 +333,8 @@ QQuickWindowManager *QQuickWindowManager::instance()
         bool fancy = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
         if (qmlNoThreadedRenderer())
             fancy = false;
+        else if (qmlForceThreadedRenderer())
+            fancy = true;
 
         if (qmlFixedAnimationStep())
             QUnifiedTimer::instance(true)->setConsistentTiming(true);
