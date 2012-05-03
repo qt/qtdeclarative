@@ -599,6 +599,30 @@ Rectangle {
 }
 \endcode
 
+Note that this is still not as efficient as specifying a static size, so you should still specify static sizes via
+the x, y, width and height properties.
+
+Item coordinates are always relative to their parent, so if you wanted to be a fixed offset from your parent's
+0,0 coordinate you should not use anchors. For example the following items are in the same place, but the anchors
+code is not as resource efficient as fixed positioning.
+
+\code
+Rectangle {
+    width: 60
+    height: 60
+    Rectangle {
+        x: 20
+        y: 20
+        width: 20
+        height: 20
+    }
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: 20
+    }
+}
+\endcode
+
 \section1 Models and Views
 
 Most applications will have at least one model feeding data to a view.  There are
