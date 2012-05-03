@@ -102,7 +102,7 @@ QString QAccessibleQuickView::text(QAccessible::Text text) const
 {
 #ifdef Q_ACCESSIBLE_QUICK_ITEM_ENABLE_DEBUG_DESCRIPTION
     if (text == QAccessible::DebugDescription) {
-        return QString::fromAscii(object()->metaObject()->className()) ;
+        return QString::fromLatin1(object()->metaObject()->className()) ;
     }
 #else
     Q_UNUSED(text)

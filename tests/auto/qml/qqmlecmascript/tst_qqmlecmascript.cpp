@@ -3594,11 +3594,11 @@ void tst_qqmlecmascript::moduleApi()
     QQmlComponent component(&engine, testfile);
 
     if (!errorMessage.isEmpty())
-        QTest::ignoreMessage(QtWarningMsg, errorMessage.toAscii().constData());
+        QTest::ignoreMessage(QtWarningMsg, errorMessage.toLatin1().constData());
 
     if (warningMessages.size())
         foreach (const QString &warning, warningMessages)
-            QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
+            QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
 
     QObject *object = component.create();
     if (!errorMessage.isEmpty()) {
@@ -3606,11 +3606,11 @@ void tst_qqmlecmascript::moduleApi()
     } else {
         QVERIFY(object != 0);
         for (int i = 0; i < readProperties.size(); ++i)
-            QCOMPARE(object->property(readProperties.at(i).toAscii().constData()), readExpectedValues.at(i));
+            QCOMPARE(object->property(readProperties.at(i).toLatin1().constData()), readExpectedValues.at(i));
         for (int i = 0; i < writeProperties.size(); ++i)
-            QVERIFY(object->setProperty(writeProperties.at(i).toAscii().constData(), writeValues.at(i)));
+            QVERIFY(object->setProperty(writeProperties.at(i).toLatin1().constData(), writeValues.at(i)));
         for (int i = 0; i < readBackProperties.size(); ++i)
-            QCOMPARE(object->property(readBackProperties.at(i).toAscii().constData()), readBackExpectedValues.at(i));
+            QCOMPARE(object->property(readBackProperties.at(i).toLatin1().constData()), readBackExpectedValues.at(i));
         delete object;
     }
 }
@@ -3736,11 +3736,11 @@ void tst_qqmlecmascript::importScripts()
     QQmlComponent component(&engine, testfile);
 
     if (!errorMessage.isEmpty())
-        QTest::ignoreMessage(QtWarningMsg, errorMessage.toAscii().constData());
+        QTest::ignoreMessage(QtWarningMsg, errorMessage.toLatin1().constData());
 
     if (warningMessages.size())
         foreach (const QString &warning, warningMessages)
-            QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
+            QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
 
     QObject *object = component.create();
     if (!errorMessage.isEmpty()) {
@@ -3748,7 +3748,7 @@ void tst_qqmlecmascript::importScripts()
     } else {
         QVERIFY(object != 0);
         for (int i = 0; i < propertyNames.size(); ++i)
-            QCOMPARE(object->property(propertyNames.at(i).toAscii().constData()), propertyValues.at(i));
+            QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
         delete object;
     }
 }
@@ -4933,7 +4933,7 @@ void tst_qqmlecmascript::stringArg()
     QVERIFY(object->property("returnValue").toBool());
 
     QString w1 = testFileUrl("stringArg.qml").toString() + QLatin1String(":45: Error: String.arg(): Invalid arguments");
-    QTest::ignoreMessage(QtWarningMsg, w1.toAscii().constData());
+    QTest::ignoreMessage(QtWarningMsg, w1.toLatin1().constData());
     QMetaObject::invokeMethod(object, "failure");
     QVERIFY(object->property("returnValue").toBool());
 
@@ -5021,8 +5021,8 @@ void tst_qqmlecmascript::sequenceConversionRead()
         // we haven't registered QList<QPoint> as a sequence type.
         QString warningOne = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'QList<QPoint>' for property 'MySequenceConversionObject::pointListProperty'");
         QString warningTwo = qmlFile.toString() + QLatin1String(":18: TypeError: Cannot read property 'length' of undefined");
-        QTest::ignoreMessage(QtWarningMsg, warningOne.toAscii().constData());
-        QTest::ignoreMessage(QtWarningMsg, warningTwo.toAscii().constData());
+        QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
+        QTest::ignoreMessage(QtWarningMsg, warningTwo.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");
 
@@ -5072,7 +5072,7 @@ void tst_qqmlecmascript::sequenceConversionWrite()
 
         // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
         QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QVariantList to an unregistered type");
-        QTest::ignoreMessage(QtWarningMsg, warningOne.toAscii().constData());
+        QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");
 
@@ -5179,7 +5179,7 @@ void tst_qqmlecmascript::sequenceConversionBindings()
     {
         QUrl qmlFile = testFileUrl("sequenceConversion.bindings.error.qml");
         QString warning = QString(QLatin1String("%1:17: Unable to assign QList<int> to QList<bool>")).arg(qmlFile.toString());
-        QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
+        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
         QQmlComponent component(&engine, qmlFile);
         QObject *object = component.create();
         QVERIFY(object != 0);

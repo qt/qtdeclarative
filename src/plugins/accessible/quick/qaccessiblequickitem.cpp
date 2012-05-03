@@ -211,7 +211,7 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
 #ifdef Q_ACCESSIBLE_QUICK_ITEM_ENABLE_DEBUG_DESCRIPTION
     case QAccessible::DebugDescription: {
         QString debugString;
-        debugString = QString::fromAscii(object()->metaObject()->className()) + QLatin1Char(' ');
+        debugString = QString::fromLatin1(object()->metaObject()->className()) + QLatin1Char(' ');
         debugString += isAccessible() ? QLatin1String("enabled") : QLatin1String("disabled");
         return debugString;
         break; }

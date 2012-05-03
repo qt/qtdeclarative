@@ -156,7 +156,7 @@ QJSValue::QJSValue(const QLatin1String &value)
 */
 #ifndef QT_NO_CAST_FROM_ASCII
 QJSValue::QJSValue(const char *value)
-    : d_ptr(new QJSValuePrivate(QString::fromAscii(value)))
+    : d_ptr(new QJSValuePrivate(QString::fromLatin1(value)))
 {
 }
 #endif

@@ -933,7 +933,7 @@ QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
         else
             return QLatin1Literal("data:,");
 
-        image.save(&buffer, type.toAscii());
+        image.save(&buffer, type.toLatin1());
         buffer.close();
         QString dataUrl = QLatin1Literal("data:%1;base64,%2");
         return dataUrl.arg(mime).arg(QLatin1String(ba.toBase64().constData()));

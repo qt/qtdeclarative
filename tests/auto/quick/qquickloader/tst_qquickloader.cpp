@@ -695,7 +695,7 @@ void tst_QQuickLoader::initialPropertyValues()
     server.serveDirectory(dataDirectory());
 
     foreach (const QString &warning, expectedWarnings)
-        QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
+        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
 
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.create();
@@ -704,7 +704,7 @@ void tst_QQuickLoader::initialPropertyValues()
     QTest::qWait(50);
 
     for (int i = 0; i < propertyNames.size(); ++i)
-        QCOMPARE(object->property(propertyNames.at(i).toAscii().constData()), propertyValues.at(i));
+        QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
 
     delete object;
 }

@@ -398,8 +398,8 @@ void tst_holistic::dynamicity()
             usedFirst = true;
         }
 
-        obj->setProperty(writeProperty.toAscii().constData(), writeValue);
-        readValue = obj->property(readProperty.toAscii().constData());
+        obj->setProperty(writeProperty.toLatin1().constData(), writeValue);
+        readValue = obj->property(readProperty.toLatin1().constData());
     }
 
     delete obj;
@@ -593,7 +593,7 @@ void tst_holistic::typeResolution()
             }
 
             for (int j = 0; j < writeProperty.size(); ++j) {
-                obj->setProperty(writeProperty.at(j).toAscii().constData(), writeValue.at(j));
+                obj->setProperty(writeProperty.at(j).toLatin1().constData(), writeValue.at(j));
             }
         }
     }

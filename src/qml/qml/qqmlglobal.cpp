@@ -318,7 +318,7 @@ QObject *QQmlGuiProvider::inputMethod()
 {
     // We don't have any input method code by default
     QObject *o = new QObject();
-    o->setObjectName(QString::fromAscii("No inputMethod available"));
+    o->setObjectName(QString::fromLatin1("No inputMethod available"));
     return o;
 }
 

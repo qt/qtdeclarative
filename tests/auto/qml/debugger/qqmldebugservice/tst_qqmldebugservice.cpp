@@ -79,7 +79,7 @@ private slots:
 void tst_QQmlDebugService::initTestCase()
 {
     const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);
-    QTest::ignoreMessage(QtDebugMsg, waitingMsg.toAscii().constData());
+    QTest::ignoreMessage(QtDebugMsg, waitingMsg.toLatin1().constData());
     new QQmlEngine(this);
 
     m_conn = new QQmlDebugConnection(this);
