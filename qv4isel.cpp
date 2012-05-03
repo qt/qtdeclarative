@@ -200,9 +200,22 @@ void InstructionSelection::visitMove(IR::Move *s)
             if (IR::Const *c = s->source->asConst()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
-                amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
-                amd64_call_code(_codePtr, __qmljs_set_activation_property_number);
+
+                switch (c->type) {
+                case IR::BoolType:
+                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, c->value != 0);
+                    amd64_call_code(_codePtr, __qmljs_set_activation_property_boolean);
+                    break;
+
+                case IR::NumberType:
+                    amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
+                    amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
+                    amd64_call_code(_codePtr, __qmljs_set_activation_property_number);
+                    break;
+
+                default:
+                    Q_ASSERT(!"TODO");
+                }
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
@@ -229,9 +242,22 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Const *c = s->source->asConst()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_lea_membase(_codePtr, AMD64_RSI, AMD64_RSP, offset);
-                amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
-                amd64_call_code(_codePtr, __qmljs_init_number);
+
+                switch (c->type) {
+                case IR::BoolType:
+                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, c->value != 0);
+                    amd64_call_code(_codePtr, __qmljs_init_boolean);
+                    break;
+
+                case IR::NumberType:
+                    amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
+                    amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
+                    amd64_call_code(_codePtr, __qmljs_init_number);
+                    break;
+
+                default:
+                    Q_ASSERT(!"TODO");
+                }
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);

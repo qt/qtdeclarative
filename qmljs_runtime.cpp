@@ -163,6 +163,13 @@ void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *valu
     object->objectValue->put(name, *value, /*flags*/ 0);
 }
 
+void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool number)
+{
+    Value value;
+    __qmljs_init_boolean(ctx, &value, number);
+    object->objectValue->put(name, value, /*flag*/ 0);
+}
+
 void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double number)
 {
     Value value;
@@ -180,6 +187,11 @@ void __qmljs_set_property_string(Context *ctx, Value *object, String *name, Stri
 void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
 {
     __qmljs_set_property(ctx, &ctx->activation, name, value);
+}
+
+void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool value)
+{
+    __qmljs_set_property_boolean(ctx, &ctx->activation, name, value);
 }
 
 void __qmljs_set_activation_property_number(Context *ctx, String *name, double value)
