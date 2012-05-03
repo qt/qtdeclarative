@@ -2839,6 +2839,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         { Object::DynamicProperty::Time, QMetaType::QTime },
         { Object::DynamicProperty::Date, QMetaType::QDate },
         { Object::DynamicProperty::DateTime, QMetaType::QDateTime },
+        { Object::DynamicProperty::Rect, QMetaType::QRectF },
     };
     static const int builtinTypeCount = sizeof(builtinTypes) / sizeof(TypeData);
 

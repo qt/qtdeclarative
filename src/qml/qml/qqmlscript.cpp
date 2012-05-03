@@ -924,6 +924,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         // { "time", strlen("time"), Object::DynamicProperty::Time },
         // { "date", strlen("date"), Object::DynamicProperty::Date },
         { "date", strlen("date"), Object::DynamicProperty::DateTime },
+        { "rect", strlen("rect"), Object::DynamicProperty::Rect },
         { "variant", strlen("variant"), Object::DynamicProperty::Variant },
         { "var", strlen("var"), Object::DynamicProperty::Var }
     };

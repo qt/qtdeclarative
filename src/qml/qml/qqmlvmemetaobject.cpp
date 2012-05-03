@@ -100,6 +100,7 @@ public:
     inline const QTime &asQTime();
     inline const QDate &asQDate();
     inline const QDateTime &asQDateTime();
+    inline const QRectF &asQRectF();
     inline const QJSValue &asQJSValue();
 
     inline void setValue(QObject *v, QQmlVMEMetaObject *target, int index);
@@ -112,6 +113,7 @@ public:
     inline void setValue(const QTime &);
     inline void setValue(const QDate &);
     inline void setValue(const QDateTime &);
+    inline void setValue(const QRectF &);
     inline void setValue(const QJSValue &);
 
     inline void setDataType(int t);
@@ -120,7 +122,7 @@ public:
 
 private:
     int type;
-    void *data[6]; // Large enough to hold all types
+    void *data[8]; // Large enough to hold all types
 
     inline void cleanup();
 };
@@ -170,6 +172,9 @@ void QQmlVMEVariant::cleanup()
         type = QVariant::Invalid;
     } else if (type == QMetaType::QDateTime) {
         ((QDateTime *)dataPtr())->~QDateTime();
+        type = QVariant::Invalid;
+    } else if (type == QMetaType::QRectF) {
+        ((QRectF *)dataPtr())->~QRectF();
         type = QVariant::Invalid;
     } else if (type == qMetaTypeId<QVariant>()) {
         ((QVariant *)dataPtr())->~QVariant();
@@ -284,6 +289,14 @@ const QDateTime &QQmlVMEVariant::asQDateTime()
     return *(QDateTime *)(dataPtr());
 }
 
+const QRectF &QQmlVMEVariant::asQRectF()
+{
+    if (type != QMetaType::QRectF)
+        setValue(QRectF());
+
+    return *(QRectF *)(dataPtr());
+}
+
 const QJSValue &QQmlVMEVariant::asQJSValue()
 {
     if (type != qMetaTypeId<QJSValue>())
@@ -392,6 +405,17 @@ void QQmlVMEVariant::setValue(const QDateTime &v)
         new (dataPtr()) QDateTime(v);
     } else {
         *(QDateTime *)(dataPtr()) = v;
+    }
+}
+
+void QQmlVMEVariant::setValue(const QRectF &v)
+{
+    if (type != QMetaType::QRectF) {
+        cleanup();
+        type = QMetaType::QRectF;
+        new (dataPtr()) QRectF(v);
+    } else {
+        *(QRectF *)(dataPtr()) = v;
     }
 }
 
@@ -598,6 +622,9 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         case QVariant::DateTime:
                             *reinterpret_cast<QDateTime *>(a[0]) = data[id].asQDateTime();
                             break;
+                        case QVariant::RectF:
+                            *reinterpret_cast<QRectF *>(a[0]) = data[id].asQRectF();
+                            break;
                         case QMetaType::QObjectStar:
                             *reinterpret_cast<QObject **>(a[0]) = data[id].asQObject();
                             break;
@@ -647,6 +674,10 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         case QVariant::DateTime:
                             needActivate = *reinterpret_cast<QDateTime *>(a[0]) != data[id].asQDateTime();
                             data[id].setValue(*reinterpret_cast<QDateTime *>(a[0]));
+                            break;
+                        case QVariant::RectF:
+                            needActivate = *reinterpret_cast<QRectF *>(a[0]) != data[id].asQRectF();
+                            data[id].setValue(*reinterpret_cast<QRectF *>(a[0]));
                             break;
                         case QMetaType::QObjectStar:
                             needActivate = *reinterpret_cast<QObject **>(a[0]) != data[id].asQObject();
