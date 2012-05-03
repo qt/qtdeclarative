@@ -71,6 +71,16 @@ static void qt_print_node_count()
     Actually, the scene may reorder nodes freely, but the resulting visual
     order is still guaranteed.
 
+    The scene graph nodes contains a mechanism to describe which
+    parts of the scene has changed. This includes the combined matrices,
+    accumulated opacity, changes to the node hierarchy, etc. This information
+    can be used for optimizations inside the scene graph renderer. For
+    the renderer to properly render the nodes, it is important that users
+    call QSGNode::markDirty() with the correct flags when nodes are changed.
+    Most of the functions on the node classes will implicitly call markDirty(),
+    e.g. QSGNode::appendChildNode() will call markDirty() passing in
+    QSGNode::DirtyNodeAdded.
+
     If nodes change every frame, the preprocess() function can be used to
     apply changes to a node for every frame its rendered. The use of preprocess()
     must be explicitly enabled by setting the QSGNode::UsePreprocess flag
@@ -80,7 +90,7 @@ static void qt_print_node_count()
     together. Nodes in a blocked subtree will not be preprocessed() and not
     rendered.
 
-    Anything related to QSGNode should happen on the scene graph rendering thread.
+    \warning Anything related to QSGNode should happen on the scene graph rendering thread.
  */
 
 QSGNode::QSGNode()
@@ -540,6 +550,11 @@ QSGBasicGeometryNode::~QSGBasicGeometryNode()
 
     If the node has the flag QSGNode::OwnsGeometry set, it will also delete the
     geometry object it is pointing to. This flag is not set by default.
+
+    If the geometry is changed whitout calling setGeometry() again, the user
+    must also mark the geometry as dirty using QSGNode::markDirty().
+
+    \sa markDirty
  */
 
 void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
@@ -582,7 +597,9 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
     \endcode
 
     A geometry node must have both geometry and a normal material before it is added to
-    the scene graph.
+    the scene graph. When the geometry and materials are changed after the node has
+    been added to the scene graph, the user should also mark them as dirty using
+    QSGNode::markDirty().
 
     The geometry node supports two types of materials, the opaqueMaterial and the normal
     material. The opaqueMaterial is used when the accumulated scene graph opacity at the
@@ -660,6 +677,10 @@ void QSGGeometryNode::setRenderOrder(int order)
 
     Geometry nodes must have a material before they can be added to the
     scene graph.
+
+    If the material is changed whitout calling setMaterial() again, the user
+    must also mark the material as dirty using QSGNode::markDirty().
+
  */
 void QSGGeometryNode::setMaterial(QSGMaterial *material)
 {
@@ -686,6 +707,11 @@ void QSGGeometryNode::setMaterial(QSGMaterial *material)
     The opaqueness refers to scene graph opacity, the material is still
     allowed to set QSGMaterial::Blending to true and draw transparent
     pixels.
+
+    If the material is changed whitout calling setOpaqueMaterial()
+    again, the user must also mark the opaque material as dirty using
+    QSGNode::markDirty().
+
  */
 void QSGGeometryNode::setOpaqueMaterial(QSGMaterial *material)
 {
