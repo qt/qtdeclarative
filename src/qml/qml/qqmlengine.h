@@ -102,6 +102,7 @@ public:
     QQmlContext *rootContext() const;
 
     void clearComponentCache();
+    void trimComponentCache();
 
     QStringList importPathList() const;
     void setImportPathList(const QStringList &paths);

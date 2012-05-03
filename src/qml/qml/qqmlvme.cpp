@@ -133,11 +133,11 @@ bool QQmlVME::initDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
 
-    if (!data || !data->context || !data->deferredComponent)
+    if (!data || !data->context || !data->compiledData)
         return false;
 
     QQmlContextData *ctxt = data->context;
-    QQmlCompiledData *comp = data->deferredComponent;
+    QQmlCompiledData *comp = data->compiledData;
     int start = data->deferredIdx;
 
     State initState;
@@ -444,7 +444,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 CTXT->setIdPropertyData(COMP->contextCaches.at(instr.contextCache));
             if (instr.compiledBinding != -1) {
                 const char *v4data = DATAS.at(instr.compiledBinding).constData();
-                CTXT->v4bindings = new QV4Bindings(v4data, CTXT, COMP);
+                CTXT->v4bindings = new QV4Bindings(v4data, CTXT);
             }
             if (states.count() == 1) {
                 rootContext = CTXT;
@@ -515,6 +515,15 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QQmlData *ddata = QQmlData::get(o);
             Q_ASSERT(ddata);
 
+            if (states.count() == 1) {
+                // Keep a reference to the compiled data we rely on.
+                // Only the top-level component instance needs to add a reference - higher-level
+                // components add a reference to the components they depend on, so an instance
+                // of the top-level component keeps them all referenced.
+                ddata->compiledData = states[0].compiledData;
+                ddata->compiledData->addref();
+            }
+
             if (instr.isRoot) {
                 if (ddata->context) {
                     Q_ASSERT(ddata->context != CTXT);
@@ -562,6 +571,12 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (!o) 
                 VME_EXCEPTION(tr("Unable to create object of type %1").arg(type.type->elementName()),
                               instr.line);
+
+            if (states.count() == 1) {
+                // Keep a reference to the compiled data we rely on
+                ddata->compiledData = states[0].compiledData;
+                ddata->compiledData->addref();
+            }
 
             if (instr.isRoot) {
                 if (ddata->context) {
@@ -649,6 +664,12 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             CTXT->addObject(qcomp);
 
+            if (states.count() == 1) {
+                // Keep a reference to the compiled data we rely on
+                ddata->compiledData = states[0].compiledData;
+                ddata->compiledData->addref();
+            }
+
             if (instr.isRoot)
                 ddata->ownContext = true;
 
@@ -673,7 +694,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             const QQmlVMEMetaData *data = 
                 (const QQmlVMEMetaData *)DATAS.at(instr.aliasData).constData();
 
-            (void)new QQmlVMEMetaObject(target, &mo, data, COMP);
+            (void)new QQmlVMEMetaObject(target, &mo, data);
 
             if (instr.propertyCache != -1) {
                 QQmlData *ddata = QQmlData::get(target, true);
@@ -1000,11 +1021,11 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_BEGIN_INSTR(Defer)
             if (instr.deferCount) {
                 QObject *target = objects.top();
-                QQmlData *data = 
-                    QQmlData::get(target, true);
-                COMP->addref();
-                data->deferredComponent = COMP;
+                QQmlData *data = QQmlData::get(target, true);
+                data->compiledData = COMP;
+                data->compiledData->addref(); // Keep this data referenced until we're initialized
                 data->deferredIdx = INSTRUCTIONSTREAM - COMP->bytecode.constData();
+                Q_ASSERT(data->deferredIdx != 0);
                 INSTRUCTIONSTREAM += instr.deferCount;
             }
         QML_END_INSTR(Defer)

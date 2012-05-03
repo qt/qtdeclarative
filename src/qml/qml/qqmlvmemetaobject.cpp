@@ -480,17 +480,12 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
     }
 }
 
-QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
-                                                     const QMetaObject *other, 
-                                                     const QQmlVMEMetaData *meta,
-                                                     QQmlCompiledData *cdata)
-: QV8GCCallback::Node(GcPrologueCallback), object(obj), compiledData(cdata),
+QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj, const QMetaObject *other, const QQmlVMEMetaData *meta)
+: QV8GCCallback::Node(GcPrologueCallback), object(obj),
   ctxt(QQmlData::get(obj, true)->outerContext), metaData(meta), data(0),
   aliasEndpoints(0), firstVarPropertyIndex(-1), varPropertiesInitialized(false),
   interceptors(0), v8methods(0), parent(0)
 {
-    compiledData->addref();
-
     *static_cast<QMetaObject *>(this) = *other;
     this->d.superdata = obj->metaObject();
 
@@ -523,7 +518,6 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
 {
-    compiledData->release();
     delete parent;
     delete [] data;
     delete [] aliasEndpoints;

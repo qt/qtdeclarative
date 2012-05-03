@@ -85,7 +85,7 @@ public:
 
     QQmlGuard<QObject> result;
     QQmlGuardedContextData rootContext;
-    QQmlCompiledData *component;
+    QQmlCompiledData *compiledData;
     QQmlVME vme;
     QQmlVMEGuard vmeGuard;
 

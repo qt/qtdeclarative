@@ -220,32 +220,24 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QObject *parent)
     if (!script.context()->isValid())
         return;
 
-    bool defaultConstruction = false;
+    bool defaultConstruction = true;
 
     int id = script.d.data()->bindingId;
-    if (id < 0) {
-        defaultConstruction = true;
-    } else {
+    if (id >= 0) {
         QQmlContextData *ctxtdata = QQmlContextData::get(script.context());
-
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(script.context()->engine());
-        QQmlCompiledData *cdata = 0;
-        QQmlTypeData *typeData = 0;
         if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
-            typeData = engine->typeLoader.get(ctxtdata->url);
-            cdata = typeData->compiledData();
-        }
+            QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
+            Q_ASSERT(typeData);
 
-        if (cdata)
-            d->init(ctxtdata, cdata->primitives.at(id), true, script.scopeObject(),
-                    cdata->name, script.d.data()->lineNumber, script.d.data()->columnNumber);
-        else
-           defaultConstruction = true;
+            if (QQmlCompiledData *cdata = typeData->compiledData()) {
+                defaultConstruction = false;
+                d->init(ctxtdata, cdata->primitives.at(id), true, script.scopeObject(),
+                        cdata->name, script.d.data()->lineNumber, script.d.data()->columnNumber);
+            }
 
-        if (cdata)
-            cdata->release();
-        if (typeData)
             typeData->release();
+        }
     }
 
     if (defaultConstruction)

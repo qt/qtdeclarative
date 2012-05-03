@@ -429,8 +429,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     delete rootContext;
     rootContext = 0;
 
-    for(QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.constBegin(); iter != m_compositeTypes.constEnd(); ++iter)
-        (*iter)->release();
     for(QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator iter = propertyCache.begin(); iter != propertyCache.end(); ++iter)
         (*iter)->release();
     for(QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::Iterator iter = typePropertyCache.begin(); iter != typePropertyCache.end(); ++iter)
@@ -716,11 +714,31 @@ QQmlEngine::~QQmlEngine()
 
   Once the component cache has been cleared, components must be loaded before
   any new objects can be created.
+
+  \sa trimComponentCache()
  */
 void QQmlEngine::clearComponentCache()
 {
     Q_D(QQmlEngine);
-    d->typeLoader.clearCache();
+    d->clearCache();
+}
+
+/*!
+  Trims the engine's internal component cache.
+
+  This function causes the property metadata of any loaded components which are
+  not currently in use to be destroyed.
+
+  A component is considered to be in use if there are any extant instances of
+  the component itself, any instances of other components that use the component,
+  or any objects instantiated by any of those components.
+
+  \sa clearComponentCache()
+ */
+void QQmlEngine::trimComponentCache()
+{
+    Q_D(QQmlEngine);
+    d->trimCache();
 }
 
 /*!
@@ -1074,7 +1092,7 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
 
-    if (data && data->deferredComponent) {
+    if (data && data->compiledData && data->deferredIdx) {
         QQmlObjectCreatingProfiler prof;
         if (prof.enabled) {
             QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
@@ -1088,8 +1106,9 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
         QQmlComponentPrivate::ConstructionState state;
         QQmlComponentPrivate::beginDeferred(ep, object, &state);
 
-        data->deferredComponent->release();
-        data->deferredComponent = 0;
+        // Release the reference for the deferral action (we still have one from construction)
+        data->compiledData->release();
+        data->compiledData = 0;
 
         QQmlComponentPrivate::complete(ep, &state);
     }
@@ -1267,9 +1286,6 @@ QHash<int, QObject *> *QQmlData::attachedProperties() const
 
 void QQmlData::destroyed(QObject *object)
 {
-    if (deferredComponent)
-        deferredComponent->release();
-
     if (nextContextObject)
         nextContextObject->prevContextObject = prevContextObject;
     if (prevContextObject)
@@ -1282,6 +1298,11 @@ void QQmlData::destroyed(QObject *object)
         binding->m_nextBinding = 0;
         binding->destroy();
         binding = next;
+    }
+
+    if (compiledData) {
+        compiledData->release();
+        compiledData = 0;
     }
 
     QQmlAbstractBoundSignal *signalHandler = signalHandlers;
@@ -1835,9 +1856,9 @@ int QQmlEnginePrivate::listType(int t) const
 const QMetaObject *QQmlEnginePrivate::rawMetaObjectForType(int t) const
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
+    QHash<int, const QMetaObject *>::ConstIterator iter = m_compositeTypes.find(t);
     if (iter != m_compositeTypes.end()) {
-        return (*iter)->root;
+        return *iter;
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         return type?type->baseMetaObject():0;
@@ -1847,18 +1868,18 @@ const QMetaObject *QQmlEnginePrivate::rawMetaObjectForType(int t) const
 const QMetaObject *QQmlEnginePrivate::metaObjectForType(int t) const
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
+    QHash<int, const QMetaObject *>::ConstIterator iter = m_compositeTypes.find(t);
     if (iter != m_compositeTypes.end()) {
-        return (*iter)->root;
+        return *iter;
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
         return type?type->metaObject():0;
     }
 }
 
-void QQmlEnginePrivate::registerCompositeType(QQmlCompiledData *data)
+void QQmlEnginePrivate::registerCompositeType(const QMetaObject *mo)
 {
-    QByteArray name = data->root->className();
+    QByteArray name = mo->className();
 
     QByteArray ptr = name + '*';
     QByteArray lst = "QQmlListProperty<" + name + '>';
@@ -1870,7 +1891,7 @@ void QQmlEnginePrivate::registerCompositeType(QQmlCompiledData *data)
                                                      qMetaTypeConstructHelper<QObject*>,
                                                      sizeof(QObject*),
                                                      static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QObject*>::Flags),
-                                                     data->root);
+                                                     mo);
     int lst_type = QMetaType::registerNormalizedType(lst,
                                                      qMetaTypeDeleteHelper<QQmlListProperty<QObject> >,
                                                      qMetaTypeCreateHelper<QQmlListProperty<QObject> >,
@@ -1880,11 +1901,49 @@ void QQmlEnginePrivate::registerCompositeType(QQmlCompiledData *data)
                                                      static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
                                                      static_cast<QMetaObject*>(0));
 
-    data->addref();
-
     Locker locker(this);
     m_qmlLists.insert(lst_type, ptr_type);
-    m_compositeTypes.insert(ptr_type, data);
+    m_compositeTypes.insert(ptr_type, mo);
+}
+
+void QQmlEnginePrivate::unregisterCompositeType(const QMetaObject *mo)
+{
+    QByteArray name = mo->className();
+
+    QByteArray ptr = name + '*';
+    QByteArray lst = "QQmlListProperty<" + name + '>';
+
+    int ptr_type = QMetaType::type(ptr.constData());
+    int lst_type = QMetaType::type(lst.constData());
+
+    Locker locker(this);
+    m_qmlLists.remove(lst_type);
+    m_compositeTypes.remove(ptr_type);
+}
+
+void QQmlEnginePrivate::clearCache()
+{
+    typeLoader.clearCache(this, &QQmlEnginePrivate::typeUnloaded);
+}
+
+void QQmlEnginePrivate::trimCache()
+{
+    typeLoader.trimCache(this, &QQmlEnginePrivate::typeUnloaded);
+}
+
+void QQmlEnginePrivate::typeUnloaded(QQmlTypeData *typeData)
+{
+    unregisterCompositeType(typeData->compiledData()->root);
+}
+
+bool QQmlEnginePrivate::isTypeLoaded(const QUrl &url) const
+{
+    return typeLoader.isTypeLoaded(url);
+}
+
+bool QQmlEnginePrivate::isScriptLoaded(const QUrl &url) const
+{
+    return typeLoader.isScriptLoaded(url);
 }
 
 bool QQml_isFileCaseCorrect(const QString &fileName)

@@ -199,8 +199,6 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
                          QQmlContextData *context)
 : program(program), bindings(0), refCount(1)
 {
-    program->cdata->addref();
-
     QV8Engine *engine = QQmlEnginePrivate::getV8Engine(context->engine);
 
     if (program->bindings.IsEmpty()) {
@@ -247,7 +245,6 @@ QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
 
 QV8Bindings::~QV8Bindings()
 {
-    program->cdata->release();
     program = 0;
 
     delete [] bindings;

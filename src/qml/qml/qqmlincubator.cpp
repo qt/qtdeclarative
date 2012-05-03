@@ -135,7 +135,7 @@ QQmlIncubationController *QQmlEngine::incubationController() const
 QQmlIncubatorPrivate::QQmlIncubatorPrivate(QQmlIncubator *q, 
                                                            QQmlIncubator::IncubationMode m)
 : q(q), status(QQmlIncubator::Null), mode(m), isAsynchronous(false), progress(Execute),
-  result(0), component(0), vme(this), waitingOnMe(0)
+  result(0), compiledData(0), vme(this), waitingOnMe(0)
 {
 }
 
@@ -147,17 +147,17 @@ void QQmlIncubatorPrivate::clear()
 {
     if (next.isInList()) {
         next.remove();
-        Q_ASSERT(component);
-        QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(component->engine);
-        component->release();
-        component = 0;
+        Q_ASSERT(compiledData);
+        QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(compiledData->engine);
+        compiledData->release();
+        compiledData = 0;
         enginePriv->incubatorCount--;
         QQmlIncubationController *controller = enginePriv->incubationController;
         if (controller)
             controller->incubatingObjectCountChanged(enginePriv->incubatorCount);
-    } else if (component) {
-        component->release();
-        component = 0;
+    } else if (compiledData) {
+        compiledData->release();
+        compiledData = 0;
     }
     if (!rootContext.isNull()) {
         rootContext->activeVMEData = 0;
@@ -258,14 +258,14 @@ void QQmlIncubationController::incubatingObjectCountChanged(int incubatingObject
 
 void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
 {
-    if (!component)
+    if (!compiledData)
         return;
-    QML_MEMORY_SCOPE_URL(component->url);
+    QML_MEMORY_SCOPE_URL(compiledData->url);
 
     typedef QQmlIncubatorPrivate IP;
     QRecursionWatcher<IP, &IP::recursion> watcher(this);
 
-    QQmlEngine *engine = component->engine;
+    QQmlEngine *engine = compiledData->engine;
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);
 
     bool guardOk = vmeGuard.isOK();
@@ -273,7 +273,7 @@ void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
 
     if (!guardOk) {
         QQmlError error;
-        error.setUrl(component->url);
+        error.setUrl(compiledData->url);
         error.setDescription(QQmlComponent::tr("Object destroyed during incubation"));
         errors << error;
         progress = QQmlIncubatorPrivate::Completed;
@@ -539,8 +539,8 @@ void QQmlIncubator::clear()
 
     QQmlEnginePrivate *enginePriv = 0;
     if (s == Loading) {
-        Q_ASSERT(d->component);
-        enginePriv = QQmlEnginePrivate::get(d->component->engine);
+        Q_ASSERT(d->compiledData);
+        enginePriv = QQmlEnginePrivate::get(d->compiledData->engine);
         if (d->result) d->result->deleteLater();
         d->result = 0;
     }
@@ -554,7 +554,7 @@ void QQmlIncubator::clear()
     d->vme.reset();
     d->vmeGuard.clear();
 
-    Q_ASSERT(d->component == 0);
+    Q_ASSERT(d->compiledData == 0);
     Q_ASSERT(d->waitingOnMe == 0);
     Q_ASSERT(d->waitingFor.isEmpty());
     Q_ASSERT(!d->nextWaitingFor.isInList());
@@ -698,7 +698,7 @@ QQmlIncubator::Status QQmlIncubatorPrivate::calculateStatus() const
     else if (result && progress == QQmlIncubatorPrivate::Completed && 
              waitingFor.isEmpty()) 
         return QQmlIncubator::Ready;
-    else if (component) 
+    else if (compiledData)
         return QQmlIncubator::Loading;
     else 
         return QQmlIncubator::Null;

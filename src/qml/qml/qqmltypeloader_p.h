@@ -268,9 +268,8 @@ public:
     };
     Q_DECLARE_FLAGS(Options, Option)
 
-    QQmlTypeData *get(const QUrl &url, Mode mode = PreferSynchronous);
-    QQmlTypeData *get(const QByteArray &, const QUrl &url, Options = None);
-    void clearCache();
+    QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
+    QQmlTypeData *getType(const QByteArray &, const QUrl &url, Options = None);
 
     QQmlScriptBlob *getScript(const QUrl &);
     QQmlQmldirData *getQmldir(const QUrl &);
@@ -283,9 +282,43 @@ public:
     bool directoryExists(const QString &path);
     const QQmlDirParser *qmlDirParser(const QString &filePath, const QString &uriHint, QString *outUrl);
 
+    template<typename T>
+    void clearCache(T *o, void (T::*callback)(QQmlTypeData *)) {
+        TypedCallback<T> cb(o, callback);
+        clearCache(&TypedCallback<T>::redirect, &cb);
+    }
+
+    template<typename T>
+    void trimCache(T *o, void (T::*callback)(QQmlTypeData *)) {
+        TypedCallback<T> cb(o, callback);
+        trimCache(&TypedCallback<T>::redirect, &cb);
+    }
+
+    bool isTypeLoaded(const QUrl &url) const;
+    bool isScriptLoaded(const QUrl &url) const;
+
 private:
     void addBundleNoLock(const QString &, const QString &);
     QString bundleIdForQmldir(const QString &qmldir, const QString &uriHint);
+
+    template<typename T>
+    struct TypedCallback
+    {
+        TypedCallback(T *object, void (T::*func)(QQmlTypeData *)) : o(object), mf(func) {}
+
+        static void redirect(void *arg, QQmlTypeData *type)
+        {
+            TypedCallback<T> *self = reinterpret_cast<TypedCallback<T> *>(arg);
+            ((self->o)->*(self->mf))(type);
+        }
+
+    private:
+        T *o;
+        void (T::*mf)(QQmlTypeData *);
+    };
+
+    void clearCache(void (*callback)(void *, QQmlTypeData *), void *);
+    void trimCache(void (*callback)(void *, QQmlTypeData *), void *);
 
     struct DirParser : public QQmlDirParser { QString adjustedUrl; };
 
@@ -332,7 +365,12 @@ public:
         QQmlScriptBlob *script;
     };
 
+private:
+    friend class QQmlTypeLoader;
+
     QQmlTypeData(const QUrl &, QQmlTypeLoader::Options, QQmlTypeLoader *);
+
+public:
     ~QQmlTypeData();
 
     QQmlTypeLoader *typeLoader() const;
@@ -397,8 +435,12 @@ private:
 // only created and destroyed in the main thread :)
 class Q_AUTOTEST_EXPORT QQmlScriptData : public QQmlCleanup, public QQmlRefCount
 {
-public:
+private:
+    friend class QQmlTypeLoader;
+
     QQmlScriptData();
+
+public:
     ~QQmlScriptData();
 
     QUrl url;
@@ -425,8 +467,12 @@ private:
 
 class Q_AUTOTEST_EXPORT QQmlScriptBlob : public QQmlDataBlob
 {
-public:
+private:
+    friend class QQmlTypeLoader;
+
     QQmlScriptBlob(const QUrl &, QQmlTypeLoader *);
+
+public:
     ~QQmlScriptBlob();
 
     struct ScriptReference
@@ -463,9 +509,12 @@ private:
 
 class Q_AUTOTEST_EXPORT QQmlQmldirData : public QQmlDataBlob
 {
-public:
+private:
+    friend class QQmlTypeLoader;
+
     QQmlQmldirData(const QUrl &);
 
+public:
     const QQmlDirComponents &dirComponents() const;
 
 protected:
@@ -473,7 +522,6 @@ protected:
 
 private:
     QQmlDirComponents m_components;
-
 };
 
 QQmlDataBlob::Data::Data()

@@ -68,6 +68,7 @@ public:
     inline virtual ~QQmlRefCount();
     inline void addref();
     inline void release();
+    inline int count() const;
 
 protected:
     inline virtual void destroy();
@@ -122,6 +123,11 @@ void QQmlRefCount::release()
     Q_ASSERT(refCount.load() > 0);
     if (!refCount.deref()) 
         destroy(); 
+}
+
+int QQmlRefCount::count() const
+{
+    return refCount.load();
 }
 
 void QQmlRefCount::destroy() 

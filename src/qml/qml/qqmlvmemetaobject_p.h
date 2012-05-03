@@ -156,8 +156,7 @@ class Q_AUTOTEST_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject,
                                                     public QV8GCCallback::Node
 {
 public:
-    QQmlVMEMetaObject(QObject *obj, const QMetaObject *other, const QQmlVMEMetaData *data,
-                     QQmlCompiledData *compiledData);
+    QQmlVMEMetaObject(QObject *obj, const QMetaObject *other, const QQmlVMEMetaData *data);
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
@@ -178,7 +177,6 @@ private:
     friend class QQmlVMEVariantQObjectPtr;
 
     QObject *object;
-    QQmlCompiledData *compiledData;
     QQmlGuardedContextData ctxt;
 
     const QQmlVMEMetaData *metaData;

@@ -81,7 +81,7 @@ public:
         : ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false), 
           hasTaintedV8Object(false), isQueuedForDeletion(false), rootObjectInCreation(false), notifyList(0), context(0), outerContext(0),
           bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0),
-          lineNumber(0), columnNumber(0), deferredComponent(0), deferredIdx(0), v8objectid(0), 
+          lineNumber(0), columnNumber(0), compiledData(0), deferredIdx(0), v8objectid(0),
           propertyCache(0), guards(0), extendedData(0) {
         init();
     }
@@ -162,7 +162,7 @@ public:
     ushort lineNumber;
     ushort columnNumber;
 
-    QQmlCompiledData *deferredComponent; // Can't this be found from the context?
+    QQmlCompiledData *compiledData;
     unsigned int deferredIdx;
 
     quint32 v8objectid;

@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
+#include "../../shared/util.h"
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QNetworkAccessManager>
@@ -51,8 +51,10 @@
 #include <QQmlComponent>
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQmlExpression>
+#include <QQmlIncubationController>
+#include <private/qqmlengine_p.h>
 
-class tst_qqmlengine : public QObject
+class tst_qqmlengine : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -65,6 +67,8 @@ private slots:
     void contextForObject();
     void offlineStoragePath();
     void clearComponentCache();
+    void trimComponentCache();
+    void trimComponentCache_data();
     void outputWarningsToStandardError();
     void objectOwnership();
     void multipleEngines();
@@ -250,6 +254,122 @@ void tst_qqmlengine::clearComponentCache()
         QCOMPARE(obj->property("test").toInt(), 11);
         delete obj;
     }
+}
+
+struct ComponentCacheFunctions : public QObject, public QQmlIncubationController
+{
+    Q_OBJECT
+public:
+    QQmlEngine *engine;
+
+    ComponentCacheFunctions(QQmlEngine &e) : engine(&e) {}
+
+    Q_INVOKABLE void trim()
+    {
+        // Wait for any pending deletions to occur
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+
+        engine->trimComponentCache();
+    }
+
+    Q_INVOKABLE bool isTypeLoaded(QString file)
+    {
+        return QQmlEnginePrivate::get(engine)->isTypeLoaded(tst_qqmlengine::instance()->testFileUrl(file));
+    }
+
+    Q_INVOKABLE bool isScriptLoaded(QString file)
+    {
+        return QQmlEnginePrivate::get(engine)->isScriptLoaded(tst_qqmlengine::instance()->testFileUrl(file));
+    }
+
+    Q_INVOKABLE void beginIncubation()
+    {
+        startTimer(0);
+    }
+
+    Q_INVOKABLE void waitForIncubation()
+    {
+        while (incubatingObjectCount() > 0) {
+            QCoreApplication::processEvents();
+        }
+    }
+
+private:
+    virtual void timerEvent(QTimerEvent *)
+    {
+        incubateFor(1000);
+    }
+};
+
+void tst_qqmlengine::trimComponentCache()
+{
+    QFETCH(QString, file);
+
+    QQmlEngine engine;
+    ComponentCacheFunctions componentCache(engine);
+    engine.rootContext()->setContextProperty("componentCache", &componentCache);
+    engine.setIncubationController(&componentCache);
+
+    QQmlComponent component(&engine, testFileUrl(file));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("success").toBool(), true);
+}
+
+void tst_qqmlengine::trimComponentCache_data()
+{
+    QTest::addColumn<QString>("file");
+
+    // The various tests here are for two types of components: those that are
+    // empty apart from their inherited elements, and those that define new properties.
+    // For each there are five types of composition: extension, aggregation,
+    // aggregation via component, property and object-created-via-transient-component.
+    foreach (const QString &test, (QStringList() << "EmptyComponent"
+                                                 << "VMEComponent"
+                                                 << "EmptyExtendEmptyComponent"
+                                                 << "VMEExtendEmptyComponent"
+                                                 << "EmptyExtendVMEComponent"
+                                                 << "VMEExtendVMEComponent"
+                                                 << "EmptyAggregateEmptyComponent"
+                                                 << "VMEAggregateEmptyComponent"
+                                                 << "EmptyAggregateVMEComponent"
+                                                 << "VMEAggregateVMEComponent"
+                                                 << "EmptyPropertyEmptyComponent"
+                                                 << "VMEPropertyEmptyComponent"
+                                                 << "EmptyPropertyVMEComponent"
+                                                 << "VMEPropertyVMEComponent"
+                                                 << "VMETransientEmptyComponent"
+                                                 << "VMETransientVMEComponent")) {
+        // For these cases, we first test that the component instance keeps the components
+        // referenced, and then that the instantiated object keeps the components referenced
+        for (int i = 1; i <= 2; ++i) {
+            QString name(QString("%1-%2").arg(test).arg(i));
+            QString file(QString("test%1.%2.qml").arg(test).arg(i));
+            QTest::newRow(name.toLatin1().constData()) << file;
+        }
+    }
+
+    // Test that a transient component is correctly referenced
+    QTest::newRow("TransientComponent-1") << "testTransientComponent.1.qml";
+    QTest::newRow("TransientComponent-2") << "testTransientComponent.2.qml";
+
+    // Test that components can be reloaded after unloading
+    QTest::newRow("ReloadComponent") << "testReloadComponent.qml";
+
+    // Test that components are correctly referenced when dynamically loaded
+    QTest::newRow("LoaderComponent") << "testLoaderComponent.qml";
+
+    // Test that components are correctly referenced when incubated
+    QTest::newRow("IncubatedComponent") << "testIncubatedComponent.qml";
+
+    // Test that a top-level omponents is correctly referenced
+    QTest::newRow("TopLevelComponent") << "testTopLevelComponent.qml";
+
+    // TODO:
+    // Test that scripts are unloaded when no longer referenced
+    QTest::newRow("ScriptComponent") << "testScriptComponent.qml";
 }
 
 static QStringList warnings;

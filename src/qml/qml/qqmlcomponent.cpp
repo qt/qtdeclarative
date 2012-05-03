@@ -327,6 +327,7 @@ void QQmlComponentPrivate::fromTypeData(QQmlTypeData *data)
         state.errors = data->errors();
     } else {
         cc = c;
+        cc->addref();
     }
 
     data->release();
@@ -573,7 +574,7 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 
     d->url = url;
 
-    QQmlTypeData *typeData = QQmlEnginePrivate::get(d->engine)->typeLoader.get(data, url);
+    QQmlTypeData *typeData = QQmlEnginePrivate::get(d->engine)->typeLoader.getType(data, url);
     
     if (typeData->isCompleteOrError()) {
         d->fromTypeData(typeData);
@@ -652,7 +653,7 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
             ? QQmlDataLoader::Asynchronous
             : QQmlDataLoader::PreferSynchronous;
 
-    QQmlTypeData *data = QQmlEnginePrivate::get(engine)->typeLoader.get(url, loaderMode);
+    QQmlTypeData *data = QQmlEnginePrivate::get(engine)->typeLoader.getType(url, loaderMode);
 
     if (data->isCompleteOrError()) {
         fromTypeData(data);
@@ -982,7 +983,8 @@ void QQmlComponent::create(QQmlIncubator &i, QQmlContext *context,
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(d->engine);
 
-    p->component = d->cc; p->component->addref();
+    p->compiledData = d->cc;
+    p->compiledData->addref();
     p->vme.init(contextData, d->cc, d->start, d->creationContext);
 
     enginePriv->incubate(i, forContextData);

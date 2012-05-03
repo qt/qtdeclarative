@@ -65,21 +65,21 @@ QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt,
     if (id < 0)
         return 0;
 
-    QQmlContextData *ctxtdata = QQmlContextData::get(ctxt);
+    QQmlBinding *rv = 0;
 
+    QQmlContextData *ctxtdata = QQmlContextData::get(ctxt);
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(ctxt->engine());
-    QQmlCompiledData *cdata = 0;
-    QQmlTypeData *typeData = 0;
     if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
-        typeData = engine->typeLoader.get(ctxtdata->url);
-        cdata = typeData->compiledData();
-    }
-    QQmlBinding *rv = cdata ? new QQmlBinding(cdata->primitives.at(id), true, obj, ctxtdata,
-                                              url, lineNumber, 0) : 0;
-    if (cdata)
-        cdata->release();
-    if (typeData)
+        QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
+        Q_ASSERT(typeData);
+
+        if (QQmlCompiledData *cdata = typeData->compiledData()) {
+            rv = new QQmlBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, 0);
+        }
+
         typeData->release();
+    }
+
     return rv;
 }
 

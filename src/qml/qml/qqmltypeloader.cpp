@@ -98,6 +98,17 @@ DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
 
 QT_BEGIN_NAMESPACE
 
+namespace {
+
+    template<typename LockType>
+    struct LockHolder
+    {
+        LockType& lock;
+        LockHolder(LockType *l) : lock(*l) { lock.lock(); }
+        ~LockHolder() { lock.unlock(); }
+    };
+}
+
 // This is a lame object that we need to ensure that slots connected to
 // QNetworkReply get called in the correct thread (the loader thread).  
 // As QQmlDataLoader lives in the main thread, and we can't use
@@ -1204,7 +1215,7 @@ loaded files.
 */
 QQmlTypeLoader::~QQmlTypeLoader()
 {
-    clearCache();
+    clearCache(0, 0);
 }
 
 /*!
@@ -1221,13 +1232,13 @@ This enum defines the options that control the way type data is handled.
 /*!
 Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached.
 */
-QQmlTypeData *QQmlTypeLoader::get(const QUrl &url, Mode mode)
+QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 {
     Q_ASSERT(!url.isRelative() && 
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
 
-    lock();
+    LockHolder<QQmlTypeLoader> holder(this);
     
     QQmlTypeData *typeData = m_typeCache.value(url);
 
@@ -1239,8 +1250,6 @@ QQmlTypeData *QQmlTypeLoader::get(const QUrl &url, Mode mode)
 
     typeData->addref();
 
-    unlock();
-
     return typeData;
 }
 
@@ -1250,14 +1259,12 @@ QQmlTypeData will not be cached.
 
 The specified \a options control how the loader handles type data.
 */
-QQmlTypeData *QQmlTypeLoader::get(const QByteArray &data, const QUrl &url, Options options)
+QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, Options options)
 {
-    lock();
+    LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlTypeData *typeData = new QQmlTypeData(url, options, this);
     QQmlDataLoader::loadWithStaticData(typeData, data);
-
-    unlock();
 
     return typeData;
 }
@@ -1271,7 +1278,7 @@ QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
 
-    lock();
+    LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlScriptBlob *scriptBlob = m_scriptCache.value(url);
 
@@ -1282,8 +1289,6 @@ QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
     }
 
     scriptBlob->addref();
-
-    unlock();
 
     return scriptBlob;
 }
@@ -1297,7 +1302,7 @@ QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
 
-    lock();
+    LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlQmldirData *qmldirData = m_qmldirCache.value(url);
 
@@ -1308,8 +1313,6 @@ QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
     }
 
     qmldirData->addref();
-
-    unlock();
 
     return qmldirData;
 }
@@ -1562,10 +1565,14 @@ const QQmlDirParser *QQmlTypeLoader::qmlDirParser(const QString &filePath,
 Clears cached information about loaded files, including any type data, scripts
 and qmldir information.
 */
-void QQmlTypeLoader::clearCache()
+void QQmlTypeLoader::clearCache(void (*callback)(void *, QQmlTypeData *), void *arg)
 {
-    for (TypeCache::Iterator iter = m_typeCache.begin(); iter != m_typeCache.end(); ++iter) 
+    for (TypeCache::Iterator iter = m_typeCache.begin(); iter != m_typeCache.end(); ++iter) {
+        if (callback)
+            (*callback)(arg, iter.value());
+
         (*iter)->release();
+    }
     for (ScriptCache::Iterator iter = m_scriptCache.begin(); iter != m_scriptCache.end(); ++iter) 
         (*iter)->release();
     for (QmldirCache::Iterator iter = m_qmldirCache.begin(); iter != m_qmldirCache.end(); ++iter) 
@@ -1578,6 +1585,48 @@ void QQmlTypeLoader::clearCache()
     m_qmldirCache.clear();
     m_importDirCache.clear();
     m_importQmlDirCache.clear();
+}
+
+void QQmlTypeLoader::trimCache(void (*callback)(void *, QQmlTypeData *), void *arg)
+{
+    while (true) {
+        QList<TypeCache::Iterator> unneededTypes;
+        for (TypeCache::Iterator iter = m_typeCache.begin(); iter != m_typeCache.end(); ++iter)  {
+            QQmlTypeData *typeData = iter.value();
+            if (typeData->m_compiledData && typeData->m_compiledData->count() == 1) {
+                // There are no live objects of this type
+                unneededTypes.append(iter);
+            }
+        }
+
+        if (unneededTypes.isEmpty())
+            break;
+
+        while (!unneededTypes.isEmpty()) {
+            TypeCache::Iterator iter = unneededTypes.last();
+            unneededTypes.removeLast();
+
+            if (callback)
+                (*callback)(arg, iter.value());
+
+            m_typeCache.erase(iter);
+            iter.value()->release();
+        }
+    }
+
+    // TODO: release any scripts which are no longer referenced by any types
+}
+
+bool QQmlTypeLoader::isTypeLoaded(const QUrl &url) const
+{
+    LockHolder<QQmlTypeLoader> holder(const_cast<QQmlTypeLoader *>(this));
+    return m_typeCache.contains(url);
+}
+
+bool QQmlTypeLoader::isScriptLoaded(const QUrl &url) const
+{
+    LockHolder<QQmlTypeLoader> holder(const_cast<QQmlTypeLoader *>(this));
+    return m_scriptCache.contains(url);
 }
 
 
@@ -1632,9 +1681,6 @@ const QSet<QString> &QQmlTypeData::namespaces() const
 
 QQmlCompiledData *QQmlTypeData::compiledData() const
 {
-    if (m_compiledData) 
-        m_compiledData->addref();
-
     return m_compiledData;
 }
 
@@ -1899,7 +1945,7 @@ void QQmlTypeData::resolveTypes()
             ref.majorVersion = majorVersion;
             ref.minorVersion = minorVersion;
         } else {
-            ref.typeData = typeLoader()->get(QUrl(url));
+            ref.typeData = typeLoader()->getType(QUrl(url));
             addDependency(ref.typeData);
         }
 

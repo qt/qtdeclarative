@@ -251,15 +251,10 @@ void Register::init(Type type)
 
 } // end of anonymous namespace
 
-QV4Bindings::QV4Bindings(const char *programData, 
-                                               QQmlContextData *context, 
-                                               QQmlRefCount *ref)
-: subscriptions(0), program(0), dataRef(0), bindings(0)
+QV4Bindings::QV4Bindings(const char *programData, QQmlContextData *context)
+: subscriptions(0), program(0), bindings(0)
 {
     program = (QV4Program *)programData;
-    dataRef = ref;
-    if (dataRef) dataRef->addref();
-
     if (program) {
         subscriptions = new Subscription[program->subscriptions];
         bindings = new Binding[program->bindings];
@@ -270,9 +265,8 @@ QV4Bindings::QV4Bindings(const char *programData,
 
 QV4Bindings::~QV4Bindings()
 {
-    delete [] bindings;
+    delete [] bindings; bindings = 0;
     delete [] subscriptions; subscriptions = 0;
-    if (dataRef) dataRef->release();
 }
 
 QQmlAbstractBinding *QV4Bindings::configBinding(int index, QObject *target, 
@@ -727,7 +721,7 @@ void **QV4Bindings::getDecodeInstrTable()
 {
     static void **decode_instr;
     if (!decode_instr) {
-        QV4Bindings *dummy = new QV4Bindings(0, 0, 0);
+        QV4Bindings *dummy = new QV4Bindings(0, 0);
         quint32 executedBlocks = 0;
         dummy->run(0, executedBlocks, 0, 0, 0, 0, 
                    QQmlPropertyPrivate::BypassInterceptor, 

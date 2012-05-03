@@ -807,6 +807,7 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
 
         } else if (tref.typeData) {
             ref.component = tref.typeData->compiledData();
+            ref.component->addref();
         }
         out->types << ref;
     }
@@ -921,7 +922,7 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
         output->root = &output->rootData;
     }
     if (!tree->metadata.isEmpty()) 
-        enginePrivate->registerCompositeType(output);
+        enginePrivate->registerCompositeType(output->root);
 }
 
 static bool QStringList_contains(const QStringList &list, const QHashedStringRef &string)
@@ -2878,13 +2879,10 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                     COMPILE_EXCEPTION(p, tr("Invalid property type"));
 
                 if (!qmltype) {
-                    QQmlTypeData *tdata = enginePrivate->typeLoader.get(QUrl(url));
+                    QQmlTypeData *tdata = enginePrivate->typeLoader.getType(QUrl(url));
                     Q_ASSERT(tdata);
                     Q_ASSERT(tdata->isComplete());
-
-                    QQmlCompiledData *data = tdata->compiledData();
-                    customTypeName = data->root->className();
-                    data->release();
+                    customTypeName = tdata->compiledData()->root->className();
                     tdata->release();
                 } else {
                     customTypeName = qmltype->typeName();

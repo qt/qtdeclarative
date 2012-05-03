@@ -68,8 +68,7 @@ class QV4Bindings : public QQmlAbstractExpression,
 {
     Q_DECLARE_TR_FUNCTIONS(QV4Bindings)
 public:
-    QV4Bindings(const char *program, QQmlContextData *context,
-                           QQmlRefCount *);
+    QV4Bindings(const char *program, QQmlContextData *context);
     virtual ~QV4Bindings();
 
     QQmlAbstractBinding *configBinding(int index, QObject *target, 
@@ -131,7 +130,6 @@ private:
     void run(Binding *, QQmlPropertyPrivate::WriteFlags flags);
 
     QV4Program *program;
-    QQmlRefCount *dataRef;
     Binding *bindings;
 
     void init();
