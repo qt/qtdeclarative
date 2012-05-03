@@ -211,14 +211,22 @@ void QQuickCanvas::focusInEvent(QFocusEvent *)
 
 void QQuickCanvasPrivate::polishItems()
 {
-    QSet<QQuickItem *> itms = itemsToPolish;
-    itemsToPolish.clear();
+    int maxPolishCycles = 100000;
 
-    for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
-        QQuickItem *item = *it;
-        QQuickItemPrivate::get(item)->polishScheduled = false;
-        item->updatePolish();
+    while (!itemsToPolish.isEmpty() && --maxPolishCycles > 0) {
+        QSet<QQuickItem *> itms = itemsToPolish;
+        itemsToPolish.clear();
+
+        for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
+            QQuickItem *item = *it;
+            QQuickItemPrivate::get(item)->polishScheduled = false;
+            item->updatePolish();
+        }
     }
+
+    if (maxPolishCycles == 0)
+        qWarning("QQuickCanvas: possible QQuickItem::polish() loop");
+
     updateFocusItemTransform();
 }
 
