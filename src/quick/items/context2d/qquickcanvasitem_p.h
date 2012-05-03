@@ -44,6 +44,7 @@
 
 #include <QtQuick/qquickitem.h>
 #include <private/qv8engine_p.h>
+#include <QtCore/QThread>
 
 QT_BEGIN_HEADER
 
@@ -159,6 +160,22 @@ private:
     void initializeContext(QQuickCanvasContext *context, const QVariantMap &args = QVariantMap());
     QRect tiledRect(const QRectF &window, const QSize &tileSize);
     bool isPaintConnected();
+};
+
+class QQuickContext2DRenderThread : public QThread
+{
+    Q_OBJECT
+public:
+    QQuickContext2DRenderThread(QQmlEngine *eng);
+    ~QQuickContext2DRenderThread();
+
+    static QQuickContext2DRenderThread *instance(QQmlEngine *engine);
+
+private:
+    QQmlEngine *m_engine;
+    QObject *m_eventLoopQuitHack;
+    static QHash<QQmlEngine *,QQuickContext2DRenderThread*> renderThreads;
+    static QMutex renderThreadsMutex;
 };
 
 QT_END_NAMESPACE

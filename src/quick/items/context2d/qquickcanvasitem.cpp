@@ -53,6 +53,43 @@
 
 QT_BEGIN_NAMESPACE
 
+QHash<QQmlEngine *,QQuickContext2DRenderThread*> QQuickContext2DRenderThread::renderThreads;
+QMutex QQuickContext2DRenderThread::renderThreadsMutex;
+
+QQuickContext2DRenderThread::QQuickContext2DRenderThread(QQmlEngine *eng)
+    : QThread(eng), m_engine(eng), m_eventLoopQuitHack(0)
+{
+    Q_ASSERT(eng);
+    m_eventLoopQuitHack = new QObject;
+    m_eventLoopQuitHack->moveToThread(this);
+    connect(m_eventLoopQuitHack, SIGNAL(destroyed(QObject*)), SLOT(quit()), Qt::DirectConnection);
+    start(QThread::IdlePriority);
+}
+
+QQuickContext2DRenderThread::~QQuickContext2DRenderThread()
+{
+    renderThreadsMutex.lock();
+    renderThreads.remove(m_engine);
+    renderThreadsMutex.unlock();
+
+    m_eventLoopQuitHack->deleteLater();
+    wait();
+}
+
+QQuickContext2DRenderThread *QQuickContext2DRenderThread::instance(QQmlEngine *engine)
+{
+    QQuickContext2DRenderThread *thread = 0;
+    renderThreadsMutex.lock();
+    if (renderThreads.contains(engine))
+        thread = renderThreads.value(engine);
+    else {
+        thread = new QQuickContext2DRenderThread(engine);
+        renderThreads.insert(engine, thread);
+    }
+    renderThreadsMutex.unlock();
+    return thread;
+}
+
 class QQuickCanvasItemPrivate : public QQuickItemPrivate
 {
 public:
