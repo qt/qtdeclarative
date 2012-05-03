@@ -65,6 +65,7 @@ class Q_QUICK_EXPORT QQuickView : public QQuickCanvas
     Q_ENUMS(ResizeMode Status)
 public:
     explicit QQuickView(QWindow *parent = 0, Qt::WindowFlags f = Qt::Window);
+    QQuickView(QQmlEngine* engine, QWindow *parent, Qt::WindowFlags f = Qt::Window);
     QQuickView(const QUrl &source, QWindow *parent = 0, Qt::WindowFlags f = Qt::Window);
     virtual ~QQuickView();
 

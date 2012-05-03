@@ -54,14 +54,19 @@
 #include <private/qqmlengine_p.h>
 #include <QtCore/qbasictimer.h>
 
-
 QT_BEGIN_NAMESPACE
 
-void QQuickViewPrivate::init()
+void QQuickViewPrivate::init(QQmlEngine* e)
 {
     Q_Q(QQuickView);
 
-    engine.setIncubationController(q->incubationController());
+    engine = e;
+
+    if (engine.isNull())
+        engine = new QQmlEngine(q);
+
+    if (!engine.data()->incubationController())
+        engine.data()->setIncubationController(q->incubationController());
 
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->addView(q);
@@ -83,6 +88,11 @@ QQuickViewPrivate::~QQuickViewPrivate()
 void QQuickViewPrivate::execute()
 {
     Q_Q(QQuickView);
+    if (!engine) {
+        qWarning() << "QQuickView: invalid qml engine.";
+        return;
+    }
+
     if (root) {
         delete root;
         root = 0;
@@ -92,8 +102,8 @@ void QQuickViewPrivate::execute()
         component = 0;
     }
     if (!source.isEmpty()) {
-        QML_MEMORY_SCOPE_URL(engine.baseUrl().resolved(source));
-        component = new QQmlComponent(&engine, source, q);
+        QML_MEMORY_SCOPE_URL(engine.data()->baseUrl().resolved(source));
+        component = new QQmlComponent(engine.data(), source, q);
         if (!component->isLoading()) {
             q->continueExecute();
         } else {
@@ -153,9 +163,12 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
 */
 
 /*!
-  \fn QQuickView::QQuickView(QWindow *parent)
+  \fn QQuickView::QQuickView(QWindow *parent, Qt::WindowFlags f)
 
-  Constructs a QQuickView with the given \a parent.
+  Constructs a QQuickView with the given \a parent and window flags \a f.
+  The default value of \a parent is 0, default window flags \a f is Qt::Window.
+
+  \sa Qt::WindowFlags
 */
 QQuickView::QQuickView(QWindow *parent, Qt::WindowFlags f)
 : QQuickCanvas(*(new QQuickViewPrivate), parent)
@@ -165,9 +178,12 @@ QQuickView::QQuickView(QWindow *parent, Qt::WindowFlags f)
 }
 
 /*!
-  \fn QQuickView::QQuickView(const QUrl &source, QWidget *parent)
+  \fn QQuickView::QQuickView(const QUrl &source, QWidget *parent, Qt::WindowFlags f)
 
-  Constructs a QQuickView with the given QML \a source and \a parent.
+  Constructs a QQuickView with the given QML \a source, \a parent and a window flags \a f.
+  The default value of \a parent is 0, default window flags \a f is Qt::Window.
+
+  \sa Qt::WindowFlags
 */
 QQuickView::QQuickView(const QUrl &source, QWindow *parent, Qt::WindowFlags f)
 : QQuickCanvas(*(new QQuickViewPrivate), parent)
@@ -175,6 +191,26 @@ QQuickView::QQuickView(const QUrl &source, QWindow *parent, Qt::WindowFlags f)
     setWindowFlags(f);
     d_func()->init();
     setSource(source);
+}
+
+/*!
+  \fn QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent, Qt::WindowFlags f)
+
+  Constructs a QQuickView with the given QML \a engine, \a parent and a window flags \a f.
+  The default value of \a parent is 0, default window flags \a f is Qt::Window.
+
+  Note: In this case, the QQuickView does not own the given \a engine object;
+  it is the caller's responsibility to destroy the engine. If the \a engine is deleted
+  before the view \a status() will return \a QQuickView::Error.
+
+  \sa Status, status(), errors(), Qt::WindowFlags
+*/
+QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent, Qt::WindowFlags f)
+    : QQuickCanvas(*(new QQuickViewPrivate), parent)
+{
+    Q_ASSERT(engine);
+    setWindowFlags(f);
+    d_func()->init(engine);
 }
 
 QQuickView::~QQuickView()
@@ -224,7 +260,7 @@ QUrl QQuickView::source() const
 QQmlEngine* QQuickView::engine() const
 {
     Q_D(const QQuickView);
-    return const_cast<QQmlEngine *>(&d->engine);
+    return d->engine ? const_cast<QQmlEngine *>(d->engine.data()) : 0;
 }
 
 /*!
@@ -237,7 +273,7 @@ QQmlEngine* QQuickView::engine() const
 QQmlContext* QQuickView::rootContext() const
 {
     Q_D(const QQuickView);
-    return d->engine.rootContext();
+    return d->engine ? d->engine.data()->rootContext() : 0;
 }
 
 /*!
@@ -267,6 +303,9 @@ QQmlContext* QQuickView::rootContext() const
 QQuickView::Status QQuickView::status() const
 {
     Q_D(const QQuickView);
+    if (!d->engine)
+        return QQuickView::Error;
+
     if (!d->component)
         return QQuickView::Null;
 
@@ -280,9 +319,18 @@ QQuickView::Status QQuickView::status() const
 QList<QQmlError> QQuickView::errors() const
 {
     Q_D(const QQuickView);
+    QList<QQmlError> errs;
+
     if (d->component)
-        return d->component->errors();
-    return QList<QQmlError>();
+        errs = d->component->errors();
+
+    if (!d->engine) {
+        QQmlError error;
+        error.setDescription(QLatin1String("QQuickView: invalid qml engine."));
+        errs << error;
+    }
+
+    return errs;
 }
 
 /*!

@@ -48,6 +48,8 @@
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/QWeakPointer>
+
 #include <QtQml/qqmlengine.h>
 #include "qquickcanvas_p.h"
 
@@ -79,7 +81,7 @@ public:
     void updateSize();
     void setRootObject(QObject *);
 
-    void init();
+    void init(QQmlEngine* e = 0);
 
     QSize rootObjectSize() const;
 
@@ -87,7 +89,7 @@ public:
 
     QUrl source;
 
-    QQmlEngine engine;
+    QWeakPointer<QQmlEngine> engine;
     QQmlComponent *component;
     QBasicTimer resizetimer;
 

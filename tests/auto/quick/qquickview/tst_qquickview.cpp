@@ -47,6 +47,7 @@
 #include "../../shared/util.h"
 #include <QtGui/QWindow>
 #include <QtCore/QDebug>
+#include <QtQml/qqmlengine.h>
 
 class tst_QQuickView : public QQmlDataTest
 {
@@ -57,6 +58,7 @@ public:
 private slots:
     void resizemodeitem();
     void errors();
+    void engine();
 };
 
 
@@ -201,6 +203,42 @@ void tst_QQuickView::errors()
     delete canvas;
 }
 
+void tst_QQuickView::engine()
+{
+    QQmlEngine *engine = new QQmlEngine;
+    QVERIFY(!engine->incubationController());
+
+    QQuickView *canvas = new QQuickView(engine, 0);
+    QVERIFY(canvas);
+    QVERIFY(engine->incubationController() == canvas->incubationController());
+
+    QQuickView *canvas2 = new QQuickView(engine, 0);
+    QVERIFY(canvas);
+    QVERIFY(engine->incubationController() == canvas->incubationController());
+    delete canvas;
+    QVERIFY(!engine->incubationController());
+
+    engine->setIncubationController(canvas2->incubationController());
+    QVERIFY(engine->incubationController() == canvas2->incubationController());
+    delete canvas2;
+    QVERIFY(!engine->incubationController());
+
+    QQuickView *canvas3 = new QQuickView;
+    QQuickView *canvas4 = new QQuickView(canvas3->engine(), 0);
+
+    QVERIFY(canvas3->engine());
+    QVERIFY(canvas4->engine());
+    QCOMPARE(canvas3->engine(), canvas4->engine());
+    delete canvas3;
+    QVERIFY(!canvas4->engine());
+    QTest::ignoreMessage(QtWarningMsg, "QQuickView: invalid qml engine. ");
+    canvas4->setSource(QUrl());
+
+    QCOMPARE(canvas4->status(), QQuickView::Error);
+    QVERIFY(!canvas4->errors().isEmpty());
+    QCOMPARE(canvas4->errors().back().description(), QLatin1String("QQuickView: invalid qml engine."));
+    delete canvas4;
+}
 
 QTEST_MAIN(tst_QQuickView)
 
