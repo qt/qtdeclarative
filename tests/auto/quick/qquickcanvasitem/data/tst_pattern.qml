@@ -1,34 +1,43 @@
 import QtQuick 2.0
-import QtTest 1.0
-import "testhelper.js" as Helper
-Canvas {
-   id:canvas; width:100;height:50; renderTarget: Canvas.Image; renderStrategy:Canvas.Threaded
-   TestCase {
-       //TODO
-       name: "pattern"; when: windowShown
-       function test_basic() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_animated() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_image() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_modified() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_paint() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_repeat() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-   }
+
+CanvasTestCase {
+   id:testCase
+   name: "pattern"
+   function init_data() { return testData("2d"); }
+   function test_basic(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_animated(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_image(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_modified(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_paint(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_repeat(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
 }

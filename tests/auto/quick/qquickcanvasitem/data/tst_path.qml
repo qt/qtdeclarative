@@ -1,13 +1,11 @@
 import QtQuick 2.0
-import QtTest 1.0
-import "testhelper.js" as Helper
 
-Canvas {
-   id:canvas; width:100;height:50; renderTarget: Canvas.Image; renderStrategy:Canvas.Threaded
-   TestCase {
-       name: "path"; when: windowShown
-
-       function test_basic() {
+CanvasTestCase {
+   id:testCase
+   name: "path"
+   function init_data() { return testData("2d"); }
+       function test_basic(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -15,7 +13,7 @@ Canvas {
            ctx.closePath();
            ctx.fillStyle = '#f00';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -25,7 +23,7 @@ Canvas {
            ctx.restore();
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
 
            canvas.width = 100;
@@ -33,9 +31,11 @@ Canvas {
            canvas.width = 100;
            ctx.fillStyle = '#f00';
            ctx.fill();
-           //verify(Helper.comparePixel(ctx, 20,20, 0,0,0,0));
+           //comparePixel(ctx, 20,20, 0,0,0,0);
+           canvas.destroy()
        }
-       function test_beginPath() {
+       function test_beginPath(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
@@ -43,9 +43,11 @@ Canvas {
            ctx.beginPath();
            ctx.fillStyle = '#f00';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_closePath() {
+       function test_closePath(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -53,7 +55,7 @@ Canvas {
            ctx.closePath();
            ctx.fillStyle = '#f00';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -66,7 +68,7 @@ Canvas {
            ctx.lineTo(200, 25);
            ctx.closePath();
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -78,10 +80,12 @@ Canvas {
            ctx.closePath();
            ctx.lineTo(1000, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
 
-       function test_isPointInPath() {
+       function test_isPointInPath(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.arc(50, 25, 10, 0, Math.PI, false);
@@ -246,10 +250,12 @@ Canvas {
            verify(ctx.isPointInPath(5, 45));
            verify(ctx.isPointInPath(25, 45));
            verify(ctx.isPointInPath(45, 45));
+           canvas.destroy()
        }
 
 
-       function test_fill() {
+       function test_fill(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -262,7 +268,7 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
 
            ctx.reset();
@@ -278,8 +284,8 @@ Canvas {
            ctx.fillStyle = '#0f0';
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 90,10, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 10,40, 0,255,0,255));
+           comparePixel(ctx, 90,10, 0,255,0,255);
+           comparePixel(ctx, 10,40, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#000';
@@ -291,7 +297,7 @@ Canvas {
            ctx.rect(10, 10, 80, 30);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,127,0,255, 1));
+           comparePixel(ctx, 50,25, 0,127,0,255, 1);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -309,7 +315,7 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -327,7 +333,7 @@ Canvas {
            ctx.lineTo(100, 0);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -344,7 +350,7 @@ Canvas {
            ctx.lineTo(100, 0);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -367,10 +373,11 @@ Canvas {
            ctx.lineTo(100, 0);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_stroke() {
+       function test_stroke(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -386,7 +393,7 @@ Canvas {
            ctx.moveTo(60, 25);
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#000';
@@ -400,7 +407,7 @@ Canvas {
            ctx.lineTo(100, 30);
            ctx.stroke();
 
-           //verify(Helper.comparePixel(ctx, 50,25, 0,127,0,255));
+           //comparePixel(ctx, 50,25, 0,127,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -421,7 +428,7 @@ Canvas {
            ctx.arc(50, 25, 10, 0, 0, false);
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
            ctx.reset();
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
@@ -437,7 +444,7 @@ Canvas {
            ctx.closePath();
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
            ctx.reset();
 
            ctx.fillStyle = '#0f0';
@@ -457,7 +464,7 @@ Canvas {
            ctx.stroke();
 
            //FIXME:lineJoin with miterLimit test fail!
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           //comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -478,7 +485,7 @@ Canvas {
            ctx.bezierCurveTo(50, 25, 50, 25, 50, 25);
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
@@ -493,7 +500,7 @@ Canvas {
            ctx.lineTo(50, 25);
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -510,7 +517,7 @@ Canvas {
 
            ctx.strokeRect(50, 25, 0, 0);
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
 
            ctx.fillStyle = '#f00';
@@ -532,15 +539,15 @@ Canvas {
            ctx.stroke();
            ctx.restore();
 
-           //verify(Helper.comparePixel(ctx, 0,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 0,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 0,49, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 50,49, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,49, 0,255,0,255));
+           //comparePixel(ctx, 0,0, 0,255,0,255);
+           //comparePixel(ctx, 50,0, 0,255,0,255);
+           //comparePixel(ctx, 99,0, 0,255,0,255);
+           //comparePixel(ctx, 0,25, 0,255,0,255);
+           //comparePixel(ctx, 50,25, 0,255,0,255);
+           //comparePixel(ctx, 99,25, 0,255,0,255);
+           //comparePixel(ctx, 0,49, 0,255,0,255);
+           //comparePixel(ctx, 50,49, 0,255,0,255);
+           //comparePixel(ctx, 99,49, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -564,15 +571,15 @@ Canvas {
            ctx.stroke();
            ctx.restore();
 
-           verify(Helper.comparePixel(ctx, 0,0, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,0, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 99,0, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 0,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 99,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 0,49, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,49, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 99,49, 0,255,0,255));
+           comparePixel(ctx, 0,0, 0,255,0,255);
+           comparePixel(ctx, 50,0, 0,255,0,255);
+           comparePixel(ctx, 99,0, 0,255,0,255);
+           comparePixel(ctx, 0,25, 0,255,0,255);
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 99,25, 0,255,0,255);
+           comparePixel(ctx, 0,49, 0,255,0,255);
+           comparePixel(ctx, 50,49, 0,255,0,255);
+           comparePixel(ctx, 99,49, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -610,15 +617,15 @@ Canvas {
            ctx.stroke();
            ctx.restore();
 
-           //verify(Helper.comparePixel(ctx, 0,0, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 99,0, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 0,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 99,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 0,49, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,49, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 99,49, 0,255,0,255));
+           //comparePixel(ctx, 0,0, 0,255,0,255);
+           comparePixel(ctx, 50,0, 0,255,0,255);
+           //comparePixel(ctx, 99,0, 0,255,0,255);
+           //comparePixel(ctx, 0,25, 0,255,0,255);
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 99,25, 0,255,0,255);
+           //comparePixel(ctx, 0,49, 0,255,0,255);
+           comparePixel(ctx, 50,49, 0,255,0,255);
+           comparePixel(ctx, 99,49, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -636,7 +643,7 @@ Canvas {
            ctx.strokeStyle = '#0f0';
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -650,10 +657,11 @@ Canvas {
            ctx.lineTo(0, 40);
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_clip() {
+       function test_clip(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -666,7 +674,7 @@ Canvas {
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -679,7 +687,7 @@ Canvas {
            ctx.fillStyle = '#f00';
            ctx.fillRect(0, 0, 100, 50);
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
            ctx.reset();
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
@@ -690,7 +698,7 @@ Canvas {
            ctx.fillStyle = '#f00';
            ctx.fillRect(0, 0, 100, 50);
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
@@ -705,7 +713,7 @@ Canvas {
            ctx.fillStyle = '#f00';
            ctx.fillRect(0, 0, 100, 50);
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -723,7 +731,7 @@ Canvas {
            ctx.lineTo(0, 0);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
 
            ctx.reset();
@@ -745,7 +753,7 @@ Canvas {
            ctx.fillStyle = '#f00';
            ctx.fillRect(0, 0, 100, 50);
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -770,10 +778,12 @@ Canvas {
            ctx.fillStyle = '#0f0';
            ctx.fillRect(0, 0, 100, 50);
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
 
-       function test_moveTo() {
+       function test_moveTo(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -785,7 +795,7 @@ Canvas {
            ctx.lineTo(100, 50);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 90,25, 0,255,0,255));
+           comparePixel(ctx, 90,25, 0,255,0,255);
            ctx.reset();
            ctx.fillStyle = '#f00';
            ctx.fillRect(0, 0, 100, 50);
@@ -796,7 +806,7 @@ Canvas {
            ctx.strokeStyle = '#0f0';
            ctx.lineWidth = 50;
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -808,7 +818,7 @@ Canvas {
            ctx.moveTo(0, 50);
            ctx.fillStyle = '#f00';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.moveTo(0, 0);
@@ -824,9 +834,11 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_lineTo() {
+       function test_lineTo(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -837,7 +849,7 @@ Canvas {
            ctx.moveTo(0, 25);
            ctx.lineTo(100, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -847,7 +859,7 @@ Canvas {
            ctx.beginPath();
            ctx.lineTo(100, 50);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -858,7 +870,7 @@ Canvas {
            ctx.lineTo(0, 25);
            ctx.lineTo(100, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -870,7 +882,7 @@ Canvas {
            ctx.lineTo(0, 25);
            ctx.lineTo(100, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.moveTo(0, 0);
@@ -886,11 +898,12 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 90,45, 0,255,0,255));
-
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 90,45, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_bezierCurveTo() {
+       function test_bezierCurveTo(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -901,7 +914,7 @@ Canvas {
            ctx.moveTo(0, 25);
            ctx.bezierCurveTo(100, 25, 100, 25, 100, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -911,8 +924,8 @@ Canvas {
            ctx.beginPath();
            ctx.bezierCurveTo(100, 50, 200, 50, 200, 50);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 95,45, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 95,45, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -922,8 +935,8 @@ Canvas {
            ctx.beginPath();
            ctx.bezierCurveTo(0, 25, 100, 25, 100, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 5,45, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 5,45, 0,255,0,255);
 
            ctx.reset();
            ctx.moveTo(0, 0);
@@ -1022,8 +1035,8 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 90,45, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 90,45, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1035,11 +1048,11 @@ Canvas {
            ctx.moveTo(-2, 3.1);
            ctx.bezierCurveTo(-2, -1, 2.1, -1, 2.1, 3.1);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1050,14 +1063,15 @@ Canvas {
            ctx.moveTo(-2000, 3100);
            ctx.bezierCurveTo(-2000, -1000, 2100, -1000, 2100, 3100);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
-
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_quadraticCurveTo() {
+       function test_quadraticCurveTo(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1068,7 +1082,7 @@ Canvas {
            ctx.moveTo(0, 25);
            ctx.quadraticCurveTo(100, 25, 100, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1078,8 +1092,8 @@ Canvas {
            ctx.beginPath();
            ctx.quadraticCurveTo(100, 50, 200, 50);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 95,45, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 95,45, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1089,8 +1103,8 @@ Canvas {
            ctx.beginPath();
            ctx.quadraticCurveTo(0, 25, 100, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 5,45, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 5,45, 0,255,0,255);
 
            ctx.reset();
            ctx.moveTo(0, 0);
@@ -1122,8 +1136,8 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 90,45, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 90,45, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1135,11 +1149,11 @@ Canvas {
            ctx.moveTo(-1, 1.05);
            ctx.quadraticCurveTo(0, -1, 1.2, 1.05);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           //comparePixel(ctx, 1,1, 0,255,0,255);
+           //comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1150,13 +1164,15 @@ Canvas {
            ctx.moveTo(-1000, 1050);
            ctx.quadraticCurveTo(0, -1000, 1200, 1050);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           //verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           //comparePixel(ctx, 1,1, 0,255,0,255);
+           //comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_rect() {
+       function test_rect(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -1165,7 +1181,7 @@ Canvas {
            ctx.fillStyle = '#0f0';
            ctx.rect(0, 0, 100, 50);
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1175,7 +1191,7 @@ Canvas {
            ctx.lineJoin = 'miter';
            ctx.rect(100, 50, 100, 100);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1185,7 +1201,7 @@ Canvas {
            ctx.rect(200, 100, 400, 1000);
            ctx.lineTo(-2000, -1000);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1197,10 +1213,10 @@ Canvas {
            ctx.rect(150, 150, 2000, 2000);
            ctx.lineTo(160, 160);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1212,10 +1228,10 @@ Canvas {
            ctx.rect(0, 50, 50, -25);
            ctx.rect(100, 50, -50, -25);
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 25,12, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 75,12, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 25,37, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 75,37, 0,255,0,255));
+           comparePixel(ctx, 25,12, 0,255,0,255);
+           comparePixel(ctx, 75,12, 0,255,0,255);
+           comparePixel(ctx, 25,37, 0,255,0,255);
+           comparePixel(ctx, 75,37, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1227,7 +1243,7 @@ Canvas {
            ctx.lineTo(-50, 25);
            ctx.rect(200, 25, 1, 1);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
 
            ctx.reset();
@@ -1260,8 +1276,8 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 90,45, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 90,45, 0,255,0,255);
 
 
            ctx.reset();
@@ -1272,7 +1288,7 @@ Canvas {
            ctx.beginPath();
            ctx.rect(45, 20, 10, 10);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1284,10 +1300,10 @@ Canvas {
            ctx.rect(0, 25, 100, -25);
            ctx.rect(100, 25, -100, 25);
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 25,12, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 75,12, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 25,37, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 75,37, 0,255,0,255));
+           comparePixel(ctx, 25,12, 0,255,0,255);
+           comparePixel(ctx, 75,12, 0,255,0,255);
+           comparePixel(ctx, 25,37, 0,255,0,255);
+           comparePixel(ctx, 75,37, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1297,7 +1313,7 @@ Canvas {
            ctx.beginPath();
            ctx.rect(0, 50, 100, 0);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1307,7 +1323,7 @@ Canvas {
            ctx.beginPath();
            ctx.rect(50, -100, 0, 250);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1317,7 +1333,7 @@ Canvas {
            ctx.beginPath();
            ctx.rect(50, 25, 0, 0);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1327,7 +1343,7 @@ Canvas {
            ctx.rect(100, 25, 0, 0);
            ctx.lineTo(0, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1337,7 +1353,7 @@ Canvas {
            ctx.moveTo(0, 0);
            ctx.rect(100, 25, 0, 0);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1349,10 +1365,12 @@ Canvas {
            ctx.beginPath();
            ctx.rect(100, 25, 1000, 0);
            ctx.stroke();
-           //verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           //comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
 
-       function test_clearRect() {
+       function test_clearRect(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1360,9 +1378,11 @@ Canvas {
            ctx.rect(0, 0, 100, 50);
            ctx.clearRect(0, 0, 16, 16);
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_fillRect() {
+       function test_fillRect(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.beginPath();
@@ -1371,10 +1391,12 @@ Canvas {
            ctx.fillRect(0, 0, 16, 16);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
 
-       function test_strokeRect() {
+       function test_strokeRect(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.beginPath();
@@ -1385,9 +1407,11 @@ Canvas {
            ctx.fillStyle = '#0f0';
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
-       function test_transform() {
+       function test_transform(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1399,7 +1423,7 @@ Canvas {
            ctx.fillStyle = '#0f0';
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#f00';
@@ -1416,7 +1440,7 @@ Canvas {
            ctx.rotate(Math.PI/2);
            ctx.scale(0.1, 0.1);
            ctx.fill();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
 
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -1438,7 +1462,7 @@ Canvas {
            ctx.stroke();
            ctx.translate(0, 50);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy()
        }
-   }
 }

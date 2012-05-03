@@ -1,13 +1,11 @@
 import QtQuick 2.0
-import QtTest 1.0
-import "testhelper.js" as Helper
 
-Canvas {
-   id:canvas; width:100;height:50; renderTarget: Canvas.Image; renderStrategy:Canvas.Threaded
-   smooth: false
-   TestCase {
-       name: "arc"; when: windowShown
-       function test_angle_1() {
+CanvasTestCase {
+   id:testCase
+   name: "arc"
+   function init_data() { return testData("2d"); }
+       function test_angle_1(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -18,9 +16,11 @@ Canvas {
            ctx.moveTo(100, 0);
            ctx.arc(100, 0, 150, Math.PI/2, -Math.PI, true);
            ctx.fill();
-           verify(Helper.comparePixel(ctx,50,25, 0,255,0,255));
+           comparePixel(ctx,50,25, 0,255,0,255);
+           canvas.destroy();
         }
-       function test_angle_2() {
+       function test_angle_2(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -31,9 +31,11 @@ Canvas {
            ctx.moveTo(100, 0);
            ctx.arc(100, 0, 150, -3*Math.PI/2, -Math.PI, true);
            ctx.fill();
-           verify(Helper.comparePixel(ctx,50,25, 0,255,0,255));
+           comparePixel(ctx,50,25, 0,255,0,255);
+           canvas.destroy();
         }
-       function test_angle_3() {
+       function test_angle_3(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -45,10 +47,12 @@ Canvas {
            ctx.fill();
            /*FIXME: from: http://www.w3.org/TR/2dcontext/#dom-context-2d-arc
            If the anticlockwise argument is omitted or false and endAngle-startAngle is equal to or greater than 2π, or, if the anticlockwise argument is true and startAngle-endAngle is equal to or greater than 2π, then the arc is the whole circumference of this circle.
-           //verify(Helper.comparePixel(ctx,50,25, 0,255,0,255));
+           //comparePixel(ctx,50,25, 0,255,0,255);
            */
+           canvas.destroy();
         }
-       function test_angle_4() {
+       function test_angle_4(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -59,12 +63,14 @@ Canvas {
            ctx.moveTo(50, 25);
            ctx.arc(50, 25, 60, (512+1/2)*Math.PI, (1024-1)*Math.PI, false);
            ctx.fill();
-           verify(Helper.comparePixel(ctx,1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx,98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx,1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx,98,48, 0,255,0,255));
+           comparePixel(ctx,1,1, 0,255,0,255);
+           comparePixel(ctx,98,1, 0,255,0,255);
+           comparePixel(ctx,1,48, 0,255,0,255);
+           comparePixel(ctx,98,48, 0,255,0,255);
+           canvas.destroy();
         }
-       function test_angle_5() {
+       function test_angle_5(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -77,11 +83,13 @@ Canvas {
            ctx.fill();
            /*FIXME: from: http://www.w3.org/TR/2dcontext/#dom-context-2d-arc
            If the anticlockwise argument is omitted or false and endAngle-startAngle is equal to or greater than 2π, or, if the anticlockwise argument is true and startAngle-endAngle is equal to or greater than 2π, then the arc is the whole circumference of this circle.
-           //verify(Helper.comparePixel(ctx,50,25, 0,255,0,255));
+           //comparePixel(ctx,50,25, 0,255,0,255);
            */
+           canvas.destroy();
         }
 
-       function test_angle_6() {
+       function test_angle_6(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -93,13 +101,15 @@ Canvas {
            ctx.arc(50, 25, 60, (1024-1)*Math.PI, (512+1/2)*Math.PI, true);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx,1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx,98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx,1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx,98,48, 0,255,0,255));
+           comparePixel(ctx,1,1, 0,255,0,255);
+           comparePixel(ctx,98,1, 0,255,0,255);
+           comparePixel(ctx,1,48, 0,255,0,255);
+           comparePixel(ctx,98,48, 0,255,0,255);
+           canvas.destroy();
         }
 
-       function test_empty() {
+       function test_empty(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -110,9 +120,11 @@ Canvas {
            ctx.beginPath();
            ctx.arc(200, 25, 5, 0, 2*Math.PI, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx,50,25, 0,255,0,255));
+           comparePixel(ctx,50,25, 0,255,0,255);
+           canvas.destroy();
         }
-       function test_nonempty() {
+       function test_nonempty(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -124,9 +136,11 @@ Canvas {
            ctx.moveTo(0, 25);
            ctx.arc(200, 25, 5, 0, 2*Math.PI, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx,50,25, 0,255,0,255));
+           comparePixel(ctx,50,25, 0,255,0,255);
+           canvas.destroy();
         }
-       function test_nonfinite() {
+       function test_nonfinite(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -179,10 +193,12 @@ Canvas {
            ctx.lineTo(0, 50);
            ctx.fillStyle = '#0f0';
            ctx.fill();
-           verify(Helper.comparePixel(ctx,50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx,90,45, 0,255,0,255));
+           comparePixel(ctx,50,25, 0,255,0,255);
+           comparePixel(ctx,90,45, 0,255,0,255);
+           canvas.destroy();
        }
-       function test_end() {
+       function test_end(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -195,9 +211,11 @@ Canvas {
            ctx.arc(-100, 0, 25, -Math.PI/2, Math.PI/2, true);
            ctx.lineTo(100, 25);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx,50,25, 0,255,0,255));
+           comparePixel(ctx,50,25, 0,255,0,255);
+           canvas.destroy();
         }
-       function test_negative() {
+       function test_negative(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -211,9 +229,11 @@ Canvas {
                verify(err, "should throw exception of type INDEX_SIZE_ERR: ctx.arc(0, 0, -1, 0, 0, true)");
            }
 
+           canvas.destroy();
        }
 
-       function test_scale_1() {
+       function test_scale_1(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -236,18 +256,20 @@ Canvas {
            ctx.arc(25, 125, 24, 0, 2*Math.PI, false);
            ctx.fill();
 
-           verify(Helper.comparePixel(ctx, 0,0, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,0, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 99,0, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 0,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 99,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 0,49, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,49, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 99,49, 0,255,0,255));
+           comparePixel(ctx, 0,0, 0,255,0,255);
+           comparePixel(ctx, 50,0, 0,255,0,255);
+           comparePixel(ctx, 99,0, 0,255,0,255);
+           comparePixel(ctx, 0,25, 0,255,0,255);
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 99,25, 0,255,0,255);
+           comparePixel(ctx, 0,49, 0,255,0,255);
+           comparePixel(ctx, 50,49, 0,255,0,255);
+           comparePixel(ctx, 99,49, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_scale_2() {
+       function test_scale_2(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -260,18 +282,20 @@ Canvas {
            ctx.arc(0, 0, 0.6, 0, Math.PI/2, false);
            ctx.stroke();
 
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 50,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,25, 0,255,0,255);
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 98,25, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 50,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_selfintersect_1() {
+       function test_selfintersect_1(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -285,11 +309,13 @@ Canvas {
            ctx.beginPath();
            ctx.arc(0, 0, 25, 0, -Math.PI/2, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_selfintersect_2() {
+       function test_selfintersect_2(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -303,15 +329,17 @@ Canvas {
            ctx.beginPath();
            ctx.arc(100, 0, 25, 0, -Math.PI/2, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 90,10, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 97,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 97,2, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 97,3, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 2,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 90,10, 0,255,0,255);
+           comparePixel(ctx, 97,1, 0,255,0,255);
+           comparePixel(ctx, 97,2, 0,255,0,255);
+           comparePixel(ctx, 97,3, 0,255,0,255);
+           comparePixel(ctx, 2,48, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_shape_1() {
+       function test_shape_1(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -322,15 +350,17 @@ Canvas {
            ctx.beginPath();
            ctx.arc(50, 50, 50, 0, Math.PI, false);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 20,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 20,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_shape_2() {
+       function test_shape_2(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -341,14 +371,16 @@ Canvas {
            ctx.beginPath();
            ctx.arc(50, 50, 50, 0, Math.PI, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 20,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 20,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
+           canvas.destroy();
        }
-       function test_shape_3() {
+       function test_shape_3(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -359,14 +391,16 @@ Canvas {
            ctx.beginPath();
            ctx.arc(0, 50, 50, 0, -Math.PI/2, false);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_shape_4() {
+       function test_shape_4(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -377,14 +411,16 @@ Canvas {
            ctx.beginPath();
            ctx.arc(-50, 50, 100, 0, -Math.PI/2, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_shape_5() {
+       function test_shape_5(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -395,14 +431,16 @@ Canvas {
            ctx.beginPath();
            ctx.arc(300, 0, 100, 0, 5*Math.PI, false);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,1, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 1,48, 0,255,0,255));
-           verify(Helper.comparePixel(ctx, 98,48, 0,255,0,255));
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           comparePixel(ctx, 1,1, 0,255,0,255);
+           comparePixel(ctx, 98,1, 0,255,0,255);
+           comparePixel(ctx, 1,48, 0,255,0,255);
+           comparePixel(ctx, 98,48, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_twopie() {
+       function test_twopie(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -413,7 +451,7 @@ Canvas {
            ctx.beginPath();
            ctx.arc(50, 25, 50, 0, 2*Math.PI - 1e-4, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,20, 0,255,0,255));
+           comparePixel(ctx, 50,20, 0,255,0,255);
            ctx.reset();
 
            ctx.fillStyle = '#f00';
@@ -423,7 +461,7 @@ Canvas {
            ctx.beginPath();
            ctx.arc(50, 25, 50, 0, 2*Math.PI - 1e-4, false);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,20, 0,255,0,255));
+           comparePixel(ctx, 50,20, 0,255,0,255);
            ctx.reset();
 
            ctx.fillStyle = '#f00';
@@ -434,7 +472,7 @@ Canvas {
            ctx.arc(50, 25, 50, 0, 2*Math.PI + 1e-4, true);
            ctx.stroke();
            //FIXME:still different behavior from browsers, > 2pi span issue
-           //verify(Helper.comparePixel(ctx, 50,20, 0,255,0,255));
+           //comparePixel(ctx, 50,20, 0,255,0,255);
            ctx.reset();
 
            ctx.fillStyle = '#f00';
@@ -444,10 +482,12 @@ Canvas {
            ctx.beginPath();
            ctx.arc(50, 25, 50, 0, 2*Math.PI + 1e-4, false);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,20, 0,255,0,255));
+           comparePixel(ctx, 50,20, 0,255,0,255);
+           canvas.destroy();
        }
 
-       function test_zero() {
+       function test_zero(row) {
+           var canvas = createCanvasObject(row);
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -458,7 +498,7 @@ Canvas {
            ctx.beginPath();
            ctx.arc(50, 25, 50, 0, 0, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,20, 0,255,0,255));
+           comparePixel(ctx, 50,20, 0,255,0,255);
            ctx.reset();
 
            ctx.fillStyle = '#0f0';
@@ -468,7 +508,7 @@ Canvas {
            ctx.beginPath();
            ctx.arc(50, 25, 50, 0, 0, false);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,20, 0,255,0,255));
+           comparePixel(ctx, 50,20, 0,255,0,255);
            ctx.reset();
 
            ctx.fillStyle = '#f00'
@@ -479,8 +519,7 @@ Canvas {
            ctx.moveTo(0, 25);
            ctx.arc(200, 25, 0, 0, Math.PI, true);
            ctx.stroke();
-           verify(Helper.comparePixel(ctx, 50,25, 0,255,0,255));
-
+           comparePixel(ctx, 50,25, 0,255,0,255);
+           canvas.destroy();
        }
-   }
 }

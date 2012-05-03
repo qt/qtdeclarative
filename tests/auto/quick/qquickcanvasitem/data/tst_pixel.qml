@@ -1,30 +1,37 @@
 import QtQuick 2.0
-import QtTest 1.0
-import "testhelper.js" as Helper
-Canvas {
-   id:canvas; width:100;height:50; renderTarget: Canvas.Image; renderStrategy:Canvas.Threaded
-   TestCase {
-       //TODO
-       name: "pixel"; when: windowShown
-       function test_createImageData() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_getImageData() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_object() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_putImageData() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-       function test_filters() {
-           var ctx = canvas.getContext('2d');
-           ctx.reset();
-      }
-   }
+
+CanvasTestCase {
+   id:testCase
+   name: "pixel"
+   function init_data() { return testData("2d"); }
+   function test_createImageData(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_getImageData(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_object(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_putImageData(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
+   function test_filters(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       canvas.destroy()
+  }
 }
