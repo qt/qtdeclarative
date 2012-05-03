@@ -73,9 +73,9 @@ Item {
 
         id: txtlinecount
         text: first
-        width: 100
+        width: 120
         wrapMode: Text.WrapAnywhere
-        font.pixelSize: 16
+        font.pixelSize: 18
     }
 
     TestCase {
