@@ -1329,7 +1329,7 @@ static void ctx2d_lineJoin_set(v8::Local<v8::String>, v8::Local<v8::Value> value
     else if (lineJoin == QLatin1String("bevel"))
         join = Qt::BevelJoin;
     else if (lineJoin == QLatin1String("miter"))
-        join = Qt::MiterJoin;
+        join = Qt::SvgMiterJoin;
     else
         return;
 
