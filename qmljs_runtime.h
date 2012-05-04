@@ -556,7 +556,7 @@ inline void __qmljs_lt(Context *ctx, Value *result, const Value *left, const Val
 
 inline void __qmljs_ge(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    __qmljs_compare(ctx, result, right, left, false);
+    __qmljs_compare(ctx, result, left, right, false);
 
     bool r = ! (result->type == UNDEFINED_TYPE ||
                 (result->type == BOOLEAN_TYPE && result->booleanValue == true));
@@ -566,7 +566,7 @@ inline void __qmljs_ge(Context *ctx, Value *result, const Value *left, const Val
 
 inline void __qmljs_le(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    __qmljs_compare(ctx, result, left, right, true);
+    __qmljs_compare(ctx, result, right, left, true);
 
     bool r = ! (result->type == UNDEFINED_TYPE ||
                 (result->type == BOOLEAN_TYPE && result->booleanValue == true));
