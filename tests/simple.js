@@ -6,7 +6,7 @@ var d = 100
 
 for (i = 0; i < 1000000; i = i + 1) {
     if (a == 1)
-        d = a + b * c
+        d = d + a + b * c
     else
         d = 321
 }
