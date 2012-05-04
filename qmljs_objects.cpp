@@ -2,6 +2,8 @@
 #include "qmljs_objects.h"
 #include <cassert>
 
+using namespace QQmlJS::VM;
+
 Object::~Object()
 {
     delete members;

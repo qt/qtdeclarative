@@ -409,7 +409,7 @@ void Codegen::operator()(AST::Program *node)
         _block->JUMP(_exitBlock);
     }
 
-    InstructionSelection isel(_module);
+    x86_64::InstructionSelection isel(_module);
 
     foreach (IR::Function *function, _module->functions) {
         linearize(function);

@@ -7,6 +7,7 @@
 #include <QtCore/QHash>
 
 namespace QQmlJS {
+namespace x86_64 {
 
 class InstructionSelection: protected IR::StmtVisitor
 {
@@ -17,7 +18,7 @@ public:
     void visitFunction(IR::Function *function);
 
 protected:
-    String *identifier(const QString &s);
+    VM::String *identifier(const QString &s);
     int tempOffset(IR::Temp *t);
     void loadTempAddress(int reg, IR::Temp *t);
 
@@ -37,9 +38,10 @@ private:
     uchar *_codePtr;
     QHash<IR::BasicBlock *, QVector<uchar *> > _patches;
     QHash<IR::BasicBlock *, uchar *> _addrs;
-    QHash<QString, String *> _identifiers;
+    QHash<QString, VM::String *> _identifiers;
 };
 
+} // end of namespace x86_64
 } // end of namespace QQmlJS
 
 #endif // QV4ISEL_P_H

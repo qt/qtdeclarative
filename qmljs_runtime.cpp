@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <cassert>
 
+using namespace QQmlJS::VM;
+
 Value Value::string(Context *ctx, const QString &s)
 {
     return string(ctx, String::get(ctx, s));

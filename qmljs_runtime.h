@@ -5,6 +5,9 @@
 #include <QtCore/QDebug>
 #include <math.h>
 
+namespace QQmlJS {
+namespace VM {
+
 enum ValueType {
     UNDEFINED_TYPE,
     NULL_TYPE,
@@ -623,5 +626,8 @@ inline bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y)
 }
 
 } // extern "C"
+
+} // namespace VM
+} // namespace QQmlJS
 
 #endif // QMLJS_RUNTIME_H

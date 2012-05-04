@@ -19,6 +19,8 @@ typedef void *gpointer;
 #endif
 
 using namespace QQmlJS;
+using namespace QQmlJS::x86_64;
+using namespace QQmlJS::VM;
 
 static inline bool protect(const void *addr, size_t size)
 {

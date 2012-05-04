@@ -7,6 +7,9 @@
 #include <QtCore/QHash>
 #include <cassert>
 
+namespace QQmlJS {
+namespace VM {
+
 struct Value;
 struct Object;
 struct BooleanObject;
@@ -259,5 +262,8 @@ struct Context {
         thisObject.type = NULL_TYPE;
     }
 };
+
+} // namespace VM
+} // namespace QQmlJS
 
 #endif // QMLJS_OBJECTS_H
