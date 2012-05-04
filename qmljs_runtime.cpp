@@ -246,26 +246,7 @@ void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y
         if (isnan(nx) || isnan(ny)) {
             __qmljs_init_undefined(ctx, result);
         } else {
-            const int sx = signbit(nx);
-            const int sy = signbit(ny);
-            const bool ix = isinf(nx);
-            const bool iy = isinf(ny);
-            bool r = false;
-
-            if (ix && !sx) {
-                r = false;
-            } else if (iy && !sy) {
-                r = true;
-            } else if (iy && sy) {
-                r = false;
-            } else if (ix && sx) {
-                r = true;
-            } else if (nx == ny) {
-                r = false;
-            } else {
-                r = nx < ny;
-            }
-            __qmljs_init_boolean(ctx, result, r);
+            __qmljs_init_boolean(ctx, result, nx < ny);
         }
     }
 }

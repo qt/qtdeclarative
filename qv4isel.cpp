@@ -109,9 +109,15 @@ void InstructionSelection::visitFunction(IR::Function *function)
     int locals = function->tempCount * sizeof(Value);
     locals = (locals + 15) & ~15;
 
+    amd64_push_reg(_codePtr, AMD64_RBP);
     amd64_push_reg(_codePtr, AMD64_R14);
+    amd64_push_reg(_codePtr, AMD64_R15);
+
+    amd64_mov_reg_reg(_codePtr, AMD64_RBP, AMD64_RSP, 8);
     amd64_mov_reg_reg(_codePtr, AMD64_R14, AMD64_RDI, 8);
     amd64_alu_reg_imm(_codePtr, X86_SUB, AMD64_RSP, locals);
+
+    amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_R15, AMD64_R15);
 
     foreach (IR::BasicBlock *block, function->basicBlocks) {
         _block = block;
@@ -131,27 +137,29 @@ void InstructionSelection::visitFunction(IR::Function *function)
     }
 
     amd64_alu_reg_imm(_codePtr, X86_ADD, AMD64_RSP, locals);
+    amd64_pop_reg(_codePtr, AMD64_R15);
     amd64_pop_reg(_codePtr, AMD64_R14);
+    amd64_pop_reg(_codePtr, AMD64_RBP);
     amd64_ret(_codePtr);
 
     qSwap(_codePtr, codePtr);
     qSwap(_code, code);
 
+#ifndef NO_UDIS86
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
-#ifndef NO_UDIS86
         ud_t ud_obj;
 
         ud_init(&ud_obj);
         ud_set_input_buffer(&ud_obj, code, codePtr - code);
         ud_set_mode(&ud_obj, 64);
-        ud_set_syntax(&ud_obj, UD_SYN_INTEL);
+        ud_set_syntax(&ud_obj, UD_SYN_ATT);
 
         while (ud_disassemble(&ud_obj)) {
             printf("\t%s\n", ud_insn_asm(&ud_obj));
         }
-#endif
     }
+#endif
 
     void (*f)(Context *) = (void (*)(Context *)) code;
 
@@ -159,7 +167,7 @@ void InstructionSelection::visitFunction(IR::Function *function)
     ctx->activation = Value::object(ctx, new (GC) ArgumentsObject);
     f(ctx);
     Value d;
-    ctx->activation.objectValue->get(String::get(ctx, QLatin1String("d")), &d);
+    ctx->activation.objectValue->get(identifier("d"), &d);
     __qmljs_to_string(ctx, &d, &d);
     qDebug() << qPrintable(d.stringValue->text());
 }
@@ -170,6 +178,16 @@ String *InstructionSelection::identifier(const QString &s)
     if (! id)
         id = new (GC) String(s);
     return id;
+}
+
+int InstructionSelection::tempOffset(IR::Temp *t)
+{
+    return sizeof(Value) * (t->index - 1);
+}
+
+void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
+{
+    amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * (t->index - 1));
 }
 
 void InstructionSelection::visitExp(IR::Exp *s)
@@ -226,22 +244,21 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Temp *t = s->source->asTemp()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
-                amd64_lea_membase(_codePtr, AMD64_RDX, AMD64_RSP, 8 + sizeof(Value) * (t->index - 1));
+                loadTempAddress(AMD64_RDX, t);
                 amd64_call_code(_codePtr, __qmljs_set_activation_property);
                 return;
             }
         } else if (IR::Temp *t = s->target->asTemp()) {
-            const int offset = 8 + sizeof(Value) * (t->index - 1);
             if (IR::Name *n = s->source->asName()) {
                 String *propertyName = identifier(*n->id);
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                amd64_lea_membase(_codePtr, AMD64_RSI, AMD64_RSP, offset);
+                loadTempAddress(AMD64_RSI, t);
                 amd64_mov_reg_imm(_codePtr, AMD64_RDX, propertyName);
                 amd64_call_code(_codePtr, __qmljs_get_activation_property);
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                amd64_lea_membase(_codePtr, AMD64_RSI, AMD64_RSP, offset);
+                loadTempAddress(AMD64_RSI, t);
 
                 switch (c->type) {
                 case IR::BoolType:
@@ -261,7 +278,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                amd64_lea_membase(_codePtr, AMD64_RSI, AMD64_RSP, offset);
+                loadTempAddress(AMD64_RSI, t);
                 amd64_mov_reg_imm(_codePtr, AMD64_RDX, new (GC) String(*str->value));
                 amd64_call_code(_codePtr, __qmljs_init_string);
                 return;
@@ -270,9 +287,9 @@ void InstructionSelection::visitMove(IR::Move *s)
                 IR::Temp *r = b->right->asTemp();
                 if (l && r) {
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                    amd64_lea_membase(_codePtr, AMD64_RSI, AMD64_RSP, offset);
-                    amd64_lea_membase(_codePtr, AMD64_RDX, AMD64_RSP, 8 + sizeof(Value) * (l->index - 1));
-                    amd64_lea_membase(_codePtr, AMD64_RCX, AMD64_RSP, 8 + sizeof(Value) * (r->index - 1));
+                    loadTempAddress(AMD64_RSI, t);
+                    loadTempAddress(AMD64_RDX, l);
+                    loadTempAddress(AMD64_RCX, r);
 
                     void (*op)(Context *, Value *, const Value *, const Value *) = 0;
 
@@ -334,7 +351,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 {
     if (IR::Temp *t = s->cond->asTemp()) {
         amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-        amd64_lea_membase(_codePtr, AMD64_RSI, AMD64_RSP, 8 + sizeof(Value) * (t->index - 1));
+        loadTempAddress(AMD64_RSI, t);
         amd64_call_code(_codePtr, __qmljs_to_boolean);
         amd64_alu_reg_imm_size(_codePtr, X86_CMP, X86_EAX, 0, 4);
         _patches[s->iftrue].append(_codePtr);

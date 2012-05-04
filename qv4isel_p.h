@@ -18,6 +18,8 @@ public:
 
 protected:
     String *identifier(const QString &s);
+    int tempOffset(IR::Temp *t);
+    void loadTempAddress(int reg, IR::Temp *t);
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);
