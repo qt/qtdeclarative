@@ -282,8 +282,24 @@ of their use.
     \li \l{Qt::createComponent()}{object Qt.createComponent(url)}
     \li \l{Qt::createQmlObject()}{object Qt.createQmlObject(string qml, object parent, string filepath)}
 \endlist
-*/
 
+
+\section1 Other Functions
+
+The following functions are also on the Qt object.
+
+\list
+    \li \l{Qt::quit()}{Qt.quit()}
+    \li \l{Qt::md5()}{Qt.md5(string)}
+    \li \l{Qt::btoa()}{string Qt.btoa(string)}
+    \li \l{Qt::atob()}{string Qt.atob(string)}
+    \li \l{Qt::binding()}{object Qt.binding(function)}
+    \li \l{Qt::locale()}{object Qt.locale()}
+    \li \l{Qt::resolvedUrl()}{string Qt.resolvedUrl(string)}
+    \li \l{Qt::openUrlExternally()}{Qt.openUrlExternally(string)}
+    \li \l{Qt::fontFamilies()}{list<string> Qt.fontFamilies()}
+\endlist
+*/
 
 /*!
     \qmlproperty object Qt::application
