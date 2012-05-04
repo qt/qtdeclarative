@@ -188,17 +188,17 @@ void Register::cleanup()
 {
     if (dataType >= FirstCleanupType) {
         if (dataType == QStringType) {
-            getstringptr()->~QString();
+            destroyPointee(getstringptr());
         } else if (dataType == QUrlType) {
-            geturlptr()->~QUrl();
+            destroyPointee(geturlptr());
         } else if (dataType == QColorType) {
             QQml_valueTypeProvider()->destroyValueType(QMetaType::QColor, typeDataPtr(), dataSize());
         } else if (dataType == QVariantType) {
-            getvariantptr()->~QVariant();
+            destroyPointee(getvariantptr());
         } else if (dataType == qMetaTypeId<v8::Handle<v8::Value> >()) {
             destroyPointee(gethandleptr());
         } else if (dataType == qMetaTypeId<QJSValue>()) {
-            getjsvalueptr()->~QJSValue();
+            destroyPointee(getjsvalueptr());
         }
     }
     setUndefined();
@@ -206,13 +206,13 @@ void Register::cleanup()
 
 void Register::cleanupString()
 {
-    getstringptr()->~QString();
+    destroyPointee(getstringptr());
     setUndefined();
 }
 
 void Register::cleanupUrl()
 {
-    geturlptr()->~QUrl();
+    destroyPointee(geturlptr());
     setUndefined();
 }
 
@@ -224,7 +224,7 @@ void Register::cleanupColor()
 
 void Register::cleanupVariant()
 {
-    getvariantptr()->~QVariant();
+    destroyPointee(getvariantptr());
     setUndefined();
 }
 
@@ -236,7 +236,7 @@ void Register::cleanupHandle()
 
 void Register::cleanupJSValue()
 {
-    getjsvalueptr()->~QJSValue();
+    destroyPointee(getjsvalueptr());
     setUndefined();
 }
 
@@ -245,17 +245,17 @@ void Register::copy(const Register &other)
     *this = other;
     if (other.dataType >= FirstCleanupType) {
         if (other.dataType == QStringType) 
-            new (getstringptr()) QString(*other.getstringptr());
+            copyConstructPointee(getstringptr(), other.getstringptr());
         else if (other.dataType == QUrlType)
-            new (geturlptr()) QUrl(*other.geturlptr());
+            copyConstructPointee(geturlptr(), other.geturlptr());
         else if (other.dataType == QColorType)
             QQml_valueTypeProvider()->copyValueType(QMetaType::QColor, other.typeDataPtr(), typeDataPtr(), dataSize());
         else if (other.dataType == QVariantType)
-            new (getvariantptr()) QVariant(*other.getvariantptr());
+            copyConstructPointee(getvariantptr(), other.getvariantptr());
         else if (other.dataType == qMetaTypeId<v8::Handle<v8::Value> >())
             copyConstructPointee(gethandleptr(), other.gethandleptr());
         else if (other.dataType == qMetaTypeId<QJSValue>())
-            new (getjsvalueptr()) QJSValue(*other.getjsvalueptr());
+            copyConstructPointee(getjsvalueptr(), other.getjsvalueptr());
     } 
 }
 
@@ -264,17 +264,17 @@ void Register::init(Type type)
     dataType = type;
     if (dataType >= FirstCleanupType) {
         if (dataType == QStringType) 
-            new (getstringptr()) QString();
+            defaultConstructPointee(getstringptr());
         else if (dataType == QUrlType)
-            new (geturlptr()) QUrl();
+            defaultConstructPointee(geturlptr());
         else if (dataType == QColorType)
             QQml_valueTypeProvider()->initValueType(QMetaType::QColor, typeDataPtr(), dataSize());
         else if (dataType == QVariantType)
-            new (getvariantptr()) QVariant();
+            defaultConstructPointee(getvariantptr());
         else if (dataType == qMetaTypeId<v8::Handle<v8::Value> >())
             defaultConstructPointee(gethandleptr());
         else if (dataType == qMetaTypeId<QJSValue>())
-            new (getjsvalueptr()) QJSValue();
+            defaultConstructPointee(getjsvalueptr());
     }
 }
 
