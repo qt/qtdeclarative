@@ -97,7 +97,8 @@ QQmlCustomParserNode
 QQmlCustomParserNodePrivate::fromObject(QQmlScript::Object *root)
 {
     QQmlCustomParserNode rootNode;
-    rootNode.d->name = root->typeName;
+    if (root->typeReference)
+        rootNode.d->name = root->typeReference->name;
     rootNode.d->location = root->location.start;
 
     for (Property *p = root->properties.first(); p; p = root->properties.next(p)) {

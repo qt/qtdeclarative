@@ -124,16 +124,13 @@ public:
 };
 
 class Object;
-class TypeReference
+class TypeReference : public QQmlPool::Class
 {
 public:
-    TypeReference(int typeId, const QString &typeName) : id(typeId), name(typeName) {}
-
-    int id;
     // type as it has been referenced in Qml
     QString name;
-    // objects in parse tree referencing the type
-    QList<QQmlScript::Object*> refObjects;
+    // The first use of this type in the parse tree.  Useful for error locations.
+    QQmlScript::Object *firstUse;
 };
 
 class Object;
@@ -310,9 +307,10 @@ public:
     // QQmlCompiledData::types array, or -1 if the object is a property
     // group.
     int type;
+    // A back pointer to the QQmlScript::TypeReference for this type, if any.
+    // Set by the parser.
+    TypeReference *typeReference;
 
-    // The fully-qualified name of this type
-    QString typeName;
     // The id assigned to the object (if any).  Set by the QQmlCompiler
     QString id;
     // The id index assigned to the object (if any).  Set by the QQmlCompiler
@@ -503,7 +501,7 @@ public:
 
 
 // ### private:
-    TypeReference *findOrCreateType(const QString &name);
+    int findOrCreateTypeId(const QString &name, Object *);
     void setTree(QQmlScript::Object *tree);
 
     void setScriptFile(const QString &filename) {_scriptFile = filename; }

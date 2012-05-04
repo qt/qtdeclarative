@@ -161,6 +161,7 @@ private:
     QStringList filePluginPath;
     QStringList fileImportPath;
 
+    QSet<QString> qmlDirFilesForWhichPluginsHaveBeenLoaded;
     QSet<QString> initializedPlugins;
     QQmlEngine *engine;
 };

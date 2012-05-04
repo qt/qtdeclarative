@@ -94,7 +94,6 @@ public:
         TypeReference()
         : type(0), typePropertyCache(0), component(0) {}
 
-        QString className;
         QQmlType *type;
         QQmlPropertyCache *typePropertyCache;
         QQmlCompiledData *component;
@@ -403,7 +402,7 @@ private:
     int componentTypeRef();
     int translationContextIndex();
 
-    static QQmlType *toQmlType(QQmlScript::Object *from);
+    QQmlType *toQmlType(QQmlScript::Object *from);
     bool canCoerce(int to, QQmlScript::Object *from);
 
     QString elementName(QQmlScript::Object *);

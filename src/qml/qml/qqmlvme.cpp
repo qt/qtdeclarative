@@ -559,7 +559,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             }
 
             if (!o) 
-                VME_EXCEPTION(tr("Unable to create object of type %1").arg(type.className), instr.line);
+                VME_EXCEPTION(tr("Unable to create object of type %1").arg(type.type->elementName()),
+                              instr.line);
 
             if (instr.isRoot) {
                 if (ddata->context) {

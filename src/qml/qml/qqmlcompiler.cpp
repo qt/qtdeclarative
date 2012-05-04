@@ -90,7 +90,6 @@ using namespace QQmlCompilerTypes;
 static QString id_string(QLatin1String("id"));
 static QString on_string(QLatin1String("on"));
 static QString Changed_string(QLatin1String("Changed"));
-static QString Component_string(QLatin1String("Component"));
 static QString Component_import_string(QLatin1String("QML/Component"));
 static QString qsTr_string(QLatin1String("qsTr"));
 static QString qsTrId_string(QLatin1String("qsTrId"));
@@ -793,22 +792,22 @@ bool QQmlCompiler::compile(QQmlEngine *engine,
                 QString err = ref.type->noCreationReason();
                 if (err.isEmpty())
                     err = tr( "Element is not creatable.");
-                COMPILE_EXCEPTION(parserRef->refObjects.first(), err);
+                COMPILE_EXCEPTION(parserRef->firstUse, err);
             }
             
             if (ref.type->containsRevisionedAttributes()) {
                 QQmlError cacheError;
-                ref.typePropertyCache = enginePrivate->cache(ref.type, resolvedTypes.at(ii).minorVersion, 
+                ref.typePropertyCache = enginePrivate->cache(ref.type,
+                                                             resolvedTypes.at(ii).minorVersion,
                                                              cacheError);
                 if (!ref.typePropertyCache) 
-                    COMPILE_EXCEPTION(parserRef->refObjects.first(), cacheError.description());
+                    COMPILE_EXCEPTION(parserRef->firstUse, cacheError.description());
                 ref.typePropertyCache->addref();
             }
 
         } else if (tref.typeData) {
             ref.component = tref.typeData->compiledData();
         }
-        ref.className = parserRef->name;
         out->types << ref;
     }
 
@@ -942,9 +941,6 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
     Q_ASSERT (obj->type != -1);
     const QQmlCompiledData::TypeReference &tr = output->types.at(obj->type);
     obj->metatype = tr.metaObject();
-
-    if (tr.type) 
-        obj->typeName = tr.type->qmlTypeName();
 
     // This object is a "Component" element
     if (tr.type && obj->metatype == &QQmlComponent::staticMetaObject) {
@@ -1614,7 +1610,6 @@ int QQmlCompiler::componentTypeRef()
             }
         }
         QQmlCompiledData::TypeReference ref;
-        ref.className = Component_string;
         ref.type = t;
         output->types << ref;
         cachedComponentTypeRef = output->types.count() - 1;
@@ -2399,7 +2394,6 @@ bool QQmlCompiler::buildPropertyObjectAssignment(QQmlScript::Property *prop,
             QQmlScript::Object *root = v->object;
             QQmlScript::Object *component = pool->New<Object>();
             component->type = componentTypeRef();
-            component->typeName = QStringLiteral("Qt/Component");
             component->metatype = &QQmlComponent::staticMetaObject;
             component->location = root->location;
             QQmlScript::Value *componentValue = pool->New<Value>();
@@ -2460,7 +2454,7 @@ bool QQmlCompiler::buildPropertyOnAssignment(QQmlScript::Property *prop,
             buildDynamicMeta(baseObj, ForceCreation);
         v->type = isPropertyValue ? Value::ValueSource : Value::ValueInterceptor;
     } else {
-        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(v->object->typeName).arg(prop->name().toString()));
+        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(elementName(v->object)).arg(prop->name().toString()));
     }
 
     return true;
@@ -2540,14 +2534,6 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     QQmlType *type = 0;
     unit->imports().resolveType(typeName, &type, 0, 0, 0, 0);
 
-    //handle enums on value types (where obj->typeName is empty)
-    QString objTypeName = obj->typeName;
-    if (objTypeName.isEmpty()) {
-        QQmlType *objType = toQmlType(obj);
-        if (objType)
-            objTypeName = objType->qmlTypeName();
-    }
-
     if (!type)
         return true;
 
@@ -2555,7 +2541,7 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     int value;
     bool ok;
 
-    if (objTypeName == type->qmlTypeName()) {
+    if (toQmlType(obj) == type) {
         // When these two match, we can short cut the search
         if (mprop.isFlagType()) {
             value = mprop.enumerator().keysToValue(enumValue.toUtf8().constData(), &ok);
@@ -3736,7 +3722,7 @@ QString QQmlCompiler::elementName(QQmlScript::Object *o)
 {
     Q_ASSERT(o);
     if (o->type != -1) {
-        return output->types.at(o->type).className;
+        return unit->parser().referencedTypes().at(o->type)->name;
     } else {
         return QString();
     }
@@ -3744,6 +3730,9 @@ QString QQmlCompiler::elementName(QQmlScript::Object *o)
 
 QQmlType *QQmlCompiler::toQmlType(QQmlScript::Object *from)
 {
+    if (from->type != -1 && output->types.at(from->type).type)
+        return output->types.at(from->type).type;
+
     // ### Optimize
     const QMetaObject *mo = from->metatype;
     QQmlType *type = 0;

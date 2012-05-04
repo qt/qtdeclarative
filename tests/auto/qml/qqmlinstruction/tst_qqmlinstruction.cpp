@@ -86,10 +86,6 @@ void tst_qqmlinstruction::dump()
     }
 
     {
-        QQmlCompiledData::TypeReference ref;
-        ref.className = "Test";
-        data->types << ref;
-
         QQmlCompiledData::Instruction::CreateCppObject i;
         i.type = 0;
         i.data = -1;
@@ -476,7 +472,7 @@ void tst_qqmlinstruction::dump()
         << "Index\tOperation\t\tData1\tData2\tData3\tComments"
         << "-------------------------------------------------------------------------------"
         << "0\t\tINIT\t\t\t0\t3\t-1\t-1"
-        << "1\t\tCREATECPP\t\t\t0\t\t\t\"Test\""
+        << "1\t\tCREATECPP\t\t\t0"
         << "2\t\tSETID\t\t\t0\t\t\t\"testId\""
         << "3\t\tSET_DEFAULT"
         << "4\t\tCREATE_COMPONENT\t3"

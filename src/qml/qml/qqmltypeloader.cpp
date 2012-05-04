@@ -1851,10 +1851,8 @@ void QQmlTypeData::resolveTypes()
             //  - known to be a namespace (Namespace {})
             //  - type with unknown namespace (UnknownNamespace.SomeType {})
             QQmlError error;
-            QString userTypeName = parserRef->name;
-            userTypeName.replace(QLatin1Char('/'),QLatin1Char('.'));
             if (typeNamespace) {
-                error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(userTypeName));
+                error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(parserRef->name));
             } else {
                 if (errors.size()) {
                     error = errors.takeFirst();
@@ -1864,14 +1862,12 @@ void QQmlTypeData::resolveTypes()
                     error.setDescription(QQmlTypeLoader::tr("Unreported error adding script import to import database"));
                 }
                 error.setUrl(m_imports.baseUrl());
-                error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(userTypeName).arg(error.description()));
+                error.setDescription(QQmlTypeLoader::tr("%1 %2").arg(parserRef->name).arg(error.description()));
             }
 
-            if (!parserRef->refObjects.isEmpty()) {
-                QQmlScript::Object *obj = parserRef->refObjects.first();
-                error.setLine(obj->location.start.line);
-                error.setColumn(obj->location.start.column);
-            }
+            Q_ASSERT(parserRef->firstUse);
+            error.setLine(parserRef->firstUse->location.start.line);
+            error.setColumn(parserRef->firstUse->location.start.column);
 
             errors.prepend(error);
             setError(errors);
@@ -1886,8 +1882,8 @@ void QQmlTypeData::resolveTypes()
             addDependency(ref.typeData);
         }
 
-        if (parserRef->refObjects.count())
-            ref.location = parserRef->refObjects.first()->location.start;
+        Q_ASSERT(parserRef->firstUse);
+        ref.location = parserRef->firstUse->location.start;
 
         m_types << ref;
     }

@@ -64,10 +64,10 @@ void QQmlCompiledData::dump(QQmlInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "DONE";
         break;
     case QQmlInstruction::CreateCppObject:
-        qWarning().nospace() << idx << "\t\t" << "CREATECPP\t\t\t" << instr->create.type << "\t\t\t" << types.at(instr->create.type).className;
+        qWarning().nospace() << idx << "\t\t" << "CREATECPP\t\t\t" << instr->create.type;
         break;
     case QQmlInstruction::CreateQMLObject:
-        qWarning().nospace() << idx << "\t\t" << "CREATEQML\t\t\t" << instr->createQml.type << "\t" << instr->createQml.bindingBits << "\t\t" << types.at(instr->createQml.type).className;
+        qWarning().nospace() << idx << "\t\t" << "CREATEQML\t\t\t" << instr->createQml.type << "\t" << instr->createQml.bindingBits;
         break;
     case QQmlInstruction::CompleteQMLObject:
         qWarning().nospace() << idx << "\t\t" << "COMPLETEQML";

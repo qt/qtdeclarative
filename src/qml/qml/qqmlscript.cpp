@@ -63,8 +63,8 @@ using namespace QQmlScript;
 // Parser IR classes
 //
 QQmlScript::Object::Object()
-: type(-1), idIndex(-1), metatype(0), synthCache(0), defaultProperty(0), parserStatusCast(-1),
-  componentCompileState(0), nextAliasingObject(0), nextIdObject(0)
+: type(-1), typeReference(0), idIndex(-1), metatype(0), synthCache(0), defaultProperty(0),
+  parserStatusCast(-1), componentCompileState(0), nextAliasingObject(0), nextIdObject(0)
 {
     // initialize the members in the meta object
     extObject.d.superdata = 0;
@@ -547,8 +547,6 @@ protected:
     QQmlScript::Object *currentObject() const;
     Property *currentProperty() const;
 
-    QString qualifiedNameId() const;
-
     QString textAt(const AST::SourceLocation &loc) const
     { return _contents->mid(loc.offset, loc.length); }
 
@@ -600,7 +598,6 @@ protected:
 private:
     QQmlScript::Parser *_parser;
     StateStack _stateStack;
-    QStringList _scope;
     const QString *_contents;
 };
 
@@ -640,11 +637,6 @@ QQmlScript::Object *ProcessAST::currentObject() const
 Property *ProcessAST::currentProperty() const
 {
     return state().property;
-}
-
-QString ProcessAST::qualifiedNameId() const
-{
-    return _scope.join(QLatin1String("/"));
 }
 
 void ProcessAST::extractVersion(QStringRef string, int *maj, int *min)
@@ -749,22 +741,10 @@ ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
     } else {
         // Class
 
-        QString resolvableObjectType = objectType;
-        if (lastTypeDot >= 0)
-            resolvableObjectType.replace(QLatin1Char('.'),QLatin1Char('/'));
-
 	QQmlScript::Object *obj = _parser->_pool.New<QQmlScript::Object>();
 
-        QQmlScript::TypeReference *typeRef = _parser->findOrCreateType(resolvableObjectType);
-        obj->type = typeRef->id;
-
-        typeRef->refObjects.append(obj);
-
-        // XXX this doesn't do anything (_scope never builds up)
-        _scope.append(resolvableObjectType);
-        obj->typeName = qualifiedNameId();
-        _scope.removeLast();
-
+        obj->type = _parser->findOrCreateTypeId(objectType, obj);
+        obj->typeReference = _parser->_refTypes.at(obj->type);
         obj->location = location;
 
         if (propertyCount) {
@@ -1059,9 +1039,8 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         property->nameLocation.line = node->identifierToken.startLine;
         property->nameLocation.column = node->identifierToken.startColumn;
         if (type >= Object::DynamicProperty::Custom) {
-            QQmlScript::TypeReference *typeRef =
-                _parser->findOrCreateType(memberType.toString());
-            typeRef->refObjects.append(_stateStack.top().object);
+            // This forces the type to be added to the resolved types list
+            _parser->findOrCreateTypeId(memberType.toString(), _stateStack.top().object);
             property->customType = memberType;
         }
 
@@ -1301,7 +1280,7 @@ QByteArray QQmlScript::Parser::preparseData() const
     return QByteArray();
 }
 
-bool QQmlScript::Parser::parse(const QString &qmlcode, const QByteArray &preparseData,
+bool QQmlScript::Parser::parse(const QString &qmlcode, const QByteArray & /* preparseData */,
                                const QUrl &url, const QString &urlString)
 {
     clear();
@@ -1672,7 +1651,6 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 void QQmlScript::Parser::clear()
 {
     _imports.clear();
-    qDeleteAll(_refTypes);
     _refTypes.clear();
     _errors.clear();
 
@@ -1684,22 +1662,18 @@ void QQmlScript::Parser::clear()
     _pool.clear();
 }
 
-QQmlScript::TypeReference *QQmlScript::Parser::findOrCreateType(const QString &name)
+int QQmlScript::Parser::findOrCreateTypeId(const QString &name, Object *object)
 {
-    TypeReference *type = 0;
-    int i = 0;
-    for (; i < _refTypes.size(); ++i) {
-        if (_refTypes.at(i)->name == name) {
-            type = _refTypes.at(i);
-            break;
-        }
-    }
-    if (!type) {
-        type = new TypeReference(i, name);
-        _refTypes.append(type);
+    for (int ii = 0; ii < _refTypes.size(); ++ii) {
+        if (_refTypes.at(ii)->name == name)
+            return ii;
     }
 
-    return type;
+    TypeReference *type = _pool.New<TypeReference>();
+    type->name = name;
+    type->firstUse = object;
+    _refTypes.append(type);
+    return _refTypes.size() - 1;
 }
 
 void QQmlScript::Parser::setTree(QQmlScript::Object *tree)
