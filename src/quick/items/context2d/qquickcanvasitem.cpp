@@ -428,8 +428,10 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
 {
     Q_D(QQuickCanvasItem);
     if (d->renderTarget != target) {
-        if (d->contextInitialized)         // target not changeable once context is active
+        if (d->contextInitialized) {
+            qmlInfo(this) << "Canvas:renderTarget not changeble once context is active.";
             return;
+        }
 
         d->renderTarget = target;
         emit renderTargetChanged();
@@ -470,8 +472,10 @@ void QQuickCanvasItem::setRenderStrategy(QQuickCanvasItem::RenderStrategy strate
 {
     Q_D(QQuickCanvasItem);
     if (d->renderStrategy != strategy) {
-        if (d->contextInitialized)   // Render strategy not changeable once context is active
+        if (d->contextInitialized) {
+            qmlInfo(this) << "Canvas:renderStrategy not changeable once context is active.";
             return;
+        }
 
         d->renderStrategy = strategy;
         emit renderStrategyChanged();
