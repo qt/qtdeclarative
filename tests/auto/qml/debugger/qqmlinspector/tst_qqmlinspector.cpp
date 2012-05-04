@@ -44,8 +44,10 @@
 #include <QHostAddress>
 #include <QDebug>
 #include <QThread>
+#include <QtCore/QLibraryInfo>
 
 #include "../shared/debugutil_p.h"
+#include "../../../shared/util.h"
 
 #define PORT 3772
 #define STR_PORT "3772"
@@ -79,7 +81,7 @@ public:
     bool m_requestResult;
 };
 
-class tst_QQmlInspector : public QObject
+class tst_QQmlInspector : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -98,8 +100,6 @@ private:
     QQmlInspectorClient *m_client;
 
 private slots:
-    void initTestCase();
-    void cleanupTestCase();
     void init();
     void cleanup();
 
@@ -135,25 +135,12 @@ void QQmlInspectorClient::messageReceived(const QByteArray &message)
     emit responseReceived();
 }
 
-void tst_QQmlInspector::initTestCase()
-{
-}
-
-void tst_QQmlInspector::cleanupTestCase()
-{
-}
-
 void tst_QQmlInspector::init()
 {
-#if defined(Q_OS_WIN)
-    const QString executable = "app\\app.exe";
-#else
-    const QString executable = "app/app";
-#endif
     const QString argument = "-qmljsdebugger=port:"STR_PORT",block";
 
-    m_process = new QQmlDebugProcess(executable);
-    m_process->start(QStringList() << argument);
+    m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
+    m_process->start(QStringList() << argument << testFile("qtquick2.qml"));
     QVERIFY2(m_process->waitForSessionStart(),
              "Could not launch application, or did not get 'Waiting for connection'.");
 
