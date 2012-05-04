@@ -65,8 +65,8 @@ QPainter* QQuickContext2DTile::createPainter(bool smooth)
     if (m_painter.isActive())
         m_painter.end();
 
+    aboutToDraw();
     if (m_device) {
-        aboutToDraw();
         m_painter.begin(m_device);
         m_painter.resetTransform();
         m_painter.setCompositionMode(QPainter::CompositionMode_Source);
@@ -104,6 +104,8 @@ QQuickContext2DFBOTile::QQuickContext2DFBOTile()
 
 QQuickContext2DFBOTile::~QQuickContext2DFBOTile()
 {
+    if (m_fbo)
+        m_fbo->release();
     delete m_fbo;
 }
 
@@ -121,7 +123,6 @@ void QQuickContext2DFBOTile::aboutToDraw()
 
 void QQuickContext2DFBOTile::drawFinished()
 {
-    m_fbo->release();
 }
 
 void QQuickContext2DFBOTile::setRect(const QRect& r)
