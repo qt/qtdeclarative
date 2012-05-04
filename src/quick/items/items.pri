@@ -23,6 +23,7 @@ HEADERS += \
     $$PWD/qquicktextcontrol_p_p.h \
     $$PWD/qquicktextedit_p.h \
     $$PWD/qquicktextedit_p_p.h \
+    $$PWD/qquicktextutil_p.h \
     $$PWD/qquickimagebase_p.h \
     $$PWD/qquickimagebase_p_p.h \
     $$PWD/qquickimage_p.h \
@@ -91,6 +92,7 @@ SOURCES += \
     $$PWD/qquicktextinput.cpp \
     $$PWD/qquicktextcontrol.cpp \
     $$PWD/qquicktextedit.cpp \
+    $$PWD/qquicktextutil.cpp \
     $$PWD/qquickimagebase.cpp \
     $$PWD/qquickimage.cpp \
     $$PWD/qquickborderimage.cpp \

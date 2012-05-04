@@ -55,6 +55,7 @@
 
 #include "qquicktextedit_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
+#include "qquicktextcontrol_p.h"
 
 #include <QtQml/qqml.h>
 
@@ -64,19 +65,21 @@ class QQuickTextDocumentWithImageResources;
 class QQuickTextControl;
 class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickTextEdit)
 
-public:
+    typedef QQuickTextEdit Public;
+
     QQuickTextEditPrivate()
         : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
-        , textMargin(0.0), yoff(0), font(sourceFont), cursorComponent(0), cursor(0), document(0), control(0)
+        , textMargin(0.0), yoff(0), font(sourceFont), cursorComponent(0), cursorItem(0), document(0), control(0)
         , lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
         , contentDirection(Qt::LayoutDirectionAuto)
         , mouseSelectionMode(QQuickTextEdit::SelectCharacters), inputMethodHints(Qt::ImhNone)
         , updateType(UpdatePaintNode)
-        , documentDirty(true), dirty(false), richText(false), cursorVisible(false)
+        , documentDirty(true), dirty(false), richText(false), cursorVisible(false), cursorPending(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(false), inLayout(false)
@@ -96,6 +99,8 @@ public:
     qreal getImplicitWidth() const;
     Qt::LayoutDirection textDirection(const QString &text) const;
 
+    void setNativeCursorEnabled(bool enabled) { control->setCursorWidth(enabled ? 1 : 0); }
+
     QColor color;
     QColor selectionColor;
     QColor selectedTextColor;
@@ -111,7 +116,7 @@ public:
     QFont font;
 
     QQmlComponent* cursorComponent;
-    QQuickItem* cursor;
+    QQuickItem* cursorItem;
     QQuickTextDocumentWithImageResources *document;
     QQuickTextControl *control;
 
@@ -138,6 +143,7 @@ public:
     bool dirty : 1;
     bool richText : 1;
     bool cursorVisible : 1;
+    bool cursorPending : 1;
     bool focusOnPress : 1;
     bool persistentSelection : 1;
     bool requireImplicitWidth:1;

@@ -1952,9 +1952,12 @@ void tst_qquicktextedit::cursorDelegate()
     view.requestActivateWindow();
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
     QVERIFY(textEditObject != 0);
-    QVERIFY(textEditObject->findChild<QQuickItem*>("cursorInstance"));
+    // Delegate creation is deferred until focus in or cursor visiblity is forced.
+    QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
+    QVERIFY(!textEditObject->isCursorVisible());
     //Test Delegate gets created
     textEditObject->setFocus(true);
+    QVERIFY(textEditObject->isCursorVisible());
     QQuickItem* delegateObject = textEditObject->findChild<QQuickItem*>("cursorInstance");
     QVERIFY(delegateObject);
     QCOMPARE(delegateObject->property("localProperty").toString(), QString("Hello"));
@@ -2716,6 +2719,7 @@ void tst_qquicktextedit::clipRect()
     cursorComponent.setData("import QtQuick 2.0\nRectangle { height: 20; width: 8 }", QUrl());
 
     edit->setCursorDelegate(&cursorComponent);
+    edit->setCursorVisible(true);
 
     // If a cursor delegate is used it's size should determine the excess width.
     QCOMPARE(edit->clipRect().x(), qreal(0));
@@ -2797,6 +2801,7 @@ void tst_qquicktextedit::boundingRect()
     cursorComponent.setData("import QtQuick 2.0\nRectangle { height: 20; width: 8 }", QUrl());
 
     edit->setCursorDelegate(&cursorComponent);
+    edit->setCursorVisible(true);
 
     // Don't include the size of a cursor delegate as it has its own bounding rect.
     QCOMPARE(edit->boundingRect().x(), qreal(0));

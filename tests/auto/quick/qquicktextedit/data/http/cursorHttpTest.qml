@@ -9,14 +9,18 @@ Rectangle { width: 300; height: 300; color: "white"
     ] 
     TextEdit {
         cursorDelegate: cursorFail
+        cursorVisible: true
     }
     TextEdit {
         cursorDelegate: cursorWait
+        cursorVisible: true
     }
     TextEdit {
         cursorDelegate: cursorNorm
+        cursorVisible: true
     }
     TextEdit {
         cursorDelegate: cursorErr
+        cursorVisible: true
     }
 }

@@ -74,8 +74,11 @@ class QQuickTextNode;
 
 class Q_AUTOTEST_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickTextInput)
 public:
+    Q_DECLARE_PUBLIC(QQuickTextInput)
+
+    typedef QQuickTextInput Public;
+
     QQuickTextInputPrivate()
         : hscroll(0)
         , vscroll(0)
@@ -105,6 +108,7 @@ public:
         , m_passwordCharacter(QLatin1Char('*'))
         , focusOnPress(true)
         , cursorVisible(false)
+        , cursorPending(false)
         , autoScroll(true)
         , selectByMouse(false)
         , canPaste(false)
@@ -235,6 +239,7 @@ public:
 
     bool focusOnPress:1;
     bool cursorVisible:1;
+    bool cursorPending:1;
     bool autoScroll:1;
     bool selectByMouse:1;
     bool canPaste:1;
@@ -265,6 +270,8 @@ public:
         return !tripleClickTimer.hasExpired(qApp->styleHints()->mouseDoubleClickInterval());
     }
 
+    void setNativeCursorEnabled(bool enabled) {
+        setCursorBlinkPeriod(enabled && cursorVisible ? qApp->styleHints()->cursorFlashTime() : 0); }
 
     int nextMaskBlank(int pos)
     {

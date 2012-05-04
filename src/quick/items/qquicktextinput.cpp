@@ -42,8 +42,10 @@
 #include "qquicktextinput_p.h"
 #include "qquicktextinput_p_p.h"
 #include "qquickcanvas.h"
+#include "qquicktextutil_p.h"
 
 #include <private/qqmlglobal_p.h>
+
 
 #include <QtCore/qcoreapplication.h>
 #include <QtQml/qqmlinfo.h>
@@ -102,8 +104,8 @@ void QQuickTextInput::componentComplete()
     d->checkIsValid();
     d->updateLayout();
     updateCursorRectangle();
-    if (d->cursorComponent && d->cursorComponent->isReady())
-        createCursor();
+    if (d->cursorComponent && isCursorVisible())
+        QQuickTextUtil::createCursor(d);
 }
 
 /*!
@@ -669,9 +671,13 @@ void QQuickTextInput::setCursorVisible(bool on)
     if (d->cursorVisible == on)
         return;
     d->cursorVisible = on;
-    d->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
-    d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
-    update();
+    if (on && isComponentComplete())
+        QQuickTextUtil::createCursor(d);
+    if (!d->cursorItem) {
+        d->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
+        d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
+        update();
+    }
     emit cursorVisibleChanged(d->cursorVisible);
 }
 
@@ -1247,65 +1253,14 @@ QQmlComponent* QQuickTextInput::cursorDelegate() const
 void QQuickTextInput::setCursorDelegate(QQmlComponent* c)
 {
     Q_D(QQuickTextInput);
-    if (d->cursorComponent == c)
-        return;
-
-    d->cursorComponent = c;
-    if (!c) {
-        //note that the components are owned by something else
-        delete d->cursorItem;
-        d->cursorItem = 0;
-    } else {
-        d->startCreatingCursor();
-    }
-
-    emit cursorDelegateChanged();
-}
-
-void QQuickTextInputPrivate::startCreatingCursor()
-{
-    Q_Q(QQuickTextInput);
-    if (cursorComponent->isReady()) {
-        q->createCursor();
-    } else if (cursorComponent->isLoading()) {
-        q->connect(cursorComponent, SIGNAL(statusChanged(int)),
-                q, SLOT(createCursor()));
-    } else { // isError
-        qmlInfo(q, cursorComponent->errors()) << QQuickTextInput::tr("Could not load cursor delegate");
-    }
+    QQuickTextUtil::setCursorDelegate(d, c);
 }
 
 void QQuickTextInput::createCursor()
 {
     Q_D(QQuickTextInput);
-    if (!isComponentComplete())
-        return;
-
-    if (d->cursorComponent->isError()) {
-        qmlInfo(this, d->cursorComponent->errors()) << tr("Could not load cursor delegate");
-        return;
-    }
-
-    if (!d->cursorComponent->isReady())
-        return;
-
-    if (d->cursorItem)
-        delete d->cursorItem;
-    QQmlContext *creationContext = d->cursorComponent->creationContext();
-    QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
-    d->cursorItem = qobject_cast<QQuickItem*>(object);
-    if (!d->cursorItem) {
-        delete object;
-        qmlInfo(this, d->cursorComponent->errors()) << tr("Could not instantiate cursor delegate");
-        return;
-    }
-
-    QRectF r = cursorRectangle();
-
-    QQml_setParent_noEvent(d->cursorItem, this);
-    d->cursorItem->setParentItem(this);
-    d->cursorItem->setPos(r.topLeft());
-    d->cursorItem->setHeight(r.height());
+    d->cursorPending = true;
+    QQuickTextUtil::createCursor(d);
 }
 
 /*!
@@ -3189,10 +3144,9 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     m_textLayout.setPreeditArea(m_cursor, event->preeditString());
 #endif //QT_NO_IM
     const int oldPreeditCursor = m_preeditCursor;
-    const bool oldCursorVisible = cursorVisible;
     m_preeditCursor = event->preeditString().length();
     hasImState = !event->preeditString().isEmpty();
-    cursorVisible = true;
+    bool cursorVisible = true;
     QList<QTextLayout::FormatRange> formats;
     for (int i = 0; i < event->attributes().size(); ++i) {
         const QInputMethodEvent::Attribute &a = event->attributes().at(i);
@@ -3224,8 +3178,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     if (isGettingInput)
         finishChange(priorState);
 
-    if (cursorVisible != oldCursorVisible)
-        emit q->cursorVisibleChanged(cursorVisible);
+    q->setCursorVisible(cursorVisible);
 
     if (selectionChange) {
         emit q->selectionChanged();

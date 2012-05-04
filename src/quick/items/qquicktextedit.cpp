@@ -46,6 +46,7 @@
 #include "qquickevents_p_p.h"
 #include "qquickcanvas.h"
 #include "qquicktextnode_p.h"
+#include "qquicktextutil_p.h"
 #include <QtQuick/qsgsimplerectnode.h>
 
 #include <QtQml/qqmlinfo.h>
@@ -59,6 +60,7 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qtextengine_p.h>
 #include <private/qsgadaptationlayer_p.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -360,8 +362,8 @@ void QQuickTextEdit::setFont(const QFont &font)
 
     if (oldFont != d->font) {
         d->document->setDefaultFont(d->font);
-        if (d->cursor) {
-            d->cursor->setHeight(QFontMetrics(d->font).height());
+        if (d->cursorItem) {
+            d->cursorItem->setHeight(QFontMetrics(d->font).height());
             moveCursorDelegate();
         }
         updateSize();
@@ -890,6 +892,8 @@ void QQuickTextEdit::setCursorVisible(bool on)
     if (d->cursorVisible == on)
         return;
     d->cursorVisible = on;
+    if (on && isComponentComplete())
+        QQuickTextUtil::createCursor(d);
     if (!on && !d->persistentSelection)
         d->control->setCursorIsFocusIndicator(true);
     d->control->setCursorVisible(on);
@@ -941,45 +945,14 @@ QQmlComponent* QQuickTextEdit::cursorDelegate() const
 void QQuickTextEdit::setCursorDelegate(QQmlComponent* c)
 {
     Q_D(QQuickTextEdit);
-    if (d->cursorComponent) {
-        if (d->cursor) {
-            d->control->setCursorWidth(-1);
-            updateCursor();
-            delete d->cursor;
-            d->cursor = 0;
-        }
-    }
-    d->cursorComponent = c;
-    if (c && c->isReady()) {
-        loadCursorDelegate();
-    } else {
-        if (c)
-            connect(c, SIGNAL(statusChanged()),
-                    this, SLOT(loadCursorDelegate()));
-    }
-
-    emit cursorDelegateChanged();
+    QQuickTextUtil::setCursorDelegate(d, c);
 }
 
-void QQuickTextEdit::loadCursorDelegate()
+void QQuickTextEdit::createCursor()
 {
     Q_D(QQuickTextEdit);
-    if (d->cursorComponent->isLoading() || !isComponentComplete())
-        return;
-    QQmlContext *creationContext = d->cursorComponent->creationContext();
-    QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
-    d->cursor = qobject_cast<QQuickItem*>(object);
-    if (d->cursor) {
-        d->control->setCursorWidth(0);
-        updateCursor();
-        QQml_setParent_noEvent(d->cursor, this);
-        d->cursor->setParentItem(this);
-        d->cursor->setHeight(QFontMetrics(d->font).height());
-        moveCursorDelegate();
-    }else{
-        delete object;
-        qmlInfo(this) << "Error loading cursor delegate.";
-    }
+    d->cursorPending = true;
+    QQuickTextUtil::createCursor(d);
 }
 
 /*!
@@ -1187,8 +1160,8 @@ void QQuickTextEdit::componentComplete()
         updateSize();
         d->dirty = false;
     }
-    if (d->cursorComponent && d->cursorComponent->isReady())
-        loadCursorDelegate();
+    if (d->cursorComponent && isCursorVisible())
+        QQuickTextUtil::createCursor(d);
 }
 /*!
     \qmlproperty bool QtQuick2::TextEdit::selectByMouse
@@ -1818,11 +1791,11 @@ void QQuickTextEdit::moveCursorDelegate()
     d->determineHorizontalAlignment();
     updateInputMethod();
     emit cursorRectangleChanged();
-    if (!d->cursor)
+    if (!d->cursorItem)
         return;
     QRectF cursorRect = cursorRectangle();
-    d->cursor->setX(cursorRect.x());
-    d->cursor->setY(cursorRect.y());
+    d->cursorItem->setX(cursorRect.x());
+    d->cursorItem->setY(cursorRect.y());
 }
 
 void QQuickTextEdit::updateSelectionMarkers()
@@ -1843,7 +1816,7 @@ QRectF QQuickTextEdit::boundingRect() const
     Q_D(const QQuickTextEdit);
     QRectF r(0, -d->yoff, d->contentSize.width(), d->contentSize.height());
     int cursorWidth = 1;
-    if (d->cursor)
+    if (d->cursorItem)
         cursorWidth = 0;
     else if (!d->document->isEmpty())
         cursorWidth += 3;// ### Need a better way of accounting for space between char and cursor
@@ -1885,8 +1858,8 @@ QRectF QQuickTextEdit::clipRect() const
     Q_D(const QQuickTextEdit);
     QRectF r = QQuickImplicitSizeItem::clipRect();
     int cursorWidth = 1;
-    if (d->cursor)
-        cursorWidth = d->cursor->width();
+    if (d->cursorItem)
+        cursorWidth = d->cursorItem->width();
     if (!d->document->isEmpty())
         cursorWidth += 3;// ### Need a better way of accounting for space between char and cursor
 

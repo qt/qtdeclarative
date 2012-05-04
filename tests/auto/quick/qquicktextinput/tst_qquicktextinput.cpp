@@ -1509,6 +1509,7 @@ void tst_qquicktextinput::clipRect()
     cursorComponent.setData("import QtQuick 2.0\nRectangle { height: 20; width: 8 }", QUrl());
 
     input->setCursorDelegate(&cursorComponent);
+    input->setCursorVisible(true);
 
     // If a cursor delegate is used it's size should determine the excess width.
     QCOMPARE(input->clipRect().x(), qreal(0));
@@ -1596,6 +1597,7 @@ void tst_qquicktextinput::boundingRect()
     cursorComponent.setData("import QtQuick 2.0\nRectangle { height: 20; width: 8 }", QUrl());
 
     input->setCursorDelegate(&cursorComponent);
+    input->setCursorVisible(true);
 
     // Don't include the size of a cursor delegate as it has its own bounding rect.
     QCOMPARE(input->boundingRect().x(), input->width() - line.naturalTextWidth());
@@ -2481,9 +2483,13 @@ void tst_qquicktextinput::cursorDelegate()
     view.requestActivateWindow();
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
     QVERIFY(textInputObject != 0);
-    QVERIFY(textInputObject->findChild<QQuickItem*>("cursorInstance"));
+    // Delegate is created on demand, and so won't be available immediately.  Focus in or
+    // setCursorVisible(true) will trigger creation.
+    QTRY_VERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
+    QVERIFY(!textInputObject->isCursorVisible());
     //Test Delegate gets created
     textInputObject->setFocus(true);
+    QVERIFY(textInputObject->isCursorVisible());
     QQuickItem* delegateObject = textInputObject->findChild<QQuickItem*>("cursorInstance");
     QVERIFY(delegateObject);
     QCOMPARE(delegateObject->property("localProperty").toString(), QString("Hello"));
@@ -2496,7 +2502,6 @@ void tst_qquicktextinput::cursorDelegate()
     textInputObject->setCursorPosition(0);
     QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
-
 
     // Test delegate gets moved on mouse press.
     textInputObject->setSelectByMouse(true);

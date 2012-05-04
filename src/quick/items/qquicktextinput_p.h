@@ -344,6 +344,8 @@ private Q_SLOTS:
     void triggerPreprocess();
 
 private:
+    friend class QQuickTextUtil;
+
     Q_DECLARE_PRIVATE(QQuickTextInput)
 };
 

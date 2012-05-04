@@ -290,7 +290,7 @@ private Q_SLOTS:
     void q_textChanged();
     void updateSelectionMarkers();
     void moveCursorDelegate();
-    void loadCursorDelegate();
+    void createCursor();
     void q_canPasteChanged();
     void updateDocument();
     void updateCursor();
@@ -319,6 +319,8 @@ protected:
     virtual void itemChange(ItemChange, const ItemChangeData &);
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData);
+
+    friend class QQuickTextUtil;
 
 private:
     Q_DISABLE_COPY(QQuickTextEdit)

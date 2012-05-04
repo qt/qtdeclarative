@@ -8,10 +8,12 @@ Rectangle { width: 300; height: 300; color: "white"
     TextEdit {
         cursorDelegate: cursorWait
         text: "Hello"
+        cursorVisible: true
     }
     TextEdit {
         objectName: "textEditObject"
         cursorDelegate: cursorNorm
+        cursorVisible: true
         focus: true;
         text: "Hello"
     }
