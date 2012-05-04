@@ -12,6 +12,7 @@ typedef void *gpointer;
 #include "amd64-codegen.h"
 
 #include <sys/mman.h>
+#include <cassert>
 
 #ifndef NO_UDIS86
 #  include <udis86.h>
@@ -97,7 +98,7 @@ InstructionSelection::~InstructionSelection()
 void InstructionSelection::visitFunction(IR::Function *function)
 {
     uchar *code = (uchar *) malloc(getpagesize());
-    Q_ASSERT(! (size_t(code) & 15));
+    assert(! (size_t(code) & 15));
 
     protect(code, getpagesize());
 
@@ -195,17 +196,17 @@ void InstructionSelection::visitExp(IR::Exp *s)
     //    if (IR::Call *c = s->expr->asCall()) {
     //        return;
     //    }
-    Q_ASSERT(!"TODO");
+    assert(!"TODO");
 }
 
 void InstructionSelection::visitEnter(IR::Enter *)
 {
-    Q_ASSERT(!"TODO");
+    assert(!"TODO");
 }
 
 void InstructionSelection::visitLeave(IR::Leave *)
 {
-    Q_ASSERT(!"TODO");
+    assert(!"TODO");
 }
 
 void InstructionSelection::visitMove(IR::Move *s)
@@ -232,7 +233,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
 
                 default:
-                    Q_ASSERT(!"TODO");
+                    assert(!"TODO");
                 }
                 return;
             } else if (IR::String *str = s->source->asString()) {
@@ -273,7 +274,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
 
                 default:
-                    Q_ASSERT(!"TODO");
+                    assert(!"TODO");
                 }
                 return;
             } else if (IR::String *str = s->source->asString()) {
@@ -300,7 +301,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     case QQmlJS::IR::OpUMinus:
                     case QQmlJS::IR::OpUPlus:
                     case QQmlJS::IR::OpCompl:
-                        Q_ASSERT(!"unreachable");
+                        assert(!"unreachable");
                         break;
 
                     case QQmlJS::IR::OpBitAnd: op = __qmljs_bit_and; break;
@@ -325,7 +326,7 @@ void InstructionSelection::visitMove(IR::Move *s)
 
                     case QQmlJS::IR::OpAnd:
                     case QQmlJS::IR::OpOr:
-                        Q_ASSERT(!"unreachable");
+                        assert(!"unreachable");
                         break;
                     }
                     amd64_call_code(_codePtr, op);
@@ -336,7 +337,7 @@ void InstructionSelection::visitMove(IR::Move *s)
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...
     }
-    Q_ASSERT(!"TODO");
+    assert(!"TODO");
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)
@@ -363,12 +364,12 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         }
         return;
     }
-    Q_ASSERT(!"TODO");
+    assert(!"TODO");
 }
 
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     qWarning() << "TODO: RET";
-    //Q_ASSERT(!"TODO");
+    //assert(!"TODO");
 }
 
