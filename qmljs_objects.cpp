@@ -2,6 +2,11 @@
 #include "qmljs_objects.h"
 #include <cassert>
 
+Object::~Object()
+{
+    delete members;
+}
+
 bool Object::get(String *name, Value *result)
 {
     if (Property *prop = getProperty(name)) {
@@ -34,19 +39,22 @@ Property *Object::getProperty(String *name)
 
 void Object::put(String *name, const Value &value, bool flag)
 {
+    Q_UNUSED(flag);
+
     if (! members)
-        members = new (GC) Table();
+        members = new Table();
 
     members->insert(name, value);
 }
 
 bool Object::canPut(String *name)
 {
-    if (Property *prop = getOwnProperty(name))
+    if (Property *prop = getOwnProperty(name)) {
+        Q_UNUSED(prop);
         return true;
-    if (! prototype)
+    } else if (! prototype) {
         return extensible;
-    if (Property *inherited = prototype->getProperty(name)) {
+    } else if (Property *inherited = prototype->getProperty(name)) {
         return inherited->isWritable();
     } else {
         return extensible;
@@ -64,6 +72,8 @@ bool Object::hasProperty(String *name) const
 
 bool Object::deleteProperty(String *name, bool flag)
 {
+    Q_UNUSED(flag);
+
     if (members)
         return members->remove(name);
 
@@ -93,7 +103,9 @@ bool FunctionObject::hasInstance(const Value &value) const
 
 Value FunctionObject::call(const Value &thisObject, const Value args[], unsigned argc)
 {
-    (void) thisObject;
+    Q_UNUSED(thisObject);
+    Q_UNUSED(args);
+    Q_UNUSED(argc);
 
     Value v;
     __qmljs_init_undefined(0, &v);
@@ -103,7 +115,7 @@ Value FunctionObject::call(const Value &thisObject, const Value args[], unsigned
 Value FunctionObject::construct(const Value args[], unsigned argc)
 {
     Value thisObject;
-    __qmljs_init_object(0, &thisObject, new (GC) Object);
+    __qmljs_init_object(0, &thisObject, new Object);
     call(thisObject, args, argc);
     return thisObject;
 }

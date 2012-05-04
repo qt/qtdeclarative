@@ -164,8 +164,8 @@ void InstructionSelection::visitFunction(IR::Function *function)
 
     void (*f)(Context *) = (void (*)(Context *)) code;
 
-    Context *ctx = new (GC) Context;
-    ctx->activation = Value::object(ctx, new (GC) ArgumentsObject);
+    Context *ctx = new Context;
+    ctx->activation = Value::object(ctx, new ArgumentsObject);
     f(ctx);
     Value d;
     ctx->activation.objectValue->get(identifier("d"), &d);
@@ -177,7 +177,7 @@ String *InstructionSelection::identifier(const QString &s)
 {
     String *&id = _identifiers[s];
     if (! id)
-        id = new (GC) String(s);
+        id = new String(s);
     return id;
 }
 
@@ -191,21 +191,21 @@ void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
     amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * (t->index - 1));
 }
 
-void InstructionSelection::visitExp(IR::Exp *s)
+void InstructionSelection::visitExp(IR::Exp *)
 {
-    //    if (IR::Call *c = s->expr->asCall()) {
-    //        return;
-    //    }
+    Q_UNIMPLEMENTED();
     assert(!"TODO");
 }
 
 void InstructionSelection::visitEnter(IR::Enter *)
 {
+    Q_UNIMPLEMENTED();
     assert(!"TODO");
 }
 
 void InstructionSelection::visitLeave(IR::Leave *)
 {
+    Q_UNIMPLEMENTED();
     assert(!"TODO");
 }
 
@@ -233,13 +233,14 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
 
                 default:
+                    Q_UNIMPLEMENTED();
                     assert(!"TODO");
                 }
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
-                amd64_mov_reg_imm(_codePtr, AMD64_RDX, new (GC) String(*str->value));
+                amd64_mov_reg_imm(_codePtr, AMD64_RDX, new String(*str->value));
                 amd64_call_code(_codePtr, __qmljs_set_activation_property_string);
                 return;
             } else if (IR::Temp *t = s->source->asTemp()) {
@@ -280,13 +281,14 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
 
                 default:
+                    Q_UNIMPLEMENTED();
                     assert(!"TODO");
                 }
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 loadTempAddress(AMD64_RSI, t);
-                amd64_mov_reg_imm(_codePtr, AMD64_RDX, new (GC) String(*str->value));
+                amd64_mov_reg_imm(_codePtr, AMD64_RDX, new String(*str->value));
                 amd64_call_code(_codePtr, __qmljs_init_string);
                 return;
             } else if (IR::Unop *u = s->source->asUnop()) {
@@ -361,6 +363,7 @@ void InstructionSelection::visitMove(IR::Move *s)
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...
     }
+    Q_UNIMPLEMENTED();
     assert(!"TODO");
 }
 
@@ -388,12 +391,13 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         }
         return;
     }
+    Q_UNIMPLEMENTED();
     assert(!"TODO");
 }
 
 void InstructionSelection::visitRet(IR::Ret *s)
 {
-    qWarning() << "TODO: RET";
-    //assert(!"TODO");
+    Q_UNIMPLEMENTED();
+    Q_UNUSED(s);
 }
 

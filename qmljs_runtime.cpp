@@ -58,9 +58,11 @@ void __qmljs_string_literal_function(Context *ctx, Value *result)
 
 void __qmljs_delete(Context *ctx, Value *result, const Value *value)
 {
+    Q_UNIMPLEMENTED();
     (void) ctx;
     (void) result;
     (void) value;
+    assert(!"TODO");
 }
 
 void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Value *right)
@@ -129,37 +131,39 @@ bool __qmljs_is_function(Context *, const Value *value)
 
 void __qmljs_object_default_value(Context *ctx, Value *result, Object *object, int typeHint)
 {
+    Q_UNUSED(ctx);
     object->defaultValue(result, typeHint);
 }
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
 {
-    __qmljs_init_object(ctx, result, new (GC) ErrorObject(String::get(ctx, QLatin1String("type error"))));
+    __qmljs_init_object(ctx, result, new ErrorObject(String::get(ctx, QLatin1String("type error"))));
 }
 
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
 {
     Value value;
     __qmljs_init_boolean(ctx, &value, boolean);
-    __qmljs_init_object(ctx, result, new (GC) BooleanObject(value));
+    __qmljs_init_object(ctx, result, new BooleanObject(value));
 }
 
 void __qmljs_new_number_object(Context *ctx, Value *result, double number)
 {
     Value value;
     __qmljs_init_number(ctx, &value, number);
-    __qmljs_init_object(ctx, result, new (GC) NumberObject(value));
+    __qmljs_init_object(ctx, result, new NumberObject(value));
 }
 
 void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
 {
     Value value;
     __qmljs_init_string(ctx, &value, string);
-    __qmljs_init_object(ctx, result, new (GC) StringObject(value));
+    __qmljs_init_object(ctx, result, new StringObject(value));
 }
 
 void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value)
 {
+    Q_UNUSED(ctx);
     object->objectValue->put(name, *value, /*flags*/ 0);
 }
 
@@ -211,6 +215,7 @@ void __qmljs_set_activation_property_string(Context *ctx, String *name, String *
 
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name)
 {
+    Q_UNUSED(ctx);
     Q_ASSERT(object->type == OBJECT_TYPE);
     object->objectValue->get(name, result);
 }
@@ -232,6 +237,7 @@ void __qmljs_get_thisObject(Context *ctx, Value *result)
 
 void __qmljs_copy_property(Context *ctx, Value *target, String *name, Value *source, String *other)
 {
+    Q_UNUSED(ctx);
     Value v;
     source->objectValue->get(other, &v);
     target->objectValue->put(name, v);

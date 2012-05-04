@@ -4,8 +4,6 @@ CONFIG += console
 
 DEFINES += __default_codegen__
 
-LIBS += -lgc
-
 udis86:LIBS += -ludis86
 else:DEFINES += NO_UDIS86
 

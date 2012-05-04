@@ -3,9 +3,9 @@
 
 #include "qmljs_runtime.h"
 
-#include <gc/gc_cpp.h>
 #include <QtCore/QString>
 #include <QtCore/QHash>
+#include <cassert>
 
 struct Value;
 struct Object;
@@ -16,7 +16,7 @@ struct ArrayObject;
 struct FunctionObject;
 struct ErrorObject;
 
-struct String: gc_cleanup {
+struct String {
     String(const QString &text)
         : _text(text), _hashValue(0) {}
 
@@ -32,7 +32,8 @@ struct String: gc_cleanup {
     }
 
     static String *get(Context *ctx, const QString &s) {
-        return new (GC) String(s);
+        Q_UNUSED(ctx);
+        return new String(s);
     }
 
 private:
@@ -40,22 +41,26 @@ private:
     mutable unsigned _hashValue;
 };
 
-struct Property: gc {
+struct Property {
     String *name;
     Value value;
     PropertyAttributes flags;
     Property *next;
+    int index;
 
     Property(String *name, const Value &value, PropertyAttributes flags = NoAttributes)
-        : name(name), value(value), flags(flags), next(0) {}
+        : name(name), value(value), flags(flags), next(0), index(-1) {}
 
     inline bool isWritable() const { return flags & WritableAttribute; }
     inline bool isEnumerable() const { return flags & EnumerableAttribute; }
     inline bool isConfigurable() const { return flags & ConfigurableAttribute; }
 
     inline bool hasName(String *n) const {
-        if (name == n || (name->hashValue() == n->hashValue() && name->text() == n->text()))
+        if (name == n) {
             return true;
+        } else if (name->hashValue() == n->hashValue() && name->text() == n->text()) {
+            return true;
+        }
         return false;
     }
 
@@ -64,13 +69,9 @@ struct Property: gc {
     }
 };
 
-class Table: public gc
+class Table
 {
-    Property **_properties;
-    Property **_buckets;
-    int _propertyCount;
-    int _bucketCount;
-    int _allocated;
+    Q_DISABLE_COPY(Table)
 
 public:
     Table()
@@ -80,47 +81,33 @@ public:
         , _bucketCount(11)
         , _allocated(0) {}
 
-    bool empty() const { return _propertyCount == -1; }
-    unsigned size() const { return _propertyCount + 1; }
+    ~Table()
+    {
+        qDeleteAll(_properties, _properties + _propertyCount + 1);
+        delete[] _properties;
+        delete[] _buckets;
+    }
+
+    inline bool isEmpty() const { return _propertyCount == -1; }
 
     typedef Property **iterator;
-    iterator begin() const { return _properties; }
-    iterator end() const { return _properties + (_propertyCount + 1); }
+    inline iterator begin() const { return _properties; }
+    inline iterator end() const { return _properties + (_propertyCount + 1); }
 
     bool remove(String *name)
     {
-        if (_properties) {
-            const unsigned hash = name->hashValue() % _bucketCount;
-
-            if (Property *prop = _buckets[hash]) {
-                if (prop->hasName(name)) {
-                    _buckets[hash] = prop->next;
-                    return true;
-                }
-
-                do {
-                    Property *next = prop->next;
-
-                    if (next && next->hasName(name)) {
-                        prop->next = next->next;
-                        return true;
-                    }
-                    prop = next;
-                } while (prop);
-            }
-        }
-
+        Q_UNUSED(name);
+        assert(!"TODO");
         return false;
     }
 
     Property *find(String *name) const
     {
-        if (! _properties)
-            return 0;
-
-        for (Property *prop = _buckets[name->hashValue() % _bucketCount]; prop; prop = prop->next) {
-            if (prop->hasName(name))
-                return prop;
+        if (_properties) {
+            for (Property *prop = _buckets[name->hashValue() % _bucketCount]; prop; prop = prop->next) {
+                if (prop->hasName(name))
+                    return prop;
+            }
         }
 
         return 0;
@@ -139,12 +126,14 @@ public:
             else
                 _allocated *= 2;
 
-            Property **properties = new (GC) Property*[_allocated];
+            Property **properties = new Property*[_allocated];
             std::copy(_properties, _properties + _propertyCount, properties);
+            delete[] _properties;
             _properties = properties;
         }
 
-        Property *prop = new (GC) Property(name, value);
+        Property *prop = new Property(name, value);
+        prop->index = _propertyCount;
         _properties[_propertyCount] = prop;
 
         if (! _buckets || 3 * _propertyCount >= 2 * _bucketCount) {
@@ -164,19 +153,29 @@ private:
         if (_bucketCount)
             _bucketCount *= 2; // ### next prime
 
-        _buckets = new (GC) Property *[_bucketCount];
+        if (_buckets)
+            delete[] _buckets;
+
+        _buckets = new Property *[_bucketCount];
         std::fill(_buckets, _buckets + _bucketCount, (Property *) 0);
 
         for (int i = 0; i <= _propertyCount; ++i) {
             Property *prop = _properties[i];
-            Property *&bucket = _buckets[prop->name->hashValue() % _bucketCount];
+            Property *&bucket = _buckets[prop->hashValue() % _bucketCount];
             prop->next = bucket;
             bucket = prop;
         }
     }
+
+private:
+    Property **_properties;
+    Property **_buckets;
+    int _propertyCount;
+    int _bucketCount;
+    int _allocated;
 };
 
-struct Object: gc_cleanup {
+struct Object {
     Object *prototype;
     String *klass;
     Table *members;
@@ -188,7 +187,7 @@ struct Object: gc_cleanup {
         , members(0)
         , extensible(true) {}
 
-    virtual ~Object() {}
+    virtual ~Object();
 
     virtual FunctionObject *asFunctionObject() { return 0; }
 
@@ -206,19 +205,19 @@ struct Object: gc_cleanup {
 struct BooleanObject: Object {
     Value value;
     BooleanObject(const Value &value): value(value) {}
-    virtual void defaultValue(Value *result, int typehint) { *result = value; }
+    virtual void defaultValue(Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct NumberObject: Object {
     Value value;
     NumberObject(const Value &value): value(value) {}
-    virtual void defaultValue(Value *result, int typehint) { *result = value; }
+    virtual void defaultValue(Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct StringObject: Object {
     Value value;
     StringObject(const Value &value): value(value) {}
-    virtual void defaultValue(Value *result, int typehint) { *result = value; }
+    virtual void defaultValue(Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct ArrayObject: Object {
@@ -244,7 +243,7 @@ struct ErrorObject: Object {
 struct ArgumentsObject: Object {
 };
 
-struct Context: gc {
+struct Context {
     Value activation;
     Value thisObject;
     Object *scope;

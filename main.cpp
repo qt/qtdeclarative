@@ -14,8 +14,6 @@ int main(int argc, char *argv[])
 {
     using namespace QQmlJS;
 
-    GC_INIT();
-
     QCoreApplication app(argc, argv);
     QStringList args = app.arguments();
     args.removeFirst();
