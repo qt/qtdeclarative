@@ -189,6 +189,11 @@ void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
     __qmljs_set_property(ctx, &ctx->activation, name, value);
 }
 
+void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
+{
+    __qmljs_copy_property(ctx, &ctx->activation, name, &ctx->activation, other);
+}
+
 void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool value)
 {
     __qmljs_set_property_boolean(ctx, &ctx->activation, name, value);
@@ -223,6 +228,13 @@ void __qmljs_get_activation(Context *ctx, Value *result)
 void __qmljs_get_thisObject(Context *ctx, Value *result)
 {
     *result = ctx->thisObject;
+}
+
+void __qmljs_copy_property(Context *ctx, Value *target, String *name, Value *source, String *other)
+{
+    Value v;
+    source->objectValue->get(other, &v);
+    target->objectValue->put(name, v);
 }
 
 void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y, bool leftFirst)

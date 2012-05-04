@@ -80,6 +80,8 @@ void __qmljs_set_activation_property_number(Context *ctx, String *name, double v
 void __qmljs_set_activation_property_string(Context *ctx, String *name, String *value);
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name);
 void __qmljs_get_activation_property(Context *ctx, Value *result, String *name);
+void __qmljs_copy_activation_property(Context *ctx, String *name, String *other);
+void __qmljs_copy_property(Context *ctx, Value *target, String *name, Value *source, String *other);
 
 // context
 void __qmljs_get_activation(Context *ctx, Value *result);
