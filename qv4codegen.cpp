@@ -1133,13 +1133,9 @@ bool Codegen::visit(NewMemberExpression *ast)
 bool Codegen::visit(NotExpression *ast)
 {
     Result expr = expression(ast->expression);
-    if (_expr.accept(cx)) {
-        _block->CJUMP(_block->UNOP(IR::OpNot, *expr), _expr.iftrue, _expr.iffalse);
-    } else {
-        const unsigned r = _block->newTemp();
-        _block->MOVE(_block->TEMP(r), _block->UNOP(IR::OpNot, *expr));
-        _expr.code = _block->TEMP(r);
-    }
+    const unsigned r = _block->newTemp();
+    _block->MOVE(_block->TEMP(r), _block->UNOP(IR::OpNot, *expr));
+    _expr.code = _block->TEMP(r);
     return false;
 }
 

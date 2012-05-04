@@ -289,6 +289,24 @@ void InstructionSelection::visitMove(IR::Move *s)
                 amd64_mov_reg_imm(_codePtr, AMD64_RDX, new (GC) String(*str->value));
                 amd64_call_code(_codePtr, __qmljs_init_string);
                 return;
+            } else if (IR::Unop *u = s->source->asUnop()) {
+                if (IR::Temp *e = u->expr->asTemp()) {
+                    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+                    loadTempAddress(AMD64_RSI, t);
+                    loadTempAddress(AMD64_RDX, e);
+                    void (*op)(Context *, Value *, const Value *) = 0;
+                    switch (u->op) {
+                    case QQmlJS::IR::OpIfTrue: assert(!"unreachable"); break;
+                    case QQmlJS::IR::OpNot: op = __qmljs_not; break;
+                    case QQmlJS::IR::OpUMinus: op = __qmljs_uminus; break;
+                    case QQmlJS::IR::OpUPlus: op = __qmljs_uplus; break;
+                    case QQmlJS::IR::OpCompl: op = __qmljs_compl; break;
+                    default: assert(!"unreachable"); break;
+                    } // switch
+                    amd64_call_code(_codePtr, op);
+                    return;
+                }
+
             } else if (IR::Binop *b = s->source->asBinop()) {
                 IR::Temp *l = b->left->asTemp();
                 IR::Temp *r = b->right->asTemp();
