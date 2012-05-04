@@ -4,7 +4,8 @@
 #include <cstdio>
 #include <cassert>
 
-using namespace QQmlJS::VM;
+namespace QQmlJS {
+namespace VM {
 
 Value Value::string(Context *ctx, const QString &s)
 {
@@ -350,3 +351,7 @@ void __qmjs_construct(Context *ctx, Value *result, const Value *function, const 
 
 
 } // extern "C"
+
+
+} // namespace VM
+} // namespace QQmlJS
