@@ -1190,8 +1190,6 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
         V8THROW_ERROR("qsTranslate(): second argument (text) must be a string");
     if ((args.Length() > 2) && !args[2]->IsString())
         V8THROW_ERROR("qsTranslate(): third argument (comment) must be a string");
-    if ((args.Length() > 3) && !args[3]->IsString())
-        V8THROW_ERROR("qsTranslate(): fourth argument (encoding) must be a string");
 
     QV8Engine *v8engine = V8ENGINE();
     QString context = v8engine->toString(args[0]);
@@ -1199,25 +1197,20 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
     QString comment;
     if (args.Length() > 2) comment = v8engine->toString(args[2]);
 
-    QCoreApplication::Encoding encoding = QCoreApplication::UnicodeUTF8;
-    if (args.Length() > 3) {
-        QString encStr = v8engine->toString(args[3]);
-        if (encStr == QLatin1String("UnicodeUTF8")) {
-            encoding = QCoreApplication::UnicodeUTF8;
-        } else {
-            QString msg = QString::fromLatin1("qsTranslate(): invalid encoding '%0'").arg(encStr);
-            V8THROW_ERROR((uint16_t *)msg.constData());
-        }
+    int i = 3;
+    if (args.Length() > i && args[i]->IsString()) {
+        qWarning("qsTranslate(): specifying the encoding as fourth argument is deprecated");
+        ++i;
     }
 
     int n = -1;
-    if (args.Length() > 4)
-        n = args[4]->Int32Value();
+    if (args.Length() > i)
+        n = args[i]->Int32Value();
 
     QString result = QCoreApplication::translate(context.toUtf8().constData(),
                                                  text.toUtf8().constData(),
                                                  comment.toUtf8().constData(),
-                                                 encoding, n);
+                                                 QCoreApplication::UnicodeUTF8, n);
 
     return v8engine->toString(result);
 }
