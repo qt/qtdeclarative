@@ -1,5 +1,4 @@
 #include "qv4codegen_p.h"
-#include "qv4isel_p.h"
 
 #include <QtCore/QStringList>
 #include <QtCore/QSet>
@@ -288,10 +287,9 @@ Codegen::Codegen()
 {
 }
 
-void Codegen::operator()(AST::Program *node)
+void Codegen::operator()(AST::Program *node, IR::Module *module)
 {
-    IR::Module module;
-    _module = &module;
+    _module = module;
 
     IR::Function *globalCode = _module->newFunction(QLatin1String("%entry"));
     _function = globalCode;
@@ -306,11 +304,8 @@ void Codegen::operator()(AST::Program *node)
         _block->JUMP(_exitBlock);
     }
 
-    x86_64::InstructionSelection isel(_module);
-
     foreach (IR::Function *function, _module->functions) {
         linearize(function);
-        isel.visitFunction(function);
     }
 }
 

@@ -15,7 +15,7 @@ class Codegen: protected AST::Visitor
 public:
     Codegen();
 
-    void operator()(AST::Program *ast);
+    void operator()(AST::Program *ast, IR::Module *module);
 
 protected:
     enum Format { ex, cx, nx };

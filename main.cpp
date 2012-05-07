@@ -1,6 +1,7 @@
 
 #include "qmljs_objects.h"
 #include "qv4codegen_p.h"
+#include "qv4isel_p.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -8,7 +9,17 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
 
+#include <sys/mman.h>
 #include <iostream>
+
+static inline bool protect(const void *addr, size_t size)
+{
+    size_t pageSize = sysconf(_SC_PAGESIZE);
+    size_t iaddr = reinterpret_cast<size_t>(addr);
+    size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
+    int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
+    return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -41,7 +52,26 @@ int main(int argc, char *argv[])
                 Program *program = AST::cast<Program *>(parser.rootNode());
 
                 Codegen cg;
-                cg(program);
+                IR::Module module;
+                cg(program, &module);
+
+                const size_t codeSize = 10 * getpagesize();
+                uchar *code = (uchar *) malloc(codeSize);
+
+                x86_64::InstructionSelection isel(&module, code);
+                QHash<QString, IR::Function *> codeByName;
+                foreach (IR::Function *function, module.functions) {
+                    isel(function);
+                    if (function->name && ! function->name->isEmpty())
+                        codeByName.insert(*function->name, function);
+                }
+
+                if (! protect(code, codeSize))
+                    Q_UNREACHABLE();
+
+                VM::Context *ctx = new VM::Context;
+                ctx->activation = VM::Value::object(ctx, new VM::ArgumentsObject);
+                codeByName.value(QLatin1String("%entry"))->code(ctx);
             }
         }
     }

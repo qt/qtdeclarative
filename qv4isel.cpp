@@ -23,15 +23,6 @@ using namespace QQmlJS;
 using namespace QQmlJS::x86_64;
 using namespace QQmlJS::VM;
 
-static inline bool protect(const void *addr, size_t size)
-{
-    size_t pageSize = sysconf(_SC_PAGESIZE);
-    size_t iaddr = reinterpret_cast<size_t>(addr);
-    size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
-    int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
-    return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
-}
-
 static inline void
 amd64_patch (unsigned char* code, gpointer target)
 {
@@ -85,12 +76,13 @@ amd64_patch (unsigned char* code, gpointer target)
     else
         x86_patch (code, (unsigned char*)target);
 }
-InstructionSelection::InstructionSelection(IR::Module *module)
+InstructionSelection::InstructionSelection(IR::Module *module, uchar *buffer)
     : _module(module)
     , _function(0)
     , _block(0)
-    , _code(0)
-    , _codePtr(0)
+    , _buffer(buffer)
+    , _code(buffer)
+    , _codePtr(buffer)
 {
 }
 
@@ -98,17 +90,11 @@ InstructionSelection::~InstructionSelection()
 {
 }
 
-void InstructionSelection::visitFunction(IR::Function *function)
+void InstructionSelection::operator()(IR::Function *function)
 {
-    uchar *code = (uchar *) malloc(getpagesize());
-    assert(! (size_t(code) & 15));
-
-    protect(code, getpagesize());
-
-    uchar *codePtr = code;
-
-    qSwap(_code, code);
-    qSwap(_codePtr, codePtr);
+    _code = (uchar *) ((size_t(_code) + 15) & ~15);
+    function->code = (void (*)(VM::Context *)) _code;
+    _codePtr = _code;
 
     int locals = function->tempCount * sizeof(Value);
     locals = (locals + 15) & ~15;
@@ -146,16 +132,13 @@ void InstructionSelection::visitFunction(IR::Function *function)
     amd64_pop_reg(_codePtr, AMD64_RBP);
     amd64_ret(_codePtr);
 
-    qSwap(_codePtr, codePtr);
-    qSwap(_code, code);
-
 #ifndef NO_UDIS86
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
         ud_t ud_obj;
 
         ud_init(&ud_obj);
-        ud_set_input_buffer(&ud_obj, code, codePtr - code);
+        ud_set_input_buffer(&ud_obj, _code, _codePtr - _code);
         ud_set_mode(&ud_obj, 64);
         ud_set_syntax(&ud_obj, UD_SYN_ATT);
 
@@ -164,12 +147,6 @@ void InstructionSelection::visitFunction(IR::Function *function)
         }
     }
 #endif
-
-    void (*f)(Context *) = (void (*)(Context *)) code;
-
-    Context *ctx = new Context;
-    ctx->activation = Value::object(ctx, new ArgumentsObject);
-    f(ctx);
 }
 
 String *InstructionSelection::identifier(const QString &s)

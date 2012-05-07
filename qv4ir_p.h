@@ -68,6 +68,11 @@ class QQmlType;
 
 namespace QQmlJS {
 
+namespace VM {
+struct Context;
+struct Value;
+}
+
 namespace IR {
 
 struct BasicBlock;
@@ -585,11 +590,12 @@ struct Function {
     QSet<QString> strings;
     QList<const QString *> formals;
     QList<const QString *> locals;
+    void (*code)(VM::Context *);
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
     Function(Module *module, const QString &name)
-      : module(module), pool(&module->pool), tempCount(0) { this->name = newString(name); }
+        : module(module), pool(&module->pool), tempCount(0), code(0) { this->name = newString(name); }
 
     ~Function();
 
