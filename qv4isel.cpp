@@ -12,6 +12,7 @@ typedef void *gpointer;
 #include "amd64-codegen.h"
 
 #include <sys/mman.h>
+#include <iostream>
 #include <cassert>
 
 #ifndef NO_UDIS86
@@ -169,10 +170,6 @@ void InstructionSelection::visitFunction(IR::Function *function)
     Context *ctx = new Context;
     ctx->activation = Value::object(ctx, new ArgumentsObject);
     f(ctx);
-    Value d;
-    ctx->activation.objectValue->get(identifier("d"), &d);
-    __qmljs_to_string(ctx, &d, &d);
-    qDebug() << qPrintable(d.stringValue->text());
 }
 
 String *InstructionSelection::identifier(const QString &s)
@@ -193,8 +190,52 @@ void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
     amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * (t->index - 1));
 }
 
-void InstructionSelection::visitExp(IR::Exp *)
+void __qmljs_print(Context *ctx, const Value *args, size_t argc)
 {
+    for (int i = 0; i < argc; ++i) {
+        Value v;
+        __qmljs_to_string(ctx, &v, &args[i]);
+        if (i)
+            std::cout << ' ';
+        std::cout << qPrintable(v.stringValue->text());
+    }
+    std::cout << std::endl;
+}
+
+void InstructionSelection::visitExp(IR::Exp *s)
+{
+    if (IR::Call *c = s->expr->asCall()) {
+        IR::Name *n = c->base->asName();
+        if (n && *n->id == QLatin1String("print")) {
+            int argc = 0;
+            for (IR::ExprList *it = c->args; it; it = it->next)
+                ++argc;
+            amd64_mov_reg_imm(_codePtr, AMD64_RDI, argc * sizeof(Value));
+            amd64_mov_reg_imm(_codePtr, AMD64_RAX, malloc);
+            amd64_call_reg(_codePtr, AMD64_RAX);
+            amd64_mov_reg_reg(_codePtr, AMD64_R15, AMD64_RAX, 8);
+
+            argc = 0;
+            for (IR::ExprList *it = c->args; it; it = it->next) {
+                IR::Temp *t = it->expr->asTemp();
+                Q_ASSERT(t != 0);
+                amd64_lea_membase(_codePtr, AMD64_RDI, AMD64_R15, argc * sizeof(Value));
+                loadTempAddress(AMD64_RSI, t);
+                amd64_call_code(_codePtr, __qmljs_copy);
+                ++argc;
+            }
+
+            amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+            amd64_mov_reg_reg(_codePtr, AMD64_RSI, AMD64_R15, 8);
+            amd64_mov_reg_imm(_codePtr, AMD64_RDX, argc);
+            amd64_call_code(_codePtr, __qmljs_print);
+
+            amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R15, 8);
+            amd64_mov_reg_imm(_codePtr, AMD64_RAX, free);
+            amd64_call_reg(_codePtr, AMD64_RAX);
+            return;
+        }
+    }
     Q_UNIMPLEMENTED();
     assert(!"TODO");
 }

@@ -11,4 +11,4 @@ for (i = 0; i < 1000000; i = i + 1) {
         d = 321
 }
 
-d = "the result is " + d
+print("the result is", d)
