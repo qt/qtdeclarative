@@ -57,6 +57,7 @@
 
 #include <QtCore/QVector>
 #include <QtCore/QString>
+#include <QtCore/QBitArray>
 
 QT_BEGIN_HEADER
 
@@ -430,12 +431,17 @@ struct Stmt {
         MIR
     };
 
-    QVector<unsigned> uses;
-    QVector<unsigned> defs;
-    QVector<unsigned> liveIn;
-    QVector<unsigned> liveOut;
+    struct Data {
+        QVector<unsigned> uses;
+        QVector<unsigned> defs;
+        QBitArray liveIn;
+        QBitArray liveOut;
+    };
 
-    virtual ~Stmt() {}
+    Data *d;
+
+    Stmt(): d(0) {}
+    virtual ~Stmt() { Q_UNREACHABLE(); }
     virtual Stmt *asTerminator() { return 0; }
 
     virtual void accept(StmtVisitor *) = 0;
@@ -447,6 +453,11 @@ struct Stmt {
     virtual CJump *asCJump() { return 0; }
     virtual Ret *asRet() { return 0; }
     virtual void dump(QTextStream &out, Mode mode = HIR) = 0;
+
+    void destroyData() {
+        delete d;
+        d = 0;
+    }
 };
 
 struct Exp: Stmt {
@@ -598,8 +609,8 @@ struct BasicBlock {
     QVector<Stmt *> statements;
     QVector<BasicBlock *> in;
     QVector<BasicBlock *> out;
-    QVector<unsigned> liveIn;
-    QVector<unsigned> liveOut;
+    QBitArray liveIn;
+    QBitArray liveOut;
     int index;
     int offset;
 

@@ -221,6 +221,11 @@ inline void __qmljs_init_object(Context *, Value *result, Object *object)
     result->objectValue = object;
 }
 
+inline void __qmljs_copy(Value *result, Value *source)
+{
+    result->type = source->type;
+    result->numberValue = source->numberValue;
+}
 
 // type conversion and testing
 inline void __qmljs_to_primitive(Context *ctx, Value *result, const Value *value, int typeHint)

@@ -4,6 +4,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QSet>
 #include <QtCore/QBuffer>
+#include <QtCore/QBitArray>
 #include <private/qqmljsast_p.h>
 #include <typeinfo>
 #include <iostream>
@@ -13,105 +14,6 @@ using namespace AST;
 
 namespace {
 QTextStream qout(stdout, QIODevice::WriteOnly);
-
-class IntSet
-{
-    IntSet(const IntSet &other);
-    IntSet &operator = (const IntSet &other);
-
-public:
-    unsigned *info;
-    unsigned *check;
-    unsigned count;
-    unsigned size;
-
-    IntSet(unsigned size = 32)
-        : info(new unsigned[size])
-        , check(new unsigned[size])
-        , count(0)
-        , size(size)
-    {
-    }
-
-    ~IntSet() {
-        delete[] info;
-        delete[] check;
-    }
-
-    typedef const unsigned *const_iterator;
-    typedef const_iterator iterator;
-    const_iterator begin() const { return info; }
-    const_iterator end() const { return info + count; }
-
-    bool empty() const { return count == 0; }
-    void clear() { count = 0; }
-
-    inline void insert(unsigned value) {
-        if (! contains(value)) {
-            info[count] = value;
-            check[value] = count;
-            ++count;
-        }
-    }
-
-    inline void remove(unsigned value) {
-        const unsigned index = check[value];
-        if (index < count && info[index] == value) {
-            if (--count) {
-                const int v = info[count];
-                check[v] = index;
-                info[index] = v;
-            }
-        }
-    }
-
-    inline bool contains(unsigned value) const {
-        const unsigned index = check[value];
-        return index < count && info[index] == value;
-    }
-
-    template <typename _It>
-    void insert(_It first, _It last) {
-        for (; first != last; ++first)
-            insert(*first);
-    }
-
-    template <typename _It>
-    void remove(_It first, _It last) {
-        for (; first != last; ++first)
-            remove(*first);
-    }
-
-    void insert(const IntSet &other) {
-        insert(other.begin(), other.end());
-    }
-
-    bool isEqualTo(const unsigned *it, unsigned length) const {
-        if (count == length) {
-            for (unsigned i = 0; i < length; ++i) {
-                if (! contains(it[i]))
-                    return false;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    bool operator == (const IntSet &other) const {
-        if (count == other.count) {
-            for (unsigned i = 0; i < count; ++i) {
-                if (! other.contains(info[i]))
-                    return false;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    bool operator != (const IntSet &other) const {
-        return ! operator == (other);
-    }
-};
 
 void edge(IR::BasicBlock *source, IR::BasicBlock *target)
 {
@@ -146,6 +48,8 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
         , _stmt(0) {}
 
     void operator()(IR::Stmt *s) {
+        Q_ASSERT(! s->d);
+        s->d = new IR::Stmt::Data;
         qSwap(_stmt, s);
         _stmt->accept(this);
         qSwap(_stmt, s);
@@ -167,8 +71,8 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
 
     virtual void visitTemp(IR::Temp *e) {
-        if (! _stmt->uses.contains(e->index))
-            _stmt->uses.append(e->index);
+        if (! _stmt->d->uses.contains(e->index))
+            _stmt->d->uses.append(e->index);
     }
 
     virtual void visitCall(IR::Call *e) {
@@ -185,8 +89,8 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
 
     virtual void visitMove(IR::Move *s) {
         if (IR::Temp *t = s->target->asTemp()) {
-            if (! _stmt->defs.contains(t->index))
-                _stmt->defs.append(t->index);
+            if (! _stmt->d->defs.contains(t->index))
+                _stmt->d->defs.append(t->index);
         } else {
             s->target->accept(this);
         }
@@ -255,7 +159,7 @@ struct RegAlloc: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitTemp(IR::Temp *e) {
         const unsigned virtualRegister = e->index;
         e->index = getReg(e);
-        if (! _stmt->liveOut.contains(virtualRegister))
+        if (! _stmt->d->liveOut.testBit(virtualRegister))
             _kill.insert(virtualRegister);
     }
 
@@ -317,37 +221,30 @@ void liveness(IR::Function *function)
 
     dfs(function->basicBlocks.first(), &V, &blocks);
 
-    IntSet liveOut(function->tempCount);
     bool changed;
-
     do {
         changed = false;
 
         foreach (IR::BasicBlock *block, blocks) {
-            liveOut.clear();
-
+            const QBitArray previousLiveIn = block->liveIn;
+            const QBitArray previousLiveOut = block->liveOut;
+            QBitArray live(function->tempCount);
+            block->liveOut = live;
             foreach (IR::BasicBlock *succ, block->out)
-                liveOut.insert(succ->liveIn.begin(), succ->liveIn.end());
-
-            if (block->out.isEmpty() || liveOut.empty() || ! liveOut.isEqualTo(block->liveOut.constData(), block->liveOut.size())) {
-                block->liveOut.resize(liveOut.count);
-                qCopy(liveOut.begin(), liveOut.end(), block->liveOut.begin());
-
-                for (int i = block->statements.size() - 1; i != -1; --i) {
-                    IR::Stmt *stmt = block->statements.at(i);
-                    stmt->liveOut.resize(liveOut.count);
-                    qCopy(liveOut.begin(), liveOut.end(), stmt->liveOut.begin());
-                    liveOut.remove(stmt->defs.begin(), stmt->defs.end());
-                    liveOut.insert(stmt->uses.begin(), stmt->uses.end());
-                    stmt->liveIn.resize(liveOut.count);
-                    qCopy(liveOut.begin(), liveOut.end(), stmt->liveIn.begin());
-                }
-
-                if (! changed && ! liveOut.isEqualTo(block->liveIn.constData(), block->liveIn.size()))
+                live |= succ->liveIn;
+            for (int i = block->statements.size() - 1; i != -1; --i) {
+                IR::Stmt *s = block->statements.at(i);
+                s->d->liveOut = live;
+                foreach (unsigned d, s->d->defs)
+                    live.clearBit(d);
+                foreach (unsigned u, s->d->uses)
+                    live.setBit(u);
+                s->d->liveIn = live;
+            }
+            block->liveIn = live;
+            if (! changed) {
+                if (previousLiveIn != block->liveIn || previousLiveOut != block->liveOut)
                     changed = true;
-
-                block->liveIn.resize(liveOut.count);
-                qCopy(liveOut.begin(), liveOut.end(), block->liveIn.begin());
             }
         }
     } while (changed);
@@ -1340,7 +1237,7 @@ void Codegen::linearize(IR::Function *function)
 
     liveness(function);
 
-    {
+    if (1) {
         RegAlloc regalloc;
         foreach (IR::BasicBlock *block, function->basicBlocks) {
             foreach (IR::Stmt *s, block->statements)
@@ -1385,7 +1282,7 @@ void Codegen::linearize(IR::Function *function)
 
             if (IR::BasicBlock *bb = leader.value(s)) {
                 qout << endl;
-                qout << 'L' << bb << ':' << endl;
+                qout << 'L' << bb->index << ':' << endl;
             }
             IR::Stmt *n = (i + 1) < code.size() ? code.at(i + 1) : 0;
             if (n && s->asJump() && s->asJump()->target == leader.value(n)) {
@@ -1434,6 +1331,11 @@ void Codegen::linearize(IR::Function *function)
 
         qout << "}" << endl
              << endl;
+    }
+
+    foreach (IR::BasicBlock *block, function->basicBlocks) {
+        foreach (IR::Stmt *s, block->statements)
+            s->destroyData();
     }
 }
 

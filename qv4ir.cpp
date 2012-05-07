@@ -427,7 +427,7 @@ void Move::dump(QTextStream &out, Mode)
 void Jump::dump(QTextStream &out, Mode mode)
 {
     Q_UNUSED(mode);
-    out << "goto " << 'L' << target << ';';
+    out << "goto " << 'L' << target->index << ';';
 }
 
 void CJump::dump(QTextStream &out, Mode mode)
@@ -436,9 +436,9 @@ void CJump::dump(QTextStream &out, Mode mode)
     out << "if (";
     cond->dump(out);
     if (mode == HIR)
-        out << ") goto " << 'L' << iftrue << "; else goto " << 'L' << iffalse << ';';
+        out << ") goto " << 'L' << iftrue->index << "; else goto " << 'L' << iffalse->index << ';';
     else
-        out << ") goto " << 'L' << iftrue << ";";
+        out << ") goto " << 'L' << iftrue->index << ";";
 }
 
 void Ret::dump(QTextStream &out, Mode)
@@ -683,7 +683,7 @@ Stmt *BasicBlock::RET(Expr *expr, Type type)
 
 void BasicBlock::dump(QTextStream &out, Stmt::Mode mode)
 {
-    out << 'L' << this << ':' << endl;
+    out << 'L' << index << ':' << endl;
     foreach (Stmt *s, statements) {
         out << '\t';
         s->dump(out, mode);
