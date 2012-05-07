@@ -77,7 +77,7 @@ public:
     ScriptAction to specify the point in the transition at which
     the StateChangeScript should to be run.
 
-    \snippet snippets/declarative/states/statechangescript.qml state and transition
+    \snippet snippets/qml/states/statechangescript.qml state and transition
 
     \sa ScriptAction
 */

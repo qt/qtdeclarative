@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
     changes between the default and the "moved" state, any changes
     to the \c x and \c y properties should be animated, using an \c Easing.InOutQuad.
 
-    \snippet doc/src/snippets/qml/transition.qml 0
+    \snippet doc/snippets/qml/transition.qml 0
 
     Notice the example does not require \l{PropertyAnimation::}{to} and
     \l{PropertyAnimation::}{from} values for the NumberAnimation. As a convenience,
@@ -83,7 +83,7 @@ QT_BEGIN_NAMESPACE
 
     To define multiple transitions, specify \l Item::transitions as a list:
 
-    \snippet doc/src/snippets/qml/transitions-list.qml list of transitions
+    \snippet doc/snippets/qml/transitions-list.qml list of transitions
 
     If multiple Transitions are specified, only a single (best-matching) Transition will be applied for any particular
     state change. In the example above, when changing to \c state1, the first transition will be used, rather
@@ -283,11 +283,11 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
     properties, so the animation is always applied when changing between
     the two states (i.e. when the mouse is pressed and released).
 
-    \snippet doc/src/snippets/qml/transition-from-to.qml 0
+    \snippet doc/snippets/qml/transition-from-to.qml 0
 
     If the transition was changed to this:
 
-    \snippet doc/src/snippets/qml/transition-from-to-modified.qml modified transition
+    \snippet doc/snippets/qml/transition-from-to-modified.qml modified transition
 
     The animation would only be applied when changing from the default state to
     the "brighter" state (i.e. when the mouse is pressed, but not on release).
@@ -330,7 +330,7 @@ void QQuickTransition::setFromState(const QString &f)
     transition applies a sequential animation when the mouse is pressed,
     and reverses the sequence of the animation when the mouse is released:
 
-    \snippet doc/src/snippets/qml/transition-reversible.qml 0
+    \snippet doc/snippets/qml/transition-reversible.qml 0
 
     If the transition did not set the \c to and \c reversible values, then
     on the mouse release, the transition would play the PropertyAnimation
@@ -436,7 +436,7 @@ bool QQuickTransition::running() const
     The top-level animations are run in parallel. To run them sequentially,
     define them within a SequentialAnimation:
 
-    \snippet doc/src/snippets/qml/transition-reversible.qml sequential animations
+    \snippet doc/snippets/qml/transition-reversible.qml sequential animations
 */
 QQmlListProperty<QQuickAbstractAnimation> QQuickTransition::animations()
 {

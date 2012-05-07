@@ -254,7 +254,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     rotations you must specify the axis to rotate around in addition to the origin point.
 
     The following example shows various 3D-like rotations applied to an \l Image.
-    \snippet doc/src/snippets/qml/rotation.qml 0
+    \snippet doc/snippets/qml/rotation.qml 0
 
     \image axisrotation.png
 
@@ -512,7 +512,7 @@ void QQuickItemKeyFilter::componentComplete()
 
     The following example provides key navigation for a 2x2 grid of items:
 
-    \snippet doc/src/snippets/qml/keynavigation.qml 0
+    \snippet doc/snippets/qml/keynavigation.qml 0
 
     The top-left item initially receives focus by setting \l {Item::}{focus} to
     \c true. When an arrow key is pressed, the focus will move to the
@@ -937,13 +937,13 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
     be used to test for a certain key; in this case, the left cursor
     key:
 
-    \snippet doc/src/snippets/qml/keys/keys-pressed.qml key item
+    \snippet doc/snippets/qml/keys/keys-pressed.qml key item
 
     Some keys may alternatively be handled via specific signal properties,
     for example \e onSelectPressed.  These handlers automatically set
     \e event.accepted to true.
 
-    \snippet doc/src/snippets/qml/keys/keys-handler.qml key item
+    \snippet doc/snippets/qml/keys/keys-handler.qml key item
 
     See \l{Qt::Key}{Qt.Key} for the list of keyboard codes.
 
@@ -1485,7 +1485,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     from left to right by default, they are now positioned from right to left instead, as demonstrated
     by the numbering and opacity of the items:
 
-    \snippet doc/src/snippets/qml/layoutmirroring.qml 0
+    \snippet doc/snippets/qml/layoutmirroring.qml 0
 
     \image layoutmirroring.png
 

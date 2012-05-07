@@ -1246,7 +1246,7 @@ QQuickText::~QQuickText()
     The link must be in rich text or HTML format and the
     \a link string provides access to the particular link.
 
-    \snippet doc/src/snippets/qml/text/onLinkActivated.qml 0
+    \snippet doc/snippets/qml/text/onLinkActivated.qml 0
 
     The example code will display the text
     "The main website is at \l{http://qt.nokia.com}{Nokia Qt DF}."

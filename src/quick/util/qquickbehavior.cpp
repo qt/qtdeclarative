@@ -85,7 +85,7 @@ public:
     whenever the \l Rectangle's \c width value changes. When the MouseArea
     is clicked, the \c width is changed, triggering the behavior's animation:
 
-    \snippet doc/src/snippets/qml/behavior.qml 0
+    \snippet doc/snippets/qml/behavior.qml 0
 
     Note that a property cannot have more than one assigned Behavior. To provide
     multiple animations within a Behavior, use ParallelAnimation or

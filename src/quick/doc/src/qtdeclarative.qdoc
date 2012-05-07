@@ -1,0 +1,179 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\title Qt Quick
+\page qtquick-reference.html
+\inqmlmodule QtQuick 2
+\ingroup qt-gui-concepts
+\ingroup overviews
+
+\brief Qt Quick provides a declarative framework for building highly
+dynamic applications.
+
+For App Developers and Designers, who want to deliver apps with amazing user
+experience, Qt provides the QML language, the Qt Quick Elements, and tools in Qt
+Creator that make it faster than ever to transform your brilliant idea into a
+winning App across mobile, embedded, and desktop platforms.
+
+\target qtquick-overviews
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+        QML Topics
+    \enddiv
+    QML is a declarative language for creating flexible and reusable
+    components. The QML runtime powers QML based applications. The runtime
+    includes a QML engine, JavaScript engine, and mechanism to bind to the Qt
+    Framework.
+
+    \div {class=" threecolumn_piece"}
+        \div {class="heading"}
+            QML Essentials
+        \enddiv
+        \list
+        \li \l{QML Components}{Components}
+        \li \l{Properties and Property Binding in QML}{Properties and Property Binding}
+        \li \l{JavaScript Expressions in QML}{JavaScript Code}
+        \li \l{QML Signal and Handler Event System}{Signal and Handler Event System}
+        \li \l{QML Modules}{Modules}
+        \endlist
+        \list
+        \li \l{What's New in Qt Quick 2}{What's New in Qt Quick}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            QML Engine
+        \enddiv
+        \list
+        \li \l{The QML Engine}
+        \li \l{QML Global Object}
+        \li \l{Dynamic Object Management in QML}{Dynamic Object Management}
+        \li \l{QML Performance}{Performance}
+        \endlist
+    \enddiv
+    \div {class=" threecolumn_piece"}
+        \div {class="heading"}
+            Reference
+        \enddiv
+        \list
+        \li \l{QML Syntax}
+        \li \l{QML Basic Types}{Data Types}
+        \li \l{QML Coding Conventions}{Coding Conventions}
+        \li \l{QML Security}{Security Model}
+        \li \l{QML Scope}{Scope Model}
+        \li \l{QML Documents}{Documents}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            QML Bindings with Qt C++
+        \enddiv
+        \list
+        \li \l{Creating QML Types}
+        \li \l{QML Plugins}
+        \li \l{Exposing C++ Models}
+        \li \l{Integrating QML Code with Existing Qt UI Code}{Qt Gui Porting Information}
+        \endlist
+    \enddiv
+    \div {class=" threecolumn_piece"}
+        \div {class="heading"}
+            Tools
+        \enddiv
+        \list
+        \li \l{QML Internationalization}{Internationalization}
+        \li \l{QtQuickTest Reference Documentation}
+        \li \l{Debugging QML}
+        \endlist
+    \enddiv
+\enddiv
+\div {class="threecolumn_area"}
+    \div {class="heading"}
+        Qt Quick Elements
+    \enddiv
+    Qt Quick Elements features graphical elements, user input system,
+    animation system, and data visualization through models and delegates.
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Graphics and Special Effects
+        \enddiv
+        \list
+        \li \l{Basic Elements}{Basic Elements}
+        \li \l{Painting with Canvas API}
+        \li \l{Using the Qt Quick Particle System}{Particle Effects}
+        \li \l{Shader Effects in QML}{Shader Effects}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Anchoring and Layouts
+        \enddiv
+        \list
+        \li \l{Item Layouts}
+        \li \l{Layouts with Anchors}
+        \li \l{Right-to-left User Interfaces}{Right-to-left User Interfaces}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Mouse and Keyboard Input
+        \enddiv
+        \list
+        \li \l{Mouse Events}{Mouse Events}
+        \li \l{Text Handling and Validators}{Text Handling and Validators}
+        \li \l{Keyboard Focus in QML}{Keyboard Focus}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            States and Transitions
+        \enddiv
+        \list
+        \li \l{States}
+        \li \l{Animation and Transitions}
+        \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Data with Models and Views
+        \enddiv
+        \list
+        \li \l{Models and Views}
+       \endlist
+    \enddiv
+    \div {class="threecolumn_piece"}
+        \div {class="heading"}
+            Data Storage and Resources
+        \enddiv
+        \list
+        \li \l{Local Storage}{SQL Local Storage}
+        \endlist
+    \enddiv
+\enddiv
+
+*/
+

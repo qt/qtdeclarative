@@ -533,7 +533,7 @@ is finished.
     The following example shows a small view onto a large image in which the
     user can drag or flick the image in order to view different parts of it.
 
-    \snippet doc/src/snippets/qml/flickable.qml document
+    \snippet doc/snippets/qml/flickable.qml document
 
     \clearfloat
 
@@ -595,9 +595,9 @@ is finished.
 
     These properties are typically used to draw a scrollbar. For example:
 
-    \snippet doc/src/snippets/qml/flickableScrollbar.qml 0
+    \snippet doc/snippets/qml/flickableScrollbar.qml 0
     \dots 8
-    \snippet doc/src/snippets/qml/flickableScrollbar.qml 1
+    \snippet doc/snippets/qml/flickableScrollbar.qml 1
 
     \sa {declarative/ui-components/scrollbar}{scrollbar example}
 */
@@ -1507,7 +1507,7 @@ void QQuickFlickable::setBoundsBehavior(BoundsBehavior b)
     The following snippet shows how these properties are used to display
     an image that is larger than the Flickable item itself:
 
-    \snippet doc/src/snippets/qml/flickable.qml document
+    \snippet doc/snippets/qml/flickable.qml document
 
     In some cases, the the content dimensions can be automatically set
     using the \l {Item::childrenRect.width}{childrenRect.width}

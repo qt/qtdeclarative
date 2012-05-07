@@ -165,7 +165,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
     When the \c blueRect is clicked, it changes to the "reparented" state: its parent is changed to \c redRect and it is
     positioned at (10, 10) within the red rectangle, as specified in the ParentChange.
 
-    \snippet doc/src/snippets/qml/parentchange.qml 0
+    \snippet doc/snippets/qml/parentchange.qml 0
 
     \image parentchange.png
 
@@ -572,7 +572,7 @@ void QQuickParentChange::rewind()
     using AnchorChanges, and the top and bottom anchor margins using
     PropertyChanges:
 
-    \snippet doc/src/snippets/qml/anchorchanges.qml 0
+    \snippet doc/snippets/qml/anchorchanges.qml 0
 
     \image anchorchanges.png
 

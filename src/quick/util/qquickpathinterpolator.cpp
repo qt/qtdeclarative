@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 
     In the following example, we animate a green rectangle along a bezier path.
 
-    \snippet doc/src/snippets/qml/pathinterpolator.qml 0
+    \snippet doc/snippets/qml/pathinterpolator.qml 0
 */
 
 QQuickPathInterpolator::QQuickPathInterpolator(QObject *parent) :

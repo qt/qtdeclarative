@@ -1,0 +1,90 @@
+project                 = QtQuick
+description             = Qt Quick Reference Documentation
+url                     = http://qt-project.org/doc/qt-5.0/qtquick
+version                 = 5.0.0
+
+depends += qtqcore qtxmlpatterns qtjsbackend qtqml
+
+sourceencoding          = UTF-8
+outputencoding          = UTF-8
+naturallanguage         = en_US
+qhp.projects            = QtCore
+
+qhp.QtQuick.file                = qtquick.qhp
+qhp.QtQuick.namespace           = org.qt-project.qtquick.500
+qhp.QtQuick.virtualFolder       = qdoc
+qhp.QtQuick.indexTitle          = Qt Quick Reference Documentation
+qhp.QtQuick.indexRoot           =
+
+qhp.QtQuick.filterAttributes    = qtquick 5.0.0 qtrefdoc
+qhp.QtQuick.customFilters.Qt.name = QtQuick 5.0.0
+qhp.QtQuick.customFilters.Qt.filterAttributes = qtquick 5.0.0
+qhp.QtQuick.subprojects         = classes overviews examples
+qhp.QtQuick.subprojects.classes.title = Classes
+qhp.QtQuick.subprojects.classes.indexTitle = Qt Quick's Classes
+qhp.QtQuick.subprojects.classes.selectors = class fake:headerfile
+qhp.QtQuick.subprojects.classes.sortPages = true
+qhp.QtQuick.subprojects.overviews.title = Overviews
+qhp.QtQuick.subprojects.overviews.indexTitle = All Overviews and HOWTOs
+qhp.QtQuick.subprojects.overviews.selectors = fake:page,group,module
+qhp.QtQuick.subprojects.examples.title = Qt Quick Examples
+qhp.QtQuick.subprojects.examples.indexTitle = Qt Quick Examples
+qhp.QtQuick.subprojects.examples.selectors = fake:example
+
+dita.metadata.default.author      = Qt Project
+dita.metadata.default.permissions = all
+dita.metadata.default.publisher   = Qt Project
+dita.metadata.default.copyryear = 2012
+dita.metadata.default.copyrholder = Nokia
+dita.metadata.default.audience = programmer
+
+sources.fileextensions  = "*.c++ *.cc *.cpp *.cxx *.mm *.qml *.qdoc"
+headers.fileextensions  = "*.ch *.h *.h++ *.hh *.hpp *.hxx"
+
+examples.fileextensions = "*.cpp *.h *.js *.xq *.svg *.xml *.ui *.qhp *.qhcp *.qml *.css"
+examples.imageextensions = "*.png"
+
+outputdir               = ../../../doc/qtquick
+tagfile                 = ../../../doc/qtquick/qtcore.tags
+
+HTML.generatemacrefs    = "true"
+HTML.nobreadcrumbs      = "true"
+
+HTML.templatedir = .
+
+HTML.stylesheets = ../../../doc/global/style/offline.css
+
+HTML.headerstyles = \
+    "  <link rel=\"stylesheet\" type=\"text/css\" href=\"style/offline.css\" />\n"
+
+HTML.endheader = \
+    "</head>\n" \
+
+defines                 = Q_QDOC \
+                          QT_.*_SUPPORT \
+                          QT_.*_LIB \
+                          QT_COMPAT \
+                          QT_KEYPAD_NAVIGATION \
+                          QT_NO_EGL \
+                          Q_WS_.* \
+                          Q_OS_.* \
+                          Q_BYTE_ORDER \
+                          QT_DEPRECATED \
+                          QT_DEPRECATED_* \
+                          Q_NO_USING_KEYWORD \
+                          __cplusplus \
+                          Q_COMPILER_INITIALIZER_LISTS
+
+versionsym              = QT_VERSION_STR
+
+codeindent              = 1
+
+headerdirs  += ..
+
+sourcedirs  += ..
+
+exampledirs += ../../../examples \
+               ../ \
+               snippets
+
+imagedirs   += images

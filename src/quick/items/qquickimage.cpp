@@ -120,7 +120,7 @@ QQuickImagePrivate::QQuickImagePrivate()
 
     The following example shows the simplest usage of the Image element.
 
-    \snippet doc/src/snippets/qml/image.qml document
+    \snippet doc/snippets/qml/image.qml document
 
     \beginfloatleft
     \image declarative-qtlogo.png

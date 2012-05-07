@@ -174,7 +174,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     Here is a Loader that loads "Page1.qml" as a component when the
     \l MouseArea is clicked:
 
-    \snippet doc/src/snippets/qml/loader/simple.qml 0
+    \snippet doc/snippets/qml/loader/simple.qml 0
 
     The loaded item can be accessed using the \l item property.
 
@@ -206,8 +206,8 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \li sizeloader.qml
     \li sizeitem.qml
     \row
-    \li \snippet doc/src/snippets/qml/loader/sizeloader.qml 0
-    \li \snippet doc/src/snippets/qml/loader/sizeitem.qml 0
+    \li \snippet doc/snippets/qml/loader/sizeloader.qml 0
+    \li \snippet doc/snippets/qml/loader/sizeitem.qml 0
     \row
     \li The red rectangle will be sized to the size of the root item.
     \li The red rectangle will be 50x50, centered in the root item.
@@ -226,8 +226,8 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \li application.qml
     \li MyItem.qml
     \row
-    \li \snippet doc/src/snippets/qml/loader/connections.qml 0
-    \li \snippet doc/src/snippets/qml/loader/MyItem.qml 0
+    \li \snippet doc/snippets/qml/loader/connections.qml 0
+    \li \snippet doc/snippets/qml/loader/MyItem.qml 0
     \endtable
 
     Alternatively, since \c MyItem.qml is loaded within the scope of the
@@ -253,8 +253,8 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \li application.qml
     \li KeyReader.qml
     \row
-    \li \snippet doc/src/snippets/qml/loader/focus.qml 0
-    \li \snippet doc/src/snippets/qml/loader/KeyReader.qml 0
+    \li \snippet doc/snippets/qml/loader/focus.qml 0
+    \li \snippet doc/snippets/qml/loader/KeyReader.qml 0
     \endtable
 
     Once \c KeyReader.qml is loaded, it accepts key events and sets

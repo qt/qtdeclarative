@@ -453,11 +453,11 @@ void QQuickPathViewPrivate::regenerate()
 
     For example, if there is a simple list model defined in a file \c ContactModel.qml like this:
 
-    \snippet doc/src/snippets/qml/pathview/ContactModel.qml 0
+    \snippet doc/snippets/qml/pathview/ContactModel.qml 0
 
     This data can be represented as a PathView, like this:
 
-    \snippet doc/src/snippets/qml/pathview/pathview.qml 0
+    \snippet doc/snippets/qml/pathview/pathview.qml 0
 
     \image pathview.gif
 
@@ -490,7 +490,7 @@ void QQuickPathViewPrivate::regenerate()
     this attached property directly as \c PathView.isCurrentItem, while the child
     \c nameText object must refer to this property as \c wrapper.PathView.isCurrentItem.
 
-    \snippet doc/src/snippets/qml/pathview/pathview.qml 1
+    \snippet doc/snippets/qml/pathview/pathview.qml 1
 
     \b Note that views do not enable \e clip automatically.  If the view
     is not clipped by another item or the screen, it will be necessary
@@ -552,7 +552,7 @@ QQuickPathView::~QQuickPathView()
 
     This property may be used to adjust the appearance of the current item.
 
-    \snippet doc/src/snippets/qml/pathview/pathview.qml 1
+    \snippet doc/snippets/qml/pathview/pathview.qml 1
 */
 
 /*!
@@ -1120,7 +1120,7 @@ bool QQuickPathView::isFlicking() const
     item in the delegate.
 
     Here is an example delegate:
-    \snippet doc/src/snippets/qml/pathview/pathview.qml 1
+    \snippet doc/snippets/qml/pathview/pathview.qml 1
 */
 QQmlComponent *QQuickPathView::delegate() const
 {

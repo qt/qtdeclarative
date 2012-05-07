@@ -642,7 +642,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     Here is a basic example of the use of view transitions. The view below specifies transitions for
     the \c add and \c displaced properties, which will be run when items are added to the view:
 
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-basic.qml 0
+    \snippet doc/snippets/qml/viewtransitions/viewtransitions-basic.qml 0
 
     When the space key is pressed, adding an item to the model, the new item will fade in and
     increase in scale over 400 milliseconds as it is added to the view. Also, any item that is
@@ -728,7 +728,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     each displaced item based on the difference between its index (provided by ViewTransition.index)
     and the first removed index (provided by ViewTransition.targetIndexes):
 
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-delayedbyindex.qml 0
+    \snippet doc/snippets/qml/viewtransitions/viewtransitions-delayedbyindex.qml 0
 
     Each displaced item delays its animation by an additional 100 milliseconds, producing a subtle
     ripple-type effect when items are displaced by the add, like this:
@@ -748,7 +748,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     animate to an intermediate position relative to its starting point for the transition, before
     animating to its final position in the view:
 
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-intermediatemove.qml 0
+    \snippet doc/snippets/qml/viewtransitions/viewtransitions-intermediatemove.qml 0
 
     Now, a displaced item will first move to a position of (20, 50) relative to its starting
     position, and then to its final, correct position in the view:
@@ -764,7 +764,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     a curved path. For example, the \c add transition in the previous example could be augmented with
     a PathAnimation as follows: to animate newly added items along a path:
 
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-pathanim.qml 0
+    \snippet doc/snippets/qml/viewtransitions/viewtransitions-pathanim.qml 0
 
     This animates newly added items along a path. Notice that each path is specified relative to
     each item's final destination point, so that items inserted at different indexes start their
@@ -787,7 +787,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     properties, this interruption may cause unwanted side effects. Consider the first example on this
     page, repeated below for convenience:
 
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-basic.qml 0
+    \snippet doc/snippets/qml/viewtransitions/viewtransitions-basic.qml 0
 
     If multiple items are added in rapid succession, without waiting for a previous transition
     to finish, this is the result:
@@ -804,7 +804,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     set to the end values specified in the \c add transition, effectively resetting these values
     whenever an item is displaced. In this case, it means setting the item opacity and scale to 1.0:
 
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-interruptedgood.qml 0
+    \snippet doc/snippets/qml/viewtransitions/viewtransitions-interruptedgood.qml 0
 
     Now, when an item's \c add transition is interrupted, its opacity and scale are animated to 1.0
     upon displacement, avoiding the erroneous visual effects from before:
@@ -829,7 +829,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     attached property, as it may not refer to the expected values at the time that the ScriptAction
     is actually invoked. Consider the following example:
 
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-scriptactionbad.qml 0
+    \snippet doc/snippets/qml/viewtransitions/viewtransitions-scriptactionbad.qml 0
 
     When the space key is pressed, three items are moved from index 5 to index 1. For each moved
     item, the \c moveTransition sequence presumably animates the item's color to "yellow", then
@@ -847,7 +847,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     In this instance, to avoid this issue, the view could set the property using a PropertyAction
     instead:
 
-    \snippet doc/src/snippets/declarative/viewtransitions/viewtransitions-scriptactiongood.qml 0
+    \snippet doc/snippets/qml/viewtransitions/viewtransitions-scriptactiongood.qml 0
 
     When the transition is initialized, the PropertyAction \c target will be set to the respective
     ViewTransition.item for the transition and will later run with the correct item target as

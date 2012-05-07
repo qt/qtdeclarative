@@ -106,7 +106,7 @@ public:
     However, dragging is not limited to mouse drags, anything that can move an item
     can generate drag events, this can include touch events, animations and bindings.
 
-    \snippet doc/src/snippets/qml/drag.qml 0
+    \snippet doc/snippets/qml/drag.qml 0
 
     A drag can be terminated either by canceling it with Drag.cancel() or setting
     Drag.active to false, or it can be terminated with a drop event by calling

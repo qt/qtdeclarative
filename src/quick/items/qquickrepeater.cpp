@@ -79,9 +79,9 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
     The following Repeater creates three instances of a \l Rectangle item within
     a \l Row:
 
-    \snippet doc/src/snippets/qml/repeaters/repeater.qml import
+    \snippet doc/snippets/qml/repeaters/repeater.qml import
     \codeline
-    \snippet doc/src/snippets/qml/repeaters/repeater.qml simple
+    \snippet doc/snippets/qml/repeaters/repeater.qml simple
 
     \image repeater-simple.png
 
@@ -96,7 +96,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
     a Repeater to be used inside a layout. For example, the following Repeater's
     items are stacked between a red rectangle and a blue rectangle:
 
-    \snippet doc/src/snippets/qml/repeaters/repeater.qml layout
+    \snippet doc/snippets/qml/repeaters/repeater.qml layout
 
     \image repeater.png
 
@@ -243,7 +243,7 @@ void QQuickRepeater::setModel(const QVariant &model)
 
     \table
     \row
-    \li \snippet doc/src/snippets/qml/repeaters/repeater.qml index
+    \li \snippet doc/snippets/qml/repeaters/repeater.qml index
     \li \image repeater-index.png
     \endtable
 
@@ -254,7 +254,7 @@ void QQuickRepeater::setModel(const QVariant &model)
 
     \table
     \row
-    \li \snippet doc/src/snippets/qml/repeaters/repeater.qml modeldata
+    \li \snippet doc/snippets/qml/repeaters/repeater.qml modeldata
     \li \image repeater-modeldata.png
     \endtable
 
