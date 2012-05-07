@@ -1,5 +1,7 @@
 
 #include "qmljs_objects.h"
+#include "qv4ir_p.h"
+#include <QtCore/QDebug>
 #include <cassert>
 
 using namespace QQmlJS::VM;
@@ -103,21 +105,32 @@ bool FunctionObject::hasInstance(const Value &value) const
     return false;
 }
 
-Value FunctionObject::call(const Value &thisObject, const Value args[], unsigned argc)
+void FunctionObject::call(Context *ctx)
 {
-    Q_UNUSED(thisObject);
-    Q_UNUSED(args);
-    Q_UNUSED(argc);
-
-    Value v;
-    __qmljs_init_undefined(0, &v);
-    return v;
+    Q_UNUSED(ctx);
 }
 
-Value FunctionObject::construct(const Value args[], unsigned argc)
+void FunctionObject::construct(Context *ctx)
 {
-    Value thisObject;
-    __qmljs_init_object(0, &thisObject, new Object);
-    call(thisObject, args, argc);
-    return thisObject;
+    Q_UNUSED(ctx);
+    Q_UNIMPLEMENTED();
+}
+
+void ScriptFunction::call(VM::Context *ctx)
+{
+    // bind the actual arguments. ### slow
+    for (int i = 0; i < function->formals.size(); ++i) {
+        const QString *f = function->formals.at(i);
+        ctx->activation.objectValue->put(String::get(ctx, *f), ctx->arguments[i]);
+    }
+    function->code(ctx);
+}
+
+Property *ArgumentsObject::getOwnProperty(String *name)
+{
+    if (Property *prop = Object::getOwnProperty(name))
+        return prop;
+    else if (context && context->scope)
+        return context->scope->getOwnProperty(name);
+    return 0;
 }

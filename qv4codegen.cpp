@@ -932,7 +932,9 @@ bool Codegen::visit(CallExpression *ast)
         (*args_it)->init(actual);
         args_it = &(*args_it)->next;
     }
-    _expr.code = _block->CALL(*base, args);
+    const unsigned t = _block->newTemp();
+    _block->MOVE(_block->TEMP(t), _block->CALL(*base, args));
+    _expr.code = _block->TEMP(t);
     return false;
 }
 

@@ -21,6 +21,24 @@ static inline bool protect(const void *addr, size_t size)
     return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
 }
 
+namespace builtins {
+using namespace QQmlJS::VM;
+struct Print: FunctionObject
+{
+    virtual void call(Context *ctx)
+    {
+        for (size_t i = 0; i < ctx->argumentCount; ++i) {
+            Value v;
+            __qmljs_to_string(ctx, &v, &ctx->arguments[i]);
+            if (i)
+                std::cout << ' ';
+            std::cout << qPrintable(v.stringValue->text());
+        }
+        std::cout << std::endl;
+    }
+};
+} // builtins
+
 int main(int argc, char *argv[])
 {
     using namespace QQmlJS;
@@ -62,15 +80,24 @@ int main(int argc, char *argv[])
                 QHash<QString, IR::Function *> codeByName;
                 foreach (IR::Function *function, module.functions) {
                     isel(function);
-                    if (function->name && ! function->name->isEmpty())
+                    if (function->name && ! function->name->isEmpty()) {
                         codeByName.insert(*function->name, function);
+                    }
                 }
 
                 if (! protect(code, codeSize))
                     Q_UNREACHABLE();
 
                 VM::Context *ctx = new VM::Context;
-                ctx->activation = VM::Value::object(ctx, new VM::ArgumentsObject);
+                ctx->activation = VM::Value::object(ctx, new VM::ArgumentsObject(ctx));
+                ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("print")),
+                                                 VM::Value::object(ctx, new builtins::Print()));
+                foreach (IR::Function *function, module.functions) {
+                    if (function->name && ! function->name->isEmpty()) {
+                        ctx->activation.objectValue->put(VM::String::get(ctx, *function->name),
+                                                         VM::Value::object(ctx, new VM::ScriptFunction(function)));
+                    }
+                }
                 codeByName.value(QLatin1String("%entry"))->code(ctx);
             }
         }

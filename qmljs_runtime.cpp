@@ -1,6 +1,7 @@
 
 #include "qmljs_runtime.h"
 #include "qmljs_objects.h"
+#include <QtCore/QDebug>
 #include <cstdio>
 #include <cassert>
 
@@ -326,29 +327,42 @@ bool __qmljs_equal(Context *ctx, const Value *x, const Value *y)
     return false;
 }
 
-void __qmljs_call(Context *ctx, Value *result, const Value *function,
-		  const Value *thisObject, const Value *arguments, int argc)
+Context *__qmljs_new_context(Context *current, Value *thisObject, size_t argc)
 {
-  if (function->type != OBJECT_TYPE) {
-    __qmljs_throw_type_error(ctx, result);
-  } else if (FunctionObject *f = function->objectValue->asFunctionObject()) {
-    *result = f->call(*thisObject, arguments, argc);
-  } else {
-    __qmljs_throw_type_error(ctx, result);
-  }
+    Context *ctx = new Context;
+    ctx->parent = current;
+    ctx->scope = current->activation.objectValue;
+    __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+    if (thisObject)
+        ctx->thisObject = *thisObject;
+    else
+        __qmljs_init_null(ctx, &ctx->thisObject);
+    ctx->arguments = new Value[argc];
+    ctx->argumentCount = argc;
+    return ctx;
 }
 
-void __qmjs_construct(Context *ctx, Value *result, const Value *function, const Value *arguments, int argc)
-{  
-  if (function->type != OBJECT_TYPE) {
-    __qmljs_throw_type_error(ctx, result);
-  } else if (FunctionObject *f = function->objectValue->asFunctionObject()) {
-    *result = f->construct(arguments, argc);
-  } else {
-    __qmljs_throw_type_error(ctx, result);
-  }
+void __qmljs_dispose_context(Context *ctx)
+{
+    delete[] ctx->arguments;
+    delete ctx;
 }
 
+void __qmljs_call_activation_property(Context *context, Value *result, String *name)
+{
+    Value func;
+    context->parent->activation.objectValue->get(name, &func);
+    if (func.type == OBJECT_TYPE) {
+        if (FunctionObject *f = func.objectValue->asFunctionObject()) {
+            f->call(context);
+            __qmljs_copy(result, &context->result);
+        } else {
+            Q_ASSERT(!"not a function");
+        }
+    } else {
+        Q_ASSERT(!"not a callable object");
+    }
+}
 
 } // extern "C"
 

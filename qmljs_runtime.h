@@ -38,6 +38,11 @@ struct Context;
 
 extern "C" {
 
+// context
+Context *__qmljs_new_context(Context *current, Value *thisObject, size_t argc);
+void __qmljs_dispose_context(Context *ctx);
+void __qmljs_call_activation_property(Context *, Value *result, String *name);
+
 // constructors
 void __qmljs_init_undefined(Context *ctx, Value *result);
 void __qmljs_init_null(Context *ctx, Value *result);
@@ -142,9 +147,6 @@ void __qmljs_eq(Context *ctx, Value *result, const Value *left, const Value *rig
 void __qmljs_ne(Context *ctx, Value *result, const Value *left, const Value *right);
 void __qmljs_se(Context *ctx, Value *result, const Value *left, const Value *right);
 void __qmljs_sne(Context *ctx, Value *result, const Value *left, const Value *right);
-
-void __qmljs_call(Context *ctx, Value *result, const Value *function, const Value *thisObject, const Value *arguments, int argc);
-void __qmjs_construct(Context *ctx, Value *result, const Value *function, const Value *arguments, int argc);
 
 } // extern "C"
 
@@ -550,7 +552,7 @@ inline void __qmljs_ushr(Context *ctx, Value *result, const Value *left, const V
 
 inline void __qmljs_gt(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    __qmljs_compare(ctx, result, right, left, false);
+    __qmljs_compare(ctx, result, left, right, false);
 
     if (result->type == UNDEFINED_TYPE)
         __qmljs_init_boolean(ctx, result, false);
@@ -566,7 +568,7 @@ inline void __qmljs_lt(Context *ctx, Value *result, const Value *left, const Val
 
 inline void __qmljs_ge(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    __qmljs_compare(ctx, result, left, right, false);
+    __qmljs_compare(ctx, result, right, left, false);
 
     bool r = ! (result->type == UNDEFINED_TYPE ||
                 (result->type == BOOLEAN_TYPE && result->booleanValue == true));

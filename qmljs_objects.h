@@ -8,6 +8,11 @@
 #include <cassert>
 
 namespace QQmlJS {
+
+namespace IR {
+struct Function;
+}
+
 namespace VM {
 
 struct Value;
@@ -234,8 +239,15 @@ struct FunctionObject: Object {
     virtual FunctionObject *asFunctionObject() { return this; }
 
     virtual bool hasInstance(const Value &value) const;
-    virtual Value call(const Value &thisObject, const Value args[], unsigned argc);
-    virtual Value construct(const Value args[], unsigned argc);
+    virtual void call(Context *ctx);
+    virtual void construct(Context *ctx);
+};
+
+struct ScriptFunction: FunctionObject {
+    IR::Function *function;
+
+    ScriptFunction(IR::Function *function): function(function) {}
+    virtual void call(Context *ctx);
 };
 
 struct ErrorObject: Object {
@@ -244,22 +256,29 @@ struct ErrorObject: Object {
 };
 
 struct ArgumentsObject: Object {
+    Context *context;
+    ArgumentsObject(Context *context): context(context) {}
+    virtual Property *getOwnProperty(String *name);
 };
 
 struct Context {
+    Context *parent;
     Value activation;
     Value thisObject;
     Object *scope;
     Value *arguments;
-    unsigned argumentCount;
+    size_t argumentCount;
+    Value result;
 
     Context()
-        : scope(0)
+        : parent(0)
+        , scope(0)
         , arguments(0)
         , argumentCount(0)
     {
         activation.type = NULL_TYPE;
         thisObject.type = NULL_TYPE;
+        result.type = UNDEFINED_TYPE;
     }
 };
 
