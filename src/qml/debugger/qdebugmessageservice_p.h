@@ -74,7 +74,7 @@ public:
     static QDebugMessageService *instance();
 
     void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt,
-                          const char *buf);
+                          const QString &buf);
 
 protected:
     void stateChanged(State);

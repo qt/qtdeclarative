@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 Q_GLOBAL_STATIC(QDebugMessageService, qmlDebugMessageService)
 
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
-                         const char *buf)
+                         const QString &buf)
 {
     QDebugMessageService::instance()->sendDebugMessage(type, ctxt, buf);
 }
@@ -64,7 +64,7 @@ public:
     {
     }
 
-    QMessageHandler oldMsgHandler;
+    QtMessageHandler oldMsgHandler;
     QQmlDebugService::State prevState;
     QMutex initMutex;
 };
@@ -91,7 +91,7 @@ QDebugMessageService *QDebugMessageService::instance()
 
 void QDebugMessageService::sendDebugMessage(QtMsgType type,
                                             const QMessageLogContext &ctxt,
-                                            const char *buf)
+                                            const QString &buf)
 {
     Q_D(QDebugMessageService);
 
@@ -100,7 +100,7 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type,
     //only if a client is connected to it.
     QByteArray message;
     QQmlDebugStream ws(&message, QIODevice::WriteOnly);
-    ws << QByteArray("MESSAGE") << type << QString::fromLocal8Bit(buf).toUtf8();
+    ws << QByteArray("MESSAGE") << type << buf.toUtf8();
     ws << QString::fromLatin1(ctxt.file).toUtf8();
     ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();
 
@@ -115,7 +115,7 @@ void QDebugMessageService::stateChanged(State state)
     QMutexLocker lock(&d->initMutex);
 
     if (state != Enabled && d->prevState == Enabled) {
-        QMessageHandler handler = qInstallMessageHandler(d->oldMsgHandler);
+        QtMessageHandler handler = qInstallMessageHandler(d->oldMsgHandler);
         // has our handler been overwritten in between?
         if (handler != DebugMessageHandler)
             qInstallMessageHandler(handler);
