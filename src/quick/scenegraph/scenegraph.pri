@@ -1,4 +1,4 @@
-qsg!contains(QT_CONFIG, egl):DEFINES += QT_NO_EGL
+!contains(QT_CONFIG, egl):DEFINES += QT_NO_EGL
 
 # Core API
 HEADERS += \
