@@ -153,11 +153,38 @@ void liveness(IR::Function *function)
     } while (changed);
 }
 
-struct FindLocals: Visitor
+struct ScanFunctionBody: Visitor
 {
     using Visitor::visit;
 
+    // search for locals
     QList<QStringRef> locals;
+    bool directEval;
+
+    ScanFunctionBody()
+        : directEval(false)
+    {
+    }
+
+    void operator()(Node *node) {
+        directEval = false;
+        locals.clear();
+        if (node)
+            node->accept(this);
+    }
+
+protected:
+    virtual bool visit(CallExpression *ast)
+    {
+        if (! directEval) {
+            if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
+                if (id->name == QLatin1String("eval")) {
+                    directEval = true;
+                }
+            }
+        }
+        return true;
+    }
 
     virtual bool visit(VariableDeclaration *ast)
     {
@@ -196,6 +223,7 @@ void Codegen::operator()(AST::Program *node, IR::Module *module)
     _module = module;
 
     IR::Function *globalCode = _module->newFunction(QLatin1String("%entry"));
+    globalCode->directEval = true; // ### remove
     _function = globalCode;
     _block = _function->newBasicBlock();
     _exitBlock = _function->newBasicBlock();
@@ -468,8 +496,18 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     if (ast->expression) {
         Result expr = expression(ast->expression);
 
-        if (expr.code)
+        if (! expr.code)
+            expr.code = _block->CONST(IR::UndefinedType, 0);
+
+        if (! _function->directEval) {
+            const int index = tempForLocalVariable(ast->name);
+            if (index != -1) {
+                _block->MOVE(_block->TEMP(index), *expr);
+                return;
+            }
+        } else {
             _block->MOVE(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), *expr);
+        }
     }
 }
 
@@ -895,9 +933,18 @@ bool Codegen::visit(FunctionExpression *ast)
 
 bool Codegen::visit(IdentifierExpression *ast)
 {
+    if (! _function->directEval) {
+        int index = tempForLocalVariable(ast->name);
+        if (index != -1) {
+            _expr.code = _block->TEMP(index);
+            return false;
+        }
+    }
+
     _expr.code = _block->NAME(ast->name.toString(),
                               ast->identifierToken.startLine,
                               ast->identifierToken.startColumn);
+
     return false;
 }
 
@@ -1235,9 +1282,21 @@ void Codegen::linearize(IR::Function *function)
 
 void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
 {
+    ScanFunctionBody functionInfo;
+    functionInfo(ast->body);
+
     IR::Function *function = _module->newFunction(ast->name.toString());
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock();
+
+    if (! functionInfo.directEval) {
+        for (int i = 0; i < functionInfo.locals.size(); ++i) {
+            unsigned t = entryBlock->newTemp();
+            Q_ASSERT(t == unsigned(i));
+            entryBlock->MOVE(entryBlock->TEMP(t), entryBlock->CONST(IR::UndefinedType, 0));
+        }
+    }
+
     unsigned returnAddress = entryBlock->newTemp();
 
     entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
@@ -1252,11 +1311,7 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
         _function->RECEIVE(it->name.toString());
     }
 
-    FindLocals locals;
-    if (ast->body)
-        ast->body->accept(&locals);
-
-    foreach (const QStringRef &local, locals.locals) {
+    foreach (const QStringRef &local, functionInfo.locals) {
         _function->LOCAL(local.toString());
     }
 
@@ -1275,6 +1330,15 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     } else {
         _expr.code = _block->CLOSURE(function);
     }
+}
+
+int Codegen::tempForLocalVariable(const QStringRef &string) const
+{
+    for (int i = 0; i < _function->locals.size(); ++i) {
+        if (*_function->locals.at(i) == string)
+            return i;
+    }
+    return -1;
 }
 
 bool Codegen::visit(IdentifierPropertyName *ast)
