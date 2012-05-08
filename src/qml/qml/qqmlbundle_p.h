@@ -46,6 +46,11 @@
 #include <QtCore/qstring.h>
 #include <QtQml/qtqmlglobal.h>
 
+#ifdef Q_CC_MSVC
+// nonstandard extension used : zero-sized array in struct/union.
+#  pragma warning( disable : 4200 )
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class Q_QML_EXPORT QQmlBundle

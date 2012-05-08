@@ -52,6 +52,11 @@
 
 #include <ctype.h> // for toupper
 
+#ifdef Q_CC_MSVC
+// nonstandard extension used : zero-sized array in struct/union.
+#  pragma warning( disable : 4200 )
+#endif
+
 Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QQmlV8Handle);
 

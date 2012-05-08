@@ -55,6 +55,11 @@
 
 #include "qv4instruction_p.h"
 
+#ifdef Q_CC_MSVC
+// nonstandard extension used : zero-sized array in struct/union.
+#  pragma warning( disable : 4200 )
+#endif
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
