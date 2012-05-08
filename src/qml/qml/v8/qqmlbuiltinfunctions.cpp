@@ -978,7 +978,7 @@ If \a filepath is specified, it will be used for error reporting for the created
 
 Example (where \c parentItem is the id of an existing QML item):
 
-\snippet doc/src/snippets/qml/createQmlObject.qml 0
+\snippet doc/snippets/qml/createQmlObject.qml 0
 
 In the case of an error, a QtScript Error object is thrown. This object has an additional property,
 \c qmlErrors, which is an array of the errors encountered.
@@ -1109,7 +1109,7 @@ component to create an object instance of the component.
 
 For example:
 
-\snippet doc/src/snippets/qml/createComponent-simple.qml 0
+\snippet doc/snippets/qml/createComponent-simple.qml 0
 
 See \l {Dynamic Object Management in QML} for more information on using this function.
 
@@ -1338,20 +1338,20 @@ v8::Handle<v8::Value> locale(const v8::Arguments &args)
     There are two main use-cases for the function: firstly, in imperative
     JavaScript code to cause a binding assignment:
 
-    \snippet doc/src/snippets/declarative/qtBinding.1.qml 0
+    \snippet doc/snippets/declarative/qtBinding.1.qml 0
 
     and secondly, when defining initial property values of dynamically
     constructed objects (via Component.createObject() or
     Loader.setSource()) as being bound to the result of an expression.
 
     For example, assuming the existence of a DynamicText component:
-    \snippet doc/src/snippets/declarative/DynamicText.qml 0
+    \snippet doc/snippets/declarative/DynamicText.qml 0
 
     the output from:
-    \snippet doc/src/snippets/declarative/qtBinding.2.qml 0
+    \snippet doc/snippets/declarative/qtBinding.2.qml 0
 
     and from:
-    \snippet doc/src/snippets/declarative/qtBinding.3.qml 0
+    \snippet doc/snippets/declarative/qtBinding.3.qml 0
 
     should both be:
     \code
@@ -1366,7 +1366,7 @@ v8::Handle<v8::Value> locale(const v8::Arguments &args)
     declarations and binding assignments}) except when the result is
     stored in an array bound to a var property.
 
-    \snippet doc/src/snippets/declarative/qtBinding.4.qml 0
+    \snippet doc/snippets/declarative/qtBinding.4.qml 0
 
     Note: in QtQuick 1.x, all function assignment was treated as
     binding assignment, so the Qt.binding() function is new in

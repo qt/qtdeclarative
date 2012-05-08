@@ -66,7 +66,7 @@ Q_DECLARE_METATYPE(QList<int>)
 
   Use evaluate() to evaluate script code.
 
-  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 0
+  \snippet doc/snippets/code/src_script_qjsengine.cpp 0
 
   evaluate() returns a QJSValue that holds the result of the
   evaluation. The QJSValue class provides functions for converting
@@ -76,13 +76,13 @@ Q_DECLARE_METATYPE(QList<int>)
   The following code snippet shows how a script function can be
   defined and then invoked from C++ using QJSValue::call():
 
-  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 1
+  \snippet doc/snippets/code/src_script_qjsengine.cpp 1
 
   As can be seen from the above snippets, a script is provided to the
   engine in the form of a string. One common way of loading scripts is
   by reading the contents of a file and passing it to evaluate():
 
-  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 2
+  \snippet doc/snippets/code/src_script_qjsengine.cpp 2
 
   Here we pass the name of the file as the second argument to
   evaluate().  This does not affect evaluation in any way; the second
@@ -98,7 +98,7 @@ Q_DECLARE_METATYPE(QList<int>)
   want to configure a script engine by adding one or more properties
   to the Global Object:
 
-  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 3
+  \snippet doc/snippets/code/src_script_qjsengine.cpp 3
 
   Adding custom properties to the scripting environment is one of the
   standard means of providing a scripting API that is specific to your
@@ -114,7 +114,7 @@ Q_DECLARE_METATYPE(QList<int>)
   value. If isError() returns true, you can call toString() on the
   error object to obtain an error message.
 
-  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 4
+  \snippet doc/snippets/code/src_script_qjsengine.cpp 4
 
   \section1 Script Object Creation
 
@@ -132,7 +132,7 @@ Q_DECLARE_METATYPE(QList<int>)
   properties of the proxy object. No binding code is needed because it
   is done dynamically using the Qt meta object system.
 
-  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 5
+  \snippet doc/snippets/code/src_script_qjsengine.cpp 5
 
   \sa QJSValue, {Making Applications Scriptable}
 

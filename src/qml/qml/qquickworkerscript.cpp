@@ -568,7 +568,7 @@ void QQuickWorkerScriptEngine::run()
 
     An example:
 
-    \snippet doc/src/snippets/qml/workerscript.qml 0
+    \snippet doc/snippets/qml/workerscript.qml 0
 
     The above worker script specifies a JavaScript file, "script.js", that handles
     the operations to be performed in the new thread. Here is \c script.js:

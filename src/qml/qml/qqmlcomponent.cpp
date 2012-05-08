@@ -202,7 +202,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     For example, here is a component that is used by multiple \l Loader objects.
     It contains a single item, a \l Rectangle:
 
-    \snippet doc/src/snippets/qml/component.qml 0
+    \snippet doc/snippets/qml/component.qml 0
 
     Notice that while a \l Rectangle by itself would be automatically 
     rendered and displayed, this is not the case for the above rectangle
