@@ -50,7 +50,7 @@
 
 #include <QtCore/qhash.h>
 #include <QtCore/qthread.h>
-#include <QtGui/qplatformsharedgraphicscache_qpa.h>
+#include <qpa/qplatformsharedgraphicscache.h>
 
 #include <QtQuick/qquickcanvas.h>
 

@@ -60,9 +60,9 @@
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtGui/QPlatformIntegration>
+#include <qpa/qplatformintegration.h>
 
-#include <QtGui/qplatformsharedgraphicscache_qpa.h>
+#include <qpa/qplatformsharedgraphicscache.h>
 
 #include <private/qobject_p.h>
 #include <qmutex.h>

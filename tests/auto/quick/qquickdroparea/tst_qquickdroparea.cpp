@@ -48,7 +48,7 @@
 #include <QtQml/qqmlexpression.h>
 
 #include <QtGui/qwindowsysteminterface_qpa.h>
-#include <QtGui/qplatformdrag_qpa.h>
+#include <qpa/qplatformdrag.h>
 
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {

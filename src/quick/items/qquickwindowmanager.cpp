@@ -49,7 +49,7 @@
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtGui/qplatformintegration_qpa.h>
+#include <qpa/qplatformintegration.h>
 
 #include <QtQml/private/qqmlglobal_p.h>
 
