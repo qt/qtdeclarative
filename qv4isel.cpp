@@ -456,7 +456,22 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     if (IR::Temp *t = s->cond->asTemp()) {
         amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
         loadTempAddress(AMD64_RSI, t);
+
+        amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_RSI, 0, 4);
+        amd64_alu_reg_imm(_codePtr, X86_CMP, AMD64_RAX, BOOLEAN_TYPE);
+
+        uchar *label1 = _codePtr;
+        amd64_branch32(_codePtr, X86_CC_NE, 0, 0);
+
+        amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_RSI, offsetof(Value, booleanValue), 1);
+
+        uchar *label2 = _codePtr;
+        amd64_jump32(_codePtr, 0);
+
+        amd64_patch(label1, _codePtr);
         amd64_call_code(_codePtr, __qmljs_to_boolean);
+
+        amd64_patch(label2, _codePtr);
         amd64_alu_reg_imm_size(_codePtr, X86_CMP, X86_EAX, 0, 4);
         _patches[s->iftrue].append(_codePtr);
         amd64_branch32(_codePtr, X86_CC_NZ, 0, 1);
