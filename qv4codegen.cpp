@@ -97,102 +97,6 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
     }
 };
 
-struct RegAlloc: IR::StmtVisitor, IR::ExprVisitor
-{
-    QHash<unsigned, unsigned> RD;
-    QHash<unsigned, unsigned> RA;
-    QList<unsigned> _freeRegisters;
-    QSet<IR::Temp *> _processed;
-    QSet<unsigned> _kill;
-    IR::Stmt *_stmt;
-    unsigned _registerCount;
-
-    RegAlloc(): _stmt(0), _registerCount(1) {}
-
-    void operator()(IR::Stmt *s) {
-        _kill.clear();
-        qSwap(_stmt, s);
-        _stmt->accept(this);
-        qSwap(_stmt, s);
-        foreach (unsigned r, _kill)
-            freeRegister(r);
-    }
-
-    unsigned newReg()
-    {
-        if (! _freeRegisters.isEmpty())
-            return _freeRegisters.takeLast();
-
-        return _registerCount++;
-    }
-
-    void freeRegister(unsigned virtualRegister)
-    {
-        unsigned physRegister = RA.value(virtualRegister);
-        RA.remove(virtualRegister);
-        RD.remove(physRegister);
-
-        if (! _freeRegisters.contains(physRegister))
-            _freeRegisters.append(physRegister);
-    }
-
-    unsigned getReg(IR::Temp *t)
-    {
-        const int virtualRegister = t->index;
-
-        if (unsigned reg = RA.value(virtualRegister)) {
-            return reg;
-        }
-
-        const unsigned reg = newReg();
-        RA[virtualRegister] = reg;
-        RD[reg] = virtualRegister;
-        return reg;
-    }
-
-    virtual void visitConst(IR::Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitName(IR::Name *) {}
-    virtual void visitClosure(IR::Closure *) {}
-
-    virtual void visitTemp(IR::Temp *e) {
-        const unsigned virtualRegister = e->index;
-        e->index = getReg(e);
-        if (! _stmt->d->liveOut.testBit(virtualRegister))
-            _kill.insert(virtualRegister);
-    }
-
-    virtual void visitUnop(IR::Unop *e) { e->expr->accept(this); }
-    virtual void visitBinop(IR::Binop *e) { e->left->accept(this); e->right->accept(this); }
-    virtual void visitCall(IR::Call *e) {
-        e->base->accept(this);
-        for (IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitNew(IR::New *e) {
-        e->base->accept(this);
-        for (IR::ExprList *it = e->args; it; it = it->next)
-            it->expr->accept(this);
-    }
-
-    virtual void visitSubscript(IR::Subscript *e) { e->base->accept(this); e->index->accept(this); }
-    virtual void visitMember(IR::Member *e) { e->base->accept(this); }
-
-    virtual void visitExp(IR::Exp *s) { s->expr->accept(this); }
-    virtual void visitEnter(IR::Enter *) {}
-    virtual void visitLeave(IR::Leave *) {}
-
-    virtual void visitMove(IR::Move *s) {
-        s->source->accept(this);
-        s->target->accept(this);
-    }
-
-    virtual void visitJump(IR::Jump *) {}
-    virtual void visitCJump(IR::CJump *s) { s->cond->accept(this); }
-    virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
-};
-
 void liveness(IR::Function *function)
 {
     QSet<IR::BasicBlock *> V;
@@ -228,9 +132,9 @@ void liveness(IR::Function *function)
             const QBitArray previousLiveIn = block->liveIn;
             const QBitArray previousLiveOut = block->liveOut;
             QBitArray live(function->tempCount);
-            block->liveOut = live;
             foreach (IR::BasicBlock *succ, block->out)
                 live |= succ->liveIn;
+            block->liveOut = live;
             for (int i = block->statements.size() - 1; i != -1; --i) {
                 IR::Stmt *s = block->statements.at(i);
                 s->d->liveOut = live;
@@ -1234,15 +1138,6 @@ void Codegen::linearize(IR::Function *function)
 
     liveness(function);
 
-    if (1) {
-        RegAlloc regalloc;
-        foreach (IR::BasicBlock *block, function->basicBlocks) {
-            foreach (IR::Stmt *s, block->statements)
-                regalloc(s);
-        }
-        function->tempCount = regalloc._registerCount - 1;
-    }
-
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
         QVector<IR::Stmt *> code;
@@ -1312,12 +1207,13 @@ void Codegen::linearize(IR::Function *function)
             //            }
             //        }
 
-            //        if (! s->liveOut.isEmpty()) {
-            //            qout << " // lives:";
-            //            foreach (unsigned live, s->liveOut) {
-            //                qout << " %" << live;
-            //            }
-            //        }
+            if (! s->d->liveOut.isEmpty()) {
+                qout << " // lives:";
+                for (int i = 0; i < s->d->liveOut.size(); ++i) {
+                    if (s->d->liveOut.testBit(i))
+                        qout << " %" << i;
+                }
+            }
 
             qout << endl;
 

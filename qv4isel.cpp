@@ -160,12 +160,12 @@ String *InstructionSelection::identifier(const QString &s)
 
 int InstructionSelection::tempOffset(IR::Temp *t)
 {
-    return sizeof(Value) * (t->index - 1);
+    return sizeof(Value) * t->index;
 }
 
 void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
 {
-    amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * (t->index - 1));
+    amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * t->index);
 }
 
 void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *result)
