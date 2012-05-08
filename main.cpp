@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
                     Q_UNREACHABLE();
 
                 VM::Context *ctx = new VM::Context;
+                ctx->init();
                 ctx->activation = VM::Value::object(ctx, new VM::ArgumentsObject(ctx));
                 ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("print")),
                                                  VM::Value::object(ctx, new builtins::Print()));

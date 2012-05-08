@@ -13,8 +13,8 @@ Object::~Object()
 
 bool Object::get(String *name, Value *result)
 {
-    if (Property *prop = getProperty(name)) {
-        *result = prop->value;
+    if (Value *prop = getProperty(name)) {
+        *result = *prop;
         return true;
     }
 
@@ -22,22 +22,24 @@ bool Object::get(String *name, Value *result)
     return false;
 }
 
-Property *Object::getOwnProperty(String *name)
+Value *Object::getOwnProperty(String *name, PropertyAttributes *attributes)
 {
     if (members) {
         if (Property *prop = members->find(name)) {
-            return prop;
+            if (attributes)
+                *attributes = prop->attributes;
+            return &prop->value;
         }
     }
     return 0;
 }
 
-Property *Object::getProperty(String *name)
+Value *Object::getProperty(String *name, PropertyAttributes *attributes)
 {
-    if (Property *prop = getOwnProperty(name))
+    if (Value *prop = getOwnProperty(name, attributes))
         return prop;
     else if (prototype)
-        return prototype->getProperty(name);
+        return prototype->getProperty(name, attributes);
     return 0;
 }
 
@@ -53,13 +55,13 @@ void Object::put(String *name, const Value &value, bool flag)
 
 bool Object::canPut(String *name)
 {
-    if (Property *prop = getOwnProperty(name)) {
-        Q_UNUSED(prop);
-        return true;
+    PropertyAttributes attrs = PropertyAttributes();
+    if (getOwnProperty(name, &attrs)) {
+        return attrs & WritableAttribute;
     } else if (! prototype) {
         return extensible;
-    } else if (Property *inherited = prototype->getProperty(name)) {
-        return inherited->isWritable();
+    } else if (prototype->getProperty(name, &attrs)) {
+        return attrs & WritableAttribute;
     } else {
         return extensible;
     }
@@ -116,21 +118,43 @@ void FunctionObject::construct(Context *ctx)
     Q_UNIMPLEMENTED();
 }
 
+ScriptFunction::ScriptFunction(IR::Function *function)
+    : function(function)
+{
+    formalParameterCount = function->formals.size();
+    if (formalParameterCount) {
+        formalParameterList = new String*[formalParameterCount];
+        for (size_t i = 0; i < formalParameterCount; ++i) {
+            formalParameterList[i] = String::get(0, *function->formals.at(i)); // ### unique
+        }
+    }
+}
+
+ScriptFunction::~ScriptFunction()
+{
+    delete[] formalParameterList;
+}
+
 void ScriptFunction::call(VM::Context *ctx)
 {
-    // bind the actual arguments. ### slow
-    for (int i = 0; i < function->formals.size(); ++i) {
-        const QString *f = function->formals.at(i);
-        ctx->activation.objectValue->put(String::get(ctx, *f), ctx->arguments[i]);
-    }
     function->code(ctx);
 }
 
-Property *ArgumentsObject::getProperty(String *name)
+Value *ArgumentsObject::getProperty(String *name, PropertyAttributes *attributes)
 {
-    if (Property *prop = Object::getProperty(name))
+    if (context) {
+        for (size_t i = 0; i < context->formalCount; ++i) {
+            String *formal = context->formals[i];
+            if (__qmljs_string_equal(context, formal, name)) {
+                if (attributes)
+                    *attributes = PropertyAttributes(*attributes | WritableAttribute);
+                return &context->arguments[i];
+            }
+        }
+    }
+    if (Value *prop = Object::getProperty(name, attributes))
         return prop;
     else if (context && context->scope)
-        return context->scope->getProperty(name);
+        return context->scope->getProperty(name, attributes);
     return 0;
 }

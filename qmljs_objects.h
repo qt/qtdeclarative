@@ -52,16 +52,16 @@ private:
 struct Property {
     String *name;
     Value value;
-    PropertyAttributes flags;
+    PropertyAttributes attributes;
     Property *next;
     int index;
 
     Property(String *name, const Value &value, PropertyAttributes flags = NoAttributes)
-        : name(name), value(value), flags(flags), next(0), index(-1) {}
+        : name(name), value(value), attributes(flags), next(0), index(-1) {}
 
-    inline bool isWritable() const { return flags & WritableAttribute; }
-    inline bool isEnumerable() const { return flags & EnumerableAttribute; }
-    inline bool isConfigurable() const { return flags & ConfigurableAttribute; }
+    inline bool isWritable() const { return attributes & WritableAttribute; }
+    inline bool isEnumerable() const { return attributes & EnumerableAttribute; }
+    inline bool isConfigurable() const { return attributes & ConfigurableAttribute; }
 
     inline bool hasName(String *n) const {
         if (name == n) {
@@ -199,9 +199,10 @@ struct Object {
 
     virtual FunctionObject *asFunctionObject() { return 0; }
 
-    virtual bool get(String *name, Value *result);
-    virtual Property *getOwnProperty(String *name);
-    virtual Property *getProperty(String *name);
+    bool get(String *name, Value *result);
+
+    virtual Value *getOwnProperty(String *name, PropertyAttributes *attributes = 0);
+    virtual Value *getProperty(String *name, PropertyAttributes *attributes = 0);
     virtual void put(String *name, const Value &value, bool flag = 0);
     virtual bool canPut(String *name);
     virtual bool hasProperty(String *name) const;
@@ -234,8 +235,9 @@ struct ArrayObject: Object {
 struct FunctionObject: Object {
     Object *scope;
     String **formalParameterList;
+    size_t formalParameterCount;
 
-    FunctionObject(Object *scope = 0): scope(scope), formalParameterList(0) {}
+    FunctionObject(Object *scope = 0): scope(scope), formalParameterList(0), formalParameterCount(0) {}
     virtual FunctionObject *asFunctionObject() { return this; }
 
     virtual bool hasInstance(const Value &value) const;
@@ -246,7 +248,9 @@ struct FunctionObject: Object {
 struct ScriptFunction: FunctionObject {
     IR::Function *function;
 
-    ScriptFunction(IR::Function *function): function(function) {}
+    ScriptFunction(IR::Function *function);
+    virtual ~ScriptFunction();
+
     virtual void call(Context *ctx);
 };
 
@@ -258,7 +262,7 @@ struct ErrorObject: Object {
 struct ArgumentsObject: Object {
     Context *context;
     ArgumentsObject(Context *context): context(context) {}
-    virtual Property *getProperty(String *name);
+    virtual Value *getProperty(String *name, PropertyAttributes *attributes);
 };
 
 struct Context {
@@ -269,6 +273,8 @@ struct Context {
     Value *arguments;
     size_t argumentCount;
     Value result;
+    String **formals;
+    size_t formalCount;
 
     void init()
     {
@@ -279,6 +285,8 @@ struct Context {
         activation.type = NULL_TYPE;
         thisObject.type = NULL_TYPE;
         result.type = UNDEFINED_TYPE;
+        formals = 0;
+        formalCount = 0;
     }
 };
 

@@ -355,6 +355,8 @@ void __qmljs_call_activation_property(Context *context, Value *result, String *n
     context->parent->activation.objectValue->get(name, &func);
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
+            context->formals = f->formalParameterList;
+            context->formalCount = f->formalParameterCount;
             f->call(context);
             __qmljs_copy(result, &context->result);
         } else {
