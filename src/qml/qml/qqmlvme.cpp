@@ -449,6 +449,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (states.count() == 1) {
                 rootContext = CTXT;
                 rootContext->activeVMEData = data;
+                rootContext->isRootObjectInCreation = true;
             }
             if (states.count() == 1 && !creationContext.isNull()) {
                 // A component that is logically created within another component instance shares the 
@@ -509,12 +510,10 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
         QML_BEGIN_INSTR(CompleteQMLObject)
             QObject *o = objects.top();
+            Q_ASSERT(o);
 
             QQmlData *ddata = QQmlData::get(o);
             Q_ASSERT(ddata);
-
-            if (states.count() == 1)
-                ddata->inCreation = true;
 
             if (instr.isRoot) {
                 if (ddata->context) {
@@ -550,8 +549,10 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             ddata->ownMemory = false;
             QObjectPrivate::get(o)->declarativeData = ddata;
 
-            if (states.count() == 1)
-                ddata->inCreation = true;
+            if (rootContext && rootContext->isRootObjectInCreation) {
+                ddata->rootObjectInCreation = true;
+                rootContext->isRootObjectInCreation = false;
+            }
 
             if (type.typePropertyCache && !ddata->propertyCache) {
                 ddata->propertyCache = type.typePropertyCache;

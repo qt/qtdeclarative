@@ -148,7 +148,8 @@ public:
     quint32 isPragmaLibraryContext:1;
     quint32 unresolvedNames:1; // True if expressions in this context failed to resolve a toplevel name
     quint32 hasEmittedDestruction:1;
-    quint32 dummy:26;
+    quint32 isRootObjectInCreation:1;
+    quint32 dummy:25;
     QQmlContext *publicContext;
 
     // VME data that is constructing this context if any

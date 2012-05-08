@@ -836,7 +836,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         //if JS ownership is needed this needs to be explicitly undone (like in component.createObject())
         ddata->indestructible = true;
         ddata->explicitIndestructibleSet = true;
-        ddata->inCreation = false;
+        ddata->rootObjectInCreation = false;
     }
 
     if (enginePriv->isDebugging && rv) {
