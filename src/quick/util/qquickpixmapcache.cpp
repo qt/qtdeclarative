@@ -1168,12 +1168,13 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
     QHash<QQuickPixmapKey, QQuickPixmapData *>::Iterator iter = store->m_cache.find(key);
 
     if (iter == store->m_cache.end()) {
-        if (options & QQuickPixmap::Asynchronous) {
-            // pixmaps can only be loaded synchronously
-            if (url.scheme() == QLatin1String("image")) {
-                QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)));
-                if (provider && provider->imageType() == QQuickImageProvider::Pixmap) {
+        if (url.scheme() == QLatin1String("image")) {
+            if (QQuickImageProvider *provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)))) {
+                if (provider->imageType() == QQuickImageProvider::Pixmap) {
+                    // pixmaps can only be loaded synchronously
                     options &= ~QQuickPixmap::Asynchronous;
+                } else if (provider->flags() & QQuickImageProvider::ForceAsynchronousImageLoading) {
+                    options |= QQuickPixmap::Asynchronous;
                 }
             }
         }

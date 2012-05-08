@@ -47,6 +47,7 @@ class QQuickImageProviderPrivate
 {
 public:
     QQuickImageProvider::ImageType type;
+    QQuickImageProvider::Flags flags;
 };
 
 /*!
@@ -203,6 +204,12 @@ QImage QQuickTextureFactory::image() const
     allowing image loading to be executed in the background, and reducing the
     performance impact on the user interface.
 
+    To force asynchronous image loading, even for image sources that do not
+    have the \c asynchronous property set to \c true, you may pass the
+    \c QQuickImageProvider::ForceAsynchronousImageLoading flag to the image
+    provider constructor. This ensures that all image requests for the
+    provider are handled in a separate thread.
+
     Asynchronous loading is not supported for image providers that provide
     QPixmap rather than QImage values, as pixmaps can only be created in the
     main thread. In this case, if \l {Image::}{asynchronous} is set to 
@@ -228,10 +235,11 @@ QImage QQuickTextureFactory::image() const
 /*!
     Creates an image provider that will provide images of the given \a type.
 */
-QQuickImageProvider::QQuickImageProvider(ImageType type)
+QQuickImageProvider::QQuickImageProvider(ImageType type, Flags flags)
     : d(new QQuickImageProviderPrivate)
 {
     d->type = type;
+    d->flags = flags;
 }
 
 /*!
@@ -250,6 +258,14 @@ QQuickImageProvider::~QQuickImageProvider()
 QQuickImageProvider::ImageType QQuickImageProvider::imageType() const
 {
     return d->type;
+}
+
+/*!
+    Returns the flags set for this provider.
+*/
+QQuickImageProvider::Flags QQuickImageProvider::flags() const
+{
+    return d->flags;
 }
 
 /*!

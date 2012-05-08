@@ -71,10 +71,11 @@ public:
 class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
 {
 public:
-    QQuickImageProvider(ImageType type);
+    QQuickImageProvider(ImageType type, Flags flags = 0);
     virtual ~QQuickImageProvider();
 
     ImageType imageType() const;
+    Flags flags() const;
 
     virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize);
     virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize);

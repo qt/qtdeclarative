@@ -204,6 +204,16 @@ void QQmlEnginePrivate::defineModule()
         The QQuickImageProvider::requestTexture() method will be called for all image requests. \omitvalue
 */
 
+/*!
+    \enum QQmlImageProviderBase::Flag
+
+    Defines specific requirements or features of this image provider.
+
+    \value ForceAsynchronousImageLoading Ensures that image requests to the provider are
+        run in a separate thread, which allows the provider to spend as much time as needed
+        on producing the image without blocking the main thread.
+*/
+
 /*! \internal */
 QQmlImageProviderBase::QQmlImageProviderBase()
 {

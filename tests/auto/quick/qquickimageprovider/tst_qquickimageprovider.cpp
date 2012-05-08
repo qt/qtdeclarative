@@ -61,6 +61,8 @@ private slots:
     void requestImage_sync();
     void requestImage_async_data();
     void requestImage_async();
+    void requestImage_async_forced_data();
+    void requestImage_async_forced();
 
     void requestPixmap_sync_data();
     void requestPixmap_sync();
@@ -81,8 +83,9 @@ private:
 class TestQImageProvider : public QQuickImageProvider
 {
 public:
-    TestQImageProvider(bool *deleteWatch = 0)
-        : QQuickImageProvider(Image), deleteWatch(deleteWatch)
+    TestQImageProvider(bool *deleteWatch = 0, bool forceAsync = false)
+        : QQuickImageProvider(Image, (forceAsync ? ForceAsynchronousImageLoading : Flags()))
+        , deleteWatch(deleteWatch)
     {
     }
 
@@ -231,7 +234,11 @@ void tst_qquickimageprovider::runTest(bool async, QQuickImageProvider *provider)
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
     QVERIFY(obj != 0);
 
-    if (async) 
+    // From this point on, treat forced async providers as async behaviour-wise
+    if (engine.imageProvider(QUrl(source).host()) == provider)
+        async |= provider->flags() & QQuickImageProvider::ForceAsynchronousImageLoading;
+
+    if (async)
         QTRY_VERIFY(obj->status() == QQuickImage::Loading);
 
     QCOMPARE(obj->source(), QUrl(source));
@@ -281,6 +288,18 @@ void tst_qquickimageprovider::requestImage_async()
 {
     bool deleteWatch = false;
     runTest(true, new TestQImageProvider(&deleteWatch));
+    QVERIFY(deleteWatch);
+}
+
+void tst_qquickimageprovider::requestImage_async_forced_data()
+{
+    fillRequestTestsData("qimage|async_forced");
+}
+
+void tst_qquickimageprovider::requestImage_async_forced()
+{
+    bool deleteWatch = false;
+    runTest(false, new TestQImageProvider(&deleteWatch, true));
     QVERIFY(deleteWatch);
 }
 

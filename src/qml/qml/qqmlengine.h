@@ -64,14 +64,21 @@ public:
         Invalid
     };
 
+    enum Flag {
+        ForceAsynchronousImageLoading  = 0x01
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+
     virtual ~QQmlImageProviderBase();
 
     virtual ImageType imageType() const = 0;
+    virtual Flags flags() const = 0;
 
 private:
     friend class QQuickImageProvider;
     QQmlImageProviderBase();
 };
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlImageProviderBase::Flags)
 
 class QQmlComponent;
 class QQmlEnginePrivate;
