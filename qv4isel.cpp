@@ -282,27 +282,27 @@ void InstructionSelection::visitMove(IR::Move *s)
                 amd64_call_code(_codePtr, __qmljs_get_activation_property);
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
-                amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 loadTempAddress(AMD64_RSI, t);
 
                 switch (c->type) {
                 case IR::NullType:
-                    amd64_call_code(_codePtr, __qmljs_init_null);
+                    amd64_mov_membase_imm(_codePtr, AMD64_RSI, 0, NULL_TYPE, 4);
                     break;
 
                 case IR::UndefinedType:
-                    amd64_call_code(_codePtr, __qmljs_init_undefined);
+                    amd64_mov_membase_imm(_codePtr, AMD64_RSI, 0, UNDEFINED_TYPE, 4);
                     break;
 
                 case IR::BoolType:
-                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, c->value != 0);
-                    amd64_call_code(_codePtr, __qmljs_init_boolean);
+                    amd64_mov_membase_imm(_codePtr, AMD64_RSI, 0, BOOLEAN_TYPE, 4);
+                    amd64_mov_membase_imm(_codePtr, AMD64_RSI, offsetof(Value, booleanValue), c->value != 0, 1);
                     break;
 
                 case IR::NumberType:
                     amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
                     amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
-                    amd64_call_code(_codePtr, __qmljs_init_number);
+                    amd64_mov_membase_imm(_codePtr, AMD64_RSI, 0, NUMBER_TYPE, 4);
+                    amd64_movsd_membase_reg(_codePtr, AMD64_RSI, offsetof(Value, numberValue), X86_XMM0);
                     break;
 
                 default:
@@ -348,6 +348,46 @@ void InstructionSelection::visitMove(IR::Move *s)
                     loadTempAddress(AMD64_RDX, l);
                     loadTempAddress(AMD64_RCX, r);
 
+                    uchar *label1 = 0, *label2 = 0, *label3 = 0;
+
+                    if (b->op == IR::OpMul || b->op == IR::OpAdd || b->op == IR::OpSub || b->op == IR::OpDiv) {
+                        amd64_alu_membase_imm_size(_codePtr, X86_CMP, AMD64_RDX, 0, NUMBER_TYPE, 4);
+                        label1 = _codePtr;
+                        amd64_branch8(_codePtr, X86_CC_NE, 0, 0);
+                        amd64_alu_membase_imm_size(_codePtr, X86_CMP, AMD64_RCX, 0, NUMBER_TYPE, 4);
+                        label2 = _codePtr;
+                        amd64_branch8(_codePtr, X86_CC_NE, 0, 0);
+                        amd64_movsd_reg_membase(_codePtr, X86_XMM0, AMD64_RDX, offsetof(Value, numberValue));
+                        amd64_movsd_reg_membase(_codePtr, X86_XMM1, AMD64_RCX, offsetof(Value, numberValue));
+                        switch (b->op) {
+                        case IR::OpAdd:
+                            amd64_sse_addsd_reg_reg(_codePtr, X86_XMM0, X86_XMM1);
+                            break;
+                        case IR::OpSub:
+                            amd64_sse_subsd_reg_reg(_codePtr, X86_XMM0, X86_XMM1);
+                            break;
+                        case IR::OpMul:
+                            amd64_sse_mulsd_reg_reg(_codePtr, X86_XMM0, X86_XMM1);
+                            break;
+                        case IR::OpDiv:
+                            amd64_sse_divsd_reg_reg(_codePtr, X86_XMM0, X86_XMM1);
+                            break;
+                        default:
+                            Q_UNREACHABLE();
+                        } // switch
+
+                        amd64_mov_membase_imm(_codePtr, AMD64_RSI, 0, NUMBER_TYPE, 4);
+                        amd64_movsd_membase_reg(_codePtr, AMD64_RSI, offsetof(Value, numberValue), X86_XMM0);
+                        label3 = _codePtr;
+                        amd64_jump32(_codePtr, 0);
+                        return;
+                    }
+
+                    if (label1 && label2) {
+                        amd64_patch(label1, _codePtr);
+                        amd64_patch(label2, _codePtr);
+                    }
+
                     void (*op)(Context *, Value *, const Value *, const Value *) = 0;
 
                     switch (b->op) {
@@ -386,6 +426,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                         break;
                     }
                     amd64_call_code(_codePtr, op);
+                    if (label3)
+                        amd64_patch(label3, _codePtr);
                     return;
                 }
             } else if (IR::Call *c = s->source->asCall()) {
