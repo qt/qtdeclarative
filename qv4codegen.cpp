@@ -200,6 +200,7 @@ void Codegen::operator()(AST::Program *node, IR::Module *module)
     _block = _function->newBasicBlock();
     _exitBlock = _function->newBasicBlock();
     _returnAddress = _block->newTemp();
+    _block->MOVE(_block->TEMP(_returnAddress), _block->CONST(IR::UndefinedType, 0));
     _exitBlock->RET(_exitBlock->TEMP(_returnAddress), IR::UndefinedType);
 
     program(node);
@@ -1239,6 +1240,7 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     IR::BasicBlock *exitBlock = function->newBasicBlock();
     unsigned returnAddress = entryBlock->newTemp();
 
+    entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
     exitBlock->RET(_block->TEMP(returnAddress), IR::InvalidType);
 
     qSwap(_function, function);

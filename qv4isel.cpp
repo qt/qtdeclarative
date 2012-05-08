@@ -279,6 +279,14 @@ void InstructionSelection::visitMove(IR::Move *s)
                 loadTempAddress(AMD64_RSI, t);
 
                 switch (c->type) {
+                case IR::NullType:
+                    amd64_call_code(_codePtr, __qmljs_init_null);
+                    break;
+
+                case IR::UndefinedType:
+                    amd64_call_code(_codePtr, __qmljs_init_undefined);
+                    break;
+
                 case IR::BoolType:
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, c->value != 0);
                     amd64_call_code(_codePtr, __qmljs_init_boolean);
