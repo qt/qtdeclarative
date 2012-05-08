@@ -82,6 +82,8 @@ QTcpServerConnection::QTcpServerConnection() :
 
 QTcpServerConnection::~QTcpServerConnection()
 {
+    if (isConnected())
+        disconnect();
     delete d_ptr;
 }
 
@@ -116,6 +118,9 @@ void QTcpServerConnection::send(const QList<QByteArray> &messages)
 void QTcpServerConnection::disconnect()
 {
     Q_D(QTcpServerConnection);
+
+    while (d->socket && d->socket->bytesToWrite() > 0)
+        d->socket->waitForBytesWritten();
 
     // protocol might still be processing packages at this point
     d->protocol->deleteLater();
