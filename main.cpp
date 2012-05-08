@@ -2,6 +2,7 @@
 #include "qmljs_objects.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_p.h"
+#include "qv4syntaxchecker_p.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -39,6 +40,60 @@ struct Print: FunctionObject
 };
 } // builtins
 
+
+void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &code)
+{
+    using namespace QQmlJS;
+
+    Lexer lexer(engine);
+    lexer.setCode(code, 1, false);
+    Parser parser(engine);
+
+    const bool parsed = parser.parseProgram();
+
+    foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
+        std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
+                  << ": error: " << qPrintable(m.message) << std::endl;
+    }
+
+    if (parsed) {
+        using namespace AST;
+        Program *program = AST::cast<Program *>(parser.rootNode());
+
+        Codegen cg;
+        IR::Module module;
+        cg(program, &module);
+
+        const size_t codeSize = 10 * getpagesize();
+        uchar *code = (uchar *) malloc(codeSize);
+
+        x86_64::InstructionSelection isel(&module, code);
+        QHash<QString, IR::Function *> codeByName;
+        foreach (IR::Function *function, module.functions) {
+            isel(function);
+            if (function->name && ! function->name->isEmpty()) {
+                codeByName.insert(*function->name, function);
+            }
+        }
+
+        if (! protect(code, codeSize))
+            Q_UNREACHABLE();
+
+        VM::Context *ctx = new VM::Context;
+        ctx->init();
+        ctx->activation = VM::Value::object(ctx, new VM::ArgumentsObject(ctx));
+        ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("print")),
+                                         VM::Value::object(ctx, new builtins::Print()));
+        foreach (IR::Function *function, module.functions) {
+            if (function->name && ! function->name->isEmpty()) {
+                ctx->activation.objectValue->put(VM::String::get(ctx, *function->name),
+                                                 VM::Value::object(ctx, new VM::ScriptFunction(function)));
+            }
+        }
+        codeByName.value(QLatin1String("%entry"))->code(ctx);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     using namespace QQmlJS;
@@ -53,54 +108,7 @@ int main(int argc, char *argv[])
         if (file.open(QFile::ReadOnly)) {
             const QString code = QString::fromUtf8(file.readAll());
             file.close();
-
-            Lexer lexer(&engine);
-            lexer.setCode(code, 1, false);
-            Parser parser(&engine);
-
-            const bool parsed = parser.parseProgram();
-
-            foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
-                std::cerr << qPrintable(fn) << ':' << m.loc.startLine << ':' << m.loc.startColumn
-                          << ": error: " << qPrintable(m.message) << std::endl;
-            }
-
-            if (parsed) {
-                using namespace AST;
-                Program *program = AST::cast<Program *>(parser.rootNode());
-
-                Codegen cg;
-                IR::Module module;
-                cg(program, &module);
-
-                const size_t codeSize = 10 * getpagesize();
-                uchar *code = (uchar *) malloc(codeSize);
-
-                x86_64::InstructionSelection isel(&module, code);
-                QHash<QString, IR::Function *> codeByName;
-                foreach (IR::Function *function, module.functions) {
-                    isel(function);
-                    if (function->name && ! function->name->isEmpty()) {
-                        codeByName.insert(*function->name, function);
-                    }
-                }
-
-                if (! protect(code, codeSize))
-                    Q_UNREACHABLE();
-
-                VM::Context *ctx = new VM::Context;
-                ctx->init();
-                ctx->activation = VM::Value::object(ctx, new VM::ArgumentsObject(ctx));
-                ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("print")),
-                                                 VM::Value::object(ctx, new builtins::Print()));
-                foreach (IR::Function *function, module.functions) {
-                    if (function->name && ! function->name->isEmpty()) {
-                        ctx->activation.objectValue->put(VM::String::get(ctx, *function->name),
-                                                         VM::Value::object(ctx, new VM::ScriptFunction(function)));
-                    }
-                }
-                codeByName.value(QLatin1String("%entry"))->code(ctx);
-            }
+            evaluate(&engine, fn, code);
         }
     }
 }
