@@ -161,7 +161,10 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \brief The Loader item allows dynamically loading an Item-based
     subtree from a URL or Component.
 
-    Loader is used to dynamically load visual QML components. It can load a
+    Loader is used to dynamically load visual QML components.  For loading non-visual
+    components, see \l {Dynamic Object Management in QML}.
+
+    Loader can load a
     QML file (using the \l source property) or a \l Component object (using
     the \l sourceComponent property). It is useful for delaying the creation
     of a component until it is required: for example, when a component should

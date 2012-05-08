@@ -1075,6 +1075,8 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 
     Dynamically created instances can be deleted with the \c destroy() method.
     See \l {Dynamic Object Management in QML} for more information.
+
+    \sa incubateObject()
 */
 void QQmlComponent::createObject(QQmlV8Function *args)
 {
@@ -1137,7 +1139,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod object Component::incubateObject(Item parent, object properties, enum mode)
+    \qmlmethod object Component::incubateObject(Item parent, object properties, enumeration mode)
 
     Creates an incubator for instance of this component.  Incubators allow new component 
     instances to be instantiated asynchronously and not cause freezes in the UI.
@@ -1185,6 +1187,11 @@ void QQmlComponent::createObject(QQmlV8Function *args)
             print ("Object", incubator.object, "is ready immediately!");
         }
     \endjs
+
+    Dynamically created instances can be deleted with the \c destroy() method.
+    See \l {Dynamic Object Management in QML} for more information.
+
+    \sa createObject()
 */
 
 void QQmlComponent::incubateObject(QQmlV8Function *args)
