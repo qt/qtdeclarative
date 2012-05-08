@@ -258,7 +258,7 @@ struct ErrorObject: Object {
 struct ArgumentsObject: Object {
     Context *context;
     ArgumentsObject(Context *context): context(context) {}
-    virtual Property *getOwnProperty(String *name);
+    virtual Property *getProperty(String *name);
 };
 
 struct Context {
@@ -270,12 +270,12 @@ struct Context {
     size_t argumentCount;
     Value result;
 
-    Context()
-        : parent(0)
-        , scope(0)
-        , arguments(0)
-        , argumentCount(0)
+    void init()
     {
+        parent = 0;
+        scope = 0;
+        arguments = 0;
+        argumentCount = 0;
         activation.type = NULL_TYPE;
         thisObject.type = NULL_TYPE;
         result.type = UNDEFINED_TYPE;

@@ -330,6 +330,7 @@ bool __qmljs_equal(Context *ctx, const Value *x, const Value *y)
 Context *__qmljs_new_context(Context *current, Value *thisObject, size_t argc)
 {
     Context *ctx = new Context;
+    ctx->init();
     ctx->parent = current;
     ctx->scope = current->activation.objectValue;
     __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));

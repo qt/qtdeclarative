@@ -126,11 +126,11 @@ void ScriptFunction::call(VM::Context *ctx)
     function->code(ctx);
 }
 
-Property *ArgumentsObject::getOwnProperty(String *name)
+Property *ArgumentsObject::getProperty(String *name)
 {
-    if (Property *prop = Object::getOwnProperty(name))
+    if (Property *prop = Object::getProperty(name))
         return prop;
     else if (context && context->scope)
-        return context->scope->getOwnProperty(name);
+        return context->scope->getProperty(name);
     return 0;
 }
