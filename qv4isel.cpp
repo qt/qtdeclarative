@@ -194,17 +194,24 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
 
     String *id = identifier(*call->base->asName()->id);
     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R15, 8);
-    loadTempAddress(AMD64_RSI, result);
+    if (result)
+        loadTempAddress(AMD64_RSI, result);
+    else
+        amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RSI, AMD64_RSI);
     amd64_mov_reg_imm(_codePtr, AMD64_RDX, id);
     amd64_call_code(_codePtr, __qmljs_call_activation_property);
     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R15, 8);
     amd64_call_code(_codePtr, __qmljs_dispose_context);
 }
 
-void InstructionSelection::visitExp(IR::Exp *)
+void InstructionSelection::visitExp(IR::Exp *s)
 {
-//    Q_UNIMPLEMENTED();
-//    assert(!"TODO");
+    if (IR::Call *c = s->expr->asCall()) {
+        callActivationProperty(c, 0);
+        return;
+    }
+    Q_UNIMPLEMENTED();
+    assert(!"TODO");
 }
 
 void InstructionSelection::visitEnter(IR::Enter *)
