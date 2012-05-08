@@ -8,7 +8,7 @@ INCLUDEPATH += ../shared
 include(../../../shared/util.pri)
 include(../shared/debugutil.pri)
 
-OTHER_FILES += data/test.qml
+TESTDATA = data/*
 
 CONFIG += parallel_test
 
