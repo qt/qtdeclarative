@@ -380,7 +380,6 @@ void InstructionSelection::visitMove(IR::Move *s)
                         amd64_movsd_membase_reg(_codePtr, AMD64_RSI, offsetof(Value, numberValue), X86_XMM0);
                         label3 = _codePtr;
                         amd64_jump32(_codePtr, 0);
-                        return;
                     }
 
                     if (label1 && label2) {
