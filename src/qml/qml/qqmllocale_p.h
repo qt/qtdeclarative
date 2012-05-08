@@ -94,7 +94,9 @@ public:
 
     enum MeasurementSystem {
         MetricSystem = QLocale::MetricSystem,
-        ImperialSystem = QLocale::ImperialSystem
+        ImperialSystem = QLocale::ImperialSystem,
+        ImperialUSSystem = QLocale::ImperialUSSystem,
+        ImperialUKSystem = QLocale::ImperialUKSystem
     };
     enum FormatType {
         LongFormat = QLocale::LongFormat,
