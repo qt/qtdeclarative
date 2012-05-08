@@ -210,7 +210,8 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
     propType = QMetaType::Void;
 
     const char *returnType = m.typeName();
-    Q_ASSERT(returnType != 0);
+    if (!returnType)
+        returnType = "\0";
     if ((*returnType != 'v') || (qstrcmp(returnType+1, "oid") != 0)) {
         propTypeName = returnType;
         flags |= NotFullyResolved;
