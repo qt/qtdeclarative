@@ -237,19 +237,23 @@ struct AnimatedSpriteVertices {
 /*!
     \qmlproperty qreal QtQuick2::AnimatedSprite::frameRate
 
-    Frames per second to show in the animation. Values below 0 are invalid.
+    Frames per second to show in the animation. Values equal to or below 0 are invalid.
 
     If frameRate is valid  then it will be used to calculate the duration of the frames.
     If not, and frameDuration is valid , then frameDuration will be used.
+
+    Changing this parameter will restart the animation.
 */
 
 /*!
     \qmlproperty int QtQuick2::AnimatedSprite::frameDuration
 
-    Duration of each frame of the animation. Values below 0 are invalid.
+    Duration of each frame of the animation. Values equal to or below 0 are invalid.
 
     If frameRate is valid then it will be used to calculate the duration of the frames.
     If not, and frameDuration is valid, then frameDuration will be used.
+
+    Changing this parameter will restart the animation.
 */
 
 /*!
@@ -314,6 +318,8 @@ struct AnimatedSpriteVertices {
     If frameSync is set to true, it overrides both frameRate and frameDuration.
 
     Default is false.
+
+    Changing this parameter will restart the animation.
 */
 
 /*!
@@ -383,6 +389,11 @@ void QQuickAnimatedSprite::start()
         return;
     m_curLoop = 0;
     m_timestamp.start();
+    if (m_spriteEngine) {
+        m_spriteEngine->stop(0);
+        m_spriteEngine->updateSprites(0);
+        m_spriteEngine->start(0);
+    }
     m_running = true;
     emit runningChanged(true);
     update();
@@ -393,6 +404,7 @@ void QQuickAnimatedSprite::stop()
     if (!m_running)
         return;
     m_running = false;
+    m_pauseOffset = 0;
     emit runningChanged(false);
 }
 
@@ -550,7 +562,7 @@ void QQuickAnimatedSprite::prepareNextFrame()
     if (m_node == 0) //error creating node
         return;
 
-    uint timeInt = m_timestamp.elapsed() + m_pauseOffset;
+    int timeInt = m_timestamp.elapsed() + m_pauseOffset;
     qreal time =  timeInt / 1000.;
     m_material->elementHeight = height();
     m_material->elementWidth = width();

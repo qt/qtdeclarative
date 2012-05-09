@@ -249,6 +249,7 @@ public slots:
         if (m_sprite->m_frameSync != arg) {
             m_sprite->setFrameSync(arg);
             emit frameSyncChanged(arg);
+            restart();
         }
     }
 
@@ -302,6 +303,7 @@ public slots:
         if (m_sprite->m_frameRate != arg) {
             m_sprite->setFrameRate(arg);
             emit frameRateChanged(arg);
+            restart();
         }
     }
 
@@ -310,6 +312,7 @@ public slots:
         if (m_sprite->m_frameDuration != arg) {
             m_sprite->setFrameDuration(arg);
             emit frameDurationChanged(arg);
+            restart();
         }
     }
 
