@@ -469,17 +469,23 @@ QQmlPropertyCache *QQmlEnginePrivate::cache(QQmlType *type, int minorVersion, QQ
 
 QV8Engine *QQmlEnginePrivate::getV8Engine(QQmlEngine *e) 
 { 
+    Q_ASSERT(e);
+
     return e->d_func()->v8engine(); 
 }
 
 QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlEngine *e) 
 { 
-    return e->d_func(); 
+    Q_ASSERT(e);
+
+    return e->d_func();
 }
 
 const QQmlEnginePrivate *QQmlEnginePrivate::get(const QQmlEngine *e) 
 { 
-    return e->d_func(); 
+    Q_ASSERT(e);
+
+    return e->d_func();
 }
 
 QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlContext *c) 
@@ -494,6 +500,8 @@ QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlContextData *c)
 
 QQmlEngine *QQmlEnginePrivate::get(QQmlEnginePrivate *p) 
 { 
+    Q_ASSERT(p);
+
     return p->q_func(); 
 }
 
