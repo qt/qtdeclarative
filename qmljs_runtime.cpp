@@ -17,7 +17,7 @@ extern "C" {
 
 void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
 {
-    __qmljs_init_object(ctx, result, new ScriptFunction(clos));
+    __qmljs_init_object(ctx, result, new ScriptFunction(ctx, clos));
 }
 
 void __qmljs_string_literal_undefined(Context *ctx, Value *result)
@@ -200,7 +200,7 @@ void __qmljs_set_property_string(Context *ctx, Value *object, String *name, Stri
 void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR::Function *function)
 {
     Value value;
-    __qmljs_init_object(ctx, &value, new VM::ScriptFunction(function));
+    __qmljs_init_object(ctx, &value, new VM::ScriptFunction(ctx, function));
     object->objectValue->put(name, value, /*flag*/ 0);
 }
 
@@ -387,7 +387,25 @@ void __qmljs_call_property(Context *context, Value *result, Value *base, String 
     thisObject.objectValue->get(name, &func);
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
-            context->thisObject = thisObject;
+            __qmljs_init_null(context, &context->thisObject);
+            context->formals = f->formalParameterList;
+            context->formalCount = f->formalParameterCount;
+            f->call(context);
+            if (result)
+                __qmljs_copy(result, &context->result);
+        } else {
+            assert(!"not a function");
+        }
+    } else {
+        assert(!"not a callable object");
+    }
+}
+
+void __qmljs_call_value(Context *context, Value *result, Value *func)
+{
+    if (func->type == OBJECT_TYPE) {
+        if (FunctionObject *f = func->objectValue->asFunctionObject()) {
+            __qmljs_init_null(context, &context->thisObject);
             context->formals = f->formalParameterList;
             context->formalCount = f->formalParameterCount;
             f->call(context);

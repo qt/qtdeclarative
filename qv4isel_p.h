@@ -24,6 +24,7 @@ protected:
     void callActivationProperty(IR::Call *call, IR::Temp *result);
     void callProperty(IR::Call *call, IR::Temp *result);
     void constructActivationProperty(IR::New *call, IR::Temp *result);
+    void callValue(IR::Call *call, IR::Temp *result);
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);

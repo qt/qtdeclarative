@@ -123,8 +123,9 @@ void FunctionObject::construct(Context *ctx)
     }
 }
 
-ScriptFunction::ScriptFunction(IR::Function *function)
-    : function(function)
+ScriptFunction::ScriptFunction(Context *context, IR::Function *function)
+    : context(context)
+    , function(function)
 {
     formalParameterCount = function->formals.size();
     if (formalParameterCount) {

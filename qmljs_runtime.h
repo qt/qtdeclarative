@@ -50,6 +50,7 @@ void __qmljs_call_activation_property(Context *, Value *result, String *name);
 void __qmljs_construct_activation_property(Context *, Value *result, String *name);
 void __qmljs_call_property(Context *context, Value *result, Value *base, String *name);
 void __qmljs_construct_property(Context *context, Value *result, Value *base, String *name);
+void __qmljs_call_value(Context *context, Value *result, Value *func);
 
 // constructors
 void __qmljs_init_undefined(Context *ctx, Value *result);

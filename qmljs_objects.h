@@ -246,9 +246,10 @@ struct FunctionObject: Object {
 };
 
 struct ScriptFunction: FunctionObject {
+    Context *context;
     IR::Function *function;
 
-    ScriptFunction(IR::Function *function);
+    ScriptFunction(Context *context, IR::Function *function);
     virtual ~ScriptFunction();
 
     virtual void call(Context *ctx);

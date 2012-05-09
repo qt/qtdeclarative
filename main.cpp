@@ -106,7 +106,7 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {
                 ctx->activation.objectValue->put(VM::String::get(ctx, *function->name),
-                                                 VM::Value::object(ctx, new VM::ScriptFunction(function)));
+                                                 VM::Value::object(ctx, new VM::ScriptFunction(ctx, function)));
             }
         }
         codeByName.value(QLatin1String("%entry"))->code(ctx);
