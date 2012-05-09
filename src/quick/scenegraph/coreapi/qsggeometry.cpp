@@ -302,6 +302,9 @@ void QSGGeometry::setLineWidth(float w)
     vertices and \a indexCount indices.
 
     Vertex and index data will be invalidated after this call and the caller must
+    mark the associated geometry node as dirty, by calling
+    node->markDirty(QSGNode::DirtyGeometry) to ensure that the renderer has
+    a chance to update internal buffers.
  */
 void QSGGeometry::allocate(int vertexCount, int indexCount)
 {
