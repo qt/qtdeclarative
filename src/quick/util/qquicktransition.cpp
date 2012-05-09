@@ -175,12 +175,12 @@ void QQuickTransitionPrivate::animationStateChanged(QAbstractAnimationJob *, QAb
     Q_Q(QQuickTransition);
 
     if (newState == QAbstractAnimationJob::Running) {
-        if (!runningInstanceCount)
-            emit q->runningChanged();
         runningInstanceCount++;
+        if (runningInstanceCount == 1)
+            emit q->runningChanged();
     } else if (newState == QAbstractAnimationJob::Stopped) {
         runningInstanceCount--;
-        if (!runningInstanceCount)
+        if (runningInstanceCount == 0)
             emit q->runningChanged();
     }
 }
