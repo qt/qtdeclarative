@@ -378,16 +378,22 @@ void __qmljs_call_activation_property(Context *context, Value *result, String *n
 
 void __qmljs_call_property(Context *context, Value *result, Value *base, String *name)
 {
+    Value baseObject;
+    Value thisObject;
+    if (base) {
+        if (baseObject.type != OBJECT_TYPE)
+            __qmljs_to_object(context, &baseObject, base);
+        thisObject = baseObject;
+    } else {
+        baseObject = context->activation;
+        __qmljs_init_null(context, &thisObject);
+    }
+    assert(baseObject.type == OBJECT_TYPE);
     Value func;
-    Value thisObject = *base;
-    if (thisObject.type != OBJECT_TYPE)
-        __qmljs_to_object(context, &thisObject, base);
-
-    assert(thisObject.type == OBJECT_TYPE);
-    thisObject.objectValue->get(name, &func);
+    baseObject.objectValue->get(name, &func);
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
-            __qmljs_init_null(context, &context->thisObject);
+            context->thisObject = thisObject;
             context->formals = f->formalParameterList;
             context->formalCount = f->formalParameterCount;
             f->call(context);
