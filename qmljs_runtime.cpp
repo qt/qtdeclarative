@@ -15,6 +15,11 @@ Value Value::string(Context *ctx, const QString &s)
 
 extern "C" {
 
+void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
+{
+    __qmljs_init_object(ctx, result, new ScriptFunction(clos));
+}
+
 void __qmljs_string_literal_undefined(Context *ctx, Value *result)
 {
     __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("undefined")));

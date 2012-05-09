@@ -23,6 +23,10 @@ using namespace QQmlJS;
 using namespace QQmlJS::x86_64;
 using namespace QQmlJS::VM;
 
+namespace {
+QTextStream qout(stdout, QIODevice::WriteOnly);
+}
+
 static inline void
 amd64_patch (unsigned char* code, gpointer target)
 {
@@ -136,6 +140,7 @@ void InstructionSelection::operator()(IR::Function *function)
 #ifndef NO_UDIS86
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
+        printf("code size: %ld bytes\n", (_codePtr - _code));
         ud_t ud_obj;
 
         ud_init(&ud_obj);
@@ -418,6 +423,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                 amd64_mov_reg_imm(_codePtr, AMD64_RDX, new String(*str->value));
                 amd64_call_code(_codePtr, __qmljs_init_string);
                 return;
+            } else if (IR::Closure *clos = s->source->asClosure()) {
+                amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+                loadTempAddress(AMD64_RSI, t);
+                amd64_mov_reg_imm(_codePtr, AMD64_RDX, clos->value);
+                amd64_call_code(_codePtr, __qmljs_init_closure);
+                return;
             } else if (IR::New *ctor = s->source->asNew()) {
                 constructActivationProperty(ctor, t);
                 return;
@@ -584,7 +595,10 @@ void InstructionSelection::visitMove(IR::Move *s)
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...
     }
+
     Q_UNIMPLEMENTED();
+    s->dump(qout, IR::Stmt::MIR);
+    qout << endl;
     assert(!"TODO");
 }
 
