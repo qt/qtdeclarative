@@ -545,10 +545,15 @@ void tst_qquickanchors::centerIn()
     QCOMPARE(rect->x(), 75.0 - 20.0);
     QCOMPARE(rect->y(), 75.0 - 10.0);
 
-    //QTBUG-21730 (use actual center to prevent animation jitter)
+    // By default center aligned to pixel
     QQuickRectangle* rect2 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("centered2"));
-    QCOMPARE(rect2->x(), 94.5);
-    QCOMPARE(rect2->y(), 94.5);
+    QCOMPARE(rect2->x(), 94.0);
+    QCOMPARE(rect2->y(), 94.0);
+
+    //QTBUG-21730 (use actual center to prevent animation jitter)
+    QQuickRectangle* rect3 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("centered3"));
+    QCOMPARE(rect3->x(), 94.5);
+    QCOMPARE(rect3->y(), 94.5);
 
     delete view;
 }

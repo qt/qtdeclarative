@@ -7,6 +7,7 @@ Rectangle {
         rotation: 90
         width: 101; height: 101; color: "blue"
         anchors.centerIn: parent;
+        anchors.alignWhenCentered: false
 
         Rectangle {
             objectName: "inner"

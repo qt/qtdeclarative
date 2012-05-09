@@ -2893,6 +2893,7 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
   \qmlproperty real QtQuick2::Item::anchors.baselineOffset
 
   \qmlproperty bool QtQuick2::Item::anchors.mirrored
+  \qmlproperty bool QtQuick2::Item::anchors.alignWhenCentered
 
   Anchors provide a way to position an item by specifying its
   relationship with other items.
@@ -2952,6 +2953,13 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
   To clear an anchor value, set it to \c undefined.
 
   \c anchors.mirrored returns true it the layout has been \l {LayoutMirroring}{mirrored}.
+
+  \c anchors.alignWhenCentered (default true) forces centered anchors to align to a
+  whole pixel, i.e. if the item being centered has an odd width/height the item
+  will be positioned on a whole pixel rather than being placed on a half-pixel.
+  This ensures the item is painted crisply.  There are cases where this is not
+  desirable, for example when rotating the item jitters may be apparent as the
+  center is rounded.
 
   \note You can only anchor an item to siblings or a parent.
 

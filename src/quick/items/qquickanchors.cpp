@@ -53,12 +53,30 @@ QT_BEGIN_NAMESPACE
 
 static inline qreal hcenter(QQuickItem *item)
 {
-    return item->width() / 2;
+    qreal width = item->width();
+    if (QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors) {
+        if (!QQuickAnchorsPrivate::get(anchors)->centerAligned)
+            return width / 2;
+    }
+    int iw = width;
+    if (iw % 2)
+        return (width + 1) / 2;
+    else
+        return width / 2;
 }
 
 static inline qreal vcenter(QQuickItem *item)
 {
-    return item->height() / 2;
+    qreal height = item->height();
+    if (QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors) {
+        if (!QQuickAnchorsPrivate::get(anchors)->centerAligned)
+            return height / 2;
+    }
+    int ih = height;
+    if (ih % 2)
+        return (height + 1) / 2;
+    else
+        return height / 2;
 }
 
 //### const item?
@@ -307,6 +325,29 @@ bool QQuickAnchors::mirrored()
 {
     Q_D(QQuickAnchors);
     return QQuickItemPrivate::get(d->item)->effectiveLayoutMirror;
+}
+
+bool QQuickAnchors::alignWhenCentered() const
+{
+    Q_D(const QQuickAnchors);
+    return d->centerAligned;
+}
+
+void QQuickAnchors::setAlignWhenCentered(bool aligned)
+{
+    Q_D(QQuickAnchors);
+    if (aligned == d->centerAligned)
+        return;
+    d->centerAligned = aligned;
+    emit centerAlignedChanged();
+    if (d->centerIn) {
+        d->centerInChanged();
+    } else {
+        if (d->usedAnchors & QQuickAnchors::VCenterAnchor)
+            d->updateVerticalAnchors();
+        else if (d->usedAnchors & QQuickAnchors::HCenterAnchor)
+            d->updateHorizontalAnchors();
+    }
 }
 
 bool QQuickAnchorsPrivate::isItemComplete() const

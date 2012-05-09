@@ -77,6 +77,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchors : public QObject
     Q_PROPERTY(QQuickItem *fill READ fill WRITE setFill RESET resetFill NOTIFY fillChanged)
     Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged)
     Q_PROPERTY(bool mirrored READ mirrored NOTIFY mirroredChanged)
+    Q_PROPERTY(bool alignWhenCentered READ alignWhenCentered WRITE setAlignWhenCentered NOTIFY centerAlignedChanged)
 
 public:
     QQuickAnchors(QQuickItem *item, QObject *parent=0);
@@ -159,6 +160,9 @@ public:
 
     bool mirrored();
 
+    bool alignWhenCentered() const;
+    void setAlignWhenCentered(bool);
+
     void classBegin();
     void componentComplete();
 
@@ -181,6 +185,7 @@ Q_SIGNALS:
     void horizontalCenterOffsetChanged();
     void baselineOffsetChanged();
     void mirroredChanged();
+    void centerAlignedChanged();
 
 private:
     friend class QQuickItemPrivate;

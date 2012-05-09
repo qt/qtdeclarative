@@ -15,4 +15,11 @@ Rectangle {
         width: 11; height: 11; color: "green"
         anchors.centerIn: parent;
     }
+
+    Rectangle {
+        objectName: "centered3"
+        width: 11; height: 11; color: "green"
+        anchors.centerIn: parent;
+        anchors.alignWhenCentered: false
+    }
 }
