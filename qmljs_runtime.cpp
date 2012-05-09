@@ -219,9 +219,14 @@ void __qmljs_set_activation_property_string(Context *ctx, String *name, String *
 
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name)
 {
-    Q_UNUSED(ctx);
-    Q_ASSERT(object->type == OBJECT_TYPE);
-    object->objectValue->get(name, result);
+    if (object->type == OBJECT_TYPE) {
+        object->objectValue->get(name, result);
+    } else {
+        Value o;
+        __qmljs_to_object(ctx, &o, object);
+        assert(o.type == OBJECT_TYPE);
+        __qmljs_get_property(ctx, result, &o, name);
+    }
 }
 
 void __qmljs_get_activation_property(Context *ctx, Value *result, String *name)
@@ -361,10 +366,29 @@ void __qmljs_call_activation_property(Context *context, Value *result, String *n
             if (result)
                 __qmljs_copy(result, &context->result);
         } else {
-            Q_ASSERT(!"not a function");
+            assert(!"not a function");
         }
     } else {
-        Q_ASSERT(!"not a callable object");
+        assert(!"not a callable object");
+    }
+}
+
+void __qmljs_construct_activation_property(Context *context, Value *result, String *name)
+{
+    Value func;
+    context->parent->activation.objectValue->get(name, &func);
+    if (func.type == OBJECT_TYPE) {
+        if (FunctionObject *f = func.objectValue->asFunctionObject()) {
+            context->formals = f->formalParameterList;
+            context->formalCount = f->formalParameterCount;
+            f->construct(context);
+            if (result)
+                __qmljs_copy(result, &context->result);
+        } else {
+            assert(!"not a function");
+        }
+    } else {
+        assert(!"not a callable object");
     }
 }
 

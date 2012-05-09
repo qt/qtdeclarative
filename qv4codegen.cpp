@@ -244,7 +244,7 @@ void Codegen::operator()(AST::Program *node, IR::Module *module)
 
 IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
 {
-    if (base->asTemp() || base->asName())
+    if (base->asTemp() /*|| base->asName()*/)
         return _block->MEMBER(base, name);
     else {
         const unsigned t = _block->newTemp();

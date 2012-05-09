@@ -23,7 +23,9 @@ static inline bool protect(const void *addr, size_t size)
 }
 
 namespace builtins {
+
 using namespace QQmlJS::VM;
+
 struct Print: FunctionObject
 {
     virtual void call(Context *ctx)
@@ -36,6 +38,18 @@ struct Print: FunctionObject
             std::cout << qPrintable(v.stringValue->text());
         }
         std::cout << std::endl;
+    }
+};
+
+struct ObjectCtor: FunctionObject
+{
+    virtual void construct(Context *ctx)
+    {
+        __qmljs_init_object(ctx, &ctx->result, new Object());
+    }
+
+    virtual void call(Context *) {
+        assert(!"not here");
     }
 };
 } // builtins
@@ -82,8 +96,13 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
         VM::Context *ctx = new VM::Context;
         ctx->init();
         ctx->activation = VM::Value::object(ctx, new VM::ArgumentsObject(ctx));
+
         ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("print")),
                                          VM::Value::object(ctx, new builtins::Print()));
+
+        ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("Object")),
+                                         VM::Value::object(ctx, new builtins::ObjectCtor()));
+
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {
                 ctx->activation.objectValue->put(VM::String::get(ctx, *function->name),
