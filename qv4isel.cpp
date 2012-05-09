@@ -170,6 +170,9 @@ void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
 
 void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *result)
 {
+    IR::Name *baseName = call->base->asName();
+    assert(baseName != 0);
+
     int argc = 0;
     for (IR::ExprList *it = call->args; it; it = it->next)
         ++argc;
@@ -192,7 +195,7 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         ++argc;
     }
 
-    String *id = identifier(*call->base->asName()->id);
+    String *id = identifier(*baseName->id);
     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R15, 8);
     if (result)
         loadTempAddress(AMD64_RSI, result);
@@ -200,6 +203,49 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RSI, AMD64_RSI);
     amd64_mov_reg_imm(_codePtr, AMD64_RDX, id);
     amd64_call_code(_codePtr, __qmljs_call_activation_property);
+    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R15, 8);
+    amd64_call_code(_codePtr, __qmljs_dispose_context);
+}
+
+void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
+{
+    IR::Member *member = call->base->asMember();
+    assert(member != 0);
+    assert(member->base->asTemp());
+
+    int argc = 0;
+    for (IR::ExprList *it = call->args; it; it = it->next)
+        ++argc;
+
+    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+    amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RSI, AMD64_RSI);
+    amd64_mov_reg_imm(_codePtr, AMD64_RDX, argc);
+    amd64_call_code(_codePtr, __qmljs_new_context);
+
+    amd64_mov_reg_reg(_codePtr, AMD64_R15, AMD64_RAX, 8);
+
+    argc = 0;
+    for (IR::ExprList *it = call->args; it; it = it->next) {
+        IR::Temp *t = it->expr->asTemp();
+        Q_ASSERT(t != 0);
+        amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_R15, offsetof(Context, arguments), 8);
+        amd64_lea_membase(_codePtr, AMD64_RDI, AMD64_RAX, argc * sizeof(Value));
+        loadTempAddress(AMD64_RSI, t);
+        amd64_call_code(_codePtr, __qmljs_copy);
+        ++argc;
+    }
+
+    // __qmljs_call_property(Context *context, Value *result, Value *base, String *name)
+
+    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R15, 8);
+    if (result)
+        loadTempAddress(AMD64_RSI, result);
+    else
+        amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RSI, AMD64_RSI);
+    loadTempAddress(AMD64_RDX, member->base->asTemp());
+    amd64_mov_reg_imm(_codePtr, AMD64_RCX, identifier(*member->name));
+    amd64_call_code(_codePtr, __qmljs_call_property);
+
     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R15, 8);
     amd64_call_code(_codePtr, __qmljs_dispose_context);
 }
@@ -243,8 +289,13 @@ void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *
 void InstructionSelection::visitExp(IR::Exp *s)
 {
     if (IR::Call *c = s->expr->asCall()) {
-        callActivationProperty(c, 0);
-        return;
+        if (c->base->asName()) {
+            callActivationProperty(c, 0);
+            return;
+        } else if (c->base->asMember()) {
+            callProperty(c, 0);
+            return;
+        }
     }
     Q_UNIMPLEMENTED();
     assert(!"TODO");
@@ -317,11 +368,15 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
-                String *propertyName = identifier(*n->id);
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 loadTempAddress(AMD64_RSI, t);
-                amd64_mov_reg_imm(_codePtr, AMD64_RDX, propertyName);
-                amd64_call_code(_codePtr, __qmljs_get_activation_property);
+                if (*n->id == QLatin1String("this")) { // ### `this' should be a builtin.
+                    amd64_call_code(_codePtr, __qmljs_get_thisObject);
+                } else {
+                    String *propertyName = identifier(*n->id);
+                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, propertyName);
+                    amd64_call_code(_codePtr, __qmljs_get_activation_property);
+                }
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
                 loadTempAddress(AMD64_RSI, t);

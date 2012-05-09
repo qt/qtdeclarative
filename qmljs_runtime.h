@@ -48,6 +48,7 @@ Context *__qmljs_new_context(Context *current, Value *thisObject, size_t argc);
 void __qmljs_dispose_context(Context *ctx);
 void __qmljs_call_activation_property(Context *, Value *result, String *name);
 void __qmljs_construct_activation_property(Context *, Value *result, String *name);
+void __qmljs_call_property(Context *context, Value *result, Value *base, String *name);
 
 // constructors
 void __qmljs_init_undefined(Context *ctx, Value *result);

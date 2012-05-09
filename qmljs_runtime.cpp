@@ -368,10 +368,21 @@ void __qmljs_dispose_context(Context *ctx)
 
 void __qmljs_call_activation_property(Context *context, Value *result, String *name)
 {
+    __qmljs_call_property(context, result, &context->parent->activation, name);
+}
+
+void __qmljs_call_property(Context *context, Value *result, Value *base, String *name)
+{
     Value func;
-    context->parent->activation.objectValue->get(name, &func);
+    Value thisObject = *base;
+    if (thisObject.type != OBJECT_TYPE)
+        __qmljs_to_object(context, &thisObject, base);
+
+    assert(thisObject.type == OBJECT_TYPE);
+    thisObject.objectValue->get(name, &func);
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
+            context->thisObject = thisObject;
             context->formals = f->formalParameterList;
             context->formalCount = f->formalParameterCount;
             f->call(context);
