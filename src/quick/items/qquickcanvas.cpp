@@ -411,7 +411,7 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
                 event->setAccepted(true);
             else
                 touchMouseId = -1;
-            if (doubleClick && event->isAccepted()) {
+            if (doubleClick && me.isAccepted()) {
                 touchMousePressTimestamp = 0;
                 QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonDblClick, p);
                 me.setTimestamp(event->timestamp());
