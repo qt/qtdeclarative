@@ -1141,7 +1141,6 @@ public:
     {
         CircularReferenceHandle *crh = static_cast<CircularReferenceHandle*>(params);
         qPersistentDispose(handle);
-        crh->m_referenced.Clear();
     }
 
     static void gccallback(QV8GCCallback::Node *n)
