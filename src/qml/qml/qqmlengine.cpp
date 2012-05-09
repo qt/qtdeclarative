@@ -1651,21 +1651,6 @@ QString QQmlEngine::offlineStoragePath() const
     return d->offlineStoragePath;
 }
 
-static void voidptr_destructor(void *v)
-{
-    void **ptr = (void **)v;
-    delete ptr;
-}
-
-static void *voidptr_constructor(const void *v)
-{
-    if (!v) {
-        return new void*;
-    } else {
-        return new void*(*(void **)v);
-    }
-}
-
 QQmlPropertyCache *QQmlEnginePrivate::createCache(const QMetaObject *mo)
 {
     Q_Q(QQmlEngine);
@@ -1878,10 +1863,22 @@ void QQmlEnginePrivate::registerCompositeType(QQmlCompiledData *data)
     QByteArray ptr = name + '*';
     QByteArray lst = "QQmlListProperty<" + name + '>';
 
-    int ptr_type = QMetaType::registerType(ptr.constData(), voidptr_destructor,
-                                           voidptr_constructor);
-    int lst_type = QMetaType::registerType(lst.constData(), voidptr_destructor,
-                                           voidptr_constructor);
+    int ptr_type = QMetaType::registerNormalizedType(ptr,
+                                                     qMetaTypeDeleteHelper<QObject*>,
+                                                     qMetaTypeCreateHelper<QObject*>,
+                                                     qMetaTypeDestructHelper<QObject*>,
+                                                     qMetaTypeConstructHelper<QObject*>,
+                                                     sizeof(QObject*),
+                                                     static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QObject*>::Flags),
+                                                     data->root);
+    int lst_type = QMetaType::registerNormalizedType(lst,
+                                                     qMetaTypeDeleteHelper<QQmlListProperty<QObject> >,
+                                                     qMetaTypeCreateHelper<QQmlListProperty<QObject> >,
+                                                     qMetaTypeDestructHelper<QQmlListProperty<QObject> >,
+                                                     qMetaTypeConstructHelper<QQmlListProperty<QObject> >,
+                                                     sizeof(QQmlListProperty<QObject>),
+                                                     static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
+                                                     static_cast<QMetaObject*>(0));
 
     data->addref();
 

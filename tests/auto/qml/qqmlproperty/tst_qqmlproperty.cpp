@@ -135,6 +135,7 @@ private slots:
     void noContext();
     void assignEmptyVariantMap();
     void warnOnInvalidBinding();
+    void registeredCompositeTypeProperty();
 
     void copy();
 private:
@@ -187,6 +188,73 @@ void tst_qqmlproperty::qmlmetaproperty()
     QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
 
     delete obj;
+}
+
+void tst_qqmlproperty::registeredCompositeTypeProperty()
+{
+    // Composite type properties
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("registeredCompositeTypeProperty.qml"));
+        QObject *obj = component.create();
+        QVERIFY(obj);
+
+        // create property accessors and check types.
+        QQmlProperty p1(obj, "first");
+        QQmlProperty p2(obj, "second");
+        QQmlProperty p3(obj, "third");
+        QVERIFY(p1.propertyType() == p2.propertyType());
+        QVERIFY(p1.propertyType() != p3.propertyType());
+
+        // check that the values are retrievable from CPP
+        QVariant first = obj->property("first");
+        QVariant second = obj->property("second");
+        QVariant third = obj->property("third");
+        QVERIFY(first.isValid());
+        QVERIFY(second.isValid());
+        QVERIFY(third.isValid());
+        // ensure that conversion from qobject-derived-ptr to qobject-ptr works.
+        QVERIFY(first.value<QObject*>());
+        QVERIFY(second.value<QObject*>());
+        QVERIFY(third.value<QObject*>());
+
+        // check that the values retrieved via QQmlProperty match.
+        QCOMPARE(p1.read(), first);
+        QCOMPARE(p2.read(), second);
+        QCOMPARE(p3.read(), third);
+
+        delete obj;
+    }
+
+    // List-of-composite-type type properties
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("registeredCompositeTypeProperty.qml"));
+        QObject *obj = component.create();
+        QVERIFY(obj);
+
+        // create list property accessors and check types
+        QQmlProperty lp1(obj, "fclist");
+        QQmlProperty lp2(obj, "sclistOne");
+        QQmlProperty lp3(obj, "sclistTwo");
+        QVERIFY(lp1.propertyType() != lp2.propertyType());
+        QVERIFY(lp2.propertyType() == lp3.propertyType());
+
+        // check that the list values are retrievable from CPP
+        QVariant firstList = obj->property("fclist");
+        QVariant secondList = obj->property("sclistOne");
+        QVariant thirdList = obj->property("sclistTwo");
+        QVERIFY(firstList.isValid());
+        QVERIFY(secondList.isValid());
+        QVERIFY(thirdList.isValid());
+
+        // check that the values retrieved via QQmlProperty match.
+        QCOMPARE(lp1.read(), firstList);
+        QCOMPARE(lp2.read(), secondList);
+        QCOMPARE(lp3.read(), thirdList);
+
+        delete obj;
+    }
 }
 
 class PropertyObject : public QObject
