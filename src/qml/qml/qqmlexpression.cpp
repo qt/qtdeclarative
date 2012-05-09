@@ -216,6 +216,10 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QObject *parent)
 : QObject(*new QQmlExpressionPrivate, parent)
 {
     Q_D(QQmlExpression);
+
+    if (!script.context()->isValid())
+        return;
+
     bool defaultConstruction = false;
 
     int id = script.d.data()->bindingId;
