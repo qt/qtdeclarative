@@ -415,7 +415,10 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Temp *t2 = s->source->asTemp()) {
                 loadTempAddress(AMD64_RDI, t);
                 loadTempAddress(AMD64_RSI, t2);
-                amd64_call_code(_codePtr, __qmljs_copy);
+                amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_RSI, 0, 4);
+                amd64_mov_membase_reg(_codePtr, AMD64_RDI, 0, AMD64_RAX, 4);
+                amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_RSI, offsetof(Value, numberValue), 8);
+                amd64_mov_membase_reg(_codePtr, AMD64_RDI, offsetof(Value, numberValue), AMD64_RAX, 8);
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
