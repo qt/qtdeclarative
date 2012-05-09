@@ -563,6 +563,14 @@ void InstructionSelection::visitMove(IR::Move *s)
                     amd64_mov_reg_imm(_codePtr, AMD64_RCX, VM::String::get(0, *str->value));
                     amd64_call_code(_codePtr, __qmljs_set_property_string);
                     return;
+                } else if (IR::Temp *t = s->source->asTemp()) {
+                    // __qmljs_set_property(ctx, object, name, value);
+                    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+                    loadTempAddress(AMD64_RSI, base);
+                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
+                    loadTempAddress(AMD64_RCX, t);
+                    amd64_call_code(_codePtr, __qmljs_set_property);
+                    return;
                 } else if (IR::Closure *clos = s->source->asClosure()) {
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                     loadTempAddress(AMD64_RSI, base);

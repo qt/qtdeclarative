@@ -114,8 +114,10 @@ void FunctionObject::call(Context *ctx)
 
 void FunctionObject::construct(Context *ctx)
 {
-    Q_UNUSED(ctx);
-    Q_UNIMPLEMENTED();
+    __qmljs_init_object(ctx, &ctx->thisObject, new Object());
+    // ### set the prototype
+    call(ctx);
+    ctx->result = ctx->thisObject;
 }
 
 ScriptFunction::ScriptFunction(IR::Function *function)

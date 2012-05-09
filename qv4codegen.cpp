@@ -5,8 +5,8 @@
 #include <QtCore/QBuffer>
 #include <QtCore/QBitArray>
 #include <private/qqmljsast_p.h>
-#include <typeinfo>
 #include <iostream>
+#include <cassert>
 
 using namespace QQmlJS;
 using namespace AST;
@@ -228,7 +228,7 @@ void Codegen::operator()(AST::Program *node, IR::Module *module)
     _block = _function->newBasicBlock();
     _exitBlock = _function->newBasicBlock();
     _returnAddress = _block->newTemp();
-    _block->MOVE(_block->TEMP(_returnAddress), _block->CONST(IR::UndefinedType, 0));
+    move(_block->TEMP(_returnAddress), _block->CONST(IR::UndefinedType, 0));
     _exitBlock->RET(_exitBlock->TEMP(_returnAddress), IR::UndefinedType);
 
     program(node);
@@ -248,7 +248,7 @@ IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
         return _block->MEMBER(base, name);
     else {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), base);
+        move(_block->TEMP(t), base);
         return _block->MEMBER(_block->TEMP(t), name);
     }
 }
@@ -259,7 +259,7 @@ IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
         return _block->SUBSCRIPT(base, index);
     else {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), base);
+        move(_block->TEMP(t), base);
         return _block->SUBSCRIPT(_block->TEMP(t), index);
     }
 }
@@ -268,7 +268,7 @@ IR::Expr *Codegen::argument(IR::Expr *expr)
 {
     if (expr && ! expr->asTemp()) {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), expr);
+        move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
     }
     return expr;
@@ -278,17 +278,30 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
 {
     if (left && ! left->asTemp()) {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), left);
+        move(_block->TEMP(t), left);
         left = _block->TEMP(t);
     }
 
     if (right && ! right->asTemp()) {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), right);
+        move(_block->TEMP(t), right);
         right = _block->TEMP(t);
     }
 
     return _block->BINOP(op, left, right);
+}
+
+void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
+{
+    if (target->asMember()) {
+        if (! (source->asTemp() || source->asConst())) {
+            const unsigned t = _block->newTemp();
+            _block->MOVE(_block->TEMP(t), source);
+            _block->MOVE(target, _block->TEMP(t), op);
+            return;
+        }
+    }
+    _block->MOVE(target, source, op);
 }
 
 void Codegen::accept(Node *node)
@@ -502,11 +515,11 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
         if (! _function->directEval) {
             const int index = tempForLocalVariable(ast->name);
             if (index != -1) {
-                _block->MOVE(_block->TEMP(index), *expr);
+                move(_block->TEMP(index), *expr);
                 return;
             }
         } else {
-            _block->MOVE(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), *expr);
+            move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), *expr);
         }
     }
 }
@@ -679,13 +692,13 @@ bool Codegen::visit(Expression *ast)
 bool Codegen::visit(ArrayLiteral *ast)
 {
     const unsigned t = _block->newTemp();
-    _block->MOVE(_block->TEMP(t), _block->NEW(_block->NAME(QLatin1String("Array"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
+    move(_block->TEMP(t), _block->NEW(_block->NAME(QLatin1String("Array"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
     int index = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
         for (Elision *elision = it->elision; elision; elision = elision->next)
             ++index;
         Result expr = expression(it->expression);
-        _block->MOVE(subscript(_block->TEMP(t), _block->CONST(IR::NumberType, index)), *expr);
+        move(subscript(_block->TEMP(t), _block->CONST(IR::NumberType, index)), *expr);
         ++index;
     }
     for (Elision *elision = ast->elision; elision; elision = elision->next)
@@ -738,11 +751,11 @@ bool Codegen::visit(BinaryExpression *ast)
             condition(ast->left, iftrue, iffalse);
             _block = iffalse;
 
-            _block->MOVE(_block->TEMP(r), _block->CONST(IR::BoolType, 0));
+            move(_block->TEMP(r), _block->CONST(IR::BoolType, 0));
             _block->JUMP(endif);
 
             _block = iftrue;
-            _block->MOVE(_block->TEMP(r), *expression(ast->right));
+            move(_block->TEMP(r), *expression(ast->right));
             if (! _block->isTerminated())
                 _block->JUMP(endif);
 
@@ -761,10 +774,10 @@ bool Codegen::visit(BinaryExpression *ast)
             IR::BasicBlock *endif = _function->newBasicBlock();
 
             const unsigned r = _block->newTemp();
-            _block->MOVE(_block->TEMP(r), *expression(ast->left));
+            move(_block->TEMP(r), *expression(ast->left));
             _block->CJUMP(_block->TEMP(r), endif, iffalse);
             _block = iffalse;
-            _block->MOVE(_block->TEMP(r), *expression(ast->right));
+            move(_block->TEMP(r), *expression(ast->right));
             if (! _block->isTerminated())
                 _block->JUMP(endif);
 
@@ -784,11 +797,11 @@ bool Codegen::visit(BinaryExpression *ast)
 
     case QSOperator::Assign:
         if (_expr.accept(nx)) {
-            _block->MOVE(*left, *right);
+            move(*left, *right);
         } else {
             const unsigned t = _block->newTemp();
-            _block->MOVE(_block->TEMP(t), *right);
-            _block->MOVE(*left, _block->TEMP(t));
+            move(_block->TEMP(t), *right);
+            move(*left, _block->TEMP(t));
             _expr.code = _block->TEMP(t);
         }
         break;
@@ -804,7 +817,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceRightShift:
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
-        _block->MOVE(*left, *right, baseOp(ast->op));
+        move(*left, *right, baseOp(ast->op));
         if (_expr.accept(nx)) {
             // nothing to do
         } else {
@@ -831,7 +844,7 @@ bool Codegen::visit(BinaryExpression *ast)
                 _expr.code = e;
             else {
                 const unsigned t = _block->newTemp();
-                _block->MOVE(_block->TEMP(t), e);
+                move(_block->TEMP(t), e);
                 _expr.code = _block->TEMP(t);
             }
         }
@@ -853,7 +866,7 @@ bool Codegen::visit(BinaryExpression *ast)
             _expr.code = e;
         else {
             const unsigned t = _block->newTemp();
-            _block->MOVE(_block->TEMP(t), e);
+            move(_block->TEMP(t), e);
             _expr.code = _block->TEMP(t);
         }
         break;
@@ -890,11 +903,11 @@ bool Codegen::visit(ConditionalExpression *ast)
     condition(ast->expression, iftrue, iffalse);
 
     _block = iftrue;
-    _block->MOVE(_block->TEMP(t), *expression(ast->ok));
+    move(_block->TEMP(t), *expression(ast->ok));
     _block->JUMP(endif);
 
     _block = iffalse;
-    _block->MOVE(_block->TEMP(t), *expression(ast->ko));
+    move(_block->TEMP(t), *expression(ast->ko));
     _block->JUMP(endif);
 
     _block = endif;
@@ -970,7 +983,9 @@ bool Codegen::visit(NewMemberExpression *ast)
         (*args_it)->init(actual);
         args_it = &(*args_it)->next;
     }
-    _expr.code = _block->NEW(*base, args);
+    const unsigned t = _block->newTemp();
+    move(_block->TEMP(t), _block->NEW(*base, args));
+    _expr.code = _block->TEMP(t);
     return false;
 }
 
@@ -978,7 +993,7 @@ bool Codegen::visit(NotExpression *ast)
 {
     Result expr = expression(ast->expression);
     const unsigned r = _block->newTemp();
-    _block->MOVE(_block->TEMP(r), _block->UNOP(IR::OpNot, *expr));
+    move(_block->TEMP(r), _block->UNOP(IR::OpNot, *expr));
     _expr.code = _block->TEMP(r);
     return false;
 }
@@ -998,11 +1013,11 @@ bool Codegen::visit(NumericLiteral *ast)
 bool Codegen::visit(ObjectLiteral *ast)
 {
     const unsigned t = _block->newTemp();
-    _block->MOVE(_block->TEMP(t), _block->NEW(_block->NAME(QLatin1String("Object"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
+    move(_block->TEMP(t), _block->NEW(_block->NAME(QLatin1String("Object"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
     for (PropertyNameAndValueList *it = ast->properties; it; it = it->next) {
         QString name = propertyName(it->name);
         Result value = expression(it->value);
-        _block->MOVE(member(_block->TEMP(t), _function->newString(name)), *value);
+        move(member(_block->TEMP(t), _function->newString(name)), *value);
     }
     _expr.code = _block->TEMP(t);
     return false;
@@ -1012,11 +1027,11 @@ bool Codegen::visit(PostDecrementExpression *ast)
 {
     Result expr = expression(ast->base);
     if (_expr.accept(nx)) {
-        _block->MOVE(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
+        move(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
     } else {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), *expr);
-        _block->MOVE(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
+        move(_block->TEMP(t), *expr);
+        move(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
         _expr.code = _block->TEMP(t);
     }
     return false;
@@ -1026,11 +1041,11 @@ bool Codegen::visit(PostIncrementExpression *ast)
 {
     Result expr = expression(ast->base);
     if (_expr.accept(nx)) {
-        _block->MOVE(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
+        move(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
     } else {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), *expr);
-        _block->MOVE(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
+        move(_block->TEMP(t), *expr);
+        move(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
         _expr.code = _block->TEMP(t);
     }
     return false;
@@ -1039,7 +1054,7 @@ bool Codegen::visit(PostIncrementExpression *ast)
 bool Codegen::visit(PreDecrementExpression *ast)
 {
     Result expr = expression(ast->expression);
-    _block->MOVE(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
+    move(*expr, _block->CONST(IR::NumberType, 1), IR::OpSub);
     if (_expr.accept(nx)) {
         // nothing to do
     } else {
@@ -1051,7 +1066,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
 bool Codegen::visit(PreIncrementExpression *ast)
 {
     Result expr = expression(ast->expression);
-    _block->MOVE(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
+    move(*expr, _block->CONST(IR::NumberType, 1), IR::OpAdd);
 
     if (_expr.accept(nx)) {
         // nothing to do
@@ -1083,7 +1098,7 @@ bool Codegen::visit(TildeExpression *ast)
 {
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    _block->MOVE(_block->TEMP(t), _block->UNOP(IR::OpCompl, *expr));
+    move(_block->TEMP(t), _block->UNOP(IR::OpCompl, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1107,7 +1122,7 @@ bool Codegen::visit(UnaryMinusExpression *ast)
 {
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    _block->MOVE(_block->TEMP(t), _block->UNOP(IR::OpUMinus, *expr));
+    move(_block->TEMP(t), _block->UNOP(IR::OpUMinus, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1116,7 +1131,7 @@ bool Codegen::visit(UnaryPlusExpression *ast)
 {
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    _block->MOVE(_block->TEMP(t), _block->UNOP(IR::OpUPlus, *expr));
+    move(_block->TEMP(t), _block->UNOP(IR::OpUPlus, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1536,7 +1551,7 @@ bool Codegen::visit(ReturnStatement *ast)
 {
     if (ast->expression) {
         Result expr = expression(ast->expression);
-        _block->MOVE(_block->TEMP(_returnAddress), *expr);
+        move(_block->TEMP(_returnAddress), *expr);
     }
 
     _block->JUMP(_exitBlock);
