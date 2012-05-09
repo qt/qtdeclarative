@@ -56,6 +56,7 @@ private slots:
     void whenAfterValue();
     void restoreBinding();
     void restoreBindingWithLoop();
+    void restoreBindingWithoutCrash();
     void deletedObject();
 
 private:
@@ -172,6 +173,45 @@ void tst_qquickbinding::restoreBindingWithLoop()
 
     myItem->setY(49);
     QCOMPARE(myItem->x(), qreal(49 + 100));
+
+    delete rect;
+}
+
+void tst_qquickbinding::restoreBindingWithoutCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restoreBindingWithoutCrash.qml"));
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QQuickRectangle *myItem = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("myItem"));
+    QVERIFY(myItem != 0);
+
+    myItem->setY(25);
+    QCOMPARE(myItem->x(), qreal(100-25));
+
+    myItem->setY(13);
+    QCOMPARE(myItem->x(), qreal(100-13));
+
+    //Binding takes effect
+    myItem->setY(51);
+    QCOMPARE(myItem->x(), qreal(51));
+
+    myItem->setY(88);
+    QCOMPARE(myItem->x(), qreal(88));
+
+    //state sets a new binding
+    rect->setState("state1");
+    //this binding temporarily takes effect. We may want to change this behavior in the future
+    QCOMPARE(myItem->x(), qreal(112));
+
+    //Binding still controls this value
+    myItem->setY(104);
+    QCOMPARE(myItem->x(), qreal(104));
+
+    //original binding restored
+    myItem->setY(49);
+    QCOMPARE(myItem->x(), qreal(100-49));
 
     delete rect;
 }

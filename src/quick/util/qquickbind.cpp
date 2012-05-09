@@ -298,7 +298,7 @@ void QQuickBind::eval()
         QQmlAbstractBinding *tmp;
         tmp = QQmlPropertyPrivate::setBinding(d->prop, 0);
         if (tmp && d->prevBind)
-            d->prevBind->destroy();
+            tmp->destroy();
         else if (!d->prevBind)
             d->prevBind = tmp;
     }
