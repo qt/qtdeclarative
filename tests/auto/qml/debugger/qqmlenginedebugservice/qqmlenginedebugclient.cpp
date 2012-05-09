@@ -241,7 +241,25 @@ quint32 QQmlEngineDebugClient::queryExpressionResult(
     m_exprResult = QVariant();
     quint32 id;
     *success = false;
-    if (state() == QQmlDebugClient::Enabled && objectDebugId != -1) {
+    if (state() == QQmlDebugClient::Enabled) {
+        id = getId();
+        QByteArray message;
+        QDataStream ds(&message, QIODevice::WriteOnly);
+        ds << QByteArray("EVAL_EXPRESSION") << id << objectDebugId << expr
+           << engines()[0].debugId;
+        sendMessage(message);
+        *success = true;
+    }
+    return id;
+}
+
+quint32 QQmlEngineDebugClient::queryExpressionResultBC(
+        int objectDebugId, const QString &expr, bool *success)
+{
+    m_exprResult = QVariant();
+    quint32 id;
+    *success = false;
+    if (state() == QQmlDebugClient::Enabled) {
         id = getId();
         QByteArray message;
         QDataStream ds(&message, QIODevice::WriteOnly);

@@ -120,6 +120,9 @@ private slots:
     void queryObject_data();
     void queryExpressionResult();
     void queryExpressionResult_data();
+    void queryExpressionResultInRootContext();
+    void queryExpressionResultBC();
+    void queryExpressionResultBC_data();
 
     void setBindingForObject();
     void setMethodBody();
@@ -707,6 +710,53 @@ void tst_QQmlEngineDebugService::queryExpressionResult()
 }
 
 void tst_QQmlEngineDebugService::queryExpressionResult_data()
+{
+    QTest::addColumn<QString>("expr");
+    QTest::addColumn<QVariant>("result");
+
+    QTest::newRow("width + 50") << "width + 50" << qVariantFromValue(60);
+    QTest::newRow("blueRect.width") << "blueRect.width" << qVariantFromValue(500);
+    QTest::newRow("bad expr") << "aeaef" << qVariantFromValue(QString("<undefined>"));
+    QTest::newRow("QObject*") << "varObj" << qVariantFromValue(QString("<unnamed object>"));
+    QTest::newRow("list of QObject*") << "varObjList" << qVariantFromValue(QString("<unknown value>"));
+    QVariantMap map;
+    map.insert(QLatin1String("rect"), QVariant(QLatin1String("<unnamed object>")));
+    QTest::newRow("varObjMap") << "varObjMap" << qVariantFromValue(map);
+}
+
+void tst_QQmlEngineDebugService::queryExpressionResultInRootContext()
+{
+    bool success;
+    const QString exp = QLatin1String("1");
+    m_dbg->queryExpressionResult(-1, exp, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    QCOMPARE(m_dbg->resultExpr().toString(), exp);
+}
+
+void tst_QQmlEngineDebugService::queryExpressionResultBC()
+{
+    QFETCH(QString, expr);
+    QFETCH(QVariant, result);
+
+    int objectId = findRootObject().debugId;
+
+    bool success;
+
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
+    unconnected->queryExpressionResultBC(objectId, expr, &success);
+    QVERIFY(!success);
+    delete unconnected;
+
+    m_dbg->queryExpressionResultBC(objectId, expr, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    QCOMPARE(m_dbg->resultExpr(), result);
+}
+
+void tst_QQmlEngineDebugService::queryExpressionResultBC_data()
 {
     QTest::addColumn<QString>("expr");
     QTest::addColumn<QVariant>("result");

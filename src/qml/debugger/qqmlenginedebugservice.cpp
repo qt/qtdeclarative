@@ -499,11 +499,20 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         QString expr;
 
         ds >> objectId >> expr;
+        int engineId = -1;
+        if (!ds.atEnd())
+            ds >> engineId;
 
         QObject *object = QQmlDebugService::objectForId(objectId);
         QQmlContext *context = qmlContext(object);
+        if (!context) {
+            QQmlEngine *engine = qobject_cast<QQmlEngine *>(
+                        QQmlDebugService::objectForId(engineId));
+            if (engine && m_engines.contains(engine))
+                context = engine->rootContext();
+        }
         QVariant result;
-        if (object && context) {
+        if (context) {
             QQmlExpression exprObj(context, object, expr);
             bool undefined = false;
             QVariant value = exprObj.evaluate(&undefined);

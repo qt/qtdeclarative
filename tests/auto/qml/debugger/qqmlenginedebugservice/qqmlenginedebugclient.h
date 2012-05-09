@@ -197,6 +197,9 @@ public:
     quint32 queryExpressionResult(int objectDebugId,
                                   const QString &expr,
                                   bool *success);
+    quint32 queryExpressionResultBC(int objectDebugId,
+                                  const QString &expr,
+                                  bool *success);
     quint32 setBindingForObject(int objectDebugId, const QString &propertyName,
                                 const QVariant &bindingExpression,
                                 bool isLiteralValue,
