@@ -284,8 +284,11 @@ QAbstractAnimationJob::~QAbstractAnimationJob()
         State oldState = m_state;
         m_state = Stopped;
         stateChanged(oldState, m_state);
+
+        Q_ASSERT(m_state == Stopped);
         if (oldState == Running)
             QQmlAnimationTimer::unregisterAnimation(this);
+        Q_ASSERT(!m_hasRegisteredTimer);
     }
 
     if (m_group)
@@ -337,7 +340,7 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
         return;
 
     // Notify state change
-    stateChanged(newState, oldState);
+    RETURN_IF_DELETED(stateChanged(newState, oldState));
     if (newState != m_state) //this is to be safe if updateState changes the state
         return;
 
@@ -351,7 +354,7 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
                 if (isTopLevel) {
                     // currentTime needs to be updated if pauseTimer is active
                     QQmlAnimationTimer::ensureTimerUpdate();
-                    setCurrentTime(m_totalCurrentTime);
+                    RETURN_IF_DELETED(setCurrentTime(m_totalCurrentTime));
                 }
             }
         }
