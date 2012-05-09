@@ -308,6 +308,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                 amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*other->id));
                 amd64_call_code(_codePtr, __qmljs_copy_activation_property);
                 return;
+            } else if (IR::Closure *clos = s->source->asClosure()) {
+                amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+                amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
+                amd64_mov_reg_imm(_codePtr, AMD64_RDX, clos->value);
+                amd64_call_code(_codePtr, __qmljs_set_activation_property_closure);
+                return;
             }
         } else if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
@@ -501,6 +507,13 @@ void InstructionSelection::visitMove(IR::Move *s)
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
                     amd64_mov_reg_imm(_codePtr, AMD64_RCX, VM::String::get(0, *str->value));
                     amd64_call_code(_codePtr, __qmljs_set_property_string);
+                    return;
+                } else if (IR::Closure *clos = s->source->asClosure()) {
+                    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+                    loadTempAddress(AMD64_RSI, base);
+                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
+                    amd64_mov_reg_imm(_codePtr, AMD64_RCX, clos->value);
+                    amd64_call_code(_codePtr, __qmljs_set_property_closure);
                     return;
                 }
             }

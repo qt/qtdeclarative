@@ -192,6 +192,13 @@ void __qmljs_set_property_string(Context *ctx, Value *object, String *name, Stri
     object->objectValue->put(name, value, /*flag*/ 0);
 }
 
+void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR::Function *function)
+{
+    Value value;
+    __qmljs_init_object(ctx, &value, new VM::ScriptFunction(function));
+    object->objectValue->put(name, value, /*flag*/ 0);
+}
+
 void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
 {
     __qmljs_set_property(ctx, &ctx->activation, name, value);
@@ -215,6 +222,11 @@ void __qmljs_set_activation_property_number(Context *ctx, String *name, double v
 void __qmljs_set_activation_property_string(Context *ctx, String *name, String *value)
 {
     __qmljs_set_property_string(ctx, &ctx->activation, name, value);
+}
+
+void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Function *value)
+{
+    __qmljs_set_property_closure(ctx, &ctx->activation, name, value);
 }
 
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name)

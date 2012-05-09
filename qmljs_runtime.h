@@ -6,6 +6,11 @@
 #include <math.h>
 
 namespace QQmlJS {
+
+namespace IR {
+struct Function;
+}
+
 namespace VM {
 
 enum ValueType {
@@ -83,10 +88,12 @@ void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *valu
 void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool value);
 void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double value);
 void __qmljs_set_property_string(Context *ctx, Value *object, String *name, String *value);
+void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR::Function *function);
 void __qmljs_set_activation_property(Context *ctx, String *name, Value *value);
 void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool value);
 void __qmljs_set_activation_property_number(Context *ctx, String *name, double value);
 void __qmljs_set_activation_property_string(Context *ctx, String *name, String *value);
+void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Function *function);
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name);
 void __qmljs_get_activation_property(Context *ctx, Value *result, String *name);
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other);
