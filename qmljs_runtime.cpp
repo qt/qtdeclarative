@@ -381,14 +381,15 @@ void __qmljs_call_property(Context *context, Value *result, Value *base, String 
     Value baseObject;
     Value thisObject;
     if (base) {
+        baseObject = *base;
         if (baseObject.type != OBJECT_TYPE)
-            __qmljs_to_object(context, &baseObject, base);
+            __qmljs_to_object(context, &baseObject, &baseObject);
+        assert(baseObject.type == OBJECT_TYPE);
         thisObject = baseObject;
     } else {
         baseObject = context->activation;
         __qmljs_init_null(context, &thisObject);
     }
-    assert(baseObject.type == OBJECT_TYPE);
     Value func;
     baseObject.objectValue->get(name, &func);
     if (func.type == OBJECT_TYPE) {
