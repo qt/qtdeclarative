@@ -403,15 +403,26 @@ void __qmljs_call_property(Context *context, Value *result, Value *base, String 
 
 void __qmljs_construct_activation_property(Context *context, Value *result, String *name)
 {
+    __qmljs_construct_property(context, result, &context->activation, name);
+}
+
+void __qmljs_construct_property(Context *context, Value *result, Value *base, String *name)
+{
     Value func;
-    context->parent->activation.objectValue->get(name, &func);
+    Value thisObject = *base;
+    if (thisObject.type != OBJECT_TYPE)
+        __qmljs_to_object(context, &thisObject, base);
+
+    assert(thisObject.type == OBJECT_TYPE);
+    thisObject.objectValue->get(name, &func);
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
+            context->thisObject = thisObject;
             context->formals = f->formalParameterList;
             context->formalCount = f->formalParameterCount;
             f->construct(context);
             if (result)
-                __qmljs_copy(result, &context->result);
+                __qmljs_copy(result, &context->thisObject);
         } else {
             assert(!"not a function");
         }

@@ -115,9 +115,12 @@ void FunctionObject::call(Context *ctx)
 void FunctionObject::construct(Context *ctx)
 {
     __qmljs_init_object(ctx, &ctx->thisObject, new Object());
-    // ### set the prototype
     call(ctx);
-    ctx->result = ctx->thisObject;
+    Value proto;
+    if (get(String::get(ctx, QLatin1String("prototype")), &proto)) { // ### `prototype' should be a unique symbol
+        if (proto.type == OBJECT_TYPE)
+            ctx->thisObject.objectValue->prototype = proto.objectValue;
+    }
 }
 
 ScriptFunction::ScriptFunction(IR::Function *function)
