@@ -937,15 +937,17 @@ QAbstractAnimationJob* QQuickScriptAction::transition(QQuickStateActions &action
 
     d->hasRunScriptScript = false;
     d->reversing = (direction == Backward);
-    for (int ii = 0; ii < actions.count(); ++ii) {
-        QQuickAction &action = actions[ii];
+    if (!d->name.isEmpty()) {
+        for (int ii = 0; ii < actions.count(); ++ii) {
+            QQuickAction &action = actions[ii];
 
-        if (action.event && action.event->type() == QQuickActionEvent::Script
-            && static_cast<QQuickStateChangeScript*>(action.event)->name() == d->name) {
-            d->runScriptScript = static_cast<QQuickStateChangeScript*>(action.event)->script();
-            d->hasRunScriptScript = true;
-            action.actionDone = true;
-            break;  //only match one (names should be unique)
+            if (action.event && action.event->type() == QQuickActionEvent::Script
+                && static_cast<QQuickStateChangeScript*>(action.event)->name() == d->name) {
+                d->runScriptScript = static_cast<QQuickStateChangeScript*>(action.event)->script();
+                d->hasRunScriptScript = true;
+                action.actionDone = true;
+                break;  //only match one (names should be unique)
+            }
         }
     }
     return initInstance(new QActionAnimation(d->createAction()));

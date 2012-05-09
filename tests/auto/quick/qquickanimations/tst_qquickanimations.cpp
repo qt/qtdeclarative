@@ -108,6 +108,7 @@ private slots:
     void loopingBug();
     void anchorBug();
     void pathAnimationInOutBackBug();
+    void scriptActionBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1375,6 +1376,18 @@ void tst_qquickanimations::anchorBug()
 
     QCOMPARE(animation.qtAnimation()->duration(), 5000);
     QCOMPARE(static_cast<QQuickBulkValueAnimator*>(animation.qtAnimation())->easingCurve(), QEasingCurve(QEasingCurve::InOutBack));
+}
+
+//ScriptAction should not match a StateChangeScript if no scriptName has been specified
+void tst_qquickanimations::scriptActionBug()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("scriptActionBug.qml"));
+    QObject *obj = c.create();
+
+    //Both the ScriptAction and StateChangeScript should be triggered
+    QCOMPARE(obj->property("actionTriggered").toBool(), true);
+    QCOMPARE(obj->property("actionTriggered").toBool(), true);
 }
 
 QTEST_MAIN(tst_qquickanimations)
