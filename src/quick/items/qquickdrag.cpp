@@ -66,13 +66,20 @@ public:
         , active(false)
         , listening(false)
         , inEvent(false)
+        , dragRestarted(false)
         , itemMoved(false)
         , eventQueued(false)
+        , overrideActions(false)
     {
     }
 
     void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &);
+    void itemParentChanged(QQuickItem *, QQuickItem *parent);
+    void updatePosition();
+    void restartDrag();
+    void deliverEnterEvent();
     void deliverMoveEvent();
+    void deliverLeaveEvent();
     void deliverEvent(QQuickCanvas *canvas, QEvent *event);
     void start() { start(supportedActions); }
     void start(Qt::DropActions supportedActions);
@@ -82,6 +89,7 @@ public:
 
     QQmlGuard<QObject> source;
     QQmlGuard<QObject> target;
+    QQmlGuard<QQuickCanvas> canvas;
     QQuickItem *attachedItem;
     QQuickDragMimeData *mimeData;
     Qt::DropAction proposedAction;
@@ -89,8 +97,10 @@ public:
     bool active : 1;
     bool listening : 1;
     bool inEvent : 1;
+    bool dragRestarted : 1;
     bool itemMoved : 1;
     bool eventQueued : 1;
+    bool overrideActions : 1;
     QPointF hotSpot;
     QStringList keys;
 };
@@ -128,12 +138,60 @@ void QQuickDragAttachedPrivate::itemGeometryChanged(QQuickItem *, const QRectF &
     Q_Q(QQuickDragAttached);
     if (newGeometry.topLeft() == oldGeometry.topLeft() || !active || itemMoved)
         return;
+    updatePosition();
+}
 
+void QQuickDragAttachedPrivate::itemParentChanged(QQuickItem *, QQuickItem *)
+{
+    Q_Q(QQuickDragAttached);
+    if (!active || dragRestarted)
+        return;
+
+    QQuickCanvas *newCanvas = attachedItem->canvas();
+
+    if (canvas != newCanvas)
+        restartDrag();
+    else if (canvas)
+        updatePosition();
+}
+
+void QQuickDragAttachedPrivate::updatePosition()
+{
+    Q_Q(QQuickDragAttached);
     itemMoved = true;
-
     if (!eventQueued) {
         eventQueued = true;
         QCoreApplication::postEvent(q, new QEvent(QEvent::User));
+    }
+}
+
+void QQuickDragAttachedPrivate::restartDrag()
+{
+    Q_Q(QQuickDragAttached);
+    dragRestarted = true;
+    if (!eventQueued) {
+        eventQueued = true;
+        QCoreApplication::postEvent(q, new QEvent(QEvent::User));
+    }
+}
+
+void QQuickDragAttachedPrivate::deliverEnterEvent()
+{
+    dragRestarted = false;
+    itemMoved = false;
+
+    canvas = attachedItem->canvas();
+
+    mimeData->m_source = source;
+    if (!overrideActions)
+        mimeData->m_supportedActions = supportedActions;
+    mimeData->m_keys = keys;
+
+    if (canvas) {
+        QPoint scenePos = attachedItem->mapToScene(hotSpot).toPoint();
+        QDragEnterEvent event(scenePos, mimeData->m_supportedActions, mimeData, Qt::NoButton, Qt::NoModifier);
+        QQuickDropEventEx::setProposedAction(&event, proposedAction);
+        deliverEvent(canvas, &event);
     }
 }
 
@@ -142,7 +200,7 @@ void QQuickDragAttachedPrivate::deliverMoveEvent()
     Q_Q(QQuickDragAttached);
 
     itemMoved = false;
-    if (QQuickCanvas *canvas = attachedItem->canvas()) {
+    if (canvas) {
         QPoint scenePos = attachedItem->mapToScene(hotSpot).toPoint();
         QDragMoveEvent event(scenePos, mimeData->m_supportedActions, mimeData, Qt::NoButton, Qt::NoModifier);
         QQuickDropEventEx::setProposedAction(&event, proposedAction);
@@ -151,6 +209,15 @@ void QQuickDragAttachedPrivate::deliverMoveEvent()
             target = dragGrabber.target();
             emit q->targetChanged();
         }
+    }
+}
+
+void QQuickDragAttachedPrivate::deliverLeaveEvent()
+{
+    if (canvas) {
+        QDragLeaveEvent event;
+        deliverEvent(canvas, &event);
+        canvas = 0;
     }
 }
 
@@ -168,8 +235,17 @@ bool QQuickDragAttached::event(QEvent *event)
 
     if (event->type() == QEvent::User) {
         d->eventQueued = false;
-        if (d->itemMoved)
+        if (d->dragRestarted) {
+            d->deliverLeaveEvent();
+            d->deliverEnterEvent();
+
+            if (d->target != d->dragGrabber.target()) {
+                d->target = d->dragGrabber.target();
+                emit targetChanged();
+            }
+        } else if (d->itemMoved) {
             d->deliverMoveEvent();
+        }
         return true;
     } else {
         return QObject::event(event);
@@ -228,7 +304,8 @@ void QQuickDragAttached::setActive(bool active)
     This property holds an object that is identified to recipients of drag events as
     the source of the events.  By default this is the item Drag property is attached to.
 
-    Changes to source while a Drag is active don't take effect until a new drag is started.
+    Changing the source while a drag is active will reset the sequence of drag events by
+    sending a drag leave event followed by a drag enter event with the new source.
 */
 
 QObject *QQuickDragAttached::source() const
@@ -242,6 +319,8 @@ void QQuickDragAttached::setSource(QObject *item)
     Q_D(QQuickDragAttached);
     if (d->source != item) {
         d->source = item;
+        if (d->active)
+            d->restartDrag();
         emit sourceChanged();
     }
 }
@@ -251,6 +330,8 @@ void QQuickDragAttached::resetSource()
     Q_D(QQuickDragAttached);
     if (d->source != d->attachedItem) {
         d->source = d->attachedItem;
+        if (d->active)
+            d->restartDrag();
         emit sourceChanged();
     }
 }
@@ -280,7 +361,7 @@ QObject *QQuickDragAttached::target() const
 
     By default this is (0, 0).
 
-    Changes to hotSpot will take effect when the next event is sent.
+    Changes to hotSpot trigger a new drag move with the updated position.
 */
 
 QPointF QQuickDragAttached::hotSpot() const
@@ -295,14 +376,8 @@ void QQuickDragAttached::setHotSpot(const QPointF &hotSpot)
     if (d->hotSpot != hotSpot) {
         d->hotSpot = hotSpot;
 
-        if (d->active) {
-            d->itemMoved = true;
-
-            if (!d->eventQueued) {
-                d->eventQueued = true;
-                QCoreApplication::postEvent(this, new QEvent(QEvent::User));
-            }
-        }
+        if (d->active)
+            d->updatePosition();
 
         emit hotSpotChanged();
     }
@@ -313,7 +388,8 @@ void QQuickDragAttached::setHotSpot(const QPointF &hotSpot)
 
     This property holds a list of keys that can be used by a DropArea to filter drag events.
 
-    Changes to keys while a Drag is active don't take effect until a new drag is started.
+    Changing the keys while a drag is active will reset the sequence of drag events by
+    sending a drag leave event followed by a drag enter event with the new source.
 */
 
 QStringList QQuickDragAttached::keys() const
@@ -327,6 +403,8 @@ void QQuickDragAttached::setKeys(const QStringList &keys)
     Q_D(QQuickDragAttached);
     if (d->keys != keys) {
         d->keys = keys;
+        if (d->active)
+            d->restartDrag();
         emit keysChanged();
     }
 }
@@ -336,8 +414,8 @@ void QQuickDragAttached::setKeys(const QStringList &keys)
 
     This property holds return values of Drag.drop() supported by the drag source.
 
-    Changes to supportedActions while a Drag is active don't take effect
-    until a new drag is started.
+    Changing the supportedActions while a drag is active will reset the sequence of drag
+    events by sending a drag leave event followed by a drag enter event with the new source.
 */
 
 Qt::DropActions QQuickDragAttached::supportedActions() const
@@ -351,6 +429,8 @@ void QQuickDragAttached::setSupportedActions(Qt::DropActions actions)
     Q_D(QQuickDragAttached);
     if (d->supportedActions != actions) {
         d->supportedActions = actions;
+        if (d->active)
+            d->restartDrag();
         emit supportedActionsChanged();
     }
 }
@@ -361,7 +441,7 @@ void QQuickDragAttached::setSupportedActions(Qt::DropActions actions)
     This property holds an action that is recommended by the drag source as a
     return value from Drag.drop().
 
-    Changes to proposedAction will take effect when the next event is sent.
+    Changes to proposedAction will trigger a move event with the updated proposal.
 */
 
 Qt::DropAction QQuickDragAttached::proposedAction() const
@@ -375,8 +455,12 @@ void QQuickDragAttached::setProposedAction(Qt::DropAction action)
     Q_D(QQuickDragAttached);
     if (d->proposedAction != action) {
         d->proposedAction = action;
+        // The proposed action shouldn't affect whether a drag is accepted
+        // so leave/enter events are excessive, but the target should still
+        // updated.
+        if (d->active)
+            d->updatePosition();
         emit proposedActionChanged();
-        // send a move event with the new default action if active?
     }
 }
 
@@ -385,30 +469,27 @@ void QQuickDragAttachedPrivate::start(Qt::DropActions supportedActions)
     Q_Q(QQuickDragAttached);
     Q_ASSERT(!active);
 
-    if (QQuickCanvas *canvas = attachedItem ? attachedItem->canvas() : 0) {
-        if (!mimeData)
-            mimeData = new QQuickDragMimeData;
-        if (!listening) {
-            QQuickItemPrivate::get(attachedItem)->addItemChangeListener(this, QQuickItemPrivate::Geometry);
-            listening = true;
-        }
-
-        mimeData->m_source = source;
-        mimeData->m_supportedActions = supportedActions;
-        mimeData->m_keys = keys;
-        active = true;
-
-        QPoint scenePos = attachedItem->mapToScene(hotSpot).toPoint();
-        QDragEnterEvent event(scenePos, supportedActions, mimeData, Qt::NoButton, Qt::NoModifier);
-        QQuickDropEventEx::setProposedAction(&event, proposedAction);
-        deliverEvent(canvas, &event);
-
-        emit q->activeChanged();
-        if (target != dragGrabber.target()) {
-            target = dragGrabber.target();
-            emit q->targetChanged();
-        }
+    if (!mimeData)
+        mimeData = new QQuickDragMimeData;
+    if (!listening) {
+        QQuickItemPrivate::get(attachedItem)->addItemChangeListener(
+                this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Parent);
+        listening = true;
     }
+
+    mimeData->m_supportedActions = supportedActions;
+    active = true;
+    itemMoved = false;
+    dragRestarted = false;
+
+    deliverEnterEvent();
+
+    if (target != dragGrabber.target()) {
+        target = dragGrabber.target();
+        emit q->targetChanged();
+    }
+
+    emit q->activeChanged();
 }
 
 /*!
@@ -431,12 +512,15 @@ void QQuickDragAttached::start(QQmlV8Function *args)
     if (d->active)
         cancel();
 
+    d->overrideActions = false;
     Qt::DropActions supportedActions = d->supportedActions;
     // check arguments for supportedActions, maybe data?
     if (args->Length() >= 1) {
         v8::Local<v8::Value> v = (*args)[0];
-        if (v->IsInt32())
+        if (v->IsInt32()) {
             supportedActions = Qt::DropActions(v->Int32Value());
+            d->overrideActions = true;
+        }
     }
 
     d->start(supportedActions);
@@ -480,13 +564,13 @@ int QQuickDragAttached::drop()
 
     QObject *target = 0;
 
-    if (QQuickCanvas *canvas = d->attachedItem->canvas()) {
+    if (d->canvas) {
         QPoint scenePos = d->attachedItem->mapToScene(d->hotSpot).toPoint();
 
         QDropEvent event(
                 scenePos, d->mimeData->m_supportedActions, d->mimeData, Qt::NoButton, Qt::NoModifier);
         QQuickDropEventEx::setProposedAction(&event, d->proposedAction);
-        d->deliverEvent(canvas, &event);
+        d->deliverEvent(d->canvas, &event);
 
         if (event.isAccepted()) {
             acceptedAction = event.dropAction();
@@ -521,17 +605,13 @@ void QQuickDragAttached::cancel()
     if (!d->active)
         return;
     d->active = false;
-    d->itemMoved = false;
-
-    if (QQuickCanvas *canvas = d->attachedItem->canvas()) {
-        QDragLeaveEvent event;
-        d->deliverEvent(canvas, &event);
-    }
+    d->deliverLeaveEvent();
 
     if (d->target) {
         d->target = 0;
         emit targetChanged();
     }
+
     emit activeChanged();
 }
 

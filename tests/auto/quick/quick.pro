@@ -44,6 +44,7 @@ QUICKTESTS =  \
     qquickborderimage \
     qquickcanvas \
     qquickdrag \
+    qquickdroparea \
     qquickflickable \
     qquickflipable \
     qquickfocusscope \

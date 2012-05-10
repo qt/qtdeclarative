@@ -154,6 +154,7 @@ private slots:
     void active();
     void drop();
     void move();
+    void parentChange();
     void hotSpot();
     void supportedActions();
     void proposedAction();
@@ -676,6 +677,93 @@ void tst_QQuickDrag::move()
     QCOMPARE(outerTarget.position.x(), qreal(25)); QCOMPARE(outerTarget.position.y(), qreal(50));
 }
 
+void tst_QQuickDrag::parentChange()
+{
+    QQuickCanvas canvas1;
+    TestDropTarget dropTarget1(canvas1.rootItem());
+    dropTarget1.setSize(QSizeF(100, 100));
+
+    QQuickCanvas canvas2;
+    TestDropTarget dropTarget2(canvas2.rootItem());
+    dropTarget2.setSize(QSizeF(100, 100));
+
+    QQmlComponent component(&engine);
+    component.setData(
+            "import QtQuick 2.0\n"
+            "Item {\n"
+                "property real hotSpotX: Drag.hotSpot.x\n"
+                "property real hotSpotY: Drag.hotSpot.y\n"
+                "x: 50; y: 50\n"
+                "width: 10; height: 10\n"
+                "Drag.active: true\n"
+            "}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
+    QVERIFY(item);
+
+    QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
+
+    // Verify setting a parent item for an item with an active drag sends an enter event.
+    item->setParentItem(canvas1.rootItem());
+    QCOMPARE(dropTarget1.enterEvents, 0);
+    QCoreApplication::processEvents();
+    QCOMPARE(dropTarget1.enterEvents, 1);
+
+    // Changing the parent within the same canvas should send a move event.
+    item->setParentItem(&dropTarget1);
+    QCOMPARE(dropTarget1.enterEvents, 1);
+    QCOMPARE(dropTarget1.moveEvents, 0);
+    QCoreApplication::processEvents();
+    QCOMPARE(dropTarget1.enterEvents, 1);
+    QCOMPARE(dropTarget1.moveEvents, 1);
+
+    // Changing the parent to an item in another canvas sends a leave event in the old canvas
+    // and an enter on the new canvas.
+    item->setParentItem(canvas2.rootItem());
+    QCOMPARE(dropTarget1.enterEvents, 1);
+    QCOMPARE(dropTarget1.moveEvents, 1);
+    QCOMPARE(dropTarget1.leaveEvents, 0);
+    QCOMPARE(dropTarget2.enterEvents, 0);
+    QCoreApplication::processEvents();
+    QCOMPARE(dropTarget1.enterEvents, 1);
+    QCOMPARE(dropTarget1.moveEvents, 1);
+    QCOMPARE(dropTarget1.leaveEvents, 1);
+    QCOMPARE(dropTarget2.enterEvents, 1);
+
+    // Removing then parent item sends a leave event.
+    item->setParentItem(0);
+    QCOMPARE(dropTarget1.enterEvents, 1);
+    QCOMPARE(dropTarget1.moveEvents, 1);
+    QCOMPARE(dropTarget1.leaveEvents, 1);
+    QCOMPARE(dropTarget2.enterEvents, 1);
+    QCOMPARE(dropTarget2.leaveEvents, 0);
+    QCoreApplication::processEvents();
+    QCOMPARE(dropTarget1.enterEvents, 1);
+    QCOMPARE(dropTarget1.moveEvents, 1);
+    QCOMPARE(dropTarget1.leaveEvents, 1);
+    QCOMPARE(dropTarget2.enterEvents, 1);
+    QCOMPARE(dropTarget2.leaveEvents, 1);
+
+    // Go around again and verify no events if active is false.
+    evaluate<void>(item, "Drag.active = false");
+    item->setParentItem(canvas1.rootItem());
+    QCoreApplication::processEvents();
+
+    item->setParentItem(&dropTarget1);
+    QCoreApplication::processEvents();
+
+    item->setParentItem(canvas2.rootItem());
+    QCoreApplication::processEvents();
+
+    item->setParentItem(0);
+    QCoreApplication::processEvents();
+    QCOMPARE(dropTarget1.enterEvents, 1);
+    QCOMPARE(dropTarget1.moveEvents, 1);
+    QCOMPARE(dropTarget1.leaveEvents, 1);
+    QCOMPARE(dropTarget2.enterEvents, 1);
+    QCOMPARE(dropTarget2.leaveEvents, 1);
+}
+
 void tst_QQuickDrag::hotSpot()
 {
     QQuickCanvas canvas;
@@ -763,18 +851,28 @@ void tst_QQuickDrag::supportedActions()
     evaluate<void>(item, "{ Drag.start(); Drag.cancel() }");
     QCOMPARE(dropTarget.supportedActions, Qt::CopyAction | Qt::MoveAction | Qt::LinkAction);
 
+    dropTarget.reset();
     evaluate<void>(item, "Drag.supportedActions = Qt.CopyAction | Qt.MoveAction");
     QCOMPARE(evaluate<bool>(item, "Drag.supportedActions == Qt.CopyAction | Qt.MoveAction"), true);
     QCOMPARE(evaluate<bool>(item, "supportedActions == Qt.CopyAction | Qt.MoveAction"), true);
     evaluate<void>(item, "Drag.start()");
     QCOMPARE(dropTarget.supportedActions, Qt::CopyAction | Qt::MoveAction);
+    QCOMPARE(dropTarget.leaveEvents, 0);
+    QCOMPARE(dropTarget.enterEvents, 1);
 
-    // Once a drag is started the proposed actions are locked in for future events.
+    // Changing the supported actions will restart the drag, after a delay to avoid any
+    // recursion.
     evaluate<void>(item, "Drag.supportedActions = Qt.MoveAction");
     QCOMPARE(evaluate<bool>(item, "Drag.supportedActions == Qt.MoveAction"), true);
     QCOMPARE(evaluate<bool>(item, "supportedActions == Qt.MoveAction"), true);
     item->setPos(QPointF(60, 60));
     QCOMPARE(dropTarget.supportedActions, Qt::CopyAction | Qt::MoveAction);
+    QCOMPARE(dropTarget.leaveEvents, 0);
+    QCOMPARE(dropTarget.enterEvents, 1);
+    QCoreApplication::processEvents();
+    QCOMPARE(dropTarget.supportedActions, Qt::MoveAction);
+    QCOMPARE(dropTarget.leaveEvents, 1);
+    QCOMPARE(dropTarget.enterEvents, 2);
 
     // Calling start with proposed actions will override the current actions for the next sequence.
     evaluate<void>(item, "Drag.start(Qt.CopyAction)");
@@ -806,7 +904,6 @@ void tst_QQuickDrag::proposedAction()
     QVERIFY(item);
     item->setParentItem(&dropTarget);
 
-
     QCOMPARE(evaluate<bool>(item, "Drag.proposedAction == Qt.MoveAction"), true);
     QCOMPARE(evaluate<bool>(item, "proposedAction == Qt.MoveAction"), true);
     evaluate<void>(item, "{ Drag.start(); Drag.cancel() }");
@@ -824,7 +921,6 @@ void tst_QQuickDrag::proposedAction()
     evaluate<void>(item, "Drag.proposedAction = Qt.MoveAction");
     QCOMPARE(evaluate<bool>(item, "Drag.proposedAction == Qt.MoveAction"), true);
     QCOMPARE(evaluate<bool>(item, "proposedAction == Qt.MoveAction"), true);
-    item->setPos(QPointF(60, 60));
     QCoreApplication::processEvents();
     QCOMPARE(dropTarget.defaultAction, Qt::MoveAction);
     QCOMPARE(dropTarget.proposedAction, Qt::MoveAction);
@@ -859,6 +955,23 @@ void tst_QQuickDrag::keys()
     QCOMPARE(evaluate<QStringList>(item, "Drag.keys"), QStringList() << "red" << "blue");
     QCOMPARE(evaluate<QStringList>(item, "keys"), QStringList() << "red" << "blue");
     QCOMPARE(item->property("keys").toStringList(), QStringList() << "red" << "blue");
+
+    // Test changing the keys restarts a drag.
+    QQuickCanvas canvas;
+    item->setParentItem(canvas.rootItem());
+    TestDropTarget dropTarget(canvas.rootItem());
+    dropTarget.setSize(QSizeF(100, 100));
+
+    evaluate<void>(item, "Drag.start()");
+    QCOMPARE(dropTarget.leaveEvents, 0);
+    QCOMPARE(dropTarget.enterEvents, 1);
+
+    evaluate<void>(item, "Drag.keys = [\"green\"]");
+    QCOMPARE(dropTarget.leaveEvents, 0);
+    QCOMPARE(dropTarget.enterEvents, 1);
+    QCoreApplication::processEvents();
+    QCOMPARE(dropTarget.leaveEvents, 1);
+    QCOMPARE(dropTarget.enterEvents, 2);
 }
 
 void tst_QQuickDrag::source()
@@ -890,6 +1003,23 @@ void tst_QQuickDrag::source()
     evaluate<void>(item, "Drag.source = undefined");
     QCOMPARE(evaluate<QObject *>(item, "Drag.source"), static_cast<QObject *>(item));
     QCOMPARE(evaluate<QObject *>(item, "source"), static_cast<QObject *>(item));
+
+    // Test changing the source restarts a drag.
+    QQuickCanvas canvas;
+    item->setParentItem(canvas.rootItem());
+    TestDropTarget dropTarget(canvas.rootItem());
+    dropTarget.setSize(QSizeF(100, 100));
+
+    evaluate<void>(item, "Drag.start()");
+    QCOMPARE(dropTarget.leaveEvents, 0);
+    QCOMPARE(dropTarget.enterEvents, 1);
+
+    evaluate<void>(item, "Drag.source = proxySource");
+    QCOMPARE(dropTarget.leaveEvents, 0);
+    QCOMPARE(dropTarget.enterEvents, 1);
+    QCoreApplication::processEvents();
+    QCOMPARE(dropTarget.leaveEvents, 1);
+    QCOMPARE(dropTarget.enterEvents, 2);
 }
 
 class RecursingDropTarget : public TestDropTarget
