@@ -106,8 +106,6 @@ translations/*.qm
 translations/*_untranslated.ts
 qrc_*.cpp
 
-src/declarative/qtdeclarativeversion.h
-
 # Test generated files
 QObject.log
 tst_*
@@ -256,11 +254,9 @@ src/qmltest/qtquicktestversion.h
 src/qtquick1/qtquick1version.h
 src/qmldevtools/qtqmldevtoolsversion.h
 src/quick/qtquickversion.h
-src/compatibility/qtdeclarativeversion.h
 src/qml/qtqmlversion.h
 
 tests/auto/*/*.o
 tests/auto/*/*.moc
 tests/auto/*/*/*.o
 tests/auto/*/*/*.moc
-src/declarative/generated/
