@@ -44,6 +44,7 @@
 #include "qquickspriteengine_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <private/qqmlglobal_p.h>
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
@@ -377,6 +378,11 @@ QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
             this, SLOT(sizeVertices()));
 }
 
+bool QQuickAnimatedSprite::isCurrentFrameChangedConnected()
+{
+    IS_SIGNAL_CONNECTED(this, QQuickAnimatedSprite, currentFrameChanged, (int));
+}
+
 void QQuickAnimatedSprite::reloadImage()
 {
     if (!isComponentComplete())
@@ -597,6 +603,7 @@ void QQuickAnimatedSprite::prepareNextFrame()
 
     double frameAt; //double just for modf
     qreal progress = 0.0;
+    int lastFrame = m_curFrame;
     if (!m_paused) {
         //Advance State (keeps time for psuedostates)
         m_spriteEngine->updateSprites(timeInt);
@@ -629,6 +636,8 @@ void QQuickAnimatedSprite::prepareNextFrame()
     } else {
         frameAt = m_curFrame;
     }
+    if (m_curFrame != lastFrame && isCurrentFrameChangedConnected())
+        emit currentFrameChanged(m_curFrame);
     if (m_spriteEngine->sprite()->reverse())
         frameAt = (m_spriteEngine->spriteFrames() - 1) - frameAt;
     qreal y = m_spriteEngine->spriteY() / m_sheetSize.height();

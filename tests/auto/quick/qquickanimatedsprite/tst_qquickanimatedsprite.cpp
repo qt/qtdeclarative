@@ -41,6 +41,7 @@
 #include <QtTest/QtTest>
 #include "../../shared/util.h"
 #include <QtQuick/qquickview.h>
+#include <private/qabstractanimation_p.h>
 #include <private/qquickanimatedsprite_p.h>
 
 class tst_qquickanimatedsprite : public QQmlDataTest
@@ -50,8 +51,16 @@ public:
     tst_qquickanimatedsprite(){}
 
 private slots:
+    void initTestCase();
     void test_properties();
+    void test_frameChangedSignal();
 };
+
+void tst_qquickanimatedsprite::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    QUnifiedTimer::instance()->setConsistentTiming(true);
+}
 
 void tst_qquickanimatedsprite::test_properties()
 {
@@ -74,6 +83,31 @@ void tst_qquickanimatedsprite::test_properties()
     QVERIFY(!sprite->running());
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
+
+    delete canvas;
+}
+
+void tst_qquickanimatedsprite::test_frameChangedSignal()
+{
+    QQuickView *canvas = new QQuickView(0);
+
+    canvas->setSource(testFileUrl("frameChange.qml"));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+
+    QVERIFY(canvas->rootObject());
+    QQuickAnimatedSprite* sprite = canvas->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+
+    QVERIFY(!sprite->running());
+    QVERIFY(!sprite->paused());
+    QCOMPARE(sprite->loops(), 3);
+    QCOMPARE(sprite->frameCount(), 6);
+
+    QSignalSpy frameChangedSpy(sprite, SIGNAL(currentFrameChanged(int)));
+    sprite->setRunning(true);
+    QTRY_COMPARE(frameChangedSpy.count(), 3*6);
+    QTRY_VERIFY(!sprite->running());
 
     delete canvas;
 }

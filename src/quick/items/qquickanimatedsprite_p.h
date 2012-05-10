@@ -353,6 +353,7 @@ protected:
     void componentComplete();
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 private:
+    bool isCurrentFrameChangedConnected();
     void prepareNextFrame();
     void reloadImage();
     QSGGeometryNode* buildNode();
