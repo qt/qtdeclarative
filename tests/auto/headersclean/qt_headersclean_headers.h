@@ -42,7 +42,6 @@
 #ifndef QT_HEADERSCLEAN_HEADERS
 #define QT_HEADERSCLEAN_HEADERS
 
-#include <QtDeclarative/QtDeclarative>
 #include <QtQml/QtQml>
 #include <QtQmlDevTools/QtQmlDevTools>
 #include <QtQuick/QtQuick>

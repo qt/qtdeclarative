@@ -56,7 +56,7 @@ Rectangle {
         property var displacedTargetIndexes: new Array()
         property var displacedTargetItems: new Array()
 
-        // for QDeclarativeListProperty types
+        // for QQmlListProperty types
         function copyList(propList) {
             var temp = new Array()
             for (var i=0; i<propList.length; i++)
