@@ -1800,9 +1800,9 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
 
     QQuickCanvas *c = canvas();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
-    bool disabledItem = grabber && !grabber->isEnabled();
+    bool grabberDisabled = grabber && !grabber->isEnabled();
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || disabledItem)) {
+    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || grabberDisabled)) {
         QQuickMouseEventEx mouseEvent(event->type(), localPos,
                                 event->windowPos(), event->screenPos(),
                                 event->button(), event->buttons(), event->modifiers());
@@ -1848,12 +1848,12 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
             break;
         }
         grabber = qobject_cast<QQuickItem*>(c->mouseGrabberItem());
-        if ((grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this) || disabledItem) {
+        if ((grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this) || grabberDisabled) {
             d->clearDelayedPress();
             grabMouse();
         }
 
-        return stealThisEvent || d->delayedPressEvent || disabledItem;
+        return stealThisEvent || d->delayedPressEvent || grabberDisabled;
     } else if (d->lastPosTime != -1) {
         d->lastPosTime = -1;
         returnToBounds();
