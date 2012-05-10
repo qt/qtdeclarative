@@ -4114,6 +4114,8 @@ void QQuickItem::setVisible(bool v)
         return;
 
     d->explicitVisible = v;
+    if (!v)
+        d->dirty(QQuickItemPrivate::Visible);
 
     const bool childVisibilityChanged = d->setEffectiveVisibleRecur(d->calcEffectiveVisible());
     if (childVisibilityChanged && d->parentItem)
