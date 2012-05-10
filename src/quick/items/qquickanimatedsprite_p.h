@@ -233,6 +233,7 @@ public slots:
         if (m_sprite->m_source != arg) {
             m_sprite->setSource(arg);
             emit sourceChanged(arg);
+            reloadImage();
         }
     }
 
