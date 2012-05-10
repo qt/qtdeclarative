@@ -42,9 +42,12 @@
 #include "qqmldebugservice_p.h"
 #include "qqmldebugservice_p_p.h"
 #include "qqmldebugserver_p.h"
+#include <private/qqmldata_p.h>
+#include <private/qqmlcontext_p.h>
 
 #include <QtCore/QDebug>
 #include <QtCore/QStringList>
+#include <QtCore/QFileInfo>
 
 QT_BEGIN_NAMESPACE
 
@@ -200,6 +203,38 @@ QObject *QQmlDebugService::objectForId(int id)
     } else {
         return *iter;
     }
+}
+
+/*!
+    Returns a list of objects matching the given filename, line and column.
+*/
+QList<QObject*> QQmlDebugService::objectForLocationInfo(const QString &filename,
+                                                 int lineNumber, int columnNumber)
+{
+    ObjectReferenceHash *hash = objectReferenceHash();
+    QList<QObject*> objects;
+    QHash<int, QObject *>::Iterator iter;
+    for (iter = hash->ids.begin(); iter != hash->ids.end(); ++iter) {
+        QQmlData *ddata = QQmlData::get(iter.value());
+        if (!ddata || !ddata->outerContext)
+            continue;
+        //column number may be different due to qmlrewriter
+        if (QFileInfo(ddata->outerContext->urlString).fileName() == filename &&
+                ddata->lineNumber == lineNumber &&
+                ddata->columnNumber >= columnNumber) {
+            QHash<QObject *, ObjectReference>::Iterator objIter =
+                    hash->objects.find(*iter);
+            Q_ASSERT(objIter != hash->objects.end());
+
+            if (objIter->object == 0) {
+                hash->ids.erase(iter);
+                hash->objects.erase(objIter);
+            } else {
+                objects << *iter;
+            }
+        }
+    }
+    return objects;
 }
 
 bool QQmlDebugService::isDebuggingEnabled()

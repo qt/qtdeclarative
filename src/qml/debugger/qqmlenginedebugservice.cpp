@@ -305,6 +305,14 @@ void QQmlEngineDebugService::prepareDeferredObjects(QObject *obj)
 
 }
 
+void QQmlEngineDebugService::storeObjectIds(QObject *co)
+{
+    QQmlDebugService::idForObject(co);
+    QObjectList children = co->children();
+    for (int ii = 0; ii < children.count(); ++ii)
+        storeObjectIds(children.at(ii));
+}
+
 void QQmlEngineDebugService::buildObjectList(QDataStream &message,
                                              QQmlContext *ctxt,
                                              const QList<QPointer<QObject> > &instances)
@@ -313,6 +321,8 @@ void QQmlEngineDebugService::buildObjectList(QDataStream &message,
 
     QString ctxtName = ctxt->objectName();
     int ctxtId = QQmlDebugService::idForObject(ctxt);
+    if (ctxt->contextObject())
+        storeObjectIds(ctxt->contextObject());
 
     message << ctxtName << ctxtId;
 
@@ -458,6 +468,27 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         rs << QByteArray("FETCH_OBJECT_R") << queryId;
 
         if (object) {
+            if (recurse)
+                prepareDeferredObjects(object);
+            buildObjectDump(rs, object, recurse, dumpProperties);
+        }
+
+    } else if (type == "FETCH_OBJECTS_FOR_LOCATION") {
+        QString file;
+        int lineNumber;
+        int columnNumber;
+        bool recurse;
+        bool dumpProperties = true;
+
+        ds >> file >> lineNumber >> columnNumber >> recurse >> dumpProperties;
+
+        QList<QObject*> objects = QQmlDebugService::objectForLocationInfo(
+                                file, lineNumber, columnNumber);
+
+        rs << QByteArray("FETCH_OBJECTS_FOR_LOCATION_R") << queryId
+           << objects.count();
+
+        foreach (QObject *object, objects) {
             if (recurse)
                 prepareDeferredObjects(object);
             buildObjectDump(rs, object, recurse, dumpProperties);

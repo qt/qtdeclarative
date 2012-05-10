@@ -118,6 +118,8 @@ private slots:
     void queryRootContexts();
     void queryObject();
     void queryObject_data();
+    void queryObjectsForLocation();
+    void queryObjectsForLocation_data();
     void queryExpressionResult();
     void queryExpressionResult_data();
     void queryExpressionResultInRootContext();
@@ -681,6 +683,78 @@ void tst_QQmlEngineDebugService::queryObject()
 }
 
 void tst_QQmlEngineDebugService::queryObject_data()
+{
+    QTest::addColumn<bool>("recursive");
+
+    QTest::newRow("non-recursive") << false;
+    QTest::newRow("recursive") << true;
+}
+
+void tst_QQmlEngineDebugService::queryObjectsForLocation()
+{
+    QFETCH(bool, recursive);
+
+    bool success;
+
+    QmlDebugObjectReference rootObject = findRootObject();
+
+    const QString fileName = QFileInfo(rootObject.source.url.toString()).fileName();
+    int lineNumber = rootObject.source.lineNumber;
+    int columnNumber = rootObject.source.columnNumber;
+
+    QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(0);
+    recursive ? unconnected->queryObjectsForLocationRecursive(fileName, lineNumber,
+                                                              columnNumber, &success)
+              : unconnected->queryObjectsForLocation(fileName, lineNumber,
+                                                     columnNumber, &success);
+    QVERIFY(!success);
+    delete unconnected;
+
+    recursive ? m_dbg->queryObjectsForLocationRecursive(fileName, lineNumber,
+                                                      columnNumber, &success)
+              : m_dbg->queryObjectsForLocation(fileName, lineNumber,
+                                             columnNumber, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    QVERIFY(m_dbg->objects().count() == 1);
+    QmlDebugObjectReference obj = m_dbg->objects().first();
+
+    // check source as defined in main()
+    QmlDebugFileReference source = obj.source;
+    QCOMPARE(source.url, QUrl(fileName));
+    QCOMPARE(source.lineNumber, lineNumber);
+    QCOMPARE(source.columnNumber, columnNumber);
+
+    // generically test all properties, children and childrens' properties
+    recursiveObjectTest(m_rootItem, obj, recursive);
+
+    if (recursive) {
+        foreach (const QmlDebugObjectReference &child, obj.children)
+            QVERIFY(child.properties.count() > 0);
+
+        QmlDebugObjectReference rect;
+        QmlDebugObjectReference text;
+        foreach (const QmlDebugObjectReference &child, obj.children) {
+            if (child.className == "Rectangle")
+                rect = child;
+            else if (child.className == "Text")
+                text = child;
+        }
+
+        // test specific property values
+        QCOMPARE(findProperty(rect.properties, "width").value, qVariantFromValue(500));
+        QCOMPARE(findProperty(rect.properties, "height").value, qVariantFromValue(600));
+        QCOMPARE(findProperty(rect.properties, "color").value, qVariantFromValue(QColor("blue")));
+
+        QCOMPARE(findProperty(text.properties, "color").value, qVariantFromValue(QColor("blue")));
+    } else {
+        foreach (const QmlDebugObjectReference &child, obj.children)
+            QCOMPARE(child.properties.count(), 0);
+    }
+}
+
+void tst_QQmlEngineDebugService::queryObjectsForLocation_data()
 {
     QTest::addColumn<bool>("recursive");
 

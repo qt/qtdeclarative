@@ -123,6 +123,7 @@ private:
     bool setBinding(int objectId, const QString &propertyName, const QVariant &expression, bool isLiteralValue, QString filename = QString(), int line = -1, int column = 0);
     bool resetBinding(int objectId, const QString &propertyName);
     bool setMethodBody(int objectId, const QString &method, const QString &body);
+    void storeObjectIds(QObject *co);
 
     QList<QQmlEngine *> m_engines;
     QQmlWatcher *m_watch;

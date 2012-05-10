@@ -217,6 +217,24 @@ quint32 QQmlEngineDebugClient::queryObject(
     return id;
 }
 
+quint32 QQmlEngineDebugClient::queryObjectsForLocation(
+        const QString &file, int lineNumber, int columnNumber, bool *success)
+{
+    m_objects.clear();
+    quint32 id;
+    *success = false;
+    if (state() == QQmlDebugClient::Enabled) {
+        id = getId();
+        QByteArray message;
+        QDataStream ds(&message, QIODevice::WriteOnly);
+        ds << QByteArray("FETCH_OBJECTS_FOR_LOCATION") << id << file << lineNumber
+           << columnNumber << false << true;
+        sendMessage(message);
+        *success = true;
+    }
+    return id;
+}
+
 quint32 QQmlEngineDebugClient::queryObjectRecursive(
         const QmlDebugObjectReference &object, bool *success)
 {
@@ -229,6 +247,24 @@ quint32 QQmlEngineDebugClient::queryObjectRecursive(
         QDataStream ds(&message, QIODevice::WriteOnly);
         ds << QByteArray("FETCH_OBJECT") << id << object.debugId << true <<
               true;
+        sendMessage(message);
+        *success = true;
+    }
+    return id;
+}
+
+quint32 QQmlEngineDebugClient::queryObjectsForLocationRecursive(const QString &file,
+        int lineNumber, int columnNumber, bool *success)
+{
+     m_objects.clear();
+    quint32 id;
+    *success = false;
+    if (state() == QQmlDebugClient::Enabled) {
+        id = getId();
+        QByteArray message;
+        QDataStream ds(&message, QIODevice::WriteOnly);
+        ds << QByteArray("FETCH_OBJECTS_FOR_LOCATION") << id << file << lineNumber
+           << columnNumber << true << true;
         sendMessage(message);
         *success = true;
     }
@@ -390,6 +426,19 @@ void QQmlEngineDebugClient::decode(QDataStream &ds,
 }
 
 void QQmlEngineDebugClient::decode(QDataStream &ds,
+                                   QList<QmlDebugObjectReference> &o,
+                                   bool simple)
+{
+    int count;
+    ds >> count;
+    for (int i = 0; i < count; i++) {
+        QmlDebugObjectReference obj;
+        decode(ds, obj, simple);
+        o << obj;
+    }
+}
+
+void QQmlEngineDebugClient::decode(QDataStream &ds,
                                    QmlDebugContextReference &c)
 {
     ds >> c.name >> c.debugId;
@@ -442,6 +491,10 @@ void QQmlEngineDebugClient::messageReceived(const QByteArray &data)
     } else if (type == "FETCH_OBJECT_R") {
         if (!ds.atEnd())
             decode(ds, m_object, false);
+
+    } else if (type == "FETCH_OBJECTS_FOR_LOCATION_R") {
+        if (!ds.atEnd())
+            decode(ds, m_objects, false);
 
     } else if (type == "EVAL_EXPRESSION_R") {;
         ds >> m_exprResult;

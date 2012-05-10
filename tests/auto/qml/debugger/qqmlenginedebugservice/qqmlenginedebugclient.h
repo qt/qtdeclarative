@@ -192,8 +192,12 @@ public:
                               bool *success);
     quint32 queryObject(const QmlDebugObjectReference &,
                         bool *success);
+    quint32 queryObjectsForLocation(const QString &file,
+            int lineNumber, int columnNumber, bool *success);
     quint32 queryObjectRecursive(const QmlDebugObjectReference &,
                                  bool *success);
+    quint32 queryObjectsForLocationRecursive(const QString &file,
+            int lineNumber, int columnNumber, bool *success);
     quint32 queryExpressionResult(int objectDebugId,
                                   const QString &expr,
                                   bool *success);
@@ -213,10 +217,12 @@ public:
 
     void decode(QDataStream &, QmlDebugContextReference &);
     void decode(QDataStream &, QmlDebugObjectReference &, bool simple);
+    void decode(QDataStream &ds, QList<QmlDebugObjectReference> &o, bool simple);
 
     QList<QmlDebugEngineReference> engines() { return m_engines; }
     QmlDebugContextReference rootContext() { return m_rootContext; }
     QmlDebugObjectReference object() { return m_object; }
+    QList<QmlDebugObjectReference> objects() { return m_objects; }
     QVariant resultExpr() { return m_exprResult; }
     bool valid() { return m_valid; }
 
@@ -234,6 +240,7 @@ private:
     QList<QmlDebugEngineReference> m_engines;
     QmlDebugContextReference m_rootContext;
     QmlDebugObjectReference m_object;
+    QList<QmlDebugObjectReference> m_objects;
     QVariant m_exprResult;
 };
 

@@ -85,6 +85,8 @@ public:
 
     static int idForObject(QObject *);
     static QObject *objectForId(int);
+    static QList<QObject*> objectForLocationInfo(const QString &filename,
+                                          int lineNumber, int columnNumber);
 
     static QString objectToString(QObject *obj);
 
