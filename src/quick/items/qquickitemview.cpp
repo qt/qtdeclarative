@@ -1344,19 +1344,23 @@ void QQuickItemView::setContentY(qreal pos)
 qreal QQuickItemView::xOrigin() const
 {
     Q_D(const QQuickItemView);
-    if (d->isContentFlowReversed())
-        return -maxXExtent() + d->size() - d->hData.endMargin;
-    else
-        return -minXExtent() + d->hData.startMargin;
+    if (d->layoutOrientation() == Qt::Horizontal
+            && effectiveLayoutDirection() == Qt::RightToLeft
+            && contentWidth() < width()) {
+        return d->lastPosition() - d->footerSize();
+    }
+    return QQuickFlickable::xOrigin();
 }
 
 qreal QQuickItemView::yOrigin() const
 {
     Q_D(const QQuickItemView);
-    if (d->isContentFlowReversed())
-        return -maxYExtent() + d->size() - d->vData.endMargin;
-    else
-        return -minYExtent() + d->vData.startMargin;
+    if (d->layoutOrientation() == Qt::Vertical
+            && d->verticalLayoutDirection == QQuickItemView::BottomToTop
+            && contentHeight() < height()) {
+        return d->lastPosition() - d->footerSize();
+    }
+    return QQuickFlickable::yOrigin();
 }
 
 void QQuickItemView::updatePolish()

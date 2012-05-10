@@ -120,8 +120,8 @@ private slots:
     void footer_data();
     void header();
     void header_data();
-    void headerFooter();
-    void headerFooter_data();
+    void extents();
+    void extents_data();
     void resetModel_headerFooter();
     void resizeViewAndRepaint();
     void resizeGrid();
@@ -3485,7 +3485,7 @@ public:
     qreal maxX() const { return maxXExtent(); }
 };
 
-void tst_QQuickGridView::headerFooter()
+void tst_QQuickGridView::extents()
 {
     QFETCH(QQuickGridView::Flow, flow);
     QFETCH(Qt::LayoutDirection, layoutDirection);
@@ -3494,6 +3494,8 @@ void tst_QQuickGridView::headerFooter()
     QFETCH(QPointF, footerPos);
     QFETCH(QPointF, minPos);
     QFETCH(QPointF, maxPos);
+    QFETCH(QPointF, origin_empty);
+    QFETCH(QPointF, origin_nonEmpty);
 
     QQuickView *canvas = getView();
 
@@ -3527,10 +3529,18 @@ void tst_QQuickGridView::headerFooter()
     QCOMPARE(static_cast<GVAccessor*>(gridview)->maxX(), maxPos.x());
     QCOMPARE(static_cast<GVAccessor*>(gridview)->maxY(), maxPos.y());
 
+    QCOMPARE(gridview->xOrigin(), origin_empty.x());
+    QCOMPARE(gridview->yOrigin(), origin_empty.y());
+    for (int i=0; i<30; i++)
+        model.addItem("Item" + QString::number(i), "");
+    QTRY_COMPARE(gridview->count(), model.count());
+    QCOMPARE(gridview->xOrigin(), origin_nonEmpty.x());
+    QCOMPARE(gridview->yOrigin(), origin_nonEmpty.y());
+
     releaseView(canvas);
 }
 
-void tst_QQuickGridView::headerFooter_data()
+void tst_QQuickGridView::extents_data()
 {
     QTest::addColumn<QQuickGridView::Flow>("flow");
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
@@ -3539,50 +3549,61 @@ void tst_QQuickGridView::headerFooter_data()
     QTest::addColumn<QPointF>("footerPos");
     QTest::addColumn<QPointF>("minPos");
     QTest::addColumn<QPointF>("maxPos");
+    QTest::addColumn<QPointF>("origin_empty");
+    QTest::addColumn<QPointF>("origin_nonEmpty");
 
     // header is 240x20 (or 20x320 in TopToBottom)
     // footer is 240x30 (or 30x320 in TopToBottom)
+    // grid has 10 rows in LeftToRight mode and 6 columns in TopToBottom
 
     QTest::newRow("LeftToRight, LtR, TtB")
             << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::TopToBottom
             << QPointF(0, -20) << QPointF(0, 0)
-            << QPointF(0, 20) << QPointF(240, 20);
+            << QPointF(0, 20) << QPointF(240, 20)
+            << QPointF(0, -20) << QPointF(0, -20);
 
     QTest::newRow("LeftToRight, RtL, TtB")
             << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::TopToBottom
             << QPointF(0, -20) << QPointF(0, 0)
-            << QPointF(0, 20) << QPointF(240, 20);
+            << QPointF(0, 20) << QPointF(240, 20)
+            << QPointF(0, -20) << QPointF(0, -20);
 
     QTest::newRow("LeftToRight, LtR, BtT")
             << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::BottomToTop
             << QPointF(0, 0) << QPointF(0, -30)
-            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20);  // content flow is reversed
+            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20)  // content flow is reversed
+            << QPointF(0, -30) << QPointF(0, (-60.0 * 10) - 30);
 
     QTest::newRow("LeftToRight, RtL, BtT")
             << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::BottomToTop
             << QPointF(0, 0) << QPointF(0, -30)
-            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20);  // content flow is reversed
+            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20)  // content flow is reversed
+            << QPointF(0, -30) << QPointF(0, (-60.0 * 10) - 30);
 
 
     QTest::newRow("TopToBottom, LtR, TtB")
             << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::TopToBottom
             << QPointF(-20, 0) << QPointF(0, 0)
-            << QPointF(20, 0) << QPointF(20, 320);
+            << QPointF(20, 0) << QPointF(20, 320)
+            << QPointF(-20, 0) << QPointF(-20, 0);
 
     QTest::newRow("TopToBottom, RtL, TtB")
             << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::TopToBottom
             << QPointF(0, 0) << QPointF(-30, 0)
-            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320);  // content flow is reversed
+            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320)  // content flow is reversed
+            << QPointF(-30, 0) << QPointF((-80.0 * 6) - 30, 0);
 
     QTest::newRow("TopToBottom, LtR, BtT")
             << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::BottomToTop
             << QPointF(-20, -320) << QPointF(0, -320)
-            << QPointF(20, 0) << QPointF(20, 320);
+            << QPointF(20, 0) << QPointF(20, 320)
+            << QPointF(-20, 0) << QPointF(-20, 0);
 
     QTest::newRow("TopToBottom, RtL, BtT")
             << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::BottomToTop
             << QPointF(0, -320) << QPointF(-30, -320)
-            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320);  // content flow is reversed
+            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320)  // content flow is reversed
+            << QPointF(-30, 0) << QPointF((-80.0 * 6) - 30, 0);
 }
 
 void tst_QQuickGridView::resetModel_headerFooter()
@@ -3612,7 +3633,7 @@ void tst_QQuickGridView::resetModel_headerFooter()
 
     QQuickItem *footer = findItem<QQuickItem>(contentItem, "footer");
     QVERIFY(footer);
-    QCOMPARE(footer->y(), 80.*2);
+    QCOMPARE(footer->y(), 60.*2);
 
     model.reset();
 
@@ -3622,7 +3643,7 @@ void tst_QQuickGridView::resetModel_headerFooter()
 
     footer = findItem<QQuickItem>(contentItem, "footer");
     QVERIFY(footer);
-    QCOMPARE(footer->y(), 80.*2);
+    QCOMPARE(footer->y(), 60.*2);
 
     delete canvas;
 }
@@ -4166,7 +4187,7 @@ void tst_QQuickGridView::margins()
         QTRY_VERIFY(contentItem != 0);
 
         QTRY_COMPARE(gridview->contentX(), -240+50.);
-        QTRY_COMPARE(gridview->xOrigin(), 0.);
+        QTRY_COMPARE(gridview->xOrigin(), -100. * 10);
 
         // check end bound
         gridview->positionViewAtEnd();
@@ -4183,18 +4204,18 @@ void tst_QQuickGridView::margins()
         QTRY_COMPARE(model.count(), gridview->count());
         gridview->setContentX(-240+50);
         gridview->returnToBounds();
-        QCOMPARE(gridview->xOrigin(), -100.);
+        QCOMPARE(gridview->xOrigin(), -1000.);
         QTRY_COMPARE(gridview->contentX(), -240-50.);
 
         // reduce right margin
         pos = gridview->contentX();
         gridview->setRightMargin(40);
-        QCOMPARE(gridview->xOrigin(), -100.);
+        QCOMPARE(gridview->xOrigin(), -1000.);
         QTRY_COMPARE(gridview->contentX(), -240-100 + 40.);
 
         // check end bound
         gridview->positionViewAtEnd();
-        QCOMPARE(gridview->xOrigin(), 0.); // positionViewAtEnd() resets origin
+        QCOMPARE(gridview->xOrigin(), -900.); // positionViewAtEnd() resets origin
         pos = gridview->contentX();
         gridview->setContentX(pos - 80);
         gridview->returnToBounds();
@@ -4203,7 +4224,7 @@ void tst_QQuickGridView::margins()
         // reduce left margin
         pos = gridview->contentX();
         gridview->setLeftMargin(20);
-        QCOMPARE(gridview->xOrigin(), 0.);
+        QCOMPARE(gridview->xOrigin(), -900.);
         QTRY_COMPARE(gridview->contentX(), pos+10);
 
         delete canvas;

@@ -22,7 +22,11 @@ GridView {
     }
 
     cellWidth: 80;
-    cellHeight: 80;
+    cellHeight: 60;
 
-    delegate: Text { width: 80; height: 80; text: index + "(" + x + ")" }
+    delegate: Rectangle {
+        width: 80; height: 60
+        border.width: 1
+        Text { text: index + "(" + parent.x + "," + parent.y + ")" }
+    }
 }

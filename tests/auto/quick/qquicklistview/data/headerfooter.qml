@@ -21,5 +21,9 @@ ListView {
         color: "blue"
     }
 
-    delegate: Text { width: 30; height: 30; text: index + "(" + x + ")" }
+    delegate: Rectangle {
+        width: view.width
+        height: 30
+        Text { text: index + "(" + x + ")" }
+    }
 }
