@@ -277,6 +277,21 @@ struct Context {
     String **formals;
     size_t formalCount;
 
+    inline Value argument(size_t index = 0)
+    {
+        Value arg;
+        getArgument(&arg, index);
+        return arg;
+    }
+
+    inline void getArgument(Value *result, size_t index)
+    {
+        if (index < argumentCount)
+            *result = arguments[index];
+        else
+            __qmljs_init_undefined(this, result);
+    }
+
     void init()
     {
         parent = 0;

@@ -48,10 +48,31 @@ struct ObjectCtor: FunctionObject
         __qmljs_init_object(ctx, &ctx->result, new Object());
     }
 
-    virtual void call(Context *) {
+    virtual void call(Context *)
+    {
         assert(!"not here");
     }
 };
+
+struct StringCtor: FunctionObject
+{
+    virtual void construct(Context *ctx)
+    {
+        Value arg = ctx->argument(0);
+        __qmljs_to_string(ctx, &arg, &arg);
+        __qmljs_init_object(ctx, &ctx->thisObject, new StringObject(arg));
+    }
+
+    virtual void call(Context *ctx)
+    {
+        const Value arg = ctx->argument(0);
+        if (arg.is(UNDEFINED_TYPE))
+            __qmljs_init_string(ctx, &ctx->result, String::get(ctx, QString()));
+        else
+            __qmljs_to_string(ctx, &ctx->result, &arg);
+    }
+};
+
 } // builtins
 
 
@@ -102,6 +123,9 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
 
         ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("Object")),
                                          VM::Value::object(ctx, new builtins::ObjectCtor()));
+
+        ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("String")),
+                                         VM::Value::object(ctx, new builtins::StringCtor()));
 
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {

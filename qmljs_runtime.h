@@ -171,6 +171,9 @@ struct Value {
         String *stringValue;
     };
 
+    inline bool is(ValueType t) const { return type == t; }
+    inline bool isNot(ValueType t) const { return type != t; }
+
     static inline Value boolean(Context *ctx, bool value) {
         Value v;
         __qmljs_init_boolean(ctx, &v, value);
