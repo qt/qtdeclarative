@@ -118,7 +118,7 @@ public:
    }
    \endqml
 
-   \sa {qmlstate}{States} {QML Animation and Transitions}{Transitions}, {QtQml}
+   \sa {qmlstate}{States}, {QML Animation and Transitions}{Transitions}, {QtQml}
 */
 
 QQuickStateGroup::QQuickStateGroup(QObject *parent)

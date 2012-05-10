@@ -1586,8 +1586,8 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
   \qmlmethod object QtQuick2::Context2D::arc(real x, real y, real radius, real startAngle, real endAngle, bool anticlockwise)
   Adds an arc to the current subpath that lies on the circumference of the circle whose center is at the point (\c x,\cy) and whose radius is \c radius.
   \image qml-item-canvas-arcTo2.png
-  \sa  QtQuick2::Context2D::arcTo
-  See {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C 2d context standard for arc}
+  \sa QtQuick2::Context2D::arcTo,
+      {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C 2d context standard for arc}
   */
 static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
 {
@@ -1633,8 +1633,8 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
 
     \image qml-item-canvas-startAngle.png
     The anticlockwise has the value TRUE for each arc in the figure above because they are all drawn in the counterclockwise direction.
-  \sa  QtQuick2::Context2D::arc
-  \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C 2d context standard for arcTo}
+  \sa QtQuick2::Context2D::arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C 2d
+      context standard for arcTo}
   */
 static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
 {

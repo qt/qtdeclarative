@@ -503,7 +503,9 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *paren
     \l QUrl::fromLocalFile() when loading a file from the local filesystem.
 
     \sa loadUrl()
-*/QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, CompilationMode mode, QObject *parent)
+*/
+QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, CompilationMode mode,
+                             QObject *parent)
 : QObject(*(new QQmlComponentPrivate), parent)
 {
     Q_D(QQmlComponent);
@@ -518,7 +520,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *paren
     \sa loadUrl()
 */
 QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName, 
-                           QObject *parent)
+                             QObject *parent)
 : QObject(*(new QQmlComponentPrivate), parent)
 {
     Q_D(QQmlComponent);
@@ -534,7 +536,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
     \sa loadUrl()
 */
 QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
-                           CompilationMode mode, QObject *parent)
+                             CompilationMode mode, QObject *parent)
 : QObject(*(new QQmlComponentPrivate), parent)
 {
     Q_D(QQmlComponent);

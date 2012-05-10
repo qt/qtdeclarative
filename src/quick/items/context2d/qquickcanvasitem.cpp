@@ -254,7 +254,7 @@ bool QQuickCanvasItem::isAvailable() const
     The type name is the same as used in the getContext() call, for the 2d
     canvas the value will be "2d".
 
-    \sa QtQuick2::Canvas::getContext QtQuick2::Canvas::available
+    \sa QtQuick2::Canvas::getContext, QtQuick2::Canvas::available
 */
 
 QString QQuickCanvasItem::contextType() const
@@ -312,7 +312,7 @@ QQmlV8Handle QQuickCanvasItem::context() const
     Only those tiles within the current canvas window are painted by the Canvas
     render engine.
 
-    \sa QtQuick2::Canvas::tileSize QtQuick2::Canvas::canvasWindow
+    \sa QtQuick2::Canvas::tileSize, QtQuick2::Canvas::canvasWindow
 */
 QSizeF QQuickCanvasItem::canvasSize() const
 {
@@ -346,7 +346,7 @@ void QQuickCanvasItem::setCanvasSize(const QSizeF & size)
 
     By default the tileSize is the same as the canvasSize.
 
-    \sa QtQuick2::Canvas::canvaasSize QtQuick2::Canvas::canvasWindow
+    \sa QtQuick2::Canvas::canvaasSize, QtQuick2::Canvas::canvasWindow
 */
 QSize QQuickCanvasItem::tileSize() const
 {
@@ -379,7 +379,7 @@ void QQuickCanvasItem::setTileSize(const QSize & size)
      can display different visible areas by changing the canvas windowSize
      and/or position.
 
-    \sa QtQuick2::Canvas::canvasSize QtQuick2::Canvas::tileSize
+    \sa QtQuick2::Canvas::canvasSize, QtQuick2::Canvas::tileSize
 */
 QRectF QQuickCanvasItem::canvasWindow() const
 {
@@ -746,8 +746,8 @@ void QQuickCanvasItem::requestPaint()
     canvas renderer will redraw it. This will trigger the "onPaint" signal
     handler function.
 
-    \sa QtQuick2::Canvas::paint QtQuick2::Canvas::requestPaint
-  */
+    \sa QtQuick2::Canvas::paint, QtQuick2::Canvas::requestPaint
+*/
 
 void QQuickCanvasItem::markDirty(const QRectF& rect)
 {
@@ -776,8 +776,8 @@ void QQuickCanvasItem::checkAnimationCallbacks()
    Note: calling this method will force painting the whole canvas, not just the
    current canvas visible window.
 
-   \sa canvasWindow canvasSize toDataURL
-  */
+   \sa canvasWindow, canvasSize, toDataURL
+*/
 bool QQuickCanvasItem::save(const QString &filename) const
 {
     Q_D(const QQuickCanvasItem);
@@ -807,9 +807,9 @@ QImage QQuickCanvasItem::loadedImage(const QUrl& url)
     The loaded image can be unloaded by the \a QtQuick2::Canvas::unloadImage method.
 
     Note: Only loaded images can be painted on the Canvas item.
-  \sa QtQuick2::Canvas::unloadImage QtQuick2::Canvas::imageLoaded QtQuick2::Canvas::isImageLoaded
-  \sa QtQuick2::Context2D::createImageData QtQuick2::Context2D::drawImage
-  */
+  \sa QtQuick2::Canvas::unloadImage, QtQuick2::Canvas::imageLoaded, QtQuick2::Canvas::isImageLoaded,
+      QtQuick2::Context2D::createImageData, QtQuick2::Context2D::drawImage
+*/
 void QQuickCanvasItem::loadImage(const QUrl& url)
 {
     Q_D(QQuickCanvasItem);
@@ -832,9 +832,9 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
   Once an image is unloaded it cannot be painted by the canvas context
   unless it is loaded again.
 
-  \sa QtQuick2::Canvas::loadImage QtQuick2::Canvas::imageLoaded QtQuick2::Canvas::isImageLoaded
-  \sa QtQuick2::Context2D::createImageData QtQuick2::Context2D::drawImage
-  */
+  \sa QtQuick2::Canvas::loadImage, QtQuick2::Canvas::imageLoaded, QtQuick2::Canvas::isImageLoaded,
+      QtQuick2::Context2D::createImageData, QtQuick2::Context2D::drawImage
+*/
 void QQuickCanvasItem::unloadImage(const QUrl& url)
 {
     Q_D(QQuickCanvasItem);
@@ -850,7 +850,7 @@ void QQuickCanvasItem::unloadImage(const QUrl& url)
   Returns true if the \a image failed to load.
 
   \sa QtQuick2::Canvas::loadImage
-  */
+*/
 bool QQuickCanvasItem::isImageError(const QUrl& url) const
 {
     Q_D(const QQuickCanvasItem);
@@ -864,7 +864,7 @@ bool QQuickCanvasItem::isImageError(const QUrl& url) const
   Returns true if the \a image is currently loading.
 
   \sa QtQuick2::Canvas::loadImage
-  */
+*/
 bool QQuickCanvasItem::isImageLoading(const QUrl& url) const
 {
     Q_D(const QQuickCanvasItem);
@@ -877,7 +877,7 @@ bool QQuickCanvasItem::isImageLoading(const QUrl& url) const
   Returns true if the \a image is sucessfully loaded and ready to use.
 
   \sa QtQuick2::Canvas::loadImage
-  */
+*/
 bool QQuickCanvasItem::isImageLoaded(const QUrl& url) const
 {
     Q_D(const QQuickCanvasItem);
@@ -907,7 +907,7 @@ QImage QQuickCanvasItem::toImage(const QRectF& rect) const
    The default \a mimeType is "image/png".
 
    \sa QtQuick2::Canvas::save
-  */
+*/
 QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
 {
     QImage image = toImage();
