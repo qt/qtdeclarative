@@ -180,11 +180,26 @@ void QQmlCompiledData::dump(QQmlInstruction *instr, int idx)
     case QQmlInstruction::StoreVariantBool:
         qWarning().nospace() << idx << "\t\t" << "STORE_VARIANT_BOOL\t\t" << instr->storeBool.propertyIndex << "\t" << instr->storeBool.value;
         break;
+    case QQmlInstruction::StoreVar:
+        qWarning().nospace() << idx << "\t\t" << "STORE_VAR\t\t" << instr->storeString.propertyIndex << "\t" << instr->storeString.value << "\t\t" << primitives.at(instr->storeString.value);
+        break;
+    case QQmlInstruction::StoreVarInteger:
+        qWarning().nospace() << idx << "\t\t" << "STORE_VAR_INTEGER\t" << instr->storeInteger.propertyIndex << "\t" << instr->storeInteger.value;
+        break;
+    case QQmlInstruction::StoreVarDouble:
+        qWarning().nospace() << idx << "\t\t" << "STORE_VAR_DOUBLE\t" << instr->storeDouble.propertyIndex << "\t" << instr->storeDouble.value;
+        break;
+    case QQmlInstruction::StoreVarBool:
+        qWarning().nospace() << idx << "\t\t" << "STORE_VAR_BOOL\t\t" << instr->storeBool.propertyIndex << "\t" << instr->storeBool.value;
+        break;
     case QQmlInstruction::StoreObject:
         qWarning().nospace() << idx << "\t\t" << "STORE_OBJECT\t\t" << instr->storeObject.propertyIndex;
         break;
     case QQmlInstruction::StoreVariantObject:
         qWarning().nospace() << idx << "\t\t" << "STORE_VARIANT_OBJECT\t" << instr->storeObject.propertyIndex;
+        break;
+    case QQmlInstruction::StoreVarObject:
+        qWarning().nospace() << idx << "\t\t" << "STORE_VAR_OBJECT\t" << instr->storeObject.propertyIndex;
         break;
     case QQmlInstruction::StoreInterface:
         qWarning().nospace() << idx << "\t\t" << "STORE_INTERFACE\t\t" << instr->storeObject.propertyIndex;

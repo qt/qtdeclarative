@@ -467,6 +467,42 @@ void tst_qqmlinstruction::dump()
         data->addInstruction(i);
     }
 
+    {
+        data->primitives << "color(1, 1, 1, 1)";
+        QQmlCompiledData::Instruction::StoreVar i;
+        i.propertyIndex = 79;
+        i.value = data->primitives.count() - 1;
+
+        data->addInstruction(i);
+    }
+
+    {
+        QQmlCompiledData::Instruction::StoreVarObject i;
+        i.propertyIndex = 80;
+        data->addInstruction(i);
+    }
+
+    {
+        QQmlCompiledData::Instruction::StoreVarInteger i;
+        i.value = 23;
+        i.propertyIndex = 81;
+        data->addInstruction(i);
+    }
+
+    {
+        QQmlCompiledData::Instruction::StoreVarDouble i;
+        i.value = 66.3;
+        i.propertyIndex = 82;
+        data->addInstruction(i);
+    }
+
+    {
+        QQmlCompiledData::Instruction::StoreVarBool i;
+        i.value = true;
+        i.propertyIndex = 83;
+        data->addInstruction(i);
+    }
+
     QStringList expect;
     expect 
         << "Index\tOperation\t\tData1\tData2\tData3\tComments"
@@ -524,6 +560,11 @@ void tst_qqmlinstruction::dump()
         << "50\t\tDONE"
         << "51\t\tSTORE_TR_STRING\t99\t3\t14\t14\t2"
         << "52\t\tSTORE_TRID_STRING\t78\t7\t-1"
+        << "53\t\tSTORE_VAR\t\t79\t5\t\t\"color(1, 1, 1, 1)\""
+        << "54\t\tSTORE_VAR_OBJECT\t80"
+        << "55\t\tSTORE_VAR_INTEGER\t81\t23"
+        << "56\t\tSTORE_VAR_DOUBLE\t82\t66.3"
+        << "57\t\tSTORE_VAR_BOOL\t\t83\ttrue"
         << "-------------------------------------------------------------------------------";
 
     messages = QStringList();
