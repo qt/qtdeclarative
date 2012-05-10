@@ -245,6 +245,14 @@ struct FunctionObject: Object {
     virtual void construct(Context *ctx);
 };
 
+struct NativeFunction: FunctionObject {
+    void (*code)(Context *);
+
+    NativeFunction(void (*code)(Context *)): code(code) {}
+    virtual void call(Context *ctx) { code(ctx); }
+    virtual void construct(Context *ctx) { code(ctx); }
+};
+
 struct ScriptFunction: FunctionObject {
     Context *context;
     IR::Function *function;
@@ -253,6 +261,7 @@ struct ScriptFunction: FunctionObject {
     virtual ~ScriptFunction();
 
     virtual void call(Context *ctx);
+    virtual void construct(Context *ctx);
 };
 
 struct ErrorObject: Object {
@@ -276,6 +285,7 @@ struct Context {
     Value result;
     String **formals;
     size_t formalCount;
+    bool calledAsConstructor;
 
     inline Value argument(size_t index = 0)
     {
@@ -303,6 +313,7 @@ struct Context {
         result.type = UNDEFINED_TYPE;
         formals = 0;
         formalCount = 0;
+        calledAsConstructor = false;
     }
 };
 

@@ -445,7 +445,15 @@ void __qmljs_construct_property(Context *context, Value *result, Value *base, St
             context->thisObject = thisObject;
             context->formals = f->formalParameterList;
             context->formalCount = f->formalParameterCount;
+            context->calledAsConstructor = true;
             f->construct(context);
+
+            Value proto;
+            if (f->get(String::get(context, QLatin1String("prototype")), &proto)) { // ### `prototype' should be a unique symbol
+                if (proto.type == OBJECT_TYPE)
+                    context->thisObject.objectValue->prototype = proto.objectValue;
+            }
+
             if (result)
                 __qmljs_copy(result, &context->thisObject);
         } else {

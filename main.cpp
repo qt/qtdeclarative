@@ -73,6 +73,30 @@ struct StringCtor: FunctionObject
     }
 };
 
+struct StringPrototype: Object
+{
+    StringPrototype(Context *ctx, FunctionObject *ctor)
+    {
+        setProperty(ctx, QLatin1String("constructor"), Value::object(ctx, ctor));
+        setProperty(ctx, QLatin1String("toString"), toString);
+    }
+
+    void setProperty(Context *ctx, const QString &name, const Value &value)
+    {
+        put(String::get(ctx, name), value);
+    }
+
+    void setProperty(Context *ctx, const QString &name, void (*code)(Context *))
+    {
+        setProperty(ctx, name, Value::object(ctx, new NativeFunction(code)));
+    }
+
+    static void toString(Context *ctx)
+    {
+        __qmljs_to_string(ctx, &ctx->result, &ctx->thisObject);
+    }
+};
+
 } // builtins
 
 
@@ -116,20 +140,25 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
 
         VM::Context *ctx = new VM::Context;
         ctx->init();
-        ctx->activation = VM::Value::object(ctx, new VM::ArgumentsObject(ctx));
 
-        ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("print")),
+        VM::String *prototype = VM::String::get(ctx, QLatin1String("prototype"));
+
+        VM::Object *globalObject = new VM::ArgumentsObject(ctx);
+        __qmljs_init_object(ctx, &ctx->activation, globalObject);
+
+        globalObject->put(VM::String::get(ctx, QLatin1String("print")),
                                          VM::Value::object(ctx, new builtins::Print()));
 
-        ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("Object")),
+        globalObject->put(VM::String::get(ctx, QLatin1String("Object")),
                                          VM::Value::object(ctx, new builtins::ObjectCtor()));
 
-        ctx->activation.objectValue->put(VM::String::get(ctx, QLatin1String("String")),
-                                         VM::Value::object(ctx, new builtins::StringCtor()));
+        VM::FunctionObject *stringCtor = new builtins::StringCtor();
+        stringCtor->put(prototype, VM::Value::object(ctx, new builtins::StringPrototype(ctx, stringCtor)));
+        globalObject->put(VM::String::get(ctx, QLatin1String("String")), VM::Value::object(ctx, stringCtor));
 
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {
-                ctx->activation.objectValue->put(VM::String::get(ctx, *function->name),
+                globalObject->put(VM::String::get(ctx, *function->name),
                                                  VM::Value::object(ctx, new VM::ScriptFunction(ctx, function)));
             }
         }
