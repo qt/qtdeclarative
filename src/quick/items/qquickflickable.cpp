@@ -1763,7 +1763,7 @@ bool QQuickFlickable::xflick() const
 {
     Q_D(const QQuickFlickable);
     if (d->flickableDirection == QQuickFlickable::AutoFlickDirection)
-        return vWidth() != width();
+        return floor(qAbs(vWidth() - width()));
     return d->flickableDirection & QQuickFlickable::HorizontalFlick;
 }
 
@@ -1771,7 +1771,7 @@ bool QQuickFlickable::yflick() const
 {
     Q_D(const QQuickFlickable);
     if (d->flickableDirection == QQuickFlickable::AutoFlickDirection)
-        return vHeight() !=  height();
+        return floor(qAbs(vHeight() - height()));
     return d->flickableDirection & QQuickFlickable::VerticalFlick;
 }
 
