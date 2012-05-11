@@ -279,7 +279,7 @@ void QQuickConnections::connectSignals()
         QQmlProperty prop(target(), propName);
         if (prop.isValid() && (prop.type() & QQmlProperty::SignalProperty)) {
             QQmlBoundSignal *signal =
-                new QQmlBoundSignal(target(), prop.method(), this);
+                new QQmlBoundSignal(target(), prop.method(), this, qmlEngine(this));
 
             QString location;
             QQmlContextData *ctxtdata = 0;

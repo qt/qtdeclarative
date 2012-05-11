@@ -80,6 +80,8 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qthread.h>
+#include <private/qthread_p.h>
 #include <QtNetwork/qnetworkconfigmanager.h>
 
 #include <private/qobject_p.h>
@@ -470,8 +472,51 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     QQmlData *ddata = QQmlData::get(object, false);
     if (!ddata) return; // Probably being deleted
 
-    QQmlNotifierEndpoint *ep = ddata->notify(index);
-    if (ep) QQmlNotifier::emitNotify(ep, a);
+    // In general, QML only supports QObject's that live on the same thread as the QQmlEngine
+    // that they're exposed to.  However, to make writing "worker objects" that calculate data
+    // in a separate thread easier, QML allows a QObject that lives in the same thread as the
+    // QQmlEngine to emit signals from a different thread.  These signals are then automatically
+    // marshalled back onto the QObject's thread and handled by QML from there.  This is tested
+    // by the qqmlecmascript::threadSignal() autotest.
+    if (ddata->notifyList &&
+        QThread::currentThreadId() != QObjectPrivate::get(object)->threadData->threadId) {
+
+        QMetaMethod m = object->metaObject()->method(index);
+        QList<QByteArray> parameterTypes = m.parameterTypes();
+
+        int *types = (int *)malloc((parameterTypes.count() + 1) * sizeof(int));
+        void **args = (void **) malloc((parameterTypes.count() + 1) *sizeof(void *));
+
+        types[0] = 0; // return type
+        args[0] = 0; // return value
+
+        for (int ii = 0; ii < parameterTypes.count(); ++ii) {
+            const QByteArray &typeName = parameterTypes.at(ii);
+            if (typeName.endsWith('*'))
+                types[ii + 1] = QMetaType::VoidStar;
+            else
+                types[ii + 1] = QMetaType::type(typeName);
+
+            if (!types[ii + 1]) {
+                qWarning("QObject::connect: Cannot queue arguments of type '%s'\n"
+                         "(Make sure '%s' is registered using qRegisterMetaType().)",
+                         typeName.constData(), typeName.constData());
+                free(types);
+                free(args);
+                return;
+            }
+
+            args[ii + 1] = QMetaType::create(types[ii + 1], a[ii + 1]);
+        }
+
+        QMetaCallEvent *ev = new QMetaCallEvent(index, 0, 0, object, index,
+                                                parameterTypes.count() + 1, types, args);
+        QCoreApplication::postEvent(object, ev);
+
+    } else {
+        QQmlNotifierEndpoint *ep = ddata->notify(index);
+        if (ep) QQmlNotifier::emitNotify(ep, a);
+    }
 }
 
 int QQmlData::receivers(QAbstractDeclarativeData *d, const QObject *, int index)

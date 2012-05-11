@@ -1382,6 +1382,17 @@ private:
     QString m_timespec;
 };
 
+class MyWorkerObject : public QObject
+{
+    Q_OBJECT
+
+public Q_SLOTS:
+    void doIt();
+
+Q_SIGNALS:
+    void done(const QString &result);
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

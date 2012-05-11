@@ -738,7 +738,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QMetaMethod signal = target->metaObject()->method(instr.signalIndex);
 
-            QQmlBoundSignal *bs = new QQmlBoundSignal(target, signal, target);
+            QQmlBoundSignal *bs = new QQmlBoundSignal(target, signal, target, engine);
             QQmlBoundSignalExpression *expr =
                 new QQmlBoundSignalExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column);
             bs->takeExpression(expr);

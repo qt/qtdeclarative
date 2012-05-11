@@ -63,6 +63,7 @@ private:
     QQmlNotifierEndpoint *endpoints;
 };
 
+class QQmlEngine;
 class QQmlNotifierEndpoint
 {
 public:
@@ -76,7 +77,7 @@ public:
     inline bool isConnected(QObject *source, int sourceSignal);
     inline bool isConnected(QQmlNotifier *);
 
-    void connect(QObject *source, int sourceSignal);
+    void connect(QObject *source, int sourceSignal, QQmlEngine *engine);
     inline void connect(QQmlNotifier *);
     inline void disconnect();
 

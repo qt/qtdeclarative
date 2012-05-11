@@ -221,14 +221,14 @@ void QQmlAbstractBoundSignal::removeFromObject()
 }
 
 QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
-                               QObject *owner)
+                               QObject *owner, QQmlEngine *engine)
 : m_expression(0), m_params(0), m_scope(scope), m_index(signal.methodIndex())
 {
     setParamsValid(false);
     setIsEvaluating(false);
     addToObject(owner);
     callback = &subscriptionCallback;
-    QQmlNotifierEndpoint::connect(scope, m_index);
+    QQmlNotifierEndpoint::connect(scope, m_index, engine);
 }
 
 QQmlBoundSignal::~QQmlBoundSignal()

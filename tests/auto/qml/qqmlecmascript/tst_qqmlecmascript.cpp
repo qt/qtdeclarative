@@ -261,8 +261,8 @@ private slots:
     void deleteRootObjectInCreation();
     void onDestruction();
     void bindingSuppression();
-
     void signalEmitted();
+    void threadSignal();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -6758,6 +6758,16 @@ void tst_qqmlecmascript::signalEmitted()
         QTRY_VERIFY(obj->property("success").toBool());
         delete obj;
     }
+}
+
+// QTBUG-25647
+void tst_qqmlecmascript::threadSignal()
+{
+    QQmlComponent c(&engine, testFileUrl("threadSignal.qml"));
+    QObject *object = c.create();
+    QVERIFY(object != 0);
+    QTRY_VERIFY(object->property("passed").toBool());
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

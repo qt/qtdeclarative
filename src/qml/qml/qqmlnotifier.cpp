@@ -41,6 +41,8 @@
 
 #include "qqmlnotifier_p.h"
 #include "qqmlproperty_p.h"
+#include <QtCore/qdebug.h>
+#include <private/qthread_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,9 +69,25 @@ void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
     else if (endpoint) endpoint->notifying = 0;
 }
 
-void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal)
+void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine *engine)
 {
     disconnect();
+
+    Q_ASSERT(engine);
+    if (QObjectPrivate::get(source)->threadData->threadId !=
+        QObjectPrivate::get(engine)->threadData->threadId) {
+
+        QString sourceName;
+        QDebug(&sourceName) << source;
+        sourceName = sourceName.left(sourceName.length() - 1);
+        QString engineName;
+        QDebug(&engineName).nospace() << engine;
+        engineName = engineName.left(engineName.length() - 1);
+
+        qFatal("QQmlEngine: Illegal attempt to connect to %s that is in"
+               " a different thread than the QML engine %s.", qPrintable(sourceName),
+               qPrintable(engineName));
+    }
 
     this->source = source;
     this->sourceSignal = sourceSignal;

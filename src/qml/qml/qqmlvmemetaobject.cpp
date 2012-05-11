@@ -473,7 +473,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
 
             QMetaProperty prop = target->metaObject()->property(d->propertyIndex());
             if (prop.hasNotifySignal())
-                connect(target, prop.notifySignalIndex());
+                connect(target, prop.notifySignalIndex(), ctxt->engine);
         }
 
         metaObject.setFlag();

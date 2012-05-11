@@ -987,7 +987,8 @@ QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
         return signalHandler->takeExpression(expr);
 
     if (expr) {
-        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object);
+        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object,
+                                                      expr->context()->engine);
         signal->takeExpression(expr);
     }
     return 0;

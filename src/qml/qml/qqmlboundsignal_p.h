@@ -132,7 +132,7 @@ class Q_QML_EXPORT QQmlBoundSignal : public QQmlAbstractBoundSignal,
                                      public QQmlNotifierEndpoint
 {
 public:
-    QQmlBoundSignal(QObject *scope, const QMetaMethod &signal, QObject *owner);
+    QQmlBoundSignal(QObject *scope, const QMetaMethod &signal, QObject *owner, QQmlEngine *engine);
     virtual ~QQmlBoundSignal();
 
     int index() const;

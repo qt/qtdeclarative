@@ -443,7 +443,7 @@ void QV4Bindings::subscribeId(QQmlContextData *p, int idIndex, int subIndex)
     }
 }
  
-void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex)
+void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex, QQmlEngine *e)
 {
     Subscription *sub = (subscriptions + subIndex);
     if (sub->isConnected(o, notifyIndex))
@@ -451,7 +451,7 @@ void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex)
     sub->bindings = this;
     sub->method = subIndex; 
     if (o)
-        sub->connect(o, notifyIndex);
+        sub->connect(o, notifyIndex, e);
     else
         sub->disconnect();
 }
@@ -801,7 +801,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         QObject *o = 0;
         const Register &object = registers[instr->subscribeop.reg];
         if (!object.isUndefined()) o = object.getQObject();
-        subscribe(o, instr->subscribeop.index, instr->subscribeop.offset);
+        subscribe(o, instr->subscribeop.index, instr->subscribeop.offset, context->engine);
     }
     QML_V4_END_INSTR(Subscribe, subscribeop)
 
@@ -843,7 +843,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 accessors->notifier(object, instr->fetchAndSubscribe.property.accessorData, &notifier);
                 if (notifier) sub->connect(notifier);
             } else if (instr->fetchAndSubscribe.property.notifyIndex != -1) {
-                sub->connect(object, instr->fetchAndSubscribe.property.notifyIndex);
+                sub->connect(object, instr->fetchAndSubscribe.property.notifyIndex, context->engine);
             }
         }
     }

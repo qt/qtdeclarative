@@ -43,6 +43,7 @@
 #include <QPlainTextEdit>
 #include <QQmlEngine>
 #include <QJSEngine>
+#include <QThread>
 
 class BaseExtensionObject : public QObject
 {
@@ -154,6 +155,23 @@ static QObject *qobject_api_engine_parent(QQmlEngine *engine, QJSEngine *scriptE
     return o;
 }
 
+class MyWorkerObjectThread : public QThread
+{
+public:
+    MyWorkerObjectThread(MyWorkerObject *o) : QThread(o), o(o) { start(); }
+
+    virtual void run() {
+        emit o->done(QLatin1String("good"));
+    }
+
+    MyWorkerObject *o;
+};
+
+void MyWorkerObject::doIt()
+{
+    new MyWorkerObjectThread(this);
+}
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
@@ -170,6 +188,7 @@ void registerTypes()
     qmlRegisterType<MyRevisionedClass>("Qt.test",1,0,"MyRevisionedClass");
     qmlRegisterType<MyDeleteObject>("Qt.test", 1,0, "MyDeleteObject");
     qmlRegisterType<MyRevisionedClass,1>("Qt.test",1,1,"MyRevisionedClass");
+    qmlRegisterType<MyWorkerObject>("Qt.test", 1,0, "MyWorkerObject");
 
     // test scarce resource property binding post-evaluation optimisation
     // and for testing memory usage in property var circular reference test

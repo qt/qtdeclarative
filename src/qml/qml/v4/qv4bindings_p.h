@@ -146,7 +146,7 @@ private:
 
     inline void unsubscribe(int subIndex);
     inline void subscribeId(QQmlContextData *p, int idIndex, int subIndex);
-    inline void subscribe(QObject *o, int notifyIndex, int subIndex);
+    inline void subscribe(QObject *o, int notifyIndex, int subIndex, QQmlEngine *);
 
     inline static qint32 toInt32(double n);
     static const double D32;

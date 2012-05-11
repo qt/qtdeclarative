@@ -226,7 +226,7 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, 
                 Q_ASSERT(g->isConnected(o, n));
             } else {
                 g = Guard::New(expression, engine);
-                g->connect(o, n);
+                g->connect(o, n, engine);
             }
 
             expression->activeGuards.prepend(g);
