@@ -346,6 +346,8 @@ public slots:
 
 private slots:
     void createEngine();
+    void sizeVertices();
+
 protected:
     void reset();
     void componentComplete();

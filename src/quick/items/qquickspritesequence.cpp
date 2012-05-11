@@ -57,10 +57,10 @@
 QT_BEGIN_NAMESPACE
 
 static const char vertexShaderCode[] =
+    "attribute highp vec2 vPos;\n"
     "attribute highp vec2 vTex;\n"
     "uniform highp vec3 animData;// w,h(premultiplied of anim), interpolation progress\n"
     "uniform highp vec4 animPos;//x,y, x,y (two frames for interpolation)\n"
-    "uniform highp vec2 size;//w,h of element\n"
     "\n"
     "uniform highp mat4 qt_Matrix;\n"
     "\n"
@@ -75,7 +75,7 @@ static const char vertexShaderCode[] =
     "    //Next frame is also passed, for interpolation\n"
     "    fTexS.zw = animPos.zw + vTex.xy * animData.xy;\n"
     "\n"
-    "    gl_Position = qt_Matrix * vec4(size.x * vTex.x, size.y * vTex.y, 0, 1);\n"
+    "    gl_Position = qt_Matrix * vec4(vPos.x, vPos.y, 0, 1);\n"
     "}\n";
 
 static const char fragmentShaderCode[] =
@@ -110,8 +110,6 @@ public:
     float animY2;
     float animW;
     float animH;
-    float elementWidth;
-    float elementHeight;
 };
 
 QQuickSpriteSequenceMaterial::QQuickSpriteSequenceMaterial()
@@ -122,8 +120,6 @@ QQuickSpriteSequenceMaterial::QQuickSpriteSequenceMaterial()
     , animY2(0.0f)
     , animW(1.0f)
     , animH(1.0f)
-    , elementWidth(1.0f)
-    , elementHeight(1.0f)
 {
     setFlag(Blending, true);
 }
@@ -156,7 +152,6 @@ public:
         program()->setUniformValue(m_opacity_id, state.opacity());
         program()->setUniformValue(m_animData_id, m->animW, m->animH, m->animT);
         program()->setUniformValue(m_animPos_id, m->animX1, m->animY1, m->animX2, m->animY2);
-        program()->setUniformValue(m_size_id, m->elementWidth, m->elementHeight);
 
         if (state.isMatrixDirty())
             program()->setUniformValue(m_matrix_id, state.combinedMatrix());
@@ -167,7 +162,6 @@ public:
         m_opacity_id = program()->uniformLocation("qt_Opacity");
         m_animData_id = program()->uniformLocation("animData");
         m_animPos_id = program()->uniformLocation("animPos");
-        m_size_id = program()->uniformLocation("size");
     }
 
     virtual const char *vertexShader() const { return vertexShaderCode; }
@@ -175,6 +169,7 @@ public:
 
     virtual char const *const *attributeNames() const {
         static const char *attr[] = {
+           "vPos",
            "vTex",
             0
         };
@@ -185,7 +180,6 @@ public:
     int m_opacity_id;
     int m_animData_id;
     int m_animPos_id;
-    int m_size_id;
 
     static float chunkOfBytes[1024];
 };
@@ -198,6 +192,8 @@ QSGMaterialShader *QQuickSpriteSequenceMaterial::createShader() const
 }
 
 struct SpriteVertex {
+    float x;
+    float y;
     float tx;
     float ty;
 };
@@ -279,6 +275,10 @@ QQuickSpriteSequence::QQuickSpriteSequence(QQuickItem *parent) :
     setFlag(ItemHasContents);
     connect(this, SIGNAL(runningChanged(bool)),
             this, SLOT(update()));
+    connect(this, SIGNAL(widthChanged()),
+            this, SLOT(sizeVertices()));
+    connect(this, SIGNAL(heightChanged()),
+            this, SLOT(sizeVertices()));
 }
 
 void QQuickSpriteSequence::jumpTo(const QString &sprite)
@@ -315,15 +315,35 @@ void QQuickSpriteSequence::createEngine()
 }
 
 static QSGGeometry::Attribute SpriteSequence_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 2, GL_FLOAT),         // tex
+    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),   // pos
+    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),         // tex
 };
 
 static QSGGeometry::AttributeSet SpriteSequence_AttributeSet =
 {
-    1, // Attribute Count
-    2 * sizeof(float),
+    2, // Attribute Count
+    (2+2) * sizeof(float),
     SpriteSequence_Attributes
 };
+
+void QQuickSpriteSequence::sizeVertices()
+{
+    if (!m_node)
+        return;
+
+    SpriteVertices *p = (SpriteVertices *) m_node->geometry()->vertexData();
+    p->v1.x = 0;
+    p->v1.y = 0;
+
+    p->v2.x = width();
+    p->v2.y = 0;
+
+    p->v3.x = 0;
+    p->v3.y = height();
+
+    p->v4.x = width();
+    p->v4.y = height();
+}
 
 QSGGeometryNode* QQuickSpriteSequence::buildNode()
 {
@@ -355,8 +375,6 @@ QSGGeometryNode* QQuickSpriteSequence::buildNode()
     m_material->animY2 = m_material->animY1;
     m_material->animW = m_spriteEngine->spriteWidth() / m_sheetSize.width();
     m_material->animH = m_spriteEngine->spriteHeight() / m_sheetSize.height();
-    m_material->elementWidth = width();
-    m_material->elementHeight = height();
     m_curState = m_spriteEngine->state(m_spriteEngine->curState())->name();
     emit currentSpriteChanged(m_curState);
 
@@ -393,6 +411,7 @@ QSGGeometryNode* QQuickSpriteSequence::buildNode()
     m_node->setGeometry(g);
     m_node->setMaterial(m_material);
     m_node->setFlag(QSGGeometryNode::OwnsMaterial);
+    sizeVertices();
     return m_node;
 }
 
@@ -431,8 +450,6 @@ void QQuickSpriteSequence::prepareNextFrame()
 
     uint timeInt = m_timestamp.elapsed();
     qreal time =  timeInt / 1000.;
-    m_material->elementHeight = height();
-    m_material->elementWidth = width();
 
     //Advance State
     m_spriteEngine->updateSprites(timeInt);
