@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS;
 
-static IR::Type irTypeFromVariantType(int t, QQmlEnginePrivate *engine, const QMetaObject * /* meta */)
+static IR::Type irTypeFromVariantType(int t, QQmlEnginePrivate *engine)
 {
     switch (t) {
     case QMetaType::Bool:
@@ -81,7 +81,7 @@ static IR::Type irTypeFromVariantType(int t, QQmlEnginePrivate *engine, const QM
     default:
         if (t == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
             return IR::SGAnchorLineType;
-        } else if (engine->metaObjectForType(t)) {
+        } else if (!engine->metaObjectForType(t).isNull()) {
             return IR::ObjectType;
         } else if (t == qMetaTypeId<QJSValue>()) {
             return IR::JSValueType;
@@ -125,9 +125,9 @@ bool QV4IRBuilder::operator()(QQmlJS::IR::Function *function,
         // This is the only operation where variant is supported:
         QQmlPropertyData *data = &m_expression->property->core;
         if (data->propType == QMetaType::QVariant) {
-            targetType = (data->isVMEProperty() ? IR::VarType : IR::VariantType);
+            targetType = (data->isVarProperty() ? IR::VarType : IR::VariantType);
         } else {
-            targetType = irTypeFromVariantType(data->propType, m_engine, 0);
+            targetType = irTypeFromVariantType(data->propType, m_engine);
         }
 
         if (targetType != r.type()) {
@@ -462,8 +462,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
             if (m_expression->context != m_expression->component) {
                 // RootStorage is more efficient than ScopeStorage, so prefer that if they are the same
                 QQmlPropertyCache *cache = m_expression->context->synthCache;
-                const QMetaObject *metaObject = m_expression->context->metaObject();
-                if (!cache) cache = m_engine->cache(metaObject);
+                if (!cache) cache = m_expression->context->metatype;
 
                 QQmlPropertyData *data = cache->property(name);
 
@@ -475,16 +474,15 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
                 }
 
                 if (data && !data->isFunction()) {
-                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
-                    _expr.code = _block->SYMBOL(irType, name, metaObject, data, IR::Name::ScopeStorage, line, column);
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
+                    _expr.code = _block->SYMBOL(irType, name, QQmlMetaObject(), data, IR::Name::ScopeStorage, line, column);
                     found = true;
                 } 
             }
 
             if (!found) {
                 QQmlPropertyCache *cache = m_expression->component->synthCache;
-                const QMetaObject *metaObject = m_expression->component->metaObject();
-                if (!cache) cache = m_engine->cache(metaObject);
+                if (!cache) cache = m_expression->component->metatype;
 
                 QQmlPropertyData *data = cache->property(name);
 
@@ -496,8 +494,8 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
                 }
 
                 if (data && !data->isFunction()) {
-                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
-                    _expr.code = _block->SYMBOL(irType, name, metaObject, data, IR::Name::RootStorage, line, column);
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
+                    _expr.code = _block->SYMBOL(irType, name, QQmlMetaObject(), data, IR::Name::RootStorage, line, column);
                     found = true;
                 } 
             }
@@ -624,7 +622,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                         return false; // We don't know enough about this property
                     }
 
-                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, attachedMeta);
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
                     _expr.code = _block->SYMBOL(baseName, irType, name, attachedMeta, data, line, column);
                 }
                 break;
@@ -634,7 +632,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     QByteArray utf8Name = name.toUtf8();
                     const char *enumName = utf8Name.constData();
 
-                    const QMetaObject *meta = baseName->meta;
+                    const QMetaObject *meta = baseName->meta.metaObject(); // XXX - firstCppMetaObject
                     bool found = false;
                     for (int ii = 0; !found && ii < meta->enumeratorCount(); ++ii) {
                         QMetaEnum e = meta->enumerator(ii);
@@ -649,7 +647,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                         qWarning() << "*** unresolved enum:"
                                    << (*baseName->id + QLatin1Char('.') + ast->name.toString());
                 } else {
-                    QQmlPropertyCache *cache = m_engine->cache(baseName->meta);
+                    QQmlPropertyCache *cache = baseName->meta.propertyCache(m_engine);
                     if (!cache) return false;
                     QQmlPropertyData *data = cache->property(name);
 
@@ -663,7 +661,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                         return false; // We don't know enough about this property
                     }
 
-                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, baseName->meta);
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
                     _expr.code = _block->SYMBOL(baseName, irType, name, baseName->meta, data, line, column);
                 }
             }
@@ -672,7 +670,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
             case IR::Name::IdObject: {
                 const QQmlScript::Object *idObject = baseName->idObject;
                 QQmlPropertyCache *cache = 
-                    idObject->synthCache?idObject->synthCache:m_engine->cache(idObject->metaObject());
+                    idObject->synthCache?idObject->synthCache:idObject->metatype;
 
                 QQmlPropertyData *data = cache->property(name);
 
@@ -686,16 +684,16 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     return false;
                 }
 
-                IR::Type irType = irTypeFromVariantType(data->propType, m_engine, idObject->metaObject());
-                _expr.code = _block->SYMBOL(baseName, irType, name,
-                                            idObject->metaObject(), data, line, column);
+                IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
+                _expr.code = _block->SYMBOL(baseName, irType, name, QQmlMetaObject(), data, line, column);
                 }
                 break;
 
             case IR::Name::Property: 
-                if (baseName->type == IR::ObjectType && baseName->meta && baseName->property->isFinal()) {
-                    const QMetaObject *meta = m_engine->metaObjectForType(baseName->property->propType);
-                    QQmlPropertyCache *cache = m_engine->cache(meta);
+                if (baseName->type == IR::ObjectType && !baseName->meta.isNull() &&
+                    baseName->property->isFinal()) {
+                    QQmlMetaObject meta = m_engine->metaObjectForType(baseName->property->propType);
+                    QQmlPropertyCache *cache = meta.propertyCache(m_engine);
                     if (!cache)
                         return false;
 
@@ -707,7 +705,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                             return false; // We don't know enough about this property
                         }
 
-                        IR::Type irType = irTypeFromVariantType(data->propType, m_engine, meta);
+                        IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
                         _expr.code = _block->SYMBOL(baseName, irType, name,
                                                     meta, data, line, column);
                     }

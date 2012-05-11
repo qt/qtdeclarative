@@ -63,16 +63,10 @@ using namespace QQmlScript;
 // Parser IR classes
 //
 QQmlScript::Object::Object()
-: type(-1), typeReference(0), idIndex(-1), metatype(0), synthCache(0), defaultProperty(0),
-  parserStatusCast(-1), componentCompileState(0), nextAliasingObject(0), nextIdObject(0)
+: type(-1), typeReference(0), idIndex(-1), metatype(0), synthCache(0),
+  defaultProperty(0), parserStatusCast(-1), componentCompileState(0), nextAliasingObject(0),
+  nextIdObject(0)
 {
-    // initialize the members in the meta object
-    extObject.d.superdata = 0;
-    extObject.d.stringdata = 0;
-    extObject.d.data = 0;
-    extObject.d.extradata = 0;
-    extObject.d.static_metacall = 0;
-    extObject.d.relatedMetaObjects = 0;
 }
 
 QQmlScript::Object::~Object() 
@@ -87,14 +81,6 @@ void Object::setBindingBit(int b)
 
     quint32 *bits = (quint32 *)bindingBitmask.data();
     bits[b / 32] |= (1 << (b % 32));
-}
-
-const QMetaObject *Object::metaObject() const
-{
-    if (!metadata.isEmpty() && metatype)
-        return &extObject;
-    else
-        return metatype;
 }
 
 QQmlScript::Property *Object::getDefaultProperty()
@@ -206,17 +192,18 @@ int QQmlScript::Object::aggregateDynamicSlotParameterCount() const
 }
 
 QQmlScript::Object::DynamicProperty::DynamicProperty()
-: isDefaultProperty(false), isReadOnly(false), type(Variant), defaultValue(0), nextProperty(0)
+: isDefaultProperty(false), isReadOnly(false), type(Variant), defaultValue(0), nextProperty(0),
+  nameIndex(-1)
 {
 }
 
 QQmlScript::Object::DynamicSignal::DynamicSignal()
-: nextSignal(0)
+: nextSignal(0), nameIndex(-1)
 {
 }
 
 QQmlScript::Object::DynamicSlot::DynamicSlot()
-: nextSlot(0)
+: nextSlot(0), nameIndex(-1)
 {
 }
 

@@ -69,7 +69,7 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
 {
     if (m_target && m_index >= 0)
-        m_target->activate(m_target->object, m_target->methodOffset + m_index, 0);
+        m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
 }
 
 void QQmlVMEVariantQObjectPtr::setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index)
@@ -461,8 +461,8 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
 
     if (metaObject.flag()) {
         // This is actually notify
-        int sigIdx = metaObject->methodOffset + aliasId + metaObject->metaData->propertyCount;
-        QMetaObject::activate(metaObject->object, sigIdx, 0);
+        int sigIdx = metaObject->methodOffset() + aliasId + metaObject->metaData->propertyCount;
+        metaObject->activate(metaObject->object, sigIdx, 0);
     } else {
         QQmlVMEMetaData::AliasData *d = metaObject->metaData->aliasData() + aliasId;
         if (!d->isObjectAlias()) {
@@ -471,32 +471,45 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             if (!target)
                 return;
 
-            QMetaProperty prop = target->metaObject()->property(d->propertyIndex());
-            if (prop.hasNotifySignal())
-                connect(target, prop.notifySignalIndex(), ctxt->engine);
+            if (d->notifySignal != -1)
+                connect(target, d->notifySignal, ctxt->engine);
         }
 
         metaObject.setFlag();
     }
 }
 
-QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj, const QMetaObject *other, const QQmlVMEMetaData *meta)
-: QV8GCCallback::Node(GcPrologueCallback), object(obj),
-  ctxt(QQmlData::get(obj, true)->outerContext), metaData(meta), data(0),
-  aliasEndpoints(0), firstVarPropertyIndex(-1), varPropertiesInitialized(false),
-  interceptors(0), v8methods(0), parent(0)
+QAbstractDynamicMetaObject *QQmlVMEMetaObject::toDynamicMetaObject(QObject *o)
 {
-    *static_cast<QMetaObject *>(this) = *other;
-    this->d.superdata = obj->metaObject();
+    if (!hasAssignedMetaObjectData) {
+        *static_cast<QMetaObject *>(this) = *cache->createMetaObject();
 
+        if (parent.isT1())
+            this->d.superdata = parent.asT1()->toDynamicMetaObject(o);
+        else
+            this->d.superdata = parent.asT2();
+
+        hasAssignedMetaObjectData = true;
+    }
+
+    return this;
+}
+
+QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
+                                     QQmlPropertyCache *cache,
+                                     const QQmlVMEMetaData *meta)
+: QV8GCCallback::Node(GcPrologueCallback), object(obj),
+  ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
+  hasAssignedMetaObjectData(false), data(0), aliasEndpoints(0), firstVarPropertyIndex(-1),
+  varPropertiesInitialized(false), interceptors(0), v8methods(0)
+{
     QObjectPrivate *op = QObjectPrivate::get(obj);
-    if (op->metaObject)
-        parent = static_cast<QAbstractDynamicMetaObject*>(op->metaObject);
+
+    if (op->metaObject) parent = op->metaObject;
+    else parent = obj->metaObject();
+
     op->metaObject = this;
     QQmlData::get(obj)->hasVMEMetaObject = true;
-
-    propOffset = QAbstractDynamicMetaObject::propertyOffset();
-    methodOffset = QAbstractDynamicMetaObject::methodOffset();
 
     data = new QQmlVMEVariant[metaData->propertyCount - metaData->varPropertyCount];
 
@@ -507,7 +520,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj, const QMetaObject *other, con
     for (int ii = 0; ii < metaData->propertyCount - metaData->varPropertyCount; ++ii) {
         int t = (metaData->propertyData() + ii)->propertyType;
         if (t == list_type) {
-            listProperties.append(List(methodOffset + ii));
+            listProperties.append(List(methodOffset() + ii, this));
             data[ii].setValue(listProperties.count() - 1);
         } 
     }
@@ -519,7 +532,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj, const QMetaObject *other, con
 
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
 {
-    delete parent;
+    if (parent.isT1()) parent.asT1()->objectDestroyed(object);
     delete [] data;
     delete [] aliasEndpoints;
 
@@ -543,7 +556,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 continue;
 
             int valueIndex = vi->m_valueTypeCoreIndex;
-            int type = property(id).userType();
+            int type = QQmlData::get(object)->propertyCache->property(id)->propType;
 
             if (type != QVariant::Invalid) {
                 if (valueIndex != -1) {
@@ -567,8 +580,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
         }
     }
     if (c == QMetaObject::ReadProperty || c == QMetaObject::WriteProperty || c == QMetaObject::ResetProperty) {
-        if (id >= propOffset) {
-            id -= propOffset;
+        if (id >= propOffset()) {
+            id -= propOffset();
 
             if (id < metaData->propertyCount) {
                int t = (metaData->propertyData() + id)->propertyType;
@@ -692,7 +705,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 }
 
                 if (c == QMetaObject::WriteProperty && needActivate) {
-                    activate(object, methodOffset + id, 0);
+                    activate(object, methodOffset() + id, 0);
                 }
 
                 return -1;
@@ -761,13 +774,13 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
     } else if(c == QMetaObject::InvokeMetaMethod) {
 
-        if (id >= methodOffset) {
+        if (id >= methodOffset()) {
 
-            id -= methodOffset;
+            id -= methodOffset();
             int plainSignals = metaData->signalCount + metaData->propertyCount +
                                metaData->aliasCount;
             if (id < plainSignals) {
-                QMetaObject::activate(object, _id, a);
+                activate(object, _id, a);
                 return -1;
             }
 
@@ -827,8 +840,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
         }
     }
 
-    if (parent)
-        return parent->metaCall(c, _id, a);
+    if (parent.isT1())
+        return parent.asT1()->metaCall(object, c, _id, a);
     else
         return object->qt_metacall(c, _id, a);
 }
@@ -912,7 +925,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
 
     // Write the value and emit change signal as appropriate.
     varProperties->Set(id - firstVarPropertyIndex, value);
-    activate(object, methodOffset + id, 0);
+    activate(object, methodOffset() + id, 0);
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
@@ -945,13 +958,13 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
         QVariant currentValue = readPropertyAsVariant(id);
         varProperties->Set(id - firstVarPropertyIndex, newv);
         if ((currentValue.userType() != value.userType() || currentValue != value))
-            activate(object, methodOffset + id, 0);
+            activate(object, methodOffset() + id, 0);
     } else {
         bool needActivate = false;
         if (value.userType() == QMetaType::QObjectStar) {
-            QObject *o = qvariant_cast<QObject *>(value);
+            QObject *o = *(QObject **)value.data();
             needActivate = (data[id].dataType() != QMetaType::QObjectStar || data[id].asQObject() != o);
-            data[id].setValue(qvariant_cast<QObject *>(value), this, id);
+            data[id].setValue(o, this, id);
         } else {
             needActivate = (data[id].dataType() != qMetaTypeId<QVariant>() ||
                             data[id].asQVariant().userType() != value.userType() ||
@@ -960,20 +973,20 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
         }
 
         if (needActivate)
-            activate(object, methodOffset + id, 0);
+            activate(object, methodOffset() + id, 0);
     }
 }
 
 void QQmlVMEMetaObject::listChanged(int id)
 {
-    activate(object, methodOffset + id, 0);
+    activate(object, methodOffset() + id, 0);
 }
 
 void QQmlVMEMetaObject::list_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
     List *list = static_cast<List *>(prop->data);
     list->append(o);
-    QMetaObject::activate(prop->object, list->notifyIndex, 0);
+    list->mo->activate(prop->object, list->notifyIndex, 0);
 }
 
 int QQmlVMEMetaObject::list_count(QQmlListProperty<QObject> *prop)
@@ -990,7 +1003,7 @@ void QQmlVMEMetaObject::list_clear(QQmlListProperty<QObject> *prop)
 {
     List *list = static_cast<List *>(prop->data);
     list->clear();
-    QMetaObject::activate(prop->object, list->notifyIndex, 0);
+    list->mo->activate(prop->object, list->notifyIndex, 0);
 }
 
 void QQmlVMEMetaObject::registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor)
@@ -1003,15 +1016,15 @@ void QQmlVMEMetaObject::registerInterceptor(int index, int valueIndex, QQmlPrope
 
 int QQmlVMEMetaObject::vmeMethodLineNumber(int index)
 {
-    if (index < methodOffset) {
-        Q_ASSERT(parent);
-        return static_cast<QQmlVMEMetaObject *>(parent)->vmeMethodLineNumber(index);
+    if (index < methodOffset()) {
+        Q_ASSERT(parent.isT1());
+        return static_cast<QQmlVMEMetaObject *>(parent.asT1())->vmeMethodLineNumber(index);
     }
 
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
-    Q_ASSERT(index >= (methodOffset + plainSignals) && index < (methodOffset + plainSignals + metaData->methodCount));
+    Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
 
-    int rawIndex = index - methodOffset - plainSignals;
+    int rawIndex = index - methodOffset() - plainSignals;
 
     QQmlVMEMetaData::MethodData *data = metaData->methodData() + rawIndex;
     return data->lineNumber;
@@ -1019,29 +1032,29 @@ int QQmlVMEMetaObject::vmeMethodLineNumber(int index)
 
 v8::Handle<v8::Function> QQmlVMEMetaObject::vmeMethod(int index)
 {
-    if (index < methodOffset) {
-        Q_ASSERT(parent);
-        return static_cast<QQmlVMEMetaObject *>(parent)->vmeMethod(index);
+    if (index < methodOffset()) {
+        Q_ASSERT(parent.isT1());
+        return static_cast<QQmlVMEMetaObject *>(parent.asT1())->vmeMethod(index);
     }
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
-    Q_ASSERT(index >= (methodOffset + plainSignals) && index < (methodOffset + plainSignals + metaData->methodCount));
-    return method(index - methodOffset - plainSignals);
+    Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
+    return method(index - methodOffset() - plainSignals);
 }
 
 // Used by debugger
 void QQmlVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Function> value)
 {
-    if (index < methodOffset) {
-        Q_ASSERT(parent);
-        return static_cast<QQmlVMEMetaObject *>(parent)->setVmeMethod(index, value);
+    if (index < methodOffset()) {
+        Q_ASSERT(parent.isT1());
+        return static_cast<QQmlVMEMetaObject *>(parent.asT1())->setVmeMethod(index, value);
     }
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
-    Q_ASSERT(index >= (methodOffset + plainSignals) && index < (methodOffset + plainSignals + metaData->methodCount));
+    Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
 
     if (!v8methods) 
         v8methods = new v8::Persistent<v8::Function>[metaData->methodCount];
 
-    int methodIndex = index - methodOffset - plainSignals;
+    int methodIndex = index - methodOffset() - plainSignals;
     if (!v8methods[methodIndex].IsEmpty()) 
         qPersistentDispose(v8methods[methodIndex]);
     v8methods[methodIndex] = value;
@@ -1049,21 +1062,21 @@ void QQmlVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Function> val
 
 v8::Handle<v8::Value> QQmlVMEMetaObject::vmeProperty(int index)
 {
-    if (index < propOffset) {
-        Q_ASSERT(parent);
-        return static_cast<QQmlVMEMetaObject *>(parent)->vmeProperty(index);
+    if (index < propOffset()) {
+        Q_ASSERT(parent.isT1());
+        return static_cast<QQmlVMEMetaObject *>(parent.asT1())->vmeProperty(index);
     }
-    return readVarProperty(index - propOffset);
+    return readVarProperty(index - propOffset());
 }
 
 void QQmlVMEMetaObject::setVMEProperty(int index, v8::Handle<v8::Value> v)
 {
-    if (index < propOffset) {
-        Q_ASSERT(parent);
-        static_cast<QQmlVMEMetaObject *>(parent)->setVMEProperty(index, v);
+    if (index < propOffset()) {
+        Q_ASSERT(parent.isT1());
+        static_cast<QQmlVMEMetaObject *>(parent.asT1())->setVMEProperty(index, v);
         return;
     }
-    return writeVarProperty(index - propOffset, v);
+    return writeVarProperty(index - propOffset(), v);
 }
 
 bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
@@ -1116,7 +1129,7 @@ void QQmlVMEMetaObject::GcPrologueCallback(QV8GCCallback::Node *node)
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const
 {
-    Q_ASSERT(index >= propOffset + metaData->propertyCount);
+    Q_ASSERT(index >= propOffset() + metaData->propertyCount);
 
     *target = 0;
     *coreIndex = -1;
@@ -1125,7 +1138,7 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
     if (!ctxt)
         return false;
 
-    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + (index - propOffset - metaData->propertyCount);
+    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + (index - propOffset() - metaData->propertyCount);
     QQmlContext *context = ctxt->asQQmlContext();
     QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(context);
 
@@ -1166,11 +1179,39 @@ void QQmlVMEMetaObject::connectAlias(int aliasId)
 
 void QQmlVMEMetaObject::connectAliasSignal(int index)
 {
-    int aliasId = (index - methodOffset) - metaData->propertyCount;
+    int aliasId = (index - methodOffset()) - metaData->propertyCount;
     if (aliasId < 0 || aliasId >= metaData->aliasCount)
         return;
 
     connectAlias(aliasId);
+}
+
+void QQmlVMEMetaObject::activate(QObject *object, int index, void **args)
+{
+    int signalOffset = cache->signalOffset();
+    int methodOffset = cache->methodOffset();
+
+    QMetaObject::activate(object, methodOffset, signalOffset, index - methodOffset, args);
+}
+
+QQmlVMEMetaObject *QQmlVMEMetaObject::getForProperty(QObject *o, int coreIndex)
+{
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
+    while (vme->propOffset() > coreIndex) {
+        Q_ASSERT(vme->parent.isT1());
+        vme = static_cast<QQmlVMEMetaObject *>(vme->parent.asT1());
+    }
+    return vme;
+}
+
+QQmlVMEMetaObject *QQmlVMEMetaObject::getForMethod(QObject *o, int coreIndex)
+{
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
+    while (vme->methodOffset() > coreIndex) {
+        Q_ASSERT(vme->parent.isT1());
+        vme = static_cast<QQmlVMEMetaObject *>(vme->parent.asT1());
+    }
+    return vme;
 }
 
 QT_END_NAMESPACE

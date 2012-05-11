@@ -1746,21 +1746,21 @@ void QQuickTextEditPrivate::init()
     control->setAcceptRichText(false);
     control->setCursorIsFocusIndicator(true);
 
-    FAST_CONNECT(control, SIGNAL(updateRequest(QRectF)), q, SLOT(updateDocument()));
-    FAST_CONNECT(control, SIGNAL(updateCursorRequest()), q, SLOT(updateCursor()));
-    FAST_CONNECT(control, SIGNAL(textChanged()), q, SLOT(q_textChanged()));
-    FAST_CONNECT(control, SIGNAL(selectionChanged()), q, SIGNAL(selectionChanged()));
-    FAST_CONNECT(control, SIGNAL(selectionChanged()), q, SLOT(updateSelectionMarkers()));
-    FAST_CONNECT(control, SIGNAL(cursorPositionChanged()), q, SLOT(updateSelectionMarkers()));
-    FAST_CONNECT(control, SIGNAL(cursorPositionChanged()), q, SIGNAL(cursorPositionChanged()));
-    FAST_CONNECT(control, SIGNAL(cursorRectangleChanged()), q, SLOT(moveCursorDelegate()));
-    FAST_CONNECT(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(updateRequest(QRectF)), q, QQuickTextEdit, SLOT(updateDocument()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(updateCursorRequest()), q, QQuickTextEdit, SLOT(updateCursor()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(selectionChanged()), q, QQuickTextEdit, SIGNAL(selectionChanged()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(selectionChanged()), q, QQuickTextEdit, SLOT(updateSelectionMarkers()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorPositionChanged()), q, QQuickTextEdit, SLOT(updateSelectionMarkers()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorPositionChanged()), q, QQuickTextEdit, SIGNAL(cursorPositionChanged()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorRectangleChanged()), q, QQuickTextEdit, SLOT(moveCursorDelegate()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(linkActivated(QString)), q, QQuickTextEdit, SIGNAL(linkActivated(QString)));
 #ifndef QT_NO_CLIPBOARD
-    FAST_CONNECT(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
+    qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()), q, QQuickTextEdit, SLOT(q_canPasteChanged()));
 #endif
-    FAST_CONNECT(document, SIGNAL(undoAvailable(bool)), q, SIGNAL(canUndoChanged()));
-    FAST_CONNECT(document, SIGNAL(redoAvailable(bool)), q, SIGNAL(canRedoChanged()));
-    FAST_CONNECT(document, SIGNAL(imagesLoaded()), q, SLOT(updateSize()));
+    qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(undoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canUndoChanged()));
+    qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(redoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canRedoChanged()));
+    qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()), q, QQuickTextEdit, SLOT(updateSize()));
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);

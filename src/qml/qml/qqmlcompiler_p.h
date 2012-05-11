@@ -76,8 +76,7 @@ class QQmlComponent;
 class QQmlContext;
 class QQmlContextData;
 
-class Q_AUTOTEST_EXPORT QQmlCompiledData : public QQmlRefCount,
-                                                   public QQmlCleanup
+class Q_AUTOTEST_EXPORT QQmlCompiledData : public QQmlRefCount, public QQmlCleanup
 {
 public:
     QQmlCompiledData(QQmlEngine *engine);
@@ -89,6 +88,10 @@ public:
     QUrl url;
     QQmlTypeNameCache *importCache;
 
+    int metaTypeId;
+    int listMetaTypeId;
+    bool isRegisteredWithEngine;
+
     struct TypeReference 
     {
         TypeReference()
@@ -98,7 +101,6 @@ public:
         QQmlPropertyCache *typePropertyCache;
         QQmlCompiledData *component;
 
-        const QMetaObject *metaObject() const;
         QQmlPropertyCache *propertyCache() const;
         QQmlPropertyCache *createPropertyCache(QQmlEngine *);
     };
@@ -115,8 +117,6 @@ public:
 
     QList<V8Program> programs;
 
-    const QMetaObject *root;
-    QAbstractDynamicMetaObject rootData;
     QQmlPropertyCache *rootPropertyCache;
     QList<QString> primitives;
     QList<QByteArray> datas;
@@ -161,8 +161,6 @@ private:
     void dump(QQmlInstruction *, int idx = -1);
     QQmlCompiledData(const QQmlCompiledData &other);
     QQmlCompiledData &operator=(const QQmlCompiledData &other);
-    QByteArray packData;
-    int pack(const char *, size_t);
 
     int indexForString(const QString &);
     int indexForByteArray(const QByteArray &);
@@ -361,20 +359,16 @@ private:
                                      QQmlScript::Object *obj,
                                      QQmlScript::Value *value,
                                      bool *isAssignment);
-    enum DynamicMetaMode { IgnoreAliases, ResolveAliases, ForceCreation };
+    enum DynamicMetaMode { Normal, ForceCreation };
     bool mergeDynamicMetaProperties(QQmlScript::Object *obj);
     bool buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mode);
+    bool buildDynamicMetaAliases(QQmlScript::Object *obj);
     bool checkDynamicMeta(QQmlScript::Object *obj);
     bool buildBinding(QQmlScript::Value *, QQmlScript::Property *prop,
                       const QQmlCompilerTypes::BindingContext &ctxt);
     bool buildLiteralBinding(QQmlScript::Value *, QQmlScript::Property *prop,
                              const QQmlCompilerTypes::BindingContext &ctxt);
     bool buildComponentFromRoot(QQmlScript::Object *obj, const QQmlCompilerTypes::BindingContext &);
-    bool compileAlias(QFastMetaBuilder &, 
-                      QByteArray &data,
-                      QQmlScript::Object *obj, 
-                      int propIndex, int aliasIndex,
-                      QQmlScript::Object::DynamicProperty &);
     bool completeComponentBuild();
     bool checkValidId(QQmlScript::Value *, const QString &);
 

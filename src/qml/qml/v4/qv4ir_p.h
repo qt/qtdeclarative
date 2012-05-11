@@ -275,10 +275,11 @@ struct Name: Expr {
     Symbol symbol;
     union {
         void *ptr;
-        const QMetaObject *meta;
         const QQmlType *declarativeType;
         const QQmlScript::Object *idObject;
     };
+
+    QQmlMetaObject meta;
     QQmlPropertyData *property;
     Storage storage;
     BuiltinSymbol builtin;
@@ -539,12 +540,12 @@ struct BasicBlock {
 
     Name *NAME(const QString &id, quint32 line, quint32 column);
     Name *NAME(Name *base, const QString &id, quint32 line, quint32 column);
-    Name *SYMBOL(Type type, const QString &id, const QMetaObject *meta, QQmlPropertyData *property, Name::Storage storage, quint32 line, quint32 column);
-    Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QQmlPropertyData *property, quint32 line, quint32 column);
-    Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QQmlPropertyData *property, Name::Storage storage, quint32 line, quint32 column);
+    Name *SYMBOL(Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage, quint32 line, quint32 column);
+    Name *SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, quint32 line, quint32 column);
+    Name *SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage, quint32 line, quint32 column);
     Name *ID_OBJECT(const QString &id, const QQmlScript::Object *object, quint32 line, quint32 column);
     Name *ATTACH_TYPE(const QString &id, const QQmlType *attachType, Name::Storage storage, quint32 line, quint32 column);
-    Name *MODULE_OBJECT(const QString &id, const QMetaObject *meta, Name::Storage storage, quint32 line, quint32 column);
+    Name *MODULE_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage, quint32 line, quint32 column);
 
     Expr *UNOP(AluOp op, Expr *expr);
     Expr *BINOP(AluOp op, Expr *left, Expr *right);

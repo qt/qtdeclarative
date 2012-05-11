@@ -57,9 +57,11 @@ Button {
         when: windowShown
 
         function test_click() {
+
             compare(spy.count, 0)
             button.clicked(1, 2);
             compare(button.text, "Clicked");
+
             compare(spy.count, 1)
             compare(spy.signalArguments.length, 1)
             compare(spy.signalArguments[0][0], 1)

@@ -566,7 +566,7 @@ void QQuickItemKeyFilter::componentComplete()
 
 QQuickKeyNavigationAttached::QQuickKeyNavigationAttached(QObject *parent)
 : QObject(*(new QQuickKeyNavigationAttachedPrivate), parent),
-  QQuickItemKeyFilter(qobject_cast<QQuickItem*>(parent))
+  QQuickItemKeyFilter(qmlobject_cast<QQuickItem*>(parent))
 {
     m_processPost = true;
 }
@@ -1305,11 +1305,11 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
 
 QQuickKeysAttached::QQuickKeysAttached(QObject *parent)
 : QObject(*(new QQuickKeysAttachedPrivate), parent),
-  QQuickItemKeyFilter(qobject_cast<QQuickItem*>(parent))
+  QQuickItemKeyFilter(qmlobject_cast<QQuickItem*>(parent))
 {
     Q_D(QQuickKeysAttached);
     m_processPost = false;
-    d->item = qobject_cast<QQuickItem*>(parent);
+    d->item = qmlobject_cast<QQuickItem*>(parent);
 }
 
 QQuickKeysAttached::~QQuickKeysAttached()
@@ -1604,7 +1604,7 @@ void QQuickItemPrivate::setImplicitLayoutMirror(bool mirror, bool inherit)
     if (isMirrorImplicit)
         setLayoutMirror(inherit ? inheritedLayoutMirror : false);
     for (int i = 0; i < childItems.count(); ++i) {
-        if (QQuickItem *child = qobject_cast<QQuickItem *>(childItems.at(i))) {
+        if (QQuickItem *child = qmlobject_cast<QQuickItem *>(childItems.at(i))) {
             QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
             childPrivate->setImplicitLayoutMirror(inheritedLayoutMirror, inheritMirrorFromParent);
         }
@@ -2496,14 +2496,7 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
 
-    // This test is measurably (albeit only slightly) faster than qobject_cast<>()
-    const QMetaObject *mo = o->metaObject();
-    while (mo && mo != &QQuickItem::staticMetaObject) {
-        mo = mo->d.superdata;
-    }
-
-    if (mo) {
-        QQuickItem *item = static_cast<QQuickItem *>(o);
+    if (QQuickItem *item = qmlobject_cast<QQuickItem *>(o)) {
         item->setParentItem(that);
     } else {
         if (o->inherits("QGraphicsItem"))
@@ -3696,8 +3689,8 @@ QQuickStateGroup *QQuickItemPrivate::_states()
         _stateGroup = new QQuickStateGroup;
         if (!componentComplete)
             _stateGroup->classBegin();
-        FAST_CONNECT(_stateGroup, SIGNAL(stateChanged(QString)),
-                     q, SIGNAL(stateChanged(QString)))
+        qmlobject_connect(_stateGroup, QQuickStateGroup, SIGNAL(stateChanged(QString)),
+                          q, QQuickItem, SIGNAL(stateChanged(QString)))
     }
 
     return _stateGroup;

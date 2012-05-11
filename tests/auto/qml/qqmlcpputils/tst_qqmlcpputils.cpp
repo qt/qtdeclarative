@@ -73,7 +73,7 @@ void tst_qqmlcpputils::fastConnect()
 {
     {
         MyObject *obj = new MyObject;
-        FAST_CONNECT(obj, SIGNAL(signal1()), obj, SLOT(slot1()));
+        qmlobject_connect(obj, MyObject, SIGNAL(signal1()), obj, MyObject, SLOT(slot1()));
 
         obj->signal1();
         QCOMPARE(obj->slotCount, 1);
@@ -83,7 +83,7 @@ void tst_qqmlcpputils::fastConnect()
 
     {
         MyObject obj;
-        FAST_CONNECT(&obj, SIGNAL(signal1()), &obj, SLOT(slot1()))
+        qmlobject_connect(&obj, MyObject, SIGNAL(signal1()), &obj, MyObject, SLOT(slot1()))
 
         obj.signal1();
         QCOMPARE(obj.slotCount, 1);
@@ -92,7 +92,7 @@ void tst_qqmlcpputils::fastConnect()
     {
         MyObject *obj = new MyObject;
         QSignalSpy spy(obj, SIGNAL(signal2()));
-        FAST_CONNECT(obj, SIGNAL(signal1()), obj, SIGNAL(signal2()));
+        qmlobject_connect(obj, MyObject, SIGNAL(signal1()), obj, MyObject, SIGNAL(signal2()));
 
         obj->signal1();
         QCOMPARE(spy.count(), 1);

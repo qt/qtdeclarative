@@ -64,7 +64,7 @@ QQmlListReference QQmlListReferencePrivate::init(const QQmlListProperty<QObject>
 
     rv.d = new QQmlListReferencePrivate;
     rv.d->object = prop.object;
-    rv.d->elementType = p?p->rawMetaObjectForType(listType):QQmlMetaType::qmlType(listType)->baseMetaObject();
+    rv.d->elementType = QQmlPropertyPrivate::rawMetaObjectForType(p, listType);
     rv.d->property = prop;
     rv.d->propertyType = propType;
 
@@ -205,7 +205,7 @@ to a list.
 */
 const QMetaObject *QQmlListReference::listElementType() const
 {
-    if (isValid()) return d->elementType;
+    if (isValid()) return d->elementType.metaObject();
     else return 0;
 }
 
@@ -262,7 +262,7 @@ bool QQmlListReference::append(QObject *object) const
 {
     if (!canAppend()) return false;
 
-    if (object && !QQmlPropertyPrivate::canConvert(object->metaObject(), d->elementType))
+    if (object && !QQmlMetaObject::canConvert(object, d->elementType))
         return false;
 
     d->property.append(&d->property, object);

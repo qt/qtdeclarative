@@ -138,9 +138,11 @@ void QQuickPathViewPrivate::init()
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QQuickItem::ItemIsFocusScope);
     q->setFiltersChildMouseEvents(true);
-    FAST_CONNECT(&tl, SIGNAL(updated()), q, SLOT(ticked()))
+    qmlobject_connect(&tl, QQuickTimeLine, SIGNAL(updated()),
+                      q, QQuickPathView, SLOT(ticked()))
     timer.invalidate();
-    FAST_CONNECT(&tl, SIGNAL(completed()), q, SLOT(movementEnding()))
+    qmlobject_connect(&tl, QQuickTimeLine, SIGNAL(completed()),
+                      q, QQuickPathView, SLOT(movementEnding()))
 }
 
 QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool onPath)
@@ -578,10 +580,12 @@ void QQuickPathView::setModel(const QVariant &model)
         return;
 
     if (d->model) {
-        disconnect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
-                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
-        disconnect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
-        disconnect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
+        qmlobject_disconnect(d->model, QQuickVisualModel, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
+                             this, QQuickPathView, SLOT(modelUpdated(QQuickChangeSet,bool)));
+        qmlobject_disconnect(d->model, QQuickVisualModel, SIGNAL(createdItem(int,QQuickItem*)),
+                             this, QQuickPathView, SLOT(createdItem(int,QQuickItem*)));
+        qmlobject_disconnect(d->model, QQuickVisualModel, SIGNAL(initItem(int,QQuickItem*)),
+                             this, QQuickPathView, SLOT(initItem(int,QQuickItem*)));
         for (int i=0; i<d->items.count(); i++){
             QQuickItem *p = d->items[i];
             d->releaseItem(p);
@@ -610,10 +614,12 @@ void QQuickPathView::setModel(const QVariant &model)
     }
     d->modelCount = 0;
     if (d->model) {
-        connect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
-                this, SLOT(modelUpdated(QQuickChangeSet,bool)));
-        connect(d->model, SIGNAL(createdItem(int,QQuickItem*)), this, SLOT(createdItem(int,QQuickItem*)));
-        connect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
+        qmlobject_connect(d->model, QQuickVisualModel, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
+                          this, QQuickPathView, SLOT(modelUpdated(QQuickChangeSet,bool)));
+        qmlobject_connect(d->model, QQuickVisualModel, SIGNAL(createdItem(int,QQuickItem*)),
+                          this, QQuickPathView, SLOT(createdItem(int,QQuickItem*)));
+        qmlobject_connect(d->model, QQuickVisualModel, SIGNAL(initItem(int,QQuickItem*)),
+                          this, QQuickPathView, SLOT(initItem(int,QQuickItem*)));
         d->modelCount = d->model->count();
         if (d->model->count())
             d->offset = qmlMod(d->offset, qreal(d->model->count()));
@@ -656,9 +662,11 @@ void QQuickPathView::setPath(QQuickPath *path)
     if (d->path == path)
         return;
     if (d->path)
-        disconnect(d->path, SIGNAL(changed()), this, SLOT(pathUpdated()));
+        qmlobject_disconnect(d->path, QQuickPath, SIGNAL(changed()),
+                             this, QQuickPathView, SLOT(pathUpdated()));
     d->path = path;
-    connect(d->path, SIGNAL(changed()), this, SLOT(pathUpdated()));
+    qmlobject_connect(d->path, QQuickPath, SIGNAL(changed()),
+                      this, QQuickPathView, SLOT(pathUpdated()));
     if (d->isValid() && isComponentComplete()) {
         d->clear();
         if (d->attType) {

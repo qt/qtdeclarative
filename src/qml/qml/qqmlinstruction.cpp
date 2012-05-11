@@ -85,7 +85,7 @@ void QQmlCompiledData::dump(QQmlInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "CREATE_COMPONENT\t" << instr->createComponent.count;
         break;
     case QQmlInstruction::StoreMetaObject:
-        qWarning().nospace() << idx << "\t\t" << "STORE_META\t\t" << instr->storeMeta.data;
+        qWarning().nospace() << idx << "\t\t" << "STORE_META\t\t";
         break;
     case QQmlInstruction::StoreFloat:
         qWarning().nospace() << idx << "\t\t" << "STORE_FLOAT\t\t" << instr->storeFloat.propertyIndex << "\t" << instr->storeFloat.value;

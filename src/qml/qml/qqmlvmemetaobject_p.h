@@ -69,6 +69,7 @@
 #include "qqmlcontext_p.h"
 
 #include <private/qv8engine_p.h>
+#include <private/qflagpointer_p.h>
 
 #include <private/qv8_p.h>
 
@@ -90,6 +91,7 @@ struct QQmlVMEMetaData
         int contextIdx;
         int propertyIdx;
         int flags;
+        int notifySignal;
 
         bool isObjectAlias() const {
             return propertyIdx == -1;
@@ -156,7 +158,7 @@ class Q_AUTOTEST_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject,
                                                     public QV8GCCallback::Node
 {
 public:
-    QQmlVMEMetaObject(QObject *obj, const QMetaObject *other, const QQmlVMEMetaData *data);
+    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data);
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
@@ -169,22 +171,28 @@ public:
 
     void connectAliasSignal(int index);
 
-    static inline QQmlVMEMetaObject *get(const QObject *obj);
+    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o);
+
+    static inline QQmlVMEMetaObject *get(QObject *o);
+    static QQmlVMEMetaObject *getForProperty(QObject *o, int coreIndex);
+    static QQmlVMEMetaObject *getForMethod(QObject *o, int coreIndex);
 
 protected:
     virtual int metaCall(QMetaObject::Call _c, int _id, void **_a);
 
-private:
+public:
     friend class QQmlVMEMetaObjectEndpoint;
     friend class QQmlVMEVariantQObjectPtr;
 
     QObject *object;
     QQmlGuardedContextData ctxt;
+    QQmlPropertyCache *cache;
 
     const QQmlVMEMetaData *metaData;
-    int propOffset;
-    int methodOffset;
+    inline int propOffset() const;
+    inline int methodOffset() const;
 
+    bool hasAssignedMetaObjectData;
     QQmlVMEVariant *data;
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
@@ -209,14 +217,15 @@ private:
     QVariant readPropertyAsVariant(int);
     void writeProperty(int, const QVariant &);
 
-    QAbstractDynamicMetaObject *parent;
+    QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
 
     void listChanged(int);
     class List : public QList<QObject*>
     {
     public:
-        List(int lpi) : notifyIndex(lpi) {}
+        List(int lpi, QQmlVMEMetaObject *mo) : notifyIndex(lpi), mo(mo) {}
         int notifyIndex;
+        QQmlVMEMetaObject *mo;
     };
     QList<List> listProperties;
 
@@ -225,11 +234,13 @@ private:
     static QObject *list_at(QQmlListProperty<QObject> *, int);
     static void list_clear(QQmlListProperty<QObject> *);
 
+    void activate(QObject *, int, void **);
+
     friend class QV8GCCallback;
     friend class QV8QObjectWrapper;
 };
 
-QQmlVMEMetaObject *QQmlVMEMetaObject::get(const QObject *obj)
+QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)
 {
     if (obj) {
         if (QQmlData *data = QQmlData::get(obj)) {
@@ -239,6 +250,16 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::get(const QObject *obj)
     }
 
     return 0;
+}
+
+int QQmlVMEMetaObject::propOffset() const
+{
+    return cache->propertyOffset();
+}
+
+int QQmlVMEMetaObject::methodOffset() const
+{
+    return cache->methodOffset();
 }
 
 QT_END_NAMESPACE

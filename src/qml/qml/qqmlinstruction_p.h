@@ -211,7 +211,6 @@ union QQmlInstruction
     };
     struct instr_storeMeta {
         QML_INSTR_HEADER
-        int data;
         int aliasData;
         int propertyCache;
     };

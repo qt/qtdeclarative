@@ -1215,7 +1215,7 @@ loaded files.
 */
 QQmlTypeLoader::~QQmlTypeLoader()
 {
-    clearCache(0, 0);
+    clearCache();
 }
 
 /*!
@@ -1563,12 +1563,9 @@ const QQmlDirParser *QQmlTypeLoader::qmlDirParser(const QString &filePath,
 Clears cached information about loaded files, including any type data, scripts
 and qmldir information.
 */
-void QQmlTypeLoader::clearCache(void (*callback)(void *, QQmlTypeData *), void *arg)
+void QQmlTypeLoader::clearCache()
 {
     for (TypeCache::Iterator iter = m_typeCache.begin(); iter != m_typeCache.end(); ++iter) {
-        if (callback)
-            (*callback)(arg, iter.value());
-
         (*iter)->release();
     }
     for (ScriptCache::Iterator iter = m_scriptCache.begin(); iter != m_scriptCache.end(); ++iter) 
@@ -1585,7 +1582,7 @@ void QQmlTypeLoader::clearCache(void (*callback)(void *, QQmlTypeData *), void *
     m_importQmlDirCache.clear();
 }
 
-void QQmlTypeLoader::trimCache(void (*callback)(void *, QQmlTypeData *), void *arg)
+void QQmlTypeLoader::trimCache()
 {
     while (true) {
         QList<TypeCache::Iterator> unneededTypes;
@@ -1604,11 +1601,8 @@ void QQmlTypeLoader::trimCache(void (*callback)(void *, QQmlTypeData *), void *a
             TypeCache::Iterator iter = unneededTypes.last();
             unneededTypes.removeLast();
 
-            QQmlTypeData *typeData = iter.value();
-            if (callback)
-                (*callback)(arg, typeData);
+            iter.value()->release();
             m_typeCache.erase(iter);
-            typeData->release();
         }
     }
 

@@ -1,7 +1,7 @@
 load(qt_module)
 
 TARGET = qmldbg_tcp
-QT       += qml-private network
+QT       += qml-private network v8-private core-private
 
 load(qt_plugin)
 

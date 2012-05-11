@@ -237,13 +237,12 @@ public:
     QQmlMetaType::TypeCategory typeCategory(int) const;
     bool isList(int) const;
     int listType(int) const;
-    const QMetaObject *rawMetaObjectForType(int) const;
-    const QMetaObject *metaObjectForType(int) const;
-    void registerCompositeType(const QMetaObject *);
-    void unregisterCompositeType(const QMetaObject *);
-
-    void clearCache();
-    void trimCache();
+    QQmlMetaObject rawMetaObjectForType(int) const;
+    QQmlMetaObject metaObjectForType(int) const;
+    QQmlPropertyCache *propertyCacheForType(int);
+    QQmlPropertyCache *rawPropertyCacheForType(int);
+    void registerCompositeType(QQmlCompiledData *);
+    void unregisterCompositeType(QQmlCompiledData *);
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
@@ -302,15 +301,13 @@ private:
     QQmlPropertyCache *createCache(const QMetaObject *);
     QQmlPropertyCache *createCache(QQmlType *, int, QQmlError &error);
 
-    void typeUnloaded(QQmlTypeData *typeData);
-
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
     QHash<QQmlMetaType::ModuleApi, QQmlMetaType::ModuleApiInstance *> moduleApiInstances;
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCache;
     QHash<QPair<QQmlType *, int>, QQmlPropertyCache *> typePropertyCache;
     QHash<int, int> m_qmlLists;
-    QHash<int, const QMetaObject *> m_compositeTypes;
+    QHash<int, QQmlCompiledData *> m_compositeTypes;
     QHash<QUrl, QByteArray> debugChangesHash;
 
     // These members is protected by the full QQmlEnginePrivate::mutex mutex

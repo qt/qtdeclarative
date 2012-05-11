@@ -386,7 +386,7 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         default:
             if (propTy == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
                 regType = PODValueType;
-            } else if (engine->metaObjectForType(propTy)) {
+            } else if (!engine->metaObjectForType(propTy).isNull()) {
                 regType = QObjectStarType;
             } else {
                 if (qmlVerboseCompiler())

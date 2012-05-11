@@ -45,7 +45,6 @@
 #include "qqmlboundsignal_p.h"
 #include "qqmlstringconverters_p.h"
 #include <private/qmetaobjectbuilder_p.h>
-#include <private/qfastmetabuilder_p.h>
 #include "qqmldata_p.h"
 #include "qqml.h"
 #include "qqmlcustomparser_p.h"
@@ -691,21 +690,18 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_BEGIN_INSTR(StoreMetaObject)
             QObject *target = objects.top();
 
-            QMetaObject mo;
-            const QByteArray &metadata = DATAS.at(instr.data);
-            QFastMetaBuilder::fromData(&mo, 0, metadata);
+            QQmlPropertyCache *propertyCache = PROPERTYCACHES.at(instr.propertyCache);
 
             const QQmlVMEMetaData *data = 
                 (const QQmlVMEMetaData *)DATAS.at(instr.aliasData).constData();
 
-            (void)new QQmlVMEMetaObject(target, &mo, data);
+            (void)new QQmlVMEMetaObject(target, propertyCache, data);
 
-            if (instr.propertyCache != -1) {
-                QQmlData *ddata = QQmlData::get(target, true);
-                if (ddata->propertyCache) ddata->propertyCache->release();
-                ddata->propertyCache = PROPERTYCACHES.at(instr.propertyCache);
-                ddata->propertyCache->addref();
-            }
+            QQmlData *ddata = QQmlData::get(target, true);
+            if (ddata->propertyCache) ddata->propertyCache->release();
+            ddata->propertyCache = propertyCache;
+            ddata->propertyCache->addref();
+
         QML_END_INSTR(StoreMetaObject)
 
         QML_BEGIN_INSTR(AssignCustomType)
@@ -761,9 +757,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *target = objects.top();
             QObject *context = objects.at(objects.count() - 1 - instr.context);
 
-            QMetaMethod signal = target->metaObject()->method(instr.signalIndex);
-
-            QQmlBoundSignal *bs = new QQmlBoundSignal(target, signal, target, engine);
+            QQmlBoundSignal *bs = new QQmlBoundSignal(target, instr.signalIndex, target, engine);
             QQmlBoundSignalExpression *expr =
                 new QQmlBoundSignalExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column);
             bs->takeExpression(expr);

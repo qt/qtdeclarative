@@ -388,7 +388,6 @@ void tst_QQmlMetaObject::method()
     for (int i = 0; i < parameterTypes.size(); ++i)
         QCOMPARE(method.parameterType(i), parameterTypes.at(i));
     QCOMPARE(method.parameterTypes(), parameterTypeNames);
-    QCOMPARE(method.parameterNames(), parameterNames);
     QCOMPARE(method.tag(), "");
 
     QCOMPARE(QString::fromUtf8(method.typeName()), returnTypeName);

@@ -242,9 +242,9 @@ void QQmlAbstractBoundSignal::removeFromObject()
     }
 }
 
-QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
-                               QObject *owner, QQmlEngine *engine)
-: m_expression(0), m_params(0), m_scope(scope), m_index(signal.methodIndex())
+QQmlBoundSignal::QQmlBoundSignal(QObject *scope, int signal, QObject *owner,
+                                 QQmlEngine *engine)
+: m_expression(0), m_params(0), m_scope(scope), m_index(signal)
 {
     setParamsValid(false);
     setIsEvaluating(false);
@@ -257,11 +257,15 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
         index refers to 'aSignal()', get the index of 'aSignal(int)'.
         This ensures that 'parameter' will be available from QML.
     */
-    if (signal.attributes() & QMetaMethod::Cloned) {
-        do {
+    if (QQmlData::get(scope, false) && QQmlData::get(scope, false)->propertyCache) {
+        QQmlPropertyCache *cache = QQmlData::get(scope, false)->propertyCache;
+        while (cache->method(m_index)->isCloned())
             --m_index;
-        } while (scope->metaObject()->method(m_index).attributes() & QMetaMethod::Cloned);
+    } else {
+        while (scope->metaObject()->method(m_index).attributes() & QMetaMethod::Cloned)
+            --m_index;
     }
+
     QQmlNotifierEndpoint::connect(scope, m_index, engine);
 }
 
@@ -328,9 +332,12 @@ void QQmlBoundSignal::subscriptionCallback(QQmlNotifierEndpoint *e, void **a)
     s->setIsEvaluating(true);
 
     if (!s->paramsValid()) {
-        QMetaMethod signal = s->m_scope->metaObject()->method(s->m_index);
-        if (!signal.parameterTypes().isEmpty())
+        QList<QByteArray> names = QQmlPropertyCache::methodParameterNames(*s->m_scope, s->m_index);
+        if (!names.isEmpty()) {
+            QMetaMethod signal = s->m_scope->metaObject()->method(s->m_index);
             s->m_params = new QQmlBoundSignalParameters(signal, s);
+        }
+
         s->setParamsValid(true);
     }
 

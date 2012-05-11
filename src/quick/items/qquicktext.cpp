@@ -1131,7 +1131,8 @@ void QQuickTextPrivate::ensureDoc()
         extra.value().doc = new QQuickTextDocumentWithImageResources(q);
         extra->doc->setDocumentMargin(0);
         extra->doc->setBaseUrl(q->baseUrl());
-        FAST_CONNECT(extra->doc, SIGNAL(imagesLoaded()), q, SLOT(q_imagesLoaded()));
+        qmlobject_connect(extra->doc, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()),
+                          q, QQuickText, SLOT(q_imagesLoaded()));
     }
 }
 

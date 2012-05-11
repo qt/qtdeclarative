@@ -119,7 +119,6 @@ void tst_qqmlinstruction::dump()
 
     {
         QQmlCompiledData::Instruction::StoreMetaObject i;
-        i.data = 3;
         i.aliasData = 6;
         i.propertyCache = 7;
 
@@ -512,7 +511,7 @@ void tst_qqmlinstruction::dump()
         << "2\t\tSETID\t\t\t0\t\t\t\"testId\""
         << "3\t\tSET_DEFAULT"
         << "4\t\tCREATE_COMPONENT\t3"
-        << "5\t\tSTORE_META\t\t3"
+        << "5\t\tSTORE_META\t\t"
         << "6\t\tSTORE_FLOAT\t\t3\t11.3"
         << "7\t\tSTORE_DOUBLE\t\t4\t14.8"
         << "8\t\tSTORE_INTEGER\t\t5\t9"

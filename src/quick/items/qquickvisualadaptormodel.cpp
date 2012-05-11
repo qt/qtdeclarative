@@ -996,29 +996,29 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &variant, QQuickVisualDat
         if (QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(object)) {
             accessors = new VDMAbstractItemModelDataType(this);
 
-            FAST_CONNECT(model, SIGNAL(rowsInserted(QModelIndex,int,int)),
-                    vdm, SLOT(_q_rowsInserted(QModelIndex,int,int)));
-            FAST_CONNECT(model, SIGNAL(rowsRemoved(QModelIndex,int,int)),
-                   vdm,  SLOT(_q_rowsRemoved(QModelIndex,int,int)));
-            FAST_CONNECT(model, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-                    vdm, SLOT(_q_dataChanged(QModelIndex,QModelIndex)));
-            FAST_CONNECT(model, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
-                    vdm, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
-            FAST_CONNECT(model, SIGNAL(modelReset()),
-                    vdm, SLOT(_q_modelReset()));
-            FAST_CONNECT(model, SIGNAL(layoutChanged()),
-                    vdm, SLOT(_q_layoutChanged()));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
+                              vdm, QQuickVisualDataModel, SLOT(_q_rowsInserted(QModelIndex,int,int)));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
+                              vdm,  QQuickVisualDataModel, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
+                              vdm, QQuickVisualDataModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex)));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
+                              vdm, QQuickVisualDataModel, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(modelReset()),
+                              vdm, QQuickVisualDataModel, SLOT(_q_modelReset()));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(layoutChanged()),
+                              vdm, QQuickVisualDataModel, SLOT(_q_layoutChanged()));
         } else if (QListModelInterface *model = qobject_cast<QListModelInterface *>(object)) {
             accessors = new VDMListModelInterfaceDataType(this);
 
-            FAST_CONNECT(model, SIGNAL(itemsChanged(int,int,QList<int>)),
-                             vdm, SLOT(_q_itemsChanged(int,int,QList<int>)));
-            FAST_CONNECT(model, SIGNAL(itemsInserted(int,int)),
-                             vdm, SLOT(_q_itemsInserted(int,int)));
-            FAST_CONNECT(model, SIGNAL(itemsRemoved(int,int)),
-                             vdm, SLOT(_q_itemsRemoved(int,int)));
-            FAST_CONNECT(model, SIGNAL(itemsMoved(int,int,int)),
-                             vdm, SLOT(_q_itemsMoved(int,int,int)));
+            qmlobject_connect(model, QListModelInterface, SIGNAL(itemsChanged(int,int,QList<int>)),
+                              vdm, QQuickVisualDataModel, SLOT(_q_itemsChanged(int,int,QList<int>)));
+            qmlobject_connect(model, QListModelInterface, SIGNAL(itemsInserted(int,int)),
+                              vdm, QQuickVisualDataModel, SLOT(_q_itemsInserted(int,int)));
+            qmlobject_connect(model, QListModelInterface, SIGNAL(itemsRemoved(int,int)),
+                              vdm, QQuickVisualDataModel, SLOT(_q_itemsRemoved(int,int)));
+            qmlobject_connect(model, QListModelInterface, SIGNAL(itemsMoved(int,int,int)),
+                              vdm, QQuickVisualDataModel, SLOT(_q_itemsMoved(int,int,int)));
         } else {
             accessors = new VDMObjectDelegateDataType;
         }

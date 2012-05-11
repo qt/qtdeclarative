@@ -496,7 +496,7 @@ Name *BasicBlock::NAME(Name *base, const QString &id, quint32 line, quint32 colu
     return e;
 }
 
-Name *BasicBlock::SYMBOL(Type type, const QString &id, const QMetaObject *meta, QQmlPropertyData *property, Name::Storage storage,
+Name *BasicBlock::SYMBOL(Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage,
                          quint32 line, quint32 column)
 {
     Name *name = SYMBOL(/*base = */ 0, type, id, meta, property, line, column);
@@ -504,7 +504,7 @@ Name *BasicBlock::SYMBOL(Type type, const QString &id, const QMetaObject *meta, 
     return name;
 }
 
-Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QQmlPropertyData *property, Name::Storage storage,
+Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage,
                          quint32 line, quint32 column)
 {
     Name *name = function->pool->New<Name>();
@@ -516,7 +516,7 @@ Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaOb
     return name;
 }
 
-Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, QQmlPropertyData *property,
+Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property,
                          quint32 line, quint32 column)
 {
     Name *name = function->pool->New<Name>();
@@ -551,7 +551,7 @@ Name *BasicBlock::ATTACH_TYPE(const QString &id, const QQmlType *attachType, Nam
     return name;
 }
 
-Name *BasicBlock::MODULE_OBJECT(const QString &id, const QMetaObject *meta, Name::Storage storage,
+Name *BasicBlock::MODULE_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage,
                                 quint32 line, quint32 column)
 {
     Name *name = function->pool->New<Name>();

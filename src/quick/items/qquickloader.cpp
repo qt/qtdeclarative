@@ -588,7 +588,7 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
 {
     Q_Q(QQuickLoader);
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(obj);
+    QQuickItem *item = qmlobject_cast<QQuickItem*>(obj);
     if (item) {
         // If the item doesn't have an explicit size, but the Loader
         // does, then set the item's size now before bindings are
@@ -625,7 +625,7 @@ void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
 
     if (status == QQmlIncubator::Ready) {
         QObject *obj = incubator->object();
-        item = qobject_cast<QQuickItem*>(obj);
+        item = qmlobject_cast<QQuickItem*>(obj);
         if (item) {
             emit q->itemChanged();
             initResize();

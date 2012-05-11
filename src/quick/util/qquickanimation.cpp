@@ -1601,10 +1601,8 @@ QQuickAnimationGroup::QQuickAnimationGroup(QQuickAnimationGroupPrivate &dd, QObj
 
 void QQuickAnimationGroupPrivate::append_animation(QQmlListProperty<QQuickAbstractAnimation> *list, QQuickAbstractAnimation *a)
 {
-    QQuickAnimationGroup *q = qobject_cast<QQuickAnimationGroup *>(list->object);
-    if (q) {
+    if (QQuickAnimationGroup *q = qmlobject_cast<QQuickAnimationGroup *>(list->object))
         a->setGroup(q);
-    }
 }
 
 void QQuickAnimationGroupPrivate::clear_animation(QQmlListProperty<QQuickAbstractAnimation> *list)

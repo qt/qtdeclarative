@@ -6,7 +6,6 @@ HEADERS +=  \
     $$PWD/qqmlrefcount_p.h \
     $$PWD/qqmlpool_p.h \
     $$PWD/qfieldlist_p.h \
-    $$PWD/qfastmetabuilder_p.h \
     $$PWD/qhashfield_p.h \
     $$PWD/qqmlthread_p.h \
     $$PWD/qfinitestack_p.h \
@@ -22,7 +21,6 @@ SOURCES += \
     $$PWD/qintrusivelist.cpp \
     $$PWD/qhashedstring.cpp \
     $$PWD/qqmlpool.cpp \
-    $$PWD/qfastmetabuilder.cpp \
     $$PWD/qqmlthread.cpp \
     $$PWD/qqmltrace.cpp \
 

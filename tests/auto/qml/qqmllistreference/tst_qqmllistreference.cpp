@@ -537,7 +537,7 @@ void tst_qqmllistreference::engineTypes()
     QVERIFY(o);
 
     QQmlProperty p1(o, QLatin1String("myList"));
-    QVERIFY(p1.propertyTypeCategory() == QQmlProperty::Normal);
+    QVERIFY(p1.propertyTypeCategory() == QQmlProperty::List);
 
     QQmlProperty p2(o, QLatin1String("myList"), engine.rootContext());
     QVERIFY(p2.propertyTypeCategory() == QQmlProperty::List);

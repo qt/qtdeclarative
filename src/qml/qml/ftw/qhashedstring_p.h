@@ -157,6 +157,8 @@ public:
 
     QString toString() const;
 
+    inline bool isLatin1() const;
+
     inline int utf8length() const;
     QByteArray toUtf8() const;
     void writeUtf8(char *) const;
@@ -1335,6 +1337,13 @@ int QHashedStringRef::utf8length() const
     if (m_utf8length < m_length)
         computeUtf8Length();
     return m_utf8length;
+}
+
+bool QHashedStringRef::isLatin1() const
+{
+    for (int ii = 0; ii < m_length; ++ii)
+        if (m_data[ii].unicode() > 127) return false;
+    return true;
 }
 
 bool QHashedStringRef::startsWithUpper() const

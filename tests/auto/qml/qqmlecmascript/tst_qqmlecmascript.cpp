@@ -266,6 +266,8 @@ private slots:
     void signalEmitted();
     void threadSignal();
     void qqmldataDestroyed();
+    void secondAlias();
+    void varAlias();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -6850,6 +6852,25 @@ void tst_qqmlecmascript::qqmldataDestroyed()
         delete object;
         // shouldn't have crashed.
     }
+}
+
+void tst_qqmlecmascript::secondAlias()
+{
+    QQmlComponent c(&engine, testFileUrl("secondAlias.qml"));
+    QObject *object = c.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("test").toInt(), 200);
+    delete object;
+}
+
+// An alias to a var property works
+void tst_qqmlecmascript::varAlias()
+{
+    QQmlComponent c(&engine, testFileUrl("varAlias.qml"));
+    QObject *object = c.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("test").toInt(), 192);
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

@@ -54,6 +54,7 @@
 //
 
 #include <private/qqmlrefcount_p.h>
+#include <private/qflagpointer_p.h>
 #include "qqmlcleanup_p.h"
 #include "qqmlnotifier_p.h"
 
@@ -69,6 +70,7 @@ class QV8QObjectWrapper;
 class QQmlEngine;
 class QQmlPropertyData;
 class QQmlAccessors;
+class QMetaObjectBuilder;
 class QQmlPropertyCacheMethodArguments;
 
 // We have this somewhat awful split between RawData and Data so that RawData can be
@@ -98,7 +100,7 @@ public:
         IsQmlBinding       = 0x00000800, // Property type is a QQmlBinding*
         IsQJSValue         = 0x00001000, // Property type is a QScriptValue
         IsV8Handle         = 0x00002000, // Property type is a QQmlV8Handle
-        IsVMEProperty      = 0x00004000, // Property type is a "var" property of VMEMO
+        IsVarProperty      = 0x00004000, // Property type is a "var" property of VMEMO
         IsValueTypeVirtual = 0x00008000, // Property is a value type "virtual" property
         IsQVariant         = 0x00010000, // Property is a QVariant
 
@@ -110,9 +112,14 @@ public:
         IsV8Function       = 0x00200000, // Function takes QQmlV8Function* args
         IsSignalHandler    = 0x00400000, // Function is a signal handler
         IsOverload         = 0x00800000, // Function is an overload of another function
+        IsCloned           = 0x01000000, // The function was marked as cloned
 
         // Internal QQmlPropertyCache flags
-        NotFullyResolved   = 0x01000000  // True if the type data is to be lazily resolved
+        NotFullyResolved   = 0x02000000, // True if the type data is to be lazily resolved
+
+        // Flags that are set based on the propType field
+        PropTypeFlagMask = IsQObjectDerived | IsEnumType | IsQList | IsQmlBinding | IsQJSValue |
+                           IsV8Handle | IsQVariant,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -135,7 +142,7 @@ public:
     bool isQmlBinding() const { return flags & IsQmlBinding; }
     bool isQJSValue() const { return flags & IsQJSValue; }
     bool isV8Handle() const { return flags & IsV8Handle; }
-    bool isVMEProperty() const { return flags & IsVMEProperty; }
+    bool isVarProperty() const { return flags & IsVarProperty; }
     bool isValueTypeVirtual() const { return flags & IsValueTypeVirtual; }
     bool isQVariant() const { return flags & IsQVariant; }
     bool isVMEFunction() const { return flags & IsVMEFunction; }
@@ -145,6 +152,7 @@ public:
     bool isV8Function() const { return flags & IsV8Function; }
     bool isSignalHandler() const { return flags & IsSignalHandler; }
     bool isOverload() const { return flags & IsOverload; }
+    bool isCloned() const { return flags & IsCloned; }
 
     bool hasOverride() const { return !(flags & IsValueTypeVirtual) &&
                                       !(flags & HasAccessors) &&
@@ -243,14 +251,24 @@ public:
                 QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
 
-    void append(QQmlEngine *, const QMetaObject *,
-                QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
-    void append(QQmlEngine *, const QMetaObject *, int revision,
-                QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
-                QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
+    QQmlPropertyCache *copyAndReserve(QQmlEngine *, int propertyCount,
+                                      int methodCount, int signalCount);
+    void appendProperty(const QString &,
+                        quint32 flags, int coreIndex, int propType, int notifyIndex);
+    void appendProperty(const QHashedCStringRef &,
+                        quint32 flags, int coreIndex, int propType, int notifyIndex);
+    void appendSignal(const QString &, quint32, int coreIndex, const int *types = 0,
+                      const QList<QByteArray> &names = QList<QByteArray>());
+    void appendSignal(const QHashedCStringRef &, quint32, int coreIndex, const int *types = 0,
+                      const QList<QByteArray> &names = QList<QByteArray>());
+    void appendMethod(const QString &, quint32 flags, int coreIndex,
+                      const QList<QByteArray> &names = QList<QByteArray>());
+    void appendMethod(const QHashedCStringRef &, quint32 flags, int coreIndex,
+                      const QList<QByteArray> &names = QList<QByteArray>());
+
+    const QMetaObject *metaObject() const;
+    const QMetaObject *createMetaObject();
+    const QMetaObject *firstCppMetaObject() const;
 
     inline QQmlPropertyData *property(const QHashedV8String &) const;
     QQmlPropertyData *property(const QHashedStringRef &) const;
@@ -259,6 +277,10 @@ public:
     QQmlPropertyData *property(int) const;
     QQmlPropertyData *method(int) const;
     QStringList propertyNames() const;
+
+    QString defaultPropertyName() const;
+    QQmlPropertyData *defaultProperty() const;
+    QQmlPropertyCache *parent() const;
 
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
@@ -270,8 +292,21 @@ public:
                                               QQmlPropertyData &);
     static int *methodParameterTypes(QObject *, int index, QVarLengthArray<int, 9> &dummy,
                                      QByteArray *unknownTypeError);
+    static QList<QByteArray> methodParameterNames(QObject *, int index);
+
+    const char *className() const;
+
+    inline int propertyCount() const;
+    inline int propertyOffset() const;
+    inline int methodCount() const;
+    inline int methodOffset() const;
+    inline int signalCount() const;
+    inline int signalOffset() const;
 
     static bool isDynamicMetaObject(const QMetaObject *);
+
+    void toMetaObjectBuilder(QMetaObjectBuilder &);
+
 protected:
     virtual void destroy();
     virtual void clear();
@@ -279,8 +314,14 @@ protected:
 private:
     friend class QQmlEnginePrivate;
     friend class QV8QObjectWrapper;
+    friend class QQmlCompiler;
 
     inline QQmlPropertyCache *copy(int reserve);
+
+    void append(QQmlEngine *, const QMetaObject *, int revision,
+                QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
+                QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
+                QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
 
     // Implemented in v8/qv8qobjectwrapper.cpp
     v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);
@@ -293,11 +334,11 @@ private:
     void updateRecur(QQmlEngine *, const QMetaObject *);
 
     QQmlEngine *engine;
-    
-    QQmlPropertyCache *parent;
+
+    QQmlPropertyCache *_parent;
     int propertyIndexCacheStart;
     int methodIndexCacheStart;
-    int signalHanderIndexCacheStart;
+    int signalHandlerIndexCacheStart;
 
     IndexCache propertyIndexCache;
     IndexCache methodIndexCache;
@@ -306,8 +347,46 @@ private:
     AllowedRevisionCache allowedRevisionCache;
     v8::Persistent<v8::Function> constructor;
 
-    const QMetaObject *metaObject;
+    bool _ownMetaObject;
+    const QMetaObject *_metaObject;
+    QByteArray _dynamicClassName;
+    QByteArray _dynamicStringData;
+    QString _defaultPropertyName;
     QQmlPropertyCacheMethodArguments *argumentsCache;
+};
+
+// QQmlMetaObject serves as a wrapper around either QMetaObject or QQmlPropertyCache.
+// This is necessary as we delay creation of QMetaObject for synthesized QObjects, but
+// we don't want to needlessly generate QQmlPropertyCaches every time we encounter a
+// QObject type used in assignment or when we don't have a QQmlEngine etc.
+//
+// This class does NOT reference the propertycache.
+class QQmlEnginePrivate;
+class Q_QML_EXPORT QQmlMetaObject
+{
+public:
+    inline QQmlMetaObject();
+    inline QQmlMetaObject(QObject *);
+    inline QQmlMetaObject(const QMetaObject *);
+    inline QQmlMetaObject(QQmlPropertyCache *);
+    inline QQmlMetaObject(const QQmlMetaObject &);
+
+    inline QQmlMetaObject &operator=(const QQmlMetaObject &);
+
+    inline bool isNull() const;
+
+    inline const char *className() const;
+    inline int propertyCount() const;
+
+    inline bool hasMetaObject() const;
+    inline const QMetaObject *metaObject() const;
+
+    QQmlPropertyCache *propertyCache(QQmlEnginePrivate *) const;
+
+    static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to);
+
+private:
+    QBiPointer<QQmlPropertyCache, const QMetaObject> _m;
 };
   
 QQmlPropertyData::QQmlPropertyData()
@@ -377,6 +456,109 @@ QQmlPropertyData *QQmlPropertyCache::property(const QHashedV8String &str) const
     QQmlPropertyData **rv = stringCache.value(str);
     if (rv && (*rv)->notFullyResolved()) resolve(*rv);
     return rv?*rv:0;
+}
+
+int QQmlPropertyCache::propertyCount() const
+{
+    return propertyIndexCacheStart + propertyIndexCache.count();
+}
+
+int QQmlPropertyCache::propertyOffset() const
+{
+    return propertyIndexCacheStart;
+}
+
+int QQmlPropertyCache::methodCount() const
+{
+    return methodIndexCacheStart + methodIndexCache.count();
+}
+
+int QQmlPropertyCache::methodOffset() const
+{
+    return methodIndexCacheStart;
+}
+
+int QQmlPropertyCache::signalCount() const
+{
+    return signalHandlerIndexCacheStart + signalHandlerIndexCache.count();
+}
+
+int QQmlPropertyCache::signalOffset() const
+{
+    return signalHandlerIndexCacheStart;
+}
+
+QQmlMetaObject::QQmlMetaObject()
+{
+}
+
+QQmlMetaObject::QQmlMetaObject(QObject *o)
+{
+    if (o) {
+        QQmlData *ddata = QQmlData::get(o, false);
+        if (ddata && ddata->propertyCache) _m = ddata->propertyCache;
+        else _m = o->metaObject();
+    }
+}
+
+QQmlMetaObject::QQmlMetaObject(const QMetaObject *m)
+: _m(m)
+{
+}
+
+QQmlMetaObject::QQmlMetaObject(QQmlPropertyCache *m)
+: _m(m)
+{
+}
+
+QQmlMetaObject::QQmlMetaObject(const QQmlMetaObject &o)
+: _m(o._m)
+{
+}
+
+QQmlMetaObject &QQmlMetaObject::operator=(const QQmlMetaObject &o)
+{
+    _m = o._m;
+    return *this;
+}
+
+bool QQmlMetaObject::isNull() const
+{
+    return _m.isNull();
+}
+
+const char *QQmlMetaObject::className() const
+{
+    if (_m.isNull()) {
+        return 0;
+    } else if (_m.isT1()) {
+        return _m.asT1()->className();
+    } else {
+        return _m.asT2()->className();
+    }
+}
+
+int QQmlMetaObject::propertyCount() const
+{
+    if (_m.isNull()) {
+        return 0;
+    } else if (_m.isT1()) {
+        return _m.asT1()->propertyCount();
+    } else {
+        return _m.asT2()->propertyCount();
+    }
+}
+
+bool QQmlMetaObject::hasMetaObject() const
+{
+    return _m.isT2() || (!_m.isNull() && _m.asT1()->metaObject());
+}
+
+const QMetaObject *QQmlMetaObject::metaObject() const
+{
+    if (_m.isNull()) return 0;
+    if (_m.isT1()) return _m.asT1()->createMetaObject();
+    else return _m.asT2();
 }
 
 QT_END_NAMESPACE

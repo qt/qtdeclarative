@@ -55,21 +55,6 @@
 
 QT_BEGIN_NAMESPACE
 
-int QQmlCompiledData::pack(const char *data, size_t size)
-{
-    const char *p = packData.constData();
-    unsigned int ps = packData.size();
-
-    for (unsigned int ii = 0; (ii + size) <= ps; ii += sizeof(int)) {
-        if (0 == ::memcmp(p + ii, data, size))
-            return ii;
-    }
-
-    int rv = packData.size();
-    packData.append(data, int(size));
-    return rv;
-}
-
 int QQmlCompiledData::indexForString(const QString &data)
 {
     int idx = primitives.indexOf(data);
@@ -101,7 +86,8 @@ int QQmlCompiledData::indexForUrl(const QUrl &data)
 }
 
 QQmlCompiledData::QQmlCompiledData(QQmlEngine *engine)
-: engine(engine), importCache(0), root(0), rootPropertyCache(0)
+: engine(engine), importCache(0), metaTypeId(-1), listMetaTypeId(-1), isRegisteredWithEngine(false),
+  rootPropertyCache(0)
 {
     Q_ASSERT(engine);
 
@@ -118,6 +104,9 @@ void QQmlCompiledData::destroy()
 
 QQmlCompiledData::~QQmlCompiledData()
 {
+    if (isRegisteredWithEngine)
+        QQmlEnginePrivate::get(engine)->unregisterCompositeType(this);
+
     clear();
 
     for (int ii = 0; ii < types.count(); ++ii) {
@@ -147,16 +136,6 @@ void QQmlCompiledData::clear()
 {
     for (int ii = 0; ii < programs.count(); ++ii)
         qPersistentDispose(programs[ii].bindings);
-}
-
-const QMetaObject *QQmlCompiledData::TypeReference::metaObject() const
-{
-    if (type) {
-        return type->metaObject();
-    } else {
-        Q_ASSERT(component);
-        return component->root;
-    }
 }
 
 /*!

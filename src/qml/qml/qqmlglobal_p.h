@@ -44,6 +44,7 @@
 
 #include <private/qtqmlglobal_p.h>
 #include <QtCore/QObject>
+#include <private/qqmlpropertycache_p.h>
 
 QT_BEGIN_HEADER
 
@@ -63,30 +64,103 @@ QT_BEGIN_NAMESPACE
         return status == Yes; \
     }
 
-#define FAST_CONNECT(Sender, Signal, Receiver, Method) \
+/*!
+    Connect \a Signal of \a Sender to \a Method of \a Receiver.  \a Signal must be
+    of type \a SenderType and \a Receiver of type \a ReceiverType.
+
+    Unlike QObject::connect(), this method caches the lookup of the signal and method
+    indexes.  It also does not require lazy QMetaObjects to be built so should be
+    preferred in all QML code that might interact with QML built objects.
+
+    \code
+        QQuickTextControl *control;
+        QQuickTextEdit *textEdit;
+        qmlobject_connect(control, QQuickTextControl, SIGNAL(updateRequest(QRectF)),
+                          textEdit, QQuickTextEdit, SLOT(updateDocument()));
+    \endcode
+*/
+#define qmlobject_connect(Sender, SenderType, Signal, Receiver, ReceiverType, Method) \
 { \
-    QObject *sender = (Sender); \
-    QObject *receiver = (Receiver); \
+    SenderType *sender = (Sender); \
+    ReceiverType *receiver = (Receiver); \
     const char *signal = (Signal); \
     const char *method = (Method); \
     static int signalIdx = -1; \
     static int methodIdx = -1; \
     if (signalIdx < 0) { \
-        if (((int)(*signal) - '0') == QSIGNAL_CODE) \
-            signalIdx = sender->metaObject()->indexOfSignal(signal+1); \
-        else \
-            qWarning("FAST_CONNECT: Invalid signal %s. Please make sure you are using the SIGNAL macro.", signal); \
+        Q_ASSERT(((int)(*signal) - '0') == QSIGNAL_CODE); \
+        signalIdx = SenderType::staticMetaObject.indexOfSignal(signal+1); \
     } \
     if (methodIdx < 0) { \
         int code = ((int)(*method) - '0'); \
+        Q_ASSERT(code == QSLOT_CODE || code == QSIGNAL_CODE); \
         if (code == QSLOT_CODE) \
-            methodIdx = receiver->metaObject()->indexOfSlot(method+1); \
-        else if (code == QSIGNAL_CODE) \
-            methodIdx = receiver->metaObject()->indexOfSignal(method+1); \
+            methodIdx = ReceiverType::staticMetaObject.indexOfSlot(method+1); \
         else \
-            qWarning("FAST_CONNECT: Invalid method %s. Please make sure you are using the SIGNAL or SLOT macro.", method); \
+            methodIdx = ReceiverType::staticMetaObject.indexOfSignal(method+1); \
     } \
+    Q_ASSERT(signalIdx != -1 && methodIdx != -1); \
     QMetaObject::connect(sender, signalIdx, receiver, methodIdx, Qt::DirectConnection); \
+}
+
+/*!
+    Disconnect \a Signal of \a Sender from \a Method of \a Receiver.  \a Signal must be
+    of type \a SenderType and \a Receiver of type \a ReceiverType.
+
+    Unlike QObject::disconnect(), this method caches the lookup of the signal and method
+    indexes.  It also does not require lazy QMetaObjects to be built so should be
+    preferred in all QML code that might interact with QML built objects.
+
+    \code
+        QQuickTextControl *control;
+        QQuickTextEdit *textEdit;
+        qmlobject_disconnect(control, QQuickTextControl, SIGNAL(updateRequest(QRectF)),
+                             textEdit, QQuickTextEdit, SLOT(updateDocument()));
+    \endcode
+*/
+#define qmlobject_disconnect(Sender, SenderType, Signal, Receiver, ReceiverType, Method) \
+{ \
+    SenderType *sender = (Sender); \
+    ReceiverType *receiver = (Receiver); \
+    const char *signal = (Signal); \
+    const char *method = (Method); \
+    static int signalIdx = -1; \
+    static int methodIdx = -1; \
+    if (signalIdx < 0) { \
+        Q_ASSERT(((int)(*signal) - '0') == QSIGNAL_CODE); \
+        signalIdx = SenderType::staticMetaObject.indexOfSignal(signal+1); \
+    } \
+    if (methodIdx < 0) { \
+        int code = ((int)(*method) - '0'); \
+        Q_ASSERT(code == QSLOT_CODE || code == QSIGNAL_CODE); \
+        if (code == QSLOT_CODE) \
+            methodIdx = ReceiverType::staticMetaObject.indexOfSlot(method+1); \
+        else \
+            methodIdx = ReceiverType::staticMetaObject.indexOfSignal(method+1); \
+    } \
+    Q_ASSERT(signalIdx != -1 && methodIdx != -1); \
+    QMetaObject::disconnect(sender, signalIdx, receiver, methodIdx); \
+}
+
+/*!
+    This method is identical to qobject_cast<T>() except that it does not require lazy
+    QMetaObjects to be built, so should be preferred in all QML code that might interact
+    with QML built objects.
+
+    \code
+        QObject *object;
+        if (QQuickTextEdit *textEdit = qmlobject_cast<QQuickTextEdit *>(object)) {
+            // ...Do something...
+        }
+    \endcode
+*/
+template<class T>
+T qmlobject_cast(QObject *object)
+{
+    if (QQmlMetaObject::canConvert(object, &reinterpret_cast<T>(object)->staticMetaObject))
+        return static_cast<T>(object);
+    else
+        return 0;
 }
 
 bool Q_QML_PRIVATE_EXPORT QQml_isSignalConnected(QObject*, int, int);

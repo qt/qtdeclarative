@@ -337,11 +337,44 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         QString signalName = terminal.mid(2);
         signalName[0] = signalName.at(0).toLower();
 
-        QMetaMethod method = findSignalByName(currentObject->metaObject(), signalName.toLatin1().constData());
-        if (method.isValid()) {
-            object = currentObject;
-            core.load(method);
-            return;
+        // XXX - this code treats methods as signals
+
+        QQmlData *ddata = QQmlData::get(currentObject, false);
+        if (ddata && ddata->propertyCache) {
+
+            // Try method
+            QQmlPropertyData *d = ddata->propertyCache->property(signalName);
+            while (d && !d->isFunction())
+                d = ddata->propertyCache->overrideData(d);
+
+            if (d) {
+                object = currentObject;
+                core = *d;
+                return;
+            }
+
+            // Try property
+            if (signalName.endsWith(QLatin1String("Changed"))) {
+                QString propName = signalName.mid(0, signalName.length() - 7);
+                QQmlPropertyData *d = ddata->propertyCache->property(propName);
+                while (d && d->isFunction())
+                    d = ddata->propertyCache->overrideData(d);
+
+                if (d && d->notifyIndex != -1) {
+                    object = currentObject;
+                    core = *ddata->propertyCache->method(d->notifyIndex);
+                    return;
+                }
+            }
+
+        } else {
+            QMetaMethod method = findSignalByName(currentObject->metaObject(),
+                                                  signalName.toLatin1().constData());
+            if (method.isValid()) {
+                object = currentObject;
+                core.load(method);
+                return;
+            }
         }
     }
 
@@ -735,8 +768,7 @@ QQmlPropertyPrivate::binding(QObject *object, int coreIndex, int valueTypeIndex)
     QQmlPropertyData *propertyData =
         data->propertyCache?data->propertyCache->property(coreIndex):0;
     if (propertyData && propertyData->isAlias()) {
-        const QQmlVMEMetaObject *vme = 
-            static_cast<const QQmlVMEMetaObject *>(metaObjectForProperty(object->metaObject(), coreIndex));
+        QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
         QObject *aObject = 0; int aCoreIndex = -1; int aValueTypeIndex = -1;
         if (!vme->aliasTarget(coreIndex, &aObject, &aCoreIndex, &aValueTypeIndex) || aCoreIndex == -1)
@@ -777,8 +809,8 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, int bindingIndex,
         QQmlPropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):0;
         if (propertyData && propertyData->isAlias()) {
-            const QQmlVMEMetaObject *vme = 
-                static_cast<const QQmlVMEMetaObject *>(metaObjectForProperty(object->metaObject(), coreIndex));
+            QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
+
             QObject *aObject = 0; int aCoreIndex = -1; int aValueTypeIndex = -1;
             if (vme->aliasTarget(coreIndex, &aObject, &aCoreIndex, &aValueTypeIndex)) {
                 // This will either be a value type sub-reference or an alias to a value-type sub-reference not both
@@ -811,8 +843,7 @@ QQmlPropertyPrivate::setBinding(QObject *object, int coreIndex, int valueTypeInd
         QQmlPropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):0;
         if (propertyData && propertyData->isAlias()) {
-            const QQmlVMEMetaObject *vme = 
-                static_cast<const QQmlVMEMetaObject *>(metaObjectForProperty(object->metaObject(), coreIndex));
+            QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
             QObject *aObject = 0; int aCoreIndex = -1; int aValueTypeIndex = -1;
             if (!vme->aliasTarget(coreIndex, &aObject, &aCoreIndex, &aValueTypeIndex)) {
@@ -871,8 +902,7 @@ QQmlPropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, int valu
         QQmlPropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):0;
         if (propertyData && propertyData->isAlias()) {
-            const QQmlVMEMetaObject *vme = 
-                static_cast<const QQmlVMEMetaObject *>(metaObjectForProperty(object->metaObject(), coreIndex));
+            QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
             QObject *aObject = 0; int aCoreIndex = -1; int aValueTypeIndex = -1;
             if (!vme->aliasTarget(coreIndex, &aObject, &aCoreIndex, &aValueTypeIndex)) {
@@ -988,7 +1018,7 @@ QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
         return signalHandler->takeExpression(expr);
 
     if (expr) {
-        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.method(), that.d->object,
+        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.index(), that.d->object,
                                                       expr->context()->engine);
         signal->takeExpression(expr);
     }
@@ -1096,8 +1126,23 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 
     } else {
 
-        return object->metaObject()->property(core.coreIndex).read(object.data());
+        if (!core.propType) // Unregistered type
+            return object->metaObject()->property(core.coreIndex).read(object);
 
+        QVariant value;
+        int status = -1;
+        void *args[] = { 0, &value, &status };
+        if (core.propType == QMetaType::QVariant) {
+            args[0] = &value;
+        } else {
+            value = QVariant(core.propType, (void*)0);
+            args[0] = value.data();
+        }
+        QMetaObject::metacall(object, QMetaObject::ReadProperty, core.coreIndex, args);
+        if (core.propType != QMetaType::QVariant && args[0] != value.data())
+            return QVariant((QVariant::Type)core.propType, args[0]);
+
+        return value;
     }
 }
 
@@ -1293,34 +1338,33 @@ bool QQmlPropertyPrivate::write(QObject *object,
 
     } else if (property.isQObject()) {
 
-        const QMetaObject *valMo = rawMetaObjectForType(enginePriv, value.userType());
+        QQmlMetaObject valMo = rawMetaObjectForType(enginePriv, value.userType());
         
-        if (!valMo)
+        if (valMo.isNull())
             return false;
 
         QObject *o = *(QObject **)value.constData();
-        const QMetaObject *propMo = rawMetaObjectForType(enginePriv, propertyType);
+        QQmlMetaObject propMo = rawMetaObjectForType(enginePriv, propertyType);
 
-        if (o) valMo = o->metaObject();
+        if (o) valMo = o;
 
-        if (canConvert(valMo, propMo)) {
+        if (QQmlMetaObject::canConvert(valMo, propMo)) {
             void *args[] = { &o, 0, &status, &flags };
-            QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, 
-                                  args);
-        } else if (!o && canConvert(propMo, valMo)) {
+            QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, args);
+        } else if (!o && QQmlMetaObject::canConvert(propMo, valMo)) {
             // In the case of a null QObject, we assign the null if there is 
             // any change that the null variant type could be up or down cast to 
             // the property type.
             void *args[] = { &o, 0, &status, &flags };
-            QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, 
-                                  args);
+            QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, args);
         } else {
             return false;
         }
 
     } else if (property.isQList()) {
 
-        const QMetaObject *listType = 0;
+        QQmlMetaObject listType;
+
         if (enginePriv) {
             listType = enginePriv->rawMetaObjectForType(enginePriv->listType(property.propType));
         } else {
@@ -1328,7 +1372,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
             if (!type) return false;
             listType = type->baseMetaObject();
         }
-        if (!listType) return false;
+        if (listType.isNull()) return false;
 
         QQmlListProperty<void> prop;
         void *args[] = { &prop, 0 };
@@ -1343,7 +1387,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
 
             for (int ii = 0; ii < qdlr.count(); ++ii) {
                 QObject *o = qdlr.at(ii);
-                if (o && !canConvert(o->metaObject(), listType))
+                if (o && !QQmlMetaObject::canConvert(o, listType))
                     o = 0;
                 prop.append(&prop, (void *)o);
             }
@@ -1352,13 +1396,13 @@ bool QQmlPropertyPrivate::write(QObject *object,
 
             for (int ii = 0; ii < list.count(); ++ii) {
                 QObject *o = list.at(ii);
-                if (o && !canConvert(o->metaObject(), listType))
+                if (o && !QQmlMetaObject::canConvert(o, listType))
                     o = 0;
                 prop.append(&prop, (void *)o);
             }
         } else {
             QObject *o = enginePriv?enginePriv->toQObject(value):QQmlMetaType::toQObject(value);
-            if (o && !canConvert(o->metaObject(), listType))
+            if (o && !QQmlMetaObject::canConvert(o, listType))
                 o = 0;
             prop.append(&prop, (void *)o);
         }
@@ -1481,7 +1525,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
     QQmlJavaScriptExpression::DeleteWatcher watcher(expression);
 
     QVariant value;
-    bool isVmeProperty = core.isVMEProperty();
+    bool isVarProperty = core.isVarProperty();
 
     if (isUndefined) {
     } else if (core.isQList()) {
@@ -1490,13 +1534,13 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         value = QVariant::fromValue((QObject *)0);
     } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
         value = resolvedUrlSequence(v8engine->toVariant(result, qMetaTypeId<QList<QUrl> >()), context);
-    } else if (!isVmeProperty && type != qMetaTypeId<QJSValue>()) {
+    } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
         value = v8engine->toVariant(result, type);
     }
 
     if (expression->hasError()) {
         return false;
-    } else if (isVmeProperty) {
+    } else if (isVarProperty) {
         if (!result.IsEmpty() && result->IsFunction()
                 && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
             // we explicitly disallow this case to avoid confusion.  Users can still store one
@@ -1504,6 +1548,8 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
+
+        typedef QQmlVMEMetaObject VMEMO;
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(core.coreIndex, result);
@@ -1540,9 +1586,9 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             if (QObject *o = *(QObject **)value.constData()) {
                 valueType = o->metaObject()->className();
 
-                if (const QMetaObject *propertyMetaObject = rawMetaObjectForType(QQmlEnginePrivate::get(engine), type)) {
-                    propertyType = propertyMetaObject->className();
-                }
+                QQmlMetaObject propertyMetaObject = rawMetaObjectForType(QQmlEnginePrivate::get(engine), type);
+                if (!propertyMetaObject.isNull())
+                    propertyType = propertyMetaObject.className();
             }
         } else if (value.userType() != QVariant::Invalid) {
             valueType = QMetaType::typeName(value.userType());
@@ -1563,13 +1609,13 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
     return true;
 }
 
-const QMetaObject *QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engine, int userType)
+QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engine, int userType)
 {
     if (engine) {
         return engine->rawMetaObjectForType(userType);
     } else {
         QQmlType *type = QQmlMetaType::qmlType(userType);
-        return type?type->baseMetaObject():0;
+        return QQmlMetaObject(type?type->baseMetaObject():0);
     }
 }
 
@@ -1762,14 +1808,13 @@ int QQmlPropertyPrivate::bindingIndex(const QQmlPropertyData &that)
 }
 
 QQmlPropertyData
-QQmlPropertyPrivate::saveValueType(const QMetaObject *metaObject, int index, 
-                                           const QMetaObject *subObject, int subIndex,
-                                           QQmlEngine *)
+QQmlPropertyPrivate::saveValueType(const QQmlPropertyData &base,
+                                   const QMetaObject *subObject, int subIndex,
+                                   QQmlEngine *)
 {
     QMetaProperty subProp = subObject->property(subIndex);
 
-    QQmlPropertyData core;
-    core.load(metaObject->property(index));
+    QQmlPropertyData core = base;
     core.setFlags(core.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
     core.valueTypeFlags = QQmlPropertyData::flagsForProperty(subProp);
     core.valueTypeCoreIndex = subIndex;
@@ -1792,31 +1837,6 @@ QQmlPropertyPrivate::restore(QObject *object, const QQmlPropertyData &data,
     prop.d->core = data;
 
     return prop;
-}
-
-/*!
-    Returns true if lhs and rhs refer to the same metaobject data
-*/
-bool QQmlPropertyPrivate::equal(const QMetaObject *lhs, const QMetaObject *rhs)
-{
-    return lhs == rhs || (1 && lhs && rhs && lhs->d.stringdata == rhs->d.stringdata);
-}
-
-/*!
-    Returns true if from inherits to.
-*/
-bool QQmlPropertyPrivate::canConvert(const QMetaObject *from, const QMetaObject *to)
-{
-    if (from && to == &QObject::staticMetaObject)
-        return true;
-
-    while (from) {
-        if (equal(from, to))
-            return true;
-        from = from->superClass();
-    }
-    
-    return false;
 }
 
 /*!
@@ -1883,17 +1903,8 @@ static inline void flush_vme_signal(const QObject *object, int index)
         QQmlPropertyData *property = data->propertyCache->method(index);
 
         if (property && property->isVMESignal()) {
-            const QMetaObject *metaObject = object->metaObject();
-            int methodOffset = metaObject->methodOffset();
-
-            while (methodOffset > index) {
-                metaObject = metaObject->d.superdata;
-                methodOffset -= QMetaObject_methods(metaObject);
-            }
-
-            QQmlVMEMetaObject *vme = 
-                static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(metaObject));
-
+            QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForMethod(const_cast<QObject *>(object),
+                                                                     index);
             vme->connectAliasSignal(index);
         }
     }
@@ -1919,21 +1930,6 @@ bool QQmlPropertyPrivate::connect(const QObject *sender, int signal_index,
 void QQmlPropertyPrivate::flushSignal(const QObject *sender, int signal_index)
 {
     flush_vme_signal(sender, signal_index);
-}
-
-/*!
-Return \a metaObject's [super] meta object that provides data for \a property.
-*/
-const QMetaObject *QQmlPropertyPrivate::metaObjectForProperty(const QMetaObject *metaObject, int property)
-{
-    int propertyOffset = metaObject->propertyOffset();
-
-    while (propertyOffset > property) {
-        metaObject = metaObject->d.superdata;
-        propertyOffset -= QMetaObject_properties(metaObject);
-    }
-
-    return metaObject;
 }
 
 QT_END_NAMESPACE

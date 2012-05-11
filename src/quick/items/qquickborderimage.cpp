@@ -316,7 +316,8 @@ void QQuickBorderImage::load()
             } else {
                 QNetworkRequest req(d->url);
                 d->sciReply = qmlEngine(this)->networkAccessManager()->get(req);
-                FAST_CONNECT(d->sciReply, SIGNAL(finished()), this, SLOT(sciRequestFinished()))
+                qmlobject_connect(d->sciReply, QNetworkReply, SIGNAL(finished()),
+                                  this, QQuickBorderImage, SLOT(sciRequestFinished()))
             }
         } else {
 

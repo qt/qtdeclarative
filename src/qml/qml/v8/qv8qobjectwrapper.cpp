@@ -535,7 +535,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             return v8::Handle<v8::Value>();
     }
 
-    if (result->isFunction() && !result->isVMEProperty()) {
+    if (result->isFunction() && !result->isVarProperty()) {
         if (result->isVMEFunction()) {
             QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
             Q_ASSERT(vmemo);
@@ -576,7 +576,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     if (ep && !result->isConstant())
         ep->captureProperty(object, result->coreIndex, result->notifyIndex);
 
-    if (result->isVMEProperty()) {
+    if (result->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
         return vmemo->vmeProperty(result->coreIndex);
@@ -594,7 +594,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     QQmlBinding *newBinding = 0;
     if (value->IsFunction()) {
         if (value->ToObject()->GetHiddenValue(engine->bindingFlagKey()).IsEmpty()) {
-            if (!property->isVMEProperty() && property->propType != qMetaTypeId<QJSValue>()) {
+            if (!property->isVarProperty() && property->propType != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ") +
                                 QLatin1String(QMetaType::typeName(property->propType));
@@ -626,7 +626,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     if (oldBinding)
         oldBinding->destroy();
 
-    if (!newBinding && property->isVMEProperty()) {
+    if (!newBinding && property->isVarProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
@@ -640,7 +640,6 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     int flags = 0; \
     void *argv[] = { &o, 0, &status, &flags }; \
     QMetaObject::metacall(object, QMetaObject::WriteProperty, property->coreIndex, argv);
-
 
     if (value->IsNull() && property->isQObject()) {
         PROPERTY_STORE(QObject*, 0);
@@ -669,7 +668,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
         PROPERTY_STORE(double, double(value->ToNumber()->Value()));
     } else if (property->propType == QMetaType::QString && value->IsString()) {
         PROPERTY_STORE(QString, engine->toString(value->ToString()));
-    } else if (property->isVMEProperty()) {
+    } else if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(property->coreIndex, value);
@@ -2146,18 +2145,18 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         } else if (v.canConvert(callType)) {
             *qvariantPtr = v;
             qvariantPtr->convert(callType);
-        } else if (const QMetaObject *mo = ep ? ep->rawMetaObjectForType(callType) : 0) {
-            QObject *obj = ep->toQObject(v);
-            
-            if (obj) {
-                const QMetaObject *objMo = obj->metaObject();
-                while (objMo && objMo != mo) objMo = objMo->superClass();
-                if (!objMo) obj = 0;
-            }
-
-            *qvariantPtr = QVariant(callType, &obj);
         } else {
-            *qvariantPtr = QVariant(callType, (void *)0);
+            QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(callType) : QQmlMetaObject();
+            if (!mo.isNull()) {
+                QObject *obj = ep->toQObject(v);
+
+                if (obj != 0 && !QQmlMetaObject::canConvert(obj, mo))
+                    obj = 0;
+
+                *qvariantPtr = QVariant(callType, &obj);
+            } else {
+                *qvariantPtr = QVariant(callType, (void *)0);
+            }
         }
     }
 }

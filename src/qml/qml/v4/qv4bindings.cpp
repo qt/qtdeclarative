@@ -424,7 +424,7 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
         QQmlData *data = QQmlData::get(*binding->target);
         QQmlPropertyData *propertyData = (data && data->propertyCache ? data->propertyCache->property(binding->property) : 0);
 
-        if (propertyData && propertyData->isVMEProperty()) {
+        if (propertyData && propertyData->isVarProperty()) {
             // We will allocate a V8 handle in this conversion/store
             v8::HandleScope handle_scope;
             v8::Context::Scope context_scope(QQmlEnginePrivate::get(context->engine)->v8engine()->context());
@@ -2116,18 +2116,27 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
 
         if (data.gettype() == QObjectStarType) {
             if (QObject *dataObject = data.getQObject()) {
-                const QMetaObject *dataMo = dataObject->metaObject();
+                QQmlMetaObject dataMo(dataObject);
 
                 QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
-                QMetaProperty receiver = output->metaObject()->property(instr->store.index);
-                const QMetaObject *receiverMo = QQmlPropertyPrivate::rawMetaObjectForType(ep, receiver.userType());
+
+                QQmlMetaObject receiverMo;
+
+                if (QQmlData::get(output, false) && QQmlData::get(output, false)->propertyCache) {
+                    QQmlPropertyData *receiver =
+                        QQmlData::get(output, false)->propertyCache->property(instr->store.index);
+                    receiverMo = ep->rawMetaObjectForType(receiver->propType);
+                } else {
+                    QMetaProperty receiver = output->metaObject()->property(instr->store.index);
+                    receiverMo = ep->rawMetaObjectForType(receiver.userType());
+                }
 
                 // Verify that these types are compatible
-                if (!QQmlPropertyPrivate::canConvert(dataMo, receiverMo)) {
+                if (!QQmlMetaObject::canConvert(dataMo, receiverMo)) {
                     THROW_EXCEPTION_STR(instr->store.exceptionId, QLatin1String("Unable to assign ") +
-                                                                  QLatin1String(dataMo->className()) +
+                                                                  QLatin1String(dataMo.className()) +
                                                                   QLatin1String(" to ") +
-                                                                  QLatin1String(receiverMo->className()));
+                                                                  QLatin1String(receiverMo.className()));
                 }
             }
         }

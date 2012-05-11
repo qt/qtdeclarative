@@ -1854,7 +1854,7 @@ void tst_qqmlproperty::warnOnInvalidBinding()
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
     // V8 error message for invalid binding to anchor
-    expectedWarning = testUrl.toString() + QString::fromLatin1(":14: Unable to assign QQuickItem_QML_7 to QQuickAnchorLine");
+    expectedWarning = testUrl.toString() + QString::fromLatin1(":14: Unable to assign QQuickItem_QML_6 to QQuickAnchorLine");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
     QQmlComponent component(&engine, testUrl);

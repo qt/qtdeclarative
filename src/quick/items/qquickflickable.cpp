@@ -208,7 +208,8 @@ void QQuickFlickablePrivate::init()
     Q_Q(QQuickFlickable);
     QQml_setParent_noEvent(contentItem, q);
     contentItem->setParentItem(q);
-    FAST_CONNECT(&timeline, SIGNAL(completed()), q, SLOT(movementEnding()))
+    qmlobject_connect(&timeline, QQuickTimeLine, SIGNAL(completed()),
+                      q, QQuickFlickable, SLOT(movementEnding()))
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFiltersChildMouseEvents(true);
     QQuickItemPrivate *viewportPrivate = QQuickItemPrivate::get(contentItem);
@@ -1420,8 +1421,7 @@ void QQuickFlickable::cancelFlick()
 
 void QQuickFlickablePrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
-    QQuickItem *i = qobject_cast<QQuickItem *>(o);
-    if (i) {
+    if (QQuickItem *i = qmlobject_cast<QQuickItem *>(o)) {
         i->setParentItem(static_cast<QQuickFlickablePrivate*>(prop->data)->contentItem);
     } else {
         o->setParent(prop->object); // XXX todo - do we want this?

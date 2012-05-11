@@ -101,7 +101,7 @@ public:
     QVariant readValueProperty();
     bool writeValueProperty(const QVariant &, WriteFlags);
 
-    static const QMetaObject *rawMetaObjectForType(QQmlEnginePrivate *, int);
+    static QQmlMetaObject rawMetaObjectForType(QQmlEnginePrivate *, int);
     static bool writeEnumProperty(const QMetaProperty &prop, int idx, QObject *object, 
                                   const QVariant &value, int flags);
     static bool writeValueProperty(QObject *, QQmlEngine *,
@@ -122,15 +122,13 @@ public:
     static QQmlAbstractBinding *binding(QObject *, int coreIndex,
                                                 int valueTypeIndex /* -1 */);
 
-    static QQmlPropertyData saveValueType(const QMetaObject *, int,
-                                                  const QMetaObject *, int,
-                                                  QQmlEngine *);
+    static QQmlPropertyData saveValueType(const QQmlPropertyData &,
+                                          const QMetaObject *, int,
+                                          QQmlEngine *);
     static QQmlProperty restore(QObject *,
                                         const QQmlPropertyData &,
                                         QQmlContextData *);
 
-    static bool equal(const QMetaObject *, const QMetaObject *);
-    static bool canConvert(const QMetaObject *from, const QMetaObject *to);
     static inline QQmlPropertyPrivate *get(const QQmlProperty &p) {
         return p.d;
     }
@@ -158,7 +156,6 @@ public:
     static bool connect(const QObject *sender, int signal_index,
                         const QObject *receiver, int method_index,
                         int type = 0, int *types = 0);
-    static const QMetaObject *metaObjectForProperty(const QMetaObject *, int);
     static void flushSignal(const QObject *sender, int signal_index);
 };
 

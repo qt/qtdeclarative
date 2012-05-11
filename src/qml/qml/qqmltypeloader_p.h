@@ -279,17 +279,8 @@ public:
     bool directoryExists(const QString &path);
     const QQmlDirParser *qmlDirParser(const QString &filePath, const QString &uriHint, QString *outUrl);
 
-    template<typename T>
-    void clearCache(T *o, void (T::*callback)(QQmlTypeData *)) {
-        TypedCallback<T> cb(o, callback);
-        clearCache(&TypedCallback<T>::redirect, &cb);
-    }
-
-    template<typename T>
-    void trimCache(T *o, void (T::*callback)(QQmlTypeData *)) {
-        TypedCallback<T> cb(o, callback);
-        trimCache(&TypedCallback<T>::redirect, &cb);
-    }
+    void clearCache();
+    void trimCache();
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
@@ -313,9 +304,6 @@ private:
         T *o;
         void (T::*mf)(QQmlTypeData *);
     };
-
-    void clearCache(void (*callback)(void *, QQmlTypeData *), void *);
-    void trimCache(void (*callback)(void *, QQmlTypeData *), void *);
 
     struct DirParser : public QQmlDirParser { QString adjustedUrl; };
 

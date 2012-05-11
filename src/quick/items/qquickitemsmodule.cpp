@@ -88,11 +88,11 @@
 
 static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
-    QQuickItem *item = qobject_cast<QQuickItem *>(obj);
+    QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
     if (!item)
         return QQmlPrivate::IncompatibleObject;
 
-    QQuickItem *parentItem = qobject_cast<QQuickItem *>(parent);
+    QQuickItem *parentItem = qmlobject_cast<QQuickItem *>(parent);
     if (!parentItem)
         return QQmlPrivate::IncompatibleParent;
 
