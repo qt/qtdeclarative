@@ -1323,7 +1323,12 @@ void QQmlData::destroyed(QObject *object)
     if (extendedData)
         delete extendedData;
 
-    v8object.Clear(); // The WeakReference handler will clean the actual handle
+    // Dispose the handle.
+    // We don't simply clear it (and wait for next gc cycle to dispose
+    // via the weak qobject reference callback) as this affects the
+    // outcomes of v8's gc statistical analysis heuristics, which can
+    // cause unnecessary growth of the old pointer space js heap area.
+    qPersistentDispose(v8object);
 
     if (ownMemory)
         delete this;
