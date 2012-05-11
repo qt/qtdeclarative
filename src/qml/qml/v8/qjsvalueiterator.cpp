@@ -56,13 +56,6 @@ QT_BEGIN_NAMESPACE
 
     \snippet doc/snippets/code/src_script_qjsvalueiterator.cpp 1
 
-    Note that QJSValueIterator will not automatically skip over
-    properties that have the QJSValue::SkipInEnumeration flag set;
-    that flag only affects iteration in script code.  If you want, you
-    can skip over such properties with code like the following:
-
-    \snippet doc/snippets/code/src_script_qjsvalueiterator.cpp 2
-
     \sa QJSValue::property()
 */
 

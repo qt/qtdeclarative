@@ -39,9 +39,9 @@
 ****************************************************************************/
 
 //! [0]
-QScriptValue object;
+QJSValue object;
 ...
-QScriptValueIterator it(object);
+QJSValueIterator it(object);
 while (it.hasNext()) {
     it.next();
     qDebug() << it.name() << ": " << it.value().toString();
@@ -50,9 +50,9 @@ while (it.hasNext()) {
 
 
 //! [1]
-QScriptValue obj = ...; // the object to iterate over
+QJSValue obj = ...; // the object to iterate over
 while (obj.isObject()) {
-    QScriptValueIterator it(obj);
+    QJSValueIterator it(obj);
     while (it.hasNext()) {
         it.next();
         qDebug() << it.name();
@@ -61,12 +61,3 @@ while (obj.isObject()) {
 }
 //! [1]
 
-
-//! [2]
-while (it.hasNext()) {
-    it.next();
-    if (it.flags() & QScriptValue::SkipInEnumeration)
-        continue;
-    qDebug() << "found enumerated property:" << it.name();
-}
-//! [2]
