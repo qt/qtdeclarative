@@ -54,16 +54,7 @@ QT_BEGIN_NAMESPACE
     can be in the middle of an image file, or split along multiple rows, as long as they form
     a contiguous line wrapping to the next row of the file from the left edge of the file.
 
-    Sprites within one animation must be the same size, however sprites within the same file
-    do not. Sprites without a frameCount specified assume that they take the entire file.
-
-    There are several software tools to help turn images into sprite sheets, here are some examples:
-    Photoshop plugin:
-    http://www.personal.psu.edu/zez1/blogs/my_blog/2011/05/scripts-4-photoshop-file-sequence-to-layers-to-sprite-sheet.html
-    Gimp plugin:
-    http://registry.gimp.org/node/20943
-    Cmd-line tool:
-    http://www.imagemagick.org/script/montage.php
+    For full details, see the \l{Sprite Animation} overview.
 */
 /*!
     \qmlproperty int QtQuick2::Sprite::duration

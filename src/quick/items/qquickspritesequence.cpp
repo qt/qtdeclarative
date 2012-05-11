@@ -215,6 +215,10 @@ struct SpriteVertices {
     \inherits Item
     \brief The SpriteSequence element draws a sprite animation
 
+    SpriteSequence renders and controls a list of animations defined
+    by \l Sprite elements.
+
+    For full details, see the \l{Sprite Animation} overview.
 */
 /*!
     \qmlproperty bool QtQuick2::SpriteSequence::running

@@ -215,6 +215,14 @@ struct AnimatedSpriteVertices {
     \inqmlmodule QtQuick 2
     \inherits Item
     \brief The AnimatedSprite element draws a sprite animation
+
+    AnimatedSprite provides rendering and control over animations which are provided
+    as multiple frames in the same image file. You can play it at a fixed speed, at the
+    frame rate of your display, or manually advance and control the progress.
+
+    For details of how a sprite animation is defined see the \l{Sprite Animation} overview.
+    Note that the AnimatedSprite element does not use Sprite elements to define multiple animations,
+    but instead encapsulates a single animation itself.
 */
 
 /*!

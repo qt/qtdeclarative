@@ -625,6 +625,8 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
     Note that the sprite image will be scaled to a square based on the size of
     the particle being rendered.
+
+    For full details, see the \l{Sprite Animation} overview.
 */
 /*!
     \qmlproperty url QtQuick.Particles2::ImageParticle::colorTable

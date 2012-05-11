@@ -50,11 +50,13 @@ two elements.
 \li \l {Rectangle} - A rectangle element
 \li \l {Image} - For incorporating bitmaps into a scene
 \li \l {BorderImage} - Allows the use of images as borders
-\li \l {AnimatedImage} - For playing animations stored in a series of frames
+\li \l {AnimatedSprite} - For playing animations stored as a series of frames
+\li \l {AnimatedImage} - For playing animations stored as an animated GIF
 \li \l {Gradient} - For defining a color gradient
 \li \l {GradientStop} - Used to define a color within a \l {Gradient}
 \li \l {SystemPalette} - Provides access to the Qt palettes
 \li \l {Canvas} - Provides a 2D canvas element
+\li \l {SpriteSequence} - For playing and transitioning between multiple animations stored as a series of frames
 \endlist
 
 \section1 Text Handling
