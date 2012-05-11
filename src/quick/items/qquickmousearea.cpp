@@ -188,7 +188,7 @@ QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
 
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), hovered(false), pressed(false), longPress(false),
-  moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
+  moved(false), dragX(true), dragY(true), stealMouse(false), doubleClick(false), preventStealing(false),
   propagateComposedEvents(false), drag(0)
 {
 }
@@ -696,10 +696,6 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
     else {
         d->longPress = false;
         d->saveEvent(event);
-        if (d->drag) {
-            d->dragX = drag()->axis() & QQuickDrag::XAxis;
-            d->dragY = drag()->axis() & QQuickDrag::YAxis;
-        }
         if (d->drag)
             d->drag->setActive(false);
         setHovered(true);
@@ -708,6 +704,10 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(true));
 
+        if (d->drag) {
+            d->dragX = drag()->axis() & QQuickDrag::XAxis;
+            d->dragY = drag()->axis() & QQuickDrag::YAxis;
+        }
     }
 }
 

@@ -59,6 +59,7 @@ private slots:
     void dragProperties();
     void resetDrag();
     void dragging();
+    void setDragOnPressed();
     void updateMouseAreaPosOnClick();
     void updateMouseAreaPosOnResize();
     void noOnClickedWithPressAndHold();
@@ -251,6 +252,54 @@ void tst_QQuickMouseArea::dragging()
     QVERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 72.0);
     QCOMPARE(blackRect->y(), 72.0);
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::setDragOnPressed()
+{
+    QQuickView *canvas = createView();
+
+    canvas->setSource(testFileUrl("setDragOnPressed.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWait(20);
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickMouseArea *mouseArea = qobject_cast<QQuickMouseArea *>(canvas->rootObject());
+    QVERIFY(mouseArea);
+
+    // target
+    QQuickItem *target = mouseArea->findChild<QQuickItem*>("target");
+    QVERIFY(target);
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
+
+    QQuickDrag *drag = mouseArea->drag();
+    QVERIFY(drag);
+    QVERIFY(!drag->active());
+
+    QCOMPARE(target->x(), 50.0);
+    QCOMPARE(target->y(), 50.0);
+
+    // First move event triggers drag, second is acted upon.
+    // This is due to possibility of higher stacked area taking precedence.
+
+    QTest::mouseMove(canvas, QPoint(111,102));
+    QTest::qWait(50);
+    QTest::mouseMove(canvas, QPoint(122,122));
+    QTest::qWait(50);
+
+    QVERIFY(drag->active());
+    QCOMPARE(target->x(), 72.0);
+    QCOMPARE(target->y(), 50.0);
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(122,122));
+    QTest::qWait(50);
+
+    QVERIFY(!drag->active());
+    QCOMPARE(target->x(), 72.0);
+    QCOMPARE(target->y(), 50.0);
 
     delete canvas;
 }
