@@ -148,6 +148,7 @@ enum Type {
     ObjectType,
     VariantType,
     VarType,
+    JSValueType,
 
     FirstNumberType,
     BoolType = FirstNumberType,

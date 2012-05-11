@@ -426,6 +426,11 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_STORE_VAR(StoreVarDouble, v8::Number::New(instr.value));
         QML_STORE_VAR(StoreVarBool, v8::Boolean::New(instr.value));
 
+        // Store a literal value in a QJSValue property.
+        QML_STORE_VALUE(StoreJSValueString, QJSValue, QJSValue(PRIMITIVES.at(instr.value)));
+        QML_STORE_VALUE(StoreJSValueInteger, QJSValue, QJSValue(instr.value));
+        QML_STORE_VALUE(StoreJSValueDouble, QJSValue, QJSValue(instr.value));
+        QML_STORE_VALUE(StoreJSValueBool, QJSValue, QJSValue(instr.value));
 
         QML_BEGIN_INSTR(Init)
             // Ensure that the compiled data has been initialized

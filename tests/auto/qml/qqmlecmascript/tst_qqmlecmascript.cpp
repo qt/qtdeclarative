@@ -160,6 +160,8 @@ private slots:
     void propertyChangeSlots();
     void propertyVar_data();
     void propertyVar();
+    void propertyQJSValue_data();
+    void propertyQJSValue();
     void propertyVarCpp();
     void propertyVarOwnership();
     void propertyVarImplicitOwnership();
@@ -4239,6 +4241,44 @@ void tst_qqmlecmascript::propertyVar()
     delete object;
 }
 
+void tst_qqmlecmascript::propertyQJSValue_data()
+{
+    QTest::addColumn<QUrl>("qmlFile");
+
+    // valid
+    QTest::newRow("non-bindable object subproperty changed") << testFileUrl("propertyQJSValue.1.qml");
+    QTest::newRow("non-bindable object changed") << testFileUrl("propertyQJSValue.2.qml");
+    QTest::newRow("primitive changed") << testFileUrl("propertyQJSValue.3.qml");
+    QTest::newRow("javascript array modification") << testFileUrl("propertyQJSValue.4.qml");
+    QTest::newRow("javascript map modification") << testFileUrl("propertyQJSValue.5.qml");
+    QTest::newRow("javascript array assignment") << testFileUrl("propertyQJSValue.6.qml");
+    QTest::newRow("javascript map assignment") << testFileUrl("propertyQJSValue.7.qml");
+    QTest::newRow("literal property assignment") << testFileUrl("propertyQJSValue.8.qml");
+    QTest::newRow("qobject property assignment") << testFileUrl("propertyQJSValue.9.qml");
+    QTest::newRow("base class var property assignment") << testFileUrl("propertyQJSValue.10.qml");
+    QTest::newRow("javascript function assignment") << testFileUrl("propertyQJSValue.11.qml");
+    QTest::newRow("javascript special assignment") << testFileUrl("propertyQJSValue.12.qml");
+    QTest::newRow("declarative binding assignment") << testFileUrl("propertyQJSValue.13.qml");
+    QTest::newRow("imperative binding assignment") << testFileUrl("propertyQJSValue.14.qml");
+    QTest::newRow("stored binding assignment") << testFileUrl("propertyQJSValue.15.qml");
+
+    QTest::newRow("reset property") << testFileUrl("propertyQJSValue.reset.qml");
+    QTest::newRow("reset property in binding") << testFileUrl("propertyQJSValue.bindingreset.qml");
+}
+
+void tst_qqmlecmascript::propertyQJSValue()
+{
+    QFETCH(QUrl, qmlFile);
+
+    QQmlComponent component(&engine, qmlFile);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
+
+    delete object;
+}
+
 // Tests that we can write QVariant values to var properties from C++
 void tst_qqmlecmascript::propertyVarCpp()
 {
@@ -5491,9 +5531,11 @@ void tst_qqmlecmascript::functionAssignment_fromBinding()
     QString w1 = url + ":4:25: Unable to assign a function to a property of any type other than var.";
     QString w2 = url + ":5:25: Invalid use of Qt.binding() in a binding declaration.";
     QString w3 = url + ":6:21: Invalid use of Qt.binding() in a binding declaration.";
+    QString w4 = url + ":7:15: Invalid use of Qt.binding() in a binding declaration.";
     QTest::ignoreMessage(QtWarningMsg, w1.toLatin1().constData());
     QTest::ignoreMessage(QtWarningMsg, w2.toLatin1().constData());
     QTest::ignoreMessage(QtWarningMsg, w3.toLatin1().constData());
+    QTest::ignoreMessage(QtWarningMsg, w4.toLatin1().constData());
 
     MyQmlObject *o = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(o != 0);

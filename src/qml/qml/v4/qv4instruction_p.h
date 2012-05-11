@@ -81,38 +81,48 @@ QT_BEGIN_NAMESPACE
     F(UnaryPlusNumber, unaryop) \
     F(UnaryPlusInt, unaryop) \
     F(ConvertBoolToInt, unaryop) \
+    F(ConvertBoolToJSValue, unaryop) \
     F(ConvertBoolToNumber, unaryop) \
     F(ConvertBoolToString, unaryop) \
     F(ConvertBoolToVariant, unaryop) \
     F(ConvertBoolToVar, unaryop) \
     F(ConvertIntToBool, unaryop) \
+    F(ConvertIntToJSValue, unaryop) \
     F(ConvertIntToNumber, unaryop) \
     F(ConvertIntToString, unaryop) \
     F(ConvertIntToVariant, unaryop) \
     F(ConvertIntToVar, unaryop) \
+    F(ConvertJSValueToVar, unaryop) \
     F(ConvertNumberToBool, unaryop) \
     F(ConvertNumberToInt, unaryop) \
+    F(ConvertNumberToJSValue, unaryop) \
     F(ConvertNumberToString, unaryop) \
     F(ConvertNumberToVariant, unaryop) \
     F(ConvertNumberToVar, unaryop) \
     F(ConvertStringToBool, unaryop) \
     F(ConvertStringToInt, unaryop) \
+    F(ConvertStringToJSValue, unaryop) \
     F(ConvertStringToNumber, unaryop) \
     F(ConvertStringToUrl, unaryop) \
     F(ConvertStringToColor, unaryop) \
     F(ConvertStringToVariant, unaryop) \
     F(ConvertStringToVar, unaryop) \
     F(ConvertUrlToBool, unaryop) \
+    F(ConvertUrlToJSValue, unaryop) \
     F(ConvertUrlToString, unaryop) \
     F(ConvertUrlToVariant, unaryop) \
     F(ConvertUrlToVar, unaryop) \
     F(ConvertColorToBool, unaryop) \
+    F(ConvertColorToJSValue, unaryop) \
     F(ConvertColorToString, unaryop) \
     F(ConvertColorToVariant, unaryop) \
     F(ConvertColorToVar, unaryop) \
     F(ConvertObjectToBool, unaryop) \
+    F(ConvertObjectToJSValue, unaryop) \
     F(ConvertObjectToVariant, unaryop) \
     F(ConvertObjectToVar, unaryop) \
+    F(ConvertVarToJSValue, unaryop) \
+    F(ConvertNullToJSValue, unaryop) \
     F(ConvertNullToObject, unaryop) \
     F(ConvertNullToVariant, unaryop) \
     F(ConvertNullToVar, unaryop) \

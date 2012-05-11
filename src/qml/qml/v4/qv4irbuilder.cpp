@@ -48,6 +48,8 @@
 
 DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
 
+Q_DECLARE_METATYPE(QJSValue)
+
 QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS;
@@ -81,6 +83,8 @@ static IR::Type irTypeFromVariantType(int t, QQmlEnginePrivate *engine, const QM
             return IR::SGAnchorLineType;
         } else if (engine->metaObjectForType(t)) {
             return IR::ObjectType;
+        } else if (t == qMetaTypeId<QJSValue>()) {
+            return IR::JSValueType;
         }
 
         return IR::InvalidType;

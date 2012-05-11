@@ -229,6 +229,9 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
     if (typeHint == QMetaType::QJsonValue)
         return QVariant::fromValue(jsonValueFromJS(value));
 
+    if (typeHint == qMetaTypeId<QJSValue>())
+        return QVariant::fromValue(scriptValueFromInternal(value));
+
     if (value->IsObject()) {
         QV8ObjectResource *r = (QV8ObjectResource *)value->ToObject()->GetExternalResource();
         if (r) {

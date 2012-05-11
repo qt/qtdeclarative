@@ -62,6 +62,7 @@
 
 #include <math.h>
 
+Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<qreal>)
 Q_DECLARE_METATYPE(QList<bool>)
@@ -1489,7 +1490,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         value = QVariant::fromValue((QObject *)0);
     } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
         value = resolvedUrlSequence(v8engine->toVariant(result, qMetaTypeId<QList<QUrl> >()), context);
-    } else if (!isVmeProperty) {
+    } else if (!isVmeProperty && type != qMetaTypeId<QJSValue>()) {
         value = v8engine->toVariant(result, type);
     }
 
@@ -1511,6 +1512,13 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         QMetaObject::metacall(object, QMetaObject::ResetProperty, core.coreIndex, args);
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
         writeValueProperty(object, engine, core, QVariant(), context, flags);
+    } else if (type == qMetaTypeId<QJSValue>()) {
+        if (!result.IsEmpty() && result->IsFunction()
+                && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
+            expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+            return false;
+        }
+        writeValueProperty(object, engine, core, QVariant::fromValue(v8engine->scriptValueFromInternal(result)), context, flags);
     } else if (isUndefined) {
         expression->delayedError()->error.setDescription(QLatin1String("Unable to assign [undefined] to ") + QLatin1String(QMetaType::typeName(type)));
         return false;

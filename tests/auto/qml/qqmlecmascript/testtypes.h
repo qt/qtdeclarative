@@ -104,6 +104,8 @@ class MyQmlObject : public QObject
     Q_PROPERTY(QRegExp regExp READ regExp WRITE setRegExp)
     Q_PROPERTY(int nonscriptable READ nonscriptable WRITE setNonscriptable SCRIPTABLE false)
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intChanged)
+    Q_PROPERTY(QJSValue qjsvalue READ qjsvalue WRITE setQJSValue NOTIFY qjsvalueChanged)
+    Q_PROPERTY(QJSValue qjsvalueWithReset READ qjsvalue WRITE setQJSValue RESET resetQJSValue NOTIFY qjsvalueChanged)
 
 public:
     MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13), m_intProperty(0), m_buttons(0) {}
@@ -177,6 +179,9 @@ public:
     };
     QVariant variant() const { return m_variant; }
     QJSValue qjsvalue() const { return m_qjsvalue; }
+    void setQJSValue(const QJSValue &value) { m_qjsvalue = value; emit qjsvalueChanged(); }
+    void resetQJSValue() { m_qjsvalue = QJSValue(QLatin1String("Reset!")); emit qjsvalueChanged(); }
+
     Qt::MouseButtons buttons() const { return m_buttons; }
 
     int intProperty() const { return m_intProperty; }
@@ -196,6 +201,7 @@ signals:
     void signalWithQJSValue(const QJSValue &arg);
     void signalWithGlobalName(int parseInt);
     void intChanged();
+    void qjsvalueChanged();
 
 public slots:
     void deleteMe() { delete this; }

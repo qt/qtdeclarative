@@ -50,6 +50,8 @@
 #include <private/qqmlaccessors_p.h>
 #include <private/qqmljsengine_p.h>
 
+Q_DECLARE_METATYPE(QJSValue)
+
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(bindingsDump, QML_BINDINGS_DUMP)
@@ -971,6 +973,7 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
             case IR::StringType:
             case IR::VariantType:
             case IR::VarType:
+            case IR::JSValueType:
                 // nothing to do. V4 will generate optimized
                 // url-to-xxx conversions.
                 break;
@@ -1098,8 +1101,24 @@ void QV4CompilerPrivate::visitMove(IR::Move *s)
                 case IR::StringType: opcode = V4Instr::ConvertStringToVar; break;
                 case IR::ObjectType: opcode = V4Instr::ConvertObjectToVar; break;
                 case IR::NullType: opcode = V4Instr::ConvertNullToVar; break;
+                case IR::JSValueType: opcode = V4Instr::ConvertJSValueToVar; break;
                 default: break;
                 } // switch
+            }
+        } else if (targetTy == IR::JSValueType) {
+            if (s->isMoveForReturn) {
+                switch (sourceTy) {
+                case IR::BoolType: opcode = V4Instr::ConvertBoolToJSValue; break;
+                case IR::IntType:  opcode = V4Instr::ConvertIntToJSValue; break;
+                case IR::NumberType: opcode = V4Instr::ConvertNumberToJSValue; break;
+                case IR::UrlType: opcode = V4Instr::ConvertUrlToJSValue; break;
+                case IR::ColorType: opcode = V4Instr::ConvertColorToJSValue; break;
+                case IR::StringType: opcode = V4Instr::ConvertStringToJSValue; break;
+                case IR::ObjectType: opcode = V4Instr::ConvertObjectToJSValue; break;
+                case IR::VarType: opcode = V4Instr::ConvertVarToJSValue; break;
+                case IR::NullType: opcode = V4Instr::ConvertNullToJSValue; break;
+                default: break;
+                }
             }
         }
         if (opcode != V4Instr::Noop) {
@@ -1179,6 +1198,9 @@ void QV4CompilerPrivate::visitRet(IR::Ret *s)
             break;
         case IR::VarType:
             test.regType = qMetaTypeId<v8::Handle<v8::Value> >();
+            break;
+        case IR::JSValueType:
+            test.regType = qMetaTypeId<QJSValue>();
             break;
         case IR::BoolType:
             test.regType = QMetaType::Bool;

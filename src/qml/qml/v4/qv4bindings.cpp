@@ -51,6 +51,8 @@
 #include <private/qv8_p.h>
 #include <private/qjsconverter_p.h>
 #include <private/qjsconverter_impl_p.h>
+#include <private/qjsvalue_impl_p.h>
+#include <private/qv8engine_impl_p.h>
 
 #include <private/qqmlaccessors_p.h>
 #include <private/qqmlprofilerservice_p.h>
@@ -64,6 +66,8 @@
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <math.h> // ::fmod
+
+Q_DECLARE_METATYPE(QJSValue)
 
 QT_BEGIN_NAMESPACE
 
@@ -101,11 +105,13 @@ struct Register {
     inline QString *getstringptr() { return reinterpret_cast<QString *>(typeDataPtr()); }
     inline QUrl *geturlptr() { return reinterpret_cast<QUrl *>(typeDataPtr()); }
     inline v8::Handle<v8::Value> *gethandleptr() { return reinterpret_cast<v8::Handle<v8::Value> *>(typeDataPtr()); }
+    inline QJSValue *getjsvalueptr() { return reinterpret_cast<QJSValue *>(typeDataPtr()); }
 
     inline const QVariant *getvariantptr() const { return reinterpret_cast<const QVariant *>(typeDataPtr()); }
     inline const QString *getstringptr() const { return reinterpret_cast<const QString *>(typeDataPtr()); }
     inline const QUrl *geturlptr() const { return reinterpret_cast<const QUrl *>(typeDataPtr()); }
     inline const v8::Handle<v8::Value> *gethandleptr() const { return reinterpret_cast<const v8::Handle<v8::Value> *>(typeDataPtr()); }
+    inline const QJSValue *getjsvalueptr() const { return reinterpret_cast<const QJSValue *>(typeDataPtr()); }
 
     size_t dataSize() { return sizeof(data); }
     inline void *typeDataPtr() { return (void *)&data; }
@@ -134,6 +140,7 @@ struct Register {
     inline void cleanupColor();
     inline void cleanupVariant();
     inline void cleanupHandle();
+    inline void cleanupJSValue();
 
     inline void copy(const Register &other);
     inline void init(Type type);
@@ -180,6 +187,8 @@ void Register::cleanup()
             getvariantptr()->~QVariant();
         } else if (dataType == qMetaTypeId<v8::Handle<v8::Value> >()) {
             destroyPointee(gethandleptr());
+        } else if (dataType == qMetaTypeId<QJSValue>()) {
+            getjsvalueptr()->~QJSValue();
         }
     }
     setUndefined();
@@ -215,6 +224,12 @@ void Register::cleanupHandle()
     setUndefined();
 }
 
+void Register::cleanupJSValue()
+{
+    getjsvalueptr()->~QJSValue();
+    setUndefined();
+}
+
 void Register::copy(const Register &other)
 {
     *this = other;
@@ -229,6 +244,8 @@ void Register::copy(const Register &other)
             new (getvariantptr()) QVariant(*other.getvariantptr());
         else if (other.dataType == qMetaTypeId<v8::Handle<v8::Value> >())
             copyConstructPointee(gethandleptr(), other.gethandleptr());
+        else if (other.dataType == qMetaTypeId<QJSValue>())
+            new (getjsvalueptr()) QJSValue(*other.getjsvalueptr());
     } 
 }
 
@@ -246,6 +263,8 @@ void Register::init(Type type)
             new (getvariantptr()) QVariant();
         else if (dataType == qMetaTypeId<v8::Handle<v8::Value> >())
             defaultConstructPointee(gethandleptr());
+        else if (dataType == qMetaTypeId<QJSValue>())
+            new (getjsvalueptr()) QJSValue();
     }
 }
 
@@ -716,6 +735,11 @@ inline quint32 QV4Bindings::toUint32(double n)
     MARK_REGISTER(reg); \
 }
 
+#define JSVALUE_REGISTER(reg) { \
+    registers[(reg)].settype(QJSValueType); \
+    MARK_REGISTER(reg); \
+}
+
 #ifdef QML_THREADED_INTERPRETER
 void **QV4Bindings::getDecodeInstrTable()
 {
@@ -935,6 +959,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertBoolToInt, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertBoolToJSValue, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.getjsvalueptr()) QJSValue(src.getbool());
+            JSVALUE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertBoolToJSValue, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertBoolToNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -992,6 +1029,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertIntToBool, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertIntToJSValue, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.getjsvalueptr()) QJSValue(src.getint());
+            JSVALUE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertIntToJSValue, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertIntToNumber, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1040,6 +1090,30 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertIntToVar, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertJSValueToVar, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            QJSValue tmp(*src.getjsvalueptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupJSValue();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            if (tmp.isUndefined()) {
+                output.setUndefined();
+            } else {
+                QV8Engine *v8engine = QQmlEnginePrivate::get(context->engine)->v8engine();
+                new (output.gethandleptr()) v8::Handle<v8::Value>(
+                        QJSValuePrivate::get(tmp)->asV8Value(v8engine));
+                V8HANDLE_REGISTER(instr->unaryop.output);
+            }
+        }
+    }
+    QML_V4_END_INSTR(ConvertJSValueToVar, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertNumberToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1057,6 +1131,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         else output.setint(toInt32(src.getnumber()));
     }
     QML_V4_END_INSTR(ConvertNumberToInt, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertNumberToJSValue, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            new (output.getjsvalueptr()) QJSValue(src.getnumber());
+            JSVALUE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertNumberToJSValue, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertNumberToString, unaryop)
     {
@@ -1137,6 +1224,24 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         }
     }
     QML_V4_END_INSTR(ConvertStringToInt, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertStringToJSValue, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            QString tmp(*src.getstringptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupString();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.getjsvalueptr()) QJSValue(tmp);
+            JSVALUE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertStringToJSValue, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertStringToNumber, unaryop)
     {
@@ -1253,6 +1358,24 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertUrlToBool, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertUrlToJSValue, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QUrl tmp(*src.geturlptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupUrl();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            new (output.getjsvalueptr()) QJSValue(tmp.toString());
+            JSVALUE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertUrlToJSValue, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertUrlToString, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1324,6 +1447,31 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertColorToBool, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertColorToJSValue, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const QVariant tmp(QMetaType::QColor, src.typeDataPtr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupColor();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
+            QV8Engine *v8engine = ep->v8engine();
+            QQmlValueType *vt = ep->valueTypes[QMetaType::QColor];
+            v8::HandleScope handle_scope;
+            v8::Context::Scope scope(v8engine->context());
+            new (output.getjsvalueptr()) QJSValue(v8engine->scriptValueFromInternal(
+                    v8engine->valueTypeWrapper()->newValueType(tmp, vt)));
+            JSVALUE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertColorToJSValue, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertColorToString, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1391,6 +1539,22 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(ConvertObjectToBool, unaryop)
 
+    QML_V4_BEGIN_INSTR(ConvertObjectToJSValue, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
+            v8::HandleScope handle_scope;
+            v8::Context::Scope scope(ep->v8engine()->context());
+            new (output.getjsvalueptr()) QJSValue(context->engine->newQObject(src.getQObject()));
+            JSVALUE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertObjectToJSValue, unaryop)
+
     QML_V4_BEGIN_INSTR(ConvertObjectToVariant, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
@@ -1419,6 +1583,33 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         }
     }
     QML_V4_END_INSTR(ConvertObjectToVar, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertVarToJSValue, unaryop)
+    {
+        const Register &src = registers[instr->unaryop.src];
+        Register &output = registers[instr->unaryop.output];
+        if (src.isUndefined()) {
+            output.setUndefined();
+        } else {
+            v8::Handle<v8::Value> tmp(*src.gethandleptr());
+            if (instr->unaryop.src == instr->unaryop.output) {
+                output.cleanupHandle();
+                MARK_CLEAN_REGISTER(instr->unaryop.output);
+            }
+            QV8Engine *v8engine = QQmlEnginePrivate::get(context->engine)->v8engine();
+            new (output.getjsvalueptr()) QJSValue(v8engine->scriptValueFromInternal(tmp));
+            JSVALUE_REGISTER(instr->unaryop.output);
+        }
+    }
+    QML_V4_END_INSTR(ConvertVarToJSValue, unaryop)
+
+    QML_V4_BEGIN_INSTR(ConvertNullToJSValue, unaryop)
+    {
+        Register &output = registers[instr->unaryop.output];
+        new (output.getjsvalueptr()) QJSValue(QJSValue::NullValue);
+        JSVALUE_REGISTER(instr->unaryop.output);
+    }
+    QML_V4_END_INSTR(ConvertNullToJSValue, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertNullToObject, unaryop)
     {

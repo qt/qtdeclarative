@@ -138,6 +138,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertBoolToInt:
         INSTR_DUMP << '\t' << "ConvertBoolToInt" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
+    case V4Instr::ConvertBoolToJSValue:
+        INSTR_DUMP << '\t' << "ConvertBoolToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
     case V4Instr::ConvertBoolToNumber:
         INSTR_DUMP << '\t' << "ConvertBoolToNumber" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
@@ -153,6 +156,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertIntToBool:
         INSTR_DUMP << '\t' << "ConvertIntToBool" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
+    case V4Instr::ConvertIntToJSValue:
+        INSTR_DUMP << '\t' << "ConvertIntToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
     case V4Instr::ConvertIntToNumber:
         INSTR_DUMP << '\t' << "ConvertIntToNumber" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
@@ -165,11 +171,17 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertIntToVar:
         INSTR_DUMP << '\t' << "ConvertIntToVar" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
+    case V4Instr::ConvertJSValueToVar:
+        INSTR_DUMP << '\t' << "ConvertJSValueToVar" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
     case V4Instr::ConvertNumberToBool:
         INSTR_DUMP << '\t' << "ConvertNumberToBool" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
     case V4Instr::ConvertNumberToInt:
         INSTR_DUMP << '\t' << "ConvertNumberToInt" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
+    case V4Instr::ConvertNumberToJSValue:
+        INSTR_DUMP << '\t' << "ConvertNumberToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
     case V4Instr::ConvertNumberToString:
         INSTR_DUMP << '\t' << "ConvertNumberToString" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
@@ -185,6 +197,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
         break;
     case V4Instr::ConvertStringToInt:
         INSTR_DUMP << '\t' << "ConvertStringToInt" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
+    case V4Instr::ConvertStringToJSValue:
+        INSTR_DUMP << '\t' << "ConvertStringToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
     case V4Instr::ConvertStringToNumber:
         INSTR_DUMP << '\t' << "ConvertStringToNumber" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
@@ -204,6 +219,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertUrlToBool:
         INSTR_DUMP << '\t' << "ConvertUrlToBool" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
+    case V4Instr::ConvertUrlToJSValue:
+        INSTR_DUMP << '\t' << "ConvertUrlToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
     case V4Instr::ConvertUrlToString:
         INSTR_DUMP << '\t' << "ConvertUrlToString" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
@@ -215,6 +233,9 @@ void Bytecode::dump(const V4Instr *i, int address) const
         break;
     case V4Instr::ConvertColorToBool:
         INSTR_DUMP << '\t' << "ConvertColorToBool" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
+    case V4Instr::ConvertColorToJSValue:
+        INSTR_DUMP << '\t' << "ConvertColorToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
     case V4Instr::ConvertColorToString:
         INSTR_DUMP << '\t' << "ConvertColorToString" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
@@ -228,11 +249,20 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::ConvertObjectToBool:
         INSTR_DUMP << '\t' << "ConvertObjectToBool" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
+    case V4Instr::ConvertObjectToJSValue:
+        INSTR_DUMP << '\t' << "ConvertObjectToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
     case V4Instr::ConvertObjectToVariant:
         INSTR_DUMP << '\t' << "ConvertObjectToVariant" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
     case V4Instr::ConvertObjectToVar:
         INSTR_DUMP << '\t' << "ConvertObjectToVar" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
+    case V4Instr::ConvertVarToJSValue:
+        INSTR_DUMP << '\t' << "ConvertVarToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
+        break;
+    case V4Instr::ConvertNullToJSValue:
+        INSTR_DUMP << '\t' << "ConvertNullToJSValue" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';
         break;
     case V4Instr::ConvertNullToObject:
         INSTR_DUMP << '\t' << "ConvertNullToObject" << '\t' << "Input_Reg(" << i->unaryop.src << ") -> Output_Reg(" << i->unaryop.output << ')';

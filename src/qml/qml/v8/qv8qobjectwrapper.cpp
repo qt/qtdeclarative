@@ -433,6 +433,10 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
         QQmlV8Handle handle;
         ReadFunction(object, property, &handle, notifier);
         return handle.toHandle();
+    } else if (property.propType == qMetaTypeId<QJSValue>()) {
+        QJSValue v;
+        ReadFunction(object, property, &v, notifier);
+        return QJSValuePrivate::get(v)->asV8Value(engine);
     } else if (property.isQVariant()) {
         QVariant v;
         ReadFunction(object, property, &v, notifier);
@@ -590,8 +594,8 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     QQmlBinding *newBinding = 0;
     if (value->IsFunction()) {
         if (value->ToObject()->GetHiddenValue(engine->bindingFlagKey()).IsEmpty()) {
-            if (!property->isVMEProperty()) {
-                // assigning a JS function to a non-var-property is not allowed.
+            if (!property->isVMEProperty() && property->propType != qMetaTypeId<QJSValue>()) {
+                // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ") +
                                 QLatin1String(QMetaType::typeName(property->propType));
                 v8::ThrowException(v8::Exception::Error(engine->toString(error)));
@@ -647,6 +651,8 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
         PROPERTY_STORE(QVariant, QVariant());
     } else if (value->IsUndefined() && property->propType == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
+    } else if (!newBinding && property->propType == qMetaTypeId<QJSValue>()) {
+        PROPERTY_STORE(QJSValue, engine->scriptValueFromInternal(value));
     } else if (value->IsUndefined()) {
         QString error = QLatin1String("Cannot assign [undefined] to ") +
                         QLatin1String(QMetaType::typeName(property->propType));

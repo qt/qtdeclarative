@@ -79,6 +79,10 @@ QT_BEGIN_NAMESPACE
     F(StoreVarDouble, storeDouble) \
     F(StoreVarBool, storeBool) \
     F(StoreString, storeString) \
+    F(StoreJSValueString, storeString) \
+    F(StoreJSValueInteger, storeInteger) \
+    F(StoreJSValueDouble, storeDouble) \
+    F(StoreJSValueBool, storeBool) \
     F(StoreStringList, storeString) \
     F(StoreStringQList, storeString) \
     F(StoreTrString, storeTrString) \

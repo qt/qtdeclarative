@@ -77,6 +77,7 @@ Q_DECLARE_METATYPE(QList<qreal>)
 Q_DECLARE_METATYPE(QList<bool>)
 Q_DECLARE_METATYPE(QList<QString>)
 Q_DECLARE_METATYPE(QList<QUrl>)
+Q_DECLARE_METATYPE(QJSValue)
 
 QT_BEGIN_NAMESPACE
 
@@ -394,6 +395,8 @@ bool QQmlCompiler::testLiteralAssignment(QQmlScript::Property *prop,
                 if (!v->value.isString()) {
                     COMPILE_EXCEPTION(v, tr("Invalid property assignment: url or array of urls expected"));
                 }
+                break;
+            } else if (type == qMetaTypeId<QJSValue>()) {
                 break;
             }
 
@@ -723,6 +726,32 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
                 instr.propertyIndex = prop->index;
                 instr.value = output->indexForString(v->value.asString());
                 output->addInstruction(instr);
+                break;
+            } else if (type == qMetaTypeId<QJSValue>()) {
+                if (v->value.isBoolean()) {
+                    Instruction::StoreJSValueBool instr;
+                    instr.propertyIndex = prop->index;
+                    instr.value = v->value.asBoolean();
+                    output->addInstruction(instr);
+                } else if (v->value.isNumber()) {
+                    double n = v->value.asNumber();
+                    if (double(int(n)) == n) {
+                        Instruction::StoreJSValueInteger instr;
+                        instr.propertyIndex = prop->index;
+                        instr.value = int(n);
+                        output->addInstruction(instr);
+                    } else {
+                        Instruction::StoreJSValueDouble instr;
+                        instr.propertyIndex = prop->index;
+                        instr.value = n;
+                        output->addInstruction(instr);
+                    }
+                } else {
+                    Instruction::StoreJSValueString instr;
+                    instr.propertyIndex = prop->index;
+                    instr.value = output->indexForString(v->value.asString());
+                    output->addInstruction(instr);
+                }
                 break;
             }
 

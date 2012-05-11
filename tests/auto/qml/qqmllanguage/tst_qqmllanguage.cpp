@@ -109,6 +109,11 @@ private slots:
     void assignCompositeToType();
     void assignLiteralToVariant();
     void assignLiteralToVar();
+    void assignLiteralToJSValue();
+    void bindJSValueToVar();
+    void bindJSValueToVariant();
+    void bindJSValueToType();
+    void bindTypeToJSValue();
     void customParserTypes();
     void rootAsQmlComponent();
     void inlineQmlComponents();
@@ -709,6 +714,368 @@ void tst_qqmllanguage::assignLiteralToVar()
     QCOMPARE(object->property("test1Bound"), QVariant(11));
 
     delete object;
+}
+
+void tst_qqmllanguage::assignLiteralToJSValue()
+{
+    QQmlComponent component(&engine, TEST_FILE("assignLiteralToJSValue.qml"));
+    VERIFY_ERRORS(0);
+    QObject *root = component.create();
+    QVERIFY(root != 0);
+
+    {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test1");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(5));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test2");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(1.7));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test3");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("Hello world!")));
+    }{
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test4");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("#FF008800")));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test5");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("10,10,10x10")));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test6");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("10,10")));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test7");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("10x10")));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test8");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("100,100,100")));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test9");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("#FF008800")));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test10");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isBool());
+        QCOMPARE(value.toBool(), true);
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test11");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isBool());
+        QCOMPARE(value.toBool(), false);
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test20");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isCallable());
+        QCOMPARE(value.call(QList<QJSValue> () << QJSValue(4)).toInt(), 12);
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test21");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isUndefined());
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test22");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNull());
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test1Bound");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(9));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test20Bound");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(27));
+    }
+}
+
+void tst_qqmllanguage::bindJSValueToVar()
+{
+    QQmlComponent component(&engine, TEST_FILE("assignLiteralToJSValue.qml"));
+
+    VERIFY_ERRORS(0);
+    QObject *root = component.create();
+    QVERIFY(root != 0);
+
+    QObject *object = root->findChild<QObject *>("varProperties");
+
+    QCOMPARE(object->property("test1").userType(), (int)QMetaType::Int);
+    QCOMPARE(object->property("test2").userType(), (int)QMetaType::Double);
+    QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test5").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test6").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test7").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test8").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test9").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test10").userType(), (int)QVariant::Bool);
+    QCOMPARE(object->property("test11").userType(), (int)QVariant::Bool);
+    QCOMPARE(object->property("test12").userType(), (int)QVariant::Color);
+    QCOMPARE(object->property("test13").userType(), (int)QVariant::RectF);
+    QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
+    QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
+    QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
+    QCOMPARE(object->property("test1Bound").userType(), (int)QVariant::Int);
+    QCOMPARE(object->property("test20Bound").userType(), (int)QVariant::Int);
+
+    QCOMPARE(object->property("test1"), QVariant(5));
+    QCOMPARE(object->property("test2"), QVariant((double)1.7));
+    QCOMPARE(object->property("test3"), QVariant(QString(QLatin1String("Hello world!"))));
+    QCOMPARE(object->property("test4"), QVariant(QString(QLatin1String("#FF008800"))));
+    QCOMPARE(object->property("test5"), QVariant(QString(QLatin1String("10,10,10x10"))));
+    QCOMPARE(object->property("test6"), QVariant(QString(QLatin1String("10,10"))));
+    QCOMPARE(object->property("test7"), QVariant(QString(QLatin1String("10x10"))));
+    QCOMPARE(object->property("test8"), QVariant(QString(QLatin1String("100,100,100"))));
+    QCOMPARE(object->property("test9"), QVariant(QString(QLatin1String("#FF008800"))));
+    QCOMPARE(object->property("test10"), QVariant(bool(true)));
+    QCOMPARE(object->property("test11"), QVariant(bool(false)));
+    QCOMPARE(object->property("test12"), QVariant(QColor::fromRgbF(0.2, 0.3, 0.4, 0.5)));
+    QCOMPARE(object->property("test13"), QVariant(QRectF(10, 10, 10, 10)));
+    QCOMPARE(object->property("test14"), QVariant(QPointF(10, 10)));
+    QCOMPARE(object->property("test15"), QVariant(QSizeF(10, 10)));
+    QCOMPARE(object->property("test16"), QVariant(QVector3D(100, 100, 100)));
+    QCOMPARE(object->property("test1Bound"), QVariant(9));
+    QCOMPARE(object->property("test20Bound"), QVariant(27));
+}
+
+void tst_qqmllanguage::bindJSValueToVariant()
+{
+    QQmlComponent component(&engine, TEST_FILE("assignLiteralToJSValue.qml"));
+
+    VERIFY_ERRORS(0);
+    QObject *root = component.create();
+    QVERIFY(root != 0);
+
+    QObject *object = root->findChild<QObject *>("variantProperties");
+
+    QCOMPARE(object->property("test1").userType(), (int)QMetaType::Int);
+    QCOMPARE(object->property("test2").userType(), (int)QMetaType::Double);
+    QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test5").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test6").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test7").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test8").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test9").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("test10").userType(), (int)QVariant::Bool);
+    QCOMPARE(object->property("test11").userType(), (int)QVariant::Bool);
+    QCOMPARE(object->property("test12").userType(), (int)QVariant::Color);
+    QCOMPARE(object->property("test13").userType(), (int)QVariant::RectF);
+    QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
+    QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
+    QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
+    QCOMPARE(object->property("test1Bound").userType(), (int)QVariant::Int);
+    QCOMPARE(object->property("test20Bound").userType(), (int)QVariant::Int);
+
+    QCOMPARE(object->property("test1"), QVariant(5));
+    QCOMPARE(object->property("test2"), QVariant((double)1.7));
+    QCOMPARE(object->property("test3"), QVariant(QString(QLatin1String("Hello world!"))));
+    QCOMPARE(object->property("test4"), QVariant(QString(QLatin1String("#FF008800"))));
+    QCOMPARE(object->property("test5"), QVariant(QString(QLatin1String("10,10,10x10"))));
+    QCOMPARE(object->property("test6"), QVariant(QString(QLatin1String("10,10"))));
+    QCOMPARE(object->property("test7"), QVariant(QString(QLatin1String("10x10"))));
+    QCOMPARE(object->property("test8"), QVariant(QString(QLatin1String("100,100,100"))));
+    QCOMPARE(object->property("test9"), QVariant(QString(QLatin1String("#FF008800"))));
+    QCOMPARE(object->property("test10"), QVariant(bool(true)));
+    QCOMPARE(object->property("test11"), QVariant(bool(false)));
+    QCOMPARE(object->property("test12"), QVariant(QColor::fromRgbF(0.2, 0.3, 0.4, 0.5)));
+    QCOMPARE(object->property("test13"), QVariant(QRectF(10, 10, 10, 10)));
+    QCOMPARE(object->property("test14"), QVariant(QPointF(10, 10)));
+    QCOMPARE(object->property("test15"), QVariant(QSizeF(10, 10)));
+    QCOMPARE(object->property("test16"), QVariant(QVector3D(100, 100, 100)));
+    QCOMPARE(object->property("test1Bound"), QVariant(9));
+    QCOMPARE(object->property("test20Bound"), QVariant(27));
+}
+
+void tst_qqmllanguage::bindJSValueToType()
+{
+    QQmlComponent component(&engine, TEST_FILE("assignLiteralToJSValue.qml"));
+
+    VERIFY_ERRORS(0);
+    QObject *root = component.create();
+    QVERIFY(root != 0);
+
+    {
+        MyTypeObject *object = root->findChild<MyTypeObject *>("typedProperties");
+
+        QCOMPARE(object->intProperty(), 5);
+        QCOMPARE(object->doubleProperty(), double(1.7));
+        QCOMPARE(object->stringProperty(), QString(QLatin1String("Hello world!")));
+        QCOMPARE(object->boolProperty(), true);
+        QCOMPARE(object->colorProperty(), QColor::fromRgbF(0.2, 0.3, 0.4, 0.5));
+        QCOMPARE(object->rectFProperty(), QRectF(10, 10, 10, 10));
+        QCOMPARE(object->pointFProperty(), QPointF(10, 10));
+        QCOMPARE(object->sizeFProperty(), QSizeF(10, 10));
+        QCOMPARE(object->vectorProperty(), QVector3D(100, 100, 100));
+    } {
+        MyTypeObject *object = root->findChild<MyTypeObject *>("stringProperties");
+
+        QCOMPARE(object->intProperty(), 1);
+        QCOMPARE(object->doubleProperty(), double(1.7));
+        QCOMPARE(object->stringProperty(), QString(QLatin1String("Hello world!")));
+        QCOMPARE(object->boolProperty(), true);
+        QCOMPARE(object->colorProperty(), QColor::fromRgb(0x00, 0x88, 0x00, 0xFF));
+        QCOMPARE(object->rectFProperty(), QRectF(10, 10, 10, 10));
+        QCOMPARE(object->pointFProperty(), QPointF(10, 10));
+        QCOMPARE(object->sizeFProperty(), QSizeF(10, 10));
+        QCOMPARE(object->vectorProperty(), QVector3D(100, 100, 100));
+    }
+}
+
+void tst_qqmllanguage::bindTypeToJSValue()
+{
+    QQmlComponent component(&engine, TEST_FILE("bindTypeToJSValue.qml"));
+
+    VERIFY_ERRORS(0);
+    QObject *root = component.create();
+    QVERIFY(root != 0);
+
+    {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("flagProperty");
+        QVERIFY(object);
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(MyTypeObject::FlagVal1 | MyTypeObject::FlagVal3));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("enumProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(MyTypeObject::EnumVal2));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("stringProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("Hello World!")));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("uintProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(10));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("intProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(-19));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("realProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(23.2));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("doubleProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(-19.7));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("floatProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toNumber(), qreal(8.5));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("colorProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isObject());
+        QCOMPARE(value.property(QLatin1String("r")).toNumber(), qreal(1.0));
+        QCOMPARE(value.property(QLatin1String("g")).toNumber(), qreal(0.0));
+        QCOMPARE(value.property(QLatin1String("b")).toNumber(), qreal(0.0));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("dateProperty");
+        QJSValue value = object->qjsvalue();
+        QCOMPARE(value.toDateTime().isValid(), true);
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("timeProperty");
+        QJSValue value = object->qjsvalue();
+        QCOMPARE(value.toDateTime().isValid(), true);
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("dateTimeProperty");
+        QJSValue value = object->qjsvalue();
+        QCOMPARE(value.toDateTime().isValid(), true);
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("pointProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isObject());
+        QCOMPARE(value.property(QLatin1String("x")).toNumber(), qreal(99));
+        QCOMPARE(value.property(QLatin1String("y")).toNumber(), qreal(13));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("pointFProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isObject());
+        QCOMPARE(value.property(QLatin1String("x")).toNumber(), qreal(-10.1));
+        QCOMPARE(value.property(QLatin1String("y")).toNumber(), qreal(12.3));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("rectProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isObject());
+        QCOMPARE(value.property(QLatin1String("x")).toNumber(), qreal(9));
+        QCOMPARE(value.property(QLatin1String("y")).toNumber(), qreal(7));
+        QCOMPARE(value.property(QLatin1String("width")).toNumber(), qreal(100));
+        QCOMPARE(value.property(QLatin1String("height")).toNumber(), qreal(200));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("rectFProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isObject());
+        QCOMPARE(value.property(QLatin1String("x")).toNumber(), qreal(1000.1));
+        QCOMPARE(value.property(QLatin1String("y")).toNumber(), qreal(-10.9));
+        QCOMPARE(value.property(QLatin1String("width")).toNumber(), qreal(400));
+        QCOMPARE(value.property(QLatin1String("height")).toNumber(), qreal(90.99));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("boolProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isBool());
+        QCOMPARE(value.toBool(), true);
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("variantProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("Hello World!")));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("vectorProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isObject());
+        QCOMPARE(value.property(QLatin1String("x")).toNumber(), qreal(10.0f));
+        QCOMPARE(value.property(QLatin1String("y")).toNumber(), qreal(1.0f));
+        QCOMPARE(value.property(QLatin1String("z")).toNumber(), qreal(2.2f));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("vector4Property");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isObject());
+        QCOMPARE(value.property(QLatin1String("x")).toNumber(), qreal(10.0f));
+        QCOMPARE(value.property(QLatin1String("y")).toNumber(), qreal(1.0f));
+        QCOMPARE(value.property(QLatin1String("z")).toNumber(), qreal(2.2f));
+        QCOMPARE(value.property(QLatin1String("w")).toNumber(), qreal(2.3f));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("urlProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QUrl encoded;
+        encoded.setEncodedUrl("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
+        QCOMPARE(value.toString(), component.url().resolved(encoded).toString());
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("objectProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isQObject());
+        QVERIFY(qobject_cast<MyTypeObject *>(value.toQObject()));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("varProperty");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isString());
+        QCOMPARE(value.toString(), QString(QLatin1String("Hello World!")));
+    }
 }
 
 // Tests that custom parser types can be instantiated

@@ -66,6 +66,8 @@ public:
     int id;
 };
 
+Q_DECLARE_METATYPE(QJSValue)
+
 QT_BEGIN_NAMESPACE
 #define MyInterface_iid "org.qt-project.Qt.Test.MyInterface"
 Q_DECLARE_INTERFACE(MyInterface, MyInterface_iid);
@@ -115,6 +117,7 @@ class MyQmlObject : public QObject, public MyInterface
     Q_PROPERTY(MyQmlObject *qmlobjectProperty READ qmlobject WRITE setQmlobject)
     Q_PROPERTY(int propertyWithNotify READ propertyWithNotify WRITE setPropertyWithNotify NOTIFY oddlyNamedNotifySignal)
     Q_PROPERTY(int nonScriptable READ nonScriptable WRITE setNonScriptable SCRIPTABLE false)
+    Q_PROPERTY(QJSValue qjsvalue READ qjsvalue WRITE setQJSValue NOTIFY qjsvalueChanged)
 
     Q_INTERFACES(MyInterface)
 public:
@@ -156,15 +159,21 @@ public:
 
     int nonScriptable() const { return 0; }
     void setNonScriptable(int) {}
+
+    QJSValue qjsvalue() const { return m_qjsvalue; }
+    void setQJSValue(const QJSValue &value) { m_qjsvalue = value; emit qjsvalueChanged(); }
+
 public slots:
     void basicSlot() { qWarning("MyQmlObject::basicSlot"); }
     void basicSlotWithArgs(int v) { qWarning("MyQmlObject::basicSlotWithArgs(%d)", v); }
+    void qjsvalueMethod(const QJSValue &v) { m_qjsvalue = v; }
 
 signals:
     void basicSignal();
     void basicParameterizedSignal(int parameter);
     void oddlyNamedNotifySignal();
     void signalWithDefaultArg(int parameter = 5);
+    void qjsvalueChanged();
 
 private:
     friend class tst_qqmllanguage;
@@ -173,6 +182,7 @@ private:
     MyQmlObject *m_qmlobject;
     MyCustomVariantType m_custom;
     int m_propertyWithNotify;
+    QJSValue m_qjsvalue;
 };
 QML_DECLARE_TYPE(MyQmlObject)
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)
@@ -202,33 +212,33 @@ class MyTypeObject : public QObject
     Q_FLAGS(MyFlags)
 
     Q_PROPERTY(QString id READ id WRITE setId)
-    Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty)
+    Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty NOTIFY objectPropertyChanged)
     Q_PROPERTY(QQmlComponent *componentProperty READ componentProperty WRITE setComponentProperty)
-    Q_PROPERTY(MyFlags flagProperty READ flagProperty WRITE setFlagProperty)
-    Q_PROPERTY(MyEnum enumProperty READ enumProperty WRITE setEnumProperty)
+    Q_PROPERTY(MyFlags flagProperty READ flagProperty WRITE setFlagProperty NOTIFY flagPropertyChanged)
+    Q_PROPERTY(MyEnum enumProperty READ enumProperty WRITE setEnumProperty NOTIFY enumPropertyChanged)
     Q_PROPERTY(MyEnum readOnlyEnumProperty READ readOnlyEnumProperty)
-    Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty)
-    Q_PROPERTY(uint uintProperty READ uintProperty WRITE setUintProperty)
-    Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty)
-    Q_PROPERTY(qreal realProperty READ realProperty WRITE setRealProperty)
-    Q_PROPERTY(double doubleProperty READ doubleProperty WRITE setDoubleProperty)
-    Q_PROPERTY(float floatProperty READ floatProperty WRITE setFloatProperty)
-    Q_PROPERTY(QColor colorProperty READ colorProperty WRITE setColorProperty)
-    Q_PROPERTY(QDate dateProperty READ dateProperty WRITE setDateProperty)
-    Q_PROPERTY(QTime timeProperty READ timeProperty WRITE setTimeProperty)
-    Q_PROPERTY(QDateTime dateTimeProperty READ dateTimeProperty WRITE setDateTimeProperty)
-    Q_PROPERTY(QPoint pointProperty READ pointProperty WRITE setPointProperty)
-    Q_PROPERTY(QPointF pointFProperty READ pointFProperty WRITE setPointFProperty)
-    Q_PROPERTY(QSize sizeProperty READ sizeProperty WRITE setSizeProperty)
-    Q_PROPERTY(QSizeF sizeFProperty READ sizeFProperty WRITE setSizeFProperty)
+    Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringPropertyChanged)
+    Q_PROPERTY(uint uintProperty READ uintProperty WRITE setUintProperty NOTIFY uintPropertyChanged)
+    Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intPropertyChanged)
+    Q_PROPERTY(qreal realProperty READ realProperty WRITE setRealProperty NOTIFY realPropertyChanged)
+    Q_PROPERTY(double doubleProperty READ doubleProperty WRITE setDoubleProperty NOTIFY doublePropertyChanged)
+    Q_PROPERTY(float floatProperty READ floatProperty WRITE setFloatProperty NOTIFY floatPropertyChanged)
+    Q_PROPERTY(QColor colorProperty READ colorProperty WRITE setColorProperty NOTIFY colorPropertyChanged)
+    Q_PROPERTY(QDate dateProperty READ dateProperty WRITE setDateProperty NOTIFY datePropertyChanged)
+    Q_PROPERTY(QTime timeProperty READ timeProperty WRITE setTimeProperty NOTIFY timePropertyChanged)
+    Q_PROPERTY(QDateTime dateTimeProperty READ dateTimeProperty WRITE setDateTimeProperty NOTIFY dateTimePropertyChanged)
+    Q_PROPERTY(QPoint pointProperty READ pointProperty WRITE setPointProperty NOTIFY pointPropertyChanged)
+    Q_PROPERTY(QPointF pointFProperty READ pointFProperty WRITE setPointFProperty NOTIFY pointFPropertyChanged)
+    Q_PROPERTY(QSize sizeProperty READ sizeProperty WRITE setSizeProperty NOTIFY sizePropertyChanged)
+    Q_PROPERTY(QSizeF sizeFProperty READ sizeFProperty WRITE setSizeFProperty NOTIFY sizeFPropertyChanged)
     Q_PROPERTY(QRect rectProperty READ rectProperty WRITE setRectProperty NOTIFY rectPropertyChanged)
-    Q_PROPERTY(QRect rectProperty2 READ rectProperty2 WRITE setRectProperty2)
-    Q_PROPERTY(QRectF rectFProperty READ rectFProperty WRITE setRectFProperty)
-    Q_PROPERTY(bool boolProperty READ boolProperty WRITE setBoolProperty)
-    Q_PROPERTY(QVariant variantProperty READ variantProperty WRITE setVariantProperty)
-    Q_PROPERTY(QVector3D vectorProperty READ vectorProperty WRITE setVectorProperty)
-    Q_PROPERTY(QVector4D vector4Property READ vector4Property WRITE setVector4Property)
-    Q_PROPERTY(QUrl urlProperty READ urlProperty WRITE setUrlProperty)
+    Q_PROPERTY(QRect rectProperty2 READ rectProperty2 WRITE setRectProperty2 )
+    Q_PROPERTY(QRectF rectFProperty READ rectFProperty WRITE setRectFProperty NOTIFY rectFPropertyChanged)
+    Q_PROPERTY(bool boolProperty READ boolProperty WRITE setBoolProperty NOTIFY boolPropertyChanged)
+    Q_PROPERTY(QVariant variantProperty READ variantProperty WRITE setVariantProperty NOTIFY variantPropertyChanged)
+    Q_PROPERTY(QVector3D vectorProperty READ vectorProperty WRITE setVectorProperty NOTIFY vectorPropertyChanged)
+    Q_PROPERTY(QVector4D vector4Property READ vector4Property WRITE setVector4Property NOTIFY vector4PropertyChanged)
+    Q_PROPERTY(QUrl urlProperty READ urlProperty WRITE setUrlProperty NOTIFY urlPropertyChanged)
 
     Q_PROPERTY(QQmlScriptString scriptProperty READ scriptProperty WRITE setScriptProperty)
     Q_PROPERTY(MyGroupedObject *grouped READ grouped CONSTANT)
@@ -252,6 +262,7 @@ public:
     }
     void setObjectProperty(QObject *v) {
         objectPropertyValue = v;
+        emit objectPropertyChanged();
     }
 
     QQmlComponent *componentPropertyValue;
@@ -270,6 +281,7 @@ public:
     }
     void setFlagProperty(MyFlags v) {
         flagPropertyValue = v;
+        emit flagPropertyChanged();
     }
 
     enum MyEnum { EnumVal1, EnumVal2 };
@@ -279,6 +291,7 @@ public:
     }
     void setEnumProperty(MyEnum v) {
         enumPropertyValue = v;
+        emit enumPropertyChanged();
     }
 
     MyEnum readOnlyEnumProperty() const {
@@ -291,6 +304,7 @@ public:
     }
     void setStringProperty(const QString &v) {
         stringPropertyValue = v;
+        emit stringPropertyChanged();
     }
 
     uint uintPropertyValue;
@@ -299,6 +313,7 @@ public:
     }
     void setUintProperty(const uint &v) {
         uintPropertyValue = v;
+        emit uintPropertyChanged();
     }
 
     int intPropertyValue;
@@ -307,6 +322,7 @@ public:
     }
     void setIntProperty(const int &v) {
         intPropertyValue = v;
+        emit intPropertyChanged();
     }
 
     qreal realPropertyValue;
@@ -315,6 +331,7 @@ public:
     }
     void setRealProperty(const qreal &v) {
         realPropertyValue = v;
+        emit realPropertyChanged();
     }
 
     double doublePropertyValue;
@@ -323,6 +340,7 @@ public:
     }
     void setDoubleProperty(const double &v) {
         doublePropertyValue = v;
+        emit doublePropertyChanged();
     }
 
     float floatPropertyValue;
@@ -331,6 +349,7 @@ public:
     }
     void setFloatProperty(const float &v) {
         floatPropertyValue = v;
+        emit floatPropertyChanged();
     }
 
     QColor colorPropertyValue;
@@ -339,6 +358,7 @@ public:
     }
     void setColorProperty(const QColor &v) {
         colorPropertyValue = v;
+        emit colorPropertyChanged();
     }
 
     QDate datePropertyValue;
@@ -347,6 +367,7 @@ public:
     }
     void setDateProperty(const QDate &v) {
         datePropertyValue = v;
+        emit datePropertyChanged();
     }
 
     QTime timePropertyValue;
@@ -355,6 +376,7 @@ public:
     }
     void setTimeProperty(const QTime &v) {
         timePropertyValue = v;
+        emit timePropertyChanged();
     }
 
     QDateTime dateTimePropertyValue;
@@ -363,6 +385,7 @@ public:
     }
     void setDateTimeProperty(const QDateTime &v) {
         dateTimePropertyValue = v;
+        emit dateTimePropertyChanged();
     }
 
     QPoint pointPropertyValue;
@@ -371,6 +394,7 @@ public:
     }
     void setPointProperty(const QPoint &v) {
         pointPropertyValue = v;
+        emit pointPropertyChanged();
     }
 
     QPointF pointFPropertyValue;
@@ -379,6 +403,7 @@ public:
     }
     void setPointFProperty(const QPointF &v) {
         pointFPropertyValue = v;
+        emit pointFPropertyChanged();
     }
 
     QSize sizePropertyValue;
@@ -387,6 +412,7 @@ public:
     }
     void setSizeProperty(const QSize &v) {
         sizePropertyValue = v;
+        emit sizePropertyChanged();
     }
 
     QSizeF sizeFPropertyValue;
@@ -395,6 +421,7 @@ public:
     }
     void setSizeFProperty(const QSizeF &v) {
         sizeFPropertyValue = v;
+        emit sizeFPropertyChanged();
     }
 
     QRect rectPropertyValue;
@@ -420,6 +447,7 @@ public:
     }
     void setRectFProperty(const QRectF &v) {
         rectFPropertyValue = v;
+        emit rectFPropertyChanged();
     }
 
     bool boolPropertyValue;
@@ -428,6 +456,7 @@ public:
     }
     void setBoolProperty(const bool &v) {
         boolPropertyValue = v;
+        emit boolPropertyChanged();
     }
 
     QVariant variantPropertyValue;
@@ -436,6 +465,7 @@ public:
     }
     void setVariantProperty(const QVariant &v) {
         variantPropertyValue = v;
+        emit variantPropertyChanged();
     }
 
     QVector3D vectorPropertyValue;
@@ -444,6 +474,7 @@ public:
     }
     void setVectorProperty(const QVector3D &v) {
         vectorPropertyValue = v;
+        emit vectorPropertyChanged();
     }
 
     QVector4D vector4PropertyValue;
@@ -452,6 +483,7 @@ public:
     }
     void setVector4Property(const QVector4D &v) {
         vector4PropertyValue = v;
+        emit vector4PropertyChanged();
     }
 
     QUrl urlPropertyValue;
@@ -460,6 +492,7 @@ public:
     }
     void setUrlProperty(const QUrl &v) {
         urlPropertyValue = v;
+        emit urlPropertyChanged();
     }
 
     QQmlScriptString scriptPropertyValue;
@@ -478,7 +511,32 @@ public:
     void doAction() { emit action(); }
 signals:
     void action();
+
+    void objectPropertyChanged();
+    void flagPropertyChanged();
+    void enumPropertyChanged();
+    void stringPropertyChanged();
+    void uintPropertyChanged();
+    void intPropertyChanged();
+    void realPropertyChanged();
+    void doublePropertyChanged();
+    void floatPropertyChanged();
+    void colorPropertyChanged();
+    void datePropertyChanged();
+    void timePropertyChanged();
+    void dateTimePropertyChanged();
+    void pointPropertyChanged();
+    void pointFPropertyChanged();
+    void sizePropertyChanged();
+    void sizeFPropertyChanged();
     void rectPropertyChanged();
+    void rectFPropertyChanged();
+    void boolPropertyChanged();
+    void variantPropertyChanged();
+    void vectorPropertyChanged();
+    void vector4PropertyChanged();
+    void urlPropertyChanged();
+
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(MyTypeObject::MyFlags)
 

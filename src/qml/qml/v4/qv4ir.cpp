@@ -65,6 +65,7 @@ const char *typeName(Type t)
     case ObjectType: return "object";
     case VariantType: return "variant";
     case VarType: return "var";
+    case JSValueType: return "QJSValue";
     case BoolType: return "bool";
     case IntType: return "int";
     case FloatType: return "float";
