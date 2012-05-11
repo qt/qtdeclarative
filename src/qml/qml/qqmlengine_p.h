@@ -241,6 +241,9 @@ public:
     const QMetaObject *metaObjectForType(int) const;
     void registerCompositeType(QQmlCompiledData *);
 
+    inline void setDebugChangesCache(const QHash<QUrl, QByteArray> &changes);
+    inline QHash<QUrl, QByteArray> debugChangesCache();
+
     void sendQuit();
     void warning(const QQmlError &);
     void warning(const QList<QQmlError> &);
@@ -299,6 +302,7 @@ private:
     QHash<QPair<QQmlType *, int>, QQmlPropertyCache *> typePropertyCache;
     QHash<int, int> m_qmlLists;
     QHash<int, QQmlCompiledData *> m_compositeTypes;
+    QHash<QUrl, QByteArray> debugChangesHash;
 
     // These members is protected by the full QQmlEnginePrivate::mutex mutex
     struct Deletable { Deletable():next(0) {} virtual ~Deletable() {} Deletable *next; };
@@ -515,6 +519,19 @@ void QQmlEnginePrivate::captureProperty(QObject *o, int c, int n)
 {
     if (propertyCapture)
         propertyCapture->captureProperty(o, c, n);
+}
+
+void QQmlEnginePrivate::setDebugChangesCache(const QHash<QUrl, QByteArray> &changes)
+{
+    Locker locker(this);
+    foreach (const QUrl &key, changes.keys())
+        debugChangesHash.insert(key, changes.value(key));
+}
+
+QHash<QUrl, QByteArray> QQmlEnginePrivate::debugChangesCache()
+{
+    Locker locker(this);
+    return debugChangesHash;
 }
 
 QT_END_NAMESPACE

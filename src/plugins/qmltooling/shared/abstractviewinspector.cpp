@@ -56,10 +56,12 @@
 //INSPECTOR SERVICE PROTOCOL
 // <HEADER><COMMAND><DATA>
 // <HEADER> : <type{request, response, event}><requestId/eventId>[<response_success_bool>]
-// <COMMAND> : {"enable", "disable", "select", "setAnimationSpeed",
+// <COMMAND> : {"enable", "disable", "select", "reload", "setAnimationSpeed",
 //              "showAppOnTop", "createObject", "destroyObject", "moveObject",
 //              "clearCache"}
 // <DATA> : select: <debugIds_int_list>
+//          reload: <list of relative paths w.r.t project of changed files>
+//                  <list of changed file contents>
 //          setAnimationSpeed: <speed_real>
 //          showAppOnTop: <set_bool>
 //          createObject: <qml_string><parentId_int><imports_string_list><filename_string>
@@ -73,6 +75,7 @@ const char EVENT[] = "event";
 const char ENABLE[] = "enable";
 const char DISABLE[] = "disable";
 const char SELECT[] = "select";
+const char RELOAD[] = "reload";
 const char SET_ANIMATION_SPEED[] = "setAnimationSpeed";
 const char SHOW_APP_ON_TOP[] = "showAppOnTop";
 const char CREATE_OBJECT[] = "createObject";
@@ -87,7 +90,8 @@ AbstractViewInspector::AbstractViewInspector(QObject *parent) :
     QObject(parent),
     m_enabled(false),
     m_debugService(QQmlInspectorService::instance()),
-    m_eventId(0)
+    m_eventId(0),
+    m_reloadEventId(-1)
 {
 }
 
@@ -296,6 +300,13 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
             if (m_enabled)
                 changeCurrentObjects(selectedObjects);
 
+        } else if (command == RELOAD) {
+            QHash<QString, QByteArray> changesHash;
+            ds >> changesHash;
+            m_reloadEventId = requestId;
+            reloadQmlFile(changesHash);
+            return;
+
         } else if (command == SET_ANIMATION_SPEED) {
             qreal speed;
             ds >> speed;
@@ -360,6 +371,19 @@ void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
     ds << debugIds;
 
     m_debugService->sendMessage(message);
+}
+
+void AbstractViewInspector::sendQmlFileReloaded(bool success)
+{
+    if (m_reloadEventId == -1)
+        return;
+
+    QByteArray response;
+
+    QQmlDebugStream rs(&response, QIODevice::WriteOnly);
+    rs << QByteArray(RESPONSE) << m_reloadEventId << success;
+
+    m_debugService->sendMessage(response);
 }
 
 QString AbstractViewInspector::idStringForObject(QObject *obj) const

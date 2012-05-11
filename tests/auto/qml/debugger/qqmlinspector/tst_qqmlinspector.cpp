@@ -62,10 +62,12 @@ public:
         , m_showAppOnTop(false)
         , m_requestId(0)
         , m_requestResult(false)
+        , m_responseId(-1)
     {
     }
 
     void setShowAppOnTop(bool showOnTop);
+    void reloadQml(const QHash<QString, QByteArray> &changesHash);
 
 signals:
     void responseReceived();
@@ -79,6 +81,8 @@ private:
 
 public:
     bool m_requestResult;
+    int m_responseId;
+    int m_reloadRequestId;
 };
 
 class tst_QQmlInspector : public QQmlDataTest
@@ -105,6 +109,7 @@ private slots:
 
     void connect();
     void showAppOnTop();
+    void reloadQml();
 };
 
 
@@ -114,6 +119,18 @@ void QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
     QDataStream ds(&message, QIODevice::WriteOnly);
     ds << QByteArray("request") << m_requestId++
        << QByteArray("showAppOnTop") << showOnTop;
+
+    sendMessage(message);
+}
+
+void QQmlInspectorClient::reloadQml(const QHash<QString, QByteArray> &changesHash)
+{
+    QByteArray message;
+    QDataStream ds(&message, QIODevice::WriteOnly);
+    m_reloadRequestId = m_requestId;
+
+    ds << QByteArray("request") << m_requestId++
+       << QByteArray("reload") << changesHash;
 
     sendMessage(message);
 }
@@ -130,8 +147,7 @@ void QQmlInspectorClient::messageReceived(const QByteArray &message)
     }
 
     m_requestResult = false;
-    int requestId;
-    ds >> requestId >> m_requestResult;
+    ds >> m_responseId >> m_requestResult;
     emit responseReceived();
 }
 
@@ -177,6 +193,30 @@ void tst_QQmlInspector::showAppOnTop()
     m_client->setShowAppOnTop(false);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
     QCOMPARE(m_client->m_requestResult, true);
+}
+
+void tst_QQmlInspector::reloadQml()
+{
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    QByteArray fileContents;
+
+    QFile file(testFile("changes.txt"));
+    if (file.open(QFile::ReadOnly))
+        fileContents = file.readAll();
+    file.close();
+
+    QHash<QString, QByteArray> changesHash;
+    changesHash.insert("qtquick2.qml", fileContents);
+
+    m_client->reloadQml(changesHash);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
+
+    QTRY_COMPARE(m_process->output().contains(
+                 QString("version 2.0")), true);
+
+    QCOMPARE(m_client->m_requestResult, true);
+    QCOMPARE(m_client->m_reloadRequestId, m_client->m_responseId);
 }
 
 QTEST_MAIN(tst_QQmlInspector)

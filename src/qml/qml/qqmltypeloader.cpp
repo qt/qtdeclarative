@@ -1026,6 +1026,21 @@ void QQmlDataLoader::loadThread(QQmlDataBlob *blob)
         return;
     }
 
+    QQmlEnginePrivate *engine_d = QQmlEnginePrivate::get(m_engine);
+    QHash<QUrl, QByteArray> debugCache = engine_d->debugChangesCache();
+
+    if (!debugCache.isEmpty()) {
+        foreach (const QUrl &url, debugCache.keys()) {
+            if (blob->m_url == blob->m_url.resolved(url)) {
+                blob->m_data.setProgress(0xFF);
+                if (blob->m_data.isAsync())
+                    m_thread->callDownloadProgressChanged(blob, 1.);
+                setData(blob, debugCache.value(url, QByteArray()));
+                return;
+            }
+        }
+    }
+
     if (QQmlFile::isSynchronous(blob->m_url)) {
         QQmlFile file(m_engine, blob->m_url);
 

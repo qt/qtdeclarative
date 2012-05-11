@@ -83,6 +83,8 @@ public:
 
     void sendCurrentObjects(const QList<QObject*> &);
 
+    void sendQmlFileReloaded(bool success);
+
     QString idStringForObject(QObject *obj) const;
 
     virtual void changeCurrentObjects(const QList<QObject*> &objects) = 0;
@@ -90,6 +92,7 @@ public:
     virtual Qt::WindowFlags windowFlags() const = 0;
     virtual void setWindowFlags(Qt::WindowFlags flags) = 0;
     virtual QQmlEngine *declarativeEngine() const = 0;
+    virtual void reloadQmlFile(const QHash<QString, QByteArray> &changesHash) = 0;
 
     void appendTool(AbstractTool *tool);
     void removeTool(AbstractTool *tool);
@@ -119,6 +122,7 @@ private:
     QQmlInspectorService *m_debugService;
     QList<AbstractTool *> m_tools;
     int m_eventId;
+    int m_reloadEventId;
 };
 
 } // namespace QmlJSDebugger

@@ -46,6 +46,7 @@
 
 #include <QtCore/QPointer>
 #include <QtCore/QHash>
+#include <QtQuick/QQuickView>
 
 QT_BEGIN_NAMESPACE
 class QQuickView;
@@ -83,6 +84,8 @@ public:
     QString titleForItem(QQuickItem *item) const;
     void showSelectedItemName(QQuickItem *item, const QPointF &point);
 
+    void reloadQmlFile(const QHash<QString, QByteArray> &changesHash);
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
 
@@ -90,6 +93,7 @@ protected:
 
 private slots:
     void removeFromSelectedItems(QObject *);
+    void onViewStatus(QQuickView::Status status);
 
 private:
     bool syncSelectedItems(const QList<QQuickItem*> &items);
@@ -101,6 +105,7 @@ private:
 
     QList<QPointer<QQuickItem> > m_selectedItems;
     QHash<QQuickItem*, SelectionHighlight*> m_highlightItems;
+    bool m_sendQmlReloadedMessage;
 };
 
 } // namespace QtQuick2

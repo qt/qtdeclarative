@@ -44,6 +44,7 @@
 #include "highlight.h"
 #include "inspecttool.h"
 
+#include <QtQml/private/qqmlengine_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 #include <QtQuick/QQuickView>
@@ -120,7 +121,8 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
     AbstractViewInspector(parent),
     m_view(view),
     m_overlay(new QQuickItem),
-    m_inspectTool(new InspectTool(this, view))
+    m_inspectTool(new InspectTool(this, view)),
+    m_sendQmlReloadedMessage(false)
 {
     // Try to make sure the overlay is always on top
     m_overlay->setZ(FLT_MAX);
@@ -130,6 +132,8 @@ QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
 
     view->installEventFilter(this);
     appendTool(m_inspectTool);
+    connect(view, SIGNAL(statusChanged(QQuickView::Status)),
+            this, SLOT(onViewStatus(QQuickView::Status)));
 }
 
 void QQuickViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
@@ -308,6 +312,51 @@ QString QQuickViewInspector::titleForItem(QQuickItem *item) const
     }
 
     return constructedName;
+}
+
+void QQuickViewInspector::reloadQmlFile(const QHash<QString, QByteArray> &changesHash)
+{
+    clearComponentCache();
+
+    // Reset the selection since we are reloading the main qml
+    setSelectedItems(QList<QQuickItem *>());
+
+    QHash<QUrl, QByteArray> debugCache;
+
+    foreach (const QString &str, changesHash.keys())
+        debugCache.insert(QUrl(str), changesHash.value(str, QByteArray()));
+
+    // Updating the cache in engine private such that the QML Data loader
+    // gets the changes from the cache.
+    QQmlEnginePrivate::get(declarativeEngine())->setDebugChangesCache(debugCache);
+
+    m_sendQmlReloadedMessage = true;
+    // reloading the view such that the changes done for the files are
+    // reflected in view
+    view()->setSource(view()->source());
+}
+
+void QQuickViewInspector::onViewStatus(QQuickView::Status status)
+{
+    bool success = false;
+    switch (status) {
+    case QQuickView::Loading:
+        return;
+    case QQuickView::Ready:
+        if (view()->errors().count())
+            break;
+        success = true;
+        break;
+    case QQuickView::Null:
+    case QQuickView::Error:
+        break;
+    default:
+        break;
+    }
+    if (m_sendQmlReloadedMessage) {
+        m_sendQmlReloadedMessage = false;
+        sendQmlFileReloaded(success);
+    }
 }
 
 } // namespace QtQuick2
