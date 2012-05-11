@@ -79,6 +79,9 @@ private slots:
     void elements_data();
     void elements();
 
+    void itemtests_qml_data();
+    void itemtests_qml();
+
 private:
     QQmlEngine engine;
 };
@@ -354,6 +357,39 @@ void tst_creation::elements()
         QObject *obj = t->create();
         delete obj;
     }
+}
+
+void tst_creation::itemtests_qml_data()
+{
+    QTest::addColumn<QString>("filepath");
+
+    QTest::newRow("emptyItem") << "emptyItem.qml";
+    QTest::newRow("emptyCustomItem") << "emptyCustomItem.qml";
+    QTest::newRow("itemWithProperties") << "itemWithProperties.qml";
+    QTest::newRow("itemUsingOnComponentCompleted") << "itemUsingOnComponentCompleted.qml";
+    QTest::newRow("itemWithAnchoredChild") << "itemWithAnchoredChild.qml";
+    QTest::newRow("itemWithChildBindedToSize") << "itemWithChildBindedToSize.qml";
+    QTest::newRow("itemWithPropertyBindingsTest1") << "itemWithPropertyBindingsTest1.qml";
+    QTest::newRow("itemWithPropertyBindingsTest2") << "itemWithPropertyBindingsTest2.qml";
+    QTest::newRow("itemWithPropertyBindingsTest3") << "itemWithPropertyBindingsTest3.qml";
+    QTest::newRow("itemWithPropertyBindingsTest4") << "itemWithPropertyBindingsTest4.qml";
+    QTest::newRow("itemWithPropertyBindingsTest5") << "itemWithPropertyBindingsTest5.qml";
+}
+
+void tst_creation::itemtests_qml()
+{
+    QFETCH(QString, filepath);
+
+    QUrl url = TEST_FILE(filepath);
+    QQmlComponent component(&engine, url);
+
+    if (!component.isReady()) {
+        qWarning() << "Unable to create component: " << url;
+        return;
+    }
+
+    delete component.create();
+    QBENCHMARK { delete component.create(); }
 }
 
 QTEST_MAIN(tst_creation)
