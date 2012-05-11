@@ -1,2 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS = calculator
+SUBDIRS =   calculator \
+            tweetsearch
