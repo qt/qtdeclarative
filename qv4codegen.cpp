@@ -159,15 +159,19 @@ struct ScanFunctionBody: Visitor
 
     // search for locals
     QList<QStringRef> locals;
-    bool directEval;
+    int maxNumberOfArguments;
+    bool hasDirectEval;
+    bool hasNestedFunctions;
 
     ScanFunctionBody()
-        : directEval(false)
+        : maxNumberOfArguments(0)
+        , hasDirectEval(false)
+        , hasNestedFunctions(false)
     {
     }
 
     void operator()(Node *node) {
-        directEval = false;
+        hasDirectEval = false;
         locals.clear();
         if (node)
             node->accept(this);
@@ -176,13 +180,26 @@ struct ScanFunctionBody: Visitor
 protected:
     virtual bool visit(CallExpression *ast)
     {
-        if (! directEval) {
+        if (! hasDirectEval) {
             if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
                 if (id->name == QLatin1String("eval")) {
-                    directEval = true;
+                    hasDirectEval = true;
                 }
             }
         }
+        int argc = 0;
+        for (AST::ArgumentList *it = ast->arguments; it; it = it->next)
+            ++argc;
+        maxNumberOfArguments = qMax(maxNumberOfArguments, argc);
+        return true;
+    }
+
+    virtual bool visit(NewMemberExpression *ast)
+    {
+        int argc = 0;
+        for (AST::ArgumentList *it = ast->arguments; it; it = it->next)
+            ++argc;
+        maxNumberOfArguments = qMax(maxNumberOfArguments, argc);
         return true;
     }
 
@@ -195,6 +212,7 @@ protected:
 
     virtual bool visit(FunctionExpression *ast)
     {
+        hasNestedFunctions = true;
         if (! locals.contains(ast->name))
             locals.append(ast->name);
         return false;
@@ -202,6 +220,7 @@ protected:
 
     virtual bool visit(FunctionDeclaration *ast)
     {
+        hasNestedFunctions = true;
         if (! locals.contains(ast->name))
             locals.append(ast->name);
         return false;
@@ -223,7 +242,9 @@ void Codegen::operator()(AST::Program *node, IR::Module *module)
     _module = module;
 
     IR::Function *globalCode = _module->newFunction(QLatin1String("%entry"));
-    globalCode->directEval = true; // ### remove
+    globalCode->hasDirectEval = true; // ### remove
+    globalCode->hasNestedFunctions = true; // ### remove
+    globalCode->redArea = 10; // ### remove
     _function = globalCode;
     _block = _function->newBasicBlock();
     _exitBlock = _function->newBasicBlock();
@@ -289,6 +310,15 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
     }
 
     return _block->BINOP(op, left, right);
+}
+
+IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
+{
+    if (base->asMember() || base->asName() || base->asTemp())
+        return _block->CALL(base, args);
+    const unsigned t = _block->newTemp();
+    _block->MOVE(_block->TEMP(t), base);
+    return _block->CALL(_block->TEMP(t), args);
 }
 
 void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
@@ -519,7 +549,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
         if (! expr.code)
             expr.code = _block->CONST(IR::UndefinedType, 0);
 
-        if (! _function->directEval) {
+        if (! _function->needsActivation()) {
             const int index = tempForLocalVariable(ast->name);
             if (index != -1) {
                 move(_block->TEMP(index), *expr);
@@ -895,7 +925,7 @@ bool Codegen::visit(CallExpression *ast)
         (*args_it)->init(actual);
         args_it = &(*args_it)->next;
     }
-    _expr.code = _block->CALL(*base, args);
+    _expr.code = call(*base, args);
     return false;
 }
 
@@ -951,7 +981,7 @@ bool Codegen::visit(FunctionExpression *ast)
 
 bool Codegen::visit(IdentifierExpression *ast)
 {
-    if (! _function->directEval) {
+    if (! _function->needsActivation()) {
         int index = tempForLocalVariable(ast->name);
         if (index != -1) {
             _expr.code = _block->TEMP(index);
@@ -1121,7 +1151,7 @@ bool Codegen::visit(TypeOfExpression *ast)
     Result expr = expression(ast->expression);
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(argument(*expr));
-    _expr.code = _block->CALL(_block->NAME(QLatin1String("typeof"), ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
+    _expr.code = call(_block->NAME(QLatin1String("typeof"), ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
     return false;
 }
 
@@ -1308,8 +1338,10 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     IR::Function *function = _module->newFunction(ast->name.toString());
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock();
+    function->hasDirectEval = functionInfo.hasDirectEval;
+    function->redArea = functionInfo.maxNumberOfArguments;
 
-    if (! functionInfo.directEval) {
+    if (! functionInfo.hasDirectEval) {
         for (int i = 0; i < functionInfo.locals.size(); ++i) {
             unsigned t = entryBlock->newTemp();
             Q_ASSERT(t == unsigned(i));

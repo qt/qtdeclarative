@@ -71,6 +71,7 @@ protected:
     IR::Expr *subscript(IR::Expr *base, IR::Expr *index);
     IR::Expr *argument(IR::Expr *expr);
     IR::Expr *binop(IR::AluOp op, IR::Expr *left, IR::Expr *right);
+    IR::Expr *call(IR::Expr *base, IR::ExprList *args);
     void move(IR::Expr *target, IR::Expr *source, IR::AluOp op = IR::OpInvalid);
 
     void linearize(IR::Function *function);

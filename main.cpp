@@ -28,6 +28,8 @@ using namespace QQmlJS::VM;
 
 struct Print: FunctionObject
 {
+    Print(Context *scope): FunctionObject(scope) {}
+
     virtual void call(Context *ctx)
     {
         for (size_t i = 0; i < ctx->argumentCount; ++i) {
@@ -43,9 +45,11 @@ struct Print: FunctionObject
 
 struct ObjectCtor: FunctionObject
 {
+    ObjectCtor(Context *scope): FunctionObject(scope) {}
+
     virtual void construct(Context *ctx)
     {
-        __qmljs_init_object(ctx, &ctx->result, new Object());
+        __qmljs_init_object(ctx, &ctx->thisObject, new Object());
     }
 
     virtual void call(Context *)
@@ -56,6 +60,8 @@ struct ObjectCtor: FunctionObject
 
 struct StringCtor: FunctionObject
 {
+    StringCtor(Context *scope): FunctionObject(scope) {}
+
     virtual void construct(Context *ctx)
     {
         Value arg = ctx->argument(0);
@@ -88,7 +94,7 @@ struct StringPrototype: Object
 
     void setProperty(Context *ctx, const QString &name, void (*code)(Context *))
     {
-        setProperty(ctx, name, Value::object(ctx, new NativeFunction(code)));
+        setProperty(ctx, name, Value::object(ctx, new NativeFunction(ctx, code)));
     }
 
     static void toString(Context *ctx)
@@ -147,12 +153,12 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
         __qmljs_init_object(ctx, &ctx->activation, globalObject);
 
         globalObject->put(VM::String::get(ctx, QLatin1String("print")),
-                                         VM::Value::object(ctx, new builtins::Print()));
+                                         VM::Value::object(ctx, new builtins::Print(ctx)));
 
         globalObject->put(VM::String::get(ctx, QLatin1String("Object")),
-                                         VM::Value::object(ctx, new builtins::ObjectCtor()));
+                                         VM::Value::object(ctx, new builtins::ObjectCtor(ctx)));
 
-        VM::FunctionObject *stringCtor = new builtins::StringCtor();
+        VM::FunctionObject *stringCtor = new builtins::StringCtor(ctx);
         stringCtor->put(prototype, VM::Value::object(ctx, new builtins::StringPrototype(ctx, stringCtor)));
         globalObject->put(VM::String::get(ctx, QLatin1String("String")), VM::Value::object(ctx, stringCtor));
 

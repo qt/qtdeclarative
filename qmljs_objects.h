@@ -233,11 +233,11 @@ struct ArrayObject: Object {
 };
 
 struct FunctionObject: Object {
-    Object *scope;
+    Context *scope;
     String **formalParameterList;
     size_t formalParameterCount;
 
-    FunctionObject(Object *scope = 0): scope(scope), formalParameterList(0), formalParameterCount(0) {}
+    FunctionObject(Context *scope): scope(scope), formalParameterList(0), formalParameterCount(0) {}
     virtual FunctionObject *asFunctionObject() { return this; }
 
     virtual bool hasInstance(const Value &value) const;
@@ -248,16 +248,15 @@ struct FunctionObject: Object {
 struct NativeFunction: FunctionObject {
     void (*code)(Context *);
 
-    NativeFunction(void (*code)(Context *)): code(code) {}
+    NativeFunction(Context *scope, void (*code)(Context *)): FunctionObject(scope), code(code) {}
     virtual void call(Context *ctx) { code(ctx); }
     virtual void construct(Context *ctx) { code(ctx); }
 };
 
 struct ScriptFunction: FunctionObject {
-    Context *context;
     IR::Function *function;
 
-    ScriptFunction(Context *context, IR::Function *function);
+    ScriptFunction(Context *scope, IR::Function *function);
     virtual ~ScriptFunction();
 
     virtual void call(Context *ctx);
@@ -279,13 +278,20 @@ struct Context {
     Context *parent;
     Value activation;
     Value thisObject;
-    Object *scope;
     Value *arguments;
     size_t argumentCount;
     Value result;
     String **formals;
     size_t formalCount;
     bool calledAsConstructor;
+
+    Value *lookup(String *name) {
+        if (activation.is(OBJECT_TYPE)) {
+            if (Value *prop = activation.objectValue->getProperty(name))
+                return prop;
+        }
+        return parent ? parent->lookup(name) : 0;
+    }
 
     inline Value argument(size_t index = 0)
     {
@@ -305,7 +311,6 @@ struct Context {
     void init()
     {
         parent = 0;
-        scope = 0;
         arguments = 0;
         argumentCount = 0;
         activation.type = NULL_TYPE;

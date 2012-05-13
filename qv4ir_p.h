@@ -587,11 +587,13 @@ struct Function {
     const QString *name;
     QVector<BasicBlock *> basicBlocks;
     int tempCount;
+    int redArea;
     QSet<QString> strings;
     QList<const QString *> formals;
     QList<const QString *> locals;
     void (*code)(VM::Context *);
-    bool directEval;
+    bool hasDirectEval: 1;
+    bool hasNestedFunctions: 1;
 
     template <typename _Tp> _Tp *New() { return new (pool->allocate(sizeof(_Tp))) _Tp(); }
 
@@ -599,8 +601,10 @@ struct Function {
         : module(module)
         , pool(&module->pool)
         , tempCount(0)
+        , redArea(0)
         , code(0)
-        , directEval(false)
+        , hasDirectEval(false)
+        , hasNestedFunctions(false)
     { this->name = newString(name); }
 
     ~Function();
@@ -614,6 +618,8 @@ struct Function {
     inline BasicBlock *i(BasicBlock *block) { basicBlocks.append(block); return block; }
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
+
+    inline bool needsActivation() const { return hasNestedFunctions || hasDirectEval; }
 };
 
 struct BasicBlock {

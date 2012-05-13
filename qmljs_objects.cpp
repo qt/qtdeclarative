@@ -118,8 +118,8 @@ void FunctionObject::construct(Context *ctx)
     call(ctx);
 }
 
-ScriptFunction::ScriptFunction(Context *context, IR::Function *function)
-    : context(context)
+ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
+    : FunctionObject(scope)
     , function(function)
 {
     formalParameterCount = function->formals.size();
@@ -143,6 +143,7 @@ void ScriptFunction::call(VM::Context *ctx)
 
 void ScriptFunction::construct(VM::Context *ctx)
 {
+    __qmljs_init_object(ctx, &ctx->thisObject, new Object());
     function->code(ctx);
 }
 
@@ -160,7 +161,5 @@ Value *ArgumentsObject::getProperty(String *name, PropertyAttributes *attributes
     }
     if (Value *prop = Object::getProperty(name, attributes))
         return prop;
-    else if (context && context->scope)
-        return context->scope->getProperty(name, attributes);
     return 0;
 }
