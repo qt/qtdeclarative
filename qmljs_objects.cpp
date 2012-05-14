@@ -17,8 +17,9 @@ void Object::setProperty(Context *ctx, const QString &name, const Value &value)
     put(ctx->engine->identifier(name), value);
 }
 
-void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context *))
+void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context *), int count)
 {
+    Q_UNUSED(count);
     setProperty(ctx, name, Value::object(ctx, new NativeFunction(ctx, code)));
 }
 
@@ -131,6 +132,7 @@ ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
     : FunctionObject(scope)
     , function(function)
 {
+    needsActivation = function->needsActivation();
     formalParameterCount = function->formals.size();
     if (formalParameterCount) {
         formalParameterList = new String*[formalParameterCount];
@@ -198,6 +200,7 @@ ExecutionEngine::ExecutionEngine()
     glo->put(VM::String::get(rootContext, QLatin1String("Object")), objectCtor);
     glo->put(VM::String::get(rootContext, QLatin1String("String")), stringCtor);
     glo->put(VM::String::get(rootContext, QLatin1String("Number")), numberCtor);
+    glo->put(VM::String::get(rootContext, QLatin1String("Math")), Value::object(rootContext, new MathObject(rootContext)));
 }
 
 String *ExecutionEngine::identifier(const QString &s)

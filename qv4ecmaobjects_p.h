@@ -83,6 +83,31 @@ protected:
     static void method_toPrecision(Context *ctx);
 };
 
+struct MathObject: Object
+{
+    MathObject(Context *ctx);
+
+protected:
+    static void method_abs(Context *ctx);
+    static void method_acos(Context *ctx);
+    static void method_asin(Context *ctx);
+    static void method_atan(Context *ctx);
+    static void method_atan2(Context *ctx);
+    static void method_ceil(Context *ctx);
+    static void method_cos(Context *ctx);
+    static void method_exp(Context *ctx);
+    static void method_floor(Context *ctx);
+    static void method_log(Context *ctx);
+    static void method_max(Context *ctx);
+    static void method_min(Context *ctx);
+    static void method_pow(Context *ctx);
+    static void method_random(Context *ctx);
+    static void method_round(Context *ctx);
+    static void method_sin(Context *ctx);
+    static void method_sqrt(Context *ctx);
+    static void method_tan(Context *ctx);
+};
+
 } // end of namespace VM
 } // end of namespace QQmlJS
 

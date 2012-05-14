@@ -216,7 +216,7 @@ struct Object {
     // helpers
     //
     void setProperty(Context *ctx, const QString &name, const Value &value);
-    void setProperty(Context *ctx, const QString &name, void (*code)(Context *));
+    void setProperty(Context *ctx, const QString &name, void (*code)(Context *), int count = 0);
 };
 
 struct BooleanObject: Object {
