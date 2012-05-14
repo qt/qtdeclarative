@@ -416,20 +416,6 @@ inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMi
     return QQmlPrivate::qmlregister(QQmlPrivate::ModuleApiRegistration, &api);
 }
 
-inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor,
-                                QObject *(*callback)(QQmlEngine *, QJSEngine *))
-{
-    QQmlPrivate::RegisterModuleApi api = {
-        0,
-
-        uri, versionMajor, versionMinor,
-
-        0, callback, 0 // unknown QObject instance type
-    };
-
-    return QQmlPrivate::qmlregister(QQmlPrivate::ModuleApiRegistration, &api);
-}
-
 template <typename T>
 inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor,
                                 QObject *(*callback)(QQmlEngine *, QJSEngine *))

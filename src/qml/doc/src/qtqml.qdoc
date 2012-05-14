@@ -279,15 +279,6 @@
   */
 
 /*!
-   \internal
-   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QQmlEngine *, QJSEngine *))
-   \deprecated
-
-   Any uses of a module API in a binding where that module API was registered with this
-   function instead of the template version will result in suboptimal binding generation.
- */
-
-/*!
    \fn template<typename T> int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QQmlEngine *, QJSEngine *))
    \relates QQmlEngine
 

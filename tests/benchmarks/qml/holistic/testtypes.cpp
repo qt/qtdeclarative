@@ -39,33 +39,30 @@
 **
 ****************************************************************************/
 #include "testtypes.h"
-#include <QWidget>
-#include <QPlainTextEdit>
 #include <QQmlEngine>
-#include <QScriptEngine>
 
-static QScriptValue script_api(QQmlEngine *engine, QScriptEngine *scriptEngine)
+static QJSValue script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
     Q_UNUSED(scriptEngine)
 
     static int testProperty = 13;
-    QScriptValue v = scriptEngine->newObject();
+    QJSValue v = scriptEngine->newObject();
     v.setProperty("scriptTestProperty", testProperty++);
     return v;
 }
 
-static QObject *qobject_api(QQmlEngine *engine, QScriptEngine *scriptEngine)
+static QObject *qobject_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
     Q_UNUSED(scriptEngine)
 
-    testQObjectApi *o = new testQObjectApi();
+    testQObjectApi *o = new testQObjectApi;
     o->setQObjectTestProperty(20);
     return o;
 }
 
-static QObject *qobject_api_engine_parent(QQmlEngine *engine, QScriptEngine *scriptEngine)
+static QObject *qobject_api_engine_parent(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(scriptEngine)
 
@@ -80,19 +77,18 @@ void registerTypes()
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObject");
 
-    qmlRegisterType<QPlainTextEdit>("Qt.test",1,0,"QPlainTextEdit");
     qRegisterMetaType<MyQmlObject::MyType>("MyQmlObject::MyType");
 
     qmlRegisterType<ScarceResourceProvider>("Qt.test", 1,0, "MyScarceResourceProvider");
     qmlRegisterType<ArbitraryVariantProvider>("Qt.test", 1,0, "MyArbitraryVariantProvider");
 
     qmlRegisterModuleApi("Qt.test",1,0,script_api);             // register (script) module API for an existing uri which contains elements
-    qmlRegisterModuleApi("Qt.test",1,0,qobject_api);            // register (qobject) for an existing uri for which another module API was previously regd.  Should replace!
+    qmlRegisterModuleApi<testQObjectApi>("Qt.test",1,0,qobject_api);            // register (qobject) for an existing uri for which another module API was previously regd.  Should replace!
     qmlRegisterModuleApi("Qt.test.scriptApi",1,0,script_api);   // register (script) module API for a uri which doesn't contain elements
-    qmlRegisterModuleApi("Qt.test.qobjectApi",1,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements
-    qmlRegisterModuleApi("Qt.test.qobjectApi",1,3,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, minor version set
-    qmlRegisterModuleApi("Qt.test.qobjectApi",2,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, major version set
-    qmlRegisterModuleApi("Qt.test.qobjectApiParented",1,0,qobject_api_engine_parent); // register (parented qobject) module API for a uri which doesn't contain elements
+    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",1,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements
+    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",1,3,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, minor version set
+    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",2,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, major version set
+    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApiParented",1,0,qobject_api_engine_parent); // register (parented qobject) module API for a uri which doesn't contain elements
 }
 
 //#include "testtypes.moc"

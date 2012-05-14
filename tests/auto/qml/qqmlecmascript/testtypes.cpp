@@ -218,7 +218,6 @@ void registerTypes()
     qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",1,3,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, minor version set
     qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",2,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, major version set
     qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApiParented",1,0,qobject_api_engine_parent); // register (parented qobject) module API for a uri which doesn't contain elements
-    qmlRegisterModuleApi("Qt.test.legacyModuleApi", 1, 0, qobject_api); // this registration function doesn't provide type information.
 
     qRegisterMetaType<MyQmlObject::MyEnum2>("MyEnum2");
     qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
