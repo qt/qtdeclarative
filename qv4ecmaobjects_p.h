@@ -56,6 +56,27 @@ protected:
     static void method_fromCharCode(Context *ctx);
 };
 
+struct NumberCtor: FunctionObject
+{
+    NumberCtor(Context *scope);
+
+    virtual void construct(Context *ctx);
+    virtual void call(Context *ctx);
+};
+
+struct NumberPrototype: Object
+{
+    NumberPrototype(Context *ctx, FunctionObject *ctor);
+
+protected:
+    static void method_toString(Context *ctx);
+    static void method_toLocaleString(Context *ctx);
+    static void method_valueOf(Context *ctx);
+    static void method_toFixed(Context *ctx);
+    static void method_toExponential(Context *ctx);
+    static void method_toPrecision(Context *ctx);
+};
+
 } // end of namespace VM
 } // end of namespace QQmlJS
 

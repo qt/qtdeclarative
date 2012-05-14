@@ -99,9 +99,13 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
         globalObject->put(VM::String::get(ctx, QLatin1String("Object")),
                           VM::Value::object(ctx, new builtins::ObjectCtor(ctx)));
 
-        VM::FunctionObject *stringCtor = new builtins::StringCtor(ctx);
-        stringCtor->put(prototype, VM::Value::object(ctx, new builtins::StringPrototype(ctx, stringCtor)));
+        VM::FunctionObject *stringCtor = new VM::StringCtor(ctx);
+        stringCtor->put(prototype, VM::Value::object(ctx, new VM::StringPrototype(ctx, stringCtor)));
         globalObject->put(VM::String::get(ctx, QLatin1String("String")), VM::Value::object(ctx, stringCtor));
+
+        VM::FunctionObject *numberCtor = new VM::NumberCtor(ctx);
+        numberCtor->put(prototype, VM::Value::object(ctx, new VM::NumberPrototype(ctx, numberCtor)));
+        globalObject->put(VM::String::get(ctx, QLatin1String("Number")), VM::Value::object(ctx, numberCtor));
 
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {
