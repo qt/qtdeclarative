@@ -72,7 +72,10 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObj
     setNotifyOnValueChanged(false);
     setContext(ctxt);
     setScopeObject(scope);
-    m_expression = QString::fromUtf8(expression);
+    if (isRewritten)
+        m_expressionUtf8 = expression;
+    else
+        m_expression = QString::fromUtf8(expression);
     m_expressionFunctionValid = false;
     m_expressionFunctionRewritten = isRewritten;
     m_fileName = fileName;
@@ -87,7 +90,10 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObj
     setNotifyOnValueChanged(false);
     setContext(ctxt);
     setScopeObject(scope);
-    m_expression = expression;
+    if (isRewritten)
+        m_expressionUtf8 = expression.toUtf8();
+    else
+        m_expression = expression;
     m_expressionFunctionValid = false;
     m_expressionFunctionRewritten = isRewritten;
     m_fileName = fileName;
@@ -104,12 +110,26 @@ QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
 QString QQmlBoundSignalExpression::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlBoundSignalExpression *This = static_cast<QQmlBoundSignalExpression *>(e);
-    return QLatin1Char('"') + This->m_expression + QLatin1Char('"');
+    return This->sourceFile() + QLatin1Char(':') + QString::number(This->lineNumber());
 }
 
 void QQmlBoundSignalExpression::expressionChanged(QQmlJavaScriptExpression *)
 {
     // bound signals do not notify on change.
+}
+
+QString QQmlBoundSignalExpression::expression() const
+{
+    if (m_expressionFunctionValid) {
+        Q_ASSERT (context() && engine());
+        v8::HandleScope handle_scope;
+        v8::Context::Scope context_scope(QQmlEnginePrivate::get(engine())->v8engine()->context());
+        return QV8Engine::toStringStatic(m_v8function->ToString());
+    } else if (!m_expressionUtf8.isEmpty()) {
+        return QString::fromUtf8(m_expressionUtf8);
+    } else {
+        return m_expression;
+    }
 }
 
 // This mirrors code in QQmlExpressionPrivate::value() and v8value().
@@ -124,17 +144,18 @@ void QQmlBoundSignalExpression::evaluate(QObject *secondaryScope)
         v8::HandleScope handle_scope;
         v8::Context::Scope context_scope(ep->v8engine()->context());
         if (!m_expressionFunctionValid) {
-            bool ok = true;
-            QString code;
-            if (m_expressionFunctionRewritten) {
-                code = m_expression;
-            } else {
-                QQmlRewrite::RewriteSignalHandler rewriteSignalHandler;
-                code = rewriteSignalHandler(m_expression, m_functionName, &ok);
-            }
 
-            if (ok)
-                m_v8function = evalFunction(context(), scopeObject(), code, m_fileName, m_line, &m_v8qmlscope);
+            if (m_expressionFunctionRewritten) {
+                m_v8function = evalFunction(context(), scopeObject(), m_expressionUtf8, m_fileName, m_line, &m_v8qmlscope);
+                m_expressionUtf8.clear();
+            } else {
+                bool ok = true;
+                QQmlRewrite::RewriteSignalHandler rewriteSignalHandler;
+                const QString &code = rewriteSignalHandler(m_expression, QString()/*no name hint available*/, &ok);
+                if (ok)
+                    m_v8function = evalFunction(context(), scopeObject(), code, m_fileName, m_line, &m_v8qmlscope);
+                m_expression.clear();
+            }
 
             if (m_v8function.IsEmpty() || m_v8function->IsNull()) {
                 ep->dereferenceScarceResources();

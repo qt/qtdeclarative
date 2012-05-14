@@ -83,7 +83,7 @@ public:
     QString sourceFile() const { return m_fileName; }
     int lineNumber() const { return m_line; }
     int columnNumber() const { return m_column; }
-    QString expression() const { return m_expression; }
+    QString expression() const;
 
     QQmlEngine *engine() const { return context() ? context()->engine : 0; }
 
@@ -93,8 +93,12 @@ private:
     v8::Persistent<v8::Object> m_v8qmlscope;
     v8::Persistent<v8::Function> m_v8function;
 
-    QString m_expression;
-    QString m_functionName; // hint for debugger
+    //either expressionUtf8 or expression will be used (but not both).
+    //once m_v8function is valid, we clear both expressions, and
+    //extract it from m_v8function if needed.
+    QByteArray m_expressionUtf8;
+    QString m_expression;   //only used when expression needs to be rewritten
+
     QString m_fileName;
     int m_line;
     int m_column;

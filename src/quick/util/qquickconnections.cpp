@@ -236,7 +236,7 @@ QQmlConnectionsParser::compile(const QList<QQmlCustomParserProperty> &props)
                 QQmlScript::Variant v = qvariant_cast<QQmlScript::Variant>(value);
                 if (v.isScript()) {
                     ds << propName;
-                    ds << rewriteSignalHandler(v, propName);
+                    ds << rewriteSignalHandler(v, propName).toUtf8();
                     ds << propLine;
                     ds << propColumn;
                 } else {
@@ -269,7 +269,7 @@ void QQuickConnections::connectSignals()
     while (!ds.atEnd()) {
         QString propName;
         ds >> propName;
-        QString script;
+        QByteArray script;
         ds >> script;
         int line;
         ds >> line;
