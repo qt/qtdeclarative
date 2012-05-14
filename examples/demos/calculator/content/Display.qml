@@ -39,73 +39,29 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Particles 2.0
 
-Item {
-    id: block
-    property bool dying: false
-    property bool spawned: false
-    property int type: 0
-    property ParticleSystem particleSystem
+BorderImage {
+    id: image
 
-    Behavior on x {
-        enabled: spawned;
-        SpringAnimation{ spring: 2; damping: 0.2 }
-    }
-    Behavior on y {
-        SpringAnimation{ spring: 2; damping: 0.2 }
-    }
+    property alias text : displayText.text
+    property alias currentOperation : operationText
 
-    Image {
-        id: img
-        source: {
-            if(type == 0){
-                "pics/redStone.png";
-            } else if(type == 1) {
-                "pics/blueStone.png";
-            } else {
-                "pics/greenStone.png";
-            }
+    source: "images/display.png"
+    border { left: 10; top: 10; right: 10; bottom: 10 }
+
+    Text {
+        id: displayText
+        anchors {
+            right: parent.right; verticalCenter: parent.verticalCenter; verticalCenterOffset: -1
+            rightMargin: 6; left: operationText.right
         }
-        opacity: 0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
-        anchors.fill: parent
+        font.pixelSize: parent.height * .6; text: "0"; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight
+        color: "#343434"; smooth: true; font.bold: true
     }
-    Emitter {
-        id: particles
-        system: particleSystem
-        group: { 
-            if(type == 0){
-                "red";
-            } else if (type == 1) {
-                "blue";
-            } else {
-                "green";
-            }
-        }
-        anchors.fill: parent
-
-        speed: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
-        shape: EllipseShape{fill:true}
-        enabled: false;
-        lifeSpan: 700; lifeSpanVariation: 100
-        emitRate: 1000
-        maximumEmitted: 100 //only fires 0.1s bursts (still 2x old number)
-        size: 28
-        endSize: 14
+    Text {
+        id: operationText
+        font.bold: true; font.pixelSize: parent.height * .7
+        color: "#343434"; smooth: true
+        anchors { left: parent.left; leftMargin: 6; verticalCenterOffset: -3; verticalCenter: parent.verticalCenter }
     }
-
-    states: [
-        State {
-            name: "AliveState"; when: spawned == true && dying == false
-            PropertyChanges { target: img; opacity: 1 }
-        },
-
-        State {
-            name: "DeathState"; when: dying == true
-            StateChangeScript { script: {particleSystem.paused = false; particles.pulse(100);} }
-            PropertyChanges { target: img; opacity: 0 }
-            StateChangeScript { script: block.destroy(1000); }
-        }
-    ]
 }

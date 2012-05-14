@@ -39,73 +39,45 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Particles 2.0
 
-Item {
-    id: block
-    property bool dying: false
-    property bool spawned: false
-    property int type: 0
-    property ParticleSystem particleSystem
+BorderImage {
+    id: button
 
-    Behavior on x {
-        enabled: spawned;
-        SpringAnimation{ spring: 2; damping: 0.2 }
+    property alias operation: buttonText.text
+    property string color: ""
+
+    Accessible.name: operation
+    Accessible.description: "This button does " + operation
+    Accessible.role: Accessible.Button
+
+    signal clicked
+
+    source: "images/button-" + color + ".png"; clip: true
+    border { left: 10; top: 10; right: 10; bottom: 10 }
+
+    Rectangle {
+        id: shade
+        anchors.fill: button; radius: 10; color: "black"; opacity: 0
     }
-    Behavior on y {
-        SpringAnimation{ spring: 2; damping: 0.2 }
+
+    Text {
+        id: buttonText
+        anchors.centerIn: parent; anchors.verticalCenterOffset: -1
+        font.pixelSize: parent.width > parent.height ? parent.height * .5 : parent.width * .5
+        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
     }
 
-    Image {
-        id: img
-        source: {
-            if(type == 0){
-                "pics/redStone.png";
-            } else if(type == 1) {
-                "pics/blueStone.png";
-            } else {
-                "pics/greenStone.png";
-            }
-        }
-        opacity: 0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+    MouseArea {
+        id: mouseArea
         anchors.fill: parent
-    }
-    Emitter {
-        id: particles
-        system: particleSystem
-        group: { 
-            if(type == 0){
-                "red";
-            } else if (type == 1) {
-                "blue";
-            } else {
-                "green";
-            }
+        onClicked: {
+            window.doOp(operation)
+            button.clicked()
         }
-        anchors.fill: parent
-
-        speed: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
-        shape: EllipseShape{fill:true}
-        enabled: false;
-        lifeSpan: 700; lifeSpanVariation: 100
-        emitRate: 1000
-        maximumEmitted: 100 //only fires 0.1s bursts (still 2x old number)
-        size: 28
-        endSize: 14
     }
 
-    states: [
-        State {
-            name: "AliveState"; when: spawned == true && dying == false
-            PropertyChanges { target: img; opacity: 1 }
-        },
-
-        State {
-            name: "DeathState"; when: dying == true
-            StateChangeScript { script: {particleSystem.paused = false; particles.pulse(100);} }
-            PropertyChanges { target: img; opacity: 0 }
-            StateChangeScript { script: block.destroy(1000); }
-        }
-    ]
+    states: State {
+        name: "pressed"; when: mouseArea.pressed == true
+        PropertyChanges { target: shade; opacity: .4 }
+    }
 }
