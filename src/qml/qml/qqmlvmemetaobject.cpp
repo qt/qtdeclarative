@@ -487,7 +487,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 : QV8GCCallback::Node(GcPrologueCallback), object(obj), compiledData(cdata),
   ctxt(QQmlData::get(obj, true)->outerContext), metaData(meta), data(0),
   aliasEndpoints(0), firstVarPropertyIndex(-1), varPropertiesInitialized(false),
-  v8methods(0), parent(0)
+  interceptors(0), v8methods(0), parent(0)
 {
     compiledData->addref();
 
@@ -540,14 +540,14 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
 int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 {
     int id = _id;
-    if(c == QMetaObject::WriteProperty) {
-        int flags = *reinterpret_cast<int*>(a[3]);
-        if (!(flags & QQmlPropertyPrivate::BypassInterceptor)
-            && !aInterceptors.isEmpty()
-            && aInterceptors.testBit(id)) {
-            QPair<int, QQmlPropertyValueInterceptor*> pair = interceptors.value(id);
-            int valueIndex = pair.first;
-            QQmlPropertyValueInterceptor *vi = pair.second;
+    if (c == QMetaObject::WriteProperty && interceptors &&
+       !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyPrivate::BypassInterceptor)) {
+
+        for (QQmlPropertyValueInterceptor *vi = interceptors; vi; vi = vi->m_next) {
+            if (vi->m_coreIndex != id)
+                continue;
+
+            int valueIndex = vi->m_valueTypeCoreIndex;
             int type = property(id).userType();
 
             if (type != QVariant::Invalid) {
@@ -1000,10 +1000,10 @@ void QQmlVMEMetaObject::list_clear(QQmlListProperty<QObject> *prop)
 
 void QQmlVMEMetaObject::registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor)
 {
-    if (aInterceptors.isEmpty())
-        aInterceptors.resize(propertyCount() + metaData->propertyCount);
-    aInterceptors.setBit(index);
-    interceptors.insert(index, qMakePair(valueIndex, interceptor));
+    interceptor->m_coreIndex = index;
+    interceptor->m_valueTypeCoreIndex = valueIndex;
+    interceptor->m_next = interceptors;
+    interceptors = interceptor;
 }
 
 int QQmlVMEMetaObject::vmeMethodLineNumber(int index)

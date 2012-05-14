@@ -198,8 +198,8 @@ private:
 
     void connectAlias(int aliasId);
     QBitArray aConnected;
-    QBitArray aInterceptors;
-    QHash<int, QPair<int, QQmlPropertyValueInterceptor*> > interceptors;
+
+    QQmlPropertyValueInterceptor *interceptors;
 
     v8::Persistent<v8::Function> *v8methods;
     v8::Handle<v8::Function> method(int);

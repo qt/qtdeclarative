@@ -66,6 +66,13 @@ public:
     virtual ~QQmlPropertyValueInterceptor();
     virtual void setTarget(const QQmlProperty &property) = 0;
     virtual void write(const QVariant &value) = 0;
+
+private:
+    friend class QQmlVMEMetaObject;
+
+    int m_coreIndex;
+    int m_valueTypeCoreIndex;
+    QQmlPropertyValueInterceptor *m_next;
 };
 
 #define QQmlPropertyValueInterceptor_iid "org.qt-project.Qt.QQmlPropertyValueInterceptor"
