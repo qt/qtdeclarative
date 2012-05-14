@@ -11,8 +11,6 @@ include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 
-CONFIG += parallel_test
-
 OTHER_FILES += data/test.qml data/test.js \
     data/timer.qml \
     data/exception.qml \
