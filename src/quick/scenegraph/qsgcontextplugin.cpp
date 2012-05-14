@@ -99,7 +99,9 @@ QSGAdaptionPluginData *contextFactory()
 
 #if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
         if (!device.isEmpty()) {
-            plugin->factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(device));
+            const int index = loader()->indexOf(device);
+            if (index != -1)
+                plugin->factory = qobject_cast<QSGContextFactoryInterface*>(loader()->instance(index));
             plugin->deviceName = device;
 #ifndef QT_NO_DEBUG
             if (!plugin->factory) {
