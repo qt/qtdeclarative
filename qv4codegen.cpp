@@ -70,6 +70,9 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
     virtual void visitRet(IR::Ret *s) { s->expr->accept(this); }
 
     virtual void visitTemp(IR::Temp *e) {
+        if (e->index < 0)
+            return;
+
         if (! _stmt->d->uses.contains(e->index))
             _stmt->d->uses.append(e->index);
     }
@@ -88,8 +91,10 @@ struct ComputeUseDef: IR::StmtVisitor, IR::ExprVisitor
 
     virtual void visitMove(IR::Move *s) {
         if (IR::Temp *t = s->target->asTemp()) {
-            if (! _stmt->d->defs.contains(t->index))
-                _stmt->d->defs.append(t->index);
+            if (t->index >= 0) {
+                if (! _stmt->d->defs.contains(t->index))
+                    _stmt->d->defs.append(t->index);
+            }
         } else {
             s->target->accept(this);
         }
