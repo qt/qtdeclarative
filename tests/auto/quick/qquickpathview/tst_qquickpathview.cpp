@@ -1231,10 +1231,15 @@ void tst_QQuickPathView::mouseDrag()
         QMouseEvent mv(QEvent::MouseMove, QPoint(30,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
         QGuiApplication::sendEvent(canvas, &mv);
     }
+    // first move beyond threshold does not trigger drag
+    QVERIFY(!pathview->isMoving());
+
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(90,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
         QGuiApplication::sendEvent(canvas, &mv);
     }
+    // next move beyond threshold does trigger drag
+    QVERIFY(pathview->isMoving());
 
     QVERIFY(pathview->currentIndex() != current);
 

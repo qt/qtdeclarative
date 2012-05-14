@@ -1345,6 +1345,7 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
     if (!interactive || !timer.isValid() || !model || !modelCount)
         return;
 
+    qint64 currentTimestamp = computeCurrentTime(event);
     qreal newPc;
     QPointF pathPoint = pointNear(event->localPos(), &newPc);
     if (!stealMouse) {
@@ -1352,10 +1353,7 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
         if (qAbs(delta.x()) > qApp->styleHints()->startDragDistance() || qAbs(delta.y()) > qApp->styleHints()->startDragDistance()) {
             stealMouse = true;
         }
-    }
-
-    qint64 currentTimestamp = computeCurrentTime(event);
-    if (stealMouse) {
+    } else {
         moveReason = QQuickPathViewPrivate::Mouse;
         qreal diff = (newPc - startPc)*modelCount*mappedRange;
         if (diff) {
