@@ -199,6 +199,23 @@ struct Value {
     }
 
     static Value string(Context *ctx, const QString &string);
+
+    static int toInteger(double number);
+    static int toInt32(double value);
+    int toUInt16(Context *ctx);
+    int toInt32(Context *ctx);
+    uint toUInt32(Context *ctx);
+    bool toBoolean(Context *ctx) const;
+    double toInteger(Context *ctx) const;
+    double toNumber(Context *ctx) const;
+    String *toString(Context *ctx) const;
+
+    inline bool isUndefined() const { return is(UNDEFINED_TYPE); }
+    inline bool isNull() const { return is(NULL_TYPE); }
+    inline bool isString() const { return is(STRING_TYPE); }
+    inline bool isBoolean() const { return is(BOOLEAN_TYPE); }
+    inline bool isNumber() const { return is(NUMBER_TYPE); }
+    inline bool isObject() const { return is(OBJECT_TYPE); }
 };
 
 extern "C" {
@@ -311,7 +328,8 @@ inline double __qmljs_to_integer(Context *ctx, const Value *value)
         return +0;
     else if (! number || isinf(number))
         return number;
-    return signbit(number) * floor(fabs(number));
+    const double v = floor(fabs(number));
+    return signbit(number) ? -v : v;
 }
 
 inline int __qmljs_to_int32(Context *ctx, const Value *value)

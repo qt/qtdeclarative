@@ -3,6 +3,7 @@
 #include "qv4codegen_p.h"
 #include "qv4isel_p.h"
 #include "qv4syntaxchecker_p.h"
+#include "qv4ecmaobjects_p.h"
 
 #include <QtCore>
 #include <private/qqmljsengine_p.h>
@@ -37,69 +38,9 @@ struct Print: FunctionObject
             __qmljs_to_string(ctx, &v, &ctx->arguments[i]);
             if (i)
                 std::cout << ' ';
-            std::cout << qPrintable(v.stringValue->text());
+            std::cout << qPrintable(v.stringValue->toQString());
         }
         std::cout << std::endl;
-    }
-};
-
-struct ObjectCtor: FunctionObject
-{
-    ObjectCtor(Context *scope): FunctionObject(scope) {}
-
-    virtual void construct(Context *ctx)
-    {
-        __qmljs_init_object(ctx, &ctx->thisObject, new Object());
-    }
-
-    virtual void call(Context *)
-    {
-        assert(!"not here");
-    }
-};
-
-struct StringCtor: FunctionObject
-{
-    StringCtor(Context *scope): FunctionObject(scope) {}
-
-    virtual void construct(Context *ctx)
-    {
-        Value arg = ctx->argument(0);
-        __qmljs_to_string(ctx, &arg, &arg);
-        __qmljs_init_object(ctx, &ctx->thisObject, new StringObject(arg));
-    }
-
-    virtual void call(Context *ctx)
-    {
-        const Value arg = ctx->argument(0);
-        if (arg.is(UNDEFINED_TYPE))
-            __qmljs_init_string(ctx, &ctx->result, String::get(ctx, QString()));
-        else
-            __qmljs_to_string(ctx, &ctx->result, &arg);
-    }
-};
-
-struct StringPrototype: Object
-{
-    StringPrototype(Context *ctx, FunctionObject *ctor)
-    {
-        setProperty(ctx, QLatin1String("constructor"), Value::object(ctx, ctor));
-        setProperty(ctx, QLatin1String("toString"), toString);
-    }
-
-    void setProperty(Context *ctx, const QString &name, const Value &value)
-    {
-        put(String::get(ctx, name), value);
-    }
-
-    void setProperty(Context *ctx, const QString &name, void (*code)(Context *))
-    {
-        setProperty(ctx, name, Value::object(ctx, new NativeFunction(ctx, code)));
-    }
-
-    static void toString(Context *ctx)
-    {
-        __qmljs_to_string(ctx, &ctx->result, &ctx->thisObject);
     }
 };
 
@@ -153,10 +94,10 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
         __qmljs_init_object(ctx, &ctx->activation, globalObject);
 
         globalObject->put(VM::String::get(ctx, QLatin1String("print")),
-                                         VM::Value::object(ctx, new builtins::Print(ctx)));
+                          VM::Value::object(ctx, new builtins::Print(ctx)));
 
         globalObject->put(VM::String::get(ctx, QLatin1String("Object")),
-                                         VM::Value::object(ctx, new builtins::ObjectCtor(ctx)));
+                          VM::Value::object(ctx, new builtins::ObjectCtor(ctx)));
 
         VM::FunctionObject *stringCtor = new builtins::StringCtor(ctx);
         stringCtor->put(prototype, VM::Value::object(ctx, new builtins::StringPrototype(ctx, stringCtor)));
@@ -165,7 +106,7 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {
                 globalObject->put(VM::String::get(ctx, *function->name),
-                                                 VM::Value::object(ctx, new VM::ScriptFunction(ctx, function)));
+                                  VM::Value::object(ctx, new VM::ScriptFunction(ctx, function)));
             }
         }
         codeByName.value(QLatin1String("%entry"))->code(ctx);

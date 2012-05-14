@@ -11,6 +11,16 @@ Object::~Object()
     delete members;
 }
 
+void Object::setProperty(Context *ctx, const QString &name, const Value &value)
+{
+    put(String::get(ctx, name), value);
+}
+
+void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context *))
+{
+    setProperty(ctx, name, Value::object(ctx, new NativeFunction(ctx, code)));
+}
+
 bool Object::get(String *name, Value *result)
 {
     if (Value *prop = getProperty(name)) {

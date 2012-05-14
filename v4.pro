@@ -13,7 +13,8 @@ SOURCES += main.cpp \
     qmljs_runtime.cpp \
     qmljs_objects.cpp \
     qv4isel.cpp \
-    qv4syntaxchecker.cpp
+    qv4syntaxchecker.cpp \
+    qv4ecmaobjects.cpp
 
 HEADERS += \
     qv4codegen_p.h \
@@ -23,7 +24,9 @@ HEADERS += \
     qv4isel_p.h \
     x86-codegen.h \
     amd64-codegen.h \
-    qv4syntaxchecker_p.h 
+    qv4syntaxchecker_p.h \
+    qv4ecmaobjects_p.h
+
 
 
 

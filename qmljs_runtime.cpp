@@ -14,6 +14,62 @@ Value Value::string(Context *ctx, const QString &s)
     return string(ctx, String::get(ctx, s));
 }
 
+int Value::toInt32(double number)
+{
+    if (! number || isnan(number) || isinf(number))
+        return +0;
+    return (int) trunc(number); // ###
+}
+
+int Value::toInteger(double number)
+{
+    if (isnan(number))
+        return +0;
+    else if (! number || isinf(number))
+        return number;
+    const double v = floor(fabs(number));
+    return signbit(number) ? -v : v;
+}
+
+int Value::toUInt16(Context *ctx)
+{
+    return __qmljs_to_uint16(ctx, this);
+}
+
+int Value::toInt32(Context *ctx)
+{
+    return __qmljs_to_int32(ctx, this);
+}
+
+uint Value::toUInt32(Context *ctx)
+{
+    return __qmljs_to_int32(ctx, this);
+}
+
+bool Value::toBoolean(Context *ctx) const
+{
+    return __qmljs_to_boolean(ctx, this);
+}
+
+double Value::toInteger(Context *ctx) const
+{
+    return __qmljs_to_integer(ctx, this);
+}
+
+double Value::toNumber(Context *ctx) const
+{
+    return __qmljs_to_number(ctx, this);
+}
+
+String *Value::toString(Context *ctx) const
+{
+    Value v;
+    __qmljs_to_string(ctx, &v, this);
+    assert(v.is(STRING_TYPE));
+    return v.stringValue;
+}
+
+
 extern "C" {
 
 void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
@@ -102,13 +158,13 @@ void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *rig
 
 int __qmljs_string_length(Context *, String *string)
 {
-    return string->text().length();
+    return string->toQString().length();
 }
 
 double __qmljs_string_to_number(Context *, String *string)
 {
     bool ok;
-    return string->text().toDouble(&ok); // ### TODO
+    return string->toQString().toDouble(&ok); // ### TODO
 }
 
 void __qmljs_string_from_number(Context *ctx, Value *result, double number)
@@ -119,19 +175,19 @@ void __qmljs_string_from_number(Context *ctx, Value *result, double number)
 
 bool __qmljs_string_compare(Context *, String *left, String *right)
 {
-    return left->text() < right->text();
+    return left->toQString() < right->toQString();
 }
 
 bool __qmljs_string_equal(Context *, String *left, String *right)
 {
     return left == right ||
             (left->hashValue() == right->hashValue() &&
-             left->text() == right->text());
+             left->toQString() == right->toQString());
 }
 
 String *__qmljs_string_concat(Context *ctx, String *first, String *second)
 {
-    return String::get(ctx, first->text() + second->text());
+    return String::get(ctx, first->toQString() + second->toQString());
 }
 
 bool __qmljs_is_function(Context *, const Value *value)

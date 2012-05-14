@@ -28,7 +28,7 @@ struct String {
     String(const QString &text)
         : _text(text), _hashValue(0) {}
 
-    inline const QString &text() const {
+    inline const QString &toQString() const {
         return _text;
     }
 
@@ -66,7 +66,7 @@ struct Property {
     inline bool hasName(String *n) const {
         if (name == n) {
             return true;
-        } else if (name->hashValue() == n->hashValue() && name->text() == n->text()) {
+        } else if (name->hashValue() == n->hashValue() && name->toQString() == n->toQString()) {
             return true;
         }
         return false;
@@ -209,6 +209,12 @@ struct Object {
     virtual bool deleteProperty(String *name, bool flag);
     virtual void defaultValue(Value *result, int typeHint);
     // ### TODO: defineOwnProperty(name, descriptor, boolean) -> boolean
+
+    //
+    // helpers
+    //
+    void setProperty(Context *ctx, const QString &name, const Value &value);
+    void setProperty(Context *ctx, const QString &name, void (*code)(Context *));
 };
 
 struct BooleanObject: Object {
