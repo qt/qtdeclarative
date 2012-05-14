@@ -5568,15 +5568,13 @@ void tst_qqmlecmascript::functionAssignment_afterBinding()
     QQmlComponent component(&engine, testFileUrl("functionAssignment.3.qml"));
 
     QString url = component.url().toString();
-    //QString w1 = url + ":16: Error: Cannot assign JavaScript function to int"; // for now, function assignment = binding assignment
-    QString w1 = QLatin1String("WARNING: function assignment is DEPRECATED and will be removed!  Wrap RHS in Qt.binding(): ") + url + QLatin1String(":16");
+    QString w1 = url + ":16: Error: Cannot assign JavaScript function to int";
     QTest::ignoreMessage(QtWarningMsg, w1.toLatin1().constData());
 
     QObject *o = component.create();
     QVERIFY(o != 0);
     QCOMPARE(o->property("t1"), QVariant::fromValue<int>(4)); // should have bound
-    //QCOMPARE(o->property("t2"), QVariant::fromValue<int>(2)); // should not have changed
-    QCOMPARE(o->property("t2"), QVariant::fromValue<int>(4)); // for now, function assignment = binding assignment
+    QCOMPARE(o->property("t2"), QVariant::fromValue<int>(2)); // should not have changed
 
     delete o;
 }

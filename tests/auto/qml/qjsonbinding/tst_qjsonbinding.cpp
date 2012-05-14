@@ -412,9 +412,6 @@ void tst_qjsonbinding::writeProperty_incompatibleType()
 
     QJSValue ret = eng.evaluate(QString::fromLatin1("obj.%0 = %1")
                                 .arg(property).arg(expression));
-    QEXPECT_FAIL("value=function", "See 'XXX TODO: uncomment the following lines' in qv8qobjectwrapper.cpp", Abort);
-    QEXPECT_FAIL("object=function", "See 'XXX TODO: uncomment the following lines' in qv8qobjectwrapper.cpp", Abort);
-    QEXPECT_FAIL("array=function", "See 'XXX TODO: uncomment the following lines' in qv8qobjectwrapper.cpp", Abort);
     QVERIFY(ret.isError());
     QVERIFY(ret.toString().contains("Cannot assign"));
 }

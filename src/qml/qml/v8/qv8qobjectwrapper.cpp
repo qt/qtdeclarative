@@ -589,31 +589,11 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     if (value->IsFunction()) {
         if (value->ToObject()->GetHiddenValue(engine->bindingFlagKey()).IsEmpty()) {
             if (!property->isVMEProperty()) {
-                // XXX TODO: uncomment the following lines
                 // assigning a JS function to a non-var-property is not allowed.
-                //QString error = QLatin1String("Cannot assign JavaScript function to ") +
-                //                QLatin1String(QMetaType::typeName(property->propType));
-                //v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-                //return;
-                // XXX TODO: remove the following transition behaviour
-                // Temporarily allow assignment of functions to non-var properties
-                // to mean binding assignment (as per old behaviour).
-                QQmlContextData *context = engine->callingContext();
-                v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
-
-                v8::Local<v8::StackTrace> trace =
-                    v8::StackTrace::CurrentStackTrace(1, (v8::StackTrace::StackTraceOptions)(v8::StackTrace::kLineNumber |
-                                                                                             v8::StackTrace::kScriptName));
-                v8::Local<v8::StackFrame> frame = trace->GetFrame(0);
-                int lineNumber = frame->GetLineNumber();
-                int columnNumber = frame->GetColumn();
-                QString url = engine->toString(frame->GetScriptName());
-
-                newBinding = new QQmlBinding(&function, object, context, url, lineNumber, columnNumber);
-                newBinding->setTarget(object, *property, context);
-                newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
-                                             QQmlBinding::RequiresThisObject);
-                qWarning("WARNING: function assignment is DEPRECATED and will be removed!  Wrap RHS in Qt.binding(): %s:%d", qPrintable(engine->toString(frame->GetScriptName())), frame->GetLineNumber());
+                QString error = QLatin1String("Cannot assign JavaScript function to ") +
+                                QLatin1String(QMetaType::typeName(property->propType));
+                v8::ThrowException(v8::Exception::Error(engine->toString(error)));
+                return;
             }
         } else {
             // binding assignment.
