@@ -19,7 +19,6 @@ public:
 
 protected:
     VM::String *identifier(const QString &s);
-    int tempOffset(IR::Temp *t);
     void loadTempAddress(int reg, IR::Temp *t);
     void callActivationProperty(IR::Call *call, IR::Temp *result);
     void callProperty(IR::Call *call, IR::Temp *result);

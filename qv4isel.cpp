@@ -163,14 +163,15 @@ String *InstructionSelection::identifier(const QString &s)
     return id;
 }
 
-int InstructionSelection::tempOffset(IR::Temp *t)
-{
-    return sizeof(Value) * t->index;
-}
-
 void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
 {
-    amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * t->index);
+    if (t->index < 0) {
+        const int arg = -t->index - 1;
+        amd64_mov_reg_membase(_codePtr, reg, AMD64_R14, offsetof(Context, arguments), 8);
+        amd64_lea_membase(_codePtr, reg, reg, sizeof(Value) * arg);
+    } else {
+        amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * t->index);
+    }
 }
 
 void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *result)

@@ -241,7 +241,10 @@ void Name::dump(QTextStream &out)
 
 void Temp::dump(QTextStream &out)
 {
-    out << '%' << index;
+    if (index < 0)
+        out << '#' << -(index + 1); // negative and 1-based.
+    else
+        out << '%' << index; // temp
 }
 
 void Closure::dump(QTextStream &out)

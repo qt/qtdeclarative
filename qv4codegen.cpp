@@ -553,9 +553,14 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
             expr.code = _block->CONST(IR::UndefinedType, 0);
 
         if (! _function->needsActivation()) {
-            const int index = tempForLocalVariable(ast->name);
+            int index = indexOfLocal(ast->name);
             if (index != -1) {
                 move(_block->TEMP(index), *expr);
+                return;
+            }
+            index = indexOfArgument(ast->name);
+            if (index != -1) {
+                move(_block->TEMP(-(index + 1)), *expr);
                 return;
             }
         } else {
@@ -985,9 +990,14 @@ bool Codegen::visit(FunctionExpression *ast)
 bool Codegen::visit(IdentifierExpression *ast)
 {
     if (! _function->needsActivation()) {
-        int index = tempForLocalVariable(ast->name);
+        int index = indexOfLocal(ast->name);
         if (index != -1) {
             _expr.code = _block->TEMP(index);
+            return false;
+        }
+        index = indexOfArgument(ast->name);
+        if (index != -1) {
+            _expr.code = _block->TEMP(-(index + 1));
             return false;
         }
     }
@@ -1344,7 +1354,7 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     function->hasDirectEval = functionInfo.hasDirectEval;
     function->maxNumberOfArguments = functionInfo.maxNumberOfArguments;
 
-    if (! functionInfo.hasDirectEval) {
+    if (! function->needsActivation()) {
         for (int i = 0; i < functionInfo.locals.size(); ++i) {
             unsigned t = entryBlock->newTemp();
             Q_ASSERT(t == unsigned(i));
@@ -1387,10 +1397,19 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     }
 }
 
-int Codegen::tempForLocalVariable(const QStringRef &string) const
+int Codegen::indexOfLocal(const QStringRef &string) const
 {
     for (int i = 0; i < _function->locals.size(); ++i) {
         if (*_function->locals.at(i) == string)
+            return i;
+    }
+    return -1;
+}
+
+int Codegen::indexOfArgument(const QStringRef &string) const
+{
+    for (int i = 0; i < _function->formals.size(); ++i) {
+        if (*_function->formals.at(i) == string)
             return i;
     }
     return -1;

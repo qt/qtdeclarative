@@ -236,8 +236,13 @@ struct FunctionObject: Object {
     Context *scope;
     String **formalParameterList;
     size_t formalParameterCount;
+    bool needsActivation;
 
-    FunctionObject(Context *scope): scope(scope), formalParameterList(0), formalParameterCount(0) {}
+    FunctionObject(Context *scope)
+        : scope(scope)
+        , formalParameterList(0)
+        , formalParameterCount(0)
+        , needsActivation(true) {}
     virtual FunctionObject *asFunctionObject() { return this; }
 
     virtual bool hasInstance(const Value &value) const;

@@ -76,7 +76,8 @@ protected:
 
     void linearize(IR::Function *function);
     void defineFunction(AST::FunctionExpression *ast, bool isDeclaration = false);
-    int tempForLocalVariable(const QStringRef &string) const;
+    int indexOfLocal(const QStringRef &string) const;
+    int indexOfArgument(const QStringRef &string) const;
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);

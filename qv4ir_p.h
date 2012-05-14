@@ -268,9 +268,9 @@ struct Name: Expr {
 };
 
 struct Temp: Expr {
-    unsigned index;
+    int index;
 
-    void init(Type type, unsigned index)
+    void init(Type type, int index)
     {
         this->type = type;
         this->index = index;

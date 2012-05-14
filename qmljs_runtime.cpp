@@ -396,13 +396,20 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
             Context *ctx = new Context;
             ctx->init();
-            __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
             ctx->parent = f->scope;
+            if (f->needsActivation)
+                __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+            else
+                __qmljs_init_null(ctx, &ctx->activation);
             ctx->thisObject = thisObject;
             ctx->formals = f->formalParameterList;
             ctx->formalCount = f->formalParameterCount;
             ctx->arguments = args;
             ctx->argumentCount = argc;
+            if (argc && f->needsActivation) {
+                ctx->arguments = new Value[argc];
+                std::copy(args, args + argc, ctx->arguments);
+            }
             f->call(ctx);
             if (result)
                 __qmljs_copy(result, &ctx->result);
@@ -416,22 +423,26 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
 
 void __qmljs_call_value(Context *context, Value *result, const Value *func, Value *args, int argc)
 {
+    Q_UNUSED(context);
+
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context *ctx = new Context;
             ctx->init();
             ctx->parent = f->scope;
-            __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+            if (f->needsActivation)
+                __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+            else
+                __qmljs_init_null(ctx, &ctx->activation);
             __qmljs_init_null(ctx, &ctx->thisObject);
             ctx->formals = f->formalParameterList;
             ctx->formalCount = f->formalParameterCount;
-            if (argc) {
+            ctx->arguments = args;
+            ctx->argumentCount = argc;
+            if (argc && f->needsActivation) {
                 ctx->arguments = new Value[argc];
                 std::copy(args, args + argc, ctx->arguments);
-            } else {
-                ctx->arguments = 0;
             }
-            ctx->argumentCount = argc;
             f->call(ctx);
             if (result)
                 __qmljs_copy(result, &ctx->result);
@@ -454,17 +465,25 @@ void __qmljs_construct_activation_property(Context *context, Value *result, Stri
 
 void __qmljs_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc)
 {
+    Q_UNUSED(context);
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context *ctx = new Context;
             ctx->init();
             ctx->parent = f->scope;
+            if (f->needsActivation)
+                __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+            else
+                __qmljs_init_null(ctx, &ctx->activation);
             __qmljs_init_null(ctx, &ctx->thisObject);
-            __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
             ctx->formals = f->formalParameterList;
             ctx->formalCount = f->formalParameterCount;
             ctx->arguments = args;
             ctx->argumentCount = argc;
+            if (argc && f->needsActivation) {
+                ctx->arguments = new Value[argc];
+                std::copy(args, args + argc, ctx->arguments);
+            }
             ctx->calledAsConstructor = true;
             f->construct(ctx);
             assert(ctx->thisObject.is(OBJECT_TYPE));
@@ -499,13 +518,19 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
             Context *ctx = new Context;
             ctx->init();
             ctx->parent = f->scope;
+            if (f->needsActivation)
+                __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+            else
+                __qmljs_init_null(ctx, &ctx->activation);
             ctx->thisObject = thisObject;
-            __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
             ctx->formals = f->formalParameterList;
             ctx->formalCount = f->formalParameterCount;
-            ctx->calledAsConstructor = true;
             ctx->arguments = args;
             ctx->argumentCount = argc;
+            if (argc && f->needsActivation) {
+                ctx->arguments = new Value[argc];
+                std::copy(args, args + argc, ctx->arguments);
+            }
             ctx->calledAsConstructor = true;
             f->construct(ctx);
             assert(ctx->thisObject.is(OBJECT_TYPE));
