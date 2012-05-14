@@ -47,7 +47,8 @@
 #include <private/qqmlglobal_p.h>
 
 /*!
-\class The QQmlFile class gives access to local and remote files.
+\class QQmlFile
+\brief The QQmlFile class gives access to local and remote files.
 
 Supports file://, qrc://, bundle:// uris and whatever QNetworkAccessManager supports.
 */
