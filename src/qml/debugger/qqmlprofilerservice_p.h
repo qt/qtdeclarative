@@ -212,16 +212,13 @@ struct QQmlBindingProfiler {
 };
 
 struct QQmlHandlingSignalProfiler {
-    QQmlHandlingSignalProfiler(QObject *object, int index, QQmlBoundSignalExpression *expression)
+    QQmlHandlingSignalProfiler(QQmlBoundSignalExpression *expression)
     {
         enabled = QQmlProfilerService::instance
                 ? QQmlProfilerService::instance->profilingEnabled() : false;
         if (enabled) {
             QQmlProfilerService *service = QQmlProfilerService::instance;
             service->startRange(QQmlProfilerService::HandlingSignal);
-            service->rangeData(QQmlProfilerService::HandlingSignal,
-                               QLatin1String(object->metaObject()->method(index).methodSignature()) + QLatin1String(": ")
-                               + expression->expression());
             service->rangeLocation(QQmlProfilerService::HandlingSignal,
                                    expression->sourceFile(), expression->lineNumber(),
                                    expression->columnNumber());

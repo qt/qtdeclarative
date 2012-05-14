@@ -289,7 +289,7 @@ void QQmlBoundSignal::subscriptionCallback(QQmlNotifierEndpoint *e, void **a)
     if (QQmlDebugService::isDebuggingEnabled())
         QV8DebugService::instance()->signalEmitted(QString::fromLatin1(s->m_scope->metaObject()->method(s->m_index).methodSignature()));
 
-    QQmlHandlingSignalProfiler prof(*(s->m_scope), s->m_index, s->m_expression);
+    QQmlHandlingSignalProfiler prof(s->m_expression);
 
     s->setIsEvaluating(true);
 
