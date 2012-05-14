@@ -241,10 +241,13 @@ void Codegen::operator()(AST::Program *node, IR::Module *module)
 {
     _module = module;
 
+    ScanFunctionBody globalCodeInfo;
+    globalCodeInfo(node);
+
     IR::Function *globalCode = _module->newFunction(QLatin1String("%entry"));
-    globalCode->hasDirectEval = true; // ### remove
-    globalCode->hasNestedFunctions = true; // ### remove
-    globalCode->redArea = 10; // ### remove
+    globalCode->hasDirectEval = globalCodeInfo.hasDirectEval;
+    globalCode->hasNestedFunctions = true; // ### FIXME: initialize it with globalCodeInfo.hasNestedFunctions;
+    globalCode->maxNumberOfArguments = globalCodeInfo.maxNumberOfArguments;
     _function = globalCode;
     _block = _function->newBasicBlock();
     _exitBlock = _function->newBasicBlock();
@@ -1339,7 +1342,7 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock();
     function->hasDirectEval = functionInfo.hasDirectEval;
-    function->redArea = functionInfo.maxNumberOfArguments;
+    function->maxNumberOfArguments = functionInfo.maxNumberOfArguments;
 
     if (! functionInfo.hasDirectEval) {
         for (int i = 0; i < functionInfo.locals.size(); ++i) {

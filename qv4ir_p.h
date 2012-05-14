@@ -587,7 +587,7 @@ struct Function {
     const QString *name;
     QVector<BasicBlock *> basicBlocks;
     int tempCount;
-    int redArea;
+    int maxNumberOfArguments;
     QSet<QString> strings;
     QList<const QString *> formals;
     QList<const QString *> locals;
@@ -601,7 +601,7 @@ struct Function {
         : module(module)
         , pool(&module->pool)
         , tempCount(0)
-        , redArea(0)
+        , maxNumberOfArguments(0)
         , code(0)
         , hasDirectEval(false)
         , hasNestedFunctions(false)

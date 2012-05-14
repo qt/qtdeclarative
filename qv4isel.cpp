@@ -101,7 +101,7 @@ void InstructionSelection::operator()(IR::Function *function)
     function->code = (void (*)(VM::Context *)) _code;
     _codePtr = _code;
 
-    int locals = (function->tempCount + function->redArea) * sizeof(Value);
+    int locals = (function->tempCount + function->maxNumberOfArguments) * sizeof(Value);
     locals = (locals + 15) & ~15;
 
     amd64_push_reg(_codePtr, AMD64_RBP);
