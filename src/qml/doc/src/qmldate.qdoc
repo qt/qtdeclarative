@@ -121,6 +121,16 @@
 
     If the date is invalid, an empty string will be returned.
 
+    Note: Using the locale-aware functions to perform date or time formatting can
+    result in incorrectly formatted times, due to an inconsistency in specification
+    between Qt and JS.  ECMA-262 specifies that historical dates should be intrepreted
+    by projecting the current rules for daylight-saving onto past years, while Qt uses
+    historical data (where available) to determine whether daylight-saving was in
+    effect for a given date.  Therefore, constructing a Date value in JS and converting
+    it to a string using the locale-aware functions can yield a result incorrect by one
+    hour, if DST is currently in effect, while it was not for the time specified, or
+    vice versa.
+
     \sa {QtQuick2::Locale}{Locale}
 */
 
