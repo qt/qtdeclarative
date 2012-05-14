@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Qml)
 
-class Q_QML_EXPORT QPauseAnimationJob : public QAbstractAnimationJob
+class Q_QML_PRIVATE_EXPORT QPauseAnimationJob : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QPauseAnimationJob)
 public:

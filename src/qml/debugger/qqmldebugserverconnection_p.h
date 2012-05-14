@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 
 class QQmlDebugServer;
-class Q_QML_EXPORT QQmlDebugServerConnection
+class Q_QML_PRIVATE_EXPORT QQmlDebugServerConnection
 {
 public:
     QQmlDebugServerConnection() {}

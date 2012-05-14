@@ -66,7 +66,6 @@ class QRectF;
 class QString;
 class QByteArray;
 
-// XXX - Bauhaus currently uses these methods which is why they're exported
 namespace QQmlStringConverters
 {
     Q_QML_PRIVATE_EXPORT QVariant variantFromString(const QString &);

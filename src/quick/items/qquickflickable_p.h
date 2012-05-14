@@ -43,6 +43,7 @@
 #define QQUICKFLICKABLE_P_H
 
 #include "qquickitem.h"
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_HEADER
 
@@ -50,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFlickablePrivate;
 class QQuickFlickableVisibleArea;
-class Q_QUICK_EXPORT QQuickFlickable : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
 {
     Q_OBJECT
 

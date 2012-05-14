@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
 
 class QQmlDebugServerPrivate;
-class Q_QML_EXPORT QQmlDebugServer : public QObject
+class Q_QML_PRIVATE_EXPORT QQmlDebugServer : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlDebugServer)

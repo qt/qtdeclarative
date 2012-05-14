@@ -70,7 +70,7 @@ class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldGlyphNode;
 
 // TODO: Rename from XInterface to AbstractX.
-class Q_QUICK_EXPORT QSGRectangleNode : public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QSGRectangleNode : public QSGGeometryNode
 {
 public:
     virtual void setRect(const QRectF &rect) = 0;
@@ -85,7 +85,7 @@ public:
 };
 
 
-class Q_QUICK_EXPORT QSGImageNode : public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QSGImageNode : public QSGGeometryNode
 {
 public:
     virtual void setTargetRect(const QRectF &rect) = 0;
@@ -101,7 +101,7 @@ public:
 };
 
 
-class Q_QUICK_EXPORT QSGGlyphNode : public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGGeometryNode
 {
 public:
     enum AntialiasingMode
@@ -134,7 +134,7 @@ protected:
     QQuickItem *m_ownerElement;
 };
 
-class Q_QUICK_EXPORT QSGDistanceFieldGlyphConsumer
+class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphConsumer
 {
 public:
     virtual ~QSGDistanceFieldGlyphConsumer() {}
@@ -142,7 +142,7 @@ public:
     virtual void invalidateGlyphs(const QVector<quint32> &glyphs) = 0;
 };
 
-class Q_QUICK_EXPORT QSGDistanceFieldGlyphCache
+class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCache
 {
 public:
     QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font);

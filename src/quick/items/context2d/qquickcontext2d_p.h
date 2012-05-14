@@ -72,7 +72,7 @@ class QQuickPixmap;
 class QSGTexture;
 
 
-class Q_QUICK_EXPORT QQuickContext2D : public QQuickCanvasContext
+class QQuickContext2D : public QQuickCanvasContext
 {
 public:
     enum TextBaseLineType { Alphabetic=0, Top, Middle, Bottom, Hanging};

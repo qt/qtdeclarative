@@ -57,7 +57,7 @@ class QQuickTransitionPrivate;
 class QQuickTransitionManager;
 class QQuickTransition;
 
-class Q_QUICK_EXPORT QQuickTransitionInstance
+class QQuickTransitionInstance
 {
 public:
     QQuickTransitionInstance(QQuickTransitionPrivate *transition, QAbstractAnimationJob *anim);
@@ -74,7 +74,7 @@ private:
     friend class QQuickTransition;
 };
 
-class Q_QUICK_EXPORT QQuickTransition : public QObject
+class Q_AUTOTEST_EXPORT QQuickTransition : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickTransition)

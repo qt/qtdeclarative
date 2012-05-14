@@ -42,12 +42,12 @@
 #ifndef QQUICKVISUALDATAMODEL_P_H
 #define QQUICKVISUALDATAMODEL_P_H
 
+#include <private/qtquickglobal_p.h>
 #include <private/qquicklistcompositor_p.h>
 #include <private/qquickvisualitemmodel_p.h>
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qstringlist.h>
-
 
 #include <private/qv8engine_p.h>
 #include <private/qqmlglobal_p.h>
@@ -67,7 +67,7 @@ class QQuickVisualDataModelAttached;
 class QQuickVisualDataModelPrivate;
 
 
-class Q_QUICK_EXPORT QQuickVisualDataModel : public QQuickVisualModel, public QQmlParserStatus
+class Q_QUICK_PRIVATE_EXPORT QQuickVisualDataModel : public QQuickVisualModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickVisualDataModel)

@@ -103,7 +103,7 @@ private:
     bool m_expressionFunctionRewritten:1;
 };
 
-class Q_QML_EXPORT QQmlAbstractBoundSignal
+class Q_QML_PRIVATE_EXPORT QQmlAbstractBoundSignal
 {
 public:
     QQmlAbstractBoundSignal();
@@ -128,8 +128,8 @@ private:
 };
 
 class QQmlBoundSignalParameters;
-class Q_QML_EXPORT QQmlBoundSignal : public QQmlAbstractBoundSignal,
-                                     public QQmlNotifierEndpoint
+class Q_QML_PRIVATE_EXPORT QQmlBoundSignal : public QQmlAbstractBoundSignal,
+                                             public QQmlNotifierEndpoint
 {
 public:
     QQmlBoundSignal(QObject *scope, const QMetaMethod &signal, QObject *owner, QQmlEngine *engine);

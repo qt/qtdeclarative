@@ -54,7 +54,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickScaleGrid : public QObject
+class QQuickScaleGrid : public QObject
 {
     Q_OBJECT
     Q_ENUMS(TileRule)
@@ -92,7 +92,7 @@ private:
     int _bottom;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickGridScaledImage
+class Q_AUTOTEST_EXPORT QQuickGridScaledImage
 {
 public:
     QQuickGridScaledImage();

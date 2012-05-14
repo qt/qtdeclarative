@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 class QQuickCanvasContext;
 
 class QQuickCanvasItemPrivate;
-class Q_QUICK_EXPORT QQuickCanvasItem : public QQuickItem
+class QQuickCanvasItem : public QQuickItem
 {
     Q_OBJECT
     Q_ENUMS(RenderTarget)

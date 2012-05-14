@@ -42,7 +42,7 @@
 #ifndef NODEUPDATER_P_H
 #define NODEUPDATER_P_H
 
-#include <QtQuick/qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
 
 QT_BEGIN_HEADER
@@ -57,7 +57,7 @@ class QSGGeometryNode;
 class QMatrix4x4;
 class QSGRenderNode;
 
-class Q_QUICK_EXPORT QSGNodeUpdater
+class Q_QUICK_PRIVATE_EXPORT QSGNodeUpdater
 {
 public:
     QSGNodeUpdater();

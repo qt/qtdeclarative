@@ -69,9 +69,9 @@ QT_BEGIN_NAMESPACE
 
 class QQmlExpression;
 class QString;
-class Q_QML_PRIVATE_EXPORT QQmlExpressionPrivate : public QObjectPrivate,
-                                                   public QQmlJavaScriptExpression,
-                                                   public QQmlAbstractExpression
+class QQmlExpressionPrivate : public QObjectPrivate,
+                              public QQmlJavaScriptExpression,
+                              public QQmlAbstractExpression
 {
     Q_DECLARE_PUBLIC(QQmlExpression)
 public:

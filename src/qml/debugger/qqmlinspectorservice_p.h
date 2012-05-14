@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlInspectorInterface;
 
-class Q_QML_EXPORT QQmlInspectorService : public QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlInspectorService : public QQmlDebugService
 {
     Q_OBJECT
 

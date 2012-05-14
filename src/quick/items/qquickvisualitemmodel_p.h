@@ -42,7 +42,7 @@
 #ifndef QQUICKVISUALITEMMODEL_P_H
 #define QQUICKVISUALITEMMODEL_P_H
 
-#include <QtQuick/qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
 #include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickChangeSet;
 
-class Q_QUICK_EXPORT QQuickVisualModel : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickVisualModel : public QObject
 {
     Q_OBJECT
 
@@ -92,7 +92,7 @@ private:
 
 class QQuickVisualItemModelAttached;
 class QQuickVisualItemModelPrivate;
-class Q_QUICK_EXPORT QQuickVisualItemModel : public QQuickVisualModel
+class Q_QUICK_PRIVATE_EXPORT QQuickVisualItemModel : public QQuickVisualModel
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickVisualItemModel)

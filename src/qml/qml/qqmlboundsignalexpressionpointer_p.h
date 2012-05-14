@@ -57,7 +57,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlBoundSignalExpression;
-class Q_QML_EXPORT QQmlBoundSignalExpressionPointer
+class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpressionPointer
 {
 public:
     inline QQmlBoundSignalExpressionPointer() : o(0) {}

@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include <QtQuick/qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
 #include <qqml.h>
 
 #include <QtCore/qobject.h>
@@ -92,7 +92,7 @@ private:
 };
 
 // used in QtLocation
-class Q_QUICK_EXPORT QQuickMouseEvent : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal x READ x)

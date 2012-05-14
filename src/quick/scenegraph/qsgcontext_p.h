@@ -48,6 +48,7 @@
 #include <QtGui/QImage>
 #include <QtGui/QSurfaceFormat>
 
+#include <private/qtquickglobal_p.h>
 #include <private/qrawfont_p.h>
 
 #include <QtQuick/qsgnode.h>
@@ -75,7 +76,7 @@ class QOpenGLFramebufferObject;
 
 class QQuickTextureFactory;
 
-class Q_QUICK_EXPORT QSGContext : public QObject
+class Q_QUICK_PRIVATE_EXPORT QSGContext : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSGContext)

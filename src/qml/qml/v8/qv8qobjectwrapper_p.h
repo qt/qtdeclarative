@@ -85,7 +85,7 @@ public:
     QIntrusiveListNode weakResource;
 };
 
-class Q_QML_EXPORT QV8QObjectWrapper
+class Q_QML_PRIVATE_EXPORT QV8QObjectWrapper
 {
 public:
     QV8QObjectWrapper();

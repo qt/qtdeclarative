@@ -53,14 +53,14 @@
 // We mean it.
 //
 
-#include <QtQml/qtqmlglobal.h>
+#include <private/qtqmlglobal_p.h>
 
 #include <QtCore/qstring.h>
 #include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_EXPORT QV8StringWrapper
+class Q_QML_PRIVATE_EXPORT QV8StringWrapper
 {
 public:
     QV8StringWrapper();

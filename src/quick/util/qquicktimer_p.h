@@ -53,7 +53,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQuickTimerPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickTimer : public QObject, public QQmlParserStatus
+class Q_AUTOTEST_EXPORT QQuickTimer : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickTimer)

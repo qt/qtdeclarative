@@ -44,7 +44,7 @@
 
 #include <QtCore/qfile.h>
 #include <QtCore/qstring.h>
-#include <QtQml/qtqmlglobal.h>
+#include <private/qtqmlglobal_p.h>
 
 #ifdef Q_CC_MSVC
 // nonstandard extension used : zero-sized array in struct/union.
@@ -53,11 +53,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_EXPORT QQmlBundle
+class Q_QML_PRIVATE_EXPORT QQmlBundle
 {
     Q_DISABLE_COPY(QQmlBundle)
 public:
-    struct Q_PACKED Q_QML_EXPORT Entry
+    struct Q_PACKED Q_QML_PRIVATE_EXPORT Entry
     {
         enum Kind {
             File = 123, // Normal file
@@ -71,12 +71,12 @@ public:
         quint64 size;
     };
 
-    struct Q_PACKED Q_QML_EXPORT RawEntry : public Entry
+    struct Q_PACKED Q_QML_PRIVATE_EXPORT RawEntry : public Entry
     {
         char data[]; // trailing data
     };
 
-    struct Q_PACKED Q_QML_EXPORT FileEntry : public Entry
+    struct Q_PACKED Q_QML_PRIVATE_EXPORT FileEntry : public Entry
     {
         quint64 link;
         int fileNameLength;

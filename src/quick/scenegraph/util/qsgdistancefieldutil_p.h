@@ -55,7 +55,7 @@ class QOpenGLShaderProgram;
 class QSGDistanceFieldGlyphCache;
 class QSGContext;
 
-class Q_QUICK_EXPORT QSGDistanceFieldGlyphCacheManager
+class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCacheManager
 {
 public:
     QSGDistanceFieldGlyphCacheManager();

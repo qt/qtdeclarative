@@ -42,7 +42,7 @@
 #ifndef QQMLCLEANUP_P_H
 #define QQMLCLEANUP_P_H
 
-#include <QtQml/qtqmlglobal.h>
+#include <private/qtqmlglobal_p.h>
 
 // 
 //  W A R N I N G
@@ -59,8 +59,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
 
-// Exported for QtQuick1
-class Q_QML_EXPORT QQmlCleanup
+class Q_QML_PRIVATE_EXPORT QQmlCleanup
 {
 public:
     QQmlCleanup();

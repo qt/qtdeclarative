@@ -225,7 +225,7 @@ public:
     static void addGcCallbackNode(Node *node);
 };
 
-class Q_QML_EXPORT QV8Engine
+class Q_QML_PRIVATE_EXPORT QV8Engine
 {
 public:
     static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }

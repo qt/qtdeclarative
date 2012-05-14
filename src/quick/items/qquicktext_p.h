@@ -246,7 +246,7 @@ private:
 };
 
 class QTextLine;
-class Q_QUICK_EXPORT QQuickTextLine : public QObject
+class QQuickTextLine : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int number READ number)

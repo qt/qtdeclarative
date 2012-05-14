@@ -43,14 +43,14 @@
 #define QQUICKWINDOWMANAGER_P_H
 
 #include <QtGui/QImage>
-#include <qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickCanvas;
 class QSGContext;
 
-class Q_QUICK_EXPORT QQuickWindowManager
+class Q_QUICK_PRIVATE_EXPORT QQuickWindowManager
 {
 public:
     virtual ~QQuickWindowManager();

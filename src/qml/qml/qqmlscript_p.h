@@ -136,7 +136,7 @@ public:
 class Object;
 class Property;
 
-class Q_QML_EXPORT Variant 
+class Q_QML_PRIVATE_EXPORT Variant
 {
 public:
     enum Type {
@@ -467,7 +467,7 @@ public:
 };
 
 class ParserJsASTData;
-class Q_QML_EXPORT Parser
+class Q_QML_PRIVATE_EXPORT Parser
 {
 public:
     Parser();

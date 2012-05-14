@@ -42,7 +42,7 @@
 #ifndef QABSTRACTANIMATIONJOB_P_H
 #define QABSTRACTANIMATIONJOB_P_H
 
-#include <QtQml/qtqmlglobal.h>
+#include <private/qtqmlglobal_p.h>
 #include <QtCore/QObject>
 #include <QtCore/private/qabstractanimation_p.h>
 #include "private/qpodvector_p.h"
@@ -55,7 +55,7 @@ QT_MODULE(Qml)
 
 class QAnimationGroupJob;
 class QAnimationJobChangeListener;
-class Q_QML_EXPORT QAbstractAnimationJob
+class Q_QML_PRIVATE_EXPORT QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QAbstractAnimationJob)
 public:
@@ -171,7 +171,7 @@ public:
     virtual void animationCurrentLoopChanged(QAbstractAnimationJob *) {}
 };
 
-class Q_QML_EXPORT QQmlAnimationTimer : public QAbstractAnimationTimer
+class Q_QML_PRIVATE_EXPORT QQmlAnimationTimer : public QAbstractAnimationTimer
 {
     Q_OBJECT
 private:

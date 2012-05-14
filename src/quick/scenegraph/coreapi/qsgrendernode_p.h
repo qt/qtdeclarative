@@ -54,12 +54,13 @@
 //
 
 #include "qsgnode.h"
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_EXPORT QSGRenderNode : public QSGNode
+class Q_QUICK_PRIVATE_EXPORT QSGRenderNode : public QSGNode
 {
 public:
     enum StateFlag

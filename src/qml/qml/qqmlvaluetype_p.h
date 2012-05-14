@@ -167,8 +167,6 @@ private:
     mutable QQmlValueType *valueTypes[QVariant::UserType - 1];
 };
 
-// These exports of these value types are obsolete since QtQuick1 no longer
-// needs them - they should become Q_AUTOTEST_EXPORT
 class Q_QML_PRIVATE_EXPORT QQmlPointFValueType : public QQmlValueTypeBase<QPointF>
 {
     Q_PROPERTY(qreal x READ x WRITE setX)

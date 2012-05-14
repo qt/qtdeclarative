@@ -48,7 +48,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlNotifierEndpoint;
-class Q_QML_EXPORT QQmlNotifier
+class Q_QML_PRIVATE_EXPORT QQmlNotifier
 {
 public:
     inline QQmlNotifier();

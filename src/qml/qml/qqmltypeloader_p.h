@@ -81,7 +81,6 @@ class QQmlTypeData;
 class QQmlDataLoader;
 class QQmlExtensionInterface;
 
-// Exported for QtQuick1
 class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCount
 {
 public:
@@ -205,8 +204,7 @@ private:
 };
 
 class QQmlDataLoaderThread;
-// Exported for QtQuick1
-class Q_QML_PRIVATE_EXPORT QQmlDataLoader 
+class QQmlDataLoader
 {
 public:
     QQmlDataLoader(QQmlEngine *);
@@ -254,8 +252,7 @@ public:
     QString fileName;
 };
 
-// Exported for QtQuick1
-class Q_QML_PRIVATE_EXPORT QQmlTypeLoader : public QQmlDataLoader
+class QQmlTypeLoader : public QQmlDataLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:

@@ -118,7 +118,7 @@ public:
     QQmlJavaScriptExpressionGuard *next;
 };
 
-class Q_QML_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
+class Q_QML_PRIVATE_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
 {
     Q_DECLARE_PUBLIC(QQmlEngine)
 public:

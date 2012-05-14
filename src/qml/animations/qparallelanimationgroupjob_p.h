@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Qml)
 
-class Q_QML_EXPORT QParallelAnimationGroupJob : public QAnimationGroupJob
+class Q_QML_PRIVATE_EXPORT QParallelAnimationGroupJob : public QAnimationGroupJob
 {
     Q_DISABLE_COPY(QParallelAnimationGroupJob)
 public:

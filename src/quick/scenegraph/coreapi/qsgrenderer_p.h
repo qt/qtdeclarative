@@ -66,7 +66,7 @@ class TextureReference;
 class QSGBindable;
 class QSGNodeUpdater;
 
-class Q_QUICK_EXPORT QSGRenderer : public QObject, public QOpenGLFunctions
+class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QObject, public QOpenGLFunctions
 {
     Q_OBJECT
 public:
@@ -186,7 +186,7 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderer::ClearMode)
 
-class Q_QUICK_EXPORT QSGBindable
+class Q_QUICK_PRIVATE_EXPORT QSGBindable
 {
 public:
     virtual ~QSGBindable() { }
@@ -224,7 +224,7 @@ QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState
 }
 
 
-class Q_QUICK_EXPORT QSGNodeDumper : public QSGNodeVisitor {
+class Q_QUICK_PRIVATE_EXPORT QSGNodeDumper : public QSGNodeVisitor {
 
 public:
     static void dump(QSGNode *n);

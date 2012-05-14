@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
 class QQmlCompiler;
 
 class QQmlCustomParserPropertyPrivate;
-class Q_QML_EXPORT QQmlCustomParserProperty
+class Q_QML_PRIVATE_EXPORT QQmlCustomParserProperty
 {
 public:
     QQmlCustomParserProperty();
@@ -92,7 +92,7 @@ private:
 };
 
 class QQmlCustomParserNodePrivate;
-class Q_QML_EXPORT QQmlCustomParserNode
+class Q_QML_PRIVATE_EXPORT QQmlCustomParserNode
 {
 public:
     QQmlCustomParserNode();
@@ -110,7 +110,7 @@ private:
     QQmlCustomParserNodePrivate *d;
 };
 
-class Q_QML_EXPORT QQmlCustomParser
+class Q_QML_PRIVATE_EXPORT QQmlCustomParser
 {
 public:
     enum Flag {

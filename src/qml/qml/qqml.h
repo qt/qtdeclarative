@@ -410,7 +410,6 @@ QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
     return qmlAttachedPropertiesObject(&idx, obj, &T::staticMetaObject, create);
 }
 
-// For the use of QtQuick1 module
 Q_QML_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor);
 
 inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor,

@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 class QOpenGLFramebufferObject;
 class QOpenGLPaintDevice;
 
-class Q_QUICK_EXPORT QSGPainterTexture : public QSGPlainTexture
+class Q_QUICK_PRIVATE_EXPORT QSGPainterTexture : public QSGPlainTexture
 {
 public:
     QSGPainterTexture();
@@ -70,7 +70,7 @@ private:
     QRect m_dirty_rect;
 };
 
-class Q_QUICK_EXPORT QSGPainterNode : public QSGGeometryNode
+class Q_QUICK_PRIVATE_EXPORT QSGPainterNode : public QSGGeometryNode
 {
 public:
     QSGPainterNode(QQuickPaintedItem *item);

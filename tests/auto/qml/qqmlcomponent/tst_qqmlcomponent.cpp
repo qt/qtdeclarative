@@ -294,19 +294,20 @@ void tst_qqmlcomponent::asyncHierarchy()
     QVERIFY(root != 0);
 
     // ensure that the parent-child relationship hierarchy is correct
+    // (use QQuickItem* for all children rather than types which are not publicly exported)
     QQuickItem *c1 = root->findChild<QQuickItem*>("c1", Qt::FindDirectChildrenOnly);
     QVERIFY(c1);
     QQuickItem *c1c1 = c1->findChild<QQuickItem*>("c1c1", Qt::FindDirectChildrenOnly);
     QVERIFY(c1c1);
     QQuickItem *c1c2 = c1->findChild<QQuickItem*>("c1c2", Qt::FindDirectChildrenOnly);
     QVERIFY(c1c2);
-    QQuickRectangle *c1c2c3 = c1c2->findChild<QQuickRectangle*>("c1c2c3", Qt::FindDirectChildrenOnly);
+    QQuickItem *c1c2c3 = c1c2->findChild<QQuickItem*>("c1c2c3", Qt::FindDirectChildrenOnly);
     QVERIFY(c1c2c3);
     QQuickItem *c2 = root->findChild<QQuickItem*>("c2", Qt::FindDirectChildrenOnly);
     QVERIFY(c2);
-    QQuickRectangle *c2c1 = c2->findChild<QQuickRectangle*>("c2c1", Qt::FindDirectChildrenOnly);
+    QQuickItem *c2c1 = c2->findChild<QQuickItem*>("c2c1", Qt::FindDirectChildrenOnly);
     QVERIFY(c2c1);
-    QQuickMouseArea *c2c1c1 = c2c1->findChild<QQuickMouseArea*>("c2c1c1", Qt::FindDirectChildrenOnly);
+    QQuickItem *c2c1c1 = c2c1->findChild<QQuickItem*>("c2c1c1", Qt::FindDirectChildrenOnly);
     QVERIFY(c2c1c1);
     QQuickItem *c2c1c2 = c2c1->findChild<QQuickItem*>("c2c1c2", Qt::FindDirectChildrenOnly);
     QVERIFY(c2c1c2);

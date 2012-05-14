@@ -43,7 +43,7 @@
 #define QQUICKMOUSEAREA_P_H
 
 #include "qquickitem.h"
-
+#include <private/qtquickglobal_p.h>
 #include <QtCore/qstringlist.h>
 
 QT_BEGIN_HEADER
@@ -121,7 +121,7 @@ private:
 class QQuickMouseAreaPrivate;
 class QQuickWheelEvent;
 // used in QtLocation
-class Q_QUICK_EXPORT QQuickMouseArea : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
 {
     Q_OBJECT
 

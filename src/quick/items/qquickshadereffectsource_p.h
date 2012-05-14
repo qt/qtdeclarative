@@ -76,7 +76,7 @@ private Q_SLOTS:
     void markDirtyTexture();
 };
 
-class Q_QUICK_EXPORT QQuickShaderEffectTexture : public QSGDynamicTexture
+class QQuickShaderEffectTexture : public QSGDynamicTexture
 {
     Q_OBJECT
 public:
@@ -153,7 +153,7 @@ private:
     uint m_grab : 1;
 };
 
-class Q_QUICK_EXPORT QQuickShaderEffectSource : public QQuickItem, public QQuickItemChangeListener
+class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectSource : public QQuickItem, public QQuickItemChangeListener
 {
     Q_OBJECT
     Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)

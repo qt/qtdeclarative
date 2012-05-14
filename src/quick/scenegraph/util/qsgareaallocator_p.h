@@ -42,7 +42,7 @@
 #ifndef AREAALLOCATOR_H
 #define AREAALLOCATOR_H
 
-#include <QtQuick/qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
 #include <QtCore/qsize.h>
 
 QT_BEGIN_NAMESPACE
@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 class QRect;
 class QPoint;
 struct QSGAreaAllocatorNode;
-class Q_QUICK_EXPORT QSGAreaAllocator
+class Q_QUICK_PRIVATE_EXPORT QSGAreaAllocator
 {
 public:
     QSGAreaAllocator(const QSize &size);

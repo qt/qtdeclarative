@@ -223,7 +223,7 @@ private:
     bool notFullyResolved() const { return flags & NotFullyResolved; }
 };
 
-class Q_QML_EXPORT QQmlPropertyCache : public QQmlRefCount, public QQmlCleanup
+class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount, public QQmlCleanup
 {
 public:
     QQmlPropertyCache(QQmlEngine *);

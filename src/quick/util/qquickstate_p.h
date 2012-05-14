@@ -56,7 +56,7 @@ class QQuickActionEvent;
 class QQmlAbstractBinding;
 class QQmlBinding;
 class QQmlExpression;
-class Q_QUICK_PRIVATE_EXPORT QQuickAction
+class QQuickAction
 {
 public:
     QQuickAction();
@@ -115,7 +115,7 @@ public:
 class QQuickStateGroup;
 class QQuickState;
 class QQuickStateOperationPrivate;
-class Q_QUICK_EXPORT QQuickStateOperation : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickStateOperation : public QObject
 {
     Q_OBJECT
 public:
@@ -140,7 +140,7 @@ typedef QQuickStateOperation::ActionList QQuickStateActions;
 
 class QQuickTransition;
 class QQuickStatePrivate;
-class Q_QUICK_EXPORT QQuickState : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickState : public QObject
 {
     Q_OBJECT
 

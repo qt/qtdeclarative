@@ -42,7 +42,7 @@
 #ifndef QQMLACCESSORS_P_H
 #define QQMLACCESSORS_P_H
 
-#include <QtQml/qtqmlglobal.h>
+#include <private/qtqmlglobal_p.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qhash.h>
 #include <QtCore/QReadWriteLock>
@@ -133,7 +133,7 @@ namespace QQmlAccessorProperties {
     };
 
     Properties properties(const QMetaObject *);
-    void Q_QML_EXPORT registerProperties(const QMetaObject *, int, Property *);
+    void Q_QML_PRIVATE_EXPORT registerProperties(const QMetaObject *, int, Property *);
 };
 
 QQmlAccessorProperties::Property *

@@ -113,7 +113,7 @@ public:
 class QQmlVME;
 class QQmlComponentAttached;
 class QQmlGuardedContextData;
-class Q_QML_EXPORT QQmlContextData
+class Q_QML_PRIVATE_EXPORT QQmlContextData
 {
 public:
     QQmlContextData();

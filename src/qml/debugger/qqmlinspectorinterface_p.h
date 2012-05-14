@@ -61,7 +61,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 
-class Q_QML_EXPORT QQmlInspectorInterface
+class Q_QML_PRIVATE_EXPORT QQmlInspectorInterface
 {
 public:
     QQmlInspectorInterface() {}

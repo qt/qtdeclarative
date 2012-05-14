@@ -167,7 +167,7 @@ protected:
 };
 
 class QQuickScriptActionPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickScriptAction : public QQuickAbstractAnimation
+class QQuickScriptAction : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickScriptAction)
@@ -193,7 +193,7 @@ protected:
 };
 
 class QQuickPropertyActionPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAction : public QQuickAbstractAnimation
+class QQuickPropertyAction : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAction)

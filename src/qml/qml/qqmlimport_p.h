@@ -71,8 +71,7 @@ class QQmlImportsPrivate;
 class QQmlImportDatabase;
 class QQmlTypeLoader;
 
-// Exported for QtQuick1
-class Q_QML_EXPORT QQmlImports
+class Q_QML_PRIVATE_EXPORT QQmlImports
 {
 public:
     QQmlImports(QQmlTypeLoader *);

@@ -52,7 +52,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPen : public QObject
+class Q_AUTOTEST_EXPORT QQuickPen : public QObject
 {
     Q_OBJECT
 
@@ -136,7 +136,7 @@ private:
 };
 
 class QQuickRectanglePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
+class Q_AUTOTEST_EXPORT QQuickRectangle : public QQuickItem
 {
     Q_OBJECT
 

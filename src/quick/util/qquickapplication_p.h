@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
 
 class QQuickApplicationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickApplication : public QObject
+class Q_AUTOTEST_EXPORT QQuickApplication : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)

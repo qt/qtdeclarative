@@ -46,7 +46,7 @@
 #include <QtCore/qstring.h>
 #include <QtGui/qpixmap.h>
 #include <QtCore/qurl.h>
-#include <QtQuick/qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
 #include <QtQuick/qquickimageprovider.h>
 
 #include <private/qintrusivelist_p.h>
@@ -77,7 +77,7 @@ private:
     QImage im;
 };
 
-class Q_QUICK_EXPORT QQuickPixmap
+class Q_QUICK_PRIVATE_EXPORT QQuickPixmap
 {
     Q_DECLARE_TR_FUNCTIONS(QQuickPixmap)
 public:

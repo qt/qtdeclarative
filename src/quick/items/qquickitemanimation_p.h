@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QQuickParentAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickParentAnimation : public QQuickAnimationGroup
+class Q_AUTOTEST_EXPORT QQuickParentAnimation : public QQuickAnimationGroup
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentAnimation)
@@ -86,7 +86,7 @@ protected:
 };
 
 class QQuickAnchorAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnchorAnimation : public QQuickAbstractAnimation
+class Q_AUTOTEST_EXPORT QQuickAnchorAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnchorAnimation)
@@ -120,7 +120,7 @@ protected:
 class QQuickItem;
 class QQuickPath;
 class QQuickPathAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPathAnimation : public QQuickAbstractAnimation
+class Q_AUTOTEST_EXPORT QQuickPathAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPathAnimation)

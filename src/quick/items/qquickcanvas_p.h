@@ -93,7 +93,7 @@ class QTouchEvent;
 class QQuickCanvasRenderLoop;
 class QQuickCanvasIncubationController;
 
-class Q_QUICK_EXPORT QQuickCanvasPrivate : public QWindowPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickCanvasPrivate : public QWindowPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickCanvas)

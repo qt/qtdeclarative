@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 class QSGGeometry;
 class QRectF;
 
-class Q_QUICK_EXPORT QQuickShaderEffectMesh : public QObject
+class QQuickShaderEffectMesh : public QObject
 {
     Q_OBJECT
 public:

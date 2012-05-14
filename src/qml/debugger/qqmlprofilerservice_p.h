@@ -91,7 +91,7 @@ class QUrl;
 class QQmlEngine;
 
 
-class Q_QML_EXPORT QQmlProfilerService : public QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlDebugService
 {
 public:
     enum Message {

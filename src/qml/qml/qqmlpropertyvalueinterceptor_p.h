@@ -53,13 +53,13 @@
 // We mean it.
 //
 
-#include <QtQml/qtqmlglobal.h>
+#include <private/qtqmlglobal_p.h>
 #include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlProperty;
-class Q_QML_EXPORT QQmlPropertyValueInterceptor
+class Q_QML_PRIVATE_EXPORT QQmlPropertyValueInterceptor
 {
 public:
     QQmlPropertyValueInterceptor();

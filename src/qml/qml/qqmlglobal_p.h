@@ -89,7 +89,7 @@ QT_BEGIN_NAMESPACE
     QMetaObject::connect(sender, signalIdx, receiver, methodIdx, Qt::DirectConnection); \
 }
 
-bool Q_QML_EXPORT QQml_isSignalConnected(QObject*, int, int);
+bool Q_QML_PRIVATE_EXPORT QQml_isSignalConnected(QObject*, int, int);
 
 #define IS_SIGNAL_CONNECTED(Sender, Signal) \
 do { \

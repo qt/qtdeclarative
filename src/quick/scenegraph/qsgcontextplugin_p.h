@@ -42,7 +42,7 @@
 #ifndef QSGCONTEXTPLUGIN_H
 #define QSGCONTEXTPLUGIN_H
 
-#include <QtQuick/qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
 #include <QtQuick/qquickimageprovider.h>
 #include <QtCore/qplugin.h>
 #include <QtCore/qfactoryinterface.h>
@@ -55,7 +55,7 @@ class QSGContext;
 
 class QQuickWindowManager;
 
-struct Q_QUICK_EXPORT QSGContextFactoryInterface : public QFactoryInterface
+struct Q_QUICK_PRIVATE_EXPORT QSGContextFactoryInterface : public QFactoryInterface
 {
     virtual QSGContext *create(const QString &key) const = 0;
 
@@ -67,7 +67,7 @@ struct Q_QUICK_EXPORT QSGContextFactoryInterface : public QFactoryInterface
         "org.qt-project.Qt.QSGContextFactoryInterface"
 Q_DECLARE_INTERFACE(QSGContextFactoryInterface, QSGContextFactoryInterface_iid)
 
-class Q_QUICK_EXPORT QSGContextPlugin : public QObject, public QSGContextFactoryInterface
+class Q_QUICK_PRIVATE_EXPORT QSGContextPlugin : public QObject, public QSGContextFactoryInterface
 {
     Q_OBJECT
     Q_INTERFACES(QSGContextFactoryInterface:QFactoryInterface)

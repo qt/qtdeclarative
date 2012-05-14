@@ -67,7 +67,7 @@ public:
     uint filterMode : 2;
 };
 
-class Q_QUICK_EXPORT QSGPlainTexture : public QSGTexture
+class Q_QUICK_PRIVATE_EXPORT QSGPlainTexture : public QSGTexture
 {
     Q_OBJECT
 public:

@@ -229,7 +229,7 @@ private:
     QQuickShaderEffectSource *m_effectSource;
 };
 
-class Q_QUICK_EXPORT QQuickItemPrivate : public QObjectPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickItemPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickItem)
 

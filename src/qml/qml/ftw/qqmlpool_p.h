@@ -53,14 +53,13 @@
 // We mean it.
 //
 
-#include <QtQml/qtqmlglobal.h>
+#include <private/qtqmlglobal_p.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qurl.h>
 
 QT_BEGIN_NAMESPACE
 
-// Exported for QtQuick1
-class Q_QML_EXPORT QQmlPool
+class Q_QML_PRIVATE_EXPORT QQmlPool
 {
 public:
     // The class has a destructor that needs to be called

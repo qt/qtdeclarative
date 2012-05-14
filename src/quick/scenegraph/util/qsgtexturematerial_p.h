@@ -43,12 +43,13 @@
 #define TEXTUREMATERIAL_P_H
 
 #include "qsgtexturematerial.h"
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_EXPORT QSGOpaqueTextureMaterialShader : public QSGMaterialShader
+class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialShader : public QSGMaterialShader
 {
 public:
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
