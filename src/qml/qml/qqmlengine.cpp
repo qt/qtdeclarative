@@ -1770,7 +1770,7 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersi
     if (overloadError) {
         if (hasCopied) raw->release();
 
-        error.setDescription(QLatin1String("Type ") + type->qmlTypeName() + QLatin1String(" ") + QString::number(type->majorVersion()) + QLatin1String(".") + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
+        error.setDescription(QLatin1String("Type ") + type->qmlTypeName() + QLatin1Char(' ') + QString::number(type->majorVersion()) + QLatin1Char('.') + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
         return 0;
     }
 

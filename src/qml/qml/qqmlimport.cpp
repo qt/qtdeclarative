@@ -339,10 +339,10 @@ bool QQmlImports::resolveType(const QString& type,
         if (d->resolveType(type,vmaj,vmin,type_return,url_return, errors)) {
             if (qmlImportTrace()) {
 #define RESOLVE_TYPE_DEBUG qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) \
-                                              << ")" << "::resolveType: " << type << " => "
+                                              << ')' << "::resolveType: " << type << " => "
 
                 if (type_return && *type_return && url_return && !url_return->isEmpty())
-                    RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << " " << *url_return;
+                    RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << ' ' << *url_return;
                 if (type_return && *type_return)
                     RESOLVE_TYPE_DEBUG << (*type_return)->typeName();
                 if (url_return && !url_return->isEmpty())
@@ -1053,8 +1053,8 @@ bool QQmlImports::addImport(QQmlImportDatabase *importDb,
     Q_ASSERT(errors);
 
     if (qmlImportTrace())
-        qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) << ")" << "::addImport: "
-                           << uri << " " << vmaj << '.' << vmin << " "
+        qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) << ')' << "::addImport: "
+                           << uri << ' ' << vmaj << '.' << vmin << ' '
                            << (importType==QQmlScript::Import::Library? "Library" : "File")
                            << " as " << prefix;
 

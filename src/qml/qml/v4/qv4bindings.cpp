@@ -386,7 +386,7 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
             Q_ASSERT(vt);
 
             name = QLatin1String(binding->target->metaObject()->property(binding->property & 0xFFFF).name());
-            name.append(QLatin1String("."));
+            name.append(QLatin1Char('.'));
             name.append(QLatin1String(vt->metaObject()->property(binding->property >> 24).name()));
         } else {
             name = QLatin1String(binding->target->metaObject()->property(binding->property).name());
@@ -598,7 +598,7 @@ static void testBindingResult(const QString &binding, int line, int column,
         iserror = true;
 
     if (iserror) {
-        qWarning().nospace() << "QV4: Optimization error @" << context->url.toString().toUtf8().constData() << ":" << line << ":" << column;
+        qWarning().nospace() << "QV4: Optimization error @" << context->url.toString().toUtf8().constData() << ':' << line << ':' << column;
 
         qWarning().nospace() << "    Binding:  " << binding;
         qWarning().nospace() << "    QtScript: " << qtscriptResult.constData();
@@ -615,7 +615,7 @@ static void testBindingException(const QString &binding, int line, int column,
 
     if (!expression.hasError()) {
         QByteArray qtscriptResult = testResultToString(value, isUndefined);
-        qWarning().nospace() << "QV4: Optimization error @" << context->url.toString().toUtf8().constData() << ":" << line << ":" << column;
+        qWarning().nospace() << "QV4: Optimization error @" << context->url.toString().toUtf8().constData() << ':' << line << ':' << column;
         qWarning().nospace() << "    Binding:  " << binding;
         qWarning().nospace() << "    QtScript: " << qtscriptResult.constData();
         qWarning().nospace() << "    V4:       exception";

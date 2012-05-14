@@ -768,7 +768,7 @@ void IRDump::basicblock(QQmlJS::IR::BasicBlock *b)
         if (ii != (b->statements.count() - 1))
             qWarning();
     }
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << '}';
 
     dec();
 }
@@ -790,7 +790,7 @@ void IRDump::function(QQmlJS::IR::Function *f)
     for (int ii = 0; ii < f->basicBlocks.count(); ++ii) {
         basicblock(f->basicBlocks.at(ii));
     }
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << '}';
 
     dec();
 }
@@ -802,25 +802,25 @@ const char *IRDump::indent()
 
 void IRDump::visitConst(QQmlJS::IR::Const *e)
 {
-    qWarning().nospace() << indent() << "Const:Expr { type: " << typeName(e->type) << ", value: " << e->value << "}";
+    qWarning().nospace() << indent() << "Const:Expr { type: " << typeName(e->type) << ", value: " << e->value << '}';
 }
 
 void IRDump::visitString(QQmlJS::IR::String *e)
 {
-    qWarning().nospace() << indent() << "String:Expr { type: " << typeName(e->type) << ", value: " << e->value << "}";
+    qWarning().nospace() << indent() << "String:Expr { type: " << typeName(e->type) << ", value: " << e->value << '}';
 }
 
 static void namedumprecur(QQmlJS::IR::Name *e, const char *indent) 
 {
     if (e->base) namedumprecur(e->base, indent);
-    qWarning().nospace() << indent << "    { type: " << typeName(e->type) << ", symbol: " << symbolname(e->symbol) << ", storage: " << storagename(e->storage) << ", id: " << e->id << "}";
+    qWarning().nospace() << indent << "    { type: " << typeName(e->type) << ", symbol: " << symbolname(e->symbol) << ", storage: " << storagename(e->storage) << ", id: " << e->id << '}';
 }
 
 void IRDump::visitName(QQmlJS::IR::Name *e)
 {
     qWarning().nospace() << indent() << "Name:Expr {";
     namedumprecur(e, indent());
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << '}';
 }
 
 void IRDump::visitTemp(QQmlJS::IR::Temp *e)
@@ -835,7 +835,7 @@ void IRDump::visitUnop(QQmlJS::IR::Unop *e)
     qWarning().nospace() << indent() << "    expr: {";
     expression(e->expr);
     qWarning().nospace() << indent() << "    }";
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << '}';
 }
 
 void IRDump::visitBinop(QQmlJS::IR::Binop *e)
@@ -852,7 +852,7 @@ void IRDump::visitBinop(QQmlJS::IR::Binop *e)
     expression(e->right);
     dec();
     qWarning().nospace() << indent() << "    }";
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << '}';
 }
 
 void IRDump::visitCall(QQmlJS::IR::Call *e)
@@ -865,7 +865,7 @@ void IRDump::visitExp(QQmlJS::IR::Exp *s)
 {
     qWarning().nospace() << indent() << "Exp:Stmt {";
     expression(s->expr);
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << '}';
 }
 
 void IRDump::visitMove(QQmlJS::IR::Move *s)
@@ -882,7 +882,7 @@ void IRDump::visitMove(QQmlJS::IR::Move *s)
     expression(s->source);
     dec();
     qWarning().nospace() << indent() << "    }";
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << '}';
 }
 
 void IRDump::visitJump(QQmlJS::IR::Jump *s)
@@ -898,9 +898,9 @@ void IRDump::visitCJump(QQmlJS::IR::CJump *s)
     expression(s->cond);
     dec();
     qWarning().nospace() << indent() << "    }";
-    qWarning().nospace() << indent() << "    iftrue: BasicBlock(" << s->iftrue << ")";
-    qWarning().nospace() << indent() << "    iffalse: BasicBlock(" << s->iffalse << ")";
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << "    iftrue: BasicBlock(" << s->iftrue << ')';
+    qWarning().nospace() << indent() << "    iffalse: BasicBlock(" << s->iffalse << ')';
+    qWarning().nospace() << indent() << '}';
 }
 
 void IRDump::visitRet(QQmlJS::IR::Ret *s)
@@ -908,7 +908,7 @@ void IRDump::visitRet(QQmlJS::IR::Ret *s)
     qWarning().nospace() << indent() << "Ret:Stmt {";
     qWarning().nospace() << indent() << "    type: " << typeName(s->type);
     expression(s->expr);
-    qWarning().nospace() << indent() << "}";
+    qWarning().nospace() << indent() << '}';
 }
 #endif
 

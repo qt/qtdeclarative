@@ -1163,7 +1163,7 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
     }
 
     if (xhrDump()) {
-        qWarning().nospace() << "XMLHttpRequest: " << qPrintable(m_method) << " " << qPrintable(url.toString());
+        qWarning().nospace() << "XMLHttpRequest: " << qPrintable(m_method) << ' ' << qPrintable(url.toString());
         if (!m_data.isEmpty()) {
             qWarning().nospace() << "                " 
                                  << qPrintable(QString::fromUtf8(m_data));
@@ -1292,7 +1292,7 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
 
     if (xhrDump()) {
         qWarning().nospace() << "XMLHttpRequest: ERROR " << qPrintable(m_url.toString());
-        qWarning().nospace() << "    " << error << " " << errorToString(error) << " " << m_statusText;
+        qWarning().nospace() << "    " << error << ' ' << errorToString(error) << ' ' << m_statusText;
     }
 
     if (error == QNetworkReply::ContentAccessDenied ||

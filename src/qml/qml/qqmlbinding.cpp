@@ -279,7 +279,7 @@ QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlBinding *This = static_cast<QQmlBinding *>(e);
 
-    return QLatin1String("\"") + QString::fromUtf8(This->m_expression) + QLatin1String("\"");
+    return QLatin1Char('"') + QString::fromUtf8(This->m_expression) + QLatin1Char('"');
 }
 
 void QQmlBinding::expressionChanged(QQmlJavaScriptExpression *e)

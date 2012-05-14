@@ -605,7 +605,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
                     if (!found && qmlVerboseCompiler())
                         qWarning() << "*** unresolved enum:" 
-                                   << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                                   << (*baseName->id + QLatin1Char('.') + ast->name.toString());
                 } else if(const QMetaObject *attachedMeta = baseName->declarativeType->attachedPropertiesType()) {
                     QQmlPropertyCache *cache = m_engine->cache(attachedMeta);
                     QQmlPropertyData *data = cache->property(name);
@@ -616,7 +616,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final attached property:"
-                                       << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                                       << (*baseName->id + QLatin1Char('.') + ast->name.toString());
                         return false; // We don't know enough about this property
                     }
 
@@ -643,7 +643,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     }
                     if (!found && qmlVerboseCompiler())
                         qWarning() << "*** unresolved enum:"
-                                   << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                                   << (*baseName->id + QLatin1Char('.') + ast->name.toString());
                 } else {
                     QQmlPropertyCache *cache = m_engine->cache(baseName->meta);
                     if (!cache) return false;
@@ -655,7 +655,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if (!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final attached property:"
-                                       << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                                       << (*baseName->id + QLatin1Char('.') + ast->name.toString());
                         return false; // We don't know enough about this property
                     }
 
@@ -699,7 +699,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                         if (!data->isFinal()) {
                             if (qmlVerboseCompiler())
                                 qWarning() << "*** non-final property access:"
-                                           << (*baseName->id + QLatin1String(".") + ast->name.toString());
+                                           << (*baseName->id + QLatin1Char('.') + ast->name.toString());
                             return false; // We don't know enough about this property
                         }
 

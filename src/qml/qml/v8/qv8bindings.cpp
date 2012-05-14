@@ -174,7 +174,7 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
 QString QV8Bindings::Binding::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     Binding *This = static_cast<Binding *>(e);
-    return This->parent->urlString() + QLatin1String(":") +
+    return This->parent->urlString() + QLatin1Char(':') +
            QString::number(This->instruction->line);
 }
 

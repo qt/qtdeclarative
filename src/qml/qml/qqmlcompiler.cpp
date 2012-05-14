@@ -2895,7 +2895,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                     propertyType = QMetaType::QObjectStar;
                 } else {
                     readonly = true;
-                    customTypeName = QByteArray("QQmlListProperty<") + customTypeName + QByteArray(">");
+                    customTypeName = QByteArrayLiteral("QQmlListProperty<") + customTypeName + '>';
                     propertyType = qMetaTypeId<QQmlListProperty<QObject> >();
                 }
 
@@ -2920,7 +2920,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                                 readonly?QFastMetaBuilder::None:QFastMetaBuilder::Writable,
                                 effectivePropertyIndex);
 
-            p->changedNameRef = builder.newString(p->name.utf8length() + strlen("Changed"));
+            p->changedNameRef = builder.newString(p->name.utf8length() + Changed_string.size());
             builder.setSignal(effectivePropertyIndex, p->changedNameRef, paramIndex);
             paramIndex++;
 
@@ -2945,7 +2945,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                                         p->isReadOnly?QFastMetaBuilder::None:QFastMetaBuilder::Writable,
                                         effectivePropertyIndex);
 
-                    p->changedNameRef = builder.newString(p->name.utf8length() + strlen("Changed"));
+                    p->changedNameRef = builder.newString(p->name.utf8length() + Changed_string.size());
                     builder.setSignal(effectivePropertyIndex, p->changedNameRef, paramIndex);
                     paramIndex++;
 
@@ -2966,7 +2966,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                     }
                     // Even if we aren't resolving the alias, we need a fake signal so that the 
                     // metaobject remains consistent across the resolve and non-resolve alias runs
-                    p->changedNameRef = builder.newString(p->name.utf8length() + strlen("Changed"));
+                    p->changedNameRef = builder.newString(p->name.utf8length() + Changed_string.size());
                     builder.setSignal(effectivePropertyIndex, p->changedNameRef, paramIndex);
                     paramIndex++;
                     effectivePropertyIndex++;
@@ -2979,7 +2979,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     // Reserve default property
     QFastMetaBuilder::StringRef defPropRef;
     if (defaultProperty) {
-        defPropRef = builder.newString(strlen("DefaultProperty"));
+        defPropRef = builder.newString(int(sizeof("DefaultProperty")) - 1);
         builder.setClassInfo(0, defPropRef, defaultProperty->nameRef);
     }
 
@@ -3036,7 +3036,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                 QString funcScript;
                 int namesSize = 0;
                 if (paramCount) namesSize += s->parameterNamesLength() + (paramCount - 1 /* commas */);
-                funcScript.reserve(strlen("(function ") + s->name.length() + 1 /* lparen */ +
+                funcScript.reserve(int(sizeof("(function ")) - 1  + s->name.length() + 1 /* lparen */ +
                         namesSize + 1 /* rparen */ + s->body.length() + 1 /* rparen */);
                 funcScript = QLatin1String("(function ") + s->name.toString() + QLatin1Char('(');
                 for (int jj = 0; jj < paramCount; ++jj) {
@@ -3647,9 +3647,9 @@ void QQmlCompiler::dumpStats()
                 output.append("            ");
             }
 
-            output.append("(");
+            output.append('(');
             output.append(QByteArray::number(stat.optimizedBindings.at(ii).start.line));
-            output.append(":");
+            output.append(':');
             output.append(QByteArray::number(stat.optimizedBindings.at(ii).start.column));
             output.append(") ");
         }
@@ -3662,13 +3662,13 @@ void QQmlCompiler::dumpStats()
         QByteArray output;
         for (int ii = 0; ii < stat.sharedBindings.count(); ++ii) {
             if (0 == (ii % 10)) {
-                if (ii) output.append("\n");
+                if (ii) output.append('\n');
                 output.append("            ");
             }
 
-            output.append("(");
+            output.append('(');
             output.append(QByteArray::number(stat.sharedBindings.at(ii).start.line));
-            output.append(":");
+            output.append(':');
             output.append(QByteArray::number(stat.sharedBindings.at(ii).start.column));
             output.append(") ");
         }
@@ -3681,13 +3681,13 @@ void QQmlCompiler::dumpStats()
         QByteArray output;
         for (int ii = 0; ii < stat.scriptBindings.count(); ++ii) {
             if (0 == (ii % 10)) {
-                if (ii) output.append("\n");
+                if (ii) output.append('\n');
                 output.append("            ");
             }
 
-            output.append("(");
+            output.append('(');
             output.append(QByteArray::number(stat.scriptBindings.at(ii).start.line));
-            output.append(":");
+            output.append(':');
             output.append(QByteArray::number(stat.scriptBindings.at(ii).start.column));
             output.append(") ");
         }

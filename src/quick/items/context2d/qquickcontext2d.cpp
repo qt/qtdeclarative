@@ -194,7 +194,7 @@ QFont qt_font_from_string(const QString& fontString) {
     QFont font;
      // ### this is simplified and incomplete
     // ### TODO:get code from Qt webkit
-     QStringList tokens = fontString.split(QLatin1String(" "));
+     const QStringList tokens = fontString.split(QLatin1Char(' '));
      foreach (const QString &token, tokens) {
          if (token == QLatin1String("italic"))
              font.setItalic(true);

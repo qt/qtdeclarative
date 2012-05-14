@@ -461,7 +461,7 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLe
                                                 int lineNumber)
 {
     if (sourceLength == -1)
-        sourceLength = strlen(source);
+        sourceLength = int(strlen(source));
 
     v8::Local<v8::String> v8source = v8::String::New(source, sourceLength);
     v8::Local<v8::String> v8fileName = m_stringWrapper.toString(fileName);

@@ -1499,7 +1499,7 @@ const QQmlDirParser *QQmlTypeLoader::qmlDirParser(const QString &filePath,
                 if (QQmlBundle::isBundleHeader(data.constData(), data.length())) {
                     QString id = bundleIdForQmldir(filePath, uriHint);
 
-                    QString bundleUrl = QLatin1String("bundle://") + id + QLatin1String("/");
+                    QString bundleUrl = QLatin1String("bundle://") + id + QLatin1Char('/');
                     qmldirParser->adjustedUrl = bundleUrl;
 
                     QUrl url(bundleUrl + QLatin1String("qmldir"));

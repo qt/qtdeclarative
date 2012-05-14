@@ -104,7 +104,7 @@ QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
 QString QQmlBoundSignalExpression::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlBoundSignalExpression *This = static_cast<QQmlBoundSignalExpression *>(e);
-    return QLatin1String("\"") + This->m_expression + QLatin1String("\"");
+    return QLatin1Char('"') + This->m_expression + QLatin1Char('"');
 }
 
 void QQmlBoundSignalExpression::expressionChanged(QQmlJavaScriptExpression *)

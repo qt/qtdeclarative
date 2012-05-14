@@ -1714,7 +1714,7 @@ bool QQmlProperty::connectNotifySignal(QObject *dest, const char *slot) const
 
     QMetaProperty prop = d->object->metaObject()->property(d->core.coreIndex);
     if (prop.hasNotifySignal()) {
-        QByteArray signal(QByteArray("2") + prop.notifySignal().methodSignature());
+        QByteArray signal('2' + prop.notifySignal().methodSignature());
         return QObject::connect(d->object, signal.constData(), dest, slot);
     } else  {
         return false;

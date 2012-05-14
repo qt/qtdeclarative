@@ -469,7 +469,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             QReadLocker lock(&d->pluginsLock);
             QHash<QString, QQmlDebugService *>::Iterator iter = d->plugins.find(name);
             if (iter == d->plugins.end()) {
-                qWarning() << "QML Debugger: Message received for missing plugin" << name << ".";
+                qWarning() << "QML Debugger: Message received for missing plugin" << name << '.';
             } else {
                 (*iter)->messageReceived(message);
 

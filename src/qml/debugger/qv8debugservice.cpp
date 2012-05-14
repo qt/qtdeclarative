@@ -173,7 +173,7 @@ void QV8DebugService::signalEmitted(const QString &signal)
 
     //Parse just the name and remove the class info
     //Normalize to Lower case.
-    QString signalName = signal.left(signal.indexOf(QLatin1String("("))).toLower();
+    QString signalName = signal.left(signal.indexOf(QLatin1Char('('))).toLower();
 
     foreach (const QString &signal, d->breakOnSignals) {
         if (signal == signalName) {

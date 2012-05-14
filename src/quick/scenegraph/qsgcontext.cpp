@@ -310,7 +310,7 @@ QSGDistanceFieldGlyphCache *QSGContext::distanceFieldGlyphCache(const QRawFont &
                 if (font.style() != QFont::StyleNormal)
                     keyName += QByteArray(" I");
                 if (font.weight() != QFont::Normal)
-                    keyName += " " + QByteArray::number(font.weight());
+                    keyName += ' ' + QByteArray::number(font.weight());
                 keyName += QByteArray(" DF");
                 QPlatformSharedGraphicsCache *sharedGraphicsCache =
                         platformIntegration->createPlatformSharedGraphicsCache(keyName);

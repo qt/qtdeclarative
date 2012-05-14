@@ -1136,17 +1136,17 @@ QDebug operator <<(QDebug debug, const QQuickListCompositor::Range &range)
 {
     (debug.nospace()
             << "Range("
-            << range.list) << " "
-            << range.index << " "
-            << range.count << " "
-            << (range.isUnresolved() ? "U" : "0")
-            << (range.append() ? "A" : "0")
-            << (range.prepend() ? "P" : "0");
+            << range.list) << ' '
+            << range.index << ' '
+            << range.count << ' '
+            << (range.isUnresolved() ? 'U' : '0')
+            << (range.append() ? 'A' : '0')
+            << (range.prepend() ? 'P' : '0');
     for (int i = QQuickListCompositor::MaximumGroupCount - 1; i >= 2; --i)
-        debug << (range.inGroup(i) ? "1" : "0");
+        debug << (range.inGroup(i) ? '1' : '0');
     return (debug
-            << (range.inGroup(QQuickListCompositor::Default) ? "D" : "0")
-            << (range.inGroup(QQuickListCompositor::Cache) ? "C" : "0"));
+            << (range.inGroup(QQuickListCompositor::Default) ? 'D' : '0')
+            << (range.inGroup(QQuickListCompositor::Cache) ? 'C' : '0'));
 }
 
 static void qt_print_indexes(QDebug &debug, int count, const int *indexes)
@@ -1159,21 +1159,21 @@ QDebug operator <<(QDebug debug, const QQuickListCompositor::iterator &it)
 {
     (debug.nospace() << "iterator(" << it.group).space() << "offset:" << it.offset;
     qt_print_indexes(debug, it.groupCount, it.index);
-    return ((debug << **it).nospace() << ")").space();
+    return ((debug << **it).nospace() << ')').space();
 }
 
 static QDebug qt_print_change(QDebug debug, const char *name, const QQuickListCompositor::Change &change)
 {
-    debug.nospace() << name << "(" << change.moveId << " " << change.count << " ";
+    debug.nospace() << name << '(' << change.moveId << ' ' << change.count << ' ';
     for (int i = QQuickListCompositor::MaximumGroupCount - 1; i >= 2; --i)
-        debug << (change.inGroup(i) ? "1" : "0");
-    debug << (change.inGroup(QQuickListCompositor::Default) ? "D" : "0")
-            << (change.inGroup(QQuickListCompositor::Cache) ? "C" : "0");
+        debug << (change.inGroup(i) ? '1' : '0');
+    debug << (change.inGroup(QQuickListCompositor::Default) ? 'D' : '0')
+            << (change.inGroup(QQuickListCompositor::Cache) ? 'C' : '0');
     int i = QQuickListCompositor::MaximumGroupCount - 1;
     for (; i >= 0 && !change.inGroup(i); --i) {}
     for (; i >= 0; --i)
-        debug << " " << change.index[i];
-    return (debug << ")").maybeSpace();
+        debug << ' ' << change.index[i];
+    return (debug << ')').maybeSpace();
 }
 
 QDebug operator <<(QDebug debug, const QQuickListCompositor::Change &change)
@@ -1199,16 +1199,16 @@ QDebug operator <<(QDebug debug, const QQuickListCompositor &list)
     debug.nospace() << "QQuickListCompositor(";
     qt_print_indexes(debug, list.m_groupCount, list.m_end.index);
     for (QQuickListCompositor::Range *range = list.m_ranges.next; range != &list.m_ranges; range = range->next) {
-        (debug << "\n").space();
+        (debug << '\n').space();
         qt_print_indexes(debug, list.m_groupCount, indexes);
-        debug << " " << *range;
+        debug << ' ' << *range;
 
         for (int i = 0; i < list.m_groupCount; ++i) {
             if (range->inGroup(i))
                 indexes[i] += range->count;
         }
     }
-    return (debug << ")").maybeSpace();
+    return (debug << ')').maybeSpace();
 }
 
 QT_END_NAMESPACE

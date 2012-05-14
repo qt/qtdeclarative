@@ -457,22 +457,22 @@ QDebug operator <<(QDebug debug, const QQuickChangeSet &set)
     foreach (const QQuickChangeSet::Remove &remove, set.removes()) debug << remove;
     foreach (const QQuickChangeSet::Insert &insert, set.inserts()) debug << insert;
     foreach (const QQuickChangeSet::Change &change, set.changes()) debug << change;
-    return debug.nospace() << ")";
+    return debug.nospace() << ')';
 }
 
 QDebug operator <<(QDebug debug, const QQuickChangeSet::Remove &remove)
 {
-    return (debug.nospace() << "Remove(" << remove.index << "," << remove.count << "," << remove.moveId << ")").space();
+    return (debug.nospace() << "Remove(" << remove.index << ',' << remove.count << ',' << remove.moveId << ')').space();
 }
 
 QDebug operator <<(QDebug debug, const QQuickChangeSet::Insert &insert)
 {
-    return (debug.nospace() << "Insert(" << insert.index << "," << insert.count << "," << insert.moveId << ")").space();
+    return (debug.nospace() << "Insert(" << insert.index << ',' << insert.count << ',' << insert.moveId << ')').space();
 }
 
 QDebug operator <<(QDebug debug, const QQuickChangeSet::Change &change)
 {
-    return (debug.nospace() << "Change(" << change.index << "," << change.count << ")").space();
+    return (debug.nospace() << "Change(" << change.index << ',' << change.count << ')').space();
 }
 
 QT_END_NAMESPACE

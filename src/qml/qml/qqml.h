@@ -95,7 +95,7 @@ int qmlRegisterType()
     QByteArray name(T::staticMetaObject.className());
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterType type = {
         0, 
@@ -131,7 +131,7 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
     QByteArray name(T::staticMetaObject.className());
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterType type = {
         0,
@@ -165,7 +165,7 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     QByteArray name(T::staticMetaObject.className());
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterType type = {
         0, 
@@ -199,7 +199,7 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     QByteArray name(T::staticMetaObject.className());
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterType type = {
         1,
@@ -233,7 +233,7 @@ int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
     QByteArray name(T::staticMetaObject.className());
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterType type = {
         1,
@@ -268,7 +268,7 @@ int qmlRegisterExtendedType()
     QByteArray name(T::staticMetaObject.className());
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterType type = {
         0, 
@@ -303,7 +303,7 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
     QByteArray name(T::staticMetaObject.className());
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlAttachedPropertiesFunc attached = QQmlPrivate::attachedPropertiesFunc<E>();
     const QMetaObject * attachedMetaObject = QQmlPrivate::attachedPropertiesMetaObject<E>(); 
@@ -344,7 +344,7 @@ int qmlRegisterInterface(const char *typeName)
     QByteArray name(typeName);
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterInterface qmlInterface = {
         0,
@@ -365,7 +365,7 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
     QByteArray name(T::staticMetaObject.className());
 
     QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + ">");
+    QByteArray listName("QQmlListProperty<" + name + '>');
 
     QQmlPrivate::RegisterType type = {
         0, 

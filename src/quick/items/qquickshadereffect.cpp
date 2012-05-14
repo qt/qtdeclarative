@@ -243,8 +243,7 @@ void QQuickShaderEffectCommon::connectPropertySignals(QQuickItem *item, Key::Sha
             QMetaProperty mp = item->metaObject()->property(pi);
             if (!mp.hasNotifySignal())
                 qWarning("QQuickShaderEffect: property '%s' does not have notification method!", d.name.constData());
-            QByteArray signalName("2");
-            signalName.append(mp.notifySignal().methodSignature());
+            const QByteArray signalName = '2' + mp.notifySignal().methodSignature();
             QSignalMapper *mapper = signalMappers[shaderType].at(i);
             QObject::connect(item, signalName, mapper, SLOT(map()));
             QObject::connect(mapper, SIGNAL(mapped(int)), item, SLOT(propertyChanged(int)));

@@ -555,7 +555,7 @@ void QQmlExpressionPrivate::expressionChanged()
 QString QQmlExpressionPrivate::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     QQmlExpressionPrivate *This = static_cast<QQmlExpressionPrivate *>(e);
-    return QLatin1String("\"") + This->expression + QLatin1String("\"");
+    return QLatin1Char('"') + This->expression + QLatin1Char('"');
 }
 
 QT_END_NAMESPACE

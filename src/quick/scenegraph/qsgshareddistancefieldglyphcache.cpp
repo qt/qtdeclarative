@@ -401,7 +401,7 @@ void QSGSharedDistanceFieldGlyphCache::saveTexture(GLuint textureId, int width, 
     for (int i=0; i<width*height; ++i)
         dest[i] = qRgba(0xff, 0xff, 0xff, data[i]);
 
-    QByteArray fileName = m_cacheId + " " + QByteArray::number(textureId);
+    QByteArray fileName = m_cacheId + ' ' + QByteArray::number(textureId);
     fileName = fileName.replace('/', '_').replace(' ', '_') + ".png";
     image.save(QString::fromLocal8Bit(fileName));
 

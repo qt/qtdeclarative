@@ -142,7 +142,7 @@ QQmlAccessorProperties::Properties::property(const char *name)
     if (count == 0)
         return 0;
 
-    unsigned int length = strlen(name);
+    const unsigned int length = (unsigned int)strlen(name);
 
     Q_ASSERT(length);
 

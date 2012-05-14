@@ -763,7 +763,7 @@ void QV4CompilerPrivate::visitBinop(IR::Binop *e)
                                  << "(`" << IR::binaryOperator(e->left->type)
                                  << "' and `"
                                  << IR::binaryOperator(e->right->type)
-                                 << "'";
+                                 << '\'';
         discard();
         return;
     }

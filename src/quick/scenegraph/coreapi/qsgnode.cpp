@@ -1193,7 +1193,7 @@ QDebug operator<<(QDebug d, const QSGGeometryNode *n)
         d << "effect=" << n->material() << "type=" << n->material()->type();
 
 
-    d << ")";
+    d << ')';
 #ifdef QML_RUNTIME_TESTING
     d << n->description;
 #endif
@@ -1214,7 +1214,7 @@ QDebug operator<<(QDebug d, const QSGClipNode *n)
 
     d << "is rect?" << (n->isRectangular() ? "yes" : "no");
 
-    d << ")";
+    d << ')';
 #ifdef QML_RUNTIME_TESTING
     d << n->description;
 #endif
@@ -1241,7 +1241,7 @@ QDebug operator<<(QDebug d, const QSGTransformNode *n)
     d << n->description;
 #endif
     d << "dirty=" << hex << (int) n->dirtyState() << dec << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
-    d << ")";
+    d << ')';
     return d;
 }
 
@@ -1260,7 +1260,7 @@ QDebug operator<<(QDebug d, const QSGOpacityNode *n)
     d << n->description;
 #endif
     d << "dirty=" << hex << (int) n->dirtyState() << dec;
-    d << ")";
+    d << ')';
     return d;
 }
 
@@ -1276,7 +1276,7 @@ QDebug operator<<(QDebug d, const QSGRootNode *n)
 #ifdef QML_RUNTIME_TESTING
     d << n->description;
 #endif
-    d << ")";
+    d << ')';
     return d;
 }
 
@@ -1312,7 +1312,7 @@ QDebug operator<<(QDebug d, const QSGNode *n)
 #ifdef QML_RUNTIME_TESTING
         d << n->description;
 #endif
-        d << ")";
+        d << ')';
         break;
     }
     return d;
