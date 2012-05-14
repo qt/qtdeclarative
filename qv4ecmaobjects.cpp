@@ -374,7 +374,7 @@ NumberPrototype::NumberPrototype(Context *ctx, FunctionObject *ctor)
     setProperty(ctx, QLatin1String("toString"), method_toString);
     setProperty(ctx, QLatin1String("toLocalString"), method_toLocaleString);
     setProperty(ctx, QLatin1String("valueOf"), method_valueOf);
-    setProperty(ctx, QLatin1String("toToFixed"), method_toFixed);
+    setProperty(ctx, QLatin1String("toFixed"), method_toFixed);
     setProperty(ctx, QLatin1String("toExponential"), method_toExponential);
     setProperty(ctx, QLatin1String("toPrecision"), method_toPrecision);
 }
