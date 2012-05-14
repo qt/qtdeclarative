@@ -8,6 +8,8 @@ namespace VM {
 
 struct ObjectCtor: FunctionObject
 {
+    static Value create(ExecutionEngine *engine);
+
     ObjectCtor(Context *scope);
 
     virtual void construct(Context *ctx);
@@ -21,6 +23,8 @@ struct ObjectPrototype: Object
 
 struct StringCtor: FunctionObject
 {
+    static Value create(ExecutionEngine *engine);
+
     StringCtor(Context *scope);
 
     virtual void construct(Context *ctx);
@@ -58,6 +62,8 @@ protected:
 
 struct NumberCtor: FunctionObject
 {
+    static Value create(ExecutionEngine *engine);
+
     NumberCtor(Context *scope);
 
     virtual void construct(Context *ctx);

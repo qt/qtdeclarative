@@ -9,6 +9,14 @@ using namespace QQmlJS::VM;
 //
 // Object
 //
+Value ObjectCtor::create(ExecutionEngine *engine)
+{
+    Context *ctx = engine->rootContext;
+    ObjectCtor *ctor = new ObjectCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, new ObjectPrototype(ctx, ctor)));
+    return Value::object(ctx, ctor);
+}
+
 ObjectCtor::ObjectCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -24,7 +32,6 @@ void ObjectCtor::call(Context *)
     assert(!"not here");
 }
 
-
 ObjectPrototype::ObjectPrototype(Context *ctx, FunctionObject *ctor)
 {
     setProperty(ctx, QLatin1String("constructor"), Value::object(ctx, ctor));
@@ -33,6 +40,14 @@ ObjectPrototype::ObjectPrototype(Context *ctx, FunctionObject *ctor)
 //
 // String
 //
+Value StringCtor::create(ExecutionEngine *engine)
+{
+    Context *ctx = engine->rootContext;
+    StringCtor *ctor = new StringCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, new StringPrototype(ctx, ctor)));
+    return Value::object(ctx, ctor);
+}
+
 StringCtor::StringCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -97,7 +112,7 @@ void StringPrototype::method_toString(Context *ctx)
 
 void StringPrototype::method_valueOf(Context *ctx)
 {
-    ctx->thisObject.objectValue->defaultValue(&ctx->result, STRING_HINT);
+    ctx->thisObject.objectValue->defaultValue(ctx, &ctx->result, STRING_HINT);
 }
 
 void StringPrototype::method_charAt(Context *ctx)
@@ -338,6 +353,14 @@ void StringPrototype::method_fromCharCode(Context *ctx)
 //
 // Number object
 //
+Value NumberCtor::create(ExecutionEngine *engine)
+{
+    Context *ctx = engine->rootContext;
+    NumberCtor *ctor = new NumberCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, new NumberPrototype(ctx, ctor)));
+    return Value::object(ctx, ctor);
+}
+
 NumberCtor::NumberCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -396,7 +419,7 @@ void NumberPrototype::method_toString(Context *ctx)
 //                                       .arg(radix));
         if (radix != 10) {
             Value internalValue;
-            self.objectValue->defaultValue(&internalValue, NUMBER_HINT);
+            self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
 
             QString str;
             double num = internalValue.toNumber(ctx);
@@ -438,7 +461,7 @@ void NumberPrototype::method_toString(Context *ctx)
     }
 
     Value internalValue;
-    self.objectValue->defaultValue(&internalValue, NUMBER_HINT);
+    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
 
     String *str = internalValue.toString(ctx);
     ctx->result = Value::string(ctx, str);
@@ -453,7 +476,7 @@ void NumberPrototype::method_toLocaleString(Context *ctx)
 //            context, QLatin1String("Number.prototype.toLocaleString"));
 //    }
     Value internalValue;
-    self.objectValue->defaultValue(&internalValue, STRING_HINT);
+    self.objectValue->defaultValue(ctx, &internalValue, STRING_HINT);
     String *str = internalValue.toString(ctx);
     ctx->result = Value::string(ctx, str);
 }
@@ -467,7 +490,7 @@ void NumberPrototype::method_valueOf(Context *ctx)
 //            context, QLatin1String("Number.prototype.toLocaleString"));
 //    }
     Value internalValue;
-    self.objectValue->defaultValue(&internalValue, NUMBER_HINT);
+    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
     ctx->result = internalValue;
 }
 
@@ -488,7 +511,7 @@ void NumberPrototype::method_toFixed(Context *ctx)
         fdigits = 0;
 
     Value internalValue;
-    self.objectValue->defaultValue(&internalValue, NUMBER_HINT);
+    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
 
     double v = internalValue.toNumber(ctx);
     QString str;
@@ -515,7 +538,7 @@ void NumberPrototype::method_toExponential(Context *ctx)
         fdigits = ctx->argument(0).toInteger(ctx);
 
     Value internalValue;
-    self.objectValue->defaultValue(&internalValue, NUMBER_HINT);
+    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
 
     double v = internalValue.toNumber(ctx);
     QString z = QString::number(v, 'e', int (fdigits));
@@ -536,7 +559,7 @@ void NumberPrototype::method_toPrecision(Context *ctx)
         fdigits = ctx->argument(0).toInteger(ctx);
 
     Value internalValue;
-    self.objectValue->defaultValue(&internalValue, NUMBER_HINT);
+    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
 
     double v = internalValue.toNumber(ctx);
     ctx->result = Value::string(ctx, QString::number(v, 'g', int (fdigits)));

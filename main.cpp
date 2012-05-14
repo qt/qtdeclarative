@@ -47,7 +47,7 @@ struct Print: FunctionObject
 } // builtins
 
 
-void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &code)
+void evaluate(QQmlJS::VM::ExecutionEngine *vm, QQmlJS::Engine *engine, const QString &fileName, const QString &code)
 {
     using namespace QQmlJS;
 
@@ -73,7 +73,7 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
         const size_t codeSize = 10 * getpagesize();
         uchar *code = (uchar *) malloc(codeSize);
 
-        x86_64::InstructionSelection isel(&module, code);
+        x86_64::InstructionSelection isel(vm, &module, code);
         QHash<QString, IR::Function *> codeByName;
         foreach (IR::Function *function, module.functions) {
             isel(function);
@@ -85,31 +85,15 @@ void evaluate(QQmlJS::Engine *engine, const QString &fileName, const QString &co
         if (! protect(code, codeSize))
             Q_UNREACHABLE();
 
-        VM::Context *ctx = new VM::Context;
-        ctx->init();
+        VM::Object *globalObject = vm->globalObject.objectValue;
+        VM::Context *ctx = vm->rootContext;
 
-        VM::String *prototype = VM::String::get(ctx, QLatin1String("prototype"));
-
-        VM::Object *globalObject = new VM::ArgumentsObject(ctx);
-        __qmljs_init_object(ctx, &ctx->activation, globalObject);
-
-        globalObject->put(VM::String::get(ctx, QLatin1String("print")),
+        globalObject->put(vm->identifier(QLatin1String("print")),
                           VM::Value::object(ctx, new builtins::Print(ctx)));
-
-        globalObject->put(VM::String::get(ctx, QLatin1String("Object")),
-                          VM::Value::object(ctx, new builtins::ObjectCtor(ctx)));
-
-        VM::FunctionObject *stringCtor = new VM::StringCtor(ctx);
-        stringCtor->put(prototype, VM::Value::object(ctx, new VM::StringPrototype(ctx, stringCtor)));
-        globalObject->put(VM::String::get(ctx, QLatin1String("String")), VM::Value::object(ctx, stringCtor));
-
-        VM::FunctionObject *numberCtor = new VM::NumberCtor(ctx);
-        numberCtor->put(prototype, VM::Value::object(ctx, new VM::NumberPrototype(ctx, numberCtor)));
-        globalObject->put(VM::String::get(ctx, QLatin1String("Number")), VM::Value::object(ctx, numberCtor));
 
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {
-                globalObject->put(VM::String::get(ctx, *function->name),
+                globalObject->put(vm->identifier(*function->name),
                                   VM::Value::object(ctx, new VM::ScriptFunction(ctx, function)));
             }
         }
@@ -125,13 +109,14 @@ int main(int argc, char *argv[])
     QStringList args = app.arguments();
     args.removeFirst();
 
+    VM::ExecutionEngine vm;
     Engine engine;
     foreach (const QString &fn, args) {
         QFile file(fn);
         if (file.open(QFile::ReadOnly)) {
             const QString code = QString::fromUtf8(file.readAll());
             file.close();
-            evaluate(&engine, fn, code);
+            evaluate(&vm, &engine, fn, code);
         }
     }
 }

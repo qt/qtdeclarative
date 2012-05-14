@@ -12,7 +12,7 @@ namespace x86_64 {
 class InstructionSelection: protected IR::StmtVisitor
 {
 public:
-    InstructionSelection(IR::Module *module, uchar *code);
+    InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module, uchar *code);
     ~InstructionSelection();
 
     void operator()(IR::Function *function);
@@ -35,6 +35,7 @@ protected:
     virtual void visitRet(IR::Ret *);
 
 private:
+    VM::ExecutionEngine *_engine;
     IR::Module *_module;
     IR::Function *_function;
     IR::BasicBlock *_block;
@@ -43,7 +44,6 @@ private:
     uchar *_codePtr;
     QHash<IR::BasicBlock *, QVector<uchar *> > _patches;
     QHash<IR::BasicBlock *, uchar *> _addrs;
-    QHash<QString, VM::String *> _identifiers;
 };
 
 } // end of namespace x86_64

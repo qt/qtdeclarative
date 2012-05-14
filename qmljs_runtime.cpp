@@ -79,47 +79,47 @@ void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
 
 void __qmljs_string_literal_undefined(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("undefined")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("undefined")));
 }
 
 void __qmljs_string_literal_null(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("null")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("null")));
 }
 
 void __qmljs_string_literal_true(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("true")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("true")));
 }
 
 void __qmljs_string_literal_false(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("false")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("false")));
 }
 
 void __qmljs_string_literal_object(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("object")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("object")));
 }
 
 void __qmljs_string_literal_boolean(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("boolean")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("boolean")));
 }
 
 void __qmljs_string_literal_number(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("number")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("number")));
 }
 
 void __qmljs_string_literal_string(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("string")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("string")));
 }
 
 void __qmljs_string_literal_function(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("function")));
+    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("function")));
 }
 
 void __qmljs_delete(Context *ctx, Value *result, const Value *value)
@@ -198,7 +198,7 @@ bool __qmljs_is_function(Context *, const Value *value)
 void __qmljs_object_default_value(Context *ctx, Value *result, Object *object, int typeHint)
 {
     Q_UNUSED(ctx);
-    object->defaultValue(result, typeHint);
+    object->defaultValue(ctx, result, typeHint);
 }
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
@@ -218,6 +218,7 @@ void __qmljs_new_number_object(Context *ctx, Value *result, double number)
     Value value;
     __qmljs_init_number(ctx, &value, number);
     __qmljs_init_object(ctx, result, new NumberObject(value));
+    result->objectValue->prototype = ctx->engine->numberPrototype.objectValue;
 }
 
 void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
@@ -225,6 +226,7 @@ void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
     Value value;
     __qmljs_init_string(ctx, &value, string);
     __qmljs_init_object(ctx, result, new StringObject(value));
+    result->objectValue->prototype = ctx->engine->stringPrototype.objectValue;
 }
 
 void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value)
@@ -451,7 +453,7 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
             Context *ctx = new Context;
-            ctx->init();
+            ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
                 __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
@@ -484,7 +486,7 @@ void __qmljs_call_value(Context *context, Value *result, const Value *func, Valu
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context *ctx = new Context;
-            ctx->init();
+            ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
                 __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
@@ -525,7 +527,7 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context *ctx = new Context;
-            ctx->init();
+            ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
                 __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
@@ -545,7 +547,7 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
             assert(ctx->thisObject.is(OBJECT_TYPE));
             ctx->result = ctx->thisObject;
             Value proto;
-            if (f->get(String::get(ctx, QLatin1String("prototype")), &proto)) { // ### `prototype' should be a unique symbol
+            if (f->get(ctx->engine->identifier(QLatin1String("prototype")), &proto)) { // ### `prototype' should be a unique symbol
                 if (proto.type == OBJECT_TYPE)
                     ctx->thisObject.objectValue->prototype = proto.objectValue;
             }
@@ -572,7 +574,7 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
             Context *ctx = new Context;
-            ctx->init();
+            ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
                 __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
@@ -592,7 +594,7 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
             assert(ctx->thisObject.is(OBJECT_TYPE));
 
             Value proto;
-            if (f->get(String::get(ctx, QLatin1String("prototype")), &proto)) { // ### `prototype' should be a unique symbol
+            if (f->get(ctx->engine->identifier(QLatin1String("prototype")), &proto)) { // ### `prototype' should be a unique symbol
                 if (proto.type == OBJECT_TYPE)
                     ctx->thisObject.objectValue->prototype = proto.objectValue;
             }

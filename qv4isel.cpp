@@ -80,8 +80,9 @@ amd64_patch (unsigned char* code, gpointer target)
     else
         x86_patch (code, (unsigned char*)target);
 }
-InstructionSelection::InstructionSelection(IR::Module *module, uchar *buffer)
-    : _module(module)
+InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module, uchar *buffer)
+    : _engine(engine)
+    , _module(module)
     , _function(0)
     , _block(0)
     , _buffer(buffer)
@@ -157,10 +158,7 @@ void InstructionSelection::operator()(IR::Function *function)
 
 String *InstructionSelection::identifier(const QString &s)
 {
-    String *&id = _identifiers[s];
-    if (! id)
-        id = new String(s);
-    return id;
+    return _engine->identifier(s);
 }
 
 void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
@@ -638,7 +636,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                     loadTempAddress(AMD64_RSI, base);
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
-                    amd64_mov_reg_imm(_codePtr, AMD64_RCX, VM::String::get(0, *str->value));
+                    amd64_mov_reg_imm(_codePtr, AMD64_RCX, VM::String::get(_engine->rootContext, *str->value));
                     amd64_call_code(_codePtr, __qmljs_set_property_string);
                     return;
                 } else if (IR::Temp *t = s->source->asTemp()) {

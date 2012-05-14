@@ -23,6 +23,8 @@ struct StringObject;
 struct ArrayObject;
 struct FunctionObject;
 struct ErrorObject;
+struct Context;
+struct ExecutionEngine;
 
 struct String {
     String(const QString &text)
@@ -207,7 +209,7 @@ struct Object {
     virtual bool canPut(String *name);
     virtual bool hasProperty(String *name) const;
     virtual bool deleteProperty(String *name, bool flag);
-    virtual void defaultValue(Value *result, int typeHint);
+    virtual void defaultValue(Context *ctx, Value *result, int typeHint);
     // ### TODO: defineOwnProperty(name, descriptor, boolean) -> boolean
 
     //
@@ -220,19 +222,19 @@ struct Object {
 struct BooleanObject: Object {
     Value value;
     BooleanObject(const Value &value): value(value) {}
-    virtual void defaultValue(Value *result, int /*typehint*/) { *result = value; }
+    virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct NumberObject: Object {
     Value value;
     NumberObject(const Value &value): value(value) {}
-    virtual void defaultValue(Value *result, int /*typehint*/) { *result = value; }
+    virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct StringObject: Object {
     Value value;
     StringObject(const Value &value): value(value) {}
-    virtual void defaultValue(Value *result, int /*typehint*/) { *result = value; }
+    virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct ArrayObject: Object {
@@ -286,6 +288,7 @@ struct ArgumentsObject: Object {
 };
 
 struct Context {
+    ExecutionEngine *engine;
     Context *parent;
     Value activation;
     Value thisObject;
@@ -319,8 +322,9 @@ struct Context {
             __qmljs_init_undefined(this, result);
     }
 
-    void init()
+    void init(ExecutionEngine *eng)
     {
+        engine = eng;
         parent = 0;
         arguments = 0;
         argumentCount = 0;
@@ -331,6 +335,26 @@ struct Context {
         formalCount = 0;
         calledAsConstructor = false;
     }
+};
+
+struct ExecutionEngine
+{
+    Context *rootContext;
+    Value globalObject;
+
+    Value objectCtor;
+    Value stringCtor;
+    Value numberCtor;
+
+    Value objectPrototype;
+    Value stringPrototype;
+    Value numberPrototype;
+
+    QHash<QString, String *> identifiers;
+
+    ExecutionEngine();
+
+    String *identifier(const QString &s);
 };
 
 } // namespace VM

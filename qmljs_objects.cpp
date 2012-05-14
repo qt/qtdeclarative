@@ -1,6 +1,7 @@
 
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
+#include "qv4ecmaobjects_p.h"
 #include <QtCore/QDebug>
 #include <cassert>
 
@@ -13,7 +14,7 @@ Object::~Object()
 
 void Object::setProperty(Context *ctx, const QString &name, const Value &value)
 {
-    put(String::get(ctx, name), value);
+    put(ctx->engine->identifier(name), value);
 }
 
 void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context *))
@@ -96,15 +97,13 @@ bool Object::deleteProperty(String *name, bool flag)
     return false;
 }
 
-void Object::defaultValue(Value *result, int typeHint)
+void Object::defaultValue(Context *ctx, Value *result, int typeHint)
 {
-    Context *ctx = 0; // ###
-
     if (typeHint == STRING_HINT) {
         if (asFunctionObject() != 0)
-            __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("function")));
+            __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("function")));
         else
-            __qmljs_init_string(ctx, result, String::get(ctx, QLatin1String("object")));
+            __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("object")));
     } else {
         __qmljs_init_undefined(ctx, result);
     }
@@ -136,7 +135,7 @@ ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
     if (formalParameterCount) {
         formalParameterList = new String*[formalParameterCount];
         for (size_t i = 0; i < formalParameterCount; ++i) {
-            formalParameterList[i] = String::get(0, *function->formals.at(i)); // ### unique
+            formalParameterList[i] = scope->engine->identifier(*function->formals.at(i));
         }
     }
 }
@@ -172,4 +171,39 @@ Value *ArgumentsObject::getProperty(String *name, PropertyAttributes *attributes
     if (Value *prop = Object::getProperty(name, attributes))
         return prop;
     return 0;
+}
+
+ExecutionEngine::ExecutionEngine()
+{
+    rootContext = new VM::Context;
+    rootContext->init(this);
+
+    //
+    // set up the global object
+    //
+    VM::Object *glo = new VM::ArgumentsObject(rootContext);
+    __qmljs_init_object(rootContext, &globalObject, glo);
+    __qmljs_init_object(rootContext, &rootContext->activation, glo);
+
+    objectCtor = ObjectCtor::create(this);
+    stringCtor = StringCtor::create(this);
+    numberCtor = NumberCtor::create(this);
+
+    String *prototype = String::get(rootContext, QLatin1String("prototype"));
+
+    objectCtor.objectValue->get(prototype, &objectPrototype);
+    stringCtor.objectValue->get(prototype, &stringPrototype);
+    numberCtor.objectValue->get(prototype, &numberPrototype);
+
+    glo->put(VM::String::get(rootContext, QLatin1String("Object")), objectCtor);
+    glo->put(VM::String::get(rootContext, QLatin1String("String")), stringCtor);
+    glo->put(VM::String::get(rootContext, QLatin1String("Number")), numberCtor);
+}
+
+String *ExecutionEngine::identifier(const QString &s)
+{
+    String *&id = identifiers[s];
+    if (! id)
+        id = new String(s);
+    return id;
 }
