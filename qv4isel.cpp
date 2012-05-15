@@ -168,7 +168,7 @@ void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
         amd64_mov_reg_membase(_codePtr, reg, AMD64_R14, offsetof(Context, arguments), 8);
         amd64_lea_membase(_codePtr, reg, reg, sizeof(Value) * arg);
     } else {
-        amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * t->index);
+        amd64_lea_membase(_codePtr, reg, AMD64_RBP, sizeof(Value) * -t->index);
     }
 }
 
