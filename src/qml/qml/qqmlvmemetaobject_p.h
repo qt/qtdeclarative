@@ -169,6 +169,8 @@ public:
 
     void connectAliasSignal(int index);
 
+    static inline QQmlVMEMetaObject *get(const QObject *obj);
+
 protected:
     virtual int metaCall(QMetaObject::Call _c, int _id, void **_a);
 
@@ -226,6 +228,18 @@ private:
     friend class QV8GCCallback;
     friend class QV8QObjectWrapper;
 };
+
+QQmlVMEMetaObject *QQmlVMEMetaObject::get(const QObject *obj)
+{
+    if (obj) {
+        if (QQmlData *data = QQmlData::get(obj)) {
+            if (data->hasVMEMetaObject)
+                return const_cast<QQmlVMEMetaObject *>(static_cast<const QQmlVMEMetaObject *>(obj->metaObject()));
+        }
+    }
+
+    return 0;
+}
 
 QT_END_NAMESPACE
 

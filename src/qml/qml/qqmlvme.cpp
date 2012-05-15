@@ -298,8 +298,8 @@ static QVariant variantFromString(const QString &string)
         v8::Handle<v8::Value> v8value = value; \
         QObject *target = objects.top(); \
         CLEAN_PROPERTY(target, instr.propertyIndex); \
-        QMetaObject *mo = const_cast<QMetaObject *>(target->metaObject()); \
-        QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject *>(mo); \
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(target); \
+        Q_ASSERT(vmemo); \
         vmemo->setVMEProperty(instr.propertyIndex, v8value); \
     QML_END_INSTR(name)
 
@@ -920,7 +920,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 QQmlPropertyPrivate::restore(target, instr.property, CTXT);
             obj->setParent(target);
             vi->setTarget(prop);
-            QQmlVMEMetaObject *mo = static_cast<QQmlVMEMetaObject *>((QMetaObject*)target->metaObject());
+            QQmlVMEMetaObject *mo = QQmlVMEMetaObject::get(target);
+            Q_ASSERT(mo);
             mo->registerInterceptor(prop.index(), QQmlPropertyPrivate::valueTypeCoreIndex(prop), vi);
         QML_END_INSTR(StoreValueInterceptor)
 

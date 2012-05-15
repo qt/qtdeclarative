@@ -721,8 +721,7 @@ bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
     jsfunction += body;
     jsfunction += QLatin1String("\n})");
 
-    QQmlVMEMetaObject *vmeMetaObject =
-            static_cast<QQmlVMEMetaObject*>(QObjectPrivate::get(object)->metaObject);
+    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(object);
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
     int lineNumber = vmeMetaObject->vmeMethodLineNumber(prop->coreIndex);

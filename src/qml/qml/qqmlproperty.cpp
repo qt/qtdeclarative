@@ -1496,7 +1496,6 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
     if (expression->hasError()) {
         return false;
     } else if (isVmeProperty) {
-        typedef QQmlVMEMetaObject VMEMO;
         if (!result.IsEmpty() && result->IsFunction()
                 && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
             // we explicitly disallow this case to avoid confusion.  Users can still store one
@@ -1504,7 +1503,8 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
-        VMEMO *vmemo = static_cast<VMEMO *>(const_cast<QMetaObject *>(object->metaObject()));
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
+        Q_ASSERT(vmemo);
         vmemo->setVMEProperty(core.coreIndex, result);
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { 0 };

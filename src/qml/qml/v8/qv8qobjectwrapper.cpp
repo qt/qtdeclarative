@@ -533,7 +533,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
 
     if (result->isFunction() && !result->isVMEProperty()) {
         if (result->isVMEFunction()) {
-            return ((QQmlVMEMetaObject *)(object->metaObject()))->vmeMethod(result->coreIndex);
+            QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
+            Q_ASSERT(vmemo);
+            return vmemo->vmeMethod(result->coreIndex);
         } else if (result->isV8Function()) {
             return MethodClosure::createWithGlobal(engine, object, objectHandle, result->coreIndex);
         } else if (result->isSignalHandler()) {
@@ -571,8 +573,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
         ep->captureProperty(object, result->coreIndex, result->notifyIndex);
 
     if (result->isVMEProperty()) {
-        typedef QQmlVMEMetaObject VMEMO;
-        VMEMO *vmemo = const_cast<VMEMO *>(static_cast<const VMEMO *>(object->metaObject()));
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
+        Q_ASSERT(vmemo);
         return vmemo->vmeProperty(result->coreIndex);
     } else if (result->isDirect())  {
         return LoadProperty<ReadAccessor::Direct>(engine, object, *result, 0);
@@ -622,7 +624,9 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
 
     if (!newBinding && property->isVMEProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties
-        static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(object->metaObject()))->setVMEProperty(property->coreIndex, value);
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
+        Q_ASSERT(vmemo);
+        vmemo->setVMEProperty(property->coreIndex, value);
         return;
     }
 
@@ -660,7 +664,9 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     } else if (property->propType == QMetaType::QString && value->IsString()) {
         PROPERTY_STORE(QString, engine->toString(value->ToString()));
     } else if (property->isVMEProperty()) {
-        static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(object->metaObject()))->setVMEProperty(property->coreIndex, value);
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
+        Q_ASSERT(vmemo);
+        vmemo->setVMEProperty(property->coreIndex, value);
     } else {
         QVariant v;
         if (property->isQList()) 

@@ -493,6 +493,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj, const QMetaObject *other, con
     if (op->metaObject)
         parent = static_cast<QAbstractDynamicMetaObject*>(op->metaObject);
     op->metaObject = this;
+    QQmlData::get(obj)->hasVMEMetaObject = true;
 
     propOffset = QAbstractDynamicMetaObject::propertyOffset();
     methodOffset = QAbstractDynamicMetaObject::methodOffset();

@@ -1949,7 +1949,8 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
 
         if (data.gettype() == V8HandleType) {
             // This property must be a VME var property
-            QQmlVMEMetaObject *vmemo = static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(output->metaObject()));
+            QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(output);
+            Q_ASSERT(vmemo);
             vmemo->setVMEProperty(instr->store.index, *data.gethandleptr());
         } else {
             int status = -1;

@@ -4540,8 +4540,8 @@ void tst_qqmlecmascript::propertyVarInheritance()
     // we want to be able to track when the varProperties array of the last metaobject is disposed
     QObject *cco5 = object->property("varProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
     QObject *ico5 = object->property("varProperty").value<QObject*>()->property("inheritanceVarProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
-    QQmlVMEMetaObject *icovmemo = ((QQmlVMEMetaObject *)(ico5->metaObject()));
-    QQmlVMEMetaObject *ccovmemo = ((QQmlVMEMetaObject *)(cco5->metaObject()));
+    QQmlVMEMetaObject *icovmemo = QQmlVMEMetaObject::get(ico5);
+    QQmlVMEMetaObject *ccovmemo = QQmlVMEMetaObject::get(cco5);
     v8::Persistent<v8::Value> icoCanaryHandle;
     v8::Persistent<v8::Value> ccoCanaryHandle;
     {
@@ -4591,7 +4591,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     {
         v8::HandleScope hs;
         propertyVarWeakRefCallbackCount = 0;                           // reset callback count.
-        childObjectVarArrayValueHandle = qPersistentNew(((QQmlVMEMetaObject *)(childObject->metaObject()))->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
+        childObjectVarArrayValueHandle = qPersistentNew(QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
         childObjectVarArrayValueHandle.MakeWeak(&propertyVarWeakRefCallbackCount, propertyVarWeakRefCallback);
         gc(engine);
         QVERIFY(propertyVarWeakRefCallbackCount == 0);                 // should not have been collected yet.
