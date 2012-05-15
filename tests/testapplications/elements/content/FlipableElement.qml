@@ -49,7 +49,9 @@ Item {
     Flipable {
         id: flipableelement
         height: 250; width: 250
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         front: Rectangle { color: "green"; anchors.fill: parent; border.color: "gray"; border.width: 3; opacity: .9; radius: 20; clip: true }
         back: Rectangle { color: "red"; anchors.fill: parent; border.color: "gray"; border.width: 3; opacity: .9; radius: 20; clip: true }
         transform: Rotation {

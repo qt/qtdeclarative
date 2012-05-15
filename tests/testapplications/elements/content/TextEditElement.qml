@@ -50,7 +50,9 @@ Item {
     Rectangle {
         id: texteditelementbackground
         color: "green"; height: 150; width: parent.width *.8; border.color: "gray"; opacity: 0.7; radius: 5; clip: true
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: secondarybackground.top
+        anchors.bottomMargin: 10
 
         TextEdit {
             id: texteditelement
@@ -63,8 +65,8 @@ Item {
 
     Rectangle {
         id: secondarybackground
-        color: "lightgray"; border.color: "gray"; opacity: 0.7; radius: 5; height: 150; width: parent.width *.8
-        anchors { top: texteditelementbackground.bottom; topMargin: 50; horizontalCenter: parent.horizontalCenter }
+        color: "lightgray"; border.color: "gray"; opacity: 0.7; radius: 5; height: 50; width: parent.width *.8
+        anchors { bottom: parent.bottom; bottomMargin: 15; horizontalCenter: parent.horizontalCenter }
 
         TextEdit {
             id: secondary

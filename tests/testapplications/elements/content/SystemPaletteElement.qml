@@ -63,7 +63,7 @@ Item {
             }
             Rectangle {
                 id: button
-                width: 100; height: 30; radius: 5; border.color: "black"; color: clicky.pressed ? syspal.highlight : syspal.button
+                width: 150; height: 50; radius: 5; border.color: "black"; color: clicky.pressed ? syspal.highlight : syspal.button
                 Behavior on color { ColorAnimation { duration: 500 } }
                 anchors { left: parent.left; top: parent.top; leftMargin: 10; topMargin: 30 }
                 Text { anchors.centerIn: parent; text: "Button"; color: syspal.buttonText }
@@ -76,7 +76,7 @@ Item {
     }
 
     SystemTestHelp { id: helpbubble; visible: statenum != 0
-        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: 100 }
+        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: 50 }
     }
     BugPanel { id: bugpanel }
 
@@ -85,7 +85,7 @@ Item {
             PropertyChanges { target: systempaletteelementtest
                 testtext: "This is an mock application shaded with the help of the SystemPalette element.\n"+
                 "The colors of the menu bar, menu text and button should mimic that of the OS it is running on.\n"+
-                "Pressing the lablelled button should shade it to the system highlight color." }
+                "Pressing the labelled button should shade it to the system highlight color." }
         }
     ]
 

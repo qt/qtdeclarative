@@ -49,7 +49,9 @@ Item {
     Text {
         id: textelement
         property int pseudopointsize: 12
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         height: 200; width: parent.width *.8; wrapMode: Text.WordWrap; font.pointSize: 12
         text: "Hello, my name is Text"; horizontalAlignment: Text.AlignHCenter; textFormat: Text.PlainText
         Behavior on font.pointSize { NumberAnimation { duration: 1000 } }

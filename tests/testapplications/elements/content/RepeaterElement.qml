@@ -49,8 +49,11 @@ Item {
 
     Column {
         id: container
-        height: 50; width: 250; spacing: 5
-        anchors.centerIn: parent
+        height: 200; width: 250
+        spacing: 5
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         Repeater { id: repeaterelement; model: repeatermodel }
         Rectangle { height: 50; width: 150; color: "green" }
         move: Transition { NumberAnimation { properties: "x,y"; duration: 1000; easing.type: Easing.OutBounce } }
@@ -60,16 +63,16 @@ Item {
 
     VisualItemModel {
         id: repeatermodel
-        Rectangle { color: "blue"; height: 50; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
+        Rectangle { color: "blue"; height: 40; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
             Text { text: "I am Thing 1"; anchors.centerIn: parent } }
-        Rectangle { color: "blue"; height: 50; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
+        Rectangle { color: "blue"; height: 40; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
             Text { text: "I am Thing 2"; anchors.centerIn: parent } }
         Rectangle { visible: repeaterelementtest.showme;
-            color: "blue"; height: 50; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
+            color: "blue"; height: 40; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
             Text { text: "I am Thing 3"; anchors.centerIn: parent } }
-        Rectangle { color: "blue"; height: 50; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
+        Rectangle { color: "blue"; height: 40; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
             Text { text: "I am Thing 4"; anchors.centerIn: parent } }
-        Rectangle { color: "blue"; height: 50; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
+        Rectangle { color: "blue"; height: 40; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
             Text { text: "I am Thing 5"; anchors.centerIn: parent } }
     }
 

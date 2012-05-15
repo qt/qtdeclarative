@@ -45,13 +45,14 @@ Item {
     id: mouseareaelementtest
     anchors.fill: parent
     property string testtext: ""
-    property int sidelength: 1500
-
     focus: true
+
     Rectangle {
         id: mouseareaelementbox
-        color: "lightgray"; border.color: "gray"; radius: 5; clip: true; opacity: .7; height: 300; width: 300
-        anchors.centerIn: parent
+        color: "lightgray"; border.color: "gray"; radius: 5; clip: true; opacity: .7; height: 200; width: 200
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         MouseArea {
             id: mouseareaelement
             hoverEnabled: true

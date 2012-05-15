@@ -49,7 +49,9 @@ Item {
     Item {
         id: imageelementcontainer
         height: 100; width: 100; clip: true
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         Behavior on height { NumberAnimation { duration: 1000 } }
         Behavior on width { NumberAnimation { duration: 1000 } }
         Image {

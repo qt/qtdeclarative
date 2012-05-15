@@ -53,7 +53,9 @@ Item {
         id: regexpvalidatorelementbackground
         color: regexpvalidatorelementinput.acceptableInput ? "green" : "red"; height: 50; width: parent.width *.8
         border.color: "gray"; opacity: 0.7; radius: 5
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
 
         TextInput {
             id: regexpvalidatorelementinput

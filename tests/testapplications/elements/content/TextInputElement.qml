@@ -49,7 +49,9 @@ Item {
     Rectangle {
         id: textinputelementbackground
         color: "green"; height: 50; width: parent.width *.8; border.color: "gray"; opacity: 0.7; radius: 5
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: secondarybackground.top
+        anchors.bottomMargin: 10
         TextInput {
             id: textinputelement
             font.pointSize: 12; width: parent.width; text: ""; horizontalAlignment: Text.AlignHCenter
@@ -62,7 +64,7 @@ Item {
     Rectangle {
         id: secondarybackground
         color: "lightgray"; border.color: "gray"; opacity: 0.7; radius: 5; height: 50; width: parent.width *.8
-        anchors { top: textinputelementbackground.bottom; topMargin: 100; horizontalCenter: parent.horizontalCenter }
+        anchors { bottom: parent.bottom; bottomMargin: 15; horizontalCenter: parent.horizontalCenter }
 
         TextInput {
             id: secondary

@@ -49,7 +49,9 @@ Item {
     Rectangle {
         id: scaletarget
         color: "green"; height: 100; width: 100; border.color: "gray"; opacity: 0.7; radius: 5
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         transform: Scale {
             id: scaleelement
             property alias originx: scaleelement.origin.x

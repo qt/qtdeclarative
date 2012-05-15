@@ -47,8 +47,10 @@ Item { id: rectangleelementtest
 
     Rectangle {
         id: rectangleelement
-        height: 100; width: 100; color: "blue"; border.width: 2; border.color: "red"; border.aligned: false; smooth: true
-        anchors.centerIn: parent
+        height: 100; width: 100; color: "blue"; border.width: 2; border.color: "red"; smooth: true
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         Behavior on height { NumberAnimation { duration: 1000 } }
         Behavior on width { NumberAnimation { duration: 1000 } }
         Behavior on radius { NumberAnimation { duration: 1000 } }

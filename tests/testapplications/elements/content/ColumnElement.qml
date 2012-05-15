@@ -48,8 +48,11 @@ Item {
 
     Column {
         id: columnelement
-        height: 250; width: 200; spacing: 5
-        anchors.centerIn: parent
+        width: 200
+        spacing: 5
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         Rectangle { id: gr; color: "green"; height: 50; width: parent.width; border.color: "gray"; border.width: 3; opacity: .9; radius: 5; clip: true }
         Rectangle { id: re; color: "red"; height: 50; width: parent.width; border.color: "gray"; border.width: 3; opacity: .9; radius: 5; clip: true }
         Rectangle {

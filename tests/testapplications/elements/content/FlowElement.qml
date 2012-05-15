@@ -50,15 +50,18 @@ Item {
 
     Flow {
         id: flowelement
-        height: 150; width: 150; spacing: 5; flow: Flow.LeftToRight
-        anchors.centerIn: parent
+        height: 110; width: 110
+        spacing: 5; flow: Flow.LeftToRight
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         Rectangle { id: gr; color: "green"; height: 50; width: 50; border.color: "gray"; border.width: 3; opacity: .9; radius: 5; clip: true
             Text { anchors.centerIn: parent; text: "1" }
         }
         Rectangle { id: re; color: "red"; height: 50; width: 50; border.color: "gray"; border.width: 3; opacity: .9; radius: 5; clip: true
             Text { anchors.centerIn: parent; text: "2" }
         }
-        Rectangle { id: bl; color: "blue"; height: 50; width: 50; border.color: "gray"; border.width: 3; opacity: 0; radius: 5; clip: true
+        Rectangle { id: bl; color: "blue"; height: 50; width: 50; border.color: "gray"; border.width: 3; opacity: .9; radius: 5; clip: true; visible: false
             Text { anchors.centerIn: parent; text: "3" }
         }
         Rectangle { id: bk; color: "black"; height: 50; width: 50; border.color: "gray"; border.width: 3; opacity: .9; radius: 5; clip: true
@@ -82,20 +85,20 @@ Item {
                 "Next, let's add a rectangle to the Flow - it should slide in from the left and the black rectangle should move to give it space" }
         },
         State { name: "added"; when: statenum == 2
-            PropertyChanges { target: bl; opacity: .9 }
+            PropertyChanges { target: bl; visible: true }
             PropertyChanges { target: flowelementtest
                 testtext: "Flow should now be showing four rectangles - green, red, blue and black.\n"+
                 "Next let's change the direction of the flow to vertical." }
         },
         State { name: "vertical"; when: statenum == 3
-            PropertyChanges { target: bl; opacity: .9 }
+            PropertyChanges { target: bl; visible: true }
             PropertyChanges { target: flowelement; flow: Flow.TopToBottom }
             PropertyChanges { target: flowelementtest
                 testtext: "Flow should now be showing four rectangles - green, blue, red and black.\n"+
                 "Next, let's flip the layout direction to RightToLeft." }
         },
         State { name: "rtlvertical"; when: statenum == 4
-            PropertyChanges { target: bl; opacity: .9 }
+            PropertyChanges { target: bl; visible: true }
             PropertyChanges { target: flowelement; flow: Flow.TopToBottom; layoutDirection: Qt.RightToLeft }
             PropertyChanges { target: flowelementtest
                 testtext: "Flow should now be showing the four rectangles aligned to the right and in a column order flowing to the left"+

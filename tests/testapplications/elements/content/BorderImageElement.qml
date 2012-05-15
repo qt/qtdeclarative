@@ -49,7 +49,9 @@ Item {
 
     BorderImage {
         id: borderimageelement
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         width: 100; height: 100
         source: "pics/qml-borderimage.png"
         border { left: bordervalue; top: bordervalue; right: bordervalue; bottom: bordervalue }

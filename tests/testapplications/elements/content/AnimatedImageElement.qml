@@ -49,7 +49,9 @@ Item {
     Item {
         id: animatedimageelementcontainer
         height: 100; width: 100
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         AnimatedImage { id: animatedimageelement; anchors.fill: parent; source: "pics/cat.gif" }
         Behavior on height { NumberAnimation { duration: 1000 } }
         Behavior on width { NumberAnimation { duration: 1000 } }

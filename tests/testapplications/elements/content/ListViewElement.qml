@@ -57,7 +57,9 @@ Item {
     ListView {
         id: listviewelement
         height: 250; width: parent.width *.8; clip: true
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         model: devices
         highlightFollowsCurrentItem: true
         highlight: highlightrect

@@ -55,7 +55,9 @@ Item {
 
     Text {
         id: textitem
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
         height: 100; width: 250; text: fontloaderelement.name; font: fontloaderelement.name
         horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
     }

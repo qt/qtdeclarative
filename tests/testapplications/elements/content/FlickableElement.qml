@@ -51,7 +51,9 @@ Item {
         id: flickableelementbox
         color: "lightgray"; border.color: "gray"; radius: 5; clip: true; opacity: .1
         height: 250; width: parent.width *.8
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 15
 
         Flickable {
             id: flickableelement
