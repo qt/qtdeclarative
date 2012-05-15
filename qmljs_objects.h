@@ -41,8 +41,6 @@ struct String {
         return _hashValue;
     }
 
-    static String *get(Context *ctx, const QString &s);
-
 private:
     QString _text;
     mutable unsigned _hashValue;

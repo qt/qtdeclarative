@@ -69,7 +69,7 @@ void StringCtor::call(Context *ctx)
 {
     const Value arg = ctx->argument(0);
     if (arg.is(UNDEFINED_TYPE))
-        __qmljs_init_string(&ctx->result, String::get(ctx, QString()));
+        __qmljs_init_string(&ctx->result, ctx->engine->newString(QString()));
     else
         __qmljs_to_string(ctx, &ctx->result, &arg);
 }

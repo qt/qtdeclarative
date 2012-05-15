@@ -169,7 +169,7 @@ double __qmljs_string_to_number(Context *, String *string)
 
 void __qmljs_string_from_number(Context *ctx, Value *result, double number)
 {
-    String *string = String::get(ctx, QString::number(number, 'g', 16));
+    String *string = ctx->engine->newString(QString::number(number, 'g', 16));
     __qmljs_init_string(result, string);
 }
 
@@ -187,7 +187,7 @@ bool __qmljs_string_equal(Context *, String *left, String *right)
 
 String *__qmljs_string_concat(Context *ctx, String *first, String *second)
 {
-    return String::get(ctx, first->toQString() + second->toQString());
+    return ctx->engine->newString(first->toQString() + second->toQString());
 }
 
 bool __qmljs_is_function(Context *, const Value *value)

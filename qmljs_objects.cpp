@@ -7,11 +7,6 @@
 
 using namespace QQmlJS::VM;
 
-String *String::get(Context *ctx, const QString &s)
-{
-    return ctx->engine->newString(s);
-}
-
 Object::~Object()
 {
     delete members;
@@ -196,7 +191,7 @@ ExecutionEngine::ExecutionEngine()
     stringCtor = StringCtor::create(this);
     numberCtor = NumberCtor::create(this);
 
-    String *prototype = String::get(rootContext, QLatin1String("prototype"));
+    String *prototype = identifier(QLatin1String("prototype"));
 
     objectCtor.objectValue->get(prototype, &objectPrototype);
     stringCtor.objectValue->get(prototype, &stringPrototype);
