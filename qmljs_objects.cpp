@@ -25,7 +25,7 @@ void Object::setProperty(Context *ctx, const QString &name, const Value &value)
 void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context *), int count)
 {
     Q_UNUSED(count);
-    setProperty(ctx, name, Value::object(ctx, ctx->engine->newNativeFunction(ctx, code)));
+    setProperty(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
 }
 
 bool Object::get(String *name, Value *result)
@@ -35,7 +35,7 @@ bool Object::get(String *name, Value *result)
         return true;
     }
 
-    __qmljs_init_undefined(0, result);
+    __qmljs_init_undefined(result);
     return false;
 }
 
@@ -107,11 +107,11 @@ void Object::defaultValue(Context *ctx, Value *result, int typeHint)
 {
     if (typeHint == STRING_HINT) {
         if (asFunctionObject() != 0)
-            __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("function")));
+            __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("function")));
         else
-            __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("object")));
+            __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("object")));
     } else {
-        __qmljs_init_undefined(ctx, result);
+        __qmljs_init_undefined(result);
     }
 }
 
@@ -129,7 +129,7 @@ void FunctionObject::call(Context *ctx)
 
 void FunctionObject::construct(Context *ctx)
 {
-    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newObject());
+    __qmljs_init_object(&ctx->thisObject, ctx->engine->newObject());
     call(ctx);
 }
 
@@ -159,7 +159,7 @@ void ScriptFunction::call(VM::Context *ctx)
 
 void ScriptFunction::construct(VM::Context *ctx)
 {
-    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newObject());
+    __qmljs_init_object(&ctx->thisObject, ctx->engine->newObject());
     function->code(ctx);
 }
 
@@ -189,8 +189,8 @@ ExecutionEngine::ExecutionEngine()
     // set up the global object
     //
     VM::Object *glo = newArgumentsObject(rootContext);
-    __qmljs_init_object(rootContext, &globalObject, glo);
-    __qmljs_init_object(rootContext, &rootContext->activation, glo);
+    __qmljs_init_object(&globalObject, glo);
+    __qmljs_init_object(&rootContext->activation, glo);
 
     objectCtor = ObjectCtor::create(this);
     stringCtor = StringCtor::create(this);
@@ -202,10 +202,10 @@ ExecutionEngine::ExecutionEngine()
     stringCtor.objectValue->get(prototype, &stringPrototype);
     numberCtor.objectValue->get(prototype, &numberPrototype);
 
-    glo->put(VM::String::get(rootContext, QLatin1String("Object")), objectCtor);
-    glo->put(VM::String::get(rootContext, QLatin1String("String")), stringCtor);
-    glo->put(VM::String::get(rootContext, QLatin1String("Number")), numberCtor);
-    glo->put(VM::String::get(rootContext, QLatin1String("Math")), Value::object(rootContext, newMathObject(rootContext)));
+    glo->put(identifier(QLatin1String("Object")), objectCtor);
+    glo->put(identifier(QLatin1String("String")), stringCtor);
+    glo->put(identifier(QLatin1String("Number")), numberCtor);
+    glo->put(identifier(QLatin1String("Math")), Value::fromObject(newMathObject(rootContext)));
 }
 
 Context *ExecutionEngine::newContext()

@@ -15,8 +15,8 @@ Value ObjectCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newObjectCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, ctx->engine->newObjectPrototype(ctx, ctor)));
-    return Value::object(ctx, ctor);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newObjectPrototype(ctx, ctor)));
+    return Value::fromObject(ctor);
 }
 
 ObjectCtor::ObjectCtor(Context *scope)
@@ -26,7 +26,7 @@ ObjectCtor::ObjectCtor(Context *scope)
 
 void ObjectCtor::construct(Context *ctx)
 {
-    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newObject());
+    __qmljs_init_object(&ctx->thisObject, ctx->engine->newObject());
 }
 
 void ObjectCtor::call(Context *)
@@ -36,7 +36,7 @@ void ObjectCtor::call(Context *)
 
 ObjectPrototype::ObjectPrototype(Context *ctx, FunctionObject *ctor)
 {
-    setProperty(ctx, QLatin1String("constructor"), Value::object(ctx, ctor));
+    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
 }
 
 //
@@ -46,8 +46,8 @@ Value StringCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newStringCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, ctx->engine->newStringPrototype(ctx, ctor)));
-    return Value::object(ctx, ctor);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newStringPrototype(ctx, ctor)));
+    return Value::fromObject(ctor);
 }
 
 StringCtor::StringCtor(Context *scope)
@@ -59,24 +59,24 @@ void StringCtor::construct(Context *ctx)
 {
     Value value;
     if (ctx->argumentCount)
-        value = Value::string(ctx, ctx->argument(0).toString(ctx));
+        value = Value::fromString(ctx->argument(0).toString(ctx));
     else
-        value = Value::string(ctx, QString());
-    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newStringObject(value));
+        value = Value::fromString(ctx, QString());
+    __qmljs_init_object(&ctx->thisObject, ctx->engine->newStringObject(value));
 }
 
 void StringCtor::call(Context *ctx)
 {
     const Value arg = ctx->argument(0);
     if (arg.is(UNDEFINED_TYPE))
-        __qmljs_init_string(ctx, &ctx->result, String::get(ctx, QString()));
+        __qmljs_init_string(&ctx->result, String::get(ctx, QString()));
     else
         __qmljs_to_string(ctx, &ctx->result, &arg);
 }
 
 StringPrototype::StringPrototype(Context *ctx, FunctionObject *ctor)
 {
-    setProperty(ctx, QLatin1String("constructor"), Value::object(ctx, ctor));
+    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
     setProperty(ctx, QLatin1String("toString"), method_toString);
     setProperty(ctx, QLatin1String("valueOf"), method_valueOf);
     setProperty(ctx, QLatin1String("charAt"), method_charAt);
@@ -129,7 +129,7 @@ void StringPrototype::method_charAt(Context *ctx)
     if (pos >= 0 && pos < str.length())
         result += str.at(pos);
 
-    ctx->result = Value::string(ctx, result);
+    ctx->result = Value::fromString(ctx, result);
 }
 
 void StringPrototype::method_charCodeAt(Context *ctx)
@@ -145,7 +145,7 @@ void StringPrototype::method_charCodeAt(Context *ctx)
     if (pos >= 0 && pos < str.length())
         result = str.at(pos).unicode();
 
-    __qmljs_init_number(ctx, &ctx->result, result);
+    __qmljs_init_number(&ctx->result, result);
 }
 
 void StringPrototype::method_concat(Context *ctx)
@@ -159,7 +159,7 @@ void StringPrototype::method_concat(Context *ctx)
         value += v.stringValue->toQString();
     }
 
-    ctx->result = Value::string(ctx, value);
+    ctx->result = Value::fromString(ctx, value);
 }
 
 void StringPrototype::method_indexOf(Context *ctx)
@@ -178,7 +178,7 @@ void StringPrototype::method_indexOf(Context *ctx)
     if (! value.isEmpty())
         index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
 
-    __qmljs_init_number(ctx, &ctx->result, index);
+    __qmljs_init_number(&ctx->result, index);
 }
 
 void StringPrototype::method_lastIndexOf(Context *ctx)
@@ -203,14 +203,14 @@ void StringPrototype::method_lastIndexOf(Context *ctx)
     if (!searchString.isEmpty() && pos == value.length())
         --pos;
     int index = value.lastIndexOf(searchString, pos);
-    __qmljs_init_number(ctx, &ctx->result, index);
+    __qmljs_init_number(&ctx->result, index);
 }
 
 void StringPrototype::method_localeCompare(Context *ctx)
 {
     const QString value = getThisString(ctx);
     const QString that = ctx->argument(0).toString(ctx)->toQString();
-    __qmljs_init_number(ctx, &ctx->result, QString::localeAwareCompare(value, that));
+    __qmljs_init_number(&ctx->result, QString::localeAwareCompare(value, that));
 }
 
 void StringPrototype::method_match(Context *)
@@ -251,7 +251,7 @@ void StringPrototype::method_slice(Context *ctx)
         end = qMin(end, length);
 
     int count = qMax(0, end - start);
-    ctx->result = Value::string(ctx, text.mid(start, count));
+    ctx->result = Value::fromString(ctx, text.mid(start, count));
 }
 
 void StringPrototype::method_split(Context *)
@@ -280,7 +280,7 @@ void StringPrototype::method_substr(Context *ctx)
 
     qint32 x = Value::toInt32(start);
     qint32 y = Value::toInt32(length);
-    ctx->result = Value::string(ctx, value.mid(x, y));
+    ctx->result = Value::fromString(ctx, value.mid(x, y));
 }
 
 void StringPrototype::method_substring(Context *ctx)
@@ -317,13 +317,13 @@ void StringPrototype::method_substring(Context *ctx)
 
     qint32 x = Value::toInt32(start);
     qint32 y = Value::toInt32(end - start);
-    ctx->result = Value::string(ctx, value.mid(x, y));
+    ctx->result = Value::fromString(ctx, value.mid(x, y));
 }
 
 void StringPrototype::method_toLowerCase(Context *ctx)
 {
     QString value = getThisString(ctx);
-    ctx->result = Value::string(ctx, value.toLower());
+    ctx->result = Value::fromString(ctx, value.toLower());
 }
 
 void StringPrototype::method_toLocaleLowerCase(Context *ctx)
@@ -334,7 +334,7 @@ void StringPrototype::method_toLocaleLowerCase(Context *ctx)
 void StringPrototype::method_toUpperCase(Context *ctx)
 {
     QString value = getThisString(ctx);
-    ctx->result = Value::string(ctx, value.toUpper());
+    ctx->result = Value::fromString(ctx, value.toUpper());
 }
 
 void StringPrototype::method_toLocaleUpperCase(Context *ctx)
@@ -349,7 +349,7 @@ void StringPrototype::method_fromCharCode(Context *ctx)
         QChar c(ctx->argument(i).toUInt16(ctx));
         str += c;
     }
-    ctx->result = Value::string(ctx, str);
+    ctx->result = Value::fromString(ctx, str);
 }
 
 //
@@ -359,8 +359,8 @@ Value NumberCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newNumberCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, ctx->engine->newNumberPrototype(ctx, ctor)));
-    return Value::object(ctx, ctor);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newNumberPrototype(ctx, ctor)));
+    return Value::fromObject(ctor);
 }
 
 NumberCtor::NumberCtor(Context *scope)
@@ -371,31 +371,31 @@ NumberCtor::NumberCtor(Context *scope)
 void NumberCtor::construct(Context *ctx)
 {
     const double n = ctx->argument(0).toNumber(ctx);
-    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newNumberObject(Value::number(ctx, n)));
+    __qmljs_init_object(&ctx->thisObject, ctx->engine->newNumberObject(Value::fromNumber(n)));
 }
 
 void NumberCtor::call(Context *ctx)
 {
     double value = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
-    __qmljs_init_number(ctx, &ctx->result, value);
+    __qmljs_init_number(&ctx->result, value);
 }
 
 NumberPrototype::NumberPrototype(Context *ctx, FunctionObject *ctor)
 {
-    ctor->setProperty(ctx, QLatin1String("NaN"), Value::number(ctx, qSNaN()));
-    ctor->setProperty(ctx, QLatin1String("NEGATIVE_INFINITY"), Value::number(ctx, -qInf()));
-    ctor->setProperty(ctx, QLatin1String("POSITIVE_INFINITY"), Value::number(ctx, qInf()));
-    ctor->setProperty(ctx, QLatin1String("MAX_VALUE"), Value::number(ctx, 1.7976931348623158e+308));
+    ctor->setProperty(ctx, QLatin1String("NaN"), Value::fromNumber(qSNaN()));
+    ctor->setProperty(ctx, QLatin1String("NEGATIVE_INFINITY"), Value::fromNumber(-qInf()));
+    ctor->setProperty(ctx, QLatin1String("POSITIVE_INFINITY"), Value::fromNumber(qInf()));
+    ctor->setProperty(ctx, QLatin1String("MAX_VALUE"), Value::fromNumber(1.7976931348623158e+308));
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor->setProperty(ctx, QLatin1String("MIN_VALUE"), Value::number(ctx, 5e-324));
+    ctor->setProperty(ctx, QLatin1String("MIN_VALUE"), Value::fromNumber(5e-324));
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
 
-    setProperty(ctx, QLatin1String("constructor"), Value::object(ctx, ctor));
+    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
     setProperty(ctx, QLatin1String("toString"), method_toString);
     setProperty(ctx, QLatin1String("toLocalString"), method_toLocaleString);
     setProperty(ctx, QLatin1String("valueOf"), method_valueOf);
@@ -426,10 +426,10 @@ void NumberPrototype::method_toString(Context *ctx)
             QString str;
             double num = internalValue.toNumber(ctx);
             if (qIsNaN(num)) {
-                ctx->result = Value::string(ctx, QLatin1String("NaN"));
+                ctx->result = Value::fromString(ctx, QLatin1String("NaN"));
                 return;
             } else if (qIsInf(num)) {
-                ctx->result = Value::string(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
+                ctx->result = Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
                 return;
             }
             bool negative = false;
@@ -457,7 +457,7 @@ void NumberPrototype::method_toString(Context *ctx)
             }
             if (negative)
                 str.prepend(QLatin1Char('-'));
-            ctx->result = Value::string(ctx, str);
+            ctx->result = Value::fromString(ctx, str);
             return;
         }
     }
@@ -466,7 +466,7 @@ void NumberPrototype::method_toString(Context *ctx)
     self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
 
     String *str = internalValue.toString(ctx);
-    ctx->result = Value::string(ctx, str);
+    ctx->result = Value::fromString(str);
 }
 
 void NumberPrototype::method_toLocaleString(Context *ctx)
@@ -480,7 +480,7 @@ void NumberPrototype::method_toLocaleString(Context *ctx)
     Value internalValue;
     self.objectValue->defaultValue(ctx, &internalValue, STRING_HINT);
     String *str = internalValue.toString(ctx);
-    ctx->result = Value::string(ctx, str);
+    ctx->result = Value::fromString(str);
 }
 
 void NumberPrototype::method_valueOf(Context *ctx)
@@ -523,7 +523,7 @@ void NumberPrototype::method_toFixed(Context *ctx)
         str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
     else
         str = QString::number(v, 'f', int (fdigits));
-    ctx->result = Value::string(ctx, str);
+    ctx->result = Value::fromString(ctx, str);
 }
 
 void NumberPrototype::method_toExponential(Context *ctx)
@@ -544,7 +544,7 @@ void NumberPrototype::method_toExponential(Context *ctx)
 
     double v = internalValue.toNumber(ctx);
     QString z = QString::number(v, 'e', int (fdigits));
-    ctx->result = Value::string(ctx, z);
+    ctx->result = Value::fromString(ctx, z);
 }
 
 void NumberPrototype::method_toPrecision(Context *ctx)
@@ -564,7 +564,7 @@ void NumberPrototype::method_toPrecision(Context *ctx)
     self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
 
     double v = internalValue.toNumber(ctx);
-    ctx->result = Value::string(ctx, QString::number(v, 'g', int (fdigits)));
+    ctx->result = Value::fromString(ctx, QString::number(v, 'g', int (fdigits)));
 }
 
 //
@@ -572,14 +572,14 @@ void NumberPrototype::method_toPrecision(Context *ctx)
 //
 MathObject::MathObject(Context *ctx)
 {
-    setProperty(ctx, QLatin1String("E"), Value::number(ctx, ::exp(1.0)));
-    setProperty(ctx, QLatin1String("LN2"), Value::number(ctx, ::log(2.0)));
-    setProperty(ctx, QLatin1String("LN10"), Value::number(ctx, ::log(10.0)));
-    setProperty(ctx, QLatin1String("LOG2E"), Value::number(ctx, 1.0/::log(2.0)));
-    setProperty(ctx, QLatin1String("LOG10E"), Value::number(ctx, 1.0/::log(10.0)));
-    setProperty(ctx, QLatin1String("PI"), Value::number(ctx, qt_PI));
-    setProperty(ctx, QLatin1String("SQRT1_2"), Value::number(ctx, ::sqrt(0.5)));
-    setProperty(ctx, QLatin1String("SQRT2"), Value::number(ctx, ::sqrt(2.0)));
+    setProperty(ctx, QLatin1String("E"), Value::fromNumber(::exp(1.0)));
+    setProperty(ctx, QLatin1String("LN2"), Value::fromNumber(::log(2.0)));
+    setProperty(ctx, QLatin1String("LN10"), Value::fromNumber(::log(10.0)));
+    setProperty(ctx, QLatin1String("LOG2E"), Value::fromNumber(1.0/::log(2.0)));
+    setProperty(ctx, QLatin1String("LOG10E"), Value::fromNumber(1.0/::log(10.0)));
+    setProperty(ctx, QLatin1String("PI"), Value::fromNumber(qt_PI));
+    setProperty(ctx, QLatin1String("SQRT1_2"), Value::fromNumber(::sqrt(0.5)));
+    setProperty(ctx, QLatin1String("SQRT2"), Value::fromNumber(::sqrt(2.0)));
 
     setProperty(ctx, QLatin1String("abs"), method_abs, 1);
     setProperty(ctx, QLatin1String("acos"), method_acos, 1);
@@ -617,36 +617,36 @@ void MathObject::method_abs(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v == 0) // 0 | -0
-        ctx->result = Value::number(ctx, 0);
+        ctx->result = Value::fromNumber(0);
     else
-        ctx->result = Value::number(ctx, v < 0 ? -v : v);
+        ctx->result = Value::fromNumber(v < 0 ? -v : v);
 }
 
 void MathObject::method_acos(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v > 1)
-        ctx->result = Value::number(ctx, qSNaN());
+        ctx->result = Value::fromNumber(qSNaN());
     else
-        ctx->result = Value::number(ctx, ::acos(v));
+        ctx->result = Value::fromNumber(::acos(v));
 }
 
 void MathObject::method_asin(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v > 1)
-        ctx->result = Value::number(ctx, qSNaN());
+        ctx->result = Value::fromNumber(qSNaN());
     else
-        ctx->result = Value::number(ctx, ::asin(v));
+        ctx->result = Value::fromNumber(::asin(v));
 }
 
 void MathObject::method_atan(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v == 0.0)
-        ctx->result = Value::number(ctx, v);
+        ctx->result = Value::fromNumber(v);
     else
-        ctx->result = Value::number(ctx, ::atan(v));
+        ctx->result = Value::fromNumber(::atan(v));
 }
 
 void MathObject::method_atan2(Context *ctx)
@@ -654,34 +654,34 @@ void MathObject::method_atan2(Context *ctx)
     double v1 = ctx->argument(0).toNumber(ctx);
     double v2 = ctx->argument(1).toNumber(ctx);
     if ((v1 < 0) && qIsFinite(v1) && qIsInf(v2) && (copySign(1.0, v2) == 1.0)) {
-        ctx->result = Value::number(ctx, copySign(0, -1.0));
+        ctx->result = Value::fromNumber(copySign(0, -1.0));
         return;
     }
     if ((v1 == 0.0) && (v2 == 0.0)) {
         if ((copySign(1.0, v1) == 1.0) && (copySign(1.0, v2) == -1.0)) {
-            ctx->result = Value::number(ctx, qt_PI);
+            ctx->result = Value::fromNumber(qt_PI);
             return;
         } else if ((copySign(1.0, v1) == -1.0) && (copySign(1.0, v2) == -1.0)) {
-            ctx->result = Value::number(ctx, -qt_PI);
+            ctx->result = Value::fromNumber(-qt_PI);
             return;
         }
     }
-    ctx->result = Value::number(ctx, ::atan2(v1, v2));
+    ctx->result = Value::fromNumber(::atan2(v1, v2));
 }
 
 void MathObject::method_ceil(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v < 0.0 && v > -1.0)
-        ctx->result = Value::number(ctx, copySign(0, -1.0));
+        ctx->result = Value::fromNumber(copySign(0, -1.0));
     else
-        ctx->result = Value::number(ctx, ::ceil(v));
+        ctx->result = Value::fromNumber(::ceil(v));
 }
 
 void MathObject::method_cos(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
-    ctx->result = Value::number(ctx, ::cos(v));
+    ctx->result = Value::fromNumber(::cos(v));
 }
 
 void MathObject::method_exp(Context *ctx)
@@ -689,27 +689,27 @@ void MathObject::method_exp(Context *ctx)
     double v = ctx->argument(0).toNumber(ctx);
     if (qIsInf(v)) {
         if (copySign(1.0, v) == -1.0)
-            ctx->result = Value::number(ctx, 0);
+            ctx->result = Value::fromNumber(0);
         else
-            ctx->result = Value::number(ctx, qInf());
+            ctx->result = Value::fromNumber(qInf());
     } else {
-        ctx->result = Value::number(ctx, ::exp(v));
+        ctx->result = Value::fromNumber(::exp(v));
     }
 }
 
 void MathObject::method_floor(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
-    ctx->result = Value::number(ctx, ::floor(v));
+    ctx->result = Value::fromNumber(::floor(v));
 }
 
 void MathObject::method_log(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v < 0)
-        ctx->result = Value::number(ctx, qSNaN());
+        ctx->result = Value::fromNumber(qSNaN());
     else
-        ctx->result = Value::number(ctx, ::log(v));
+        ctx->result = Value::fromNumber(::log(v));
 }
 
 void MathObject::method_max(Context *ctx)
@@ -720,7 +720,7 @@ void MathObject::method_max(Context *ctx)
         if (x > mx || qIsNaN(x))
             mx = x;
     }
-    ctx->result = Value::number(ctx, mx);
+    ctx->result = Value::fromNumber(mx);
 }
 
 void MathObject::method_min(Context *ctx)
@@ -733,7 +733,7 @@ void MathObject::method_min(Context *ctx)
             mx = x;
         }
     }
-    ctx->result = Value::number(ctx, mx);
+    ctx->result = Value::fromNumber(mx);
 }
 
 void MathObject::method_pow(Context *ctx)
@@ -742,27 +742,27 @@ void MathObject::method_pow(Context *ctx)
     double y = ctx->argument(1).toNumber(ctx);
 
     if (qIsNaN(y)) {
-        ctx->result = Value::number(ctx, qSNaN());
+        ctx->result = Value::fromNumber(qSNaN());
         return;
     }
 
     if (y == 0) {
-        ctx->result = Value::number(ctx, 1);
+        ctx->result = Value::fromNumber(1);
     } else if (((x == 1) || (x == -1)) && qIsInf(y)) {
-        ctx->result = Value::number(ctx, qSNaN());
+        ctx->result = Value::fromNumber(qSNaN());
     } else if (((x == 0) && copySign(1.0, x) == 1.0) && (y < 0)) {
-        ctx->result = Value::number(ctx, qInf());
+        ctx->result = Value::fromNumber(qInf());
     } else if ((x == 0) && copySign(1.0, x) == -1.0) {
         if (y < 0) {
             if (::fmod(-y, 2.0) == 1.0)
-                ctx->result = Value::number(ctx, -qInf());
+                ctx->result = Value::fromNumber(-qInf());
             else
-                ctx->result = Value::number(ctx, qInf());
+                ctx->result = Value::fromNumber(qInf());
         } else if (y > 0) {
             if (::fmod(y, 2.0) == 1.0)
-                ctx->result = Value::number(ctx, copySign(0, -1.0));
+                ctx->result = Value::fromNumber(copySign(0, -1.0));
             else
-                ctx->result = Value::number(ctx, 0);
+                ctx->result = Value::fromNumber(0);
         }
     }
 
@@ -782,39 +782,39 @@ void MathObject::method_pow(Context *ctx)
     }
 #endif
     else {
-        ctx->result = Value::number(ctx, ::pow(x, y));
+        ctx->result = Value::fromNumber(::pow(x, y));
     }
 }
 
 void MathObject::method_random(Context *ctx)
 {
-    ctx->result = Value::number(ctx, qrand() / (double) RAND_MAX);
+    ctx->result = Value::fromNumber(qrand() / (double) RAND_MAX);
 }
 
 void MathObject::method_round(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     v = copySign(::floor(v + 0.5), v);
-    ctx->result = Value::number(ctx, v);
+    ctx->result = Value::fromNumber(v);
 }
 
 void MathObject::method_sin(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
-    ctx->result = Value::number(ctx, ::sin(v));
+    ctx->result = Value::fromNumber(::sin(v));
 }
 
 void MathObject::method_sqrt(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
-    ctx->result = Value::number(ctx, ::sqrt(v));
+    ctx->result = Value::fromNumber(::sqrt(v));
 }
 
 void MathObject::method_tan(Context *ctx)
 {
     double v = ctx->argument(0).toNumber(ctx);
     if (v == 0.0)
-        ctx->result = Value::number(ctx, v);
+        ctx->result = Value::fromNumber(v);
     else
-        ctx->result = Value::number(ctx, ::tan(v));
+        ctx->result = Value::fromNumber(::tan(v));
 }

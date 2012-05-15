@@ -89,12 +89,12 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, QQmlJS::Engine *engine, const QSt
         VM::Context *ctx = vm->rootContext;
 
         globalObject->put(vm->identifier(QLatin1String("print")),
-                          VM::Value::object(ctx, new builtins::Print(ctx)));
+                          VM::Value::fromObject(new builtins::Print(ctx)));
 
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {
                 globalObject->put(vm->identifier(*function->name),
-                                  VM::Value::object(ctx, ctx->engine->newScriptFunction(ctx, function)));
+                                  VM::Value::fromObject(ctx->engine->newScriptFunction(ctx, function)));
             }
         }
         codeByName.value(QLatin1String("%entry"))->code(ctx);

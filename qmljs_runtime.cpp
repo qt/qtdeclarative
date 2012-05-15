@@ -9,9 +9,9 @@
 namespace QQmlJS {
 namespace VM {
 
-Value Value::string(Context *ctx, const QString &s)
+Value Value::fromString(Context *ctx, const QString &s)
 {
-    return string(ctx, String::get(ctx, s));
+    return fromString(ctx->engine->newString(s));
 }
 
 int Value::toInt32(double number)
@@ -74,52 +74,52 @@ extern "C" {
 
 void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
 {
-    __qmljs_init_object(ctx, result, ctx->engine->newScriptFunction(ctx, clos));
+    __qmljs_init_object(result, ctx->engine->newScriptFunction(ctx, clos));
 }
 
 void __qmljs_string_literal_undefined(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("undefined")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("undefined")));
 }
 
 void __qmljs_string_literal_null(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("null")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("null")));
 }
 
 void __qmljs_string_literal_true(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("true")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("true")));
 }
 
 void __qmljs_string_literal_false(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("false")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("false")));
 }
 
 void __qmljs_string_literal_object(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("object")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("object")));
 }
 
 void __qmljs_string_literal_boolean(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("boolean")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("boolean")));
 }
 
 void __qmljs_string_literal_number(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("number")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("number")));
 }
 
 void __qmljs_string_literal_string(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("string")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("string")));
 }
 
 void __qmljs_string_literal_function(Context *ctx, Value *result)
 {
-    __qmljs_init_string(ctx, result, ctx->engine->identifier(QLatin1String("function")));
+    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("function")));
 }
 
 void __qmljs_delete(Context *ctx, Value *result, const Value *value)
@@ -136,7 +136,7 @@ void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Va
     if (right->type == OBJECT_TYPE) {
         if (FunctionObject *function = right->objectValue->asFunctionObject()) {
             bool r = function->hasInstance(*left);
-            __qmljs_init_boolean(ctx, result, r);
+            __qmljs_init_boolean(result, r);
             return;
         }
     }
@@ -150,7 +150,7 @@ void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *rig
         Value s;
         __qmljs_to_string(ctx, &s, left);
         bool r = right->objectValue->hasProperty(s.stringValue);
-        __qmljs_init_boolean(ctx, result, r);
+        __qmljs_init_boolean(result, r);
     } else {
         __qmljs_throw_type_error(ctx, result);
     }
@@ -170,7 +170,7 @@ double __qmljs_string_to_number(Context *, String *string)
 void __qmljs_string_from_number(Context *ctx, Value *result, double number)
 {
     String *string = String::get(ctx, QString::number(number, 'g', 16));
-    __qmljs_init_string(ctx, result, string);
+    __qmljs_init_string(result, string);
 }
 
 bool __qmljs_string_compare(Context *, String *left, String *right)
@@ -203,29 +203,29 @@ void __qmljs_object_default_value(Context *ctx, Value *result, Object *object, i
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
 {
-    __qmljs_init_object(ctx, result, ctx->engine->newErrorObject(Value::string(ctx, QLatin1String("type error"))));
+    __qmljs_init_object(result, ctx->engine->newErrorObject(Value::fromString(ctx, QLatin1String("type error"))));
 }
 
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
 {
     Value value;
-    __qmljs_init_boolean(ctx, &value, boolean);
-    __qmljs_init_object(ctx, result, ctx->engine->newBooleanObject(value));
+    __qmljs_init_boolean(&value, boolean);
+    __qmljs_init_object(result, ctx->engine->newBooleanObject(value));
 }
 
 void __qmljs_new_number_object(Context *ctx, Value *result, double number)
 {
     Value value;
-    __qmljs_init_number(ctx, &value, number);
-    __qmljs_init_object(ctx, result, ctx->engine->newNumberObject(value));
+    __qmljs_init_number(&value, number);
+    __qmljs_init_object(result, ctx->engine->newNumberObject(value));
     result->objectValue->prototype = ctx->engine->numberPrototype.objectValue;
 }
 
 void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
 {
     Value value;
-    __qmljs_init_string(ctx, &value, string);
-    __qmljs_init_object(ctx, result, ctx->engine->newStringObject(value));
+    __qmljs_init_string(&value, string);
+    __qmljs_init_object(result, ctx->engine->newStringObject(value));
     result->objectValue->prototype = ctx->engine->stringPrototype.objectValue;
 }
 
@@ -238,21 +238,21 @@ void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *valu
 void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool number)
 {
     Value value;
-    __qmljs_init_boolean(ctx, &value, number);
+    __qmljs_init_boolean(&value, number);
     object->objectValue->put(name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double number)
 {
     Value value;
-    __qmljs_init_number(ctx, &value, number);
+    __qmljs_init_number(&value, number);
     object->objectValue->put(name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_string(Context *ctx, Value *object, String *name, String *s)
 {
     Value value;
-    __qmljs_init_string(ctx, &value, s);
+    __qmljs_init_string(&value, s);
     object->objectValue->put(name, value, /*flag*/ 0);
 }
 
@@ -282,21 +282,21 @@ void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
 void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool b)
 {
     Value value;
-    __qmljs_init_boolean(ctx, &value, b);
+    __qmljs_init_boolean(&value, b);
     __qmljs_set_activation_property(ctx, name, &value);
 }
 
 void __qmljs_set_activation_property_number(Context *ctx, String *name, double number)
 {
     Value value;
-    __qmljs_init_number(ctx, &value, number);
+    __qmljs_init_number(&value, number);
     __qmljs_set_activation_property(ctx, name, &value);
 }
 
 void __qmljs_set_activation_property_string(Context *ctx, String *name, String *string)
 {
     Value value;
-    __qmljs_init_string(ctx, &value, string);
+    __qmljs_init_string(&value, string);
     __qmljs_set_activation_property(ctx, name, &value);
 }
 
@@ -359,14 +359,14 @@ void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y
 
     if (px.type == STRING_TYPE && py.type == STRING_TYPE) {
         bool r = __qmljs_string_compare(ctx, px.stringValue, py.stringValue);
-        __qmljs_init_boolean(ctx, result, r);
+        __qmljs_init_boolean(result, r);
     } else {
         double nx = __qmljs_to_number(ctx, &px);
         double ny = __qmljs_to_number(ctx, &py);
         if (isnan(nx) || isnan(ny)) {
-            __qmljs_init_undefined(ctx, result);
+            __qmljs_init_undefined(result);
         } else {
-            __qmljs_init_boolean(ctx, result, nx < ny);
+            __qmljs_init_boolean(result, nx < ny);
         }
     }
 }
@@ -397,19 +397,19 @@ bool __qmljs_equal(Context *ctx, const Value *x, const Value *y)
             return true;
         } else if (x->type == NUMBER_TYPE && y->type == STRING_TYPE) {
             Value ny;
-            __qmljs_init_number(ctx, &ny, __qmljs_to_number(ctx, y));
+            __qmljs_init_number(&ny, __qmljs_to_number(ctx, y));
             return __qmljs_equal(ctx, x, &ny);
         } else if (x->type == STRING_TYPE && y->type == NUMBER_TYPE) {
             Value nx;
-            __qmljs_init_number(ctx, &nx, __qmljs_to_number(ctx, x));
+            __qmljs_init_number(&nx, __qmljs_to_number(ctx, x));
             return __qmljs_equal(ctx, &nx, y);
         } else if (x->type == BOOLEAN_TYPE) {
             Value nx;
-            __qmljs_init_number(ctx, &nx, (double) x->booleanValue);
+            __qmljs_init_number(&nx, (double) x->booleanValue);
             return __qmljs_equal(ctx, &nx, y);
         } else if (y->type == BOOLEAN_TYPE) {
             Value ny;
-            __qmljs_init_number(ctx, &ny, (double) y->booleanValue);
+            __qmljs_init_number(&ny, (double) y->booleanValue);
             return __qmljs_equal(ctx, x, &ny);
         } else if ((x->type == NUMBER_TYPE || x->type == STRING_TYPE) && y->type == OBJECT_TYPE) {
             Value py;
@@ -446,7 +446,7 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
         thisObject = baseObject;
     } else {
         baseObject = context->activation;
-        __qmljs_init_null(context, &thisObject);
+        __qmljs_init_null(&thisObject);
     }
     Value func;
     baseObject.objectValue->get(name, &func);
@@ -457,9 +457,9 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
-                __qmljs_init_object(ctx, &ctx->activation, ctx->engine->newArgumentsObject(ctx));
+                __qmljs_init_object(&ctx->activation, ctx->engine->newArgumentsObject(ctx));
             else
-                __qmljs_init_null(ctx, &ctx->activation);
+                __qmljs_init_null(&ctx->activation);
             ctx->thisObject = thisObject;
             ctx->formals = f->formalParameterList;
             ctx->formalCount = f->formalParameterCount;
@@ -491,10 +491,10 @@ void __qmljs_call_value(Context *context, Value *result, const Value *func, Valu
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
-                __qmljs_init_object(ctx, &ctx->activation, ctx->engine->newArgumentsObject(ctx));
+                __qmljs_init_object(&ctx->activation, ctx->engine->newArgumentsObject(ctx));
             else
-                __qmljs_init_null(ctx, &ctx->activation);
-            __qmljs_init_null(ctx, &ctx->thisObject);
+                __qmljs_init_null(&ctx->activation);
+            __qmljs_init_null(&ctx->thisObject);
             ctx->formals = f->formalParameterList;
             ctx->formalCount = f->formalParameterCount;
             ctx->arguments = args;
@@ -533,10 +533,10 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
-                __qmljs_init_object(ctx, &ctx->activation, ctx->engine->newArgumentsObject(ctx));
+                __qmljs_init_object(&ctx->activation, ctx->engine->newArgumentsObject(ctx));
             else
-                __qmljs_init_null(ctx, &ctx->activation);
-            __qmljs_init_null(ctx, &ctx->thisObject);
+                __qmljs_init_null(&ctx->activation);
+            __qmljs_init_null(&ctx->thisObject);
             ctx->formals = f->formalParameterList;
             ctx->formalCount = f->formalParameterCount;
             ctx->arguments = args;
@@ -581,9 +581,9 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
-                __qmljs_init_object(ctx, &ctx->activation, ctx->engine->newArgumentsObject(ctx));
+                __qmljs_init_object(&ctx->activation, ctx->engine->newArgumentsObject(ctx));
             else
-                __qmljs_init_null(ctx, &ctx->activation);
+                __qmljs_init_null(&ctx->activation);
             ctx->thisObject = thisObject;
             ctx->formals = f->formalParameterList;
             ctx->formalCount = f->formalParameterCount;

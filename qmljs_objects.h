@@ -316,7 +316,7 @@ struct Context {
         if (index < argumentCount)
             *result = arguments[index];
         else
-            __qmljs_init_undefined(this, result);
+            __qmljs_init_undefined(result);
     }
 
     void init(ExecutionEngine *eng)
