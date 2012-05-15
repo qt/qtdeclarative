@@ -50,16 +50,119 @@
 
 #include <QtCore/qhash.h>
 #include <QtCore/qthread.h>
+#include <QtCore/qcoreapplication.h>
+
 #include <qpa/qplatformsharedgraphicscache.h>
 
 #include <QtQuick/qquickcanvas.h>
 
 // #define QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG
 
-Q_DECLARE_METATYPE(QVector<quint32>)
-Q_DECLARE_METATYPE(QVector<QImage>)
-
 QT_BEGIN_NAMESPACE
+
+namespace {
+
+    class QSGInvokeEvent: public QEvent
+    {
+    public:
+        QSGInvokeEvent(QPlatformSharedGraphicsCache *cache,
+                       const QByteArray &cacheId,
+                       const QVector<quint32> &glyphIds)
+            : QEvent(User)
+            , m_cache(cache)
+            , m_cacheId(cacheId)
+            , m_glyphIds(glyphIds)
+        {}
+
+        virtual void invoke() = 0;
+    protected:
+        QPlatformSharedGraphicsCache *m_cache;
+        QByteArray m_cacheId;
+        QVector<quint32> m_glyphIds;
+    };
+
+    class QSGReleaseItemsEvent: public QSGInvokeEvent
+    {
+    public:
+        QSGReleaseItemsEvent(QPlatformSharedGraphicsCache *cache,
+                             const QByteArray &cacheId,
+                             const QVector<quint32> &glyphIds)
+            : QSGInvokeEvent(cache, cacheId, glyphIds)
+        {
+        }
+
+        void invoke()
+        {
+            m_cache->releaseItems(m_cacheId, m_glyphIds);
+        }
+    };
+
+    class QSGRequestItemsEvent: public QSGInvokeEvent
+    {
+    public:
+        QSGRequestItemsEvent(QPlatformSharedGraphicsCache *cache,
+                             const QByteArray &cacheId,
+                             const QVector<quint32> &glyphIds)
+            : QSGInvokeEvent(cache, cacheId, glyphIds)
+        {
+        }
+
+        void invoke()
+        {
+            m_cache->requestItems(m_cacheId, m_glyphIds);
+        }
+    };
+
+    class QSGInsertItemsEvent: public QSGInvokeEvent
+    {
+    public:
+        QSGInsertItemsEvent(QPlatformSharedGraphicsCache *cache,
+                            const QByteArray &cacheId,
+                            const QVector<quint32> &glyphIds,
+                            const QVector<QImage> &images)
+            : QSGInvokeEvent(cache, cacheId, glyphIds)
+            , m_images(images)
+        {
+        }
+
+        void invoke()
+        {
+            m_cache->insertItems(m_cacheId, m_glyphIds, m_images);
+        }
+
+    private:
+        QVector<QImage> m_images;
+    };
+
+    class QSGMainThreadInvoker: public QObject
+    {
+    public:
+        bool event(QEvent *e)
+        {
+            if (e->type() == QEvent::User) {
+                Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread());
+                static_cast<QSGInvokeEvent *>(e)->invoke();
+                return true;
+            }
+            return QObject::event(e);
+        }
+
+        static QSGMainThreadInvoker *instance()
+        {
+            if (m_invoker == 0) {
+                m_invoker = new QSGMainThreadInvoker;
+                m_invoker->moveToThread(QCoreApplication::instance()->thread());
+            }
+
+            return m_invoker;
+        }
+
+    private:
+        static QSGMainThreadInvoker *m_invoker;
+    };
+
+    QSGMainThreadInvoker* QSGMainThreadInvoker::m_invoker = 0;
+}
 
 QSGSharedDistanceFieldGlyphCache::QSGSharedDistanceFieldGlyphCache(const QByteArray &cacheId,
                                                                    QPlatformSharedGraphicsCache *sharedGraphicsCache,
@@ -77,9 +180,6 @@ QSGSharedDistanceFieldGlyphCache::QSGSharedDistanceFieldGlyphCache(const QByteAr
 
     Q_ASSERT(sizeof(glyph_t) == sizeof(quint32));
     Q_ASSERT(sharedGraphicsCache != 0);
-
-    qRegisterMetaType<QVector<quint32> >();
-    qRegisterMetaType<QVector<QImage> >();
 
     connect(sharedGraphicsCache, SIGNAL(itemsMissing(QByteArray,QVector<quint32>)),
             this, SLOT(reportItemsMissing(QByteArray,QVector<quint32>)),
@@ -135,11 +235,10 @@ void QSGSharedDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
         glyphsVector.append(*it);
     }
 
-    // Invoke method on queued connection to make sure it's called asynchronously on the
-    // correct thread (requestGlyphs() is called from the rendering thread.)
-    QMetaObject::invokeMethod(m_sharedGraphicsCache, "requestItems", Qt::QueuedConnection,
-                              Q_ARG(QByteArray, m_cacheId),
-                              Q_ARG(QVector<quint32>, glyphsVector));
+    QSGMainThreadInvoker *invoker = QSGMainThreadInvoker::instance();
+    QCoreApplication::postEvent(invoker, new QSGRequestItemsEvent(m_sharedGraphicsCache,
+                                                                  m_cacheId,
+                                                                  glyphsVector));
 }
 
 void QSGSharedDistanceFieldGlyphCache::waitForGlyphs()
@@ -173,10 +272,11 @@ void QSGSharedDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage> 
             ++it; ++i;
         }
 
-        QMetaObject::invokeMethod(m_sharedGraphicsCache, "insertItems", Qt::QueuedConnection,
-                                  Q_ARG(QByteArray, m_cacheId),
-                                  Q_ARG(QVector<quint32>, glyphIds),
-                                  Q_ARG(QVector<QImage>, images));
+        QSGMainThreadInvoker *invoker = QSGMainThreadInvoker::instance();
+        QCoreApplication::postEvent(invoker, new QSGInsertItemsEvent(m_sharedGraphicsCache,
+                                                                     m_cacheId,
+                                                                     glyphIds,
+                                                                     images));
     }
 
     processPendingGlyphs();
@@ -225,9 +325,10 @@ void QSGSharedDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyphs
         glyphsVector.append(*glyphsIt);
     }
 
-    QMetaObject::invokeMethod(m_sharedGraphicsCache, "releaseItems", Qt::QueuedConnection,
-                              Q_ARG(QByteArray, m_cacheId),
-                              Q_ARG(QVector<quint32>, glyphsVector));
+    QSGMainThreadInvoker *mainThreadInvoker = QSGMainThreadInvoker::instance();
+    QCoreApplication::postEvent(mainThreadInvoker, new QSGReleaseItemsEvent(m_sharedGraphicsCache,
+                                                                            m_cacheId,
+                                                                            glyphsVector));
 }
 
 void QSGSharedDistanceFieldGlyphCache::registerOwnerElement(QQuickItem *ownerElement)
