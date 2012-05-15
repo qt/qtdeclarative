@@ -53,6 +53,7 @@
 #include <private/qqmlxmlhttprequest_p.h>
 #include <private/qqmllocale_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qqmlmemoryprofiler_p.h>
 
 #include "qscript_impl_p.h"
 #include "qv8domerrors_p.h"
@@ -127,6 +128,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     , m_listModelData(0)
     , m_application(0)
 {
+    QML_MEMORY_SCOPE_STRING("QV8Engine::QV8Engine");
     qMetaTypeId<QJSValue>();
     qMetaTypeId<QList<int> >();
 

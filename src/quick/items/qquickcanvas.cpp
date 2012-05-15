@@ -68,6 +68,7 @@
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
 #include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlmemoryprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -267,6 +268,7 @@ void forceUpdate(QQuickItem *item)
 
 void QQuickCanvasPrivate::syncSceneGraph()
 {
+    QML_MEMORY_SCOPE_STRING("SceneGraph");
     if (!renderer) {
         forceUpdate(rootItem);
 
@@ -289,6 +291,7 @@ void QQuickCanvasPrivate::syncSceneGraph()
 
 void QQuickCanvasPrivate::renderSceneGraph(const QSize &size)
 {
+    QML_MEMORY_SCOPE_STRING("SceneGraph");
     Q_Q(QQuickCanvas);
     emit q->beforeRendering();
     int fboId = 0;

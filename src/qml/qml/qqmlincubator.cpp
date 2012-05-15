@@ -45,6 +45,7 @@
 
 #include "qqmlcompiler_p.h"
 #include "qqmlexpression_p.h"
+#include "qqmlmemoryprofiler_p.h"
 
 // XXX TODO 
 //   - check that the Component.onCompleted behavior is the same as 4.8 in the synchronous and 
@@ -259,6 +260,8 @@ void QQmlIncubatorPrivate::incubate(QQmlVME::Interrupt &i)
 {
     if (!component)
         return;
+    QML_MEMORY_SCOPE_URL(component->url);
+
     typedef QQmlIncubatorPrivate IP;
     QRecursionWatcher<IP, &IP::recursion> watcher(this);
 

@@ -47,6 +47,7 @@
 #include <private/qqmlcompiler_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlprofilerservice_p.h>
+#include <private/qqmlmemoryprofiler_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -852,6 +853,7 @@ void QQmlDataLoaderThread::loadWithStaticDataThread(QQmlDataBlob *b, const QByte
 
 void QQmlDataLoaderThread::callCompletedMain(QQmlDataBlob *b) 
 { 
+    QML_MEMORY_SCOPE_URL(b->url());
 #ifdef DATABLOB_DEBUG
     qWarning("QQmlDataLoaderThread: %s completed() callback", qPrintable(b->url().toString())); 
 #endif
@@ -1026,6 +1028,7 @@ void QQmlDataLoader::loadThread(QQmlDataBlob *blob)
         return;
     }
 
+    QML_MEMORY_SCOPE_URL(blob->m_url);
     QQmlEnginePrivate *engine_d = QQmlEnginePrivate::get(m_engine);
     QHash<QUrl, QByteArray> debugCache = engine_d->debugChangesCache();
 
@@ -1155,6 +1158,7 @@ void QQmlDataLoader::initializeEngine(QQmlExtensionInterface *iface,
 
 void QQmlDataLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 {
+    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlDataBlob::Data d;
     d.d = &data;
     setData(blob, d);
@@ -1162,6 +1166,7 @@ void QQmlDataLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
 
 void QQmlDataLoader::setData(QQmlDataBlob *blob, QQmlFile *file)
 {
+    QML_MEMORY_SCOPE_URL(blob->url());
     QQmlDataBlob::Data d;
     d.d = file;
     setData(blob, d);
@@ -1169,6 +1174,7 @@ void QQmlDataLoader::setData(QQmlDataBlob *blob, QQmlFile *file)
 
 void QQmlDataLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::Data &d)
 {
+    QML_MEMORY_SCOPE_URL(blob->url());
     blob->m_inCallback = true;
 
     blob->dataReceived(d);

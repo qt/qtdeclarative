@@ -65,6 +65,7 @@
 #include <QStringList>
 #include <QtCore/qdebug.h>
 #include <qqmlinfo.h>
+#include "qqmlmemoryprofiler_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -744,6 +745,7 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 QObject *QQmlComponent::create(QQmlContext *context)
 {
     Q_D(QQmlComponent);
+    QML_MEMORY_SCOPE_URL(url());
 
     if (!context)
         context = d->engine->rootContext();

@@ -48,6 +48,7 @@
 
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlinspectorservice_p.h>
+#include <private/qqmlmemoryprofiler_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <private/qqmlengine_p.h>
@@ -91,6 +92,7 @@ void QQuickViewPrivate::execute()
         component = 0;
     }
     if (!source.isEmpty()) {
+        QML_MEMORY_SCOPE_URL(engine.baseUrl().resolved(source));
         component = new QQmlComponent(&engine, source, q);
         if (!component->isLoading()) {
             q->continueExecute();
