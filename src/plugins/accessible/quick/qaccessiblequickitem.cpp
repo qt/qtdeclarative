@@ -152,6 +152,9 @@ QAccessible::State QAccessibleQuickItem::state() const
     if (item()->hasActiveFocus())
         state.focused = true;
 
+    if (!item()->canvas() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
+        state.invisible = true;
+
     QAccessible::Role r = role();
     switch (r) {
     case QAccessible::Button: {
@@ -162,7 +165,7 @@ QAccessible::State QAccessibleQuickItem::state() const
     }
     case QAccessible::CheckBox:
     case QAccessible::RadioButton: {
-        // FIXME when states are extended: state.checkable = true;
+        state.checkable = true;
         state.checked = item()->property("checked").toBool();
         break;
     }

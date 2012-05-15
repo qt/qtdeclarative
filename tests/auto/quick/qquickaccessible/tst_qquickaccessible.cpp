@@ -399,16 +399,24 @@ void tst_QQuickAccessible::checkableTest()
     QAI button1 = QAI(root->child(0));
     QCOMPARE(button1->role(), QAccessible::Button);
     QVERIFY(!(button1->state().checked));
+    QVERIFY(!(button1->state().checkable));
+
     QAI button2 = QAI(root->child(1));
     QVERIFY(!(button2->state().checked));
+    QVERIFY(button2->state().checkable);
+
     QAI button3 = QAI(root->child(2));
     QVERIFY(button3->state().checked);
+    QVERIFY(button3->state().checkable);
 
     QAI checkBox1 = QAI(root->child(3));
     QCOMPARE(checkBox1->role(), QAccessible::CheckBox);
     QVERIFY((checkBox1->state().checked));
+    QVERIFY(checkBox1->state().checkable);
+
     QAI checkBox2 = QAI(root->child(4));
     QVERIFY(!(checkBox2->state().checked));
+    QVERIFY(checkBox2->state().checkable);
 }
 
 QTEST_MAIN(tst_QQuickAccessible)
