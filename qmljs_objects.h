@@ -370,6 +370,9 @@ struct ExecutionEngine
     Object *newNumberPrototype(Context *ctx, FunctionObject *proto);
 
     Object *newBooleanObject(const Value &value);
+    FunctionObject *newBooleanCtor(Context *ctx);
+    Object *newBooleanPrototype(Context *ctx, FunctionObject *proto);
+
     Object *newErrorObject(const Value &value);
     Object *newMathObject(Context *ctx);
     Object *newArgumentsObject(Context *ctx);

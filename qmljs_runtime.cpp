@@ -211,6 +211,7 @@ void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
     Value value;
     __qmljs_init_boolean(&value, boolean);
     __qmljs_init_object(result, ctx->engine->newBooleanObject(value));
+    result->objectValue->prototype = ctx->engine->objectPrototype.objectValue;
 }
 
 void __qmljs_new_number_object(Context *ctx, Value *result, double number)

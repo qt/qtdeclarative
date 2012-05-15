@@ -258,7 +258,9 @@ FunctionObject *ExecutionEngine::newStringCtor(Context *ctx)
 
 Object *ExecutionEngine::newStringPrototype(Context *ctx, FunctionObject *proto)
 {
-    return new StringPrototype(ctx, proto);
+    Object *stringProto = new StringPrototype(ctx, proto);
+    stringProto->prototype = objectPrototype.objectValue;
+    return stringProto;
 }
 
 Object *ExecutionEngine::newNumberObject(const Value &value)
@@ -273,12 +275,26 @@ FunctionObject *ExecutionEngine::newNumberCtor(Context *ctx)
 
 Object *ExecutionEngine::newNumberPrototype(Context *ctx, FunctionObject *proto)
 {
-    return new NumberPrototype(ctx, proto);
+    Object *numberProto = new NumberPrototype(ctx, proto);
+    numberProto->prototype = objectPrototype.objectValue;
+    return numberProto;
 }
 
 Object *ExecutionEngine::newBooleanObject(const Value &value)
 {
     return new BooleanObject(value);
+}
+
+FunctionObject *ExecutionEngine::newBooleanCtor(Context *ctx)
+{
+    return new BooleanCtor(ctx);
+}
+
+Object *ExecutionEngine::newBooleanPrototype(Context *ctx, FunctionObject *proto)
+{
+    Object *booleanProto = new BooleanPrototype(ctx, proto);
+    booleanProto->prototype = objectPrototype.objectValue;
+    return booleanProto;
 }
 
 Object *ExecutionEngine::newErrorObject(const Value &value)

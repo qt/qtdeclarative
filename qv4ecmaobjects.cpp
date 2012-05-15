@@ -568,6 +568,70 @@ void NumberPrototype::method_toPrecision(Context *ctx)
 }
 
 //
+// Boolean object
+//
+Value BooleanCtor::create(ExecutionEngine *engine)
+{
+    Context *ctx = engine->rootContext;
+    FunctionObject *ctor = ctx->engine->newBooleanCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newBooleanPrototype(ctx, ctor)));
+    return Value::fromObject(ctor);
+}
+
+BooleanCtor::BooleanCtor(Context *scope)
+    : FunctionObject(scope)
+{
+}
+
+void BooleanCtor::construct(Context *ctx)
+{
+    const double n = ctx->argument(0).toBoolean(ctx);
+    __qmljs_init_object(&ctx->thisObject, ctx->engine->newBooleanObject(Value::fromBoolean(n)));
+}
+
+void BooleanCtor::call(Context *ctx)
+{
+    double value = ctx->argumentCount ? ctx->argument(0).toBoolean(ctx) : 0;
+    __qmljs_init_boolean(&ctx->result, value);
+}
+
+BooleanPrototype::BooleanPrototype(Context *ctx, FunctionObject *ctor)
+{
+    ctor->setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
+    ctor->setProperty(ctx, QLatin1String("toString"), method_toString);
+    ctor->setProperty(ctx, QLatin1String("valueOf"), method_valueOf);
+}
+
+void BooleanPrototype::method_toString(Context *ctx)
+{
+    Value self = ctx->thisObject;
+//    if (self.classInfo() != classInfo) {
+//        return throwThisObjectTypeError(
+//            context, QLatin1String("Boolean.prototype.toString"));
+//    }
+    assert(self.isObject());
+    Value internalValue;
+    self.objectValue->defaultValue(ctx, &internalValue, PREFERREDTYPE_HINT);
+    assert(internalValue.isBoolean());
+    bool v = internalValue.booleanValue;
+    ctx->result = Value::fromString(ctx, QLatin1String(v ? "true" : "false"));
+}
+
+void BooleanPrototype::method_valueOf(Context *ctx)
+{
+    Value self = ctx->thisObject;
+//    if (self.classInfo() != classInfo) {
+//        return throwThisObjectTypeError(
+//            context, QLatin1String("Boolean.prototype.valueOf"));
+//    }
+    assert(self.isObject());
+    Value internalValue;
+    self.objectValue->defaultValue(ctx, &internalValue, PREFERREDTYPE_HINT);
+    assert(internalValue.isBoolean());
+    ctx->result = internalValue;
+}
+
+//
 // Math object
 //
 MathObject::MathObject(Context *ctx)

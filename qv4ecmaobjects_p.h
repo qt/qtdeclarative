@@ -83,6 +83,25 @@ protected:
     static void method_toPrecision(Context *ctx);
 };
 
+struct BooleanCtor: FunctionObject
+{
+    static Value create(ExecutionEngine *engine);
+
+    BooleanCtor(Context *scope);
+
+    virtual void construct(Context *ctx);
+    virtual void call(Context *ctx);
+};
+
+struct BooleanPrototype: Object
+{
+    BooleanPrototype(Context *ctx, FunctionObject *ctor);
+
+protected:
+    static void method_toString(Context *ctx);
+    static void method_valueOf(Context *ctx);
+};
+
 struct MathObject: Object
 {
     MathObject(Context *ctx);
