@@ -132,6 +132,7 @@ ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
     : FunctionObject(scope)
     , function(function)
 {
+    needsActivation = function->needsActivation();
     formalParameterCount = function->formals.size();
     if (formalParameterCount) {
         formalParameterList = new String*[formalParameterCount];

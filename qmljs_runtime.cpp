@@ -452,7 +452,8 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
     baseObject.objectValue->get(name, &func);
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
-            Context *ctx = new Context;
+            Context k;
+            Context *ctx = f->needsActivation ? new Context : &k;
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
@@ -485,7 +486,8 @@ void __qmljs_call_value(Context *context, Value *result, const Value *func, Valu
 
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
-            Context *ctx = new Context;
+            Context k;
+            Context *ctx = f->needsActivation ? new Context : &k;
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
@@ -526,7 +528,8 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
     Q_UNUSED(context);
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
-            Context *ctx = new Context;
+            Context k;
+            Context *ctx = f->needsActivation ? new Context : &k;
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
@@ -573,7 +576,8 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
     thisObject.objectValue->get(name, &func);
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
-            Context *ctx = new Context;
+            Context k;
+            Context *ctx = f->needsActivation ? new Context : &k;
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)

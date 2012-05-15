@@ -1357,6 +1357,7 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock();
     function->hasDirectEval = functionInfo.hasDirectEval;
+    function->hasNestedFunctions = functionInfo.hasNestedFunctions;
     function->maxNumberOfArguments = functionInfo.maxNumberOfArguments;
 
     if (! function->needsActivation()) {
