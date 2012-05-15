@@ -263,6 +263,7 @@ private slots:
     void bindingSuppression();
     void signalEmitted();
     void threadSignal();
+    void qqmldataDestroyed();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -6648,6 +6649,7 @@ void tst_qqmlecmascript::replaceBinding()
 
 void tst_qqmlecmascript::deleteRootObjectInCreation()
 {
+    {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("deleteRootObjectInCreation.qml"));
     QObject *obj = c.create();
@@ -6657,6 +6659,15 @@ void tst_qqmlecmascript::deleteRootObjectInCreation()
     QTest::qWait(1);
     QVERIFY(obj->property("childDestructible").toBool());
     delete obj;
+    }
+
+    {
+    QQmlComponent c(&engine, testFileUrl("deleteRootObjectInCreation.2.qml"));
+    QObject *object = c.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("testConditionsMet").toBool());
+    delete object;
+    }
 }
 
 void tst_qqmlecmascript::onDestruction()
@@ -6766,6 +6777,40 @@ void tst_qqmlecmascript::threadSignal()
     QVERIFY(object != 0);
     QTRY_VERIFY(object->property("passed").toBool());
     delete object;
+}
+
+// ensure that the qqmldata::destroyed() handler doesn't cause problems
+void tst_qqmlecmascript::qqmldataDestroyed()
+{
+    // gc cleans up a qobject, later the qqmldata destroyed handler will run.
+    {
+        QQmlComponent c(&engine, testFileUrl("qqmldataDestroyed.qml"));
+        QObject *object = c.create();
+        QVERIFY(object != 0);
+        // now gc causing the collection of the dynamically constructed object.
+        engine.collectGarbage();
+        engine.collectGarbage();
+        // now process events to allow deletion (calling qqmldata::destroyed())
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+        // shouldn't crash.
+        delete object;
+    }
+
+    // in this case, the object has CPP ownership, and the gc will
+    // be triggered during its beginCreate stage.
+    {
+        QQmlComponent c(&engine, testFileUrl("qqmldataDestroyed.2.qml"));
+        QObject *object = c.create();
+        QVERIFY(object != 0);
+        QVERIFY(object->property("testConditionsMet").toBool());
+        // the gc() within the handler will have triggered the weak
+        // qobject reference callback.  If that incorrectly disposes
+        // the handle, when the qqmldata::destroyed() handler is
+        // called due to object deletion we will see a crash.
+        delete object;
+        // shouldn't have crashed.
+    }
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

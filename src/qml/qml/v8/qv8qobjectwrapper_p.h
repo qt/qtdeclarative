@@ -119,7 +119,7 @@ private:
     friend class QV8QObjectInstance;
 
     v8::Local<v8::Object> newQObject(QObject *, QQmlData *, QV8Engine *);
-    void deleteWeakQObject(QV8QObjectResource *resource);
+    bool deleteWeakQObject(QV8QObjectResource *resource, bool calledFromEngineDtor = false);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
                                              const QHashedV8String &, QV8QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, const QHashedV8String &,

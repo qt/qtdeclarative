@@ -1033,6 +1033,19 @@ public:
     int qobjectTestWritableFinalProperty() const { return m_testWritableFinalProperty; }
     void setQObjectTestWritableFinalProperty(int tp) { m_testWritableFinalProperty = tp; emit qobjectTestWritableFinalPropertyChanged(); }
 
+    Q_INVOKABLE bool trackedObjectHasJsOwnership() {
+        QObject * object = m_trackedObject;
+
+        if (!object)
+            return false;
+
+        QQmlData *ddata = QQmlData::get(object, false);
+        if (!ddata)
+            return false;
+        else
+            return ddata->indestructible?false:true;
+    }
+
 signals:
     void qobjectTestPropertyChanged(int testProperty);
     void qobjectTestWritablePropertyChanged(int testWritableProperty);

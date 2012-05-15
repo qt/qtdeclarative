@@ -218,7 +218,7 @@ void QV8QObjectWrapper::destroy()
     for (; i != m_javaScriptOwnedWeakQObjects.end(); ++i) {
         QV8QObjectResource *resource = *i;
         Q_ASSERT(resource);
-        deleteWeakQObject(resource);
+        deleteWeakQObject(resource, true);
     }
 }
 
@@ -909,9 +909,11 @@ void QV8QObjectWrapper::WeakQObjectReferenceCallback(v8::Persistent<v8::Value> h
     Q_ASSERT(resource);
 
     static_cast<QV8QObjectWrapper*>(wrapper)->unregisterWeakQObjectReference(resource);
-    static_cast<QV8QObjectWrapper*>(wrapper)->deleteWeakQObject(resource);
-
-    qPersistentDispose(handle);
+    if (static_cast<QV8QObjectWrapper*>(wrapper)->deleteWeakQObject(resource, false)) {
+        qPersistentDispose(handle); // dispose.
+    } else {
+        handle.MakeWeak(0, WeakQObjectReferenceCallback); // revive.
+    }
 }
 
 static void WeakQObjectInstanceCallback(v8::Persistent<v8::Value> handle, void *data)
@@ -1122,15 +1124,20 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         return v8::Local<v8::Object>::New((*iter)->v8object);
     }
 }
-void QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource)
+
+// returns true if the object's qqmldata v8object handle should
+// be disposed by the caller, false if it should not be (due to
+// creation status, etc).
+bool QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource, bool calledFromEngineDtor)
 {
     QObject *object = resource->object;
     if (object) {
         QQmlData *ddata = QQmlData::get(object, false);
         if (ddata) {
-            if (ddata->rootObjectInCreation) {
-                ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
-                return;
+            if (!calledFromEngineDtor && ddata->rootObjectInCreation) {
+                // if weak ref callback is triggered (by gc) for a root object
+                // prior to completion of creation, we should NOT delete it.
+                return false;
             }
 
             ddata->v8object.Clear();
@@ -1143,6 +1150,8 @@ void QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource)
             }
         }
     }
+
+    return true;
 }
 
 QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, v8::Handle<v8::Object> object)
