@@ -74,7 +74,7 @@ extern "C" {
 
 void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
 {
-    __qmljs_init_object(ctx, result, new ScriptFunction(ctx, clos));
+    __qmljs_init_object(ctx, result, ctx->engine->newScriptFunction(ctx, clos));
 }
 
 void __qmljs_string_literal_undefined(Context *ctx, Value *result)
@@ -203,21 +203,21 @@ void __qmljs_object_default_value(Context *ctx, Value *result, Object *object, i
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
 {
-    __qmljs_init_object(ctx, result, new ErrorObject(String::get(ctx, QLatin1String("type error"))));
+    __qmljs_init_object(ctx, result, ctx->engine->newErrorObject(Value::string(ctx, QLatin1String("type error"))));
 }
 
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
 {
     Value value;
     __qmljs_init_boolean(ctx, &value, boolean);
-    __qmljs_init_object(ctx, result, new BooleanObject(value));
+    __qmljs_init_object(ctx, result, ctx->engine->newBooleanObject(value));
 }
 
 void __qmljs_new_number_object(Context *ctx, Value *result, double number)
 {
     Value value;
     __qmljs_init_number(ctx, &value, number);
-    __qmljs_init_object(ctx, result, new NumberObject(value));
+    __qmljs_init_object(ctx, result, ctx->engine->newNumberObject(value));
     result->objectValue->prototype = ctx->engine->numberPrototype.objectValue;
 }
 
@@ -225,7 +225,7 @@ void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
 {
     Value value;
     __qmljs_init_string(ctx, &value, string);
-    __qmljs_init_object(ctx, result, new StringObject(value));
+    __qmljs_init_object(ctx, result, ctx->engine->newStringObject(value));
     result->objectValue->prototype = ctx->engine->stringPrototype.objectValue;
 }
 
@@ -453,11 +453,11 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
             Context k;
-            Context *ctx = f->needsActivation ? new Context : &k;
+            Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
-                __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+                __qmljs_init_object(ctx, &ctx->activation, ctx->engine->newArgumentsObject(ctx));
             else
                 __qmljs_init_null(ctx, &ctx->activation);
             ctx->thisObject = thisObject;
@@ -487,11 +487,11 @@ void __qmljs_call_value(Context *context, Value *result, const Value *func, Valu
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context k;
-            Context *ctx = f->needsActivation ? new Context : &k;
+            Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
-                __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+                __qmljs_init_object(ctx, &ctx->activation, ctx->engine->newArgumentsObject(ctx));
             else
                 __qmljs_init_null(ctx, &ctx->activation);
             __qmljs_init_null(ctx, &ctx->thisObject);
@@ -529,11 +529,11 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context k;
-            Context *ctx = f->needsActivation ? new Context : &k;
+            Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
-                __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+                __qmljs_init_object(ctx, &ctx->activation, ctx->engine->newArgumentsObject(ctx));
             else
                 __qmljs_init_null(ctx, &ctx->activation);
             __qmljs_init_null(ctx, &ctx->thisObject);
@@ -577,11 +577,11 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
     if (func.type == OBJECT_TYPE) {
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
             Context k;
-            Context *ctx = f->needsActivation ? new Context : &k;
+            Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
             ctx->init(context->engine);
             ctx->parent = f->scope;
             if (f->needsActivation)
-                __qmljs_init_object(ctx, &ctx->activation, new ArgumentsObject(ctx));
+                __qmljs_init_object(ctx, &ctx->activation, ctx->engine->newArgumentsObject(ctx));
             else
                 __qmljs_init_null(ctx, &ctx->activation);
             ctx->thisObject = thisObject;

@@ -400,7 +400,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
-                amd64_mov_reg_imm(_codePtr, AMD64_RDX, new String(*str->value));
+                amd64_mov_reg_imm(_codePtr, AMD64_RDX, _engine->newString(*str->value));
                 amd64_call_code(_codePtr, __qmljs_set_activation_property_string);
                 return;
             } else if (IR::Temp *t = s->source->asTemp()) {
@@ -474,7 +474,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 loadTempAddress(AMD64_RSI, t);
-                amd64_mov_reg_imm(_codePtr, AMD64_RDX, new String(*str->value));
+                amd64_mov_reg_imm(_codePtr, AMD64_RDX, _engine->newString(*str->value));
                 amd64_call_code(_codePtr, __qmljs_init_string);
                 return;
             } else if (IR::Closure *clos = s->source->asClosure()) {

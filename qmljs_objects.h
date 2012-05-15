@@ -41,10 +41,7 @@ struct String {
         return _hashValue;
     }
 
-    static String *get(Context *ctx, const QString &s) {
-        Q_UNUSED(ctx);
-        return new String(s);
-    }
+    static String *get(Context *ctx, const QString &s);
 
 private:
     QString _text;
@@ -277,8 +274,8 @@ struct ScriptFunction: FunctionObject {
 };
 
 struct ErrorObject: Object {
-    String *message;
-    ErrorObject(String *message): message(message) {}
+    Value message;
+    ErrorObject(const Value &message): message(message) {}
 };
 
 struct ArgumentsObject: Object {
@@ -354,7 +351,30 @@ struct ExecutionEngine
 
     ExecutionEngine();
 
+    Context *newContext();
+
     String *identifier(const QString &s);
+
+    FunctionObject *newNativeFunction(Context *scope, void (*code)(Context *));
+    FunctionObject *newScriptFunction(Context *scope, IR::Function *function);
+
+    Object *newObject();
+    FunctionObject *newObjectCtor(Context *ctx);
+    Object *newObjectPrototype(Context *ctx, FunctionObject *proto);
+
+    String *newString(const QString &s);
+    Object *newStringObject(const Value &value);
+    FunctionObject *newStringCtor(Context *ctx);
+    Object *newStringPrototype(Context *ctx, FunctionObject *proto);
+
+    Object *newNumberObject(const Value &value);
+    FunctionObject *newNumberCtor(Context *ctx);
+    Object *newNumberPrototype(Context *ctx, FunctionObject *proto);
+
+    Object *newBooleanObject(const Value &value);
+    Object *newErrorObject(const Value &value);
+    Object *newMathObject(Context *ctx);
+    Object *newArgumentsObject(Context *ctx);
 };
 
 } // namespace VM

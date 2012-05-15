@@ -14,8 +14,8 @@ static const double qt_PI = 2.0 * ::asin(1.0);
 Value ObjectCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
-    ObjectCtor *ctor = new ObjectCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, new ObjectPrototype(ctx, ctor)));
+    FunctionObject *ctor = ctx->engine->newObjectCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, ctx->engine->newObjectPrototype(ctx, ctor)));
     return Value::object(ctx, ctor);
 }
 
@@ -26,7 +26,7 @@ ObjectCtor::ObjectCtor(Context *scope)
 
 void ObjectCtor::construct(Context *ctx)
 {
-    __qmljs_init_object(ctx, &ctx->thisObject, new Object());
+    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newObject());
 }
 
 void ObjectCtor::call(Context *)
@@ -45,8 +45,8 @@ ObjectPrototype::ObjectPrototype(Context *ctx, FunctionObject *ctor)
 Value StringCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
-    StringCtor *ctor = new StringCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, new StringPrototype(ctx, ctor)));
+    FunctionObject *ctor = ctx->engine->newStringCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, ctx->engine->newStringPrototype(ctx, ctor)));
     return Value::object(ctx, ctor);
 }
 
@@ -62,7 +62,7 @@ void StringCtor::construct(Context *ctx)
         value = Value::string(ctx, ctx->argument(0).toString(ctx));
     else
         value = Value::string(ctx, QString());
-    __qmljs_init_object(ctx, &ctx->thisObject, new StringObject(value));
+    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newStringObject(value));
 }
 
 void StringCtor::call(Context *ctx)
@@ -358,8 +358,8 @@ void StringPrototype::method_fromCharCode(Context *ctx)
 Value NumberCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
-    NumberCtor *ctor = new NumberCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, new NumberPrototype(ctx, ctor)));
+    FunctionObject *ctor = ctx->engine->newNumberCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::object(ctx, ctx->engine->newNumberPrototype(ctx, ctor)));
     return Value::object(ctx, ctor);
 }
 
@@ -371,7 +371,7 @@ NumberCtor::NumberCtor(Context *scope)
 void NumberCtor::construct(Context *ctx)
 {
     const double n = ctx->argument(0).toNumber(ctx);
-    __qmljs_init_object(ctx, &ctx->thisObject, new NumberObject(Value::number(ctx, n)));
+    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newNumberObject(Value::number(ctx, n)));
 }
 
 void NumberCtor::call(Context *ctx)

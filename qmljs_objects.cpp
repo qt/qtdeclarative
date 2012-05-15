@@ -7,6 +7,11 @@
 
 using namespace QQmlJS::VM;
 
+String *String::get(Context *ctx, const QString &s)
+{
+    return ctx->engine->newString(s);
+}
+
 Object::~Object()
 {
     delete members;
@@ -20,7 +25,7 @@ void Object::setProperty(Context *ctx, const QString &name, const Value &value)
 void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context *), int count)
 {
     Q_UNUSED(count);
-    setProperty(ctx, name, Value::object(ctx, new NativeFunction(ctx, code)));
+    setProperty(ctx, name, Value::object(ctx, ctx->engine->newNativeFunction(ctx, code)));
 }
 
 bool Object::get(String *name, Value *result)
@@ -124,7 +129,7 @@ void FunctionObject::call(Context *ctx)
 
 void FunctionObject::construct(Context *ctx)
 {
-    __qmljs_init_object(ctx, &ctx->thisObject, new Object());
+    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newObject());
     call(ctx);
 }
 
@@ -154,7 +159,7 @@ void ScriptFunction::call(VM::Context *ctx)
 
 void ScriptFunction::construct(VM::Context *ctx)
 {
-    __qmljs_init_object(ctx, &ctx->thisObject, new Object());
+    __qmljs_init_object(ctx, &ctx->thisObject, ctx->engine->newObject());
     function->code(ctx);
 }
 
@@ -177,13 +182,13 @@ Value *ArgumentsObject::getProperty(String *name, PropertyAttributes *attributes
 
 ExecutionEngine::ExecutionEngine()
 {
-    rootContext = new VM::Context;
+    rootContext = newContext();
     rootContext->init(this);
 
     //
     // set up the global object
     //
-    VM::Object *glo = new VM::ArgumentsObject(rootContext);
+    VM::Object *glo = newArgumentsObject(rootContext);
     __qmljs_init_object(rootContext, &globalObject, glo);
     __qmljs_init_object(rootContext, &rootContext->activation, glo);
 
@@ -200,13 +205,98 @@ ExecutionEngine::ExecutionEngine()
     glo->put(VM::String::get(rootContext, QLatin1String("Object")), objectCtor);
     glo->put(VM::String::get(rootContext, QLatin1String("String")), stringCtor);
     glo->put(VM::String::get(rootContext, QLatin1String("Number")), numberCtor);
-    glo->put(VM::String::get(rootContext, QLatin1String("Math")), Value::object(rootContext, new MathObject(rootContext)));
+    glo->put(VM::String::get(rootContext, QLatin1String("Math")), Value::object(rootContext, newMathObject(rootContext)));
+}
+
+Context *ExecutionEngine::newContext()
+{
+    return new Context();
 }
 
 String *ExecutionEngine::identifier(const QString &s)
 {
     String *&id = identifiers[s];
     if (! id)
-        id = new String(s);
+        id = newString(s);
     return id;
+}
+
+FunctionObject *ExecutionEngine::newNativeFunction(Context *scope, void (*code)(Context *))
+{
+    return new NativeFunction(scope, code);
+}
+
+FunctionObject *ExecutionEngine::newScriptFunction(Context *scope, IR::Function *function)
+{
+    return new ScriptFunction(scope, function);
+}
+
+Object *ExecutionEngine::newObject()
+{
+    return new Object();
+}
+
+FunctionObject *ExecutionEngine::newObjectCtor(Context *ctx)
+{
+    return new ObjectCtor(ctx);
+}
+
+Object *ExecutionEngine::newObjectPrototype(Context *ctx, FunctionObject *proto)
+{
+    return new ObjectPrototype(ctx, proto);
+}
+
+String *ExecutionEngine::newString(const QString &s)
+{
+    return new String(s);
+}
+
+Object *ExecutionEngine::newStringObject(const Value &value)
+{
+    return new StringObject(value);
+}
+
+FunctionObject *ExecutionEngine::newStringCtor(Context *ctx)
+{
+    return new StringCtor(ctx);
+}
+
+Object *ExecutionEngine::newStringPrototype(Context *ctx, FunctionObject *proto)
+{
+    return new StringPrototype(ctx, proto);
+}
+
+Object *ExecutionEngine::newNumberObject(const Value &value)
+{
+    return new NumberObject(value);
+}
+
+FunctionObject *ExecutionEngine::newNumberCtor(Context *ctx)
+{
+    return new NumberCtor(ctx);
+}
+
+Object *ExecutionEngine::newNumberPrototype(Context *ctx, FunctionObject *proto)
+{
+    return new NumberPrototype(ctx, proto);
+}
+
+Object *ExecutionEngine::newBooleanObject(const Value &value)
+{
+    return new BooleanObject(value);
+}
+
+Object *ExecutionEngine::newErrorObject(const Value &value)
+{
+    return new ErrorObject(value);
+}
+
+Object *ExecutionEngine::newMathObject(Context *ctx)
+{
+    return new MathObject(ctx);
+}
+
+Object *ExecutionEngine::newArgumentsObject(Context *ctx)
+{
+    return new ArgumentsObject(ctx);
 }

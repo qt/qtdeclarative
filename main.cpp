@@ -94,7 +94,7 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, QQmlJS::Engine *engine, const QSt
         foreach (IR::Function *function, module.functions) {
             if (function->name && ! function->name->isEmpty()) {
                 globalObject->put(vm->identifier(*function->name),
-                                  VM::Value::object(ctx, new VM::ScriptFunction(ctx, function)));
+                                  VM::Value::object(ctx, ctx->engine->newScriptFunction(ctx, function)));
             }
         }
         codeByName.value(QLatin1String("%entry"))->code(ctx);
