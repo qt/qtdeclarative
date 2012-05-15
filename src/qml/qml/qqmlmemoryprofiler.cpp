@@ -75,7 +75,7 @@ extern QFunctionPointer qt_linux_find_symbol_sys(const char *symbol);
 
 static bool openLibrary()
 {
-#if 0//def Q_OS_LINUX   [Disabled until qt_linux_find_symbol_sys is available in qtbase]
+#ifdef Q_OS_LINUX
     if (state == Unloaded) {
         memprofile_stats = (qmlmemprofile_stats *) qt_linux_find_symbol_sys("qmlmemprofile_stats");
         memprofile_clear = (qmlmemprofile_clear *) qt_linux_find_symbol_sys("qmlmemprofile_clear");
