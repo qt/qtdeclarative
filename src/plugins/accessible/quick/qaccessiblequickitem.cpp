@@ -231,11 +231,6 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
         } else if (textType == QAccessible::Name) {
             return object()->objectName();
         }
-    } else {
-        if (textType == QAccessible::Name) {
-            QVariant text = object()->property("text");
-            return text.toString();
-        }
     }
 
     return QString();
