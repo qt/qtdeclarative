@@ -47,6 +47,14 @@ never spend more than a couple of milliseconds per frame within blocking functio
 Failure to do so will result in skipped frames, which has a drastic effect on the
 user experience.
 
+\note A pattern which is tempting, but should \e never be used, is creating your
+own QEventLoop or calling QCoreApplication::processEvents() in order to avoid
+blocking within a C++ code block invoked from QML. This is dangerous because
+when an event loop is entered in a signal handler or binding, the QML engine
+continues to run other bindings, animations, transitions, etc. Those bindings
+can then cause side effects which, for example, destroy the hierarchy containing
+your event loop.
+
 \section1 Profiling
 
 The most important tip is: use the QML profiler included with Qt Creator.  Knowing
