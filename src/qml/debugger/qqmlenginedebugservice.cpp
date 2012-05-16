@@ -651,7 +651,11 @@ bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyN
     QQmlContext *context = qmlContext(object);
 
     if (object && context) {
-        if (object->property(propertyName.toLatin1()).isValid()) {
+        QString parentProperty = propertyName;
+        if (propertyName.indexOf(QLatin1Char('.')) != -1)
+            parentProperty = propertyName.left(propertyName.indexOf(QLatin1Char('.')));
+
+        if (object->property(parentProperty.toLatin1()).isValid()) {
             QQmlProperty property(object, propertyName);
             QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(property);
             if (oldBinding) {
@@ -669,7 +673,7 @@ bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyN
                 // overwrite with default value
                 if (QQmlType *objType = QQmlMetaType::qmlType(object->metaObject())) {
                     if (QObject *emptyObject = objType->create()) {
-                        if (emptyObject->property(propertyName.toLatin1()).isValid()) {
+                        if (emptyObject->property(parentProperty.toLatin1()).isValid()) {
                             QVariant defaultValue = QQmlProperty(emptyObject, propertyName).read();
                             if (defaultValue.isValid()) {
                                 setBinding(objectId, propertyName, defaultValue, true);
@@ -679,15 +683,24 @@ bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyN
                     }
                 }
             }
-        } else if (hasValidSignal(object, propertyName)) {
+            return true;
+        }
+
+        if (hasValidSignal(object, propertyName)) {
             QQmlProperty property(object, propertyName, context);
             QQmlPropertyPrivate::setSignalExpression(property, 0);
-        } else {
-            if (m_statesDelegate)
-                m_statesDelegate->resetBindingForInvalidProperty(object, propertyName);
+            return true;
         }
+
+        if (m_statesDelegate) {
+            m_statesDelegate->resetBindingForInvalidProperty(object, propertyName);
+            return true;
+        }
+
+        return false;
     }
-    return true;
+    // object or context null.
+    return false;
 }
 
 bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, const QString &body)

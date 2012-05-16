@@ -127,6 +127,7 @@ private slots:
     void queryExpressionResultBC_data();
 
     void setBindingForObject();
+    void resetBindingForObject();
     void setMethodBody();
     void queryObjectTree();
     void setBindingInStates();
@@ -258,7 +259,7 @@ void tst_QQmlEngineDebugService::initTestCase()
                 "id: root\n"
                 "width: 10; height: 20; scale: blueRect.scale;"
                 "Rectangle { id: blueRect; width: 500; height: 600; color: \"blue\"; }"
-                "Text { color: blueRect.color; }"
+                "Text { font.bold: true; color: blueRect.color; }"
                 "MouseArea {"
                     "onEntered: { console.log('hello') }"
                 "}"
@@ -886,20 +887,6 @@ void tst_QQmlEngineDebugService::setBindingForObject()
     QCOMPARE(widthPropertyRef.binding, QString("height"));
 
     //
-    // reset
-    //
-    m_dbg->resetBindingForObject(rootObject.debugId, "width", &success);
-    QVERIFY(success);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
-    QCOMPARE(m_dbg->valid(), true);
-
-    rootObject = findRootObject();
-    widthPropertyRef =  findProperty(rootObject.properties, "width");
-
-   // QCOMPARE(widthPropertyRef.value(), QVariant(0)); // TODO: Shouldn't this work?
-    QCOMPARE(widthPropertyRef.binding, QString());
-
-    //
     // set handler
     //
     rootObject = findRootObject();
@@ -933,6 +920,50 @@ void tst_QQmlEngineDebugService::setBindingForObject()
     onEnteredRef = findProperty(mouseAreaObject.properties, "onEntered");
     QCOMPARE(onEnteredRef.name, QString("onEntered"));
     QCOMPARE(onEnteredRef.value,  QVariant("{console.log('hello, world') }"));
+}
+
+void tst_QQmlEngineDebugService::resetBindingForObject()
+{
+    QmlDebugObjectReference rootObject = findRootObject();
+    QVERIFY(rootObject.debugId != -1);
+    QmlDebugPropertyReference widthPropertyRef = findProperty(rootObject.properties, "width");
+
+    bool success = false;
+
+    m_dbg->setBindingForObject(rootObject.debugId, "width", "15", true,
+                               QString(), -1, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+    QCOMPARE(m_dbg->valid(), true);
+
+    //
+    // reset
+    //
+    m_dbg->resetBindingForObject(rootObject.debugId, "width", &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+    QCOMPARE(m_dbg->valid(), true);
+
+    rootObject = findRootObject();
+    widthPropertyRef =  findProperty(rootObject.properties, "width");
+
+    QCOMPARE(widthPropertyRef.value, QVariant(0));
+    QCOMPARE(widthPropertyRef.binding, QString());
+
+    //
+    // reset nested property
+    //
+    success = false;
+    m_dbg->resetBindingForObject(rootObject.debugId, "font.bold", &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+    QCOMPARE(m_dbg->valid(), true);
+
+    rootObject = findRootObject();
+    QmlDebugPropertyReference boldPropertyRef =  findProperty(rootObject.properties, "font.bold");
+
+    QCOMPARE(boldPropertyRef.value.toBool(), false);
+    QCOMPARE(boldPropertyRef.binding, QString());
 }
 
 void tst_QQmlEngineDebugService::setBindingInStates()
