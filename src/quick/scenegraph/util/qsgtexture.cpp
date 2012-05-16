@@ -499,7 +499,7 @@ int QSGPlainTexture::textureId() const
             // The actual texture and id will be updated/deleted in a later bind()
             // or ~QSGPlainTexture so just keep it minimal here.
             return 0;
-        } else {
+        } else if (m_texture_id == 0){
             // Generate a texture id for use later and return it.
             glGenTextures(1, &const_cast<QSGPlainTexture *>(this)->m_texture_id);
             return m_texture_id;
