@@ -3422,6 +3422,17 @@ void QQuickItem::polish()
     }
 }
 
+/*!
+    \qmlmethod object QtQuick2::Item::mapFromItem(Item item, real x, real y)
+    \qmlmethod object QtQuick2::Item::mapFromItem(Item item, real x, real y, real width, real height)
+
+    Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in \a
+    item's coordinate system, to this item's coordinate system, and returns an object with \c x and
+    \c y (and optionally \c width and \c height) properties matching the mapped coordinate.
+
+    If \a item is a \c null value, this maps the point or rect from the coordinate system of
+    the root QML view.
+*/
 void QQuickItem::mapFromItem(QQmlV8Function *args) const
 {
     if (args->Length() != 0) {
@@ -3444,10 +3455,22 @@ void QQuickItem::mapFromItem(QQmlV8Function *args) const
         qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
         qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
 
-        QPointF p = mapFromItem(itemObj, QPointF(x, y));
+        if (args->Length() > 3) {
+            qreal w = (*args)[3]->NumberValue();
+            qreal h = (args->Length() > 4)?(*args)[4]->NumberValue():0;
 
-        rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
-        rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+            QRectF r = mapRectFromItem(itemObj, QRectF(x, y, w, h));
+
+            rv->Set(v8::String::New("x"), v8::Number::New(r.x()));
+            rv->Set(v8::String::New("y"), v8::Number::New(r.y()));
+            rv->Set(v8::String::New("width"), v8::Number::New(r.width()));
+            rv->Set(v8::String::New("height"), v8::Number::New(r.height()));
+        } else {
+            QPointF p = mapFromItem(itemObj, QPointF(x, y));
+
+            rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
+            rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+        }
     }
 }
 
@@ -3465,6 +3488,17 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
     return t;
 }
 
+/*!
+    \qmlmethod object QtQuick2::Item::mapToItem(Item item, real x, real y)
+    \qmlmethod object QtQuick2::Item::mapToItem(Item item, real x, real y, real width, real height)
+
+    Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in this
+    item's coordinate system, to \a item's coordinate system, and returns an object with \c x and
+    \c y (and optionally \c width and \c height) properties matching the mapped coordinate.
+
+    If \a item is a \c null value, this maps the point or rect to the coordinate system of the
+    root QML view.
+*/
 void QQuickItem::mapToItem(QQmlV8Function *args) const
 {
     if (args->Length() != 0) {
@@ -3487,10 +3521,22 @@ void QQuickItem::mapToItem(QQmlV8Function *args) const
         qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
         qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
 
-        QPointF p = mapToItem(itemObj, QPointF(x, y));
+        if (args->Length() > 3) {
+            qreal w = (*args)[3]->NumberValue();
+            qreal h = (args->Length() > 4)?(*args)[4]->NumberValue():0;
 
-        rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
-        rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+            QRectF r = mapRectToItem(itemObj, QRectF(x, y, w, h));
+
+            rv->Set(v8::String::New("x"), v8::Number::New(r.x()));
+            rv->Set(v8::String::New("y"), v8::Number::New(r.y()));
+            rv->Set(v8::String::New("width"), v8::Number::New(r.width()));
+            rv->Set(v8::String::New("height"), v8::Number::New(r.height()));
+        } else {
+            QPointF p = mapToItem(itemObj, QPointF(x, y));
+
+            rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
+            rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+        }
     }
 }
 
@@ -5139,26 +5185,6 @@ bool QQuickItem::contains(const QPointF &point) const
     return QRectF(0, 0, d->width, d->height).contains(point);
 }
 
-/*!
-    \qmlmethod object QtQuick2::Item::mapFromItem(Item item, real x, real y)
-
-    Maps the point (\a x, \a y), which is in \a item's coordinate system, to
-    this item's coordinate system, and returns an object with \c x and \c y
-    properties matching the mapped coordinate.
-
-    If \a item is a \c null value, this maps the point from the coordinate
-    system of the root QML view.
-*/
-/*!
-    \qmlmethod object QtQuick2::Item::mapToItem(Item item, real x, real y)
-
-    Maps the point (\a x, \a y), which is in this item's coordinate system, to
-    \a item's coordinate system, and returns an object with \c x and \c y
-    properties matching the mapped coordinate.
-
-    If \a item is a \c null value, this maps \a x and \a y to the coordinate
-    system of the root QML view.
-*/
 QPointF QQuickItem::mapToItem(const QQuickItem *item, const QPointF &point) const
 {
     QPointF p = mapToScene(point);

@@ -77,6 +77,8 @@ private slots:
     void clip();
     void mapCoordinates();
     void mapCoordinates_data();
+    void mapCoordinatesRect();
+    void mapCoordinatesRect_data();
     void propertyChanges();
     void transforms();
     void transforms_data();
@@ -1081,6 +1083,71 @@ void tst_QQuickItem::mapCoordinates_data()
 
     for (int i=-20; i<=20; i+=10)
         QTest::newRow(QTest::toString(i)) << i << i;
+}
+
+void tst_QQuickItem::mapCoordinatesRect()
+{
+    QFETCH(int, x);
+    QFETCH(int, y);
+    QFETCH(int, width);
+    QFETCH(int, height);
+
+    QQuickView *canvas = new QQuickView(0);
+    canvas->setBaseSize(QSize(300, 300));
+    canvas->setSource(testFileUrl("mapCoordinatesRect.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QVERIFY(root != 0);
+    QQuickItem *a = findItem<QQuickItem>(canvas->rootObject(), "itemA");
+    QVERIFY(a != 0);
+    QQuickItem *b = findItem<QQuickItem>(canvas->rootObject(), "itemB");
+    QVERIFY(b != 0);
+
+    QVariant result;
+
+    QVERIFY(QMetaObject::invokeMethod(root, "mapAToB",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
+    QCOMPARE(result.value<QRectF>(), qobject_cast<QQuickItem*>(a)->mapRectToItem(b, QRectF(x, y, width, height)));
+
+    QVERIFY(QMetaObject::invokeMethod(root, "mapAFromB",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
+    QCOMPARE(result.value<QRectF>(), qobject_cast<QQuickItem*>(a)->mapRectFromItem(b, QRectF(x, y, width, height)));
+
+    QVERIFY(QMetaObject::invokeMethod(root, "mapAToNull",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
+    QCOMPARE(result.value<QRectF>(), qobject_cast<QQuickItem*>(a)->mapRectToScene(QRectF(x, y, width, height)));
+
+    QVERIFY(QMetaObject::invokeMethod(root, "mapAFromNull",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
+    QCOMPARE(result.value<QRectF>(), qobject_cast<QQuickItem*>(a)->mapRectFromScene(QRectF(x, y, width, height)));
+
+    QString warning1 = testFileUrl("mapCoordinatesRect.qml").toString() + ":48:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
+    QString warning2 = testFileUrl("mapCoordinatesRect.qml").toString() + ":48:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QVERIFY(QMetaObject::invokeMethod(root, "checkMapAToInvalid",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
+    QVERIFY(result.toBool());
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QVERIFY(QMetaObject::invokeMethod(root, "checkMapAFromInvalid",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
+    QVERIFY(result.toBool());
+
+    delete canvas;
+}
+
+void tst_QQuickItem::mapCoordinatesRect_data()
+{
+    QTest::addColumn<int>("x");
+    QTest::addColumn<int>("y");
+    QTest::addColumn<int>("width");
+    QTest::addColumn<int>("height");
+
+    for (int i=-20; i<=20; i+=5)
+        QTest::newRow(QTest::toString(i)) << i << i << i << i;
 }
 
 void tst_QQuickItem::transforms_data()
