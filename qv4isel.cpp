@@ -115,6 +115,8 @@ void InstructionSelection::operator()(IR::Function *function)
     amd64_mov_reg_reg(_codePtr, AMD64_R14, AMD64_RDI, 8);
     amd64_alu_reg_imm(_codePtr, X86_SUB, AMD64_RSP, locals);
 
+    amd64_mov_reg_membase(_codePtr, AMD64_R15, AMD64_R14, offsetof(Context, locals), 8);
+
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
         _block = block;
         _addrs[block] = _codePtr;
@@ -169,8 +171,7 @@ void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
         amd64_mov_reg_membase(_codePtr, reg, AMD64_R14, offsetof(Context, arguments), 8);
         amd64_lea_membase(_codePtr, reg, reg, sizeof(Value) * arg);
     } else if (t->index < _function->locals.size()) {
-        amd64_mov_reg_membase(_codePtr, reg, AMD64_R14, offsetof(Context, locals), 8);
-        amd64_lea_membase(_codePtr, reg, reg, sizeof(Value) * t->index);
+        amd64_lea_membase(_codePtr, reg, AMD64_R15, sizeof(Value) * t->index);
     } else {
         amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * (_function->maxNumberOfArguments + t->index - _function->locals.size()));
     }
