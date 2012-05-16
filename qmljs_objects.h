@@ -301,13 +301,16 @@ struct Context {
     size_t varCount;
     bool calledAsConstructor;
 
-    Value *lookup(String *name) {
-        if (activation.is(OBJECT_TYPE)) {
-            if (Value *prop = activation.objectValue->getProperty(name)) {
-                return prop;
+    Value *lookup(String *name)
+    {
+        for (Context *ctx = this; ctx; ctx = ctx->parent) {
+            if (ctx->activation.is(OBJECT_TYPE)) {
+                if (Value *prop = ctx->activation.objectValue->getProperty(name)) {
+                    return prop;
+                }
             }
         }
-        return parent ? parent->lookup(name) : 0;
+        return 0;
     }
 
     inline Value argument(size_t index = 0)
@@ -341,6 +344,12 @@ struct Context {
         varCount = 0;
         calledAsConstructor = false;
     }
+
+    void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
+    void leaveCallContext(FunctionObject *f, Value *r);
+
+    void initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
+    void leaveConstructorContext(FunctionObject *f, Value *returnValue);
 };
 
 struct ExecutionEngine

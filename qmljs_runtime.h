@@ -174,6 +174,18 @@ struct Value {
     inline bool is(ValueType t) const { return type == t; }
     inline bool isNot(ValueType t) const { return type != t; }
 
+    static inline Value undefinedValue() {
+        Value v;
+        v.type = UNDEFINED_TYPE;
+        return v;
+    }
+
+    static inline Value nullValue() {
+        Value v;
+        v.type = NULL_TYPE;
+        return v;
+    }
+
     static inline Value fromBoolean(bool value) {
         Value v;
         __qmljs_init_boolean(&v, value);

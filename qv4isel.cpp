@@ -104,7 +104,7 @@ void InstructionSelection::operator()(IR::Function *function)
     _function->code = (void (*)(VM::Context *)) _code;
     _codePtr = _code;
 
-    int locals = (_function->tempCount + _function->maxNumberOfArguments) * sizeof(Value);
+    int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) * sizeof(Value);
     locals = (locals + 15) & ~15;
 
     amd64_push_reg(_codePtr, AMD64_RBP);
@@ -114,12 +114,6 @@ void InstructionSelection::operator()(IR::Function *function)
     amd64_mov_reg_reg(_codePtr, AMD64_RBP, AMD64_RSP, 8);
     amd64_mov_reg_reg(_codePtr, AMD64_R14, AMD64_RDI, 8);
     amd64_alu_reg_imm(_codePtr, X86_SUB, AMD64_RSP, locals);
-
-    amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_R15, AMD64_R15);
-
-    amd64_lea_membase(_codePtr, AMD64_RAX, AMD64_RSP, _function->maxNumberOfArguments * sizeof(Value));
-    amd64_mov_membase_reg(_codePtr, AMD64_R14, offsetof(Context, locals), AMD64_RAX, 8);
-
 
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
         _block = block;
@@ -174,8 +168,11 @@ void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
         const int arg = -t->index - 1;
         amd64_mov_reg_membase(_codePtr, reg, AMD64_R14, offsetof(Context, arguments), 8);
         amd64_lea_membase(_codePtr, reg, reg, sizeof(Value) * arg);
+    } else if (t->index < _function->locals.size()) {
+        amd64_mov_reg_membase(_codePtr, reg, AMD64_R14, offsetof(Context, locals), 8);
+        amd64_lea_membase(_codePtr, reg, reg, sizeof(Value) * t->index);
     } else {
-        amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * (_function->maxNumberOfArguments + t->index));
+        amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * (_function->maxNumberOfArguments + t->index - _function->locals.size()));
     }
 }
 

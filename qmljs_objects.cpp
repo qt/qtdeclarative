@@ -328,3 +328,62 @@ Object *ExecutionEngine::newArgumentsObject(Context *ctx)
 {
     return new ArgumentsObject(ctx);
 }
+
+void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
+{
+    engine = e;
+    parent = f->scope;
+
+    if (f->needsActivation)
+        __qmljs_init_object(&activation, engine->newArgumentsObject(this));
+    else
+        __qmljs_init_null(&activation);
+
+    if (object)
+        thisObject = *object;
+    else
+        __qmljs_init_null(&thisObject);
+
+    formals = f->formalParameterList;
+    formalCount = f->formalParameterCount;
+    arguments = args;
+    argumentCount = argc;
+    if (argc && f->needsActivation) {
+        arguments = new Value[argc];
+        std::copy(args, args + argc, arguments);
+    }
+    vars = f->varList;
+    varCount = f->varCount;
+    locals = varCount ? new Value[varCount] : 0;
+    std::fill(locals, locals + varCount, Value::undefinedValue());
+}
+
+void Context::leaveCallContext(FunctionObject *f, Value *returnValue)
+{
+    if (returnValue)
+        __qmljs_copy(returnValue, &result);
+
+    if (! f->needsActivation) {
+        delete[] locals;
+        locals = 0;
+    }
+}
+
+void Context::initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
+{
+    initCallContext(e, object, f, args, argc);
+    calledAsConstructor = true;
+}
+
+void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
+{
+    assert(thisObject.is(OBJECT_TYPE));
+    result = thisObject;
+
+    Value proto;
+    if (f->get(engine->identifier(QLatin1String("prototype")), &proto)) {
+        if (proto.type == OBJECT_TYPE)
+            thisObject.objectValue->prototype = proto.objectValue;
+    }
+    leaveCallContext(f, returnValue);
+}

@@ -256,6 +256,7 @@ Codegen::Codegen()
 void Codegen::operator()(AST::Program *node, IR::Module *module)
 {
     _module = module;
+    _env = 0;
 
     Scope scope(this, newEnvironment());
     ScanFunctionBody globalCodeInfo;
@@ -1385,11 +1386,12 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     function->hasNestedFunctions = functionInfo.hasNestedFunctions;
     function->maxNumberOfArguments = functionInfo.maxNumberOfArguments;
 
-    if (! function->needsActivation()) {
+    //if (! function->needsActivation())
+    {
         for (int i = 0; i < functionInfo.locals.size(); ++i) {
             unsigned t = entryBlock->newTemp();
             Q_ASSERT(t == unsigned(i));
-            entryBlock->MOVE(entryBlock->TEMP(t), entryBlock->CONST(IR::UndefinedType, 0));
+            //entryBlock->MOVE(entryBlock->TEMP(t), entryBlock->CONST(IR::UndefinedType, 0));
         }
     }
 

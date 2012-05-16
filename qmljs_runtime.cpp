@@ -238,6 +238,7 @@ void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *valu
 
 void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool number)
 {
+    Q_UNUSED(ctx);
     Value value;
     __qmljs_init_boolean(&value, number);
     object->objectValue->put(name, value, /*flag*/ 0);
@@ -245,6 +246,7 @@ void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, boo
 
 void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double number)
 {
+    Q_UNUSED(ctx);
     Value value;
     __qmljs_init_number(&value, number);
     object->objectValue->put(name, value, /*flag*/ 0);
@@ -252,6 +254,7 @@ void __qmljs_set_property_number(Context *ctx, Value *object, String *name, doub
 
 void __qmljs_set_property_string(Context *ctx, Value *object, String *name, String *s)
 {
+    Q_UNUSED(ctx);
     Value value;
     __qmljs_init_string(&value, s);
     object->objectValue->put(name, value, /*flag*/ 0);
@@ -266,9 +269,9 @@ void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR:
 
 void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
 {
-    if (Value *prop = ctx->lookup(name))
-        __qmljs_copy(prop, value);
-    else
+    if (Value *prop = ctx->lookup(name)) {
+        *prop = *value;
+    } else
         ctx->activation.objectValue->put(name, *value);
 }
 
@@ -455,24 +458,9 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
             Context k;
             Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->init(context->engine);
-            ctx->parent = f->scope;
-            if (f->needsActivation)
-                __qmljs_init_object(&ctx->activation, ctx->engine->newArgumentsObject(ctx));
-            else
-                __qmljs_init_null(&ctx->activation);
-            ctx->thisObject = thisObject;
-            ctx->formals = f->formalParameterList;
-            ctx->formalCount = f->formalParameterCount;
-            ctx->arguments = args;
-            ctx->argumentCount = argc;
-            if (argc && f->needsActivation) {
-                ctx->arguments = new Value[argc];
-                std::copy(args, args + argc, ctx->arguments);
-            }
+            ctx->initCallContext(context->engine, &thisObject, f, args, argc);
             f->call(ctx);
-            if (result)
-                __qmljs_copy(result, &ctx->result);
+            ctx->leaveCallContext(f, result);
         } else {
             assert(!"not a function");
         }
@@ -483,33 +471,13 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
 
 void __qmljs_call_value(Context *context, Value *result, const Value *func, Value *args, int argc)
 {
-    Q_UNUSED(context);
-
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context k;
             Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->init(context->engine);
-            ctx->parent = f->scope;
-            if (f->needsActivation)
-                __qmljs_init_object(&ctx->activation, ctx->engine->newArgumentsObject(ctx));
-            else
-                __qmljs_init_null(&ctx->activation);
-            __qmljs_init_null(&ctx->thisObject);
-            ctx->formals = f->formalParameterList;
-            ctx->formalCount = f->formalParameterCount;
-            ctx->arguments = args;
-            ctx->argumentCount = argc;
-            if (argc && f->needsActivation) {
-                ctx->arguments = new Value[argc];
-                std::copy(args, args + argc, ctx->arguments);
-            }
-            ctx->vars = f->varList;
-            ctx->varCount = f->varCount;
-            ctx->locals = 0;
+            ctx->initCallContext(context->engine, 0, f, args, argc);
             f->call(ctx);
-            if (result)
-                __qmljs_copy(result, &ctx->result);
+            ctx->leaveCallContext(f, result);
         } else {
             assert(!"not a function");
         }
@@ -534,33 +502,9 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context k;
             Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->init(context->engine);
-            ctx->parent = f->scope;
-            if (f->needsActivation)
-                __qmljs_init_object(&ctx->activation, ctx->engine->newArgumentsObject(ctx));
-            else
-                __qmljs_init_null(&ctx->activation);
-            __qmljs_init_null(&ctx->thisObject);
-            ctx->formals = f->formalParameterList;
-            ctx->formalCount = f->formalParameterCount;
-            ctx->arguments = args;
-            ctx->argumentCount = argc;
-            if (argc && f->needsActivation) {
-                ctx->arguments = new Value[argc];
-                std::copy(args, args + argc, ctx->arguments);
-            }
-            ctx->calledAsConstructor = true;
+            ctx->initConstructorContext(context->engine, 0, f, args, argc);
             f->construct(ctx);
-            assert(ctx->thisObject.is(OBJECT_TYPE));
-            ctx->result = ctx->thisObject;
-            Value proto;
-            if (f->get(ctx->engine->identifier(QLatin1String("prototype")), &proto)) { // ### `prototype' should be a unique symbol
-                if (proto.type == OBJECT_TYPE)
-                    ctx->thisObject.objectValue->prototype = proto.objectValue;
-            }
-
-            if (result)
-                __qmljs_copy(result, &ctx->thisObject);
+            ctx->leaveConstructorContext(f, result);
         } else {
             assert(!"not a function");
         }
@@ -582,33 +526,10 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
         if (FunctionObject *f = func.objectValue->asFunctionObject()) {
             Context k;
             Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->init(context->engine);
-            ctx->parent = f->scope;
-            if (f->needsActivation)
-                __qmljs_init_object(&ctx->activation, ctx->engine->newArgumentsObject(ctx));
-            else
-                __qmljs_init_null(&ctx->activation);
-            ctx->thisObject = thisObject;
-            ctx->formals = f->formalParameterList;
-            ctx->formalCount = f->formalParameterCount;
-            ctx->arguments = args;
-            ctx->argumentCount = argc;
-            if (argc && f->needsActivation) {
-                ctx->arguments = new Value[argc];
-                std::copy(args, args + argc, ctx->arguments);
-            }
+            ctx->initConstructorContext(context->engine, 0, f, args, argc);
             ctx->calledAsConstructor = true;
             f->construct(ctx);
-            assert(ctx->thisObject.is(OBJECT_TYPE));
-
-            Value proto;
-            if (f->get(ctx->engine->identifier(QLatin1String("prototype")), &proto)) { // ### `prototype' should be a unique symbol
-                if (proto.type == OBJECT_TYPE)
-                    ctx->thisObject.objectValue->prototype = proto.objectValue;
-            }
-
-            if (result)
-                __qmljs_copy(result, &ctx->thisObject);
+            ctx->leaveConstructorContext(f, result);
         } else {
             assert(!"not a function");
         }

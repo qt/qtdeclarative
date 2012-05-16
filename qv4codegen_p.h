@@ -105,7 +105,7 @@ protected:
     struct Scope {
         Codegen *cg;
         Environment *previous;
-        inline Scope(Codegen *cg, Environment *env) { previous = cg->changeEnvironment(env); }
+        inline Scope(Codegen *cg, Environment *env): cg(cg) { previous = cg->changeEnvironment(env); }
         inline ~Scope() { cg->changeEnvironment(previous); }
 
     private:
