@@ -26,7 +26,6 @@
 ****************************************************************************/
 
 /*!
-\target qmlengine
 \page qmlengine.html
 \ingroup qml-features
 \title The QML Engine
@@ -233,7 +232,7 @@ specified in QML files, plugins, or applications.
     side, all QML object data is automatically made available to the meta-object
     system and can be accessed from C++.
 
-    The \l{Creating QML Types} article covers the topic of exposing Qt functions
+    The \l{C++ Types as QML Types} article covers the topic of exposing Qt functions
     and properties to the declarative engine.
 
     \section2 Calling Functions
@@ -392,7 +391,7 @@ specified in QML files, plugins, or applications.
     changes. If you are using custom types in QML, make sure their properties
     have NOTIFY signals so that they can be used in property bindings.
 
-    The \l{Creating QML Types} article covers the topic of exposing Qt
+    The \l{C++ Types as QML Types} article covers the topic of exposing Qt
     properties to the runtime. For more information, the
     \l{Tutorial: Writing QML extensions with C++}{Writing QML extensions with C++}
     tutorial demonstrates basic usage patterns.

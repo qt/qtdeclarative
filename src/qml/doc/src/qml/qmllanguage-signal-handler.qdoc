@@ -125,6 +125,6 @@ Connections element may connect a signal from the runtime to another signal or
 method.
 
 For complete information on events from the runtime or creating signals from the
-runtime, read the \l{The QML Engine} and the \l{Creating QML Types} articles.
+runtime, read the \l{The QML Engine} and the \l{C++ Types as QML Types} articles.
 
 */

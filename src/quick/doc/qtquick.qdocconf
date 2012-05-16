@@ -88,3 +88,11 @@ exampledirs += ../../../examples \
                snippets
 
 imagedirs   += images
+
+#add qml sources because of dependencies
+headerdirs += ../../qml
+sourcedirs += ../../qml
+exampledirs += ../../qml/snippets \
+               ../../qml
+
+imagedirs += ../../qml

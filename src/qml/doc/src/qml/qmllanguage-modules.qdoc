@@ -26,9 +26,9 @@
 ****************************************************************************/
 
 /*!
-\page qml-modules.html
+\page qmllanguage-modules.html
 \title QML Modules
-\brief creating and setting up QML modules
+\brief creating and importing QML modules
 
 \section1 Modules
 

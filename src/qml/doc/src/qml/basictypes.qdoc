@@ -37,7 +37,7 @@
     \annotatedlist qmlbasictypes
 
     To create additional types, such as data types created in C++, read the
-    \l{Creating QML Types} article.
+    \l{C++ Types as QML Types} article.
 */
 
 /*!
