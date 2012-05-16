@@ -97,12 +97,14 @@ InstructionSelection::~InstructionSelection()
 
 void InstructionSelection::operator()(IR::Function *function)
 {
+    qSwap(_function, function);
+
     _code = _codePtr;
     _code = (uchar *) ((size_t(_code) + 15) & ~15);
-    function->code = (void (*)(VM::Context *)) _code;
+    _function->code = (void (*)(VM::Context *)) _code;
     _codePtr = _code;
 
-    int locals = (function->tempCount + function->maxNumberOfArguments) * sizeof(Value);
+    int locals = (_function->tempCount + _function->maxNumberOfArguments) * sizeof(Value);
     locals = (locals + 15) & ~15;
 
     amd64_push_reg(_codePtr, AMD64_RBP);
@@ -115,7 +117,11 @@ void InstructionSelection::operator()(IR::Function *function)
 
     amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_R15, AMD64_R15);
 
-    foreach (IR::BasicBlock *block, function->basicBlocks) {
+    amd64_lea_membase(_codePtr, AMD64_RAX, AMD64_RSP, _function->maxNumberOfArguments * sizeof(Value));
+    amd64_mov_membase_reg(_codePtr, AMD64_R14, offsetof(Context, locals), AMD64_RAX, 8);
+
+
+    foreach (IR::BasicBlock *block, _function->basicBlocks) {
         _block = block;
         _addrs[block] = _codePtr;
         foreach (IR::Stmt *s, block->statements) {
@@ -154,6 +160,7 @@ void InstructionSelection::operator()(IR::Function *function)
         }
     }
 #endif
+    qSwap(_function, _function);
 }
 
 String *InstructionSelection::identifier(const QString &s)
@@ -168,7 +175,7 @@ void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
         amd64_mov_reg_membase(_codePtr, reg, AMD64_R14, offsetof(Context, arguments), 8);
         amd64_lea_membase(_codePtr, reg, reg, sizeof(Value) * arg);
     } else {
-        amd64_lea_membase(_codePtr, reg, AMD64_RBP, sizeof(Value) * -t->index);
+        amd64_lea_membase(_codePtr, reg, AMD64_RSP, sizeof(Value) * (_function->maxNumberOfArguments + t->index));
     }
 }
 

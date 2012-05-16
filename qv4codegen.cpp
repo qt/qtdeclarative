@@ -158,25 +158,33 @@ void liveness(IR::Function *function)
     } while (changed);
 }
 
-struct ScanFunctionBody: Visitor
+} // end of anonymous namespace
+
+struct Codegen::ScanFunctionBody: Visitor
 {
     using Visitor::visit;
 
     // search for locals
+    Codegen::Environment *env;
     QList<QStringRef> locals;
     int maxNumberOfArguments;
     bool hasDirectEval;
     bool hasNestedFunctions;
 
     ScanFunctionBody()
-        : maxNumberOfArguments(0)
+        : env(0)
+        , maxNumberOfArguments(0)
         , hasDirectEval(false)
         , hasNestedFunctions(false)
     {
     }
 
-    void operator()(Node *node) {
+    void operator()(Node *node, Environment *e)
+    {
+        env = e;
+        maxNumberOfArguments = 0;
         hasDirectEval = false;
+        hasNestedFunctions = false;
         locals.clear();
         if (node)
             node->accept(this);
@@ -210,6 +218,7 @@ protected:
 
     virtual bool visit(VariableDeclaration *ast)
     {
+        env->enter(ast->name);
         if (! locals.contains(ast->name))
             locals.append(ast->name);
         return true;
@@ -217,6 +226,7 @@ protected:
 
     virtual bool visit(FunctionExpression *ast)
     {
+        env->enter(ast->name);
         hasNestedFunctions = true;
         if (! locals.contains(ast->name))
             locals.append(ast->name);
@@ -225,6 +235,7 @@ protected:
 
     virtual bool visit(FunctionDeclaration *ast)
     {
+        env->enter(ast->name);
         hasNestedFunctions = true;
         if (! locals.contains(ast->name))
             locals.append(ast->name);
@@ -232,13 +243,13 @@ protected:
     }
 };
 
-} // end of anonymous namespace
-
 Codegen::Codegen()
-    : _function(0)
+    : _module(0)
+    , _function(0)
     , _block(0)
     , _exitBlock(0)
     , _returnAddress(0)
+    , _env(0)
 {
 }
 
@@ -246,8 +257,9 @@ void Codegen::operator()(AST::Program *node, IR::Module *module)
 {
     _module = module;
 
+    Scope scope(this, newEnvironment());
     ScanFunctionBody globalCodeInfo;
-    globalCodeInfo(node);
+    globalCodeInfo(node, _env);
 
     IR::Function *globalCode = _module->newFunction(QLatin1String("%entry"));
     globalCode->hasDirectEval = globalCodeInfo.hasDirectEval;
@@ -269,6 +281,9 @@ void Codegen::operator()(AST::Program *node, IR::Module *module)
     foreach (IR::Function *function, _module->functions) {
         linearize(function);
     }
+
+    qDeleteAll(_allEnvironments);
+    _allEnvironments.clear();
 }
 
 IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
@@ -568,6 +583,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
                 move(_block->TEMP(-(index + 1)), *expr);
                 return;
             }
+            Q_UNREACHABLE();
         } else {
             move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), *expr);
         }
@@ -1252,7 +1268,9 @@ void Codegen::linearize(IR::Function *function)
     trace.append(exitBlock);
     function->basicBlocks = trace;
 
+#ifndef QV4_NO_LIVENESS
     liveness(function);
+#endif
 
     static bool showCode = !qgetenv("SHOW_CODE").isNull();
     if (showCode) {
@@ -1304,6 +1322,7 @@ void Codegen::linearize(IR::Function *function)
             s->dump(out, IR::Stmt::MIR);
             out.flush();
 
+#ifndef QV4_NO_LIVENESS
             for (int i = 60 - str.size(); i >= 0; --i)
                 str.append(' ');
 
@@ -1330,6 +1349,9 @@ void Codegen::linearize(IR::Function *function)
                         qout << " %" << i;
                 }
             }
+#else
+            qout << "    " << str;
+#endif
 
             qout << endl;
 
@@ -1342,16 +1364,19 @@ void Codegen::linearize(IR::Function *function)
              << endl;
     }
 
+#ifndef QV4_NO_LIVENESS
     foreach (IR::BasicBlock *block, function->basicBlocks) {
         foreach (IR::Stmt *s, block->statements)
             s->destroyData();
     }
+#endif
 }
 
 void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
 {
+    Scope scope(this, newEnvironment());
     ScanFunctionBody functionInfo;
-    functionInfo(ast->body);
+    functionInfo(ast->body, _env);
 
     IR::Function *function = _module->newFunction(ast->name.toString());
     IR::BasicBlock *entryBlock = function->newBasicBlock();

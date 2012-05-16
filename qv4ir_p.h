@@ -655,7 +655,7 @@ struct BasicBlock {
 
     unsigned newTemp();
 
-    Temp *TEMP(unsigned index);
+    Temp *TEMP(int index);
 
     Expr *CONST(Type type, double value);
     Expr *STRING(const QString *value);

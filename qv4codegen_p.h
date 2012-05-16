@@ -53,6 +53,65 @@ protected:
         }
     };
 
+    struct Environment {
+        Environment *parent;
+        QHash<QStringRef, int> members;
+        int count;
+
+        Environment(Environment *parent = 0)
+            : parent(parent)
+            , count(0) {}
+
+        int findMember(const QStringRef &name) const
+        {
+            return members.value(name, -1);
+        }
+
+        bool lookupMember(const QStringRef &name, Environment **scope, int *index, int *distance)
+        {
+            Environment *it = this;
+            *distance = 0;
+            for (; it; it = it->parent, ++(*distance)) {
+                int idx = it->findMember(name);
+                if (idx != -1) {
+                    *scope = it;
+                    *index = idx;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void enter(const QStringRef &name)
+        {
+            int idx = members.value(name, -1);
+            if (idx == -1)
+                members.insert(name, count++);
+        }
+    };
+
+    Environment *newEnvironment()
+    {
+        Environment *scope = new Environment(_env);
+        return scope;
+    }
+
+    Environment *changeEnvironment(Environment *env)
+    {
+        qSwap(_env, env);
+        return env;
+    }
+
+    struct Scope {
+        Codegen *cg;
+        Environment *previous;
+        inline Scope(Codegen *cg, Environment *env) { previous = cg->changeEnvironment(env); }
+        inline ~Scope() { cg->changeEnvironment(previous); }
+
+    private:
+        Q_DISABLE_COPY(Scope)
+    };
+
     struct UiMember {
     };
 
@@ -225,6 +284,10 @@ private:
     IR::BasicBlock *_block;
     IR::BasicBlock *_exitBlock;
     unsigned _returnAddress;
+    QVector<Environment *> _allEnvironments;
+    Environment *_env;
+
+    struct ScanFunctionBody;
 };
 
 } // end of namespace QQmlJS

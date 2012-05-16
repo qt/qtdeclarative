@@ -239,12 +239,16 @@ struct FunctionObject: Object {
     Context *scope;
     String **formalParameterList;
     size_t formalParameterCount;
+    String **varList;
+    size_t varCount;
     bool needsActivation;
 
     FunctionObject(Context *scope)
         : scope(scope)
         , formalParameterList(0)
         , formalParameterCount(0)
+        , varList(0)
+        , varCount(0)
         , needsActivation(true) {}
     virtual FunctionObject *asFunctionObject() { return this; }
 
@@ -289,15 +293,19 @@ struct Context {
     Value thisObject;
     Value *arguments;
     size_t argumentCount;
+    Value *locals;
     Value result;
     String **formals;
     size_t formalCount;
+    String **vars;
+    size_t varCount;
     bool calledAsConstructor;
 
     Value *lookup(String *name) {
         if (activation.is(OBJECT_TYPE)) {
-            if (Value *prop = activation.objectValue->getProperty(name))
+            if (Value *prop = activation.objectValue->getProperty(name)) {
                 return prop;
+            }
         }
         return parent ? parent->lookup(name) : 0;
     }
@@ -323,11 +331,14 @@ struct Context {
         parent = 0;
         arguments = 0;
         argumentCount = 0;
+        locals = 0;
         activation.type = NULL_TYPE;
         thisObject.type = NULL_TYPE;
         result.type = UNDEFINED_TYPE;
         formals = 0;
         formalCount = 0;
+        vars = 0;
+        varCount = 0;
         calledAsConstructor = false;
     }
 };

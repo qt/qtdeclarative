@@ -504,6 +504,9 @@ void __qmljs_call_value(Context *context, Value *result, const Value *func, Valu
                 ctx->arguments = new Value[argc];
                 std::copy(args, args + argc, ctx->arguments);
             }
+            ctx->vars = f->varList;
+            ctx->varCount = f->varCount;
+            ctx->locals = 0;
             f->call(ctx);
             if (result)
                 __qmljs_copy(result, &ctx->result);

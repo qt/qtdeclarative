@@ -241,10 +241,11 @@ void Name::dump(QTextStream &out)
 
 void Temp::dump(QTextStream &out)
 {
-    if (index < 0)
+    if (index < 0) {
         out << '#' << -(index + 1); // negative and 1-based.
-    else
+    } else {
         out << '%' << index; // temp
+    }
 }
 
 void Closure::dump(QTextStream &out)
@@ -496,7 +497,7 @@ unsigned BasicBlock::newTemp()
     return function->tempCount++;
 }
 
-Temp *BasicBlock::TEMP(unsigned index)
+Temp *BasicBlock::TEMP(int index)
 { 
     Temp *e = function->New<Temp>();
     e->init(IR::InvalidType, index);

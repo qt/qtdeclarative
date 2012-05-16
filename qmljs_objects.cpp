@@ -140,11 +140,20 @@ ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
             formalParameterList[i] = scope->engine->identifier(*function->formals.at(i));
         }
     }
+
+    varCount = function->locals.size();
+    if (varCount) {
+        varList = new String*[varCount];
+        for (size_t i = 0; i < varCount; ++i) {
+            varList[i] = scope->engine->identifier(*function->locals.at(i));
+        }
+    }
 }
 
 ScriptFunction::~ScriptFunction()
 {
     delete[] formalParameterList;
+    delete[] varList;
 }
 
 void ScriptFunction::call(VM::Context *ctx)
@@ -161,6 +170,14 @@ void ScriptFunction::construct(VM::Context *ctx)
 Value *ArgumentsObject::getProperty(String *name, PropertyAttributes *attributes)
 {
     if (context) {
+        for (size_t i = 0; i < context->varCount; ++i) {
+            String *var = context->vars[i];
+            if (__qmljs_string_equal(context, var, name)) {
+                if (attributes)
+                    *attributes = PropertyAttributes(*attributes | WritableAttribute);
+                return &context->locals[i];
+            }
+        }
         for (size_t i = 0; i < context->formalCount; ++i) {
             String *formal = context->formals[i];
             if (__qmljs_string_equal(context, formal, name)) {
