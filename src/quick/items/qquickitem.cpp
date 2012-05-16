@@ -3107,6 +3107,11 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     The main thread is blocked while this function is executed so it is safe to read
     values from the QQuickItem instance and other objects in the main thread.
 
+    If no call to QQuickItem::updatePaintNode() result in actual scene graph
+    changes, like QSGNode::markDirty() or adding and removing nodes, then
+    the underlying implementation may decide to not render the scene again as
+    the visual outcome is identical.
+
     \warning It is crucial that OpenGL operations and interaction with
     the scene graph happens exclusively on the rendering thread,
     primarily during the QQuickItem::updatePaintNode() call. The best
@@ -3114,7 +3119,7 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     the QQuickItem::updatePaintNode() function.
 
     \sa QSGMaterial, QSGSimpleMaterial, QSGGeometryNode, QSGGeometry,
-    QSGFlatColorMaterial, QSGTextureMaterial
+    QSGFlatColorMaterial, QSGTextureMaterial, QSGNode::markDirty()
  */
 
 QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
@@ -3401,6 +3406,16 @@ void QQuickItem::setBaselineOffset(qreal offset)
     emit baselineOffsetChanged(offset);
 }
 
+
+/*!
+ * Schedules a call to updatePaintNode() for this item.
+ *
+ * The call to QQuickItem::updatePaintNode() will always happen if the
+ * item is showing in a QQuickCanvas.
+ *
+ * Only items which specifies QQuickItem::ItemHasContents are allowed
+ * to call QQuickItem::update().
+ */
 void QQuickItem::update()
 {
     Q_D(QQuickItem);

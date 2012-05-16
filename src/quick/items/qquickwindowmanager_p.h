@@ -64,6 +64,7 @@ public:
     virtual QImage grab(QQuickCanvas *canvas) = 0;
     virtual void resize(QQuickCanvas *canvas, const QSize &size) = 0;
 
+    virtual void update(QQuickCanvas *canvas) = 0;
     virtual void maybeUpdate(QQuickCanvas *canvas) = 0;
     virtual void wakeup() = 0;
 

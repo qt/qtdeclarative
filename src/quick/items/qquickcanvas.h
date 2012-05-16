@@ -130,6 +130,7 @@ Q_SIGNALS:
     void clearColorChanged(const QColor &);
 
 public Q_SLOTS:
+    void update();
     void releaseResources();
 
 protected:

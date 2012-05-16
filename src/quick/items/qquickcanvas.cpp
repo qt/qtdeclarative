@@ -255,6 +255,19 @@ void QQuickCanvasPrivate::setRenderWithoutShowing(bool render)
 }
 
 
+/*!
+ * Schedules the canvas to render another frame.
+ *
+ * Calling QQuickCanvas::update() differs from QQuickItem::update() in that
+ * it always triggers a repaint, regardless of changes in the underlying
+ * scene graph or not.
+ */
+void QQuickCanvas::update()
+{
+    Q_D(QQuickCanvas);
+    d->windowManager->update(this);
+}
+
 void forceUpdate(QQuickItem *item)
 {
     if (item->flags() & QQuickItem::ItemHasContents)

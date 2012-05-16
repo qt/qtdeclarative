@@ -188,6 +188,7 @@ public:
     void resize(QQuickCanvas *canvas, const QSize &size);
     void handleDeferredUpdate();
     void maybeUpdate(QQuickCanvas *canvas);
+    void update(QQuickCanvas *canvas) { maybeUpdate(canvas); } // identical for this implementation
     void wakeup();
 
     void startRendering();
@@ -297,6 +298,7 @@ public:
     void wakeup();
 
     void maybeUpdate(QQuickCanvas *canvas);
+    void update(QQuickCanvas *canvas) { maybeUpdate(canvas); } // identical for this implementation.
 
     void releaseResources() { }
 
