@@ -151,7 +151,6 @@ QSGContext::QSGContext(QObject *parent) :
     QObject(*(new QSGContextPrivate), parent)
 {
     Q_D(QSGContext);
-    // ### Do something with these before final release...
     static bool doSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing"));
     static bool doLowQualSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing-lowq"));
     static bool doGray = qApp->arguments().contains(QLatin1String("--text-gray-antialiasing"));
@@ -359,14 +358,7 @@ QSGGlyphNode *QSGContext::createGlyphNode()
  */
 QSGRenderer *QSGContext::createRenderer()
 {
-    // ### Do something with this before release...
-    static bool doFrontToBack = qApp->arguments().contains(QLatin1String("--opaque-front-to-back"));
-    QSGDefaultRenderer *renderer = new QSGDefaultRenderer(this);
-    if (doFrontToBack) {
-        printf("QSGContext: Sorting opaque nodes front to back...\n");
-        renderer->setSortFrontToBackEnabled(true);
-    }
-    return renderer;
+    return new QSGDefaultRenderer(this);
 }
 
 

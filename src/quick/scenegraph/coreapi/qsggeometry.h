@@ -63,7 +63,8 @@ public:
         int type;
 
         uint isVertexCoordinate : 1;
-        uint migrateYourCodeToUseTheCreateFunction: 31; // ### Remove before release
+
+        uint reserved : 31;
 
         static Attribute create(int pos, int tupleSize, int primitiveType, bool isPosition = false);
     };

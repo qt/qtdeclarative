@@ -154,46 +154,11 @@ void QSGDistanceFieldGlyphCache::update()
 
     QHash<glyph_t, QImage> distanceFields;
 
-    // ### Remove before final release
-    static bool cacheDistanceFields = QGuiApplication::arguments().contains(QLatin1String("--cache-distance-fields"));
-
-    QString tmpPath = QString::fromLatin1("%1/.qt/").arg(QDir::tempPath());
-    QString keyBase = QString::fromLatin1("%1%2%3_%4_%5_%6.fontblob")
-            .arg(tmpPath)
-            .arg(m_referenceFont.familyName())
-            .arg(m_referenceFont.styleName())
-            .arg(m_referenceFont.weight())
-            .arg(m_referenceFont.style());
-
-    if (cacheDistanceFields && !QFile::exists(tmpPath))
-        QDir(tmpPath).mkpath(tmpPath);
-
     for (int i = 0; i < m_pendingGlyphs.size(); ++i) {
         glyph_t glyphIndex = m_pendingGlyphs.at(i);
 
-        if (cacheDistanceFields) {
-            QString key = keyBase.arg(glyphIndex);
-            QFile file(key);
-            if (file.open(QFile::ReadOnly)) {
-                int fileSize = file.size();
-                int dim = sqrt(float(fileSize));
-                QByteArray blob = file.readAll();
-                QImage df(dim, dim, QImage::Format_Indexed8);
-                memcpy(df.bits(), blob.constData(), fileSize);
-                distanceFields.insert(glyphIndex, df);
-                continue;
-            }
-        }
-
         QImage distanceField = qt_renderDistanceFieldGlyph(m_referenceFont, glyphIndex, m_doubleGlyphResolution);
         distanceFields.insert(glyphIndex, distanceField);
-
-        if (cacheDistanceFields) {
-            QString key = keyBase.arg(glyphIndex);
-            QFile file(key);
-            file.open(QFile::WriteOnly);
-            file.write((const char *) distanceField.constBits(), distanceField.width() * distanceField.height());
-        }
     }
 
     m_pendingGlyphs.reset();

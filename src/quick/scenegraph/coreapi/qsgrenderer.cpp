@@ -631,12 +631,9 @@ static inline GLenum qt_drawTypeForPattern(QSGGeometry::DataPattern p)
 
 void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
 {
-    // ### remove before final release...
-    static bool use_vbo = !QGuiApplication::arguments().contains(QLatin1String("--no-vbo"));
-
     const void *vertexData;
     int vertexByteSize = g->vertexCount() * g->sizeOfVertex();
-    if (use_vbo && g->vertexDataPattern() != QSGGeometry::AlwaysUploadPattern && vertexByteSize > 1024) {
+    if (g->vertexDataPattern() != QSGGeometry::AlwaysUploadPattern && vertexByteSize > 1024) {
 
         // The base pointer for a VBO is 0
         vertexData = 0;
@@ -686,7 +683,7 @@ void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
 
     // Set up the indices...
     const void *indexData;
-    if (use_vbo && g->indexDataPattern() != QSGGeometry::AlwaysUploadPattern && g->indexCount() > 512) {
+    if (g->indexDataPattern() != QSGGeometry::AlwaysUploadPattern && g->indexCount() > 512) {
 
         // Base pointer for a VBO is 0
         indexData = 0;
