@@ -73,7 +73,7 @@ struct QQmlMetaTypeData
     QList<QQmlType *> types;
     typedef QHash<int, QQmlType *> Ids;
     Ids idToType;
-    typedef QHash<QString, QQmlType *> Names;
+    typedef QHash<QHashedStringRef,QQmlType *> Names;
     Names nameToType;
     typedef QHash<const QMetaObject *, QQmlType *> MetaObjects;
     MetaObjects metaObjectToType;
@@ -83,12 +83,12 @@ struct QQmlMetaTypeData
     struct VersionedUri {
         VersionedUri()
         : majorVersion(0) {}
-        VersionedUri(const QString &uri, int majorVersion)
+        VersionedUri(const QHashedString &uri, int majorVersion)
         : uri(uri), majorVersion(majorVersion) {}
         bool operator==(const VersionedUri &other) const {
             return other.majorVersion == majorVersion && other.uri == uri;
         }
-        QString uri;
+        QHashedString uri;
         int majorVersion;
     };
     typedef QHash<VersionedUri, QQmlTypeModule *> TypeModules;
@@ -99,7 +99,7 @@ struct QQmlMetaTypeData
         QList<QQmlMetaType::ModuleApi> moduleApis;
         bool sorted;
     };
-    typedef QHash<QString, ModuleApiList> ModuleApis;
+    typedef QStringHash<ModuleApiList> ModuleApis;
     ModuleApis moduleApis;
     int moduleApiCount;
 
@@ -132,7 +132,7 @@ Q_GLOBAL_STATIC(QReadWriteLock, metaTypeDataLock)
 
 static uint qHash(const QQmlMetaTypeData::VersionedUri &v)
 {
-    return qHash(v.uri) ^ qHash(v.majorVersion);
+    return v.uri.hash() ^ qHash(v.majorVersion);
 }
 
 QQmlMetaTypeData::QQmlMetaTypeData()
@@ -156,7 +156,7 @@ public:
 
     bool m_isInterface : 1;
     const char *m_iid;
-    QString m_module;
+    QHashedString m_module;
     QString m_name;
     QString m_elementName;
     int m_version_maj;
@@ -219,12 +219,14 @@ QQmlType::QQmlType(int index, const QQmlPrivate::RegisterInterface &interface)
 QQmlType::QQmlType(int index, const QQmlPrivate::RegisterType &type)
 : d(new QQmlTypePrivate)
 {
-    QString name = QString::fromUtf8(type.uri);
-    if (type.uri) name += QLatin1Char('/');
-    name += QString::fromUtf8(type.elementName);
-
     d->m_module = QString::fromUtf8(type.uri);
-    d->m_name = name;
+    d->m_elementName = QString::fromUtf8(type.elementName);
+
+    if (!d->m_module.isEmpty())
+        d->m_name = static_cast<QString>(d->m_module) + QLatin1Char('/') + d->m_elementName;
+    else
+        d->m_name = d->m_elementName;
+
     d->m_version_maj = type.versionMajor;
     d->m_version_min = type.versionMinor;
     if (type.version >= 1) // revisions added in version 1
@@ -262,7 +264,7 @@ QQmlType::~QQmlType()
     delete d;
 }
 
-QString QQmlType::module() const
+const QHashedString &QQmlType::module() const
 {
     return d->m_module;
 }
@@ -283,7 +285,7 @@ bool QQmlType::availableInVersion(int vmajor, int vminor) const
     return vmajor == d->m_version_maj && vminor >= d->m_version_min;
 }
 
-bool QQmlType::availableInVersion(const QString &module, int vmajor, int vminor) const
+bool QQmlType::availableInVersion(const QHashedStringRef &module, int vmajor, int vminor) const
 {
     Q_ASSERT(vmajor >= 0 && vminor >= 0);
     return module == d->m_module && vmajor == d->m_version_maj && vminor >= d->m_version_min;
@@ -491,11 +493,6 @@ QByteArray QQmlType::typeName() const
 
 const QString &QQmlType::elementName() const
 {
-    if (d->m_elementName.isEmpty()) {
-        QString n = qmlTypeName();
-        int idx = n.lastIndexOf(QLatin1Char('/'));
-        d->m_elementName = n.mid(idx + 1);
-    }
     return d->m_elementName;
 }
 
@@ -699,8 +696,6 @@ int QQmlTypeModule::maximumMinorVersion() const
 
 void QQmlTypeModulePrivate::add(QQmlType *type)
 {
-    types << type;
-
     minMinorVersion = qMin(minMinorVersion, type->minorVersion());
     maxMinorVersion = qMax(maxMinorVersion, type->minorVersion());
 
@@ -712,25 +707,6 @@ void QQmlTypeModulePrivate::add(QQmlType *type)
         }
     }
     list.append(type);
-}
-
-QList<QQmlType *> QQmlTypeModule::types()
-{
-    QList<QQmlType *> rv;
-    QReadLocker lock(metaTypeDataLock());
-    rv = d->types;
-    return rv;
-}
-
-QList<QQmlType *> QQmlTypeModule::type(const QString &name)
-{
-    QReadLocker lock(metaTypeDataLock());
-    QList<QQmlType *> rv;
-    for (int ii = 0; ii < d->types.count(); ++ii) {
-        if (d->types.at(ii)->elementName() == name)
-            rv << d->types.at(ii);
-    }
-    return rv;
 }
 
 QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
@@ -835,8 +811,8 @@ int registerInterface(const QQmlPrivate::RegisterInterface &interface)
     data->idToType.insert(type->typeId(), type);
     data->idToType.insert(type->qListTypeId(), type);
     // XXX No insertMulti, so no multi-version interfaces?
-    if (!type->qmlTypeName().isEmpty())
-        data->nameToType.insert(type->qmlTypeName(), type);
+    if (!type->elementName().isEmpty())
+        data->nameToType.insert(type->elementName(), type);
 
     if (data->interfaces.size() <= interface.typeId)
         data->interfaces.resize(interface.typeId + 16);
@@ -869,8 +845,8 @@ int registerType(const QQmlPrivate::RegisterType &type)
     data->idToType.insert(dtype->typeId(), dtype);
     if (dtype->qListTypeId()) data->idToType.insert(dtype->qListTypeId(), dtype);
 
-    if (!dtype->qmlTypeName().isEmpty())
-        data->nameToType.insertMulti(dtype->qmlTypeName(), dtype);
+    if (!dtype->elementName().isEmpty())
+        data->nameToType.insertMulti(dtype->elementName(), dtype);
 
     data->metaObjectToType.insertMulti(dtype->baseMetaObject(), dtype);
 
@@ -881,8 +857,8 @@ int registerType(const QQmlPrivate::RegisterType &type)
     data->objects.setBit(type.typeId, true);
     if (type.listId) data->lists.setBit(type.listId, true);
 
-    if (type.uri) {
-        QString mod = QString::fromUtf8(type.uri);
+    if (!dtype->module().isEmpty()) {
+        const QHashedString &mod = dtype->module();
 
         QQmlMetaTypeData::VersionedUri versionedUri(mod, type.versionMajor);
         QQmlTypeModule *module = data->uriToModule.value(versionedUri);
@@ -915,14 +891,14 @@ int registerModuleApi(const QQmlPrivate::RegisterModuleApi &api)
 
     int index = data->moduleApiCount++;
 
-    QQmlMetaTypeData::ModuleApis::Iterator iter = data->moduleApis.find(uri);
-    if (iter == data->moduleApis.end()) {
+    QQmlMetaTypeData::ModuleApiList *apiList = data->moduleApis.value(uri);
+    if (!apiList) {
         QQmlMetaTypeData::ModuleApiList apis;
         apis.moduleApis << import;
         data->moduleApis.insert(uri, apis);
     } else {
-        iter->moduleApis << import;
-        iter->sorted = false;
+        apiList->moduleApis << import;
+        apiList->sorted = false;
     }
 
     return index;
@@ -985,9 +961,12 @@ bool QQmlMetaType::isModule(const QString &module, int versionMajor, int version
         return true;
 
     // then, check ModuleApis
-    foreach (const QQmlMetaType::ModuleApi &mApi, data->moduleApis.value(module).moduleApis) {
-        if (mApi.major == versionMajor && mApi.minor == versionMinor) // XXX is this correct?
-            return true;
+    QQmlMetaTypeData::ModuleApiList *apiList = data->moduleApis.value(module);
+    if (apiList) {
+        foreach (const QQmlMetaType::ModuleApi &mApi, apiList->moduleApis) {
+            if (mApi.major == versionMajor && mApi.minor == versionMinor) // XXX is this correct?
+                return true;
+        }
     }
 
     return false;
@@ -1018,17 +997,17 @@ QQmlMetaType::moduleApi(const QString &uri, int versionMajor, int versionMinor)
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QQmlMetaTypeData::ModuleApis::Iterator iter = data->moduleApis.find(uri);
-    if (iter == data->moduleApis.end())
+    QQmlMetaTypeData::ModuleApiList *apiList = data->moduleApis.value(uri);
+    if (!apiList)
         return ModuleApi();
 
-    if (iter->sorted == false) {
-        qSort(iter->moduleApis.begin(), iter->moduleApis.end());
-        iter->sorted = true;
+    if (apiList->sorted == false) {
+        qSort(apiList->moduleApis.begin(), apiList->moduleApis.end());
+        apiList->sorted = true;
     }
 
-    for (int ii = iter->moduleApis.count() - 1; ii >= 0; --ii) {
-        const ModuleApi &import = iter->moduleApis.at(ii);
+    for (int ii = apiList->moduleApis.count() - 1; ii >= 0; --ii) {
+        const ModuleApi &import = apiList->moduleApis.at(ii);
         if (import.major == versionMajor && import.minor <= versionMinor)
             return import;
     }
@@ -1042,11 +1021,9 @@ QHash<QString, QList<QQmlMetaType::ModuleApi> > QQmlMetaType::moduleApis()
     QQmlMetaTypeData *data = metaTypeData();
 
     QHash<QString, QList<ModuleApi> > moduleApis;
-    QHashIterator<QString, QQmlMetaTypeData::ModuleApiList> it(data->moduleApis);
-    while (it.hasNext()) {
-        it.next();
+    QStringHash<QQmlMetaTypeData::ModuleApiList>::ConstIterator it = data->moduleApis.begin();
+    for (; it != data->moduleApis.end(); ++it)
         moduleApis[it.key()] = it.value().moduleApis;
-    }
 
     return moduleApis;
 }
@@ -1241,19 +1218,35 @@ QQmlMetaType::StringConverter QQmlMetaType::customStringConverter(int type)
 }
 
 /*!
-    Returns the type (if any) of URI-qualified named \a name in version specified
+    Returns the type (if any) of URI-qualified named \a qualifiedName and version specified
     by \a version_major and \a version_minor.
 */
-QQmlType *QQmlMetaType::qmlType(const QString &name, int version_major, int version_minor)
+QQmlType *QQmlMetaType::qmlType(const QString &qualifiedName, int version_major, int version_minor)
+{
+    int slash = qualifiedName.indexOf(QLatin1Char('/'));
+    if (slash <= 0)
+        return 0;
+
+    QHashedStringRef module(qualifiedName.constData(), slash);
+    QHashedStringRef name(qualifiedName.constData() + slash + 1, qualifiedName.length() - slash - 1);
+
+    return qmlType(name, module, version_major, version_minor);
+}
+
+/*!
+    Returns the type (if any) of \a name in \a module and version specified
+    by \a version_major and \a version_minor.
+*/
+QQmlType *QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int version_major, int version_minor)
 {
     Q_ASSERT(version_major >= 0 && version_minor >= 0);
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.find(name);
-    while (it != data->nameToType.end()) {
+    while (it != data->nameToType.end() && it.key() == name) {
         // XXX version_major<0 just a kludge for QQmlPropertyPrivate::initProperty
-        if (it.key() == name && (version_major<0 || (*it)->availableInVersion(version_major,version_minor)))
+        if (version_major < 0 || (*it)->availableInVersion(module, version_major,version_minor))
             return (*it);
         ++it;
     }
@@ -1278,7 +1271,7 @@ QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject)
     by \a version_major and \a version_minor in module specified by \a uri.  Returns null if no
     type is registered.
 */
-QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject, const QString &module, int version_major, int version_minor)
+QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor)
 {
     Q_ASSERT(version_major >= 0 && version_minor >= 0);
     QReadLocker lock(metaTypeDataLock());
@@ -1319,7 +1312,14 @@ QList<QString> QQmlMetaType::qmlTypeNames()
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    return data->nameToType.keys();
+    QList<QString> names;
+    QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.begin();
+    while (it != data->nameToType.end()) {
+        names += (*it)->qmlTypeName();
+        ++it;
+    }
+
+    return names;
 }
 
 /*!

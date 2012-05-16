@@ -67,6 +67,8 @@ class QQmlType;
 class QQmlCustomParser;
 class QQmlTypePrivate;
 class QQmlTypeModule;
+class QHashedString;
+class QHashedStringRef;
 
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
@@ -74,9 +76,10 @@ public:
     static QList<QString> qmlTypeNames();
     static QList<QQmlType*> qmlTypes();
 
-    static QQmlType *qmlType(const QString &, int, int);
+    static QQmlType *qmlType(const QString &qualifiedName, int, int);
+    static QQmlType *qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int, int);
     static QQmlType *qmlType(const QMetaObject *);
-    static QQmlType *qmlType(const QMetaObject *metaObject, const QString &module, int version_major, int version_minor);
+    static QQmlType *qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
     static QQmlType *qmlType(int);
 
     static QMetaProperty defaultProperty(const QMetaObject *);
@@ -140,7 +143,6 @@ private:
     static CompareFunction anchorLineCompareFunction;
 };
 
-class QHashedStringRef;
 class QHashedV8String;
 class Q_QML_PRIVATE_EXPORT QQmlType
 {
@@ -149,12 +151,12 @@ public:
     const QString &qmlTypeName() const;
     const QString &elementName() const;
 
-    QString module() const;
+    const QHashedString &module() const;
     int majorVersion() const;
     int minorVersion() const;
 
     bool availableInVersion(int vmajor, int vminor) const;
-    bool availableInVersion(const QString &module, int vmajor, int vminor) const;
+    bool availableInVersion(const QHashedStringRef &module, int vmajor, int vminor) const;
 
     QObject *create() const;
     void create(QObject **, void **, size_t) const;
@@ -213,9 +215,6 @@ public:
 
     int minimumMinorVersion() const;
     int maximumMinorVersion() const;
-
-    QList<QQmlType *> types();
-    QList<QQmlType *> type(const QString &);
 
     QQmlType *type(const QHashedStringRef &, int);
     QQmlType *type(const QHashedV8String &, int);

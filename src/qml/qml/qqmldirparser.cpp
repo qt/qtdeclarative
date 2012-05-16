@@ -156,7 +156,7 @@ bool QQmlDirParser::parse()
             }
             Component entry(sections[1], sections[2], -1, -1);
             entry.internal = true;
-            _components.append(entry);
+            _components.insertMulti(entry.typeName, entry);
         } else if (sections[0] == QLatin1String("typeinfo")) {
             if (sectionCount != 2) {
                 reportError(lineNumber, -1,
@@ -171,7 +171,7 @@ bool QQmlDirParser::parse()
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
             const Component entry(sections[0], sections[1], -1, -1);
-            _components.append(entry);
+            _components.insertMulti(entry.typeName, entry);
         } else if (sectionCount == 3) {
             const QString &version = sections[1];
             const int dotIndex = version.indexOf(QLatin1Char('.'));
@@ -196,7 +196,7 @@ bool QQmlDirParser::parse()
                             _scripts.append(entry);
                         } else {
                             const Component entry(sections[0], fileName, majorVersion, minorVersion);
-                            _components.append(entry);
+                            _components.insertMulti(entry.typeName, entry);
                         }
                     }
                 }
@@ -250,7 +250,7 @@ QList<QQmlDirParser::Plugin> QQmlDirParser::plugins() const
     return _plugins;
 }
 
-QList<QQmlDirParser::Component> QQmlDirParser::components() const
+QHash<QHashedStringRef,QQmlDirParser::Component> QQmlDirParser::components() const
 {
     return _components;
 }

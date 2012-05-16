@@ -44,6 +44,7 @@
 
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
+#include <private/qhashedstring_p.h>
 
 class tst_qqmlmetatype : public QObject
 {
@@ -57,6 +58,7 @@ private slots:
     void qmlParserStatusCast();
     void qmlPropertyValueSourceCast();
     void qmlPropertyValueInterceptorCast();
+    void qmlType();
 
     void isList();
 
@@ -169,6 +171,19 @@ void tst_qqmlmetatype::qmlPropertyValueInterceptorCast()
 
     QQmlPropertyValueInterceptor *interceptor = reinterpret_cast<QQmlPropertyValueInterceptor *>(reinterpret_cast<char *>((QObject *)&t) + cast);
     QCOMPARE(interceptor, (QQmlPropertyValueInterceptor*)&t);
+}
+
+void tst_qqmlmetatype::qmlType()
+{
+    QQmlType *type = QQmlMetaType::qmlType(QString("ParserStatusTestType"), QString("Test"), 1, 0);
+    QVERIFY(type);
+    QVERIFY(type->module() == QLatin1String("Test"));
+    QVERIFY(type->elementName() == QLatin1String("ParserStatusTestType"));
+
+    type = QQmlMetaType::qmlType("Test/ParserStatusTestType", 1, 0);
+    QVERIFY(type);
+    QVERIFY(type->module() == QLatin1String("Test"));
+    QVERIFY(type->elementName() == QLatin1String("ParserStatusTestType"));
 }
 
 void tst_qqmlmetatype::isList()

@@ -125,20 +125,20 @@ public:
         QQmlDirComponents qmlDirComponents;
         QQmlDirScripts qmlDirScripts;
 
-        bool resolveType(QQmlTypeLoader *typeLoader, const QString& type,
+        bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
                          int *vmajor, int *vminor,
                          QQmlType** type_return, QString* url_return,
                          QString *base = 0, bool *typeRecursionDetected = 0) const;
     };
     QList<Import> imports;
 
-    bool resolveType(QQmlTypeLoader *typeLoader, const QString& type,
+    bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
                      int *vmajor, int *vminor,
                      QQmlType** type_return, QString* url_return,
                      QString *base = 0, QList<QQmlError> *errors = 0);
 
     // Prefix when used as a qualified import.  Otherwise empty.
-    QString prefix;
+    QHashedString prefix;
 
     // Used by QQmlImportsPrivate::qualifiedSets
     QQmlImportNamespace *nextNamespace;
@@ -156,7 +156,7 @@ public:
                    bool isImplicitImport, QQmlImportDatabase *database,
                    QString *, QList<QQmlError> *errors);
 
-    bool resolveType(const QString& type, int *vmajor, int *vminor,
+    bool resolveType(const QHashedStringRef &type, int *vmajor, int *vminor,
                      QQmlType** type_return, QString* url_return,
                      QList<QQmlError> *errors);
 
@@ -166,7 +166,7 @@ public:
 
     QQmlImportNamespace unqualifiedset;
 
-    QQmlImportNamespace *findQualifiedNamespace(const QString &);
+    QQmlImportNamespace *findQualifiedNamespace(const QHashedStringRef &);
     QFieldList<QQmlImportNamespace, &QQmlImportNamespace::nextNamespace> qualifiedSets;
 
     QQmlTypeLoader *typeLoader;
@@ -325,7 +325,7 @@ QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
 
   \sa addImport()
 */
-bool QQmlImports::resolveType(const QString& type,
+bool QQmlImports::resolveType(const QHashedStringRef &type,
                               QQmlType** type_return, QString* url_return, int *vmaj, int *vmin,
                               QQmlImportNamespace** ns_return, QList<QQmlError> *errors) const
 {
@@ -339,7 +339,7 @@ bool QQmlImports::resolveType(const QString& type,
         if (d->resolveType(type,vmaj,vmin,type_return,url_return, errors)) {
             if (qmlImportTrace()) {
 #define RESOLVE_TYPE_DEBUG qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) \
-                                              << ')' << "::resolveType: " << type << " => "
+                                              << ')' << "::resolveType: " << type.toString() << " => "
 
                 if (type_return && *type_return && url_return && !url_return->isEmpty())
                     RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << ' ' << *url_return;
@@ -366,7 +366,7 @@ bool QQmlImports::resolveType(const QString& type,
 
   If either return pointer is 0, the corresponding search is not done.
 */
-bool QQmlImports::resolveType(QQmlImportNamespace* ns, const QString& type,
+bool QQmlImports::resolveType(QQmlImportNamespace* ns, const QHashedStringRef &type,
                               QQmlType** type_return, QString* url_return,
                               int *vmaj, int *vmin) const
 {
@@ -374,13 +374,12 @@ bool QQmlImports::resolveType(QQmlImportNamespace* ns, const QString& type,
 }
 
 bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
-                                              const QString& type, int *vmajor, int *vminor,
+                                              const QHashedStringRef& type, int *vmajor, int *vminor,
                                               QQmlType** type_return, QString* url_return,
                                               QString *base, bool *typeRecursionDetected) const
 {
     if (majversion >= 0 && minversion >= 0) {
-        QString qt = uri + QLatin1Char('/') + type;
-        QQmlType *t = QQmlMetaType::qmlType(qt, majversion, minversion);
+        QQmlType *t = QQmlMetaType::qmlType(type, uri, majversion, minversion);
         if (t) {
             if (vmajor) *vmajor = majversion;
             if (vminor) *vminor = minversion;
@@ -392,14 +391,21 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
 
     bool typeWasDeclaredInQmldir = false;
     if (!qmlDirComponents.isEmpty()) {
-        foreach (const QQmlDirParser::Component &c, qmlDirComponents) {
-            if (type == c.typeName) {
-                typeWasDeclaredInQmldir = true;
+        QQmlDirComponents::ConstIterator it = qmlDirComponents.find(type);
+        if (it != qmlDirComponents.end()) {
+            typeWasDeclaredInQmldir = true;
+            // first found is last inserted - process in reverse
+            QQmlDirComponents::ConstIterator begin = it;
+            while (++it != qmlDirComponents.end() && it.key() == type) {}
+            do {
+                --it;
+                const QQmlDirParser::Component &c = *it;
+
                 // importing version -1 means import ALL versions
                 if ((majversion == -1) || (c.majorVersion == majversion &&
                                            minversion >= c.minorVersion)) {
 
-                    QString candidate = resolveLocalUrl(QString(url + type + dotqml_string), c.fileName);
+                    QString candidate = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
                     if (c.internal && base) {
                         if (resolveLocalUrl(*base, c.fileName) != candidate)
                             continue; // failed attempt to access an internal type
@@ -413,19 +419,18 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
                         *url_return = candidate;
                     return true;
                 }
-            }
+            } while (it != begin);
         }
     }
 
     if (!typeWasDeclaredInQmldir && !isLibrary) {
-        QString qmlUrl = url + type + dotqml_string;
+        QString qmlUrl = url + QString::fromRawData(type.constData(), type.length()) + dotqml_string;
 
         bool exists = false;
 
         if (QQmlFile::isBundle(qmlUrl)) {
             exists = QQmlFile::bundleFileExists(qmlUrl, typeLoader->engine());
         } else {
-            QString file = QQmlFile::urlToLocalFileOrQrc(qmlUrl);
             exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(qmlUrl)).isEmpty();
         }
 
@@ -444,19 +449,19 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
     return false;
 }
 
-bool QQmlImportsPrivate::resolveType(const QString& type, int *vmajor, int *vminor,
+bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, int *vminor,
                                      QQmlType** type_return, QString* url_return,
                                      QList<QQmlError> *errors)
 {
     QQmlImportNamespace *s = 0;
     int dot = type.indexOf(QLatin1Char('.'));
     if (dot >= 0) {
-        QString namespaceName = type.left(dot);
+        QHashedStringRef namespaceName(type.constData(), dot);
         s = findQualifiedNamespace(namespaceName);
         if (!s) {
             if (errors) {
                 QQmlError error;
-                error.setDescription(QQmlImportDatabase::tr("- %1 is not a namespace").arg(namespaceName));
+                error.setDescription(QQmlImportDatabase::tr("- %1 is not a namespace").arg(namespaceName.toString()));
                 errors->prepend(error);
             }
             return false;
@@ -473,13 +478,13 @@ bool QQmlImportsPrivate::resolveType(const QString& type, int *vmajor, int *vmin
     } else {
         s = &unqualifiedset;
     }
-    QString unqualifiedtype = dot < 0 ? type : type.mid(dot+1, -1);
+    QHashedStringRef unqualifiedtype = dot < 0 ? type : QHashedStringRef(type.constData()+dot+1, type.length()-dot-1);
     if (s) {
         if (s->resolveType(typeLoader,unqualifiedtype,vmajor,vminor,type_return,url_return, &base, errors))
             return true;
         if (s->imports.count() == 1 && !s->imports.at(0).isLibrary && url_return && s != &unqualifiedset) {
             // qualified, and only 1 url
-            *url_return = resolveLocalUrl(s->imports.at(0).url, unqualifiedtype + QLatin1String(".qml"));
+            *url_return = resolveLocalUrl(s->imports.at(0).url, unqualifiedtype.toString() + QLatin1String(".qml"));
             return true;
         }
     }
@@ -487,7 +492,7 @@ bool QQmlImportsPrivate::resolveType(const QString& type, int *vmajor, int *vmin
     return false;
 }
 
-bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QString& type,
+bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
                                       int *vmajor, int *vminor, QQmlType** type_return,
                                       QString* url_return, QString *base, QList<QQmlError> *errors)
 {
@@ -560,7 +565,7 @@ QQmlImportsPrivate::~QQmlImportsPrivate()
         delete ns;
 }
 
-QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QString &prefix)
+QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QHashedStringRef &prefix)
 {
     for (QQmlImportNamespace *ns = qualifiedSets.first(); ns; ns = qualifiedSets.next(ns)) {
         if (prefix == ns->prefix)
@@ -844,11 +849,11 @@ bool QQmlImportsPrivate::addImport(const QQmlDirComponents &qmldircomponentsnetw
             } else {
                 int lowest_min = INT_MAX;
                 int highest_min = INT_MIN;
-                typedef QList<QQmlDirParser::Component>::const_iterator ConstIterator;
+                typedef QQmlDirComponents::const_iterator ConstIterator;
                 typedef QList<QQmlDirParser::Script>::const_iterator SConstIterator;
 
-                for (ConstIterator cit = qmldircomponents.constBegin();
-                     cit != qmldircomponents.constEnd(); ++cit) {
+                ConstIterator cend = qmldircomponents.end();
+                for (ConstIterator cit = qmldircomponents.begin(); cit != cend; ++cit) {
                     if (cit->majorVersion == vmaj) {
                         lowest_min = qMin(lowest_min, cit->minorVersion);
                         highest_min = qMax(highest_min, cit->minorVersion);

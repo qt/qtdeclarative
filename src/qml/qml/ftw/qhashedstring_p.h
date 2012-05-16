@@ -148,6 +148,7 @@ public:
     inline const QChar *constData() const;
     bool startsWith(const QString &) const;
     bool endsWith(const QString &) const;
+    int indexOf(const QChar &, int from=0) const;
     QHashedStringRef mid(int, int) const;
 
     inline bool isEmpty() const;

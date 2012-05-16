@@ -443,6 +443,27 @@ bool QHashedStringRef::startsWith(const QString &s) const
            QHashedString::compare(s.constData(), m_data, s.length());
 }
 
+static int findChar(const QChar *str, int len, QChar ch, int from)
+{
+    const ushort *s = (const ushort *)str;
+    ushort c = ch.unicode();
+    if (from < 0)
+        from = qMax(from + len, 0);
+    if (from < len) {
+        const ushort *n = s + from - 1;
+        const ushort *e = s + len;
+        while (++n != e)
+            if (*n == c)
+                return  n - s;
+    }
+    return -1;
+}
+
+int QHashedStringRef::indexOf(const QChar &c, int from) const
+{
+    return findChar(m_data, m_length, c, from);
+}
+
 QString QHashedStringRef::toString() const
 {
     if (m_length == 0)

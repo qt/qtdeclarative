@@ -83,13 +83,13 @@ public:
     void setBaseUrl(const QUrl &url, const QString &urlString = QString());
     QUrl baseUrl() const;
 
-    bool resolveType(const QString& type,
+    bool resolveType(const QHashedStringRef &type,
                      QQmlType** type_return, QString* url_return,
                      int *version_major, int *version_minor,
                      QQmlImportNamespace** ns_return,
                      QList<QQmlError> *errors = 0) const;
     bool resolveType(QQmlImportNamespace*,
-                     const QString& type,
+                     const QHashedStringRef& type,
                      QQmlType** type_return, QString* url_return,
                      int *version_major, int *version_minor) const;
 

@@ -56,6 +56,7 @@
 #include <QtCore/QUrl>
 #include <QtCore/QHash>
 #include <QtCore/QDebug>
+#include <private/qhashedstring_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -120,7 +121,7 @@ public:
         int minorVersion;
     };
 
-    QList<Component> components() const;
+    QHash<QHashedStringRef,Component> components() const;
     QList<Script> scripts() const;
     QList<Plugin> plugins() const;
 
@@ -143,7 +144,7 @@ private:
 private:
     QList<QQmlError> _errors;
     QString _source;
-    QList<Component> _components;
+    QHash<QHashedStringRef,Component> _components; // multi hash
     QList<Script> _scripts;
     QList<Plugin> _plugins;
 #ifdef QT_CREATOR
@@ -152,7 +153,7 @@ private:
     unsigned _isParsed: 1;
 };
 
-typedef QList<QQmlDirParser::Component> QQmlDirComponents;
+typedef QHash<QHashedStringRef,QQmlDirParser::Component> QQmlDirComponents;
 typedef QList<QQmlDirParser::Script> QQmlDirScripts;
 
 QDebug &operator<< (QDebug &, const QQmlDirParser::Component &);

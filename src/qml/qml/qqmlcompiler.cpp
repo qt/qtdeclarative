@@ -90,7 +90,8 @@ using namespace QQmlCompilerTypes;
 static QString id_string(QLatin1String("id"));
 static QString on_string(QLatin1String("on"));
 static QString Changed_string(QLatin1String("Changed"));
-static QString Component_import_string(QLatin1String("QML/Component"));
+static QString Component_string(QLatin1String("Component"));
+static QString Component_module_string(QLatin1String("QML"));
 static QString qsTr_string(QLatin1String("qsTr"));
 static QString qsTrId_string(QLatin1String("qsTrId"));
 
@@ -1603,7 +1604,7 @@ bool QQmlCompiler::buildSubObject(QQmlScript::Object *obj, const BindingContext 
 int QQmlCompiler::componentTypeRef()
 {
     if (cachedComponentTypeRef == -1) {
-        QQmlType *t = QQmlMetaType::qmlType(Component_import_string,1,0);
+        QQmlType *t = QQmlMetaType::qmlType(Component_string, Component_module_string, 1, 0);
         for (int ii = output->types.count() - 1; ii >= 0; --ii) {
             if (output->types.at(ii).type == t) {
                 cachedComponentTypeRef = ii;
@@ -1739,7 +1740,7 @@ bool QQmlCompiler::buildProperty(QQmlScript::Property *prop,
 
         QQmlType *type = 0;
         QQmlImportNamespace *typeNamespace = 0;
-        unit->imports().resolveType(prop->name().toString(), &type, 0, 0, 0, &typeNamespace);
+        unit->imports().resolveType(prop->name(), &type, 0, 0, 0, &typeNamespace);
 
         if (typeNamespace) {
             COMPILE_CHECK(buildPropertyInNamespace(typeNamespace, prop, obj, 
@@ -1861,7 +1862,7 @@ bool QQmlCompiler::buildPropertyInNamespace(QQmlImportNamespace *ns,
         // Setup attached property data
 
         QQmlType *type = 0;
-        unit->imports().resolveType(ns, prop->name().toString(), &type, 0, 0, 0);
+        unit->imports().resolveType(ns, prop->name(), &type, 0, 0, 0);
 
         if (!type || !type->attachedPropertiesType()) 
             COMPILE_EXCEPTION(prop, tr("Non-existent attached object"));
@@ -2875,7 +2876,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                 QByteArray customTypeName;
                 QQmlType *qmltype = 0;
                 QString url;
-                if (!unit->imports().resolveType(p->customType.toString(), &qmltype, &url, 0, 0, 0))
+                if (!unit->imports().resolveType(p->customType, &qmltype, &url, 0, 0, 0))
                     COMPILE_EXCEPTION(p, tr("Invalid property type"));
 
                 if (!qmltype) {
