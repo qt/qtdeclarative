@@ -228,6 +228,18 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *scope, const QMetaMethod &signal,
     setIsEvaluating(false);
     addToObject(owner);
     callback = &subscriptionCallback;
+
+    /*
+        If this is a cloned method, connect to the 'original'. For example,
+        for the signal 'void aSignal(int parameter = 0)', if the method
+        index refers to 'aSignal()', get the index of 'aSignal(int)'.
+        This ensures that 'parameter' will be available from QML.
+    */
+    if (signal.attributes() & QMetaMethod::Cloned) {
+        do {
+            --m_index;
+        } while (scope->metaObject()->method(m_index).attributes() & QMetaMethod::Cloned);
+    }
     QQmlNotifierEndpoint::connect(scope, m_index, engine);
 }
 

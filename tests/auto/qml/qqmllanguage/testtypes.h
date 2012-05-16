@@ -164,6 +164,7 @@ signals:
     void basicSignal();
     void basicParameterizedSignal(int parameter);
     void oddlyNamedNotifySignal();
+    void signalWithDefaultArg(int parameter = 5);
 
 private:
     friend class tst_qqmllanguage;

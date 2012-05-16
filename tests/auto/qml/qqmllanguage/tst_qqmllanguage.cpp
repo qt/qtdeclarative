@@ -173,6 +173,7 @@ private slots:
 
     void propertyInit();
     void remoteLoadCrash();
+    void signalWithDefaultArg();
 
     // regression tests for crashes
     void crash1();
@@ -2311,6 +2312,37 @@ void tst_qqmllanguage::remoteLoadCrash()
 
     QObject *o = component.create();
     delete o;
+}
+
+void tst_qqmllanguage::signalWithDefaultArg()
+{
+    QQmlComponent component(&engine, TEST_FILE("signalWithDefaultArg.qml"));
+
+    MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("signalCount").toInt(), 0);
+    QCOMPARE(object->property("signalArg").toInt(), 0);
+
+    emit object->signalWithDefaultArg();
+    QCOMPARE(object-> property("signalCount").toInt(), 1);
+    QCOMPARE(object->property("signalArg").toInt(), 5);
+
+    emit object->signalWithDefaultArg(15);
+    QCOMPARE(object->property("signalCount").toInt(), 2);
+    QCOMPARE(object->property("signalArg").toInt(), 15);
+
+    const QMetaObject *metaObject = object->metaObject();
+
+    metaObject->invokeMethod(object, "emitNoArgSignal");
+    QCOMPARE(object->property("signalCount").toInt(), 3);
+    QCOMPARE(object->property("signalArg").toInt(), 5);
+
+    metaObject->invokeMethod(object, "emitArgSignal");
+    QCOMPARE(object->property("signalCount").toInt(), 4);
+    QCOMPARE(object->property("signalArg").toInt(), 22);
+
+    delete object;
 }
 
 // QTBUG-20639
