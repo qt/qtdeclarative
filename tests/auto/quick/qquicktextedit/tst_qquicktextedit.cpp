@@ -109,6 +109,7 @@ private slots:
     // ### these tests may be trivial
     void hAlign();
     void hAlign_RightToLeft();
+    void hAlignVisual();
     void vAlign();
     void font();
     void color();
@@ -790,6 +791,94 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     emptyEdit->setFocus(true);
     QCOMPARE(emptyEdit->hAlign(), QQuickTextEdit::AlignRight);
     QVERIFY(emptyEdit->cursorRectangle().left() > canvas.width()/2);
+}
+
+
+static int numberOfNonWhitePixels(int fromX, int toX, const QImage &image)
+{
+    int pixels = 0;
+    for (int x = fromX; x < toX; ++x) {
+        for (int y = 0; y < image.height(); ++y) {
+            if (image.pixel(x, y) != qRgb(255, 255, 255))
+                pixels++;
+        }
+    }
+    return pixels;
+}
+
+void tst_qquicktextedit::hAlignVisual()
+{
+    QQuickView view(testFileUrl("hAlignVisual.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+
+    QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
+    QVERIFY(text != 0);
+    {
+        // Left Align
+        QImage image = view.grabFrameBuffer();
+        int left = numberOfNonWhitePixels(0, image.width() / 3, image);
+        int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
+        int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
+        QVERIFY(left > mid);
+        QVERIFY(mid > right);
+    }
+    {
+        // HCenter Align
+        text->setHAlign(QQuickText::AlignHCenter);
+        QImage image = view.grabFrameBuffer();
+        int left = numberOfNonWhitePixels(0, image.width() / 3, image);
+        int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
+        int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
+        QVERIFY(left < mid);
+        QVERIFY(mid > right);
+    }
+    {
+        // Right Align
+        text->setHAlign(QQuickText::AlignRight);
+        QImage image = view.grabFrameBuffer();
+        int left = numberOfNonWhitePixels(0, image.width() / 3, image);
+        int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
+        int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
+        QVERIFY(left < mid);
+        QVERIFY(mid < right);
+    }
+
+    text->setWidth(200);
+
+    {
+        // Left Align
+        QImage image = view.grabFrameBuffer();
+        int x = qCeil(text->implicitWidth());
+        int left = numberOfNonWhitePixels(0, x, image);
+        int right = numberOfNonWhitePixels(x, image.width() - x, image);
+        QVERIFY(left > 0);
+        QVERIFY(right == 0);
+    }
+    {
+        // HCenter Align
+        text->setHAlign(QQuickText::AlignHCenter);
+        QImage image = view.grabFrameBuffer();
+        int x1 = qFloor(image.width() - text->implicitWidth()) / 2;
+        int x2 = image.width() - x1;
+        int left = numberOfNonWhitePixels(0, x1, image);
+        int mid = numberOfNonWhitePixels(x1, x2 - x1, image);
+        int right = numberOfNonWhitePixels(x2, image.width() - x2, image);
+        QVERIFY(left == 0);
+        QVERIFY(mid > 0);
+        QVERIFY(right == 0);
+    }
+    {
+        // Right Align
+        text->setHAlign(QQuickText::AlignRight);
+        QImage image = view.grabFrameBuffer();
+        int x = image.width() - qCeil(text->implicitWidth());
+        int left = numberOfNonWhitePixels(0, x, image);
+        int right = numberOfNonWhitePixels(x, image.width() - x, image);
+        QVERIFY(left == 0);
+        QVERIFY(right > 0);
+    }
 }
 
 void tst_qquicktextedit::vAlign()
