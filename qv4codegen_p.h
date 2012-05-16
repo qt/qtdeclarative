@@ -15,7 +15,7 @@ class Codegen: protected AST::Visitor
 public:
     Codegen();
 
-    void operator()(AST::Program *ast, IR::Module *module);
+    IR::Function *operator()(AST::Program *ast, IR::Module *module);
 
 protected:
     enum Format { ex, cx, nx };
@@ -55,19 +55,24 @@ protected:
 
     struct Environment {
         Environment *parent;
-        QHash<QStringRef, int> members;
-        int count;
+        QHash<QString, int> members;
+        QVector<QString> vars;
+        int maxNumberOfArguments;
+        bool hasDirectEval;
+        bool hasNestedFunctions;
 
-        Environment(Environment *parent = 0)
+        Environment(Environment *parent)
             : parent(parent)
-            , count(0) {}
+            , maxNumberOfArguments(0)
+            , hasDirectEval(false)
+            , hasNestedFunctions(false) {}
 
-        int findMember(const QStringRef &name) const
+        int findMember(const QString &name) const
         {
             return members.value(name, -1);
         }
 
-        bool lookupMember(const QStringRef &name, Environment **scope, int *index, int *distance)
+        bool lookupMember(const QString &name, Environment **scope, int *index, int *distance)
         {
             Environment *it = this;
             *distance = 0;
@@ -82,35 +87,24 @@ protected:
             return false;
         }
 
-        void enter(const QStringRef &name)
+        void enter(const QString &name)
         {
-            int idx = members.value(name, -1);
-            if (idx == -1)
-                members.insert(name, count++);
+            if (! name.isEmpty()) {
+                int idx = members.value(name, -1);
+                if (idx == -1) {
+                    members.insert(name, vars.count());
+                    vars.append(name);
+                }
+            }
         }
     };
 
-    Environment *newEnvironment()
+    Environment *newEnvironment(AST::Node *node, Environment *parent)
     {
-        Environment *scope = new Environment(_env);
-        return scope;
-    }
-
-    Environment *changeEnvironment(Environment *env)
-    {
-        qSwap(_env, env);
+        Environment *env = new Environment(parent);
+        _envMap.insert(node, env);
         return env;
     }
-
-    struct Scope {
-        Codegen *cg;
-        Environment *previous;
-        inline Scope(Codegen *cg, Environment *env): cg(cg) { previous = cg->changeEnvironment(env); }
-        inline ~Scope() { cg->changeEnvironment(previous); }
-
-    private:
-        Q_DISABLE_COPY(Scope)
-    };
 
     struct UiMember {
     };
@@ -126,6 +120,9 @@ protected:
             : breakBlock(breakBlock), continueBlock(continueBlock) {}
     };
 
+    void enterEnvironment(AST::Node *node);
+    void leaveEnvironment();
+
     IR::Expr *member(IR::Expr *base, const QString *name);
     IR::Expr *subscript(IR::Expr *base, IR::Expr *index);
     IR::Expr *argument(IR::Expr *expr);
@@ -134,7 +131,8 @@ protected:
     void move(IR::Expr *target, IR::Expr *source, IR::AluOp op = IR::OpInvalid);
 
     void linearize(IR::Function *function);
-    void defineFunction(AST::FunctionExpression *ast, bool isDeclaration = false);
+    IR::Function *defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals,
+                                 AST::SourceElements *body, bool isDeclaration = false);
     int indexOfLocal(const QStringRef &string) const;
     int indexOfArgument(const QStringRef &string) const;
 
@@ -284,10 +282,10 @@ private:
     IR::BasicBlock *_block;
     IR::BasicBlock *_exitBlock;
     unsigned _returnAddress;
-    QVector<Environment *> _allEnvironments;
     Environment *_env;
+    QHash<AST::Node *, Environment *> _envMap;
 
-    struct ScanFunctionBody;
+    class ScanFunctions;
 };
 
 } // end of namespace QQmlJS

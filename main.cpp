@@ -68,18 +68,14 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, QQmlJS::Engine *engine, const QSt
 
         Codegen cg;
         IR::Module module;
-        cg(program, &module);
+        IR::Function *globalCode = cg(program, &module);
 
         const size_t codeSize = 10 * getpagesize();
         uchar *code = (uchar *) malloc(codeSize);
 
         x86_64::InstructionSelection isel(vm, &module, code);
-        QHash<QString, IR::Function *> codeByName;
         foreach (IR::Function *function, module.functions) {
             isel(function);
-            if (function->name && ! function->name->isEmpty()) {
-                codeByName.insert(*function->name, function);
-            }
         }
 
         if (! protect(code, codeSize))
@@ -91,13 +87,19 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, QQmlJS::Engine *engine, const QSt
         globalObject->put(vm->identifier(QLatin1String("print")),
                           VM::Value::fromObject(new builtins::Print(ctx)));
 
-        foreach (IR::Function *function, module.functions) {
-            if (function->name && ! function->name->isEmpty()) {
-                globalObject->put(vm->identifier(*function->name),
-                                  VM::Value::fromObject(ctx->engine->newScriptFunction(ctx, function)));
-            }
+        ctx->varCount = globalCode->locals.size();
+        if (ctx->varCount) {
+            ctx->locals = new VM::Value[ctx->varCount];
+            ctx->vars = new VM::String*[ctx->varCount];
+            std::fill(ctx->locals, ctx->locals + ctx->varCount, VM::Value::undefinedValue());
+            for (size_t i = 0; i < ctx->varCount; ++i)
+                ctx->vars[i] = ctx->engine->identifier(*globalCode->locals.at(i));
         }
-        codeByName.value(QLatin1String("%entry"))->code(ctx);
+
+        globalCode->code(ctx);
+
+        delete[] ctx->locals;
+        delete[] ctx->vars;
     }
 }
 

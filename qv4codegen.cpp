@@ -4,6 +4,7 @@
 #include <QtCore/QSet>
 #include <QtCore/QBuffer>
 #include <QtCore/QBitArray>
+#include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
 #include <iostream>
 #include <cassert>
@@ -160,87 +161,110 @@ void liveness(IR::Function *function)
 
 } // end of anonymous namespace
 
-struct Codegen::ScanFunctionBody: Visitor
+class Codegen::ScanFunctions: Visitor
 {
-    using Visitor::visit;
-
-    // search for locals
-    Codegen::Environment *env;
-    QList<QStringRef> locals;
-    int maxNumberOfArguments;
-    bool hasDirectEval;
-    bool hasNestedFunctions;
-
-    ScanFunctionBody()
-        : env(0)
-        , maxNumberOfArguments(0)
-        , hasDirectEval(false)
-        , hasNestedFunctions(false)
+public:
+    ScanFunctions(Codegen *cg)
+        : _cg(cg)
+        , _env(0)
     {
     }
 
-    void operator()(Node *node, Environment *e)
+    void operator()(Node *node)
     {
-        env = e;
-        maxNumberOfArguments = 0;
-        hasDirectEval = false;
-        hasNestedFunctions = false;
-        locals.clear();
+        _env = 0;
         if (node)
             node->accept(this);
     }
 
 protected:
+    using Visitor::visit;
+    using Visitor::endVisit;
+
+    inline void enterEnvironment(Node *node)
+    {
+        Environment *e = _cg->newEnvironment(node, _env);
+        _envStack.append(e);
+        _env = e;
+    }
+
+    inline void leaveEnvironment()
+    {
+        _envStack.pop();
+        _env = _envStack.isEmpty() ? 0 : _envStack.top();
+    }
+
+    virtual bool visit(Program *ast)
+    {
+        enterEnvironment(ast);
+        return true;
+    }
+
+    virtual void endVisit(Program *)
+    {
+        leaveEnvironment();
+    }
+
     virtual bool visit(CallExpression *ast)
     {
-        if (! hasDirectEval) {
+        if (! _env->hasDirectEval) {
             if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
                 if (id->name == QLatin1String("eval")) {
-                    hasDirectEval = true;
+                    _env->hasDirectEval = true;
                 }
             }
         }
         int argc = 0;
-        for (AST::ArgumentList *it = ast->arguments; it; it = it->next)
+        for (ArgumentList *it = ast->arguments; it; it = it->next)
             ++argc;
-        maxNumberOfArguments = qMax(maxNumberOfArguments, argc);
+        _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
         return true;
     }
 
     virtual bool visit(NewMemberExpression *ast)
     {
         int argc = 0;
-        for (AST::ArgumentList *it = ast->arguments; it; it = it->next)
+        for (ArgumentList *it = ast->arguments; it; it = it->next)
             ++argc;
-        maxNumberOfArguments = qMax(maxNumberOfArguments, argc);
+        _env->maxNumberOfArguments = qMax(_env->maxNumberOfArguments, argc);
         return true;
     }
 
     virtual bool visit(VariableDeclaration *ast)
     {
-        env->enter(ast->name);
-        if (! locals.contains(ast->name))
-            locals.append(ast->name);
+        _env->enter(ast->name.toString());
         return true;
     }
 
     virtual bool visit(FunctionExpression *ast)
     {
-        env->enter(ast->name);
-        hasNestedFunctions = true;
-        if (! locals.contains(ast->name))
-            locals.append(ast->name);
-        return false;
+        _env->hasNestedFunctions = true;
+        _env->enter(ast->name.toString());
+        enterEnvironment(ast);
+        return true;
+    }
+
+    virtual void endVisit(FunctionExpression *)
+    {
+        leaveEnvironment();
     }
 
     virtual bool visit(FunctionDeclaration *ast)
     {
-        env->enter(ast->name);
-        hasNestedFunctions = true;
-        if (! locals.contains(ast->name))
-            locals.append(ast->name);
-        return false;
+        _env->hasNestedFunctions = true;
+        _env->enter(ast->name.toString());
+        enterEnvironment(ast);
+        return true;
     }
+
+    virtual void endVisit(FunctionDeclaration *)
+    {
+        leaveEnvironment();
+    }
+
+    Codegen *_cg;
+    Environment *_env;
+    QStack<Environment *> _envStack;
 };
 
 Codegen::Codegen()
@@ -253,38 +277,36 @@ Codegen::Codegen()
 {
 }
 
-void Codegen::operator()(AST::Program *node, IR::Module *module)
+IR::Function *Codegen::operator()(Program *node, IR::Module *module)
 {
     _module = module;
     _env = 0;
 
-    Scope scope(this, newEnvironment());
-    ScanFunctionBody globalCodeInfo;
-    globalCodeInfo(node, _env);
+    ScanFunctions scan(this);
+    scan(node);
 
-    IR::Function *globalCode = _module->newFunction(QLatin1String("%entry"));
-    globalCode->hasDirectEval = globalCodeInfo.hasDirectEval;
-    globalCode->hasNestedFunctions = true; // ### FIXME: initialize it with globalCodeInfo.hasNestedFunctions;
-    globalCode->maxNumberOfArguments = globalCodeInfo.maxNumberOfArguments;
-    _function = globalCode;
-    _block = _function->newBasicBlock();
-    _exitBlock = _function->newBasicBlock();
-    _returnAddress = _block->newTemp();
-    move(_block->TEMP(_returnAddress), _block->CONST(IR::UndefinedType, 0));
-    _exitBlock->RET(_exitBlock->TEMP(_returnAddress), IR::UndefinedType);
-
-    program(node);
-
-    if (! _block->isTerminated()) {
-        _block->JUMP(_exitBlock);
-    }
+    IR::Function *globalCode = defineFunction(QLatin1String("%entry"), node, 0, node->elements);
 
     foreach (IR::Function *function, _module->functions) {
         linearize(function);
     }
 
-    qDeleteAll(_allEnvironments);
-    _allEnvironments.clear();
+    qDeleteAll(_envMap);
+    _envMap.clear();
+
+    return globalCode;
+}
+
+void Codegen::enterEnvironment(Node *node)
+{
+    _env = _envMap.value(node);
+    Q_ASSERT(_env);
+}
+
+void Codegen::leaveEnvironment()
+{
+    Q_ASSERT(_env);
+    _env = _env->parent;
 }
 
 IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
@@ -504,8 +526,9 @@ void Codegen::functionBody(FunctionBody *ast)
 
 void Codegen::program(Program *ast)
 {
-    if (ast)
+    if (ast) {
         sourceElements(ast->elements);
+    }
 }
 
 void Codegen::propertyNameAndValueList(PropertyNameAndValueList *)
@@ -569,25 +592,11 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
 {
     if (ast->expression) {
         Result expr = expression(ast->expression);
+        Q_ASSERT(expr.code);
 
-        if (! expr.code)
-            expr.code = _block->CONST(IR::UndefinedType, 0);
-
-        if (! _function->needsActivation()) {
-            int index = indexOfLocal(ast->name);
-            if (index != -1) {
-                move(_block->TEMP(index), *expr);
-                return;
-            }
-            index = indexOfArgument(ast->name);
-            if (index != -1) {
-                move(_block->TEMP(-(index + 1)), *expr);
-                return;
-            }
-            Q_UNREACHABLE();
-        } else {
-            move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), *expr);
-        }
+        const int index = _env->findMember(ast->name.toString());
+        Q_ASSERT(index != -1);
+        move(_block->TEMP(index), *expr);
     }
 }
 
@@ -1005,14 +1014,21 @@ bool Codegen::visit(FieldMemberExpression *ast)
 
 bool Codegen::visit(FunctionExpression *ast)
 {
-    defineFunction(ast, false);
+    IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0, false);
+    if (_expr.accept(nx)) {
+        const int index = _env->findMember(ast->name.toString());
+        Q_ASSERT(index != -1);
+        move(_block->TEMP(index), _block->CLOSURE(function));
+    } else {
+        _expr.code = _block->CLOSURE(function);
+    }
     return false;
 }
 
 bool Codegen::visit(IdentifierExpression *ast)
 {
     if (! _function->needsActivation()) {
-        int index = indexOfLocal(ast->name);
+        int index = _env->findMember(ast->name.toString());
         if (index != -1) {
             _expr.code = _block->TEMP(index);
             return false;
@@ -1216,7 +1232,14 @@ bool Codegen::visit(VoidExpression *ast)
 
 bool Codegen::visit(FunctionDeclaration *ast)
 {
-    defineFunction(ast);
+    IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0, true);
+    if (_expr.accept(nx)) {
+        const int index = _env->findMember(ast->name.toString());
+        Q_ASSERT(index != -1);
+        move(_block->TEMP(index), _block->CLOSURE(function));
+    } else {
+        _expr.code = _block->CLOSURE(function);
+    }
     return false;
 }
 
@@ -1373,47 +1396,42 @@ void Codegen::linearize(IR::Function *function)
 #endif
 }
 
-void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
+IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
+                                      AST::FormalParameterList *formals,
+                                      AST::SourceElements *body, bool /*isDeclaration*/)
 {
-    Scope scope(this, newEnvironment());
-    ScanFunctionBody functionInfo;
-    functionInfo(ast->body, _env);
-
-    IR::Function *function = _module->newFunction(ast->name.toString());
+    enterEnvironment(ast);
+    IR::Function *function = _module->newFunction(name);
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock();
-    function->hasDirectEval = functionInfo.hasDirectEval;
-    function->hasNestedFunctions = functionInfo.hasNestedFunctions;
-    function->maxNumberOfArguments = functionInfo.maxNumberOfArguments;
+    function->hasDirectEval = _env->hasDirectEval;
+    function->hasNestedFunctions = _env->hasNestedFunctions;
+    function->maxNumberOfArguments = _env->maxNumberOfArguments;
 
-    //if (! function->needsActivation())
-    {
-        for (int i = 0; i < functionInfo.locals.size(); ++i) {
-            unsigned t = entryBlock->newTemp();
-            Q_ASSERT(t == unsigned(i));
-            //entryBlock->MOVE(entryBlock->TEMP(t), entryBlock->CONST(IR::UndefinedType, 0));
-        }
+    for (int i = 0; i < _env->vars.size(); ++i) {
+        unsigned t = entryBlock->newTemp();
+        Q_ASSERT(t == unsigned(i));
     }
 
     unsigned returnAddress = entryBlock->newTemp();
 
     entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
-    exitBlock->RET(_block->TEMP(returnAddress), IR::InvalidType);
+    exitBlock->RET(exitBlock->TEMP(returnAddress), IR::InvalidType);
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
 
-    for (FormalParameterList *it = ast->formals; it; it = it->next) {
+    for (FormalParameterList *it = formals; it; it = it->next) {
         _function->RECEIVE(it->name.toString());
     }
 
-    foreach (const QStringRef &local, functionInfo.locals) {
-        _function->LOCAL(local.toString());
+    foreach (const QString &local, _env->vars) {
+        _function->LOCAL(local);
     }
 
-    functionBody(ast->body);
+    sourceElements(body);
 
     if (! _block->isTerminated())
         _block->JUMP(_exitBlock);
@@ -1423,11 +1441,8 @@ void Codegen::defineFunction(FunctionExpression *ast, bool /*isDeclaration*/)
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
 
-    if (_expr.accept(nx)) {
-        // nothing to do
-    } else {
-        _expr.code = _block->CLOSURE(function);
-    }
+    leaveEnvironment();
+    return function;
 }
 
 int Codegen::indexOfLocal(const QStringRef &string) const
