@@ -118,6 +118,7 @@ public:
     virtual QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *) = 0;
     virtual QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *) = 0;
     virtual QObject *scope() = 0;
+    virtual bool isEvaluating() const = 0;
 
     void removeFromObject();
 protected:

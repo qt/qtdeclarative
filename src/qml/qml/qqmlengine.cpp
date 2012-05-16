@@ -1307,6 +1307,35 @@ void QQmlData::destroyed(QObject *object)
 
     QQmlAbstractBoundSignal *signalHandler = signalHandlers;
     while (signalHandler) {
+        if (signalHandler->isEvaluating()) {
+            // The object is being deleted during signal handler evaluation.
+            // This will cause a crash due to invalid memory access when the
+            // evaluation has completed.
+            // Abort with a friendly message instead.
+            QString locationString;
+            QQmlBoundSignalExpression *expr = signalHandler->expression();
+            if (expr) {
+                QString fileName = expr->sourceFile();
+                if (fileName.isEmpty())
+                    fileName = QStringLiteral("<Unknown File>");
+                locationString.append(fileName);
+                locationString.append(QString::fromLatin1(":%0: ").arg(expr->lineNumber()));
+                QString source = expr->expression();
+                if (source.size() > 100) {
+                    source.truncate(96);
+                    source.append(QStringLiteral(" ..."));
+                }
+                locationString.append(source);
+            } else {
+                locationString = QStringLiteral("<Unknown Location>");
+            }
+            qFatal("Object %p destroyed while one of its QML signal handlers is in progress.\n"
+                   "Most likely the object was deleted synchronously (use QObject::deleteLater() "
+                   "instead), or the application is running a nested event loop.\n"
+                   "This behavior is NOT supported!\n"
+                   "%s", object, qPrintable(locationString));
+        }
+
         QQmlAbstractBoundSignal *next = signalHandler->m_nextSignal;
         signalHandler->m_prevSignal = 0;
         signalHandler->m_nextSignal = 0;
