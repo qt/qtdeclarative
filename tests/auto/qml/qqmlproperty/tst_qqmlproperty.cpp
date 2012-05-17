@@ -190,6 +190,44 @@ void tst_qqmlproperty::qmlmetaproperty()
     delete obj;
 }
 
+// 1 = equal, 0 = unknown, -1 = not equal.
+static int compareVariantAndListReference(const QVariant &v, QQmlListReference &r)
+{
+    if (QLatin1String(v.typeName()) != QLatin1String("QQmlListReference"))
+        return -1;
+
+    QQmlListReference lhs = v.value<QQmlListReference>();
+    if (lhs.isValid() != r.isValid())
+        return -1;
+
+    if (lhs.canCount() != r.canCount())
+        return -1;
+
+    if (!lhs.canCount()) {
+        if (lhs.canAt() != r.canAt())
+            return -1; // not equal.
+        return 0; // not sure if they're equal or not, and no way to tell.
+    }
+
+    // if we get here, we must be able to count.
+    if (lhs.count() != r.count())
+        return -1;
+
+    if (lhs.canAt() != r.canAt())
+        return -1;
+
+    if (!lhs.canAt())
+        return 0; // can count, but can't check element equality.
+
+    for (int i = 0; i < lhs.count(); ++i) {
+        if (lhs.at(i) != r.at(i)) {
+            return -1; // different elements :. not equal.
+        }
+    }
+
+    return 1; // equal.
+}
+
 void tst_qqmlproperty::registeredCompositeTypeProperty()
 {
     // Composite type properties
@@ -203,6 +241,9 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
         QQmlProperty p1(obj, "first");
         QQmlProperty p2(obj, "second");
         QQmlProperty p3(obj, "third");
+        QQmlProperty p1e(obj, "first", &engine);
+        QQmlProperty p2e(obj, "second", &engine);
+        QQmlProperty p3e(obj, "third", &engine);
         QVERIFY(p1.propertyType() == p2.propertyType());
         QVERIFY(p1.propertyType() != p3.propertyType());
 
@@ -218,10 +259,13 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
         QVERIFY(second.value<QObject*>());
         QVERIFY(third.value<QObject*>());
 
-        // check that the values retrieved via QQmlProperty match.
-        QCOMPARE(p1.read(), first);
-        QCOMPARE(p2.read(), second);
-        QCOMPARE(p3.read(), third);
+        // check that the values retrieved via QQmlProperty match those retrieved via QMetaProperty::read().
+        QCOMPARE(p1.read().value<QObject*>(), first.value<QObject*>());
+        QCOMPARE(p2.read().value<QObject*>(), second.value<QObject*>());
+        QCOMPARE(p3.read().value<QObject*>(), third.value<QObject*>());
+        QCOMPARE(p1e.read().value<QObject*>(), first.value<QObject*>());
+        QCOMPARE(p2e.read().value<QObject*>(), second.value<QObject*>());
+        QCOMPARE(p3e.read().value<QObject*>(), third.value<QObject*>());
 
         delete obj;
     }
@@ -234,11 +278,11 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
         QVERIFY(obj);
 
         // create list property accessors and check types
-        QQmlProperty lp1(obj, "fclist");
-        QQmlProperty lp2(obj, "sclistOne");
-        QQmlProperty lp3(obj, "sclistTwo");
-        QVERIFY(lp1.propertyType() != lp2.propertyType());
-        QVERIFY(lp2.propertyType() == lp3.propertyType());
+        QQmlProperty lp1e(obj, "fclist", &engine);
+        QQmlProperty lp2e(obj, "sclistOne", &engine);
+        QQmlProperty lp3e(obj, "sclistTwo", &engine);
+        QVERIFY(lp1e.propertyType() != lp2e.propertyType());
+        QVERIFY(lp2e.propertyType() == lp3e.propertyType());
 
         // check that the list values are retrievable from CPP
         QVariant firstList = obj->property("fclist");
@@ -248,10 +292,13 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
         QVERIFY(secondList.isValid());
         QVERIFY(thirdList.isValid());
 
-        // check that the values retrieved via QQmlProperty match.
-        QCOMPARE(lp1.read(), firstList);
-        QCOMPARE(lp2.read(), secondList);
-        QCOMPARE(lp3.read(), thirdList);
+        // check that the value returned by QQmlProperty::read() is equivalent to the list reference.
+        QQmlListReference r1(obj, "fclist", &engine);
+        QQmlListReference r2(obj, "sclistOne", &engine);
+        QQmlListReference r3(obj, "sclistTwo", &engine);
+        QCOMPARE(compareVariantAndListReference(lp1e.read(), r1), 1);
+        QCOMPARE(compareVariantAndListReference(lp2e.read(), r2), 1);
+        QCOMPARE(compareVariantAndListReference(lp3e.read(), r3), 1);
 
         delete obj;
     }
