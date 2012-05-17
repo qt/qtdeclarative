@@ -55,21 +55,9 @@
 #include "testtypes.h"
 #include "testhttpserver.h"
 
-DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
+#include "../../shared/util.h"
 
-/*
-    Returns the path to some testdata file or directory.
-*/
-QString testdata(QString const& name = QString())
-{
-    static const QString dataDirectory = QDir::currentPath() + QLatin1String("/data");
-    QString result = dataDirectory;
-    if (!name.isEmpty()) {
-        result += QLatin1Char('/');
-        result += name;
-    }
-    return result;
-}
+DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
 /*
 This test case covers QML language issues.  This covers everything that does not
@@ -77,14 +65,9 @@ involve evaluating ECMAScript expressions and bindings.
 
 Evaluation of expressions and bindings is covered in qmlecmascript
 */
-class tst_qqmllanguage : public QObject
+class tst_qqmllanguage : public QQmlDataTest
 {
     Q_OBJECT
-public:
-    tst_qqmllanguage() {
-        QQmlMetaType::registerCustomStringConverter(qMetaTypeId<MyCustomVariantType>(), myCustomVariantTypeConverter);
-        engine.addImportPath(testdata("lib"));
-    }
 
 private slots:
     void initTestCase();
@@ -200,7 +183,7 @@ private:
     QList<QByteArray> expected; \
     QList<QByteArray> actual; \
     do { \
-        QFile file(testdata(QLatin1String(errorfile))); \
+        QFile file(testFile(errorfile)); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
         file.close(); \
@@ -227,7 +210,7 @@ private:
         if (qgetenv("DEBUG") != "" && expected != actual) \
             qWarning() << "Expected:" << expected << "Actual:" << actual;  \
         if (qgetenv("QDECLARATIVELANGUAGE_UPDATEERRORS") != "" && expected != actual) {\
-            QFile file(QLatin1String("data/") + QLatin1String(errorfile)); \
+            QFile file(testFile(errorfile)); \
             QVERIFY(file.open(QIODevice::WriteOnly)); \
             for (int ii = 0; ii < actual.count(); ++ii) { \
                 file.write(actual.at(ii)); file.write("\n"); \
@@ -238,19 +221,9 @@ private:
         } \
     }
 
-inline QUrl TEST_FILE(const QString &filename)
-{
-    return QUrl::fromLocalFile(testdata(filename));
-}
-
-inline QUrl TEST_FILE(const char *filename)
-{
-    return TEST_FILE(QLatin1String(filename));
-}
-
 void tst_qqmllanguage::cleanupTestCase()
 {
-    QVERIFY(QFile::remove(TEST_FILE(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml")).toLocalFile()));
+    QVERIFY(QFile::remove(testFile(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml"))));
 }
 
 void tst_qqmllanguage::insertedSemicolon_data()
@@ -268,7 +241,7 @@ void tst_qqmllanguage::insertedSemicolon()
     QFETCH(QString, errorFile);
     QFETCH(bool, create);
 
-    QQmlComponent component(&engine, TEST_FILE(file));
+    QQmlComponent component(&engine, testFileUrl(file));
 
     if(create) {
         QObject *object = component.create();
@@ -486,7 +459,7 @@ void tst_qqmllanguage::errors()
     QFETCH(QString, errorFile);
     QFETCH(bool, create);
 
-    QQmlComponent component(&engine, TEST_FILE(file));
+    QQmlComponent component(&engine, testFileUrl(file));
 
     if(create) {
         QObject *object = component.create();
@@ -498,7 +471,7 @@ void tst_qqmllanguage::errors()
 
 void tst_qqmllanguage::simpleObject()
 {
-    QQmlComponent component(&engine, TEST_FILE("simpleObject.qml"));
+    QQmlComponent component(&engine, testFileUrl("simpleObject.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -506,7 +479,7 @@ void tst_qqmllanguage::simpleObject()
 
 void tst_qqmllanguage::simpleContainer()
 {
-    QQmlComponent component(&engine, TEST_FILE("simpleContainer.qml"));
+    QQmlComponent component(&engine, testFileUrl("simpleContainer.qml"));
     VERIFY_ERRORS(0);
     MyContainer *container= qobject_cast<MyContainer*>(component.create());
     QVERIFY(container != 0);
@@ -515,7 +488,7 @@ void tst_qqmllanguage::simpleContainer()
 
 void tst_qqmllanguage::interfaceProperty()
 {
-    QQmlComponent component(&engine, TEST_FILE("interfaceProperty.qml"));
+    QQmlComponent component(&engine, testFileUrl("interfaceProperty.qml"));
     VERIFY_ERRORS(0);
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != 0);
@@ -525,7 +498,7 @@ void tst_qqmllanguage::interfaceProperty()
 
 void tst_qqmllanguage::interfaceQList()
 {
-    QQmlComponent component(&engine, TEST_FILE("interfaceQList.qml"));
+    QQmlComponent component(&engine, testFileUrl("interfaceQList.qml"));
     VERIFY_ERRORS(0);
     MyContainer *container= qobject_cast<MyContainer*>(component.create());
     QVERIFY(container != 0);
@@ -536,7 +509,7 @@ void tst_qqmllanguage::interfaceQList()
 
 void tst_qqmllanguage::assignObjectToSignal()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignObjectToSignal.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignObjectToSignal.qml"));
     VERIFY_ERRORS(0);
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(object != 0);
@@ -546,7 +519,7 @@ void tst_qqmllanguage::assignObjectToSignal()
 
 void tst_qqmllanguage::assignObjectToVariant()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignObjectToVariant.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignObjectToVariant.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -556,7 +529,7 @@ void tst_qqmllanguage::assignObjectToVariant()
 
 void tst_qqmllanguage::assignLiteralSignalProperty()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignLiteralSignalProperty.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignLiteralSignalProperty.qml"));
     VERIFY_ERRORS(0);
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(object != 0);
@@ -566,7 +539,7 @@ void tst_qqmllanguage::assignLiteralSignalProperty()
 // Test is an external component can be loaded and assigned (to a qlist)
 void tst_qqmllanguage::assignQmlComponent()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignQmlComponent.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignQmlComponent.qml"));
     VERIFY_ERRORS(0);
     MyContainer *object = qobject_cast<MyContainer *>(component.create());
     QVERIFY(object != 0);
@@ -579,7 +552,7 @@ void tst_qqmllanguage::assignQmlComponent()
 // Test literal assignment to all the basic types 
 void tst_qqmllanguage::assignBasicTypes()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignBasicTypes.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignBasicTypes.qml"));
     VERIFY_ERRORS(0);
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -624,7 +597,7 @@ void tst_qqmllanguage::assignBasicTypes()
 // Test edge case type assignments
 void tst_qqmllanguage::assignTypeExtremes()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignTypeExtremes.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignTypeExtremes.qml"));
     VERIFY_ERRORS(0);
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -635,7 +608,7 @@ void tst_qqmllanguage::assignTypeExtremes()
 // Test that a composite type can assign to a property of its base type
 void tst_qqmllanguage::assignCompositeToType()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignCompositeToType.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignCompositeToType.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -644,7 +617,7 @@ void tst_qqmllanguage::assignCompositeToType()
 // Test that literals are stored correctly in variant properties
 void tst_qqmllanguage::assignLiteralToVariant()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignLiteralToVariant.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignLiteralToVariant.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -683,7 +656,7 @@ void tst_qqmllanguage::assignLiteralToVariant()
 // no conversion from "special strings" to QVariants is performed.
 void tst_qqmllanguage::assignLiteralToVar()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignLiteralToVar.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignLiteralToVar.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -731,7 +704,7 @@ void tst_qqmllanguage::assignLiteralToVar()
 
 void tst_qqmllanguage::assignLiteralToJSValue()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignLiteralToJSValue.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignLiteralToJSValue.qml"));
     VERIFY_ERRORS(0);
     QObject *root = component.create();
     QVERIFY(root != 0);
@@ -819,7 +792,7 @@ void tst_qqmllanguage::assignLiteralToJSValue()
 
 void tst_qqmllanguage::bindJSValueToVar()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignLiteralToJSValue.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignLiteralToJSValue.qml"));
 
     VERIFY_ERRORS(0);
     QObject *root = component.create();
@@ -868,7 +841,7 @@ void tst_qqmllanguage::bindJSValueToVar()
 
 void tst_qqmllanguage::bindJSValueToVariant()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignLiteralToJSValue.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignLiteralToJSValue.qml"));
 
     VERIFY_ERRORS(0);
     QObject *root = component.create();
@@ -917,7 +890,7 @@ void tst_qqmllanguage::bindJSValueToVariant()
 
 void tst_qqmllanguage::bindJSValueToType()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignLiteralToJSValue.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignLiteralToJSValue.qml"));
 
     VERIFY_ERRORS(0);
     QObject *root = component.create();
@@ -952,7 +925,7 @@ void tst_qqmllanguage::bindJSValueToType()
 
 void tst_qqmllanguage::bindTypeToJSValue()
 {
-    QQmlComponent component(&engine, TEST_FILE("bindTypeToJSValue.qml"));
+    QQmlComponent component(&engine, testFileUrl("bindTypeToJSValue.qml"));
 
     VERIFY_ERRORS(0);
     QObject *root = component.create();
@@ -1094,7 +1067,7 @@ void tst_qqmllanguage::bindTypeToJSValue()
 // Tests that custom parser types can be instantiated
 void tst_qqmllanguage::customParserTypes()
 {
-    QQmlComponent component(&engine, TEST_FILE("customParserTypes.qml"));
+    QQmlComponent component(&engine, testFileUrl("customParserTypes.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1104,7 +1077,7 @@ void tst_qqmllanguage::customParserTypes()
 // Tests that the root item can be a custom component
 void tst_qqmllanguage::rootAsQmlComponent()
 {
-    QQmlComponent component(&engine, TEST_FILE("rootAsQmlComponent.qml"));
+    QQmlComponent component(&engine, testFileUrl("rootAsQmlComponent.qml"));
     VERIFY_ERRORS(0);
     MyContainer *object = qobject_cast<MyContainer *>(component.create());
     QVERIFY(object != 0);
@@ -1115,7 +1088,7 @@ void tst_qqmllanguage::rootAsQmlComponent()
 // Tests that components can be specified inline
 void tst_qqmllanguage::inlineQmlComponents()
 {
-    QQmlComponent component(&engine, TEST_FILE("inlineQmlComponents.qml"));
+    QQmlComponent component(&engine, testFileUrl("inlineQmlComponents.qml"));
     VERIFY_ERRORS(0);
     MyContainer *object = qobject_cast<MyContainer *>(component.create());
     QVERIFY(object != 0);
@@ -1130,7 +1103,7 @@ void tst_qqmllanguage::inlineQmlComponents()
 // Tests that types that have an id property have it set
 void tst_qqmllanguage::idProperty()
 {
-    QQmlComponent component(&engine, TEST_FILE("idProperty.qml"));
+    QQmlComponent component(&engine, testFileUrl("idProperty.qml"));
     VERIFY_ERRORS(0);
     MyContainer *object = qobject_cast<MyContainer *>(component.create());
     QVERIFY(object != 0);
@@ -1146,7 +1119,7 @@ void tst_qqmllanguage::idProperty()
 // even if the notify signal for "blah" is not called "blahChanged"
 void tst_qqmllanguage::autoNotifyConnection()
 {
-    QQmlComponent component(&engine, TEST_FILE("autoNotifyConnection.qml"));
+    QQmlComponent component(&engine, testFileUrl("autoNotifyConnection.qml"));
     VERIFY_ERRORS(0);
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(object != 0);
@@ -1161,7 +1134,7 @@ void tst_qqmllanguage::autoNotifyConnection()
 // Tests that signals can be assigned to
 void tst_qqmllanguage::assignSignal()
 {
-    QQmlComponent component(&engine, TEST_FILE("assignSignal.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignSignal.qml"));
     VERIFY_ERRORS(0);
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(object != 0);
@@ -1174,7 +1147,7 @@ void tst_qqmllanguage::assignSignal()
 // Tests the creation and assignment of dynamic properties
 void tst_qqmllanguage::dynamicProperties()
 {
-    QQmlComponent component(&engine, TEST_FILE("dynamicProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("dynamicProperties.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1183,7 +1156,7 @@ void tst_qqmllanguage::dynamicProperties()
     QCOMPARE(object->property("doubleProperty"), QVariant(-10.1));
     QCOMPARE(object->property("realProperty"), QVariant((qreal)-19.9));
     QCOMPARE(object->property("stringProperty"), QVariant("Hello World!"));
-    QCOMPARE(object->property("urlProperty"), QVariant(TEST_FILE("main.qml")));
+    QCOMPARE(object->property("urlProperty"), QVariant(testFileUrl("main.qml")));
     QCOMPARE(object->property("colorProperty"), QVariant(QColor("red")));
     QCOMPARE(object->property("dateProperty"), QVariant(QDate(1945, 9, 2)));
     QCOMPARE(object->property("varProperty"), QVariant("Hello World!"));
@@ -1192,7 +1165,7 @@ void tst_qqmllanguage::dynamicProperties()
 // Test that nested types can use dynamic properties
 void tst_qqmllanguage::dynamicPropertiesNested()
 {
-    QQmlComponent component(&engine, TEST_FILE("dynamicPropertiesNested.qml"));
+    QQmlComponent component(&engine, testFileUrl("dynamicPropertiesNested.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1208,7 +1181,7 @@ void tst_qqmllanguage::dynamicPropertiesNested()
 // Tests the creation and assignment to dynamic list properties
 void tst_qqmllanguage::listProperties()
 {
-    QQmlComponent component(&engine, TEST_FILE("listProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("listProperties.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1221,7 +1194,7 @@ void tst_qqmllanguage::listProperties()
 void tst_qqmllanguage::dynamicObjectProperties()
 {
     {
-    QQmlComponent component(&engine, TEST_FILE("dynamicObjectProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("dynamicObjectProperties.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1230,7 +1203,7 @@ void tst_qqmllanguage::dynamicObjectProperties()
     QVERIFY(object->property("objectProperty2") != qVariantFromValue((QObject*)0));
     }
     {
-    QQmlComponent component(&engine, TEST_FILE("dynamicObjectProperties.2.qml"));
+    QQmlComponent component(&engine, testFileUrl("dynamicObjectProperties.2.qml"));
     QEXPECT_FAIL("", "QTBUG-10822", Abort);
     VERIFY_ERRORS(0);
     QObject *object = component.create();
@@ -1245,7 +1218,7 @@ void tst_qqmllanguage::dynamicSignalsAndSlots()
 {
     QTest::ignoreMessage(QtDebugMsg, "1921");
 
-    QQmlComponent component(&engine, TEST_FILE("dynamicSignalsAndSlots.qml"));
+    QQmlComponent component(&engine, testFileUrl("dynamicSignalsAndSlots.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1261,7 +1234,7 @@ void tst_qqmllanguage::dynamicSignalsAndSlots()
 
 void tst_qqmllanguage::simpleBindings()
 {
-    QQmlComponent component(&engine, TEST_FILE("simpleBindings.qml"));
+    QQmlComponent component(&engine, testFileUrl("simpleBindings.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1274,7 +1247,7 @@ void tst_qqmllanguage::simpleBindings()
 
 void tst_qqmllanguage::autoComponentCreation()
 {
-    QQmlComponent component(&engine, TEST_FILE("autoComponentCreation.qml"));
+    QQmlComponent component(&engine, testFileUrl("autoComponentCreation.qml"));
     VERIFY_ERRORS(0);
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -1287,7 +1260,7 @@ void tst_qqmllanguage::autoComponentCreation()
 void tst_qqmllanguage::propertyValueSource()
 {
     {
-    QQmlComponent component(&engine, TEST_FILE("propertyValueSource.qml"));
+    QQmlComponent component(&engine, testFileUrl("propertyValueSource.qml"));
     VERIFY_ERRORS(0);
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -1308,7 +1281,7 @@ void tst_qqmllanguage::propertyValueSource()
     }
 
     {
-    QQmlComponent component(&engine, TEST_FILE("propertyValueSource.2.qml"));
+    QQmlComponent component(&engine, testFileUrl("propertyValueSource.2.qml"));
     VERIFY_ERRORS(0);
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -1331,7 +1304,7 @@ void tst_qqmllanguage::propertyValueSource()
 
 void tst_qqmllanguage::attachedProperties()
 {
-    QQmlComponent component(&engine, TEST_FILE("attachedProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("attachedProperties.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1344,7 +1317,7 @@ void tst_qqmllanguage::attachedProperties()
 // Tests non-static object properties
 void tst_qqmllanguage::dynamicObjects()
 {
-    QQmlComponent component(&engine, TEST_FILE("dynamicObject.1.qml"));
+    QQmlComponent component(&engine, testFileUrl("dynamicObject.1.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1353,7 +1326,7 @@ void tst_qqmllanguage::dynamicObjects()
 // Tests the registration of custom variant string converters
 void tst_qqmllanguage::customVariantTypes()
 {
-    QQmlComponent component(&engine, TEST_FILE("customVariantTypes.qml"));
+    QQmlComponent component(&engine, testFileUrl("customVariantTypes.qml"));
     VERIFY_ERRORS(0);
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != 0);
@@ -1362,7 +1335,7 @@ void tst_qqmllanguage::customVariantTypes()
 
 void tst_qqmllanguage::valueTypes()
 {
-    QQmlComponent component(&engine, TEST_FILE("valueTypes.qml"));
+    QQmlComponent component(&engine, testFileUrl("valueTypes.qml"));
     VERIFY_ERRORS(0);
 
     QString message = component.url().toString() + ":2:1: QML MyTypeObject: Binding loop detected for property \"rectProperty.width\"";
@@ -1398,7 +1371,7 @@ void tst_qqmllanguage::valueTypes()
 void tst_qqmllanguage::cppnamespace()
 {
     {
-        QQmlComponent component(&engine, TEST_FILE("cppnamespace.qml"));
+        QQmlComponent component(&engine, testFileUrl("cppnamespace.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1406,7 +1379,7 @@ void tst_qqmllanguage::cppnamespace()
     }
 
     {
-        QQmlComponent component(&engine, TEST_FILE("cppnamespace.2.qml"));
+        QQmlComponent component(&engine, testFileUrl("cppnamespace.2.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1418,7 +1391,7 @@ void tst_qqmllanguage::aliasProperties()
 {
     // Simple "int" alias
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.1.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.1.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1438,7 +1411,7 @@ void tst_qqmllanguage::aliasProperties()
 
     // Complex object alias
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.2.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.2.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1463,7 +1436,7 @@ void tst_qqmllanguage::aliasProperties()
 
     // Nested aliases
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.3.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.3.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1484,7 +1457,7 @@ void tst_qqmllanguage::aliasProperties()
 
     // Enum aliases
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.4.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.4.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1496,7 +1469,7 @@ void tst_qqmllanguage::aliasProperties()
 
     // Id aliases
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.5.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.5.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1518,7 +1491,7 @@ void tst_qqmllanguage::aliasProperties()
 
     // Nested aliases - this used to cause a crash
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.6.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.6.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1529,7 +1502,7 @@ void tst_qqmllanguage::aliasProperties()
     // Ptr Alias Cleanup - check that aliases to ptr types return 0 
     // if the object aliased to is removed
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.7.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.7.qml"));
         VERIFY_ERRORS(0);
 
         QObject *object = component.create();
@@ -1555,7 +1528,7 @@ void tst_qqmllanguage::aliasProperties()
 
     // Simple composite type
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.8.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.8.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1567,7 +1540,7 @@ void tst_qqmllanguage::aliasProperties()
 
     // Complex composite type
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.9.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.9.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1580,7 +1553,7 @@ void tst_qqmllanguage::aliasProperties()
     // Valuetype alias
     // Simple "int" alias
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.10.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.10.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1600,7 +1573,7 @@ void tst_qqmllanguage::aliasProperties()
 
     // Valuetype sub-alias
     {
-        QQmlComponent component(&engine, TEST_FILE("alias.11.qml"));
+        QQmlComponent component(&engine, testFileUrl("alias.11.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -1622,7 +1595,7 @@ void tst_qqmllanguage::aliasProperties()
 // QTBUG-13374 Test that alias properties and signals can coexist
 void tst_qqmllanguage::aliasPropertiesAndSignals()
 {
-    QQmlComponent component(&engine, TEST_FILE("aliasPropertiesAndSignals.qml"));
+    QQmlComponent component(&engine, testFileUrl("aliasPropertiesAndSignals.qml"));
     VERIFY_ERRORS(0);
     QObject *o = component.create();
     QVERIFY(o);
@@ -1633,7 +1606,7 @@ void tst_qqmllanguage::aliasPropertiesAndSignals()
 // Test that the root element in a composite type can be a Component
 void tst_qqmllanguage::componentCompositeType()
 {
-    QQmlComponent component(&engine, TEST_FILE("componentCompositeType.qml"));
+    QQmlComponent component(&engine, testFileUrl("componentCompositeType.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1667,7 +1640,7 @@ void tst_qqmllanguage::i18n()
 {
     QFETCH(QString, file);
     QFETCH(QString, stringProperty);
-    QQmlComponent component(&engine, TEST_FILE(file));
+    QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(0);
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -1679,7 +1652,7 @@ void tst_qqmllanguage::i18n()
 // Check that the Component::onCompleted attached property works
 void tst_qqmllanguage::onCompleted()
 {
-    QQmlComponent component(&engine, TEST_FILE("onCompleted.qml"));
+    QQmlComponent component(&engine, testFileUrl("onCompleted.qml"));
     VERIFY_ERRORS(0);
     QTest::ignoreMessage(QtDebugMsg, "Completed 6 10");
     QTest::ignoreMessage(QtDebugMsg, "Completed 6 10");
@@ -1691,7 +1664,7 @@ void tst_qqmllanguage::onCompleted()
 // Check that the Component::onDestruction attached property works
 void tst_qqmllanguage::onDestruction()
 {
-    QQmlComponent component(&engine, TEST_FILE("onDestruction.qml"));
+    QQmlComponent component(&engine, testFileUrl("onDestruction.qml"));
     VERIFY_ERRORS(0);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -1705,7 +1678,7 @@ void tst_qqmllanguage::onDestruction()
 void tst_qqmllanguage::scriptString()
 {
     {
-        QQmlComponent component(&engine, TEST_FILE("scriptString.qml"));
+        QQmlComponent component(&engine, testFileUrl("scriptString.qml"));
         VERIFY_ERRORS(0);
 
         MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
@@ -1721,7 +1694,7 @@ void tst_qqmllanguage::scriptString()
     }
 
     {
-        QQmlComponent component(&engine, TEST_FILE("scriptString2.qml"));
+        QQmlComponent component(&engine, testFileUrl("scriptString2.qml"));
         VERIFY_ERRORS(0);
 
         MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
@@ -1730,7 +1703,7 @@ void tst_qqmllanguage::scriptString()
     }
 
     {
-        QQmlComponent component(&engine, TEST_FILE("scriptString3.qml"));
+        QQmlComponent component(&engine, testFileUrl("scriptString3.qml"));
         VERIFY_ERRORS(0);
 
         MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
@@ -1739,7 +1712,7 @@ void tst_qqmllanguage::scriptString()
     }
 
     {
-        QQmlComponent component(&engine, TEST_FILE("scriptString4.qml"));
+        QQmlComponent component(&engine, testFileUrl("scriptString4.qml"));
         VERIFY_ERRORS(0);
 
         MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
@@ -1752,7 +1725,7 @@ void tst_qqmllanguage::scriptString()
 // property assignments
 void tst_qqmllanguage::defaultPropertyListOrder()
 {
-    QQmlComponent component(&engine, TEST_FILE("defaultPropertyListOrder.qml"));
+    QQmlComponent component(&engine, testFileUrl("defaultPropertyListOrder.qml"));
     VERIFY_ERRORS(0);
 
     MyContainer *container = qobject_cast<MyContainer *>(component.create());
@@ -1769,13 +1742,13 @@ void tst_qqmllanguage::defaultPropertyListOrder()
 
 void tst_qqmllanguage::declaredPropertyValues()
 {
-    QQmlComponent component(&engine, TEST_FILE("declaredPropertyValues.qml"));
+    QQmlComponent component(&engine, testFileUrl("declaredPropertyValues.qml"));
     VERIFY_ERRORS(0);
 }
 
 void tst_qqmllanguage::dontDoubleCallClassBegin()
 {
-    QQmlComponent component(&engine, TEST_FILE("dontDoubleCallClassBegin.qml"));
+    QQmlComponent component(&engine, testFileUrl("dontDoubleCallClassBegin.qml"));
     QObject *o = component.create();
     QVERIFY(o);
 
@@ -1865,7 +1838,7 @@ void tst_qqmllanguage::reservedWords()
 void tst_qqmllanguage::testType(const QString& qml, const QString& type, const QString& expectederror, bool partialMatch)
 {
     QQmlComponent component(&engine);
-    component.setData(qml.toUtf8(), TEST_FILE("empty.qml")); // just a file for relative local imports
+    component.setData(qml.toUtf8(), testFileUrl("empty.qml")); // just a file for relative local imports
 
     QTRY_VERIFY(!component.isLoading());
 
@@ -1890,7 +1863,7 @@ void tst_qqmllanguage::testType(const QString& qml, const QString& type, const Q
 // QTBUG-17276
 void tst_qqmllanguage::inlineAssignmentsOverrideBindings()
 {
-    QQmlComponent component(&engine, TEST_FILE("inlineAssignmentsOverrideBindings.qml"));
+    QQmlComponent component(&engine, testFileUrl("inlineAssignmentsOverrideBindings.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -1901,7 +1874,7 @@ void tst_qqmllanguage::inlineAssignmentsOverrideBindings()
 // QTBUG-19354
 void tst_qqmllanguage::nestedComponentRoots()
 {
-    QQmlComponent component(&engine, TEST_FILE("nestedComponentRoots.qml"));
+    QQmlComponent component(&engine, testFileUrl("nestedComponentRoots.qml"));
 }
 
 // Import tests (QT-558)
@@ -2104,7 +2077,7 @@ void tst_qqmllanguage::basicRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server(14447);
-    server.serveDirectory(testdata());
+    server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine, url);
 
@@ -2148,7 +2121,7 @@ void tst_qqmllanguage::importsRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server(14447);
-    server.serveDirectory(testdata());
+    server.serveDirectory(dataDirectory());
 
     testType(qml,type,error);
 }
@@ -2325,13 +2298,13 @@ void tst_qqmllanguage::importsOrder()
 
 void tst_qqmllanguage::importIncorrectCase()
 {
-    QQmlComponent component(&engine, TEST_FILE("importIncorrectCase.qml"));
+    QQmlComponent component(&engine, testFileUrl("importIncorrectCase.qml"));
 
     QList<QQmlError> errors = component.errors();
     QCOMPARE(errors.count(), 1);
 
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
-    QString expectedError = QLatin1String("cannot load module \"com.Nokia.installedtest\": File name case mismatch for \"") + testdata("lib/com/Nokia/installedtest/qmldir") + QLatin1String("\"");
+    QString expectedError = QLatin1String("cannot load module \"com.Nokia.installedtest\": File name case mismatch for \"") + testFile("lib/com/Nokia/installedtest/qmldir") + QLatin1String("\"");
 #else
     QString expectedError = QLatin1String("module \"com.Nokia.installedtest\" is not installed");
 #endif
@@ -2402,10 +2375,11 @@ void tst_qqmllanguage::importJs()
     QFETCH(QString, errorFile);
     QFETCH(bool, performTest);
 
-    QQmlComponent component(&engine, TEST_FILE(file));
+
+    QQmlComponent component(&engine, testFileUrl(file));
 
     {
-        DETERMINE_ERRORS(errorFile.toLatin1().constData(),expected,actual);
+        DETERMINE_ERRORS(errorFile,expected,actual);
         QCOMPARE(expected.size(), actual.size());
         for (int i = 0; i < expected.size(); ++i)
         {
@@ -2430,7 +2404,7 @@ void tst_qqmllanguage::qmlAttachedPropertiesObjectMethod()
     QCOMPARE(qmlAttachedPropertiesObject<MyQmlObject>(&object, true), (QObject *)0);
 
     {
-        QQmlComponent component(&engine, TEST_FILE("qmlAttachedPropertiesObjectMethod.1.qml"));
+        QQmlComponent component(&engine, testFileUrl("qmlAttachedPropertiesObjectMethod.1.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -2440,7 +2414,7 @@ void tst_qqmllanguage::qmlAttachedPropertiesObjectMethod()
     }
 
     {
-        QQmlComponent component(&engine, TEST_FILE("qmlAttachedPropertiesObjectMethod.2.qml"));
+        QQmlComponent component(&engine, testFileUrl("qmlAttachedPropertiesObjectMethod.2.qml"));
         VERIFY_ERRORS(0);
         QObject *object = component.create();
         QVERIFY(object != 0);
@@ -2458,13 +2432,13 @@ void tst_qqmllanguage::crash1()
 
 void tst_qqmllanguage::crash2()
 {
-    QQmlComponent component(&engine, TEST_FILE("crash2.qml"));
+    QQmlComponent component(&engine, testFileUrl("crash2.qml"));
 }
 
 // QTBUG-8676
 void tst_qqmllanguage::customOnProperty()
 {
-    QQmlComponent component(&engine, TEST_FILE("customOnProperty.qml"));
+    QQmlComponent component(&engine, testFileUrl("customOnProperty.qml"));
 
     VERIFY_ERRORS(0);
     QObject *object = component.create();
@@ -2478,7 +2452,7 @@ void tst_qqmllanguage::customOnProperty()
 // QTBUG-12601
 void tst_qqmllanguage::variantNotify()
 {
-    QQmlComponent component(&engine, TEST_FILE("variantNotify.qml"));
+    QQmlComponent component(&engine, testFileUrl("variantNotify.qml"));
 
     VERIFY_ERRORS(0);
     QObject *object = component.create();
@@ -2492,7 +2466,7 @@ void tst_qqmllanguage::variantNotify()
 void tst_qqmllanguage::revisions()
 {
     {
-        QQmlComponent component(&engine, TEST_FILE("revisions11.qml"));
+        QQmlComponent component(&engine, testFileUrl("revisions11.qml"));
 
         VERIFY_ERRORS(0);
         MyRevisionedClass *object = qobject_cast<MyRevisionedClass*>(component.create());
@@ -2504,7 +2478,7 @@ void tst_qqmllanguage::revisions()
     }
     {
         QQmlEngine myEngine;
-        QQmlComponent component(&myEngine, TEST_FILE("revisionssub11.qml"));
+        QQmlComponent component(&myEngine, testFileUrl("revisionssub11.qml"));
 
         VERIFY_ERRORS(0);
         MyRevisionedSubclass *object = qobject_cast<MyRevisionedSubclass*>(component.create());
@@ -2518,7 +2492,7 @@ void tst_qqmllanguage::revisions()
         delete object;
     }
     {
-        QQmlComponent component(&engine, TEST_FILE("versionedbase.qml"));
+        QQmlComponent component(&engine, testFileUrl("versionedbase.qml"));
         VERIFY_ERRORS(0);
         MySubclass *object = qobject_cast<MySubclass*>(component.create());
         QVERIFY(object != 0);
@@ -2533,11 +2507,11 @@ void tst_qqmllanguage::revisions()
 void tst_qqmllanguage::revisionOverloads()
 {
     {
-    QQmlComponent component(&engine, TEST_FILE("allowedRevisionOverloads.qml"));
+    QQmlComponent component(&engine, testFileUrl("allowedRevisionOverloads.qml"));
     VERIFY_ERRORS(0);
     }
     {
-    QQmlComponent component(&engine, TEST_FILE("disallowedRevisionOverloads.qml"));
+    QQmlComponent component(&engine, testFileUrl("disallowedRevisionOverloads.qml"));
     QEXPECT_FAIL("", "QTBUG-13849", Abort);
     QVERIFY(0);
     VERIFY_ERRORS("disallowedRevisionOverloads.errors.txt");
@@ -2599,8 +2573,11 @@ void tst_qqmllanguage::subclassedUncreateableRevision()
 
 void tst_qqmllanguage::initTestCase()
 {
-    QString testdataDir = QFileInfo(QFINDTESTDATA("data")).absolutePath();
-    QVERIFY2(QDir::setCurrent(testdataDir), qPrintable("Could not chdir to " + testdataDir));
+    QQmlDataTest::initTestCase();
+    QVERIFY2(QDir::setCurrent(dataDirectory()), qPrintable("Could not chdir to " + dataDirectory()));
+
+    QQmlMetaType::registerCustomStringConverter(qMetaTypeId<MyCustomVariantType>(), myCustomVariantTypeConverter);
+    engine.addImportPath(testFile("lib"));
 
     registerTypes();
 
@@ -2621,9 +2598,9 @@ void tst_qqmllanguage::initTestCase()
     // For POSIX, this will just be data/I18nType.qml, since POSIX is 7-bit
     // For iso8859-1 locale, this will just be data/I18nType?????.qml where ????? is 5 8-bit characters
     // For utf-8 locale, this will be data/I18nType??????????.qml where ?????????? is 5 8-bit characters, UTF-8 encoded
-    QFile in(TEST_FILE(QLatin1String("I18nType30.qml")).toLocalFile());
+    QFile in(testFileUrl(QLatin1String("I18nType30.qml")).toLocalFile());
     QVERIFY2(in.open(QIODevice::ReadOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(in.fileName(), in.errorString())));
-    QFile out(TEST_FILE(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml")).toLocalFile());
+    QFile out(testFileUrl(QString::fromUtf8("I18nType\303\201\303\242\303\243\303\244\303\245.qml")).toLocalFile());
     QVERIFY2(out.open(QIODevice::WriteOnly), qPrintable(QString::fromLatin1("Cannot open '%1': %2").arg(out.fileName(), out.errorString())));
     out.write(in.readAll());
 }
@@ -2631,7 +2608,7 @@ void tst_qqmllanguage::initTestCase()
 void tst_qqmllanguage::aliasPropertyChangeSignals()
 {
     {
-        QQmlComponent component(&engine, TEST_FILE("aliasPropertyChangeSignals.qml"));
+        QQmlComponent component(&engine, testFileUrl("aliasPropertyChangeSignals.qml"));
 
         VERIFY_ERRORS(0);
         QObject *o = component.create();
@@ -2644,7 +2621,7 @@ void tst_qqmllanguage::aliasPropertyChangeSignals()
 
     // QTCREATORBUG-2769
     {
-        QQmlComponent component(&engine, TEST_FILE("aliasPropertyChangeSignals.2.qml"));
+        QQmlComponent component(&engine, testFileUrl("aliasPropertyChangeSignals.2.qml"));
 
         VERIFY_ERRORS(0);
         QObject *o = component.create();
@@ -2660,7 +2637,7 @@ void tst_qqmllanguage::aliasPropertyChangeSignals()
 void tst_qqmllanguage::propertyInit()
 {
     {
-        QQmlComponent component(&engine, TEST_FILE("propertyInit.1.qml"));
+        QQmlComponent component(&engine, testFileUrl("propertyInit.1.qml"));
 
         VERIFY_ERRORS(0);
         QObject *o = component.create();
@@ -2672,7 +2649,7 @@ void tst_qqmllanguage::propertyInit()
     }
 
     {
-        QQmlComponent component(&engine, TEST_FILE("propertyInit.2.qml"));
+        QQmlComponent component(&engine, testFileUrl("propertyInit.2.qml"));
 
         VERIFY_ERRORS(0);
         QObject *o = component.create();
@@ -2688,7 +2665,7 @@ void tst_qqmllanguage::propertyInit()
 // QTBUG-16878
 void tst_qqmllanguage::registrationOrder()
 {
-    QQmlComponent component(&engine, TEST_FILE("registrationOrder.qml"));
+    QQmlComponent component(&engine, testFileUrl("registrationOrder.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -2698,7 +2675,7 @@ void tst_qqmllanguage::registrationOrder()
 
 void tst_qqmllanguage::readonly()
 {
-    QQmlComponent component(&engine, TEST_FILE("readonly.qml"));
+    QQmlComponent component(&engine, testFileUrl("readonly.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -2732,7 +2709,7 @@ void tst_qqmllanguage::readonly()
 
 void tst_qqmllanguage::receivers()
 {
-    QQmlComponent component(&engine, TEST_FILE("receivers.qml"));
+    QQmlComponent component(&engine, testFileUrl("receivers.qml"));
 
     MyReceiversTestObject *o = qobject_cast<MyReceiversTestObject*>(component.create());
     QVERIFY(o != 0);
@@ -2751,7 +2728,7 @@ void tst_qqmllanguage::receivers()
 void tst_qqmllanguage::remoteLoadCrash()
 {
     TestHTTPServer server(14448);
-    server.serveDirectory(testdata());
+    server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; Text {}", QUrl("http://127.0.0.1:14448/remoteLoadCrash.qml"));
@@ -2764,7 +2741,7 @@ void tst_qqmllanguage::remoteLoadCrash()
 
 void tst_qqmllanguage::signalWithDefaultArg()
 {
-    QQmlComponent component(&engine, TEST_FILE("signalWithDefaultArg.qml"));
+    QQmlComponent component(&engine, testFileUrl("signalWithDefaultArg.qml"));
 
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(object != 0);
@@ -2800,7 +2777,7 @@ void tst_qqmllanguage::globalEnums()
     qRegisterMetaType<MyEnum2Class::EnumB>();
     qRegisterMetaType<Qt::TextFormat>();
 
-    QQmlComponent component(&engine, TEST_FILE("globalEnums.qml"));
+    QQmlComponent component(&engine, testFileUrl("globalEnums.qml"));
 
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -2885,7 +2862,7 @@ void tst_qqmllanguage::literals()
     QFETCH(QString, property);
     QFETCH(QVariant, value);
 
-    QQmlComponent component(&engine, TEST_FILE("literals.qml"));
+    QQmlComponent component(&engine, testFile("literals.qml"));
 
     QObject *object = component.create();
     QVERIFY(object != 0);

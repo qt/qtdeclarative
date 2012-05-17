@@ -13,3 +13,5 @@ SOURCES += ../../shared/testhttpserver.cpp
 TESTDATA = data/*
 
 QT += core-private gui-private v8-private qml-private network testlib
+
+include (../../shared/util.pri)
