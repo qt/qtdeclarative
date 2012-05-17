@@ -61,6 +61,10 @@
 #include <qqmlengine.h>
 #include <private/qv8domerrors_p.h>
 #include <QtCore/qnumeric.h>
+#include <private/qquickcanvas_p.h>
+#include <private/qquickwindowmanager_p.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
 
 #ifdef Q_OS_QNX
 #include <ctype.h>
@@ -3319,6 +3323,9 @@ QQuickContext2D::QQuickContext2D(QObject *parent)
     : QQuickCanvasContext(parent)
     , m_buffer(new QQuickContext2DCommandBuffer)
     , m_v8engine(0)
+    , m_windowManager(0)
+    , m_surface(0)
+    , m_glContext(0)
 {
 }
 
@@ -3344,11 +3351,8 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_canvas = canvasItem;
     m_renderTarget = canvasItem->renderTarget();
 
-    // For the FBO target we only (currently) support Cooperative
-    if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
-        canvasItem->setRenderStrategy(QQuickCanvasItem::Cooperative);
-    }
-
+    QQuickCanvas *canvas = canvasItem->canvas();
+    m_windowManager =  QQuickCanvasPrivate::get(canvas)->windowManager;
     m_renderStrategy = canvasItem->renderStrategy();
 
     switch (m_renderTarget) {
@@ -3356,7 +3360,12 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_texture = new QQuickContext2DImageTexture(m_renderStrategy == QQuickCanvasItem::Threaded);
         break;
     case QQuickCanvasItem::FramebufferObject:
+    {
         m_texture = new QQuickContext2DFBOTexture;
+        // No BufferQueueingOpenGL, falls back to Cooperative mode
+        if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL))
+            m_renderStrategy = QQuickCanvasItem::Cooperative;
+    }
         break;
     }
 
@@ -3365,6 +3374,24 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_texture->setTileSize(canvasItem->tileSize());
     m_texture->setCanvasSize(canvasItem->canvasSize().toSize());
     m_texture->setSmooth(canvasItem->smooth());
+
+    QThread *renderThread = QThread::currentThread();
+    QThread *sceneGraphThread = canvas->openglContext() ? canvas->openglContext()->thread() : 0;
+
+    if (m_renderStrategy == QQuickCanvasItem::Threaded)
+        renderThread = QQuickContext2DRenderThread::instance(qmlEngine(canvasItem));
+    else if (m_renderStrategy == QQuickCanvasItem::Cooperative)
+        renderThread = sceneGraphThread;
+
+    if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
+         QOpenGLContext *cc = QQuickCanvasPrivate::get(canvas)->context->glContext();
+         m_surface = canvas;
+         m_glContext = new QOpenGLContext;
+         m_glContext->setFormat(cc->format());
+         m_glContext->setShareContext(cc);
+         if (renderThread != QThread::currentThread())
+             m_glContext->moveToThread(renderThread);
+    }
 
     connect(m_texture, SIGNAL(textureChanged()), SIGNAL(textureChanged()));
 

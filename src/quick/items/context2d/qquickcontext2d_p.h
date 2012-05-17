@@ -70,7 +70,9 @@ class QQuickContext2DCommandBuffer;
 class QQuickContext2DTexture;
 class QQuickPixmap;
 class QSGTexture;
-
+class QQuickWindowManager;
+class QSurface;
+class QOpenGLContext;
 
 class QQuickContext2D : public QQuickCanvasContext
 {
@@ -223,6 +225,9 @@ public:
     QPainterPath createTextGlyphs(qreal x, qreal y, const QString& text);
     QImage createImage(const QUrl& url);
 
+    QOpenGLContext *glContext() { return m_glContext; }
+    QSurface *surface() { return m_surface; }
+
     State state;
     QStack<QQuickContext2D::State> m_stateStack;
     QQuickCanvasItem* m_canvas;
@@ -232,6 +237,9 @@ public:
     v8::Local<v8::Value> m_strokeStyle;
     v8::Handle<v8::Value> m_v8path;
     QV8Engine *m_v8engine;
+    QQuickWindowManager *m_windowManager;
+    QSurface *m_surface;
+    QOpenGLContext *m_glContext;
     v8::Persistent<v8::Object> m_v8value;
     QQuickContext2DTexture *m_texture;
     QQuickCanvasItem::RenderTarget m_renderTarget;

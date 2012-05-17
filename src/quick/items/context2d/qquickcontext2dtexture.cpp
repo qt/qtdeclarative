@@ -68,6 +68,25 @@ static inline int qt_next_power_of_two(int v)
     return v;
 }
 
+struct GLAcquireContext {
+    GLAcquireContext(QOpenGLContext *c, QSurface *s):ctx(c) {
+        if (ctx) {
+            Q_ASSERT(s);
+            if (!ctx->isValid())
+                ctx->create();
+
+            if (!ctx->isValid())
+                qWarning() << "Unable to create GL context";
+            else if (!ctx->makeCurrent(s))
+                qWarning() << "Can't make current GL context";
+        }
+    }
+    ~GLAcquireContext() {
+        if (ctx)
+            ctx->doneCurrent();
+    }
+    QOpenGLContext *ctx;
+};
 
 Q_GLOBAL_STATIC(QThread, globalCanvasThreadRenderInstance)
 
@@ -240,6 +259,8 @@ void QQuickContext2DTexture::paint()
 {
     if (canvasDestroyed())
         return;
+
+    GLAcquireContext currentContext(m_context->glContext(), m_context->surface());
 
     if (m_threadRendering && QThread::currentThread() != globalCanvasThreadRenderInstance()) {
         Q_ASSERT(thread() == globalCanvasThreadRenderInstance());
