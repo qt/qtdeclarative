@@ -2684,7 +2684,6 @@ void tst_qquicktextinput::cursorRectangle_data()
 
 void tst_qquicktextinput::cursorRectangle()
 {
-    QSKIP("QTBUG-24801");
     QFETCH(QString, text);
     QFETCH(int, positionAtWidth);
     QFETCH(int, wrapPosition);
