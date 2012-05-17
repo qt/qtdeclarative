@@ -107,7 +107,8 @@ public:
     enum ChangeType {
         Completion = 0x01,
         StateChange = 0x02,
-        CurrentLoop = 0x04
+        CurrentLoop = 0x04,
+        CurrentTime = 0x08
     };
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
@@ -126,8 +127,9 @@ protected:
 
     void finished();
     void stateChanged(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
-    void currentLoopChanged(int currentLoop);
+    void currentLoopChanged();
     void directionChanged(QAbstractAnimationJob::Direction);
+    void currentTimeChanged(int currentTime);
 
     //definition
     int m_loopCount;
@@ -158,6 +160,7 @@ protected:
     bool m_isPause:1;
     bool m_isGroup:1;
     bool m_disableUserControl:1;
+    bool m_hasCurrentTimeChangeListeners:1;
 
     friend class QQmlAnimationTimer;
     friend class QAnimationGroupJob;
@@ -169,6 +172,7 @@ public:
     virtual void animationFinished(QAbstractAnimationJob *) {}
     virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State, QAbstractAnimationJob::State) {}
     virtual void animationCurrentLoopChanged(QAbstractAnimationJob *) {}
+    virtual void animationCurrentTimeChanged(QAbstractAnimationJob *, int) {}
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlAnimationTimer : public QAbstractAnimationTimer

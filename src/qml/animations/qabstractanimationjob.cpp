@@ -271,6 +271,8 @@ QAbstractAnimationJob::QAbstractAnimationJob()
     , m_isPause(false)
     , m_isGroup(false)
     , m_disableUserControl(false)
+    , m_hasCurrentTimeChangeListeners(false)
+
 {
 }
 
@@ -449,7 +451,7 @@ void QAbstractAnimationJob::setCurrentTime(int msecs)
     RETURN_IF_DELETED(updateCurrentTime(m_currentTime));
 
     if (m_currentLoop != oldLoop)
-        currentLoopChanged(m_currentLoop);
+        currentLoopChanged();
 
     // All animations are responsible for stopping the animation when their
     // own end state is reached; in this case the animation is time driven,
@@ -458,6 +460,9 @@ void QAbstractAnimationJob::setCurrentTime(int msecs)
         || (m_direction == Backward && m_totalCurrentTime == 0)) {
         stop();
     }
+
+    if (m_hasCurrentTimeChangeListeners)
+        currentTimeChanged(m_currentTime);
 }
 
 void QAbstractAnimationJob::start()
@@ -549,9 +554,8 @@ void QAbstractAnimationJob::stateChanged(QAbstractAnimationJob::State newState, 
     }
 }
 
-void QAbstractAnimationJob::currentLoopChanged(int currentLoop)
+void QAbstractAnimationJob::currentLoopChanged()
 {
-    Q_UNUSED(currentLoop);
     for (int i = 0; i < changeListeners.count(); ++i) {
         const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
         if (change.types & QAbstractAnimationJob::CurrentLoop) {
@@ -560,14 +564,39 @@ void QAbstractAnimationJob::currentLoopChanged(int currentLoop)
     }
 }
 
+void QAbstractAnimationJob::currentTimeChanged(int currentTime)
+{
+    Q_ASSERT(m_hasCurrentTimeChangeListeners);
+
+    for (int i = 0; i < changeListeners.count(); ++i) {
+        const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
+        if (change.types & QAbstractAnimationJob::CurrentTime) {
+           RETURN_IF_DELETED(change.listener->animationCurrentTimeChanged(this, currentTime));
+        }
+    }
+}
+
 void QAbstractAnimationJob::addAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes changes)
 {
+    if (changes & QAbstractAnimationJob::CurrentTime)
+        m_hasCurrentTimeChangeListeners = true;
+
     changeListeners.append(ChangeListener(listener, changes));
 }
 
 void QAbstractAnimationJob::removeAnimationChangeListener(QAnimationJobChangeListener *listener, QAbstractAnimationJob::ChangeTypes changes)
 {
+    m_hasCurrentTimeChangeListeners = false;
+
     changeListeners.removeOne(ChangeListener(listener, changes));
+
+    for (int i = 0; i < changeListeners.count(); ++i) {
+        const QAbstractAnimationJob::ChangeListener &change = changeListeners.at(i);
+        if (change.types & QAbstractAnimationJob::CurrentTime) {
+            m_hasCurrentTimeChangeListeners = true;
+            break;
+        }
+    }
 }
 
 QT_END_NAMESPACE

@@ -46,12 +46,15 @@
 QT_BEGIN_NAMESPACE
 
 
-class QQuickAnimationControllerPrivate : public QObjectPrivate
+class QQuickAnimationControllerPrivate : public QObjectPrivate, QAnimationJobChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickAnimationController)
 public:
     QQuickAnimationControllerPrivate()
         : progress(0.0), animation(0), animationInstance(0), finalized(false) {}
+    virtual void animationFinished(QAbstractAnimationJob *job);
+    virtual void animationCurrentTimeChanged(QAbstractAnimationJob *job, int currentTime);
+
 
     qreal progress;
     QQuickAbstractAnimation *animation;
@@ -59,6 +62,34 @@ public:
     bool finalized:1;
 
 };
+
+void QQuickAnimationControllerPrivate::animationFinished(QAbstractAnimationJob *job)
+{
+    Q_Q(QQuickAnimationController);
+    Q_ASSERT(animationInstance && animationInstance == job);
+
+    animationInstance->removeAnimationChangeListener(this, QAbstractAnimationJob::Completion | QAbstractAnimationJob::CurrentTime);
+
+    if (animationInstance->direction() == QAbstractAnimationJob::Forward && progress != 1) {
+        progress = 1;
+        emit q->progressChanged();
+    } else if (animationInstance->direction() == QAbstractAnimationJob::Backward && progress != 0) {
+        progress = 0;
+        emit q->progressChanged();
+    }
+
+}
+
+void QQuickAnimationControllerPrivate::animationCurrentTimeChanged(QAbstractAnimationJob *job, int currentTime)
+{
+    Q_Q(QQuickAnimationController);
+    Q_ASSERT(animationInstance && animationInstance == job);
+    const qreal newProgress = currentTime * 1.0 / animationInstance->duration();
+    if (progress != newProgress) {
+        progress = newProgress;
+        emit q->progressChanged();
+    }
+}
 
 /*!
     \qmlclass AnimationController QQuickAnimationController
@@ -199,6 +230,65 @@ void QQuickAnimationController::componentFinalized()
     d->finalized = true;
     reload();
 }
+
+/*!
+    \qmlmethod QtQuick2::AnimationController::completeToBeginning()
+    \brief Finishes running the controlled animation in a backwards direction.
+
+    After calling this method, the animation runs normally from the current progress point
+    in a backwards direction to the beginning state.
+
+    The animation controller's progress value will be automatically updated while the animation is running.
+
+    \sa completeToEnd(), progress()
+*/
+void QQuickAnimationController::completeToBeginning()
+{
+    Q_D(QQuickAnimationController);
+    if (!d->animationInstance)
+        return;
+
+    if (d->progress == 0)
+        return;
+
+    d->animationInstance->addAnimationChangeListener(d, QAbstractAnimationJob::Completion | QAbstractAnimationJob::CurrentTime);
+    d->animationInstance->setDirection(QAbstractAnimationJob::Backward);
+
+    //Disable and then enable user control to trigger the animation instance's state change
+    d->animationInstance->setDisableUserControl();
+    d->animationInstance->setEnableUserControl();
+    d->animationInstance->start();
+}
+
+/*!
+    \qmlmethod QtQuick2::AnimationController::completeToEnd()
+    \brief Finishes running the controlled animation in a forwards direction.
+
+    After calling this method, the animation runs normally from the current progress point
+    in a forwards direction to the end state.
+
+    The animation controller's progress value will be automatically updated while the animation is running.
+
+    \sa completeToBeginning(), progress()
+*/
+void QQuickAnimationController::completeToEnd()
+{
+    Q_D(QQuickAnimationController);
+    if (!d->animationInstance)
+        return;
+
+    if (d->progress == 1)
+        return;
+
+    d->animationInstance->addAnimationChangeListener(d, QAbstractAnimationJob::Completion | QAbstractAnimationJob::CurrentTime);
+    d->animationInstance->setDirection(QAbstractAnimationJob::Forward);
+
+    //Disable and then enable user control to trigger the animation instance's state change
+    d->animationInstance->setDisableUserControl();
+    d->animationInstance->setEnableUserControl();
+    d->animationInstance->start();
+}
+
 
 
 QT_END_NAMESPACE

@@ -80,6 +80,8 @@ Q_SIGNALS:
     void animationChanged();
 public Q_SLOTS:
     void reload();
+    void completeToBeginning();
+    void completeToEnd();
 private Q_SLOTS:
     void componentFinalized();
     void updateProgress();
