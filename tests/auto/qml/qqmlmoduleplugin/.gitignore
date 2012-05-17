@@ -1,0 +1,2 @@
+imports/*/*/*
+!imports/com/nokia/PureQmlModule/*

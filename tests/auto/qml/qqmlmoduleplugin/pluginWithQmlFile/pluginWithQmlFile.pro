@@ -5,3 +5,9 @@ QT = core qml
 DESTDIR = ../imports/com/nokia/AutoTestPluginWithQmlFile
 
 QT += core-private gui-private qml-private
+
+IMPORT_FILES = \
+        qmldir \
+        MyQmlFile.qml
+
+include (../../../shared/imports.pri)

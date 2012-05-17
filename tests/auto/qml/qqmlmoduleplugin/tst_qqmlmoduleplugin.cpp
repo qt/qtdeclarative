@@ -75,14 +75,18 @@ private slots:
 
 private:
     QString m_importsDirectory;
+    QString m_dataImportsDirectory;
 };
 
 void tst_qqmlmoduleplugin::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    m_importsDirectory = directory() + QStringLiteral("/imports");
+    m_importsDirectory = QFINDTESTDATA(QStringLiteral("imports"));
     QVERIFY2(QFileInfo(m_importsDirectory).isDir(),
              qPrintable(QString::fromLatin1("Imports directory '%1' does not exist.").arg(m_importsDirectory)));
+    m_dataImportsDirectory = directory() + QStringLiteral("/imports");
+    QVERIFY2(QFileInfo(m_dataImportsDirectory).isDir(),
+             qPrintable(QString::fromLatin1("Imports directory '%1' does not exist.").arg(m_dataImportsDirectory)));
 }
 
 #define VERIFY_ERRORS(errorfile) \
@@ -222,7 +226,7 @@ void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(m_importsDirectory);
+    server.serveDirectory(m_dataImportsDirectory);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -243,10 +247,10 @@ void tst_qqmlmoduleplugin::remoteImportWithUnquotedUri()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(m_importsDirectory);
+    server.serveDirectory(m_dataImportsDirectory);
 
     QQmlEngine engine;
-    engine.addImportPath(m_importsDirectory);
+    engine.addImportPath(m_dataImportsDirectory);
     QQmlComponent component(&engine);
     component.setData("import com.nokia.PureQmlModule 1.0 \nComponentA { width: 300; ComponentB{} }", QUrl());
 
