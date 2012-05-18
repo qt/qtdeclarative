@@ -2,12 +2,62 @@
 #include "qmljs_runtime.h"
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
+#include <QtCore/qmath.h>
+#include <QtCore/qnumeric.h>
 #include <QtCore/QDebug>
 #include <cstdio>
 #include <cassert>
+#include <typeinfo>
 
 namespace QQmlJS {
 namespace VM {
+
+QString numberToString(double num, int radix = 10)
+{
+    if (qIsNaN(num)) {
+        return QLatin1String("NaN");
+    } else if (qIsInf(num)) {
+        return QLatin1String(num < 0 ? "-Infinity" : "Infinity");
+    }
+
+    if (radix == 10)
+        return QString::number(num, 'g', 16);
+
+    QString str;
+    bool negative = false;
+
+    if (num < 0) {
+        negative = true;
+        num = -num;
+    }
+
+    double frac = num - ::floor(num);
+    num = Value::toInteger(num);
+
+    do {
+        char c = (char)::fmod(num, radix);
+        c = (c < 10) ? (c + '0') : (c - 10 + 'a');
+        str.prepend(QLatin1Char(c));
+        num = ::floor(num / radix);
+    } while (num != 0);
+
+    if (frac != 0) {
+        str.append(QLatin1Char('.'));
+        do {
+            frac = frac * radix;
+            char c = (char)::floor(frac);
+            c = (c < 10) ? (c + '0') : (c - 10 + 'a');
+            str.append(QLatin1Char(c));
+            frac = frac - ::floor(frac);
+        } while (frac != 0);
+    }
+
+    if (negative)
+        str.prepend(QLatin1Char('-'));
+
+    return str;
+}
+
 
 Value Value::fromString(Context *ctx, const QString &s)
 {
@@ -107,6 +157,11 @@ bool Value::isErrorObject() const
 bool Value::isArgumentsObject() const
 {
     return type == OBJECT_TYPE ? objectValue->asArgumentsObject() != 0 : false;
+}
+
+Object *Value::asObject() const
+{
+    return type == OBJECT_TYPE ? objectValue : 0;
 }
 
 FunctionObject *Value::asFunctionObject() const
@@ -248,7 +303,7 @@ double __qmljs_string_to_number(Context *, String *string)
 
 void __qmljs_string_from_number(Context *ctx, Value *result, double number)
 {
-    String *string = ctx->engine->newString(QString::number(number, 'g', 16));
+    String *string = ctx->engine->newString(numberToString(number, 10));
     __qmljs_init_string(result, string);
 }
 
@@ -274,10 +329,42 @@ bool __qmljs_is_function(Context *, const Value *value)
     return value->objectValue->asFunctionObject() != 0;
 }
 
-void __qmljs_object_default_value(Context *ctx, Value *result, Object *object, int typeHint)
+void __qmljs_object_default_value(Context *ctx, Value *result, const Value *object, int typeHint)
 {
-    Q_UNUSED(ctx);
-    object->defaultValue(ctx, result, typeHint);
+    if (typeHint == PREFERREDTYPE_HINT) {
+        if (object->isDateObject())
+            typeHint = STRING_HINT;
+        else
+            typeHint = NUMBER_HINT;
+    }
+
+    String *meth1 = ctx->engine->identifier("toString");
+    String *meth2 = ctx->engine->identifier("valueOf");
+
+    if (typeHint == NUMBER_HINT)
+        qSwap(meth1, meth2);
+
+    Value *conv = object->asObject()->getProperty(meth1);
+    if (conv && conv->isFunctionObject()) {
+        Value r;
+        __qmljs_call_value(ctx, &r, object, conv, 0, 0);
+        if (r.isPrimitive()) {
+            *result = r;
+            return;
+        }
+    }
+
+    conv = object->asObject()->getProperty(meth2);
+    if (conv && conv->isFunctionObject()) {
+        Value r;
+        __qmljs_call_value(ctx, &r, object, conv, 0, 0);
+        if (r.isPrimitive()) {
+            *result = r;
+            return;
+        }
+    }
+
+    assert(!"type error");
 }
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
@@ -514,7 +601,7 @@ void __qmljs_call_activation_property(Context *context, Value *result, String *n
     if (! func)
         assert(!"reference error");
 
-    __qmljs_call_value(context, result, func, args, argc);
+    __qmljs_call_value(context, result, /*thisObject=*/ 0, func, args, argc);
 }
 
 void __qmljs_call_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
@@ -548,13 +635,13 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
     }
 }
 
-void __qmljs_call_value(Context *context, Value *result, const Value *func, Value *args, int argc)
+void __qmljs_call_value(Context *context, Value *result, const Value *thisObject, const Value *func, Value *args, int argc)
 {
     if (func->type == OBJECT_TYPE) {
         if (FunctionObject *f = func->objectValue->asFunctionObject()) {
             Context k;
             Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->initCallContext(context->engine, 0, f, args, argc);
+            ctx->initCallContext(context->engine, thisObject, f, args, argc);
             f->call(ctx);
             ctx->leaveCallContext(f, result);
         } else {

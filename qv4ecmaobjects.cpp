@@ -562,10 +562,12 @@ StringPrototype::StringPrototype(Context *ctx, FunctionObject *ctor)
 
 QString StringPrototype::getThisString(Context *ctx)
 {
-    Value v;
-    __qmljs_to_string(ctx, &v, &ctx->thisObject);
-    assert(v.is(STRING_TYPE));
-    return v.stringValue->toQString();
+    if (StringObject *thisObject = ctx->thisObject.asStringObject()) {
+        return thisObject->value.stringValue->toQString();
+    } else {
+        assert(!"type error");
+        return QString();
+    }
 }
 
 void StringPrototype::method_toString(Context *ctx)
@@ -575,7 +577,11 @@ void StringPrototype::method_toString(Context *ctx)
 
 void StringPrototype::method_valueOf(Context *ctx)
 {
-    ctx->thisObject.objectValue->defaultValue(ctx, &ctx->result, STRING_HINT);
+    if (StringObject *o = ctx->thisObject.asStringObject()) {
+        ctx->result = o->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void StringPrototype::method_charAt(Context *ctx)
@@ -868,6 +874,7 @@ NumberPrototype::NumberPrototype(Context *ctx, FunctionObject *ctor)
 
 void NumberPrototype::method_toString(Context *ctx)
 {
+    assert(!"here");
     if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
         Value arg = ctx->argument(0);
         if (!arg.isUndefined()) {
@@ -879,16 +886,17 @@ void NumberPrototype::method_toString(Context *ctx)
                 return;
             }
 
+            double num = thisObject->value.numberValue;
+            if (qIsNaN(num)) {
+                ctx->result = Value::fromString(ctx, QLatin1String("NaN"));
+                return;
+            } else if (qIsInf(num)) {
+                ctx->result = Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
+                return;
+            }
+
             if (radix != 10) {
-                double num = thisObject->value.numberValue;
                 QString str;
-                if (qIsNaN(num)) {
-                    ctx->result = Value::fromString(ctx, QLatin1String("NaN"));
-                    return;
-                } else if (qIsInf(num)) {
-                    ctx->result = Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
-                    return;
-                }
                 bool negative = false;
                 if (num < 0) {
                     negative = true;

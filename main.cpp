@@ -34,11 +34,10 @@ struct Print: FunctionObject
     virtual void call(Context *ctx)
     {
         for (size_t i = 0; i < ctx->argumentCount; ++i) {
-            Value v;
-            __qmljs_to_string(ctx, &v, &ctx->arguments[i]);
+            String *s = ctx->argument(i).toString(ctx);
             if (i)
                 std::cout << ' ';
-            std::cout << qPrintable(v.stringValue->toQString());
+            std::cout << qPrintable(s->toQString());
         }
         std::cout << std::endl;
     }

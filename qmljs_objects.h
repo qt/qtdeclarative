@@ -213,7 +213,6 @@ struct Object {
     virtual bool canPut(String *name);
     virtual bool hasProperty(String *name) const;
     virtual bool deleteProperty(String *name, bool flag);
-    virtual void defaultValue(Context *ctx, Value *result, int typeHint);
     // ### TODO: defineOwnProperty(name, descriptor, boolean) -> boolean
 
     //
@@ -227,28 +226,24 @@ struct BooleanObject: Object {
     Value value;
     BooleanObject(const Value &value): value(value) {}
     virtual BooleanObject *asBooleanObject() { return this; }
-    virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct NumberObject: Object {
     Value value;
     NumberObject(const Value &value): value(value) {}
     virtual NumberObject *asNumberObject() { return this; }
-    virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct StringObject: Object {
     Value value;
     StringObject(const Value &value): value(value) {}
     virtual StringObject *asStringObject() { return this; }
-    virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct DateObject: Object {
     Value value;
     DateObject(const Value &value): value(value) {}
     virtual DateObject *asDateObject() { return this; }
-    virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct ArrayObject: Object {

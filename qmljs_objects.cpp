@@ -102,19 +102,6 @@ bool Object::deleteProperty(String *name, bool flag)
     return false;
 }
 
-void Object::defaultValue(Context *ctx, Value *result, int typeHint)
-{
-    if (typeHint == STRING_HINT) {
-        if (asFunctionObject() != 0)
-            __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("function")));
-        else
-            __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("object")));
-    } else {
-        __qmljs_init_undefined(result);
-    }
-}
-
-
 bool FunctionObject::hasInstance(const Value &value) const
 {
     Q_UNUSED(value);

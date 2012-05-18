@@ -54,7 +54,7 @@ extern "C" {
 // context
 void __qmljs_call_activation_property(Context *, Value *result, String *name, Value *args, int argc);
 void __qmljs_call_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc);
-void __qmljs_call_value(Context *context, Value *result, const Value *func, Value *args, int argc);
+void __qmljs_call_value(Context *context, Value *result, const Value *thisObject, const Value *func, Value *args, int argc);
 
 void __qmljs_construct_activation_property(Context *, Value *result, String *name, Value *args, int argc);
 void __qmljs_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc);
@@ -91,7 +91,7 @@ bool __qmljs_string_equal(Context *ctx, String *left, String *right);
 String *__qmljs_string_concat(Context *ctx, String *first, String *second);
 
 // objects
-void __qmljs_object_default_value(Context *ctx, Value *result, Object *object, int typeHint);
+void __qmljs_object_default_value(Context *ctx, Value *result, const Value *object, int typeHint);
 void __qmljs_throw_type_error(Context *ctx, Value *result);
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean);
 void __qmljs_new_number_object(Context *ctx, Value *result, double n);
@@ -237,6 +237,7 @@ struct Value {
     inline bool isNumber() const { return is(NUMBER_TYPE); }
     inline bool isObject() const { return is(OBJECT_TYPE); }
 
+    inline bool isPrimitive() const { return type != OBJECT_TYPE; }
     bool isFunctionObject() const;
     bool isBooleanObject() const;
     bool isNumberObject() const;
@@ -246,6 +247,7 @@ struct Value {
     bool isErrorObject() const;
     bool isArgumentsObject() const;
 
+    Object *asObject() const;
     FunctionObject *asFunctionObject() const;
     BooleanObject *asBooleanObject() const;
     NumberObject *asNumberObject() const;
@@ -473,7 +475,7 @@ inline bool __qmljs_is_callable(Context *ctx, const Value *value)
 inline void __qmljs_default_value(Context *ctx, Value *result, const Value *value, int typeHint)
 {
     if (value->type == OBJECT_TYPE)
-        __qmljs_object_default_value(ctx, result, value->objectValue, typeHint);
+        __qmljs_object_default_value(ctx, result, value, typeHint);
     else
         __qmljs_init_undefined(result);
 }
