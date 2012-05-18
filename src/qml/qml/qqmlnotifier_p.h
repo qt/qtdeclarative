@@ -70,8 +70,19 @@ public:
     inline QQmlNotifierEndpoint();
     inline ~QQmlNotifierEndpoint();
 
-    typedef void (*Callback)(QQmlNotifierEndpoint *, void **);
-    Callback callback;
+    // QQmlNotifierEndpoint can only invoke one of a set of pre-defined callbacks.
+    // To add another callback, extend this enum and add the callback to the top
+    // of qqmlnotifier.cpp.  Four bits are reserved for the callback, so there can
+    // be up to 15 of them (0 is reserved).
+    enum Callback {
+        None = 0,
+        QQmlBoundSignal = 1,
+        QQmlJavaScriptExpressionGuard = 2,
+        QQmlVMEMetaObjectEndpoint = 3,
+        QV4BindingsSubscription = 4
+    };
+
+    inline void setCallback(Callback c) { callback = c; }
 
     inline bool isConnected();
     inline bool isConnected(QObject *source, int sourceSignal);
@@ -88,13 +99,16 @@ private:
     friend class QQmlData;
     friend class QQmlNotifier;
 
-    union {
-        QQmlNotifier *notifier;
-        QObject *source;
-    };
-    unsigned int notifying : 1;
-    signed int sourceSignal : 31;
-    QQmlNotifierEndpoint **disconnected;
+    // Contains either the QObject*, or the QQmlNotifier* that this
+    // endpoint is connected to.  While the endpoint is notifying, the
+    // senderPtr points to another intptr_t that contains this value.
+    intptr_t senderPtr;
+    inline QObject *senderAsObject() const;
+    inline QQmlNotifier *senderAsNotifier() const;
+
+    Callback callback:4;
+    signed int sourceSignal:28;
+
     QQmlNotifierEndpoint  *next;
     QQmlNotifierEndpoint **prev;
 };
@@ -111,12 +125,12 @@ QQmlNotifier::~QQmlNotifier()
         QQmlNotifierEndpoint *n = endpoint;
         endpoint = n->next;
 
+        if (n->isNotifying()) *((intptr_t *)(n->senderPtr & ~0x1)) = 0;
+
         n->next = 0;
         n->prev = 0;
-        n->notifier = 0;
+        n->senderPtr = 0;
         n->sourceSignal = -1;
-        if (n->disconnected) *n->disconnected = 0;
-        n->disconnected = 0;
     }
     endpoints = 0;
 }
@@ -128,7 +142,7 @@ void QQmlNotifier::notify()
 }
 
 QQmlNotifierEndpoint::QQmlNotifierEndpoint()
-: callback(0), notifier(0), notifying(0), sourceSignal(-1), disconnected(0), next(0), prev(0)
+: senderPtr(0), callback(None), sourceSignal(-1), next(0), prev(0)
 {
 }
 
@@ -144,12 +158,13 @@ bool QQmlNotifierEndpoint::isConnected()
 
 bool QQmlNotifierEndpoint::isConnected(QObject *source, int sourceSignal)
 {
-    return this->sourceSignal != -1 && this->source == source && this->sourceSignal == sourceSignal;
+    return this->sourceSignal != -1 && senderAsObject() == source &&
+           this->sourceSignal == sourceSignal;
 }
 
 bool QQmlNotifierEndpoint::isConnected(QQmlNotifier *notifier)
 {
-    return sourceSignal == -1 && this->notifier == notifier;
+    return sourceSignal == -1 && senderAsNotifier() == notifier;
 }
 
 void QQmlNotifierEndpoint::connect(QQmlNotifier *notifier)
@@ -160,19 +175,17 @@ void QQmlNotifierEndpoint::connect(QQmlNotifier *notifier)
     if (next) { next->prev = &next; }
     notifier->endpoints = this;
     prev = &notifier->endpoints;
-    this->notifier = notifier;
+    senderPtr = intptr_t(notifier);
 }
 
 void QQmlNotifierEndpoint::disconnect()
 {
     if (next) next->prev = prev;
     if (prev) *prev = next;
-    if (disconnected) *disconnected = 0;
+    if (isNotifying()) *((intptr_t *)(senderPtr & ~0x1)) = 0;
     next = 0;
     prev = 0;
-    disconnected = 0;
-    notifier = 0;
-    notifying = 0;
+    senderPtr = 0;
     sourceSignal = -1;
 }
 
@@ -185,7 +198,7 @@ An in progress notify can be cancelled by calling cancelNotify.
 */
 bool QQmlNotifierEndpoint::isNotifying() const
 {
-    return notifying == 1;
+    return senderPtr & 0x1;
 }
 
 /*!
@@ -193,11 +206,21 @@ Cancel any notifies that are in progress.
 */
 void QQmlNotifierEndpoint::cancelNotify() 
 {
-    notifying = 0;
-    if (disconnected) {
-        *disconnected = 0;
-        disconnected = 0;
+    if (isNotifying()) {
+        intptr_t sp = *((intptr_t *)(senderPtr & ~0x1));
+        *((intptr_t *)(senderPtr & ~0x1)) = 0;
+        senderPtr = sp;
     }
+}
+
+QObject *QQmlNotifierEndpoint::senderAsObject() const
+{
+    return isNotifying()?((QObject *)(*((intptr_t *)(senderPtr & ~0x1)))):((QObject *)senderPtr);
+}
+
+QQmlNotifier *QQmlNotifierEndpoint::senderAsNotifier() const
+{
+    return isNotifying()?((QQmlNotifier *)(*((intptr_t *)(senderPtr & ~0x1)))):((QQmlNotifier *)senderPtr);
 }
 
 QT_END_NAMESPACE

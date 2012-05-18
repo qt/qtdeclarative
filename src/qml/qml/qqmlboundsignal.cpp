@@ -249,7 +249,7 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *scope, int signal, QObject *owner,
     setParamsValid(false);
     setIsEvaluating(false);
     addToObject(owner);
-    callback = &subscriptionCallback;
+    setCallback(QQmlNotifierEndpoint::QQmlBoundSignal);
 
     /*
         If this is a cloned method, connect to the 'original'. For example,
@@ -318,7 +318,7 @@ QQmlBoundSignalExpressionPointer QQmlBoundSignal::takeExpression(QQmlBoundSignal
     return rv;
 }
 
-void QQmlBoundSignal::subscriptionCallback(QQmlNotifierEndpoint *e, void **a)
+void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
 {
     QQmlBoundSignal *s = static_cast<QQmlBoundSignal*>(e);
     if (!s->m_expression)

@@ -46,27 +46,47 @@
 
 QT_BEGIN_NAMESPACE
 
+typedef void (*Callback)(QQmlNotifierEndpoint *, void **);
+
+void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);
+void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
+void QQmlVMEMetaObjectEndpoint_callback(QQmlNotifierEndpoint *, void **);
+void QV4BindingsSubscription_callback(QQmlNotifierEndpoint *, void **);
+
+static Callback QQmlNotifier_callbacks[] = {
+    0,
+    QQmlBoundSignal_callback,
+    QQmlJavaScriptExpressionGuard_callback,
+    QQmlVMEMetaObjectEndpoint_callback,
+    QV4BindingsSubscription_callback
+};
+
 void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
 {
-    QQmlNotifierEndpoint **oldDisconnected = endpoint->disconnected;
-    endpoint->disconnected = &endpoint;
-    endpoint->notifying = 1;
+    intptr_t originalSenderPtr;
+    intptr_t *disconnectWatch;
+
+    if (!endpoint->isNotifying()) {
+        originalSenderPtr = endpoint->senderPtr;
+        disconnectWatch = &originalSenderPtr;
+        endpoint->senderPtr = intptr_t(disconnectWatch) | 0x1;
+    } else {
+        disconnectWatch = (intptr_t *)(endpoint->senderPtr & ~0x1);
+    }
 
     if (endpoint->next)
         emitNotify(endpoint->next, a);
 
-    if (endpoint) {
+    if (*disconnectWatch) {
 
-        Q_ASSERT(endpoint->callback);
-        
-        endpoint->callback(endpoint, a);
+        Q_ASSERT(QQmlNotifier_callbacks[endpoint->callback]);
+        QQmlNotifier_callbacks[endpoint->callback](endpoint, a);
 
-        if (endpoint) 
-            endpoint->disconnected = oldDisconnected;
+        if (disconnectWatch == &originalSenderPtr && originalSenderPtr) {
+            // End of notifying, restore values
+            endpoint->senderPtr = originalSenderPtr;
+        }
     } 
-
-    if (oldDisconnected) *oldDisconnected = endpoint;
-    else if (endpoint) endpoint->notifying = 0;
 }
 
 void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine *engine)
@@ -89,7 +109,7 @@ void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine
                qPrintable(engineName));
     }
 
-    this->source = source;
+    senderPtr = intptr_t(source);
     this->sourceSignal = sourceSignal;
     QQmlPropertyPrivate::flushSignal(source, sourceSignal);
     QQmlData *ddata = QQmlData::get(source, true);

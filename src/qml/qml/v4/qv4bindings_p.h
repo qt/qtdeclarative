@@ -117,12 +117,11 @@ private:
     class Subscription : public QQmlNotifierEndpoint
     {
     public:
-        Subscription() : bindings(0), method(-1) { callback = &subscriptionCallback; }
-        static void subscriptionCallback(QQmlNotifierEndpoint *e, void**);
+        inline Subscription();
         QV4Bindings *bindings;
         int method;
     };
-    friend class Subscription;
+    friend void QV4BindingsSubscription_callback(QQmlNotifierEndpoint *e, void **);
 
     Subscription *subscriptions;
 

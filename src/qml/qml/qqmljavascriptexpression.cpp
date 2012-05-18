@@ -368,4 +368,12 @@ void QQmlJavaScriptExpression::clearGuards()
         g->Delete();
 }
 
+void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *e, void **)
+{
+    QQmlJavaScriptExpression *expression =
+        static_cast<QQmlJavaScriptExpressionGuard *>(e)->expression;
+
+    expression->m_vtable->expressionChanged(expression);
+}
+
 QT_END_NAMESPACE

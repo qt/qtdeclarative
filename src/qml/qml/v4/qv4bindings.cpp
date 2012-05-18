@@ -349,9 +349,15 @@ void QV4Bindings::Binding::retargetBinding(QObject *t, int i)
     target.value().targetProperty = i;
 }
 
-void QV4Bindings::Subscription::subscriptionCallback(QQmlNotifierEndpoint *e, void **)
+QV4Bindings::Subscription::Subscription()
+: bindings(0), method(-1)
 {
-    Subscription *s = static_cast<Subscription *>(e);
+    setCallback(QQmlNotifierEndpoint::QV4BindingsSubscription);
+}
+
+void QV4BindingsSubscription_callback(QQmlNotifierEndpoint *e, void **)
+{
+    QV4Bindings::Subscription *s = static_cast<QV4Bindings::Subscription *>(e);
     s->bindings->subscriptionNotify(s->method);
 }
 

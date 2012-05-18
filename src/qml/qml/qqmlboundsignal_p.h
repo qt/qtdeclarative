@@ -147,11 +147,11 @@ public:
     QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *);
     QObject *scope() { return *m_scope; }
 
-    static void subscriptionCallback(QQmlNotifierEndpoint *e, void **);
-
     bool isEvaluating() const { return m_scope.flag(); }
 
 private:
+    friend void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);
+
     QQmlBoundSignalExpressionPointer m_expression;
     QQmlBoundSignalParameters *m_params;
     // We store some flag bits in the following flag pointer.

@@ -446,10 +446,10 @@ void QQmlVMEVariant::ensureValueType(int t)
 
 QQmlVMEMetaObjectEndpoint::QQmlVMEMetaObjectEndpoint()
 {
-    callback = &vmecallback;
+    setCallback(QQmlNotifierEndpoint::QQmlVMEMetaObjectEndpoint);
 }
 
-void QQmlVMEMetaObjectEndpoint::vmecallback(QQmlNotifierEndpoint *e, void **)
+void QQmlVMEMetaObjectEndpoint_callback(QQmlNotifierEndpoint *e, void **)
 {
     QQmlVMEMetaObjectEndpoint *vmee = static_cast<QQmlVMEMetaObjectEndpoint*>(e);
     vmee->tryConnect();

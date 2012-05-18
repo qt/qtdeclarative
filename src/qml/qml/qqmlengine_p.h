@@ -103,13 +103,12 @@ class QDir;
 class QQmlIncubator;
 
 // This needs to be declared here so that the pool for it can live in QQmlEnginePrivate.
-// The inline method definitions are in qqmlexpression_p.h
+// The inline method definitions are in qqmljavascriptexpression_p.h
 class QQmlJavaScriptExpressionGuard : public QQmlNotifierEndpoint
 {
 public:
     inline QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpression *);
 
-    static inline void endpointCallback(QQmlNotifierEndpoint *, void **);
     static inline QQmlJavaScriptExpressionGuard *New(QQmlJavaScriptExpression *e,
                                                              QQmlEngine *engine);
     inline void Delete();

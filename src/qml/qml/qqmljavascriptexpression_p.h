@@ -146,7 +146,7 @@ protected:
 
 private:
     typedef QQmlJavaScriptExpressionGuard Guard;
-    friend class QQmlJavaScriptExpressionGuard;
+    friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
 
     struct GuardCapture : public QQmlEnginePrivate::PropertyCapture {
         GuardCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e)
@@ -253,15 +253,7 @@ bool QQmlJavaScriptExpression::hasDelayedError() const
 QQmlJavaScriptExpressionGuard::QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpression *e)
 : expression(e), next(0)
 {
-    callback = &endpointCallback;
-}
-
-void QQmlJavaScriptExpressionGuard::endpointCallback(QQmlNotifierEndpoint *e, void **)
-{
-    QQmlJavaScriptExpression *expression =
-        static_cast<QQmlJavaScriptExpressionGuard *>(e)->expression;
-
-    expression->m_vtable->expressionChanged(expression);
+    setCallback(QQmlNotifierEndpoint::QQmlJavaScriptExpressionGuard);
 }
 
 QQmlJavaScriptExpressionGuard *
