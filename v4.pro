@@ -25,7 +25,8 @@ HEADERS += \
     x86-codegen.h \
     amd64-codegen.h \
     qv4syntaxchecker_p.h \
-    qv4ecmaobjects_p.h
+    qv4ecmaobjects_p.h \
+    qv4array_p.h
 
 
 

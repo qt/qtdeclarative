@@ -1,5 +1,6 @@
 
 #include "qv4ecmaobjects_p.h"
+#include "qv4array_p.h"
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
