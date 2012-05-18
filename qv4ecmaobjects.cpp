@@ -936,7 +936,7 @@ void NumberPrototype::method_toLocaleString(Context *ctx)
     assert(self.isObject());
     //    if (self.classInfo() != classInfo) {
     //        return throwThisObjectTypeError(
-    //            context, QLatin1String("Number.prototype.toLocaleString"));
+    //            ctx, QLatin1String("Number.prototype.toLocaleString"));
     //    }
     Value internalValue;
     self.objectValue->defaultValue(ctx, &internalValue, STRING_HINT);
@@ -950,7 +950,7 @@ void NumberPrototype::method_valueOf(Context *ctx)
     assert(self.isObject());
     //    if (self.classInfo() != classInfo) {
     //        return throwThisObjectTypeError(
-    //            context, QLatin1String("Number.prototype.toLocaleString"));
+    //            ctx, QLatin1String("Number.prototype.toLocaleString"));
     //    }
     Value internalValue;
     self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
@@ -1068,7 +1068,7 @@ void BooleanPrototype::method_toString(Context *ctx)
     Value self = ctx->thisObject;
 //    if (self.classInfo() != classInfo) {
 //        return throwThisObjectTypeError(
-//            context, QLatin1String("Boolean.prototype.toString"));
+//            ctx, QLatin1String("Boolean.prototype.toString"));
 //    }
     assert(self.isObject());
     Value internalValue;
@@ -1083,7 +1083,7 @@ void BooleanPrototype::method_valueOf(Context *ctx)
     Value self = ctx->thisObject;
 //    if (self.classInfo() != classInfo) {
 //        return throwThisObjectTypeError(
-//            context, QLatin1String("Boolean.prototype.valueOf"));
+//            ctx, QLatin1String("Boolean.prototype.valueOf"));
 //    }
     assert(self.isObject());
     Value internalValue;
@@ -1099,7 +1099,7 @@ Value DateCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newDateCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newNumberPrototype(ctx, ctor)));
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newDatePrototype(ctx, ctor)));
     return Value::fromObject(ctor);
 }
 
@@ -1110,18 +1110,17 @@ DateCtor::DateCtor(Context *scope)
 
 void DateCtor::construct(Context *ctx)
 {
-    // called as constructor
-    double t;
+    double t = 0;
 
     if (ctx->argumentCount == 0)
         t = currentTime();
 
     else if (ctx->argumentCount == 1) {
         Value arg = ctx->argument(0);
-//        if (arg.isDate())
-//            arg = arg.internalValue();
-//        else
-//          __qmljs_to_primitive(ctx, &arg, &arg, PREFERREDTYPE_HINT);
+        if (DateObject *d = arg.asDateObject())
+            arg = d->value;
+        else
+            __qmljs_to_primitive(ctx, &arg, &arg, PREFERREDTYPE_HINT);
 
         if (arg.isString())
             t = ParseString(arg.toString(ctx)->toQString());
@@ -1129,7 +1128,7 @@ void DateCtor::construct(Context *ctx)
             t = TimeClip(arg.toNumber(ctx));
     }
 
-    else { // context->argumentCount() > 1
+    else { // ctx->argumentCount() > 1
         double year  = ctx->argument(0).toNumber(ctx);
         double month = ctx->argument(1).toNumber(ctx);
         double day  = ctx->argumentCount >= 3 ? ctx->argument(2).toNumber(ctx) : 1;
@@ -1143,11 +1142,8 @@ void DateCtor::construct(Context *ctx)
         t = TimeClip(UTC(t));
     }
 
-//    Value &obj = ctx->m_thisObject;
-//    obj.setClassInfo(classInfo());
-//    obj.setInternalValue(Value(t));
-//    obj.setPrototype(publicPrototype);
-//    ctx->setReturnValue(obj);
+    Object *d = ctx->engine->newDateObject(Value::fromNumber(t));
+    ctx->thisObject = Value::fromObject(d);
 }
 
 void DateCtor::call(Context *ctx)
@@ -1157,6 +1153,7 @@ void DateCtor::call(Context *ctx)
 }
 
 DatePrototype::DatePrototype(Context *ctx, FunctionObject *ctor)
+    : DateObject(Value::fromNumber(qSNaN()))
 {
     LocalTZA = getLocalTZA();
 
@@ -1210,11 +1207,19 @@ DatePrototype::DatePrototype(Context *ctx, FunctionObject *ctor)
     setProperty(ctx, QLatin1String("toGMTString"), method_toUTCString, 0);
 }
 
+DateObject *DatePrototype::getThisDateObject(Context *ctx)
+{
+    assert(ctx->thisObject.isObject());
+    DateObject *date = ctx->thisObject.objectValue->asDateObject();
+    return date;
+}
+
 double DatePrototype::getThisDate(Context *ctx)
 {
     assert(ctx->thisObject.isObject());
-    Value internalValue;
-    ctx->thisObject.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
+    DateObject *date = ctx->thisObject.objectValue->asDateObject();
+    assert(date);
+    Value internalValue = date->value;
     assert(internalValue.isNumber());
     return internalValue.numberValue;
 }
@@ -1449,70 +1454,244 @@ void DatePrototype::method_getTimezoneOffset(Context *ctx)
 
 void DatePrototype::method_setTime(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        self->value.numberValue = TimeClip(ctx->argument(0).toNumber(ctx));
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setMilliseconds(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = LocalTime(self->value.numberValue);
+        double ms = ctx->argument(0).toNumber(ctx);
+        self->value.numberValue = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setUTCMilliseconds(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        double ms = ctx->argument(0).toNumber(ctx);
+        self->value.numberValue = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setSeconds(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = LocalTime(self->value.numberValue);
+        double sec = ctx->argument(0).toNumber(ctx);
+        double ms = (ctx->argumentCount < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setUTCSeconds(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        double sec = ctx->argument(0).toNumber(ctx);
+        double ms = (ctx->argumentCount < 2) ? msFromTime(t) : ctx->argument(1).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setMinutes(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = LocalTime(self->value.numberValue);
+        double min = ctx->argument(0).toNumber(ctx);
+        double sec = (ctx->argumentCount < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double ms = (ctx->argumentCount < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setUTCMinutes(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        double min = ctx->argument(0).toNumber(ctx);
+        double sec = (ctx->argumentCount < 2) ? SecFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double ms = (ctx->argumentCount < 3) ? msFromTime(t) : ctx->argument(2).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setHours(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = LocalTime(self->value.numberValue);
+        double hour = ctx->argument(0).toNumber(ctx);
+        double min = (ctx->argumentCount < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double sec = (ctx->argumentCount < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
+        double ms = (ctx->argumentCount < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setUTCHours(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        double hour = ctx->argument(0).toNumber(ctx);
+        double min = (ctx->argumentCount < 2) ? MinFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double sec = (ctx->argumentCount < 3) ? SecFromTime(t) : ctx->argument(2).toNumber(ctx);
+        double ms = (ctx->argumentCount < 4) ? msFromTime(t) : ctx->argument(3).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setDate(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = LocalTime(self->value.numberValue);
+        double date = ctx->argument(0).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setUTCDate(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        double date = ctx->argument(0).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setMonth(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = LocalTime(self->value.numberValue);
+        double month = ctx->argument(0).toNumber(ctx);
+        double date = (ctx->argumentCount < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setUTCMonth(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        double month = ctx->argument(0).toNumber(ctx);
+        double date = (ctx->argumentCount < 2) ? DateFromTime(t) : ctx->argument(1).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setYear(Context *ctx)
 {
-}
-
-void DatePrototype::method_setFullYear(Context *ctx)
-{
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        if (qIsNaN(t))
+            t = 0;
+        else
+            t = LocalTime(t);
+        double year = ctx->argument(0).toNumber(ctx);
+        double r;
+        if (qIsNaN(year)) {
+            r = qSNaN();
+        } else {
+            if ((Value::toInteger(year) >= 0) && (Value::toInteger(year) <= 99))
+                year += 1900;
+            r = MakeDay(year, MonthFromTime(t), DateFromTime(t));
+            r = UTC(MakeDate(r, TimeWithinDay(t)));
+            r = TimeClip(r);
+        }
+        self->value.numberValue = r;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_setUTCFullYear(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        double year = ctx->argument(0).toNumber(ctx);
+        double month = (ctx->argumentCount < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double date = (ctx->argumentCount < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
+}
+
+void DatePrototype::method_setFullYear(Context *ctx)
+{
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = LocalTime(self->value.numberValue);
+        double year = ctx->argument(0).toNumber(ctx);
+        double month = (ctx->argumentCount < 2) ? MonthFromTime(t) : ctx->argument(1).toNumber(ctx);
+        double date = (ctx->argumentCount < 3) ? DateFromTime(t) : ctx->argument(2).toNumber(ctx);
+        t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
+        self->value.numberValue = t;
+        ctx->result = self->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void DatePrototype::method_toUTCString(Context *ctx)
 {
+    if (DateObject *self = getThisDateObject(ctx)) {
+        double t = self->value.numberValue;
+        ctx->result = Value::fromString(ctx, ToUTCString(t));
+    }
 }
 
 //

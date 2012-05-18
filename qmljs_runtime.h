@@ -40,6 +40,14 @@ struct Value;
 struct Object;
 struct String;
 struct Context;
+struct FunctionObject;
+struct BooleanObject;
+struct NumberObject;
+struct StringObject;
+struct DateObject;
+struct ArrayObject;
+struct ErrorObject;
+struct ArgumentsObject;
 
 extern "C" {
 
@@ -228,6 +236,24 @@ struct Value {
     inline bool isBoolean() const { return is(BOOLEAN_TYPE); }
     inline bool isNumber() const { return is(NUMBER_TYPE); }
     inline bool isObject() const { return is(OBJECT_TYPE); }
+
+    bool isFunctionObject() const;
+    bool isBooleanObject() const;
+    bool isNumberObject() const;
+    bool isStringObject() const;
+    bool isDateObject() const;
+    bool isArrayObject() const;
+    bool isErrorObject() const;
+    bool isArgumentsObject() const;
+
+    FunctionObject *asFunctionObject() const;
+    BooleanObject *asBooleanObject() const;
+    NumberObject *asNumberObject() const;
+    StringObject *asStringObject() const;
+    DateObject *asDateObject() const;
+    ArrayObject *asArrayObject() const;
+    ErrorObject *asErrorObject() const;
+    ArgumentsObject *asArgumentsObject() const;
 };
 
 extern "C" {

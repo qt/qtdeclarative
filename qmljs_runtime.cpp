@@ -69,6 +69,85 @@ String *Value::toString(Context *ctx) const
     return v.stringValue;
 }
 
+bool Value::isFunctionObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asFunctionObject() != 0 : false;
+}
+
+bool Value::isBooleanObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asBooleanObject() != 0 : false;
+}
+
+bool Value::isNumberObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asNumberObject() != 0 : false;
+}
+
+bool Value::isStringObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asStringObject() != 0 : false;
+}
+
+bool Value::isDateObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asDateObject() != 0 : false;
+}
+
+bool Value::isArrayObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asArrayObject() != 0 : false;
+}
+
+bool Value::isErrorObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asErrorObject() != 0 : false;
+}
+
+bool Value::isArgumentsObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asArgumentsObject() != 0 : false;
+}
+
+FunctionObject *Value::asFunctionObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asFunctionObject() : 0;
+}
+
+BooleanObject *Value::asBooleanObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asBooleanObject() : 0;
+}
+
+NumberObject *Value::asNumberObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asNumberObject() : 0;
+}
+
+StringObject *Value::asStringObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asStringObject() : 0;
+}
+
+DateObject *Value::asDateObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asDateObject() : 0;
+}
+
+ArrayObject *Value::asArrayObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asArrayObject() : 0;
+}
+
+ErrorObject *Value::asErrorObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asErrorObject() : 0;
+}
+
+ArgumentsObject *Value::asArgumentsObject() const
+{
+    return type == OBJECT_TYPE ? objectValue->asArgumentsObject() : 0;
+}
 
 extern "C" {
 

@@ -21,8 +21,10 @@ struct BooleanObject;
 struct NumberObject;
 struct StringObject;
 struct ArrayObject;
+struct DateObject;
 struct FunctionObject;
 struct ErrorObject;
+struct ArgumentsObject;
 struct Context;
 struct ExecutionEngine;
 
@@ -194,7 +196,14 @@ struct Object {
 
     virtual ~Object();
 
+    virtual BooleanObject *asBooleanObject() { return 0; }
+    virtual NumberObject *asNumberObject() { return 0; }
+    virtual StringObject *asStringObject() { return 0; }
+    virtual DateObject *asDateObject() { return 0; }
+    virtual ArrayObject *asArrayObject() { return 0; }
     virtual FunctionObject *asFunctionObject() { return 0; }
+    virtual ErrorObject *asErrorObject() { return 0; }
+    virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
     bool get(String *name, Value *result);
 
@@ -217,22 +226,33 @@ struct Object {
 struct BooleanObject: Object {
     Value value;
     BooleanObject(const Value &value): value(value) {}
+    virtual BooleanObject *asBooleanObject() { return this; }
     virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct NumberObject: Object {
     Value value;
     NumberObject(const Value &value): value(value) {}
+    virtual NumberObject *asNumberObject() { return this; }
     virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct StringObject: Object {
     Value value;
     StringObject(const Value &value): value(value) {}
+    virtual StringObject *asStringObject() { return this; }
+    virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
+};
+
+struct DateObject: Object {
+    Value value;
+    DateObject(const Value &value): value(value) {}
+    virtual DateObject *asDateObject() { return this; }
     virtual void defaultValue(Context *, Value *result, int /*typehint*/) { *result = value; }
 };
 
 struct ArrayObject: Object {
+    virtual ArrayObject *asArrayObject() { return this; }
 };
 
 struct FunctionObject: Object {
@@ -250,8 +270,8 @@ struct FunctionObject: Object {
         , varList(0)
         , varCount(0)
         , needsActivation(true) {}
-    virtual FunctionObject *asFunctionObject() { return this; }
 
+    virtual FunctionObject *asFunctionObject() { return this; }
     virtual bool hasInstance(const Value &value) const;
     virtual void call(Context *ctx);
     virtual void construct(Context *ctx);
@@ -278,11 +298,13 @@ struct ScriptFunction: FunctionObject {
 struct ErrorObject: Object {
     Value message;
     ErrorObject(const Value &message): message(message) {}
+    virtual ErrorObject *asErrorObject() { return this; }
 };
 
 struct ArgumentsObject: Object {
     Context *context;
     ArgumentsObject(Context *context): context(context) {}
+    virtual ArgumentsObject *asArgumentsObject() { return this; }
     virtual Value *getProperty(String *name, PropertyAttributes *attributes);
 };
 

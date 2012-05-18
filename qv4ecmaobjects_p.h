@@ -112,11 +112,12 @@ struct DateCtor: FunctionObject
     virtual void call(Context *ctx);
 };
 
-struct DatePrototype: Object
+struct DatePrototype: DateObject
 {
     DatePrototype(Context *ctx, FunctionObject *ctor);
 
 protected:
+    static DateObject *getThisDateObject(Context *ctx);
     static double getThisDate(Context *ctx);
 
     static void method_MakeTime(Context *ctx);

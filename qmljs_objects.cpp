@@ -323,7 +323,7 @@ Object *ExecutionEngine::newBooleanPrototype(Context *ctx, FunctionObject *proto
 
 Object *ExecutionEngine::newDateObject(const Value &value)
 {
-    return new Object(); // ### FIXME
+    return new DateObject(value);
 }
 
 FunctionObject *ExecutionEngine::newDateCtor(Context *ctx)
