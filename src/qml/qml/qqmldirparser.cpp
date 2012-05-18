@@ -44,14 +44,28 @@
 #include "qqmlglobal_p.h"
 
 #include <QtQml/qqmlfile.h>
-#include <QtCore/QTextStream>
-#include <QtCore/QFile>
 #include <QtCore/QtDebug>
 
 QT_BEGIN_NAMESPACE
 
+static int parseInt(const QStringRef &str, bool *ok)
+{
+    int pos = 0;
+    int number = 0;
+    while (pos < str.length() && str.at(pos).isDigit()) {
+        if (pos != 0)
+            number *= 10;
+        number += str.at(pos).unicode() - '0';
+        ++pos;
+    }
+    if (pos != str.length())
+        *ok = false;
+    else
+        *ok = true;
+    return number;
+}
+
 QQmlDirParser::QQmlDirParser()
-    : _isParsed(false)
 {
 }
 
@@ -59,79 +73,69 @@ QQmlDirParser::~QQmlDirParser()
 {
 }
 
-QString QQmlDirParser::source() const
-{
-    return _source;
+inline static void scanSpace(const QChar *&ch) {
+    while (ch->isSpace() && !ch->isNull() && *ch != QLatin1Char('\n'))
+        ++ch;
 }
 
-void QQmlDirParser::setSource(const QString &source)
-{
-    _isParsed = false;
-    _source = source;
+inline static void scanToEnd(const QChar *&ch) {
+    while (*ch != QLatin1Char('\n') && !ch->isNull())
+        ++ch;
 }
 
-bool QQmlDirParser::isParsed() const
-{
-    return _isParsed;
+inline static void scanWord(const QChar *&ch) {
+    while (!ch->isSpace() && !ch->isNull())
+        ++ch;
 }
 
 /*!
 \a url is used for generating errors.
 */
-bool QQmlDirParser::parse()
+bool QQmlDirParser::parse(const QString &source)
 {
-    if (_isParsed)
-        return true;
-
-    _isParsed = true;
     _errors.clear();
     _plugins.clear();
     _components.clear();
     _scripts.clear();
 
-    QTextStream stream(&_source);
     int lineNumber = 0;
 
-    forever {
+    const QChar *ch = source.constData();
+    while (!ch->isNull()) {
         ++lineNumber;
 
-        const QString line = stream.readLine();
-        if (line.isNull())
+        const QChar *lineStart = ch;
+
+        scanSpace(ch);
+        if (*ch == QLatin1Char('\n')) {
+            ++ch;
+            continue;
+        }
+        if (ch->isNull())
             break;
 
         QString sections[3];
         int sectionCount = 0;
 
-        int index = 0;
-        const int length = line.length();
-
-        while (index != length) {
-            const QChar ch = line.at(index);
-
-            if (ch.isSpace()) {
-                do { ++index; }
-                while (index != length && line.at(index).isSpace());
-
-            } else if (ch == QLatin1Char('#')) {
-                // recognized a comment
+        do {
+            if (*ch == QLatin1Char('#')) {
+                scanToEnd(ch);
                 break;
-
-            } else {
-                const int start = index;
-
-                do { ++index; }
-                while (index != length && !line.at(index).isSpace());
-
-                const QString lexeme = line.mid(start, index - start);
-
-                if (sectionCount >= 3) {
-                    reportError(lineNumber, start, QLatin1String("unexpected token"));
-
-                } else {
-                    sections[sectionCount++] = lexeme;
-                }
             }
-        }
+            const QChar *start = ch;
+            scanWord(ch);
+            if (sectionCount < 3) {
+                sections[sectionCount++] = source.mid(start-source.constData(), ch-start);
+            } else {
+                reportError(lineNumber, start-lineStart, QLatin1String("unexpected token"));
+                scanToEnd(ch);
+                break;
+            }
+            scanSpace(ch);
+        } while (*ch != QLatin1Char('\n') && !ch->isNull());
+
+        if (!ch->isNull())
+            ++ch;
 
         if (sectionCount == 0) {
             continue; // no sections, no party.
@@ -182,10 +186,10 @@ bool QQmlDirParser::parse()
                 reportError(lineNumber, -1, QLatin1String("unexpected '.'"));
             } else {
                 bool validVersionNumber = false;
-                const int majorVersion = version.left(dotIndex).toInt(&validVersionNumber);
+                const int majorVersion = parseInt(QStringRef(&version, 0, dotIndex), &validVersionNumber);
 
                 if (validVersionNumber) {
-                    const int minorVersion = version.mid(dotIndex + 1).toInt(&validVersionNumber);
+                    const int minorVersion = parseInt(QStringRef(&version, dotIndex+1, version.length()-dotIndex-1), &validVersionNumber);
 
                     if (validVersionNumber) {
                         const QString &fileName = sections[2];

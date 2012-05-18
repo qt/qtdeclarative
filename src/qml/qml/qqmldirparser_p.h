@@ -70,11 +70,7 @@ public:
     QQmlDirParser();
     ~QQmlDirParser();
 
-    QString source() const;
-    void setSource(const QString &source);
-
-    bool isParsed() const;
-    bool parse();
+    bool parse(const QString &source);
 
     bool hasError() const;
     void setError(const QQmlError &);
@@ -143,14 +139,12 @@ private:
 
 private:
     QList<QQmlError> _errors;
-    QString _source;
     QHash<QHashedStringRef,Component> _components; // multi hash
     QList<Script> _scripts;
     QList<Plugin> _plugins;
 #ifdef QT_CREATOR
     QList<TypeInfo> _typeInfos;
 #endif
-    unsigned _isParsed: 1;
 };
 
 typedef QHash<QHashedStringRef,QQmlDirParser::Component> QQmlDirComponents;

@@ -1509,8 +1509,7 @@ const QQmlDirParser *QQmlTypeLoader::qmlDirParser(const QString &filePath,
             if (file.isError()) {
                 ERROR(NOT_READABLE_ERROR.arg(filePath));
             } else {
-                qmldirParser->setSource(QString::fromUtf8(file.data(), file.size()));
-                qmldirParser->parse();
+                qmldirParser->parse(QString::fromUtf8(file.data(), file.size()));
             }
 
         } else {
@@ -1533,13 +1532,11 @@ const QQmlDirParser *QQmlTypeLoader::qmlDirParser(const QString &filePath,
                     if (file.isError()) {
                         ERROR(NOT_READABLE_ERROR.arg(filePath));
                     } else {
-                        qmldirParser->setSource(QString::fromUtf8(file.data(), file.size()));
-                        qmldirParser->parse();
+                        qmldirParser->parse(QString::fromUtf8(file.data(), file.size()));
                     }
                 } else {
                     data += file.readAll();
-                    qmldirParser->setSource(QString::fromUtf8(data));
-                    qmldirParser->parse();
+                    qmldirParser->parse(QString::fromUtf8(data));
                 }
             } else {
                 ERROR(NOT_READABLE_ERROR.arg(filePath));
@@ -2158,8 +2155,7 @@ const QQmlDirComponents &QQmlQmldirData::dirComponents() const
 void QQmlQmldirData::dataReceived(const Data &data)
 {
     QQmlDirParser parser;
-    parser.setSource(QString::fromUtf8(data.data(), data.size()));
-    parser.parse();
+    parser.parse(QString::fromUtf8(data.data(), data.size()));
     m_components = parser.components();
 }
 
