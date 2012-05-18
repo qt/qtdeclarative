@@ -555,6 +555,83 @@ inline void __qmljs_bit_and(Context *ctx, Value *result, const Value *left, cons
     __qmljs_init_number(result, lval & rval);
 }
 
+inline void __qmljs_inplace_bit_and(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_bit_xor(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_bit_or(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_bit_or(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_bit_xor(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_bit_xor(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_add(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_add(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_sub(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_sub(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_mul(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_mul(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_div(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_div(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_mod(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_mod(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_shl(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_shl(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_shr(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_shr(ctx, result, result, &v);
+}
+
+inline void __qmljs_inplace_ushr(Context *ctx, Value *result, double value)
+{
+    Value v;
+    __qmljs_init_number(&v, value);
+    __qmljs_ushr(ctx, result, result, &v);
+}
+
 inline void __qmljs_add(Context *ctx, Value *result, const Value *left, const Value *right)
 {
     Value pleft, pright;

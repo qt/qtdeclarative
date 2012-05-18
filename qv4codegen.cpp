@@ -920,11 +920,13 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceRightShift:
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
-        move(*left, *right, baseOp(ast->op));
         if (_expr.accept(nx)) {
-            // nothing to do
+            move(*left, *right, baseOp(ast->op));
         } else {
-            _expr.code = *left;
+            const unsigned t = _block->newTemp();
+            move(_block->TEMP(t), *right);
+            move(*left, _block->TEMP(t), baseOp(ast->op));
+            _expr.code = _block->TEMP(t);
         }
         break;
     }

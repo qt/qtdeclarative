@@ -438,7 +438,7 @@ void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
     if (Value *prop = ctx->lookup(name)) {
         *prop = *value;
     } else
-        ctx->activation.objectValue->put(name, *value);
+        ctx->engine->globalObject.objectValue->put(name, *value);
 }
 
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
