@@ -1182,9 +1182,9 @@ bool QV8Engine::metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data
             QMetaType::constructInPlace(type, data, var.constData());
             return true;
         }
-        if (var.canConvert(QVariant::Type(type))) {
+        if (var.canConvert(type)) {
             QVariant vv = var;
-            vv.convert(QVariant::Type(type));
+            vv.convert(type);
             Q_ASSERT(vv.userType() == type);
             QMetaType::constructInPlace(type, data, vv.constData());
             return true;

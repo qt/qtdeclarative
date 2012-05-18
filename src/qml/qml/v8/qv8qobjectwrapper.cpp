@@ -2137,9 +2137,9 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
 
         if (v.userType() == callType) {
             *qvariantPtr = v;
-        } else if (v.canConvert((QVariant::Type)callType)) {
+        } else if (v.canConvert(callType)) {
             *qvariantPtr = v;
-            qvariantPtr->convert((QVariant::Type)callType);
+            qvariantPtr->convert(callType);
         } else if (const QMetaObject *mo = ep ? ep->rawMetaObjectForType(callType) : 0) {
             QObject *obj = ep->toQObject(v);
             

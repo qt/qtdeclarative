@@ -1371,7 +1371,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
             v = QQmlStringConverters::variantFromString(value.toString(), propertyType, &ok);
         if (!ok) {
             v = value;
-            if (v.convert((QVariant::Type)propertyType)) {
+            if (v.convert(propertyType)) {
                 ok = true;
             } else if ((uint)propertyType >= QVariant::UserType && variantType == QVariant::String) {
                 QQmlMetaType::StringConverter con = QQmlMetaType::customStringConverter(propertyType);

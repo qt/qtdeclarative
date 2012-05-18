@@ -455,8 +455,8 @@ static bool testCompareVariants(const QVariant &qtscriptRaw, const QVariant &v4)
     QVariant qtscript = qtscriptRaw;
 
     if (qtscript.userType() == v4.userType()) {
-    } else if (qtscript.canConvert((QVariant::Type)v4.userType())) {
-        qtscript.convert((QVariant::Type)v4.userType());
+    } else if (qtscript.canConvert(v4.userType())) {
+        qtscript.convert(v4.userType());
     } else if (qtscript.userType() == QVariant::Invalid && v4.userType() == QMetaType::QObjectStar) {
         qtscript = qVariantFromValue<QObject *>(0);
     } else {
