@@ -286,7 +286,11 @@ void QQmlCustomParser::error(const QQmlCustomParserNode& node, const QString& de
 */
 int QQmlCustomParser::evaluateEnum(const QByteArray& script) const
 {
-    return compiler->evaluateEnum(script);
+    int dot = script.indexOf('.');
+    if (dot == -1)
+        return -1;
+
+    return compiler->evaluateEnum(QString::fromUtf8(script.left(dot)), script.mid(dot+1));
 }
 
 /*!

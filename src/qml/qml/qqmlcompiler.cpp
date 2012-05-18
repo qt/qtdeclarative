@@ -2546,9 +2546,19 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     if (!string.at(0).isUpper())
         return true;
 
+    int dot = string.indexOf(QLatin1Char('.'));
+    if (dot == -1 || dot == string.length()-1)
+        return true;
+
+    if (string.indexOf(QLatin1Char('.'), dot+1) != -1)
+        return true;
+
+    QHashedStringRef typeName(string.constData(), dot);
+    QString enumValue = string.mid(dot+1);
+
     if (isIntProp) {
         // Allow enum assignment to ints.
-        int enumval = evaluateEnum(string.toUtf8());
+        int enumval = evaluateEnum(typeName, enumValue.toUtf8());
         if (enumval != -1) {
             v->type = Value::Literal;
             v->value = QQmlScript::Variant((double)enumval);
@@ -2557,18 +2567,12 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
         return true;
     }
 
-    QStringList parts = string.split(QLatin1Char('.'));
-    if (parts.count() != 2)
-        return true;
-
-    QString typeName = parts.at(0);
     QQmlType *type = 0;
     unit->imports().resolveType(typeName, &type, 0, 0, 0, 0);
 
     if (!type)
         return true;
 
-    QString enumValue = parts.at(1);
     int value = 0;
     bool ok;
 
@@ -2608,24 +2612,22 @@ struct StaticQtMetaObject : public QObject
 };
 
 // Similar logic to above, but not knowing target property.
-int QQmlCompiler::evaluateEnum(const QByteArray& script) const
+int QQmlCompiler::evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue) const
 {
-    int dot = script.indexOf('.');
-    if (dot > 0) {
-        const QByteArray &scope = script.left(dot);
-        QQmlType *type = 0;
-        unit->imports().resolveType(QString::fromUtf8(script.left(dot)), &type, 0, 0, 0, 0);
-        if (!type && scope != "Qt")
+    QQmlType *type = 0;
+    if (scope != QLatin1String("Qt")) {
+        unit->imports().resolveType(scope, &type, 0, 0, 0, 0);
+        if (!type)
             return -1;
-        const QMetaObject *mo = type ? type->metaObject() : StaticQtMetaObject::get();
-        const char *key = script.constData() + dot+1;
-        int i = mo->enumeratorCount();
-        while (i--) {
-            bool ok;
-            int v = mo->enumerator(i).keyToValue(key, &ok);
-            if (ok)
-                return v;
-        }
+
+    }
+    const QMetaObject *mo = type ? type->metaObject() : StaticQtMetaObject::get();
+    int i = mo->enumeratorCount();
+    while (i--) {
+        bool ok;
+        int v = mo->enumerator(i).keyToValue(enumValue.constData(), &ok);
+        if (ok)
+            return v;
     }
     return -1;
 }
