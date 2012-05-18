@@ -62,7 +62,8 @@
 
 #if defined (Q_OS_UNIX)
 #include <sys/types.h>
-#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #if defined (QT_LINUXBASE)
@@ -181,83 +182,6 @@ void QQmlDataLoaderNetworkReplyProxy::downloadProgress(qint64 bytesReceived, qin
     QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
     l->networkReplyProgress(reply, bytesReceived, bytesTotal);
 }
-
-/*
-Returns the set of QML files in path (qmldir, *.qml, *.js).  The caller
-is responsible for deleting the returned data.
-Returns 0 if the directory does not exist.
-*/
-#if defined (Q_OS_UNIX) && !defined(Q_OS_DARWIN)
-static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
-{
-    QByteArray name(QFile::encodeName(path));
-    DIR *dd = opendir(name);
-    if (!dd)
-        return 0;
-
-    struct dirent *result;
-    union {
-        struct dirent d;
-        char b[offsetof (struct dirent, d_name) + NAME_MAX + 1];
-    } u;
-
-    QStringHash<bool> *files = new QStringHash<bool>;
-    while (readdir_r(dd, &u.d, &result) == 0 && result != 0) {
-        if (!strcmp(u.d.d_name, "qmldir")) {
-            files->insert(QLatin1String("qmldir"), true);
-            continue;
-        }
-        int len = strlen(u.d.d_name);
-        if (len < 4)
-            continue;
-        if (!strcmp(u.d.d_name+len-4, ".qml") || !strcmp(u.d.d_name+len-3, ".js"))
-            files->insert(QFile::decodeName(u.d.d_name), true);
-#if defined(Q_OS_DARWIN)
-        else if ((len > 6 && !strcmp(u.d.d_name+len-6, ".dylib")) || !strcmp(u.d.d_name+len-3, ".so")
-                  || (len > 7 && !strcmp(u.d.d_name+len-7, ".bundle")))
-            files->insert(QFile::decodeName(u.d.d_name), true);
-#else  // Unix
-        else if (!strcmp(u.d.d_name+len-3, ".so") || !strcmp(u.d.d_name+len-3, ".sl"))
-            files->insert(QFile::decodeName(u.d.d_name), true);
-#endif
-    }
-
-    closedir(dd);
-    return files;
-}
-#else
-static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
-{
-    QDirIterator dir(path, QDir::Files);
-    if (!dir.hasNext())
-        return 0;
-    QStringHash<bool> *files = new QStringHash<bool>;
-    while (dir.hasNext()) {
-        dir.next();
-        QString fileName = dir.fileName();
-        if (fileName == QLatin1String("qmldir")
-                || fileName.endsWith(QLatin1String(".qml"))
-                || fileName.endsWith(QLatin1String(".js"))
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
-                || fileName.endsWith(QLatin1String(".dll"))
-#elif defined(Q_OS_DARWIN)
-                || fileName.endsWith(QLatin1String(".dylib"))
-                || fileName.endsWith(QLatin1String(".so"))
-                || fileName.endsWith(QLatin1String(".bundle"))
-#else  // Unix
-                || fileName.endsWith(QLatin1String(".so"))
-                || fileName.endsWith(QLatin1String(".sl"))
-#endif
-                ) {
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
-            fileName = fileName.toLower();
-#endif
-            files->insert(fileName, true);
-        }
-    }
-    return files;
-}
-#endif
 
 
 /*!
@@ -1397,9 +1321,13 @@ bool QQmlEngine::addNamedBundle(const QString &name, const QString &fileName)
 }
 
 /*!
-Returns the absolute filename of path via a directory cache for files named
-"qmldir", "*.qml", "*.js", and plugins.
+Returns the absolute filename of path via a directory cache.
 Returns a empty string if the path does not exist.
+
+Why a directory cache?  QML checks for files in many paths with
+invalid directories.  By caching whether a directory exists
+we avoid many stats.  We also cache the files' existance in the
+directory, for the same reason.
 */
 QString QQmlTypeLoader::absoluteFilePath(const QString &path)
 {
@@ -1410,39 +1338,55 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
         QFileInfo fileInfo(path);
         return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
     }
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
-    QString lowPath = path.toLower();
-    int lastSlash = lowPath.lastIndexOf(QLatin1Char('/'));
-    QString dirPath = lowPath.left(lastSlash);
-#else
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
     QStringRef dirPath(&path, 0, lastSlash);
-#endif
 
     StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
     if (!fileSet) {
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
-        QHashedString dirPathString(dirPath);
-#else
         QHashedString dirPathString(dirPath.toString());
+        bool exists = false;
+#ifdef Q_OS_UNIX
+        struct stat statBuf;
+        if (::stat(QFile::encodeName(dirPathString).constData(), &statBuf) == 0)
+            exists = S_ISDIR(statBuf.st_mode);
+#else
+        exists = QDir(dirPathString).exists();
 #endif
-        StringSet *files = qmlFilesInDirectory(dirPathString);
+        QStringHash<bool> *files = exists ? new QStringHash<bool> : 0;
         m_importDirCache.insert(dirPathString, files);
         fileSet = m_importDirCache.value(dirPathString);
     }
     if (!(*fileSet))
         return QString();
 
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
-    QString absoluteFilePath = (*fileSet)->contains(QHashedStringRef(lowPath.constData()+lastSlash+1, lowPath.length()-lastSlash-1)) ? path : QString();
+    QString absoluteFilePath;
+    QHashedStringRef fileName(path.constData()+lastSlash+1, path.length()-lastSlash-1);
+
+    bool *value = (*fileSet)->value(fileName);
+    if (value) {
+        if (*value)
+            absoluteFilePath = path;
+    } else {
+        bool exists = false;
+#ifdef Q_OS_UNIX
+        struct stat statBuf;
+        // XXX Avoid encoding entire path. Should store encoded dirpath in cache
+        if (::stat(QFile::encodeName(path).constData(), &statBuf) == 0)
+            exists = S_ISREG(statBuf.st_mode);
 #else
-    QString absoluteFilePath = (*fileSet)->contains(QHashedStringRef(path.constData()+lastSlash+1, path.length()-lastSlash-1)) ? path : QString();
+        exists = QFile::exists(path);
 #endif
+        (*fileSet)->insert(fileName.toString(), exists);
+        if (exists)
+            absoluteFilePath = path;
+    }
+
     if (absoluteFilePath.length() > 2 && absoluteFilePath.at(0) != QLatin1Char('/') && absoluteFilePath.at(1) != QLatin1Char(':'))
         absoluteFilePath = QFileInfo(absoluteFilePath).absoluteFilePath();
 
     return absoluteFilePath;
 }
+
 
 /*!
 Returns true if the path is a directory via a directory cache.  Cache is
@@ -1461,20 +1405,20 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
     int length = path.length();
     if (path.endsWith(QLatin1Char('/')))
         --length;
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
-    QString dirPath = path.left(length).toLower();
-#else
     QStringRef dirPath(&path, 0, length);
-#endif
 
     StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
     if (!fileSet) {
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
-        QHashedString dirPathString(dirPath);
-#else
         QHashedString dirPathString(dirPath.toString());
+        bool exists = false;
+#ifdef Q_OS_UNIX
+        struct stat statBuf;
+        if (::stat(QFile::encodeName(dirPathString).constData(), &statBuf) == 0)
+            exists = S_ISDIR(statBuf.st_mode);
+#else
+        exists = QDir(dirPathString).exists();
 #endif
-        StringSet *files = qmlFilesInDirectory(dirPathString);
+        QStringHash<bool> *files = exists ? new QStringHash<bool> : 0;
         m_importDirCache.insert(dirPathString, files);
         fileSet = m_importDirCache.value(dirPathString);
     }
