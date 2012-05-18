@@ -649,34 +649,54 @@ inline void __qmljs_lt(Context *ctx, Value *result, const Value *left, const Val
 
 inline void __qmljs_ge(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    __qmljs_compare(ctx, result, right, left, false);
+    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
+        __qmljs_init_boolean(result, left->numberValue >= right->numberValue);
+    } else {
+        __qmljs_compare(ctx, result, right, left, false);
 
-    bool r = ! (result->type == UNDEFINED_TYPE ||
-                (result->type == BOOLEAN_TYPE && result->booleanValue == true));
+        bool r = ! (result->type == UNDEFINED_TYPE ||
+                    (result->type == BOOLEAN_TYPE && result->booleanValue == true));
 
-    __qmljs_init_boolean(result, r);
+        __qmljs_init_boolean(result, r);
+    }
 }
 
 inline void __qmljs_le(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    __qmljs_compare(ctx, result, right, left, true);
+    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
+        __qmljs_init_boolean(result, left->numberValue <= right->numberValue);
+    } else {
+        __qmljs_compare(ctx, result, right, left, true);
 
-    bool r = ! (result->type == UNDEFINED_TYPE ||
-                (result->type == BOOLEAN_TYPE && result->booleanValue == true));
+        bool r = ! (result->type == UNDEFINED_TYPE ||
+                    (result->type == BOOLEAN_TYPE && result->booleanValue == true));
 
-    __qmljs_init_boolean(result, r);
+        __qmljs_init_boolean(result, r);
+    }
 }
 
 inline void __qmljs_eq(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    bool r = __qmljs_equal(ctx, left, right);
-    __qmljs_init_boolean(result, r);
+    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
+        __qmljs_init_boolean(result, left->numberValue == right->numberValue);
+    } else if (left->type == STRING_TYPE && right->type == STRING_TYPE) {
+        __qmljs_init_boolean(result, __qmljs_string_equal(ctx, left->stringValue, right->stringValue));
+    } else {
+        bool r = __qmljs_equal(ctx, left, right);
+        __qmljs_init_boolean(result, r);
+    }
 }
 
 inline void __qmljs_ne(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    bool r = ! __qmljs_equal(ctx, left, right);
-    __qmljs_init_boolean(result, r);
+    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
+        __qmljs_init_boolean(result, left->numberValue != right->numberValue);
+    } else if (left->type == STRING_TYPE && right->type != STRING_TYPE) {
+        __qmljs_init_boolean(result, __qmljs_string_equal(ctx, left->stringValue, right->stringValue));
+    } else {
+        bool r = ! __qmljs_equal(ctx, left, right);
+        __qmljs_init_boolean(result, r);
+    }
 }
 
 inline void __qmljs_se(Context *ctx, Value *result, const Value *left, const Value *right)
