@@ -150,7 +150,7 @@ protected:
         QAbstractAnimationJob::ChangeTypes types;
         bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
-    QPODVector<ChangeListener,4> changeListeners;
+    QPODVector<ChangeListener,1> changeListeners;
 
     QAbstractAnimationJob *m_nextSibling;
     QAbstractAnimationJob *m_previousSibling;
