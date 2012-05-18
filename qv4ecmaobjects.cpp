@@ -1037,6 +1037,7 @@ void BooleanCtor::call(Context *ctx)
 }
 
 BooleanPrototype::BooleanPrototype(Context *ctx, FunctionObject *ctor)
+    : BooleanObject(Value::fromBoolean(false))
 {
     ctor->setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
     ctor->setProperty(ctx, QLatin1String("toString"), method_toString);
@@ -1045,31 +1046,20 @@ BooleanPrototype::BooleanPrototype(Context *ctx, FunctionObject *ctor)
 
 void BooleanPrototype::method_toString(Context *ctx)
 {
-    Value self = ctx->thisObject;
-//    if (self.classInfo() != classInfo) {
-//        return throwThisObjectTypeError(
-//            ctx, QLatin1String("Boolean.prototype.toString"));
-//    }
-    assert(self.isObject());
-    Value internalValue;
-    self.objectValue->defaultValue(ctx, &internalValue, PREFERREDTYPE_HINT);
-    assert(internalValue.isBoolean());
-    bool v = internalValue.booleanValue;
-    ctx->result = Value::fromString(ctx, QLatin1String(v ? "true" : "false"));
+    if (BooleanObject *thisObject = ctx->thisObject.asBooleanObject()) {
+        ctx->result = Value::fromString(ctx, QLatin1String(thisObject->value.booleanValue ? "true" : "false"));
+    } else {
+        assert(!"type error");
+    }
 }
 
 void BooleanPrototype::method_valueOf(Context *ctx)
 {
-    Value self = ctx->thisObject;
-//    if (self.classInfo() != classInfo) {
-//        return throwThisObjectTypeError(
-//            ctx, QLatin1String("Boolean.prototype.valueOf"));
-//    }
-    assert(self.isObject());
-    Value internalValue;
-    self.objectValue->defaultValue(ctx, &internalValue, PREFERREDTYPE_HINT);
-    assert(internalValue.isBoolean());
-    ctx->result = internalValue;
+    if (BooleanObject *thisObject = ctx->thisObject.asBooleanObject()) {
+        ctx->result = thisObject->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 //

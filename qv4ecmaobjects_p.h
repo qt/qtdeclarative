@@ -95,7 +95,7 @@ struct BooleanCtor: FunctionObject
     virtual void call(Context *ctx);
 };
 
-struct BooleanPrototype: Object
+struct BooleanPrototype: BooleanObject
 {
     BooleanPrototype(Context *ctx, FunctionObject *ctor);
 
