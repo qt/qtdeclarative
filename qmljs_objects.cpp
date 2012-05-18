@@ -2,11 +2,15 @@
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
 #include "qv4ecmaobjects_p.h"
+#include <QtCore/qmath.h>
 #include <QtCore/QDebug>
 #include <cassert>
 
 using namespace QQmlJS::VM;
 
+//
+// Object
+//
 Object::~Object()
 {
     delete members;
@@ -207,16 +211,19 @@ ExecutionEngine::ExecutionEngine()
     objectCtor = ObjectCtor::create(this);
     stringCtor = StringCtor::create(this);
     numberCtor = NumberCtor::create(this);
+    dateCtor = DateCtor::create(this);
 
     String *prototype = identifier(QLatin1String("prototype"));
 
     objectCtor.objectValue->get(prototype, &objectPrototype);
     stringCtor.objectValue->get(prototype, &stringPrototype);
     numberCtor.objectValue->get(prototype, &numberPrototype);
+    dateCtor.objectValue->get(prototype, &datePrototype);
 
     glo->put(identifier(QLatin1String("Object")), objectCtor);
     glo->put(identifier(QLatin1String("String")), stringCtor);
     glo->put(identifier(QLatin1String("Number")), numberCtor);
+    glo->put(identifier(QLatin1String("Date")), dateCtor);
     glo->put(identifier(QLatin1String("Math")), Value::fromObject(newMathObject(rootContext)));
 }
 
@@ -312,6 +319,23 @@ Object *ExecutionEngine::newBooleanPrototype(Context *ctx, FunctionObject *proto
     Object *booleanProto = new BooleanPrototype(ctx, proto);
     booleanProto->prototype = objectPrototype.objectValue;
     return booleanProto;
+}
+
+Object *ExecutionEngine::newDateObject(const Value &value)
+{
+    return new Object(); // ### FIXME
+}
+
+FunctionObject *ExecutionEngine::newDateCtor(Context *ctx)
+{
+    return new DateCtor(ctx);
+}
+
+Object *ExecutionEngine::newDatePrototype(Context *ctx, FunctionObject *proto)
+{
+    Object *dateProto = new DatePrototype(ctx, proto);
+    dateProto->prototype = objectPrototype.objectValue;
+    return dateProto;
 }
 
 Object *ExecutionEngine::newErrorObject(const Value &value)

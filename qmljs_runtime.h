@@ -597,18 +597,26 @@ inline void __qmljs_ushr(Context *ctx, Value *result, const Value *left, const V
 
 inline void __qmljs_gt(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    __qmljs_compare(ctx, result, left, right, false);
+    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
+        __qmljs_init_boolean(result, left->numberValue > right->numberValue);
+    } else {
+        __qmljs_compare(ctx, result, left, right, false);
 
-    if (result->type == UNDEFINED_TYPE)
-        __qmljs_init_boolean(result, false);
+        if (result->type == UNDEFINED_TYPE)
+            __qmljs_init_boolean(result, false);
+    }
 }
 
 inline void __qmljs_lt(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    __qmljs_compare(ctx, result, left, right, true);
+    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
+        __qmljs_init_boolean(result, left->numberValue < right->numberValue);
+    } else {
+        __qmljs_compare(ctx, result, left, right, true);
 
-    if (result->type == UNDEFINED_TYPE)
-        __qmljs_init_boolean(result, false);
+        if (result->type == UNDEFINED_TYPE)
+            __qmljs_init_boolean(result, false);
+    }
 }
 
 inline void __qmljs_ge(Context *ctx, Value *result, const Value *left, const Value *right)

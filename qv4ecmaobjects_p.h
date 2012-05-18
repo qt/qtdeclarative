@@ -102,6 +102,73 @@ protected:
     static void method_valueOf(Context *ctx);
 };
 
+struct DateCtor: FunctionObject
+{
+    static Value create(ExecutionEngine *engine);
+
+    DateCtor(Context *scope);
+
+    virtual void construct(Context *ctx);
+    virtual void call(Context *ctx);
+};
+
+struct DatePrototype: Object
+{
+    DatePrototype(Context *ctx, FunctionObject *ctor);
+
+protected:
+    static double getThisDate(Context *ctx);
+
+    static void method_MakeTime(Context *ctx);
+    static void method_MakeDate(Context *ctx);
+    static void method_TimeClip(Context *ctx);
+    static void method_parse(Context *ctx);
+    static void method_UTC(Context *ctx);
+    static void method_toString(Context *ctx);
+    static void method_toDateString(Context *ctx);
+    static void method_toTimeString(Context *ctx);
+    static void method_toLocaleString(Context *ctx);
+    static void method_toLocaleDateString(Context *ctx);
+    static void method_toLocaleTimeString(Context *ctx);
+    static void method_valueOf(Context *ctx);
+    static void method_getTime(Context *ctx);
+    static void method_getYear(Context *ctx);
+    static void method_getFullYear(Context *ctx);
+    static void method_getUTCFullYear(Context *ctx);
+    static void method_getMonth(Context *ctx);
+    static void method_getUTCMonth(Context *ctx);
+    static void method_getDate(Context *ctx);
+    static void method_getUTCDate(Context *ctx);
+    static void method_getDay(Context *ctx);
+    static void method_getUTCDay(Context *ctx);
+    static void method_getHours(Context *ctx);
+    static void method_getUTCHours(Context *ctx);
+    static void method_getMinutes(Context *ctx);
+    static void method_getUTCMinutes(Context *ctx);
+    static void method_getSeconds(Context *ctx);
+    static void method_getUTCSeconds(Context *ctx);
+    static void method_getMilliseconds(Context *ctx);
+    static void method_getUTCMilliseconds(Context *ctx);
+    static void method_getTimezoneOffset(Context *ctx);
+    static void method_setTime(Context *ctx);
+    static void method_setMilliseconds(Context *ctx);
+    static void method_setUTCMilliseconds(Context *ctx);
+    static void method_setSeconds(Context *ctx);
+    static void method_setUTCSeconds(Context *ctx);
+    static void method_setMinutes(Context *ctx);
+    static void method_setUTCMinutes(Context *ctx);
+    static void method_setHours(Context *ctx);
+    static void method_setUTCHours(Context *ctx);
+    static void method_setDate(Context *ctx);
+    static void method_setUTCDate(Context *ctx);
+    static void method_setMonth(Context *ctx);
+    static void method_setUTCMonth(Context *ctx);
+    static void method_setYear(Context *ctx);
+    static void method_setFullYear(Context *ctx);
+    static void method_setUTCFullYear(Context *ctx);
+    static void method_toUTCString(Context *ctx);
+};
+
 struct MathObject: Object
 {
     MathObject(Context *ctx);

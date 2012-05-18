@@ -1,12 +1,473 @@
 
 #include "qv4ecmaobjects_p.h"
+#include <QtCore/qnumeric.h>
+#include <QtCore/qmath.h>
+#include <QtCore/QDateTime>
+#include <QtCore/QStringList>
+#include <QtCore/QDebug>
+#include <math.h>
 #include <qmath.h>
 #include <qnumeric.h>
 #include <cassert>
 
+#ifndef Q_WS_WIN
+#  include <time.h>
+#  ifndef Q_OS_VXWORKS
+#    include <sys/time.h>
+#  else
+#    include "qplatformdefs.h"
+#  endif
+#else
+#  include <windows.h>
+#endif
+
 using namespace QQmlJS::VM;
 
 static const double qt_PI = 2.0 * ::asin(1.0);
+
+static const double HoursPerDay = 24.0;
+static const double MinutesPerHour = 60.0;
+static const double SecondsPerMinute = 60.0;
+static const double msPerSecond = 1000.0;
+static const double msPerMinute = 60000.0;
+static const double msPerHour = 3600000.0;
+static const double msPerDay = 86400000.0;
+
+static double LocalTZA = 0.0; // initialized at startup
+
+static inline double TimeWithinDay(double t)
+{
+    double r = ::fmod(t, msPerDay);
+    return (r >= 0) ? r : r + msPerDay;
+}
+
+static inline int HourFromTime(double t)
+{
+    int r = int(::fmod(::floor(t / msPerHour), HoursPerDay));
+    return (r >= 0) ? r : r + int(HoursPerDay);
+}
+
+static inline int MinFromTime(double t)
+{
+    int r = int(::fmod(::floor(t / msPerMinute), MinutesPerHour));
+    return (r >= 0) ? r : r + int(MinutesPerHour);
+}
+
+static inline int SecFromTime(double t)
+{
+    int r = int(::fmod(::floor(t / msPerSecond), SecondsPerMinute));
+    return (r >= 0) ? r : r + int(SecondsPerMinute);
+}
+
+static inline int msFromTime(double t)
+{
+    int r = int(::fmod(t, msPerSecond));
+    return (r >= 0) ? r : r + int(msPerSecond);
+}
+
+static inline double Day(double t)
+{
+    return ::floor(t / msPerDay);
+}
+
+static inline double DaysInYear(double y)
+{
+    if (::fmod(y, 4))
+        return 365;
+
+    else if (::fmod(y, 100))
+        return 366;
+
+    else if (::fmod(y, 400))
+        return 365;
+
+    return 366;
+}
+
+static inline double DayFromYear(double y)
+{
+    return 365 * (y - 1970)
+        + ::floor((y - 1969) / 4)
+        - ::floor((y - 1901) / 100)
+        + ::floor((y - 1601) / 400);
+}
+
+static inline double TimeFromYear(double y)
+{
+    return msPerDay * DayFromYear(y);
+}
+
+static inline double YearFromTime(double t)
+{
+    int y = 1970;
+    y += (int) ::floor(t / (msPerDay * 365.2425));
+
+    double t2 = TimeFromYear(y);
+    return (t2 > t) ? y - 1 : ((t2 + msPerDay * DaysInYear(y)) <= t) ? y + 1 : y;
+}
+
+static inline bool InLeapYear(double t)
+{
+    double x = DaysInYear(YearFromTime(t));
+    if (x == 365)
+        return 0;
+
+    Q_ASSERT (x == 366);
+    return 1;
+}
+
+static inline double DayWithinYear(double t)
+{
+    return Day(t) - DayFromYear(YearFromTime(t));
+}
+
+static inline double MonthFromTime(double t)
+{
+    double d = DayWithinYear(t);
+    double l = InLeapYear(t);
+
+    if (d < 31.0)
+        return 0;
+
+    else if (d < 59.0 + l)
+        return 1;
+
+    else if (d < 90.0 + l)
+        return 2;
+
+    else if (d < 120.0 + l)
+        return 3;
+
+    else if (d < 151.0 + l)
+        return 4;
+
+    else if (d < 181.0 + l)
+        return 5;
+
+    else if (d < 212.0 + l)
+        return 6;
+
+    else if (d < 243.0 + l)
+        return 7;
+
+    else if (d < 273.0 + l)
+        return 8;
+
+    else if (d < 304.0 + l)
+        return 9;
+
+    else if (d < 334.0 + l)
+        return 10;
+
+    else if (d < 365.0 + l)
+        return 11;
+
+    return qSNaN(); // ### assert?
+}
+
+static inline double DateFromTime(double t)
+{
+    int m = (int) Value::toInteger(MonthFromTime(t));
+    double d = DayWithinYear(t);
+    double l = InLeapYear(t);
+
+    switch (m) {
+    case 0: return d + 1.0;
+    case 1: return d - 30.0;
+    case 2: return d - 58.0 - l;
+    case 3: return d - 89.0 - l;
+    case 4: return d - 119.0 - l;
+    case 5: return d - 150.0 - l;
+    case 6: return d - 180.0 - l;
+    case 7: return d - 211.0 - l;
+    case 8: return d - 242.0 - l;
+    case 9: return d - 272.0 - l;
+    case 10: return d - 303.0 - l;
+    case 11: return d - 333.0 - l;
+    }
+
+    return qSNaN(); // ### assert
+}
+
+static inline double WeekDay(double t)
+{
+    double r = ::fmod (Day(t) + 4.0, 7.0);
+    return (r >= 0) ? r : r + 7.0;
+}
+
+
+static inline double MakeTime(double hour, double min, double sec, double ms)
+{
+    return ((hour * MinutesPerHour + min) * SecondsPerMinute + sec) * msPerSecond + ms;
+}
+
+static inline double DayFromMonth(double month, double leap)
+{
+    switch ((int) month) {
+    case 0: return 0;
+    case 1: return 31.0;
+    case 2: return 59.0 + leap;
+    case 3: return 90.0 + leap;
+    case 4: return 120.0 + leap;
+    case 5: return 151.0 + leap;
+    case 6: return 181.0 + leap;
+    case 7: return 212.0 + leap;
+    case 8: return 243.0 + leap;
+    case 9: return 273.0 + leap;
+    case 10: return 304.0 + leap;
+    case 11: return 334.0 + leap;
+    }
+
+    return qSNaN(); // ### assert?
+}
+
+static double MakeDay(double year, double month, double day)
+{
+    year += ::floor(month / 12.0);
+
+    month = ::fmod(month, 12.0);
+    if (month < 0)
+        month += 12.0;
+
+    double t = TimeFromYear(year);
+    double leap = InLeapYear(t);
+
+    day += ::floor(t / msPerDay);
+    day += DayFromMonth(month, leap);
+
+    return day - 1;
+}
+
+static inline double MakeDate(double day, double time)
+{
+    return day * msPerDay + time;
+}
+
+static inline double DaylightSavingTA(double t)
+{
+#ifndef Q_WS_WIN
+    long int tt = (long int)(t / msPerSecond);
+    struct tm *tmtm = localtime((const time_t*)&tt);
+    if (! tmtm)
+        return 0;
+    return (tmtm->tm_isdst > 0) ? msPerHour : 0;
+#else
+    Q_UNUSED(t);
+    /// ### implement me
+    return 0;
+#endif
+}
+
+static inline double LocalTime(double t)
+{
+    return t + LocalTZA + DaylightSavingTA(t);
+}
+
+static inline double UTC(double t)
+{
+    return t - LocalTZA - DaylightSavingTA(t - LocalTZA);
+}
+
+static inline double currentTime()
+{
+#ifndef Q_WS_WIN
+    struct timeval tv;
+
+    gettimeofday(&tv, 0);
+    return ::floor(tv.tv_sec * msPerSecond + (tv.tv_usec / 1000.0));
+#else
+    SYSTEMTIME st;
+    GetSystemTime(&st);
+    FILETIME ft;
+    SystemTimeToFileTime(&st, &ft);
+    LARGE_INTEGER li;
+    li.LowPart = ft.dwLowDateTime;
+    li.HighPart = ft.dwHighDateTime;
+    return double(li.QuadPart - Q_INT64_C(116444736000000000)) / 10000.0;
+#endif
+}
+
+static inline double TimeClip(double t)
+{
+    if (! qIsFinite(t) || fabs(t) > 8.64e15)
+        return qSNaN();
+    return Value::toInteger(t);
+}
+
+static inline double FromDateTime(const QDateTime &dt)
+{
+    if (!dt.isValid())
+        return qSNaN();
+    QDate date = dt.date();
+    QTime taim = dt.time();
+    int year = date.year();
+    int month = date.month() - 1;
+    int day = date.day();
+    int hours = taim.hour();
+    int mins = taim.minute();
+    int secs = taim.second();
+    int ms = taim.msec();
+    double t = MakeDate(MakeDay(year, month, day),
+                        MakeTime(hours, mins, secs, ms));
+    if (dt.timeSpec() == Qt::LocalTime)
+        t = UTC(t);
+    return TimeClip(t);
+}
+
+static inline double ParseString(const QString &s)
+{
+    QDateTime dt = QDateTime::fromString(s, Qt::TextDate);
+    if (!dt.isValid())
+        dt = QDateTime::fromString(s, Qt::ISODate);
+    if (!dt.isValid()) {
+        QStringList formats;
+        formats << QLatin1String("M/d/yyyy")
+                << QLatin1String("M/d/yyyy hh:mm")
+                << QLatin1String("M/d/yyyy hh:mm A")
+
+                << QLatin1String("M/d/yyyy, hh:mm")
+                << QLatin1String("M/d/yyyy, hh:mm A")
+
+                << QLatin1String("MMM d yyyy")
+                << QLatin1String("MMM d yyyy hh:mm")
+                << QLatin1String("MMM d yyyy hh:mm:ss")
+                << QLatin1String("MMM d yyyy, hh:mm")
+                << QLatin1String("MMM d yyyy, hh:mm:ss")
+
+                << QLatin1String("MMMM d yyyy")
+                << QLatin1String("MMMM d yyyy hh:mm")
+                << QLatin1String("MMMM d yyyy hh:mm:ss")
+                << QLatin1String("MMMM d yyyy, hh:mm")
+                << QLatin1String("MMMM d yyyy, hh:mm:ss")
+
+                << QLatin1String("MMM d, yyyy")
+                << QLatin1String("MMM d, yyyy hh:mm")
+                << QLatin1String("MMM d, yyyy hh:mm:ss")
+
+                << QLatin1String("MMMM d, yyyy")
+                << QLatin1String("MMMM d, yyyy hh:mm")
+                << QLatin1String("MMMM d, yyyy hh:mm:ss")
+
+                << QLatin1String("d MMM yyyy")
+                << QLatin1String("d MMM yyyy hh:mm")
+                << QLatin1String("d MMM yyyy hh:mm:ss")
+                << QLatin1String("d MMM yyyy, hh:mm")
+                << QLatin1String("d MMM yyyy, hh:mm:ss")
+
+                << QLatin1String("d MMMM yyyy")
+                << QLatin1String("d MMMM yyyy hh:mm")
+                << QLatin1String("d MMMM yyyy hh:mm:ss")
+                << QLatin1String("d MMMM yyyy, hh:mm")
+                << QLatin1String("d MMMM yyyy, hh:mm:ss")
+
+                << QLatin1String("d MMM, yyyy")
+                << QLatin1String("d MMM, yyyy hh:mm")
+                << QLatin1String("d MMM, yyyy hh:mm:ss")
+
+                << QLatin1String("d MMMM, yyyy")
+                << QLatin1String("d MMMM, yyyy hh:mm")
+                << QLatin1String("d MMMM, yyyy hh:mm:ss");
+
+        for (int i = 0; i < formats.size(); ++i) {
+            dt = QDateTime::fromString(s, formats.at(i));
+            if (dt.isValid())
+                break;
+        }
+    }
+    return FromDateTime(dt);
+}
+
+/*!
+  \internal
+
+  Converts the ECMA Date value \tt (in UTC form) to QDateTime
+  according to \a spec.
+*/
+static inline QDateTime ToDateTime(double t, Qt::TimeSpec spec)
+{
+    if (qIsNaN(t))
+        return QDateTime();
+    if (spec == Qt::LocalTime)
+        t = LocalTime(t);
+    int year = int(YearFromTime(t));
+    int month = int(MonthFromTime(t) + 1);
+    int day = int(DateFromTime(t));
+    int hours = HourFromTime(t);
+    int mins = MinFromTime(t);
+    int secs = SecFromTime(t);
+    int ms = msFromTime(t);
+    return QDateTime(QDate(year, month, day), QTime(hours, mins, secs, ms), spec);
+}
+
+static inline QString ToString(double t)
+{
+    if (qIsNaN(t))
+        return QLatin1String("Invalid Date");
+    QString str = ToDateTime(t, Qt::LocalTime).toString() + QLatin1String(" GMT");
+    double tzoffset = LocalTZA + DaylightSavingTA(t);
+    if (tzoffset) {
+        int hours = static_cast<int>(::fabs(tzoffset) / 1000 / 60 / 60);
+        int mins = int(::fabs(tzoffset) / 1000 / 60) % 60;
+        str.append(QLatin1Char((tzoffset > 0) ?  '+' : '-'));
+        if (hours < 10)
+            str.append(QLatin1Char('0'));
+        str.append(QString::number(hours));
+        if (mins < 10)
+            str.append(QLatin1Char('0'));
+        str.append(QString::number(mins));
+    }
+    return str;
+}
+
+static inline QString ToUTCString(double t)
+{
+    if (qIsNaN(t))
+        return QLatin1String("Invalid Date");
+    return ToDateTime(t, Qt::UTC).toString() + QLatin1String(" GMT");
+}
+
+static inline QString ToDateString(double t)
+{
+    return ToDateTime(t, Qt::LocalTime).date().toString();
+}
+
+static inline QString ToTimeString(double t)
+{
+    return ToDateTime(t, Qt::LocalTime).time().toString();
+}
+
+static inline QString ToLocaleString(double t)
+{
+    return ToDateTime(t, Qt::LocalTime).toString(Qt::LocaleDate);
+}
+
+static inline QString ToLocaleDateString(double t)
+{
+    return ToDateTime(t, Qt::LocalTime).date().toString(Qt::LocaleDate);
+}
+
+static inline QString ToLocaleTimeString(double t)
+{
+    return ToDateTime(t, Qt::LocalTime).time().toString(Qt::LocaleDate);
+}
+
+static double getLocalTZA()
+{
+#ifndef Q_WS_WIN
+    struct tm* t;
+    time_t curr;
+    time(&curr);
+    t = localtime(&curr);
+    time_t locl = mktime(t);
+    t = gmtime(&curr);
+    time_t globl = mktime(t);
+    return double(locl - globl) * 1000.0;
+#else
+    TIME_ZONE_INFORMATION tzInfo;
+    GetTimeZoneInformation(&tzInfo);
+    return -tzInfo.Bias * 60.0 * 1000.0;
+#endif
+}
 
 //
 // Object
@@ -629,6 +1090,429 @@ void BooleanPrototype::method_valueOf(Context *ctx)
     self.objectValue->defaultValue(ctx, &internalValue, PREFERREDTYPE_HINT);
     assert(internalValue.isBoolean());
     ctx->result = internalValue;
+}
+
+//
+// Date object
+//
+Value DateCtor::create(ExecutionEngine *engine)
+{
+    Context *ctx = engine->rootContext;
+    FunctionObject *ctor = ctx->engine->newDateCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newNumberPrototype(ctx, ctor)));
+    return Value::fromObject(ctor);
+}
+
+DateCtor::DateCtor(Context *scope)
+    : FunctionObject(scope)
+{
+}
+
+void DateCtor::construct(Context *ctx)
+{
+    // called as constructor
+    double t;
+
+    if (ctx->argumentCount == 0)
+        t = currentTime();
+
+    else if (ctx->argumentCount == 1) {
+        Value arg = ctx->argument(0);
+//        if (arg.isDate())
+//            arg = arg.internalValue();
+//        else
+//          __qmljs_to_primitive(ctx, &arg, &arg, PREFERREDTYPE_HINT);
+
+        if (arg.isString())
+            t = ParseString(arg.toString(ctx)->toQString());
+        else
+            t = TimeClip(arg.toNumber(ctx));
+    }
+
+    else { // context->argumentCount() > 1
+        double year  = ctx->argument(0).toNumber(ctx);
+        double month = ctx->argument(1).toNumber(ctx);
+        double day  = ctx->argumentCount >= 3 ? ctx->argument(2).toNumber(ctx) : 1;
+        double hours = ctx->argumentCount >= 4 ? ctx->argument(3).toNumber(ctx) : 0;
+        double mins = ctx->argumentCount >= 5 ? ctx->argument(4).toNumber(ctx) : 0;
+        double secs = ctx->argumentCount >= 6 ? ctx->argument(5).toNumber(ctx) : 0;
+        double ms    = ctx->argumentCount >= 7 ? ctx->argument(6).toNumber(ctx) : 0;
+        if (year >= 0 && year <= 99)
+            year += 1900;
+        t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
+        t = TimeClip(UTC(t));
+    }
+
+//    Value &obj = ctx->m_thisObject;
+//    obj.setClassInfo(classInfo());
+//    obj.setInternalValue(Value(t));
+//    obj.setPrototype(publicPrototype);
+//    ctx->setReturnValue(obj);
+}
+
+void DateCtor::call(Context *ctx)
+{
+    double t = currentTime();
+    ctx->result = Value::fromString(ctx, ToString(t));
+}
+
+DatePrototype::DatePrototype(Context *ctx, FunctionObject *ctor)
+{
+    LocalTZA = getLocalTZA();
+
+    ctor->setProperty(ctx, QLatin1String("parse"), method_parse, 1);
+    ctor->setProperty(ctx, QLatin1String("UTC"), method_UTC, 7);
+
+    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QLatin1String("toString"), method_toString, 0);
+    setProperty(ctx, QLatin1String("toDateString"), method_toDateString, 0);
+    setProperty(ctx, QLatin1String("toTimeString"), method_toTimeString, 0);
+    setProperty(ctx, QLatin1String("toLocaleString"), method_toLocaleString, 0);
+    setProperty(ctx, QLatin1String("toLocaleDateString"), method_toLocaleDateString, 0);
+    setProperty(ctx, QLatin1String("toLocaleTimeString"), method_toLocaleTimeString, 0);
+    setProperty(ctx, QLatin1String("valueOf"), method_valueOf, 0);
+    setProperty(ctx, QLatin1String("getTime"), method_getTime, 0);
+    setProperty(ctx, QLatin1String("getYear"), method_getYear, 0);
+    setProperty(ctx, QLatin1String("getFullYear"), method_getFullYear, 0);
+    setProperty(ctx, QLatin1String("getUTCFullYear"), method_getUTCFullYear, 0);
+    setProperty(ctx, QLatin1String("getMonth"), method_getMonth, 0);
+    setProperty(ctx, QLatin1String("getUTCMonth"), method_getUTCMonth, 0);
+    setProperty(ctx, QLatin1String("getDate"), method_getDate, 0);
+    setProperty(ctx, QLatin1String("getUTCDate"), method_getUTCDate, 0);
+    setProperty(ctx, QLatin1String("getDay"), method_getDay, 0);
+    setProperty(ctx, QLatin1String("getUTCDay"), method_getUTCDay, 0);
+    setProperty(ctx, QLatin1String("getHours"), method_getHours, 0);
+    setProperty(ctx, QLatin1String("getUTCHours"), method_getUTCHours, 0);
+    setProperty(ctx, QLatin1String("getMinutes"), method_getMinutes, 0);
+    setProperty(ctx, QLatin1String("getUTCMinutes"), method_getUTCMinutes, 0);
+    setProperty(ctx, QLatin1String("getSeconds"), method_getSeconds, 0);
+    setProperty(ctx, QLatin1String("getUTCSeconds"), method_getUTCSeconds, 0);
+    setProperty(ctx, QLatin1String("getMilliseconds"), method_getMilliseconds, 0);
+    setProperty(ctx, QLatin1String("getUTCMilliseconds"), method_getUTCMilliseconds, 0);
+    setProperty(ctx, QLatin1String("getTimezoneOffset"), method_getTimezoneOffset, 0);
+    setProperty(ctx, QLatin1String("setTime"), method_setTime, 1);
+    setProperty(ctx, QLatin1String("setMilliseconds"), method_setMilliseconds, 1);
+    setProperty(ctx, QLatin1String("setUTCMilliseconds"), method_setUTCMilliseconds, 1);
+    setProperty(ctx, QLatin1String("setSeconds"), method_setSeconds, 2);
+    setProperty(ctx, QLatin1String("setUTCSeconds"), method_setUTCSeconds, 2);
+    setProperty(ctx, QLatin1String("setMinutes"), method_setMinutes, 3);
+    setProperty(ctx, QLatin1String("setUTCMinutes"), method_setUTCMinutes, 3);
+    setProperty(ctx, QLatin1String("setHours"), method_setHours, 4);
+    setProperty(ctx, QLatin1String("setUTCHours"), method_setUTCHours, 4);
+    setProperty(ctx, QLatin1String("setDate"), method_setDate, 1);
+    setProperty(ctx, QLatin1String("setUTCDate"), method_setUTCDate, 1);
+    setProperty(ctx, QLatin1String("setMonth"), method_setMonth, 2);
+    setProperty(ctx, QLatin1String("setUTCMonth"), method_setUTCMonth, 2);
+    setProperty(ctx, QLatin1String("setYear"), method_setYear, 1);
+    setProperty(ctx, QLatin1String("setFullYear"), method_setFullYear, 3);
+    setProperty(ctx, QLatin1String("setUTCFullYear"), method_setUTCFullYear, 3);
+    setProperty(ctx, QLatin1String("toUTCString"), method_toUTCString, 0);
+    setProperty(ctx, QLatin1String("toGMTString"), method_toUTCString, 0);
+}
+
+double DatePrototype::getThisDate(Context *ctx)
+{
+    assert(ctx->thisObject.isObject());
+    Value internalValue;
+    ctx->thisObject.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
+    assert(internalValue.isNumber());
+    return internalValue.numberValue;
+}
+
+void DatePrototype::method_MakeTime(Context *ctx)
+{
+}
+
+void DatePrototype::method_MakeDate(Context *ctx)
+{
+}
+
+void DatePrototype::method_TimeClip(Context *ctx)
+{
+}
+
+void DatePrototype::method_parse(Context *ctx)
+{
+    ctx->result = Value::fromNumber(ParseString(ctx->argument(0).toString(ctx)->toQString()));
+}
+
+void DatePrototype::method_UTC(Context *ctx)
+{
+    const int numArgs = ctx->argumentCount;
+    if (numArgs >= 2) {
+        double year  = ctx->argument(0).toNumber(ctx);
+        double month = ctx->argument(1).toNumber(ctx);
+        double day   = numArgs >= 3 ? ctx->argument(2).toNumber(ctx) : 1;
+        double hours = numArgs >= 4 ? ctx->argument(3).toNumber(ctx) : 0;
+        double mins  = numArgs >= 5 ? ctx->argument(4).toNumber(ctx) : 0;
+        double secs  = numArgs >= 6 ? ctx->argument(5).toNumber(ctx) : 0;
+        double ms    = numArgs >= 7 ? ctx->argument(6).toNumber(ctx) : 0;
+        if (year >= 0 && year <= 99)
+            year += 1900;
+        double t = MakeDate(MakeDay(year, month, day),
+                            MakeTime(hours, mins, secs, ms));
+        ctx->result = Value::fromNumber(TimeClip(t));
+    }
+}
+
+void DatePrototype::method_toString(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    ctx->result = Value::fromString(ctx, ToString(t));
+}
+
+void DatePrototype::method_toDateString(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    ctx->result = Value::fromString(ctx, ToDateString(t));
+}
+
+void DatePrototype::method_toTimeString(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    ctx->result = Value::fromString(ctx, ToTimeString(t));
+}
+
+void DatePrototype::method_toLocaleString(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    ctx->result = Value::fromString(ctx, ToLocaleString(t));
+}
+
+void DatePrototype::method_toLocaleDateString(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    ctx->result = Value::fromString(ctx, ToLocaleDateString(t));
+}
+
+void DatePrototype::method_toLocaleTimeString(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    ctx->result = Value::fromString(ctx, ToLocaleTimeString(t));
+}
+
+void DatePrototype::method_valueOf(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getTime(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getYear(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = YearFromTime(LocalTime(t)) - 1900;
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getFullYear(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = YearFromTime(LocalTime(t));
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getUTCFullYear(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = YearFromTime(t);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getMonth(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = MonthFromTime(LocalTime(t));
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getUTCMonth(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = MonthFromTime(t);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getDate(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = DateFromTime(LocalTime(t));
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getUTCDate(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = DateFromTime(t);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getDay(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = WeekDay(LocalTime(t));
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getUTCDay(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = WeekDay(t);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getHours(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = HourFromTime(LocalTime(t));
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getUTCHours(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = HourFromTime(t);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getMinutes(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = MinFromTime(LocalTime(t));
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getUTCMinutes(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = MinFromTime(t);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getSeconds(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = SecFromTime(LocalTime(t));
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getUTCSeconds(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = SecFromTime(t);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getMilliseconds(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = msFromTime(LocalTime(t));
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getUTCMilliseconds(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = msFromTime(t);
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_getTimezoneOffset(Context *ctx)
+{
+    double t = getThisDate(ctx);
+    if (! qIsNaN(t))
+        t = (t - LocalTime(t)) / msPerMinute;
+    ctx->result = Value::fromNumber(t);
+}
+
+void DatePrototype::method_setTime(Context *ctx)
+{
+}
+
+void DatePrototype::method_setMilliseconds(Context *ctx)
+{
+}
+
+void DatePrototype::method_setUTCMilliseconds(Context *ctx)
+{
+}
+
+void DatePrototype::method_setSeconds(Context *ctx)
+{
+}
+
+void DatePrototype::method_setUTCSeconds(Context *ctx)
+{
+}
+
+void DatePrototype::method_setMinutes(Context *ctx)
+{
+}
+
+void DatePrototype::method_setUTCMinutes(Context *ctx)
+{
+}
+
+void DatePrototype::method_setHours(Context *ctx)
+{
+}
+
+void DatePrototype::method_setUTCHours(Context *ctx)
+{
+}
+
+void DatePrototype::method_setDate(Context *ctx)
+{
+}
+
+void DatePrototype::method_setUTCDate(Context *ctx)
+{
+}
+
+void DatePrototype::method_setMonth(Context *ctx)
+{
+}
+
+void DatePrototype::method_setUTCMonth(Context *ctx)
+{
+}
+
+void DatePrototype::method_setYear(Context *ctx)
+{
+}
+
+void DatePrototype::method_setFullYear(Context *ctx)
+{
+}
+
+void DatePrototype::method_setUTCFullYear(Context *ctx)
+{
+}
+
+void DatePrototype::method_toUTCString(Context *ctx)
+{
 }
 
 //

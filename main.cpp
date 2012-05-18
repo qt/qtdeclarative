@@ -47,78 +47,81 @@ struct Print: FunctionObject
 } // builtins
 
 
-void evaluate(QQmlJS::VM::ExecutionEngine *vm, QQmlJS::Engine *engine, const QString &fileName, const QString &code)
+void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QString &source)
 {
     using namespace QQmlJS;
 
-    Lexer lexer(engine);
-    lexer.setCode(code, 1, false);
-    Parser parser(engine);
+    IR::Module module;
+    IR::Function *globalCode = 0;
 
-    const bool parsed = parser.parseProgram();
+    const size_t codeSize = 10 * getpagesize();
+    uchar *code = (uchar *) malloc(codeSize);
+    assert(! (size_t(code) & 15));
 
-    foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
-        std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
-                  << ": error: " << qPrintable(m.message) << std::endl;
-    }
+    {
+        QQmlJS::Engine ee, *engine = &ee;
+        Lexer lexer(engine);
+        lexer.setCode(source, 1, false);
+        Parser parser(engine);
 
-    if (parsed) {
-        using namespace AST;
-        Program *program = AST::cast<Program *>(parser.rootNode());
+        const bool parsed = parser.parseProgram();
 
-        Codegen cg;
-        IR::Module module;
-        IR::Function *globalCode = cg(program, &module);
-
-        const size_t codeSize = 10 * getpagesize();
-        uchar *code = (uchar *) malloc(codeSize);
-
-        x86_64::InstructionSelection isel(vm, &module, code);
-        foreach (IR::Function *function, module.functions) {
-            isel(function);
+        foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
+            std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
+                      << ": error: " << qPrintable(m.message) << std::endl;
         }
 
-        if (! protect(code, codeSize))
-            Q_UNREACHABLE();
+        if (parsed) {
+            using namespace AST;
+            Program *program = AST::cast<Program *>(parser.rootNode());
 
-        VM::Object *globalObject = vm->globalObject.objectValue;
-        VM::Context *ctx = vm->rootContext;
+            Codegen cg;
+            globalCode = cg(program, &module);
 
-        globalObject->put(vm->identifier(QLatin1String("print")),
-                          VM::Value::fromObject(new builtins::Print(ctx)));
-
-        ctx->varCount = globalCode->locals.size();
-        if (ctx->varCount) {
-            ctx->locals = new VM::Value[ctx->varCount];
-            ctx->vars = new VM::String*[ctx->varCount];
-            std::fill(ctx->locals, ctx->locals + ctx->varCount, VM::Value::undefinedValue());
-            for (size_t i = 0; i < ctx->varCount; ++i)
-                ctx->vars[i] = ctx->engine->identifier(*globalCode->locals.at(i));
+            x86_64::InstructionSelection isel(vm, &module, code);
+            foreach (IR::Function *function, module.functions) {
+                isel(function);
+            }
         }
-
-        globalCode->code(ctx);
-
-        delete[] ctx->locals;
-        delete[] ctx->vars;
     }
+
+    if (! protect(code, codeSize))
+        Q_UNREACHABLE();
+
+    VM::Object *globalObject = vm->globalObject.objectValue;
+    VM::Context *ctx = vm->rootContext;
+
+    globalObject->put(vm->identifier(QLatin1String("print")),
+                      VM::Value::fromObject(new builtins::Print(ctx)));
+
+    ctx->varCount = globalCode->locals.size();
+    if (ctx->varCount) {
+        ctx->locals = new VM::Value[ctx->varCount];
+        ctx->vars = new VM::String*[ctx->varCount];
+        std::fill(ctx->locals, ctx->locals + ctx->varCount, VM::Value::undefinedValue());
+        for (size_t i = 0; i < ctx->varCount; ++i)
+            ctx->vars[i] = ctx->engine->identifier(*globalCode->locals.at(i));
+    }
+
+    globalCode->code(ctx);
+
+    delete[] ctx->locals;
+    delete[] ctx->vars;
 }
 
 int main(int argc, char *argv[])
 {
-    using namespace QQmlJS;
-
     QCoreApplication app(argc, argv);
     QStringList args = app.arguments();
     args.removeFirst();
 
-    VM::ExecutionEngine vm;
-    Engine engine;
+    QQmlJS::VM::ExecutionEngine vm;
     foreach (const QString &fn, args) {
         QFile file(fn);
         if (file.open(QFile::ReadOnly)) {
             const QString code = QString::fromUtf8(file.readAll());
             file.close();
-            evaluate(&vm, &engine, fn, code);
+            evaluate(&vm, fn, code);
         }
     }
 }

@@ -506,6 +506,9 @@ void InstructionSelection::visitMove(IR::Move *s)
                     return;
                 }
                 assert(!"todo");
+            } else if (IR::Subscript *ss = s->source->asSubscript()) {
+                qWarning() << "TODO load subscript";
+                return;
             } else if (IR::Unop *u = s->source->asUnop()) {
                 if (IR::Temp *e = u->expr->asTemp()) {
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
@@ -522,8 +525,9 @@ void InstructionSelection::visitMove(IR::Move *s)
                     } // switch
                     amd64_call_code(_codePtr, op);
                     return;
+                } else if (IR::Const *c = u->expr->asConst()) {
+                    return;
                 }
-
             } else if (IR::Binop *b = s->source->asBinop()) {
                 IR::Temp *l = b->left->asTemp();
                 IR::Temp *r = b->right->asTemp();
@@ -660,9 +664,40 @@ void InstructionSelection::visitMove(IR::Move *s)
                     return;
                 }
             }
+        } else if (IR::Subscript *ss = s->target->asSubscript()) {
+            if (IR::Temp *t = s->source->asTemp()) {
+                return;
+            } else if (IR::Const *c = s->source->asConst()) {
+                return;
+            }
         }
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...
+        if (IR::Temp *t = s->target->asTemp()) {
+            if (IR::Const *c = s->source->asConst()) {
+                return;
+            } else if (IR::Temp *t2 = s->source->asTemp()) {
+                return;
+            }
+        } else if (IR::Name *n = s->target->asName()) {
+            if (IR::Const *c = s->source->asConst()) {
+                return;
+            } else if (IR::Temp *t = s->source->asTemp()) {
+                return;
+            }
+        } else if (IR::Subscript *ss = s->target->asSubscript()) {
+            if (IR::Const *c = s->source->asConst()) {
+                return;
+            } else if (IR::Temp *t = s->source->asTemp()) {
+                return;
+            }
+        } else if (IR::Member *m = s->target->asMember()) {
+            if (IR::Const *c = s->source->asConst()) {
+                return;
+            } else if (IR::Temp *t = s->source->asTemp()) {
+                return;
+            }
+        }
     }
 
     Q_UNIMPLEMENTED();

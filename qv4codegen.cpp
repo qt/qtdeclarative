@@ -341,6 +341,16 @@ IR::Expr *Codegen::argument(IR::Expr *expr)
     return expr;
 }
 
+IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
+{
+    if (! expr->asTemp()) {
+        const unsigned t = _block->newTemp();
+        move(_block->TEMP(t), expr);
+        expr = _block->TEMP(t);
+    }
+    return _block->UNOP(op, expr);
+}
+
 IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
 {
     if (left && ! left->asTemp()) {
@@ -369,7 +379,14 @@ IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
 
 void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
 {
-    if (target->asMember()) {
+    if (op != IR::OpInvalid) {
+        if (! (source->asTemp() || source->asConst())) {
+            const unsigned t = _block->newTemp();
+            _block->MOVE(_block->TEMP(t), source);
+            _block->MOVE(target, _block->TEMP(t), op);
+            return;
+        }
+    } else if (target->asMember() || target->asSubscript()) {
         if (! (source->asTemp() || source->asConst())) {
             const unsigned t = _block->newTemp();
             _block->MOVE(_block->TEMP(t), source);
@@ -385,6 +402,16 @@ void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
         }
     }
     _block->MOVE(target, source, op);
+}
+
+void Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
+{
+    if (! cond->asTemp()) {
+        const unsigned t = _block->newTemp();
+        _block->MOVE(_block->TEMP(t), cond);
+        cond = _block->TEMP(t);
+    }
+    _block->CJUMP(cond, iftrue, iffalse);
 }
 
 void Codegen::accept(Node *node)
@@ -419,7 +446,7 @@ void Codegen::condition(ExpressionNode *ast, IR::BasicBlock *iftrue, IR::BasicBl
         accept(ast);
         qSwap(_expr, r);
         if (r.format == ex) {
-            _block->CJUMP(*r, r.iftrue, r.iffalse);
+            cjump(*r, r.iftrue, r.iffalse);
         }
     }
 }
@@ -851,7 +878,7 @@ bool Codegen::visit(BinaryExpression *ast)
 
             const unsigned r = _block->newTemp();
             move(_block->TEMP(r), *expression(ast->left));
-            _block->CJUMP(_block->TEMP(r), endif, iffalse);
+            cjump(_block->TEMP(r), endif, iffalse);
             _block = iffalse;
             move(_block->TEMP(r), *expression(ast->right));
             if (! _block->isTerminated())
@@ -913,7 +940,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::StrictEqual:
     case QSOperator::StrictNotEqual:
         if (false && _expr.accept(cx)) {
-            _block->CJUMP(binop(IR::binaryOperator(ast->op), *left, *right), _expr.iftrue, _expr.iffalse);
+            cjump(binop(IR::binaryOperator(ast->op), *left, *right), _expr.iftrue, _expr.iffalse);
         } else {
             IR::Expr *e = binop(IR::binaryOperator(ast->op), *left, *right);
             if (e->asConst() || e->asString())
@@ -1081,7 +1108,7 @@ bool Codegen::visit(NotExpression *ast)
 {
     Result expr = expression(ast->expression);
     const unsigned r = _block->newTemp();
-    move(_block->TEMP(r), _block->UNOP(IR::OpNot, *expr));
+    move(_block->TEMP(r), unop(IR::OpNot, *expr));
     _expr.code = _block->TEMP(r);
     return false;
 }
@@ -1186,7 +1213,7 @@ bool Codegen::visit(TildeExpression *ast)
 {
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->UNOP(IR::OpCompl, *expr));
+    move(_block->TEMP(t), unop(IR::OpCompl, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1210,7 +1237,7 @@ bool Codegen::visit(UnaryMinusExpression *ast)
 {
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->UNOP(IR::OpUMinus, *expr));
+    move(_block->TEMP(t), unop(IR::OpUMinus, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
@@ -1219,7 +1246,7 @@ bool Codegen::visit(UnaryPlusExpression *ast)
 {
     Result expr = expression(ast->expression);
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->UNOP(IR::OpUPlus, *expr));
+    move(_block->TEMP(t), unop(IR::OpUPlus, *expr));
     _expr.code = _block->TEMP(t);
     return false;
 }
