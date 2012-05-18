@@ -132,7 +132,6 @@ private:
     QSize m_size;
     GLenum m_format;
 
-    QQuickItem *m_shaderSource;
     QSGRenderer *m_renderer;
     QOpenGLFramebufferObject *m_fbo;
     QOpenGLFramebufferObject *m_secondaryFbo;
