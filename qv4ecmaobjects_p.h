@@ -70,13 +70,11 @@ struct NumberCtor: FunctionObject
     virtual void call(Context *ctx);
 };
 
-struct NumberPrototype: Object
+struct NumberPrototype: NumberObject
 {
     NumberPrototype(Context *ctx, FunctionObject *ctor);
 
 protected:
-    static NumberObject *getThisNumberObject(Context *ctx);
-
     static void method_toString(Context *ctx);
     static void method_toLocaleString(Context *ctx);
     static void method_valueOf(Context *ctx);
@@ -119,7 +117,6 @@ struct DatePrototype: DateObject
     DatePrototype(Context *ctx, FunctionObject *ctor);
 
 protected:
-    static DateObject *getThisDateObject(Context *ctx);
     static double getThisDate(Context *ctx);
 
     static void method_MakeTime(Context *ctx);
