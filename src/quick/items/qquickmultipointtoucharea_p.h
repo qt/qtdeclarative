@@ -232,12 +232,6 @@ Q_SIGNALS:
     void minimumTouchPointsChanged();
     void maximumTouchPointsChanged();
 
-    //### deprecated, will be removed for 5.0
-    void touchPointsPressed(const QList<QObject*> &touchPoints);
-    void touchPointsUpdated(const QList<QObject*> &touchPoints);
-    void touchPointsReleased(const QList<QObject*> &touchPoints);
-    void touchPointsCanceled(const QList<QObject*> &touchPoints);
-
 protected:
     void touchEvent(QTouchEvent *);
     bool childMouseEventFilter(QQuickItem *i, QEvent *event);

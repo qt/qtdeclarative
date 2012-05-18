@@ -497,18 +497,12 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
             }
         }
 
-        if (ended) {
+        if (ended)
             emit released(_releasedTouchPoints);
-            emit touchPointsReleased(_releasedTouchPoints);
-        }
-        if (moved) {
+        if (moved)
             emit updated(_movedTouchPoints);
-            emit touchPointsUpdated(_movedTouchPoints);
-        }
-        if (started) {
+        if (started)
             emit pressed(_pressedTouchPoints);
-            emit touchPointsPressed(_pressedTouchPoints);
-        }
         if (ended || moved || started) emit touchUpdated(_touchPoints.values());
     }
 }
@@ -618,7 +612,6 @@ void QQuickMultiPointTouchArea::ungrab()
         foreach (QObject *obj, _touchPoints)
             static_cast<QQuickTouchPoint*>(obj)->setPressed(false);
         emit canceled(_touchPoints.values());
-        emit touchPointsCanceled(_touchPoints.values());
         clearTouchLists();
         foreach (QObject *obj, _touchPoints) {
             QQuickTouchPoint *dtp = static_cast<QQuickTouchPoint*>(obj);
