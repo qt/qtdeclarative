@@ -400,7 +400,7 @@ bool QQmlCompiler::testLiteralAssignment(QQmlScript::Property *prop,
             // otherwise, check for existence of string converter to custom type
             QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(type);
             if (!converter)
-                COMPILE_EXCEPTION(v, tr("Invalid property assignment: unsupported type \"%1\"").arg(QString::fromLatin1(QVariant::typeToName((QVariant::Type)type))));
+                COMPILE_EXCEPTION(v, tr("Invalid property assignment: unsupported type \"%1\"").arg(QString::fromLatin1(QMetaType::typeName(type))));
             }
             break;
     }
