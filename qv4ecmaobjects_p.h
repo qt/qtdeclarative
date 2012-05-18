@@ -75,6 +75,8 @@ struct NumberPrototype: Object
     NumberPrototype(Context *ctx, FunctionObject *ctor);
 
 protected:
+    static NumberObject *getThisNumberObject(Context *ctx);
+
     static void method_toString(Context *ctx);
     static void method_toLocaleString(Context *ctx);
     static void method_valueOf(Context *ctx);

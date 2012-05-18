@@ -865,167 +865,147 @@ NumberPrototype::NumberPrototype(Context *ctx, FunctionObject *ctor)
     setProperty(ctx, QLatin1String("toPrecision"), method_toPrecision);
 }
 
+NumberObject *NumberPrototype::getThisNumberObject(Context *ctx)
+{
+    assert(ctx->thisObject.isObject());
+    if (NumberObject *o = ctx->thisObject.objectValue->asNumberObject()) {
+        return o;
+    }
+    return 0;
+}
+
 void NumberPrototype::method_toString(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    assert(self.isObject());
-    //    if (self.classInfo() != classInfo) {
-    //        return throwThisObjectTypeError(
-    //            ctx, QLatin1String("Number.prototype.toString"));
-    //    }
-
-    Value arg = ctx->argument(0);
-    if (!arg.isUndefined()) {
-        int radix = arg.toInt32(ctx);
-        //        if (radix < 2 || radix > 36)
-        //            return ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
-        //                                       .arg(radix));
-        if (radix != 10) {
-            Value internalValue;
-            self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
-
-            QString str;
-            double num = internalValue.toNumber(ctx);
-            if (qIsNaN(num)) {
-                ctx->result = Value::fromString(ctx, QLatin1String("NaN"));
-                return;
-            } else if (qIsInf(num)) {
-                ctx->result = Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
+    if (NumberObject *thisObject = getThisNumberObject(ctx)) {
+        Value arg = ctx->argument(0);
+        if (!arg.isUndefined()) {
+            int radix = arg.toInt32(ctx);
+            if (radix < 2 || radix > 36) {
+//                return ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
+//                                       .arg(radix));
+                assert(!"not a valid redix");
                 return;
             }
-            bool negative = false;
-            if (num < 0) {
-                negative = true;
-                num = -num;
-            }
-            double frac = num - ::floor(num);
-            num = Value::toInteger(num);
-            do {
-                char c = (char)::fmod(num, radix);
-                c = (c < 10) ? (c + '0') : (c - 10 + 'a');
-                str.prepend(QLatin1Char(c));
-                num = ::floor(num / radix);
-            } while (num != 0);
-            if (frac != 0) {
-                str.append(QLatin1Char('.'));
+
+            if (radix != 10) {
+                double num = thisObject->value.numberValue;
+                QString str;
+                if (qIsNaN(num)) {
+                    ctx->result = Value::fromString(ctx, QLatin1String("NaN"));
+                    return;
+                } else if (qIsInf(num)) {
+                    ctx->result = Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
+                    return;
+                }
+                bool negative = false;
+                if (num < 0) {
+                    negative = true;
+                    num = -num;
+                }
+                double frac = num - ::floor(num);
+                num = Value::toInteger(num);
                 do {
-                    frac = frac * radix;
-                    char c = (char)::floor(frac);
+                    char c = (char)::fmod(num, radix);
                     c = (c < 10) ? (c + '0') : (c - 10 + 'a');
-                    str.append(QLatin1Char(c));
-                    frac = frac - ::floor(frac);
-                } while (frac != 0);
+                    str.prepend(QLatin1Char(c));
+                    num = ::floor(num / radix);
+                } while (num != 0);
+                if (frac != 0) {
+                    str.append(QLatin1Char('.'));
+                    do {
+                        frac = frac * radix;
+                        char c = (char)::floor(frac);
+                        c = (c < 10) ? (c + '0') : (c - 10 + 'a');
+                        str.append(QLatin1Char(c));
+                        frac = frac - ::floor(frac);
+                    } while (frac != 0);
+                }
+                if (negative)
+                    str.prepend(QLatin1Char('-'));
+                ctx->result = Value::fromString(ctx, str);
+                return;
             }
-            if (negative)
-                str.prepend(QLatin1Char('-'));
-            ctx->result = Value::fromString(ctx, str);
-            return;
         }
+
+        Value internalValue = thisObject->value;
+        String *str = internalValue.toString(ctx);
+        ctx->result = Value::fromString(str);
+    } else {
+        assert(!"type error");
     }
-
-    Value internalValue;
-    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
-
-    String *str = internalValue.toString(ctx);
-    ctx->result = Value::fromString(str);
 }
 
 void NumberPrototype::method_toLocaleString(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    assert(self.isObject());
-    //    if (self.classInfo() != classInfo) {
-    //        return throwThisObjectTypeError(
-    //            ctx, QLatin1String("Number.prototype.toLocaleString"));
-    //    }
-    Value internalValue;
-    self.objectValue->defaultValue(ctx, &internalValue, STRING_HINT);
-    String *str = internalValue.toString(ctx);
-    ctx->result = Value::fromString(str);
+    if (NumberObject *thisObject = getThisNumberObject(ctx)) {
+        String *str = thisObject->value.toString(ctx);
+        ctx->result = Value::fromString(str);
+    } else {
+        assert(!"type error");
+    }
 }
 
 void NumberPrototype::method_valueOf(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    assert(self.isObject());
-    //    if (self.classInfo() != classInfo) {
-    //        return throwThisObjectTypeError(
-    //            ctx, QLatin1String("Number.prototype.toLocaleString"));
-    //    }
-    Value internalValue;
-    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
-    ctx->result = internalValue;
+    if (NumberObject *thisObject = getThisNumberObject(ctx)) {
+        ctx->result = thisObject->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void NumberPrototype::method_toFixed(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    assert(self.isObject());
-    //    if (self.classInfo() != classInfo) {
-    //        return throwThisObjectTypeError(
-    //            ctx, QLatin1String("Number.prototype.toFixed"));
-    //    }
-    double fdigits = 0;
+    if (NumberObject *thisObject = getThisNumberObject(ctx)) {
+        double fdigits = 0;
 
-    if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger(ctx);
+        if (ctx->argumentCount > 0)
+            fdigits = ctx->argument(0).toInteger(ctx);
 
-    if (qIsNaN(fdigits))
-        fdigits = 0;
+        if (qIsNaN(fdigits))
+            fdigits = 0;
 
-    Value internalValue;
-    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
-
-    double v = internalValue.toNumber(ctx);
-    QString str;
-    if (qIsNaN(v))
-        str = QString::fromLatin1("NaN");
-    else if (qIsInf(v))
-        str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
-    else
-        str = QString::number(v, 'f', int (fdigits));
-    ctx->result = Value::fromString(ctx, str);
+        double v = thisObject->value.numberValue;
+        QString str;
+        if (qIsNaN(v))
+            str = QString::fromLatin1("NaN");
+        else if (qIsInf(v))
+            str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
+        else
+            str = QString::number(v, 'f', int (fdigits));
+        ctx->result = Value::fromString(ctx, str);
+    } else {
+        assert(!"type error");
+    }
 }
 
 void NumberPrototype::method_toExponential(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    assert(self.isObject());
-    //    if (self.classInfo() != classInfo) {
-    //        return throwThisObjectTypeError(
-    //            ctx, QLatin1String("Number.prototype.toFixed"));
-    //    }
-    double fdigits = 0;
+    if (NumberObject *thisObject = getThisNumberObject(ctx)) {
+        double fdigits = 0;
 
-    if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger(ctx);
+        if (ctx->argumentCount > 0)
+            fdigits = ctx->argument(0).toInteger(ctx);
 
-    Value internalValue;
-    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
-
-    double v = internalValue.toNumber(ctx);
-    QString z = QString::number(v, 'e', int (fdigits));
-    ctx->result = Value::fromString(ctx, z);
+        QString z = QString::number(thisObject->value.numberValue, 'e', int (fdigits));
+        ctx->result = Value::fromString(ctx, z);
+    } else {
+        assert(!"type error");
+    }
 }
 
 void NumberPrototype::method_toPrecision(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    assert(self.isObject());
-    //    if (self.classInfo() != classInfo) {
-    //        return throwThisObjectTypeError(
-    //            ctx, QLatin1String("Number.prototype.toFixed"));
-    //    }
-    double fdigits = 0;
+    if (NumberObject *thisObject = getThisNumberObject(ctx)) {
+        double fdigits = 0;
 
-    if (ctx->argumentCount > 0)
-        fdigits = ctx->argument(0).toInteger(ctx);
+        if (ctx->argumentCount > 0)
+            fdigits = ctx->argument(0).toInteger(ctx);
 
-    Value internalValue;
-    self.objectValue->defaultValue(ctx, &internalValue, NUMBER_HINT);
-
-    double v = internalValue.toNumber(ctx);
-    ctx->result = Value::fromString(ctx, QString::number(v, 'g', int (fdigits)));
+        ctx->result = Value::fromString(ctx, QString::number(thisObject->value.numberValue, 'g', int (fdigits)));
+    } else {
+        assert(!"type error");
+    }
 }
 
 //
