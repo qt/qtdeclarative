@@ -84,8 +84,6 @@ public:
     inline bool isNotifying() const;
     inline void cancelNotify();
 
-    void copyAndClear(QQmlNotifierEndpoint &other);
-
 private:
     friend class QQmlData;
     friend class QQmlNotifier;

@@ -96,38 +96,5 @@ void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine
     ddata->addNotify(sourceSignal, this);
 }
 
-void QQmlNotifierEndpoint::copyAndClear(QQmlNotifierEndpoint &other)
-{
-    if (&other == this)
-        return;
-
-    other.disconnect();
-
-    other.callback = callback;
-
-    if (!isConnected())
-        return;
-
-    other.notifier = notifier;
-    other.sourceSignal = sourceSignal;
-    other.disconnected = disconnected;
-    other.notifying = notifying;
-    if (other.disconnected) *other.disconnected = &other;
-
-    if (next) {
-        other.next = next;
-        next->prev = &other.next;
-    }
-    other.prev = prev;
-    *other.prev = &other;
-
-    prev = 0;
-    next = 0;
-    disconnected = 0;
-    notifier = 0;
-    notifying = 0;
-    sourceSignal = -1;
-}
-
 QT_END_NAMESPACE
 
