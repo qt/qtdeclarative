@@ -717,7 +717,7 @@ void tst_qquickvisualdatamodel::packagesDestroyed()
     SingleRoleModel model;
     model.list.clear();
     for (int i=0; i<30; i++)
-        model.list << ("item " + i);
+        model.list << (QLatin1String("item ") + i);
 
     QQuickView view;
     view.rootContext()->setContextProperty("testModel", &model);
@@ -799,7 +799,7 @@ void tst_qquickvisualdatamodel::qaimRowsMoved()
     SingleRoleModel model;
     model.list.clear();
     for (int i=0; i<30; i++)
-        model.list << ("item " + i);
+        model.list << (QLatin1String("item ") + i);
     engine.rootContext()->setContextProperty("myModel", &model);
 
     QQuickVisualDataModel *obj = qobject_cast<QQuickVisualDataModel*>(c.create());
