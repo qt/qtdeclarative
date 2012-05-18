@@ -341,7 +341,7 @@ int qmlRegisterValueTypeEnums(const char *uri, int versionMajor, int versionMino
     QQmlPrivate::RegisterType type = {
         0,
 
-        qRegisterMetaType<T *>(pointerName.constData()), 0, 0, 0,
+        qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0, 0, 0,
 
         QString(),
 

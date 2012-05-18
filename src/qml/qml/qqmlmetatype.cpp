@@ -190,6 +190,25 @@ public:
     static QHash<const QMetaObject *, int> m_attachedPropertyIds;
 };
 
+// Avoid multiple fromUtf8(), copies and hashing of the module name.
+// This is only called when metaTypeDataLock is locked.
+static QHashedString moduletoUtf8(const char *module)
+{
+    if (!module)
+        return QHashedString();
+
+    static const char *lastModule = 0;
+    static QHashedString lastModuleStr;
+
+    if (lastModule != module) {
+        lastModuleStr = QString::fromUtf8(module);
+        lastModuleStr.hash();
+        lastModule = module;
+    }
+
+    return lastModuleStr;
+}
+
 QHash<const QMetaObject *, int> QQmlTypePrivate::m_attachedPropertyIds;
 
 QQmlTypePrivate::QQmlTypePrivate()
@@ -219,13 +238,8 @@ QQmlType::QQmlType(int index, const QQmlPrivate::RegisterInterface &interface)
 QQmlType::QQmlType(int index, const QQmlPrivate::RegisterType &type)
 : d(new QQmlTypePrivate)
 {
-    d->m_module = QString::fromUtf8(type.uri);
+    d->m_module = moduletoUtf8(type.uri);
     d->m_elementName = QString::fromUtf8(type.elementName);
-
-    if (!d->m_module.isEmpty())
-        d->m_name = static_cast<QString>(d->m_module) + QLatin1Char('/') + d->m_elementName;
-    else
-        d->m_name = d->m_elementName;
 
     d->m_version_maj = type.versionMajor;
     d->m_version_min = type.versionMinor;
@@ -498,6 +512,13 @@ const QString &QQmlType::elementName() const
 
 const QString &QQmlType::qmlTypeName() const
 {
+    if (d->m_name.isEmpty()) {
+        if (!d->m_module.isEmpty())
+            d->m_name = static_cast<QString>(d->m_module) + QLatin1Char('/') + d->m_elementName;
+        else
+            d->m_name = d->m_elementName;
+    }
+
     return d->m_name;
 }
 

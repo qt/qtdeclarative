@@ -179,11 +179,13 @@ void tst_qqmlmetatype::qmlType()
     QVERIFY(type);
     QVERIFY(type->module() == QLatin1String("Test"));
     QVERIFY(type->elementName() == QLatin1String("ParserStatusTestType"));
+    QCOMPARE(type->qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
 
     type = QQmlMetaType::qmlType("Test/ParserStatusTestType", 1, 0);
     QVERIFY(type);
     QVERIFY(type->module() == QLatin1String("Test"));
     QVERIFY(type->elementName() == QLatin1String("ParserStatusTestType"));
+    QCOMPARE(type->qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
 }
 
 void tst_qqmlmetatype::isList()
