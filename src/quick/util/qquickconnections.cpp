@@ -74,7 +74,7 @@ public:
     \qmlclass Connections QQuickConnections
     \inqmlmodule QtQuick 2
     \ingroup qml-utility-elements
-    \brief A Connections element describes generalized connections to signals.
+    \brief Describes generalized connections to signals
 
     A Connections object creates a connection to a QML signal.
 

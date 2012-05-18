@@ -1140,7 +1140,7 @@ void QQuickTextPrivate::ensureDoc()
     \qmlclass Text QQuickText
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
-    \brief The Text item allows you to add formatted text to a scene.
+    \brief Specifies how to add formatted text to a scene
     \inherits Item
 
     Text items can display both plain and rich text. For example, red text with

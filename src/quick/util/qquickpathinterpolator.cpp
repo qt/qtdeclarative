@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass PathInterpolator QQuickPathInterpolator
     \inqmlmodule QtQuick 2
-    \brief The PathInterpolator element provides a way to manually animate along a path.
+    \brief Specifies how to manually animate along a path
 
     PathInterpolator provides \c x, \c y, and \c angle information for a particular \c progress
     along a path.

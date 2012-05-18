@@ -91,7 +91,7 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
 /*!
     \qmlclass DropArea QQuickDropArea
     \inqmlmodule QtQuick 2
-    \brief The DropArea item provides drag and drop handling.
+    \brief For specifying drag and drop handling in an area
 
     A DropArea is an invisible item which receives events when other items are
     dragged over it.
@@ -326,7 +326,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 /*!
     \qmlclass DragEvent QQuickDragEvent
     \inqmlmodule QtQuick 2
-    \brief The DragEvent object provides information about a drag event.
+    \brief Provides information about a drag event
 
     The position of the drag event can be obtained from the \l x and \l y
     properties, and the \l keys property identifies the drag keys of the event

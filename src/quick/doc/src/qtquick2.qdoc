@@ -29,10 +29,10 @@
     \qmlmodule QtQuick 2
     \title QML Module QtQuick 2
 
-    \brief The QML Elements
+    \brief Contains QML types for creating applications
 
-    This QML module contains all the QML elements that are
+    This QML module contains all the QML types that are
     instantiated as objects of C++ classes in the QtQml
-    module. These elements work with the Scenegraph renderer and
+    module. These types work with the Scenegraph renderer and
     their own canvas.
  */

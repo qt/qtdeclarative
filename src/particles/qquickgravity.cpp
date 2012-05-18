@@ -47,7 +47,7 @@ const qreal CONV = 0.017453292520444443;
     \qmlclass Gravity QQuickGravityAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The Gravity element allows you to set an accleration in an angle
+    \brief For applying accleration in an angle
 
     This element will accelerate all affected particles to a vector of
     the specified magnitude in the specified angle. If the angle and acceleration do

@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass PointDirection QQuickPointDirection
     \inqmlmodule QtQuick.Particles 2
     \inherits Direction
-    \brief The PointDirection element allows you to specify a direction that varies in x and y components
+    \brief For specifying a direction that varies in x and y components
 
     The PointDirection element allows both the specification of a direction by x and y components,
     as well as varying the parameters by x or y component.

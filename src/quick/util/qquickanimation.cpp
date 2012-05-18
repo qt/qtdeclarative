@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass Animation QQuickAbstractAnimation
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
-    \brief The Animation element is the base of all QML animations.
+    \brief Is the base of all QML animations
 
     The Animation element cannot be used directly in a QML file.  It exists
     to provide a set of common properties and methods, available across all the
@@ -442,7 +442,7 @@ void QQuickAbstractAnimation::setGroup(QQuickAnimationGroup *g)
 
 /*!
     \qmlmethod QtQuick2::Animation::start()
-    \brief Starts the animation.
+    \brief Starts the animation
 
     If the animation is already running, calling this method has no effect.  The
     \c running property will be true following a call to \c start().
@@ -454,7 +454,7 @@ void QQuickAbstractAnimation::start()
 
 /*!
     \qmlmethod QtQuick2::Animation::pause()
-    \brief Pauses the animation.
+    \brief Pauses the animation
 
     If the animation is already paused or not \c running, calling this method has no effect.
     The \c paused property will be true following a call to \c pause().
@@ -466,7 +466,7 @@ void QQuickAbstractAnimation::pause()
 
 /*!
     \qmlmethod QtQuick2::Animation::resume()
-    \brief Resumes a paused animation.
+    \brief Resumes a paused animation
 
     If the animation is not paused or not \c running, calling this method has no effect.
     The \c paused property will be false following a call to \c resume().
@@ -478,7 +478,7 @@ void QQuickAbstractAnimation::resume()
 
 /*!
     \qmlmethod QtQuick2::Animation::stop()
-    \brief Stops the animation.
+    \brief Stops the animation
 
     If the animation is not running, calling this method has no effect.  Both the
     \c running and \c paused properties will be false following a call to \c stop().
@@ -503,7 +503,7 @@ void QQuickAbstractAnimation::stop()
 
 /*!
     \qmlmethod QtQuick2::Animation::restart()
-    \brief Restarts the animation.
+    \brief Restarts the animation
 
     This is a convenience method, and is equivalent to calling \c stop() and
     then \c start().
@@ -516,7 +516,7 @@ void QQuickAbstractAnimation::restart()
 
 /*!
     \qmlmethod QtQuick2::Animation::complete()
-    \brief Stops the animation, jumping to the final property values.
+    \brief Stops the animation, jumping to the final property values
 
     If the animation is not running, calling this method has no effect.  The
     \c running property will be false following a call to \c complete().
@@ -618,7 +618,7 @@ void QQuickAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
     \inherits Animation
-    \brief The PauseAnimation element provides a pause for an animation.
+    \brief Provides a pause for an animation
 
     When used in a SequentialAnimation, PauseAnimation is a step when
     nothing happens, for a specified duration.
@@ -686,9 +686,9 @@ QAbstractAnimationJob* QQuickPauseAnimation::transition(QQuickStateActions &acti
 /*!
     \qmlclass ColorAnimation QQuickColorAnimation
     \inqmlmodule QtQuick 2
-  \ingroup qml-animation-transition
+    \ingroup qml-animation-transition
     \inherits PropertyAnimation
-    \brief The ColorAnimation element animates changes in color values.
+    \brief Animates changes in color values
 
     ColorAnimation is a specialized PropertyAnimation that defines an
     animation to be applied when a color value changes.
@@ -832,7 +832,7 @@ void QActionAnimation::updateState(State newState, State oldState)
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
     \inherits Animation
-    \brief The ScriptAction element allows scripts to be run during an animation.
+    \brief Defines scripts to be run during an animation
 
     ScriptAction can be used to run a script at a specific point in an animation.
 
@@ -958,7 +958,7 @@ QAbstractAnimationJob* QQuickScriptAction::transition(QQuickStateActions &action
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
     \inherits Animation
-    \brief The PropertyAction element allows immediate property changes during animation.
+    \brief Specifies immediate property changes during animation
 
     PropertyAction is used to specify an immediate property change during an
     animation. The property change is not animated.
@@ -1210,7 +1210,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
     \inqmlmodule QtQuick 2
   \ingroup qml-animation-transition
     \inherits PropertyAnimation
-    \brief The NumberAnimation element animates changes in qreal-type values.
+    \brief Animates changes in qreal-type values
 
     NumberAnimation is a specialized PropertyAnimation that defines an
     animation to be applied when a numerical value changes.
@@ -1322,7 +1322,7 @@ void QQuickNumberAnimation::setTo(qreal t)
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
     \inherits PropertyAnimation
-    \brief The Vector3dAnimation element animates changes in QVector3d values.
+    \brief Animates changes in QVector3d values
 
     Vector3dAnimation is a specialized PropertyAnimation that defines an
     animation to be applied when a Vector3d value changes.
@@ -1398,7 +1398,7 @@ void QQuickVector3dAnimation::setTo(QVector3D t)
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
     \inherits PropertyAnimation
-    \brief The RotationAnimation element animates changes in rotation values.
+    \brief Animates changes in rotation values
 
     RotationAnimation is a specialized PropertyAnimation that gives control
     over the direction of rotation during an animation.
@@ -1634,7 +1634,7 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
     \inqmlmodule QtQuick 2
   \ingroup qml-animation-transition
     \inherits Animation
-    \brief The SequentialAnimation element allows animations to be run sequentially.
+    \brief Allows animations to be run sequentially
 
     The SequentialAnimation and ParallelAnimation elements allow multiple
     animations to be run together. Animations defined in a SequentialAnimation
@@ -1706,7 +1706,7 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
     \inqmlmodule QtQuick 2
   \ingroup qml-animation-transition
     \inherits Animation
-    \brief The ParallelAnimation element allows animations to be run in parallel.
+    \brief Enables animations to be run in parallel
 
     The SequentialAnimation and ParallelAnimation elements allow multiple
     animations to be run together. Animations defined in a SequentialAnimation
@@ -1831,7 +1831,7 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
     \inqmlmodule QtQuick 2
   \ingroup qml-animation-transition
     \inherits Animation
-    \brief The PropertyAnimation element animates changes in property values.
+    \brief Animates changes in property values
 
     PropertyAnimation provides a way to animate changes to a property's value.
 
@@ -1988,7 +1988,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
     \qmlproperty real QtQuick2::PropertyAnimation::easing.overshoot
     \qmlproperty real QtQuick2::PropertyAnimation::easing.period
     \qmlproperty list<real> QtQuick2::PropertyAnimation::easing.bezierCurve
-    \brief the easing curve used for the animation.
+    \brief Specifies the easing curve used for the animation
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify
     amplitude, period and/or overshoot (more details provided after the table). The default easing curve is

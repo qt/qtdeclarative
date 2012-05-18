@@ -506,7 +506,7 @@ is finished.
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-interaction-elements
 
-    \brief The Flickable item provides a surface that can be "flicked".
+    \brief For specifying a surface that can be "flicked"
     \inherits Item
 
     The Flickable item places its children on a surface that can be dragged

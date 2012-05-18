@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Particle
     \inqmlmodule QtQuick.Particles 2
-    \brief Particle elements can be manipulated in custom emitters and affectors.
+    \brief Represents particles manipulated by emitters and affectors
 
     Particle elements are always managed internally by the ParticleSystem and cannot be created in QML.
     However, sometimes they are exposed via signals so as to allow arbitrary changes to the particle state

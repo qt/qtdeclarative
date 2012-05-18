@@ -51,7 +51,7 @@ const qreal CONV = 0.017453292519943295;
     \qmlclass AngleDirection QQuickAngleDirection
     \inqmlmodule QtQuick.Particles 2
     \inherits Direction
-    \brief The AngleDirection element allows you to specify a direction that varies in angle
+    \brief For specifying a direction that varies in angle
 
     The AngledDirection element allows both the specification of a direction by angle and magnitude,
     as well as varying the parameters by angle or magnitude.

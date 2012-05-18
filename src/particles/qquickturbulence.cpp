@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass Turbulence QQuickTurbulenceAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief Turbulence provides fluid like forces based on a noise image.
+    \brief Provides fluid-like forces from a noise image
 
     The Turbulence Element scales the noise source over the area it affects,
     and uses the curl of that source to generate force vectors.

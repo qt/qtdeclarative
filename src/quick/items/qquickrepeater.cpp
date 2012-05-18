@@ -66,8 +66,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
     \inqmlmodule QtQuick 2
     \ingroup qml-utility-elements
     \inherits Item
-
-    \brief The Repeater element allows you to repeat an Item-based component using a model.
+    \brief Specifies how to repeately create an Item-based component using a model
 
     The Repeater element is used to create a large number of
     similar items. Like other view elements, a Repeater has a \l model and a \l delegate:

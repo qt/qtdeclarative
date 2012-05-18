@@ -41,7 +41,7 @@
 
 /*!
     \qmlclass SignalSpy SignalSpy
-    \brief The SignalSpy item enables introspection of signal emission.
+    \brief Enables introspection of signal emission
     \since 4.8
     \ingroup qtest::qml
 

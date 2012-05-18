@@ -748,7 +748,7 @@ V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
 /*!
     \qmlclass Locale QQmlLocale
     \inqmlmodule QtQuick 2
-    \brief The Locale object provides locale specific properties and formatted data.
+    \brief Provides locale specific properties and formatted data
 
     The Locale object may only be created via the \l{QML:Qt::locale()}{Qt.locale()} function.
     It cannot be created directly.

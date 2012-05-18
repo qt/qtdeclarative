@@ -103,7 +103,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 /*!
     \qmlclass ParticleSystem QQuickParticleSystem
     \inqmlmodule QtQuick.Particles 2
-    \brief The ParticleSystem brings together ParticlePainter, Emitter and Affector elements.
+    \brief A system which includes particle painter, emitter, and affector types
 
 */
 

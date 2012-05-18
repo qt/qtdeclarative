@@ -158,8 +158,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \ingroup qml-utility-elements
     \inherits Item
 
-    \brief The Loader item allows dynamically loading an Item-based
-    subtree from a URL or Component.
+    \brief Allows dynamical loading of an item-based subtree from a URL or Component
 
     Loader is used to dynamically load visual QML components.  For loading non-visual
     components, see \l {Dynamic Object Management in QML}.

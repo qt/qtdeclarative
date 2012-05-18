@@ -1153,7 +1153,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     \ingroup qml-view-elements
 
     \inherits Flickable
-    \brief The GridView item provides a grid view of items provided by a model.
+    \brief For specifying a grid view of items provided by a model
 
     A GridView displays data from models created from built-in QML elements like ListModel
     and XmlListModel, or custom model classes defined in C++ that inherit from

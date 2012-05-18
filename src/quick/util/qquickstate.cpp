@@ -123,7 +123,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
     \qmlclass State QQuickState
     \inqmlmodule QtQuick 2
     \ingroup qml-state-elements
-    \brief The State element defines configurations of objects and properties.
+    \brief Defines configurations of objects and properties
 
     A \e state is a set of batched changes from the default configuration.
 

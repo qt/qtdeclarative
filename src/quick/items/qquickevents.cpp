@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick 2
     \ingroup qml-event-elements
 
-    \brief The KeyEvent object provides information about a key event.
+    \brief Provides information about a key event
 
     For example, the following changes the Item's state property when the Enter
     key is pressed:
@@ -143,7 +143,7 @@ Item {
     \inqmlmodule QtQuick 2
     \ingroup qml-event-elements
 
-    \brief The MouseEvent object provides information about a mouse event.
+    \brief Provides information about a mouse event
 
     The position of the mouse can be found via the \l x and \l y properties.
     The button that caused the event is available via the \l button property.
@@ -241,7 +241,7 @@ Item {
     \inqmlmodule QtQuick 2
     \ingroup qml-event-elements
 
-    \brief The WheelEvent object provides information about a mouse wheel event.
+    \brief Provides information about a mouse wheel event
 
     The position of the mouse can be found via the \l x and \l y properties.
 

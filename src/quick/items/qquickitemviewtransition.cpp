@@ -569,7 +569,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \qmlclass ViewTransition QQuickViewTransitionAttached
     \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \brief The ViewTransition attached property provides details on items under transition in a view.
+    \brief Specifies items under transition in a view
 
     With ListView and GridView, it is possible to specify transitions that should be applied whenever
     the items in the view change as a result of modifications to the view's model. They both have the

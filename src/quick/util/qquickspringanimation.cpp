@@ -345,7 +345,7 @@ void QQuickSpringAnimationPrivate::updateMode()
     \ingroup qml-animation-transition
     \inherits NumberAnimation
 
-    \brief The SpringAnimation element allows a property to track a value in a spring-like motion.
+    \brief Allows a property to track a value in a spring-like motion
 
     SpringAnimation mimics the oscillatory behavior of a spring, with the appropriate \l spring constant to
     control the acceleration and the \l damping to control how quickly the effect dies away.

@@ -120,7 +120,7 @@ public:
     \qmlclass VisualItemModel QQuickVisualItemModel
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief The VisualItemModel allows items to be provided to a view.
+    \brief Defines items to be used added to a view
 
     A VisualItemModel contains the visual items to be used in a view.
     When a VisualItemModel is used in a view, the view does not require

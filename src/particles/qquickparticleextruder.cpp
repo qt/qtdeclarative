@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Shape QQuickParticleExtruder
     \inqmlmodule QtQuick.Particles 2
-    \brief The Shape element allows you to specify an area for affectors and emitter.
+    \brief For specifying an area for affectors and emitters
 
     The base class is just a rectangle.
 */

@@ -92,7 +92,7 @@ public:
 /*!
     \qmlclass Drag QQuickDrag
     \inqmlmodule QtQuick 2
-    \brief The Drag attached property provides drag and drop events for moved Items.
+    \brief For specifying drag and drop events for moved Items
 
     Using the Drag attached property any Item can made a source of drag and drop
     events within a scene.

@@ -76,7 +76,7 @@ public:
     \qmlclass Timer QQuickTimer
     \inqmlmodule QtQuick 2
     \ingroup qml-utility-elements
-    \brief The Timer item triggers a handler at a specified interval.
+    \brief Triggers a handler at a specified interval
 
     A Timer can be used to trigger an action either once, or repeatedly
     at a given interval.
@@ -233,7 +233,7 @@ void QQuickTimer::setTriggeredOnStart(bool triggeredOnStart)
 
 /*!
     \qmlmethod QtQuick2::Timer::start()
-    \brief Starts the timer.
+    \brief Starts the timer
 
     If the timer is already running, calling this method has no effect.  The
     \c running property will be true following a call to \c start().
@@ -245,7 +245,7 @@ void QQuickTimer::start()
 
 /*!
     \qmlmethod QtQuick2::Timer::stop()
-    \brief Stops the timer.
+    \brief Stops the timer
 
     If the timer is not running, calling this method has no effect.  The
     \c running property will be false following a call to \c stop().
@@ -257,7 +257,7 @@ void QQuickTimer::stop()
 
 /*!
     \qmlmethod QtQuick2::Timer::restart()
-    \brief Restarts the timer.
+    \brief Restarts the timer
 
     If the Timer is not running it will be started, otherwise it will be
     stopped, reset to initial state and started.  The \c running property

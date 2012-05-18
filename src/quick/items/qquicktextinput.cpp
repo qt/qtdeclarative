@@ -69,8 +69,8 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
     \qmlclass TextInput QQuickTextInput
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
-    \brief The TextInput item displays an editable line of text.
     \inherits Item
+    \brief Displays an editable line of text
 
     The TextInput element displays a single line of editable plain text.
 
@@ -845,6 +845,7 @@ void QQuickTextInput::setAutoScroll(bool b)
     \qmlclass IntValidator QIntValidator
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
+    \brief Defines a validator for integer values
 
     This element provides a validator for integer values.
 
@@ -907,6 +908,7 @@ void QQuickIntValidator::resetLocaleName()
     \qmlclass DoubleValidator QDoubleValidator
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
+    \brief Defines a validator for non-integer numbers
 
     This element provides a validator for non-integer numbers.
 
@@ -999,6 +1001,7 @@ void QQuickDoubleValidator::resetLocaleName()
     \qmlclass RegExpValidator QRegExpValidator
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
+    \brief Provides a string validator
 
     This element provides a validator, which counts as valid any string which
     matches a specified regular expression.

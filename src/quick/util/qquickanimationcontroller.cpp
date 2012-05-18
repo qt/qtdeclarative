@@ -95,7 +95,7 @@ void QQuickAnimationControllerPrivate::animationCurrentTimeChanged(QAbstractAnim
     \qmlclass AnimationController QQuickAnimationController
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
-    \brief The AnimationController element allows you to control animations manually.
+    \brief Enables manual control of animations
 
     Normally animations are driven by an internal timer, but the AnimationController
     allows the given \a animation to be driven by a \a progress value explicitly.
@@ -185,7 +185,7 @@ void QQuickAnimationController::setAnimation(QQuickAbstractAnimation *animation)
 
 /*!
     \qmlmethod QtQuick2::AnimationController::reload()
-    \brief Reloads the animation properties.
+    \brief Reloads the animation properties
 
     If the animation properties changed, calling this method to reload the animation definations.
 */

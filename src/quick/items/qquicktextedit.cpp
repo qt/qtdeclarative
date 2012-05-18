@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass TextEdit QQuickTextEdit
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
-    \brief The TextEdit item displays multiple lines of editable formatted text.
+    \brief Displays multiple lines of editable formatted text
     \inherits Item
 
     The TextEdit item displays a block of editable, formatted text.

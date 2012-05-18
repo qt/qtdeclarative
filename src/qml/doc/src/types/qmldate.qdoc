@@ -28,7 +28,7 @@
 /*!
     \qmlclass Date
     \inqmlmodule QtQuick 2
-    \brief The Date object provides date functions
+    \brief Provides date functions
 
     The QML Date object extends the JS Date object with
     locale aware functions.

@@ -96,3 +96,7 @@ exampledirs += ../../qml/snippets \
                ../../qml
 
 imagedirs += ../../qml
+
+#add particles sources
+headerdirs += ../../particles
+sourcedirs += ../../particles

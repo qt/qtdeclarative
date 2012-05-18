@@ -112,9 +112,10 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 /*!
     \class QQmlComponent
     \since 5.0
-    \brief The QQmlComponent class encapsulates a QML component definition.
     \inmodule QtQml
     \mainclass
+
+    \brief The QQmlComponent class encapsulates a QML component definition
 
     Components are reusable, encapsulated QML elements with well-defined interfaces.
     They are often defined in \l {qdeclarativedocuments.html}{Component Files}.
@@ -190,7 +191,8 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \qmlclass Component QQmlComponent
     \ingroup qml-utility-elements
     \since 4.7
-    \brief The Component element encapsulates a QML component definition.
+    \inqmlmodule QtQuick 2
+    \brief Encapsulates a QML component definition
 
     Components are reusable, encapsulated QML elements with well-defined interfaces.
 

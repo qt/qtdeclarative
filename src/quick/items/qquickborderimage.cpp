@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass BorderImage QQuickBorderImage
     \inqmlmodule QtQuick 2
-    \brief The BorderImage element provides an image that can be used as a border.
+    \brief For specifying an image that can be used as a border
     \inherits Item
     \ingroup qml-basic-visual-elements
 

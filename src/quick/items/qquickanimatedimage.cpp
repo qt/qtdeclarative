@@ -57,6 +57,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick 2
     \inherits Image
     \ingroup basic-visual-elements
+    \brief Plays animations stored as a series of images
 
     The AnimatedImage element extends the features of the \l Image element, providing
     a way to play animations stored as images containing a series of frames,

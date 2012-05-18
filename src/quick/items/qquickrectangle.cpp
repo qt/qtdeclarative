@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \internal
     \class QQuickPen
-    \brief The QQuickPen class provides a pen used for drawing rectangle borders on a QQuickView.
+    \brief For specifying a pen used for drawing rectangle borders on a QQuickView
 
     By default, the pen is invalid and nothing is drawn. You must either set a color (then the default
     width is 1) or a width (then the default color is black).
@@ -130,7 +130,7 @@ bool QQuickPen::isValid() const
     \qmlclass GradientStop QQuickGradientStop
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
-    \brief The GradientStop item defines the color at a position in a Gradient.
+    \brief Defines the color at a position in a Gradient
 
     \sa Gradient
 */
@@ -181,7 +181,7 @@ void QQuickGradientStop::updateGradient()
     \qmlclass Gradient QQuickGradient
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
-    \brief The Gradient item defines a gradient fill.
+    \brief Defines a gradient fill
 
     A gradient is defined by two or more colors, which will be blended seamlessly.
 
@@ -280,7 +280,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
     \qmlclass Rectangle QQuickRectangle
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
-    \brief The Rectangle item provides a filled rectangle with an optional border.
+    \brief Describes a filled rectangle with an optional border
     \inherits Item
 
     Rectangle items are used to fill areas with solid color or gradients, and are

@@ -149,7 +149,7 @@ QHash<QUrl, QQuickFontObject*> QQuickFontLoaderPrivate::fonts;
     \qmlclass FontLoader QQuickFontLoader
     \inqmlmodule QtQuick 2
   \ingroup qml-utility-elements
-    \brief The FontLoader element allows fonts to be loaded by name or URL.
+    \brief Allows fonts to be loaded by name or URL
 
     The FontLoader element is used to load fonts by name or URL. 
     

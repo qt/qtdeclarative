@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qml-animation-transition
     \since QtQuick 2.0
     \inherits Animation
-    \brief The ParentAnimation element animates changes in parent values.
+    \brief Animates changes in parent values
 
     ParentAnimation is used to animate a parent change for an \l Item.
 
@@ -418,7 +418,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
     \inherits Animation
-    \brief The AnchorAnimation element animates changes in anchor values.
+    \brief Animates changes in anchor values
 
     AnchorAnimation is used to animate an anchor change.
 
@@ -491,7 +491,7 @@ void QQuickAnchorAnimation::setDuration(int duration)
     \qmlproperty real QtQuick2::AnchorAnimation::easing.amplitude
     \qmlproperty real QtQuick2::AnchorAnimation::easing.overshoot
     \qmlproperty real QtQuick2::AnchorAnimation::easing.period
-    \brief the easing curve used for the animation.
+    \brief Specifies the easing curve used for the animation
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify
     amplitude, period and/or overshoot. The default easing curve is
@@ -562,7 +562,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     \ingroup qml-animation-transition
     \inherits Animation
     \since QtQuick 2.0
-    \brief The PathAnimation element animates an item along a path.
+    \brief Animates an item along a path
 
     When used in a transition, the path can be specified without start
     or end points, for example:

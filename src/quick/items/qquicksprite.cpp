@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Sprite QQuickSprite
     \inqmlmodule QtQuick 2
-    \brief The Sprite element represents a sprite animation
+    \brief Specifies sprite animations
 
     QQuickSprite renders sprites of one or more frames and animates them. The sprites
     can be in the middle of an image file, or split along multiple rows, as long as they form

@@ -311,7 +311,7 @@ void QSmoothedAnimation::init()
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
     \inherits NumberAnimation
-    \brief The SmoothedAnimation element allows a property to smoothly track a value.
+    \brief Allows a property to smoothly track a value
 
     A SmoothedAnimation animates a property's value to a set target value
     using an ease in/out quad easing curve.  When the target value changes,

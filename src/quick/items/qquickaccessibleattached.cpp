@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Accessible QQuickAccessibleAttached
-    \brief Attached property to enable accessibility of QML items.
+    \brief Enables accessibility of QML items
 
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-interaction-elements

@@ -130,7 +130,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     \qmlclass Transform QQuickTransform
     \inqmlmodule QtQuick 2
     \ingroup qml-transform-elements
-    \brief The Transform elements provide a way of building advanced transformations on Items.
+    \brief For specifying advanced transformations on Items
 
     The Transform element is a base type which cannot be instantiated directly.
     The following concrete Transform types are available:
@@ -152,7 +152,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     \qmlclass Translate QQuickTranslate
     \inqmlmodule QtQuick 2
     \ingroup qml-transform-elements
-    \brief The Translate object provides a way to move an Item without changing its x or y properties.
+    \brief Provides a way to move an Item without changing its x or y properties
 
     The Translate object provides independent control over position in addition to the Item's x and y properties.
 
@@ -194,7 +194,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     \qmlclass Scale QQuickScale
     \inqmlmodule QtQuick 2
     \ingroup qml-transform-elements
-    \brief The Scale element provides a way to scale an Item.
+    \brief Provides a way to scale an Item
 
     The Scale element gives more control over scaling than using \l Item's \l{Item::scale}{scale} property. Specifically,
     it allows a different scale for the x and y axes, and allows the scale to be relative to an
@@ -236,7 +236,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     \qmlclass Rotation QQuickRotation
     \inqmlmodule QtQuick 2
     \ingroup qml-transform-elements
-    \brief The Rotation object provides a way to rotate an Item.
+    \brief Provides a way to rotate an Item
 
     The Rotation object gives more control over rotation than using \l Item's \l{Item::rotation}{rotation} property.
     Specifically, it allows (z axis) rotation to be relative to an arbitrary point.
@@ -504,7 +504,7 @@ void QQuickItemKeyFilter::componentComplete()
     \qmlclass KeyNavigation QQuickKeyNavigationAttached
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-interaction-elements
-    \brief The KeyNavigation attached property supports key navigation by arrow keys.
+    \brief Supports key navigation by arrow keys
 
     Key-based user interfaces commonly allow the use of arrow keys to navigate between
     focusable items.  The KeyNavigation attached property enables this behavior by providing a
@@ -920,7 +920,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
     \qmlclass Keys QQuickKeysAttached
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-interaction-elements
-    \brief The Keys attached property provides key handling to Items.
+    \brief Provides key handling to Items
 
     All visual primitives support key handling via the Keys
     attached property.  Keys can be handled via the onPressed
@@ -1466,7 +1466,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     \qmlclass LayoutMirroring QQuickLayoutMirroringAttached
     \inqmlmodule QtQuick 2
     \ingroup qml-utility-elements
-    \brief The LayoutMirroring attached property is used to mirror layout behavior.
+    \brief Property used to mirror layout behavior
 
     The LayoutMirroring attached property is used to horizontally mirror \l {anchor-layout}{Item anchors},
     \l{Using QML Positioner and Repeater Items}{positioner} elements (such as \l Row and \l Grid)
@@ -1674,7 +1674,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
 /*!
     \class QQuickItem
-    \brief The QQuickItem class provides the most basic of all visual items in QML.
+    \brief Provides the most basic of all visual items in QML
 
     \inmodule QtQuick
 
@@ -1724,7 +1724,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \inherits QtObject
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
-    \brief The Item is the most basic of all visual items in QML.
+    \brief A basic visual QML type
 
     All visual items in Qt Quick inherit from Item.  Although Item
     has no visual appearance, it defines all the properties that are
@@ -2742,7 +2742,7 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
 
 /*!
     \property QQuickItem::childrenRect
-    \brief The geometry of an item's children.
+    \brief Specifies the geometry of an item's children
 
     This property holds the (collective) position and size of the item's children.
 */
@@ -2961,7 +2961,7 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
 
 /*!
   \property QQuickItem::baselineOffset
-  \brief The position of the item's baseline in local coordinates.
+  \brief Speciifies the position of the item's baseline in local coordinates
 
   The baseline of a \l Text item is the imaginary line on which the text
   sits. Controls containing text usually set their baseline to the
@@ -4468,7 +4468,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 
 /*!
     \property QQuickItem::smooth
-    \brief whether the item is smoothed or not.
+    \brief Specifies whether the item is smoothed or not
 
     Primarily used in image based elements to decide if the item should use smooth
     sampling or not. Smooth sampling is performed using linear interpolation, while

@@ -56,7 +56,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
     \qmlclass TouchPoint QQuickTouchPoint
     \inqmlmodule QtQuick 2
     \ingroup qml-event-elements
-    \brief The TouchPoint element describes a touch point in a MultiPointTouchArea.
+    \brief Describes a touch point in a MultiPointTouchArea
 
     The TouchPoint element contains information about a touch point, such as the current
     position, pressure, and area.
@@ -224,7 +224,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 /*!
     \qmlclass MultiPointTouchArea QQuickMultiPointTouchArea
     \inqmlmodule QtQuick 2
-    \brief The MultiPointTouchArea item enables handling of multiple touch points.
+    \brief Enables handling of multiple touch points
     \inherits Item
 
     A MultiPointTouchArea is an invisible item that is used to track multiple touch points.

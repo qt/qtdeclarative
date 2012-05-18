@@ -1357,7 +1357,7 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
     \qmlclass ListModel QQuickListModel
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief The ListModel element defines a free-form list data source.
+    \brief Defines a free-form list data source
 
     The ListModel is a simple container of ListElement definitions, each containing data roles.
     The contents can be defined dynamically, or explicitly in QML.
@@ -2428,7 +2428,7 @@ bool QQuickListModelParser::definesEmptyList(const QString &s)
     \qmlclass ListElement QQuickListElement
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief The ListElement element defines a data item in a ListModel.
+    \brief Defines a data item in a ListModel
 
     List elements are defined inside ListModel definitions, and represent items in a
     list that will be displayed using ListView or \l Repeater items.

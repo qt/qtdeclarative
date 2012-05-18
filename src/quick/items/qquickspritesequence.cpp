@@ -209,7 +209,7 @@ struct SpriteVertices {
     \qmlclass SpriteSequence QQuickSpriteSequence
     \inqmlmodule QtQuick 2
     \inherits Item
-    \brief The SpriteSequence element draws a sprite animation
+    \brief Draws a sprite animation
 
     SpriteSequence renders and controls a list of animations defined
     by \l Sprite elements.

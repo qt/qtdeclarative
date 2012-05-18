@@ -441,7 +441,7 @@ void QQuickPathViewPrivate::regenerate()
     \qmlclass PathView QQuickPathView
     \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \brief The PathView element lays out model-provided items on a path.
+    \brief Lays out model-provided items on a path
     \inherits Item
 
     A PathView displays data from models created from built-in QML elements like ListModel

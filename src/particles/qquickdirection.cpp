@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Direction QQuickDirection
     \inqmlmodule QtQuick.Particles 2
-    \brief The Direction elements allow you to specify a vector space.
+    \brief For specifying a vector space
 
 */
 

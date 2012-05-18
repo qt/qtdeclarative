@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass ItemParticle QQuickItemParticle
     \inqmlmodule QtQuick.Particles 2
     \inherits ParticlePainter
-    \brief The ItemParticle element allows you to specify your own delegate to paint particles.
+    \brief For specifying a delegate to paint particles
 
 */
 

@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass EllipseShape QQuickEllipseExtruder
     \inqmlmodule QtQuick.Particles 2
     \inherits Shape
-    \brief The EllipseShape represents an ellipse to other particle system elements
+    \brief Represents an ellipse to other particle system elements
 
     This shape can be used by Emitter subclasses and Affector subclasses to have
     them act upon an ellipse shaped area.

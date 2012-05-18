@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass Wander QQuickWanderAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The Wander affector allows particles to randomly vary their trajectory.
+    \brief For applying random particle trajectory
 
 */
 /*!

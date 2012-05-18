@@ -81,7 +81,7 @@ QQuickVisualDataModelParts::QQuickVisualDataModelParts(QQuickVisualDataModel *pa
     \qmlclass VisualDataModel QQuickVisualDataModel
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief The VisualDataModel encapsulates a model and delegate
+    \brief Encapsulates a model and delegate
 
     A VisualDataModel encapsulates a model and the delegate that will
     be instantiated for items in the model.
@@ -2026,7 +2026,7 @@ void QQuickVisualDataGroupPrivate::destroyingPackage(QQuickPackage *package)
     \qmlclass VisualDataGroup QQuickVisualDataGroup
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief The VisualDataGroup encapsulates a filtered set of visual data items.
+    \brief Encapsulates a filtered set of visual data items
 
 */
 

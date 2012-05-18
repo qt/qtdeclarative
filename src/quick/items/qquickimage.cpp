@@ -99,7 +99,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     \qmlclass Image QQuickImage
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
-    \brief The Image element displays an image in a declarative user interface
+    \brief Displays an image in a declarative user interface
     \inherits Item
 
     The Image element is used to display images in a declarative user interface.

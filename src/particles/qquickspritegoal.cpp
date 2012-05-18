@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass SpriteGoal QQuickSpriteGoalAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The SpriteGoal Affector allows you to change the state of a sprite particle.
+    \brief For changing the the state of a sprite particle
 
 */
 /*!

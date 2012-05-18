@@ -456,7 +456,7 @@ through the data.
     \inqmlmodule QtQuick.LocalStorage 2
     \since QtQuick 2.0
 
-    \brief The LocalStorage module API provides the ability to access local offline storage in an SQL database.
+    \brief Provides a JavaScript module API for accessing a local SQLite database
 
 These databases are user-specific and QML-specific, but accessible to all QML applications.
 They are stored in the \c Databases subdirectory

@@ -29,14 +29,14 @@
   \qmlmodule QtQuick.Particles 2
   \title QML Module QtQuick.Particles 2
 
-  \brief Elements for the Qt Quick particle system
+  \brief Contains types for particle effects
 
-  This QML module contains a particle system for Qt Quick. To use these elements, you will need to import the module with the following line:
+  This QML module contains a particle system for Qt Quick. To use these types, import the module with the following line:
   \code
   import QtQuick.Particles 2.0
   \endcode
 
-  For a simple overview of how the system can be used, see \l{qml-particlesystem.html}{Using the Qt Quick Particle System}.
+  For a simple overview of how the system can be used, see \l{Using the Qt Quick Particle System}.
 
   For details on the performance characteristics see \l{qml-particlesystem-performance.html}{Qt Quick Particle System Performance}.
 

@@ -71,7 +71,7 @@ public:
     \qmlclass StateChangeScript QQuickStateChangeScript
     \inqmlmodule QtQuick 2
     \ingroup qml-state-elements
-    \brief The StateChangeScript element allows you to run a script in a state.
+    \brief Specifies how to run a script in a state
 
     A StateChangeScript is run upon entering a state. You can optionally use
     ScriptAction to specify the point in the transition at which

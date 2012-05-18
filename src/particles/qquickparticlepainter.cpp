@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass ParticlePainter QQuickParticlePainter
     \inqmlmodule QtQuick.Particles 2
     \inherits ParticlePainter
-    \brief ParticlePainter elements allow you to specify how to paint particles.
+    \brief For specifying how to paint particles
 
     The default implementation paints nothing. See the subclasses if you want to
     paint something visible.

@@ -95,7 +95,7 @@ public:
    \qmlclass StateGroup QQuickStateGroup
     \inqmlmodule QtQuick 2
    \ingroup qml-state-elements
-   \brief The StateGroup element provides state support for non-Item elements.
+   \brief Provides built-in state support for non-Item elements
 
    Item (and all derived elements) provides built in support for states and transitions
    via its \l{Item::state}{state}, \l{Item::states}{states} and \l{Item::transitions}{transitions} properties. StateGroup provides an easy way to

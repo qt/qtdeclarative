@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Emitter QQuickParticleEmitter
     \inqmlmodule QtQuick.Particles 2
-    \brief The Emitter element allows you to emit logical particles.
+    \brief Emits logical particles
 
     This element emits logical particles into the ParticleSystem, with the
     given starting attributes.

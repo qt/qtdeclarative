@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-interaction-elements
 
-    \brief The FocusScope object explicitly creates a focus scope.
+    \brief Explicitly creates a focus scope
     \inherits Item
 
     Focus scopes assist in keyboard focus handling when building reusable QML

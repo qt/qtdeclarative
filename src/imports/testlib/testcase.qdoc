@@ -41,7 +41,7 @@
 
 /*!
     \qmlclass TestCase TestCase
-    \brief The TestCase item represents a unit test case.
+    \brief Represents a unit test case
     \since 4.8
     \ingroup qtest::qml
 

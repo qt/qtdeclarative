@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass TrailEmitter QQuickTrailEmitter
     \inqmlmodule QtQuick.Particles 2
     \inherits QQuickParticleEmitter
-    \brief The TrailEmitter element allows you to emit logical particles from other logical particles.
+    \brief Emits logical particles from other logical particles
 
     This element emits logical particles into the ParticleSystem, with the
     starting positions based on those of other logical particles.

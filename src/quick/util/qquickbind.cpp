@@ -78,7 +78,7 @@ public:
     \qmlclass Binding QQuickBind
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief The Binding element allows arbitrary property bindings to be created.
+    \brief Enables the arbitrary creation of property bindings
 
     \section1 Binding to an inaccessible property
 

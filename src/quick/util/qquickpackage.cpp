@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass Package QQuickPackage
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief Package provides a collection of named items.
+    \brief Specifies a collection of named items
 
     The Package class is used in conjunction with
     VisualDataModel to enable delegates with a shared context

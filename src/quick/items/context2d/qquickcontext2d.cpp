@@ -71,8 +71,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass Context2D QQuickContext2D
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
-    \brief The Context2D API allows you to draw 2d graphic shapes on the \c
-    Canvas item.
+    \brief Provides 2D context for shapes on a Canvas item
 
     The Context2D object can be created by \c Canvas item's \c getContext()
     method:
@@ -2188,10 +2187,11 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
     return args.This();
 }
 /*!
-  \qmlclass QtQuick2::TextMetrics
+  \qmlclass TextMetrics
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
-    \brief The Context2D TextMetrics interface.
+    \brief Provides a Context2D TextMetrics interface
+
     The TextMetrics object can be created by QtQuick2::Context2D::measureText method.
     See {http://www.w3.org/TR/2dcontext/#textmetrics}{W3C 2d context TexMetrics} for more details.
 
@@ -2380,7 +2380,10 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 
 // pixel manipulation
 /*!
-  \qmlclass QtQuick2::CanvasImageData
+    \qmlclass CanvasImageData
+    \inqmlmodule QtQuick 2
+    \brief Contains image pixel data in RGBA order
+
      The \a QtQuick2::CanvasImageData object holds the image pixel data.
 
      The \a QtQuick2::CanvasImageData object has the actual dimensions of the data stored in
@@ -2429,7 +2432,10 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::Acce
 }
 
 /*!
-  \qmlclass QtQuick2::CanvasPixelArray
+    \qmlclass CanvasPixelArray
+    \inqmlmodule QtQuick 2
+    \brief Provides ordered and indexed access to the components of each pixel in image data
+
   The CanvasPixelArray object provides ordered, indexed access to the color components of each pixel of the image data.
   The CanvasPixelArray can be accessed as normal Javascript array.
     \sa QtQuick2::CanvasImageData
@@ -2664,10 +2670,10 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
 }
 
 /*!
-  \qmlclass QtQuick2::CanvasGradient
+    \qmlclass CanvasGradient
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
-    \brief The Context2D opaque CanvasGradient interface.
+    \brief Provides an opaque CanvasGradient interface
   */
 
 /*!

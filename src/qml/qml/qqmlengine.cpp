@@ -109,9 +109,10 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 
 /*!
   \qmlclass QtObject QObject
+  \inqmlmodule QtQuick 2
   \ingroup qml-utility-elements
   \since 4.7
-  \brief The QtObject element is the most basic element in QML.
+  \brief A basic QML type
 
   The QtObject element is a non-visual element which contains only the
   objectName property.

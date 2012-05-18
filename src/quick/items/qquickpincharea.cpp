@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass PinchEvent QQuickPinchEvent
     \inqmlmodule QtQuick 2
     \ingroup qml-event-elements
-    \brief The PinchEvent object provides information about a pinch event.
+    \brief For specifying information about a pinch event
 
     \b {The PinchEvent element was added in QtQuick 1.1}
 
@@ -163,7 +163,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 /*!
     \qmlclass PinchArea QQuickPinchArea
     \inqmlmodule QtQuick 2
-    \brief The PinchArea item enables simple pinch gesture handling.
+    \brief Enables simple pinch gesture handling
     \inherits Item
 
     \b {The PinchArea element was added in QtQuick 1.1}

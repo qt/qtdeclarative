@@ -72,7 +72,7 @@ typedef QPair<int, int> QQuickXmlListRange;
     \qmlclass XmlRole QQuickXmlListModelRole
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief The XmlRole element allows you to specify a role for an XmlListModel.
+    \brief For specifying a role to an XmlListModel
 
     \sa {QtQml}
 */
@@ -597,7 +597,7 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
     \qmlclass XmlListModel QQuickXmlListModel
     \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \brief The XmlListModel element is used to specify a read-only model using XPath expressions.
+    \brief For specifying a read-only model using XPath expressions
 
 
     To use this element, you will need to import the module with the following line:

@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass Transition QQuickTransition
     \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
-    \brief The Transition element defines animated transitions that occur on state changes.
+    \brief Defines animated transitions that occur on state changes
 
     A Transition defines the animations to be applied when a \l State change occurs.
 

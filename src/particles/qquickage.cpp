@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass Age QQuickAgeAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The Age affector allows you to prematurely age particles
+    \brief For altering particle ages
 
     The Age affector allows you to alter where the particle is in its lifecycle. Common uses
     are to expire particles prematurely, possibly giving them time to animate out.

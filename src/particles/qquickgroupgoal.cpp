@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass GroupGoal QQuickGroupGoalAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The GroupGoal Affector allows you to change the state of a group of a particle.
+    \brief For changing the state of a group of a particle
 
 */
 /*!

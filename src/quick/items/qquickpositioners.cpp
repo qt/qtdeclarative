@@ -135,7 +135,7 @@ QQuickBasePositioner::QQuickBasePositioner(PositionerType at, QQuickItem *parent
 /*!
     \internal
     \class QQuickBasePositioner
-    \brief The QQuickBasePositioner class provides a base for QQuickGraphics layouts.
+    \brief For specifying a base for QQuickGraphics layouts
 
     To create a QQuickGraphics Positioner, simply subclass QQuickBasePositioner and implement
     doLayout(), which is automatically called when the layout might need
@@ -496,7 +496,7 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
     \qmlclass Positioner QQuickPositionerAttached
     \inqmlmodule QtQuick 2
     \ingroup qml-positioning-elements
-    \brief The Positioner type provides attached properties that contain details on where an item exists in a positioner.
+    \brief Provides attached properties that contain details on where an item exists in a positioner
 
     Positioner is an attached property that is attached to the top-level child item within a
     Column, Row, Flow or Grid. It provides properties that allow a child item to determine
@@ -578,7 +578,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \qmlclass Column QQuickColumn
     \inqmlmodule QtQuick 2
     \ingroup qml-positioning-elements
-    \brief The Column element positions its children in a column.
+    \brief Positions its children in a column
     \inherits Item
 
     Column is an element that positions its child items along a single column.
@@ -746,7 +746,7 @@ void QQuickColumn::reportConflictingAnchors()
     \qmlclass Row QQuickRow
     \inqmlmodule QtQuick 2
     \ingroup qml-positioning-elements
-    \brief The Row element positions its children in a row.
+    \brief Positions its children in a row
     \inherits Item
 
     Row is an element that positions its child items along a single row.
@@ -977,7 +977,7 @@ void QQuickRow::reportConflictingAnchors()
     \qmlclass Grid QQuickGrid
     \inqmlmodule QtQuick 2
     \ingroup qml-positioning-elements
-    \brief The Grid element positions its children in grid formation.
+    \brief Positions its children in grid formation
     \inherits Item
 
     Grid is an element that positions its child items in grid formation.
@@ -1418,7 +1418,7 @@ void QQuickGrid::reportConflictingAnchors()
     \qmlclass Flow QQuickFlow
     \inqmlmodule QtQuick 2
     \ingroup qml-positioning-elements
-    \brief The Flow element positions its children side by side, wrapping as necessary.
+    \brief Positions its children side by side, wrapping as necessary
     \inherits Item
 
     The Flow item positions its child items like words on a page, wrapping them

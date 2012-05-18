@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass RectangleShape QQuickRectangleExtruder
     \inqmlmodule QtQuick.Particles 2
-    \brief The RectangleShape element allows you to specify an area for affectors and emitter.
+    \brief For specifying an area for affectors and emitter
 
     Just a rectangle.
 */
