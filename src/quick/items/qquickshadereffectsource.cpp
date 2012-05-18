@@ -186,12 +186,13 @@ void QQuickShaderEffectTexture::bind()
 
 bool QQuickShaderEffectTexture::updateTexture()
 {
-    if ((m_live || m_grab) && m_dirtyTexture) {
+    bool doGrab = (m_live || m_grab) && m_dirtyTexture;
+    if (doGrab)
         grab();
-        m_grab = false;
-        return true;
-    }
-    return false;
+    if (m_grab)
+        emit scheduledUpdateCompleted();
+    m_grab = false;
+    return doGrab;
 }
 
 void QQuickShaderEffectTexture::setHasMipmaps(bool mipmap)
@@ -297,8 +298,6 @@ void QQuickShaderEffectTexture::grab()
         m_fbo = m_secondaryFbo = 0;
         m_depthStencilBuffer.clear();
         m_dirtyTexture = false;
-        if (m_grab)
-            emit scheduledUpdateCompleted();
         return;
     }
     QSGNode *root = m_item;
@@ -443,9 +442,6 @@ void QQuickShaderEffectTexture::grab()
 #endif
     if (m_recursive)
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
-
-    if (m_grab)
-        emit scheduledUpdateCompleted();
 }
 
 QImage QQuickShaderEffectTexture::toImage() const
