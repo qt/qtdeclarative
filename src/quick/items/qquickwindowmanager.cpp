@@ -940,6 +940,9 @@ void QQuickRenderThreadSingleContextWindowManager::exposureChanged(QQuickCanvas 
     printf("GUI: exposure changed: %p\n", canvas);
 #endif
 
+    if (canvas->isExposed())
+        maybeUpdate(canvas);
+
 #ifdef THREAD_DEBUG
     printf("GUI: exposure changed done: %p\n", canvas);
 #endif
