@@ -377,10 +377,25 @@ void RewriteBinding::rewriteCaseStatements(AST::StatementList *statements, bool 
     }
 }
 
+
+/*
+    RewriteSignalHandler performs two different types of rewrites, depending on what information
+    is available.
+
+    When the target object is known, the rewriter can be provided a list of parameter names (and an
+    optional preconstructed parameter string), which allows us to:
+        1. Check whether the parameters are used
+        2. Rewrite with the parameters included in the rewrite
+    When this information is not available, we do a more generic rewrite, and rely on the expression
+    to perform a second rewrite with the parameter information (using createParameterString)
+    once the target object is known.
+*/
 RewriteSignalHandler::RewriteSignalHandler()
     : _writer(0)
     , _code(0)
     , _position(0)
+    , _parameterAccess(UnknownAccess)
+    , _parameterCountForJS(0)
 {
 }
 
@@ -395,7 +410,75 @@ bool RewriteSignalHandler::visit(AST::StringLiteral *ast)
     return false;
 }
 
-QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString &code, const QString &name)
+//if we never make use of the signal parameters in our expression,
+//there is no need to provide them
+bool RewriteSignalHandler::visit(AST::IdentifierExpression *e)
+{
+    //optimization: don't need to compare strings if a parameter has already been marked as used.
+    if (_parameterAccess == ParametersAccessed)
+        return false;
+
+    static const QString argumentsString = QStringLiteral("arguments");
+    if (_parameterNames.contains(e->name) || e->name == argumentsString)
+        _parameterAccess = ParametersAccessed;
+    return false;
+}
+
+static QString unnamed_error_string(QLatin1String(QT_TR_NOOP("Signal uses unnamed parameter followed by named parameter.")));
+static QString global_error_string(QLatin1String(QT_TR_NOOP("Signal parameter \"%1\" hides global variable.")));
+
+#define EXIT_ON_ERROR(error) \
+{ \
+    _error = error; \
+    return QString(); \
+}
+
+//create a parameter string which can be inserted into a generic rewrite
+QString RewriteSignalHandler::createParameterString(const QList<QByteArray> &parameterNameList,
+                                                    const QStringHash<bool> &illegalNames)
+{
+    QList<QHashedString> hashedParameterNameList;
+    for (int i = 0; i < parameterNameList.count(); ++i)
+        hashedParameterNameList.append(QString::fromUtf8(parameterNameList.at(i).constData()));
+
+    return createParameterString(hashedParameterNameList, illegalNames);
+}
+
+QString RewriteSignalHandler::createParameterString(const QList<QHashedString> &parameterNameList,
+                                                    const QStringHash<bool> &illegalNames)
+{
+    QString parameters;
+    bool unnamedParam = false;
+    for (int i = 0; i < parameterNameList.count(); ++i) {
+        const QHashedString &param = parameterNameList.at(i);
+        if (param.isEmpty())
+            unnamedParam = true;
+        else if (unnamedParam)
+            EXIT_ON_ERROR(unnamed_error_string)
+        else if (illegalNames.contains(param))
+            EXIT_ON_ERROR(global_error_string.arg(param))
+        ++_parameterCountForJS;
+        parameters += param;
+        if (i < parameterNameList.count()-1)
+            parameters += QStringLiteral(",");
+    }
+    if (parameters.endsWith(QLatin1Char(',')))
+        parameters.resize(parameters.length() - 1);
+    return parameters;
+}
+
+/*
+    If \a parameterString is provided, use \a parameterNameList to test whether the
+    parameters are used in the body of the function
+      * if unused, the rewrite will not include parameters, else
+      * if used, the rewrite will use \a parameterString
+    If \a parameterString is not provided, it is constructed from \a parameterNameList
+    as needed.
+*/
+QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString &code, const QString &name,
+                                         const QString &parameterString,
+                                         const QList<QByteArray> &parameterNameList,
+                                         const QStringHash<bool> &illegalNames)
 {
     if (rewriteDump()) {
         qWarning() << "=============================================================";
@@ -403,10 +486,25 @@ QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString 
         qWarning() << qPrintable(code);
     }
 
+    bool hasParameterString = !parameterString.isEmpty();
+
     QQmlJS::AST::ExpressionNode *expression = node->expressionCast();
     QQmlJS::AST::Statement *statement = node->statementCast();
     if (!expression && !statement)
         return code;
+
+    if (!parameterNameList.isEmpty()) {
+        for (int i = 0; i < parameterNameList.count(); ++i) {
+            QHashedString param(QString::fromUtf8(parameterNameList.at(i).constData()));
+            _parameterNames.insert(param, i);
+            if (!hasParameterString)
+                _parameterNameList.append(param);
+        }
+
+        //this is set to Unaccessed here, and will be set to Accessed
+        //if we detect that a parameter has been used
+        _parameterAccess = ParametersUnaccessed;
+    }
 
     TextWriter w;
     _writer = &w;
@@ -418,7 +516,10 @@ QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString 
     QString rewritten = code;
     w.write(&rewritten);
 
-    rewritten = QStringLiteral("(function ") + name + QStringLiteral("() { ") + rewritten + QStringLiteral(" })");
+    QString parameters = (_parameterAccess == ParametersUnaccessed) ? QString()
+                                                                    : hasParameterString ? parameterString
+                                                                                         : createParameterString(_parameterNameList, illegalNames);
+    rewritten = QStringLiteral("(function ") + name + QStringLiteral("(") + parameters + QStringLiteral(") { ") + rewritten + QStringLiteral(" })");
 
     if (rewriteDump()) {
         qWarning() << "To:";
@@ -429,7 +530,9 @@ QString RewriteSignalHandler::operator()(QQmlJS::AST::Node *node, const QString 
     return rewritten;
 }
 
-QString RewriteSignalHandler::operator()(const QString &code, const QString &name, bool *ok)
+QString RewriteSignalHandler::operator()(const QString &code, const QString &name, bool *ok,
+                                         const QList<QByteArray> &parameterNameList,
+                                         const QStringHash<bool> &illegalNames)
 {
     Engine engine;
     Lexer lexer(&engine);
@@ -441,7 +544,7 @@ QString RewriteSignalHandler::operator()(const QString &code, const QString &nam
         return QString();
     }
     if (ok) *ok = true;
-    return operator()(parser.statement(), code, name);
+    return operator()(parser.statement(), code, name, QString(), parameterNameList, illegalNames);
 }
 
 } // namespace QQmlRewrite

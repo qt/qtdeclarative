@@ -621,7 +621,8 @@ bool QQmlEngineDebugService::setBinding(int objectId,
                 if (isLiteralValue) {
                     property.write(expression);
                 } else if (hasValidSignal(object, propertyName)) {
-                    QQmlBoundSignalExpression *qmlExpression = new QQmlBoundSignalExpression(QQmlContextData::get(context), object, expression.toString(),
+                    QQmlBoundSignalExpression *qmlExpression = new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(property)->signalIndex(),
+                                                                                             QQmlContextData::get(context), object, expression.toString(),
                                                                                              false, filename, line, column);
                     QQmlPropertyPrivate::takeSignalExpression(property, qmlExpression);
                 } else if (property.isProperty()) {

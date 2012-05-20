@@ -760,7 +760,10 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QQmlBoundSignal *bs = new QQmlBoundSignal(target, instr.signalIndex, target, engine);
             QQmlBoundSignalExpression *expr =
-                new QQmlBoundSignalExpression(CTXT, context, DATAS.at(instr.value), true, COMP->name, instr.line, instr.column);
+                new QQmlBoundSignalExpression(target, instr.signalIndex,
+                                              CTXT, context, DATAS.at(instr.value),
+                                              true, COMP->name, instr.line, instr.column);
+            expr->setParameterCountForJS(instr.parameterCount);
             bs->takeExpression(expr);
         QML_END_INSTR(StoreSignal)
 

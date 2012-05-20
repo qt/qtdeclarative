@@ -62,34 +62,42 @@
 #include <private/qflagpointer_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlglobal_p.h>
-#include <private/qobject_p.h>
+#include <private/qbitfield_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlAbstractExpression, public QQmlJavaScriptExpression, public QQmlRefCount
 {
 public:
-    QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
+    QQmlBoundSignalExpression(QObject *target, int index,
+                              QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
                               bool isRewritten, const QString &fileName, quint16 line, quint16 column);
-    QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QString &expression,
+    QQmlBoundSignalExpression(QObject *target, int index,
+                              QQmlContextData *ctxt, QObject *scope, const QString &expression,
                               bool isRewritten, const QString &fileName, quint16 line, quint16 column);
 
     // "inherited" from QQmlJavaScriptExpression.
     static QString expressionIdentifier(QQmlJavaScriptExpression *);
     static void expressionChanged(QQmlJavaScriptExpression *);
 
+    void setParameterCountForJS(int count) { m_parameterCountForJS = count; }
+
     // evaluation of a bound signal expression doesn't return any value
-    void evaluate(QObject *secondaryScope = 0);
+    void evaluate(void **a);
 
     QString sourceFile() const { return m_fileName; }
     quint16 lineNumber() const { return m_line; }
     quint16 columnNumber() const { return m_column; }
     QString expression() const;
+    QObject *target() const { return m_target; }
 
     QQmlEngine *engine() const { return context() ? context()->engine : 0; }
 
 private:
     ~QQmlBoundSignalExpression();
+
+    void init(QQmlContextData *ctxt, QObject *scope);
+    bool hasParameterInfo() const { return m_parameterCountForJS > 0; }
 
     v8::Persistent<v8::Object> m_v8qmlscope;
     v8::Persistent<v8::Function> m_v8function;
@@ -99,13 +107,18 @@ private:
     //extract it from m_v8function if needed.
     QByteArray m_expressionUtf8;
     QString m_expression;   //only used when expression needs to be rewritten
-
     QString m_fileName;
     quint16 m_line;
     quint16 m_column;
 
+    int m_parameterCountForJS;
+
+    QObject *m_target;
+    int m_index;
+
     bool m_expressionFunctionValid:1;
     bool m_expressionFunctionRewritten:1;
+    bool m_invalidParameterName:1;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlAbstractBoundSignal
@@ -118,7 +131,6 @@ public:
     virtual QQmlBoundSignalExpression *expression() const = 0;
     virtual QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *) = 0;
     virtual QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *) = 0;
-    virtual QObject *scope() = 0;
     virtual bool isEvaluating() const = 0;
 
     void removeFromObject();
@@ -133,12 +145,11 @@ private:
     QQmlAbstractBoundSignal  *m_nextSignal;
 };
 
-class QQmlBoundSignalParameters;
 class Q_QML_PRIVATE_EXPORT QQmlBoundSignal : public QQmlAbstractBoundSignal,
                                              public QQmlNotifierEndpoint
 {
 public:
-    QQmlBoundSignal(QObject *scope, int signal, QObject *owner, QQmlEngine *engine);
+    QQmlBoundSignal(QObject *target, int signal, QObject *owner, QQmlEngine *engine);
     virtual ~QQmlBoundSignal();
 
     int index() const;
@@ -146,26 +157,16 @@ public:
     QQmlBoundSignalExpression *expression() const;
     QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *);
     QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *);
-    QObject *scope() { return *m_scope; }
 
-    bool isEvaluating() const { return m_scope.flag(); }
+    bool isEvaluating() const { return m_isEvaluating; }
 
 private:
     friend void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);
 
     QQmlBoundSignalExpressionPointer m_expression;
-    QQmlBoundSignalParameters *m_params;
-    // We store some flag bits in the following flag pointer.
-    //    m_scope:flag1 - m_isEvaluating
-    //    m_scope:flag2 - m_paramsValid
-    QFlagPointer<QObject> m_scope;
     int m_index;
-
-    void setIsEvaluating(bool v) { m_scope.setFlagValue(v); }
-    void setParamsValid(bool v) { m_scope.setFlag2Value(v); }
-    bool paramsValid() const { return m_scope.flag2(); }
+    bool m_isEvaluating;
 };
-
 
 QT_END_NAMESPACE
 

@@ -79,6 +79,7 @@ private slots:
     void boolPropertiesEvaluateAsBool();
     void methods();
     void signalAssignment();
+    void signalArguments();
     void bindingLoop();
     void basicExpressions();
     void basicExpressions_data();
@@ -513,21 +514,42 @@ void tst_qqmlecmascript::signalAssignment()
 
     {
         QQmlComponent component(&engine, testFileUrl("signalAssignment.3.qml"));
-        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
-        QVERIFY(object != 0);
-        QCOMPARE(object->string(), QString());
-        emit object->unnamedArgumentSignal(19, 10.25, "Hello world!");
-        QCOMPARE(object->string(), QString("pass 19 Hello world!"));
-        delete object;
+        QVERIFY(component.isError());
+        QString expectedErrorString = component.url().toString() + QLatin1String(":4 Signal uses unnamed parameter followed by named parameter.\n");
+        QCOMPARE(component.errorString(), expectedErrorString);
     }
 
     {
         QQmlComponent component(&engine, testFileUrl("signalAssignment.4.qml"));
+        QVERIFY(component.isError());
+        QString expectedErrorString = component.url().toString() + QLatin1String(":5 Signal parameter \"parseInt\" hides global variable.\n");
+        QCOMPARE(component.errorString(), expectedErrorString);
+    }
+}
+
+void tst_qqmlecmascript::signalArguments()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("signalArguments.1.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
         QVERIFY(object != 0);
         QCOMPARE(object->string(), QString());
-        emit object->signalWithGlobalName(19);
-        QCOMPARE(object->string(), QString("pass 5"));
+        emit object->basicSignal();
+        QCOMPARE(object->string(), QString("pass"));
+        QCOMPARE(object->property("argumentCount").toInt(), 0);
+        QCOMPARE(object->property("calleeCorrect").toBool(), true);
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("signalArguments.2.qml"));
+        MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->string(), QString());
+        emit object->argumentSignal(19, "Hello world!", 10.25, MyQmlObject::EnumValue4, Qt::RightButton);
+        QCOMPARE(object->string(), QString("pass 19 Hello world! 10.25 3 2"));
+        QCOMPARE(object->property("argumentCount").toInt(), 5);
+        QCOMPARE(object->property("calleeCorrect").toBool(), true);
         delete object;
     }
 }
@@ -3432,6 +3454,11 @@ void tst_qqmlecmascript::signalWithUnknownTypes()
 
     QCOMPARE(result.value, type.value);
 
+    MyQmlObject::MyOtherType othertype;
+    othertype.value = 17;
+    emit object->signalWithCompletelyUnknownType(othertype);
+
+    QVERIFY(!object->variant().isValid());
 
     delete object;
 }

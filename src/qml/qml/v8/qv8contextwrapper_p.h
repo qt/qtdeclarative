@@ -79,13 +79,6 @@ public:
     void addSubContext(v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Script>, 
                        QQmlContextData *ctxt);
 
-    // XXX We only use the secondary scope to pass the "arguments" of the signal to
-    // on<SignalName> properties.  Instead of doing this we should rewrite the 
-    // JavaScript closure function to accept these arguments as named parameters.
-    // To keep backwards compatibility we have to check that the argument names are
-    // not members of the QV8Engine::illegalNames() set.
-    QObject *setSecondaryScope(v8::Handle<v8::Object>, QObject *);
-
     QQmlContextData *callingContext();
     QQmlContextData *context(v8::Handle<v8::Value>);
 

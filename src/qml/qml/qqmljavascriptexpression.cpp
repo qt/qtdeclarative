@@ -124,6 +124,15 @@ v8::Local<v8::Value>
 QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
                                    v8::Handle<v8::Function> function, bool *isUndefined)
 {
+    return evaluate(context, function, 0, 0, isUndefined);
+}
+
+v8::Local<v8::Value>
+QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
+                                   v8::Handle<v8::Function> function,
+                                   int argc, v8::Handle<v8::Value> args[],
+                                   bool *isUndefined)
+{
     Q_ASSERT(context && context->engine);
 
     if (function.IsEmpty() || function->IsUndefined()) {
@@ -168,7 +177,7 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
             if (value->IsObject()) This = v8::Handle<v8::Object>::Cast(value);
         }
 
-        result = function->Call(This, 0, 0);
+        result = function->Call(This, argc, args);
 
         if (isUndefined)
             *isUndefined = try_catch.HasCaught() || result->IsUndefined();

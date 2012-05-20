@@ -66,8 +66,6 @@ public:
     quint32 readOnly:1;
     quint32 dummy:29;
 
-    QObject *secondaryScope;
-
     // This is a pretty horrible hack, and an abuse of external strings.  When we create a 
     // sub-context (a context created by a Qt.include() in an external javascript file),
     // we pass a specially crafted SubContext external string as the v8::Script::Data() to
@@ -90,7 +88,7 @@ private:
 
 QV8ContextResource::QV8ContextResource(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject)
 : QV8ObjectResource(engine), isSharedContext(false), hasSubContexts(false), readOnly(true), 
-  secondaryScope(0), context(context), scopeObject(scopeObject)
+  context(context), scopeObject(scopeObject)
 {
 }
 
@@ -209,16 +207,6 @@ void QV8ContextWrapper::addSubContext(v8::Handle<v8::Object> qmlglobal, v8::Hand
     script->SetData(v8::String::NewExternal(new QV8ContextResource::SubContext(ctxt)));
 }
 
-QObject *QV8ContextWrapper::setSecondaryScope(v8::Handle<v8::Object> ctxt, QObject *scope)
-{
-    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(ctxt);
-    if (!resource) return 0;
-
-    QObject *rv = resource->secondaryScope;
-    resource->secondaryScope = scope;
-    return rv;
-}
-
 QQmlContextData *QV8ContextWrapper::callingContext()
 {
     v8::Local<v8::Object> qmlglobal = v8::Context::GetCallingQmlGlobal();
@@ -262,7 +250,6 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
         return v8::Handle<v8::Value>();
 
     // Search type (attached property/enum/imported scripts) names
-    // Secondary scope object
     // while (context) {
     //     Search context properties
     //     Search scope object
@@ -300,12 +287,6 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine->engine());
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
-
-    if (resource->secondaryScope) {
-        v8::Handle<v8::Value> result = qobjectWrapper->getProperty(resource->secondaryScope, propertystring, 
-                                                                   QV8QObjectWrapper::IgnoreRevision);
-        if (!result.IsEmpty()) return result;
-    }
 
     while (context) {
         // Search context properties
@@ -407,12 +388,6 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
     QHashedV8String propertystring(property);
 
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
-
-    // Search scope object
-    if (resource->secondaryScope && 
-        qobjectWrapper->setProperty(resource->secondaryScope, propertystring, value, 
-                                    QV8QObjectWrapper::IgnoreRevision))
-        return value;
 
     while (context) {
         // Search context properties

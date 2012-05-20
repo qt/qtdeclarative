@@ -1323,8 +1323,17 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
 
             Instruction::StoreSignal store;
             store.signalIndex = prop->index;
-            const QString &rewrite = rewriteSignalHandler(v->value, prop->name().toString());
+
+            const QList<QByteArray> &parameterNameList = obj->metatype->signalParameterNames(prop->index);
+            QQmlRewrite::RewriteSignalHandler rewriter;
+            int count = 0;
+            const QString &rewrite = rewriter(v->value.asAST(), v->value.asScript(),
+                                              prop->name().toString(),
+                                              obj->metatype->signalParameterStringForJS(prop->index, &count),
+                                              parameterNameList);
             store.value = output->indexForByteArray(rewrite.toUtf8());
+            store.parameterCount =
+                    (rewriter.parameterAccess() == QQmlRewrite::RewriteSignalHandler::ParametersUnaccessed) ? 0 : count;
             store.context = v->signalExpressionContextStack;
             store.line = v->location.start.line;
             store.column = v->location.start.column;
@@ -1693,6 +1702,15 @@ bool QQmlCompiler::buildSignal(QQmlScript::Property *prop, QQmlScript::Object *o
             QString script = prop->values.first()->value.asScript().trimmed();
             if (script.isEmpty())
                 COMPILE_EXCEPTION(prop, tr("Empty signal assignment"));
+
+            //all handlers should be on the original, rather than cloned signals in order
+            //to ensure all parameters are available (see qqmlboundsignal constructor for more details)
+            prop->index = obj->metatype->originalClone(prop->index);
+
+            QString errorString;
+            obj->metatype->signalParameterStringForJS(prop->index, 0, &errorString);
+            if (!errorString.isEmpty())
+                COMPILE_EXCEPTION(prop, errorString);
 
             prop->values.first()->signalExpressionContextStack = ctxt.stack;
         }

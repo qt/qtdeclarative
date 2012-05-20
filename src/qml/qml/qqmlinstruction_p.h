@@ -408,6 +408,7 @@ union QQmlInstruction
         QML_INSTR_HEADER
         int signalIndex;
         int value;
+        int parameterCount;
         short context;
         ushort line;
         ushort column;

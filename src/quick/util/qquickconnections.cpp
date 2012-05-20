@@ -279,8 +279,9 @@ void QQuickConnections::connectSignals()
 
         QQmlProperty prop(target(), propName);
         if (prop.isValid() && (prop.type() & QQmlProperty::SignalProperty)) {
+            int signalIndex = QQmlPropertyPrivate::get(prop)->signalIndex();
             QQmlBoundSignal *signal =
-                new QQmlBoundSignal(target(), QQmlPropertyPrivate::get(prop)->signalIndex(), this, qmlEngine(this));
+                new QQmlBoundSignal(target(), signalIndex, this, qmlEngine(this));
 
             QString location;
             QQmlContextData *ctxtdata = 0;
@@ -292,7 +293,9 @@ void QQuickConnections::connectSignals()
             }
 
             QQmlBoundSignalExpression *expression = ctxtdata ?
-                new QQmlBoundSignalExpression(ctxtdata, 0, script, true, location, line, column) : 0;
+                new QQmlBoundSignalExpression(target(), signalIndex,
+                                              ctxtdata, this, script,
+                                              true, location, line, column) : 0;
             signal->takeExpression(expression);
             d->boundsignals += signal;
         } else {

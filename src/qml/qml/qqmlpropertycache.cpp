@@ -48,6 +48,7 @@
 #include <private/qmetaobject_p.h>
 #include <private/qqmlaccessors_p.h>
 #include <private/qmetaobjectbuilder_p.h>
+#include <private/qqmlrewrite_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -69,6 +70,12 @@ class QQmlPropertyCacheMethodArguments
 {
 public:
     QQmlPropertyCacheMethodArguments *next;
+
+    //for signal handler rewrites
+    QString *signalParameterStringForJS;
+    int signalParameterCountForJS:30;
+    int parameterError:1;
+    int argumentsValid:1;
 
     QList<QByteArray> *names;
     int arguments[0];
@@ -261,6 +268,7 @@ QQmlPropertyCache::~QQmlPropertyCache()
     QQmlPropertyCacheMethodArguments *args = argumentsCache;
     while (args) {
         QQmlPropertyCacheMethodArguments *next = args->next;
+        if (args->signalParameterStringForJS) delete args->signalParameterStringForJS;
         if (args->names) delete args->names;
         free(args);
         args = next;
@@ -392,6 +400,10 @@ void QQmlPropertyCache::appendSignal(const QString &name, quint32 flags, int cor
         typedef QQmlPropertyCacheMethodArguments A;
         A *args = static_cast<A *>(malloc(sizeof(A) + (argumentCount + 1) * sizeof(int)));
         ::memcpy(args->arguments, types, (argumentCount + 1) * sizeof(int));
+        args->argumentsValid = true;
+        args->signalParameterStringForJS = 0;
+        args->signalParameterCountForJS = 0;
+        args->parameterError = false;
         args->names = new QList<QByteArray>(names);
         args->next = argumentsCache;
         argumentsCache = args;
@@ -432,6 +444,10 @@ void QQmlPropertyCache::appendSignal(const QHashedCStringRef &name, quint32 flag
         typedef QQmlPropertyCacheMethodArguments A;
         A *args = static_cast<A *>(malloc(sizeof(A) + (argumentCount + 1) * sizeof(int)));
         ::memcpy(args->arguments, types, (argumentCount + 1) * sizeof(int));
+        args->argumentsValid = true;
+        args->signalParameterStringForJS = 0;
+        args->signalParameterCountForJS = 0;
+        args->parameterError = false;
         args->names = new QList<QByteArray>(names);
         args->next = argumentsCache;
         argumentsCache = args;
@@ -468,6 +484,10 @@ void QQmlPropertyCache::appendMethod(const QString &name, quint32 flags, int cor
     args->arguments[0] = argumentCount;
     for (int ii = 0; ii < argumentCount; ++ii)
         args->arguments[ii + 1] = QMetaType::QVariant;
+    args->argumentsValid = true;
+    args->signalParameterStringForJS = 0;
+    args->signalParameterCountForJS = 0;
+    args->parameterError = false;
     args->names = 0;
     if (argumentCount)
         args->names = new QList<QByteArray>(names);
@@ -503,6 +523,10 @@ void QQmlPropertyCache::appendMethod(const QHashedCStringRef &name, quint32 flag
     args->arguments[0] = argumentCount;
     for (int ii = 0; ii < argumentCount; ++ii)
         args->arguments[ii + 1] = QMetaType::QVariant;
+    args->argumentsValid = true;
+    args->signalParameterStringForJS = 0;
+    args->signalParameterCountForJS = 0;
+    args->parameterError = false;
     args->names = 0;
     if (argumentCount)
         args->names = new QList<QByteArray>(names);
@@ -1001,16 +1025,60 @@ static int EnumType(const QMetaObject *metaobj, const QByteArray &str, int type)
     \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().
 */
-QList<QByteArray> QQmlPropertyCache::signalParameterNames(QObject *object, int index)
+QString QQmlPropertyCache::signalParameterStringForJS(int index, int *count, QString *errorString)
 {
-    QQmlData *data = QQmlData::get(object, false);
-    if (data->propertyCache) {
-        QQmlPropertyData *p = data->propertyCache->signal(index);
-        if (!p->hasArguments())
-            return QList<QByteArray>();
+    QQmlPropertyData *signalData = signal(index);
+    if (!signalData)
+        return QString();
+
+    typedef QQmlPropertyCacheMethodArguments A;
+
+    if (signalData->arguments) {
+        A *arguments = static_cast<A *>(signalData->arguments);
+        if (arguments->signalParameterStringForJS) {
+            if (count)
+                *count = arguments->signalParameterCountForJS;
+            if (arguments->parameterError) {
+                if (errorString)
+                    *errorString = *arguments->signalParameterStringForJS;
+                return QString();
+            }
+            return *arguments->signalParameterStringForJS;
+        }
     }
 
-    return QMetaObjectPrivate::signal(object->metaObject(), index).parameterNames();
+    QList<QByteArray> parameterNameList = signalParameterNames(index);
+
+    if (!signalData->arguments) {
+        int argc = parameterNameList.count();
+        A *args = static_cast<A *>(malloc(sizeof(A) + (argc + 1) * sizeof(int)));
+        args->arguments[0] = argc;
+        args->argumentsValid = false;
+        args->signalParameterStringForJS = 0;
+        args->signalParameterCountForJS = 0;
+        args->parameterError = false;
+        args->names = new QList<QByteArray>(parameterNameList);
+        signalData->arguments = args;
+    }
+
+    QQmlRewrite::RewriteSignalHandler rewriter;
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+    const QString &parameters = rewriter.createParameterString(parameterNameList,
+                                                               ep->v8engine()->illegalNames());
+
+    bool error = rewriter.hasParameterError();
+    A *arguments = static_cast<A *>(signalData->arguments);
+    arguments->signalParameterStringForJS = new QString(error ? rewriter.parameterError() : parameters);
+    arguments->signalParameterCountForJS = rewriter.parameterCountForJS();
+    if (count)
+        *count = arguments->signalParameterCountForJS;
+    if (error) {
+        arguments->parameterError = true;
+        if (errorString)
+            *errorString = *arguments->signalParameterStringForJS;
+        return QString();
+    }
+    return *arguments->signalParameterStringForJS;
 }
 
 // Returns an array of the arguments for method \a index.  The first entry in the array
@@ -1034,7 +1102,7 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
 
         QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&c->methodIndexCache.at(index - c->methodIndexCacheStart));
 
-        if (rv->arguments)
+        if (rv->arguments && static_cast<A *>(rv->arguments)->argumentsValid)
             return static_cast<A *>(rv->arguments)->arguments;
 
         const QMetaObject *metaObject = c->createMetaObject();
@@ -1042,9 +1110,18 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
         QMetaMethod m = metaObject->method(index);
 
         int argc = m.parameterCount();
-        A *args = static_cast<A *>(malloc(sizeof(A) + (argc + 1) * sizeof(int)));
-        args->arguments[0] = argc;
-        args->names = 0;
+        if (!rv->arguments) {
+            A *args = static_cast<A *>(malloc(sizeof(A) + (argc + 1) * sizeof(int)));
+            args->arguments[0] = argc;
+            args->argumentsValid = false;
+            args->signalParameterStringForJS = 0;
+            args->signalParameterCountForJS = 0;
+            args->parameterError = false;
+            args->names = 0;
+            rv->arguments = args;
+        }
+        A *args = static_cast<A *>(rv->arguments);
+
         QList<QByteArray> argTypeNames; // Only loaded if needed
 
         for (int ii = 0; ii < argc; ++ii) {
@@ -1062,13 +1139,12 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
             }
             if (type == QMetaType::UnknownType) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
-                free(args);
                 return 0;
             }
             args->arguments[ii + 1] = type;
         }
+        args->argumentsValid = true;
 
-        rv->arguments = args;
         args->next = c->argumentsCache;
         c->argumentsCache = args;
         return static_cast<A *>(rv->arguments)->arguments;
@@ -1152,6 +1228,27 @@ int QQmlPropertyCache::methodReturnType(QObject *object, const QQmlPropertyData 
     }
 
     return type;
+}
+
+int QQmlPropertyCache::originalClone(int index)
+{
+    while (signal(index)->isCloned())
+        --index;
+    return index;
+}
+
+int QQmlPropertyCache::originalClone(QObject *object, int index)
+{
+    QQmlData *data = QQmlData::get(object, false);
+    if (data && data->propertyCache) {
+        QQmlPropertyCache *cache = data->propertyCache;
+        while (cache->signal(index)->isCloned())
+            --index;
+    } else {
+        while (QMetaObjectPrivate::signal(object->metaObject(), index).attributes() & QMetaMethod::Cloned)
+            --index;
+    }
+    return index;
 }
 
 QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QString &property)
@@ -1355,7 +1452,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         QQmlPropertyCacheMethodArguments *arguments = 0;
         if (data->hasArguments()) {
             arguments = (QQmlPropertyCacheMethodArguments *)data->arguments;
-
+            Q_ASSERT(arguments->argumentsValid);
             for (int ii = 0; ii < arguments->arguments[0]; ++ii) {
                 if (ii != 0) signature.append(",");
                 signature.append(QMetaType::typeName(arguments->arguments[1 + ii]));
@@ -1386,6 +1483,23 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
             builder.addClassInfo("DefaultProperty", _defaultPropertyName.toUtf8());
         }
     }
+}
+
+/*! \internal
+    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
+QList<QByteArray> QQmlPropertyCache::signalParameterNames(int index) const
+{
+    QQmlPropertyData *signalData = signal(index);
+    if (signalData && signalData->hasArguments()) {
+        QQmlPropertyCacheMethodArguments *args = (QQmlPropertyCacheMethodArguments *)signalData->arguments;
+        if (args && args->names)
+            return *args->names;
+        const QMetaMethod &method = QMetaObjectPrivate::signal(firstCppMetaObject(), index);
+        return method.parameterNames();
+    }
+    return QList<QByteArray>();
 }
 
 // Returns true if \a from is assignable to a property of type \a to

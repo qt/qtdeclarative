@@ -49,6 +49,7 @@
 #include <QtWidgets/QLineEdit>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
+#include <QtCore/private/qobject_p.h>
 #include "../../shared/util.h"
 
 #include <QDebug>
@@ -146,13 +147,13 @@ void tst_qqmlproperty::qmlmetaproperty()
 {
     QQmlProperty prop;
 
+    QObject *obj = new QObject;
+
     QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
     QVERIFY(binding != 0);
-    QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+    QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(obj, QObjectPrivate::get(obj)->signalIndex("destroyed()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
     QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
     QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
-
-    QObject *obj = new QObject;
 
     QCOMPARE(prop.name(), QString());
     QCOMPARE(prop.read(), QVariant());
@@ -366,7 +367,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
 
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&object, QObjectPrivate::get(&object)->signalIndex("destroyed()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -414,7 +415,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&dobject, QObjectPrivate::get(&dobject)->signalIndex("clicked()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -469,7 +470,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
 
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&object, QObjectPrivate::get(&object)->signalIndex("destroyed()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -517,7 +518,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&dobject, QObjectPrivate::get(&dobject)->signalIndex("clicked()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -567,7 +568,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&dobject, QQmlPropertyPrivate::get(prop)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -616,7 +617,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&dobject, QQmlPropertyPrivate::get(prop)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -670,7 +671,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
 
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&object, QObjectPrivate::get(&object)->signalIndex("destroyed()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -718,7 +719,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&dobject, QObjectPrivate::get(&dobject)->signalIndex("clicked()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -773,7 +774,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
 
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&object, QObjectPrivate::get(&object)->signalIndex("destroyed()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -821,7 +822,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&dobject, QObjectPrivate::get(&dobject)->signalIndex("clicked()"), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -871,7 +872,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&dobject, QQmlPropertyPrivate::get(prop)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -920,7 +921,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QWeakPointer<QQmlAbstractBinding> binding(QQmlAbstractBinding::getPointer(new QQmlBinding(QLatin1String("null"), 0, engine.rootContext())));
         static_cast<QQmlBinding *>(binding.data())->setTarget(prop);
         QVERIFY(binding != 0);
-        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
+        QQmlBoundSignalExpression *sigExpr = new QQmlBoundSignalExpression(&dobject, QQmlPropertyPrivate::get(prop)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1);
         QQmlAbstractExpression::DeleteWatcher sigExprWatcher(sigExpr);
         QVERIFY(sigExpr != 0 && !sigExprWatcher.wasDeleted());
 
@@ -1102,7 +1103,7 @@ void tst_qqmlproperty::read()
         QQmlProperty p(&o, "onClicked");
         QCOMPARE(p.read(), QVariant());
 
-        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1)));
+        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1)));
         QVERIFY(0 != QQmlPropertyPrivate::signalExpression(p));
 
         QCOMPARE(p.read(), QVariant());
@@ -1114,7 +1115,7 @@ void tst_qqmlproperty::read()
         QQmlProperty p(&o, "onPropertyWithNotifyChanged");
         QCOMPARE(p.read(), QVariant());
 
-        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1)));
+        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1)));
         QVERIFY(0 != QQmlPropertyPrivate::signalExpression(p));
 
         QCOMPARE(p.read(), QVariant());
@@ -1270,7 +1271,7 @@ void tst_qqmlproperty::write()
         QQmlProperty p(&o, "onClicked");
         QCOMPARE(p.write(QVariant("console.log(1921)")), false);
 
-        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1)));
+        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1)));
         QVERIFY(0 != QQmlPropertyPrivate::signalExpression(p));
 
         QCOMPARE(p.write(QVariant("console.log(1921)")), false);
@@ -1284,7 +1285,7 @@ void tst_qqmlproperty::write()
         QQmlProperty p(&o, "onPropertyWithNotifyChanged");
         QCOMPARE(p.write(QVariant("console.log(1921)")), false);
 
-        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1)));
+        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), false, QString(), -1, -1)));
         QVERIFY(0 != QQmlPropertyPrivate::signalExpression(p));
 
         QCOMPARE(p.write(QVariant("console.log(1921)")), false);

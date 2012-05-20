@@ -193,6 +193,9 @@ public:
     struct MyType {
         int value;
     };
+    struct MyOtherType {
+        int value;
+    };
     QVariant variant() const { return m_variant; }
     QJSValue qjsvalue() const { return m_qjsvalue; }
     void setQJSValue(const QJSValue &value) { m_qjsvalue = value; emit qjsvalueChanged(); }
@@ -247,6 +250,7 @@ signals:
     void anotherBasicSignal();
     void thirdBasicSignal();
     void signalWithUnknownType(const MyQmlObject::MyType &arg);
+    void signalWithCompletelyUnknownType(const MyQmlObject::MyOtherType &arg);
     void signalWithVariant(const QVariant &arg);
     void signalWithQJSValue(const QJSValue &arg);
     void signalWithGlobalName(int parseInt);

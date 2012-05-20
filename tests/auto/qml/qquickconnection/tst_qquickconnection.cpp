@@ -62,6 +62,7 @@ private slots:
     void unknownSignals();
     void errors_data();
     void errors();
+    void rewriteErrors();
     void singletonTypeTarget();
 
 private:
@@ -222,6 +223,56 @@ void tst_qquickconnection::errors()
     QList<QQmlError> errors = c.errors();
     QVERIFY(errors.count() == 1);
     QCOMPARE(errors.at(0).description(), error);
+}
+
+class TestObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool ran READ ran WRITE setRan)
+
+public:
+    TestObject(QObject *parent = 0) : m_ran(false) {}
+    ~TestObject() {}
+
+    bool ran() const { return m_ran; }
+    void setRan(bool arg) { m_ran = arg; }
+
+signals:
+    void unnamedArgumentSignal(int a, qreal, QString c);
+    void signalWithGlobalName(int parseInt);
+
+private:
+    bool m_ran;
+};
+
+void tst_qquickconnection::rewriteErrors()
+{
+    qmlRegisterType<TestObject>("Test", 1, 0, "TestObject");
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("rewriteError-unnamed.qml"));
+        TestObject *obj = qobject_cast<TestObject*>(c.create());
+        QVERIFY(obj != 0);
+
+        QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal uses unnamed parameter followed by named parameter.").toLatin1());
+        obj->unnamedArgumentSignal(1, .5, "hello");
+        QCOMPARE(obj->ran(), false);
+
+        delete obj;
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("rewriteError-global.qml"));
+        TestObject *obj = qobject_cast<TestObject*>(c.create());
+        QVERIFY(obj != 0);
+
+        QTest::ignoreMessage(QtWarningMsg, (c.url().toString() + ":5:35: QML Connections: Signal parameter \"parseInt\" hides global variable.").toLatin1());
+        obj->signalWithGlobalName(10);
+        QCOMPARE(obj->ran(), false);
+
+        delete obj;
+    }
 }
 
 

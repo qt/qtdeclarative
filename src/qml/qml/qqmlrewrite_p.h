@@ -57,6 +57,7 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsmemorypool_p.h>
+#include <private/qhashedstring_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -129,14 +130,30 @@ private:
 
 class RewriteSignalHandler: protected AST::Visitor
 {
-    TextWriter *_writer;
-    const QString *_code;
-    int _position;
-
 public:
     RewriteSignalHandler();
-    QString operator()(QQmlJS::AST::Node *node, const QString &code, const QString &name);
-    QString operator()(const QString &code, const QString &name, bool *ok = 0);
+    QString operator()(QQmlJS::AST::Node *node, const QString &code, const QString &name,
+                       const QString &parameterString = QString(),
+                       const QList<QByteArray> &parameterNameList = QList<QByteArray>(),
+                       const QStringHash<bool> &illegalNames = QStringHash<bool>());
+    QString operator()(const QString &code, const QString &name, bool *ok = 0,
+                       const QList<QByteArray> &parameterNameList = QList<QByteArray>(),
+                       const QStringHash<bool> &illegalNames = QStringHash<bool>());
+
+    enum ParameterAccess {
+        ParametersAccessed,
+        ParametersUnaccessed,
+        UnknownAccess
+    };
+
+    //returns the first n signal parameters that are used in the expression
+    int parameterCountForJS() const { return _parameterCountForJS; }
+    ParameterAccess parameterAccess() const { return _parameterAccess; }
+    QString createParameterString(const QList<QByteArray> &parameterNameList,
+                                  const QStringHash<bool> &illegalNames);
+
+    bool hasParameterError() { return !_error.isEmpty(); }
+    QString parameterError() const { return _error; }
 
 protected:
     void rewriteMultilineStrings(QString &code);
@@ -144,6 +161,20 @@ protected:
     using AST::Visitor::visit;
     void accept(AST::Node *node);
     virtual bool visit(AST::StringLiteral *ast);
+    virtual bool visit(AST::IdentifierExpression *);
+
+private:
+    QString createParameterString(const QList<QHashedString> &parameterNameList,
+                                  const QStringHash<bool> &illegalNames);
+
+    TextWriter *_writer;
+    const QString *_code;
+    int _position;
+    QStringHash<int> _parameterNames;
+    QList<QHashedString> _parameterNameList;
+    ParameterAccess _parameterAccess;
+    int _parameterCountForJS;
+    QString _error;
 };
 
 bool SharedBindingTester::visit(AST::FunctionDeclaration *)

@@ -53,11 +53,12 @@
 #include "qqmlrewrite_p.h"
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qv8debugservice_p.h>
+#include "qqmlinfo.h"
 
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>
 
-Q_DECLARE_METATYPE(QJSValue)
+Q_DECLARE_METATYPE(QQmlV8Handle)
 
 QT_BEGIN_NAMESPACE
 
@@ -66,40 +67,56 @@ static QQmlJavaScriptExpression::VTable QQmlBoundSignalExpression_jsvtable = {
     QQmlBoundSignalExpression::expressionChanged
 };
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
+                                                     QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
                                                      bool isRewritten, const QString &fileName, quint16 line, quint16 column)
-    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable)
+    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
+      m_fileName(fileName),
+      m_line(line),
+      m_column(column),
+      m_parameterCountForJS(-1),
+      m_target(target),
+      m_index(index),
+      m_expressionFunctionValid(false),
+      m_expressionFunctionRewritten(isRewritten),
+      m_invalidParameterName(false)
 {
-    setNotifyOnValueChanged(false);
-    setContext(ctxt);
-    setScopeObject(scope);
+    init(ctxt, scope);
     if (isRewritten)
         m_expressionUtf8 = expression;
     else
         m_expression = QString::fromUtf8(expression);
-    m_expressionFunctionValid = false;
-    m_expressionFunctionRewritten = isRewritten;
-    m_fileName = fileName;
-    m_line = line;
-    m_column = column;
 }
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QString &expression,
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
+                                                     QQmlContextData *ctxt, QObject *scope, const QString &expression,
                                                      bool isRewritten, const QString &fileName, quint16 line, quint16 column)
-    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable)
+    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
+      m_fileName(fileName),
+      m_line(line),
+      m_column(column),
+      m_parameterCountForJS(-1),
+      m_target(target),
+      m_index(index),
+      m_expressionFunctionValid(false),
+      m_expressionFunctionRewritten(isRewritten),
+      m_invalidParameterName(false)
 {
-    setNotifyOnValueChanged(false);
-    setContext(ctxt);
-    setScopeObject(scope);
+    init(ctxt, scope);
     if (isRewritten)
         m_expressionUtf8 = expression.toUtf8();
     else
         m_expression = expression;
-    m_expressionFunctionValid = false;
-    m_expressionFunctionRewritten = isRewritten;
-    m_fileName = fileName;
-    m_line = line;
-    m_column = column;
+}
+
+void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
+{
+    setNotifyOnValueChanged(false);
+    setContext(ctxt);
+    setScopeObject(scope);
+
+    Q_ASSERT(m_target && m_index > -1);
+    m_index = QQmlPropertyCache::originalClone(m_target, m_index);
 }
 
 QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
@@ -133,11 +150,15 @@ QString QQmlBoundSignalExpression::expression() const
     }
 }
 
-// This mirrors code in QQmlExpressionPrivate::value() and v8value().
-// Any change made here should be made there and vice versa.
-void QQmlBoundSignalExpression::evaluate(QObject *secondaryScope)
+// Parts of this function mirror code in QQmlExpressionPrivate::value() and v8value().
+// Changes made here may need to be made there and vice versa.
+void QQmlBoundSignalExpression::evaluate(void **a)
 {
     Q_ASSERT (context() && engine());
+
+    if (m_invalidParameterName)
+        return;
+
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
@@ -146,17 +167,48 @@ void QQmlBoundSignalExpression::evaluate(QObject *secondaryScope)
         v8::Context::Scope context_scope(ep->v8engine()->context());
         if (!m_expressionFunctionValid) {
 
+            //TODO: look at using the property cache here (as in the compiler)
+            //      for further optimization
+            QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
+            QQmlRewrite::RewriteSignalHandler rewriter;
+
+            QString expression;
+            bool ok = true;
+
             if (m_expressionFunctionRewritten) {
-                m_v8function = evalFunction(context(), scopeObject(), QString::fromUtf8(m_expressionUtf8),
-                                            m_fileName, m_line, &m_v8qmlscope);
+                expression = QString::fromUtf8(m_expressionUtf8);
+
+                //if we need parameters, and the rewrite doesn't include them,
+                //create and insert the parameter string now
+                if (m_parameterCountForJS == -1 && signal.parameterCount()) {
+                    const QString &parameters = rewriter.createParameterString(signal.parameterNames(),
+                                                                               ep->v8engine()->illegalNames());
+                    int index = expression.indexOf(QLatin1Char('('), 1);
+                    Q_ASSERT(index > -1);
+                    expression.insert(index + 1, parameters);
+
+                    setParameterCountForJS(rewriter.parameterCountForJS());
+                }
+
                 m_expressionUtf8.clear();
             } else {
-                bool ok = true;
-                QQmlRewrite::RewriteSignalHandler rewriteSignalHandler;
-                const QString &code = rewriteSignalHandler(m_expression, QString()/*no name hint available*/, &ok);
-                if (ok)
-                    m_v8function = evalFunction(context(), scopeObject(), code, m_fileName, m_line, &m_v8qmlscope);
+                //expression is still in its original form, so perform a full rewrite
+                expression = rewriter(m_expression, QString()/*no name hint available*/, &ok,
+                                      signal.parameterNames(),
+                                      ep->v8engine()->illegalNames());
                 m_expression.clear();
+            }
+
+            if (rewriter.hasParameterError()) {
+                qmlInfo(scopeObject()) << rewriter.parameterError();
+                m_invalidParameterName = true;
+                ep->dereferenceScarceResources();
+                return;
+            }
+
+            if (ok) {
+                m_v8function = evalFunction(context(), scopeObject(), expression,
+                                            m_fileName, m_line, &m_v8qmlscope);
             }
 
             if (m_v8function.IsEmpty() || m_v8function->IsNull()) {
@@ -168,47 +220,47 @@ void QQmlBoundSignalExpression::evaluate(QObject *secondaryScope)
             m_expressionFunctionValid = true;
         }
 
-        if (secondaryScope) {
-            QObject *restoreSecondaryScope = 0;
-            restoreSecondaryScope = ep->v8engine()->contextWrapper()->setSecondaryScope(m_v8qmlscope, secondaryScope);
+        if (!hasParameterInfo()) {
             QQmlJavaScriptExpression::evaluate(context(), m_v8function, 0);
-            ep->v8engine()->contextWrapper()->setSecondaryScope(m_v8qmlscope, restoreSecondaryScope);
         } else {
-            QQmlJavaScriptExpression::evaluate(context(), m_v8function, 0);
+            QV8Engine *engine = ep->v8engine();
+            QVarLengthArray<int, 9> dummy;
+            //TODO: lookup via signal index rather than method index as an optimization
+            int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
+            int *argsTypes = QQmlPropertyCache::methodParameterTypes(m_target, methodIndex, dummy, 0);
+            int argCount = argsTypes ? m_parameterCountForJS : 0;
+
+            QVarLengthArray<v8::Handle<v8::Value>, 9> args(argCount);
+
+            for (int ii = 0; ii < argCount; ++ii) {
+                int type = argsTypes[ii + 1];
+                //### ideally we would use metaTypeToJS, however it currently gives different results
+                //    for several cases (such as QVariant type and QObject-derived types)
+                //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
+                if (type == QMetaType::QVariant) {
+                    args[ii] = engine->fromVariant(*((QVariant *)a[ii + 1]));
+                } else if (type == QMetaType::Int) {
+                    //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
+                    args[ii] = v8::Integer::New(*reinterpret_cast<const int*>(a[ii + 1]));
+                } else if (type == qMetaTypeId<QQmlV8Handle>()) {
+                    args[ii] = reinterpret_cast<QQmlV8Handle *>(a[ii + 1])->toHandle();
+                } else if (ep->isQObject(type)) {
+                    if (!*reinterpret_cast<void* const *>(a[ii + 1]))
+                        args[ii] = v8::Null();
+                    else
+                        args[ii] = engine->newQObject(*reinterpret_cast<QObject* const *>(a[ii + 1]));
+                } else {
+                    args[ii] = engine->fromVariant(QVariant(type, a[ii + 1]));
+                }
+            }
+
+            QQmlJavaScriptExpression::evaluate(context(), m_v8function, argCount, args.data(), 0);
         }
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-class QQmlBoundSignalParameters : public QObject
-{
-Q_OBJECT
-public:
-    QQmlBoundSignalParameters(const QMetaMethod &, QQmlAbstractBoundSignal*, QQmlEngine*);
-    ~QQmlBoundSignalParameters();
-
-    void setValues(void **);
-    void clearValues();
-
-private:
-    friend class MetaObject;
-    int metaCall(QMetaObject::Call, int _id, void **);
-    struct MetaObject : public QAbstractDynamicMetaObject {
-        MetaObject(QQmlBoundSignalParameters *b)
-            : parent(b) {}
-
-        int metaCall(QMetaObject::Call c, int id, void **a) { 
-            return parent->metaCall(c, id, a);
-        }
-        QQmlBoundSignalParameters *parent;
-    };
-
-    int *types;
-    void **values;
-    QMetaObject *myMetaObject;
-};
 
 QQmlAbstractBoundSignal::QQmlAbstractBoundSignal()
 : m_prevSignal(0), m_nextSignal(0)
@@ -247,12 +299,10 @@ void QQmlAbstractBoundSignal::removeFromObject()
     \a signal MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().
 */
-QQmlBoundSignal::QQmlBoundSignal(QObject *scope, int signal, QObject *owner,
+QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
-: m_expression(0), m_params(0), m_scope(scope), m_index(signal)
+: m_expression(0), m_index(signal), m_isEvaluating(false)
 {
-    setParamsValid(false);
-    setIsEvaluating(false);
     addToObject(owner);
     setCallback(QQmlNotifierEndpoint::QQmlBoundSignal);
 
@@ -262,22 +312,13 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *scope, int signal, QObject *owner,
         index refers to 'aSignal()', get the index of 'aSignal(int)'.
         This ensures that 'parameter' will be available from QML.
     */
-    if (QQmlData::get(scope, false) && QQmlData::get(scope, false)->propertyCache) {
-        QQmlPropertyCache *cache = QQmlData::get(scope, false)->propertyCache;
-        while (cache->signal(m_index)->isCloned())
-            --m_index;
-    } else {
-        while (QMetaObjectPrivate::signal(scope->metaObject(), m_index).attributes() & QMetaMethod::Cloned)
-            --m_index;
-    }
-
-    QQmlNotifierEndpoint::connect(scope, m_index, engine);
+    m_index = QQmlPropertyCache::originalClone(target, m_index);
+    QQmlNotifierEndpoint::connect(target, m_index, engine);
 }
 
 QQmlBoundSignal::~QQmlBoundSignal()
 {
     m_expression = 0;
-    delete m_params;
 }
 
 /*!
@@ -334,140 +375,21 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
         return;
 
     if (QQmlDebugService::isDebuggingEnabled())
-        QV8DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_scope->metaObject(), s->m_index).methodSignature()));
+        QV8DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->m_index).methodSignature()));
 
     QQmlHandlingSignalProfiler prof(s->m_expression);
 
-    s->setIsEvaluating(true);
+    s->m_isEvaluating = true;
 
-    if (!s->paramsValid()) {
-        QList<QByteArray> names = QQmlPropertyCache::signalParameterNames(*s->m_scope, s->m_index);
-        if (!names.isEmpty()) {
-            QMetaMethod signal = QMetaObjectPrivate::signal(s->m_scope->metaObject(), s->m_index);
-            s->m_params = new QQmlBoundSignalParameters(signal, s, s->m_expression->engine());
-        }
-
-        s->setParamsValid(true);
-    }
-
-    if (s->m_params) s->m_params->setValues(a);
     if (s->m_expression && s->m_expression->engine()) {
-        s->m_expression->evaluate(s->m_params);
+        s->m_expression->evaluate(a);
         if (s->m_expression && s->m_expression->hasError()) {
             QQmlEngine *engine = s->m_expression->engine();
             QQmlEnginePrivate::warning(engine, s->m_expression->error(engine));
         }
     }
-    if (s->m_params) s->m_params->clearValues();
 
-    s->setIsEvaluating(false);
-}
-
-QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method, 
-                                                     QQmlAbstractBoundSignal *owner,
-                                                     QQmlEngine *engine)
-: types(0), values(0)
-{
-    MetaObject *mo = new MetaObject(this);
-
-    // ### Optimize!
-    QMetaObjectBuilder mob;
-    mob.setSuperClass(&QQmlBoundSignalParameters::staticMetaObject);
-    mob.setClassName("QQmlBoundSignalParameters");
-
-    QList<QByteArray> paramTypes = method.parameterTypes();
-    QList<QByteArray> paramNames = method.parameterNames();
-    types = new int[paramTypes.count()];
-    for (int ii = 0; ii < paramTypes.count(); ++ii) {
-        const QByteArray &type = paramTypes.at(ii);
-        if (type.isEmpty()) {
-            types[ii] = 0;
-            continue;
-        }
-
-        QByteArray name = paramNames.at(ii);
-        if (name.isEmpty())
-            name = "__qt_anonymous_param_" + QByteArray::number(ii);
-
-        int t = QMetaType::type(type.constData());
-        if (QQmlEnginePrivate::get(engine)->isQObject(t)) {
-            types[ii] = QMetaType::QObjectStar;
-            QMetaPropertyBuilder prop = mob.addProperty(name, "QObject*");
-            prop.setWritable(false);
-        } else {
-            QByteArray propType = type;
-            QMetaType::TypeFlags flags = QMetaType::typeFlags(t);
-            if (flags & QMetaType::IsEnumeration) {
-                t = QVariant::Int;
-                propType = "int";
-            } else if (t == QMetaType::UnknownType ||
-                       (t >= int(QMetaType::User) && !(flags & QMetaType::PointerToQObject) &&
-                        t != qMetaTypeId<QJSValue>())) {
-                //the UserType clause is to catch registered QFlags
-                QByteArray scope;
-                QByteArray name;
-                int scopeIdx = propType.lastIndexOf("::");
-                if (scopeIdx != -1) {
-                    scope = propType.left(scopeIdx);
-                    name = propType.mid(scopeIdx + 2);
-                } else {
-                    name = propType;
-                }
-                const QMetaObject *meta;
-                if (scope == "Qt")
-                    meta = &QObject::staticQtMetaObject;
-                else
-                    meta = owner->scope()->metaObject();
-                for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
-                    QMetaEnum m = meta->enumerator(i);
-                    if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope))) {
-                        t = QVariant::Int;
-                        propType = "int";
-                        break;
-                    }
-                }
-            }
-            types[ii] = t;
-            QMetaPropertyBuilder prop = mob.addProperty(name, propType);
-            prop.setWritable(false);
-        }
-    }
-    myMetaObject = mob.toMetaObject();
-    *static_cast<QMetaObject *>(mo) = *myMetaObject;
-
-    d_ptr->metaObject = mo;
-}
-
-QQmlBoundSignalParameters::~QQmlBoundSignalParameters()
-{
-    delete [] types;
-    free(myMetaObject);
-}
-
-void QQmlBoundSignalParameters::setValues(void **v)
-{
-    values = v;
-}
-
-void QQmlBoundSignalParameters::clearValues()
-{
-    values = 0;
-}
-
-int QQmlBoundSignalParameters::metaCall(QMetaObject::Call c, int id, void **a)
-{
-    if (!values)
-        return -1;
-
-    if (c == QMetaObject::ReadProperty && id >= 1) {
-        int t = types[id - 1];
-        void *p = a[0];
-        QMetaType::destruct(t, p);
-        QMetaType::construct(t, p, values[id]);
-        return -1;
-    } else {
-        return qt_metacall(c, id, a);
-    }
+    s->m_isEvaluating = false;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -517,5 +439,3 @@ QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::take(QQmlBou
 }
 
 QT_END_NAMESPACE
-
-#include <qqmlboundsignal.moc>
