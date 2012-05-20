@@ -71,6 +71,13 @@ int Value::toInt32(double number)
     return (int) trunc(number); // ###
 }
 
+uint Value::toUInt32(double number)
+{
+    if (! number || isnan(number) || isinf(number))
+        return +0;
+    return (uint) trunc(number); // ###
+}
+
 int Value::toInteger(double number)
 {
     if (isnan(number))
@@ -344,7 +351,9 @@ void __qmljs_object_default_value(Context *ctx, Value *result, const Value *obje
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
 
-    Value *conv = object->asObject()->getProperty(meth1);
+    Object *oo = object->asObject();
+    assert(oo != 0);
+    Value *conv = oo->getProperty(meth1);
     if (conv && conv->isFunctionObject()) {
         Value r;
         __qmljs_call_value(ctx, &r, object, conv, 0, 0);
@@ -364,7 +373,7 @@ void __qmljs_object_default_value(Context *ctx, Value *result, const Value *obje
         }
     }
 
-    assert(!"type error");
+    __qmljs_init_undefined(result);
 }
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
@@ -431,6 +440,63 @@ void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR:
     Value value;
     __qmljs_init_closure(ctx, &value, function);
     object->objectValue->put(name, value, /*flag*/ 0);
+}
+
+void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index)
+{
+    if (object->isString() && index->isNumber()) {
+        const QString s = object->stringValue->toQString().mid(Value::toUInt32(index->numberValue), 1);
+        if (s.isNull())
+            __qmljs_init_undefined(result);
+        else
+            *result = Value::fromString(ctx, s);
+    } else if (object->isArrayObject() && index->isNumber()) {
+        *result = object->asArrayObject()->value.at(Value::toUInt32(index->numberValue));
+    } else {
+        String *name = index->toString(ctx);
+
+        if (! object->isObject())
+            __qmljs_to_object(ctx, object, object);
+
+        object->objectValue->get(name, result);
+    }
+}
+
+void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value)
+{
+    if (object->isArrayObject() && index->isNumber()) {
+        object->asArrayObject()->value.assign(Value::toUInt32(index->numberValue), *value);
+    } else {
+        String *name = index->toString(ctx);
+
+        if (! object->isObject())
+            __qmljs_to_object(ctx, object, object);
+
+        object->objectValue->put(name, *value, /*flags*/ 0);
+    }
+}
+
+void __qmljs_set_element_number(Context *ctx, Value *object, Value *index, double number)
+{
+    Value v;
+    __qmljs_init_number(&v, number);
+    __qmljs_set_element(ctx, object, index, &v);
+}
+
+void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Value *value)
+{
+    if (Value *base = ctx->lookup(name)) {
+        __qmljs_set_element(ctx, base, index, value);
+    } else {
+        assert(!"reference error");
+    }
+}
+
+void __qmljs_set_activation_element_number(Context *ctx, String *name, Value *index, double number)
+{
+    Value v;
+    __qmljs_init_number(&v, number);
+    __qmljs_set_activation_element(ctx, name, index, &v);
 }
 
 void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)

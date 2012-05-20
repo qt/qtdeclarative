@@ -14,7 +14,8 @@ SOURCES += main.cpp \
     qmljs_objects.cpp \
     qv4isel.cpp \
     qv4syntaxchecker.cpp \
-    qv4ecmaobjects.cpp
+    qv4ecmaobjects.cpp \
+    qv4array.cpp
 
 HEADERS += \
     qv4codegen_p.h \

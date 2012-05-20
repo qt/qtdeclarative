@@ -11,7 +11,7 @@ namespace VM {
 class Array
 {
 public:
-    inline Array(ExecutionEngine *engine);
+    inline Array();
     inline Array(const Array &other);
     inline ~Array();
 
@@ -38,7 +38,6 @@ private:
         MapMode
     };
 
-    ExecutionEngine *m_engine;
     Mode m_mode;
     int m_instances;
 
@@ -54,37 +53,21 @@ public:
     inline ArrayElementLessThan(Context *context, const Value &comparefn)
         : m_context(context), m_comparefn(comparefn) {}
 
-    inline bool operator()(const Value &v1, const Value &v2) const
-    {
-        if (v1.isUndefined())
-            return false;
-        if (v2.isUndefined())
-            return true;
-        if (!m_comparefn.isUndefined()) {
-            ArrayElementLessThan *that = const_cast<ArrayElementLessThan*>(this);
-            Value args[] = { v1, v2 };
-            Value result;
-            __qmljs_call_value(m_context, &result, 0, &m_comparefn, args, 2);
-            return result.toNumber(m_context) <= 0;
-        }
-        return v1.toString(m_context)->toQString() < v2.toString(m_context)->toQString();
-    }
+    bool operator()(const Value &v1, const Value &v2) const;
 
 private:
     Context *m_context;
     Value m_comparefn;
 };
 
-inline Array::Array(ExecutionEngine *engine):
-    m_engine(engine),
-    m_mode(VectorMode),
-    m_instances(0)
+inline Array::Array()
+    : m_mode(VectorMode)
+    , m_instances(0)
 {
     to_vector = new QVector<Value>();
 }
 
 inline Array::Array(const Array &other):
-    m_engine(other.m_engine),
     m_mode(other.m_mode),
     m_instances(other.m_instances)
 {
@@ -104,7 +87,6 @@ inline Array::~Array()
 
 inline Array &Array::operator = (const Array &other)
 {
-    m_engine = other.m_engine;
     m_instances = other.m_instances;
     if (m_mode != other.m_mode) {
         if (m_mode == VectorMode)
@@ -166,8 +148,6 @@ inline void Array::assign(uint index, const Value &v)
 {
     if (index >= size()) {
         resize(index + 1);
-        //        if (m_engine)
-        //            m_engine->adjustBytesAllocated(sizeof(Value) * (size() - index));
     }
 
     const Value &oldv = at(index);
@@ -208,7 +188,7 @@ inline void Array::resize(uint s)
 
     if (m_mode == VectorMode) {
         if (s < N) {
-            to_vector->resize (s);
+            to_vector->resize (s); // ### init
         } else {
             // switch to MapMode
             QMap<uint, Value> *m = new QMap<uint, Value>();
@@ -226,7 +206,7 @@ inline void Array::resize(uint s)
     else {
         if (s < N) {
             // switch to VectorMode
-            QVector<Value> *v = new QVector<Value> (s);
+            QVector<Value> *v = new QVector<Value> (s, Value::undefinedValue());
             QMap<uint, Value>::const_iterator it = to_map->constBegin();
             for ( ; (it != to_map->constEnd()) && (it.key() < s); ++it)
                 (*v) [it.key()] = it.value();
@@ -259,9 +239,7 @@ inline void Array::concat(const Array &other)
     for (uint i = 0; i < other.size(); ++i) {
         Value v = other.at(i);
         if (! v.isUndefined())
-            continue;
-
-        assign(k + i, v);
+            assign(k + i, v);
     }
 }
 

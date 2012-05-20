@@ -102,6 +102,16 @@ bool Object::deleteProperty(String *name, bool flag)
     return false;
 }
 
+Value *ArrayObject::getOwnProperty(String *name, PropertyAttributes *attributes)
+{
+    if (name->toQString() == QLatin1String("length")) {
+        length.numberValue = value.size();
+        return &length;
+    }
+
+    return Object::getOwnProperty(name, attributes);
+}
+
 bool FunctionObject::hasInstance(const Value &value) const
 {
     Q_UNUSED(value);
@@ -188,28 +198,42 @@ ExecutionEngine::ExecutionEngine()
     rootContext = newContext();
     rootContext->init(this);
 
+    objectPrototype.type = NULL_TYPE;
+    stringPrototype.type = NULL_TYPE;
+    numberPrototype.type = NULL_TYPE;
+    booleanPrototype.type = NULL_TYPE;
+    arrayPrototype.type = NULL_TYPE;
+    datePrototype.type = NULL_TYPE;
+    //functionPrototype.type = NULL_TYPE;
+
     //
     // set up the global object
     //
+    String *prototype = identifier(QLatin1String("prototype"));
+
     VM::Object *glo = newArgumentsObject(rootContext);
     __qmljs_init_object(&globalObject, glo);
     __qmljs_init_object(&rootContext->activation, glo);
 
     objectCtor = ObjectCtor::create(this);
+    objectCtor.objectValue->get(prototype, &objectPrototype);
+
     stringCtor = StringCtor::create(this);
     numberCtor = NumberCtor::create(this);
+    booleanCtor = BooleanCtor::create(this);
+    arrayCtor = ArrayCtor::create(this);
     dateCtor = DateCtor::create(this);
 
-    String *prototype = identifier(QLatin1String("prototype"));
-
-    objectCtor.objectValue->get(prototype, &objectPrototype);
     stringCtor.objectValue->get(prototype, &stringPrototype);
     numberCtor.objectValue->get(prototype, &numberPrototype);
+    booleanCtor.objectValue->get(prototype, &booleanPrototype);
+    arrayCtor.objectValue->get(prototype, &arrayPrototype);
     dateCtor.objectValue->get(prototype, &datePrototype);
 
     glo->put(identifier(QLatin1String("Object")), objectCtor);
     glo->put(identifier(QLatin1String("String")), stringCtor);
     glo->put(identifier(QLatin1String("Number")), numberCtor);
+    glo->put(identifier(QLatin1String("Array")), arrayCtor);
     glo->put(identifier(QLatin1String("Date")), dateCtor);
     glo->put(identifier(QLatin1String("Math")), Value::fromObject(newMathObject(rootContext)));
 }
@@ -306,6 +330,32 @@ Object *ExecutionEngine::newBooleanPrototype(Context *ctx, FunctionObject *proto
     Object *booleanProto = new BooleanPrototype(ctx, proto);
     booleanProto->prototype = objectPrototype.objectValue;
     return booleanProto;
+}
+
+Object *ExecutionEngine::newArrayObject()
+{
+    ArrayObject *object = new ArrayObject();
+    object->prototype = arrayPrototype.objectValue;
+    return object;
+}
+
+Object *ExecutionEngine::newArrayObject(const Array &value)
+{
+    ArrayObject *object = new ArrayObject(value);
+    object->prototype = arrayPrototype.objectValue;
+    return object;
+}
+
+FunctionObject *ExecutionEngine::newArrayCtor(Context *ctx)
+{
+    return new ArrayCtor(ctx);
+}
+
+Object *ExecutionEngine::newArrayPrototype(Context *ctx, FunctionObject *proto)
+{
+    Object *arrayProto = new ArrayPrototype(ctx, proto);
+    arrayProto->prototype = objectPrototype.objectValue;
+    return arrayProto;
 }
 
 Object *ExecutionEngine::newDateObject(const Value &value)

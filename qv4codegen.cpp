@@ -322,13 +322,19 @@ IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
 
 IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
 {
-    if (base->asTemp() || base->asName())
-        return _block->SUBSCRIPT(base, index);
-    else {
+    if (! base->asTemp()) {
         const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), base);
-        return _block->SUBSCRIPT(_block->TEMP(t), index);
+        _block->MOVE(_block->TEMP(t), base);
+        base = _block->TEMP(t);
     }
+
+    if (! index->asTemp()) {
+        const unsigned t = _block->newTemp();
+        _block->MOVE(_block->TEMP(t), index);
+        index = _block->TEMP(t);
+    }
+
+    return _block->SUBSCRIPT(base, index);
 }
 
 IR::Expr *Codegen::argument(IR::Expr *expr)
@@ -1056,7 +1062,7 @@ bool Codegen::visit(FunctionExpression *ast)
 
 bool Codegen::visit(IdentifierExpression *ast)
 {
-    if (! _function->needsActivation()) {
+    if (! _function->hasDirectEval) {
         int index = _env->findMember(ast->name.toString());
         if (index != -1) {
             _expr.code = _block->TEMP(index);

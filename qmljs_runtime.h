@@ -4,6 +4,7 @@
 #include <QtCore/QString>
 #include <QtCore/QDebug>
 #include <math.h>
+#include <cassert>
 
 namespace QQmlJS {
 
@@ -110,6 +111,14 @@ void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *na
 void __qmljs_get_activation_property(Context *ctx, Value *result, String *name);
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other);
 void __qmljs_copy_property(Context *ctx, Value *target, String *name, Value *source, String *other);
+
+void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index);
+
+void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value);
+void __qmljs_set_element_number(Context *ctx, Value *object, Value *index, double number);
+
+void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Value *value);
+void __qmljs_set_activation_element_number(Context *ctx, String *name, Value *index, double number);
 
 // context
 void __qmljs_get_activation(Context *ctx, Value *result);
@@ -222,6 +231,8 @@ struct Value {
 
     static int toInteger(double fromNumber);
     static int toInt32(double value);
+    static uint toUInt32(double value);
+
     int toUInt16(Context *ctx);
     int toInt32(Context *ctx);
     uint toUInt32(Context *ctx);
@@ -420,7 +431,10 @@ inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
     case OBJECT_TYPE: {
         Value prim;
         __qmljs_to_primitive(ctx, &prim, value, STRING_HINT);
-        __qmljs_to_string(ctx, result, &prim);
+        if (prim.isPrimitive())
+            __qmljs_to_string(ctx, result, &prim);
+        else
+            assert(!"type error");
         break;
     }
 

@@ -19,6 +19,9 @@ struct ObjectCtor: FunctionObject
 struct ObjectPrototype: Object
 {
     ObjectPrototype(Context *ctx, FunctionObject *ctor);
+
+protected:
+    static void method_toString(Context *ctx);
 };
 
 struct StringCtor: FunctionObject
@@ -100,6 +103,35 @@ struct BooleanPrototype: BooleanObject
 protected:
     static void method_toString(Context *ctx);
     static void method_valueOf(Context *ctx);
+};
+
+struct ArrayCtor: FunctionObject
+{
+    static Value create(ExecutionEngine *engine);
+
+    ArrayCtor(Context *scope);
+
+    virtual void construct(Context *ctx);
+    virtual void call(Context *ctx);
+};
+
+struct ArrayPrototype: Object
+{
+    ArrayPrototype(Context *ctx, FunctionObject *ctor);
+
+protected:
+    static void method_toString(Context *ctx);
+    static void method_toLocaleString(Context *ctx);
+    static void method_concat(Context *ctx);
+    static void method_join(Context *ctx);
+    static void method_pop(Context *ctx);
+    static void method_push(Context *ctx);
+    static void method_reverse(Context *ctx);
+    static void method_shift(Context *ctx);
+    static void method_slice(Context *ctx);
+    static void method_sort(Context *ctx);
+    static void method_splice(Context *ctx);
+    static void method_unshift(Context *ctx);
 };
 
 struct DateCtor: FunctionObject

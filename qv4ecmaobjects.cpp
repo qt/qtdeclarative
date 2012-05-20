@@ -499,6 +499,12 @@ void ObjectCtor::call(Context *)
 ObjectPrototype::ObjectPrototype(Context *ctx, FunctionObject *ctor)
 {
     setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QLatin1String("toString"), method_toString, 0);
+}
+
+void ObjectPrototype::method_toString(Context *ctx)
+{
+    ctx->result = Value::fromString(ctx, "object");
 }
 
 //
@@ -573,7 +579,11 @@ QString StringPrototype::getThisString(Context *ctx)
 
 void StringPrototype::method_toString(Context *ctx)
 {
-    __qmljs_to_string(ctx, &ctx->result, &ctx->thisObject);
+    if (StringObject *o = ctx->thisObject.asStringObject()) {
+        ctx->result = o->value;
+    } else {
+        assert(!"type error");
+    }
 }
 
 void StringPrototype::method_valueOf(Context *ctx)
@@ -1061,6 +1071,198 @@ void BooleanPrototype::method_valueOf(Context *ctx)
     } else {
         assert(!"type error");
     }
+}
+
+//
+// Array object
+//
+//
+// Number object
+//
+Value ArrayCtor::create(ExecutionEngine *engine)
+{
+    Context *ctx = engine->rootContext;
+    FunctionObject *ctor = ctx->engine->newArrayCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newArrayPrototype(ctx, ctor)));
+    return Value::fromObject(ctor);
+}
+
+ArrayCtor::ArrayCtor(Context *scope)
+    : FunctionObject(scope)
+{
+}
+
+void ArrayCtor::construct(Context *ctx)
+{
+    ctx->thisObject = Value::fromObject(ctx->engine->newArrayObject());
+}
+
+void ArrayCtor::call(Context *ctx)
+{
+    ctx->result = Value::fromObject(ctx->engine->newArrayObject());
+}
+
+ArrayPrototype::ArrayPrototype(Context *ctx, FunctionObject *ctor)
+{
+    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QLatin1String("toString"), method_toString, 0);
+    setProperty(ctx, QLatin1String("toLocalString"), method_toLocaleString, 0);
+    setProperty(ctx, QLatin1String("concat"), method_concat, 1);
+    setProperty(ctx, QLatin1String("join"), method_join, 1);
+    setProperty(ctx, QLatin1String("pop"), method_pop, 0);
+    setProperty(ctx, QLatin1String("push"), method_push, 1);
+    setProperty(ctx, QLatin1String("reverse"), method_reverse, 0);
+    setProperty(ctx, QLatin1String("shift"), method_shift, 0);
+    setProperty(ctx, QLatin1String("slice"), method_slice, 2);
+    setProperty(ctx, QLatin1String("sort"), method_sort, 1);
+    setProperty(ctx, QLatin1String("splice"), method_splice, 2);
+    setProperty(ctx, QLatin1String("unshift"), method_unshift, 1);
+}
+
+void ArrayPrototype::method_toString(Context *ctx)
+{
+    method_join(ctx);
+}
+
+void ArrayPrototype::method_toLocaleString(Context *ctx)
+{
+    method_toString(ctx);
+}
+
+void ArrayPrototype::method_concat(Context *ctx)
+{
+    Array result;
+
+    if (ArrayObject *instance = ctx->thisObject.asArrayObject())
+        result = instance->value;
+    else {
+        QString v = ctx->thisObject.toString(ctx)->toQString();
+        result.assign(0, Value::fromString(ctx, v));
+    }
+
+    for (uint i = 0; i < ctx->argumentCount; ++i) {
+        quint32 k = result.size();
+        Value arg = ctx->argument(i);
+
+        if (ArrayObject *elt = arg.asArrayObject())
+            result.concat(elt->value);
+
+        else
+            result.assign(k, Value::fromString(arg.toString(ctx)));
+    }
+
+    ctx->result = Value::fromObject(ctx->engine->newArrayObject(result));
+}
+
+void ArrayPrototype::method_join(Context *ctx)
+{
+    Value arg = ctx->argument(0);
+
+    QString r4;
+    if (arg.isUndefined())
+        r4 = QLatin1String(",");
+    else
+        r4 = arg.toString(ctx)->toQString();
+
+    Value self = ctx->thisObject;
+
+    Value *length = self.objectValue->getProperty(ctx->engine->identifier("length"));
+    double r1 = length ? length->toNumber(ctx) : 0;
+    quint32 r2 = Value::toUInt32(r1);
+
+    static QSet<Object *> visitedArrayElements;
+
+    if (! r2 || visitedArrayElements.contains(self.objectValue)) {
+        ctx->result = Value::fromString(ctx, QString());
+        return;
+    }
+
+    // avoid infinite recursion
+    visitedArrayElements.insert(self.objectValue);
+
+    QString R;
+
+    if (ArrayObject *a = self.objectValue->asArrayObject()) {
+        for (uint i = 0; i < a->value.size(); ++i) {
+            if (! R.isEmpty())
+                R += r4;
+
+            Value e = a->value.at(i);
+            if (! (e.isUndefined() || e.isNull()))
+                R += e.toString(ctx)->toQString();
+        }
+    } else {
+        //
+        // crazy!
+        //
+        Value *r6 = self.objectValue->getProperty(ctx->engine->identifier(QLatin1String("0")));
+        if (r6 && !(r6->isUndefined() || r6->isNull()))
+            R = r6->toString(ctx)->toQString();
+
+        for (quint32 k = 1; k < r2; ++k) {
+            R += r4;
+
+            String *name = Value::fromNumber(k).toString(ctx);
+            Value *r12 = self.objectValue->getProperty(name);
+
+            if (r12 && ! (r12->isUndefined() || r12->isNull()))
+                R += r12->toString(ctx)->toQString();
+        }
+    }
+
+    visitedArrayElements.remove(self.objectValue);
+    ctx->result = Value::fromString(ctx, R);
+}
+
+void ArrayPrototype::method_pop(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Value elt = instance->value.pop();
+        ctx->result = elt;
+    } else {
+        String *id_length = ctx->engine->identifier(QLatin1String("length"));
+        Value *r1 = self.objectValue->getProperty(id_length);
+        quint32 r2 = r1 ? r1->toUInt32(ctx) : 0;
+        if (! r2) {
+            self.objectValue->put(id_length, Value::fromNumber(0));
+        } else {
+            String *r6 = Value::fromNumber(r2 - 1).toString(ctx);
+            Value *r7 = self.objectValue->getProperty(r6);
+            self.objectValue->deleteProperty(r6, 0);
+            self.objectValue->put(id_length, Value::fromNumber(2 - 1));
+            if (r7)
+                ctx->result = *r7;
+        }
+    }
+}
+
+void ArrayPrototype::method_push(Context *ctx)
+{
+}
+
+void ArrayPrototype::method_reverse(Context *ctx)
+{
+}
+
+void ArrayPrototype::method_shift(Context *ctx)
+{
+}
+
+void ArrayPrototype::method_slice(Context *ctx)
+{
+}
+
+void ArrayPrototype::method_sort(Context *ctx)
+{
+}
+
+void ArrayPrototype::method_splice(Context *ctx)
+{
+}
+
+void ArrayPrototype::method_unshift(Context *ctx)
+{
 }
 
 //

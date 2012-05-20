@@ -2,6 +2,7 @@
 #define QMLJS_OBJECTS_H
 
 #include "qmljs_runtime.h"
+#include "qv4array_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -247,7 +248,12 @@ struct DateObject: Object {
 };
 
 struct ArrayObject: Object {
+    Array value;
+    Value length;
+    ArrayObject() { length.type = NUMBER_TYPE; }
+    ArrayObject(const Array &value): value(value) { length.type = NUMBER_TYPE; }
     virtual ArrayObject *asArrayObject() { return this; }
+    virtual Value *getOwnProperty(String *name, PropertyAttributes *attributes);
 };
 
 struct FunctionObject: Object {
@@ -377,11 +383,15 @@ struct ExecutionEngine
     Value objectCtor;
     Value stringCtor;
     Value numberCtor;
+    Value booleanCtor;
+    Value arrayCtor;
     Value dateCtor;
 
     Value objectPrototype;
     Value stringPrototype;
     Value numberPrototype;
+    Value booleanPrototype;
+    Value arrayPrototype;
     Value datePrototype;
 
     QHash<QString, String *> identifiers;
@@ -411,6 +421,11 @@ struct ExecutionEngine
     Object *newBooleanObject(const Value &value);
     FunctionObject *newBooleanCtor(Context *ctx);
     Object *newBooleanPrototype(Context *ctx, FunctionObject *proto);
+
+    Object *newArrayObject();
+    Object *newArrayObject(const Array &value);
+    FunctionObject *newArrayCtor(Context *ctx);
+    Object *newArrayPrototype(Context *ctx, FunctionObject *proto);
 
     Object *newDateObject(const Value &value);
     FunctionObject *newDateCtor(Context *ctx);
