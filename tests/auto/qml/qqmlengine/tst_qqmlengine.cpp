@@ -69,6 +69,9 @@ private slots:
     void clearComponentCache();
     void trimComponentCache();
     void trimComponentCache_data();
+    void repeatedCompilation();
+    void failedCompilation();
+    void failedCompilation_data();
     void outputWarningsToStandardError();
     void objectOwnership();
     void multipleEngines();
@@ -370,6 +373,46 @@ void tst_qqmlengine::trimComponentCache_data()
     // TODO:
     // Test that scripts are unloaded when no longer referenced
     QTest::newRow("ScriptComponent") << "testScriptComponent.qml";
+}
+
+void tst_qqmlengine::repeatedCompilation()
+{
+    QQmlEngine engine;
+
+    for (int i = 0; i < 100; ++i) {
+        engine.collectGarbage();
+        engine.trimComponentCache();
+
+        QQmlComponent component(&engine, testFileUrl("repeatedCompilation.qml"));
+        QVERIFY(component.isReady());
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->property("success").toBool(), true);
+    }
+}
+
+void tst_qqmlengine::failedCompilation()
+{
+    QFETCH(QString, file);
+
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl(file));
+    QVERIFY(!component.isReady());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object == 0);
+
+    engine.collectGarbage();
+    engine.trimComponentCache();
+    engine.clearComponentCache();
+}
+
+void tst_qqmlengine::failedCompilation_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QTest::newRow("Invalid URL") << "failedCompilation.does.not.exist.qml";
+    QTest::newRow("Invalid content") << "failedCompilation.1.qml";
 }
 
 static QStringList warnings;

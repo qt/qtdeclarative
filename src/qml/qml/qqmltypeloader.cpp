@@ -1244,6 +1244,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 
     if (!typeData) {
         typeData = new QQmlTypeData(url, None, this);
+        // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
         QQmlDataLoader::load(typeData, mode);
     }
@@ -1606,11 +1607,11 @@ void QQmlTypeLoader::trimCache(void (*callback)(void *, QQmlTypeData *), void *a
             TypeCache::Iterator iter = unneededTypes.last();
             unneededTypes.removeLast();
 
+            QQmlTypeData *typeData = iter.value();
             if (callback)
-                (*callback)(arg, iter.value());
-
+                (*callback)(arg, typeData);
             m_typeCache.erase(iter);
-            iter.value()->release();
+            typeData->release();
         }
     }
 

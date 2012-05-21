@@ -1962,7 +1962,14 @@ void QQmlEnginePrivate::trimCache()
 
 void QQmlEnginePrivate::typeUnloaded(QQmlTypeData *typeData)
 {
-    unregisterCompositeType(typeData->compiledData()->root);
+    if (typeData && typeData->compiledData()) {
+        const QMetaObject *mo = typeData->compiledData()->root;
+        if (QQmlPropertyCache *pc = propertyCache.value(mo)) {
+            propertyCache.remove(mo);
+            pc->release();
+        }
+        unregisterCompositeType(mo);
+    }
 }
 
 bool QQmlEnginePrivate::isTypeLoaded(const QUrl &url) const
