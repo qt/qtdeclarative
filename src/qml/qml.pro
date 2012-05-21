@@ -3,7 +3,7 @@ load(qt_module)
 TARGET     = QtQml
 QPRO_PWD   = $$PWD
 
-CONFIG += module exceptions
+CONFIG += module
 MODULE_PRI += ../../modules/qt_qml.pri
 
 QT = core-private network v8-private

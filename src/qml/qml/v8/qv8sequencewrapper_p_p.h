@@ -333,13 +333,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     /* according to ECMA262r3 we need to insert */ \
                     /* undefined values increasing length to newLength. */ \
                     /* We cannot, so we insert default-values instead. */ \
-                    QT_TRY { \
-                        c.reserve(newCount); \
-                    } QT_CATCH (std::bad_alloc &exception) { \
-                        generateWarning(engine, QString(QLatin1String(exception.what()) \
-                                                + QLatin1String(" during length set"))); \
-                        return; /* failed; don't write back any result. */ \
-                    } \
+                    c.reserve(newCount); \
                     while (newCount > count++) { \
                         c.append(DefaultValue); \
                     } \
@@ -381,13 +375,7 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                 } else { \
                     /* according to ECMA262r3 we need to insert */ \
                     /* the value at the given index, increasing length to index+1. */ \
-                    QT_TRY { \
-                        c.reserve(signedIdx + 1); \
-                    } QT_CATCH (std::bad_alloc &exception) { \
-                        generateWarning(engine, QString(QLatin1String(exception.what()) \
-                                                + QLatin1String(" during indexed set"))); \
-                        return v8::Undefined(); /* failed; don't write back any result. */ \
-                    } \
+                    c.reserve(signedIdx + 1); \
                     while (signedIdx > count++) { \
                         c.append(DefaultValue); \
                     } \
