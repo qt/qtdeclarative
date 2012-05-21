@@ -1431,7 +1431,23 @@ void ArrayPrototype::method_some(Context *ctx)
 {
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
-        Q_UNIMPLEMENTED();
+        Value callback = ctx->argument(0);
+        if (callback.isFunctionObject()) {
+            Value thisArg = ctx->argument(1);
+            bool ok = false;
+            for (uint k = 0; !ok && k < instance->value.size(); ++k) {
+                Value args[3];
+                args[0] = instance->value.at(k);
+                args[1] = Value::fromNumber(k);
+                args[2] = ctx->thisObject;
+                Value r;
+                __qmljs_call_value(ctx, &r, &thisArg, &callback, args, 3);
+                ok = __qmljs_to_boolean(ctx, &r);
+            }
+            ctx->result = Value::fromBoolean(ok);
+        } else {
+            assert(!"type error");
+        }
     } else {
         assert(!"generic implementation");
     }
