@@ -385,6 +385,7 @@ struct ExecutionEngine
     Value numberCtor;
     Value booleanCtor;
     Value arrayCtor;
+    Value functionCtor;
     Value dateCtor;
 
     Value objectPrototype;
@@ -392,6 +393,7 @@ struct ExecutionEngine
     Value numberPrototype;
     Value booleanPrototype;
     Value arrayPrototype;
+    Value functionPrototype;
     Value datePrototype;
 
     QHash<QString, String *> identifiers;
@@ -421,6 +423,10 @@ struct ExecutionEngine
     Object *newBooleanObject(const Value &value);
     FunctionObject *newBooleanCtor(Context *ctx);
     Object *newBooleanPrototype(Context *ctx, FunctionObject *proto);
+
+    Object *newFunctionObject(Context *ctx);
+    FunctionObject *newFunctionCtor(Context *ctx);
+    Object *newFunctionPrototype(Context *ctx, FunctionObject *proto);
 
     Object *newArrayObject();
     Object *newArrayObject(const Array &value);

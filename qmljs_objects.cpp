@@ -218,6 +218,9 @@ ExecutionEngine::ExecutionEngine()
     objectCtor = ObjectCtor::create(this);
     objectCtor.objectValue->get(prototype, &objectPrototype);
 
+    functionCtor = FunctionCtor::create(this);
+    functionCtor.objectValue->get(prototype, &functionPrototype);
+
     stringCtor = StringCtor::create(this);
     numberCtor = NumberCtor::create(this);
     booleanCtor = BooleanCtor::create(this);
@@ -234,6 +237,7 @@ ExecutionEngine::ExecutionEngine()
     glo->put(identifier(QLatin1String("String")), stringCtor);
     glo->put(identifier(QLatin1String("Number")), numberCtor);
     glo->put(identifier(QLatin1String("Array")), arrayCtor);
+    glo->put(identifier(QLatin1String("Function")), functionCtor);
     glo->put(identifier(QLatin1String("Date")), dateCtor);
     glo->put(identifier(QLatin1String("Math")), Value::fromObject(newMathObject(rootContext)));
 }
@@ -342,6 +346,26 @@ Object *ExecutionEngine::newBooleanPrototype(Context *ctx, FunctionObject *proto
     Object *booleanProto = new BooleanPrototype(ctx, proto);
     booleanProto->prototype = objectPrototype.objectValue;
     return booleanProto;
+}
+
+Object *ExecutionEngine::newFunctionObject(Context *ctx)
+{
+    Object *object = new FunctionObject(ctx);
+    if (functionPrototype.isObject())
+        object->prototype = functionPrototype.objectValue;
+    return object;
+}
+
+FunctionObject *ExecutionEngine::newFunctionCtor(Context *ctx)
+{
+    return new FunctionCtor(ctx);
+}
+
+Object *ExecutionEngine::newFunctionPrototype(Context *ctx, FunctionObject *proto)
+{
+    Object *functionProto = new FunctionPrototype(ctx, proto);
+    functionProto->prototype = objectPrototype.objectValue;
+    return functionProto;
 }
 
 Object *ExecutionEngine::newArrayObject()

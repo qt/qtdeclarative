@@ -134,6 +134,27 @@ protected:
     static void method_unshift(Context *ctx);
 };
 
+struct FunctionCtor: FunctionObject
+{
+    static Value create(ExecutionEngine *engine);
+
+    FunctionCtor(Context *scope);
+
+    virtual void construct(Context *ctx);
+    virtual void call(Context *ctx);
+};
+
+struct FunctionPrototype: FunctionObject
+{
+    FunctionPrototype(Context *ctx, FunctionObject *ctor);
+
+protected:
+    static void method_toString(Context *ctx);
+    static void method_apply(Context *ctx);
+    static void method_call(Context *ctx);
+    static void method_bind(Context *ctx);
+};
+
 struct DateCtor: FunctionObject
 {
     static Value create(ExecutionEngine *engine);

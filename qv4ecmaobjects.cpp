@@ -1076,9 +1076,6 @@ void BooleanPrototype::method_valueOf(Context *ctx)
 //
 // Array object
 //
-//
-// Number object
-//
 Value ArrayCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
@@ -1372,6 +1369,85 @@ void ArrayPrototype::method_unshift(Context *ctx)
     if (ArrayObject *instance = self.asArrayObject()) {
     } else {
         assert(!"generic implementation of Array.prototype.unshift");
+    }
+}
+
+//
+// Function object
+//
+//
+// Array object
+//
+Value FunctionCtor::create(ExecutionEngine *engine)
+{
+    Context *ctx = engine->rootContext;
+    FunctionObject *ctor = ctx->engine->newFunctionCtor(ctx);
+    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newFunctionPrototype(ctx, ctor)));
+    return Value::fromObject(ctor);
+}
+
+FunctionCtor::FunctionCtor(Context *scope)
+    : FunctionObject(scope)
+{
+}
+
+void FunctionCtor::construct(Context *ctx)
+{
+    Q_UNIMPLEMENTED();
+}
+
+void FunctionCtor::call(Context *ctx)
+{
+    Q_UNIMPLEMENTED();
+}
+
+FunctionPrototype::FunctionPrototype(Context *ctx, FunctionObject *ctor)
+    : FunctionObject(ctx)
+{
+    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QLatin1String("toString"), method_toString, 0);
+    setProperty(ctx, QLatin1String("apply"), method_apply, 0);
+    setProperty(ctx, QLatin1String("call"), method_call, 0);
+    setProperty(ctx, QLatin1String("bind"), method_bind, 0);
+}
+
+void FunctionPrototype::method_toString(Context *ctx)
+{
+    if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
+        ctx->result = Value::fromString(ctx, QLatin1String("function() { [code] }"));
+    } else {
+        assert(!"type error");
+    }
+}
+
+void FunctionPrototype::method_apply(Context *ctx)
+{
+    if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"type error");
+    }
+}
+
+void FunctionPrototype::method_call(Context *ctx)
+{
+    if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
+        Value thisArg = ctx->argument(0);
+        QVector<Value> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
+        if (ctx->argumentCount)
+            qCopy(ctx->arguments + 1, ctx->arguments + ctx->argumentCount, args.begin());
+        __qmljs_call_value(ctx, &ctx->result, &thisArg, &ctx->thisObject, args.data(), args.size());
+    } else {
+        assert(!"type error");
+    }
+}
+
+void FunctionPrototype::method_bind(Context *ctx)
+{
+    if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"type error");
     }
 }
 
