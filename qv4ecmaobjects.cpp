@@ -1094,12 +1094,31 @@ ArrayCtor::ArrayCtor(Context *scope)
 
 void ArrayCtor::construct(Context *ctx)
 {
-    ctx->thisObject = Value::fromObject(ctx->engine->newArrayObject());
+    call(ctx);
+    ctx->thisObject = ctx->result;
 }
 
 void ArrayCtor::call(Context *ctx)
 {
-    ctx->result = Value::fromObject(ctx->engine->newArrayObject());
+    Array value;
+    if (ctx->argumentCount == 1 && ctx->argument(0).isNumber()) {
+        double size = ctx->argument(0).numberValue;
+        quint32 isize = Value::toUInt32(size);
+
+        if (size != double(isize)) {
+            assert(!"invlaid array length exception");
+            return;
+        }
+
+        qDebug() << "size:" << isize;
+        value.resize(isize);
+    } else {
+        for (size_t i = 0; i < ctx->argumentCount; ++i) {
+            value.assign(i, ctx->argument(i));
+        }
+    }
+
+    ctx->result = Value::fromObject(ctx->engine->newArrayObject(value));
 }
 
 ArrayPrototype::ArrayPrototype(Context *ctx, FunctionObject *ctor)
@@ -1184,7 +1203,7 @@ void ArrayPrototype::method_join(Context *ctx)
 
     if (ArrayObject *a = self.objectValue->asArrayObject()) {
         for (uint i = 0; i < a->value.size(); ++i) {
-            if (! R.isEmpty())
+            if (i)
                 R += r4;
 
             Value e = a->value.at(i);
@@ -1239,30 +1258,89 @@ void ArrayPrototype::method_pop(Context *ctx)
 
 void ArrayPrototype::method_push(Context *ctx)
 {
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        uint pos = instance->value.size();
+        for (size_t i = 0; i < ctx->argumentCount; ++i) {
+            Value val = ctx->argument(i);
+            instance->value.assign(pos++, val);
+        }
+        ctx->result = Value::fromNumber(pos);
+    } else {
+        String *id_length = ctx->engine->identifier(QLatin1String("length"));
+        Value *r1 = self.objectValue->getProperty(id_length);
+        quint32 n = r1 ? r1->toUInt32(ctx) : 0;
+        for (int index = 0; index < ctx->argumentCount; ++index, ++n) {
+            Value r3 = ctx->argument(index);
+            String *name = Value::fromNumber(n).toString(ctx);
+            self.objectValue->put(name, r3);
+        }
+        Value r = Value::fromNumber(n);
+        self.objectValue->put(id_length, r);
+        ctx->result = r;
+    }
 }
 
 void ArrayPrototype::method_reverse(Context *ctx)
 {
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        int lo = 0, hi = instance->value.count() - 1;
+
+        for (; lo < hi; ++lo, --hi) {
+            Value tmp = instance->value.at(lo);
+            instance->value.assign(lo, instance->value.at(hi));
+            instance->value.assign(hi, tmp);
+        }
+    } else {
+        assert(!"generic implementation of Array.prototype.reverse");
+    }
 }
 
 void ArrayPrototype::method_shift(Context *ctx)
 {
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        ctx->result = instance->value.takeFirst();
+    } else {
+        assert(!"generic implementation of Array.prototype.reverse");
+    }
 }
 
 void ArrayPrototype::method_slice(Context *ctx)
 {
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+    } else {
+        assert(!"generic implementation of Array.prototype.slice");
+    }
 }
 
 void ArrayPrototype::method_sort(Context *ctx)
 {
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+    } else {
+        assert(!"generic implementation of Array.prototype.sort");
+    }
 }
 
 void ArrayPrototype::method_splice(Context *ctx)
 {
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+    } else {
+        assert(!"generic implementation of Array.prototype.splice");
+    }
 }
 
 void ArrayPrototype::method_unshift(Context *ctx)
 {
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+    } else {
+        assert(!"generic implementation of Array.prototype.unshift");
+    }
 }
 
 //

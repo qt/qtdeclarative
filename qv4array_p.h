@@ -26,6 +26,7 @@ public:
     inline void resize(uint size);
     inline void concat(const Array &other);
     inline Value pop();
+    inline Value takeFirst();
     inline void sort(Context *context, const Value &comparefn);
     inline void splice(double start, double deleteCount,
                        const QVector<Value> &items,
@@ -138,9 +139,9 @@ inline Value Array::at(uint index) const
     if (m_mode == VectorMode) {
         if (index < uint(to_vector->size()))
             return to_vector->at(index);
-        return Value();
+        return Value::undefinedValue();
     } else {
-        return to_map->value(index, Value());
+        return to_map->value(index, Value::undefinedValue());
     }
 }
 
@@ -188,7 +189,9 @@ inline void Array::resize(uint s)
 
     if (m_mode == VectorMode) {
         if (s < N) {
-            to_vector->resize (s); // ### init
+            to_vector->resize(s);
+            for (uint i = oldSize; i < s; ++i)
+                assign(i, Value::undefinedValue());
         } else {
             // switch to MapMode
             QMap<uint, Value> *m = new QMap<uint, Value>();
@@ -196,7 +199,7 @@ inline void Array::resize(uint s)
                 if (! to_vector->at(i).isUndefined())
                     m->insert(i, to_vector->at(i));
             }
-            m->insert(s, Value());
+            m->insert(s, Value::undefinedValue());
             delete to_vector;
             to_map = m;
             m_mode = MapMode;
@@ -227,7 +230,7 @@ inline void Array::resize(uint s)
                         to_map->erase(it);
                 }
             }
-            to_map->insert(s, Value());
+            to_map->insert(s, Value::undefinedValue());
         }
     }
 }
@@ -246,7 +249,7 @@ inline void Array::concat(const Array &other)
 inline Value Array::pop()
 {
     if (isEmpty())
-        return Value();
+        return Value::undefinedValue();
 
     Value v;
 
@@ -257,6 +260,22 @@ inline Value Array::pop()
 
     resize(size() - 1);
 
+    return v;
+}
+
+inline Value Array::takeFirst()
+{
+    if (isEmpty())
+        return Value::undefinedValue();
+
+    Value v;
+    if (m_mode == VectorMode) {
+        v = to_vector->first();
+        to_vector->remove(0, 1);
+    } else {
+        v = *to_map->begin();
+        to_map->erase(to_map->begin());
+    }
     return v;
 }
 
@@ -296,7 +315,7 @@ inline void Array::splice(double start, double deleteCount,
         for (uint i = 0; i < dc; ++i)
             other.assign(i, to_vector->at(st + i));
         if (itemsSize > dc)
-            to_vector->insert(st, itemsSize - dc, Value());
+            to_vector->insert(st, itemsSize - dc, Value::undefinedValue());
         else if (itemsSize < dc)
             to_vector->remove(st, dc - itemsSize);
         for (uint i = 0; i < itemsSize; ++i)
