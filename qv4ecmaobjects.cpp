@@ -1554,7 +1554,29 @@ void ArrayPrototype::method_reduce(Context *ctx)
 {
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
-        Q_UNIMPLEMENTED();
+        Value callback = ctx->argument(0);
+        Value initialValue = ctx->argument(1);
+        Value acc = initialValue;
+        for (quint32 k = 0; k < instance->value.size(); ++k) {
+            Value v = instance->value.at(k);
+            if (v.isUndefined())
+                continue;
+
+            if (acc.isUndefined()) {
+                acc = v;
+                continue;
+            }
+
+            Value r;
+            Value args[4];
+            args[0] = acc;
+            args[1] = v;
+            args[2] = Value::fromNumber(k);
+            args[3] = ctx->thisObject;
+            __qmljs_call_value(ctx, &r, 0, &callback, args, 4);
+            acc = r;
+        }
+        ctx->result = acc;
     } else {
         assert(!"generic implementation");
     }
