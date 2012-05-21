@@ -66,6 +66,8 @@ QT_BEGIN_NAMESPACE
 
 typedef QQuickListCompositor Compositor;
 
+class QQuickVisualDataModelAttachedMetaObject;
+
 class QQuickVisualDataModelItemMetaType : public QQmlRefCount
 {
 public:
@@ -92,10 +94,8 @@ public:
 
     QQmlGuard<QQuickVisualDataModel> model;
     const int groupCount;
-    const int memberPropertyOffset;
-    const int indexPropertyOffset;
     QV8Engine * const v8Engine;
-    QMetaObject *metaObject;
+    QQuickVisualDataModelAttachedMetaObject *metaObject;
     const QStringList groupNames;
     v8::Persistent<v8::ObjectTemplate> constructor;
 };
@@ -151,7 +151,6 @@ public:
     QVDMIncubationTask *incubationTask;
     v8::Persistent<v8::Object> indexHandle;
     v8::Persistent<v8::Value> modelHandle;
-    QIntrusiveListNode cacheNode;
     int objectRef;
     int scriptRef;
     int groups;
@@ -389,18 +388,21 @@ public:
     QList<QQuickVisualPartsModel *> models;
 };
 
-class QQuickVisualDataModelAttachedMetaObject : public QAbstractDynamicMetaObject
+class QQuickVisualDataModelAttachedMetaObject : public QAbstractDynamicMetaObject, public QQmlRefCount
 {
 public:
     QQuickVisualDataModelAttachedMetaObject(
-            QQuickVisualDataModelAttached *attached, QQuickVisualDataModelItemMetaType *metaType);
+            QQuickVisualDataModelItemMetaType *metaType, QMetaObject *metaObject);
     ~QQuickVisualDataModelAttachedMetaObject();
 
-    int metaCall(QMetaObject::Call, int _id, void **);
+    void objectDestroyed(QObject *);
+    int metaCall(QObject *, QMetaObject::Call, int _id, void **);
 
 private:
-    QQuickVisualDataModelAttached *attached;
-    QQuickVisualDataModelItemMetaType *metaType;
+    QQuickVisualDataModelItemMetaType * const metaType;
+    QMetaObject * const metaObject;
+    const int memberPropertyOffset;
+    const int indexPropertyOffset;
 };
 
 QT_END_NAMESPACE

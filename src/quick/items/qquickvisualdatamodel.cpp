@@ -162,6 +162,9 @@ QQuickVisualDataModelPrivate::QQuickVisualDataModelPrivate(QQmlContext *ctxt)
 QQuickVisualDataModelPrivate::~QQuickVisualDataModelPrivate()
 {
     qDeleteAll(m_finishedIncubating);
+
+    if (m_cacheMetaType)
+        m_cacheMetaType->release();
 }
 
 void QQuickVisualDataModelPrivate::init()
@@ -207,9 +210,6 @@ QQuickVisualDataModel::~QQuickVisualDataModel()
         if (!cacheItem->isReferenced())
             delete cacheItem;
     }
-
-    if (d->m_cacheMetaType)
-        d->m_cacheMetaType->release();
 }
 
 
@@ -782,10 +782,10 @@ void QQuickVisualDataModelPrivate::incubatorStatusChanged(QVDMIncubationTask *in
     if (status == QQmlIncubator::Ready) {
         incubationTask->incubating = 0;
         releaseIncubator(incubationTask);
-        if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object))
-            emitCreatedPackage(cacheItem, package);
-        else if (QQuickItem *item = qobject_cast<QQuickItem *>(cacheItem->object))
+        if (QQuickItem *item = qmlobject_cast<QQuickItem *>(cacheItem->object))
             emitCreatedItem(cacheItem, item);
+        else if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object))
+            emitCreatedPackage(cacheItem, package);
     } else if (status == QQmlIncubator::Error) {
         cacheItem->scriptRef -= 1;
         cacheItem->contextData->destroy();
@@ -1446,18 +1446,16 @@ QQuickVisualDataModelItemMetaType::QQuickVisualDataModelItemMetaType(
         QV8Engine *engine, QQuickVisualDataModel *model, const QStringList &groupNames)
     : model(model)
     , groupCount(groupNames.count() + 1)
-    , memberPropertyOffset(QQuickVisualDataModelAttached::staticMetaObject.propertyCount())
-    , indexPropertyOffset(QQuickVisualDataModelAttached::staticMetaObject.propertyCount() + groupNames.count())
     , v8Engine(engine)
     , metaObject(0)
     , groupNames(groupNames)
 {
-    initializeMetaObject();
 }
 
 QQuickVisualDataModelItemMetaType::~QQuickVisualDataModelItemMetaType()
 {
-    free(metaObject);
+    if (metaObject)
+        metaObject->release();
     qPersistentDispose(constructor);
 }
 
@@ -1485,7 +1483,7 @@ void QQuickVisualDataModelItemMetaType::initializeMetaObject()
         propertyBuilder.setWritable(true);
     }
 
-    metaObject = builder.toMetaObject();
+    metaObject = new QQuickVisualDataModelAttachedMetaObject(this, builder.toMetaObject());
 }
 
 void QQuickVisualDataModelItemMetaType::initializeConstructor()
@@ -1785,41 +1783,47 @@ QQuickVisualDataModelItem *QQuickVisualDataModelItem::dataForObject(QObject *obj
 //---------------------------------------------------------------------------
 
 QQuickVisualDataModelAttachedMetaObject::QQuickVisualDataModelAttachedMetaObject(
-        QQuickVisualDataModelAttached *attached, QQuickVisualDataModelItemMetaType *metaType)
-    : attached(attached)
-    , metaType(metaType)
+        QQuickVisualDataModelItemMetaType *metaType, QMetaObject *metaObject)
+    : metaType(metaType)
+    , metaObject(metaObject)
+    , memberPropertyOffset(QQuickVisualDataModelAttached::staticMetaObject.propertyCount())
+    , indexPropertyOffset(QQuickVisualDataModelAttached::staticMetaObject.propertyCount() + metaType->groupNames.count())
 {
-    if (!metaType->metaObject)
-        metaType->initializeMetaObject();
-
-    metaType->addref();
-    *static_cast<QMetaObject *>(this) = *metaType->metaObject;
-    QObjectPrivate::get(attached)->metaObject = this;
+    // Don't reference count the meta-type here as that would create a circular reference.
+    // Instead we rely the fact that the meta-type's reference count can't reach 0 without first
+    // destroying all delegates with attached objects.
+    *static_cast<QMetaObject *>(this) = *metaObject;
 }
 
 QQuickVisualDataModelAttachedMetaObject::~QQuickVisualDataModelAttachedMetaObject()
 {
-    metaType->release();
+    ::free(metaObject);
 }
 
-int QQuickVisualDataModelAttachedMetaObject::metaCall(QMetaObject::Call call, int _id, void **arguments)
+void QQuickVisualDataModelAttachedMetaObject::objectDestroyed(QObject *)
 {
+    release();
+}
+
+int QQuickVisualDataModelAttachedMetaObject::metaCall(QObject *object, QMetaObject::Call call, int _id, void **arguments)
+{
+    QQuickVisualDataModelAttached *attached = static_cast<QQuickVisualDataModelAttached *>(object);
     if (call == QMetaObject::ReadProperty) {
-        if (_id >= metaType->indexPropertyOffset) {
-            Compositor::Group group = Compositor::Group(_id - metaType->indexPropertyOffset + 1);
+        if (_id >= indexPropertyOffset) {
+            Compositor::Group group = Compositor::Group(_id - indexPropertyOffset + 1);
             *static_cast<int *>(arguments[0]) = attached->m_cacheItem->index[group];
             return -1;
-        } else if (_id >= metaType->memberPropertyOffset) {
-            Compositor::Group group = Compositor::Group(_id - metaType->memberPropertyOffset + 1);
+        } else if (_id >= memberPropertyOffset) {
+            Compositor::Group group = Compositor::Group(_id - memberPropertyOffset + 1);
             *static_cast<bool *>(arguments[0]) = attached->m_cacheItem->groups & (1 << group);
             return -1;
         }
     } else if (call == QMetaObject::WriteProperty) {
-        if (_id >= metaType->memberPropertyOffset) {
+        if (_id >= memberPropertyOffset) {
             if (!metaType->model)
                 return -1;
             QQuickVisualDataModelPrivate *model = QQuickVisualDataModelPrivate::get(metaType->model);
-            Compositor::Group group = Compositor::Group(_id - metaType->memberPropertyOffset + 1);
+            Compositor::Group group = Compositor::Group(_id - memberPropertyOffset + 1);
             const int groupFlag = 1 << group;
             const bool member = attached->m_cacheItem->groups & groupFlag;
             if (member && !*static_cast<bool *>(arguments[0])) {
@@ -1860,7 +1864,11 @@ QQuickVisualDataModelAttached::QQuickVisualDataModelAttached(
     for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i)
         m_previousIndex[i] = m_cacheItem->index[i];
 
-    new QQuickVisualDataModelAttachedMetaObject(this, cacheItem->metaType);
+    if (!cacheItem->metaType->metaObject)
+        cacheItem->metaType->initializeMetaObject();
+
+    QObjectPrivate::get(this)->metaObject = cacheItem->metaType->metaObject;
+    cacheItem->metaType->metaObject->addref();
 }
 
 /*!

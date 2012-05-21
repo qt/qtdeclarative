@@ -90,7 +90,6 @@ public:
             QQuickVisualDataModelItemMetaType *metaType,
             VDMModelDelegateDataType *dataType,
             int index);
-    ~QQuickVDMCachedModelData();
 
     int metaCall(QMetaObject::Call call, int id, void **arguments);
 
@@ -108,7 +107,10 @@ public:
     QVector<QVariant> cachedData;
 };
 
-class VDMModelDelegateDataType : public QQmlRefCount, public QQuickVisualAdaptorModel::Accessors
+class VDMModelDelegateDataType
+        : public QQmlRefCount
+        , public QQuickVisualAdaptorModel::Accessors
+        , public QAbstractDynamicMetaObject
 {
 public:
     VDMModelDelegateDataType(QQuickVisualAdaptorModel *model)
@@ -204,6 +206,18 @@ public:
         }
     }
 
+    // QAbstractDynamicMetaObject
+
+    void objectDestroyed(QObject *)
+    {
+        release();
+    }
+
+    int metaCall(QObject *object, QMetaObject::Call call, int id, void **arguments)
+    {
+        return static_cast<QQuickVDMCachedModelData *>(object)->metaCall(call, id, arguments);
+    }
+
     v8::Persistent<v8::ObjectTemplate> constructor;
     QList<int> propertyRoles;
     QList<int> watchedRoleIds;
@@ -217,23 +231,6 @@ public:
     bool hasModelData;
 };
 
-
-class QQuickVDMCachedModelDataMetaObject : public QAbstractDynamicMetaObject
-{
-public:
-    QQuickVDMCachedModelDataMetaObject(QQuickVDMCachedModelData *data)
-        : m_data(data)
-    {
-    }
-
-    int metaCall(QMetaObject::Call call, int id, void **arguments)
-    {
-        return m_data->metaCall(call, id, arguments);
-    }
-
-    QQuickVDMCachedModelData *m_data;
-};
-
 QQuickVDMCachedModelData::QQuickVDMCachedModelData(
         QQuickVisualDataModelItemMetaType *metaType, VDMModelDelegateDataType *dataType, int index)
     : QQuickVisualDataModelItem(metaType, index)
@@ -242,22 +239,13 @@ QQuickVDMCachedModelData::QQuickVDMCachedModelData(
     if (index == -1)
         cachedData.resize(type->hasModelData ? 1 : type->propertyRoles.count());
 
-    QQuickVDMCachedModelDataMetaObject *metaObject = new QQuickVDMCachedModelDataMetaObject(this);
-
-    QObjectPrivate *op = QObjectPrivate::get(this);
-    *static_cast<QMetaObject *>(metaObject) = *type->metaObject;
-    op->metaObject = metaObject;
+    QObjectPrivate::get(this)->metaObject = type;
 
     type->addref();
 
     QQmlData *qmldata = QQmlData::get(this, true);
     qmldata->propertyCache = dataType->propertyCache;
     qmldata->propertyCache->addref();
-}
-
-QQuickVDMCachedModelData::~QQuickVDMCachedModelData()
-{
-    type->release();
 }
 
 int QQuickVDMCachedModelData::metaCall(QMetaObject::Call call, int id, void **arguments)
@@ -542,6 +530,7 @@ public:
         }
 
         metaObject = builder.toMetaObject();
+        *static_cast<QMetaObject *>(this) = *metaObject;
         propertyCache = new QQmlPropertyCache(engine, metaObject);
     }
 };
@@ -657,6 +646,7 @@ public:
         }
 
         metaObject = builder.toMetaObject();
+        *static_cast<QMetaObject *>(this) = *metaObject;
         propertyCache = new QQmlPropertyCache(engine, metaObject);
     }
 };
