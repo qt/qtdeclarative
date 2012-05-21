@@ -345,6 +345,39 @@ void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
     amd64_call_code(_codePtr, __qmljs_construct_property);
 }
 
+void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
+{
+    IR::Temp *baseTemp = call->base->asTemp();
+    assert(baseTemp != 0);
+
+    int argc = 0;
+    for (IR::ExprList *it = call->args; it; it = it->next) {
+        ++argc;
+    }
+
+    int i = 0;
+    for (IR::ExprList *it = call->args; it; it = it->next, ++i) {
+        IR::Temp *arg = it->expr->asTemp();
+        assert(arg != 0);
+        amd64_lea_membase(_codePtr, AMD64_RDI, AMD64_RSP, sizeof(Value) * i);
+        loadTempAddress(AMD64_RSI, arg);
+        amd64_call_code(_codePtr, __qmljs_copy);
+    }
+
+    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8); // load the context
+
+    if (result)
+        loadTempAddress(AMD64_RSI, result);
+    else
+        amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RSI, AMD64_RSI);
+
+    amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RDX, AMD64_RDX);
+    loadTempAddress(AMD64_RCX, baseTemp);
+    amd64_lea_membase(_codePtr, AMD64_R8, AMD64_RSP, 0);
+    amd64_mov_reg_imm(_codePtr, AMD64_R9, argc);
+    amd64_call_code(_codePtr, __qmljs_construct_value);
+}
+
 void InstructionSelection::visitExp(IR::Exp *s)
 {
     if (IR::Call *c = s->expr->asCall()) {
@@ -494,6 +527,9 @@ void InstructionSelection::visitMove(IR::Move *s)
                     return;
                 } else if (ctor->base->asMember()) {
                     constructProperty(ctor, t);
+                    return;
+                } else if (ctor->base->asTemp()) {
+                    constructValue(ctor, t);
                     return;
                 }
             } else if (IR::Member *m = s->source->asMember()) {

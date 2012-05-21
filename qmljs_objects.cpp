@@ -263,7 +263,10 @@ FunctionObject *ExecutionEngine::newScriptFunction(Context *scope, IR::Function 
 
 Object *ExecutionEngine::newObject()
 {
-    return new Object();
+    Object *object = new Object();
+    if (objectPrototype.isObject())
+        object->prototype = objectPrototype.objectValue;
+    return object;
 }
 
 FunctionObject *ExecutionEngine::newObjectCtor(Context *ctx)
@@ -283,7 +286,10 @@ String *ExecutionEngine::newString(const QString &s)
 
 Object *ExecutionEngine::newStringObject(const Value &value)
 {
-    return new StringObject(value);
+    StringObject *object = new StringObject(value);
+    if (stringPrototype.isObject())
+        object->prototype = stringPrototype.objectValue;
+    return object;
 }
 
 FunctionObject *ExecutionEngine::newStringCtor(Context *ctx)
@@ -300,7 +306,10 @@ Object *ExecutionEngine::newStringPrototype(Context *ctx, FunctionObject *proto)
 
 Object *ExecutionEngine::newNumberObject(const Value &value)
 {
-    return new NumberObject(value);
+    NumberObject *object = new NumberObject(value);
+    if (numberPrototype.isObject())
+        object->prototype = numberPrototype.objectValue;
+    return object;
 }
 
 FunctionObject *ExecutionEngine::newNumberCtor(Context *ctx)
@@ -317,7 +326,10 @@ Object *ExecutionEngine::newNumberPrototype(Context *ctx, FunctionObject *proto)
 
 Object *ExecutionEngine::newBooleanObject(const Value &value)
 {
-    return new BooleanObject(value);
+    Object *object = new BooleanObject(value);
+    if (booleanPrototype.isObject())
+        object->prototype = booleanPrototype.objectValue;
+    return object;
 }
 
 FunctionObject *ExecutionEngine::newBooleanCtor(Context *ctx)
@@ -335,14 +347,16 @@ Object *ExecutionEngine::newBooleanPrototype(Context *ctx, FunctionObject *proto
 Object *ExecutionEngine::newArrayObject()
 {
     ArrayObject *object = new ArrayObject();
-    object->prototype = arrayPrototype.objectValue;
+    if (arrayPrototype.isObject())
+        object->prototype = arrayPrototype.objectValue;
     return object;
 }
 
 Object *ExecutionEngine::newArrayObject(const Array &value)
 {
     ArrayObject *object = new ArrayObject(value);
-    object->prototype = arrayPrototype.objectValue;
+    if (arrayPrototype.isObject())
+        object->prototype = arrayPrototype.objectValue;
     return object;
 }
 
@@ -360,7 +374,10 @@ Object *ExecutionEngine::newArrayPrototype(Context *ctx, FunctionObject *proto)
 
 Object *ExecutionEngine::newDateObject(const Value &value)
 {
-    return new DateObject(value);
+    Object *object = new DateObject(value);
+    if (datePrototype.isObject())
+        object->prototype = datePrototype.objectValue;
+    return object;
 }
 
 FunctionObject *ExecutionEngine::newDateCtor(Context *ctx)
