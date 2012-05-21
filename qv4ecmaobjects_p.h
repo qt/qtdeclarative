@@ -115,7 +115,7 @@ struct ArrayCtor: FunctionObject
     virtual void call(Context *ctx);
 };
 
-struct ArrayPrototype: Object
+struct ArrayPrototype: ArrayObject
 {
     ArrayPrototype(Context *ctx, FunctionObject *ctor);
 
