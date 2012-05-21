@@ -6,8 +6,6 @@ SOURCES += tst_qqmlsqldatabase.cpp
 
 include (../../shared/util.pri)
 
-CONFIG += parallel_test
-
 TESTDATA = data/*
 
 QT += core-private gui-private v8-private qml-private quick-private sql testlib

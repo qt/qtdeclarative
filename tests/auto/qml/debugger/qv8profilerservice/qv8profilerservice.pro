@@ -10,7 +10,5 @@ include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 
-CONFIG += parallel_test
-
 QT += qml testlib
 

@@ -11,5 +11,3 @@ include(../../../shared/util.pri)
 include(../shared/debugutil.pri)
 
 TESTDATA = data/*
-
-CONFIG += parallel_test
