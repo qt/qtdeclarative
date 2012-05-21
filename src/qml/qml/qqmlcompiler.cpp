@@ -2540,7 +2540,7 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
         return true;
 
     QString enumValue = parts.at(1);
-    int value;
+    int value = 0;
     bool ok;
 
     if (toQmlType(obj) == type) {

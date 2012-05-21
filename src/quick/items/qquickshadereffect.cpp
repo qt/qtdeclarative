@@ -297,9 +297,12 @@ void QQuickShaderEffectCommon::updateParseLog(bool ignoreAttributes)
 void QQuickShaderEffectCommon::lookThroughShaderCode(QQuickItem *item, Key::ShaderType shaderType, const QByteArray &code)
 {
     int index = 0;
-    int typeIndex, typeLength, nameIndex, nameLength;
+    int typeIndex = -1;
+    int typeLength = 0;
+    int nameIndex = -1;
+    int nameLength = 0;
     const char *s = code.constData();
-    VariableQualifier decl;
+    VariableQualifier decl = AttributeQualifier;
     while ((index = qt_search_for_variable(s, code.size(), index, decl, typeIndex, typeLength,
                                            nameIndex, nameLength)) != -1)
     {

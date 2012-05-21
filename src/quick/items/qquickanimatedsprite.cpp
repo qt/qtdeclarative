@@ -594,7 +594,7 @@ void QQuickAnimatedSprite::prepareNextFrame()
     qreal time =  timeInt / 1000.;
 
     double frameAt; //double just for modf
-    qreal progress;
+    qreal progress = 0.0;
     if (!m_paused) {
         //Advance State (keeps time for psuedostates)
         m_spriteEngine->updateSprites(timeInt);

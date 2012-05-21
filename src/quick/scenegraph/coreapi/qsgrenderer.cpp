@@ -240,8 +240,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 #ifdef QSG_RENDERER_TIMING
     if (qsg_render_timing)
         frameTimer.start();
-    int bindTime;
-    int renderTime;
+    int bindTime = 0;
+    int renderTime = 0;
 #endif
 
     m_bindable = &bindable;
