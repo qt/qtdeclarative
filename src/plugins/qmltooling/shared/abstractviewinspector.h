@@ -110,6 +110,9 @@ protected:
     virtual bool wheelEvent(QWheelEvent *event);
     virtual bool touchEvent(QTouchEvent *event);
 
+private slots:
+    void onQmlObjectDestroyed();
+
 private:
     void setEnabled(bool value);
 
@@ -123,6 +126,7 @@ private:
     QList<AbstractTool *> m_tools;
     int m_eventId;
     int m_reloadEventId;
+    int m_destroyEventId;
 };
 
 } // namespace QmlJSDebugger

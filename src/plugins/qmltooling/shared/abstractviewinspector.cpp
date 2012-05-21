@@ -91,7 +91,8 @@ AbstractViewInspector::AbstractViewInspector(QObject *parent) :
     m_enabled(false),
     m_debugService(QQmlInspectorService::instance()),
     m_eventId(0),
-    m_reloadEventId(-1)
+    m_reloadEventId(-1),
+    m_destroyEventId(-1)
 {
 }
 
@@ -269,6 +270,20 @@ bool AbstractViewInspector::touchEvent(QTouchEvent *event)
     return true;
 }
 
+void AbstractViewInspector::onQmlObjectDestroyed()
+{
+    if (m_destroyEventId == -1)
+        return;
+
+    QByteArray response;
+
+    QQmlDebugStream rs(&response, QIODevice::WriteOnly);
+    rs << QByteArray(RESPONSE) << m_destroyEventId << true;
+
+    m_debugService->sendMessage(response);
+    m_destroyEventId = -1;
+}
+
 void AbstractViewInspector::handleMessage(const QByteArray &message)
 {
     bool success = true;
@@ -329,8 +344,12 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
         } else if (command == DESTROY_OBJECT) {
             int debugId;
             ds >> debugId;
-            if (QObject *obj = QQmlDebugService::objectForId(debugId))
+            m_destroyEventId = requestId;
+            if (QObject *obj = QQmlDebugService::objectForId(debugId)) {
+                connect(obj, SIGNAL(destroyed()), SLOT(onQmlObjectDestroyed()));
                 obj->deleteLater();
+            }
+            return;
 
         } else if (command == MOVE_OBJECT) {
             int debugId, newParent;
