@@ -170,6 +170,11 @@ public:
         }
     }
 
+    ~QQuickMouseEventEx()
+    {
+        d = 0;
+    }
+
     static const QQuickMouseEventEx *extended(const QMouseEvent *e) {
         const QQuickMouseEventEx *ex = static_cast<const QQuickMouseEventEx*>(e);
         return reinterpret_cast<const QMouseEvent*>(ex->d) == e ? ex : 0;
