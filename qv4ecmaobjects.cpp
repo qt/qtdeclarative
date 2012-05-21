@@ -1275,7 +1275,7 @@ void ArrayPrototype::method_push(Context *ctx)
         String *id_length = ctx->engine->identifier(QLatin1String("length"));
         Value *r1 = self.objectValue->getProperty(id_length);
         quint32 n = r1 ? r1->toUInt32(ctx) : 0;
-        for (int index = 0; index < ctx->argumentCount; ++index, ++n) {
+        for (size_t index = 0; index < ctx->argumentCount; ++index, ++n) {
             Value r3 = ctx->argument(index);
             String *name = Value::fromNumber(n).toString(ctx);
             self.objectValue->put(name, r3);
@@ -1425,7 +1425,23 @@ void ArrayPrototype::method_forEach(Context *ctx)
 {
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
-        Q_UNIMPLEMENTED();
+        Value callback = ctx->argument(0);
+        if (! callback.isFunctionObject())
+            assert(!"type error");
+        else {
+            Value thisArg = ctx->argument(1);
+            for (quint32 k = 0; k < instance->value.size(); ++k) {
+                Value v = instance->value.at(k);
+                if (v.isUndefined())
+                    continue;
+                Value r;
+                Value args[3];
+                args[0] = v;
+                args[1] = Value::fromNumber(k);
+                args[2] = ctx->thisObject;
+                __qmljs_call_value(ctx, &r, &thisArg, &callback, args, 3);
+            }
+        }
     } else {
         assert(!"generic implementation");
     }
