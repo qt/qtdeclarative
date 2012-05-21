@@ -402,7 +402,6 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                         QCoreApplication::translate(DATAS.at(instr.context).constData(),
                                                     DATAS.at(instr.text).constData(),
                                                     DATAS.at(instr.comment).constData(),
-                                                    QCoreApplication::UnicodeUTF8,
                                                     instr.n));
         QML_STORE_VALUE(StoreTrIdString, QString, qtTrId(DATAS.at(instr.text).constData(), instr.n));
 

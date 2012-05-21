@@ -1210,7 +1210,7 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
     QString result = QCoreApplication::translate(context.toUtf8().constData(),
                                                  text.toUtf8().constData(),
                                                  comment.toUtf8().constData(),
-                                                 QCoreApplication::UnicodeUTF8, n);
+                                                 n);
 
     return v8engine->toString(result);
 }
@@ -1249,7 +1249,7 @@ v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
         n = args[2]->Int32Value();
 
     QString result = QCoreApplication::translate(context.toUtf8().constData(), text.toUtf8().constData(),
-                                                 comment.toUtf8().constData(), QCoreApplication::UnicodeUTF8, n);
+                                                 comment.toUtf8().constData(), n);
 
     return v8engine->toString(result);
 }
