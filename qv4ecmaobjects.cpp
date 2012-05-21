@@ -1308,11 +1308,28 @@ void ArrayPrototype::method_shift(Context *ctx)
 
 void ArrayPrototype::method_slice(Context *ctx)
 {
+    // ### TODO implement the fast non-generic version of slice.
+
+    Array result;
+    Value start = ctx->argument(0);
+    Value end = ctx->argument(1);
     Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-    } else {
-        assert(!"generic implementation of Array.prototype.slice");
+    String *id_length = ctx->engine->identifier(QLatin1String("length"));
+    Value *l = self.objectValue->getProperty(id_length);
+    double r2 = l ? l->toNumber(ctx) : 0;
+    quint32 r3 = Value::toUInt32(r2);
+    qint32 r4 = qint32(start.toInteger(ctx));
+    quint32 r5 = r4 < 0 ? qMax(quint32(r3 + r4), quint32(0)) : qMin(quint32(r4), r3);
+    quint32 k = r5;
+    qint32 r7 = end.isUndefined() ? r3 : qint32 (end.toInteger(ctx));
+    quint32 r8 = r7 < 0 ? qMax(quint32(r3 + r7), quint32(0)) : qMin(quint32(r7), r3);
+    quint32 n = 0;
+    for (; k < r8; ++k) {
+        String *r11 = Value::fromNumber(k).toString(ctx);
+        if (Value *v = self.objectValue->getProperty(r11))
+            result.assign(n++, *v);
     }
+    ctx->result = Value::fromObject(ctx->engine->newArrayObject(result));
 }
 
 void ArrayPrototype::method_sort(Context *ctx)
