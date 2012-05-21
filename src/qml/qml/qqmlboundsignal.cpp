@@ -146,7 +146,8 @@ void QQmlBoundSignalExpression::evaluate(QObject *secondaryScope)
         if (!m_expressionFunctionValid) {
 
             if (m_expressionFunctionRewritten) {
-                m_v8function = evalFunction(context(), scopeObject(), m_expressionUtf8, m_fileName, m_line, &m_v8qmlscope);
+                m_v8function = evalFunction(context(), scopeObject(), QString::fromUtf8(m_expressionUtf8),
+                                            m_fileName, m_line, &m_v8qmlscope);
                 m_expressionUtf8.clear();
             } else {
                 bool ok = true;
