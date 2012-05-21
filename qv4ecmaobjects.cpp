@@ -1329,8 +1329,21 @@ void ArrayPrototype::method_sort(Context *ctx)
 
 void ArrayPrototype::method_splice(Context *ctx)
 {
+    if (ctx->argumentCount < 2)
+        return;
+
+    double start = ctx->argument(0).toInteger(ctx);
+    double deleteCount = ctx->argument(1).toInteger(ctx);
+    Value a = Value::fromObject(ctx->engine->newArrayObject());
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
+        QVector<Value> items;
+        for (size_t i = 2; i < ctx->argumentCount; ++i)
+            items << ctx->argument(i);
+        ArrayObject *otherInstance = a.asArrayObject();
+        Q_ASSERT(otherInstance);
+        instance->value.splice(start, deleteCount, items, otherInstance->value);
+        ctx->result = a;
     } else {
         assert(!"generic implementation of Array.prototype.splice");
     }
