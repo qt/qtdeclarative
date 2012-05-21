@@ -354,11 +354,15 @@ The following functions are also on the Qt object.
                         from right to left.
     \endlist
 
+    \endtable
+
     The following example uses the \c application object to indicate
     whether the application is currently active:
 
     \snippet doc/snippets/qml/application.qml document
+*/
 
+/*!
     \qmlproperty object Qt::inputMethod
     \since QtQuick 2.0
 
