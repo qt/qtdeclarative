@@ -1521,7 +1521,30 @@ void ArrayPrototype::method_filter(Context *ctx)
 {
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
-        Q_UNIMPLEMENTED();
+        Value callback = ctx->argument(0);
+        if (! callback.isFunctionObject())
+            assert(!"type error");
+        else {
+            Value thisArg = ctx->argument(1);
+            ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
+            for (quint32 k = 0; k < instance->value.size(); ++k) {
+                Value v = instance->value.at(k);
+                if (v.isUndefined())
+                    continue;
+                Value r;
+                Value args[3];
+                args[0] = v;
+                args[1] = Value::fromNumber(k);
+                args[2] = ctx->thisObject;
+                __qmljs_call_value(ctx, &r, &thisArg, &callback, args, 3);
+                if (__qmljs_to_boolean(ctx, &r)) {
+                    const uint index = a->value.size();
+                    a->value.resize(index + 1);
+                    a->value.assign(index, v);
+                }
+            }
+            ctx->result = Value::fromObject(a);
+        }
     } else {
         assert(!"generic implementation");
     }
