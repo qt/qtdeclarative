@@ -1110,7 +1110,6 @@ void ArrayCtor::call(Context *ctx)
             return;
         }
 
-        qDebug() << "size:" << isize;
         value.resize(isize);
     } else {
         for (size_t i = 0; i < ctx->argumentCount; ++i) {
