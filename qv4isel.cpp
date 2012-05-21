@@ -371,10 +371,9 @@ void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
     else
         amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RSI, AMD64_RSI);
 
-    amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RDX, AMD64_RDX);
-    loadTempAddress(AMD64_RCX, baseTemp);
-    amd64_lea_membase(_codePtr, AMD64_R8, AMD64_RSP, 0);
-    amd64_mov_reg_imm(_codePtr, AMD64_R9, argc);
+    loadTempAddress(AMD64_RDX, baseTemp);
+    amd64_lea_membase(_codePtr, AMD64_RCX, AMD64_RSP, 0);
+    amd64_mov_reg_imm(_codePtr, AMD64_R8, argc);
     amd64_call_code(_codePtr, __qmljs_construct_value);
 }
 

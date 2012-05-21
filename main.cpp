@@ -114,12 +114,12 @@ int main(int argc, char *argv[])
     QStringList args = app.arguments();
     args.removeFirst();
 
-    QQmlJS::VM::ExecutionEngine vm;
     foreach (const QString &fn, args) {
         QFile file(fn);
         if (file.open(QFile::ReadOnly)) {
             const QString code = QString::fromUtf8(file.readAll());
             file.close();
+            QQmlJS::VM::ExecutionEngine vm;
             evaluate(&vm, fn, code);
         }
     }
