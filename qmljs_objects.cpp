@@ -204,7 +204,7 @@ ExecutionEngine::ExecutionEngine()
     booleanPrototype.type = NULL_TYPE;
     arrayPrototype.type = NULL_TYPE;
     datePrototype.type = NULL_TYPE;
-    //functionPrototype.type = NULL_TYPE;
+    functionPrototype.type = NULL_TYPE;
 
     //
     // set up the global object
