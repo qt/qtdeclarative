@@ -1132,6 +1132,15 @@ ArrayPrototype::ArrayPrototype(Context *ctx, FunctionObject *ctor)
     setProperty(ctx, QLatin1String("sort"), method_sort, 1);
     setProperty(ctx, QLatin1String("splice"), method_splice, 2);
     setProperty(ctx, QLatin1String("unshift"), method_unshift, 1);
+    setProperty(ctx, QLatin1String("indexOf"), method_indexOf, 0);
+    setProperty(ctx, QLatin1String("lastIndexOf"), method_lastIndexOf, 0);
+    setProperty(ctx, QLatin1String("every"), method_every, 0);
+    setProperty(ctx, QLatin1String("some"), method_some, 0);
+    setProperty(ctx, QLatin1String("forEach"), method_forEach, 0);
+    setProperty(ctx, QLatin1String("map"), method_map, 0);
+    setProperty(ctx, QLatin1String("filter"), method_filter, 0);
+    setProperty(ctx, QLatin1String("reduce"), method_reduce, 0);
+    setProperty(ctx, QLatin1String("reduceRight"), method_reduceRight, 0);
 }
 
 void ArrayPrototype::method_toString(Context *ctx)
@@ -1369,6 +1378,96 @@ void ArrayPrototype::method_unshift(Context *ctx)
     if (ArrayObject *instance = self.asArrayObject()) {
     } else {
         assert(!"generic implementation of Array.prototype.unshift");
+    }
+}
+
+void ArrayPrototype::method_indexOf(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
+    }
+}
+
+void ArrayPrototype::method_lastIndexOf(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
+    }
+}
+
+void ArrayPrototype::method_every(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
+    }
+}
+
+void ArrayPrototype::method_some(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
+    }
+}
+
+void ArrayPrototype::method_forEach(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
+    }
+}
+
+void ArrayPrototype::method_map(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
+    }
+}
+
+void ArrayPrototype::method_filter(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
+    }
+}
+
+void ArrayPrototype::method_reduce(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
+    }
+}
+
+void ArrayPrototype::method_reduceRight(Context *ctx)
+{
+    Value self = ctx->thisObject;
+    if (ArrayObject *instance = self.asArrayObject()) {
+        Q_UNIMPLEMENTED();
+    } else {
+        assert(!"generic implementation");
     }
 }
 

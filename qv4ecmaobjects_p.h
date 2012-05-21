@@ -132,6 +132,15 @@ protected:
     static void method_sort(Context *ctx);
     static void method_splice(Context *ctx);
     static void method_unshift(Context *ctx);
+    static void method_indexOf(Context *ctx);
+    static void method_lastIndexOf(Context *ctx);
+    static void method_every(Context *ctx);
+    static void method_some(Context *ctx);
+    static void method_forEach(Context *ctx);
+    static void method_map(Context *ctx);
+    static void method_filter(Context *ctx);
+    static void method_reduce(Context *ctx);
+    static void method_reduceRight(Context *ctx);
 };
 
 struct FunctionCtor: FunctionObject
