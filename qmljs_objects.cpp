@@ -257,12 +257,18 @@ String *ExecutionEngine::identifier(const QString &s)
 
 FunctionObject *ExecutionEngine::newNativeFunction(Context *scope, void (*code)(Context *))
 {
-    return new NativeFunction(scope, code);
+    NativeFunction *f = new NativeFunction(scope, code);
+    if (scope->engine->functionPrototype.isObject())
+        f->prototype = scope->engine->functionPrototype.objectValue;
+    return f;
 }
 
 FunctionObject *ExecutionEngine::newScriptFunction(Context *scope, IR::Function *function)
 {
-    return new ScriptFunction(scope, function);
+    ScriptFunction *f = new ScriptFunction(scope, function);
+    if (scope->engine->functionPrototype.isObject())
+        f->prototype = scope->engine->functionPrototype.objectValue;
+    return f;
 }
 
 Object *ExecutionEngine::newObject()
