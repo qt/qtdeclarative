@@ -402,7 +402,7 @@ void QQuickCanvasItem::setCanvasWindow(const QRectF& rect)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Canvas::renderTarget
+    \qmlproperty enumeration QtQuick2::Canvas::renderTarget
     Holds the current canvas render target.
 
     \list
@@ -439,7 +439,7 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
 }
 
 /*!
-    \qmlproperty bool QtQuick2::Canvas::renderStrategy
+    \qmlproperty enumeration QtQuick2::Canvas::renderStrategy
     Holds the current canvas rendering strategy.
 
     \list
