@@ -1318,7 +1318,10 @@ void ArrayPrototype::method_slice(Context *ctx)
 void ArrayPrototype::method_sort(Context *ctx)
 {
     Value self = ctx->thisObject;
+    Value comparefn = ctx->argument(0);
     if (ArrayObject *instance = self.asArrayObject()) {
+        instance->value.sort(ctx, comparefn);
+        ctx->result = ctx->thisObject;
     } else {
         assert(!"generic implementation of Array.prototype.sort");
     }
