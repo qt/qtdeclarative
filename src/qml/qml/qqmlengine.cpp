@@ -947,14 +947,6 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 }
 
 /*!
-  Attempt to free unused memory.
-*/
-void QQmlEngine::collectGarbage()
-{
-    QV8Engine::gc();
-}
-
-/*!
   Returns the QQmlContext for the \a object, or 0 if no
   context has been set.
 

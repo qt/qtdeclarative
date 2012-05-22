@@ -206,8 +206,6 @@ QJSEngine::~QJSEngine()
     when the QJSEngine decides that it's wise to do so (i.e. when a certain number of new objects
     have been created). However, you can call this function to explicitly request that garbage
     collection should be performed as soon as possible.
-
-    \sa reportAdditionalMemoryCost()
 */
 void QJSEngine::collectGarbage()
 {
@@ -296,7 +294,7 @@ QJSValue QJSEngine::newArray(uint length)
   wrapper object (either by script code or C++) will result in a
   script exception.
 
-  \sa QJSValue::toQObject(), reportAdditionalMemoryCost()
+  \sa QJSValue::toQObject()
 */
 QJSValue QJSEngine::newQObject(QObject *object)
 {
