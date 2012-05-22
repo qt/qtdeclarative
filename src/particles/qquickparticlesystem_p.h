@@ -189,8 +189,10 @@ public:
     float ax;
     float ay;
 
-    //Other stuff, now universally shared
+    //Painter-specific stuff, now universally shared
+    //Used by ImageParticle color mode
     Color4ub color;
+    //Used by ImageParticle deform mode
     float xx;
     float xy;
     float yx;
@@ -198,6 +200,7 @@ public:
     float rotation;
     float rotationSpeed;
     float autoRotate;//Assume that GPUs prefer floats to bools
+    //Used by ImageParticle Sprite mode
     float animIdx;
     float frameDuration;
     float frameAt;//Used for duration -1
@@ -207,16 +210,19 @@ public:
     float animY;
     float animWidth;
     float animHeight;
-    float r;
-    QQuickItem* delegate;
-    int modelIndex;
-    float update;//Used by custom affectors
-
-    //Used by image particle
+    //Used by ImageParticle data shadowing
     QQuickImageParticle* colorOwner;
     QQuickImageParticle* rotationOwner;
     QQuickImageParticle* deformationOwner;
     QQuickImageParticle* animationOwner;
+    //Used by CustomParticle
+    float r;
+    //Used by ItemParticle
+    QQuickItem* delegate;
+    int modelIndex;
+    //Used by custom affectors
+    float update;
+
 
     void debugDump();
     bool stillAlive();//Only checks end, because usually that's all you need and it's a little faster.
