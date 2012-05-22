@@ -120,6 +120,8 @@ void QQuickFontObject::replyFinished()
             else
                 emit fontDownloaded(QString(), QQuickFontLoader::Error);
         } else {
+            qWarning("%s: Unable to load font '%s': %s", Q_FUNC_INFO,
+                     qPrintable(reply->url().toString()), qPrintable(reply->errorString()));
             emit fontDownloaded(QString(), QQuickFontLoader::Error);
         }
         reply->deleteLater();
