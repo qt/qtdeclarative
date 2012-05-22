@@ -3,6 +3,7 @@ TEMPLATE=app
 TARGET=tst_qquickcanvasitem
 
 CONFIG += warn_on qmltestcase
+CONFIG += insignificant_test  #QTBUG-25859
 SOURCES += tst_qquickcanvasitem.cpp
 
 TESTDATA = data/*
@@ -27,6 +28,5 @@ OTHER_FILES += \
     data/tst_arcto.qml \
     data/tst_arc.qml \
     data/tst_context.qml
-
 
 

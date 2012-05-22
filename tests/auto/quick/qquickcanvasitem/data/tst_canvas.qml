@@ -11,7 +11,7 @@ CanvasTestCase {
        var ctx = c.getContext("2d");
        verify(ctx);
 
-       tryCompare(c, "availableChangedCount", 1, 100);
+       tryCompare(c, "availableChangedCount", 1);
        //by default canvasSize is same with canvas' actual size
        // when canvas size changes, canvasSize should be changed as well.
        compare(c.canvasSize.width, c.width);
@@ -51,7 +51,7 @@ CanvasTestCase {
        verify(c);
        var ctx = c.getContext("2d");
        verify(ctx);
-       tryCompare(c, "availableChangedCount", 1, 100);
+       tryCompare(c, "availableChangedCount", 1);
 
        compare(c.tileSize.width, c.width);
        compare(c.tileSize.height, c.height);
@@ -90,7 +90,7 @@ CanvasTestCase {
        var ctx = c.getContext("2d");
        verify(ctx);
 
-       tryCompare(c, "availableChangedCount", 1, 100);
+       tryCompare(c, "availableChangedCount", 1);
        compare(c.canvasWindow.x, 0);
        compare(c.canvasWindow.y, 0);
        compare(c.canvasWindow.width, c.width);
@@ -121,7 +121,7 @@ CanvasTestCase {
        verify(c);
        var ctx = c.getContext("2d");
 
-       tryCompare(c, "availableChangedCount", 1, 100);
+       tryCompare(c, "availableChangedCount", 1);
 
        c.requestPaint();
        verify(c.save("c.png"));
@@ -139,7 +139,7 @@ CanvasTestCase {
        var ctx = c.getContext("2d");
        verify(ctx);
 
-       tryCompare(c, "availableChangedCount", 1, 100);
+       tryCompare(c, "availableChangedCount", 1);
 
        var imageTypes = [
                    {mimeType:"image/png"},
@@ -177,12 +177,12 @@ CanvasTestCase {
        var c = createCanvasObject(row);
        verify(c);
        var ctx = c.getContext("2d");
-       tryCompare(c, "availableChangedCount", 1, 100);
+       tryCompare(c, "availableChangedCount", 1);
 
        ctx.fillRect(0, 0, c.width, c.height);
        c.toDataURL();
-       tryCompare(c, "paintedCount", 2, 200);
-       tryCompare(c, "paintCount", 1, 200);
+       tryCompare(c, "paintedCount", 2);
+       tryCompare(c, "paintCount", 1);
        c.destroy();
   }
    function test_loadImage(row) {
@@ -191,7 +191,7 @@ CanvasTestCase {
        var ctx = c.getContext("2d");
        verify(ctx);
 
-       tryCompare(c, "availableChangedCount", 1, 100);
+       tryCompare(c, "availableChangedCount", 1);
 
        verify(!c.isImageLoaded("red.png"));
        c.loadImage("red.png");
@@ -213,7 +213,7 @@ CanvasTestCase {
        verify(c);
        var ctx = c.getContext("2d");
        verify(ctx);
-       tryCompare(c, "availableChangedCount", 1, 100);
+       tryCompare(c, "availableChangedCount", 1);
 
        compare(ctx.canvas, c);
        ctx = c.getContext('2d');
