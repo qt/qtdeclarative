@@ -138,9 +138,7 @@ QStringList QQmlAccessible::actionNames() const
         break;
     case QAccessible::RadioButton:
     case QAccessible::CheckBox:
-        actions << QAccessibleActionInterface::checkAction()
-                << QAccessibleActionInterface::uncheckAction()
-                << QAccessibleActionInterface::pressAction();
+        actions << QAccessibleActionInterface::toggleAction();
         break;
     case QAccessible::Slider:
     case QAccessible::SpinBox:
@@ -174,12 +172,8 @@ void QQmlAccessible::doAction(const QString &actionName)
     case QAccessible::CheckBox: {
         QVariant checked = object()->property("checked");
         if (checked.isValid()) {
-            if (actionName == QAccessibleActionInterface::pressAction()) {
+            if (actionName == QAccessibleActionInterface::toggleAction()) {
                 object()->setProperty("checked",  QVariant(!checked.toBool()));
-            } else if (actionName == QAccessibleActionInterface::checkAction()) {
-                object()->setProperty("checked",  QVariant(true));
-            } else if (actionName == QAccessibleActionInterface::uncheckAction()) {
-                object()->setProperty("checked",  QVariant(false));
             }
         }
         break;
