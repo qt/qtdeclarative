@@ -152,18 +152,6 @@ QJSEngine::QJSEngine()
 {
 }
 
-#ifdef QT_DEPRECATED
-
-/*!
-    \internal
-*/
-QJSEngine::QJSEngine(QJSEngine::ContextOwnership ownership)
-    : d(new QV8Engine(this, ownership))
-{
-}
-
-#endif // QT_DEPRECATED
-
 /*!
     Constructs a QJSEngine object with the given \a parent.
 

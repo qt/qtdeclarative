@@ -231,7 +231,11 @@ public:
     static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
     static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
 
-    QV8Engine(QJSEngine* qq,QJSEngine::ContextOwnership ownership = QJSEngine::CreateNewContext);
+    enum ContextOwnership {
+        AdoptCurrentContext,
+        CreateNewContext
+    };
+    QV8Engine(QJSEngine* qq, ContextOwnership ownership = CreateNewContext);
     virtual ~QV8Engine();
 
     // This enum should be in sync with QQmlEngine::ObjectOwnership

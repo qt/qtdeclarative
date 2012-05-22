@@ -65,14 +65,6 @@ class Q_QML_EXPORT QJSEngine
 {
     Q_OBJECT
 public:
-#ifdef QT_DEPRECATED
-    enum ContextOwnership {
-        AdoptCurrentContext,
-        CreateNewContext
-    };
-    QT_DEPRECATED explicit QJSEngine(ContextOwnership ownership);
-#endif
-
     QJSEngine();
     explicit QJSEngine(QObject *parent);
     virtual ~QJSEngine();

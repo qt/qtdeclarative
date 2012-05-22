@@ -120,10 +120,10 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
 }
 
 
-QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
+QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
     : q(qq)
     , m_engine(0)
-    , m_ownsV8Context(ownership == QJSEngine::CreateNewContext)
+    , m_ownsV8Context(ownership == CreateNewContext)
     , m_xmlHttpRequestData(0)
     , m_listModelData(0)
     , m_application(0)
@@ -141,7 +141,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     ensurePerThreadIsolate();
 
     v8::HandleScope handle_scope;
-    m_context = (ownership == QJSEngine::CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
+    m_context = (ownership == CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent());
     qPersistentRegister(m_context);
     m_originalGlobalObject.init(m_context);
     v8::Context::Scope context_scope(m_context);
