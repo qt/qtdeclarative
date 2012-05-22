@@ -87,6 +87,7 @@ public:
     static QObject *objectForId(int);
     static QList<QObject*> objectForLocationInfo(const QString &filename,
                                           int lineNumber, int columnNumber);
+    static void removeInvalidObjectsFromHash();
 
     static QString objectToString(QObject *obj);
 

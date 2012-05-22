@@ -199,6 +199,8 @@ QObject *QQmlDebugService::objectForId(int id)
     if (objIter->object == 0) {
         hash->ids.erase(iter);
         hash->objects.erase(objIter);
+        // run a loop to remove other invalid objects
+        removeInvalidObjectsFromHash();
         return 0;
     } else {
         return *iter;
@@ -235,6 +237,24 @@ QList<QObject*> QQmlDebugService::objectForLocationInfo(const QString &filename,
         }
     }
     return objects;
+}
+
+void QQmlDebugService::removeInvalidObjectsFromHash()
+{
+    ObjectReferenceHash *hash = objectReferenceHash();
+    QHash<int, QObject *>::Iterator iter = hash->ids.begin();
+    while (iter != hash->ids.end()) {
+        QHash<QObject *, ObjectReference>::Iterator objIter =
+                hash->objects.find(*iter);
+        Q_ASSERT(objIter != hash->objects.end());
+
+        if (objIter->object == 0) {
+            iter = hash->ids.erase(iter);
+            hash->objects.erase(objIter);
+        } else {
+            ++iter;
+        }
+    }
 }
 
 bool QQmlDebugService::isDebuggingEnabled()

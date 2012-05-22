@@ -131,6 +131,8 @@ private slots:
     void setMethodBody();
     void queryObjectTree();
     void setBindingInStates();
+
+    void regression_QTCREATORBUG_7451();
 };
 
 QmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
@@ -762,6 +764,68 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation_data()
     QTest::newRow("non-recursive") << false;
     QTest::newRow("recursive") << true;
 }
+
+void tst_QQmlEngineDebugService::regression_QTCREATORBUG_7451()
+{
+    QmlDebugObjectReference rootObject = findRootObject();
+    int contextId = rootObject.contextDebugId;
+    QQmlContext *context = qobject_cast<QQmlContext *>(QQmlDebugService::objectForId(contextId));
+    QQmlComponent component(context->engine());
+    QByteArray content;
+    content.append("import QtQuick 2.0\n"
+               "Text {"
+               "y: 10\n"
+               "text: \"test\"\n"
+               "}");
+    component.setData(content, rootObject.source.url);
+    QObject *object = component.create(context);
+    QVERIFY(object);
+    int idNew = QQmlDebugService::idForObject(object);
+    QVERIFY(idNew >= 0);
+
+    const QString fileName = QFileInfo(rootObject.source.url.toString()).fileName();
+    int lineNumber = rootObject.source.lineNumber;
+    int columnNumber = rootObject.source.columnNumber;
+    bool success = false;
+
+    m_dbg->queryObjectsForLocation(fileName, lineNumber,
+                                        columnNumber, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    foreach (QmlDebugObjectReference child, rootObject.children) {
+        success = false;
+        lineNumber = child.source.lineNumber;
+        columnNumber = child.source.columnNumber;
+        m_dbg->queryObjectsForLocation(fileName, lineNumber,
+                                       columnNumber, &success);
+        QVERIFY(success);
+        QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+    }
+
+    delete object;
+    QObject *deleted = QQmlDebugService::objectForId(idNew);
+    QVERIFY(!deleted);
+
+    lineNumber = rootObject.source.lineNumber;
+    columnNumber = rootObject.source.columnNumber;
+    success = false;
+    m_dbg->queryObjectsForLocation(fileName, lineNumber,
+                                   columnNumber, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    foreach (QmlDebugObjectReference child, rootObject.children) {
+        success = false;
+        lineNumber = child.source.lineNumber;
+        columnNumber = child.source.columnNumber;
+        m_dbg->queryObjectsForLocation(fileName, lineNumber,
+                                       columnNumber, &success);
+        QVERIFY(success);
+        QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+    }
+}
+
 
 void tst_QQmlEngineDebugService::queryExpressionResult()
 {
