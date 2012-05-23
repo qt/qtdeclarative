@@ -658,18 +658,12 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
             continue;
 
         // Extract method name
-        const char *signature;
-        if (QMetaObjectPrivate::get(metaObject)->revision >= 7) {
-            // Safe to use the raw name pointer
-            signature = m.name().constData();
-        } else {
-            // Safe to use the raw signature pointer
-            signature = m.methodSignature().constData();
-        }
-        const char *cptr = signature;
+        // It's safe to keep the raw name pointer
+        Q_ASSERT(QMetaObjectPrivate::get(metaObject)->revision >= 7);
+        const char *rawName = m.name().constData();
+        const char *cptr = rawName;
         char utf8 = 0;
-        while (*cptr && *cptr != '(') {
-            Q_ASSERT(*cptr != 0);
+        while (*cptr) {
             utf8 |= *cptr & 0x80;
             ++cptr;
         }
@@ -699,7 +693,7 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
         QQmlPropertyData *old = 0;
 
         if (utf8) {
-            QHashedString methodName(QString::fromUtf8(signature, cptr - signature));
+            QHashedString methodName(QString::fromUtf8(rawName, cptr - rawName));
             if (QQmlPropertyData **it = stringCache.value(methodName))
                 old = *it;
             stringCache.insert(methodName, data);
@@ -710,7 +704,7 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
                 ++signalHandlerIndex;
             }
         } else {
-            QHashedCStringRef methodName(signature, cptr - signature);
+            QHashedCStringRef methodName(rawName, cptr - rawName);
             if (QQmlPropertyData **it = stringCache.value(methodName))
                 old = *it;
             stringCache.insert(methodName, data);
@@ -721,9 +715,9 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
                 QVarLengthArray<char, 128> str(length+3);
                 str[0] = 'o';
                 str[1] = 'n';
-                str[2] = toupper(signature[0]);
+                str[2] = toupper(rawName[0]);
                 if (length > 1)
-                    memcpy(&str[3], &signature[1], length - 1);
+                    memcpy(&str[3], &rawName[1], length - 1);
                 str[length + 2] = '\0';
 
                 QHashedString on(QString::fromLatin1(str.data()));
