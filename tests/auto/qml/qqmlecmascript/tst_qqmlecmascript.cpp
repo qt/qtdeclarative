@@ -1409,12 +1409,9 @@ void tst_qqmlecmascript::componentCreation()
         QVERIFY(created);
 
         QObject *expectedParent;
-        if (createdParent.isEmpty()) {
-            // For now, the parent should be the engine; this will change for QTBUG-24841
-            expectedParent = &engine;
-        } else if (createdParent == QLatin1String("obj")) {
+        if (createdParent == QLatin1String("obj")) {
             expectedParent = object;
-        } else if (createdParent == QLatin1String("null")) {
+        } else if ((createdParent == QLatin1String("null")) || createdParent.isEmpty()) {
             expectedParent = 0;
         }
         QCOMPARE(created->parent(), expectedParent);

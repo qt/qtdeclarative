@@ -1137,9 +1137,7 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
         return v8::Null();
 
     QQmlComponent::CompilationMode compileMode = QQmlComponent::PreferSynchronous;
-
-    // Default to engine parent; this will be removed in the near future (QTBUG-24841)
-    QObject *parentArg = engine;
+    QObject *parentArg = 0;
 
     int consumedCount = 1;
     if (args.Length() > 1) {
