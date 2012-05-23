@@ -91,8 +91,7 @@ AbstractViewInspector::AbstractViewInspector(QObject *parent) :
     m_enabled(false),
     m_debugService(QQmlInspectorService::instance()),
     m_eventId(0),
-    m_reloadEventId(-1),
-    m_destroyEventId(-1)
+    m_reloadEventId(-1)
 {
 }
 
@@ -270,18 +269,20 @@ bool AbstractViewInspector::touchEvent(QTouchEvent *event)
     return true;
 }
 
-void AbstractViewInspector::onQmlObjectDestroyed()
+void AbstractViewInspector::onQmlObjectDestroyed(QObject *object)
 {
-    if (m_destroyEventId == -1)
+    if (!m_hashObjectsTobeDestroyed.contains(object))
         return;
+
+    int removeId = m_hashObjectsTobeDestroyed.take(object);
+    QQmlDebugService::removeInvalidObjectsFromHash();
 
     QByteArray response;
 
     QQmlDebugStream rs(&response, QIODevice::WriteOnly);
-    rs << QByteArray(RESPONSE) << m_destroyEventId << true;
+    rs << QByteArray(RESPONSE) << removeId << true;
 
     m_debugService->sendMessage(response);
-    m_destroyEventId = -1;
 }
 
 void AbstractViewInspector::handleMessage(const QByteArray &message)
@@ -344,9 +345,9 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
         } else if (command == DESTROY_OBJECT) {
             int debugId;
             ds >> debugId;
-            m_destroyEventId = requestId;
             if (QObject *obj = QQmlDebugService::objectForId(debugId)) {
-                connect(obj, SIGNAL(destroyed()), SLOT(onQmlObjectDestroyed()));
+                m_hashObjectsTobeDestroyed.insert(obj, requestId);
+                connect(obj, SIGNAL(destroyed(QObject*)), SLOT(onQmlObjectDestroyed(QObject*)));
                 obj->deleteLater();
             }
             return;

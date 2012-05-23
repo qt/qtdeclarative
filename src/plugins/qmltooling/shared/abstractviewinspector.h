@@ -111,7 +111,7 @@ protected:
     virtual bool touchEvent(QTouchEvent *event);
 
 private slots:
-    void onQmlObjectDestroyed();
+    void onQmlObjectDestroyed(QObject *object);
 
 private:
     void setEnabled(bool value);
@@ -126,7 +126,8 @@ private:
     QList<AbstractTool *> m_tools;
     int m_eventId;
     int m_reloadEventId;
-    int m_destroyEventId;
+    // Hash< object to be destroyed, destroy eventId >
+    QHash<QObject *, int> m_hashObjectsTobeDestroyed;
 };
 
 } // namespace QmlJSDebugger
