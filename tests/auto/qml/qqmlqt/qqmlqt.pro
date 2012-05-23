@@ -8,6 +8,4 @@ macx:CONFIG -= app_bundle
 
 TESTDATA = data/*
 
-CONFIG += parallel_test
-
 QT += core-private v8-private qml-private quick-private testlib gui
