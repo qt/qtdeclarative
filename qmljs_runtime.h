@@ -61,6 +61,9 @@ void __qmljs_construct_activation_property(Context *, Value *result, String *nam
 void __qmljs_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc);
 void __qmljs_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc);
 
+void __qmljs_builtin_typeof(Context *context, Value *result, Value *args, int argc);
+void __qmljs_builtin_throw(Context *context, Value *result, Value *args, int argc);
+
 // constructors
 void __qmljs_init_undefined(Value *result);
 void __qmljs_init_null(Value *result);

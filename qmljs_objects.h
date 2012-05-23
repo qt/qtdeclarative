@@ -322,7 +322,8 @@ struct Context {
     size_t formalCount;
     String **vars;
     size_t varCount;
-    bool calledAsConstructor;
+    int calledAsConstructor;
+    int hasUncaughtException;
 
     Value *lookup(String *name)
     {
@@ -366,6 +367,7 @@ struct Context {
         vars = 0;
         varCount = 0;
         calledAsConstructor = false;
+        hasUncaughtException = false;
     }
 
     void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);

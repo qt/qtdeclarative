@@ -203,10 +203,33 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
     else
         amd64_alu_reg_reg(_codePtr, X86_XOR, AMD64_RSI, AMD64_RSI);
 
-    amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*baseName->id));
-    amd64_lea_membase(_codePtr, AMD64_RCX, AMD64_RSP, 0);
-    amd64_mov_reg_imm(_codePtr, AMD64_R8, argc);
-    amd64_call_code(_codePtr, __qmljs_call_activation_property);
+    if (baseName->id) {
+        amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*baseName->id));
+        amd64_lea_membase(_codePtr, AMD64_RCX, AMD64_RSP, 0);
+        amd64_mov_reg_imm(_codePtr, AMD64_R8, argc);
+        amd64_call_code(_codePtr, __qmljs_call_activation_property);
+    } else {
+        switch (baseName->builtin) {
+        case IR::Name::builtin_invalid:
+            Q_UNREACHABLE();
+            break;
+        case IR::Name::builtin_typeof:
+            amd64_lea_membase(_codePtr, AMD64_RDX, AMD64_RSP, 0);
+            amd64_mov_reg_imm(_codePtr, AMD64_RCX, argc);
+            amd64_call_code(_codePtr, __qmljs_builtin_typeof);
+            break;
+        case IR::Name::builtin_throw:
+            amd64_lea_membase(_codePtr, AMD64_RDX, AMD64_RSP, 0);
+            amd64_mov_reg_imm(_codePtr, AMD64_RCX, argc);
+            amd64_call_code(_codePtr, __qmljs_builtin_throw);
+            break;
+        }
+    }
+
+    amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_R14, offsetof(Context, hasUncaughtException), 4);
+    amd64_alu_reg_imm_size(_codePtr, X86_CMP, AMD64_RAX, 1, 1);
+    _patches[_function->basicBlocks.last()].append(_codePtr); // ### TODO: jump to the exception handler
+    amd64_branch32(_codePtr, X86_CC_E, /* exception handler */ 0, 1);
 }
 
 
@@ -241,6 +264,11 @@ void InstructionSelection::callValue(IR::Call *call, IR::Temp *result)
     amd64_lea_membase(_codePtr, AMD64_R8, AMD64_RSP, 0);
     amd64_mov_reg_imm(_codePtr, AMD64_R9, argc);
     amd64_call_code(_codePtr, __qmljs_call_value);
+
+    amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_R14, offsetof(Context, hasUncaughtException), 4);
+    amd64_alu_reg_imm_size(_codePtr, X86_CMP, AMD64_RAX, 1, 1);
+    _patches[_function->basicBlocks.last()].append(_codePtr); // ### TODO: jump to the exception handler
+    amd64_branch32(_codePtr, X86_CC_E, /* exception handler */ 0, 1);
 }
 
 void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)

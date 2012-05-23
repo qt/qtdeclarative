@@ -692,6 +692,10 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
             Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
             ctx->initCallContext(context->engine, &thisObject, f, args, argc);
             f->call(ctx);
+            if (ctx->hasUncaughtException) {
+                context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+                context->result = ctx->result;
+            }
             ctx->leaveCallContext(f, result);
         } else {
             assert(!"not a function");
@@ -709,6 +713,10 @@ void __qmljs_call_value(Context *context, Value *result, const Value *thisObject
             Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
             ctx->initCallContext(context->engine, thisObject, f, args, argc);
             f->call(ctx);
+            if (ctx->hasUncaughtException) {
+                context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+                context->result = ctx->result;
+            }
             ctx->leaveCallContext(f, result);
         } else {
             assert(!"not a function");
@@ -736,6 +744,10 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
             Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
             ctx->initConstructorContext(context->engine, 0, f, args, argc);
             f->construct(ctx);
+            if (ctx->hasUncaughtException) {
+                context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+                context->result = ctx->result;
+            }
             ctx->leaveConstructorContext(f, result);
         } else {
             assert(!"not a function");
@@ -761,6 +773,10 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
             ctx->initConstructorContext(context->engine, 0, f, args, argc);
             ctx->calledAsConstructor = true;
             f->construct(ctx);
+            if (ctx->hasUncaughtException) {
+                context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+                context->result = ctx->result;
+            }
             ctx->leaveConstructorContext(f, result);
         } else {
             assert(!"not a function");
@@ -769,6 +785,21 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
         assert(!"not a callable object");
     }
 }
+
+void __qmljs_builtin_typeof(Context *context, Value *result, Value *args, int argc)
+{
+    Q_UNUSED(argc);
+    __qmljs_typeof(context, result, &args[0]);
+}
+
+void __qmljs_builtin_throw(Context *context, Value *result, Value *args, int argc)
+{
+    Q_UNUSED(result);
+    Q_UNUSED(argc);
+    context->result = args[0];
+    context->hasUncaughtException = true;
+}
+
 
 } // extern "C"
 

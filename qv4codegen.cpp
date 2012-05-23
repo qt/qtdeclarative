@@ -272,6 +272,7 @@ Codegen::Codegen()
     , _function(0)
     , _block(0)
     , _exitBlock(0)
+    , _throwBlock(0)
     , _returnAddress(0)
     , _env(0)
 {
@@ -1237,7 +1238,7 @@ bool Codegen::visit(TypeOfExpression *ast)
     Result expr = expression(ast->expression);
     IR::ExprList *args = _function->New<IR::ExprList>();
     args->init(argument(*expr));
-    _expr.code = call(_block->NAME(QLatin1String("typeof"), ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
+    _expr.code = call(_block->NAME(IR::Name::builtin_typeof, ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
     return false;
 }
 
@@ -1439,6 +1440,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     IR::Function *function = _module->newFunction(name);
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock();
+    IR::BasicBlock *throwBlock = function->newBasicBlock();
     function->hasDirectEval = _env->hasDirectEval;
     function->hasNestedFunctions = _env->hasNestedFunctions;
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
@@ -1452,10 +1454,14 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
     exitBlock->RET(exitBlock->TEMP(returnAddress), IR::InvalidType);
+    IR::ExprList *throwArgs = function->New<IR::ExprList>();
+    throwArgs->expr = throwBlock->TEMP(returnAddress);
+    throwBlock->EXP(throwBlock->CALL(throwBlock->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
+    qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
 
     for (FormalParameterList *it = formals; it; it = it->next) {
@@ -1471,9 +1477,13 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     if (! _block->isTerminated())
         _block->JUMP(_exitBlock);
 
+    if (! _throwBlock->isTerminated())
+        _throwBlock->JUMP(_exitBlock);
+
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
+    qSwap(_throwBlock, throwBlock);
     qSwap(_returnAddress, returnAddress);
 
     leaveEnvironment();
@@ -1708,10 +1718,11 @@ bool Codegen::visit(SwitchStatement *)
     return false;
 }
 
-bool Codegen::visit(ThrowStatement *)
+bool Codegen::visit(ThrowStatement *ast)
 {
-    //Q_ASSERT(!"not implemented");
-    _expr.code = _block->CONST(IR::UndefinedType, 0);
+    Result expr = expression(ast->expression);
+    _block->MOVE(_block->TEMP(_returnAddress), *expr);
+    _block->JUMP(_throwBlock);
     return false;
 }
 

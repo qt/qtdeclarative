@@ -255,11 +255,19 @@ struct String: Expr {
 };
 
 struct Name: Expr {
+    enum Builtin {
+        builtin_invalid,
+        builtin_typeof,
+        builtin_throw
+    };
+
     const QString *id;
+    Builtin builtin;
     quint32 line;
     quint32 column;
 
     void init(Type type, const QString *id, quint32 line, quint32 column);
+    void init(Type type, Builtin builtin, quint32 line, quint32 column);
 
     virtual void accept(ExprVisitor *v) { v->visitName(this); }
     virtual Name *asName() { return this; }
@@ -661,6 +669,7 @@ struct BasicBlock {
     Expr *STRING(const QString *value);
 
     Name *NAME(const QString &id, quint32 line, quint32 column);
+    Name *NAME(Name::Builtin builtin, quint32 line, quint32 column);
 
     Closure *CLOSURE(Function *function);
 

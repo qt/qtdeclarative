@@ -230,13 +230,26 @@ void Name::init(Type type, const QString *id, quint32 line, quint32 column)
 {
     this->type = type;
     this->id = id;
+    this->builtin = builtin_invalid;
+    this->line = line;
+    this->column = column;
+}
+
+void Name::init(Type type, Builtin builtin, quint32 line, quint32 column)
+{
+    this->type = type;
+    this->id = 0;
+    this->builtin = builtin;
     this->line = line;
     this->column = column;
 }
 
 void Name::dump(QTextStream &out)
 {
-    out << *id;
+    if (id)
+        out << *id;
+    else
+        out << "__qmljs_builtin_%" << (int) builtin;
 }
 
 void Temp::dump(QTextStream &out)
@@ -525,6 +538,13 @@ Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
     return e;
 }
 
+Name *BasicBlock::NAME(Name::Builtin builtin, quint32 line, quint32 column)
+{
+    Name *e = function->New<Name>();
+    e->init(InvalidType, builtin, line, column);
+    return e;
+}
+
 Closure *BasicBlock::CLOSURE(Function *function)
 {
     Closure *clos = function->New<Closure>();
@@ -622,6 +642,9 @@ Expr *BasicBlock::MEMBER(Expr *base, const QString *name)
 
 Stmt *BasicBlock::EXP(Expr *expr)
 { 
+    if (isTerminated())
+        return 0;
+
     Exp *s = function->New<Exp>();
     s->init(expr);
     statements.append(s);
@@ -630,6 +653,9 @@ Stmt *BasicBlock::EXP(Expr *expr)
 
 Stmt *BasicBlock::ENTER(Expr *expr)
 {
+    if (isTerminated())
+        return 0;
+
     Enter *s = function->New<Enter>();
     s->init(expr);
     statements.append(s);
@@ -638,6 +664,9 @@ Stmt *BasicBlock::ENTER(Expr *expr)
 
 Stmt *BasicBlock::LEAVE()
 {
+    if (isTerminated())
+        return 0;
+
     Leave *s = function->New<Leave>();
     s->init();
     statements.append(s);
@@ -646,6 +675,9 @@ Stmt *BasicBlock::LEAVE()
 
 Stmt *BasicBlock::MOVE(Expr *target, Expr *source, AluOp op)
 { 
+    if (isTerminated())
+        return 0;
+
     Move *s = function->New<Move>();
     s->init(target, source, op);
     statements.append(s);

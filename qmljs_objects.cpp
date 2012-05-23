@@ -463,6 +463,8 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
     vars = f->varList;
     varCount = f->varCount;
     locals = varCount ? new Value[varCount] : 0;
+    hasUncaughtException = false;
+    calledAsConstructor = false;
     std::fill(locals, locals + varCount, Value::undefinedValue());
 }
 

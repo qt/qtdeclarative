@@ -283,6 +283,7 @@ private:
     IR::Function *_function;
     IR::BasicBlock *_block;
     IR::BasicBlock *_exitBlock;
+    IR::BasicBlock *_throwBlock;
     unsigned _returnAddress;
     Environment *_env;
     QHash<AST::Node *, Environment *> _envMap;
