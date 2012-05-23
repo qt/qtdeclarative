@@ -81,8 +81,6 @@ QQuickViewPrivate::~QQuickViewPrivate()
 {
     if (QQmlDebugService::isDebuggingEnabled())
         QQmlInspectorService::instance()->removeView(q_func());
-
-    delete root;
 }
 
 void QQuickViewPrivate::execute()
@@ -215,6 +213,11 @@ QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent, Qt::WindowFlags f)
 
 QQuickView::~QQuickView()
 {
+    // Ensure that the component is destroyed before the engine; the engine may
+    // be a child of the QQuickViewPrivate, and will be destroyed by its dtor
+    Q_D(QQuickView);
+    delete d->root;
+    d->root = 0;
 }
 
 /*! \property QQuickView::source
