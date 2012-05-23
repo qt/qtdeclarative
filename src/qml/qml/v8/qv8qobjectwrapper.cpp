@@ -1555,7 +1555,7 @@ static v8::Handle<v8::Value> CallMethod(QObject *object, int index, int returnTy
 
         return args[0].toValue(engine);
 
-    } else if (returnType != 0) {
+    } else if (returnType != QMetaType::Void) {
         
         CallArgument arg;
         arg.initAsType(returnType);
