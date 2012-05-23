@@ -2230,9 +2230,6 @@ void tst_qquicktextedit::delegateLoading_data()
 
 void tst_qquicktextedit::delegateLoading()
 {
-#ifdef Q_OS_MAC
-    QSKIP("Test crashes during canvas tear down. QTBUG-23010");
-#endif
     QFETCH(QString, qmlfile);
     QFETCH(QString, error);
 
