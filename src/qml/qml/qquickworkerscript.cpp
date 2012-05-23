@@ -485,8 +485,13 @@ QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
     //We have to force to cleanup the main thread's event queue here
     //to make sure the main GUI release all pending locks/wait conditions which
     //some worker script/agent are waiting for (QQuickListModelWorkerAgent::sync() for example).
-    QCoreApplication::processEvents();
-    wait();
+    while (!isFinished()) {
+        // We can't simply wait here, because the worker thread will not terminate
+        // until the main thread processes the last data event it generates
+        QCoreApplication::processEvents();
+        yieldCurrentThread();
+    }
+
     d->deleteLater();
 }
 
