@@ -158,91 +158,47 @@ static bool qt_verifyIntegrity(
 
 QQuickListCompositor::iterator &QQuickListCompositor::iterator::operator +=(int difference)
 {
-    Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag)) {
-        incrementIndexes(range->count - offset);
-        offset = 0;
-        range = range->next;
-    }
+    // Update all indexes to the start of the range.
     decrementIndexes(offset);
-    offset += difference;
-    while (offset >= range->count || !(range->flags & groupFlag)) {
-        if (range->flags & groupFlag)
-            offset -= range->count;
-        incrementIndexes(range->count);
-        range = range->next;
-    }
-    incrementIndexes(offset);
-    return *this;
-}
 
-QQuickListCompositor::iterator &QQuickListCompositor::iterator::operator -=(int difference)
-{
-    Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag)) {
-        decrementIndexes(offset);
-        range = range->previous;
-        offset = range->count;
-    }
-    decrementIndexes(offset);
-    offset -= difference;
-    while (offset < 0) {
+    // If the iterator group isn't a member of the current range ignore the current offset.
+    if (!(range->flags & groupFlag))
+        offset = 0;
+
+    offset += difference;
+
+    // Iterate backwards looking for a range with a positive offset.
+    while (offset <= 0 && range->previous->flags) {
         range = range->previous;
         if (range->flags & groupFlag)
             offset += range->count;
         decrementIndexes(range->count);
     }
+
+    // Iterate forwards looking for the first range which contains both the offset and the
+    // iterator group.
+    while (range->flags && (offset >= range->count || !(range->flags & groupFlag))) {
+        if (range->flags & groupFlag)
+            offset -= range->count;
+        incrementIndexes(range->count);
+        range = range->next;
+    }
+
+    // Update all the indexes to inclue the remaining offset.
     incrementIndexes(offset);
+
     return *this;
 }
 
 QQuickListCompositor::insert_iterator &QQuickListCompositor::insert_iterator::operator +=(int difference)
 {
-    Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag)) {
-        incrementIndexes(range->count - offset);
-        offset = 0;
-        range = range->next;
-    }
-    decrementIndexes(offset);
-    offset += difference;
-    while (offset > range->count
-            || (offset == range->count && !range->append() && offset > 0)
-            || (!(range->flags & groupFlag) && offset > 0)) {
-        Q_ASSERT(range->flags);
-        if (range->flags & groupFlag)
-            offset -= range->count;
-        incrementIndexes(range->count);
-        range = range->next;
-    }
-    incrementIndexes(offset);
-    return *this;
-}
+    iterator::operator +=(difference);
 
-QQuickListCompositor::insert_iterator &QQuickListCompositor::insert_iterator::operator -=(int difference)
-{
-    Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag) && range->previous->flags) {
-        decrementIndexes(offset);
+    // If the previous range contains the append flag move the iterator to the tail of the previous
+    // range so that appended appear after the insert position.
+    if (offset == 0 && range->previous->append()) {
         range = range->previous;
-        offset = (range->flags & (GroupMask | CacheFlag)) ? range->count : 0;
-    }
-    decrementIndexes(offset);
-    offset -= difference;
-    while (offset < 0) {
-        range = range->previous;
-        if (range->flags & groupFlag)
-            offset += range->count;
-        decrementIndexes(range->count);
-    }
-    incrementIndexes(offset);
-    for (Range *previous = range->previous; offset == 0 && previous->prepend(); previous = previous->previous) {
-        if (previous->append() && previous->inGroup()) {
-            offset = previous->count;
-            range = previous;
-        } else if (!previous->inGroup()) {
-            break;
-        }
+        offset = range->inGroup() ? range->count : 0;
     }
 
     return *this;
@@ -303,14 +259,7 @@ QQuickListCompositor::iterator QQuickListCompositor::find(Group group, int index
     } else {
         const int offset = index - m_cacheIt.index[group];
         m_cacheIt.setGroup(group);
-        if (offset > 0) {
-            m_cacheIt += offset;
-        } else if (offset < 0) {
-            m_cacheIt -= -offset;
-        } else if (offset == 0) {
-            m_cacheIt -= 0;
-            m_cacheIt += 0;
-        }
+        m_cacheIt += offset;
     }
     Q_ASSERT(m_cacheIt.index[group] == index);
     Q_ASSERT(m_cacheIt->inGroup(group));
@@ -335,14 +284,7 @@ QQuickListCompositor::insert_iterator QQuickListCompositor::findInsertPosition(G
         const int offset = index - m_cacheIt.index[group];
         it = m_cacheIt;
         it.setGroup(group);
-        if (offset > 0) {
-            it += offset;
-        } else if (offset < 0) {
-            it -= -offset;
-        } else if (offset == 0) {
-            it -= 0;
-            it += 0;
-        }
+        it += offset;
     }
     Q_ASSERT(it.index[group] == index);
     return it;
@@ -414,7 +356,7 @@ QQuickListCompositor::iterator QQuickListCompositor::insert(
 void QQuickListCompositor::setFlags(
         Group fromGroup, int from, int count, Group group, int flags, QVector<Insert> *inserts)
 {
-    QT_QML_TRACE_LISTCOMPOSITOR(<< group << index << count << flags)
+    QT_QML_TRACE_LISTCOMPOSITOR(<< fromGroup << from << count << group << flags)
     setFlags(find(fromGroup, from), count, group, flags, inserts);
 }
 
@@ -496,7 +438,7 @@ void QQuickListCompositor::setFlags(
 void QQuickListCompositor::clearFlags(
         Group fromGroup, int from, int count, Group group, uint flags, QVector<Remove> *removes)
 {
-    QT_QML_TRACE_LISTCOMPOSITOR(<< group << index << count << flags)
+    QT_QML_TRACE_LISTCOMPOSITOR(<< fromGroup << from << count << group << flags)
     clearFlags(find(fromGroup, from), count, group, flags, removes);
 }
 
@@ -631,27 +573,44 @@ bool QQuickListCompositor::verifyMoveTo(
     return to >= 0 && to + count <= m_end.index[toGroup];
 }
 
+/*!
+    \internal
+
+    Moves \a count items belonging to \a moveGroup from the index \a from in \a fromGroup
+    to the index \a to in \a toGroup.
+
+    If \a removes and \a inserts are not null they will be populated with per group notifications
+    of the items moved.
+ */
+
 void QQuickListCompositor::move(
         Group fromGroup,
         int from,
         Group toGroup,
         int to,
         int count,
-        Group group,
+        Group moveGroup,
         QVector<Remove> *removes,
         QVector<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< fromGroup << from << toGroup << to << count)
-    Q_ASSERT(count != 0);
-    Q_ASSERT(from >=0 && from + count <= m_end.index[toGroup]);
-    Q_ASSERT(verifyMoveTo(fromGroup, from, toGroup, to, count, group));
+    Q_ASSERT(count > 0);
+    Q_ASSERT(from >=0);
+    Q_ASSERT(verifyMoveTo(fromGroup, from, toGroup, to, count, moveGroup));
 
+    // Find the position of the first item to move.
     iterator fromIt = find(fromGroup, from);
-    if (fromIt != group) {
+
+    if (fromIt != moveGroup) {
+        // If the range at the from index doesn't contain items from the move group; skip
+        // to the next range.
         fromIt.incrementIndexes(fromIt->count - fromIt.offset);
         fromIt.offset = 0;
         *fromIt = fromIt->next;
     } else if (fromIt.offset > 0) {
+        // If the range at the from index contains items from the move group and the index isn't
+        // at the start of the range; split the range at the index and move the iterator to start
+        // of the second range.
         *fromIt = insert(
                 *fromIt, fromIt->list, fromIt->index, fromIt.offset, fromIt->flags & ~AppendFlag)->next;
         fromIt->index += fromIt.offset;
@@ -659,32 +618,39 @@ void QQuickListCompositor::move(
         fromIt.offset = 0;
     }
 
+    // Remove count items belonging to the move group from the list.
     Range movedFlags;
     for (int moveId = 0; count > 0;) {
-        if (fromIt != group) {
+        if (fromIt != moveGroup) {
+            // Skip ranges not containing items from the move group.
             fromIt.incrementIndexes(fromIt->count);
             *fromIt = fromIt->next;
             continue;
         }
         int difference = qMin(count, fromIt->count);
 
+        // Create a new static range containing the moved items from an existing range.
         new Range(
                 &movedFlags,
                 fromIt->list,
                 fromIt->index,
                 difference,
                 fromIt->flags & ~(PrependFlag | AppendFlag));
+        // Remove moved items from the count, the existing range, and a remove notification.
         if (removes)
             removes->append(Remove(fromIt, difference, fromIt->flags, moveId++));
         count -= difference;
         fromIt->count -= difference;
 
+        // If the existing range contains the prepend flag replace the removed items with
+        // a placeholder range for new items inserted into the source model.
         int removeIndex = fromIt->index;
         if (fromIt->prepend()
                 && fromIt->previous != &m_ranges
                 && fromIt->previous->flags == PrependFlag
                 && fromIt->previous->list == fromIt->list
                 && fromIt->previous->end() == fromIt->index) {
+            // Grow the previous range instead of creating a new one if possible.
             fromIt->previous->count += difference;
         } else if (fromIt->prepend()) {
             *fromIt = insert(*fromIt, fromIt->list, removeIndex, difference, PrependFlag)->next;
@@ -692,10 +658,12 @@ void QQuickListCompositor::move(
         fromIt->index += difference;
 
         if (fromIt->count == 0) {
+            // If the existing range has no items remaining; remove it from the list.
             if (fromIt->append())
                 fromIt->previous->flags |= AppendFlag;
             *fromIt = erase(*fromIt);
 
+            // If the ranges before and after the removed range can be joined, do so.
             if (*fromIt != m_ranges.next && fromIt->flags == PrependFlag
                     && fromIt->previous != &m_ranges
                     && fromIt->previous->flags == PrependFlag
@@ -710,6 +678,7 @@ void QQuickListCompositor::move(
         }
     }
 
+    // Try and join the range following the removed items to the range preceding it.
     if (*fromIt != m_ranges.next
             && *fromIt != &m_ranges
             && fromIt->previous->list == fromIt->list
@@ -723,14 +692,15 @@ void QQuickListCompositor::move(
         *fromIt = erase(*fromIt)->previous;
     }
 
+    // Find the destination position of the move.
     insert_iterator toIt = fromIt;
     toIt.setGroup(toGroup);
-    const int difference = to - toIt.index[toGroup];
-    if (difference > 0)
-        toIt += difference;
-    else
-        toIt -= -difference;
 
+    const int difference = to - toIt.index[toGroup];
+    toIt += difference;
+
+    // If the insert position is part way through a range; split it and move the iterator to the
+    // start of the second range.
     if (toIt.offset > 0) {
         *toIt = insert(*toIt, toIt->list, toIt->index, toIt.offset, toIt->flags & ~AppendFlag)->next;
         toIt->index += toIt.offset;
@@ -738,6 +708,8 @@ void QQuickListCompositor::move(
         toIt.offset = 0;
     }
 
+    // Insert the moved ranges before the insert iterator, growing the previous range if that
+    // is an option.
     for (Range *range = movedFlags.previous; range != &movedFlags; range = range->previous) {
         if (*toIt != &m_ranges
                 && range->list == toIt->list
@@ -750,6 +722,7 @@ void QQuickListCompositor::move(
         }
     }
 
+    // Try and join the range after the inserted ranges to the last range inserted.
     if (*toIt != m_ranges.next
             && toIt->previous->list == toIt->list
             && (!toIt->list || (toIt->previous->end() == toIt->index && toIt->previous->flags == (toIt->flags & ~AppendFlag)))) {
@@ -758,6 +731,7 @@ void QQuickListCompositor::move(
         toIt->previous->flags = toIt->flags;
         *toIt = erase(*toIt)->previous;
     }
+    // Create insert notification for the ranges moved.
     Insert insert(toIt, 0, 0, 0);
     for (Range *next, *range = movedFlags.next; range != &movedFlags; range = next) {
         insert.count = range->count;
@@ -774,6 +748,7 @@ void QQuickListCompositor::move(
     }
 
     m_cacheIt = toIt;
+
     QT_QML_VERIFY_LISTCOMPOSITOR
 }
 

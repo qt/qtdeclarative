@@ -135,7 +135,6 @@ public:
         const Range *operator ->() const { return range; }
 
         iterator &operator +=(int difference);
-        iterator &operator -=(int difference);
 
         template<typename T> T *list() const { return static_cast<T *>(range->list); }
         int modelIndex() const { return range->index + offset; }
@@ -170,7 +169,6 @@ public:
         inline ~insert_iterator() {}
 
         insert_iterator &operator +=(int difference);
-        insert_iterator &operator -=(int difference);
     };
 
     struct Change

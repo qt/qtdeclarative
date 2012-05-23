@@ -258,8 +258,8 @@ void tst_qquicklistcompositor::findInsertPosition_data()
                 << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
                 << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
             << Selection << 1
-            << 1 << 0 << 1 << 1
-            << uint(C::AppendFlag | C::PrependFlag | C::CacheFlag) << 1;
+            << 1 << 1 << 1 << 3
+            << uint(0) << 0;
 }
 
 void tst_qquicklistcompositor::findInsertPosition()
@@ -282,6 +282,7 @@ void tst_qquicklistcompositor::findInsertPosition()
         compositor.append(range.list, range.index, range.count, range.flags);
 
     QQuickListCompositor::insert_iterator it = compositor.findInsertPosition(group, index);
+
     QCOMPARE(it.index[C::Cache], cacheIndex);
     QCOMPARE(it.index[C::Default], defaultIndex);
     QCOMPARE(it.index[Visible], visibleIndex);
@@ -338,7 +339,6 @@ void tst_qquicklistcompositor::insert()
                 C::Default, 0, c, 6, 4, C::DefaultFlag);
         const int indexes[] = {6,7,8,9,0,1,2,3,4,5,6,7,8,9,10,11,4,5,6,7,2,3};
         const int *lists[]  = {c,c,c,c,a,a,a,a,a,a,a,a,a,a, a, a,b,b,b,b,c,c};
-        QCOMPARE(compositor.count(C::Default), lengthOf(indexes));
         for (int i = 0; i < lengthOf(indexes); ++i) {
             it = compositor.find(C::Default, i);
             QCOMPARE(it.list<int>(), lists[i]);
@@ -950,6 +950,34 @@ void tst_qquicklistcompositor::move_data()
                 << IndexArray(cacheIndexes) << ListArray(cacheLists)
                 << IndexArray(defaultIndexes) << ListArray(defaultLists)
                 << IndexArray() << ListArray()
+                << IndexArray() << ListArray();
+    } { static const int cacheIndexes[] = {1,2,3,4,5,6,0,8,9};
+        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a};
+        static const int defaultIndexes[] = {1,2,3,4,5,6,0,8,9};
+        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a};
+        static const int visibleIndexes[] = {0,7,10};
+        static const void *visibleLists[] = {a,a, a};
+        QTest::newRow("0, 6, 3")
+                << (RangeList()
+                    << Range(a, 0, 1, C::PrependFlag)
+                    << Range(a, 1, 6, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 0, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 7, 1, VisibleFlag)
+                    << Range(a,10, 1, VisibleFlag)
+                    << Range(a, 7, 1, C::PrependFlag)
+                    << Range(a, 8, 2, C::AppendFlag | C::PrependFlag | C::DefaultFlag | C::CacheFlag))
+                << Visible << 0 << C::Default << 6 << 3
+                << (RemoveList()
+                    << Remove(0, 0, 6, 6, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag, 0)
+                    << Remove(0, 0, 6, 6, 1, VisibleFlag, 1)
+                    << Remove(0, 0, 6, 6, 1, VisibleFlag, 2))
+                << (InsertList()
+                    << Insert(0, 0, 6, 6, 1, VisibleFlag | C::DefaultFlag | C::CacheFlag, 0)
+                    << Insert(0, 1, 7, 7, 1, VisibleFlag, 1)
+                    << Insert(0, 2, 7, 7, 1, VisibleFlag, 2))
+                << IndexArray(cacheIndexes) << ListArray(cacheLists)
+                << IndexArray(defaultIndexes) << ListArray(defaultLists)
+                << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray() << ListArray();
     }
 }
