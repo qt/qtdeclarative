@@ -47,31 +47,29 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlAbstractBinding::QQmlAbstractBinding()
-: m_nextBinding(0)
+extern QQmlAbstractBinding::VTable QQmlBinding_vtable;
+extern QQmlAbstractBinding::VTable QQmlValueTypeProxyBinding_vtable;
+extern QQmlAbstractBinding::VTable QV4Bindings_Binding_vtable;
+extern QQmlAbstractBinding::VTable QV8Bindings_Binding_vtable;
+
+QQmlAbstractBinding::VTable *QQmlAbstractBinding::vTables[] = {
+    &QQmlBinding_vtable,
+    &QV4Bindings_Binding_vtable,
+    &QV8Bindings_Binding_vtable,
+    &QQmlValueTypeProxyBinding_vtable
+};
+
+QQmlAbstractBinding::QQmlAbstractBinding(BindingType bt)
+: m_nextBindingPtr(bt)
 {
+    Q_ASSERT(bt <= 0x03);
 }
 
 QQmlAbstractBinding::~QQmlAbstractBinding()
 {
     Q_ASSERT(isAddedToObject() == false);
-    Q_ASSERT(m_nextBinding == 0);
+    Q_ASSERT(nextBinding() == 0);
     Q_ASSERT(*m_mePtr == 0);
-}
-
-/*!
-Destroy the binding.  Use this instead of calling delete.
-
-Bindings are free to implement their own memory management, so the delete operator is not
-necessarily safe.  The default implementation clears the binding, removes it from the object
-and calls delete.
-*/
-void QQmlAbstractBinding::destroy()
-{
-    removeFromObject();
-    clear();
-
-    delete this;
 }
 
 /*!
@@ -84,7 +82,7 @@ However, it does not enable the binding itself or call update() on it.
 */
 void QQmlAbstractBinding::addToObject()
 {
-    Q_ASSERT(!m_nextBinding);
+    Q_ASSERT(!nextBinding());
     Q_ASSERT(isAddedToObject() == false);
 
     QObject *obj = object();
@@ -104,7 +102,7 @@ void QQmlAbstractBinding::addToObject()
         if (data->hasBindingBit(coreIndex)) {
             QQmlAbstractBinding *b = data->bindings;
             while (b && b->propertyIndex() != coreIndex)
-                b = b->m_nextBinding;
+                b = b->nextBinding();
             Q_ASSERT(b && b->bindingType() == QQmlAbstractBinding::ValueTypeProxy);
             proxy = static_cast<QQmlValueTypeProxyBinding *>(b);
         }
@@ -118,11 +116,11 @@ void QQmlAbstractBinding::addToObject()
             proxy->addToObject();
         }
 
-        m_nextBinding = proxy->m_bindings;
+        setNextBinding(proxy->m_bindings);
         proxy->m_bindings = this;
 
     } else {
-        m_nextBinding = data->bindings;
+        setNextBinding(data->bindings);
         data->bindings = this;
 
         data->setBindingBit(obj, index);
@@ -148,7 +146,7 @@ void QQmlAbstractBinding::removeFromObject()
             // Find the value type binding
             QQmlAbstractBinding *vtbinding = data->bindings;
             while (vtbinding->propertyIndex() != (index & 0xFFFFFF)) {
-                vtbinding = vtbinding->m_nextBinding;
+                vtbinding = vtbinding->nextBinding();
                 Q_ASSERT(vtbinding);
             }
             Q_ASSERT(vtbinding->bindingType() == QQmlAbstractBinding::ValueTypeProxy);
@@ -158,13 +156,13 @@ void QQmlAbstractBinding::removeFromObject()
 
             QQmlAbstractBinding *binding = vtproxybinding->m_bindings;
             if (binding == this) {
-                vtproxybinding->m_bindings = m_nextBinding;
+                vtproxybinding->m_bindings = nextBinding();
             } else {
-               while (binding->m_nextBinding != this) {
-                  binding = binding->m_nextBinding;
+               while (binding->nextBinding() != this) {
+                  binding = binding->nextBinding();
                   Q_ASSERT(binding);
                }
-               binding->m_nextBinding = m_nextBinding;
+               binding->setNextBinding(nextBinding());
             }
 
             // Value type - we don't remove the proxy from the object.  It will sit their happily
@@ -174,20 +172,20 @@ void QQmlAbstractBinding::removeFromObject()
         } else {
 
             if (data->bindings == this) {
-                data->bindings = m_nextBinding;
+                data->bindings = nextBinding();
             } else {
                 QQmlAbstractBinding *binding = data->bindings;
-                while (binding->m_nextBinding != this) {
-                    binding = binding->m_nextBinding;
+                while (binding->nextBinding() != this) {
+                    binding = binding->nextBinding();
                     Q_ASSERT(binding);
                 }
-                binding->m_nextBinding = m_nextBinding;
+                binding->setNextBinding(nextBinding());
             }
 
             data->clearBindingBit(index);
         }
 
-        m_nextBinding = 0;
+        setNextBinding(0);
         setAddedToObject(false);
     }
 }
@@ -218,20 +216,14 @@ void QQmlAbstractBinding::clear()
     }
 }
 
-void QQmlAbstractBinding::retargetBinding(QObject *, int)
+void QQmlAbstractBinding::default_retargetBinding(QQmlAbstractBinding *, QObject *, int)
 {
     qFatal("QQmlAbstractBinding::retargetBinding() called on illegal binding.");
 }
 
-QString QQmlAbstractBinding::expression() const
+QString QQmlAbstractBinding::default_expression(const QQmlAbstractBinding *)
 {
     return QLatin1String("<Unknown>");
 }
-
-void QQmlAbstractBinding::setEnabled(bool enabled, QQmlPropertyPrivate::WriteFlags flags)
-{
-    if (enabled) update(flags);
-}
-
 
 QT_END_NAMESPACE

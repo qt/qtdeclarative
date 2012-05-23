@@ -62,16 +62,18 @@ class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 public:
     QQmlValueTypeProxyBinding(QObject *o, int coreIndex);
 
-    virtual Type bindingType() const { return ValueTypeProxy; }
-
-    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
-    virtual void update(QQmlPropertyPrivate::WriteFlags);
-    virtual int propertyIndex() const;
-    virtual QObject *object() const;
+    int propertyIndex() const;
+    QObject *object() const;
 
     QQmlAbstractBinding *binding(int propertyIndex);
 
     void removeBindings(quint32 mask);
+
+    // "Inherited" from QQmlAbstractBinding
+    static void setEnabled(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
+    static void update(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
+    static int propertyIndex(const QQmlAbstractBinding *);
+    static QObject *object(const QQmlAbstractBinding *);
 
 protected:
     ~QQmlValueTypeProxyBinding();

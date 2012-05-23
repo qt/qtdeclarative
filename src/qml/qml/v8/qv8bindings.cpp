@@ -52,22 +52,35 @@
 
 QT_BEGIN_NAMESPACE
 
+QQmlAbstractBinding::VTable QV8Bindings_Binding_vtable = {
+    QV8Bindings::Binding::destroy,
+    QQmlAbstractBinding::default_expression,
+    QV8Bindings::Binding::propertyIndex,
+    QV8Bindings::Binding::object,
+    QV8Bindings::Binding::setEnabled,
+    QV8Bindings::Binding::update,
+    QV8Bindings::Binding::retargetBinding
+};
+
 static QQmlJavaScriptExpression::VTable QV8Bindings_Binding_jsvtable = {
     QV8Bindings::Binding::expressionIdentifier,
     QV8Bindings::Binding::expressionChanged
 };
 
 QV8Bindings::Binding::Binding()
-: QQmlJavaScriptExpression(&QV8Bindings_Binding_jsvtable), parent(0)
+: QQmlJavaScriptExpression(&QV8Bindings_Binding_jsvtable), QQmlAbstractBinding(V8), parent(0)
 {
 }
 
-void QV8Bindings::Binding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
+void QV8Bindings::Binding::setEnabled(QQmlAbstractBinding *_This, bool e,
+                                      QQmlPropertyPrivate::WriteFlags flags)
 {
-    if (enabledFlag() != e) {
-        setEnabledFlag(e);
+    QV8Bindings::Binding *This = static_cast<QV8Bindings::Binding *>(_This);
 
-        if (e) update(flags);
+    if (This->enabledFlag() != e) {
+        This->setEnabledFlag(e);
+
+        if (e) This->update(flags);
     }
 }
 
@@ -83,10 +96,19 @@ void QV8Bindings::Binding::refresh()
     update();
 }
 
-int QV8Bindings::Binding::propertyIndex() const
+int QV8Bindings::Binding::propertyIndex(const QQmlAbstractBinding *_This)
 {
-    if (target.hasValue()) return target.constValue()->targetProperty;
-    else return instruction->property.encodedIndex();
+    const QV8Bindings::Binding *This = static_cast<const QV8Bindings::Binding *>(_This);
+    if (This->target.hasValue()) return This->target.constValue()->targetProperty;
+    else return This->instruction->property.encodedIndex();
+}
+
+QObject *QV8Bindings::Binding::object(const QQmlAbstractBinding *_This)
+{
+    const QV8Bindings::Binding *This = static_cast<const QV8Bindings::Binding *>(_This);
+
+    if (This->target.hasValue()) return This->target.constValue()->target;
+    else return *This->target;
 }
 
 QObject *QV8Bindings::Binding::object() const
@@ -95,10 +117,18 @@ QObject *QV8Bindings::Binding::object() const
     else return *target;
 }
 
-void QV8Bindings::Binding::retargetBinding(QObject *t, int i)
+void QV8Bindings::Binding::retargetBinding(QQmlAbstractBinding *_This, QObject *t, int i)
 {
-    target.value().target = t;
-    target.value().targetProperty = i;
+    QV8Bindings::Binding *This = static_cast<QV8Bindings::Binding *>(_This);
+
+    This->target.value().target = t;
+    This->target.value().targetProperty = i;
+}
+
+void QV8Bindings::Binding::update(QQmlAbstractBinding *_This, QQmlPropertyPrivate::WriteFlags flags)
+{
+    QV8Bindings::Binding *This = static_cast<QV8Bindings::Binding *>(_This);
+    This->update(flags);
 }
 
 void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
@@ -184,14 +214,16 @@ void QV8Bindings::Binding::expressionChanged(QQmlJavaScriptExpression *e)
     This->update(QQmlPropertyPrivate::DontRemoveBinding);
 }
 
-void QV8Bindings::Binding::destroy()
+void QV8Bindings::Binding::destroy(QQmlAbstractBinding *_This)
 {
-    setEnabledFlag(false);
-    setDestroyedFlag(true);
-    removeFromObject();
-    clear();
-    clearError();
-    parent->release();
+    QV8Bindings::Binding *This = static_cast<QV8Bindings::Binding *>(_This);
+
+    This->setEnabledFlag(false);
+    This->setDestroyedFlag(true);
+    This->removeFromObject();
+    This->clear();
+    This->clearError();
+    This->parent->release();
 }
 
 QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,

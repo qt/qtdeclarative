@@ -785,7 +785,7 @@ QQmlPropertyPrivate::binding(QObject *object, int coreIndex, int valueTypeIndex)
 
     QQmlAbstractBinding *binding = data->bindings;
     while (binding && binding->propertyIndex() != coreIndex)
-        binding = binding->m_nextBinding;
+        binding = binding->nextBinding();
 
     if (binding && valueTypeIndex != -1) {
         if (binding->bindingType() == QQmlAbstractBinding::ValueTypeProxy) {
@@ -862,7 +862,7 @@ QQmlPropertyPrivate::setBinding(QObject *object, int coreIndex, int valueTypeInd
         binding = data->bindings;
 
         while (binding && binding->propertyIndex() != coreIndex) 
-            binding = binding->m_nextBinding;
+            binding = binding->nextBinding();
     }
 
     int index = coreIndex;
@@ -921,7 +921,7 @@ QQmlPropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, int valu
         binding = data->bindings;
 
         while (binding && binding->propertyIndex() != coreIndex) 
-            binding = binding->m_nextBinding;
+            binding = binding->nextBinding();
     }
 
     int index = coreIndex;

@@ -63,28 +63,41 @@ QT_BEGIN_NAMESPACE
 class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
 {
 public:
+    struct VTable {
+        void (*destroy)(QQmlAbstractBinding *);
+        QString (*expression)(const QQmlAbstractBinding *);
+        int (*propertyIndex)(const QQmlAbstractBinding *);
+        QObject *(*object)(const QQmlAbstractBinding *);
+        void (*setEnabled)(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
+        void (*update)(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
+        void (*retargetBinding)(QQmlAbstractBinding *, QObject *, int);
+    };
+
     typedef QWeakPointer<QQmlAbstractBinding> Pointer;
 
-    virtual void destroy();
+    enum BindingType { Binding = 0, V4 = 1, V8 = 2, ValueTypeProxy = 3 };
+    inline BindingType bindingType() const;
 
-    virtual QString expression() const;
-
-    enum Type { PropertyBinding, ValueTypeProxy };
-    virtual Type bindingType() const { return PropertyBinding; }
+    // Destroy the binding.  Use this instead of calling delete.
+    // Bindings are free to implement their own memory management, so the delete operator is
+    // not necessarily safe.  The default implementation clears the binding, removes it from
+    // the object and calls delete.
+    void destroy() { vtable()->destroy(this); }
+    QString expression() const { return vtable()->expression(this); }
 
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.
     // Encoding is:  coreIndex | (valueTypeIndex << 24)
-    virtual int propertyIndex() const = 0;
+    int propertyIndex() const { return vtable()->propertyIndex(this); }
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
-    virtual QObject *object() const = 0;
+    QObject *object() const { return vtable()->object(this); }
 
     void setEnabled(bool e) { setEnabled(e, QQmlPropertyPrivate::DontRemoveBinding); }
-    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags) = 0;
+    void setEnabled(bool e, QQmlPropertyPrivate::WriteFlags f) { vtable()->setEnabled(this, e, f); }
 
     void update() { update(QQmlPropertyPrivate::DontRemoveBinding); }
-    virtual void update(QQmlPropertyPrivate::WriteFlags) = 0;
+    void update(QQmlPropertyPrivate::WriteFlags f) { vtable()->update(this, f); }
 
     void addToObject();
     void removeFromObject();
@@ -92,15 +105,22 @@ public:
     static inline Pointer getPointer(QQmlAbstractBinding *p);
     static void printBindingLoopError(QQmlProperty &prop);
 
+    // Default implementation for some VTable functions
+    template<typename T>
+    static void default_destroy(QQmlAbstractBinding *);
+    static QString default_expression(const QQmlAbstractBinding *);
+    static void default_retargetBinding(QQmlAbstractBinding *, QObject *, int);
+
 protected:
-    QQmlAbstractBinding();
-    virtual ~QQmlAbstractBinding();
+    QQmlAbstractBinding(BindingType);
+    ~QQmlAbstractBinding();
     void clear();
 
     // Called by QQmlPropertyPrivate to "move" a binding to a different property.
     // This is only used for alias properties. The default implementation qFatal()'s
     // to ensure that the method is never called for binding types that don't support it.
-    virtual void retargetBinding(QObject *, int);
+    void retargetBinding(QObject *o, int i) { vtable()->retargetBinding(this, o, i); }
+
 private:
     Pointer weakPointer();
 
@@ -120,7 +140,13 @@ private:
     inline void setAddedToObject(bool v);
     inline bool isAddedToObject() const;
 
-    QQmlAbstractBinding  *m_nextBinding;
+    inline QQmlAbstractBinding *nextBinding() const;
+    inline void setNextBinding(QQmlAbstractBinding *);
+
+    uintptr_t m_nextBindingPtr;
+
+    static VTable *vTables[];
+    inline const VTable *vtable() const { return vTables[bindingType()]; }
 };
 
 QQmlAbstractBinding::Pointer
@@ -137,6 +163,29 @@ void QQmlAbstractBinding::setAddedToObject(bool v)
 bool QQmlAbstractBinding::isAddedToObject() const
 {
     return m_mePtr.flag();
+}
+
+QQmlAbstractBinding *QQmlAbstractBinding::nextBinding() const
+{
+    return (QQmlAbstractBinding *)(m_nextBindingPtr & ~0x3);
+}
+
+void QQmlAbstractBinding::setNextBinding(QQmlAbstractBinding *b)
+{
+    m_nextBindingPtr = uintptr_t(b) | (m_nextBindingPtr & 0x3);
+}
+
+QQmlAbstractBinding::BindingType QQmlAbstractBinding::bindingType() const
+{
+    return (BindingType)(m_nextBindingPtr & 0x3);
+}
+
+template<typename T>
+void QQmlAbstractBinding::default_destroy(QQmlAbstractBinding *This)
+{
+    This->removeFromObject();
+    This->clear();
+    delete static_cast<T *>(This);
 }
 
 QT_END_NAMESPACE

@@ -73,6 +73,16 @@ QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS;
 
+QQmlAbstractBinding::VTable QV4Bindings_Binding_vtable = {
+    QV4Bindings::Binding::destroy,
+    QQmlAbstractBinding::default_expression,
+    QV4Bindings::Binding::propertyIndex,
+    QV4Bindings::Binding::object,
+    QV4Bindings::Binding::setEnabled,
+    QV4Bindings::Binding::update,
+    QV4Bindings::Binding::retargetBinding
+};
+
 namespace {
 struct Register {
     typedef QQmlRegisterType Type;
@@ -307,46 +317,58 @@ QQmlAbstractBinding *QV4Bindings::configBinding(int index, QObject *target,
     return rv;
 }
 
-void QV4Bindings::Binding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
+void QV4Bindings::Binding::setEnabled(QQmlAbstractBinding *_This,
+                                      bool e, QQmlPropertyPrivate::WriteFlags flags)
 {
-    if (enabled != e) {
-        enabled = e;
+    QV4Bindings::Binding *This = static_cast<QV4Bindings::Binding *>(_This);
 
-        if (e) update(flags);
+    if (This->enabled != e) {
+        This->enabled = e;
+
+        if (e) update(_This, flags);
     }
 }
 
-void QV4Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
+void QV4Bindings::Binding::update(QQmlAbstractBinding *_This, QQmlPropertyPrivate::WriteFlags flags)
 {
-    parent->run(this, flags);
+    QV4Bindings::Binding *This = static_cast<QV4Bindings::Binding *>(_This);
+    This->parent->run(This, flags);
 }
 
-void QV4Bindings::Binding::destroy()
+void QV4Bindings::Binding::destroy(QQmlAbstractBinding *_This)
 {
-    enabled = false;
-    removeFromObject();
-    clear();
-    removeError();
-    parent->release();
+    QV4Bindings::Binding *This = static_cast<QV4Bindings::Binding *>(_This);
+
+    This->enabled = false;
+    This->removeFromObject();
+    This->clear();
+    This->removeError();
+    This->parent->release();
 }
 
-int QV4Bindings::Binding::propertyIndex() const
+int QV4Bindings::Binding::propertyIndex(const QQmlAbstractBinding *_This)
 {
-    if (target.hasValue()) return target.constValue()->targetProperty;
+    const QV4Bindings::Binding *This = static_cast<const QV4Bindings::Binding *>(_This);
+
+    if (This->target.hasValue()) return This->target.constValue()->targetProperty;
     //mask out the type information set for value types
-    else return property & 0xFF00FFFF;
+    else return This->property & 0xFF00FFFF;
 }
 
-QObject *QV4Bindings::Binding::object() const
+QObject *QV4Bindings::Binding::object(const QQmlAbstractBinding *_This)
 {
-    if (target.hasValue()) return target.constValue()->target;
-    return *target;
+    const QV4Bindings::Binding *This = static_cast<const QV4Bindings::Binding *>(_This);
+
+    if (This->target.hasValue()) return This->target.constValue()->target;
+    return *This->target;
 }
 
-void QV4Bindings::Binding::retargetBinding(QObject *t, int i)
+void QV4Bindings::Binding::retargetBinding(QQmlAbstractBinding *_This, QObject *t, int i)
 {
-    target.value().target = t;
-    target.value().targetProperty = i;
+    QV4Bindings::Binding *This = static_cast<QV4Bindings::Binding *>(_This);
+
+    This->target.value().target = t;
+    This->target.value().targetProperty = i;
 }
 
 QV4Bindings::Subscription::Subscription()

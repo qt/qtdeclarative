@@ -97,13 +97,22 @@ public:
     // Inherited from  QQmlAbstractExpression
     virtual void refresh();
 
-    // Inherited from  QQmlAbstractBinding
-    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags);
-    virtual void update(QQmlPropertyPrivate::WriteFlags flags);
-    virtual QString expression() const;
-    virtual QObject *object() const;
-    virtual int propertyIndex() const;
-    virtual void retargetBinding(QObject *, int);
+    // "Inherited" from  QQmlAbstractBinding
+    static QString expression(const QQmlAbstractBinding *);
+    static int propertyIndex(const QQmlAbstractBinding *);
+    static QObject *object(const QQmlAbstractBinding *);
+    static void setEnabled(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
+    static void update(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
+    static void retargetBinding(QQmlAbstractBinding *, QObject *, int);
+
+    void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags);
+    void update(QQmlPropertyPrivate::WriteFlags flags);
+    void update() { update(QQmlPropertyPrivate::DontRemoveBinding); }
+
+    QString expression() const;
+    QObject *object() const;
+    int propertyIndex() const;
+    void retargetBinding(QObject *, int);
 
     typedef int Identifier;
     static Identifier Invalid;
@@ -111,12 +120,12 @@ public:
     static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *, const QString &, int);
 
     QVariant evaluate();
-    void update() { update(QQmlPropertyPrivate::DontRemoveBinding); }
 
     static QString expressionIdentifier(QQmlJavaScriptExpression *);
     static void expressionChanged(QQmlJavaScriptExpression *);
 
 protected:
+    friend class QQmlAbstractBinding;
     ~QQmlBinding();
 
 private:

@@ -56,6 +56,17 @@
 
 QT_BEGIN_NAMESPACE
 
+// Used in qqmlabstractbinding.cpp
+QQmlAbstractBinding::VTable QQmlBinding_vtable = {
+    QQmlAbstractBinding::default_destroy<QQmlBinding>,
+    QQmlBinding::expression,
+    QQmlBinding::propertyIndex,
+    QQmlBinding::object,
+    QQmlBinding::setEnabled,
+    QQmlBinding::update,
+    QQmlBinding::retargetBinding
+};
+
 QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
 QQmlBinding *
@@ -89,7 +100,8 @@ static QQmlJavaScriptExpression::VTable QQmlBinding_jsvtable = {
 };
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), m_lineNumber(-1), m_columnNumber(-1)
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
+  m_lineNumber(-1), m_columnNumber(-1)
 {
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt));
@@ -103,7 +115,8 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), m_lineNumber(-1), m_columnNumber(-1)
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
+  m_lineNumber(-1), m_columnNumber(-1)
 {
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(ctxt);
@@ -119,7 +132,8 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
 QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj, 
                          QQmlContextData *ctxt,
                          const QString &url, int lineNumber, int columnNumber)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), m_lineNumber(-1), m_columnNumber(-1)
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
+  m_lineNumber(-1), m_columnNumber(-1)
 {
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(ctxt);
@@ -151,7 +165,7 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
  */
 QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt,
                          const QString &url, int lineNumber, int columnNumber)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable),
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
   m_url(url), m_lineNumber(lineNumber), m_columnNumber(columnNumber)
 {
     setNotifyOnValueChanged(true);
@@ -291,6 +305,36 @@ void QQmlBinding::expressionChanged(QQmlJavaScriptExpression *e)
 void QQmlBinding::refresh()
 {
     update();
+}
+
+QString QQmlBinding::expression(const QQmlAbstractBinding *This)
+{
+    return static_cast<const QQmlBinding *>(This)->expression();
+}
+
+int QQmlBinding::propertyIndex(const QQmlAbstractBinding *This)
+{
+    return static_cast<const QQmlBinding *>(This)->propertyIndex();
+}
+
+QObject *QQmlBinding::object(const QQmlAbstractBinding *This)
+{
+    return static_cast<const QQmlBinding *>(This)->object();
+}
+
+void QQmlBinding::setEnabled(QQmlAbstractBinding *This, bool e, QQmlPropertyPrivate::WriteFlags f)
+{
+    static_cast<QQmlBinding *>(This)->setEnabled(e, f);
+}
+
+void QQmlBinding::update(QQmlAbstractBinding *This , QQmlPropertyPrivate::WriteFlags f)
+{
+    static_cast<QQmlBinding *>(This)->update(f);
+}
+
+void QQmlBinding::retargetBinding(QQmlAbstractBinding *This, QObject *o, int i)
+{
+    static_cast<QQmlBinding *>(This)->retargetBinding(o, i);
 }
 
 void QQmlBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)

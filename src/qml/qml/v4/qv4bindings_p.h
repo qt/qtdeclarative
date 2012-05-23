@@ -79,20 +79,17 @@ public:
     static void **getDecodeInstrTable();
 #endif
 
-private:
-    Q_DISABLE_COPY(QV4Bindings)
-
     struct Binding : public QQmlAbstractBinding, public QQmlDelayedError {
-        Binding() : enabled(false), updating(0), property(0),
+        Binding() : QQmlAbstractBinding(V4), enabled(false), updating(0), property(0),
                     scope(0), target(0), executedBlocks(0), parent(0) {}
 
         // Inherited from QQmlAbstractBinding
-        virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags);
-        virtual void update(QQmlPropertyPrivate::WriteFlags flags);
-        virtual void destroy();
-        virtual int propertyIndex() const;
-        virtual void retargetBinding(QObject *, int);
-        virtual QObject *object() const;
+        static void destroy(QQmlAbstractBinding *);
+        static int propertyIndex(const QQmlAbstractBinding *);
+        static QObject *object(const QQmlAbstractBinding *);
+        static void setEnabled(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
+        static void update(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
+        static void retargetBinding(QQmlAbstractBinding *, QObject *, int);
 
         struct Retarget {
             QObject *target;
@@ -113,6 +110,9 @@ private:
 
         QV4Bindings *parent;
     };
+
+private:
+    Q_DISABLE_COPY(QV4Bindings)
 
     class Subscription : public QQmlNotifierEndpoint
     {

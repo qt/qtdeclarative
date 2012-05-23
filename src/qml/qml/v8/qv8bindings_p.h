@@ -93,13 +93,16 @@ public:
         static QString expressionIdentifier(QQmlJavaScriptExpression *);
         static void expressionChanged(QQmlJavaScriptExpression *);
 
-        // Inherited from QQmlAbstractBinding
-        virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags);
-        virtual void update(QQmlPropertyPrivate::WriteFlags flags);
-        virtual void destroy();
-        virtual QObject *object() const;
-        virtual int propertyIndex() const;
-        virtual void retargetBinding(QObject *, int);
+        // "Inherited" from QQmlAbstractBinding
+        static void destroy(QQmlAbstractBinding *);
+        static int propertyIndex(const QQmlAbstractBinding *);
+        static QObject *object(const QQmlAbstractBinding *);
+        static void setEnabled(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
+        static void update(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
+        static void retargetBinding(QQmlAbstractBinding *, QObject *, int);
+
+        QObject *object() const;
+        void update(QQmlPropertyPrivate::WriteFlags flags);
 
         QV8Bindings *parent;
 
