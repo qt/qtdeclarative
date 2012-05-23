@@ -145,8 +145,7 @@ public:
     static bool isValueType(int);
     static QQmlValueType *valueType(int);
 
-    static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
-    static void registerValueTypes();
+    static void registerValueTypes(const char *uri, int versionMajor, int versionMinor);
 
     QQmlValueType *operator[](int idx) const {
         if (idx >= (int)QVariant::UserType)

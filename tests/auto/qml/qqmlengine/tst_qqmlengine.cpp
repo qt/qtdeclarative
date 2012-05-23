@@ -75,6 +75,8 @@ private slots:
     void outputWarningsToStandardError();
     void objectOwnership();
     void multipleEngines();
+    void qtqmlModule_data();
+    void qtqmlModule();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -562,6 +564,79 @@ void tst_qqmlengine::multipleEngines()
         engine1.rootContext()->setContextProperty("object", &o);
         QQmlExpression expr1(engine1.rootContext(), 0, QString("object.objectName"));
         QCOMPARE(expr1.evaluate().toString(), QString("TestName"));
+    }
+}
+
+void tst_qqmlengine::qtqmlModule_data()
+{
+    QTest::addColumn<QUrl>("testFile");
+    QTest::addColumn<QString>("expectedError");
+    QTest::addColumn<QStringList>("expectedWarnings");
+
+    QTest::newRow("import QtQml of correct version (2.0)")
+            << testFileUrl("qtqmlModule.1.qml")
+            << QString()
+            << QStringList();
+
+    QTest::newRow("import QtQml of incorrect version (3.0)")
+            << testFileUrl("qtqmlModule.2.qml")
+            << QString(testFileUrl("qtqmlModule.2.qml").toString() + QLatin1String(":1 module \"QtQml\" version 3.0 is not installed\n"))
+            << QStringList();
+
+    QTest::newRow("import QtQml of incorrect version (1.0)")
+            << testFileUrl("qtqmlModule.3.qml")
+            << QString(testFileUrl("qtqmlModule.3.qml").toString() + QLatin1String(":1 module \"QtQml\" version 1.0 is not installed\n"))
+            << QStringList();
+
+    QTest::newRow("import QtQml of incorrect version (2.5)")
+            << testFileUrl("qtqmlModule.4.qml")
+            << QString(testFileUrl("qtqmlModule.4.qml").toString() + QLatin1String(":1 module \"QtQml\" version 2.5 is not installed\n"))
+            << QStringList();
+
+    QTest::newRow("QtQml 2.0 module provides Component and QtObject")
+            << testFileUrl("qtqmlModule.5.qml")
+            << QString()
+            << QStringList();
+
+    QTest::newRow("can import QtQml then QtQuick")
+            << testFileUrl("qtqmlModule.6.qml")
+            << QString()
+            << QStringList();
+
+    QTest::newRow("can import QtQuick then QtQml")
+            << testFileUrl("qtqmlModule.7.qml")
+            << QString()
+            << QStringList();
+
+    QTest::newRow("no import results in no QtObject availability")
+            << testFileUrl("qtqmlModule.8.qml")
+            << QString(testFileUrl("qtqmlModule.8.qml").toString() + QLatin1String(":4 QtObject is not a type\n"))
+            << QStringList();
+
+    QTest::newRow("importing QtQml only results in no Item availability")
+            << testFileUrl("qtqmlModule.9.qml")
+            << QString(testFileUrl("qtqmlModule.9.qml").toString() + QLatin1String(":4 Item is not a type\n"))
+            << QStringList();
+}
+
+// Test that the engine registers the QtQml module
+void tst_qqmlengine::qtqmlModule()
+{
+    QFETCH(QUrl, testFile);
+    QFETCH(QString, expectedError);
+    QFETCH(QStringList, expectedWarnings);
+
+    foreach (const QString &w, expectedWarnings)
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(w));
+
+    QQmlEngine e;
+    QQmlComponent c(&e, testFile);
+    if (expectedError.isEmpty()) {
+        QObject *o = c.create();
+        QVERIFY(o);
+        delete o;
+    } else {
+        QCOMPARE(c.errorString(), expectedError);
     }
 }
 

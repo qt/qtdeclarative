@@ -104,7 +104,8 @@ QT_BEGIN_NAMESPACE
 void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
     QQmlEnginePrivate::registerBaseTypes(uri, versionMajor, versionMinor);
-    QQmlValueTypeFactory::registerBaseTypes(uri, versionMajor, versionMinor);
+    QQmlEnginePrivate::registerQtQuick2Types(uri, versionMajor, versionMinor);
+    QQmlValueTypeFactory::registerValueTypes(uri, versionMajor, versionMinor);
 }
 
 /*!
@@ -165,19 +166,30 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 
 bool QQmlEnginePrivate::qml_debugging_enabled = false;
 
+// these types are part of the QML language
 void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
     qmlRegisterType<QQmlComponent>(uri,versionMajor,versionMinor,"Component");
     qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
-    qmlRegisterType<QQuickListElement>(uri, versionMajor, versionMinor,"ListElement");
-    qmlRegisterCustomType<QQuickListModel>(uri, versionMajor, versionMinor,"ListModel", new QQuickListModelParser);
-    qmlRegisterType<QQuickWorkerScript>(uri,versionMajor,versionMinor,"WorkerScript");
 }
 
-void QQmlEnginePrivate::defineModule()
+
+// These QtQuick types' implementation resides in the QtQml module
+void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor)
 {
-    registerBaseTypes("QtQuick", 2, 0);
-    qmlRegisterUncreatableType<QQmlLocale>("QtQuick",2,0,"Locale",QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
+    qmlRegisterType<QQuickListElement>(uri, versionMajor, versionMinor, "ListElement");
+    qmlRegisterCustomType<QQuickListModel>(uri, versionMajor, versionMinor, "ListModel", new QQuickListModelParser);
+    qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
+}
+
+void QQmlEnginePrivate::defineQtQuick2Module()
+{
+    // register the base types into the QtQuick namespace
+    registerBaseTypes("QtQuick",2,0);
+
+    // register the QtQuick2 types which are implemented in the QtQml module.
+    registerQtQuick2Types("QtQuick",2,0);
+    qmlRegisterUncreatableType<QQmlLocale>("QtQuick", 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 }
 
 
@@ -602,7 +614,8 @@ void QQmlEnginePrivate::init()
 
     static bool firstTime = true;
     if (firstTime) {
-        qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component");
+        qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
+        registerBaseTypes("QtQml", 2, 0); // import which provides language building blocks.
 
         QQmlData::init();
         firstTime = false;

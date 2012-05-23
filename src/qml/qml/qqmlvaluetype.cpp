@@ -72,14 +72,9 @@ bool QQmlValueTypeFactory::isValueType(int idx)
     return false;
 }
 
-void QQmlValueTypeFactory::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
+void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor, int versionMinor)
 {
     qmlRegisterValueTypeEnums<QQmlEasingValueType>(uri, versionMajor, versionMinor, "Easing");
-}
-
-void QQmlValueTypeFactory::registerValueTypes()
-{
-    registerBaseTypes("QtQuick", 2, 0);
 }
 
 QQmlValueType *QQmlValueTypeFactory::valueType(int t)

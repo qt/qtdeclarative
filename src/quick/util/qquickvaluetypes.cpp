@@ -49,14 +49,11 @@
 QT_BEGIN_NAMESPACE
 
 namespace QQuickValueTypes {
-
-void registerValueTypes()
-{
-    QQmlValueTypeFactory::registerValueTypes();
-
-    qmlRegisterValueTypeEnums<QQuickFontValueType>("QtQuick", 2, 0, "Font");
-}
-
+    void registerValueTypes()
+    {
+        QQmlValueTypeFactory::registerValueTypes("QtQuick", 2, 0);
+        qmlRegisterValueTypeEnums<QQuickFontValueType>("QtQuick", 2, 0, "Font");
+    }
 }
 
 QQuickColorValueType::QQuickColorValueType(QObject *parent)

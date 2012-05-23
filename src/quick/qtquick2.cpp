@@ -173,7 +173,7 @@ void QQmlQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *ob
 void QQmlQtQuick2Module::defineModule()
 {
     QQuickUtilModule::defineModule();
-    QQmlEnginePrivate::defineModule();
+    QQmlEnginePrivate::defineQtQuick2Module();
     QQuickItemsModule::defineModule();
 
     qmlRegisterUncreatableType<QQuickApplication>("QtQuick",2,0,"Application", QQuickApplication::tr("Application is an abstract class"));
