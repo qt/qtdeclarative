@@ -1293,7 +1293,7 @@ void QQmlData::destroyed(QObject *object)
     QQmlAbstractBinding *binding = bindings;
     while (binding) {
         QQmlAbstractBinding *next = binding->m_nextBinding;
-        binding->m_prevBinding = 0;
+        binding->setAddedToObject(false);
         binding->m_nextBinding = 0;
         binding->destroy();
         binding = next;

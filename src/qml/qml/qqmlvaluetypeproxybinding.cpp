@@ -50,10 +50,14 @@ QQmlValueTypeProxyBinding::QQmlValueTypeProxyBinding(QObject *o, int index)
 
 QQmlValueTypeProxyBinding::~QQmlValueTypeProxyBinding()
 {
-    while (m_bindings) {
-        QQmlAbstractBinding *binding = m_bindings;
-        binding->setEnabled(false, 0);
+    QQmlAbstractBinding *binding = m_bindings;
+    // This must be identical to the logic in QQmlData::destroyed()
+    while (binding) {
+        QQmlAbstractBinding *next = binding->m_nextBinding;
+        binding->setAddedToObject(false);
+        binding->m_nextBinding = 0;
         binding->destroy();
+        binding = next;
     }
 }
 
@@ -110,16 +114,23 @@ Removes a collection of bindings, corresponding to the set bits in \a mask.
 void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
 {
     QQmlAbstractBinding *binding = m_bindings;
+    QQmlAbstractBinding *lastBinding = 0;
+
     while (binding) {
         if (mask & (1 << (binding->propertyIndex() >> 24))) {
             QQmlAbstractBinding *remove = binding;
             binding = remove->m_nextBinding;
-            *remove->m_prevBinding = remove->m_nextBinding;
-            if (remove->m_nextBinding) remove->m_nextBinding->m_prevBinding = remove->m_prevBinding;
-            remove->m_prevBinding = 0;
+
+            if (lastBinding == 0)
+                m_bindings = remove->m_nextBinding;
+            else
+                lastBinding->m_nextBinding = remove->m_nextBinding;
+
+            remove->setAddedToObject(false);
             remove->m_nextBinding = 0;
             remove->destroy();
         } else {
+            lastBinding = binding;
             binding = binding->m_nextBinding;
         }
     }

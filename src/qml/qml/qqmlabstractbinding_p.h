@@ -65,8 +65,6 @@ class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
 public:
     typedef QWeakPointer<QQmlAbstractBinding> Pointer;
 
-    QQmlAbstractBinding();
-
     virtual void destroy();
 
     virtual QString expression() const;
@@ -95,6 +93,7 @@ public:
     static void printBindingLoopError(QQmlProperty &prop);
 
 protected:
+    QQmlAbstractBinding();
     virtual ~QQmlAbstractBinding();
     void clear();
 
@@ -114,9 +113,13 @@ private:
 
     typedef QSharedPointer<QQmlAbstractBinding> SharedPointer;
     // To save memory, we also store the rarely used weakPointer() instance in here
+    // We also use the flag bits:
+    //    m_mePtr.flag1: added to object
     QPointerValuePair<QQmlAbstractBinding*, SharedPointer> m_mePtr;
 
-    QQmlAbstractBinding **m_prevBinding;
+    inline void setAddedToObject(bool v);
+    inline bool isAddedToObject() const;
+
     QQmlAbstractBinding  *m_nextBinding;
 };
 
@@ -124,6 +127,16 @@ QQmlAbstractBinding::Pointer
 QQmlAbstractBinding::getPointer(QQmlAbstractBinding *p)
 {
     return p ? p->weakPointer() : Pointer();
+}
+
+void QQmlAbstractBinding::setAddedToObject(bool v)
+{
+    m_mePtr.setFlagValue(v);
+}
+
+bool QQmlAbstractBinding::isAddedToObject() const
+{
+    return m_mePtr.flag();
 }
 
 QT_END_NAMESPACE

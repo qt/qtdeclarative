@@ -48,13 +48,14 @@
 QT_BEGIN_NAMESPACE
 
 QQmlAbstractBinding::QQmlAbstractBinding()
-: m_prevBinding(0), m_nextBinding(0)
+: m_nextBinding(0)
 {
 }
 
 QQmlAbstractBinding::~QQmlAbstractBinding()
 {
-    Q_ASSERT(m_prevBinding == 0);
+    Q_ASSERT(isAddedToObject() == false);
+    Q_ASSERT(m_nextBinding == 0);
     Q_ASSERT(*m_mePtr == 0);
 }
 
@@ -83,7 +84,8 @@ However, it does not enable the binding itself or call update() on it.
 */
 void QQmlAbstractBinding::addToObject()
 {
-    Q_ASSERT(!m_prevBinding);
+    Q_ASSERT(!m_nextBinding);
+    Q_ASSERT(isAddedToObject() == false);
 
     QObject *obj = object();
     Q_ASSERT(obj);
@@ -117,18 +119,16 @@ void QQmlAbstractBinding::addToObject()
         }
 
         m_nextBinding = proxy->m_bindings;
-        if (m_nextBinding) m_nextBinding->m_prevBinding = &m_nextBinding;
-        m_prevBinding = &proxy->m_bindings;
         proxy->m_bindings = this;
 
     } else {
         m_nextBinding = data->bindings;
-        if (m_nextBinding) m_nextBinding->m_prevBinding = &m_nextBinding;
-        m_prevBinding = &data->bindings;
         data->bindings = this;
 
         data->setBindingBit(obj, index);
     }
+
+    setAddedToObject(true);
 }
 
 /*!
@@ -136,22 +136,59 @@ Remove the binding from the object.
 */
 void QQmlAbstractBinding::removeFromObject()
 {
-    if (m_prevBinding) {
+    if (isAddedToObject()) {
+        QObject *obj = object();
         int index = propertyIndex();
 
-        *m_prevBinding = m_nextBinding;
-        if (m_nextBinding) m_nextBinding->m_prevBinding = m_prevBinding;
-        m_prevBinding = 0;
-        m_nextBinding = 0;
+        QQmlData *data = QQmlData::get(obj, false);
+        Q_ASSERT(data);
 
         if (index & 0xFF000000) {
+
+            // Find the value type binding
+            QQmlAbstractBinding *vtbinding = data->bindings;
+            while (vtbinding->propertyIndex() != (index & 0xFFFFFF)) {
+                vtbinding = vtbinding->m_nextBinding;
+                Q_ASSERT(vtbinding);
+            }
+            Q_ASSERT(vtbinding->bindingType() == QQmlAbstractBinding::ValueTypeProxy);
+
+            QQmlValueTypeProxyBinding *vtproxybinding =
+                static_cast<QQmlValueTypeProxyBinding *>(vtbinding);
+
+            QQmlAbstractBinding *binding = vtproxybinding->m_bindings;
+            if (binding == this) {
+                vtproxybinding->m_bindings = m_nextBinding;
+            } else {
+               while (binding->m_nextBinding != this) {
+                  binding = binding->m_nextBinding;
+                  Q_ASSERT(binding);
+               }
+               binding->m_nextBinding = m_nextBinding;
+            }
+
             // Value type - we don't remove the proxy from the object.  It will sit their happily
             // doing nothing until it is removed by a write, a binding change or it is reused
             // to hold more sub-bindings.
-        } else if (QObject *obj = object()) {
-            QQmlData *data = QQmlData::get(obj, false);
-            if (data) data->clearBindingBit(index);
+
+        } else {
+
+            if (data->bindings == this) {
+                data->bindings = m_nextBinding;
+            } else {
+                QQmlAbstractBinding *binding = data->bindings;
+                while (binding->m_nextBinding != this) {
+                    binding = binding->m_nextBinding;
+                    Q_ASSERT(binding);
+                }
+                binding->m_nextBinding = m_nextBinding;
+            }
+
+            data->clearBindingBit(index);
         }
+
+        m_nextBinding = 0;
+        setAddedToObject(false);
     }
 }
 
