@@ -332,7 +332,8 @@ QQuickWindowManager *QQuickWindowManager::instance()
 
         theInstance = QSGContext::createWindowManager();
 
-        bool fancy = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL);
+        bool fancy = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL)
+            && QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL);
         if (qmlNoThreadedRenderer())
             fancy = false;
         else if (qmlForceThreadedRenderer())
