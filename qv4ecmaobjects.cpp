@@ -572,7 +572,7 @@ QString StringPrototype::getThisString(Context *ctx)
     if (StringObject *thisObject = ctx->thisObject.asStringObject()) {
         return thisObject->value.stringValue->toQString();
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
         return QString();
     }
 }
@@ -582,7 +582,7 @@ void StringPrototype::method_toString(Context *ctx)
     if (StringObject *o = ctx->thisObject.asStringObject()) {
         ctx->result = o->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -591,7 +591,7 @@ void StringPrototype::method_valueOf(Context *ctx)
     if (StringObject *o = ctx->thisObject.asStringObject()) {
         ctx->result = o->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -691,22 +691,22 @@ void StringPrototype::method_localeCompare(Context *ctx)
     __qmljs_init_number(&ctx->result, QString::localeAwareCompare(value, that));
 }
 
-void StringPrototype::method_match(Context *)
+void StringPrototype::method_match(Context *ctx)
 {
     // requires Regexp
-    Q_UNIMPLEMENTED();
+    ctx->throwUnimplemented(QLatin1String("String.prototype.match"));
 }
 
-void StringPrototype::method_replace(Context *)
+void StringPrototype::method_replace(Context *ctx)
 {
     // requires Regexp
-    Q_UNIMPLEMENTED();
+    ctx->throwUnimplemented(QLatin1String("String.prototype.replace"));
 }
 
-void StringPrototype::method_search(Context *)
+void StringPrototype::method_search(Context *ctx)
 {
     // requires Regexp
-    Q_UNIMPLEMENTED();
+    ctx->throwUnimplemented(QLatin1String("String.prototype.search"));
 }
 
 void StringPrototype::method_slice(Context *ctx)
@@ -732,10 +732,9 @@ void StringPrototype::method_slice(Context *ctx)
     ctx->result = Value::fromString(ctx, text.mid(start, count));
 }
 
-void StringPrototype::method_split(Context *)
+void StringPrototype::method_split(Context *ctx)
 {
-    // requires Array
-    Q_UNIMPLEMENTED();
+    ctx->throwUnimplemented(QLatin1String("String.prototype.splt"));
 }
 
 void StringPrototype::method_substr(Context *ctx)
@@ -885,15 +884,13 @@ NumberPrototype::NumberPrototype(Context *ctx, FunctionObject *ctor)
 
 void NumberPrototype::method_toString(Context *ctx)
 {
-    assert(!"here");
     if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
         Value arg = ctx->argument(0);
         if (!arg.isUndefined()) {
             int radix = arg.toInt32(ctx);
             if (radix < 2 || radix > 36) {
-//                return ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
-//                                       .arg(radix));
-                assert(!"not a valid redix");
+                ctx->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
+                                .arg(radix));
                 return;
             }
 
@@ -942,7 +939,7 @@ void NumberPrototype::method_toString(Context *ctx)
         String *str = internalValue.toString(ctx);
         ctx->result = Value::fromString(str);
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -952,7 +949,7 @@ void NumberPrototype::method_toLocaleString(Context *ctx)
         String *str = thisObject->value.toString(ctx);
         ctx->result = Value::fromString(str);
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -961,7 +958,7 @@ void NumberPrototype::method_valueOf(Context *ctx)
     if (NumberObject *thisObject = ctx->thisObject.asNumberObject()) {
         ctx->result = thisObject->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -986,7 +983,7 @@ void NumberPrototype::method_toFixed(Context *ctx)
             str = QString::number(v, 'f', int (fdigits));
         ctx->result = Value::fromString(ctx, str);
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -1001,7 +998,7 @@ void NumberPrototype::method_toExponential(Context *ctx)
         QString z = QString::number(thisObject->value.numberValue, 'e', int (fdigits));
         ctx->result = Value::fromString(ctx, z);
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -1015,7 +1012,7 @@ void NumberPrototype::method_toPrecision(Context *ctx)
 
         ctx->result = Value::fromString(ctx, QString::number(thisObject->value.numberValue, 'g', int (fdigits)));
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -1060,7 +1057,7 @@ void BooleanPrototype::method_toString(Context *ctx)
     if (BooleanObject *thisObject = ctx->thisObject.asBooleanObject()) {
         ctx->result = Value::fromString(ctx, QLatin1String(thisObject->value.booleanValue ? "true" : "false"));
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -1069,7 +1066,7 @@ void BooleanPrototype::method_valueOf(Context *ctx)
     if (BooleanObject *thisObject = ctx->thisObject.asBooleanObject()) {
         ctx->result = thisObject->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -1103,7 +1100,7 @@ void ArrayCtor::call(Context *ctx)
         quint32 isize = Value::toUInt32(size);
 
         if (size != double(isize)) {
-            assert(!"invlaid array length exception");
+            ctx->throwError(QLatin1String("Invalid array length"));
             return;
         }
 
@@ -1298,7 +1295,7 @@ void ArrayPrototype::method_reverse(Context *ctx)
             instance->value.assign(hi, tmp);
         }
     } else {
-        assert(!"generic implementation of Array.prototype.reverse");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.reverse"));
     }
 }
 
@@ -1308,7 +1305,7 @@ void ArrayPrototype::method_shift(Context *ctx)
     if (ArrayObject *instance = self.asArrayObject()) {
         ctx->result = instance->value.takeFirst();
     } else {
-        assert(!"generic implementation of Array.prototype.reverse");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.reverse"));
     }
 }
 
@@ -1346,7 +1343,7 @@ void ArrayPrototype::method_sort(Context *ctx)
         instance->value.sort(ctx, comparefn);
         ctx->result = ctx->thisObject;
     } else {
-        assert(!"generic implementation of Array.prototype.sort");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.sort"));
     }
 }
 
@@ -1368,37 +1365,23 @@ void ArrayPrototype::method_splice(Context *ctx)
         instance->value.splice(start, deleteCount, items, otherInstance->value);
         ctx->result = a;
     } else {
-        assert(!"generic implementation of Array.prototype.splice");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.splice"));
     }
 }
 
 void ArrayPrototype::method_unshift(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-    } else {
-        assert(!"generic implementation of Array.prototype.unshift");
-    }
+    ctx->throwUnimplemented(QLatin1String("Array.prototype.indexOf"));
 }
 
 void ArrayPrototype::method_indexOf(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Q_UNIMPLEMENTED();
-    } else {
-        assert(!"generic implementation");
-    }
+    ctx->throwUnimplemented(QLatin1String("Array.prototype.indexOf"));
 }
 
 void ArrayPrototype::method_lastIndexOf(Context *ctx)
 {
-    Value self = ctx->thisObject;
-    if (ArrayObject *instance = self.asArrayObject()) {
-        Q_UNIMPLEMENTED();
-    } else {
-        assert(!"generic implementation");
-    }
+    ctx->throwUnimplemented(QLatin1String("Array.prototype.indexOf"));
 }
 
 void ArrayPrototype::method_every(Context *ctx)
@@ -1424,10 +1407,10 @@ void ArrayPrototype::method_every(Context *ctx)
             }
             ctx->result = Value::fromBoolean(ok);
         } else {
-            assert(!"type error");
+            ctx->throwTypeError();
         }
     } else {
-        assert(!"generic implementation");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.every"));
     }
 }
 
@@ -1454,10 +1437,10 @@ void ArrayPrototype::method_some(Context *ctx)
             }
             ctx->result = Value::fromBoolean(ok);
         } else {
-            assert(!"type error");
+            ctx->throwTypeError();
         }
     } else {
-        assert(!"generic implementation");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.some"));
     }
 }
 
@@ -1467,7 +1450,7 @@ void ArrayPrototype::method_forEach(Context *ctx)
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
         if (! callback.isFunctionObject())
-            assert(!"type error");
+            ctx->throwTypeError();
         else {
             Value thisArg = ctx->argument(1);
             for (quint32 k = 0; k < instance->value.size(); ++k) {
@@ -1483,7 +1466,7 @@ void ArrayPrototype::method_forEach(Context *ctx)
             }
         }
     } else {
-        assert(!"generic implementation");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.forEach"));
     }
 }
 
@@ -1493,7 +1476,7 @@ void ArrayPrototype::method_map(Context *ctx)
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
         if (! callback.isFunctionObject())
-            assert(!"type error");
+            ctx->throwTypeError();
         else {
             Value thisArg = ctx->argument(1);
             ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
@@ -1513,7 +1496,7 @@ void ArrayPrototype::method_map(Context *ctx)
             ctx->result = Value::fromObject(a);
         }
     } else {
-        assert(!"generic implementation");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.map"));
     }
 }
 
@@ -1523,7 +1506,7 @@ void ArrayPrototype::method_filter(Context *ctx)
     if (ArrayObject *instance = self.asArrayObject()) {
         Value callback = ctx->argument(0);
         if (! callback.isFunctionObject())
-            assert(!"type error");
+            ctx->throwTypeError();
         else {
             Value thisArg = ctx->argument(1);
             ArrayObject *a = ctx->engine->newArrayObject()->asArrayObject();
@@ -1546,7 +1529,7 @@ void ArrayPrototype::method_filter(Context *ctx)
             ctx->result = Value::fromObject(a);
         }
     } else {
-        assert(!"generic implementation");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.filter"));
     }
 }
 
@@ -1578,7 +1561,7 @@ void ArrayPrototype::method_reduce(Context *ctx)
         }
         ctx->result = acc;
     } else {
-        assert(!"generic implementation");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.reduce"));
     }
 }
 
@@ -1610,7 +1593,7 @@ void ArrayPrototype::method_reduceRight(Context *ctx)
         }
         ctx->result = acc;
     } else {
-        assert(!"generic implementation");
+        ctx->throwUnimplemented(QLatin1String("Array.prototype.reduceRight"));
     }
 }
 
@@ -1635,12 +1618,12 @@ FunctionCtor::FunctionCtor(Context *scope)
 
 void FunctionCtor::construct(Context *ctx)
 {
-    Q_UNIMPLEMENTED();
+    ctx->throwUnimplemented(QLatin1String("Function.prototype.constructor"));
 }
 
 void FunctionCtor::call(Context *ctx)
 {
-    Q_UNIMPLEMENTED();
+    ctx->throwUnimplemented(QLatin1String("Function"));
 }
 
 FunctionPrototype::FunctionPrototype(Context *ctx, FunctionObject *ctor)
@@ -1658,16 +1641,16 @@ void FunctionPrototype::method_toString(Context *ctx)
     if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
         ctx->result = Value::fromString(ctx, QLatin1String("function() { [code] }"));
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
 void FunctionPrototype::method_apply(Context *ctx)
 {
     if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        Q_UNIMPLEMENTED();
+        ctx->throwUnimplemented(QLatin1String("Function.prototype.apply"));
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -1680,16 +1663,16 @@ void FunctionPrototype::method_call(Context *ctx)
             qCopy(ctx->arguments + 1, ctx->arguments + ctx->argumentCount, args.begin());
         __qmljs_call_value(ctx, &ctx->result, &thisArg, &ctx->thisObject, args.data(), args.size());
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
 void FunctionPrototype::method_bind(Context *ctx)
 {
     if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        Q_UNIMPLEMENTED();
+        ctx->throwUnimplemented(QLatin1String("Function.prototype.bind"));
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -1813,7 +1796,7 @@ double DatePrototype::getThisDate(Context *ctx)
     if (DateObject *thisObject = ctx->thisObject.asDateObject())
         return thisObject->value.numberValue;
     else {
-        assert(!"type error");
+        ctx->throwTypeError();
         return 0;
     }
 }
@@ -2052,7 +2035,7 @@ void DatePrototype::method_setTime(Context *ctx)
         self->value.numberValue = TimeClip(ctx->argument(0).toNumber(ctx));
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2064,7 +2047,7 @@ void DatePrototype::method_setMilliseconds(Context *ctx)
         self->value.numberValue = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2076,7 +2059,7 @@ void DatePrototype::method_setUTCMilliseconds(Context *ctx)
         self->value.numberValue = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2090,7 +2073,7 @@ void DatePrototype::method_setSeconds(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2104,7 +2087,7 @@ void DatePrototype::method_setUTCSeconds(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2119,7 +2102,7 @@ void DatePrototype::method_setMinutes(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2134,7 +2117,7 @@ void DatePrototype::method_setUTCMinutes(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2150,7 +2133,7 @@ void DatePrototype::method_setHours(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2166,7 +2149,7 @@ void DatePrototype::method_setUTCHours(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2179,7 +2162,7 @@ void DatePrototype::method_setDate(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2192,7 +2175,7 @@ void DatePrototype::method_setUTCDate(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2206,7 +2189,7 @@ void DatePrototype::method_setMonth(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2220,7 +2203,7 @@ void DatePrototype::method_setUTCMonth(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2246,7 +2229,7 @@ void DatePrototype::method_setYear(Context *ctx)
         self->value.numberValue = r;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2261,7 +2244,7 @@ void DatePrototype::method_setUTCFullYear(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 
@@ -2276,7 +2259,7 @@ void DatePrototype::method_setFullYear(Context *ctx)
         self->value.numberValue = t;
         ctx->result = self->value;
     } else {
-        assert(!"type error");
+        ctx->throwTypeError();
     }
 }
 

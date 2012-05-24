@@ -370,6 +370,11 @@ struct Context {
         hasUncaughtException = false;
     }
 
+    void throwError(const Value &value);
+    void throwError(const QString &message);
+    void throwTypeError();
+    void throwUnimplemented(const QString &message);
+
     void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
     void leaveCallContext(FunctionObject *f, Value *r);
 

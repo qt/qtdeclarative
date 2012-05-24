@@ -437,6 +437,30 @@ Object *ExecutionEngine::newArgumentsObject(Context *ctx)
     return new ArgumentsObject(ctx);
 }
 
+void Context::throwError(const Value &value)
+{
+    result = value;
+    hasUncaughtException = true;
+}
+
+void Context::throwError(const QString &message)
+{
+    Value v = Value::fromString(this, message);
+    throwError(Value::fromObject(engine->newErrorObject(v)));
+}
+
+void Context::throwTypeError()
+{
+    Value v = Value::fromString(this, QLatin1String("Type error"));
+    throwError(Value::fromObject(engine->newErrorObject(v)));
+}
+
+void Context::throwUnimplemented(const QString &message)
+{
+    Value v = Value::fromString(this, QLatin1String("Unimplemented ") + message);
+    throwError(Value::fromObject(engine->newErrorObject(v)));
+}
+
 void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
 {
     engine = e;

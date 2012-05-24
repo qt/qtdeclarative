@@ -378,7 +378,9 @@ void __qmljs_object_default_value(Context *ctx, Value *result, const Value *obje
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
 {
-    __qmljs_init_object(result, ctx->engine->newErrorObject(Value::fromString(ctx, QLatin1String("type error"))));
+    ctx->throwTypeError();
+    if (result)
+        *result = ctx->result;
 }
 
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
