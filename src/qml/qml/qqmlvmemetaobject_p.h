@@ -245,7 +245,7 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)
     if (obj) {
         if (QQmlData *data = QQmlData::get(obj)) {
             if (data->hasVMEMetaObject)
-                return const_cast<QQmlVMEMetaObject *>(static_cast<const QQmlVMEMetaObject *>(obj->metaObject()));
+                return static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(obj)->metaObject);
         }
     }
 
