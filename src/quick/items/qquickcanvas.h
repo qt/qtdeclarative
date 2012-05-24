@@ -125,6 +125,7 @@ Q_SIGNALS:
     void frameSwapped();
     void sceneGraphInitialized();
     void sceneGraphInvalidated();
+    void beforeSynchronizing();
     void beforeRendering();
     void afterRendering();
     void clearColorChanged(const QColor &);

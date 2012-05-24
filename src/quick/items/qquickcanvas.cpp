@@ -282,6 +282,9 @@ void forceUpdate(QQuickItem *item)
 void QQuickCanvasPrivate::syncSceneGraph()
 {
     QML_MEMORY_SCOPE_STRING("SceneGraph");
+    Q_Q(QQuickCanvas);
+
+    emit q->beforeSynchronizing();
     if (!renderer) {
         forceUpdate(rootItem);
 
@@ -786,6 +789,11 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
     steps, in the given order:
 
     \list
+
+    \li The QQuickCanvas::beforeSynchronizing() signal is emitted.
+    Applications can make direct connections (Qt::DirectConnection)
+    to this signal to do any preparation required before calls to
+    QQuickItem::updatePaintNode().
 
     \li Synchronzation of the QML state into the scene graph. This is
     done by calling the QQuickItem::updatePaintNode() function on all

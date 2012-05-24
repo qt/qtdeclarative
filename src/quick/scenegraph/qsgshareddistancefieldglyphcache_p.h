@@ -86,6 +86,9 @@ private Q_SLOTS:
                             const QVector<QPoint> &positions);
     void reportItemsInvalidated(const QByteArray &cacheId, const QVector<quint32> &itemIds);
 
+    void sceneGraphUpdateStarted();
+    void sceneGraphUpdateDone();
+
 private:
     void waitForGlyphs();
     void saveTexture(GLuint textureId, int width, int height);
@@ -122,6 +125,9 @@ private:
     QHash<quint32, PendingGlyph> m_pendingReadyGlyphs;
     QHash<glyph_t, void *> m_bufferForGlyph;
     QHash<QQuickItem *, Owner> m_registeredOwners;
+
+    bool m_isInSceneGraphUpdate;
+    bool m_hasPostedEvents;
 };
 
 QT_END_NAMESPACE

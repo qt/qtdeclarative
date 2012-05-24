@@ -66,19 +66,25 @@ namespace {
     {
     public:
         QSGInvokeEvent(QPlatformSharedGraphicsCache *cache,
-                       const QByteArray &cacheId,
-                       const QVector<quint32> &glyphIds)
+                       const QByteArray &cacheId = QByteArray(),
+                       const QVector<quint32> &glyphIds = QVector<quint32>(),
+                       bool inSceneGraphUpdate = false)
             : QEvent(User)
             , m_cache(cache)
             , m_cacheId(cacheId)
             , m_glyphIds(glyphIds)
+            , m_inSceneGraphUpdate(inSceneGraphUpdate)
         {}
+
+        bool inSceneGraphUpdate() const { return m_inSceneGraphUpdate; }
+        QPlatformSharedGraphicsCache *cache() const { return m_cache; }
 
         virtual void invoke() = 0;
     protected:
         QPlatformSharedGraphicsCache *m_cache;
         QByteArray m_cacheId;
         QVector<quint32> m_glyphIds;
+        bool m_inSceneGraphUpdate;
     };
 
     class QSGReleaseItemsEvent: public QSGInvokeEvent
@@ -86,8 +92,9 @@ namespace {
     public:
         QSGReleaseItemsEvent(QPlatformSharedGraphicsCache *cache,
                              const QByteArray &cacheId,
-                             const QVector<quint32> &glyphIds)
-            : QSGInvokeEvent(cache, cacheId, glyphIds)
+                             const QVector<quint32> &glyphIds,
+                             bool inSceneGraphUpdate)
+            : QSGInvokeEvent(cache, cacheId, glyphIds, inSceneGraphUpdate)
         {
         }
 
@@ -102,8 +109,9 @@ namespace {
     public:
         QSGRequestItemsEvent(QPlatformSharedGraphicsCache *cache,
                              const QByteArray &cacheId,
-                             const QVector<quint32> &glyphIds)
-            : QSGInvokeEvent(cache, cacheId, glyphIds)
+                             const QVector<quint32> &glyphIds,
+                             bool inSceneGraphUpdate)
+            : QSGInvokeEvent(cache, cacheId, glyphIds, inSceneGraphUpdate)
         {
         }
 
@@ -119,8 +127,9 @@ namespace {
         QSGInsertItemsEvent(QPlatformSharedGraphicsCache *cache,
                             const QByteArray &cacheId,
                             const QVector<quint32> &glyphIds,
-                            const QVector<QImage> &images)
-            : QSGInvokeEvent(cache, cacheId, glyphIds)
+                            const QVector<QImage> &images,
+                            bool inSceneGraphUpdate)
+            : QSGInvokeEvent(cache, cacheId, glyphIds, inSceneGraphUpdate)
             , m_images(images)
         {
         }
@@ -134,6 +143,21 @@ namespace {
         QVector<QImage> m_images;
     };
 
+    class QSGEndRequestBatchEvent: public QSGInvokeEvent
+    {
+    public:
+        QSGEndRequestBatchEvent(QPlatformSharedGraphicsCache *cache)
+            : QSGInvokeEvent(cache)
+        {
+        }
+
+        void invoke()
+        {
+            if (m_cache->requestBatchStarted())
+                m_cache->endRequestBatch();
+        }
+    };
+
     class QSGMainThreadInvoker: public QObject
     {
     public:
@@ -141,6 +165,14 @@ namespace {
         {
             if (e->type() == QEvent::User) {
                 Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread());
+
+                QSGInvokeEvent *invokeEvent = static_cast<QSGInvokeEvent *>(e);
+                if (invokeEvent->inSceneGraphUpdate()) {
+                    QPlatformSharedGraphicsCache *cache = invokeEvent->cache();
+                    if (!cache->requestBatchStarted())
+                        cache->beginRequestBatch();
+                }
+
                 static_cast<QSGInvokeEvent *>(e)->invoke();
                 return true;
             }
@@ -172,6 +204,8 @@ QSGSharedDistanceFieldGlyphCache::QSGSharedDistanceFieldGlyphCache(const QByteAr
     : QSGDistanceFieldGlyphCache(man, c, font)
     , m_cacheId(cacheId)
     , m_sharedGraphicsCache(sharedGraphicsCache)
+    , m_isInSceneGraphUpdate(false)
+    , m_hasPostedEvents(false)
 {
 #if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG)
     qDebug("QSGSharedDistanceFieldGlyphCache with id %s created in thread %p",
@@ -192,6 +226,14 @@ QSGSharedDistanceFieldGlyphCache::QSGSharedDistanceFieldGlyphCache(const QByteAr
             Qt::DirectConnection);
     connect(sharedGraphicsCache, SIGNAL(itemsInvalidated(QByteArray,QVector<quint32>)),
             this, SLOT(reportItemsInvalidated(QByteArray,QVector<quint32>)),
+            Qt::DirectConnection);
+
+    QQuickCanvas *canvas = static_cast<QQuickCanvas *>(c->surface());
+    Q_ASSERT(canvas != 0);
+
+    connect(canvas, SIGNAL(beforeSynchronizing()), this, SLOT(sceneGraphUpdateStarted()),
+            Qt::DirectConnection);
+    connect(canvas, SIGNAL(beforeRendering()), this, SLOT(sceneGraphUpdateDone()),
             Qt::DirectConnection);
 }
 
@@ -235,14 +277,22 @@ void QSGSharedDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
         glyphsVector.append(*it);
     }
 
+    m_hasPostedEvents = true;
     QSGMainThreadInvoker *invoker = QSGMainThreadInvoker::instance();
     QCoreApplication::postEvent(invoker, new QSGRequestItemsEvent(m_sharedGraphicsCache,
                                                                   m_cacheId,
-                                                                  glyphsVector));
+                                                                  glyphsVector,
+                                                                  m_isInSceneGraphUpdate));
 }
 
 void QSGSharedDistanceFieldGlyphCache::waitForGlyphs()
 {
+    Q_ASSERT(!m_isInSceneGraphUpdate);
+    if (m_isInSceneGraphUpdate) {
+        qWarning("QSGSharedDistanceFieldGlyphCache::waitForGlyphs: Called from inside "
+                 "scenegraph update. Will freeze.");
+    }
+
     {
         QMutexLocker locker(&m_pendingGlyphsMutex);
         while (!m_requestedGlyphsThatHaveNotBeenReturned.isEmpty())
@@ -272,11 +322,13 @@ void QSGSharedDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage> 
             ++it; ++i;
         }
 
+        m_hasPostedEvents = true;
         QSGMainThreadInvoker *invoker = QSGMainThreadInvoker::instance();
         QCoreApplication::postEvent(invoker, new QSGInsertItemsEvent(m_sharedGraphicsCache,
                                                                      m_cacheId,
                                                                      glyphIds,
-                                                                     images));
+                                                                     images,
+                                                                     m_isInSceneGraphUpdate));
     }
 
     processPendingGlyphs();
@@ -325,10 +377,12 @@ void QSGSharedDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyphs
         glyphsVector.append(*glyphsIt);
     }
 
+    m_hasPostedEvents = true;
     QSGMainThreadInvoker *mainThreadInvoker = QSGMainThreadInvoker::instance();
     QCoreApplication::postEvent(mainThreadInvoker, new QSGReleaseItemsEvent(m_sharedGraphicsCache,
                                                                             m_cacheId,
-                                                                            glyphsVector));
+                                                                            glyphsVector,
+                                                                            m_isInSceneGraphUpdate));
 }
 
 void QSGSharedDistanceFieldGlyphCache::registerOwnerElement(QQuickItem *ownerElement)
@@ -759,6 +813,23 @@ void QSGSharedDistanceFieldGlyphCache::reportItemsMissing(const QByteArray &cach
 
     m_pendingGlyphsCondition.wakeAll();
     emit glyphsPending();
+}
+
+void QSGSharedDistanceFieldGlyphCache::sceneGraphUpdateStarted()
+{
+    m_isInSceneGraphUpdate = true;
+    m_hasPostedEvents = false;
+}
+
+void QSGSharedDistanceFieldGlyphCache::sceneGraphUpdateDone()
+{
+    m_isInSceneGraphUpdate = false;
+
+    if (m_hasPostedEvents) {
+        QSGMainThreadInvoker *invoker = QSGMainThreadInvoker::instance();
+        QCoreApplication::postEvent(invoker, new QSGEndRequestBatchEvent(m_sharedGraphicsCache));
+        m_hasPostedEvents = false;
+    }
 }
 
 QT_END_NAMESPACE
