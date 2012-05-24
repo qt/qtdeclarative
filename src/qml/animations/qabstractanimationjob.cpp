@@ -355,7 +355,7 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
             if (oldState == Stopped) {
                 if (isTopLevel) {
                     // currentTime needs to be updated if pauseTimer is active
-                    QQmlAnimationTimer::ensureTimerUpdate();
+                    RETURN_IF_DELETED(QQmlAnimationTimer::ensureTimerUpdate());
                     RETURN_IF_DELETED(setCurrentTime(m_totalCurrentTime));
                 }
             }
