@@ -89,18 +89,18 @@ private:
 tst_examples::tst_examples() : canvas(0)
 {
     // Add files to exclude here
-    excludedFiles << "doc/src/snippets/qml/listmodel.qml"; //Just a ListModel, no root QQuickItem
+    excludedFiles << "snippets/qml/listmodel.qml"; //Just a ListModel, no root QQuickItem
 
     // Add directories you want excluded here (don't add examples/, because they install to examples/qtdeclarative/)
     excludedDirs << "shared"; //Not an example
     excludedDirs << "qtquick/text/fonts"; // QTBUG-21415
-    excludedDirs << "doc/src/snippets/qml/path"; //No root QQuickItem
+    excludedDirs << "snippets/qml/path"; //No root QQuickItem
     excludedDirs << "tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
 
     // These snippets are not expected to run on their own.
-    excludedDirs << "doc/src/snippets/qml/visualdatamodel_rootindex";
-    excludedDirs << "doc/src/snippets/qml/qtbinding";
-    excludedDirs << "doc/src/snippets/qml/imports";
+    excludedDirs << "snippets/qml/visualdatamodel_rootindex";
+    excludedDirs << "snippets/qml/qtbinding";
+    excludedDirs << "snippets/qml/imports";
 
 #ifdef QT_NO_WEBKIT
     excludedDirs << "qtquick/modelviews/webview";
@@ -112,6 +112,7 @@ tst_examples::tst_examples() : canvas(0)
     excludedDirs << "demos/twitter";
     excludedDirs << "demos/flickr";
     excludedDirs << "demos/photoviewer";
+    excludedDirs << "snippets/qml/xmlrole.qml";
 #endif
 
     // QTBUG-24034 - don't run customparticle examples
@@ -276,11 +277,15 @@ void tst_examples::sgsnippets_data()
 {
     QTest::addColumn<QString>("file");
 
-    QString snippets = QLatin1String(SRCDIR) + "/../../../../doc/src/snippets/qml";
-
+    QString snippets = QLatin1String(SRCDIR) + "/../../../../src/qml/doc/snippets/qml";
     QStringList files;
     files << findQmlFiles(QDir(snippets));
+    foreach (const QString &file, files)
+        QTest::newRow(qPrintable(file)) << file;
 
+    snippets = QLatin1String(SRCDIR) + "/../../../../src/quick/doc/snippets/qml";
+    files.clear();
+    files << findQmlFiles(QDir(snippets));
     foreach (const QString &file, files)
         QTest::newRow(qPrintable(file)) << file;
 }

@@ -40,35 +40,12 @@
 
 import QtQuick 2.0
 
-ListView {
-    width: 240; height: 320
-    model: ListModel {}
-
-    delegate: Rectangle {
-        width: 100; height: 30
-        border.width: 1
-        color: "lightsteelblue"
-        Text {
-            anchors.centerIn: parent
-            text: name
-        }
+Rectangle {
+    width: 50; height: 50
+    color: "black"
+    Text {
+        color: "white"
+        text: String.fromCharCode(65 + Math.floor(26*Math.random()))
+        anchors.centerIn: parent
     }
-
-    add: Transition {
-        NumberAnimation { property: "opacity"; from: 0; to: 1.0; duration: 400 }
-        NumberAnimation { property: "scale"; from: 0; to: 1.0; duration: 400 }
-    }
-
-//! [0]
-    displaced: Transition {
-        NumberAnimation { properties: "x,y"; duration: 400; easing.type: Easing.OutBounce }
-
-        // ensure opacity and scale values return to 1.0
-        NumberAnimation { property: "opacity"; to: 1.0 }
-        NumberAnimation { property: "scale"; to: 1.0 }
-    }
-//! [0]
-
-    focus: true
-    Keys.onSpacePressed: model.insert(0, { "name": "Item " + model.count })
 }

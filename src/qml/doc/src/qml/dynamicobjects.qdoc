@@ -118,6 +118,8 @@ use the signal \c connect() method. See
 \l{QML Signal and Handler Event System#Connecting Signals to Methods and Signals}
 {Connecting Signals to Methods and Signals} for more information.
 
+It is also possible to instantiate components without blocking via the
+\l {Component::incubateObject()}{incubateObject()} function.
 
 \section2 Creating an Object from a String of QML
 
@@ -149,7 +151,8 @@ The actual creation context depends on how an item is created:
 \li If \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}
    if called, the creation context is the context of the parent item passed to this method
 \li If a \c {Component{}} item is defined and \l {Component::createObject()}{createObject()}
-   is called on that item, the creation context is the context in which the \c Component is defined
+   or \l {Component::incubateObject()}{incubateObject()} is called on that item,
+   the creation context is the context in which the \c Component is defined
 \endlist
 
 Also, note that while dynamically created objects may be used the same as other objects, they
