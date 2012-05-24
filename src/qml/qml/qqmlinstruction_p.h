@@ -200,6 +200,7 @@ union QQmlInstruction
         ushort column;
         ushort line; 
         bool isRoot;
+        bool parentToSuper;
     };
     struct instr_createSimple {
         QML_INSTR_HEADER
@@ -208,6 +209,7 @@ union QQmlInstruction
         int type;
         ushort column;
         ushort line; 
+        bool parentToSuper;
     };
     struct instr_storeMeta {
         QML_INSTR_HEADER
@@ -222,13 +224,11 @@ union QQmlInstruction
     struct instr_assignValueSource {
         QML_INSTR_HEADER
         QQmlPropertyRawData property;
-        int owner;
         int castValue;
     };
     struct instr_assignValueInterceptor {
         QML_INSTR_HEADER
         QQmlPropertyRawData property;
-        int owner;
         int castValue;
     };
     struct instr_initV8Bindings {

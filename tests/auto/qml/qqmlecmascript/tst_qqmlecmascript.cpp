@@ -6860,16 +6860,6 @@ void tst_qqmlecmascript::bindingSuppression()
 void tst_qqmlecmascript::signalEmitted()
 {
     {
-        // calling destroy on the parent.
-        QQmlEngine engine;
-        QQmlComponent c(&engine, testFileUrl("signalEmitted.qml"));
-        QObject *obj = c.create();
-        QVERIFY(obj != 0);
-        QTRY_VERIFY(obj->property("success").toBool());
-        delete obj;
-    }
-
-    {
         // calling destroy on the sibling.
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("signalEmitted.2.qml"));

@@ -1383,10 +1383,23 @@ void QQmlData::destroyed(QObject *object)
         delete this;
 }
 
+DEFINE_BOOL_CONFIG_OPTION(parentTest, QML_PARENT_TEST);
+
 void QQmlData::parentChanged(QObject *object, QObject *parent)
 {
-    Q_UNUSED(object);
-    Q_UNUSED(parent);
+    if (parentTest()) {
+        if (parentFrozen && !QObjectPrivate::get(object)->wasDeleted) {
+            QString on;
+            QString pn;
+
+            { QDebug dbg(&on); dbg << object; on = on.left(on.length() - 1); }
+            { QDebug dbg(&pn); dbg << parent; pn = pn.left(pn.length() - 1); }
+
+            qFatal("Object %s has had its parent frozen by QML and cannot be changed.\n"
+                   "User code is attempting to change it to %s.\n"
+                   "This behavior is NOT supported!", qPrintable(on), qPrintable(pn));
+        }
+    }
 }
 
 bool QQmlData::hasBindingBit(int bit) const

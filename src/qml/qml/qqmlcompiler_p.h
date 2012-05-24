@@ -373,7 +373,7 @@ private:
     bool checkValidId(QQmlScript::Value *, const QString &);
 
 
-    void genObject(QQmlScript::Object *obj);
+    void genObject(QQmlScript::Object *obj, bool parentToSuper = false);
     void genObjectBody(QQmlScript::Object *obj);
     void genValueTypeProperty(QQmlScript::Object *obj,QQmlScript::Property *);
     void genComponent(QQmlScript::Object *obj);

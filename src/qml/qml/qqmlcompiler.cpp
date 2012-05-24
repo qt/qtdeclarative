@@ -1155,7 +1155,7 @@ bool QQmlCompiler::buildObject(QQmlScript::Object *obj, const BindingContext &ct
     return true;
 }
 
-void QQmlCompiler::genObject(QQmlScript::Object *obj)
+void QQmlCompiler::genObject(QQmlScript::Object *obj, bool parentToSuper)
 {
     QQmlCompiledData::TypeReference &tr = output->types[obj->type];
     if (tr.type && obj->metatype->metaObject() == &QQmlComponent::staticMetaObject) {
@@ -1173,6 +1173,7 @@ void QQmlCompiler::genObject(QQmlScript::Object *obj)
         create.type = obj->type;
         create.line = obj->location.start.line;
         create.column = obj->location.start.column;
+        create.parentToSuper = parentToSuper;
         output->addInstruction(create);
 
     } else {
@@ -1186,6 +1187,7 @@ void QQmlCompiler::genObject(QQmlScript::Object *obj)
                 create.data = output->indexForByteArray(obj->custom);
             create.type = obj->type;
             create.isRoot = (compileState->root == obj);
+            create.parentToSuper = parentToSuper;
             output->addInstruction(create);
         } else {
             Instruction::CreateQMLObject create;
@@ -1975,31 +1977,25 @@ void QQmlCompiler::genPropertyAssignment(QQmlScript::Property *prop,
                  v->type == Value::ValueInterceptor);
 
         if (v->type == Value::ValueSource) {
-            genObject(v->object);
+            genObject(v->object, valueTypeProperty?true:false);
 
             Instruction::StoreValueSource store;
-            if (valueTypeProperty) {
+            if (valueTypeProperty)
                 store.property = genValueTypeData(prop, valueTypeProperty);
-                store.owner = 1;
-            } else {
+            else
                 store.property = prop->core;
-                store.owner = 0;
-            }
             QQmlType *valueType = toQmlType(v->object);
             store.castValue = valueType->propertyValueSourceCast();
             output->addInstruction(store);
 
         } else if (v->type == Value::ValueInterceptor) {
-            genObject(v->object);
+            genObject(v->object, valueTypeProperty?true:false);
 
             Instruction::StoreValueInterceptor store;
-            if (valueTypeProperty) {
+            if (valueTypeProperty)
                 store.property = genValueTypeData(prop, valueTypeProperty);
-                store.owner = 1;
-            } else {
+            else
                 store.property = prop->core;
-                store.owner = 0;
-            }
             QQmlType *valueType = toQmlType(v->object);
             store.castValue = valueType->propertyValueInterceptorCast();
             output->addInstruction(store);

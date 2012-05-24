@@ -339,7 +339,6 @@ void tst_qqmlinstruction::dump()
     {
         QQmlCompiledData::Instruction::StoreValueSource i;
         i.property.coreIndex = 29;
-        i.owner = 1;
         i.castValue = 4;
         data->addInstruction(i);
     }
@@ -347,7 +346,6 @@ void tst_qqmlinstruction::dump()
     {
         QQmlCompiledData::Instruction::StoreValueInterceptor i;
         i.property.coreIndex = 30;
-        i.owner = 2;
         i.castValue = -4;
         data->addInstruction(i);
     }

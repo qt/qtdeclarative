@@ -609,13 +609,14 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 customParser->setCustomData(o, DATAS.at(instr.data));
             }
             if (!objects.isEmpty()) {
-                QObject *parent = objects.top();
+                QObject *parent = objects.at(objects.count() - 1 - (instr.parentToSuper?1:0));
 #if 0 // ### refactor
                 if (o->isWidgetType() && parent->isWidgetType()) 
                     static_cast<QWidget*>(o)->setParent(static_cast<QWidget*>(parent));
                 else 
 #endif
                     QQml_setParent_noEvent(o, parent);
+                ddata->parentFrozen = true;
             }
             objects.push(o);
         QML_END_INSTR(CreateCppObject)
@@ -642,9 +643,10 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             ddata->prevContextObject = &CTXT->contextObjects; 
             CTXT->contextObjects = ddata; 
 
-            QObject *parent = objects.top();                                                                    
+            QObject *parent = objects.at(objects.count() - 1 - (instr.parentToSuper?1:0));
             QQml_setParent_noEvent(o, parent);                                                        
 
+            ddata->parentFrozen = true;
             objects.push(o);
         QML_END_INSTR(CreateSimpleObject)
 
@@ -905,19 +907,16 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_BEGIN_INSTR(StoreValueSource)
             QObject *obj = objects.pop();
             QQmlPropertyValueSource *vs = reinterpret_cast<QQmlPropertyValueSource *>(reinterpret_cast<char *>(obj) + instr.castValue);
-            QObject *target = objects.at(objects.count() - 1 - instr.owner);
-
-            obj->setParent(target);
+            QObject *target = obj->parent();
             vs->setTarget(QQmlPropertyPrivate::restore(target, instr.property, CTXT));
         QML_END_INSTR(StoreValueSource)
 
         QML_BEGIN_INSTR(StoreValueInterceptor)
             QObject *obj = objects.pop();
             QQmlPropertyValueInterceptor *vi = reinterpret_cast<QQmlPropertyValueInterceptor *>(reinterpret_cast<char *>(obj) + instr.castValue);
-            QObject *target = objects.at(objects.count() - 1 - instr.owner);
+            QObject *target = obj->parent();
             QQmlProperty prop = 
                 QQmlPropertyPrivate::restore(target, instr.property, CTXT);
-            obj->setParent(target);
             vi->setTarget(prop);
             QQmlVMEMetaObject *mo = QQmlVMEMetaObject::get(target);
             Q_ASSERT(mo);
