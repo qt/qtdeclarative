@@ -249,6 +249,10 @@ QQuickVDMCachedModelData::QQuickVDMCachedModelData(
     op->metaObject = metaObject;
 
     type->addref();
+
+    QQmlData *qmldata = QQmlData::get(this, true);
+    qmldata->propertyCache = dataType->propertyCache;
+    qmldata->propertyCache->addref();
 }
 
 QQuickVDMCachedModelData::~QQuickVDMCachedModelData()
