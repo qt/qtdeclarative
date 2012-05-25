@@ -2,43 +2,39 @@
 #define QV4ECMAOBJECTS_P_H
 
 #include "qmljs_objects.h"
+#include <QtCore/qnumeric.h>
 
 namespace QQmlJS {
 namespace VM {
 
 struct ObjectCtor: FunctionObject
 {
-    static Value create(ExecutionEngine *engine);
-
     ObjectCtor(Context *scope);
 
     virtual void construct(Context *ctx);
-    virtual void call(Context *);
+    virtual void call(Context *ctx);
 };
 
 struct ObjectPrototype: Object
 {
-    ObjectPrototype(Context *ctx, FunctionObject *ctor);
+    void init(Context *ctx, const Value &ctor);
 
-protected:
     static void method_toString(Context *ctx);
 };
 
 struct StringCtor: FunctionObject
 {
-    static Value create(ExecutionEngine *engine);
-
     StringCtor(Context *scope);
 
     virtual void construct(Context *ctx);
     virtual void call(Context *ctx);
 };
 
-struct StringPrototype: Object
+struct StringPrototype: StringObject
 {
-    StringPrototype(Context *ctx, FunctionObject *ctor);
+    StringPrototype(Context *ctx): StringObject(Value::fromString(ctx, QString())) {}
+    void init(Context *ctx, const Value &ctor);
 
-protected:
     static QString getThisString(Context *ctx);
 
     static void method_toString(Context *ctx);
@@ -65,8 +61,6 @@ protected:
 
 struct NumberCtor: FunctionObject
 {
-    static Value create(ExecutionEngine *engine);
-
     NumberCtor(Context *scope);
 
     virtual void construct(Context *ctx);
@@ -75,9 +69,9 @@ struct NumberCtor: FunctionObject
 
 struct NumberPrototype: NumberObject
 {
-    NumberPrototype(Context *ctx, FunctionObject *ctor);
+    NumberPrototype(): NumberObject(Value::fromNumber(0)) {}
+    void init(Context *ctx, const Value &ctor);
 
-protected:
     static void method_toString(Context *ctx);
     static void method_toLocaleString(Context *ctx);
     static void method_valueOf(Context *ctx);
@@ -88,8 +82,6 @@ protected:
 
 struct BooleanCtor: FunctionObject
 {
-    static Value create(ExecutionEngine *engine);
-
     BooleanCtor(Context *scope);
 
     virtual void construct(Context *ctx);
@@ -98,17 +90,15 @@ struct BooleanCtor: FunctionObject
 
 struct BooleanPrototype: BooleanObject
 {
-    BooleanPrototype(Context *ctx, FunctionObject *ctor);
+    BooleanPrototype(): BooleanObject(Value::fromBoolean(false)) {}
+    void init(Context *ctx, const Value &ctor);
 
-protected:
     static void method_toString(Context *ctx);
     static void method_valueOf(Context *ctx);
 };
 
 struct ArrayCtor: FunctionObject
 {
-    static Value create(ExecutionEngine *engine);
-
     ArrayCtor(Context *scope);
 
     virtual void construct(Context *ctx);
@@ -117,9 +107,8 @@ struct ArrayCtor: FunctionObject
 
 struct ArrayPrototype: ArrayObject
 {
-    ArrayPrototype(Context *ctx, FunctionObject *ctor);
+    void init(Context *ctx, const Value &ctor);
 
-protected:
     static void method_toString(Context *ctx);
     static void method_toLocaleString(Context *ctx);
     static void method_concat(Context *ctx);
@@ -145,8 +134,6 @@ protected:
 
 struct FunctionCtor: FunctionObject
 {
-    static Value create(ExecutionEngine *engine);
-
     FunctionCtor(Context *scope);
 
     virtual void construct(Context *ctx);
@@ -155,9 +142,9 @@ struct FunctionCtor: FunctionObject
 
 struct FunctionPrototype: FunctionObject
 {
-    FunctionPrototype(Context *ctx, FunctionObject *ctor);
+    FunctionPrototype(Context *ctx): FunctionObject(ctx) {}
+    void init(Context *ctx, const Value &ctor);
 
-protected:
     static void method_toString(Context *ctx);
     static void method_apply(Context *ctx);
     static void method_call(Context *ctx);
@@ -166,8 +153,6 @@ protected:
 
 struct DateCtor: FunctionObject
 {
-    static Value create(ExecutionEngine *engine);
-
     DateCtor(Context *scope);
 
     virtual void construct(Context *ctx);
@@ -176,9 +161,9 @@ struct DateCtor: FunctionObject
 
 struct DatePrototype: DateObject
 {
-    DatePrototype(Context *ctx, FunctionObject *ctor);
+    DatePrototype(): DateObject(Value::fromNumber(qSNaN())) {}
+    void init(Context *ctx, const Value &ctor);
 
-protected:
     static double getThisDate(Context *ctx);
 
     static void method_MakeTime(Context *ctx);
@@ -235,7 +220,6 @@ struct MathObject: Object
 {
     MathObject(Context *ctx);
 
-protected:
     static void method_abs(Context *ctx);
     static void method_acos(Context *ctx);
     static void method_asin(Context *ctx);

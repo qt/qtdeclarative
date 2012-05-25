@@ -363,6 +363,7 @@ void __qmljs_object_default_value(Context *ctx, Value *result, const Value *obje
 
     Object *oo = object->asObject();
     assert(oo != 0);
+
     Value conv = oo->getProperty(ctx, meth1);
     if (!conv.isUndefined() && conv.isFunctionObject()) {
         Value r;
@@ -398,7 +399,6 @@ void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
     Value value;
     __qmljs_init_boolean(&value, boolean);
     __qmljs_init_object(result, ctx->engine->newBooleanObject(value));
-    result->objectValue->prototype = ctx->engine->objectPrototype.objectValue;
 }
 
 void __qmljs_new_number_object(Context *ctx, Value *result, double number)
@@ -406,7 +406,6 @@ void __qmljs_new_number_object(Context *ctx, Value *result, double number)
     Value value;
     __qmljs_init_number(&value, number);
     __qmljs_init_object(result, ctx->engine->newNumberObject(value));
-    result->objectValue->prototype = ctx->engine->numberPrototype.objectValue;
 }
 
 void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
@@ -414,7 +413,6 @@ void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
     Value value;
     __qmljs_init_string(&value, string);
     __qmljs_init_object(result, ctx->engine->newStringObject(value));
-    result->objectValue->prototype = ctx->engine->stringPrototype.objectValue;
 }
 
 void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value)

@@ -473,14 +473,6 @@ static double getLocalTZA()
 //
 // Object
 //
-Value ObjectCtor::create(ExecutionEngine *engine)
-{
-    Context *ctx = engine->rootContext;
-    FunctionObject *ctor = ctx->engine->newObjectCtor(ctx);
-    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newObjectPrototype(ctx, ctor)));
-    return Value::fromObject(ctor);
-}
-
 ObjectCtor::ObjectCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -491,14 +483,15 @@ void ObjectCtor::construct(Context *ctx)
     __qmljs_init_object(&ctx->thisObject, ctx->engine->newObject());
 }
 
-void ObjectCtor::call(Context *)
+void ObjectCtor::call(Context *ctx)
 {
-    assert(!"not here");
+    __qmljs_init_object(&ctx->result, ctx->engine->newObject());
 }
 
-ObjectPrototype::ObjectPrototype(Context *ctx, FunctionObject *ctor)
+void ObjectPrototype::init(Context *ctx, const Value &ctor)
 {
-    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    setProperty(ctx, QStringLiteral("constructor"), ctor);
     setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
 }
 
@@ -510,14 +503,6 @@ void ObjectPrototype::method_toString(Context *ctx)
 //
 // String
 //
-Value StringCtor::create(ExecutionEngine *engine)
-{
-    Context *ctx = engine->rootContext;
-    FunctionObject *ctor = ctx->engine->newStringCtor(ctx);
-    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newStringPrototype(ctx, ctor)));
-    return Value::fromObject(ctor);
-}
-
 StringCtor::StringCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -542,9 +527,10 @@ void StringCtor::call(Context *ctx)
         __qmljs_to_string(ctx, &ctx->result, &arg);
 }
 
-StringPrototype::StringPrototype(Context *ctx, FunctionObject *ctor)
+void StringPrototype::init(Context *ctx, const Value &ctor)
 {
-    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    setProperty(ctx, QStringLiteral("constructor"), ctor);
     setProperty(ctx, QStringLiteral("toString"), method_toString);
     setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
     setProperty(ctx, QStringLiteral("charAt"), method_charAt);
@@ -832,14 +818,6 @@ void StringPrototype::method_fromCharCode(Context *ctx)
 //
 // Number object
 //
-Value NumberCtor::create(ExecutionEngine *engine)
-{
-    Context *ctx = engine->rootContext;
-    FunctionObject *ctor = ctx->engine->newNumberCtor(ctx);
-    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newNumberPrototype(ctx, ctor)));
-    return Value::fromObject(ctor);
-}
-
 NumberCtor::NumberCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -857,23 +835,23 @@ void NumberCtor::call(Context *ctx)
     __qmljs_init_number(&ctx->result, value);
 }
 
-NumberPrototype::NumberPrototype(Context *ctx, FunctionObject *ctor)
-    : NumberObject(Value::fromNumber(0))
+void NumberPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor->setProperty(ctx, QStringLiteral("NaN"), Value::fromNumber(qSNaN()));
-    ctor->setProperty(ctx, QStringLiteral("NEGATIVE_INFINITY"), Value::fromNumber(-qInf()));
-    ctor->setProperty(ctx, QStringLiteral("POSITIVE_INFINITY"), Value::fromNumber(qInf()));
-    ctor->setProperty(ctx, QStringLiteral("MAX_VALUE"), Value::fromNumber(1.7976931348623158e+308));
+    ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue->setProperty(ctx, QStringLiteral("NaN"), Value::fromNumber(qSNaN()));
+    ctor.objectValue->setProperty(ctx, QStringLiteral("NEGATIVE_INFINITY"), Value::fromNumber(-qInf()));
+    ctor.objectValue->setProperty(ctx, QStringLiteral("POSITIVE_INFINITY"), Value::fromNumber(qInf()));
+    ctor.objectValue->setProperty(ctx, QStringLiteral("MAX_VALUE"), Value::fromNumber(1.7976931348623158e+308));
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor->setProperty(ctx, QStringLiteral("MIN_VALUE"), Value::fromNumber(5e-324));
+    ctor.objectValue->setProperty(ctx, QStringLiteral("MIN_VALUE"), Value::fromNumber(5e-324));
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
 
-    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QStringLiteral("constructor"), ctor);
     setProperty(ctx, QStringLiteral("toString"), method_toString);
     setProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString);
     setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
@@ -1019,14 +997,6 @@ void NumberPrototype::method_toPrecision(Context *ctx)
 //
 // Boolean object
 //
-Value BooleanCtor::create(ExecutionEngine *engine)
-{
-    Context *ctx = engine->rootContext;
-    FunctionObject *ctor = ctx->engine->newBooleanCtor(ctx);
-    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newBooleanPrototype(ctx, ctor)));
-    return Value::fromObject(ctor);
-}
-
 BooleanCtor::BooleanCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -1044,12 +1014,12 @@ void BooleanCtor::call(Context *ctx)
     __qmljs_init_boolean(&ctx->result, value);
 }
 
-BooleanPrototype::BooleanPrototype(Context *ctx, FunctionObject *ctor)
-    : BooleanObject(Value::fromBoolean(false))
+void BooleanPrototype::init(Context *ctx, const Value &ctor)
 {
-    ctor->setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
-    ctor->setProperty(ctx, QStringLiteral("toString"), method_toString);
-    ctor->setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
+    ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    setProperty(ctx, QStringLiteral("constructor"), ctor);
+    setProperty(ctx, QStringLiteral("toString"), method_toString);
+    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
 }
 
 void BooleanPrototype::method_toString(Context *ctx)
@@ -1073,14 +1043,6 @@ void BooleanPrototype::method_valueOf(Context *ctx)
 //
 // Array object
 //
-Value ArrayCtor::create(ExecutionEngine *engine)
-{
-    Context *ctx = engine->rootContext;
-    FunctionObject *ctor = ctx->engine->newArrayCtor(ctx);
-    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newArrayPrototype(ctx, ctor)));
-    return Value::fromObject(ctor);
-}
-
 ArrayCtor::ArrayCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -1114,9 +1076,10 @@ void ArrayCtor::call(Context *ctx)
     ctx->result = Value::fromObject(ctx->engine->newArrayObject(value));
 }
 
-ArrayPrototype::ArrayPrototype(Context *ctx, FunctionObject *ctor)
+void ArrayPrototype::init(Context *ctx, const Value &ctor)
 {
-    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    setProperty(ctx, QStringLiteral("constructor"), ctor);
     setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     setProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString, 0);
     setProperty(ctx, QStringLiteral("concat"), method_concat, 1);
@@ -1595,17 +1558,6 @@ void ArrayPrototype::method_reduceRight(Context *ctx)
 //
 // Function object
 //
-//
-// Array object
-//
-Value FunctionCtor::create(ExecutionEngine *engine)
-{
-    Context *ctx = engine->rootContext;
-    FunctionObject *ctor = ctx->engine->newFunctionCtor(ctx);
-    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newFunctionPrototype(ctx, ctor)));
-    return Value::fromObject(ctor);
-}
-
 FunctionCtor::FunctionCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -1621,10 +1573,10 @@ void FunctionCtor::call(Context *ctx)
     ctx->throwUnimplemented(QStringLiteral("Function"));
 }
 
-FunctionPrototype::FunctionPrototype(Context *ctx, FunctionObject *ctor)
-    : FunctionObject(ctx)
+void FunctionPrototype::init(Context *ctx, const Value &ctor)
 {
-    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    setProperty(ctx, QStringLiteral("constructor"), ctor);
     setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     setProperty(ctx, QStringLiteral("apply"), method_apply, 0);
     setProperty(ctx, QStringLiteral("call"), method_call, 0);
@@ -1678,14 +1630,6 @@ void FunctionPrototype::method_bind(Context *ctx)
 //
 // Date object
 //
-Value DateCtor::create(ExecutionEngine *engine)
-{
-    Context *ctx = engine->rootContext;
-    FunctionObject *ctor = ctx->engine->newDateCtor(ctx);
-    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newDatePrototype(ctx, ctor)));
-    return Value::fromObject(ctor);
-}
-
 DateCtor::DateCtor(Context *scope)
     : FunctionObject(scope)
 {
@@ -1735,15 +1679,15 @@ void DateCtor::call(Context *ctx)
     ctx->result = Value::fromString(ctx, ToString(t));
 }
 
-DatePrototype::DatePrototype(Context *ctx, FunctionObject *ctor)
-    : DateObject(Value::fromNumber(qSNaN()))
+void DatePrototype::init(Context *ctx, const Value &ctor)
 {
+    ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
     LocalTZA = getLocalTZA();
 
-    ctor->setProperty(ctx, QStringLiteral("parse"), method_parse, 1);
-    ctor->setProperty(ctx, QStringLiteral("UTC"), method_UTC, 7);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("parse"), method_parse, 1);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("UTC"), method_UTC, 7);
 
-    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QStringLiteral("constructor"), ctor);
     setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
     setProperty(ctx, QStringLiteral("toDateString"), method_toDateString, 0);
     setProperty(ctx, QStringLiteral("toTimeString"), method_toTimeString, 0);

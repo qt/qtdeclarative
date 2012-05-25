@@ -105,7 +105,10 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
     globalCode->code(ctx);
 
     if (ctx->hasUncaughtException) {
-        std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+        if (VM::ErrorObject *e = ctx->result.asErrorObject())
+            std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
+        else
+            std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
     }
 
     delete[] ctx->locals;

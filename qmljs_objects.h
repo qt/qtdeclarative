@@ -29,6 +29,14 @@ struct ArgumentsObject;
 struct Context;
 struct ExecutionEngine;
 
+struct ObjectPrototype;
+struct StringPrototype;
+struct NumberPrototype;
+struct BooleanPrototype;
+struct ArrayPrototype;
+struct FunctionPrototype;
+struct DatePrototype;
+
 struct String {
     String(const QString &text)
         : _text(text), _hashValue(0) {}
@@ -297,8 +305,8 @@ struct ScriptFunction: FunctionObject {
 };
 
 struct ErrorObject: Object {
-    Value message;
-    ErrorObject(const Value &message): message(message) {}
+    Value value;
+    ErrorObject(const Value &message): value(message) {}
     virtual ErrorObject *asErrorObject() { return this; }
 };
 
@@ -396,13 +404,13 @@ struct ExecutionEngine
     Value functionCtor;
     Value dateCtor;
 
-    Value objectPrototype;
-    Value stringPrototype;
-    Value numberPrototype;
-    Value booleanPrototype;
-    Value arrayPrototype;
-    Value functionPrototype;
-    Value datePrototype;
+    ObjectPrototype *objectPrototype;
+    StringPrototype *stringPrototype;
+    NumberPrototype *numberPrototype;
+    BooleanPrototype *booleanPrototype;
+    ArrayPrototype *arrayPrototype;
+    FunctionPrototype *functionPrototype;
+    DatePrototype *datePrototype;
 
     QHash<QString, String *> identifiers;
 
@@ -420,33 +428,26 @@ struct ExecutionEngine
 
     Object *newObject();
     FunctionObject *newObjectCtor(Context *ctx);
-    Object *newObjectPrototype(Context *ctx, FunctionObject *proto);
 
     String *newString(const QString &s);
     Object *newStringObject(const Value &value);
     FunctionObject *newStringCtor(Context *ctx);
-    Object *newStringPrototype(Context *ctx, FunctionObject *proto);
 
     Object *newNumberObject(const Value &value);
     FunctionObject *newNumberCtor(Context *ctx);
-    Object *newNumberPrototype(Context *ctx, FunctionObject *proto);
 
     Object *newBooleanObject(const Value &value);
     FunctionObject *newBooleanCtor(Context *ctx);
-    Object *newBooleanPrototype(Context *ctx, FunctionObject *proto);
 
     Object *newFunctionObject(Context *ctx);
     FunctionObject *newFunctionCtor(Context *ctx);
-    Object *newFunctionPrototype(Context *ctx, FunctionObject *proto);
 
     Object *newArrayObject();
     Object *newArrayObject(const Array &value);
     FunctionObject *newArrayCtor(Context *ctx);
-    Object *newArrayPrototype(Context *ctx, FunctionObject *proto);
 
     Object *newDateObject(const Value &value);
     FunctionObject *newDateCtor(Context *ctx);
-    Object *newDatePrototype(Context *ctx, FunctionObject *proto);
 
     Object *newErrorObject(const Value &value);
     Object *newMathObject(Context *ctx);

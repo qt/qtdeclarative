@@ -5,6 +5,7 @@
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
 #include <cassert>
+#include <typeinfo>
 
 using namespace QQmlJS::VM;
 
@@ -27,7 +28,7 @@ void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context
     setProperty(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
 }
 
-Value *Object::getOwnProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+Value *Object::getOwnProperty(Context *, String *name, PropertyAttributes *attributes)
 {
     if (members) {
         if (Property *prop = members->find(name)) {
@@ -48,7 +49,7 @@ Value *Object::getPropertyDescriptor(Context *ctx, String *name, PropertyAttribu
     return 0;
 }
 
-void Object::setProperty(Context *ctx, String *name, const Value &value, bool flag)
+void Object::setProperty(Context *, String *name, const Value &value, bool flag)
 {
     Q_UNUSED(flag);
 
@@ -73,7 +74,7 @@ bool Object::canSetProperty(Context *ctx, String *name)
     return true;
 }
 
-bool Object::hasProperty(Context *ctx, String *name) const
+bool Object::hasProperty(Context *, String *name) const
 {
     if (members)
         return members->find(name) != 0;
@@ -81,7 +82,7 @@ bool Object::hasProperty(Context *ctx, String *name) const
     return false;
 }
 
-bool Object::deleteProperty(Context *ctx, String *name, bool flag)
+bool Object::deleteProperty(Context *, String *name, bool flag)
 {
     Q_UNUSED(flag);
 
@@ -192,16 +193,46 @@ ExecutionEngine::ExecutionEngine()
     rootContext = newContext();
     rootContext->init(this);
 
-    objectPrototype.type = NULL_TYPE;
-    stringPrototype.type = NULL_TYPE;
-    numberPrototype.type = NULL_TYPE;
-    booleanPrototype.type = NULL_TYPE;
-    arrayPrototype.type = NULL_TYPE;
-    datePrototype.type = NULL_TYPE;
-    functionPrototype.type = NULL_TYPE;
-
     id_length = identifier(QStringLiteral("length"));
     id_prototype = identifier(QStringLiteral("prototype"));
+
+    objectPrototype = new ObjectPrototype();
+    stringPrototype = new StringPrototype(rootContext);
+    numberPrototype = new NumberPrototype();
+    booleanPrototype = new BooleanPrototype();
+    arrayPrototype = new ArrayPrototype();
+    datePrototype = new DatePrototype();
+    functionPrototype = new FunctionPrototype(rootContext);
+
+    stringPrototype->prototype = objectPrototype;
+    numberPrototype->prototype = objectPrototype;
+    booleanPrototype->prototype = objectPrototype;
+    arrayPrototype->prototype = objectPrototype;
+    datePrototype->prototype = objectPrototype;
+    functionPrototype->prototype = objectPrototype;
+
+    Value objectCtor = Value::fromObject(new ObjectCtor(rootContext));
+    Value stringCtor = Value::fromObject(new StringCtor(rootContext));
+    Value numberCtor = Value::fromObject(new NumberCtor(rootContext));
+    Value booleanCtor = Value::fromObject(new BooleanCtor(rootContext));
+    Value arrayCtor = Value::fromObject(new ArrayCtor(rootContext));
+    Value functionCtor = Value::fromObject(new FunctionCtor(rootContext));
+    Value dateCtor = Value::fromObject(new DateCtor(rootContext));
+
+    stringCtor.objectValue->prototype = functionPrototype;
+    numberCtor.objectValue->prototype = functionPrototype;
+    booleanCtor.objectValue->prototype = functionPrototype;
+    arrayCtor.objectValue->prototype = functionPrototype;
+    functionCtor.objectValue->prototype = functionPrototype;
+    dateCtor.objectValue->prototype = functionPrototype;
+
+    objectPrototype->init(rootContext, objectCtor);
+    stringPrototype->init(rootContext, stringCtor);
+    numberPrototype->init(rootContext, numberCtor);
+    booleanPrototype->init(rootContext, booleanCtor);
+    arrayPrototype->init(rootContext, arrayCtor);
+    datePrototype->init(rootContext, dateCtor);
+    functionPrototype->init(rootContext, functionCtor);
 
     //
     // set up the global object
@@ -210,27 +241,10 @@ ExecutionEngine::ExecutionEngine()
     __qmljs_init_object(&globalObject, glo);
     __qmljs_init_object(&rootContext->activation, glo);
 
-    objectCtor = ObjectCtor::create(this);
-    objectPrototype = objectCtor.property(rootContext, id_prototype);
-
-    functionCtor = FunctionCtor::create(this);
-    functionPrototype = functionCtor.property(rootContext, id_prototype);
-
-    stringCtor = StringCtor::create(this);
-    numberCtor = NumberCtor::create(this);
-    booleanCtor = BooleanCtor::create(this);
-    arrayCtor = ArrayCtor::create(this);
-    dateCtor = DateCtor::create(this);
-
-    stringPrototype = stringCtor.property(rootContext, id_prototype);
-    numberPrototype = numberCtor.property(rootContext, id_prototype);
-    booleanPrototype = booleanCtor.property(rootContext, id_prototype);
-    arrayPrototype = arrayCtor.property(rootContext, id_prototype);
-    datePrototype = dateCtor.property(rootContext, id_prototype);
-
     glo->setProperty(rootContext, identifier(QStringLiteral("Object")), objectCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("String")), stringCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("Number")), numberCtor);
+    glo->setProperty(rootContext, identifier(QStringLiteral("Boolean")), booleanCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("Array")), arrayCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("Function")), functionCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("Date")), dateCtor);
@@ -253,35 +267,27 @@ String *ExecutionEngine::identifier(const QString &s)
 FunctionObject *ExecutionEngine::newNativeFunction(Context *scope, void (*code)(Context *))
 {
     NativeFunction *f = new NativeFunction(scope, code);
-    if (scope->engine->functionPrototype.isObject())
-        f->prototype = scope->engine->functionPrototype.objectValue;
+    f->prototype = scope->engine->functionPrototype;
     return f;
 }
 
 FunctionObject *ExecutionEngine::newScriptFunction(Context *scope, IR::Function *function)
 {
     ScriptFunction *f = new ScriptFunction(scope, function);
-    if (scope->engine->functionPrototype.isObject())
-        f->prototype = scope->engine->functionPrototype.objectValue;
+    f->prototype = scope->engine->functionPrototype;
     return f;
 }
 
 Object *ExecutionEngine::newObject()
 {
     Object *object = new Object();
-    if (objectPrototype.isObject())
-        object->prototype = objectPrototype.objectValue;
+    object->prototype = objectPrototype;
     return object;
 }
 
 FunctionObject *ExecutionEngine::newObjectCtor(Context *ctx)
 {
     return new ObjectCtor(ctx);
-}
-
-Object *ExecutionEngine::newObjectPrototype(Context *ctx, FunctionObject *proto)
-{
-    return new ObjectPrototype(ctx, proto);
 }
 
 String *ExecutionEngine::newString(const QString &s)
@@ -292,8 +298,7 @@ String *ExecutionEngine::newString(const QString &s)
 Object *ExecutionEngine::newStringObject(const Value &value)
 {
     StringObject *object = new StringObject(value);
-    if (stringPrototype.isObject())
-        object->prototype = stringPrototype.objectValue;
+    object->prototype = stringPrototype;
     return object;
 }
 
@@ -302,18 +307,10 @@ FunctionObject *ExecutionEngine::newStringCtor(Context *ctx)
     return new StringCtor(ctx);
 }
 
-Object *ExecutionEngine::newStringPrototype(Context *ctx, FunctionObject *proto)
-{
-    Object *stringProto = new StringPrototype(ctx, proto);
-    stringProto->prototype = objectPrototype.objectValue;
-    return stringProto;
-}
-
 Object *ExecutionEngine::newNumberObject(const Value &value)
 {
     NumberObject *object = new NumberObject(value);
-    if (numberPrototype.isObject())
-        object->prototype = numberPrototype.objectValue;
+    object->prototype = numberPrototype;
     return object;
 }
 
@@ -322,18 +319,10 @@ FunctionObject *ExecutionEngine::newNumberCtor(Context *ctx)
     return new NumberCtor(ctx);
 }
 
-Object *ExecutionEngine::newNumberPrototype(Context *ctx, FunctionObject *proto)
-{
-    Object *numberProto = new NumberPrototype(ctx, proto);
-    numberProto->prototype = objectPrototype.objectValue;
-    return numberProto;
-}
-
 Object *ExecutionEngine::newBooleanObject(const Value &value)
 {
     Object *object = new BooleanObject(value);
-    if (booleanPrototype.isObject())
-        object->prototype = booleanPrototype.objectValue;
+    object->prototype = booleanPrototype;
     return object;
 }
 
@@ -342,18 +331,10 @@ FunctionObject *ExecutionEngine::newBooleanCtor(Context *ctx)
     return new BooleanCtor(ctx);
 }
 
-Object *ExecutionEngine::newBooleanPrototype(Context *ctx, FunctionObject *proto)
-{
-    Object *booleanProto = new BooleanPrototype(ctx, proto);
-    booleanProto->prototype = objectPrototype.objectValue;
-    return booleanProto;
-}
-
 Object *ExecutionEngine::newFunctionObject(Context *ctx)
 {
     Object *object = new FunctionObject(ctx);
-    if (functionPrototype.isObject())
-        object->prototype = functionPrototype.objectValue;
+    object->prototype = functionPrototype;
     return object;
 }
 
@@ -362,26 +343,17 @@ FunctionObject *ExecutionEngine::newFunctionCtor(Context *ctx)
     return new FunctionCtor(ctx);
 }
 
-Object *ExecutionEngine::newFunctionPrototype(Context *ctx, FunctionObject *proto)
-{
-    Object *functionProto = new FunctionPrototype(ctx, proto);
-    functionProto->prototype = objectPrototype.objectValue;
-    return functionProto;
-}
-
 Object *ExecutionEngine::newArrayObject()
 {
     ArrayObject *object = new ArrayObject();
-    if (arrayPrototype.isObject())
-        object->prototype = arrayPrototype.objectValue;
+    object->prototype = arrayPrototype;
     return object;
 }
 
 Object *ExecutionEngine::newArrayObject(const Array &value)
 {
     ArrayObject *object = new ArrayObject(value);
-    if (arrayPrototype.isObject())
-        object->prototype = arrayPrototype.objectValue;
+    object->prototype = arrayPrototype;
     return object;
 }
 
@@ -390,19 +362,10 @@ FunctionObject *ExecutionEngine::newArrayCtor(Context *ctx)
     return new ArrayCtor(ctx);
 }
 
-Object *ExecutionEngine::newArrayPrototype(Context *ctx, FunctionObject *proto)
-{
-    Object *arrayProto = new ArrayPrototype(ctx, proto);
-    assert(objectPrototype.isObject());
-    arrayProto->prototype = objectPrototype.objectValue;
-    return arrayProto;
-}
-
 Object *ExecutionEngine::newDateObject(const Value &value)
 {
     Object *object = new DateObject(value);
-    if (datePrototype.isObject())
-        object->prototype = datePrototype.objectValue;
+    object->prototype = datePrototype;
     return object;
 }
 
@@ -411,27 +374,17 @@ FunctionObject *ExecutionEngine::newDateCtor(Context *ctx)
     return new DateCtor(ctx);
 }
 
-Object *ExecutionEngine::newDatePrototype(Context *ctx, FunctionObject *proto)
-{
-    Object *dateProto = new DatePrototype(ctx, proto);
-    assert(objectPrototype.isObject());
-    dateProto->prototype = objectPrototype.objectValue;
-    return dateProto;
-}
-
 Object *ExecutionEngine::newErrorObject(const Value &value)
 {
     ErrorObject *object = new ErrorObject(value);
-    assert(objectPrototype.isObject());
-    object->prototype = objectPrototype.objectValue;
+    object->prototype = objectPrototype;
     return object;
 }
 
 Object *ExecutionEngine::newMathObject(Context *ctx)
 {
     MathObject *object = new MathObject(ctx);
-    assert(objectPrototype.isObject());
-    object->prototype = objectPrototype.objectValue;
+    object->prototype = objectPrototype;
     return object;
 }
 
