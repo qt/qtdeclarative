@@ -45,6 +45,8 @@
 #include <QtQuick/QQuickItem>
 #include <QtQml/QQmlExpression>
 
+#include <QtQuick/private/qquickitem_p.h>
+
 namespace QQuickVisualTestUtil
 {
     QQuickItem *findVisibleChild(QQuickItem *parent, const QString &objectName);
@@ -106,7 +108,9 @@ namespace QQuickVisualTestUtil
             items << qobject_cast<QQuickItem*>(findItem<T>(parent, objectName, indexes[i]));
         return items;
     }
-
 }
+
+#define QQUICK_VERIFY_POLISH(item) \
+    QTRY_COMPARE(QQuickItemPrivate::get(item)->polishScheduled, false)
 
 #endif // QQUICKVISUALTESTUTIL_H

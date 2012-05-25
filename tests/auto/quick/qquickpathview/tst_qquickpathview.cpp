@@ -63,6 +63,7 @@
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
+Q_DECLARE_METATYPE(QQuickPathView::HighlightRangeMode)
 
 static void initStandardTreeModel(QStandardItemModel *model)
 {
@@ -101,6 +102,8 @@ private slots:
     void removeModel();
     void moveModel_data();
     void moveModel();
+    void consecutiveModelChanges_data();
+    void consecutiveModelChanges();
     void path();
     void pathMoved();
     void setCurrentIndex();
@@ -524,6 +527,127 @@ void tst_QQuickPathView::moveModel()
         pathview->setOffset(4);
 
     model.moveItems(from, to, count);
+    QTRY_COMPARE(pathview->offset(), offset);
+
+    delete canvas;
+}
+
+void tst_QQuickPathView::consecutiveModelChanges_data()
+{
+    QTest::addColumn<QQuickPathView::HighlightRangeMode>("mode");
+    QTest::addColumn<QList<ListChange> >("changes");
+    QTest::addColumn<int>("count");
+    QTest::addColumn<qreal>("offset");
+
+    QTest::newRow("no range - insert after, insert before")
+            << QQuickPathView::NoHighlightRange
+            << (QList<ListChange>()
+                << ListChange::insert(7, 2)
+                << ListChange::insert(1, 3))
+            << 13
+            << 6.;
+    QTest::newRow("no range - remove after, remove before")
+            << QQuickPathView::NoHighlightRange
+            << (QList<ListChange>()
+                << ListChange::remove(6, 2)
+                << ListChange::remove(1, 3))
+            << 3
+            << 2.;
+
+    QTest::newRow("no range - remove after, insert before")
+            << QQuickPathView::NoHighlightRange
+            << (QList<ListChange>()
+                << ListChange::remove(5, 2)
+                << ListChange::insert(1, 3))
+            << 9
+            << 2.;
+
+    QTest::newRow("no range - insert after, remove before")
+            << QQuickPathView::NoHighlightRange
+            << (QList<ListChange>()
+                << ListChange::insert(6, 2)
+                << ListChange::remove(1, 3))
+            << 7
+            << 6.;
+
+    QTest::newRow("no range - insert, remove all, polish, insert")
+            << QQuickPathView::NoHighlightRange
+            << (QList<ListChange>()
+                << ListChange::insert(3, 1)
+                << ListChange::remove(0, 9)
+                << ListChange::polish()
+                << ListChange::insert(0, 3))
+            << 3
+            << 0.;
+}
+
+void tst_QQuickPathView::consecutiveModelChanges()
+{
+    QFETCH(QQuickPathView::HighlightRangeMode, mode);
+    QFETCH(QList<ListChange>, changes);
+    QFETCH(int, count);
+    QFETCH(qreal, offset);
+
+    QQuickView *canvas = createView();
+    canvas->show();
+
+    QaimModel model;
+    model.addItem("Ben", "12345");
+    model.addItem("Bohn", "2345");
+    model.addItem("Bob", "54321");
+    model.addItem("Bill", "4321");
+    model.addItem("Jinny", "679");
+    model.addItem("Milly", "73378");
+    model.addItem("Jimmy", "3535");
+    model.addItem("Barb", "9039");
+
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(testFileUrl("pathview0.qml"));
+    qApp->processEvents();
+
+    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QVERIFY(pathview != 0);
+
+    pathview->setHighlightRangeMode(mode);
+
+    pathview->setCurrentIndex(4);
+    if (mode == QQuickPathView::StrictlyEnforceRange)
+        QTRY_COMPARE(pathview->offset(), 4.0);
+    else
+        pathview->setOffset(4);
+
+    for (int i=0; i<changes.count(); i++) {
+        switch (changes[i].type) {
+            case ListChange::Inserted:
+            {
+                QList<QPair<QString, QString> > items;
+                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
+                    items << qMakePair(QString("new item %1").arg(j), QString::number(j));
+                model.insertItems(changes[i].index, items);
+                break;
+            }
+            case ListChange::Removed:
+                model.removeItems(changes[i].index, changes[i].count);
+                break;
+            case ListChange::Moved:
+                model.moveItems(changes[i].index, changes[i].to, changes[i].count);
+                break;
+            case ListChange::SetCurrent:
+                pathview->setCurrentIndex(changes[i].index);
+                break;
+        case ListChange::Polish:
+                QQUICK_VERIFY_POLISH(pathview);
+                break;
+            default:
+                continue;
+        }
+    }
+    QQUICK_VERIFY_POLISH(pathview);
+
+    QCOMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), count);
+    QCOMPARE(pathview->count(), count);
     QTRY_COMPARE(pathview->offset(), offset);
 
     delete canvas;

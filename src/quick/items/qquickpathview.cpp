@@ -1573,10 +1573,12 @@ void QQuickPathView::componentComplete()
 void QQuickPathView::refill()
 {
     Q_D(QQuickPathView);
+
+    d->layoutScheduled = false;
+
     if (!d->isValid() || !isComponentComplete())
         return;
 
-    d->layoutScheduled = false;
     bool currentVisible = false;
 
     // first move existing items and remove items off path

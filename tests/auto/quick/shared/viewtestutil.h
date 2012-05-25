@@ -60,7 +60,7 @@ namespace QQuickViewTestUtil
     QList<int> adjustIndexesForRemoveDisplaced(const QList<int> &indexes, int index, int count);
 
     struct ListChange {
-        enum { Inserted, Removed, Moved, SetCurrent, SetContentY } type;
+        enum { Inserted, Removed, Moved, SetCurrent, SetContentY, Polish } type;
         int index;
         int count;
         int to;     // Move
@@ -71,6 +71,7 @@ namespace QQuickViewTestUtil
         static ListChange move(int index, int to, int count) { ListChange c = { Moved, index, count, to, 0.0 }; return c; }
         static ListChange setCurrent(int index) { ListChange c = { SetCurrent, index, -1, -1, 0.0 }; return c; }
         static ListChange setContentY(qreal pos) { ListChange c = { SetContentY, -1, -1, -1, pos }; return c; }
+        static ListChange polish() { ListChange c = { Polish, -1, -1, -1, 0.0 }; return c; }
     };
 
     class QmlListModel : public QListModelInterface

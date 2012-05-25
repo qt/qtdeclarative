@@ -46,7 +46,6 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
-#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickvisualitemmodel_p.h>
