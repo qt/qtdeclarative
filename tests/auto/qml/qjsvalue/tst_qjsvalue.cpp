@@ -316,13 +316,6 @@ void tst_QJSValue::ctor_copyAndAssign()
     QCOMPARE(v5.toNumber(), 1.0);
 }
 
-#if 0 // FIXME: No c-style callbacks currently
-static QJSValue myFunction(QScriptContext *, QScriptEngine *eng)
-{
-    return eng->undefinedValue();
-}
-#endif
-
 void tst_QJSValue::toString()
 {
     QJSEngine eng;
@@ -365,13 +358,6 @@ void tst_QJSValue::toString()
     QJSValue object = eng.newObject();
     QCOMPARE(object.toString(), QString("[object Object]"));
     QCOMPARE(qjsvalue_cast<QString>(object), QString("[object Object]"));
-
-    // FIXME: No c-style callbacks currently
-#if 0
-    QJSValue fun = eng.newFunction(myFunction);
-    QCOMPARE(fun.toString().simplified(), QString("function () { [native code] }"));
-    QCOMPARE(qscriptvalue_cast<QString>(fun).simplified(), QString("function () { [native code] }"));
-#endif
 
     // toString() that throws exception
     {
@@ -468,13 +454,6 @@ void tst_QJSValue::toNumber()
     QCOMPARE(qIsNaN(object.toNumber()), true);
     QCOMPARE(qIsNaN(qjsvalue_cast<qreal>(object)), true);
 
-    // FIXME: No c-style callbacks currently
-#if 0
-    QJSValue fun = eng.newFunction(myFunction);
-    QCOMPARE(qIsNaN(fun.toNumber()), true);
-    QCOMPARE(qIsNaN(qscriptvalue_cast<qreal>(fun)), true);
-#endif
-
     QJSValue inv = QJSValue();
     QVERIFY(qIsNaN(inv.toNumber()));
     QVERIFY(qIsNaN(qjsvalue_cast<qreal>(inv)));
@@ -555,13 +534,6 @@ void tst_QJSValue::toBoolean() // deprecated
     QJSValue object = eng.newObject();
     QCOMPARE(object.toBool(), true);
     QCOMPARE(qjsvalue_cast<bool>(object), true);
-
-    // FIXME: No c-style callbacks currently
-#if 0
-    QJSValue fun = eng.newFunction(myFunction);
-    QCOMPARE(fun.toBoolean(), true);
-    QCOMPARE(qscriptvalue_cast<bool>(fun), true);
-#endif
 
     QJSValue inv = QJSValue();
     QCOMPARE(inv.toBool(), false);
@@ -655,13 +627,6 @@ void tst_QJSValue::toBool()
     QJSValue object = eng.newObject();
     QCOMPARE(object.toBool(), true);
     QCOMPARE(qjsvalue_cast<bool>(object), true);
-
-    // FIXME: No c-style callbacks currently
-#if 0
-    QJSValue fun = eng.newFunction(myFunction);
-    QCOMPARE(fun.toBool(), true);
-    QCOMPARE(qscriptvalue_cast<bool>(fun), true);
-#endif
 
     QJSValue inv = QJSValue();
     QCOMPARE(inv.toBool(), false);
@@ -1069,12 +1034,11 @@ void tst_QJSValue::toVariant()
         QCOMPARE(qjsvalue_cast<QVariant>(nil), QVariant(QMetaType::VoidStar, 0));
     }
 
-#if 0 // FIXME: No automatic sequence conversion
     // array
     {
         QVariantList listIn;
         listIn << 123 << "hello";
-        QJSValue array = qScriptValueFromValue(&eng, listIn);
+        QJSValue array = eng.toScriptValue(listIn);
         QVERIFY(array.isArray());
         QCOMPARE(array.property("length").toInt(), 2);
         QVariant ret = array.toVariant();
@@ -1084,13 +1048,13 @@ void tst_QJSValue::toVariant()
         for (int i = 0; i < listIn.size(); ++i)
             QVERIFY(listOut.at(i) == listIn.at(i));
         // round-trip conversion
-        QJSValue array2 = qScriptValueFromValue(&eng, ret);
+        QJSValue array2 = eng.toScriptValue(ret);
         QVERIFY(array2.isArray());
         QCOMPARE(array2.property("length").toInt(), array.property("length").toInt());
         for (int i = 0; i < array.property("length").toInt(); ++i)
             QVERIFY(array2.property(i).strictlyEquals(array.property(i)));
     }
-#endif
+
 }
 
 void tst_QJSValue::toQObject_nonQObject_data()
@@ -1326,41 +1290,6 @@ void tst_QJSValue::isRegExp()
     QCOMPARE(value.isRegExp(), regexp);
 }
 
-#if 0 // FIXME: No c-style callbacks currently
-static QJSValue getter(QScriptContext *ctx, QScriptEngine *)
-{
-    return ctx->thisObject().property("x");
-}
-
-static QJSValue setter(QScriptContext *ctx, QScriptEngine *)
-{
-    ctx->thisObject().setProperty("x", ctx->argument(0));
-    return ctx->argument(0);
-}
-
-static QJSValue getterSetter(QScriptContext *ctx, QScriptEngine *)
-{
-    if (ctx->argumentCount() > 0)
-        ctx->thisObject().setProperty("x", ctx->argument(0));
-    return ctx->thisObject().property("x");
-}
-
-static QJSValue getterSetterThrowingError(QScriptContext *ctx, QScriptEngine *)
-{
-    if (ctx->argumentCount() > 0)
-        return ctx->throwError("set foo");
-    else
-        return ctx->throwError("get foo");
-}
-
-static QJSValue getSet__proto__(QScriptContext *ctx, QScriptEngine *)
-{
-    if (ctx->argumentCount() > 0)
-        ctx->callee().setProperty("value", ctx->argument(0));
-    return ctx->callee().property("value");
-}
-#endif
-
 void tst_QJSValue::hasProperty_basic()
 {
     QJSEngine eng;
@@ -1554,127 +1483,6 @@ void tst_QJSValue::getSetProperty_twoEngines()
     QVERIFY(object.property("oof").isUndefined());
 }
 
-
-void tst_QJSValue::getSetProperty_gettersAndSetters()
-{
-#if 0 // FIXME: No setters/getters right now
-    QScriptEngine eng;
-    QJSValue str = eng.toScriptValue(QString::fromLatin1("bar"));
-    QJSValue num = eng.toScriptValue(123.0);
-    QJSValue object = eng.newObject();
-    for (int x = 0; x < 2; ++x) {
-        object.deleteProperty("foo");
-        // getter() returns this.x
-        object.setProperty("foo", eng.newFunction(getter),
-                            QJSValue::PropertyGetter | QJSValue::UserRange);
-        QCOMPARE(object.propertyFlags("foo") & ~QJSValue::UserRange,
-                 QJSValue::PropertyGetter );
-
-        QEXPECT_FAIL("", "QTBUG-17615: User-range flags are not retained for getter/setter properties", Continue);
-        QCOMPARE(object.propertyFlags("foo"),
-                 QJSValue::PropertyGetter | QJSValue::UserRange);
-        object.setProperty("x", num);
-        QCOMPARE(object.property("foo").strictlyEquals(num), true);
-
-        // setter() sets this.x
-        object.setProperty("foo", eng.newFunction(setter),
-                            QJSValue::PropertySetter);
-        QCOMPARE(object.propertyFlags("foo") & ~QJSValue::UserRange,
-                 QJSValue::PropertySetter | QJSValue::PropertyGetter);
-
-        QCOMPARE(object.propertyFlags("foo"),
-                 QJSValue::PropertySetter | QJSValue::PropertyGetter);
-        object.setProperty("foo", str);
-        QCOMPARE(object.property("x").strictlyEquals(str), true);
-        QCOMPARE(object.property("foo").strictlyEquals(str), true);
-
-        // kill the getter
-        object.setProperty("foo", QJSValue(), QJSValue::PropertyGetter);
-        QVERIFY(!(object.propertyFlags("foo") & QJSValue::PropertyGetter));
-        QVERIFY(object.propertyFlags("foo") & QJSValue::PropertySetter);
-        QCOMPARE(object.property("foo").isUndefined(), true);
-
-        // setter should still work
-        object.setProperty("foo", num);
-        QCOMPARE(object.property("x").strictlyEquals(num), true);
-
-        // kill the setter too
-        object.setProperty("foo", QJSValue(), QJSValue::PropertySetter);
-        QVERIFY(!(object.propertyFlags("foo") & QJSValue::PropertySetter));
-        // now foo is just a regular property
-        object.setProperty("foo", str);
-        QCOMPARE(object.property("x").strictlyEquals(num), true);
-        QCOMPARE(object.property("foo").strictlyEquals(str), true);
-    }
-
-    for (int x = 0; x < 2; ++x) {
-        object.deleteProperty("foo");
-        // setter() sets this.x
-        object.setProperty("foo", eng.newFunction(setter), QJSValue::PropertySetter);
-        object.setProperty("foo", str);
-        QCOMPARE(object.property("x").strictlyEquals(str), true);
-        QCOMPARE(object.property("foo").isUndefined(), true);
-
-        // getter() returns this.x
-        object.setProperty("foo", eng.newFunction(getter), QJSValue::PropertyGetter);
-        object.setProperty("x", num);
-        QCOMPARE(object.property("foo").strictlyEquals(num), true);
-
-        // kill the setter
-        object.setProperty("foo", QJSValue(), QJSValue::PropertySetter);
-        object.setProperty("foo", str);
-
-        // getter should still work
-        QCOMPARE(object.property("foo").strictlyEquals(num), true);
-
-        // kill the getter too
-        object.setProperty("foo", QJSValue(), QJSValue::PropertyGetter);
-        // now foo is just a regular property
-        object.setProperty("foo", str);
-        QCOMPARE(object.property("x").strictlyEquals(num), true);
-        QCOMPARE(object.property("foo").strictlyEquals(str), true);
-    }
-
-    // use a single function as both getter and setter
-    object.deleteProperty("foo");
-    object.setProperty("foo", eng.newFunction(getterSetter),
-                        QJSValue::PropertyGetter | QJSValue::PropertySetter);
-    QCOMPARE(object.propertyFlags("foo"),
-             QJSValue::PropertyGetter | QJSValue::PropertySetter);
-    object.setProperty("x", num);
-    QCOMPARE(object.property("foo").strictlyEquals(num), true);
-
-    // killing the getter will preserve the setter, even though they are the same function
-    object.setProperty("foo", QJSValue(), QJSValue::PropertyGetter);
-    QVERIFY(object.propertyFlags("foo") & QJSValue::PropertySetter);
-    QCOMPARE(object.property("foo").isUndefined(), true);
-#endif
-}
-
-void tst_QJSValue::getSetProperty_gettersAndSettersThrowErrorNative()
-{
-#if 0 // FIXME: No setters/getters right now
-    // getter/setter that throws an error
-    QScriptEngine eng;
-    QJSValue str = eng.toScriptValue("bar");
-    QJSValue object = eng.newObject();
-
-    object.setProperty("foo", eng.newFunction(getterSetterThrowingError),
-                        QJSValue::PropertyGetter | QJSValue::PropertySetter);
-    QVERIFY(!eng.hasUncaughtException());
-    QJSValue ret = object.property("foo");
-    QVERIFY(ret.isError());
-    QVERIFY(eng.hasUncaughtException());
-    QVERIFY(ret.strictlyEquals(eng.uncaughtException()));
-    QCOMPARE(ret.toString(), QLatin1String("Error: get foo"));
-    eng.evaluate("Object"); // clear exception state...
-    QVERIFY(!eng.hasUncaughtException());
-    object.setProperty("foo", str);
-    QVERIFY(eng.hasUncaughtException());
-    QCOMPARE(eng.uncaughtException().toString(), QLatin1String("Error: set foo"));
-#endif
-}
-
 void tst_QJSValue::getSetProperty_gettersAndSettersThrowErrorJS()
 {
     // getter/setter that throws an error (from js function)
@@ -1696,80 +1504,6 @@ void tst_QJSValue::getSetProperty_gettersAndSettersThrowErrorJS()
 //    QCOMPARE(eng.uncaughtException().toString(), QLatin1String("Error: set foo"));
 }
 
-void tst_QJSValue::getSetProperty_gettersAndSettersOnNative()
-{
-#if 0 // FIXME: No c-style functions right now
-    // attempt to install getter+setter on built-in (native) property
-    QScriptEngine eng;
-    QJSValue object = eng.newObject();
-    QVERIFY(object.property("__proto__").strictlyEquals(object.prototype()));
-
-    QJSValue fun = eng.newFunction(getSet__proto__);
-    fun.setProperty("value", eng.toScriptValue("boo"));
-/*    QTest::ignoreMessage(QtWarningMsg, "QJSValue::setProperty() failed: "
-                         "cannot set getter or setter of native property "
-                         "`__proto__'");*/
-    object.setProperty("__proto__", fun,
-                        QJSValue::PropertyGetter | QJSValue::PropertySetter
-                        | QJSValue::UserRange);
-    QVERIFY(object.property("__proto__").strictlyEquals(object.prototype()));
-
-    object.setProperty("__proto__", QJSValue(),
-                        QJSValue::PropertyGetter | QJSValue::PropertySetter);
-    QVERIFY(object.property("__proto__").strictlyEquals(object.prototype()));
-#endif
-}
-
-void tst_QJSValue::getSetProperty_gettersAndSettersOnGlobalObject()
-{
-#if 0 // FIXME: No c-style functions right now
-    // global property that's a getter+setter
-    QScriptEngine eng;
-    eng.globalObject().setProperty("globalGetterSetterProperty", eng.newFunction(getterSetter),
-                                   QJSValue::PropertyGetter | QJSValue::PropertySetter);
-    eng.evaluate("globalGetterSetterProperty = 123");
-    {
-        QJSValue ret = eng.evaluate("globalGetterSetterProperty");
-        QVERIFY(ret.isNumber());
-        QVERIFY(ret.strictlyEquals(eng.toScriptValue(123)));
-    }
-    QCOMPARE(eng.evaluate("typeof globalGetterSetterProperty").toString(),
-             QString::fromLatin1("number"));
-    {
-        QJSValue ret = eng.evaluate("this.globalGetterSetterProperty()");
-        QVERIFY(ret.isError());
-        QCOMPARE(ret.toString(), QString::fromLatin1("TypeError: Property 'globalGetterSetterProperty' of object #<Object> is not a function"));
-    }
-    {
-        QJSValue ret = eng.evaluate("new this.globalGetterSetterProperty()");
-        QVERIFY(ret.isError());
-        QCOMPARE(ret.toString(), QString::fromLatin1("TypeError: number is not a function"));
-    }
-#endif
-}
-
-void tst_QJSValue::getSetProperty_gettersAndSettersChange()
-{
-#if 0 // FIXME: No setters/getters API right now
-    // "upgrading" an existing property to become a getter+setter
-    QScriptEngine eng;
-    QJSValue object = eng.newObject();
-    QJSValue num(&eng, 123);
-    object.setProperty("foo", num);
-    object.setProperty("foo", eng.newFunction(getterSetter),
-                        QJSValue::PropertyGetter | QJSValue::PropertySetter);
-    QVERIFY(!object.property("x").isValid());
-    object.setProperty("foo", num);
-    QVERIFY(object.property("x").equals(num));
-
-    eng.globalObject().setProperty("object", object);
-    QJSValue res = eng.evaluate("object.x = 89; var a = object.foo; object.foo = 65; a");
-    QCOMPARE(res.toInt(), 89);
-    QCOMPARE(object.property("x").toInt(), 65);
-    QCOMPARE(object.property("foo").toInt(), 65);
-#endif
-}
-
 void tst_QJSValue::getSetProperty_array()
 {
     QJSEngine eng;
@@ -1789,40 +1523,6 @@ void tst_QJSValue::getSetProperty_array()
     array.setProperty("length", eng.toScriptValue(1));
     QCOMPARE(array.property("length").toUInt(), quint32(1));
     QVERIFY(array.property(1).isUndefined());
-}
-
-void tst_QJSValue::getSetProperty_gettersAndSettersStupid()
-{
-#if 0 // FIXME: No setters/getters API right now
-    //removing unexisting Setter or Getter should not crash.
-    QScriptEngine eng;
-    QJSValue num = eng.toScriptValue(123.0);
-
-    {
-        QJSValue object = eng.newObject();
-        object.setProperty("foo", QJSValue(), QJSValue::PropertyGetter);
-        QVERIFY(!object.property("foo").isValid());
-        object.setProperty("foo", num);
-        QCOMPARE(object.property("foo").strictlyEquals(num), true);
-    }
-
-    {
-        QJSValue object = eng.newObject();
-        object.setProperty("foo", QJSValue(), QJSValue::PropertySetter);
-        QVERIFY(!object.property("foo").isValid());
-        object.setProperty("foo", num);
-        QCOMPARE(object.property("foo").strictlyEquals(num), true);
-    }
-
-    {
-        QJSValue object = eng.globalObject();
-        object.setProperty("foo", QJSValue(), QJSValue::PropertySetter);
-        object.setProperty("foo", QJSValue(), QJSValue::PropertyGetter);
-        QVERIFY(!object.property("foo").isValid());
-        object.setProperty("foo", num);
-        QCOMPARE(object.property("foo").strictlyEquals(num), true);
-    }
-#endif
 }
 
 void tst_QJSValue::getSetProperty()
@@ -1855,160 +1555,9 @@ void tst_QJSValue::getSetProperty()
 
     eng.globalObject().setProperty("object", object);
 
-#if 0 // FIXME: no setProperty API with flags
-  // ReadOnly
-    object.setProperty("readOnlyProperty", num, QJSValue::ReadOnly);
-    QCOMPARE(object.propertyFlags("readOnlyProperty"), QJSValue::ReadOnly);
-    QCOMPARE(object.property("readOnlyProperty").strictlyEquals(num), true);
-    eng.evaluate("object.readOnlyProperty = !object.readOnlyProperty");
-    QCOMPARE(object.property("readOnlyProperty").strictlyEquals(num), true);
-    // should still be part of enumeration
-    {
-        QJSValue ret = eng.evaluate(
-            "found = false;"
-            "for (var p in object) {"
-            "  if (p == 'readOnlyProperty') {"
-            "    found = true; break;"
-            "  }"
-            "} found");
-        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), true);
-    }
-    // should still be deletable
-    {
-        QJSValue ret = eng.evaluate("delete object.readOnlyProperty");
-        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), true);
-        QCOMPARE(object.property("readOnlyProperty").isValid(), false);
-    }
-
-  // Undeletable
-    object.setProperty("undeletableProperty", num, QJSValue::Undeletable);
-    QCOMPARE(object.propertyFlags("undeletableProperty"), QJSValue::Undeletable);
-    QCOMPARE(object.property("undeletableProperty").strictlyEquals(num), true);
-    {
-        QJSValue ret = eng.evaluate("delete object.undeletableProperty");
-        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), false);
-        QCOMPARE(object.property("undeletableProperty").strictlyEquals(num), true);
-    }
-    // should still be writable
-    eng.evaluate("object.undeletableProperty = object.undeletableProperty + 1");
-    QCOMPARE(object.property("undeletableProperty").toNumber(), num.toNumber() + 1);
-    // should still be part of enumeration
-    {
-        QJSValue ret = eng.evaluate(
-            "found = false;"
-            "for (var p in object) {"
-            "  if (p == 'undeletableProperty') {"
-            "    found = true; break;"
-            "  }"
-            "} found");
-        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), true);
-    }
-    // should still be deletable from C++
-    object.deleteProperty("undeletableProperty");
-    QEXPECT_FAIL("", "QTBUG-17617: With JSC-based back-end, undeletable properties can't be deleted from C++", Continue);
-    QVERIFY(!object.property("undeletableProperty").isValid());
-    QEXPECT_FAIL("", "QTBUG-17617: With JSC-based back-end, undeletable properties can't be deleted from C++", Continue);
-    QCOMPARE(object.propertyFlags("undeletableProperty"), 0);
-
-  // SkipInEnumeration
-    object.setProperty("dontEnumProperty", num, QJSValue::SkipInEnumeration);
-    QCOMPARE(object.propertyFlags("dontEnumProperty"), QJSValue::SkipInEnumeration);
-    QCOMPARE(object.property("dontEnumProperty").strictlyEquals(num), true);
-    // should not be part of enumeration
-    {
-        QJSValue ret = eng.evaluate(
-            "found = false;"
-            "for (var p in object) {"
-            "  if (p == 'dontEnumProperty') {"
-            "    found = true; break;"
-            "  }"
-            "} found");
-        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(false)), true);
-    }
-    // should still be writable
-    eng.evaluate("object.dontEnumProperty = object.dontEnumProperty + 1");
-    QCOMPARE(object.property("dontEnumProperty").toNumber(), num.toNumber() + 1);
-    // should still be deletable
-    {
-        QJSValue ret = eng.evaluate("delete object.dontEnumProperty");
-        QCOMPARE(ret.strictlyEquals(eng.toScriptValue(true)), true);
-        QCOMPARE(object.property("dontEnumProperty").isValid(), false);
-    }
-
-    // change flags
-    object.setProperty("flagProperty", str);
-    QCOMPARE(object.propertyFlags("flagProperty"), static_cast<QJSValue::PropertyFlags>(0));
-
-    QEXPECT_FAIL("", "FIXME: v8 does not support changing flags of existing properties", Continue);
-    //v8::i::JSObject::SetProperty(LookupResult* result, ... ) does not take in account the attributes
-    // if the result->isFound()
-    object.setProperty("flagProperty", str, QJSValue::ReadOnly);
-    QCOMPARE(object.propertyFlags("flagProperty"), QJSValue::ReadOnly);
-
-    QEXPECT_FAIL("", "FIXME: v8 does not support changing flags of existing properties", Continue);
-    object.setProperty("flagProperty", str, object.propertyFlags("flagProperty") | QJSValue::SkipInEnumeration);
-    QCOMPARE(object.propertyFlags("flagProperty"), QJSValue::ReadOnly | QJSValue::SkipInEnumeration);
-
-    QEXPECT_FAIL("", "FIXME: v8 does not support changing flags of existing properties", Continue);
-    object.setProperty("flagProperty", str, QJSValue::KeepExistingFlags);
-    QCOMPARE(object.propertyFlags("flagProperty"), QJSValue::ReadOnly | QJSValue::SkipInEnumeration);
-
-    QEXPECT_FAIL("", "FIXME: v8 does not support UserRange", Continue);
-    object.setProperty("flagProperty", str, QJSValue::UserRange);
-    QCOMPARE(object.propertyFlags("flagProperty"), QJSValue::UserRange);
-
-    // flags of property in the prototype
-    {
-        QJSValue object2 = eng.newObject();
-        object2.setPrototype(object);
-        QCOMPARE(object2.propertyFlags("flagProperty", QJSValue::ResolveLocal), 0);
-        QEXPECT_FAIL("", "FIXME: v8 does not support UserRange", Continue);
-        QCOMPARE(object2.propertyFlags("flagProperty"), QJSValue::UserRange);
-    }
-
-    // using interned strings
-    QScriptString foo = eng.toStringHandle("foo");
-
-    QVERIFY(object.deleteProperty(foo));
-    QVERIFY(!object.property(foo).isValid());
-
-    object.setProperty(foo, num);
-    QVERIFY(object.property(foo).strictlyEquals(num));
-    QVERIFY(object.property("foo").strictlyEquals(num));
-    QVERIFY(object.propertyFlags(foo) == 0);
-#endif
-
     // Setting index property on non-Array
     object.setProperty(13, num);
     QVERIFY(object.property(13).equals(num));
-}
-
-void tst_QJSValue::arrayElementGetterSetter()
-{
-#if 0 // FIXME: No c-style functions
-    QScriptEngine eng;
-    QJSValue obj = eng.newObject();
-    obj.setProperty(1, eng.newFunction(getterSetter), QJSValue::PropertyGetter|QJSValue::PropertySetter);
-    {
-        QJSValue num(123);
-        obj.setProperty("x", num);
-        QJSValue ret = obj.property(1);
-        QVERIFY(ret.isValid());
-        QVERIFY(ret.equals(num));
-    }
-    {
-        QJSValue num(456);
-        obj.setProperty(1, num);
-        QJSValue ret = obj.property(1);
-        QVERIFY(ret.isValid());
-        QVERIFY(ret.equals(num));
-        QVERIFY(ret.equals(obj.property("1")));
-    }
-    QCOMPARE(obj.propertyFlags("1"), QJSValue::PropertyGetter|QJSValue::PropertySetter);
-
-    obj.setProperty(1, QJSValue(), QJSValue::PropertyGetter|QJSValue::PropertySetter);
-    QVERIFY(obj.propertyFlags("1") == 0);
-#endif
 }
 
 void tst_QJSValue::getSetPrototype_cyclicPrototype()
@@ -2127,258 +1676,6 @@ void tst_QJSValue::getSetPrototype()
     QCOMPARE(object.prototype().strictlyEquals(prototype), true);
 }
 
-void tst_QJSValue::getSetScope()
-{
-#if 0 // FIXME: No QJSValue::scope
-    QScriptEngine eng;
-
-    QJSValue object = eng.newObject();
-    QCOMPARE(object.scope().isValid(), false);
-
-    QJSValue object2 = eng.newObject();
-    object2.setScope(object);
-
-    QEXPECT_FAIL("", "FIXME: scope not implemented yet", Abort);
-    QCOMPARE(object2.scope().strictlyEquals(object), true);
-
-    object.setProperty("foo", 123);
-    QVERIFY(!object2.property("foo").isValid());
-    {
-        QJSValue ret = object2.property("foo", QJSValue::ResolveScope);
-        QVERIFY(ret.isNumber());
-        QCOMPARE(ret.toInt(), 123);
-    }
-
-    QJSValue inv;
-    inv.setScope(object);
-    QCOMPARE(inv.scope().isValid(), false);
-
-    QScriptEngine otherEngine;
-    QJSValue object3 = otherEngine.newObject();
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::setScope() failed: cannot set a scope object created in a different engine");
-    object2.setScope(object3);
-    QCOMPARE(object2.scope().strictlyEquals(object), true);
-
-    object2.setScope(QJSValue());
-    QVERIFY(!object2.scope().isValid());
-#endif
-}
-
-void tst_QJSValue::getSetData_objects_data()
-{
-#if 0 // FIXME: no setData/data API
-    newEngine();
-    QObject *temp = new QObject;
-
-    QTest::addColumn<QJSValue>("object");
-
-    QTest::newRow("object from evaluate") << engine->evaluate("new Object()");
-    QTest::newRow("object from engine") << engine->newObject();
-    QTest::newRow("Array") << engine->newArray();
-    QTest::newRow("Date") << engine->evaluate("new Date(12324)");
-    QTest::newRow("QObject") << engine->newQObject(temp);
-    QTest::newRow("RegExp") << engine->newRegExp(QRegExp());
-#endif
-}
-
-void tst_QJSValue::getSetData_objects()
-{
-#if 0 // FIXME: no setData/data API
-    QFETCH(QJSValue, object);
-
-    QVERIFY(!object.data().isValid());
-    QJSValue v1(true);
-    object.setData(v1);
-    QVERIFY(object.data().strictlyEquals(v1));
-    QJSValue v2(123);
-    object.setData(v2);
-    QVERIFY(object.data().strictlyEquals(v2));
-    QJSValue v3 = engine->newObject();
-    object.setData(v3);
-    QVERIFY(object.data().strictlyEquals(v3));
-    object.setData(QJSValue());
-    QVERIFY(!object.data().isValid());
-#endif
-}
-
-void tst_QJSValue::getSetData_nonObjects_data()
-{
-#if 0 // FIXME: no setData/data API
-    newEngine();
-
-    QTest::addColumn<QJSValue>("value");
-
-    QTest::newRow("undefined (bound)") << engine->toScriptValue(QVariant());
-    QTest::newRow("null (bound)") << engine->evaluate("null");
-    QTest::newRow("string (bound)") << engine->toScriptValue("Pong");
-    QTest::newRow("bool (bound)") << engine->toScriptValue(false);
-
-    QTest::newRow("undefined") << QJSValue(QJSValue::UndefinedValue);
-    QTest::newRow("null") << QJSValue(QJSValue::NullValue);
-    QTest::newRow("string") << QJSValue("Pong");
-    QTest::newRow("bool") << QJSValue(true);
-#endif
-}
-
-void tst_QJSValue::getSetData_nonObjects()
-{
-#if 0 // FIXME: no setData/data API
-    QFETCH(QJSValue, value);
-
-    QVERIFY(!value.data().isValid());
-    QJSValue v1(true);
-    value.setData(v1);
-    QVERIFY(!value.data().isValid());
-    QJSValue v2(123);
-    value.setData(v2);
-    QVERIFY(!value.data().isValid());
-    QJSValue v3 = engine->newObject();
-    value.setData(v3);
-    QVERIFY(!value.data().isValid());
-    value.setData(QJSValue());
-    QVERIFY(!value.data().isValid());
-#endif
-}
-
-void tst_QJSValue::setData_QTBUG15144()
-{
-#if 0 // FIXME: no setData/data API
-    QScriptEngine eng;
-    QJSValue obj = eng.newObject();
-    for (int i = 0; i < 10000; ++i) {
-        // Create an object with property 'fooN' on it, and immediately kill
-        // the reference to the object so it and the property name become garbage.
-        eng.evaluate(QString::fromLatin1("o = {}; o.foo%0 = 10; o = null;").arg(i));
-        // Setting the data will cause a JS string to be allocated, which could
-        // trigger a GC. This should not cause a crash.
-        obj.setData("foodfight");
-    }
-#endif
-}
-
-#if 0 // FIXME: no QScriptClass
-class TestScriptClass : public QScriptClass
-{
-public:
-    TestScriptClass(QScriptEngine *engine) : QScriptClass(engine) {}
-};
-
-void tst_QJSValue::getSetScriptClass_emptyClass_data()
-{
-    newEngine();
-    QObject *temp = new QObject;
-    QTest::addColumn<QJSValue>("value");
-
-    QTest::newRow("invalid") << QJSValue();
-    QTest::newRow("number") << QJSValue(123);
-    QTest::newRow("string") << QJSValue("pong");
-    QTest::newRow("bool") << QJSValue(false);
-    QTest::newRow("null") << QJSValue(QJSValue::NullValue);
-    QTest::newRow("undefined") << QJSValue(QJSValue::UndefinedValue);
-
-    QTest::newRow("number") << engine->toScriptValue(123);
-    QTest::newRow("string") << engine->toScriptValue("pong");
-    QTest::newRow("bool") << engine->toScriptValue(true);
-    QTest::newRow("null") << QJSValue(engine->evaluate("null"));
-    QTest::newRow("undefined") << QJSValue(engine->toScriptValue(QVariant()));
-    QTest::newRow("object") << QJSValue(engine->newObject());
-    QTest::newRow("date") << QJSValue(engine->evaluate("new Date()"));
-    QTest::newRow("qobject") << QJSValue(engine->newQObject(temp));
-}
-
-void tst_QJSValue::getSetScriptClass_emptyClass()
-{
-    QFETCH(QJSValue, value);
-    QCOMPARE(value.scriptClass(), (QScriptClass*)0);
-}
-
-void tst_QJSValue::getSetScriptClass_JSObjectFromCpp()
-{
-    QScriptEngine eng;
-    TestScriptClass testClass(&eng);
-    // object created in C++ (newObject())
-    {
-        QJSValue obj = eng.newObject();
-        obj.setScriptClass(&testClass);
-        QCOMPARE(obj.scriptClass(), (QScriptClass*)&testClass);
-        obj.setScriptClass(0);
-        QCOMPARE(obj.scriptClass(), (QScriptClass*)0);
-    }
-}
-
-void tst_QJSValue::getSetScriptClass_JSObjectFromJS()
-{
-    QScriptEngine eng;
-    TestScriptClass testClass(&eng);
-    // object created in JS
-    {
-        QJSValue obj = eng.evaluate("new Object");
-        QVERIFY(!eng.hasUncaughtException());
-        QVERIFY(obj.isObject());
-        QCOMPARE(obj.scriptClass(), (QScriptClass*)0);
-        obj.setScriptClass(&testClass);
-        QCOMPARE(obj.scriptClass(), (QScriptClass*)&testClass);
-        obj.setScriptClass(0);
-        QCOMPARE(obj.scriptClass(), (QScriptClass*)0);
-    }
-}
-
-void tst_QJSValue::getSetScriptClass_QVariant()
-{
-    QScriptEngine eng;
-    TestScriptClass testClass(&eng);
-    // object that already has a(n internal) class
-    {
-        QJSValue obj = eng.toScriptValue(QUrl("http://example.com"));
-        QVERIFY(obj.isVariant());
-        QCOMPARE(obj.scriptClass(), (QScriptClass*)0);
-        obj.setScriptClass(&testClass);
-        QCOMPARE(obj.scriptClass(), (QScriptClass*)&testClass);
-        QVERIFY(obj.isObject());
-        QVERIFY(!obj.isVariant());
-        QCOMPARE(obj.toVariant(), QVariant(QVariantMap()));
-    }
-}
-
-void tst_QJSValue::getSetScriptClass_QObject()
-{
-    QScriptEngine eng;
-    QObject temp;
-    TestScriptClass testClass(&eng);
-    {
-        QJSValue obj = eng.newQObject(&temp);
-        QVERIFY(obj.isQObject());
-        obj.setScriptClass(&testClass);
-        QCOMPARE(obj.scriptClass(), (QScriptClass*)&testClass);
-        QVERIFY(obj.isObject());
-        QVERIFY(!obj.isQObject());
-        QVERIFY(obj.toQObject() == 0);
-    }
-}
-#endif
-
-#if 0 // FIXME: No c-style callbacks
-static QJSValue getArg(QScriptContext *ctx, QScriptEngine *)
-{
-    return ctx->argument(0);
-}
-
-static QJSValue evaluateArg(QScriptContext *, QScriptEngine *eng)
-{
-    return eng->evaluate("arguments[0]");
-}
-
-static QJSValue addArgs(QScriptContext *, QScriptEngine *eng)
-{
-    return eng->evaluate("arguments[0] + arguments[1]");
-}
-
-static QJSValue returnInvalidValue(QScriptContext *, QScriptEngine *)
-{
-    return QJSValue();
-}
-#endif
-
 void tst_QJSValue::call_function()
 {
     QJSEngine eng;
@@ -2450,15 +1747,6 @@ void tst_QJSValue::call_arguments()
         QCOMPARE(result.isNumber(), true);
         QCOMPARE(result.toNumber(), 123.0);
     }
-#if 0 // FIXME: The feature of interpreting a passed array as argument list has been removed from the API
-    {
-        QJSValue args = eng.newArray();
-        args.setProperty(0, 123);
-        QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
-        QVERIFY(result.isNumber());
-        QCOMPARE(result.toNumber(), 123.0);
-    }
-#endif
 }
 
 void tst_QJSValue::call()
@@ -2475,16 +1763,6 @@ void tst_QJSValue::call()
             QCOMPARE(result.isNumber(), true);
             QCOMPARE(result.toNumber(), 456.0);
         }
-#if 0 // FIXME: The feature of interpreting a passed array as argument list has been removed from the API
-        {
-            QJSValue args = eng.newArray();
-            args.setProperty(0, 123);
-            args.setProperty(1, 456);
-            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
-            QVERIFY(result.isNumber());
-            QCOMPARE(result.toNumber(), 456.0);
-        }
-#endif
     }
     {
         QJSValue fun = eng.evaluate("(function() { throw new Error('foo'); })");
@@ -2496,100 +1774,6 @@ void tst_QJSValue::call()
             QCOMPARE(result.isError(), true);
         }
     }
-#if 0 // FIXME: No c-style callbacks
-    {
-        eng.clearExceptions();
-        QJSValue fun = eng.newFunction(getArg);
-        {
-            QJSValueList args;
-            args << eng.toScriptValue(123.0);
-            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
-            QVERIFY(!eng.hasUncaughtException());
-            QCOMPARE(result.isNumber(), true);
-            QCOMPARE(result.toNumber(), 123.0);
-        }
-        // V2 constructors
-        {
-            QJSValueList args;
-            args << QJSValue(123.0);
-            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
-            QCOMPARE(result.isNumber(), true);
-            QCOMPARE(result.toNumber(), 123.0);
-        }
-#if 0 // FIXME: The feature of interpreting a passed array as argument list has been removed from the API
-        {
-            QJSValue args = eng.newArray();
-            args.setProperty(0, 123);
-            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
-            QVERIFY(result.isNumber());
-            QCOMPARE(result.toNumber(), 123.0);
-        }
-#endif
-    }
-    {
-        QJSValue fun = eng.newFunction(evaluateArg);
-        {
-            QJSValueList args;
-            args << eng.toScriptValue(123.0);
-            QJSValue result = fun.callWithInstance(eng.toScriptValue(QVariant()), args);
-            QVERIFY(!eng.hasUncaughtException());
-            QCOMPARE(result.isNumber(), true);
-            QCOMPARE(result.toNumber(), 123.0);
-        }
-    }
-#endif
-}
-
-void tst_QJSValue::call_invalidArguments()
-{
-#if 0 // FIXME: No c-style callbacks
-    // test that invalid arguments are handled gracefully
-    QScriptEngine eng;
-    {
-        QJSValue fun = eng.newFunction(getArg);
-        {
-            QJSValueList args;
-            args << QJSValue();
-            QJSValue ret = fun.callWithInstance(args);
-            QVERIFY(!eng.hasUncaughtException());
-            QVERIFY(ret.isUndefined());
-        }
-    }
-    {
-        QJSValue fun = eng.newFunction(evaluateArg);
-        {
-            QJSValueList args;
-            args << QJSValue();
-            QJSValue ret = fun.call(args);
-            QVERIFY(ret.isUndefined());
-        }
-    }
-    {
-        QJSValue fun = eng.newFunction(addArgs);
-        {
-            QJSValueList args;
-            args << QJSValue() << QJSValue();
-            QJSValue ret = fun.call(args);
-            QVERIFY(!ret.isUndefined());
-            QCOMPARE(ret.isNumber(), true);
-            QCOMPARE(qIsNaN(ret.toNumber()), true);
-        }
-    }
-#endif
-}
-
-void tst_QJSValue::call_invalidReturn()
-{
-#if 0 // FIXME: No c-style callbacks
-    // test that invalid return value is handled gracefully
-    QScriptEngine eng;
-    QJSValue fun = eng.newFunction(returnInvalidValue);
-    eng.globalObject().setProperty("returnInvalidValue", fun);
-    QJSValue ret = eng.evaluate("returnInvalidValue() + returnInvalidValue()");
-    QVERIFY(!ret.isUndefined());
-    QCOMPARE(ret.isNumber(), true);
-    QCOMPARE(qIsNaN(ret.toNumber()), true);
-#endif
 }
 
 void tst_QJSValue::call_twoEngines()
@@ -2620,50 +1804,6 @@ void tst_QJSValue::call_twoEngines()
     }
 }
 
-void tst_QJSValue::call_array()
-{
-#if 0 // FIXME: The feature of interpreting an array as argument list has been removed from the API
-    QScriptEngine eng;
-    QJSValue fun = eng.evaluate("(function() { return arguments; })");
-    QVERIFY(fun.isCallable());
-    QJSValue array = eng.newArray(3);
-    array.setProperty(0, eng.toScriptValue(123.0));
-    array.setProperty(1, eng.toScriptValue(456.0));
-    array.setProperty(2, eng.toScriptValue(789.0));
-    // call with single array object as arguments
-    QJSValue ret = fun.call(QJSValue(), array);
-    QVERIFY(!eng.hasUncaughtException());
-    QCOMPARE(ret.isError(), false);
-    QCOMPARE(ret.property(0).strictlyEquals(array.property(0)), true);
-    QCOMPARE(ret.property(1).strictlyEquals(array.property(1)), true);
-    QCOMPARE(ret.property(2).strictlyEquals(array.property(2)), true);
-    // call with arguments object as arguments
-    QJSValue ret2 = fun.call(QJSValue(), ret);
-    QCOMPARE(ret2.isError(), false);
-    QCOMPARE(ret2.property(0).strictlyEquals(ret.property(0)), true);
-    QCOMPARE(ret2.property(1).strictlyEquals(ret.property(1)), true);
-    QCOMPARE(ret2.property(2).strictlyEquals(ret.property(2)), true);
-    // call with null as arguments
-    QJSValue ret3 = fun.call(QJSValue(), eng.evaluate("null"));
-    QCOMPARE(ret3.isError(), false);
-    QCOMPARE(ret3.property("length").isNumber(), true);
-    QCOMPARE(ret3.property("length").toNumber(), 0.0);
-    // call with undefined as arguments
-    QJSValue ret4 = fun.call(QJSValue(), eng.toScriptValue(QVariant()));
-    QCOMPARE(ret4.isError(), false);
-    QCOMPARE(ret4.property("length").isNumber(), true);
-    QCOMPARE(ret4.property("length").toNumber(), 0.0);
-    // call with something else as arguments
-    QJSValue ret5 = fun.call(QJSValue(), eng.toScriptValue(123.0));
-    QCOMPARE(ret5.isError(), true);
-    // call with a non-array object as arguments
-    QJSValue ret6 = fun.call(QJSValue(), eng.globalObject());
-    QVERIFY(ret6.isError());
-    QCOMPARE(ret6.toString(), QString::fromLatin1("TypeError: Arguments must be an array"));
-#endif
-}
-
-
 void tst_QJSValue::call_nonFunction_data()
 {
     newEngine();
@@ -2689,21 +1829,6 @@ void tst_QJSValue::call_nonFunction()
     QFETCH(QJSValue, value);
     QVERIFY(value.call().isUndefined());
 }
-
-#if 0 // FIXME: no c-style callbacks
-static QJSValue ctorReturningUndefined(QScriptContext *ctx, QScriptEngine *)
-{
-    ctx->thisObject().setProperty("foo", 123);
-    return QJSValue(QJSValue::UndefinedValue);
-}
-
-static QJSValue ctorReturningNewObject(QScriptContext *, QScriptEngine *eng)
-{
-    QJSValue result = eng->newObject();
-    result.setProperty("bar", 456);
-    return result;
-}
-#endif
 
 void tst_QJSValue::construct_nonFunction_data()
 {
@@ -2754,28 +1879,6 @@ void tst_QJSValue::construct_newObjectJS()
     QCOMPARE(ret.property("bar").toInt(), 456);
 }
 
-#if 0 // FIXME: no c-style callbacks
-void tst_QJSValue::construct_undefined()
-{
-    QScriptEngine eng;
-    QJSValue fun = eng.newFunction(ctorReturningUndefined);
-    QJSValue ret = fun.callAsConstructor();
-    QVERIFY(ret.isObject());
-    QVERIFY(ret.instanceOf(fun));
-    QCOMPARE(ret.property("foo").toInt(), 123);
-}
-
-void tst_QJSValue::construct_newObjectCpp()
-{
-    QScriptEngine eng;
-    QJSValue fun = eng.newFunction(ctorReturningNewObject);
-    QJSValue ret = fun.callAsConstructor();
-    QVERIFY(ret.isObject());
-    QVERIFY(!ret.instanceOf(fun));
-    QCOMPARE(ret.property("bar").toInt(), 456);
-}
-#endif
-
 void tst_QJSValue::construct_arg()
 {
     QJSEngine eng;
@@ -2818,48 +1921,6 @@ void tst_QJSValue::construct_throw()
     QCOMPARE(ret.isError(), true);
 }
 
-#if 0 // FIXME: The feature of interpreting an array as argument list has been removed from the API
-void tst_QJSValue::construct()
-{
-    QScriptEngine eng;
-    QJSValue fun = eng.evaluate("(function() { return arguments; })");
-    QVERIFY(fun.isCallable());
-    QJSValue array = eng.newArray(3);
-    array.setProperty(0, eng.toScriptValue(123.0));
-    array.setProperty(1, eng.toScriptValue(456.0));
-    array.setProperty(2, eng.toScriptValue(789.0));
-    // construct with single array object as arguments
-    QJSValue ret = fun.callAsConstructor(array);
-    QVERIFY(!eng.hasUncaughtException());
-    QVERIFY(ret.isObject());
-    QCOMPARE(ret.property(0).strictlyEquals(array.property(0)), true);
-    QCOMPARE(ret.property(1).strictlyEquals(array.property(1)), true);
-    QCOMPARE(ret.property(2).strictlyEquals(array.property(2)), true);
-    // construct with arguments object as arguments
-    QJSValue ret2 = fun.callAsConstructor(ret);
-    QCOMPARE(ret2.property(0).strictlyEquals(ret.property(0)), true);
-    QCOMPARE(ret2.property(1).strictlyEquals(ret.property(1)), true);
-    QCOMPARE(ret2.property(2).strictlyEquals(ret.property(2)), true);
-    // construct with null as arguments
-    QJSValue ret3 = fun.callAsConstructor(eng.evaluate("null");
-    QCOMPARE(ret3.isError(), false);
-    QCOMPARE(ret3.property("length").isNumber(), true);
-    QCOMPARE(ret3.property("length").toNumber(), 0.0);
-    // construct with undefined as arguments
-    QJSValue ret4 = fun.callAsConstructor(eng.toScriptValue(QVariant()));
-    QCOMPARE(ret4.isError(), false);
-    QCOMPARE(ret4.property("length").isNumber(), true);
-    QCOMPARE(ret4.property("length").toNumber(), 0.0);
-    // construct with something else as arguments
-    QJSValue ret5 = fun.callAsConstructor(eng.toScriptValue(123.0));
-    QCOMPARE(ret5.isError(), true);
-    // construct with a non-array object as arguments
-    QJSValue ret6 = fun.callAsConstructor(eng.globalObject());
-    QVERIFY(ret6.isError());
-    QCOMPARE(ret6.toString(), QString::fromLatin1("TypeError: Arguments must be an array"));
-}
-#endif
-
 void tst_QJSValue::construct_twoEngines()
 {
     QJSEngine engine;
@@ -2884,114 +1945,7 @@ void tst_QJSValue::construct_constructorThrowsPrimitive()
         QCOMPARE(ret.toNumber(), 123.0);
         QVERIFY(!ret.isError());
     }
-#if 0 // FIXME: The feature of interpreting an array as argument list has been removed from the API
-    // construct(QJSValue)
-    {
-        QJSValue ret = fun.callAsConstructor(eng.newArray());
-        QVERIFY(ret.isNumber());
-        QCOMPARE(ret.toNumber(), 123.0);
-        QVERIFY(eng.hasUncaughtException());
-        QVERIFY(ret.strictlyEquals(eng.uncaughtException()));
-        eng.clearExceptions();
-    }
-#endif
 }
-
-#if 0 // FIXME: No QJSValue::lessThan
-void tst_QJSValue::lessThan()
-{
-    QScriptEngine eng;
-
-    QVERIFY(!QJSValue().lessThan(QJSValue()));
-
-    QJSValue num = eng.toScriptValue(123);
-    QCOMPARE(num.lessThan(eng.toScriptValue(124)), true);
-    QCOMPARE(num.lessThan(eng.toScriptValue(122)), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue(123)), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue("124")), true);
-    QCOMPARE(num.lessThan(eng.toScriptValue("122")), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue("123")), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue(qSNaN())), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue(+qInf())), true);
-    QCOMPARE(num.lessThan(eng.toScriptValue(-qInf())), false);
-    QCOMPARE(num.lessThan(num), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue(124).toObject()), true);
-    QCOMPARE(num.lessThan(eng.toScriptValue(122).toObject()), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue(123).toObject()), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue("124").toObject()), true);
-    QCOMPARE(num.lessThan(eng.toScriptValue("122").toObject()), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue("123").toObject()), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue(qSNaN()).toObject()), false);
-    QCOMPARE(num.lessThan(eng.toScriptValue(+qInf()).toObject()), true);
-    QCOMPARE(num.lessThan(eng.toScriptValue(-qInf()).toObject()), false);
-    QCOMPARE(num.lessThan(num.toObject()), false);
-    QCOMPARE(num.lessThan(QJSValue()), false);
-
-    QJSValue str = eng.toScriptValue("123");
-    QCOMPARE(str.lessThan(eng.toScriptValue("124")), true);
-    QCOMPARE(str.lessThan(eng.toScriptValue("122")), false);
-    QCOMPARE(str.lessThan(eng.toScriptValue("123")), false);
-    QCOMPARE(str.lessThan(eng.toScriptValue(124)), true);
-    QCOMPARE(str.lessThan(eng.toScriptValue(122)), false);
-    QCOMPARE(str.lessThan(eng.toScriptValue(123)), false);
-    QCOMPARE(str.lessThan(str), false);
-    QCOMPARE(str.lessThan(eng.toScriptValue("124").toObject()), true);
-    QCOMPARE(str.lessThan(eng.toScriptValue("122").toObject()), false);
-    QCOMPARE(str.lessThan(eng.toScriptValue("123").toObject()), false);
-    QCOMPARE(str.lessThan(eng.toScriptValue(124).toObject()), true);
-    QCOMPARE(str.lessThan(eng.toScriptValue(122).toObject()), false);
-    QCOMPARE(str.lessThan(eng.toScriptValue(123).toObject()), false);
-    QCOMPARE(str.lessThan(str.toObject()), false);
-    QCOMPARE(str.lessThan(QJSValue()), false);
-
-    // V2 constructors
-    QJSValue num2 = QJSValue(123);
-    QCOMPARE(num2.lessThan(QJSValue(124)), true);
-    QCOMPARE(num2.lessThan(QJSValue(122)), false);
-    QCOMPARE(num2.lessThan(QJSValue(123)), false);
-    QCOMPARE(num2.lessThan(QJSValue("124")), true);
-    QCOMPARE(num2.lessThan(QJSValue("122")), false);
-    QCOMPARE(num2.lessThan(QJSValue("123")), false);
-    QCOMPARE(num2.lessThan(QJSValue(qSNaN())), false);
-    QCOMPARE(num2.lessThan(QJSValue(+qInf())), true);
-    QCOMPARE(num2.lessThan(QJSValue(-qInf())), false);
-    QCOMPARE(num2.lessThan(num), false);
-    QCOMPARE(num2.lessThan(QJSValue()), false);
-
-    QJSValue str2 = QJSValue("123");
-    QCOMPARE(str2.lessThan(QJSValue("124")), true);
-    QCOMPARE(str2.lessThan(QJSValue("122")), false);
-    QCOMPARE(str2.lessThan(QJSValue("123")), false);
-    QCOMPARE(str2.lessThan(QJSValue(124)), true);
-    QCOMPARE(str2.lessThan(QJSValue(122)), false);
-    QCOMPARE(str2.lessThan(QJSValue(123)), false);
-    QCOMPARE(str2.lessThan(str), false);
-    QCOMPARE(str2.lessThan(QJSValue()), false);
-
-    QJSValue obj1 = eng.newObject();
-    QJSValue obj2 = eng.newObject();
-    QCOMPARE(obj1.lessThan(obj2), false);
-    QCOMPARE(obj2.lessThan(obj1), false);
-    QCOMPARE(obj1.lessThan(obj1), false);
-    QCOMPARE(obj2.lessThan(obj2), false);
-
-    QJSValue date1 = eng.toScriptValue(QDateTime(QDate(2000, 1, 1)));
-    QJSValue date2 = eng.toScriptValue(QDateTime(QDate(1999, 1, 1)));
-    QCOMPARE(date1.lessThan(date2), false);
-    QCOMPARE(date2.lessThan(date1), true);
-    QCOMPARE(date1.lessThan(date1), false);
-    QCOMPARE(date2.lessThan(date2), false);
-    QCOMPARE(date1.lessThan(QJSValue()), false);
-
-    QCOMPARE(QJSValue().lessThan(date2), false);
-
-    QScriptEngine otherEngine;
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::lessThan: "
-                         "cannot compare to a value created in "
-                         "a different engine");
-    QCOMPARE(date1.lessThan(otherEngine.toScriptValue(123)), false);
-}
-#endif
 
 void tst_QJSValue::equals()
 {
@@ -3470,9 +2424,7 @@ void tst_QJSValue::prettyPrinter()
     QVERIFY(val.isCallable());
     QString actual = val.toString();
     int count = qMin(actual.size(), expected.size());
-//    qDebug() << actual << expected;
     for (int i = 0; i < count; ++i) {
-//        qDebug() << i << actual.at(i) << expected.at(i);
         QCOMPARE(actual.at(i), expected.at(i));
     }
     QCOMPARE(actual.size(), expected.size());
@@ -3525,41 +2477,6 @@ void tst_QJSValue::valueOfWithClosure()
         QCOMPARE(obj.toString(), QString::fromLatin1("ciao"));
     }
 }
-
-#if 0 // FIXME: no objectId()
-void tst_QJSValue::objectId()
-{
-    QCOMPARE(QJSValue().objectId(), (qint64)-1);
-    QCOMPARE(QJSValue(QJSValue::UndefinedValue).objectId(), (qint64)-1);
-    QCOMPARE(QJSValue(QJSValue::NullValue).objectId(), (qint64)-1);
-    QCOMPARE(QJSValue(false).objectId(), (qint64)-1);
-    QCOMPARE(QJSValue(123).objectId(), (qint64)-1);
-    QCOMPARE(QJSValue(uint(123)).objectId(), (qint64)-1);
-    QCOMPARE(QJSValue(123.5).objectId(), (qint64)-1);
-    QCOMPARE(QJSValue("ciao").objectId(), (qint64)-1);
-
-    QScriptEngine eng;
-    QJSValue o1 = eng.newObject();
-    QVERIFY(o1.objectId() != -1);
-    QJSValue o2 = eng.newObject();
-    QVERIFY(o2.objectId() != -1);
-    QVERIFY(o1.objectId() != o2.objectId());
-
-    QVERIFY(eng.objectById(o1.objectId()).strictlyEquals(o1));
-    QVERIFY(eng.objectById(o2.objectId()).strictlyEquals(o2));
-
-    qint64 globalObjectId = -1;
-    {
-        QJSValue global = eng.globalObject();
-        globalObjectId = global.objectId();
-        QVERIFY(globalObjectId != -1);
-        QVERIFY(eng.objectById(globalObjectId).strictlyEquals(global));
-    }
-    QJSValue obj = eng.objectById(globalObjectId);
-    QVERIFY(obj.isObject());
-    QVERIFY(obj.strictlyEquals(eng.globalObject()));
-}
-#endif
 
 void tst_QJSValue::nestedObjectToVariant_data()
 {

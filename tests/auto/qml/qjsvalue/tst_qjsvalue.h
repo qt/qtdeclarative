@@ -100,9 +100,6 @@ private slots:
     void isRegExp_data();
     void isRegExp();
 
-#if 0 // FIXME: No QScriptValue::lessThan
-    void lessThan();
-#endif
     void equals();
     void strictlyEquals();
 
@@ -122,62 +119,32 @@ private slots:
     void getSetPrototype_null();
     void getSetPrototype_notObjectOrNull();
     void getSetPrototype();
-    void getSetScope();
     void getSetProperty_HooliganTask162051();
     void getSetProperty_HooliganTask183072();
     void getSetProperty_propertyRemoval();
     void getSetProperty_resolveMode();
     void getSetProperty_twoEngines();
-    void getSetProperty_gettersAndSetters();
-    void getSetProperty_gettersAndSettersThrowErrorNative();
     void getSetProperty_gettersAndSettersThrowErrorJS();
-    void getSetProperty_gettersAndSettersOnNative();
-    void getSetProperty_gettersAndSettersOnGlobalObject();
-    void getSetProperty_gettersAndSettersChange();
-    void getSetProperty_gettersAndSettersStupid();
     void getSetProperty_array();
     void getSetProperty();
-    void arrayElementGetterSetter();
-    void getSetData_objects_data();
-    void getSetData_objects();
-    void getSetData_nonObjects_data();
-    void getSetData_nonObjects();
-    void setData_QTBUG15144();
-#if 0 // FIXME: no QScriptClass
-    void getSetScriptClass_emptyClass_data();
-    void getSetScriptClass_emptyClass();
-    void getSetScriptClass_JSObjectFromCpp();
-    void getSetScriptClass_JSObjectFromJS();
-    void getSetScriptClass_QVariant();
-    void getSetScriptClass_QObject();
-#endif
+
     void call_function();
     void call_object();
     void call_newObjects();
     void call_this();
     void call_arguments();
     void call();
-    void call_invalidArguments();
-    void call_invalidReturn();
     void call_twoEngines();
-    void call_array();
     void call_nonFunction_data();
     void call_nonFunction();
     void construct_nonFunction_data();
     void construct_nonFunction();
     void construct_simple();
     void construct_newObjectJS();
-#if 0 // FIXME: no c-style callbacks
-    void construct_undefined();
-    void construct_newObjectCpp();
-#endif
     void construct_arg();
     void construct_proto();
     void construct_returnInt();
     void construct_throw();
-#if 0 // FIXME: The feature of interpreting an array as argument list has been removed from the API
-    void construct();
-#endif
     void construct_twoEngines();
     void construct_constructorThrowsPrimitive();
     void castToPointer();
@@ -185,9 +152,6 @@ private slots:
     void prettyPrinter();
     void engineDeleted();
     void valueOfWithClosure();
-#if 0 // FIXME: no objectId()
-    void objectId();
-#endif
     void nestedObjectToVariant_data();
     void nestedObjectToVariant();
 
