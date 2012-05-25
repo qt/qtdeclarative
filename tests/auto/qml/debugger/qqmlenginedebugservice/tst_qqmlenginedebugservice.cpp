@@ -268,6 +268,7 @@ void tst_QQmlEngineDebugService::initTestCase()
                 "property variant varObj\n"
                 "property variant varObjList: []\n"
                 "property variant varObjMap\n"
+                "property variant simpleVar: 10.05\n"
                 "Component.onCompleted: {\n"
                     "varObj = blueRect;\n"
                     "var list = varObjList;\n"
@@ -861,6 +862,7 @@ void tst_QQmlEngineDebugService::queryExpressionResult_data()
     QVariantMap map;
     map.insert(QLatin1String("rect"), QVariant(QLatin1String("<unnamed object>")));
     QTest::newRow("varObjMap") << "varObjMap" << qVariantFromValue(map);
+    QTest::newRow("simpleVar") << "simpleVar" << qVariantFromValue(10.05);
 }
 
 void tst_QQmlEngineDebugService::queryExpressionResultInRootContext()
@@ -908,6 +910,7 @@ void tst_QQmlEngineDebugService::queryExpressionResultBC_data()
     QVariantMap map;
     map.insert(QLatin1String("rect"), QVariant(QLatin1String("<unnamed object>")));
     QTest::newRow("varObjMap") << "varObjMap" << qVariantFromValue(map);
+    QTest::newRow("simpleVar") << "simpleVar" << qVariantFromValue(10.05);
 }
 
 void tst_QQmlEngineDebugService::setBindingForObject()

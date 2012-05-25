@@ -163,6 +163,8 @@ QQmlEngineDebugService::propertyData(QObject *obj, int propIdx)
         rv.type = QQmlObjectProperty::Object;
     } else if (QQmlMetaType::isList(prop.userType())) {
         rv.type = QQmlObjectProperty::List;
+    } else if (prop.userType() == QMetaType::QVariant) {
+        rv.type = QQmlObjectProperty::Variant;
     }
 
     QVariant value;
