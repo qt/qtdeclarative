@@ -257,6 +257,13 @@ void QQmlDebugService::removeInvalidObjectsFromHash()
     }
 }
 
+void QQmlDebugService::clearObjectsFromHash()
+{
+    ObjectReferenceHash *hash = objectReferenceHash();
+    hash->ids.clear();
+    hash->objects.clear();
+}
+
 bool QQmlDebugService::isDebuggingEnabled()
 {
     return QQmlDebugServer::instance() != 0;

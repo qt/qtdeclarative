@@ -48,42 +48,12 @@
 
 #include "../shared/debugutil_p.h"
 #include "../../../shared/util.h"
+#include "qqmlinspectorclient.h"
 
 #define PORT 3772
 #define STR_PORT "3772"
 
-class QQmlInspectorClient : public QQmlDebugClient
-{
-    Q_OBJECT
 
-public:
-    QQmlInspectorClient(QQmlDebugConnection *connection)
-        : QQmlDebugClient(QLatin1String("QmlInspector"), connection)
-        , m_showAppOnTop(false)
-        , m_requestId(0)
-        , m_requestResult(false)
-        , m_responseId(-1)
-    {
-    }
-
-    void setShowAppOnTop(bool showOnTop);
-    void reloadQml(const QHash<QString, QByteArray> &changesHash);
-
-signals:
-    void responseReceived();
-
-protected:
-    void messageReceived(const QByteArray &message);
-
-private:
-    bool m_showAppOnTop;
-    int m_requestId;
-
-public:
-    bool m_requestResult;
-    int m_responseId;
-    int m_reloadRequestId;
-};
 
 class tst_QQmlInspector : public QQmlDataTest
 {
@@ -111,45 +81,6 @@ private slots:
     void showAppOnTop();
     void reloadQml();
 };
-
-
-void QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-    ds << QByteArray("request") << m_requestId++
-       << QByteArray("showAppOnTop") << showOnTop;
-
-    sendMessage(message);
-}
-
-void QQmlInspectorClient::reloadQml(const QHash<QString, QByteArray> &changesHash)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-    m_reloadRequestId = m_requestId;
-
-    ds << QByteArray("request") << m_requestId++
-       << QByteArray("reload") << changesHash;
-
-    sendMessage(message);
-}
-
-void QQmlInspectorClient::messageReceived(const QByteArray &message)
-{
-    QDataStream ds(message);
-    QByteArray type;
-    ds >> type;
-
-    if (type != QByteArray("response")) {
-        qDebug() << "Unhandled message of type" << type;
-        return;
-    }
-
-    m_requestResult = false;
-    ds >> m_responseId >> m_requestResult;
-    emit responseReceived();
-}
 
 void tst_QQmlInspector::init()
 {

@@ -45,6 +45,7 @@
 #include "inspecttool.h"
 
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmldebugservice_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 #include <QtQuick/QQuickView>
@@ -320,6 +321,8 @@ void QQuickViewInspector::reloadQmlFile(const QHash<QString, QByteArray> &change
 
     // Reset the selection since we are reloading the main qml
     setSelectedItems(QList<QQuickItem *>());
+
+    QQmlDebugService::clearObjectsFromHash();
 
     QHash<QUrl, QByteArray> debugCache;
 
