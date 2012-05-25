@@ -1412,6 +1412,27 @@ Q_SIGNALS:
     void done(const QString &result);
 };
 
+class MyUnregisteredEnumTypeObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(MyEnum enumProperty READ enumProperty WRITE setEnumProperty)
+
+public:
+    MyUnregisteredEnumTypeObject() : QObject(), m_ev(FirstValue) {}
+    ~MyUnregisteredEnumTypeObject() {}
+
+    enum MyEnum {
+        FirstValue = 1,
+        SecondValue = 2
+    };
+
+    MyEnum enumProperty() const { return m_ev; }
+    void setEnumProperty(MyEnum v) { m_ev = v; }
+
+private:
+    MyEnum m_ev;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

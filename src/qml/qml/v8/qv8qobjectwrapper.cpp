@@ -596,8 +596,11 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
         if (value->ToObject()->GetHiddenValue(engine->bindingFlagKey()).IsEmpty()) {
             if (!property->isVarProperty() && property->propType != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
-                QString error = QLatin1String("Cannot assign JavaScript function to ") +
-                                QLatin1String(QMetaType::typeName(property->propType));
+                QString error = QLatin1String("Cannot assign JavaScript function to ");
+                if (!QMetaType::typeName(property->propType))
+                    error += QLatin1String("[unknown property type]");
+                else
+                    error += QLatin1String(QMetaType::typeName(property->propType));
                 v8::ThrowException(v8::Exception::Error(engine->toString(error)));
                 return;
             }
@@ -653,8 +656,11 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
     } else if (!newBinding && property->propType == qMetaTypeId<QJSValue>()) {
         PROPERTY_STORE(QJSValue, engine->scriptValueFromInternal(value));
     } else if (value->IsUndefined()) {
-        QString error = QLatin1String("Cannot assign [undefined] to ") +
-                        QLatin1String(QMetaType::typeName(property->propType));
+        QString error = QLatin1String("Cannot assign [undefined] to ");
+        if (!QMetaType::typeName(property->propType))
+            error += QLatin1String("[unknown property type]");
+        else
+            error += QLatin1String(QMetaType::typeName(property->propType));
         v8::ThrowException(v8::Exception::Error(engine->toString(error)));
     } else if (value->IsFunction()) {
         // this is handled by the binding creation above

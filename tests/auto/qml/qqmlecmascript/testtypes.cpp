@@ -226,6 +226,8 @@ void registerTypes()
     qmlRegisterType<WriteCounter>("Qt.test", 1, 0, "WriteCounter");
 
     qmlRegisterType<MySequenceConversionObject>("Qt.test", 1, 0, "MySequenceConversionObject");
+
+    qmlRegisterType<MyUnregisteredEnumTypeObject>("Qt.test", 1, 0, "MyUnregisteredEnumTypeObject");
 }
 
 #include "testtypes.moc"

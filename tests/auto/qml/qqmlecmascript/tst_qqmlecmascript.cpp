@@ -923,15 +923,36 @@ void tst_qqmlecmascript::enums()
     {
     QQmlComponent component(&engine, testFileUrl("enums.2.qml"));
 
-    QString warning1 = component.url().toString() + ":5: Unable to assign [undefined] to int";
-    QString warning2 = component.url().toString() + ":6: Unable to assign [undefined] to int";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QString w1 = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'MyEnum' for property 'MyUnregisteredEnumTypeObject::enumProperty'");
+    QString w2 = QLatin1String("QQmlExpression: Expression ") + testFileUrl("enums.2.qml").toString() + QLatin1String(":7 depends on non-NOTIFYable properties:");
+    QString w3 = QLatin1String("    MyUnregisteredEnumTypeObject::enumProperty");
+    QString w4 = component.url().toString() + ":5: Unable to assign [undefined] to int";
+    QString w5 = component.url().toString() + ":6: Unable to assign [undefined] to int";
+    QString w6 = component.url().toString() + ":7: Unable to assign [undefined] to int";
+    QString w7 = component.url().toString() + ":11: Unable to assign [undefined] to [unknown property type]";
+    QString w8 = component.url().toString() + ":16: Error: Cannot assign JavaScript function to [unknown property type]";
+    QString w9 = component.url().toString() + ":19: Error: Cannot assign [undefined] to [unknown property type]";
+    QString w10 = component.url().toString() + ":22: Error: Cannot assign [undefined] to [unknown property type]";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w2));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w3));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w4));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w5));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w6));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w7));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w8));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w9));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w10));
 
     QObject *object = component.create();
     QVERIFY(object != 0);
     QCOMPARE(object->property("a").toInt(), 0);
     QCOMPARE(object->property("b").toInt(), 0);
+    QCOMPARE(object->property("c").toInt(), 0);
+
+    QMetaObject::invokeMethod(object, "testAssignmentOne");
+    QMetaObject::invokeMethod(object, "testAssignmentTwo");
+    QMetaObject::invokeMethod(object, "testAssignmentThree");
 
     delete object;
     }

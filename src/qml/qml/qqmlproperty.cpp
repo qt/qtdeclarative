@@ -1566,7 +1566,12 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         }
         writeValueProperty(object, engine, core, QVariant::fromValue(v8engine->scriptValueFromInternal(result)), context, flags);
     } else if (isUndefined) {
-        expression->delayedError()->error.setDescription(QLatin1String("Unable to assign [undefined] to ") + QLatin1String(QMetaType::typeName(type)));
+        QString errorStr = QLatin1String("Unable to assign [undefined] to ");
+        if (!QMetaType::typeName(type))
+            errorStr += QLatin1String("[unknown property type]");
+        else
+            errorStr += QLatin1String(QMetaType::typeName(type));
+        expression->delayedError()->error.setDescription(errorStr);
         return false;
     } else if (result->IsFunction()) {
         if (!result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty())
