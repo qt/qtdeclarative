@@ -118,6 +118,7 @@ private slots:
     void manualHighlight();
     void footer();
     void footer_data();
+    void initialZValues();
     void header();
     void header_data();
     void extents();
@@ -3263,6 +3264,26 @@ void tst_QQuickGridView::footer_data()
         << QPointF(-240, -320)
         << QPointF(-80, -60)
         << QPointF(-(6 * 80) - 40, -320);
+}
+
+void tst_QQuickGridView::initialZValues()
+{
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("initialZValues.qml"));
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QVERIFY(gridview->headerItem());
+    QTRY_COMPARE(gridview->headerItem()->z(), gridview->property("initialZ").toReal());
+
+    QVERIFY(gridview->footerItem());
+    QTRY_COMPARE(gridview->footerItem()->z(), gridview->property("initialZ").toReal());
+
+    delete canvas;
 }
 
 void tst_QQuickGridView::header()

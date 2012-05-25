@@ -1272,10 +1272,9 @@ void QQuickListViewPrivate::updateFooter()
     Q_Q(QQuickListView);
     bool created = false;
     if (!footer) {
-        QQuickItem *item = createComponentItem(footerComponent);
+        QQuickItem *item = createComponentItem(footerComponent, 1.0);
         if (!item)
             return;
-        item->setZ(1);
         footer = new FxListItemSG(item, q, true, true);
         created = true;
     }
@@ -1303,10 +1302,9 @@ void QQuickListViewPrivate::updateHeader()
     Q_Q(QQuickListView);
     bool created = false;
     if (!header) {
-        QQuickItem *item = createComponentItem(headerComponent);
+        QQuickItem *item = createComponentItem(headerComponent, 1.0);
         if (!item)
             return;
-        item->setZ(1);
         header = new FxListItemSG(item, q, true, true);
         created = true;
     }

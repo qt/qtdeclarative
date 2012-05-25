@@ -817,10 +817,9 @@ void QQuickGridViewPrivate::updateFooter()
     Q_Q(QQuickGridView);
     bool created = false;
     if (!footer) {
-        QQuickItem *item = createComponentItem(footerComponent);
+        QQuickItem *item = createComponentItem(footerComponent, 1.0);
         if (!item)
             return;
-        item->setZ(1);
         footer = new FxGridItemSG(item, q, true, true);
         created = true;
     }
@@ -862,10 +861,9 @@ void QQuickGridViewPrivate::updateHeader()
     Q_Q(QQuickGridView);
     bool created = false;
     if (!header) {
-        QQuickItem *item = createComponentItem(headerComponent);
+        QQuickItem *item = createComponentItem(headerComponent, 1.0);
         if (!item)
             return;
-        item->setZ(1);
         header = new FxGridItemSG(item, q, true, true);
         created = true;
     }

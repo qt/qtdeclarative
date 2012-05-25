@@ -149,6 +149,7 @@ private slots:
     void componentChanges();
     void modelChanges();
     void manualHighlight();
+    void initialZValues();
     void header();
     void header_data();
     void header_delayItemCreation();
@@ -3216,6 +3217,26 @@ void tst_QQuickListView::QTBUG_11105()
 
     delete canvas;
     delete testObject;
+}
+
+void tst_QQuickListView::initialZValues()
+{
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("initialZValues.qml"));
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QVERIFY(listview->headerItem());
+    QTRY_COMPARE(listview->headerItem()->z(), listview->property("initialZ").toReal());
+
+    QVERIFY(listview->footerItem());
+    QTRY_COMPARE(listview->footerItem()->z(), listview->property("initialZ").toReal());
+
+    delete canvas;
 }
 
 void tst_QQuickListView::header()

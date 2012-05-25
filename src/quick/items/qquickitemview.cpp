@@ -2260,10 +2260,10 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
 
 QQuickItem *QQuickItemViewPrivate::createHighlightItem()
 {
-    return createComponentItem(highlightComponent, true);
+    return createComponentItem(highlightComponent, 0.0, true);
 }
 
-QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, bool createDefault)
+QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault)
 {
     Q_Q(QQuickItemView);
 
@@ -2272,7 +2272,7 @@ QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component,
         QQmlContext *creationContext = component->creationContext();
         QQmlContext *context = new QQmlContext(
                 creationContext ? creationContext : qmlContext(q));
-        QObject *nobj = component->create(context);
+        QObject *nobj = component->beginCreate(context);
         if (nobj) {
             QQml_setParent_noEvent(context, nobj);
             item = qobject_cast<QQuickItem *>(nobj);
@@ -2285,9 +2285,12 @@ QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component,
         item = new QQuickItem;
     }
     if (item) {
+        item->setZ(zValue);
         QQml_setParent_noEvent(item, q->contentItem());
         item->setParentItem(q->contentItem());
     }
+    if (component)
+        component->completeCreate();
     return item;
 }
 
