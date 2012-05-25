@@ -70,6 +70,7 @@ private slots:
     void nonOverlapping();
     void nested();
     void inFlickable();
+    void inFlickable2();
     void invisible();
 
 private:
@@ -683,6 +684,88 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
     QTest::touchEvent(canvas, device).release(0, p1).release(1, p2);
     QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
     QTest::qWait(50);
+
+    delete canvas;
+}
+
+// test that dragging out of a Flickable containing a MPTA doesn't harm Flickable's state.
+void tst_QQuickMultiPointTouchArea::inFlickable2()
+{
+    QQuickView *canvas = createAndShowView("inFlickable2.qml");
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickFlickable *flickable = canvas->rootObject()->findChild<QQuickFlickable*>("flickable");
+    QVERIFY(flickable != 0);
+
+    QQuickTouchPoint *point11 = canvas->rootObject()->findChild<QQuickTouchPoint*>("point1");
+    QVERIFY(point11);
+
+    QCOMPARE(point11->pressed(), false);
+
+    QPoint p1(50,100);
+
+    // move point horizontally, out of Flickable area
+    QTest::touchEvent(canvas, device).press(0, p1);
+    QTest::mousePress(canvas, Qt::LeftButton, 0, p1);
+
+    p1 += QPoint(15,0);
+    QTest::touchEvent(canvas, device).move(0, p1);
+    QTest::mouseMove(canvas, p1);
+
+    p1 += QPoint(15,0);
+    QTest::touchEvent(canvas, device).move(0, p1);
+    QTest::mouseMove(canvas, p1);
+
+    p1 += QPoint(15,0);
+    QTest::touchEvent(canvas, device).move(0, p1);
+    QTest::mouseMove(canvas, p1);
+
+    p1 += QPoint(15,0);
+    QTest::touchEvent(canvas, device).move(0, p1);
+    QTest::mouseMove(canvas, p1);
+
+    QVERIFY(!flickable->isMoving());
+    QVERIFY(point11->pressed());
+
+    QTest::touchEvent(canvas, device).release(0, p1);
+    QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
+    QTest::qWait(50);
+
+    QTRY_VERIFY(!flickable->isMoving());
+
+    // Check that we can still move the Flickable
+    p1 = QPoint(50,100);
+    QTest::touchEvent(canvas, device).press(0, p1);
+    QTest::mousePress(canvas, Qt::LeftButton, 0, p1);
+
+    QCOMPARE(point11->pressed(), true);
+
+    p1 += QPoint(0,15);
+    QTest::touchEvent(canvas, device).move(0, p1);
+    QTest::mouseMove(canvas, p1);
+
+    p1 += QPoint(0,15);
+    QTest::touchEvent(canvas, device).move(0, p1);
+    QTest::mouseMove(canvas, p1);
+
+    p1 += QPoint(0,15);
+    QTest::touchEvent(canvas, device).move(0, p1);
+    QTest::mouseMove(canvas, p1);
+
+    p1 += QPoint(0,15);
+    QTest::touchEvent(canvas, device).move(0, p1);
+    QTest::mouseMove(canvas, p1);
+
+    QVERIFY(flickable->contentY() < 0);
+    QVERIFY(flickable->isMoving());
+    QCOMPARE(point11->pressed(), false);
+
+    QTest::touchEvent(canvas, device).release(0, p1);
+    QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
+    QTest::qWait(50);
+
+    QTRY_VERIFY(!flickable->isMoving());
+
 
     delete canvas;
 }

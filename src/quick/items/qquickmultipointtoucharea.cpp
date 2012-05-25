@@ -398,9 +398,6 @@ void QQuickMultiPointTouchArea::touchEvent(QTouchEvent *event)
             //TODO: move to canvas
             _stealMouse = false;
             setKeepMouseGrab(false);
-            QQuickCanvas *c = canvas();
-            if (c && c->mouseGrabberItem() == this)
-                ungrabMouse();
             setKeepTouchGrab(false);
             ungrabTouchPoints();
         }
@@ -698,9 +695,6 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *i, QEvent *eve
             //TODO: verify this behavior
             _stealMouse = false;
             setKeepMouseGrab(false);
-            QQuickCanvas *c = canvas();
-            if (c && c->mouseGrabberItem() == this)
-                ungrabMouse();
             setKeepTouchGrab(false);
             ungrabTouchPoints();
         }
