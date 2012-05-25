@@ -6,7 +6,7 @@ QPRO_PWD   = $$PWD
 CONFIG += module
 MODULE_PRI += ../../modules/qt_qml.pri
 
-QT = core-private network v8-private
+QT = core-private network
 
 DEFINES   += QT_BUILD_QML_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
@@ -22,6 +22,9 @@ exists("qqml_enable_gcov") {
 }
 
 load(qt_module_config)
+
+# private dependencies
+QT += v8-private
 
 HEADERS += qtqmlversion.h \
            qtqmlglobal.h \

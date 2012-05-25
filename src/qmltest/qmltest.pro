@@ -7,10 +7,13 @@ CONFIG += module
 CONFIG += dll warn_on
 MODULE_PRI += ../../modules/qt_qmltest.pri
 
-QT +=  testlib testlib-private qml quick  gui
+QT += qml testlib-private
 DEFINES += QT_BUILD_QUICK_TEST_LIB QT_NO_URL_CAST_FROM_STRING
 
 load(qt_module_config)
+
+# private dependencies
+QT += quick
 
 # Install qmltestcase.prf into the Qt mkspecs so that "CONFIG += qmltestcase"
 # can be used in customer applications to build against QtQuickTest.

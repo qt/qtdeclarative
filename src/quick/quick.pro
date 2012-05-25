@@ -6,7 +6,7 @@ CONFIG += module
 CONFIG += dll warn_on
 MODULE_PRI = ../../modules/qt_quick.pri
 
-QT = core-private gui gui-private network v8-private qml qml-private
+QT = core-private gui-private qml-private
 
 DEFINES   += QT_BUILD_QUICK_LIB QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
@@ -18,6 +18,9 @@ exists("qqml_enable_gcov") {
 }
 
 load(qt_module_config)
+
+# private dependencies
+QT += v8-private network
 
 include(util/util.pri)
 include(scenegraph/scenegraph.pri)
