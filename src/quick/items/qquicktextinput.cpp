@@ -3995,6 +3995,7 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
     } else if (event->timerId() == d->m_passwordEchoTimer.timerId()) {
         d->m_passwordEchoTimer.stop();
         d->updateDisplayText();
+        updateCursorRectangle();
     }
 }
 

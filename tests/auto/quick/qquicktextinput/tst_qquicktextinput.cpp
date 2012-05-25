@@ -2970,6 +2970,10 @@ void tst_qquicktextinput::passwordEchoDelay()
     QVERIFY(canvas.rootObject() != 0);
 
     QQuickTextInput *input = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("myInput")));
+    QVERIFY(input);
+
+    QQuickItem *cursor = input->findChild<QQuickItem *>("cursor");
+    QVERIFY(cursor);
 
     QChar fillChar = QLatin1Char('*');
 
@@ -2989,8 +2993,17 @@ void tst_qquicktextinput::passwordEchoDelay()
     QCOMPARE(input->displayText(), QString(4, fillChar));
     QTest::keyPress(&canvas, '4');
     QCOMPARE(input->displayText(), QString(4, fillChar) + QLatin1Char('4'));
+    QCOMPARE(input->cursorRectangle().topLeft(), cursor->pos());
+
+    // Verify the last character entered is replaced by the fill character after a delay.
+    // Also check the cursor position is updated to accomdate a size difference between
+    // the fill character and the replaced character.
+    QSignalSpy cursorSpy(input, SIGNAL(cursorRectangleChanged()));
     QTest::qWait(maskDelay);
     QTRY_COMPARE(input->displayText(), QString(5, fillChar));
+    QCOMPARE(cursorSpy.count(), 1);
+    QCOMPARE(input->cursorRectangle().topLeft(), cursor->pos());
+
     QTest::keyPress(&canvas, '5');
     QCOMPARE(input->displayText(), QString(5, fillChar) + QLatin1Char('5'));
     input->setFocus(false);
