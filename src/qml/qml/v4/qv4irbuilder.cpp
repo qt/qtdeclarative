@@ -475,7 +475,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
 
                 if (data && !data->isFunction()) {
                     IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
-                    _expr.code = _block->SYMBOL(irType, name, QQmlMetaObject(), data, IR::Name::ScopeStorage, line, column);
+                    _expr.code = _block->SYMBOL(irType, name, QQmlMetaObject(cache), data, IR::Name::ScopeStorage, line, column);
                     found = true;
                 } 
             }
@@ -495,7 +495,7 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
 
                 if (data && !data->isFunction()) {
                     IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
-                    _expr.code = _block->SYMBOL(irType, name, QQmlMetaObject(), data, IR::Name::RootStorage, line, column);
+                    _expr.code = _block->SYMBOL(irType, name, QQmlMetaObject(cache), data, IR::Name::RootStorage, line, column);
                     found = true;
                 } 
             }
@@ -632,7 +632,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     QByteArray utf8Name = name.toUtf8();
                     const char *enumName = utf8Name.constData();
 
-                    const QMetaObject *meta = baseName->meta.metaObject(); // XXX - firstCppMetaObject
+                    const QMetaObject *meta = baseName->meta.propertyCache(m_engine)->firstCppMetaObject();
                     bool found = false;
                     for (int ii = 0; !found && ii < meta->enumeratorCount(); ++ii) {
                         QMetaEnum e = meta->enumerator(ii);
@@ -685,7 +685,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 }
 
                 IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
-                _expr.code = _block->SYMBOL(baseName, irType, name, QQmlMetaObject(), data, line, column);
+                _expr.code = _block->SYMBOL(baseName, irType, name, QQmlMetaObject(cache), data, line, column);
                 }
                 break;
 
