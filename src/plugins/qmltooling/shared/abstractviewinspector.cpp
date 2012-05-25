@@ -60,14 +60,14 @@
 //              "showAppOnTop", "createObject", "destroyObject", "moveObject",
 //              "clearCache"}
 // <DATA> : select: <debugIds_int_list>
-//          reload: <list of relative paths w.r.t project of changed files>
-//                  <list of changed file contents>
+//          reload: <hash<changed_filename_string, filecontents_bytearray>>
 //          setAnimationSpeed: <speed_real>
 //          showAppOnTop: <set_bool>
 //          createObject: <qml_string><parentId_int><imports_string_list><filename_string>
 //          destroyObject: <debugId_int>
 //          moveObject: <debugId_int><newParentId_int>
 //          clearCache: void
+// Response for "destroyObject" carries the <debugId_int> of the destroyed object.
 
 const char REQUEST[] = "request";
 const char RESPONSE[] = "response";
@@ -274,13 +274,13 @@ void AbstractViewInspector::onQmlObjectDestroyed(QObject *object)
     if (!m_hashObjectsTobeDestroyed.contains(object))
         return;
 
-    int removeId = m_hashObjectsTobeDestroyed.take(object);
+    QPair<int, int> ids = m_hashObjectsTobeDestroyed.take(object);
     QQmlDebugService::removeInvalidObjectsFromHash();
 
     QByteArray response;
 
     QQmlDebugStream rs(&response, QIODevice::WriteOnly);
-    rs << QByteArray(RESPONSE) << removeId << true;
+    rs << QByteArray(RESPONSE) << ids.first << true << ids.second;
 
     m_debugService->sendMessage(response);
 }
@@ -346,7 +346,8 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
             int debugId;
             ds >> debugId;
             if (QObject *obj = QQmlDebugService::objectForId(debugId)) {
-                m_hashObjectsTobeDestroyed.insert(obj, requestId);
+                QPair<int, int> ids(requestId, debugId);
+                m_hashObjectsTobeDestroyed.insert(obj, ids);
                 connect(obj, SIGNAL(destroyed(QObject*)), SLOT(onQmlObjectDestroyed(QObject*)));
                 obj->deleteLater();
             }

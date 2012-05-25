@@ -126,8 +126,8 @@ private:
     QList<AbstractTool *> m_tools;
     int m_eventId;
     int m_reloadEventId;
-    // Hash< object to be destroyed, destroy eventId >
-    QHash<QObject *, int> m_hashObjectsTobeDestroyed;
+    // Hash< object to be destroyed, QPair<destroy eventId, object debugId> >
+    QHash<QObject *, QPair<int, int> > m_hashObjectsTobeDestroyed;
 };
 
 } // namespace QmlJSDebugger
