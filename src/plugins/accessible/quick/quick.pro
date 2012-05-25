@@ -5,7 +5,7 @@ load(qt_plugin)
 include ($$PWD/../shared/qaccessiblebase.pri)
 
 QT += core-private gui-private v8-private qml-private quick-private
-DESTDIR = $$QT.gui.plugins/accessible
+QTDIR_build:DESTDIR = $$QT.gui.plugins/accessible
 
 QTDIR_build:REQUIRES += "contains(QT_CONFIG, accessibility)"
 
@@ -23,3 +23,5 @@ HEADERS  += \
 OTHERFILES += accessible.json
 }
 
+target.path += $$[QT_INSTALL_PLUGINS]/accessible
+INSTALLS += target
