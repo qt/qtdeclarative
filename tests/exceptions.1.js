@@ -2,7 +2,7 @@
 function foo(a) {
     x = 1
     if (a)
-        throw 0;
+        throw 100;
     print("unreachable.1")
 }
 

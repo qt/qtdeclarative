@@ -374,6 +374,7 @@ struct Context {
     void throwError(const QString &message);
     void throwTypeError();
     void throwUnimplemented(const QString &message);
+    void throwReferenceError(const Value &value);
 
     void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
     void leaveCallContext(FunctionObject *f, Value *r);

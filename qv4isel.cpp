@@ -223,13 +223,15 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
             amd64_mov_reg_imm(_codePtr, AMD64_RCX, argc);
             amd64_call_code(_codePtr, __qmljs_builtin_throw);
             break;
+        case IR::Name::builtin_rethrow:
+            amd64_lea_membase(_codePtr, AMD64_RDX, AMD64_RSP, 0);
+            amd64_mov_reg_imm(_codePtr, AMD64_RCX, argc);
+            amd64_call_code(_codePtr, __qmljs_builtin_rethrow);
+            return; // we need to return to avoid checking the exceptions
         }
     }
 
-    amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_R14, offsetof(Context, hasUncaughtException), 4);
-    amd64_alu_reg_imm_size(_codePtr, X86_CMP, AMD64_RAX, 1, 1);
-    _patches[_function->basicBlocks.last()].append(_codePtr); // ### TODO: jump to the exception handler
-    amd64_branch32(_codePtr, X86_CC_E, /* exception handler */ 0, 1);
+    checkExceptions();
 }
 
 
@@ -265,10 +267,7 @@ void InstructionSelection::callValue(IR::Call *call, IR::Temp *result)
     amd64_mov_reg_imm(_codePtr, AMD64_R9, argc);
     amd64_call_code(_codePtr, __qmljs_call_value);
 
-    amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_R14, offsetof(Context, hasUncaughtException), 4);
-    amd64_alu_reg_imm_size(_codePtr, X86_CMP, AMD64_RAX, 1, 1);
-    _patches[_function->basicBlocks.last()].append(_codePtr); // ### TODO: jump to the exception handler
-    amd64_branch32(_codePtr, X86_CC_E, /* exception handler */ 0, 1);
+    checkExceptions();
 }
 
 void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
@@ -304,6 +303,8 @@ void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
     amd64_lea_membase(_codePtr, AMD64_R8, AMD64_RSP, 0);
     amd64_mov_reg_imm(_codePtr, AMD64_R9, argc);
     amd64_call_code(_codePtr, __qmljs_call_property);
+
+    checkExceptions();
 }
 
 void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
@@ -336,6 +337,8 @@ void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *
     amd64_lea_membase(_codePtr, AMD64_RCX, AMD64_RSP, 0);
     amd64_mov_reg_imm(_codePtr, AMD64_R8, argc);
     amd64_call_code(_codePtr, __qmljs_construct_activation_property);
+
+    checkExceptions();
 }
 
 void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
@@ -371,6 +374,8 @@ void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
     amd64_lea_membase(_codePtr, AMD64_R8, AMD64_RSP, 0);
     amd64_mov_reg_imm(_codePtr, AMD64_R9, argc);
     amd64_call_code(_codePtr, __qmljs_construct_property);
+
+    checkExceptions();
 }
 
 void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
@@ -403,6 +408,14 @@ void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
     amd64_lea_membase(_codePtr, AMD64_RCX, AMD64_RSP, 0);
     amd64_mov_reg_imm(_codePtr, AMD64_R8, argc);
     amd64_call_code(_codePtr, __qmljs_construct_value);
+}
+
+void InstructionSelection::checkExceptions()
+{
+    amd64_mov_reg_membase(_codePtr, AMD64_RAX, AMD64_R14, offsetof(Context, hasUncaughtException), 4);
+    amd64_alu_reg_imm_size(_codePtr, X86_CMP, AMD64_RAX, 1, 1);
+    _patches[_function->handlersBlock].append(_codePtr);
+    amd64_branch32(_codePtr, X86_CC_E, 0, 1);
 }
 
 void InstructionSelection::visitExp(IR::Exp *s)
@@ -462,32 +475,33 @@ void InstructionSelection::visitMove(IR::Move *s)
                     Q_UNIMPLEMENTED();
                     assert(!"TODO");
                 }
-                return;
             } else if (IR::String *str = s->source->asString()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
                 amd64_mov_reg_imm(_codePtr, AMD64_RDX, _engine->newString(*str->value));
                 amd64_call_code(_codePtr, __qmljs_set_activation_property_string);
-                return;
             } else if (IR::Temp *t = s->source->asTemp()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
                 loadTempAddress(AMD64_RDX, t);
                 amd64_call_code(_codePtr, __qmljs_set_activation_property);
-                return;
             } else if (IR::Name *other = s->source->asName()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
                 amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*other->id));
                 amd64_call_code(_codePtr, __qmljs_copy_activation_property);
-                return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
                 amd64_mov_reg_imm(_codePtr, AMD64_RDX, clos->value);
                 amd64_call_code(_codePtr, __qmljs_set_activation_property_closure);
-                return;
+            } else {
+                Q_UNIMPLEMENTED();
+                assert(!"TODO");
             }
+
+            checkExceptions();
+            return;
         } else if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
@@ -498,6 +512,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     String *propertyName = identifier(*n->id);
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, propertyName);
                     amd64_call_code(_codePtr, __qmljs_get_activation_property);
+                    checkExceptions();
                 }
                 return;
             } else if (IR::Const *c = s->source->asConst()) {
@@ -567,6 +582,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     loadTempAddress(AMD64_RDX, base);
                     amd64_mov_reg_imm(_codePtr, AMD64_RCX, identifier(*m->name));
                     amd64_call_code(_codePtr, __qmljs_get_property);
+                    checkExceptions();
                     return;
                 }
                 assert(!"wip");
@@ -577,6 +593,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 loadTempAddress(AMD64_RDX, ss->base->asTemp());
                 loadTempAddress(AMD64_RCX, ss->index->asTemp());
                 amd64_call_code(_codePtr, __qmljs_get_element);
+                checkExceptions();
                 return;
             } else if (IR::Unop *u = s->source->asUnop()) {
                 if (IR::Temp *e = u->expr->asTemp()) {
@@ -709,14 +726,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                     amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
                     amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
                     amd64_call_code(_codePtr, __qmljs_set_property_number);
-                    return;
                 } else if (IR::String *str = s->source->asString()) {
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                     loadTempAddress(AMD64_RSI, base);
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
                     amd64_mov_reg_imm(_codePtr, AMD64_RCX, _engine->newString(*str->value));
                     amd64_call_code(_codePtr, __qmljs_set_property_string);
-                    return;
                 } else if (IR::Temp *t = s->source->asTemp()) {
                     // __qmljs_set_property(ctx, object, name, value);
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
@@ -724,15 +739,18 @@ void InstructionSelection::visitMove(IR::Move *s)
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
                     loadTempAddress(AMD64_RCX, t);
                     amd64_call_code(_codePtr, __qmljs_set_property);
-                    return;
                 } else if (IR::Closure *clos = s->source->asClosure()) {
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                     loadTempAddress(AMD64_RSI, base);
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
                     amd64_mov_reg_imm(_codePtr, AMD64_RCX, clos->value);
                     amd64_call_code(_codePtr, __qmljs_set_property_closure);
-                    return;
+                } else {
+                    Q_UNIMPLEMENTED();
+                    assert(!"TODO");
                 }
+                checkExceptions();
+                return;
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
             if (IR::Temp *t2 = s->source->asTemp()) {
@@ -740,16 +758,24 @@ void InstructionSelection::visitMove(IR::Move *s)
                 loadTempAddress(AMD64_RDX, ss->index->asTemp());
                 loadTempAddress(AMD64_RCX, t2);
                 amd64_call_code(_codePtr, __qmljs_set_element);
-                return;
             } else if (IR::Const *c = s->source->asConst()) {
-                amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                loadTempAddress(AMD64_RSI, ss->base->asTemp());
-                loadTempAddress(AMD64_RDX, ss->index->asTemp());
-                amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
-                amd64_call_code(_codePtr, __qmljs_set_element_number);
-                return;
+                if (c->type == IR::NumberType) {
+                    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+                    loadTempAddress(AMD64_RSI, ss->base->asTemp());
+                    loadTempAddress(AMD64_RDX, ss->index->asTemp());
+                    amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
+                    amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
+                    amd64_call_code(_codePtr, __qmljs_set_element_number);
+                } else {
+                    Q_UNIMPLEMENTED();
+                    assert(!"TODO");
+                }
+            } else {
+                Q_UNIMPLEMENTED();
+                assert(!"TODO");
             }
+            checkExceptions();
+            return;
         }
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...

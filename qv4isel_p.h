@@ -26,6 +26,7 @@ protected:
     void constructProperty(IR::New *ctor, IR::Temp *result);
     void callValue(IR::Call *call, IR::Temp *result);
     void constructValue(IR::New *call, IR::Temp *result);
+    void checkExceptions();
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);

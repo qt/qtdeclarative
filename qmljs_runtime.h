@@ -63,6 +63,7 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
 
 void __qmljs_builtin_typeof(Context *context, Value *result, Value *args, int argc);
 void __qmljs_builtin_throw(Context *context, Value *result, Value *args, int argc);
+void __qmljs_builtin_rethrow(Context *context, Value *result, Value *args, int argc);
 
 // constructors
 void __qmljs_init_undefined(Value *result);
@@ -437,7 +438,7 @@ inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
         if (prim.isPrimitive())
             __qmljs_to_string(ctx, result, &prim);
         else
-            assert(!"type error");
+            __qmljs_throw_type_error(ctx, result);
         break;
     }
 

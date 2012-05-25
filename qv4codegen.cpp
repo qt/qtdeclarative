@@ -273,6 +273,7 @@ Codegen::Codegen()
     , _block(0)
     , _exitBlock(0)
     , _throwBlock(0)
+    , _handlersBlock(0)
     , _returnAddress(0)
     , _env(0)
 {
@@ -1441,9 +1442,11 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     IR::BasicBlock *entryBlock = function->newBasicBlock();
     IR::BasicBlock *exitBlock = function->newBasicBlock();
     IR::BasicBlock *throwBlock = function->newBasicBlock();
+    IR::BasicBlock *handlersBlock = function->newBasicBlock();
     function->hasDirectEval = _env->hasDirectEval;
     function->hasNestedFunctions = _env->hasNestedFunctions;
     function->maxNumberOfArguments = _env->maxNumberOfArguments;
+    function->handlersBlock = handlersBlock;
 
     for (int i = 0; i < _env->vars.size(); ++i) {
         unsigned t = entryBlock->newTemp();
@@ -1462,6 +1465,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_throwBlock, throwBlock);
+    qSwap(_handlersBlock, handlersBlock);
     qSwap(_returnAddress, returnAddress);
 
     for (FormalParameterList *it = formals; it; it = it->next) {
@@ -1478,12 +1482,17 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         _block->JUMP(_exitBlock);
 
     if (! _throwBlock->isTerminated())
-        _throwBlock->JUMP(_exitBlock);
+        _throwBlock->JUMP(_function->handlersBlock);
+
+    _handlersBlock->MOVE(_handlersBlock->TEMP(_returnAddress),
+                         _handlersBlock->CALL(_handlersBlock->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
+    _handlersBlock->JUMP(_exitBlock);
 
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_throwBlock, throwBlock);
+    qSwap(_handlersBlock, handlersBlock);
     qSwap(_returnAddress, returnAddress);
 
     leaveEnvironment();

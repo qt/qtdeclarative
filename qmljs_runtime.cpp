@@ -490,7 +490,7 @@ void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Va
     if (Value *base = ctx->lookup(name)) {
         __qmljs_set_element(ctx, base, index, value);
     } else {
-        assert(!"reference error");
+        ctx->throwReferenceError(Value::fromString(name));
     }
 }
 
@@ -514,7 +514,7 @@ void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
     if (Value *source = ctx->lookup(other))
         __qmljs_set_activation_property(ctx, name, source);
     else
-        assert(!"reference error");
+        ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool b)
@@ -552,8 +552,10 @@ void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *na
     } else {
         Value o;
         __qmljs_to_object(ctx, &o, object);
-        assert(o.type == OBJECT_TYPE);
-        __qmljs_get_property(ctx, result, &o, name);
+        if (o.isObject())
+            __qmljs_get_property(ctx, result, &o, name);
+        else
+            ctx->throwTypeError();
     }
 }
 
@@ -562,7 +564,7 @@ void __qmljs_get_activation_property(Context *ctx, Value *result, String *name)
     if (Value *prop = ctx->lookup(name))
         *result = *prop;
     else
-        assert(!"reference error");
+        ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_get_activation(Context *ctx, Value *result)
@@ -667,9 +669,9 @@ void __qmljs_call_activation_property(Context *context, Value *result, String *n
 {
     Value *func = context->lookup(name);
     if (! func)
-        assert(!"reference error");
-
-    __qmljs_call_value(context, result, /*thisObject=*/ 0, func, args, argc);
+        context->throwReferenceError(Value::fromString(name));
+    else
+        __qmljs_call_value(context, result, /*thisObject=*/ 0, func, args, argc);
 }
 
 void __qmljs_call_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
@@ -700,10 +702,10 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
             }
             ctx->leaveCallContext(f, result);
         } else {
-            assert(!"not a function");
+            context->throwTypeError();
         }
     } else {
-        assert(!"not a callable object");
+        context->throwTypeError();
     }
 }
 
@@ -721,10 +723,10 @@ void __qmljs_call_value(Context *context, Value *result, const Value *thisObject
             }
             ctx->leaveCallContext(f, result);
         } else {
-            assert(!"not a function");
+            context->throwTypeError();
         }
     } else {
-        assert(!"not a callable object");
+        context->throwTypeError();
     }
 }
 
@@ -732,9 +734,9 @@ void __qmljs_construct_activation_property(Context *context, Value *result, Stri
 {
     Value *func = context->lookup(name);
     if (! func)
-        assert(!"reference error");
-
-    __qmljs_construct_value(context, result, func, args, argc);
+        context->throwReferenceError(Value::fromString(name));
+    else
+        __qmljs_construct_value(context, result, func, args, argc);
 }
 
 void __qmljs_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc)
@@ -752,10 +754,10 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
             }
             ctx->leaveConstructorContext(f, result);
         } else {
-            assert(!"not a function");
+            context->throwTypeError();
         }
     } else {
-        assert(!"not a callable object");
+        context->throwTypeError();
     }
 }
 
@@ -781,10 +783,10 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
             }
             ctx->leaveConstructorContext(f, result);
         } else {
-            assert(!"not a function");
+            context->throwTypeError();
         }
     } else {
-        assert(!"not a callable object");
+        context->throwTypeError();
     }
 }
 
@@ -796,12 +798,17 @@ void __qmljs_builtin_typeof(Context *context, Value *result, Value *args, int ar
 
 void __qmljs_builtin_throw(Context *context, Value *result, Value *args, int argc)
 {
-    Q_UNUSED(result);
     Q_UNUSED(argc);
-    context->result = args[0];
+    Q_UNUSED(result);
     context->hasUncaughtException = true;
+    context->result = args[0];
 }
 
+void __qmljs_builtin_rethrow(Context *context, Value *result, Value *, int)
+{
+    assert(result);
+    *result = context->result;
+}
 
 } // extern "C"
 

@@ -258,7 +258,8 @@ struct Name: Expr {
     enum Builtin {
         builtin_invalid,
         builtin_typeof,
-        builtin_throw
+        builtin_throw,
+        builtin_rethrow
     };
 
     const QString *id;
@@ -599,6 +600,7 @@ struct Function {
     QSet<QString> strings;
     QList<const QString *> formals;
     QList<const QString *> locals;
+    IR::BasicBlock *handlersBlock;
     void (*code)(VM::Context *);
     bool hasDirectEval: 1;
     bool hasNestedFunctions: 1;
@@ -609,6 +611,7 @@ struct Function {
         : module(module)
         , pool(&module->pool)
         , tempCount(0)
+        , handlersBlock(0)
         , maxNumberOfArguments(0)
         , code(0)
         , hasDirectEval(false)

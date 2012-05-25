@@ -398,6 +398,7 @@ FunctionObject *ExecutionEngine::newArrayCtor(Context *ctx)
 Object *ExecutionEngine::newArrayPrototype(Context *ctx, FunctionObject *proto)
 {
     Object *arrayProto = new ArrayPrototype(ctx, proto);
+    assert(objectPrototype.isObject());
     arrayProto->prototype = objectPrototype.objectValue;
     return arrayProto;
 }
@@ -418,18 +419,25 @@ FunctionObject *ExecutionEngine::newDateCtor(Context *ctx)
 Object *ExecutionEngine::newDatePrototype(Context *ctx, FunctionObject *proto)
 {
     Object *dateProto = new DatePrototype(ctx, proto);
+    assert(objectPrototype.isObject());
     dateProto->prototype = objectPrototype.objectValue;
     return dateProto;
 }
 
 Object *ExecutionEngine::newErrorObject(const Value &value)
 {
-    return new ErrorObject(value);
+    ErrorObject *object = new ErrorObject(value);
+    assert(objectPrototype.isObject());
+    object->prototype = objectPrototype.objectValue;
+    return object;
 }
 
 Object *ExecutionEngine::newMathObject(Context *ctx)
 {
-    return new MathObject(ctx);
+    MathObject *object = new MathObject(ctx);
+    assert(objectPrototype.isObject());
+    object->prototype = objectPrototype.objectValue;
+    return object;
 }
 
 Object *ExecutionEngine::newArgumentsObject(Context *ctx)
@@ -459,6 +467,13 @@ void Context::throwUnimplemented(const QString &message)
 {
     Value v = Value::fromString(this, QLatin1String("Unimplemented ") + message);
     throwError(Value::fromObject(engine->newErrorObject(v)));
+}
+
+void Context::throwReferenceError(const Value &value)
+{
+    String *s = value.toString(this);
+    QString msg = s->toQString() + QStringLiteral(" is not defined");
+    throwError(Value::fromObject(engine->newErrorObject(Value::fromString(this, msg))));
 }
 
 void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
