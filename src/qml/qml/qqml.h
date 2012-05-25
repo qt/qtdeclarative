@@ -91,12 +91,12 @@ class QQmlPropertyValueInterceptor;
 
 #define QML_GETTYPENAMES \
     const char *className = T::staticMetaObject.className(); \
-    int nameLen = strlen(className); \
+    const int nameLen = int(strlen(className)); \
     QVarLengthArray<char,48> pointerName(nameLen+2); \
     memcpy(pointerName.data(), className, nameLen); \
     pointerName[nameLen] = '*'; \
     pointerName[nameLen+1] = '\0'; \
-    int listLen = strlen("QQmlListProperty<"); \
+    const int listLen = int(strlen("QQmlListProperty<")); \
     QVarLengthArray<char,64> listName(listLen + nameLen + 2); \
     memcpy(listName.data(), "QQmlListProperty<", listLen); \
     memcpy(listName.data()+listLen, className, nameLen); \
