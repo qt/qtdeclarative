@@ -18,7 +18,7 @@ Object::~Object()
 
 void Object::setProperty(Context *ctx, const QString &name, const Value &value)
 {
-    put(ctx->engine->identifier(name), value);
+    setProperty(ctx, ctx->engine->identifier(name), value);
 }
 
 void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context *), int count)
@@ -27,18 +27,7 @@ void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context
     setProperty(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
 }
 
-bool Object::get(String *name, Value *result)
-{
-    if (Value *prop = getProperty(name)) {
-        *result = *prop;
-        return true;
-    }
-
-    __qmljs_init_undefined(result);
-    return false;
-}
-
-Value *Object::getOwnProperty(String *name, PropertyAttributes *attributes)
+Value *Object::getOwnProperty(Context *ctx, String *name, PropertyAttributes *attributes)
 {
     if (members) {
         if (Property *prop = members->find(name)) {
@@ -50,16 +39,16 @@ Value *Object::getOwnProperty(String *name, PropertyAttributes *attributes)
     return 0;
 }
 
-Value *Object::getProperty(String *name, PropertyAttributes *attributes)
+Value *Object::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
 {
-    if (Value *prop = getOwnProperty(name, attributes))
+    if (Value *prop = getOwnProperty(ctx, name, attributes))
         return prop;
     else if (prototype)
-        return prototype->getProperty(name, attributes);
+        return prototype->getPropertyDescriptor(ctx, name, attributes);
     return 0;
 }
 
-void Object::put(String *name, const Value &value, bool flag)
+void Object::setProperty(Context *ctx, String *name, const Value &value, bool flag)
 {
     Q_UNUSED(flag);
 
@@ -69,14 +58,14 @@ void Object::put(String *name, const Value &value, bool flag)
     members->insert(name, value);
 }
 
-bool Object::canPut(String *name)
+bool Object::canSetProperty(Context *ctx, String *name)
 {
     PropertyAttributes attrs = PropertyAttributes();
-    if (getOwnProperty(name, &attrs)) {
+    if (getOwnProperty(ctx, name, &attrs)) {
         return attrs & WritableAttribute;
     } else if (! prototype) {
         return extensible;
-    } else if (prototype->getProperty(name, &attrs)) {
+    } else if (prototype->getPropertyDescriptor(ctx, name, &attrs)) {
         return attrs & WritableAttribute;
     } else {
         return extensible;
@@ -84,7 +73,7 @@ bool Object::canPut(String *name)
     return true;
 }
 
-bool Object::hasProperty(String *name) const
+bool Object::hasProperty(Context *ctx, String *name) const
 {
     if (members)
         return members->find(name) != 0;
@@ -92,7 +81,7 @@ bool Object::hasProperty(String *name) const
     return false;
 }
 
-bool Object::deleteProperty(String *name, bool flag)
+bool Object::deleteProperty(Context *ctx, String *name, bool flag)
 {
     Q_UNUSED(flag);
 
@@ -102,14 +91,19 @@ bool Object::deleteProperty(String *name, bool flag)
     return false;
 }
 
-Value *ArrayObject::getOwnProperty(String *name, PropertyAttributes *attributes)
+void Object::defineOwnProperty(Context *ctx, const Value &getter, const Value &setter, bool flag)
 {
-    if (name->toQString() == QLatin1String("length")) {
-        length.numberValue = value.size();
-        return &length;
-    }
+    Q_UNUSED(getter);
+    Q_UNUSED(setter);
+    Q_UNUSED(flag);
+    ctx->throwUnimplemented(QStringLiteral("defineOwnProperty"));
+}
 
-    return Object::getOwnProperty(name, attributes);
+Value ArrayObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+{
+    if (name->isEqualTo(ctx->engine->id_length))
+        return Value::fromNumber(value.size());
+    return Object::getProperty(ctx, name, attributes);
 }
 
 bool FunctionObject::hasInstance(const Value &value) const
@@ -168,7 +162,7 @@ void ScriptFunction::construct(VM::Context *ctx)
     function->code(ctx);
 }
 
-Value *ArgumentsObject::getProperty(String *name, PropertyAttributes *attributes)
+Value *ArgumentsObject::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
 {
     if (context) {
         for (size_t i = 0; i < context->varCount; ++i) {
@@ -188,7 +182,7 @@ Value *ArgumentsObject::getProperty(String *name, PropertyAttributes *attributes
             }
         }
     }
-    if (Value *prop = Object::getProperty(name, attributes))
+    if (Value *prop = Object::getPropertyDescriptor(ctx, name, attributes))
         return prop;
     return 0;
 }
@@ -206,20 +200,21 @@ ExecutionEngine::ExecutionEngine()
     datePrototype.type = NULL_TYPE;
     functionPrototype.type = NULL_TYPE;
 
+    id_length = identifier(QStringLiteral("length"));
+    id_prototype = identifier(QStringLiteral("prototype"));
+
     //
     // set up the global object
     //
-    String *prototype = identifier(QLatin1String("prototype"));
-
     VM::Object *glo = newArgumentsObject(rootContext);
     __qmljs_init_object(&globalObject, glo);
     __qmljs_init_object(&rootContext->activation, glo);
 
     objectCtor = ObjectCtor::create(this);
-    objectCtor.objectValue->get(prototype, &objectPrototype);
+    objectPrototype = objectCtor.property(rootContext, id_prototype);
 
     functionCtor = FunctionCtor::create(this);
-    functionCtor.objectValue->get(prototype, &functionPrototype);
+    functionPrototype = functionCtor.property(rootContext, id_prototype);
 
     stringCtor = StringCtor::create(this);
     numberCtor = NumberCtor::create(this);
@@ -227,19 +222,19 @@ ExecutionEngine::ExecutionEngine()
     arrayCtor = ArrayCtor::create(this);
     dateCtor = DateCtor::create(this);
 
-    stringCtor.objectValue->get(prototype, &stringPrototype);
-    numberCtor.objectValue->get(prototype, &numberPrototype);
-    booleanCtor.objectValue->get(prototype, &booleanPrototype);
-    arrayCtor.objectValue->get(prototype, &arrayPrototype);
-    dateCtor.objectValue->get(prototype, &datePrototype);
+    stringPrototype = stringCtor.property(rootContext, id_prototype);
+    numberPrototype = numberCtor.property(rootContext, id_prototype);
+    booleanPrototype = booleanCtor.property(rootContext, id_prototype);
+    arrayPrototype = arrayCtor.property(rootContext, id_prototype);
+    datePrototype = dateCtor.property(rootContext, id_prototype);
 
-    glo->put(identifier(QLatin1String("Object")), objectCtor);
-    glo->put(identifier(QLatin1String("String")), stringCtor);
-    glo->put(identifier(QLatin1String("Number")), numberCtor);
-    glo->put(identifier(QLatin1String("Array")), arrayCtor);
-    glo->put(identifier(QLatin1String("Function")), functionCtor);
-    glo->put(identifier(QLatin1String("Date")), dateCtor);
-    glo->put(identifier(QLatin1String("Math")), Value::fromObject(newMathObject(rootContext)));
+    glo->setProperty(rootContext, identifier(QStringLiteral("Object")), objectCtor);
+    glo->setProperty(rootContext, identifier(QStringLiteral("String")), stringCtor);
+    glo->setProperty(rootContext, identifier(QStringLiteral("Number")), numberCtor);
+    glo->setProperty(rootContext, identifier(QStringLiteral("Array")), arrayCtor);
+    glo->setProperty(rootContext, identifier(QStringLiteral("Function")), functionCtor);
+    glo->setProperty(rootContext, identifier(QStringLiteral("Date")), dateCtor);
+    glo->setProperty(rootContext, identifier(QStringLiteral("Math")), Value::fromObject(newMathObject(rootContext)));
 }
 
 Context *ExecutionEngine::newContext()
@@ -459,13 +454,13 @@ void Context::throwError(const QString &message)
 
 void Context::throwTypeError()
 {
-    Value v = Value::fromString(this, QLatin1String("Type error"));
+    Value v = Value::fromString(this, QStringLiteral("Type error"));
     throwError(Value::fromObject(engine->newErrorObject(v)));
 }
 
 void Context::throwUnimplemented(const QString &message)
 {
-    Value v = Value::fromString(this, QLatin1String("Unimplemented ") + message);
+    Value v = Value::fromString(this, QStringLiteral("Unimplemented ") + message);
     throwError(Value::fromObject(engine->newErrorObject(v)));
 }
 
@@ -529,10 +524,9 @@ void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
     assert(thisObject.is(OBJECT_TYPE));
     result = thisObject;
 
-    Value proto;
-    if (f->get(engine->identifier(QLatin1String("prototype")), &proto)) {
-        if (proto.type == OBJECT_TYPE)
-            thisObject.objectValue->prototype = proto.objectValue;
-    }
+    Value proto = f->getProperty(this, engine->id_prototype);
+    if (proto.isObject())
+        thisObject.objectValue->prototype = proto.objectValue;
+
     leaveCallContext(f, returnValue);
 }

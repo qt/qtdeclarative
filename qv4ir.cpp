@@ -211,15 +211,15 @@ QString String::escape(const QString &s)
     for (int i = 0; i < s.length(); ++i) {
         const QChar ch = s.at(i);
         if (ch == QLatin1Char('\n'))
-            r += QLatin1String("\\n");
+            r += QStringLiteral("\\n");
         else if (ch == QLatin1Char('\r'))
-            r += QLatin1String("\\r");
+            r += QStringLiteral("\\r");
         else if (ch == QLatin1Char('\\'))
-            r += QLatin1String("\\\\");
+            r += QStringLiteral("\\\\");
         else if (ch == QLatin1Char('"'))
-            r += QLatin1String("\\\"");
+            r += QStringLiteral("\\\"");
         else if (ch == QLatin1Char('\''))
-            r += QLatin1String("\\'");
+            r += QStringLiteral("\\'");
         else
             r += ch;
     }

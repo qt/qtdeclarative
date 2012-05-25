@@ -15,7 +15,7 @@ namespace VM {
 QString numberToString(double num, int radix = 10)
 {
     if (qIsNaN(num)) {
-        return QLatin1String("NaN");
+        return QStringLiteral("NaN");
     } else if (qIsInf(num)) {
         return QLatin1String(num < 0 ? "-Infinity" : "Infinity");
     }
@@ -211,6 +211,16 @@ ArgumentsObject *Value::asArgumentsObject() const
     return type == OBJECT_TYPE ? objectValue->asArgumentsObject() : 0;
 }
 
+Value Value::property(Context *ctx, String *name) const
+{
+    return isObject() ? objectValue->getProperty(ctx, name) : undefinedValue();
+}
+
+Value *Value::getPropertyDescriptor(Context *ctx, String *name) const
+{
+    return isObject() ? objectValue->getPropertyDescriptor(ctx, name) : 0;
+}
+
 extern "C" {
 
 void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
@@ -220,47 +230,47 @@ void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
 
 void __qmljs_string_literal_undefined(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("undefined")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("undefined")));
 }
 
 void __qmljs_string_literal_null(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("null")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("null")));
 }
 
 void __qmljs_string_literal_true(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("true")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("true")));
 }
 
 void __qmljs_string_literal_false(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("false")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("false")));
 }
 
 void __qmljs_string_literal_object(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("object")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("object")));
 }
 
 void __qmljs_string_literal_boolean(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("boolean")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("boolean")));
 }
 
 void __qmljs_string_literal_number(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("number")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("number")));
 }
 
 void __qmljs_string_literal_string(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("string")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("string")));
 }
 
 void __qmljs_string_literal_function(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QLatin1String("function")));
+    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("function")));
 }
 
 void __qmljs_delete(Context *ctx, Value *result, const Value *value)
@@ -290,7 +300,7 @@ void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *rig
     if (right->type == OBJECT_TYPE) {
         Value s;
         __qmljs_to_string(ctx, &s, left);
-        bool r = right->objectValue->hasProperty(s.stringValue);
+        bool r = right->objectValue->hasProperty(ctx, s.stringValue);
         __qmljs_init_boolean(result, r);
     } else {
         __qmljs_throw_type_error(ctx, result);
@@ -353,20 +363,20 @@ void __qmljs_object_default_value(Context *ctx, Value *result, const Value *obje
 
     Object *oo = object->asObject();
     assert(oo != 0);
-    Value *conv = oo->getProperty(meth1);
-    if (conv && conv->isFunctionObject()) {
+    Value conv = oo->getProperty(ctx, meth1);
+    if (!conv.isUndefined() && conv.isFunctionObject()) {
         Value r;
-        __qmljs_call_value(ctx, &r, object, conv, 0, 0);
+        __qmljs_call_value(ctx, &r, object, &conv, 0, 0);
         if (r.isPrimitive()) {
             *result = r;
             return;
         }
     }
 
-    conv = object->asObject()->getProperty(meth2);
-    if (conv && conv->isFunctionObject()) {
+    conv = oo->getProperty(ctx, meth2);
+    if (!conv.isUndefined() && conv.isFunctionObject()) {
         Value r;
-        __qmljs_call_value(ctx, &r, object, conv, 0, 0);
+        __qmljs_call_value(ctx, &r, object, &conv, 0, 0);
         if (r.isPrimitive()) {
             *result = r;
             return;
@@ -409,16 +419,14 @@ void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
 
 void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value)
 {
-    Q_UNUSED(ctx);
-    object->objectValue->put(name, *value, /*flags*/ 0);
+    object->objectValue->setProperty(ctx, name, *value, /*flags*/ 0);
 }
 
 void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool number)
 {
-    Q_UNUSED(ctx);
     Value value;
     __qmljs_init_boolean(&value, number);
-    object->objectValue->put(name, value, /*flag*/ 0);
+    object->objectValue->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double number)
@@ -426,7 +434,7 @@ void __qmljs_set_property_number(Context *ctx, Value *object, String *name, doub
     Q_UNUSED(ctx);
     Value value;
     __qmljs_init_number(&value, number);
-    object->objectValue->put(name, value, /*flag*/ 0);
+    object->objectValue->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_string(Context *ctx, Value *object, String *name, String *s)
@@ -434,14 +442,14 @@ void __qmljs_set_property_string(Context *ctx, Value *object, String *name, Stri
     Q_UNUSED(ctx);
     Value value;
     __qmljs_init_string(&value, s);
-    object->objectValue->put(name, value, /*flag*/ 0);
+    object->objectValue->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR::Function *function)
 {
     Value value;
     __qmljs_init_closure(ctx, &value, function);
-    object->objectValue->put(name, value, /*flag*/ 0);
+    object->objectValue->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index)
@@ -460,7 +468,7 @@ void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *inde
         if (! object->isObject())
             __qmljs_to_object(ctx, object, object);
 
-        object->objectValue->get(name, result);
+        *result = object->property(ctx, name);
     }
 }
 
@@ -474,7 +482,7 @@ void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value
         if (! object->isObject())
             __qmljs_to_object(ctx, object, object);
 
-        object->objectValue->put(name, *value, /*flags*/ 0);
+        object->objectValue->setProperty(ctx, name, *value, /*flags*/ 0);
     }
 }
 
@@ -487,7 +495,7 @@ void __qmljs_set_element_number(Context *ctx, Value *object, Value *index, doubl
 
 void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Value *value)
 {
-    if (Value *base = ctx->lookup(name)) {
+    if (Value *base = ctx->lookupPropertyDescriptor(name)) {
         __qmljs_set_element(ctx, base, index, value);
     } else {
         ctx->throwReferenceError(Value::fromString(name));
@@ -503,15 +511,15 @@ void __qmljs_set_activation_element_number(Context *ctx, String *name, Value *in
 
 void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
 {
-    if (Value *prop = ctx->lookup(name)) {
+    if (Value *prop = ctx->lookupPropertyDescriptor(name)) {
         *prop = *value;
     } else
-        ctx->engine->globalObject.objectValue->put(name, *value);
+        ctx->engine->globalObject.objectValue->setProperty(ctx, name, *value);
 }
 
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
 {
-    if (Value *source = ctx->lookup(other))
+    if (Value *source = ctx->lookupPropertyDescriptor(other))
         __qmljs_set_activation_property(ctx, name, source);
     else
         ctx->throwReferenceError(Value::fromString(name));
@@ -548,7 +556,9 @@ void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Fun
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name)
 {
     if (object->type == OBJECT_TYPE) {
-        object->objectValue->get(name, result);
+        *result = object->property(ctx, name);
+    } else if (object->type == STRING_TYPE && name->isEqualTo(ctx->engine->id_length)) {
+        __qmljs_init_number(result,  object->stringValue->toQString().length());
     } else {
         Value o;
         __qmljs_to_object(ctx, &o, object);
@@ -561,7 +571,7 @@ void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *na
 
 void __qmljs_get_activation_property(Context *ctx, Value *result, String *name)
 {
-    if (Value *prop = ctx->lookup(name))
+    if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *result = *prop;
     else
         ctx->throwReferenceError(Value::fromString(name));
@@ -575,14 +585,6 @@ void __qmljs_get_activation(Context *ctx, Value *result)
 void __qmljs_get_thisObject(Context *ctx, Value *result)
 {
     *result = ctx->thisObject;
-}
-
-void __qmljs_copy_property(Context *ctx, Value *target, String *name, Value *source, String *other)
-{
-    Q_UNUSED(ctx);
-    Value v;
-    source->objectValue->get(other, &v);
-    target->objectValue->put(name, v);
 }
 
 void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y, bool leftFirst)
@@ -667,7 +669,7 @@ bool __qmljs_equal(Context *ctx, const Value *x, const Value *y)
 
 void __qmljs_call_activation_property(Context *context, Value *result, String *name, Value *args, int argc)
 {
-    Value *func = context->lookup(name);
+    Value *func = context->lookupPropertyDescriptor(name);
     if (! func)
         context->throwReferenceError(Value::fromString(name));
     else
@@ -688,22 +690,17 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
         baseObject = context->activation;
         __qmljs_init_null(&thisObject);
     }
-    Value func;
-    baseObject.objectValue->get(name, &func);
-    if (func.type == OBJECT_TYPE) {
-        if (FunctionObject *f = func.objectValue->asFunctionObject()) {
-            Context k;
-            Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->initCallContext(context->engine, &thisObject, f, args, argc);
-            f->call(ctx);
-            if (ctx->hasUncaughtException) {
-                context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-                context->result = ctx->result;
-            }
-            ctx->leaveCallContext(f, result);
-        } else {
-            context->throwTypeError();
+    Value func = baseObject.property(context, name);
+    if (FunctionObject *f = func.asFunctionObject()) {
+        Context k;
+        Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
+        ctx->initCallContext(context->engine, &thisObject, f, args, argc);
+        f->call(ctx);
+        if (ctx->hasUncaughtException) {
+            context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+            context->result = ctx->result;
         }
+        ctx->leaveCallContext(f, result);
     } else {
         context->throwTypeError();
     }
@@ -711,20 +708,16 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
 
 void __qmljs_call_value(Context *context, Value *result, const Value *thisObject, const Value *func, Value *args, int argc)
 {
-    if (func->type == OBJECT_TYPE) {
-        if (FunctionObject *f = func->objectValue->asFunctionObject()) {
-            Context k;
-            Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->initCallContext(context->engine, thisObject, f, args, argc);
-            f->call(ctx);
-            if (ctx->hasUncaughtException) {
-                context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-                context->result = ctx->result;
-            }
-            ctx->leaveCallContext(f, result);
-        } else {
-            context->throwTypeError();
+    if (FunctionObject *f = func->asFunctionObject()) {
+        Context k;
+        Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
+        ctx->initCallContext(context->engine, thisObject, f, args, argc);
+        f->call(ctx);
+        if (ctx->hasUncaughtException) {
+            context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+            context->result = ctx->result;
         }
+        ctx->leaveCallContext(f, result);
     } else {
         context->throwTypeError();
     }
@@ -732,7 +725,7 @@ void __qmljs_call_value(Context *context, Value *result, const Value *thisObject
 
 void __qmljs_construct_activation_property(Context *context, Value *result, String *name, Value *args, int argc)
 {
-    Value *func = context->lookup(name);
+    Value *func = context->lookupPropertyDescriptor(name);
     if (! func)
         context->throwReferenceError(Value::fromString(name));
     else
@@ -741,21 +734,16 @@ void __qmljs_construct_activation_property(Context *context, Value *result, Stri
 
 void __qmljs_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc)
 {
-    Q_UNUSED(context);
-    if (func->type == OBJECT_TYPE) {
-        if (FunctionObject *f = func->objectValue->asFunctionObject()) {
-            Context k;
-            Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->initConstructorContext(context->engine, 0, f, args, argc);
-            f->construct(ctx);
-            if (ctx->hasUncaughtException) {
-                context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-                context->result = ctx->result;
-            }
-            ctx->leaveConstructorContext(f, result);
-        } else {
-            context->throwTypeError();
+    if (FunctionObject *f = func->asFunctionObject()) {
+        Context k;
+        Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
+        ctx->initConstructorContext(context->engine, 0, f, args, argc);
+        f->construct(ctx);
+        if (ctx->hasUncaughtException) {
+            context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+            context->result = ctx->result;
         }
+        ctx->leaveConstructorContext(f, result);
     } else {
         context->throwTypeError();
     }
@@ -763,28 +751,23 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
 
 void __qmljs_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
 {
-    Value func;
     Value thisObject = *base;
     if (thisObject.type != OBJECT_TYPE)
         __qmljs_to_object(context, &thisObject, base);
 
     assert(thisObject.type == OBJECT_TYPE);
-    thisObject.objectValue->get(name, &func);
-    if (func.type == OBJECT_TYPE) {
-        if (FunctionObject *f = func.objectValue->asFunctionObject()) {
-            Context k;
-            Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
-            ctx->initConstructorContext(context->engine, 0, f, args, argc);
-            ctx->calledAsConstructor = true;
-            f->construct(ctx);
-            if (ctx->hasUncaughtException) {
-                context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
-                context->result = ctx->result;
-            }
-            ctx->leaveConstructorContext(f, result);
-        } else {
-            context->throwTypeError();
+    Value func = thisObject.property(context, name);
+    if (FunctionObject *f = func.asFunctionObject()) {
+        Context k;
+        Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
+        ctx->initConstructorContext(context->engine, 0, f, args, argc);
+        ctx->calledAsConstructor = true;
+        f->construct(ctx);
+        if (ctx->hasUncaughtException) {
+            context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
+            context->result = ctx->result;
         }
+        ctx->leaveConstructorContext(f, result);
     } else {
         context->throwTypeError();
     }

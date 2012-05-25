@@ -33,6 +33,12 @@ struct String {
     String(const QString &text)
         : _text(text), _hashValue(0) {}
 
+    bool isEqualTo(const String *other) const {
+        if (other && hashValue() == other->hashValue())
+            return this == other || toQString() == other->toQString();
+        return false;
+    }
+
     inline const QString &toQString() const {
         return _text;
     }
@@ -63,18 +69,8 @@ struct Property {
     inline bool isEnumerable() const { return attributes & EnumerableAttribute; }
     inline bool isConfigurable() const { return attributes & ConfigurableAttribute; }
 
-    inline bool hasName(String *n) const {
-        if (name == n) {
-            return true;
-        } else if (name->hashValue() == n->hashValue() && name->toQString() == n->toQString()) {
-            return true;
-        }
-        return false;
-    }
-
-    inline unsigned hashValue() const {
-        return name->hashValue();
-    }
+    inline bool hasName(String *n) const { return name->isEqualTo(n); }
+    inline unsigned hashValue() const { return name->hashValue(); }
 };
 
 class Table
@@ -206,15 +202,20 @@ struct Object {
     virtual ErrorObject *asErrorObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
-    bool get(String *name, Value *result);
+    virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes = 0)
+    {
+        if (Value *v = getPropertyDescriptor(ctx, name, attributes))
+            return *v;
+        return Value::undefinedValue();
+    }
 
-    virtual Value *getOwnProperty(String *name, PropertyAttributes *attributes = 0);
-    virtual Value *getProperty(String *name, PropertyAttributes *attributes = 0);
-    virtual void put(String *name, const Value &value, bool flag = 0);
-    virtual bool canPut(String *name);
-    virtual bool hasProperty(String *name) const;
-    virtual bool deleteProperty(String *name, bool flag);
-    // ### TODO: defineOwnProperty(name, descriptor, boolean) -> boolean
+    virtual Value *getOwnProperty(Context *ctx, String *name, PropertyAttributes *attributes = 0);
+    virtual Value *getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes = 0);
+    virtual void setProperty(Context *ctx, String *name, const Value &value, bool flag = false);
+    virtual bool canSetProperty(Context *ctx, String *name);
+    virtual bool hasProperty(Context *ctx, String *name) const;
+    virtual bool deleteProperty(Context *ctx, String *name, bool flag);
+    virtual void defineOwnProperty(Context *ctx, const Value &getter, const Value &setter, bool flag = false);
 
     //
     // helpers
@@ -249,11 +250,10 @@ struct DateObject: Object {
 
 struct ArrayObject: Object {
     Array value;
-    Value length;
-    ArrayObject() { length.type = NUMBER_TYPE; }
-    ArrayObject(const Array &value): value(value) { length.type = NUMBER_TYPE; }
+    ArrayObject() {}
+    ArrayObject(const Array &value): value(value) {}
     virtual ArrayObject *asArrayObject() { return this; }
-    virtual Value *getOwnProperty(String *name, PropertyAttributes *attributes);
+    virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes);
 };
 
 struct FunctionObject: Object {
@@ -306,7 +306,7 @@ struct ArgumentsObject: Object {
     Context *context;
     ArgumentsObject(Context *context): context(context) {}
     virtual ArgumentsObject *asArgumentsObject() { return this; }
-    virtual Value *getProperty(String *name, PropertyAttributes *attributes);
+    virtual Value *getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes);
 };
 
 struct Context {
@@ -325,11 +325,11 @@ struct Context {
     int calledAsConstructor;
     int hasUncaughtException;
 
-    Value *lookup(String *name)
+    Value *lookupPropertyDescriptor(String *name)
     {
         for (Context *ctx = this; ctx; ctx = ctx->parent) {
             if (ctx->activation.is(OBJECT_TYPE)) {
-                if (Value *prop = ctx->activation.objectValue->getProperty(name)) {
+                if (Value *prop = ctx->activation.objectValue->getPropertyDescriptor(this, name)) {
                     return prop;
                 }
             }
@@ -405,6 +405,9 @@ struct ExecutionEngine
     Value datePrototype;
 
     QHash<QString, String *> identifiers;
+
+    String *id_length;
+    String *id_prototype;
 
     ExecutionEngine();
 

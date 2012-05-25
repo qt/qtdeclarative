@@ -322,52 +322,52 @@ static inline double ParseString(const QString &s)
         dt = QDateTime::fromString(s, Qt::ISODate);
     if (!dt.isValid()) {
         QStringList formats;
-        formats << QLatin1String("M/d/yyyy")
-                << QLatin1String("M/d/yyyy hh:mm")
-                << QLatin1String("M/d/yyyy hh:mm A")
+        formats << QStringLiteral("M/d/yyyy")
+                << QStringLiteral("M/d/yyyy hh:mm")
+                << QStringLiteral("M/d/yyyy hh:mm A")
 
-                << QLatin1String("M/d/yyyy, hh:mm")
-                << QLatin1String("M/d/yyyy, hh:mm A")
+                << QStringLiteral("M/d/yyyy, hh:mm")
+                << QStringLiteral("M/d/yyyy, hh:mm A")
 
-                << QLatin1String("MMM d yyyy")
-                << QLatin1String("MMM d yyyy hh:mm")
-                << QLatin1String("MMM d yyyy hh:mm:ss")
-                << QLatin1String("MMM d yyyy, hh:mm")
-                << QLatin1String("MMM d yyyy, hh:mm:ss")
+                << QStringLiteral("MMM d yyyy")
+                << QStringLiteral("MMM d yyyy hh:mm")
+                << QStringLiteral("MMM d yyyy hh:mm:ss")
+                << QStringLiteral("MMM d yyyy, hh:mm")
+                << QStringLiteral("MMM d yyyy, hh:mm:ss")
 
-                << QLatin1String("MMMM d yyyy")
-                << QLatin1String("MMMM d yyyy hh:mm")
-                << QLatin1String("MMMM d yyyy hh:mm:ss")
-                << QLatin1String("MMMM d yyyy, hh:mm")
-                << QLatin1String("MMMM d yyyy, hh:mm:ss")
+                << QStringLiteral("MMMM d yyyy")
+                << QStringLiteral("MMMM d yyyy hh:mm")
+                << QStringLiteral("MMMM d yyyy hh:mm:ss")
+                << QStringLiteral("MMMM d yyyy, hh:mm")
+                << QStringLiteral("MMMM d yyyy, hh:mm:ss")
 
-                << QLatin1String("MMM d, yyyy")
-                << QLatin1String("MMM d, yyyy hh:mm")
-                << QLatin1String("MMM d, yyyy hh:mm:ss")
+                << QStringLiteral("MMM d, yyyy")
+                << QStringLiteral("MMM d, yyyy hh:mm")
+                << QStringLiteral("MMM d, yyyy hh:mm:ss")
 
-                << QLatin1String("MMMM d, yyyy")
-                << QLatin1String("MMMM d, yyyy hh:mm")
-                << QLatin1String("MMMM d, yyyy hh:mm:ss")
+                << QStringLiteral("MMMM d, yyyy")
+                << QStringLiteral("MMMM d, yyyy hh:mm")
+                << QStringLiteral("MMMM d, yyyy hh:mm:ss")
 
-                << QLatin1String("d MMM yyyy")
-                << QLatin1String("d MMM yyyy hh:mm")
-                << QLatin1String("d MMM yyyy hh:mm:ss")
-                << QLatin1String("d MMM yyyy, hh:mm")
-                << QLatin1String("d MMM yyyy, hh:mm:ss")
+                << QStringLiteral("d MMM yyyy")
+                << QStringLiteral("d MMM yyyy hh:mm")
+                << QStringLiteral("d MMM yyyy hh:mm:ss")
+                << QStringLiteral("d MMM yyyy, hh:mm")
+                << QStringLiteral("d MMM yyyy, hh:mm:ss")
 
-                << QLatin1String("d MMMM yyyy")
-                << QLatin1String("d MMMM yyyy hh:mm")
-                << QLatin1String("d MMMM yyyy hh:mm:ss")
-                << QLatin1String("d MMMM yyyy, hh:mm")
-                << QLatin1String("d MMMM yyyy, hh:mm:ss")
+                << QStringLiteral("d MMMM yyyy")
+                << QStringLiteral("d MMMM yyyy hh:mm")
+                << QStringLiteral("d MMMM yyyy hh:mm:ss")
+                << QStringLiteral("d MMMM yyyy, hh:mm")
+                << QStringLiteral("d MMMM yyyy, hh:mm:ss")
 
-                << QLatin1String("d MMM, yyyy")
-                << QLatin1String("d MMM, yyyy hh:mm")
-                << QLatin1String("d MMM, yyyy hh:mm:ss")
+                << QStringLiteral("d MMM, yyyy")
+                << QStringLiteral("d MMM, yyyy hh:mm")
+                << QStringLiteral("d MMM, yyyy hh:mm:ss")
 
-                << QLatin1String("d MMMM, yyyy")
-                << QLatin1String("d MMMM, yyyy hh:mm")
-                << QLatin1String("d MMMM, yyyy hh:mm:ss");
+                << QStringLiteral("d MMMM, yyyy")
+                << QStringLiteral("d MMMM, yyyy hh:mm")
+                << QStringLiteral("d MMMM, yyyy hh:mm:ss");
 
         for (int i = 0; i < formats.size(); ++i) {
             dt = QDateTime::fromString(s, formats.at(i));
@@ -403,8 +403,8 @@ static inline QDateTime ToDateTime(double t, Qt::TimeSpec spec)
 static inline QString ToString(double t)
 {
     if (qIsNaN(t))
-        return QLatin1String("Invalid Date");
-    QString str = ToDateTime(t, Qt::LocalTime).toString() + QLatin1String(" GMT");
+        return QStringLiteral("Invalid Date");
+    QString str = ToDateTime(t, Qt::LocalTime).toString() + QStringLiteral(" GMT");
     double tzoffset = LocalTZA + DaylightSavingTA(t);
     if (tzoffset) {
         int hours = static_cast<int>(::fabs(tzoffset) / 1000 / 60 / 60);
@@ -423,8 +423,8 @@ static inline QString ToString(double t)
 static inline QString ToUTCString(double t)
 {
     if (qIsNaN(t))
-        return QLatin1String("Invalid Date");
-    return ToDateTime(t, Qt::UTC).toString() + QLatin1String(" GMT");
+        return QStringLiteral("Invalid Date");
+    return ToDateTime(t, Qt::UTC).toString() + QStringLiteral(" GMT");
 }
 
 static inline QString ToDateString(double t)
@@ -477,7 +477,7 @@ Value ObjectCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newObjectCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newObjectPrototype(ctx, ctor)));
+    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newObjectPrototype(ctx, ctor)));
     return Value::fromObject(ctor);
 }
 
@@ -498,8 +498,8 @@ void ObjectCtor::call(Context *)
 
 ObjectPrototype::ObjectPrototype(Context *ctx, FunctionObject *ctor)
 {
-    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
-    setProperty(ctx, QLatin1String("toString"), method_toString, 0);
+    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
 }
 
 void ObjectPrototype::method_toString(Context *ctx)
@@ -514,7 +514,7 @@ Value StringCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newStringCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newStringPrototype(ctx, ctor)));
+    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newStringPrototype(ctx, ctor)));
     return Value::fromObject(ctor);
 }
 
@@ -544,27 +544,27 @@ void StringCtor::call(Context *ctx)
 
 StringPrototype::StringPrototype(Context *ctx, FunctionObject *ctor)
 {
-    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
-    setProperty(ctx, QLatin1String("toString"), method_toString);
-    setProperty(ctx, QLatin1String("valueOf"), method_valueOf);
-    setProperty(ctx, QLatin1String("charAt"), method_charAt);
-    setProperty(ctx, QLatin1String("charCodeAt"), method_charCodeAt);
-    setProperty(ctx, QLatin1String("concat"), method_concat);
-    setProperty(ctx, QLatin1String("indexOf"), method_indexOf);
-    setProperty(ctx, QLatin1String("lastIndexOf"), method_lastIndexOf);
-    setProperty(ctx, QLatin1String("localeCompare"), method_localeCompare);
-    setProperty(ctx, QLatin1String("match"), method_match);
-    setProperty(ctx, QLatin1String("replace"), method_replace);
-    setProperty(ctx, QLatin1String("search"), method_search);
-    setProperty(ctx, QLatin1String("slice"), method_slice);
-    setProperty(ctx, QLatin1String("split"), method_split);
-    setProperty(ctx, QLatin1String("substr"), method_substr);
-    setProperty(ctx, QLatin1String("substring"), method_substring);
-    setProperty(ctx, QLatin1String("toLowerCase"), method_toLowerCase);
-    setProperty(ctx, QLatin1String("toLocaleLowerCase"), method_toLocaleLowerCase);
-    setProperty(ctx, QLatin1String("toUpperCase"), method_toUpperCase);
-    setProperty(ctx, QLatin1String("toLocaleUpperCase"), method_toLocaleUpperCase);
-    setProperty(ctx, QLatin1String("fromCharCode"), method_fromCharCode);
+    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QStringLiteral("toString"), method_toString);
+    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
+    setProperty(ctx, QStringLiteral("charAt"), method_charAt);
+    setProperty(ctx, QStringLiteral("charCodeAt"), method_charCodeAt);
+    setProperty(ctx, QStringLiteral("concat"), method_concat);
+    setProperty(ctx, QStringLiteral("indexOf"), method_indexOf);
+    setProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf);
+    setProperty(ctx, QStringLiteral("localeCompare"), method_localeCompare);
+    setProperty(ctx, QStringLiteral("match"), method_match);
+    setProperty(ctx, QStringLiteral("replace"), method_replace);
+    setProperty(ctx, QStringLiteral("search"), method_search);
+    setProperty(ctx, QStringLiteral("slice"), method_slice);
+    setProperty(ctx, QStringLiteral("split"), method_split);
+    setProperty(ctx, QStringLiteral("substr"), method_substr);
+    setProperty(ctx, QStringLiteral("substring"), method_substring);
+    setProperty(ctx, QStringLiteral("toLowerCase"), method_toLowerCase);
+    setProperty(ctx, QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
+    setProperty(ctx, QStringLiteral("toUpperCase"), method_toUpperCase);
+    setProperty(ctx, QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
+    setProperty(ctx, QStringLiteral("fromCharCode"), method_fromCharCode);
 }
 
 QString StringPrototype::getThisString(Context *ctx)
@@ -694,19 +694,19 @@ void StringPrototype::method_localeCompare(Context *ctx)
 void StringPrototype::method_match(Context *ctx)
 {
     // requires Regexp
-    ctx->throwUnimplemented(QLatin1String("String.prototype.match"));
+    ctx->throwUnimplemented(QStringLiteral("String.prototype.match"));
 }
 
 void StringPrototype::method_replace(Context *ctx)
 {
     // requires Regexp
-    ctx->throwUnimplemented(QLatin1String("String.prototype.replace"));
+    ctx->throwUnimplemented(QStringLiteral("String.prototype.replace"));
 }
 
 void StringPrototype::method_search(Context *ctx)
 {
     // requires Regexp
-    ctx->throwUnimplemented(QLatin1String("String.prototype.search"));
+    ctx->throwUnimplemented(QStringLiteral("String.prototype.search"));
 }
 
 void StringPrototype::method_slice(Context *ctx)
@@ -734,7 +734,7 @@ void StringPrototype::method_slice(Context *ctx)
 
 void StringPrototype::method_split(Context *ctx)
 {
-    ctx->throwUnimplemented(QLatin1String("String.prototype.splt"));
+    ctx->throwUnimplemented(QStringLiteral("String.prototype.splt"));
 }
 
 void StringPrototype::method_substr(Context *ctx)
@@ -836,7 +836,7 @@ Value NumberCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newNumberCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newNumberPrototype(ctx, ctor)));
+    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newNumberPrototype(ctx, ctor)));
     return Value::fromObject(ctor);
 }
 
@@ -860,26 +860,26 @@ void NumberCtor::call(Context *ctx)
 NumberPrototype::NumberPrototype(Context *ctx, FunctionObject *ctor)
     : NumberObject(Value::fromNumber(0))
 {
-    ctor->setProperty(ctx, QLatin1String("NaN"), Value::fromNumber(qSNaN()));
-    ctor->setProperty(ctx, QLatin1String("NEGATIVE_INFINITY"), Value::fromNumber(-qInf()));
-    ctor->setProperty(ctx, QLatin1String("POSITIVE_INFINITY"), Value::fromNumber(qInf()));
-    ctor->setProperty(ctx, QLatin1String("MAX_VALUE"), Value::fromNumber(1.7976931348623158e+308));
+    ctor->setProperty(ctx, QStringLiteral("NaN"), Value::fromNumber(qSNaN()));
+    ctor->setProperty(ctx, QStringLiteral("NEGATIVE_INFINITY"), Value::fromNumber(-qInf()));
+    ctor->setProperty(ctx, QStringLiteral("POSITIVE_INFINITY"), Value::fromNumber(qInf()));
+    ctor->setProperty(ctx, QStringLiteral("MAX_VALUE"), Value::fromNumber(1.7976931348623158e+308));
 #ifdef __INTEL_COMPILER
 # pragma warning( push )
 # pragma warning(disable: 239)
 #endif
-    ctor->setProperty(ctx, QLatin1String("MIN_VALUE"), Value::fromNumber(5e-324));
+    ctor->setProperty(ctx, QStringLiteral("MIN_VALUE"), Value::fromNumber(5e-324));
 #ifdef __INTEL_COMPILER
 # pragma warning( pop )
 #endif
 
-    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
-    setProperty(ctx, QLatin1String("toString"), method_toString);
-    setProperty(ctx, QLatin1String("toLocalString"), method_toLocaleString);
-    setProperty(ctx, QLatin1String("valueOf"), method_valueOf);
-    setProperty(ctx, QLatin1String("toFixed"), method_toFixed);
-    setProperty(ctx, QLatin1String("toExponential"), method_toExponential);
-    setProperty(ctx, QLatin1String("toPrecision"), method_toPrecision);
+    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QStringLiteral("toString"), method_toString);
+    setProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString);
+    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
+    setProperty(ctx, QStringLiteral("toFixed"), method_toFixed);
+    setProperty(ctx, QStringLiteral("toExponential"), method_toExponential);
+    setProperty(ctx, QStringLiteral("toPrecision"), method_toPrecision);
 }
 
 void NumberPrototype::method_toString(Context *ctx)
@@ -896,7 +896,7 @@ void NumberPrototype::method_toString(Context *ctx)
 
             double num = thisObject->value.numberValue;
             if (qIsNaN(num)) {
-                ctx->result = Value::fromString(ctx, QLatin1String("NaN"));
+                ctx->result = Value::fromString(ctx, QStringLiteral("NaN"));
                 return;
             } else if (qIsInf(num)) {
                 ctx->result = Value::fromString(ctx, QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
@@ -1023,7 +1023,7 @@ Value BooleanCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newBooleanCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newBooleanPrototype(ctx, ctor)));
+    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newBooleanPrototype(ctx, ctor)));
     return Value::fromObject(ctor);
 }
 
@@ -1047,9 +1047,9 @@ void BooleanCtor::call(Context *ctx)
 BooleanPrototype::BooleanPrototype(Context *ctx, FunctionObject *ctor)
     : BooleanObject(Value::fromBoolean(false))
 {
-    ctor->setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
-    ctor->setProperty(ctx, QLatin1String("toString"), method_toString);
-    ctor->setProperty(ctx, QLatin1String("valueOf"), method_valueOf);
+    ctor->setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    ctor->setProperty(ctx, QStringLiteral("toString"), method_toString);
+    ctor->setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
 }
 
 void BooleanPrototype::method_toString(Context *ctx)
@@ -1077,7 +1077,7 @@ Value ArrayCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newArrayCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newArrayPrototype(ctx, ctor)));
+    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newArrayPrototype(ctx, ctor)));
     return Value::fromObject(ctor);
 }
 
@@ -1100,7 +1100,7 @@ void ArrayCtor::call(Context *ctx)
         quint32 isize = Value::toUInt32(size);
 
         if (size != double(isize)) {
-            ctx->throwError(QLatin1String("Invalid array length"));
+            ctx->throwError(QStringLiteral("Invalid array length"));
             return;
         }
 
@@ -1116,28 +1116,28 @@ void ArrayCtor::call(Context *ctx)
 
 ArrayPrototype::ArrayPrototype(Context *ctx, FunctionObject *ctor)
 {
-    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
-    setProperty(ctx, QLatin1String("toString"), method_toString, 0);
-    setProperty(ctx, QLatin1String("toLocalString"), method_toLocaleString, 0);
-    setProperty(ctx, QLatin1String("concat"), method_concat, 1);
-    setProperty(ctx, QLatin1String("join"), method_join, 1);
-    setProperty(ctx, QLatin1String("pop"), method_pop, 0);
-    setProperty(ctx, QLatin1String("push"), method_push, 1);
-    setProperty(ctx, QLatin1String("reverse"), method_reverse, 0);
-    setProperty(ctx, QLatin1String("shift"), method_shift, 0);
-    setProperty(ctx, QLatin1String("slice"), method_slice, 2);
-    setProperty(ctx, QLatin1String("sort"), method_sort, 1);
-    setProperty(ctx, QLatin1String("splice"), method_splice, 2);
-    setProperty(ctx, QLatin1String("unshift"), method_unshift, 1);
-    setProperty(ctx, QLatin1String("indexOf"), method_indexOf, 0);
-    setProperty(ctx, QLatin1String("lastIndexOf"), method_lastIndexOf, 0);
-    setProperty(ctx, QLatin1String("every"), method_every, 0);
-    setProperty(ctx, QLatin1String("some"), method_some, 0);
-    setProperty(ctx, QLatin1String("forEach"), method_forEach, 0);
-    setProperty(ctx, QLatin1String("map"), method_map, 0);
-    setProperty(ctx, QLatin1String("filter"), method_filter, 0);
-    setProperty(ctx, QLatin1String("reduce"), method_reduce, 0);
-    setProperty(ctx, QLatin1String("reduceRight"), method_reduceRight, 0);
+    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+    setProperty(ctx, QStringLiteral("toLocalString"), method_toLocaleString, 0);
+    setProperty(ctx, QStringLiteral("concat"), method_concat, 1);
+    setProperty(ctx, QStringLiteral("join"), method_join, 1);
+    setProperty(ctx, QStringLiteral("pop"), method_pop, 0);
+    setProperty(ctx, QStringLiteral("push"), method_push, 1);
+    setProperty(ctx, QStringLiteral("reverse"), method_reverse, 0);
+    setProperty(ctx, QStringLiteral("shift"), method_shift, 0);
+    setProperty(ctx, QStringLiteral("slice"), method_slice, 2);
+    setProperty(ctx, QStringLiteral("sort"), method_sort, 1);
+    setProperty(ctx, QStringLiteral("splice"), method_splice, 2);
+    setProperty(ctx, QStringLiteral("unshift"), method_unshift, 1);
+    setProperty(ctx, QStringLiteral("indexOf"), method_indexOf, 0);
+    setProperty(ctx, QStringLiteral("lastIndexOf"), method_lastIndexOf, 0);
+    setProperty(ctx, QStringLiteral("every"), method_every, 0);
+    setProperty(ctx, QStringLiteral("some"), method_some, 0);
+    setProperty(ctx, QStringLiteral("forEach"), method_forEach, 0);
+    setProperty(ctx, QStringLiteral("map"), method_map, 0);
+    setProperty(ctx, QStringLiteral("filter"), method_filter, 0);
+    setProperty(ctx, QStringLiteral("reduce"), method_reduce, 0);
+    setProperty(ctx, QStringLiteral("reduceRight"), method_reduceRight, 0);
 }
 
 void ArrayPrototype::method_toString(Context *ctx)
@@ -1181,15 +1181,13 @@ void ArrayPrototype::method_join(Context *ctx)
 
     QString r4;
     if (arg.isUndefined())
-        r4 = QLatin1String(",");
+        r4 = QStringLiteral(",");
     else
         r4 = arg.toString(ctx)->toQString();
 
     Value self = ctx->thisObject;
-
-    Value *length = self.objectValue->getProperty(ctx->engine->identifier("length"));
-    double r1 = length ? length->toNumber(ctx) : 0;
-    quint32 r2 = Value::toUInt32(r1);
+    const Value length = self.property(ctx, ctx->engine->id_length);
+    const quint32 r2 = Value::toUInt32(length.isUndefined() ? 0 : length.toNumber(ctx));
 
     static QSet<Object *> visitedArrayElements;
 
@@ -1203,7 +1201,7 @@ void ArrayPrototype::method_join(Context *ctx)
 
     QString R;
 
-    if (ArrayObject *a = self.objectValue->asArrayObject()) {
+    if (ArrayObject *a = self.asArrayObject()) {
         for (uint i = 0; i < a->value.size(); ++i) {
             if (i)
                 R += r4;
@@ -1216,18 +1214,18 @@ void ArrayPrototype::method_join(Context *ctx)
         //
         // crazy!
         //
-        Value *r6 = self.objectValue->getProperty(ctx->engine->identifier(QLatin1String("0")));
-        if (r6 && !(r6->isUndefined() || r6->isNull()))
-            R = r6->toString(ctx)->toQString();
+        Value r6 = self.property(ctx, ctx->engine->identifier(QStringLiteral("0")));
+        if (!(r6.isUndefined() || r6.isNull()))
+            R = r6.toString(ctx)->toQString();
 
         for (quint32 k = 1; k < r2; ++k) {
             R += r4;
 
             String *name = Value::fromNumber(k).toString(ctx);
-            Value *r12 = self.objectValue->getProperty(name);
+            Value r12 = self.property(ctx, name);
 
-            if (r12 && ! (r12->isUndefined() || r12->isNull()))
-                R += r12->toString(ctx)->toQString();
+            if (! (r12.isUndefined() || r12.isNull()))
+                R += r12.toString(ctx)->toQString();
         }
     }
 
@@ -1242,18 +1240,16 @@ void ArrayPrototype::method_pop(Context *ctx)
         Value elt = instance->value.pop();
         ctx->result = elt;
     } else {
-        String *id_length = ctx->engine->identifier(QLatin1String("length"));
-        Value *r1 = self.objectValue->getProperty(id_length);
-        quint32 r2 = r1 ? r1->toUInt32(ctx) : 0;
+        Value r1 = self.property(ctx, ctx->engine->id_length);
+        quint32 r2 = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
         if (! r2) {
-            self.objectValue->put(id_length, Value::fromNumber(0));
+            self.objectValue->setProperty(ctx, ctx->engine->id_length, Value::fromNumber(0));
         } else {
             String *r6 = Value::fromNumber(r2 - 1).toString(ctx);
-            Value *r7 = self.objectValue->getProperty(r6);
-            self.objectValue->deleteProperty(r6, 0);
-            self.objectValue->put(id_length, Value::fromNumber(2 - 1));
-            if (r7)
-                ctx->result = *r7;
+            Value r7 = self.property(ctx, r6);
+            self.objectValue->deleteProperty(ctx, r6, 0);
+            self.objectValue->setProperty(ctx, ctx->engine->id_length, Value::fromNumber(2 - 1));
+            ctx->result = r7;
         }
     }
 }
@@ -1269,16 +1265,15 @@ void ArrayPrototype::method_push(Context *ctx)
         }
         ctx->result = Value::fromNumber(pos);
     } else {
-        String *id_length = ctx->engine->identifier(QLatin1String("length"));
-        Value *r1 = self.objectValue->getProperty(id_length);
-        quint32 n = r1 ? r1->toUInt32(ctx) : 0;
+        Value r1 = self.property(ctx, ctx->engine->id_length);
+        quint32 n = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
         for (size_t index = 0; index < ctx->argumentCount; ++index, ++n) {
             Value r3 = ctx->argument(index);
             String *name = Value::fromNumber(n).toString(ctx);
-            self.objectValue->put(name, r3);
+            self.objectValue->setProperty(ctx, name, r3);
         }
         Value r = Value::fromNumber(n);
-        self.objectValue->put(id_length, r);
+        self.objectValue->setProperty(ctx, ctx->engine->id_length, r);
         ctx->result = r;
     }
 }
@@ -1295,7 +1290,7 @@ void ArrayPrototype::method_reverse(Context *ctx)
             instance->value.assign(hi, tmp);
         }
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.reverse"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.reverse"));
     }
 }
 
@@ -1305,7 +1300,7 @@ void ArrayPrototype::method_shift(Context *ctx)
     if (ArrayObject *instance = self.asArrayObject()) {
         ctx->result = instance->value.takeFirst();
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.reverse"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.reverse"));
     }
 }
 
@@ -1317,9 +1312,8 @@ void ArrayPrototype::method_slice(Context *ctx)
     Value start = ctx->argument(0);
     Value end = ctx->argument(1);
     Value self = ctx->thisObject;
-    String *id_length = ctx->engine->identifier(QLatin1String("length"));
-    Value *l = self.objectValue->getProperty(id_length);
-    double r2 = l ? l->toNumber(ctx) : 0;
+    Value l = self.property(ctx, ctx->engine->id_length);
+    double r2 = !l.isUndefined() ? l.toNumber(ctx) : 0;
     quint32 r3 = Value::toUInt32(r2);
     qint32 r4 = qint32(start.toInteger(ctx));
     quint32 r5 = r4 < 0 ? qMax(quint32(r3 + r4), quint32(0)) : qMin(quint32(r4), r3);
@@ -1329,8 +1323,9 @@ void ArrayPrototype::method_slice(Context *ctx)
     quint32 n = 0;
     for (; k < r8; ++k) {
         String *r11 = Value::fromNumber(k).toString(ctx);
-        if (Value *v = self.objectValue->getProperty(r11))
-            result.assign(n++, *v);
+        Value v = self.property(ctx, r11);
+        if (! v.isUndefined())
+            result.assign(n++, v);
     }
     ctx->result = Value::fromObject(ctx->engine->newArrayObject(result));
 }
@@ -1343,7 +1338,7 @@ void ArrayPrototype::method_sort(Context *ctx)
         instance->value.sort(ctx, comparefn);
         ctx->result = ctx->thisObject;
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.sort"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.sort"));
     }
 }
 
@@ -1365,23 +1360,23 @@ void ArrayPrototype::method_splice(Context *ctx)
         instance->value.splice(start, deleteCount, items, otherInstance->value);
         ctx->result = a;
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.splice"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.splice"));
     }
 }
 
 void ArrayPrototype::method_unshift(Context *ctx)
 {
-    ctx->throwUnimplemented(QLatin1String("Array.prototype.indexOf"));
+    ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
 }
 
 void ArrayPrototype::method_indexOf(Context *ctx)
 {
-    ctx->throwUnimplemented(QLatin1String("Array.prototype.indexOf"));
+    ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
 }
 
 void ArrayPrototype::method_lastIndexOf(Context *ctx)
 {
-    ctx->throwUnimplemented(QLatin1String("Array.prototype.indexOf"));
+    ctx->throwUnimplemented(QStringLiteral("Array.prototype.indexOf"));
 }
 
 void ArrayPrototype::method_every(Context *ctx)
@@ -1410,7 +1405,7 @@ void ArrayPrototype::method_every(Context *ctx)
             ctx->throwTypeError();
         }
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.every"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.every"));
     }
 }
 
@@ -1440,7 +1435,7 @@ void ArrayPrototype::method_some(Context *ctx)
             ctx->throwTypeError();
         }
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.some"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.some"));
     }
 }
 
@@ -1466,7 +1461,7 @@ void ArrayPrototype::method_forEach(Context *ctx)
             }
         }
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.forEach"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.forEach"));
     }
 }
 
@@ -1496,7 +1491,7 @@ void ArrayPrototype::method_map(Context *ctx)
             ctx->result = Value::fromObject(a);
         }
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.map"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.map"));
     }
 }
 
@@ -1529,7 +1524,7 @@ void ArrayPrototype::method_filter(Context *ctx)
             ctx->result = Value::fromObject(a);
         }
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.filter"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.filter"));
     }
 }
 
@@ -1561,7 +1556,7 @@ void ArrayPrototype::method_reduce(Context *ctx)
         }
         ctx->result = acc;
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.reduce"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.reduce"));
     }
 }
 
@@ -1593,7 +1588,7 @@ void ArrayPrototype::method_reduceRight(Context *ctx)
         }
         ctx->result = acc;
     } else {
-        ctx->throwUnimplemented(QLatin1String("Array.prototype.reduceRight"));
+        ctx->throwUnimplemented(QStringLiteral("Array.prototype.reduceRight"));
     }
 }
 
@@ -1607,7 +1602,7 @@ Value FunctionCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newFunctionCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newFunctionPrototype(ctx, ctor)));
+    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newFunctionPrototype(ctx, ctor)));
     return Value::fromObject(ctor);
 }
 
@@ -1618,28 +1613,29 @@ FunctionCtor::FunctionCtor(Context *scope)
 
 void FunctionCtor::construct(Context *ctx)
 {
-    ctx->throwUnimplemented(QLatin1String("Function.prototype.constructor"));
+    ctx->throwUnimplemented(QStringLiteral("Function.prototype.constructor"));
 }
 
 void FunctionCtor::call(Context *ctx)
 {
-    ctx->throwUnimplemented(QLatin1String("Function"));
+    ctx->throwUnimplemented(QStringLiteral("Function"));
 }
 
 FunctionPrototype::FunctionPrototype(Context *ctx, FunctionObject *ctor)
     : FunctionObject(ctx)
 {
-    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
-    setProperty(ctx, QLatin1String("toString"), method_toString, 0);
-    setProperty(ctx, QLatin1String("apply"), method_apply, 0);
-    setProperty(ctx, QLatin1String("call"), method_call, 0);
-    setProperty(ctx, QLatin1String("bind"), method_bind, 0);
+    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+    setProperty(ctx, QStringLiteral("apply"), method_apply, 0);
+    setProperty(ctx, QStringLiteral("call"), method_call, 0);
+    setProperty(ctx, QStringLiteral("bind"), method_bind, 0);
 }
 
 void FunctionPrototype::method_toString(Context *ctx)
 {
     if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        ctx->result = Value::fromString(ctx, QLatin1String("function() { [code] }"));
+        Q_UNUSED(fun);
+        ctx->result = Value::fromString(ctx, QStringLiteral("function() { [code] }"));
     } else {
         ctx->throwTypeError();
     }
@@ -1648,7 +1644,8 @@ void FunctionPrototype::method_toString(Context *ctx)
 void FunctionPrototype::method_apply(Context *ctx)
 {
     if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        ctx->throwUnimplemented(QLatin1String("Function.prototype.apply"));
+        Q_UNUSED(fun);
+        ctx->throwUnimplemented(QStringLiteral("Function.prototype.apply"));
     } else {
         ctx->throwTypeError();
     }
@@ -1657,6 +1654,7 @@ void FunctionPrototype::method_apply(Context *ctx)
 void FunctionPrototype::method_call(Context *ctx)
 {
     if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
+        Q_UNUSED(fun);
         Value thisArg = ctx->argument(0);
         QVector<Value> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
         if (ctx->argumentCount)
@@ -1670,7 +1668,8 @@ void FunctionPrototype::method_call(Context *ctx)
 void FunctionPrototype::method_bind(Context *ctx)
 {
     if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        ctx->throwUnimplemented(QLatin1String("Function.prototype.bind"));
+        Q_UNUSED(fun);
+        ctx->throwUnimplemented(QStringLiteral("Function.prototype.bind"));
     } else {
         ctx->throwTypeError();
     }
@@ -1683,7 +1682,7 @@ Value DateCtor::create(ExecutionEngine *engine)
 {
     Context *ctx = engine->rootContext;
     FunctionObject *ctor = ctx->engine->newDateCtor(ctx);
-    ctor->setProperty(ctx, QLatin1String("prototype"), Value::fromObject(ctx->engine->newDatePrototype(ctx, ctor)));
+    ctor->setProperty(ctx, QStringLiteral("prototype"), Value::fromObject(ctx->engine->newDatePrototype(ctx, ctor)));
     return Value::fromObject(ctor);
 }
 
@@ -1741,54 +1740,54 @@ DatePrototype::DatePrototype(Context *ctx, FunctionObject *ctor)
 {
     LocalTZA = getLocalTZA();
 
-    ctor->setProperty(ctx, QLatin1String("parse"), method_parse, 1);
-    ctor->setProperty(ctx, QLatin1String("UTC"), method_UTC, 7);
+    ctor->setProperty(ctx, QStringLiteral("parse"), method_parse, 1);
+    ctor->setProperty(ctx, QStringLiteral("UTC"), method_UTC, 7);
 
-    setProperty(ctx, QLatin1String("constructor"), Value::fromObject(ctor));
-    setProperty(ctx, QLatin1String("toString"), method_toString, 0);
-    setProperty(ctx, QLatin1String("toDateString"), method_toDateString, 0);
-    setProperty(ctx, QLatin1String("toTimeString"), method_toTimeString, 0);
-    setProperty(ctx, QLatin1String("toLocaleString"), method_toLocaleString, 0);
-    setProperty(ctx, QLatin1String("toLocaleDateString"), method_toLocaleDateString, 0);
-    setProperty(ctx, QLatin1String("toLocaleTimeString"), method_toLocaleTimeString, 0);
-    setProperty(ctx, QLatin1String("valueOf"), method_valueOf, 0);
-    setProperty(ctx, QLatin1String("getTime"), method_getTime, 0);
-    setProperty(ctx, QLatin1String("getYear"), method_getYear, 0);
-    setProperty(ctx, QLatin1String("getFullYear"), method_getFullYear, 0);
-    setProperty(ctx, QLatin1String("getUTCFullYear"), method_getUTCFullYear, 0);
-    setProperty(ctx, QLatin1String("getMonth"), method_getMonth, 0);
-    setProperty(ctx, QLatin1String("getUTCMonth"), method_getUTCMonth, 0);
-    setProperty(ctx, QLatin1String("getDate"), method_getDate, 0);
-    setProperty(ctx, QLatin1String("getUTCDate"), method_getUTCDate, 0);
-    setProperty(ctx, QLatin1String("getDay"), method_getDay, 0);
-    setProperty(ctx, QLatin1String("getUTCDay"), method_getUTCDay, 0);
-    setProperty(ctx, QLatin1String("getHours"), method_getHours, 0);
-    setProperty(ctx, QLatin1String("getUTCHours"), method_getUTCHours, 0);
-    setProperty(ctx, QLatin1String("getMinutes"), method_getMinutes, 0);
-    setProperty(ctx, QLatin1String("getUTCMinutes"), method_getUTCMinutes, 0);
-    setProperty(ctx, QLatin1String("getSeconds"), method_getSeconds, 0);
-    setProperty(ctx, QLatin1String("getUTCSeconds"), method_getUTCSeconds, 0);
-    setProperty(ctx, QLatin1String("getMilliseconds"), method_getMilliseconds, 0);
-    setProperty(ctx, QLatin1String("getUTCMilliseconds"), method_getUTCMilliseconds, 0);
-    setProperty(ctx, QLatin1String("getTimezoneOffset"), method_getTimezoneOffset, 0);
-    setProperty(ctx, QLatin1String("setTime"), method_setTime, 1);
-    setProperty(ctx, QLatin1String("setMilliseconds"), method_setMilliseconds, 1);
-    setProperty(ctx, QLatin1String("setUTCMilliseconds"), method_setUTCMilliseconds, 1);
-    setProperty(ctx, QLatin1String("setSeconds"), method_setSeconds, 2);
-    setProperty(ctx, QLatin1String("setUTCSeconds"), method_setUTCSeconds, 2);
-    setProperty(ctx, QLatin1String("setMinutes"), method_setMinutes, 3);
-    setProperty(ctx, QLatin1String("setUTCMinutes"), method_setUTCMinutes, 3);
-    setProperty(ctx, QLatin1String("setHours"), method_setHours, 4);
-    setProperty(ctx, QLatin1String("setUTCHours"), method_setUTCHours, 4);
-    setProperty(ctx, QLatin1String("setDate"), method_setDate, 1);
-    setProperty(ctx, QLatin1String("setUTCDate"), method_setUTCDate, 1);
-    setProperty(ctx, QLatin1String("setMonth"), method_setMonth, 2);
-    setProperty(ctx, QLatin1String("setUTCMonth"), method_setUTCMonth, 2);
-    setProperty(ctx, QLatin1String("setYear"), method_setYear, 1);
-    setProperty(ctx, QLatin1String("setFullYear"), method_setFullYear, 3);
-    setProperty(ctx, QLatin1String("setUTCFullYear"), method_setUTCFullYear, 3);
-    setProperty(ctx, QLatin1String("toUTCString"), method_toUTCString, 0);
-    setProperty(ctx, QLatin1String("toGMTString"), method_toUTCString, 0);
+    setProperty(ctx, QStringLiteral("constructor"), Value::fromObject(ctor));
+    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+    setProperty(ctx, QStringLiteral("toDateString"), method_toDateString, 0);
+    setProperty(ctx, QStringLiteral("toTimeString"), method_toTimeString, 0);
+    setProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    setProperty(ctx, QStringLiteral("toLocaleDateString"), method_toLocaleDateString, 0);
+    setProperty(ctx, QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString, 0);
+    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
+    setProperty(ctx, QStringLiteral("getTime"), method_getTime, 0);
+    setProperty(ctx, QStringLiteral("getYear"), method_getYear, 0);
+    setProperty(ctx, QStringLiteral("getFullYear"), method_getFullYear, 0);
+    setProperty(ctx, QStringLiteral("getUTCFullYear"), method_getUTCFullYear, 0);
+    setProperty(ctx, QStringLiteral("getMonth"), method_getMonth, 0);
+    setProperty(ctx, QStringLiteral("getUTCMonth"), method_getUTCMonth, 0);
+    setProperty(ctx, QStringLiteral("getDate"), method_getDate, 0);
+    setProperty(ctx, QStringLiteral("getUTCDate"), method_getUTCDate, 0);
+    setProperty(ctx, QStringLiteral("getDay"), method_getDay, 0);
+    setProperty(ctx, QStringLiteral("getUTCDay"), method_getUTCDay, 0);
+    setProperty(ctx, QStringLiteral("getHours"), method_getHours, 0);
+    setProperty(ctx, QStringLiteral("getUTCHours"), method_getUTCHours, 0);
+    setProperty(ctx, QStringLiteral("getMinutes"), method_getMinutes, 0);
+    setProperty(ctx, QStringLiteral("getUTCMinutes"), method_getUTCMinutes, 0);
+    setProperty(ctx, QStringLiteral("getSeconds"), method_getSeconds, 0);
+    setProperty(ctx, QStringLiteral("getUTCSeconds"), method_getUTCSeconds, 0);
+    setProperty(ctx, QStringLiteral("getMilliseconds"), method_getMilliseconds, 0);
+    setProperty(ctx, QStringLiteral("getUTCMilliseconds"), method_getUTCMilliseconds, 0);
+    setProperty(ctx, QStringLiteral("getTimezoneOffset"), method_getTimezoneOffset, 0);
+    setProperty(ctx, QStringLiteral("setTime"), method_setTime, 1);
+    setProperty(ctx, QStringLiteral("setMilliseconds"), method_setMilliseconds, 1);
+    setProperty(ctx, QStringLiteral("setUTCMilliseconds"), method_setUTCMilliseconds, 1);
+    setProperty(ctx, QStringLiteral("setSeconds"), method_setSeconds, 2);
+    setProperty(ctx, QStringLiteral("setUTCSeconds"), method_setUTCSeconds, 2);
+    setProperty(ctx, QStringLiteral("setMinutes"), method_setMinutes, 3);
+    setProperty(ctx, QStringLiteral("setUTCMinutes"), method_setUTCMinutes, 3);
+    setProperty(ctx, QStringLiteral("setHours"), method_setHours, 4);
+    setProperty(ctx, QStringLiteral("setUTCHours"), method_setUTCHours, 4);
+    setProperty(ctx, QStringLiteral("setDate"), method_setDate, 1);
+    setProperty(ctx, QStringLiteral("setUTCDate"), method_setUTCDate, 1);
+    setProperty(ctx, QStringLiteral("setMonth"), method_setMonth, 2);
+    setProperty(ctx, QStringLiteral("setUTCMonth"), method_setUTCMonth, 2);
+    setProperty(ctx, QStringLiteral("setYear"), method_setYear, 1);
+    setProperty(ctx, QStringLiteral("setFullYear"), method_setFullYear, 3);
+    setProperty(ctx, QStringLiteral("setUTCFullYear"), method_setUTCFullYear, 3);
+    setProperty(ctx, QStringLiteral("toUTCString"), method_toUTCString, 0);
+    setProperty(ctx, QStringLiteral("toGMTString"), method_toUTCString, 0);
 }
 
 double DatePrototype::getThisDate(Context *ctx)
@@ -1803,14 +1802,17 @@ double DatePrototype::getThisDate(Context *ctx)
 
 void DatePrototype::method_MakeTime(Context *ctx)
 {
+    ctx->throwUnimplemented(QStringLiteral("Data.MakeTime"));
 }
 
 void DatePrototype::method_MakeDate(Context *ctx)
 {
+    ctx->throwUnimplemented(QStringLiteral("Data.MakeDate"));
 }
 
 void DatePrototype::method_TimeClip(Context *ctx)
 {
+    ctx->throwUnimplemented(QStringLiteral("Data.TimeClip"));
 }
 
 void DatePrototype::method_parse(Context *ctx)
@@ -2276,33 +2278,33 @@ void DatePrototype::method_toUTCString(Context *ctx)
 //
 MathObject::MathObject(Context *ctx)
 {
-    setProperty(ctx, QLatin1String("E"), Value::fromNumber(::exp(1.0)));
-    setProperty(ctx, QLatin1String("LN2"), Value::fromNumber(::log(2.0)));
-    setProperty(ctx, QLatin1String("LN10"), Value::fromNumber(::log(10.0)));
-    setProperty(ctx, QLatin1String("LOG2E"), Value::fromNumber(1.0/::log(2.0)));
-    setProperty(ctx, QLatin1String("LOG10E"), Value::fromNumber(1.0/::log(10.0)));
-    setProperty(ctx, QLatin1String("PI"), Value::fromNumber(qt_PI));
-    setProperty(ctx, QLatin1String("SQRT1_2"), Value::fromNumber(::sqrt(0.5)));
-    setProperty(ctx, QLatin1String("SQRT2"), Value::fromNumber(::sqrt(2.0)));
+    setProperty(ctx, QStringLiteral("E"), Value::fromNumber(::exp(1.0)));
+    setProperty(ctx, QStringLiteral("LN2"), Value::fromNumber(::log(2.0)));
+    setProperty(ctx, QStringLiteral("LN10"), Value::fromNumber(::log(10.0)));
+    setProperty(ctx, QStringLiteral("LOG2E"), Value::fromNumber(1.0/::log(2.0)));
+    setProperty(ctx, QStringLiteral("LOG10E"), Value::fromNumber(1.0/::log(10.0)));
+    setProperty(ctx, QStringLiteral("PI"), Value::fromNumber(qt_PI));
+    setProperty(ctx, QStringLiteral("SQRT1_2"), Value::fromNumber(::sqrt(0.5)));
+    setProperty(ctx, QStringLiteral("SQRT2"), Value::fromNumber(::sqrt(2.0)));
 
-    setProperty(ctx, QLatin1String("abs"), method_abs, 1);
-    setProperty(ctx, QLatin1String("acos"), method_acos, 1);
-    setProperty(ctx, QLatin1String("asin"), method_asin, 0);
-    setProperty(ctx, QLatin1String("atan"), method_atan, 1);
-    setProperty(ctx, QLatin1String("atan2"), method_atan2, 2);
-    setProperty(ctx, QLatin1String("ceil"), method_ceil, 1);
-    setProperty(ctx, QLatin1String("cos"), method_cos, 1);
-    setProperty(ctx, QLatin1String("exp"), method_exp, 1);
-    setProperty(ctx, QLatin1String("floor"), method_floor, 1);
-    setProperty(ctx, QLatin1String("log"), method_log, 1);
-    setProperty(ctx, QLatin1String("max"), method_max, 2);
-    setProperty(ctx, QLatin1String("min"), method_min, 2);
-    setProperty(ctx, QLatin1String("pow"), method_pow, 2);
-    setProperty(ctx, QLatin1String("random"), method_random, 0);
-    setProperty(ctx, QLatin1String("round"), method_round, 1);
-    setProperty(ctx, QLatin1String("sin"), method_sin, 1);
-    setProperty(ctx, QLatin1String("sqrt"), method_sqrt, 1);
-    setProperty(ctx, QLatin1String("tan"), method_tan, 1);
+    setProperty(ctx, QStringLiteral("abs"), method_abs, 1);
+    setProperty(ctx, QStringLiteral("acos"), method_acos, 1);
+    setProperty(ctx, QStringLiteral("asin"), method_asin, 0);
+    setProperty(ctx, QStringLiteral("atan"), method_atan, 1);
+    setProperty(ctx, QStringLiteral("atan2"), method_atan2, 2);
+    setProperty(ctx, QStringLiteral("ceil"), method_ceil, 1);
+    setProperty(ctx, QStringLiteral("cos"), method_cos, 1);
+    setProperty(ctx, QStringLiteral("exp"), method_exp, 1);
+    setProperty(ctx, QStringLiteral("floor"), method_floor, 1);
+    setProperty(ctx, QStringLiteral("log"), method_log, 1);
+    setProperty(ctx, QStringLiteral("max"), method_max, 2);
+    setProperty(ctx, QStringLiteral("min"), method_min, 2);
+    setProperty(ctx, QStringLiteral("pow"), method_pow, 2);
+    setProperty(ctx, QStringLiteral("random"), method_random, 0);
+    setProperty(ctx, QStringLiteral("round"), method_round, 1);
+    setProperty(ctx, QStringLiteral("sin"), method_sin, 1);
+    setProperty(ctx, QStringLiteral("sqrt"), method_sqrt, 1);
+    setProperty(ctx, QStringLiteral("tan"), method_tan, 1);
 }
 
 /* copies the sign from y to x and returns the result */

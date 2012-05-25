@@ -209,7 +209,7 @@ protected:
     {
         if (! _env->hasDirectEval) {
             if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
-                if (id->name == QLatin1String("eval")) {
+                if (id->name == QStringLiteral("eval")) {
                     _env->hasDirectEval = true;
                 }
             }
@@ -287,7 +287,7 @@ IR::Function *Codegen::operator()(Program *node, IR::Module *module)
     ScanFunctions scan(this);
     scan(node);
 
-    IR::Function *globalCode = defineFunction(QLatin1String("%entry"), node, 0, node->elements);
+    IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0, node->elements);
 
     foreach (IR::Function *function, _module->functions) {
         linearize(function);
@@ -803,7 +803,7 @@ bool Codegen::visit(Expression *ast)
 bool Codegen::visit(ArrayLiteral *ast)
 {
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->NEW(_block->NAME(QLatin1String("Array"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
+    move(_block->TEMP(t), _block->NEW(_block->NAME(QStringLiteral("Array"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
     int index = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
         for (Elision *elision = it->elision; elision; elision = elision->next)
@@ -1138,7 +1138,7 @@ bool Codegen::visit(NumericLiteral *ast)
 bool Codegen::visit(ObjectLiteral *ast)
 {
     const unsigned t = _block->newTemp();
-    move(_block->TEMP(t), _block->NEW(_block->NAME(QLatin1String("Object"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
+    move(_block->TEMP(t), _block->NEW(_block->NAME(QStringLiteral("Object"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn)));
     for (PropertyNameAndValueList *it = ast->properties; it; it = it->next) {
         QString name = propertyName(it->name);
         Result value = expression(it->value);
@@ -1215,7 +1215,7 @@ bool Codegen::visit(StringLiteral *ast)
 
 bool Codegen::visit(ThisExpression *ast)
 {
-    _expr.code = _block->NAME(QLatin1String("this"), ast->thisToken.startLine, ast->thisToken.startColumn);
+    _expr.code = _block->NAME(QStringLiteral("this"), ast->thisToken.startLine, ast->thisToken.startColumn);
     return false;
 }
 

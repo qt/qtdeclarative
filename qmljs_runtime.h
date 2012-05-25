@@ -114,7 +114,6 @@ void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Fun
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name);
 void __qmljs_get_activation_property(Context *ctx, Value *result, String *name);
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other);
-void __qmljs_copy_property(Context *ctx, Value *target, String *name, Value *source, String *other);
 
 void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index);
 
@@ -271,6 +270,9 @@ struct Value {
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
     ArgumentsObject *asArgumentsObject() const;
+
+    Value property(Context *ctx, String *name) const;
+    Value *getPropertyDescriptor(Context *ctx, String *name) const;
 };
 
 extern "C" {

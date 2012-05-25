@@ -90,8 +90,8 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
     VM::Object *globalObject = vm->globalObject.objectValue;
     VM::Context *ctx = vm->rootContext;
 
-    globalObject->put(vm->identifier(QLatin1String("print")),
-                      VM::Value::fromObject(new builtins::Print(ctx)));
+    globalObject->setProperty(ctx, vm->identifier(QStringLiteral("print")),
+                              VM::Value::fromObject(new builtins::Print(ctx)));
 
     ctx->varCount = globalCode->locals.size();
     if (ctx->varCount) {

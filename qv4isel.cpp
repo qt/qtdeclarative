@@ -506,7 +506,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             if (IR::Name *n = s->source->asName()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 loadTempAddress(AMD64_RSI, t);
-                if (*n->id == QLatin1String("this")) { // ### `this' should be a builtin.
+                if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
                     amd64_call_code(_codePtr, __qmljs_get_thisObject);
                 } else {
                     String *propertyName = identifier(*n->id);
