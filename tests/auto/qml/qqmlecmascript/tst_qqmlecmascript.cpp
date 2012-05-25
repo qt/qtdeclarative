@@ -4228,6 +4228,7 @@ void tst_qqmlecmascript::propertyVar_data()
     QTest::newRow("declarative binding assignment") << testFileUrl("propertyVar.13.qml");
     QTest::newRow("imperative binding assignment") << testFileUrl("propertyVar.14.qml");
     QTest::newRow("stored binding assignment") << testFileUrl("propertyVar.15.qml");
+    QTest::newRow("function expression binding assignment") << testFileUrl("propertyVar.16.qml");
 }
 
 void tst_qqmlecmascript::propertyVar()
@@ -4263,6 +4264,7 @@ void tst_qqmlecmascript::propertyQJSValue_data()
     QTest::newRow("declarative binding assignment") << testFileUrl("propertyQJSValue.13.qml");
     QTest::newRow("imperative binding assignment") << testFileUrl("propertyQJSValue.14.qml");
     QTest::newRow("stored binding assignment") << testFileUrl("propertyQJSValue.15.qml");
+    QTest::newRow("javascript function binding") << testFileUrl("propertyQJSValue.16.qml");
 
     QTest::newRow("reset property") << testFileUrl("propertyQJSValue.reset.qml");
     QTest::newRow("reset property in binding") << testFileUrl("propertyQJSValue.bindingreset.qml");

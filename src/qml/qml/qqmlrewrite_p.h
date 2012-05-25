@@ -120,6 +120,9 @@ protected:
 
     virtual bool visit(AST::CaseBlock *ast);
 
+    virtual bool visit(AST::FunctionExpression *ast);
+    virtual bool visit(AST::FunctionDeclaration *ast);
+
 private:
     int _inLoop;
 };

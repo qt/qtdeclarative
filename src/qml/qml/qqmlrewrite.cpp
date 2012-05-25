@@ -313,6 +313,16 @@ void RewriteBinding::endVisit(AST::LocalForEachStatement *)
     --_inLoop;
 }
 
+bool RewriteBinding::visit(AST::FunctionExpression *)
+{
+    return false;
+}
+
+bool RewriteBinding::visit(AST::FunctionDeclaration *)
+{
+    return false;
+}
+
 bool RewriteBinding::visit(AST::CaseBlock *ast)
 {
     // Process the initial sequence of the case clauses.
