@@ -200,7 +200,9 @@ static QHashedString moduletoUtf8(const char *module)
     static const char *lastModule = 0;
     static QHashedString lastModuleStr;
 
-    if (lastModule != module) {
+    // Separate plugins may have different strings at the same address
+    QHashedCStringRef currentModule(module, ::strlen(module));
+    if ((lastModule != module) || (lastModuleStr.hash() != currentModule.hash())) {
         lastModuleStr = QString::fromUtf8(module);
         lastModuleStr.hash();
         lastModule = module;
