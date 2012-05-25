@@ -2101,6 +2101,8 @@ void tst_qquicktextedit::cursorDelegate()
     QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
 
+    textEditObject->setReadOnly(false);
+
     // Delegate moved when text is entered
     textEditObject->setText(QString());
     for (int i = 0; i < 20; ++i) {
@@ -2114,7 +2116,22 @@ void tst_qquicktextedit::cursorDelegate()
     for (int i = 0; i < 20; ++i) {
         QInputMethodEvent event;
         event.setCommitString("a");
-        QGuiApplication::sendEvent(&view, &event);
+        QGuiApplication::sendEvent(textEditObject, &event);
+        QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
+    }
+    // Delegate moved when text is removed by im.
+    for (int i = 19; i > 1; --i) {
+        QInputMethodEvent event;
+        event.setCommitString(QString(), -1, 1);
+        QGuiApplication::sendEvent(textEditObject, &event);
+        QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
+    }
+    {   // Delegate moved the text is changed in place by im.
+        QInputMethodEvent event;
+        event.setCommitString("i", -1, 1);
+        QGuiApplication::sendEvent(textEditObject, &event);
         QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
         QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
     }

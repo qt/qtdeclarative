@@ -2547,6 +2547,8 @@ void tst_qquicktextinput::cursorDelegate()
     QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
 
+    textInputObject->setReadOnly(false);
+
     // Delegate moved when text is entered
     textInputObject->setText(QString());
     for (int i = 0; i < 20; ++i) {
@@ -2559,8 +2561,23 @@ void tst_qquicktextinput::cursorDelegate()
     textInputObject->setText(QString());
     for (int i = 0; i < 20; ++i) {
         QInputMethodEvent event;
-        event.setCommitString("a");
-        QGuiApplication::sendEvent(&view, &event);
+        event.setCommitString("w");
+        QGuiApplication::sendEvent(textInputObject, &event);
+        QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+    }
+    // Delegate moved when text is removed by im.
+    for (int i = 19; i > 1; --i) {
+        QInputMethodEvent event;
+        event.setCommitString(QString(), -1, 1);
+        QGuiApplication::sendEvent(textInputObject, &event);
+        QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
+        QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
+    }
+    {   // Delegate moved the text is changed in place by im.
+        QInputMethodEvent event;
+        event.setCommitString("i", -1, 1);
+        QGuiApplication::sendEvent(textInputObject, &event);
         QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
         QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
     }

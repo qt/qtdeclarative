@@ -6,6 +6,7 @@ Rectangle { width: 300; height: 300; color: "white"
         text: "Hello world!"
         id: textEditObject;
         objectName: "textEditObject"
+        width: 300; height: 300
         wrapMode: TextEdit.WordWrap
         cursorDelegate: Cursor {
             id:cursorInstance;
