@@ -194,12 +194,10 @@ QQuickVisualDataModel::~QQuickVisualDataModel()
     Q_D(QQuickVisualDataModel);
 
     foreach (QQuickVisualDataModelItem *cacheItem, d->m_cache) {
-        if (QObject *object = cacheItem->object()) {
-            // Clear the guard before deleting the object so it doesn't decrement scriptRef and
-            // potentially delete the cacheItem itself.
-            cacheItem->setObject(0);
-            delete object;
+        if (cacheItem->object) {
+            delete cacheItem->object;
 
+            cacheItem->object = 0;
             cacheItem->contextData->destroy();
             cacheItem->contextData = 0;
             cacheItem->scriptRef -= 1;
@@ -517,8 +515,8 @@ void QQuickVisualDataModel::cancel(int index)
             d->releaseIncubator(cacheItem->incubationTask);
             cacheItem->incubationTask = 0;
         }
-        if (cacheItem->object() && !cacheItem->isObjectReferenced()) {
-            QObject *object = cacheItem->object();
+        if (cacheItem->object && !cacheItem->isObjectReferenced()) {
+            QObject *object = cacheItem->object;
             cacheItem->destroyObject();
             if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(object))
                 d->emitDestroyingPackage(package);
@@ -784,9 +782,9 @@ void QQuickVisualDataModelPrivate::incubatorStatusChanged(QVDMIncubationTask *in
     if (status == QQmlIncubator::Ready) {
         incubationTask->incubating = 0;
         releaseIncubator(incubationTask);
-        if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object()))
+        if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object))
             emitCreatedPackage(cacheItem, package);
-        else if (QQuickItem *item = qobject_cast<QQuickItem *>(cacheItem->object()))
+        else if (QQuickItem *item = qobject_cast<QQuickItem *>(cacheItem->object))
             emitCreatedItem(cacheItem, item);
     } else if (status == QQmlIncubator::Error) {
         cacheItem->scriptRef -= 1;
@@ -814,11 +812,11 @@ void QVDMIncubationTask::setInitialState(QObject *o)
 void QQuickVisualDataModelPrivate::setInitialState(QVDMIncubationTask *incubationTask, QObject *o)
 {
     QQuickVisualDataModelItem *cacheItem = incubationTask->incubating;
-    cacheItem->setObject(o);
+    cacheItem->object = o;
 
-    if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object()))
+    if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(cacheItem->object))
         emitInitPackage(cacheItem, package);
-    else if (QQuickItem *item = qmlobject_cast<QQuickItem *>(cacheItem->object()))
+    else if (QQuickItem *item = qmlobject_cast<QQuickItem *>(cacheItem->object))
         emitInitItem(cacheItem, item);
 }
 
@@ -854,7 +852,7 @@ QObject *QQuickVisualDataModelPrivate::object(Compositor::Group group, int index
             // previously requested async - now needed immediately
             cacheItem->incubationTask->forceCompletion();
         }
-    } else if (!cacheItem->object()) {
+    } else if (!cacheItem->object) {
         QQmlContext *creationContext = m_delegate->creationContext();
 
         cacheItem->scriptRef += 1;
@@ -886,9 +884,9 @@ QObject *QQuickVisualDataModelPrivate::object(Compositor::Group group, int index
 
     if (index == m_compositor.count(group) - 1 && m_adaptorModel.canFetchMore())
         QCoreApplication::postEvent(q, new QEvent(QEvent::UpdateRequest));
-    if (cacheItem->object() && reference)
+    if (cacheItem->object && reference)
         cacheItem->referenceObject();
-    return cacheItem->object();
+    return cacheItem->object;
 }
 
 /*
@@ -1157,14 +1155,13 @@ void QQuickVisualDataModelPrivate::itemsRemoved(
         } else {
             for (; cacheIndex < remove.cacheIndex + remove.count - removedCache; ++cacheIndex) {
                 QQuickVisualDataModelItem *cacheItem = m_cache.at(cacheIndex);
-                if (remove.inGroup(Compositor::Persisted) && cacheItem->objectRef == 0 && cacheItem->object()) {
-                    QObject *object = cacheItem->object();
+                if (remove.inGroup(Compositor::Persisted) && cacheItem->objectRef == 0 && cacheItem->object) {
+                    QObject *object = cacheItem->object;
                     cacheItem->destroyObject();
                     if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(object))
                         emitDestroyingPackage(package);
                     else if (QQuickItem *item = qmlobject_cast<QQuickItem *>(object))
                         emitDestroyingItem(item);
-                    cacheItem->setObject(0);
                     cacheItem->scriptRef -= 1;
                 }
                 if (!cacheItem->isReferenced()) {
@@ -1321,7 +1318,7 @@ void QQuickVisualDataModelPrivate::emitChanges()
         QQuickVisualDataGroupPrivate::get(m_groups[i])->emitModelUpdated(reset);
 
     foreach (QQuickVisualDataModelItem *cacheItem, m_cache) {
-        if (cacheItem->object() && cacheItem->attached)
+        if (cacheItem->attached)
             cacheItem->attached->emitChanges();
     }
 }
@@ -1406,7 +1403,7 @@ void QQuickVisualDataModel::_q_layoutChanged()
 QQuickVisualDataModelAttached *QQuickVisualDataModel::qmlAttachedProperties(QObject *obj)
 {
     if (QQuickVisualDataModelItem *cacheItem = QQuickVisualDataModelItem::dataForObject(obj)) {
-        if (cacheItem->object() == obj) { // Don't create attached item for child objects.
+        if (cacheItem->object == obj) { // Don't create attached item for child objects.
             cacheItem->attached = new QQuickVisualDataModelAttached(cacheItem, obj);
             return cacheItem->attached;
         }
@@ -1678,6 +1675,7 @@ QQuickVisualDataModelItem::QQuickVisualDataModelItem(
     : QV8ObjectResource(metaType->v8Engine)
     , metaType(metaType)
     , contextData(0)
+    , object(0)
     , attached(0)
     , incubationTask(0)
     , objectRef(0)
@@ -1692,7 +1690,7 @@ QQuickVisualDataModelItem::~QQuickVisualDataModelItem()
 {
     Q_ASSERT(scriptRef == 0);
     Q_ASSERT(objectRef == 0);
-    Q_ASSERT(!object());
+    Q_ASSERT(!object);
     Q_ASSERT(indexHandle.IsEmpty());
     Q_ASSERT(modelHandle.IsEmpty());
 
@@ -1749,18 +1747,15 @@ void QQuickVisualDataModelItem::incubateObject(
 
 void QQuickVisualDataModelItem::destroyObject()
 {
-    QObject * const obj = object();
-    setObject(0);
-
-    Q_ASSERT(obj);
+    Q_ASSERT(object);
     Q_ASSERT(contextData);
 
-    QObjectPrivate *p = QObjectPrivate::get(obj);
+    QObjectPrivate *p = QObjectPrivate::get(object);
     Q_ASSERT(p->declarativeData);
     QQmlData *data = static_cast<QQmlData*>(p->declarativeData);
     if (data->ownContext && data->context)
         data->context->clearContext();
-    obj->deleteLater();
+    object->deleteLater();
 
     if (attached) {
         attached->m_cacheItem = 0;
@@ -1769,6 +1764,7 @@ void QQuickVisualDataModelItem::destroyObject()
 
     contextData->destroy();
     contextData = 0;
+    object = 0;
 }
 
 QQuickVisualDataModelItem *QQuickVisualDataModelItem::dataForObject(QObject *object)
@@ -1784,25 +1780,6 @@ QQuickVisualDataModelItem *QQuickVisualDataModelItem::dataForObject(QObject *obj
         }
     }
     return 0;
-}
-
-void QQuickVisualDataModelItem::objectDestroyed(QObject *)
-{
-    const bool contextValid = contextData->isValid();
-    contextData->destroy();
-    contextData = 0;
-    attached = 0;
-    objectRef = 0;
-
-    if (contextValid) {
-        Dispose();
-    } else {
-        // The parent context was invalidated, meaning the visual data model is about to be
-        // destroyed.  So we'll just decrement the script ref here and let the vdm destructor
-        // destroy the object if necessary, rather than Dispose of the object and unnecessarily
-        // remove each item from the soon to be destroyed cache list individually.
-        scriptRef -= 1;
-    }
 }
 
 //---------------------------------------------------------------------------
@@ -2841,7 +2818,6 @@ QQuickVisualModel::ReleaseFlags QQuickVisualPartsModel::release(QQuickItem *item
     QHash<QObject *, QQuickPackage *>::iterator it = m_packaged.find(item);
     if (it != m_packaged.end()) {
         QQuickPackage *package = *it;
-        QQml_setParent_noEvent(item, package);
         QQuickVisualDataModelPrivate *model = QQuickVisualDataModelPrivate::get(m_model);
         flags = model->release(package);
         m_packaged.erase(it);
@@ -2893,7 +2869,6 @@ void QQuickVisualPartsModel::destroyingPackage(QQuickPackage *package)
         Q_ASSERT(!m_packaged.contains(item));
         emit destroyingItem(item);
         item->setParentItem(0);
-        QQml_setParent_noEvent(item, package);
     }
 }
 

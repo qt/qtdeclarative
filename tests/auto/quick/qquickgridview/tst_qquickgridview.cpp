@@ -4264,7 +4264,7 @@ void tst_QQuickGridView::creationContext()
     QVERIFY(rootItem->property("count").toInt() > 0);
 
     QQuickItem *item;
-    QVERIFY(item = rootItem->findChild<QQuickItem *>("listItem"));
+    QVERIFY(item = findItem<QQuickItem>(rootItem, "listItem"));
     QCOMPARE(item->property("text").toString(), QString("Hello!"));
     QVERIFY(item = rootItem->findChild<QQuickItem *>("header"));
     QCOMPARE(item->property("text").toString(), QString("Hello!"));

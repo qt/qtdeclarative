@@ -1480,13 +1480,13 @@ void tst_qquickpositioners::test_repeater()
 {
     QQuickView *canvas = createView(testFile("repeatertest.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = findItem<QQuickRectangle>(canvas->rootItem(), "one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = findItem<QQuickRectangle>(canvas->rootItem(), "two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = findItem<QQuickRectangle>(canvas->rootItem(), "three");
     QVERIFY(three != 0);
 
     QCOMPARE(one->x(), 0.0);

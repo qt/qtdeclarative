@@ -103,7 +103,7 @@ public:
 class QQuickVisualAdaptorModel;
 class QVDMIncubationTask;
 
-class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource, public QQmlGuard<QObject>
+class QQuickVisualDataModelItem : public QObject, public QV8ObjectResource
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
@@ -146,6 +146,7 @@ public:
 
     QQuickVisualDataModelItemMetaType * const metaType;
     QQmlContextData *contextData;
+    QObject *object;
     QQuickVisualDataModelAttached *attached;
     QVDMIncubationTask *incubationTask;
     v8::Persistent<v8::Object> indexHandle;

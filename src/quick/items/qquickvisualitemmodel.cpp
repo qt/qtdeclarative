@@ -65,7 +65,6 @@ public:
     QQuickVisualItemModelPrivate() : QObjectPrivate() {}
 
     static void children_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *item) {
-        QQml_setParent_noEvent(item, prop->object);
         static_cast<QQuickVisualItemModelPrivate *>(prop->data)->children.append(Item(item));
         static_cast<QQuickVisualItemModelPrivate *>(prop->data)->itemAppended();
         static_cast<QQuickVisualItemModelPrivate *>(prop->data)->emitChildrenChanged();
@@ -206,7 +205,6 @@ QQuickVisualModel::ReleaseFlags QQuickVisualItemModel::release(QQuickItem *item)
         if (d->children[idx].deref()) {
             // XXX todo - the original did item->scene()->removeItem().  Why?
             item->setParentItem(0);
-            QQml_setParent_noEvent(item, this);
         }
     }
     return 0;

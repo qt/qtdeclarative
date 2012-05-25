@@ -386,7 +386,6 @@ void QQuickRepeaterPrivate::createItems()
                 break;
             }
             deletables[ii] = item;
-            QQml_setParent_noEvent(item, q->parentItem());
             item->setParentItem(q->parentItem());
             if (ii > 0 && deletables.at(ii-1)) {
                 item->stackAfter(deletables.at(ii-1));
@@ -415,7 +414,6 @@ void QQuickRepeater::createdItem(int, QQuickItem *)
 
 void QQuickRepeater::initItem(int, QQuickItem *item)
 {
-    QQml_setParent_noEvent(item, parentItem());
     item->setParentItem(parentItem());
 }
 

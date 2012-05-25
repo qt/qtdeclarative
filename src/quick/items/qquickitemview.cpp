@@ -2181,7 +2181,6 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
 
     if (QQuickItem *item = model->item(modelIndex, asynchronous)) {
         item->setParentItem(q->contentItem());
-        QQml_setParent_noEvent(item, q->contentItem());
         requestedIndex = -1;
         FxViewItem *viewItem = requestedItem;
         if (!viewItem)
@@ -2228,7 +2227,6 @@ void QQuickItemView::initItem(int index, QQuickItem *item)
         if (d->requestedAsync)
             item->setVisible(false);
         item->setParentItem(contentItem());
-        QQml_setParent_noEvent(item, contentItem());
         d->requestedItem = d->newViewItem(index, item);
     }
 }

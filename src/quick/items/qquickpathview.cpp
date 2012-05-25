@@ -154,7 +154,6 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool onPath)
     inRequest = true;
     QQuickItem *item = model->item(modelIndex, false);
     if (item) {
-        QQml_setParent_noEvent(item, q);
         item->setParentItem(q);
         requestedIndex = -1;
         qPathViewAttachedType = attType;
@@ -181,7 +180,6 @@ void QQuickPathView::createdItem(int index, QQuickItem *item)
             att->setOnPath(false);
         }
         item->setParentItem(this);
-        QQml_setParent_noEvent(item, this);
         d->updateItem(item, index < d->firstIndex ? 0.0 : 1.0);
     } else {
         d->requestedIndex = -1;

@@ -3452,7 +3452,7 @@ void tst_qquickvisualdatamodel::invalidAttachment()
     QCOMPARE(property.userType(), qMetaTypeId<QQuickVisualDataModel *>());
     QVERIFY(!property.value<QQuickVisualDataModel *>());
 
-    QQuickItem *item = object->findChild<QQuickItem *>("delegate");
+    QQuickItem *item = findItem<QQuickItem>(static_cast<QQuickItem *>(object.data()), "delegate");
     QVERIFY(item);
 
     property = item->property("validVdm");

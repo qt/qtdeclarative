@@ -145,11 +145,6 @@ QQuickPackage::QQuickPackage(QObject *parent)
 
 QQuickPackage::~QQuickPackage()
 {
-    Q_D(QQuickPackage);
-    for (int ii = 0; ii < d->dataList.count(); ++ii) {
-        QObject *obj = d->dataList.at(ii);
-        obj->setParent(this);
-    }
 }
 
 QQmlListProperty<QObject> QQuickPackage::data()
