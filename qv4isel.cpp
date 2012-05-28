@@ -665,7 +665,7 @@ void InstructionSelection::visitMove(IR::Move *s)
 
                     void (*op)(Context *, Value *, const Value *, const Value *) = 0;
 
-                    switch (b->op) {
+                    switch ((IR::AluOp) b->op) {
                     case QQmlJS::IR::OpInvalid:
                     case QQmlJS::IR::OpIfTrue:
                     case QQmlJS::IR::OpNot:
@@ -694,6 +694,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                     case QQmlJS::IR::OpNotEqual: op = __qmljs_ne; break;
                     case QQmlJS::IR::OpStrictEqual: op = __qmljs_se; break;
                     case QQmlJS::IR::OpStrictNotEqual: op = __qmljs_sne; break;
+                    case QQmlJS::IR::OpInstanceof: op = __qmljs_instanceof; break;
+
+                    case QQmlJS::IR::OpIn:
+                        Q_UNIMPLEMENTED();
+                        assert(!"TODO");
+                        break;
 
                     case QQmlJS::IR::OpAnd:
                     case QQmlJS::IR::OpOr:

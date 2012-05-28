@@ -284,12 +284,10 @@ void __qmljs_delete(Context *ctx, Value *result, const Value *value)
 
 void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (right->type == OBJECT_TYPE) {
-        if (FunctionObject *function = right->objectValue->asFunctionObject()) {
-            bool r = function->hasInstance(*left);
-            __qmljs_init_boolean(result, r);
-            return;
-        }
+    if (FunctionObject *function = right->asFunctionObject()) {
+        bool r = function->hasInstance(ctx, *left);
+        __qmljs_init_boolean(result, r);
+        return;
     }
 
     __qmljs_throw_type_error(ctx, result);

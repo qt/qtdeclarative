@@ -28,6 +28,15 @@ void Object::setProperty(Context *ctx, const QString &name, void (*code)(Context
     setProperty(ctx, name, Value::fromObject(ctx->engine->newNativeFunction(ctx, code)));
 }
 
+Value Object::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+{
+    if (name->isEqualTo(ctx->engine->id___proto__))
+        return Value::fromObject(prototype);
+    else if (Value *v = getPropertyDescriptor(ctx, name, attributes))
+        return *v;
+    return Value::undefinedValue();
+}
+
 Value *Object::getOwnProperty(Context *, String *name, PropertyAttributes *attributes)
 {
     if (members) {
@@ -107,9 +116,29 @@ Value ArrayObject::getProperty(Context *ctx, String *name, PropertyAttributes *a
     return Object::getProperty(ctx, name, attributes);
 }
 
-bool FunctionObject::hasInstance(const Value &value) const
+bool FunctionObject::hasInstance(Context *ctx, const Value &value)
 {
-    Q_UNUSED(value);
+    if (! value.isObject()) {
+        ctx->throwTypeError();
+        return false;
+    }
+
+    Value o = getProperty(ctx, ctx->engine->id_prototype);
+    if (! o.isObject()) {
+        ctx->throwTypeError();
+        return false;
+    }
+
+    Object *v = value.objectValue;
+    while (v) {
+        v = v->prototype;
+
+        if (! v)
+            break;
+        else if (o.objectValue == v)
+            return true;
+    }
+
     return false;
 }
 
@@ -195,6 +224,7 @@ ExecutionEngine::ExecutionEngine()
 
     id_length = identifier(QStringLiteral("length"));
     id_prototype = identifier(QStringLiteral("prototype"));
+    id___proto__ = identifier(QStringLiteral("__proto__"));
 
     objectPrototype = new ObjectPrototype();
     stringPrototype = new StringPrototype(rootContext);
@@ -478,8 +508,7 @@ void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
     result = thisObject;
 
     Value proto = f->getProperty(this, engine->id_prototype);
-    if (proto.isObject())
-        thisObject.objectValue->prototype = proto.objectValue;
+    thisObject.objectValue->prototype = proto.objectValue;
 
     leaveCallContext(f, returnValue);
 }

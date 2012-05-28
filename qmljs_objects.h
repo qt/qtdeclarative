@@ -210,13 +210,7 @@ struct Object {
     virtual ErrorObject *asErrorObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
-    virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes = 0)
-    {
-        if (Value *v = getPropertyDescriptor(ctx, name, attributes))
-            return *v;
-        return Value::undefinedValue();
-    }
-
+    virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes = 0);
     virtual Value *getOwnProperty(Context *ctx, String *name, PropertyAttributes *attributes = 0);
     virtual Value *getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes = 0);
     virtual void setProperty(Context *ctx, String *name, const Value &value, bool flag = false);
@@ -281,7 +275,7 @@ struct FunctionObject: Object {
         , needsActivation(true) {}
 
     virtual FunctionObject *asFunctionObject() { return this; }
-    virtual bool hasInstance(const Value &value) const;
+    virtual bool hasInstance(Context *ctx, const Value &value);
     virtual void call(Context *ctx);
     virtual void construct(Context *ctx);
 };
@@ -416,6 +410,7 @@ struct ExecutionEngine
 
     String *id_length;
     String *id_prototype;
+    String *id___proto__;
 
     ExecutionEngine();
 

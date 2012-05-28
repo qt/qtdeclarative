@@ -143,6 +143,9 @@ const char *opname(AluOp op)
     case OpStrictEqual: return "===";
     case OpStrictNotEqual: return "!==";
 
+    case OpInstanceof: return "instanceof";
+    case OpIn: return "in";
+
     case OpAnd: return "&&";
     case OpOr: return "||";
 
@@ -175,6 +178,8 @@ AluOp binaryOperator(int op)
     case QSOperator::StrictNotEqual: return OpStrictNotEqual;
     case QSOperator::Sub: return OpSub;
     case QSOperator::URShift: return OpURShift;
+    case QSOperator::InstanceOf: return OpInstanceof;
+    case QSOperator::In: return OpIn;
     default: return OpInvalid;
     }
 }
@@ -351,6 +356,8 @@ Type Binop::typeForOp(AluOp op, Expr *left, Expr *right)
     case OpNotEqual:
     case OpStrictEqual:
     case OpStrictNotEqual:
+    case OpInstanceof:
+    case OpIn:
         return BoolType;
     } // switch
 
@@ -588,6 +595,11 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
                 case OpStrictNotEqual: return CONST(ty, c1->value != c2->value);
                 case OpSub: return CONST(ty, c1->value - c2->value);
                 case OpURShift: return CONST(ty, unsigned(c1->value) >> int(c2->value));
+
+                case OpInstanceof:
+                case OpIn:
+                    Q_ASSERT(!"unreachabe");
+                    break;
 
                 case OpIfTrue: // unary ops
                 case OpNot:

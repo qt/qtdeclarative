@@ -136,6 +136,9 @@ enum AluOp {
     OpStrictEqual,
     OpStrictNotEqual,
 
+    OpInstanceof,
+    OpIn,
+
     OpAnd,
     OpOr
 };
