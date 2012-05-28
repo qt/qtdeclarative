@@ -371,13 +371,13 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         }
     }
 
-    QSequentialAnimationGroupJob *topLevelGroup = new QSequentialAnimationGroupJob;
-    QActionAnimation *viaAction = d->via ? new QActionAnimation : 0;
-    QActionAnimation *targetAction = new QActionAnimation;
-    //we'll assume the common case by far is to have children, and always create ag
-    QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
-
     if (data->actions.count()) {
+        QSequentialAnimationGroupJob *topLevelGroup = new QSequentialAnimationGroupJob;
+        QActionAnimation *viaAction = d->via ? new QActionAnimation : 0;
+        QActionAnimation *targetAction = new QActionAnimation;
+        //we'll assume the common case by far is to have children, and always create ag
+        QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
+
         if (d->via)
             viaAction->setAnimAction(viaData);
         targetAction->setAnimAction(data);
@@ -405,12 +405,12 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
             topLevelGroup->appendAnimation(ag);
             topLevelGroup->appendAnimation(d->via ? viaAction : targetAction);
         }
+        return initInstance(topLevelGroup);
     } else {
         delete data;
         delete viaData;
     }
-
-    return initInstance(topLevelGroup);
+    return 0;
 }
 
 /*!
