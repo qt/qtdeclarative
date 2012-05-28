@@ -1,0 +1,208 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-cppintegration-functions.html
+\title Exposing C++ Functionality To QML
+\brief Description of how to expose functionality defined in C++ to QML
+
+
+// XXX TODO The content of "Exposing C++ Functionality To QML" and
+// "Exposing Data From C++ To QML" should probably be grouped together
+// on the same page, or separated in a more distinct way.
+
+
+
+\section1 Properties Of Types Defined In C++
+
+Any \l {The Property System}{Qt properties} - that is, those declared with the Q_PROPERTY()
+macro - are accessible from QML. Here is a modified version of the \l {Embedding C++ objects into
+QML components}{earlier example} on this page; here, the \c ApplicationData class has a \c backgroundColor
+property. This property can be written to and read from QML:
+
+\table
+\row
+\li \snippet qml/qtbinding/properties-cpp/applicationdata.h 0
+\li \snippet qml/qtbinding/properties-cpp/MyItem.qml 0
+\endtable
+
+Notice the \c backgroundColorChanged signal is declared as the NOTIFY signal for the
+\c backgroundColor property. If a Qt property does not have an associated NOTIFY signal,
+the property cannot be used for \l{Property Binding}, as the QML engine would not be
+notified when the value changes. If you are using custom types in QML, make sure their
+properties have NOTIFY signals so that they can be used in property bindings.
+
+\section1 Signals And Slots
+
+QML integrates with the normal Qt C++ signals and slots system.
+Signal handlers may be defined in a QML object, to handle signals
+emitted by that or other objects.  Signals may also be defined
+and emitted from QML, which can be connected to slots in C++.
+
+\section1 Method Invocation
+
+Methods of C++ types exposed to QML may be invoked so long as they
+are flagged with Q_INVOKABLE.  As noted above, if the function
+returns a pointer to a QObject or a QObject-derived type, some care
+must be taken to avoid unwanted ownership changes occurring.
+
+
+
+
+\section2 Property Signals
+
+    All properties on custom types automatically support property binding.
+    However, for binding to work correctly, QML must be able to reliably
+    determine when a property has changed so that it knows to reevaluate any
+    bindings that depend on the property's value. QML relies on the presence of
+    a \l {Qt's Property System}{NOTIFY signal} for this determination.
+
+    Here is the \c host property declaration:
+
+    \snippet examples/qml/cppextensions/referenceexamples/binding/birthdayparty.h 0
+
+    The NOTIFY attribute is followed by a signal name. It is the responsibility
+    of the class implementer to ensure that whenever the property's value
+    changes, the NOTIFY signal is emitted. The signature of the NOTIFY signal is
+    not important to QML.
+
+    To prevent loops or excessive evaluation, developers should ensure that the
+    signal is only emitted whenever the property's value is actually changed. If
+    a property, or group of properties, is infrequently used it is permitted to
+    use the same NOTIFY signal for several properties. This should be done with
+    care to ensure that performance doesn't suffer.
+
+    To keep QML reliable, if a property does not have a NOTIFY signal, it cannot
+    be used in a binding expression. However, the property can still be assigned
+    a binding as QML does not need to monitor the property for change in that
+    scenario.
+
+    Consider a custom type, \c TestElement, that has two properties, \c a and
+    \c b. Property \c a does \e not have a NOTIFY signal, and property \c b does
+    have a NOTIFY signal.
+
+    \code
+    TestElement {
+        // This is OK
+        a: b
+    }
+    TestElement {
+        // Will NOT work
+        b: a
+    }
+    \endcode
+
+    The presence of a NOTIFY signal does incur a small overhead. There are cases
+    where a property's value is set at object construction time, and does not
+    subsequently change. The most common case of this is when a type uses \l
+    {Grouped Properties}, and the grouped property object is allocated once, and
+    only freed when the object is deleted. In these cases, the CONSTANT
+    attribute may be added to the property declaration instead of a NOTIFY
+    signal.
+
+    \snippet examples/qml/cppextensions/referenceexamples/binding/person.h 0
+
+    Extreme care must be taken here or applications using your type may misbehave.
+    The CONSTANT attribute should only be used for properties whose value is set,
+    and finalized, only in the class constructor.  All other properties that want
+    to be used in bindings should have a NOTIFY signal instead.
+
+    \l {Extending QML -  Binding Example} shows the BirthdayParty example updated to
+    include NOTIFY signals for use in binding.
+
+\section1 Signals Support
+
+    A \l{signals and slots}{signal} in Qt C++ is readily available as a
+    \l{Signal and Handler Event System}{QML signal}. A signal will have
+    a corresponding signal \e{handler}, created automatically. The handler
+    name will have \c on prepended at the beginning of the name. The first
+    character of the signal is uppercased for the signal handler. The
+    signal parameter is also availabe to the QML signal.
+
+    \snippet examples/qml/cppextensions/referenceexamples/signal/birthdayparty.h 0
+    The QML engine will create a handler for the \c partyStarted signal
+    called \c onPartyStarted.
+    \snippet examples/qml/cppextensions/referenceexamples/signal/example.qml 0
+
+    Classes may have multiple signals with the same name, but only the final
+    signal is accessible as a QML signal. Note that signals with the same name
+    but different parameters cannot be distinguished from one another.
+
+    Signal parameters are exposed and can be any one of the QML
+    \l{QML Basic Types}{basic types} as well registered object types. Accessing
+    unregistered types will not generate an error, but the parameter value will
+    not be accessible from the handler.
+
+    To use signals from items not created in QML, access their signals with the
+    \l {Connections} element.
+
+    Additionally, if a property is added to a C++ class, all QML elements
+    based on that C++ class will have a \e{value-changed} signal handler
+    for that property. The name of the signal handler is
+    \e{on<Property-name>Changed}, with the first letter of the property
+    name being upper case.
+
+    The \l {Extending QML - Signal Support Example}{Signal Support Example}
+    shows an example application exposing signals to a QML component.
+
+\section1 Exposing Methods
+
+    The Q_INVOKABLE macro exposes any Qt C++ method as a QML method.
+
+    \snippet examples/qml/cppextensions/referenceexamples/methods/birthdayparty.h 0
+
+    In a QML file, we can invoke the method as we would a
+    \l{JavaScript Expressions in QML}{JavaScript expression}.
+    \snippet examples/qml/cppextensions/referenceexamples/methods/example.qml 0
+
+    \l {Extending QML - Methods Example}{Methods example} uses the Q_INVOKABLE
+    method to expose methods and demonstrates some usages of the method in
+    an application.
+
+    An alternative to the Q_INVOKABLE macro is to declare the C++ method as a
+    \l{signals and slot}{slot}.
+
+    \code
+    slots:
+        void invite(const QString &name);
+    \endcode
+
+
+
+
+\section1 Module API Functionality
+
+One of the simplest ways to expose C++ functionality to clients in
+QML is by registering a QObject module API.  This allows functionality
+and data to be exposed in a namespace which is accessible from QML.
+See the qmlRegisterModuleApi() documentation for more information
+about registering module APIs.
+
+A module API is instantiated and owned by the engine as a singleton.
+Thus, it is more performant to implement common functionality in a module
+API than in an instantiable, non-visual element.
+
+*/

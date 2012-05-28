@@ -536,7 +536,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     \qmlclass ShaderEffect QQuickShaderEffect
     \inqmlmodule QtQuick 2
     \inherits Item
-    \ingroup qtquick-shaders
+    \ingroup qtquick-effects
     \brief Applies custom shaders to a rectangle
 
     The ShaderEffect element applies a custom OpenGL

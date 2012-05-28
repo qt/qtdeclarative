@@ -456,7 +456,7 @@ QImage QQuickShaderEffectTexture::toImage() const
     \qmlclass ShaderEffectSource QQuickShaderEffectSource
     \since 5.0
     \inherits Item
-    \ingroup qtquick-shaders
+    \ingroup qtquick-effects
     \brief Renders a QML element into a texture and displays it
 
     The ShaderEffectSource element renders \l sourceItem into a texture and

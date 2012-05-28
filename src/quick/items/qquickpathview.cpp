@@ -498,7 +498,7 @@ void QQuickPathViewPrivate::regenerate()
     to set \e {clip: true} in order to have the out of view items clipped
     nicely.
 
-    \sa Path, {declarative/modelviews/pathview}{PathView example}
+    \sa Path, {quick/modelviews/pathview}{PathView example}
 */
 
 QQuickPathView::QQuickPathView(QQuickItem *parent)

@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Sprite QQuickSprite
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-images-sprites
+    \ingroup qtquick-visual-utility
     \brief Specifies sprite animations
 
     QQuickSprite renders sprites of one or more frames and animates them. The sprites

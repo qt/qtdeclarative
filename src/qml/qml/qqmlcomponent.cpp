@@ -118,7 +118,6 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \brief The QQmlComponent class encapsulates a QML component definition
 
     Components are reusable, encapsulated QML elements with well-defined interfaces.
-    They are often defined in \l {qdeclarativedocuments.html}{Component Files}.
 
     A QQmlComponent instance can be created from a QML file.
     For example, if there is a \c main.qml file like this:
@@ -183,8 +182,6 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \endcode
 
     Note that the QtQuick 1 version is named QDeclarativeComponent.
-
-    \sa {Using QML Bindings in C++ Applications}, {Integrating QML Code with Existing Qt UI Code}
 */
 
 /*!
@@ -196,7 +193,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
     Components are reusable, encapsulated QML elements with well-defined interfaces.
 
-    Components are often defined by \l {qdeclarativedocuments.html}{component files} -
+    Components are often defined by \l {{QML Documents}}{component files} -
     that is, \c .qml files. The \e Component element essentially allows QML components
     to be defined inline, within a \l {QML Document}{QML document}, rather than as a separate QML file.
     This may be useful for reusing a small component within a QML file, or for defining
@@ -1082,7 +1079,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     \endjs
 
     Dynamically created instances can be deleted with the \c destroy() method.
-    See \l {Dynamic Object Management in QML} for more information.
+    See \l {Dynamic QML Object Creation from JavaScript} for more information.
 
     \sa incubateObject()
 */
@@ -1197,7 +1194,7 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     \endjs
 
     Dynamically created instances can be deleted with the \c destroy() method.
-    See \l {Dynamic Object Management in QML} for more information.
+    See \l {Dynamic QML Object Creation from JavaScript} for more information.
 
     \sa createObject()
 */

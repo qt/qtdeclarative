@@ -1,0 +1,635 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-syntax-objectattributes.html
+\title QML Object Attributes
+\brief Valid attributes for an object declaration
+
+
+\section1 QML object attributes
+
+An \l{qtqml-syntax-basics.html#object-declarations}{object declaration} contains the set of attributes that should be set for that object. These may include:
+
+\list
+\li the \e id assignment
+\li property value assignments
+\li signal handlers
+\li custom properties
+\li custom methods
+\li custom signals
+\li attached properties and attached signal handlers
+\endlist
+
+These attributes are discussed in detail below.
+
+
+\section2 The \e id assignment
+
+Any QML object can be given a special \e id value that allows the object to be identified and referred to by other objects. This \c id must begin with a lower-case letter or an underscore, and cannot contain characters other than letters, numbers and underscores.
+
+Below is a \l TextInput object and a \l Text object. The \l TextInput object's \c id value is set to "myTextInput". The \l Text object sets its \c text property to have the same value as the \c text property of the \l TextInput, by referring to \c myTextInput.text. Now, both items will display the same text:
+
+\qml
+import QtQuick 2.0
+
+Column {
+    width: 200; height: 200
+
+    TextInput { id: myTextInput; text: "Hello World" }
+
+    Text { text: myTextInput.text }
+}
+\endqml
+
+An object can be referred to by its \c id from anywhere within the \e {component scope} in which it is declared. Therefore, an \c id value must always be unique within its component scope. See \l{qtqml-documents-scope.html}{Scope and Naming Resolution} for more information.
+
+Once an object is created, its \c id cannot be changed. The \c id value is a special value and is not an ordinary object property; for example, it is not possible to access \c myTextInput.id in the above example.
+
+
+\section2 Property Initialization
+
+A property is an attribute of an object that can be assigned a static value or bound to a dynamic expression. A property's value can be read by other objects. Generally it can also be modified by another object, unless a particular QML type has explicitly disallowed this for a specific property.
+
+A property can be assigned a value using the \c {<property-name : property-value>} syntax, with a colon separating the property name and value:
+
+\qml
+Rectangle {
+    width: 200
+    height: 200
+    color: "red"
+}
+\endqml
+
+This sets the rectangle's \c width property value to 200, the \c height property value to 200 and the \c color property value to "red".
+
+A property can also be assigned an expression written in JavaScript:
+
+\qml
+Rectangle {
+    width: 30 * 5
+    height: 500 / 2
+}
+\endqml
+
+\section3 Property Binding: binding properties to expressions
+
+Additionally, a property can be \e bound to an expression that references other objects and properties. This creates a \l {Property Binding}{property binding}, enabling the property to be automatically updated whenever the value of the evaluated expression changes. A property binding can simply be a reference to another object's property, as in the example below, where the blue \l Rectangle's \c height is bound to the height of its parent:
+
+\qml
+Rectangle {
+    width: 200; height: 200
+
+    Rectangle {
+        width: 100; height: parent.height
+        color: "blue"
+    }
+}
+\endqml
+
+Whenever the \c height of the parent rectangle changes, the \c height of the blue rectangle will also update to have the same value.
+
+Furthermore, a binding can contain any valid JavaScript expression, as QML uses a standards compliant JavaScript engine. It can also call external methods or refer to standard JavaScript objects such as \c Math and \c Date. Below are valid bindings that could be substituted for the \c height binding from the above example:
+
+\code
+height: parent.height / 2
+
+height: Math.min(parent.width, parent.height)
+
+height: parent.height > 100 ? parent.height : parent.height/2
+
+height: {
+    if (parent.height > 100)
+        return parent.height
+    else
+        return parent.height / 2
+}
+
+height: someMethodThatReturnsHeight()
+\endcode
+
+See the \l {Property Binding} documentation for a more detailed discussion on property binding.
+
+
+\section3 Type safety
+
+Properties are type safe. A property can only be assigned a value that matches the property type.
+
+For example, if a property is a real, and if you try to assign a string to it you will get an error:
+
+\code
+property int volume: "four"  // generates an error; the property's object will not be loaded
+\endcode
+
+Likewise if a property is assigned a value of the wrong type during run time, the new value will not be assigned, and an error will be generated.
+
+See \l {QML Basic Types} for a list of the types of properties that are supported by default. Additionally, any available \l {QML Object Types}QML object type} may also be used as a property type.
+
+
+\section3 Special property types
+
+\section4 List type properties
+
+A \l list type property or a \l var type property can be assigned a list of values. The syntax for defining a list value is a comma-separated list surrounded by square brackets:
+
+\code
+[ <item 1>, <item 2>, ... ]
+\endcode
+
+For example, \l Item type has a \l {Item::states}{states} property that is used to hold a list of \l State type objects. The code below assigns a list of three \l State objects to this property:
+
+\qml
+import QtQuick 2.0
+
+Item {
+    states: [
+        State { name: "loading" },
+        State { name: "running" },
+        State { name: "stopped" }
+    ]
+}
+\endqml
+
+If the list contains a single item, the square brackets may be omitted:
+
+\qml
+import QtQuick 2.0
+
+Item {
+    states: State { name: "running" }
+}
+\endqml
+
+See the \l list and \l var type documentation for more details.
+
+
+\section4 Grouped Properties
+
+In some cases properties contain a logical group of attributes. These attributes can be assigned to using either the dot notation or group notation.
+
+For example, the \l Text type has a \l{Text::font}{font} group property. Below, the first \l Text object initializes its \c font values using dot notation, while the second uses group notation:
+
+\code
+Text {
+    //dot notation
+    font.pixelSize: 12
+    font.bold: true
+}
+
+Text {
+    //group notation
+    font { pixelSize: 12; bold: true }
+}
+\endcode
+
+
+\section2 Custom properties
+
+An object definition can be given additional custom properties. This allows it to \l {Defining Object Types from QML}{expose a particular value} to outside objects or maintain some internal variable more easily.
+
+Custom properties are added through the \e property keyword, as per the syntax below:
+
+\code
+    [default] property <type> <name>[: defaultValue]
+\endcode
+
+(Property names must begin with a lower case letter and can only contain letters, numbers and underscores. \l {JavaScript Reserved Words}{JavaScript reserved words} are not valid property names.)
+
+Declaring a custom property implicitly creates a value-change signal for that property that can be connected to using a signal handler \e on<Property>Changed, where \e <Property> is the name of the property, with the first letter capitalized.
+
+For example, the \l Rectangle below has a custom property named \e sum which is of type \c int. This property is set to the sum of the values in the two text inputs through a binding that uses the standard JavaScript \c parseInt() function.
+
+\qml
+Column {
+    property int sum: parseInt(inputA) + parseInt(inputB)
+
+    onSumChanged: console.log("Sum changed to:", sum)
+
+    TextInput { id: inputA; text: "100" }
+    TextInput { id: inputB; text: "200" }
+}
+\endqml
+
+Notice the \c onSumChanged signal handler automatically works since the addition of the \c sum property has implicitly created an appropriate value-change signal for the property.
+
+The default property value is optional. The above example could have separated the declaration and value assignment of the \c sum property, as follows:
+
+\qml
+Column {
+    property int sum
+
+    sum: parseInt(inputA) + parseInt(inputB)
+    //...
+}
+\endqml
+
+The end result would be identical.
+
+
+\section3 Custom property types
+
+The following types can be used as custom property types:
+
+\list
+\li \l bool
+\li \l int
+\li \l real, \l double
+\li \l string
+\li \l var
+\endlist
+
+The \l var type is a generic placeholder type that can hold any type of value, including lists and objects:
+
+\code
+property var someNumber: 1.5
+property var someString: "abc"
+property var someBool: true
+property var someList: [1, 2, "three", "four"]
+property var someObject: Rectangle { width: 100; height: 100; color: "red" }
+\endcode
+
+For convenience, the following types can also be used as custom property types. Using these types specifically instead of the \l var type provides type safety and may also assist with application optimization:
+
+\list
+\li \l color
+\li \l date
+\li \l rect
+\li \l url
+\endlist
+
+Additionally, any \l{QML Object Types}QML object type} can be used as a property type. For example:
+
+\code
+property Item someItem
+property Rectangle someRectangle
+\endcode
+
+This applies to \l {Defining Object Types from QML}{custom QML types} as well. If a QML type was defined in a file named \c ColorfulButton.qml, then a property of type \c ColorfulButton would also be valid.
+
+
+\section3 Property aliases
+
+Property aliases are properties which hold a reference to another property. Unlike an ordinary property definition, which allocates a new, unique storage space for the property, a property alias connects the newly declared property (called the aliasing property) as a direct reference to an existing property (the aliased property).
+
+A property alias declaration looks like an ordinary property definition, except it requires the \c alias keyword instead of a property type:
+
+\code
+[default] property alias <name>: <alias reference>
+\endcode
+
+Unlike an ordinary property, an alias can only refer to a object, or the property of a object, that is within the scope of the \l{QML Object Types}{type} within which the alias is declared. It cannot contain arbitrary JavaScript expressions and it cannot refer to objects declared outside of the scope of its type. Also note the \e {alias reference} is not optional, unlike the optional default value for an ordinary property; the alias reference must be provided when the alias is first declared.
+
+For example, below is a \c Button type with a \c buttonText aliased property which is connected to the \c text object of the \l Text child:
+
+\qml
+// Button.qml
+import QtQuick 2.0
+
+Rectangle {
+    property alias buttonText: textItem.text
+
+    width: 100; height: 30; color: "yellow"
+
+    Text { id: textItem }
+}
+\endqml
+
+The following code would create a \c Button with a defined text string for the child \l Text object:
+
+\qml
+Button { buttonText: "Click Me" }
+\endqml
+
+Here, modifying \c buttonText directly modifies the textItem.text value; it does not change some other value that then updates textItem.text. If \c buttonText was not an alias, changing its value would not actually change the displayed text at all, as property bindings are not bi-directional: the \c buttonText value would have changed if textItem.text was changed, but not the other way around.
+
+
+\section4 Considerations for property aliases
+
+Aliases are only activated once a component has been fully initialized. An error is generated when an uninitialized alias is referenced. Likewise, aliasing an aliasing property will also result in an error.
+
+\snippet qml/properties.qml alias complete
+
+When importing a \l{QML Object Types}QML object type} with a property alias in the root object, however, the property appear as a regular Qt property and consequently can be used in alias references.
+
+It is possible for an aliasing property to have the same name as an existing
+property, effectively overwriting the existing property. For example,
+the following QML type has a \c color alias property, named the same as the built-in
+\l {Rectangle::color} property:
+
+\snippet qml/properties.qml alias overwrite
+
+Any object that use this type and refer to its \c color property will be
+referring to the alias rather than the ordinary \l {Rectangle::color} property.
+Internally, however, the red can correctly set its \c color
+property and refer to the actual defined property rather than the alias.
+
+
+\section3 Default properties
+
+An object definition can have a single \e default property. A default property is the property to which a value is assigned if an object is declared within another object's definition without attaching it as a value to a particular property.
+
+Declaring a property with the optional \c default attribute marks it as the default property. For example, say there is a file MyLabel.qml with a default property \c someText:
+
+\qml
+// MyLabel.qml
+import QtQuick 2.0
+
+Text {
+    default property var someText
+
+    text: "Hello, " + someText.text
+}
+\endqml
+
+The \c someText value could be assigned to in a \c MyLabel object definition, like this:
+
+\qml
+MyLabel {
+    Text { text: "world!" }
+}
+\endqml
+
+This has exactly the same effect as the following:
+
+\qml
+MyLabel {
+    someText: Text { text: "world!" }
+}
+\endqml
+
+However, since the \c someText property has been marked as the default property, it is not necessary to explicitly assign the \l Text object to this property.
+
+You will notice that child objects can be added to any \l {Item}-based type without explicitly adding them to the \l {Item::children}{children} property. This is because the default property of \l Item is its \c data property, and any items added to this list for an \l Item are automatically added to its list of \l {Item::children}{children}.
+
+Default properties can be useful for reassigning the children of an item. See the  \l{declarative/ui-components/tabwidget}{TabWidget example}, which uses a default property to automatically reassign children of the TabWidget as children of an inner ListView.
+
+
+\section2 Signal handlers
+
+A signal is a notification from an object that some event has occurred: for example, a property has changed, an animation has started or stopped, or when an image has been downloaded. The \l MouseArea type, for example, has a \l {MouseArea::clicked}{clicked} signal that is emitted when the user clicks within the mouse area.
+
+An object can be notified through a \e {signal handler} whenever it a particular signal is emitted. A signal handler is declared with the syntax \e on<Signal> where \e <Signal> is the name of the signal, with the first letter capitalized. The signal handler must be declared within the definition of the object that emits the signal, and the handler should contain the block of JavaScript code to be executed when the signal handler is invoked.
+
+For example, the \e onClicked signal handler below is declared within the \l MouseArea object definition, and is invoked when the \l MouseArea is clicked, causing a console message to be printed:
+
+\qml
+import QtQuick 2.0
+
+Item {
+    width: 100; height: 100
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: {
+            console.log("Click!")
+        }
+    }
+}
+\endqml
+
+
+\section3 Property change signal handlers
+
+QML types also provide built-in \e {property change signals} that are emitted whenever a property value changes. Signal handlers for these take the syntax form \e on<Property>Changed where \e <Property> is the name of the property, with the first letter capitalized. For example, although the \l TextInput type documentation does not document a \c textChanged signal, this signal is implicitly available through the fact that \l TextInput has a \l {TextInput::text}{text} property and so it is possible to write an \c onTextChanged signal handler to be called whenever this property changes:
+
+\qml
+import QtQuick 2.0
+
+TextInput {
+    text: "Change this!"
+
+    onTextChanged: console.log("Text has changed to:", text)
+}
+\endqml
+
+
+\section2 Custom signals
+
+Signals provide a way to notify other objects when an event has occurred. For example, the \l MouseArea has a \c clicked signal to notify other objects that the mouse has been clicked within the area.
+
+The syntax for defining a new signal is:
+
+\code
+signal <name>[([<type> <parameter name>[, ...]])]
+\endcode
+
+Attempting to declare two signals or methods with the same name in the same type block is an error. However, a new signal may reuse the name of an existing signal on the type. (This should be done with caution, as the existing signal may be hidden and become inaccessible.)
+
+Here are three examples of signal declarations:
+
+\qml
+Item {
+    signal clicked
+    signal hovered()
+    signal actionPerformed(string action, var actionResult)
+}
+\endqml
+
+If the signal has no parameters, the "()" brackets are optional. If parameters are used, the parameter types must be declared, as for the \c string and \c var arguments for the \c actionPerformed signal above. The allowed parameter types are the same as those listed under \l {custom property types} on this page.
+
+Once a signal is added to an object definition, it can automatically be connected to using an appropriately named signal handler as described in the \l {signal handlers} section earlier on this page. The signal handlers for connecting to the three signals in the above example would be \c onClicked, \c onHovered and \c onActionPerformed.
+
+To emit a signal, invoke it as a method. Any relevant signal handlers will be invoked when the signal is emitted, and handlers can use the defined signal argument names to access the respective  arguments. For example, if a \c SquareButton.qml file was defined as follows, with signals \c activated and \c deactivated:
+
+\qml
+// SquareButton.qml
+Rectangle {
+    id: root
+
+    signal activated(real xPosition, real yPosition)
+    signal deactivated
+
+    width: 100; height: 100
+
+    MouseArea {
+        anchors.fill: parent
+        onPressed: root.activated(mouse.x, mouse.y)
+        onRelased: root.deactivated()
+    }
+}
+\endqml
+
+These signals could be received by any \c SquareButton objects in another QML file in the same directory:
+
+\qml
+// myapplication.qml
+SquareButton {
+    onActivated: console.log("Activated at " + xPosition + "," + yPosition)
+    onDeactivated: console.log("Deactivated!")
+}
+\endqml
+
+See the \l {Signal and Handler Event System} for more details on use of signals.
+
+
+\section2 Custom methods
+
+Methods can be added to a QML type in order to define standalone, reusable blocks of JavaScript code.
+
+These methods can be invoked either internally or by external objects.
+
+The syntax for defining a method is:
+
+\code
+    function <name>([<parameter name>[, ...]]) { <body> }
+\endcode
+
+Unlike signals, method parameter types do not have to be declared as they default to the \c var type.
+
+Attempting to declare two methods or signals with the same name in the same type block is an error. However, a new method may reuse the name of an existing method on the type. (This should be done with caution, as the existing method may be hidden and become inaccessible.)
+
+Below is a \l Rectangle with a \c calculateHeight() method that is called when assigning the \c height value:
+
+\qml
+import QtQuick 2.0
+Rectangle {
+    id: rect
+
+    function calculateHeight() {
+        return rect.width / 2;
+    }
+
+    width: 100
+    height: calculateHeight()
+}
+\endqml
+
+If the method has parameters, they are accessible by name within the method. Below, when the \l MouseArea is clicked it invokes the \c moveTo() method which can then refer to the received \c newX and \c newY parameters to reposition the text:
+
+\qml
+import QtQuick 2.0
+
+Item {
+    width: 200; height: 200
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: label.moveTo(mouse.x, mouse.y)
+    }
+
+    Text {
+        id: label
+
+        function moveTo(newX, newY) {
+            label.x = newX;
+            label.y = newY;
+        }
+
+        text: "Move me!"
+    }
+}
+\endqml
+
+A method can be connected to a signal so that it is automatically invoked whenever the signal is emitted. See \l {Signal and Handler Event System} for more details.
+
+
+\section2 Attached properties and attached signal handlers
+
+\e {Attached properties} and \e {attached signal handlers} are mechanisms that enable objects to be annotated with extra properties or signal handlers that are otherwise unavailable to the object. In particular, they allow objects to access properties or signals that are specifically relevant to the individual object.
+
+A QML type implementation may choose to create an \e {attaching type} with particular properties and signals. Instances of this type can then be created and \e attached to specific objects at run time, allowing those objects to access the properties and signals of the attaching type. These are accessed by prefixing the properties and respective signal handlers with the name of the attaching type.
+
+For example, the \l ListView type has an attached property \l ListView.isCurrentItem that is available to each delegate object in a ListView. This can be used by each individual delegate object to determine whether it is the currently selected item in the view:
+
+\qml
+import QtQuick 2.0
+
+ListView {
+    width: 240; height: 320
+    model: 3
+    delegate: Rectangle {
+        width: 100; height: 30
+        color: ListView.isCurrentItem ? "red" : "yellow"
+    }
+}
+\endqml
+
+In this case, the name of the \e {attaching type} is \c ListView and the property in question is \c isCurrentItem, hence the attached property is referred to as \c ListView.isCurrentItem.
+
+An attached signal handler is referred to in the same way. For example, the \c Component.isCompleted attached signal handler is commonly used to execute some JavaScript code when a component's creation process has been completed. In the example below, once the \l ListModel has been fully created, its \c Component.onCompleted signal handler will automatically be invoked to populate the model:
+
+\qml
+import QtQuick 2.0
+
+ListView {
+    width: 240; height: 320
+    model: ListModel {
+        id: listModel
+        Component.onCompleted: {
+            for (var i=0; i<10; i++)
+                listModel.append({"Name": "Item " + i})
+        }
+    }
+    delegate: Text { text: index }
+}
+\endqml
+
+Since the name of the \e {attaching type} is \c Component and that type has a \c completed signal, the attached signal handler is referred to as \c Component.isCompleted.
+
+
+\section3 A note about accessing attached properties and signal handlers
+
+A common error is to assume that attached properties and signal handlers are directly accessible from the children of the object to which these attributes have been attached. This is not the case. The instance of the \e {attaching type} is only attached to specific objects, not to the object and all of its children.
+
+For example, below is a modified version of the earlier example involving attached properties. This time, the delegate is an \l Item and the colored \l Rectangle is a child of that item:
+
+\qml
+import QtQuick 2.0
+
+ListView {
+    width: 240; height: 320
+    model: 3
+    delegate: Item {
+        width: 100; height: 30
+
+        Rectangle {
+            width: 100; height: 30
+            color: ListView.isCurrentItem ? "red" : "yellow"    // WRONG! This won't work.
+        }
+    }
+}
+\endqml
+
+This does not work as expected because \c ListView.isCurrentItem is attached \e only to the root delegate object, and not its children. Since the \l Rectangle is a child of the delegate, rather than being the delegate itself, it cannot access the \c isCurrentItem attached property as \c ListView.isCurrentItem. So instead, the rectangle should access \c isCurrentItem through the root delegate:
+
+\qml
+ListView {
+    //....
+    delegate: Item {
+        id: delegateItem
+        width: 100; height: 30
+
+        Rectangle {
+            width: 100; height: 30
+            color: delegateItem.ListView.isCurrentItem ? "red" : "yellow"   // correct
+        }
+    }
+}
+\endqml
+
+Now \c delegateItem.ListView.isCurrentItem correctly refers to the \c isCurrentItem attached property of the delegate.
+
+*/

@@ -94,7 +94,7 @@ QQuickImagePrivate::QQuickImagePrivate()
 /*!
     \qmlclass Image QQuickImage
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-images
+    \ingroup qtquick-visual
     \inherits Item
     \brief Displays an image in a declarative user interface
 

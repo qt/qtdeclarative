@@ -108,7 +108,7 @@ public:
 /*!
     \qmlclass Drag QQuickDrag
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-interaction
+    \ingroup qtquick-input
     \brief For specifying drag and drop events for moved Items
 
     Using the Drag attached property any Item can made a source of drag and drop

@@ -26,27 +26,82 @@
 ****************************************************************************/
 
 /*!
-  \module QtQuick
-  \title Qt Quick Module
-  \ingroup modules
+\page qtquick-main.html
+\title Qt Quick Module
+\brief The Qt Quick module implements the "standard library" for QML
 
-  \brief The Qt Quick module provides classes for embedding Qt Quick
-  in Qt/C++ applications.
+\section1 Overview Of The Qt Quick Module
 
-  To include the definitions of the module's classes, use the
-  following directive:
+The Qt Quick module is the standard library for the QML language (which is
+defined and implemented by the \l{qtqml-main.html}{Qt QML module}).
+The Qt Quick module provides a visual canvas, visual item types, an animation
+framework, and types which make dynamic instantiation of objects more
+convenient.  It also provides the QQuickView C++ class to enable displaying
+a user-interface written in Qt Quick.
 
-  \code
-  #include <QtQuick>
-  \endcode
+In summary, Qt Quick provides a library of visual types to allow building a
+user-interface, and the C++ API to instantiate and interact with it.
 
-  To link against the module, add this line to your \l qmake \c
-  .pro file:
+\section1 Qt Quick Module Documentation
 
-  \code
-  QT += quick
-  \endcode
+\list
 
-  For more information on the Qt Quick module, see the
-  \l{Qt Quick} documentation.
+    \li \l{qtquick-concepts-topic.html}{Important Concepts In Qt Quick}
+        \list
+        \li \l{qtquick-concepts-topic.html#the-visual-canvas}{The Visual Canvas}
+        \li \l{qtquick-concepts-topic.html#positioning}{Positioning}
+        \li \l{qtquick-concepts-topic.html#user-input}{User Input}
+        \li \l{qtquick-concepts-topic.html#event-interceptors}{Event Interceptors}
+        \li \l{qtquick-concepts-statesanimations.html}{States, Transitions And Animations}
+        \li \l{qtquick-concepts-topic.html#data-models-views-and-data-storage}{Data - Models, Views and Data Storage}
+        \li \l{qtquick-concepts-topic.html#graphical-effects-and-particles}{Graphical Effects And Particles}
+        \li \l{qtquick-concepts-topic.html#defining-and-using-modular-components}{Defining And Using Modular Components}
+
+        \endlist
+
+    \li \l{qtquick-qmltypereference.html}{QML Types Provided By The Qt Quick Module}
+        \list
+        \li \l{qtquick-qmltypereference.html#visual-types}{Visual Types}
+        \li \l{qtquick-qmltypereference.html#user-input-types}{User Input Types}
+        \li \l{qtquick-qmltypereference.html#positioning}{Positioning}
+        \li \l{qtquick-qmltypereference.html#states-transitions-and-animations}{States, Transitions And Animations}
+        \li \l{qtquick-qmltypereference.html#interceptors}{Interceptors}
+        \li \l{qtquick-qmltypereference.html#model-view-types-and-data-storage-and-access}{Model/View Types And Data Storage And Access}
+        \li \l{qtquick-qmltypereference.html#particles-and-graphical-effects}{Particles And Graphical Effects}
+        \li \l{qtquick-qmltypereference.html#canvas-similar-to-html5-canvas}{Canvas (similar to HTML5 Canvas)}
+        \li \l{qtquick-qmltypereference.html#dynamic-instantiation-enablers}{Dynamic Instantiation Enablers}
+        \endlist
+
+    \li \l{qtquick-cppextensionpoints.html}{C++ Extension Points}
+        \list
+        \li \l{qtquick-cppextensionpoints.html#user-defined-qquickitem-derived-types}{User-Defined QQuickItem-Derived Types}
+        \li \l{qtquick-cppextensionpoints.html#scene-graph-related-classes}{Scene Graph-Related Classes}
+        \endlist
+
+\endlist
+
+\section1 Reference Documentation
+
+More information about the Qt Quick module is contained within the class and
+function documentation of the \l{qtquick-apireference.html}
+{Qt Quick Module API Reference}.  The QML types provided by the Qt Quick module
+are listed in the \l{qtquick-qmltypereference.html}
+{Qt Quick Module QML Type Reference} page.
+
+Application developers who are interested in writing applications using QML
+should start by reading the \l{qtquick-applicationdevelopers.html}
+{QML Application Developer Resources}.  The documentation for the
+\l{qtqml-main.html}{Qt QML} module is also an indispensible resource for
+application developers who are using Qt Quick, as it provides the definition
+and implementation of the QML language (for which Qt Quick is the standard
+library of types and functionality).
+
+Quick Links:
+\list
+\li \l{qtquick-qmltypereference.html}{Qt Quick Module QML Type Reference}
+\li \l{qtquick-module.html}{Qt Quick Module C++ API Reference}
+\li \l{qtqml-main.html}{Qt QML Module Documentation}
+\li \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
+\endlist
+
 */

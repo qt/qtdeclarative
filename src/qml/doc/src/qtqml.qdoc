@@ -24,339 +24,169 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 /*!
-  \module QtQml
-  \title Qt QML Module
-  \ingroup modules
+\page qtqml-main.html
+\title Qt QML Module
+\brief The Qt QML module defines and implements the QML language
 
-  \brief The Qt QML module provides a declarative framework
-  for building highly dynamic, custom user interfaces.
+\section1 Overview Of The Qt QML Module
 
-  To include the definitions of the module's classes, use the
-  following directive:
+The Qt QML module provides a framework for developing applications.  It defines
+and implements the QML language, and provides API which allows clients to
+extend the QML language with more types, and to integrate QML code with
+JavaScript or C++.
 
-  \code
-  #include <QtQml>
-  \endcode
+Application developers who are interested in writing applications using QML
+should start by reading the \l{qtquick-applicationdevelopers.html}
+{QML Application Developer Resources}.
 
-  To link against the module, add this line to your \l qmake \c
-  .pro file:
+\section2 What Is QML
 
-  \code
-  QT += qml
-  \endcode
+QML is a user-interface specification and programming language.  It was
+designed specifically to enable and ease the development of modern,
+touch-driven, fluidly animated and visually-appealling applications.
 
-  For more information on the Qt QML module (including the visual
-  elements which are implemented on top of the Qt QML module) see the
-  \l{Qt Quick} documentation.
+One of the core goals of QML is to allow closer interaction between designers
+and programmers during the development of an application.
+
+\section2 What Does The Qt QML Module Provide
+
+The Qt QML module provides the definition and an implementation of the QML
+language.  It uses a JavaScript engine to provide JavaScript integration, and
+provides C++ API to provide integration with C++.  It provides a framework for
+object instantiation and manipulation along with strong typing, which can be
+integrated with a visual canvas and an animation framework to enable the
+development of highly-appealling interactive applications.
+
+\section2 What Does The Qt QML Module Not Provide
+
+It does not provide a visual canvas, visual items, or an animation framework.
+These are provided instead by the \l{QtQuick} module.
+
+Qt Quick can be thought of as the "standard library" of types (including visual
+types, animation classes, and canvas integration) for the QML language.
+
+
+\section1 Qt QML Module Documentation
+
+\list
+    \li \l{qtqml-cppclasses-topic.html}{C++ Classes Provided By The Qt QML Module}
+        \list
+        \li \l{qtqml-cppclasses-engine.html}{QQmlEngine}
+        \li \l{qtqml-cppclasses-context.html}{QQmlContext}
+        \li \l{qtqml-cppclasses-component.html}{QQmlComponent}
+        \endlist
+
+    \li \l{qtqml-typesystem-topic.html}{The QML Type System}
+        \list
+        \li \l{qtqml-typesystem-topic.html}{Basic Types}
+        \li \l{qtqml-typesystem-topic.html#javascript-types}{JavaScript Types}
+        \li \l{qtqml-typesystem-topic.html#qml-object-types}{QML Object Types}
+            \list
+            \li \l{qtqml-documents-definetypes.html}{Defining Object Types from QML}
+            \li \l{qtqml-cppintegration-registercpptypes.html}{Defining Object Types from C++}
+            \endlist
+        \endlist
+
+    \li \l{qtqml-modules-topic.html}{QML Modules}
+        \list
+        \li \l{qtqml-modules-topic.html#syntax-of-a-qmldir-file}{Packaging QML and JavaScript Files}
+        \li \l{qtqml-modules-cppplugins.html#creating-a-plugin}{Providing Types and Functionality in a C++ Plugin}
+        \li \l{qtqml-modules-qmldir.html}{Syntax of a qmldir File}
+        \endlist
+
+    \li \l{qtqml-documents-topic.html}{QML Documents}
+        \list
+        \li \l{qtqml-documents-structure.html}{Structure of a QML Document}
+        \li \l{qtqml-syntax-basics.html}{Syntax of the QML Language}
+        \li \l{qtqml-documents-definetypes.html}{Defining Object Types through QML Documents}
+            \list
+            \li \l{qtqml-documents-definetypes.html#defining-an-object-type-with-a-qml-file}{Defining an Object Type with a QML File}
+            \li \l{qtqml-documents-definetypes.html#accessible-attributes-of-custom-types}{Accessible Attributes of Custom Types}
+            \endlist
+            \li \l{qtqml-documents-networktransparency.html}{Resource Loading and Network Transparency}
+            \li \l{qtqml-documents-scope.html}{Scope and Naming Resolution}
+        \endlist
+
+    \li \l{qtqml-typereference-topic.html}{QML Types Provided by the Qt QML Module}
+        \list
+        \li \l{qtqml-typereference-topic.html#qtobject}{QtObject}
+        \li \l{qtqml-typereference-topic.html#component}{Component}
+        \endlist
+
+    \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
+        \list
+        \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
+        \li \l{qtqml-javascript-imports.html}{Importing JavaScript Files in QML Documents}
+        \li \l{qtqml-javascript-dynamicobjects.html}{Dynamic QML Object Creation from JavaScript}
+        \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
+            \list
+            \li \l{qtqml-javascript-qmlglobalobject.html}{QML Global Object}
+            \li \l{qtqml-javascript-functionlist.html}{List of JavaScript Objects and Functions}
+            \endlist
+        \endlist
+
+    \li \l{qtqml-cppintegration-topic.html}{Integrating QML and C++}
+        \list
+        \li \l{qtqml-cppintegration-registercpptypes.html}{Defining QML Object Types from C++}
+        \li \l{qtqml-cppintegration-data.html}{Exposing C++ Data to QML}
+        \li \l{qtqml-cppintegration-functions.html}{Exposing C++ Functionality to QML}
+        \li \l{qtqml-cppintegration-reverse.html}{Interacting with Objects defined in QML from C++}
+        \endlist
+
+\endlist
+
+
+\section1 Syntax of the QML Language
+
+\list
+    \li \l{qtqml-syntax-basics.html}{QML Syntax Basics}
+        \list
+        \li \l{qtqml-syntax-imports.html}{Import Statements}
+        \li \l{qtqml-syntax-basics.html#object-declarations}{Object Declarations}
+        \list
+            \li \l{qtqml-syntax-basics.html#child-objects}{Child Objects}
+        \endlist
+        \li \l{qtqml-syntax-basics.html#comments}{Comments}
+        \endlist
+
+    \li \l{qtqml-syntax-objectattributes.html}{QML Object Attributes}
+        \list
+        \li \l{qtqml-syntax-objectattributes.html#the-id-assignment}{The \e id Assignment}
+        \li \l{qtqml-syntax-objectattributes.html#property-initialization}{Property Initialization}
+        \li \l{qtqml-syntax-objectattributes.html#custom-properties}{Custom Properties}
+        \li \l{qtqml-syntax-objectattributes.html#signal-handlers}{Signal Handlers}
+        \li \l{qtqml-syntax-objectattributes.html#custom-signals}{Custom Signals}
+        \li \l{qtqml-syntax-objectattributes.html#custom-methods}{Custom Methods}
+        \li \l{qtqml-syntax-objectattributes.html#attached-properties-and-attached-signal-handlers}{Attached Properties and Attached Signal Handlers}
+        \endlist
+
+    \li \l{qtqml-syntax-propertybinding.html}{Property Binding}
+    \li \l{qtqml-syntax-signals.html}{Signal and Handler Event System}
+\endlist
+
+\section1 Reference Documentation
+
+More information about the Qt QML module is contained within the class and
+function documentation of the \l{qtqml-apireference.html}
+{Qt QML Module API Reference}.  The QML types provided by the Qt QML module
+are listed in the \l{qtqml-typereference-topic.html}
+{Qt QML Module QML Type Reference} page.
+
+Application developers who are interested in writing applications using QML
+should start by reading the \l{qtquick-applicationdevelopers.html}
+{QML Application Developer Resources}.  The documentation for the
+\l{qtquick-main.html}{QtQuick} module is also an indispensible resource for
+application developers, as it provides the standard library of QML types which
+application developers will use in their applications.
+
+Quick Links:
+\list
+\li \l{qtqml-typereference-topic.html}{Qt QML Module QML Type Reference}
+\li \l{qtqml-module.html}{Qt QML Module C++ API Reference}
+\li \l{qtquick-main.html}{Qt Quick Module Documentation}
+\li \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
+\endlist
+
 */
 
-
-/*!
-  \macro QML_DECLARE_TYPE()
-  \relates QQmlEngine
-
-  Equivalent to \c Q_DECLARE_METATYPE(TYPE *) and \c Q_DECLARE_METATYPE(QQmlListProperty<TYPE>)
-
-  #include <QtQml> to use this macro.
-*/
-
-/*!
-  \macro QML_DECLARE_TYPEINFO(Type,Flags)
-  \relates QQmlEngine
-
-  Declares additional properties of the given \a Type as described by the
-  specified \a Flags.
-
-  Current the only supported type info is \c QML_HAS_ATTACHED_PROPERTIES which
-  declares that the \a Type supports \l {Attached Properties}.
-
-  #include <QtQml> to use this macro.
-*/
-
-
-/*!
-  \fn int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
-  \relates QQmlEngine
-
-  This template function registers the C++ type in the QML system with
-  the name \a qmlName, in the library imported from \a uri having the
-  version number composed from \a versionMajor and \a versionMinor.
-
-  Returns the QML type id.
-
-  There are two forms of this template function:
-
-  \code
-  template<typename T>
-  int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
-
-  template<typename T, int metaObjectRevision>
-  int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
-  \endcode
-
-  The former is the standard form which registers the type \e T as a new type.
-  The latter allows a particular revision of a class to be registered in
-  a specified version (see \l {QML Type Versioning}).
-
-
-  For example, this registers a C++ class \c MySliderItem as a QML type
-  named \c Slider for version 1.0 of a \l{QML Modules}{module} called
-  "com.mycompany.qmlcomponents":
-
-  \code
-  #include <QtQml>
-
-  ...
-
-  qmlRegisterType<MySliderItem>("com.mycompany.qmlcomponents", 1, 0, "Slider");
-  \endcode
-
-  Once this is registered, the type can be used in QML by importing the
-  specified module name and version number:
-
-  \qml
-  import com.mycompany.qmlcomponents 1.0
-
-  Slider {
-      // ...
-  }
-  \endqml
-
-  Note that it's perfectly reasonable for a library to register types to older versions
-  than the actual version of the library. Indeed, it is normal for the new library to allow
-  QML written to previous versions to continue to work, even if more advanced versions of
-  some of its types are available.
-*/
-
-/*!
-  \fn int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
-  \relates QQmlEngine
-
-  This template function registers the specified revision of a C++ type in the QML system with
-  the library imported from \a uri having the version number composed
-  from \a versionMajor and \a versionMinor.
-
-  Returns the QML type id.
-
-  \code
-  template<typename T, int metaObjectRevision>
-  int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor);
-  \endcode
-
-  This function is typically used to register the revision of a base class to
-  use for the specified module version (see \l {QML Type Versioning}).
-*/
-
-/*!
-  \fn int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
-  \relates QQmlEngine
-
-  This template function registers the C++ type in the QML system with
-  the name \a qmlName, in the library imported from \a uri having the
-  version number composed from \a versionMajor and \a versionMinor.
-
-  While the type has a name and a type, it cannot be created, and the
-  given error \a message will result if creation is attempted.
-
-  This is useful where the type is only intended for providing attached properties or enum values.
-
-  Returns the QML type id.
-
-  #include <QtQml> to use this function.
-
-  \sa qmlRegisterTypeNotAvailable()
-*/
-
-/*!
-  \fn int qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
-  \relates QQmlEngine
-
-  This function registers a type in the QML system with the name \a qmlName, in the library imported from \a uri having the
-  version number composed from \a versionMajor and \a versionMinor, but any attempt to instantiate the type
-  will produce the given error \a message.
-
-  Normally, the types exported by a module should be fixed. However, if a C++ type is not available, you should
-  at least "reserve" the QML type name, and give the user of your module a meaningful error message.
-
-  Returns the QML type id.
-
-  Example:
-
-  \code
-  #ifdef NO_GAMES_ALLOWED
-  qmlRegisterTypeNotAvailable("MinehuntCore", 0, 1, "Game", "Get back to work, slacker!");
-  #else
-  qmlRegisterType<MinehuntGame>("MinehuntCore", 0, 1, "Game");
-  #endif
-  \endcode
-
-  This will cause any QML which uses this module and attempts to use the type to produce an error message:
-  \code
-  fun.qml: Get back to work, slacker!
-     Game {
-     ^
-  \endcode
-
-  Without this, a generic "Game is not a type" message would be given.
-
-  #include <QtQml> to use this function.
-
-  \sa qmlRegisterUncreatableType()
-*/
-
-/*!
-  \fn int qmlRegisterType()
-  \relates QQmlEngine
-  \overload
-
-  This template function registers the C++ type in the QML
-  system. Instances of this type cannot be created from the QML
-  system.
-
-  #include <QtQml> to use this function.
-
-  Returns the QML type id.
-*/
-
-/*!
-  \fn int qmlRegisterInterface(const char *typeName)
-  \relates QQmlEngine
-
-  This template function registers the C++ type in the QML system
-  under the name \a typeName.
-
-  #include <QtQml> to use this function.
-
-  Returns the QML type id.
-*/
-
-/*!
-   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QJSValue (*callback)(QQmlEngine *, QJSEngine *))
-   \relates QQmlEngine
-
-   This function may be used to register a module API provider \a callback in a particular \a uri
-   with a version specified in \a versionMajor and \a versionMinor.
-
-   Installing a module API into a uri allows developers to provide arbitrary functionality
-   (methods and properties) in a namespace that doesn't necessarily contain elements.
-
-   A module API may be either a QObject or a QJSValue.  Only one module API provider
-   may be registered into any given namespace (combination of \a uri, \a versionMajor and \a versionMinor).
-   This function should be used to register a module API provider function which returns a QJSValue as a module API.
-
-   \b{NOTE:} QJSValue module API properties will \b{not} trigger binding re-evaluation if changed.
-
-   Usage:
-   \code
-   // first, define the module API provider function (callback).
-   static QJSValue *example_qjsvalue_module_api_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
-   {
-       Q_UNUSED(engine)
-
-       static int seedValue = 5;
-       QJSValue example = scriptEngine->newObject();
-       example.setProperty("someProperty", seedValue++);
-       return example;
-   }
-
-   // second, register the module API provider with QML by calling this function in an initialization function.
-   ...
-   qmlRegisterModuleApi("Qt.example.qjsvalueApi", 1, 0, example_qjsvalue_module_api_provider);
-   ...
-   \endcode
-
-   In order to use the registered module API in QML, you must import the module API.
-   \qml
-   import QtQuick 2.0
-   import Qt.example.qjsvalueApi 1.0 as ExampleApi
-   Item {
-       id: root
-       property int someValue: ExampleApi.someProperty
-   }
-   \endqml
-  */
-
-/*!
-   \fn template<typename T> int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QQmlEngine *, QJSEngine *))
-   \relates QQmlEngine
-
-   This function may be used to register a module API provider \a callback in a particular \a uri
-   with a version specified in \a versionMajor and \a versionMinor.
-
-   Installing a module API into a uri allows developers to provide arbitrary functionality
-   (methods and properties) in a namespace that doesn't necessarily contain elements.
-
-   A module API may be either a QObject or a QJSValue.  Only one module API provider
-   may be registered into any given namespace (combination of \a uri, \a versionMajor and \a versionMinor).
-   This function should be used to register a module API provider function which returns a QObject
-   of the given type T as a module API.
-
-   A QObject module API must be imported with a qualifier, and that qualifier may be used as
-   the target in a \l Connections element or otherwise used as any other element id would.
-   One exception to this is that a QObject module API property may not be aliased (because the
-   module API qualifier does not identify an object within the same component as any other item).
-
-   \b{NOTE:} A QObject module API instance returned from a module API provider is owned by the QML
-   engine.  For this reason, the module API provider function should \b{not} be implemented as a
-   singleton factory.
-
-   Usage:
-   \code
-   // first, define your QObject which provides the functionality.
-   class ModuleApiExample : public QObject
-   {
-       Q_OBJECT
-       Q_PROPERTY (int someProperty READ someProperty WRITE setSomeProperty NOTIFY somePropertyChanged)
-
-   public:
-       ModuleApiExample(QObject* parent = 0)
-           : QObject(parent), m_someProperty(0)
-       {
-       }
-
-       ~ModuleApiExample() {}
-
-       Q_INVOKABLE int doSomething() { setSomeProperty(5); return m_someProperty; }
-
-       int someProperty() const { return m_someProperty; }
-       void setSomeProperty(int val) { m_someProperty = val; emit somePropertyChanged(val); }
-
-   signals:
-       void somePropertyChanged(int newValue);
-
-   private:
-       int m_someProperty;
-   };
-
-   // second, define the module API provider function (callback).
-   static QObject *example_qobject_module_api_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
-   {
-       Q_UNUSED(engine)
-       Q_UNUSED(scriptEngine)
-
-       ModuleApiExample *example = new ModuleApiExample();
-       return example;
-   }
-
-   // third, register the module API provider with QML by calling this function in an initialization function.
-   ...
-   qmlRegisterModuleApi<ModuleApiExample>("Qt.example.qobjectApi", 1, 0, example_qobject_module_api_provider);
-   ...
-   \endcode
-
-   In order to use the registered module API in QML, you must import the module API.
-   \qml
-   import QtQuick 2.0
-   import Qt.example.qobjectApi 1.0 as ExampleApi
-   Item {
-       id: root
-       property int someValue: ExampleApi.someProperty
-
-       Component.onCompleted: {
-           someValue = ExampleApi.doSomething()
-       }
-   }
-   \endqml
-  */

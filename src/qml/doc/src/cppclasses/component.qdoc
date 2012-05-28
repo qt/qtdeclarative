@@ -1,0 +1,85 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-cppclasses-component.html
+\title Qt QML Module C++ Classes - QQmlComponent
+\brief Description of QQmlComponent
+
+    \section2 Loading QML Components from C++
+
+    A QML document can be loaded with QQmlComponent or QQuickView.
+    QQmlComponent loads a QML component as a C++ QObject;
+    QQuickView also does this, but additionally loads the QML component
+    directly into a QQuickCanvas which displays visual QML object types
+    provided by Qt Quick, or object types derived from those.
+    It is convenient for loading a displayable
+    QML component as a root QWindow.
+
+    For example, suppose there is a \c MyItem.qml file that looks like this:
+
+    \snippet qml/qtbinding/loading/MyItem.qml start
+    \snippet qml/qtbinding/loading/MyItem.qml end
+
+    This QML document can be loaded with QQmlComponent or
+    QQuickView with the following C++ code. Using a QQmlComponent
+    requires calling QQmlComponent::create() to create a new instance of
+    the component, while a QQuickView automatically creates an instance of
+    the component, which is accessible via QQuickView::rootObject():
+
+    \table
+    \row
+    \li
+    \snippet qml/qtbinding/loading/main.cpp QQmlComponent-a
+    \dots 0
+    \snippet qml/qtbinding/loading/main.cpp QQmlComponent-b
+    \li
+    \snippet qml/qtbinding/loading/main.cpp QQuickView
+    \endtable
+
+    This \c object is the instance of the \c MyItem.qml component that has been
+    created. You can now modify the item's properties using
+    QObject::setProperty() or QQmlProperty:
+
+    \snippet qml/qtbinding/loading/main.cpp properties
+
+    Alternatively, you can cast the object to its actual type and call functions
+    with compile-time safety. In this case the base object of \c MyItem.qml is
+    an \l Item, which is defined by the QQuickItem class:
+
+    \snippet qml/qtbinding/loading/main.cpp cast
+
+    You can also connect to any signals or call functions defined in the
+    component using QMetaObject::invokeMethod() and QObject::connect(). See \l
+    {Interacting with Objects defined in QML from C++} for further details.
+
+
+
+
+
+
+
+*/

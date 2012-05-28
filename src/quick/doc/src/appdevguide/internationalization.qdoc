@@ -1,0 +1,96 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick-internationalization.html
+\ingroup qml-features
+\title Localization And Internationalization Support In Qt Quick
+\brief Description of how a QML developer can internationalize their application
+
+\section1 Translation
+
+Strings in QML can be marked for translation using the qsTr(), qsTranslate(), qsTrId(),
+QT_TR_NOOP(), QT_TRANSLATE_NOOP(), and QT_TRID_NOOP() functions.
+
+For example:
+\qml
+Text { text: qsTr("Pictures") }
+\endqml
+
+These functions are standard QtScript functions; for more details see
+QScriptEngine::installTranslatorFunctions().
+
+QML relies on the core internationalization capabilities provided by Qt. These
+capabilities are described more fully in:
+\list
+\li \l {Internationalization with Qt}
+\li \l {Qt Linguist Manual}
+\endlist
+
+You can test a translation with the \l{qtquick-qmlscene.html}{QML Scene} using the -translation option.
+
+\section2 Example
+
+First we create a simple QML file with text to be translated. The string
+that needs to be translated is enclosed in a call to \c qsTr().
+
+hello.qml:
+\qml
+import QtQuick 2.0
+
+Rectangle {
+    width: 200; height: 200
+    Text { text: qsTr("Hello"); anchors.centerIn: parent }
+}
+\endqml
+
+Next we create a translation source file using lupdate:
+\code
+lupdate hello.qml -ts hello.ts
+\endcode
+
+Then we open \c hello.ts in \l{Qt Linguist Manual} {Linguist}, provide
+a translation and create the release file \c hello.qm.
+
+Finally, we can test the translation:
+\code
+qmlviewer -translation hello.qm hello.qml
+\endcode
+
+You can see a complete example and source code in the \l{declarative/i18n}{QML Internationalization example}.
+
+\section1 Localization
+
+Localization is the process of adapting to local conventions,
+for example presenting dates and times using the locally preferred formats.
+
+Qt Quick supports localization via the \l {QtQuick2::Locale}{Locale} object and extensions to the
+\l{ECMA-262}{ECMAScript} \l {QtQuick2::Date}{Date} and \l {QtQuick2::Number}{Number} types.
+
+
+*/
+

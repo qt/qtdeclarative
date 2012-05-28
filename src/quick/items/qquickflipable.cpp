@@ -91,6 +91,7 @@ public:
     \qmlclass Flipable QQuickFlipable
     \inqmlmodule QtQuick 2
     \inherits Item
+    \ingroup qtquick-input
     \ingroup qtquick-containers
     \brief For specifying a surface that can be flipped
 

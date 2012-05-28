@@ -209,7 +209,7 @@ struct SpriteVertices {
 /*!
     \qmlclass SpriteSequence QQuickSpriteSequence
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-images-sprites
+    \ingroup qtquick-visual-utility
     \inherits Item
     \brief Draws a sprite animation
 

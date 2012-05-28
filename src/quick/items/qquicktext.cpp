@@ -1139,7 +1139,7 @@ void QQuickTextPrivate::ensureDoc()
 /*!
     \qmlclass Text QQuickText
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-text
+    \ingroup qtquick-visual
     \inherits Item
     \brief Specifies how to add formatted text to a scene
 

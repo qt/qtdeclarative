@@ -1725,7 +1725,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             \image listview-layout-righttoleft.png
     \endtable
 
-    \sa {QML Data Models}, GridView, {declarative/modelviews/listview}{ListView examples}
+    \sa {QML Data Models}, GridView, {quick/modelviews/listview}{ListView examples}
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
     : QQuickItemView(*(new QQuickListViewPrivate), parent)
@@ -1887,7 +1887,7 @@ QQuickListView::~QQuickListView()
     so as to stay with the current item, unless the highlightFollowsCurrentItem
     property is false.
 
-    \sa highlightItem, highlightFollowsCurrentItem, {declarative/modelviews/listview}{ListView examples}
+    \sa highlightItem, highlightFollowsCurrentItem, {quick/modelviews/listview}{ListView examples}
 */
 
 /*!
@@ -2173,7 +2173,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     differing sections will result in a section header being created
     even if that section exists elsewhere.
 
-    \sa {declarative/modelviews/listview}{ListView examples}
+    \sa {quick/modelviews/listview}{ListView examples}
 */
 QQuickViewSection *QQuickListView::sectionCriteria()
 {

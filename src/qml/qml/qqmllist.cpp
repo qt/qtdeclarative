@@ -346,9 +346,6 @@ QML list properties are typesafe - in this case \c {Fruit} is a QObject type tha
 The QtQuick 1 version of this class is named QDeclarativeListProperty.
 
 \note QQmlListProperty can only be used for lists of QObject-derived object pointers.
-
-\sa {Object and List Property Types}
-
 */
 
 /*!

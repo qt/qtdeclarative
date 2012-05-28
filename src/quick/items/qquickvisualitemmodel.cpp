@@ -150,7 +150,7 @@ public:
 
     \image visualitemmodel.png
 
-    \sa {declarative/modelviews/visualitemmodel}{VisualItemModel example}
+    \sa {quick/modelviews/visualitemmodel}{VisualItemModel example}
 */
 QQuickVisualItemModel::QQuickVisualItemModel(QObject *parent)
     : QQuickVisualModel(*(new QQuickVisualItemModelPrivate), parent)

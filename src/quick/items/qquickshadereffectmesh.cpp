@@ -53,7 +53,7 @@ QQuickShaderEffectMesh::QQuickShaderEffectMesh(QObject *parent)
 /*!
     \qmlclass GridMesh QQuickGridMesh
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-shaders
+    \ingroup qtquick-effects
     \brief Defines a mesh with vertices arranged in a grid
 
     GridMesh defines a rectangular mesh consisting of vertices arranged in an

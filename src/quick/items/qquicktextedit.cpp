@@ -67,7 +67,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass TextEdit QQuickTextEdit
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-text
+    \ingroup qtquick-visual
+    \ingroup qtquick-input
     \inherits Item
     \brief Displays multiple lines of editable formatted text
 

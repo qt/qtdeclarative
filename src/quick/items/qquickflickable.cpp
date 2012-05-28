@@ -585,7 +585,7 @@ is finished.
 /*!
     \qmlclass Flickable QQuickFlickable
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-interaction
+    \ingroup qtquick-input
     \ingroup qtquick-containers
 
     \brief For specifying a surface that can be "flicked"

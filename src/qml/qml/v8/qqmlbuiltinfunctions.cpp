@@ -958,7 +958,7 @@ v8::Handle<v8::Value> atob(const v8::Arguments &args)
 /*!
 \qmlmethod Qt::quit()
 This function causes the QQmlEngine::quit() signal to be emitted.
-Within the \l {QML Viewer}, this causes the launcher application to exit;
+Within the \l {Prototyping with qmlscene}, this causes the launcher application to exit;
 to quit a C++ application when this method is called, connect the
 QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
 */
@@ -990,7 +990,7 @@ Note that this function returns immediately, and therefore may not work if
 the \a qml string loads new components (that is, external QML files that have not yet been loaded).
 If this is the case, consider using \l{QML:Qt::createComponent()}{Qt.createComponent()} instead.
 
-See \l {Dynamic Object Management in QML} for more information on using this function.
+See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 */
 v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args)
 {
@@ -1111,7 +1111,7 @@ For example:
 
 \snippet qml/createComponent-simple.qml 0
 
-See \l {Dynamic Object Management in QML} for more information on using this function.
+See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 
 To create a QML object from an arbitrary string of QML (instead of a file),
 use \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}.

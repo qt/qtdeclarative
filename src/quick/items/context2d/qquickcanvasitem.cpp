@@ -207,6 +207,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \since QtQuick 2.0
     \inherits Item
     \ingroup qtquick-canvas
+    \ingroup qtquick-visual
     \brief For specifying a 2D canvas element which enables drawing via Javascript
 
     The Canvas item allows drawing of straight and curved lines, simple and

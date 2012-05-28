@@ -1,0 +1,143 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-typereference-topic.html
+\title QML Types Provided By The Qt QML Module
+\brief List of QML types provided by the Qt QML module
+
+The Qt QML module provides the definition and implementation of the QML
+language, and it also provides some elementary QML types which provide the
+basis for further extensions to the QML language.
+
+
+
+The Qt QML module also provides the \c QtObject and \c Component types which
+may be used in QML documents, by default.  These types are non-visual and
+provide building-blocks for extensions to QML.
+
+
+
+\section1 The QtQml Import
+
+The types provided by the Qt QML module are only available in a QML document
+if that document imports the QtQml namespace (or if the document imports the
+QtQuick namespace, as noted below).
+
+The current version of the import provided by the Qt QML module is version 2.0,
+and thus it may be imported via the following statement:
+
+\tt{import QtQml 2.0}
+
+Most clients will never need to use the QtQml import, as all of the types and
+functionality provided by the QtQml namespace are also provided by the QtQuick
+namespace which may be imported as follows:
+
+\tt{import QtQuick 2.0}
+
+See the \l{Qt Quick} module documentation for more information about the
+QtQuick namespace and what it provides to QML application developers.
+
+The documentation for the types below applies equally to the types of the same
+name provided by the Qt Quick module, as they are in fact identical.
+
+\section1 QtObject
+
+The \c QtObject type provides a basic instantiable object which can be used in
+QML applications.  It is non-visual, but may have properties, methods, signals
+and signal handlers.
+
+For example, the following QtObject has several properties, one of which has
+been assigned a \l{Property Binding}
+{binding}, and a \l{Signal and Handler Event System}{signal handler} for
+the default change signal which exists for one of its properties:
+
+\code
+    import QtQuick 2.0
+
+    QtObject {
+        property int a: 15
+        property int b: a + 22
+        property int changeCount: 0
+
+        onAChanged: {
+            changeCount += 1;
+        }
+    }
+\endcode
+
+\section1 Component
+
+The \c Component type provides a basic re-usable component which allows
+instances of another type to be instantiated on-demand.  It may be given an
+\c id and it has a default property which is the object type to instantiate,
+but no other properties may be added to it.
+
+For example, the following QtObject has two different Component properties,
+and it uses those components to dynamically construct objects at run-time:
+
+\code
+    import QtQuick 2.0
+
+    QtObject {
+        id: root
+        property bool which: true
+
+        property Component a: Component {
+            id: firstComponent
+            QtObject {
+                property int answer: 42
+                function activate() {
+                    console.log("The answer is: " + answer);
+                }
+            }
+        }
+
+        property Component b: Component {
+            id: secondComponent
+            QtObject {
+                property string message: "Hello, World!"
+                function activate() {
+                    console.log(message);
+                }
+            }
+        }
+
+        function activateDynamicObject() {
+            var o = {};
+            if (which) {
+                which = false;
+                o = a.createObject(null); // no parent
+            } else {
+                which = true;
+                o = b.createObject(null); // no parent
+            }
+            o.activate();
+        }
+    }
+\endcode
+
+*/

@@ -1,0 +1,154 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-syntax-topic.html
+\title Syntax of the QML Language
+\brief Description of the QML language and its syntax
+
+
+QML is a declarative language that enables objects to be defined in terms of their attributes
+and how they relate and respond to changes in other objects. In contrast to imperative code, where changes in attributes and behavior are expressed through a series of statements that are processed step by step, the declarative QML syntax integrates attribute and behavioral changes directly into the definitions of individual objects.
+
+QML source code is generally loaded by the engine through QML \e documents, which are
+standalone documents of QML code. These can be used to define \l {QML Object Types}{QML object types} that can then be reused throughout an application.
+
+
+\section1 Structure Of A QML Document
+
+A QML document is a self contained piece of QML source code that consists of two parts:
+
+    \list
+    \li Its \e import statements
+    \li A single root object declaration
+    \endlist
+
+A document is generally placed into a \c .qml file that is then loaded by the engine; if
+the name of the \c .qml file begins with a capital letter, the file is recognized by the engine as a definition of a \l {QML Object Types}{QML object type}. Additionally, a
+document may loaded from a text string (rather than a file) using Qt.createQmlObject().
+
+
+\section2 Import statements
+
+A QML document may begin with one or more \c import statements.
+
+An import can be any one of:
+
+\list
+\li a versioned namespace into which types have been registered (e.g., by a plugin)
+\li a versioned namespace which provides a module API
+\li a relative directory which contains type-definitions as QML documents
+\li a JavaScript file
+\endlist
+
+Module API imports and JavaScript file imports must be qualified when
+imported, so that the properties and methods they provide can be accessed.
+
+The generic form of the various imports are as follows:
+\list
+\li \tt{import Namespace VersionMajor.VersionMinor}
+\li \tt{import Namespace VersionMajor.VersionMinor as ModuleApiIdentifier}
+\li \tt{import "directory"}
+\li \tt{import "file.js" as ScriptIdentifier}
+\endlist
+
+Examples:
+\list
+\li \tt{import QtQuick 2.0}
+\li \tt{import QtQuick.LocalStorage 2.0 as Database}
+\li \tt{import "../privateComponents"}
+\li \tt{import "somefile.js" as Script}
+\endlist
+
+Please see the \l{qtqml-syntax-imports.html}{QML Documents - Imports}
+documentation for in-depth information about QML imports.
+
+
+\section2 The Root Object Declaration
+
+Following the import statements, a QML document should have a single root \l {qtqml-syntax-basics.html#object-declarations}{object declaration}.
+
+
+
+A QML file must only contain \b {a single root object definition}. The following is invalid and will generate an error:
+
+\code
+// MyQmlFile.qml
+import QtQuick 2.0
+
+Rectangle { width: 200; height: 200; color: "red" }
+Rectangle { width: 200; height: 200; color: "blue" }    // invalid!
+\endcode
+
+This is because a .qml file automatically defines a QML type, which encapsulates a \e single QML object definition. This is discussed further in \l {QML Object Types}.
+
+
+
+\section1 Object Declarations
+
+
+\section2 Declaring an object and its attributes
+
+
+\section2 Child Objects
+
+
+\section2 Object Ownership Semantics
+
+
+
+\section1 QML Object Attributes
+
+
+If an object definition only has a small number of properties, it can be written on a single line like this, with the properties separated by semi-colons:
+
+\qml
+Rectangle { width: 200; height: 200; color: "red" }
+\endqml
+
+
+
+\section3 Property Binding
+
+Properties may have a value defined at declaration, and if that value is
+defined in terms of other properties or properties of other objects, it is
+called a "binding".  Such a binding may also be defined imperatively.  See the
+\l{Property Binding}
+documentation for more information about defining values at declaration
+and binding values to properties.
+
+
+\section2 Methods, Signals And Signal Handlers
+
+Objects may have methods defined, allowing them to provide complex
+functionality in a modular and maintainable fashion. An object definition may
+also include signals and signal handlers, allowing complex event-driven
+functionality to be implemented in QML.
+
+See the \l{Signal and Handler Event System}{Methods And Signals}
+documentation for in-depth information about methods and signals.
+
+*/

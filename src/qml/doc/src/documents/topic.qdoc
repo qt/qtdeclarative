@@ -1,0 +1,64 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-documents-topic.html
+\title QML Documents
+\brief Description of QML documents
+
+\section1 Structure Of A QML Document
+
+A QML document consists of two parts: its imports, and its object
+hierarchy definition. See the \l {qtqml-documents-structure.html}{Structure of a QML Document}
+for more information.
+
+
+\section1 Documents as QML object type definitions
+
+Any QML document can also define a QML object type.
+
+
+\section2 Defining a component with a .qml file
+
+
+\section2 Attributes exposed by components
+
+
+
+\section1 Network Transparency
+
+It is important to note that QML is network-transparent.
+Applications can import documents from remote paths just as
+simply as documents from local paths.
+
+Please see the \l{qtqml-documents-networktransparency.html}
+{Network Transparency} documentation for more information about network
+transparency in imports.
+
+\section1 Scope and Naming Resolution
+
+
+*/

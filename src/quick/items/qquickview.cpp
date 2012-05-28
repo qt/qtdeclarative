@@ -144,7 +144,7 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
     you can connect to the statusChanged() signal and monitor for QQuickView::Error.
     The errors are available via QQuickView::errors().
 
-    \sa {Using QML Bindings in C++ Applications}
+    \sa {Exposing C++ Data to QML}
 */
 
 

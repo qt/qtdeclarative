@@ -560,7 +560,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
 /*!
     \qmlclass PathAnimation QQuickPathAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \inherits Animation
     \since QtQuick 2.0
     \brief Animates an item along a path

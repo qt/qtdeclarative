@@ -156,7 +156,7 @@ QQmlContextPrivate::QQmlContextPrivate()
     to reevaluate). Thus whenever possible you should complete "setup" of the context
     before using it to create any objects.
 
-    \sa {Using QML Bindings in C++ Applications}
+    \sa {Exposing C++ Data to QML}
 */
 
 /*! \internal */

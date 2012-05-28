@@ -1,0 +1,74 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-javascript-topic.html
+\title Integrating QML And JavaScript
+\brief Description of how to use JavaScript in QML applications
+
+The QML language uses a JSON-like syntax and allows various expressions and
+methods to be defined as JavaScript functions.  It also allows users to import
+JavaScript files and use the functionality those imports provide.
+
+This allows developers and designers to leverage the knowledge they have of
+JavaScript to quickly develop both user-interfaces and application logic.
+
+\section1 JavaScript Expressions
+
+QML has a deep JavaScript integration, and allows
+\l{qtqml-syntax-objectattributes.html#signal-handlers}{signal handlers}
+and \l{qtqml-syntax-objectattributes.html#custom-methods}{methods}
+to be defined in JavaScript.  One of the other fundamental concepts of QML is
+the ability to bind property values to the result of complex expressions which
+can include properties from other objects. These
+\l{Property Binding}{property bindings}
+are JavaScript expressions.
+
+See the documentation page titled
+\l{qtqml-javascript-expressions.html}{JavaScript Expressions In QML Documents}
+for more information about using JavaScript expressions in QML.
+
+\section1 JavaScript Imports
+
+A QML document may import JavaScript files.  This allows an application
+developer to provide application logic in modular, self-contained files.
+See the documentation page titled
+\l{qtqml-javascript-imports.html}{Importing JavaScript Files In QML Documents}
+for more information on how to import JavaScript files and how to use the
+functionality they provide.
+
+\section1 JavaScript Host Environment
+
+The QML engine provides a JavaScript environment that has some differences to
+the JavaScript environment provided by a web browser.  Certain limitations
+apply to code running in the environment, and the QML engine provides various
+objects in the root context which may be unfamiliar to JavaScript developers.
+
+These limitations and extensions are documented in the description of the
+\l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment} provided
+by the QML engine.
+
+*/

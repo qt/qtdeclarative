@@ -1,0 +1,142 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick-concepts-positioning.html
+\title Concepts - Positioning
+\brief Description of the concept of visual object positioning in Qt Quick
+
+This page describes the concept of positioning visual user-interface elements
+and the various elements which Qt Quick provides to support precise
+positioning, and the ways in which positioning in Qt Quick can be automated.
+
+\section1 Manual Positioning
+
+In any user-interface, the visual elements exist at a particular location in
+the screen coordinates at any instant in time.  While fluidly animated and
+dynamic user-interfaces are a major focus of Qt Quick, statically-positioned
+user interfaces are still a viable option.  What's more, if the position of
+those elements does not change, it can often be more performant to specify
+the position manually than to use the more dynamic positioning methods
+documented in proceeding sections.
+
+In Qt Quick, every visual object is positioned within the
+\l{qtquick-concepts-visual-coordinates.html}{coordinate system}
+provided by the Qt Quick visual canvas.  As described in that document, the
+x and y coordinates of a visual object are relative to those of its visual
+parent, with the top-left corner have the value [0, 0].
+
+Thus, the following example will display three rectangles positioned manually:
+
+\table
+    \header
+    \li Example Code
+    \li Resultant Layout
+
+    \row
+    \li
+        \qml
+        import QtQuick 2.0
+
+        Rectangle {
+            id: r1
+            x: 0
+            y: 0
+            width: 200
+            height: 200
+
+            Rectangle {
+                id: r2
+                x: 0
+                y: 100
+                width: 100
+                height: 100
+            }
+
+            Rectangle {
+                id: r3
+                x: 100
+                y: 100
+                width: 50
+                height: 100
+            }
+        }
+        \endqml
+    \li
+        \image manual-layout.png
+\endtable
+
+\section1 Positioning With Bindings
+
+The position and dimensions of a visual object can also be set through property
+bindings.  This has the advantage that the values will automatically be updated
+as the dependencies of the bindings change.  For example, the width of one
+Rectangle might depend on the width of the Rectangle next to it.
+
+While bindings provide a very flexible and intuitive way of creating dynamic
+layouts, it should be noted that there is some performance cost associated with
+them, and where possible, pristine Anchor layouts should be preferred.
+
+\section1 Anchors
+
+A visual object can be thought of as having various anchor-points (or more
+correctly, anchor-lines).  Other items can be anchored to those points, which
+means that as any object changes, the other objects which are anchored to it
+will adjust automatically to maintain the anchoring.
+
+Qt Quick provides anchors as a top-level concept.  See the documentation about
+\l{qtquick-concepts-positioning-anchors.html}{positioning with anchors}
+for in-depth information on the topic.
+
+It is important to note that anchor-based layouts are generally far more
+performant than binding-based layouts, if pristine.  A "pristine" anchor layout
+is one which uses only anchors (with object nesting) to determine the
+positioning, whereas a "contaminated" anchor layout is one which uses both
+anchoring and bindings (either on position-related [x,y] properties or on
+dimension-related [width,height] properties) to determine the position.
+
+\section1 Pre-defined Layouts
+
+There are many well-known layouts which work well in user-interfaces, such as
+grids and lists, rows and columns.  Qt Quick supports these sort of pre-defined
+layouts, which can often be more performant to draw than anchor or
+binding-based layouts.  See the documentation on
+\l{qtquick-concepts-positioning-layouts.html}{layout elements} for more
+information about utilizing pre-defined layouts.
+
+\section1 Right-To-Left Support
+
+The directionality of the written form of a language often has a great impact
+on how the visual elements of a user-interface should be positioned.  Qt Quick
+supports right-to-left positioning of elements through the predefined-layouts
+as well as right-to-left text layouts.
+
+Please see the documentation about
+\l{qtquick-concepts-positioning-righttoleft.html}
+{right-to-left support in Qt Quick} for in-depth information on the topic.
+
+*/

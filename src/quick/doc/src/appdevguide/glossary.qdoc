@@ -1,0 +1,111 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick-glossary.html
+\title Glossary Of Terms
+\brief Glossary of terms used in the documentation for QML and QtQuick
+
+\section1 Common Terms
+
+\table
+    \header
+        \li Term
+        \li Definition
+
+    \row
+        \li QML
+        \li The language provided by the Qt QML module in which QML
+            applications are written
+
+    \row
+        \li Qt Quick
+        \li The standard-library of types and functionality for the
+            QML language, which is provided by the Qt Quick module,
+            and may be accessed with "import QtQuick 2.0"
+
+    \row
+        \li Type
+        \li A type is either a property type, or a QML object type.
+            All QML object types may also be a property type (for
+            example, you can have a property of type Button) but not
+            all property types are also QML object types (for example,
+            an integer is not an object).  Types are either built-in
+            to the QML language (\l{qtqml-basictypes.html}{basic types}),
+            or they are provided by the QtQuick import
+            (\l{qtquick-qmltypereference.html}{Qt Quick types}), or they
+            are provided in extensions to QML (\l{qtqml-modules-topic.html}
+            {Modules}) or by the application developer as QML documents.
+
+    \row
+        \li Component
+        \li A Component is a special type which may be used to instantiate
+            other QML object types.
+
+    \row
+        \li Object
+        \li An object is an instance of a type.
+
+    \row
+        \li Property
+        \li An object can have one or more properties.  Some properties
+            are associated with the canvas (e.g., x, y, width, height,
+            and opacity) while others may be data specific to that type
+            (e.g., the "text" property of the Text type).
+
+    \row
+        \li Binding
+        \li A binding is a JavaScript expression which is "bound" to a
+            property.  The value of the property at any point in time
+            will be the value returned by evaluating that expression.
+
+    \row
+        \li Signal
+        \li A signal is a notification of a condition occurring, and may be
+            either "emitted" or "handled".  Most properties of QML objects
+            have a change signal, and also an associated change signal handler
+            which may be defined by clients to implement functionality.  For
+            example, the "onClicked()" handler of an instance of the MouseArea
+            type might be defined in an application to cause a sound to be
+            played.
+
+    \row
+        \li Signal Handler
+        \li A signal handler is the expression (or function) which is triggered
+            by a signal.  It is also known as a "slot" in C++.
+
+    \row
+        \li Lazy Instantiation
+        \li Object instances can be instantiated "lazily" at run-time,
+            to avoid performing unnecessary work until needed.  Qt Quick
+            provides the Loader element to make lazy instantiation more
+            convenient.
+\endtable
+
+\section1 Indexed Alphabetically
+
+*/

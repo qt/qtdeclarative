@@ -1,0 +1,185 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtqml-syntax-propertybinding.html
+\title Property Binding
+\brief binding object properties
+
+To make the fullest use of QML and its built-in support for implementing dynamic object behavioral changes, most QML objects will use \e {property binding}. This is a core feature of QML that allows objects to automatically update their properties in response to changing attributes in other objects or the occurence of some external event.
+
+When an object's property is assigned a value, it can either be assigned a static value, or \e bound to a JavaScript expression. In the first case, the property's value will not change unless a new value is assigned to the property. In the latter case, a \e {property binding} is created and the property's value is automatically updated by the QML engine whenever the value of the evaluated expression changes.
+
+
+\section1 Overview
+
+To create a property binding, a property is assigned an expression that evaluates to the desired value. At its simplest, an expression may simply be a reference to another object's property. Take the following example, where the blue \l Rectangle's \c height is bound to the height of its parent:
+
+\qml
+Rectangle {
+    width: 200; height: 200
+
+    Rectangle {
+        width: 100; height: parent.height
+        color: "blue"
+    }
+}
+\endqml
+
+Whenever the \c height of the parent item changes, the \c height of the blue rectangle will update to be of the same value.
+
+The binding expression can be any valid JavaScript expression. For example, the above code could be modified so that the height of the rectangle is always one-third of the height of its parent:
+
+\qml
+Rectangle {
+    width: 200; height: 200
+
+    Rectangle {
+        width: 100; height: parent.height / 3
+        color: "blue"
+    }
+}
+\endqml
+
+###TODO have .gif here that demonstrates the changes?
+
+Whenever the value of \c parent.height changes, the QML engine will re-evaluate the above expression and assign the blue rectangle's \c width property with the appropriate updated value.
+
+
+QML uses a standards compliant JavaScript engine, so any valid JavaScript expression or statement can be used in a property binding. Bindings can access object properties, call methods and use built-in JavaScript objects such as \c Date and \c Math. Here is an example with various valid bindings:
+
+\qml
+Column {
+    width: 200
+    height: 200
+
+    Rectangle {
+        width: Math.max(bottomRect.width, parent.width/2)
+        height: (parent.height / 3) + 10
+        color: "yellow"
+
+        TextInput {
+            id: myTextInput
+            text: "Hello QML!"
+        }
+    }
+
+    Rectangle {
+        id: bottomRect
+        width: 100
+        height: 50
+        color: myTextInput.text.length <= 10 ? "red" : "blue"
+    }
+}
+\endqml
+
+###TODO have .gif here that demonstrates the changes?
+
+While syntactically bindings can be of arbitrary complexity, if a binding starts to become overly complex - such as involving multiple lines, or imperative loops - it may be better to refactor the component entirely, or at least factor the binding out into a separate function.
+
+
+\keyword qml-javascript-assignment
+\section1 Creating property bindings from JavaScript
+
+Once a property has been bound to an expression, the property is set to be automatically updated as necessary. However, be aware that if the property is later assigned a static value from a JavaScript statement, this will remove the binding.
+
+For example, the \c height of the \l Rectangle below is initially bound to be twice its \c width. However, when the space key is pressed, the \c height value is changed to be three times its \c width. At this point, the \c height is assigned the currently evaluated result of \c width*3 and \e {the height will no longer be automatically updated whenever the width changes}. The assignment of the static value removes the binding.
+
+\qml
+import QtQuick 2.0
+
+Rectangle {
+    width: 100
+    height: width * 2
+
+    focus: true
+    Keys.onSpacePressed: {
+        height = width * 3
+    }
+}
+\endqml
+
+If the intention is to remove the binding, then this is not a problem. However if the intention is to create a new binding of \c width*3 then the property must be assigned a Qt.binding() value instead. This is done by passing a function to Qt.binding() that returns the desired result:
+
+\qml
+import QtQuick 2.0
+
+Rectangle {
+    width: 100
+    height: width * 2
+
+    focus: true
+    Keys.onSpacePressed: {
+        height = Qt.binding(function() { return width * 3 })
+    }
+}
+\endqml
+
+Now when the space key is pressed, a new binding of \c width*3 is assigned, instead of simply removing the initial binding.
+
+
+\section2 Using \c this with property binding
+
+When creating a property binding from JavaScript, QML allows the use of the \c
+this keyword to refer to the object to which the property binding will be
+assigned. This allows one to explicitly refer to a property within an object
+when there may be ambiguity about the exact property that should be used for the
+binding.
+
+For example, the \c Component.onCompleted handler below is defined within the
+scope of the \l Item, and references to \c width within this scope would refer
+to the \l Item's width, rather than that of the \l Rectangle. To bind the \l
+Rectangle's \c height to its own \c width, the function passed to Qt.binding()
+needs to explicitly refer to \c this.width rather than just \c width.
+
+\qml
+Item {
+    width: 500
+    height: 500
+
+    Rectangle {
+        id: rect
+        width: 100
+        color: "yellow"
+    }
+
+    Component.onCompleted: {
+        rect.height = Qt.binding(function() { return this.width * 2 })
+        console.log("rect.height = " + rect.height) // prints 200, not 1000
+    }
+}
+\endqml
+
+In this case, the function could also have referred to \c rect.width rather than
+\c this.width.
+
+Note that the value of \c this is not defined outside of its use in property binding.
+See \l {QML JavaScript Restrictions} for details.
+
+
+*/
+

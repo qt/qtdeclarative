@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     \li Subclass QQmlExtensionPlugin, implement registerTypes() method
     to register types using qmlRegisterType(), and export the class using the Q_EXPORT_PLUGIN2() macro
     \li Write an appropriate project file for the plugin
-    \li Create a \l{Writing a qmldir file}{qmldir file} to describe the plugin
+    \li Create a \l{Syntax of a qmldir file}{qmldir file} to describe the plugin
     \endlist
 
     QML extension plugins can be used to provide either application-specific or
@@ -105,7 +105,7 @@ QT_BEGIN_NAMESPACE
     ...
     \endcode    
 
-    Finally, a \l{Writing a qmldir file}{qmldir file} is required in the \c com/nokia/TimeExample directory
+    Finally, a \l{Syntax of a qmldir file}{qmldir file} is required in the \c com/nokia/TimeExample directory
     that describes the plugin. This directory includes a \c Clock.qml file that
     should be bundled with the plugin, so it needs to be specified in the \c qmldir
     file:
@@ -117,9 +117,9 @@ QT_BEGIN_NAMESPACE
 
     \snippet examples/qml/cppextensions/plugins/plugins.qml 0
 
-    The full source code is available in the \l {declarative/cppextensions/plugins}{plugins example}.
+    The full source code is available in the \l {qml/cppextensions/plugins}{plugins example}.
 
-    The \l {Tutorial: Writing QML extensions with C++} also contains a chapter
+    The \l {Tutorial: Extending QML with C++} also contains a chapter
     on creating QML plugins.
 
     Note that the QtQuick 1 version is called QDeclarativeExtensionPlugin.

@@ -1,0 +1,882 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-cppintegration-data.html
+\title Exposing Data From C++ To QML
+\brief Description of how to expose data from C++ to QML
+
+
+// XXX TODO The content of "Exposing C++ Functionality To QML" and
+// "Exposing Data From C++ To QML" should probably be grouped together
+// on the same page, or separated in a more distinct way.
+// [CA]: I'm not so sure.  Functions vs Data is separate and distinct.
+// I like the separation of pages, to be honest.
+
+
+\section1 Ownership Semantics
+
+The ownership of data transferred from C++ to QML always remains with C++ in all
+cases, except for one (where a QObject is returned from a method invocation).
+More information about that possible ownership change is included
+below.  Furthermore, QML respects the normal QObject parent ownership
+semantics of Qt C++, and won't ever take ownership of a QObject which
+already has a parent.
+
+\section1 Context Properties
+
+Data from C++ may be exposed to QML via context properties.
+Since all expressions evaluated in QML are evaluated in a
+particular context, if the context is modified, all bindings
+in that context will be re-evaluated, and thus this method
+should be used with care (or only during initialization).
+
+\section1 Instance Property Access
+
+Data from a registered C++ type may be exposed as a property
+which has been declared using the Q_PROPERTY macro.  Such a
+property will be accessible from QML code.
+
+
+
+\target properties-cpp
+
+Any \l {The Property System}{Qt properties} - that is, those declared with the Q_PROPERTY()
+macro - are accessible from QML. Here is a modified version of the \l {Embedding C++ objects into
+QML components}{earlier example} on this page; here, the \c ApplicationData class has a \c backgroundColor
+property. This property can be written to and read from QML:
+
+\table
+\row
+\li \snippet qml/qtbinding/properties-cpp/applicationdata.h 0
+\li \snippet qml/qtbinding/properties-cpp/MyItem.qml 0
+\endtable
+
+Notice the \c backgroundColorChanged signal is declared as the NOTIFY signal for the
+\c backgroundColor property. If a Qt property does not have an associated NOTIFY signal,
+the property cannot be used for \l{Property Binding}, as the QML engine would not be
+notified when the value changes. If you are using custom types in QML, make sure their
+properties have NOTIFY signals so that they can be used in property bindings.
+
+See \l {Tutorial: Extending QML with C++} for further details and examples
+on using Qt properties with QML.
+
+
+
+
+\section1 Supported data types
+
+Any C++ data that is used from QML - whether as custom properties, or parameters for signals or
+functions - must be of a type that is recognizable by QML.
+
+By default, QML recognizes the following data types:
+
+// XXX TODO This list should refer to "QML Basic Types" list to refer to the type conversions
+
+\list
+\li bool
+\li unsigned int, int
+\li float, double, qreal
+\li QString
+\li QUrl
+\li QColor
+\li QDate, QTime, QDateTime
+\li QPoint, QPointF
+\li QSize, QSizeF
+\li QRect, QRectF
+\li QVariant
+\li QVariantList, QVariantMap
+\li QObject*
+\li Enumerations declared with Q_ENUMS()
+\endlist
+
+To allow a custom C++ type to be created or used in QML, the C++ class must be registered as a QML
+type using qmlRegisterType(), as shown in the \l {Defining new QML elements} section above.
+
+
+
+
+\section2 JavaScript Arrays and Objects
+
+There is built-in support for automatic type conversion between QVariantList and JavaScript
+arrays, and QVariantMap and JavaScript objects.
+
+For example, the function defined in QML below left expects two arguments, an array and an object, and prints
+their contents using the standard JavaScript syntax for array and object item access. The C++ code
+below right calls this function, passing a QVariantList and a QVariantMap, which are automatically
+converted to JavaScript array and object values, repectively:
+
+\table
+\header
+\li Type
+\li String format
+\li Example
+\row
+\li \snippet qml/qtbinding/variantlistmap/MyItem.qml 0
+\li \snippet qml/qtbinding/variantlistmap/main.cpp 0
+\endtable
+
+This produces output like:
+
+\code
+Array item: 10
+Array item: #00ff00
+Array item: bottles
+Object item: language = QML
+Object item: released = Tue Sep 21 2010 00:00:00 GMT+1000 (EST)
+\endcode
+
+Similarly, if a C++ type uses a QVariantList or QVariantMap type for a property or method
+parameter, the value can be created as a JavaScript array or object in the QML
+side, and is automatically converted to a QVariantList or QVariantMap when it is passed to C++.
+
+
+\section2 Using Enumerations of a Custom Type
+
+To use an enumeration from a custom C++ component, the enumeration must be declared with Q_ENUMS() to
+register it with Qt's meta object system. For example, the following C++ type has a \c Status enum:
+
+\snippet qml/qtbinding/enums/imageviewer.h start
+\snippet qml/qtbinding/enums/imageviewer.h end
+
+Providing the \c ImageViewer class has been registered using qmlRegisterType(), its \c Status enum can
+now be used from QML:
+
+\snippet qml/qtbinding/enums/standalone.qml 0
+
+The C++ type must be registered with QML to use its enums. If your C++ type is not instantiable, it
+can be registered using qmlRegisterUncreatableType().  To be accessible from QML, the names of enum values
+must begin with a capital letter.
+
+See the \l {Tutorial: Extending QML with C++}{Writing QML extensions with C++} tutorial and
+the \l{Extending QML with C++} reference documentation for
+more information.
+
+
+\section2 Using Enumeration Values as Signal and Method Parameters
+
+C++ signals may pass enumeration values as signal parameters to QML, providing that the enumeration
+and the signal are declared within the same class, or that the enumeration value is one of those declared
+in the \l {Qt}{Qt Namespace}.
+
+Likewise, invokable C++ method parameters may be enumeration values providing
+that the enumeration and the method are declared within the same class, or that
+the enumeration value is one of those declared in the \l {Qt}{Qt Namespace}.
+
+Additionally, if a C++ signal with an enum parameter should be connectable to a QML function using the
+\l{QML Signal and Handler Event System#Connecting Signals to Methods and Signals}{connect()}
+function, the enum type must be registered using qRegisterMetaType().
+
+For QML signals, enum values may be used as signal parameters using the \c int type:
+
+\snippet qml/qtbinding/enums/standalone.qml 1
+
+
+
+
+\section2 Automatic Type Conversion from Strings
+
+As a convenience, some basic types can be specified in QML using format strings to make it easier to
+pass simple values from QML to C++.
+
+\table
+\header
+\li Type
+\li String format
+\li Example
+\row
+\li QColor
+\li Color name, "#RRGGBB", "#RRGGBBAA"
+\li "red", "#ff0000", "#ff000000"
+\row
+\li QDate
+\li "YYYY-MM-DD"
+\li "2010-05-31"
+\row
+\li QPoint
+\li "x,y"
+\li "10,20"
+\row
+\li QRect
+\li "x,y,WidthxHeight"
+\li "50,50,100x100"
+\row
+\li QSize
+\li "WidthxHeight"
+\li "100x200"
+\row
+\li QTime
+\li "hh:mm:ss"
+\li "14:22:55"
+\row
+\li QUrl
+\li URL string
+\li "http://www.example.com"
+\row
+\li QVector3D
+\li "x,y,z"
+\li "0,1,0"
+\row
+\li Enumeration value
+\li Enum value name
+\li "AlignRight"
+\endtable
+
+(More details on these string formats and types can be found in the
+\l {QML Basic Types}{basic type documentation}.)
+
+These string formats can be used to set QML \c property values and pass arguments to C++
+functions. This is demonstrated by various examples on this page; in the above
+\l{#properties-cpp}{Qt properties example}, the \c ApplicationData class has a \c backgroundColor
+property of a QColor type, which is set from the QML code with the string "red" rather rather
+than an actual QColor object.
+
+If it is preferred to pass an explicitly-typed value rather than a string, the global
+\l{QmlGlobalQtObject}{Qt object} provides convenience functions for creating some of the object
+types listed above. For example, \l{QML:Qt::rgba()}{Qt.rgba()} creates a QColor value from four
+RGBA values. The QColor returned from this function could be used instead of a string to set
+a QColor-type property or to call a C++ function that requires a QColor parameter.
+
+
+
+
+\section1 Data Returned From Instance Method Invocation
+
+A registered C++ type may have functions flagged with the
+Q_INVOKABLE flag defined.  Those functions of an instance of
+such a type will be accessible from QML.  The function may
+have a return value, which will be converted to a JavaScript
+value when accessed from a JavaScript expression in QML.
+
+Note that if the return value is a QObject pointer (or a
+pointer to a QObject-derived type), the QML engine will assume
+ownership of it unless the object has had its ownership previously
+explicitly set (to QQmlEngine::CppOwnership).
+
+\section1 Data Provided In A Custom C++ Model
+
+Models can be defined in C++ and then made available to QML. This is useful
+for exposing existing C++ data models or otherwise complex datasets to QML.
+
+A C++ model class can be defined as a \l QStringList, a QObjectList or a
+\l QAbstractItemModel. The first two are useful for exposing simpler datasets,
+while QAbstractItemModel provides a more flexible solution for more complex
+models.
+
+\section2 QStringList-based Model
+
+A model may be a simple \l QStringList, which provides the contents of the list
+via the \e modelData role.
+
+Here is a ListView with a delegate that references its model item's
+value using the \c modelData role:
+
+\snippet examples/quick/modelviews/stringlistmodel/view.qml 0
+
+A Qt application can load this QML document and set the value of \c myModel
+to a QStringList:
+
+\snippet examples/quick/modelviews/stringlistmodel/main.cpp 0
+
+The complete example is available in Qt's \l {quick/modelviews/stringlistmodel}{examples/quick/modelviews/stringlistmodel} directory.
+
+\b{Note:} There is no way for the view to know that the contents of a QStringList
+have changed.  If the QStringList changes, it will be necessary to reset
+the model by calling QQmlContext::setContextProperty() again.
+
+
+\section2 QObjectList-based model
+
+A list of QObject* values can also be used as a model. A QList<QObject*> provides
+the properties of the objects in the list as roles.
+
+The following application creates a \c DataObject class that with
+Q_PROPERTY values that will be accessible as named roles when a
+QList<DataObject*> is exposed to QML:
+
+\snippet examples/quick/modelviews/objectlistmodel/dataobject.h 0
+\dots 4
+\snippet examples/quick/modelviews/objectlistmodel/dataobject.h 1
+\codeline
+\snippet examples/quick/modelviews/objectlistmodel/main.cpp 0
+\dots
+
+The QObject* is available as the \c modelData property.  As a convenience,
+the properties of the object are also made available directly in the
+delegate's context. Here, \c view.qml references the \c DataModel properties in
+the ListView delegate:
+
+\snippet examples/quick/modelviews/objectlistmodel/view.qml 0
+
+Note the use of the fully qualified access to the \c color property.
+The properties of the object are not replicated in the \c model
+object, since they are easily available via the \c modelData
+object.
+
+The complete example is available in Qt's \l {quick/modelviews/objectlistmodel}{examples/quick/modelviews/objectlistmodel} directory.
+
+Note: There is no way for the view to know that the contents of a QList
+have changed.  If the QList changes, it will be necessary to reset
+the model by calling QQmlContext::setContextProperty() again.
+
+
+\section2 QAbstractItemModel
+
+A model can be defined by subclassing QAbstractItemModel. This is the
+best approach if you have a more complex model that cannot be supported
+by the other approaches. A QAbstractItemModel can also automatically
+notify a QML view when the model data has changed.
+
+The roles of a QAbstractItemModel subclass can be exposed to QML by calling
+QAbstractItemModel::setRoleNames(). The default role names set by Qt are:
+
+\table
+\header
+\li Qt Role
+\li QML Role Name
+\row
+\li Qt::DisplayRole
+\li display
+\row
+\li Qt::DecorationRole
+\li decoration
+\endtable
+
+Here is an application with a QAbstractListModel subclass named \c AnimalModel
+that has \e type and \e size roles. It calls QAbstractItemModel::setRoleNames() to set the
+role names for accessing the properties via QML:
+
+\snippet examples/quick/modelviews/abstractitemmodel/model.h 0
+\dots
+\snippet examples/quick/modelviews/abstractitemmodel/model.h 1
+\dots
+\snippet examples/quick/modelviews/abstractitemmodel/model.h 2
+\codeline
+\snippet examples/quick/modelviews/abstractitemmodel/model.cpp 0
+\codeline
+\snippet examples/quick/modelviews/abstractitemmodel/main.cpp 0
+\dots
+
+This model is displayed by a ListView delegate that accesses the \e type and \e size
+roles:
+
+\snippet examples/quick/modelviews/abstractitemmodel/view.qml 0
+
+QML views are automatically updated when the model changes. Remember the model
+must follow the standard rules for model changes and notify the view when
+the model has changed by using QAbstractItemModel::dataChanged(),
+QAbstractItemModel::beginInsertRows(), etc. See the \l {Model subclassing reference} for
+more information.
+
+The complete example is available in Qt's \l {quick/modelviews/abstractitemmodel}{examples/quick/modelviews/abstractitemmodel} directory.
+
+QAbstractItemModel presents a hierarchy of tables, but the views currently provided by QML
+can only display list data.
+In order to display child lists of a hierarchical model
+the VisualDataModel element provides several properties and functions for use
+with models of type QAbstractItemModel:
+
+\list
+\li \e hasModelChildren role property to determine whether a node has child nodes.
+\li \l VisualDataModel::rootIndex allows the root node to be specified
+\li \l VisualDataModel::modelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
+\li \l VisualDataModel::parentModelIndex() returns a QModelIndex which can be assigned to VisualDataModel::rootIndex
+\endlist
+
+\section2 Exposing C++ Data Models to QML
+
+The above examples use QQmlContext::setContextProperty() to set
+model values directly in QML components. An alternative to this is to
+register the C++ model class as a QML type (either
+\l{qtqml-registercpptypes.html}{directly} from a C++ entry-point, or within
+the initialization function of a \l{qtqml-modules-cppplugins.html}
+{QML C++ plugin}, as shown below).  This would allow the model classes to be
+created directly as elements within QML:
+
+\table
+\row
+
+\li
+\code
+class MyModelPlugin : public QQmlExtensionPlugin
+{
+public:
+    void registerTypes(const char *uri)
+    {
+        qmlRegisterType<MyModel>(uri, 1, 0,
+                "MyModel");
+    }
+}
+
+Q_EXPORT_PLUGIN2(mymodelplugin, MyModelPlugin);
+\endcode
+
+\li
+\qml
+MyModel {
+    id: myModel
+    ListElement { someProperty: "some value" }
+}
+\endqml
+
+\qml
+ListView {
+    width: 200; height: 250
+    model: myModel
+    delegate: Text { text: someProperty }
+}
+\endqml
+
+\endtable
+
+See \l {Tutorial: Extending QML with C++} for details on writing QML C++
+plugins.
+
+
+
+
+
+
+
+\section2 Embedding C++ Objects into QML Components
+
+When loading a QML scene into a C++ application, it can be useful to directly embed C++ data into
+the QML object. QQmlContext enables this by exposing data to the context of a QML
+component, allowing data to be injected from C++ into QML.
+
+For example, here is a QML item that refers to a \c currentDateTime value that does not exist in
+the current scope:
+
+\snippet qml/qtbinding/context/MyItem.qml 0
+
+This \c currentDateTime value can be set directly by the C++ application that loads the QML
+component, using QQmlContext::setContextProperty():
+
+\snippet qml/qtbinding/context/main.cpp 0
+
+Context properties can hold either QVariant or QObject* values. This means custom C++ objects can
+also be injected using this approach, and these objects can be modified and read directly in QML.
+Here, we modify the above example to embed a QObject instance instead of a QDateTime value, and the QML code
+invokes a method on the object instance:
+
+\table
+\row
+\li
+\snippet qml/qtbinding/context-advanced/applicationdata.h 0
+\codeline
+\snippet qml/qtbinding/context-advanced/main.cpp 0
+\li
+\snippet qml/qtbinding/context-advanced/MyItem.qml 0
+\endtable
+
+(Note that date/time values returned from C++ to QML can be formatted through
+\l{QML:Qt::formatDateTime}{Qt.formatDateTime()} and associated functions.)
+
+If the QML item needs to receive signals from the context property, it can connect to them using the
+\l Connections element. For example, if \c ApplicationData has a signal named \c
+dataChanged(), this signal can be connected to using an \c onDataChanged handler within
+a \l Connections object:
+
+\snippet qml/qtbinding/context-advanced/connections.qml 0
+
+Context properties can be useful for using C++ based data models in a QML view. See the
+\l {quick/modelviews/stringlistmodel}{String ListModel},
+\l {quick/modelviews/objectlistmodel}{Object ListModel} and
+\l {quick/modelviews/abstractitemmodel}{AbstractItemModel} models for
+respective examples on using QStringListModel, QObjectList-based models and QAbstractItemModel
+in QML views.
+
+Also see the QQmlContext documentation for more information.
+
+
+
+
+
+
+\section1 Exposing Qt C++ Properties
+
+    The \l{QQmlEngine}{QML engine} utilizes Qt's
+    \l{The Property System}{Property System} and in effect, QML
+    \l{Property Binding}{property bindings} also use Qt properties.
+
+    Essentially, a Qt C++ property has a \e write function, \e read function,
+    and has a signal function. QML properties are inheritely public, both
+    readable and writable, albeit type-safe. QML properties may also have
+    signals which are emitted when the property value or binding changes.
+
+    The QML property equivalent of a Qt C++ property is created as a property
+    with the \l Q_PROPERTY() macro. There needs to be C++ functions assigned as
+    the property's read, write, and signal handler function.
+
+    The \l {Creating QML Object Types from C++}{Register a Type} section mentions that the
+    \c Person class has properties that are exposed to the QML context. The QML
+    properties are created with the \c Q_PROPERTY macro. The macro associates
+    the properties to the read, write, and singal functions in its argument.
+
+\code
+Q_PROPERTY(int size READ size WRITE setSize NOTIFY shoeChanged)
+\endcode
+
+    A \c Shoe class might have an integer property called \c size. We set the \c
+    size() function as the \c READ function and the \c setSize() function to be
+    the \c WRITE function. In a QML application, when a property is read, the \c
+    size() is called and when the property's binding changes, the \c setSize()
+    is called. The READ function, by definition, must return the same type as
+    the property.
+
+    We may also connect a \l{signals and slots}{signal} to a property. The \c
+    size property may have a \c shoeChanged signal indicated after the \c NOTIFY
+    parameter of the macro. The \c shoeChanged becomes a \l{QML Signal and
+    Handler Event System}{QML signal} and the runtime will create QML handler
+    called \c onShoeChanged. Whenever the size property's binding changes, the
+    \c shoeChanged signal is emitted and the \c onShoeChanged handler is
+    invoked. In the handler, commands such as \l{JavaScript Expressions in
+    QML}{JavaScript expressions} can perform clean-up operations or call other
+    functions.
+
+    \b{Note:} The QML signal handler will always be named
+    on<Property-name>Changed, regardless of the name used for the NOTIFY
+    signal in C++. We recommend using <property-name>Changed() for the
+    NOTIFY signal in C++.
+
+    We may also make the property a \c read-only property by placing
+    \c CONSTANT in the parameter. Changing the binding will generate an error.
+\code
+//A read-only property
+Q_PROPERTY(int size READ size CONSTANT)
+\endcode
+
+\section2 Default Property
+
+    When imported, QML components will bind their children to their designated
+    \l{default-property}{default property}. This is helpful, for example,
+    to redirect any declared child components to a property of another
+    component.
+
+    The runtime can set a property to be the default property by tagging the
+    property with \c DefaultProperty in The Q_CLASSINFO() macro.
+
+    \code
+    Q_CLASSINFO("DefaultProperty", "pipe")
+    \endcode
+
+    The property tagged as default property, \c pipe, can only be an object
+    property, or a list property.
+
+    A default property is optional. A derived class inherits its base class's
+    default property, but may override it in its own declaration. The \c pipe
+    property can refer to a property declared in the class itself, or a property
+    inherited from a base class.
+
+    The \l{Extending QML - Default Property Example}{Default Properties} example
+    uses \l{default-property}{default properties} to assign the children of
+    a component to a specific property.
+
+    \section2 Grouped Properties
+
+    A property group may be functionally defined as a set of related properties.
+    For example, the \l{Layouts with Anchors}{anchors} are a group of
+    related properties. In practice, property groups resemble a parent object
+    where the individual properties are accessed as children.
+
+    A grouped property's member properties are accessed using the
+    <group>.<property> notation. For example, shoe.color is the way to access
+    the \c color property in the \c shoe property group .
+
+    \snippet examples/qml/cppextensions/referenceexamples/grouped/example.qml ungrouped
+
+    Alternatively, the group can be accessed as a set.
+    \snippet examples/qml/cppextensions/referenceexamples/grouped/example.qml grouped
+
+    A grouped property block is implemented as a read-only object property. The
+    \c shoe property shown is declared like this:
+
+    \snippet examples/qml/cppextensions/referenceexamples/grouped/person.h 1
+
+    The \c ShoeDescription type declares the properties available to the grouped
+    property block - in this case the \c size, \c color, \c brand and \c price properties.
+
+    Grouped property blocks may declared and accessed be recusively.
+
+    \l {Extending QML - Grouped Properties Example} shows the complete code used to
+    implement the \c shoe property grouping.
+
+    \section2 Attached Properties
+
+    Attached properties annotate or add properties to another type or component.
+    For example, the \l Keys \e{attaching type} contains \e{attached properties}
+    that other elements may use to respond to key input. Conceptually, attached
+    properties are a \e type exporting a set of additional properties that can
+    be set on any other object instance.
+
+    The attaching type is a QObject derived type. The properties on the
+    attaching type are those that become available for use as attached
+    properties.
+
+    \snippet examples/qml/cppextensions/referenceexamples/attached/example.qml 1
+
+    The \c BirthdayParty is called the attaching type and the
+    \c Boy instance the attachee object instance. The property \c rsvp is the
+    attached property.
+
+    Any Qt C++ type can become an attaching type by declaring the \c
+    qmlAttachedProperties() a public member function and declaring that the
+    class has QML_HAS_ATTACHED_PROPERTIES.
+
+    \code
+    static AttachedPropertiesType *qmlAttachedProperties(QObject *object);
+    \endcode
+
+    This static pointer returns an attachment object, of type \a
+    AttachedPropertiesType, for the attachee \a object instance. It is
+    customary, though not strictly required, for the attachment object to be
+    parented to \a object to prevent memory leaks.
+    The \l {Extending QML - Attached Properties Example}{Birthday}
+    class has \c BirthdayPartyAttached attached properties.
+
+    \snippet examples/qml/cppextensions/referenceexamples/attached/birthdayparty.h static attached
+
+    The QML_DECLARE_TYPEINFO() macro can notify the runtime that the type has
+    attached properties with the QML_HAS_ATTACHED_PROPERTIES argument.
+
+    \snippet examples/qml/cppextensions/referenceexamples/attached/birthdayparty.h declare attached
+
+    The qmlAttachedProperties method will be called at most once for each
+    attachee object instance. The QML engine will cache the returned instance
+    pointer for subsequent attached property accesses. Consequently the
+    attachment object may not be deleted until \a object is destroyed.
+
+    A common usage scenario is for a type to enhance the properties
+    available to its children in order to gather instance specific data.
+
+    \snippet examples/qml/cppextensions/referenceexamples/attached/example.qml begin
+    \snippet examples/qml/cppextensions/referenceexamples/attached/example.qml rsvp
+    \snippet examples/qml/cppextensions/referenceexamples/attached/example.qml end
+
+    However, as a QML type cannot limit the instances to which the attachment
+    object must attach, the following is also allowed, even though adding a
+    birthday party rsvp in this context will have no effect. Instead, \c
+    BirthdayParty could be a separate component with a property \c rsvp.
+    \code
+    GraduationParty {
+        Boy { BirthdayParty.rsvp: "2009-06-01" }
+    }
+    \endcode
+
+    From C++, including the attaching type implementation, the attachment object
+    for an instance can be accessed using the following method:
+
+    \code
+    template<typename T>
+    QObject *qmlAttachedPropertiesObject<T>(QObject *attachee, bool create = true);
+    \endcode
+
+    This returns the attachment object attached to \a attachee by the attaching
+    type \a T. If type \a T is not a valid attaching type, this method always
+    returns 0. If \a create is true, a valid attachment object will always be
+    returned, creating it if it does not already exist. If \a create is false,
+    the attachment object will only be returned if it has previously been
+    created.
+
+    The \c rsvp properties of each guest in the \c Birthday party is accessible
+    through the \c qmlAttachedPropertiesObject function.
+
+    \snippet examples/qml/cppextensions/referenceexamples/attached/main.cpp query rsvp
+
+    The
+    \l {Extending QML - Attached Properties Example}{Attached Properties Example}
+    demonstrates the creation of attached properties with a birthday party
+    scenario.
+
+\section2 Object and List Properties
+
+    QML can set properties of types that are more complex than basic intrinsics like
+    integers and strings.  Properties can also be object pointers, Qt interface
+    pointers,  lists of object pointers, and lists of Qt interface pointers.  As QML
+    is typesafe it ensures that only valid types are assigned to these properties,
+    just like it does for primitive types.
+
+    Properties that are pointers to objects or Qt interfaces are declared with the
+    Q_PROPERTY() macro, just like other properties.  The \c host property
+    declaration looks like this:
+
+    \snippet examples/qml/cppextensions/referenceexamples/properties/birthdayparty.h 1
+
+    As long as the property type, in this case \c Person, is registered with QML the
+    property can be assigned.
+
+    QML also supports assigning Qt interfaces.  To assign to a property whose type
+    is a Qt interface pointer, the interface must also be registered with QML.  As
+    they cannot be instantiated directly, registering a Qt interface is different
+    from registering a new QML type. The following function is used instead:
+
+    \code
+    template<typename T>
+    int qmlRegisterInterface(const char *typeName)
+    \endcode
+
+    \c qmlRegisterInterface registers the C++ interface \a T with the QML system
+    as \a typeName.
+
+    Following registration, QML can coerce objects that implement this interface
+    for assignment to appropriately typed properties.
+
+
+    \snippet examples/qml/cppextensions/referenceexamples/properties/example.qml 0
+
+    The \c guests property is a \e{list property} of \c Person objects. A list
+    of \c Person objects are bound to the \c BirthdayParty's \c host property,
+    and assigns three \c Person objects to the guests property.
+
+    Properties that are lists of objects or Qt interfaces are also declared with
+    the Q_PROPERTY() macro. However, list properties must have the type
+    \l{QQmlListProperty}{QQmlListProperty<T>}.
+
+    \snippet examples/qml/cppextensions/referenceexamples/properties/birthdayparty.h 2
+
+    As with the other property types, the type of list content, \a T, must be
+    \l{Creating QML Object Types from C++}{registered} into the runtime.
+
+    \snippet examples/qml/cppextensions/referenceexamples/properties/main.cpp register list
+
+    \l {Extending QML - Object and List Property Types Example} shows the
+    complete code used to create the \c BirthdayParty type. For more
+    information, visit \l{QQmlListProperty}{QQmlListProperty<T>}
+    for creating list properties.
+
+\section2 Sequence Types
+
+    Certain C++ sequence types are supported transparently in QML as JavaScript
+    Array types.
+    In particular, QML currently supports:
+    \list
+      \li \c {QList<int>}
+      \li \c {QList<qreal>}
+      \li \c {QList<bool>}
+      \li \c {QList<QString>} and \c{QStringList}
+      \li \c {QList<QUrl>}
+    \endlist
+
+    These sequence types are implemented directly in terms of the underlying C++
+    sequence. There are two ways in which such sequences can be exposed to QML:
+    as a Q_PROPERTY of the given sequence type; or as the return type of a
+    Q_INVOKABLE method. There are some differences in the way these are
+    implemented, which are important to note.
+
+    If the sequence is exposed as a Q_PROPERTY, accessing any value in the
+    sequence by index will cause the sequence data to be read from the QObject's
+    property, then a read to occur. Similarly, modifying any value in the
+    sequence will cause the sequence data to be read, and then the modification
+    will be performed and the modified sequence will be written back to the
+    QObject's property.
+
+    If the sequence is returned from a Q_INVOKABLE function, access and mutation
+    is much cheaper, as no QObject property read or write occurs; instead, the
+    C++ sequence data is accessed and modified directly.
+
+    Other sequence types are not supported transparently, and instead an
+    instance of any other sequence type will be passed between QML and C++ as an
+    opaque QVariantList.
+
+    \b {Important Note:} There are some minor differences between the
+    semantics of such sequence Array types and default JavaScript Array types
+    which result from the use of a C++ storage type in the implementation. In
+    particular, deleting an element from an Array will result in a
+    default-constructed value replacing that element, rather than an Undefined
+    value. Similarly, setting the length property of the Array to a value larger
+    than its current value will result in the Array being padded out to the
+    specified length with default-constructed elements rather than Undefined
+    elements.  Finally, the Qt container classes support signed (rather than
+    unsigned) integer indexes; thus, attempting to access any index greater
+    than INT_MAX will fail.
+
+    The default-constructed values for each sequence type are as follows:
+    \table
+    \row \li QList<int> \li integer value 0
+    \row \li QList<qreal> \li real value 0.0
+    \row \li QList<bool> \li boolean value \c {false}
+    \row \li QList<QString> and QStringList \li empty QString
+    \row \li QList<QUrl> \li empty QUrl
+    \endtable
+
+    If you wish to remove elements from a sequence rather than simply replace
+    them with default constructed values, do not use the indexed delete operator
+    ("delete sequence[i]") but instead use the \c {splice} function
+    ("sequence.splice(startIndex, deleteCount)").
+
+
+
+
+\section1 Property Value Sources
+
+\snippet examples/qml/cppextensions/referenceexamples/valuesource/example.qml 0
+\snippet examples/qml/cppextensions/referenceexamples/valuesource/example.qml 1
+
+The QML snippet shown above applies a property value source to the \c announcement property.
+A property value source generates a value for a property that changes over time.
+
+Property value sources are most commonly used to do animation.  Rather than
+constructing an animation object and manually setting the animation's "target"
+property, a property value source can be assigned directly to a property of any
+type and automatically set up this association.
+
+The example shown here is rather contrived: the \c announcement property of the
+\c BirthdayParty object is a string that is printed every time it is assigned and
+the \c HappyBirthdaySong value source generates the lyrics of the song
+"Happy Birthday".
+
+\snippet examples/qml/cppextensions/referenceexamples/valuesource/birthdayparty.h 0
+
+Normally, assigning an object to a string property would not be allowed.  In
+the case of a property value source, rather than assigning the object instance
+itself, the QML engine sets up an association between the value source and
+the property.
+
+Property value sources are special types that derive from the
+QQmlPropertyValueSource base class.  This base class contains a single method,
+QQmlPropertyValueSource::setTarget(), that the QML engine invokes when
+associating the property value source with a property.  The relevant part of
+the \c HappyBirthdaySong type declaration looks like this:
+
+\snippet examples/qml/cppextensions/referenceexamples/valuesource/happybirthdaysong.h 0
+\snippet examples/qml/cppextensions/referenceexamples/valuesource/happybirthdaysong.h 1
+\snippet examples/qml/cppextensions/referenceexamples/valuesource/happybirthdaysong.h 2
+
+In all other respects, property value sources are regular QML types.  They must
+be registered with the QML engine using the same macros as other types, and can
+contain properties, signals and methods just like other types.
+
+When a property value source object is assigned to a property, QML first tries
+to assign it normally, as though it were a regular QML type.  Only if this
+assignment fails does the engine call the \l {QQmlPropertyValueSource::}{setTarget()} method.  This allows
+the type to also be used in contexts other than just as a value source.
+
+\l {Extending QML -  Property Value Source Example} shows the complete code used
+to implement the \c HappyBirthdaySong property value source.
+
+
+
+*/

@@ -75,7 +75,7 @@ public:
 /*!
     \qmlclass Timer QQuickTimer
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-utility
+    \ingroup qtquick-interceptors
     \brief Triggers a handler at a specified interval
 
     A Timer can be used to trigger an action either once, or repeatedly

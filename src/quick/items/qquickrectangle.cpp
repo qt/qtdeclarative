@@ -130,7 +130,7 @@ bool QQuickPen::isValid() const
 /*!
     \qmlclass GradientStop QQuickGradientStop
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-item-graphics
+    \ingroup qtquick-visual-utility
     \brief Defines the color at a position in a Gradient
 
     \sa Gradient
@@ -181,7 +181,7 @@ void QQuickGradientStop::updateGradient()
 /*!
     \qmlclass Gradient QQuickGradient
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-item-graphics
+    \ingroup qtquick-visual-utility
     \brief Defines a gradient fill
 
     A gradient is defined by two or more colors, which will be blended seamlessly.
@@ -281,7 +281,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
     \qmlclass Rectangle QQuickRectangle
     \inqmlmodule QtQuick 2
     \inherits Item
-    \ingroup qtquick-visual-types
+    \ingroup qtquick-visual
     \brief Describes a filled rectangle with an optional border
 
     Rectangle items are used to fill areas with solid color or gradients, and are

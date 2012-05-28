@@ -1,0 +1,252 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-cppintegration-reverse.html
+\title Interacting With QML Objects From C++
+\brief Description of how to interact with QML objects from C++
+
+\section1 QML Objects, QObject And QMetaObject
+
+QML object types are, internally, QObject-derived types.  Each type has an
+associated QMetaObject, and all functions, properties and signals of an
+instance of a QML object type can be accessed through the QMetaObject.
+
+\section1 Accessing QML Objects From C++
+
+Once you have a pointer to a QML object in C++, you can access its properties,
+invoke its functions, and connect to its signals.  To get such a pointer, a
+C++ developer may either inspect the object hierarchy directly, or be passed
+a pointer to the QML object as an argument in a function call.
+
+
+
+\section2 Loading QML Components from C++
+
+A QML document can be loaded with QQmlComponent or QQuickView. QQmlComponent
+loads a QML component as a C++ object; QQuickView also does this,
+but additionally loads the QML component directly into a QGraphicsView. It is convenient for loading
+a displayable QML component into a QWidget-based application.
+
+For example, suppose there is a \c MyItem.qml file that looks like this:
+
+\snippet qml/qtbinding/loading/MyItem.qml start
+\snippet qml/qtbinding/loading/MyItem.qml end
+
+This QML document can be loaded with QQmlComponent or QQuickView with the following
+C++ code. Using a QQmlComponent requires calling QQmlComponent::create() to create
+a new instance of the component, while a QQuickView automatically creates an instance of the
+component, which is accessible via QQuickView::rootObject():
+
+\table
+\row
+\li
+\snippet qml/qtbinding/loading/main.cpp QQmlComponent-a
+\dots 0
+\snippet qml/qtbinding/loading/main.cpp QQmlComponent-b
+\li
+\snippet qml/qtbinding/loading/main.cpp QQuickView
+\endtable
+
+This \c object is the instance of the \c MyItem.qml component that has been created. You can now
+modify the item's properties using QObject::setProperty() or QQmlProperty:
+
+\snippet qml/qtbinding/loading/main.cpp properties
+
+Alternatively, you can cast the object to its actual type and call functions with compile-time
+safety. In this case the base object of \c MyItem.qml is an \l Item, which is defined by the
+QQuickItem class:
+
+\snippet qml/qtbinding/loading/main.cpp cast
+
+You can also connect to any signals or call functions defined in the component using
+QMetaObject::invokeMethod() and QObject::connect(). See \l {Exchanging data between QML and C++}
+below for further details.
+
+
+
+
+\section2 Object Name And findChild
+
+NOTE: this is only applicable to QML object types provided by the Qt Quick
+module.
+
+QML components are essentially object trees with children that have siblings and their own children.
+Child objects of QML components can be located using the QObject::objectName property with
+QObject::findChild(). For example, if the root item in \c MyItem.qml had a child \l Rectangle item:
+
+\snippet qml/qtbinding/loading/MyItem.qml start
+\codeline
+\snippet qml/qtbinding/loading/MyItem.qml child
+\snippet qml/qtbinding/loading/MyItem.qml end
+
+The child could be located like this:
+
+\snippet qml/qtbinding/loading/main.cpp findChild
+
+If \c objectName is used inside a delegate of a ListView, \l Repeater or some other
+element that creates multiple instances of its delegates, there will be multiple children with
+the same \c objectName. In this case, QObject::findChildren() can be used to find all children
+with a matching \c objectName.
+
+\warning While it is possible to use C++ to access and manipulate QML objects deep into the
+object tree, we recommend that you do not take this approach outside of application
+testing and prototyping. One strength of QML and C++ integration is the ability to implement the
+QML user interface separately from the C++ logic and dataset backend, and this strategy breaks if the
+C++ side reaches deep into the QML components to manipulate them directly. This would make it difficult
+to, for example, swap a QML view component for another view, if the new component was missing a
+required \c objectName. It is better for the C++ implementation to know as little as possible about
+the QML user interface implementation and the composition of the QML object tree.
+
+\section2 Passed As Arguments
+
+Any QML object may be passed as an argument to a Q_INVOKABLE C++ function
+if that function has a pointer to a QObject as a parameter.  The object
+may be passed via its id, or via a JavaScript var which references that object.
+
+XXX TODO: snippet example.
+
+\section1 Properties
+
+Any properties declared in a QML object are automatically accessible from C++. Given a QML item
+like this:
+
+\snippet qml/qtbinding/properties-qml/MyItem.qml 0
+
+The value of the \c someNumber property can be set and read using QQmlProperty, or
+QObject::setProperty() and QObject::property():
+
+\snippet qml/qtbinding/properties-qml/main.cpp 0
+
+You should always use QObject::setProperty(), QQmlProperty or QMetaProperty::write() to
+change a QML property value, to ensure the QML engine is made aware of the property change. For example,
+say you have a custom element \c PushButton with a \c buttonText property that internally reflects
+the value of a \c m_buttonText member variable. Modifying the member variable directly like this is
+not a good idea:
+
+\badcode
+// BAD!
+QQmlComponent component(engine, "MyButton.qml");
+PushButton *button = qobject_cast<PushButton*>(component.create());
+button->m_buttonText = "Click me";
+\endcode
+
+Since the value is changed directly, this bypasses Qt's \l{The Meta-Object System}{meta-object system}
+and the QML engine is not made aware of the property change. This means property bindings to
+\c buttonText would not be updated, and any \c onButtonTextChanged handlers would not be called.
+
+\section1 Functions
+
+QML functions can be called from C++ and vice-versa.
+
+All QML functions are exposed to the meta-object system and can be called using
+QMetaObject::invokeMethod(). Here is a C++ application that uses this to call a QML function:
+
+\table
+\row
+\li \snippet qml/qtbinding/functions-qml/MyItem.qml 0
+\li \snippet qml/qtbinding/functions-qml/main.cpp 0
+\endtable
+
+Notice the Q_RETURN_ARG() and Q_ARG() arguments for QMetaObject::invokeMethod() must be specified as
+QVariant types, as this is the generic data type used for QML functions and return values.
+
+To call a C++ function from QML, the function must be either a Qt slot, or a function marked with
+the Q_INVOKABLE macro, to be available to QML. In the following example, the QML code invokes
+methods on the \c myObject object, which has been set using QQmlContext::setContextProperty():
+
+\table
+\row
+\li
+\snippet qml/qtbinding/functions-cpp/MyItem.qml 0
+\li
+\snippet qml/qtbinding/functions-cpp/myclass.h 0
+\codeline
+\snippet qml/qtbinding/functions-cpp/main.cpp 0
+\endtable
+
+QML supports the calling of overloaded C++ functions. If there are multiple C++ functions with the
+same name but different arguments, the correct function will be called according to the number and
+the types of arguments that are provided.
+
+\section1 Signals And Slots
+
+All QML signals are automatically available to C++, and can be connected to using QObject::connect()
+like any ordinary Qt C++ signal. In return, any C++ signal can be received by a QML object using
+\l {Signal Handlers}{signal handlers}.
+
+Here is a QML component with a signal named \c qmlSignal. This signal is connected to a C++ object's
+slot using QObject::connect(), so that the \c cppSlot() method is called whenever the \c qmlSignal
+is emitted:
+
+\table
+\row
+\li
+\snippet qml/qtbinding/signals-qml/MyItem.qml 0
+\li
+\snippet qml/qtbinding/signals-qml/myclass.h 0
+\codeline
+\snippet qml/qtbinding/signals-qml/main.cpp 0
+\endtable
+
+To connect to Qt C++ signals from within QML, use a signal handler with the \c on<SignalName> syntax.
+In the following example, the
+QML code creates a \c ImageViewer object, and the \c imageChanged and \c loadingError signals of the
+C++ object are connected to through \c onImagedChanged and \c onLoadingError signal handlers in QML:
+
+\table
+\row
+\li
+
+\snippet qml/qtbinding/signals-cpp/imageviewer.h start
+\dots 4
+\snippet qml/qtbinding/signals-cpp/imageviewer.h end
+
+\li
+\snippet qml/qtbinding/signals-cpp/standalone.qml 0
+\endtable
+
+(Note that if a signal has been declared as the NOTIFY signal for a property, QML allows it to be
+received with an \c on<Property>Changed handler even if the signal's name does not follow the \c
+<Property>Changed naming convention. In the above example, if the "imageChanged" signal was named
+"imageModified" instead, the \c onImageChanged signal handler would still be called.)
+
+If, however, the object with the signal is not created from within the QML code, and the QML item only has a
+reference to the created object - for example, if the object was set using
+QQmlContext::setContextProperty() - then the \l Connections element can be used
+instead to create the signal handler:
+
+\table
+\row
+\li \snippet qml/qtbinding/signals-cpp/main.cpp connections
+\li \snippet qml/qtbinding/signals-cpp/MyItem.qml 0
+\endtable
+
+C++ signals can use enum values as parameters provided that the enum is declared in the
+class that is emitting the signal, and that the enum is registered using Q_ENUMS.
+See \l {Using enumerations of a custom type} below for details.
+
+*/

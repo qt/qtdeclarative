@@ -59,7 +59,7 @@ public:
 /*!
     \qmlclass SystemPalette QQuickSystemPalette
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-utility
+    \ingroup qtquick-visual-utility
     \brief Provides access to the Qt palettes
 
     The SystemPalette element provides access to the Qt application

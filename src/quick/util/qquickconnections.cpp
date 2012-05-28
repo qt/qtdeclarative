@@ -73,7 +73,7 @@ public:
 /*!
     \qmlclass Connections QQuickConnections
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-utility
+    \ingroup qtquick-interceptors
     \brief Describes generalized connections to signals
 
     A Connections object creates a connection to a QML signal.

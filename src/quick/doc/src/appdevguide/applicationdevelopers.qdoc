@@ -1,0 +1,110 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtquick-applicationdevelopers.html
+\title QML Application Developer Resources
+\brief Essential documentation for QML application developers
+
+\section1 Overview Of QML and Qt Quick
+
+\section2 What Is QML?
+
+QML is a user-interface specification and programming language.
+It allows highly performant, fluidly animated, visually appealing applications
+to be rapidly developed by either developers or designers.  QML offers a
+highly-readable, declarative, JSON-like syntax with support for imperative
+JavaScript expressions combined with dynamic property bindings.
+
+\section2 What Is Qt Quick?
+
+Qt Quick is the standard library of types and functionality for QML.  It
+includes visual elements, interactive elements, animations, models and views,
+particle effects and shader effects.  A QML application developer can get
+access to all of that functionality with a single import statement.
+
+\section1 Quick Start
+
+\list
+\li \l{qtquick-quickstart-basics.html}{QML Basics}
+    \list
+    \li \l{qtquick-quickstart-basics.html#creating-a-qml-document}{Creating A QML Document}
+    \li \l{qtquick-quickstart-basics.html#importing-and-using-the-qtquick-module}{Importing And Using The QtQuick Module}
+    \li \l{qtquick-quickstart-basics.html#loading-and-displaying-the-qml-document}{Loading And Displaying The QML Document}
+    \endlist
+\li \l{qtquick-quickstart-essentials.html}{QML Essentials}
+    \list
+    \li \l{qtquick-quickstart-essentials.html#bindings-and-signals}{Bindings And Signals}
+    \li \l{qtquick-quickstart-essentials.html#handling-user-input}{Handling User Input}
+    \li \l{qtquick-quickstart-essentials.html#defining-custom-qml-types-for-re-use}{Defining Custom QML Types For Re-use}
+    \endlist
+\endlist
+
+\section1 Features And Use-Case Solutions
+
+\list
+\li \l{qtquick-usecase-visual.html}{Placing Visual Content And Images In The Window}
+\li \l{qtquick-usecase-userinput.html}{Responding To User Input}
+\li \l{qtquick-usecase-animations.html}{Animating UI Elements}
+\li \l{qtquick-usecase-text.html}{Formatting And Displaying Text}
+\li \l{qtquick-usecase-layouts.html}{Complex Layouts}
+\li \l{qtquick-usecase-styling.html}{Style And Theme: Look And Feel}
+\li \l{qtquick-usecase-integratingjs.html}{Integrating With JavaScript}
+\li \l{qtquick-usecase-integratingcpp.html}{Integrating With C++}
+\li \l{qtquick-usecase-modules.html}{Creating Modules For QML}
+\li \l{qtquick-usecase-multimedia.html}{Playing Sounds And Video In QML}
+\endlist
+
+\section1 Important Application Development Topics
+
+\list
+\li \l{qml-intro.html}{Introduction To QML Application Development}
+\li \l{qtquick-performance.html}{Performance Considerations And Suggestions}
+\li \l{qtquick-internationalization.html}{Internationalization And Localization}
+\li \l{qtquick-glossary.html}{Glossary Of Terms}
+\endlist
+
+
+\section1 Testing and Debugging
+\list
+\li \l{qtquick-qmlscene.html}{Prototyping with qmlscene}
+\li \l{qtquick-debugging.html}{Debugging QML Applications}
+\li \l{qtquick-qtquicktest.html}{QtQuickTest: QML Unit Testing Framework}
+\endlist
+
+\section1 Further Information About The QML Language
+
+Please see the documentation for the \l{qtqml-main.html}{Qt QML Module} for
+in-depth information about QML documents and the QML language.
+
+\section1 Further Information About Qt Quick
+
+Please see the documentation for the \l{qtquick-main.html}{Qt Quick Module}
+for in-depth information about the various QML types and other functionality
+provided by Qt Quick.
+
+*/
+

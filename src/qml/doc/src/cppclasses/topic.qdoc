@@ -1,0 +1,68 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-cppclasses-topic.html
+\title C++ Classes Provided By The Qt QML Module
+\brief Overview of the C++ classes provided by the Qt QML module
+
+The Qt QML module provides C++ classes which implement the QML framework.
+Clients can use these classes to interact with the QML run-time (for example,
+by injecting data or invoking methods on objects), and to instantiate a
+hierarchy of objects from a QML document.
+
+\section1 The QQmlEngine Class
+
+The QQmlEngine class provides an engine which can manage a hierarchy of objects
+which is defined in a QML document.  It provides a root QML context within
+which expressions are evaluated, and ensures that properties of objects are
+updated correctly when required.
+
+See \l{qtqml-cppclasses-engine.html}{Qt QML Module C++ Classes - QQmlEngine}
+for in-depth information about QQmlEngine.
+
+\section1 The QQmlComponent Class
+
+The QQmlComponent class is used to load a QML document.  It requires a
+QQmlEngine in order to instantiate the hierarchy of objects defined in the QML
+document.
+
+See
+\l{qtqml-cppclasses-component.html}{Qt QML Module C++ Classes - QQmlComponent}
+for in-depth information about QQmlComponent.
+
+\section1 The QQmlContext Class
+
+The QQmlContext class provides a context for object instantiation and
+expression evaluation.  All objects are instantiated in a particular context,
+and all of the expressions which are evaluated while an application is running
+are evaluated within a particular context.  This context defines how symbols
+are resolved, and thus which values the expression operates on.
+
+See \l{qtqml-cppclasses-context.html}{Qt QML Module C++ Classes - QQmlContext}
+for in-depth information about QQmlContext.
+
+*/

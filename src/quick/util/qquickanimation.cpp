@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Animation QQuickAbstractAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-animation-properties
+    \ingroup qtquick-transitions-animations
     \brief Is the base of all QML animations
 
     The Animation element cannot be used directly in a QML file.  It exists
@@ -617,7 +617,7 @@ void QQuickAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
 /*!
     \qmlclass PauseAnimation QQuickPauseAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-animation-modifiers
+    \ingroup qtquick-transitions-animations
     \inherits Animation
     \brief Provides a pause for an animation
 
@@ -831,7 +831,7 @@ void QActionAnimation::updateState(State newState, State oldState)
 /*!
     \qmlclass ScriptAction QQuickScriptAction
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-animation-modifiers
+    \ingroup qtquick-transitions-animations
     \inherits Animation
     \brief Defines scripts to be run during an animation
 
@@ -957,7 +957,7 @@ QAbstractAnimationJob* QQuickScriptAction::transition(QQuickStateActions &action
 /*!
     \qmlclass PropertyAction QQuickPropertyAction
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-animation-modifiers
+    \ingroup qtquick-transitions-animations
     \inherits Animation
     \brief Specifies immediate property changes during animation
 
@@ -1637,7 +1637,7 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
 /*!
     \qmlclass SequentialAnimation QQuickSequentialAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-animation-define
+    \ingroup qtquick-transitions-animations
     \inherits Animation
     \brief Allows animations to be run sequentially
 
@@ -1710,7 +1710,7 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
 /*!
     \qmlclass ParallelAnimation QQuickParallelAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-animation-define
+    \ingroup qtquick-transitions-animations
     \inherits Animation
     \brief Enables animations to be run in parallel
 

@@ -300,7 +300,7 @@ The format specification is described at \l{Qt::formatDateTime}{Qt.formatDateTim
 
 \section1 Dynamic Object Creation
 The following functions on the global object allow you to dynamically create QML
-items from files or strings. See \l{Dynamic Object Management in QML} for an overview
+items from files or strings. See \l{Dynamic QML Object Creation from JavaScript} for an overview
 of their use.
 
 \list

@@ -129,7 +129,7 @@ void QQuickItemPrivate::registerAccessorProperties()
 /*!
     \qmlclass Transform QQuickTransform
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-transformations
+    \ingroup qtquick-visual-transforms
     \brief For specifying advanced transformations on Items
 
     The Transform element is a base type which cannot be instantiated directly.
@@ -151,7 +151,7 @@ void QQuickItemPrivate::registerAccessorProperties()
 /*!
     \qmlclass Translate QQuickTranslate
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-transformations
+    \ingroup qtquick-visual-transforms
     \brief Provides a way to move an Item without changing its x or y properties
 
     The Translate object provides independent control over position in addition to the Item's x and y properties.
@@ -193,7 +193,7 @@ void QQuickItemPrivate::registerAccessorProperties()
 /*!
     \qmlclass Scale QQuickScale
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-transformations
+    \ingroup qtquick-visual-transforms
     \brief Provides a way to scale an Item
 
     The Scale element gives more control over scaling than using \l Item's \l{Item::scale}{scale} property. Specifically,
@@ -235,7 +235,7 @@ void QQuickItemPrivate::registerAccessorProperties()
 /*!
     \qmlclass Rotation QQuickRotation
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-transformations
+    \ingroup qtquick-visual-transforms
     \brief Provides a way to rotate an Item
 
     The Rotation object gives more control over rotation than using \l Item's \l{Item::rotation}{rotation} property.
@@ -503,7 +503,7 @@ void QQuickItemKeyFilter::componentComplete()
 /*!
     \qmlclass KeyNavigation QQuickKeyNavigationAttached
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-interaction
+    \ingroup qtquick-input
     \brief Supports key navigation by arrow keys
 
     Key-based user interfaces commonly allow the use of arrow keys to navigate between
@@ -917,7 +917,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
 /*!
     \qmlclass Keys QQuickKeysAttached
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-interaction
+    \ingroup qtquick-input
     \brief Provides key handling to Items
 
     All visual primitives support key handling via the Keys
@@ -1463,7 +1463,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 /*!
     \qmlclass LayoutMirroring QQuickLayoutMirroringAttached
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-utility
+    \ingroup qtquick-positioners
     \ingroup qml-utility-elements
     \brief Property used to mirror layout behavior
 
@@ -1722,7 +1722,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \qmlclass Item QQuickItem
     \inherits QtObject
     \inqmlmodule QtQuick 2
-    \ingroup qtquick-visual-types
+    \ingroup qtquick-visual
     \brief A basic visual QML type
 
     All visual items in Qt Quick inherit from Item.  Although Item

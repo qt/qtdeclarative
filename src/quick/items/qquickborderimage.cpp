@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick 2
     \brief For specifying an image that can be used as a border
     \inherits Item
-    \ingroup qtquick-item-graphics
+    \ingroup qtquick-visual
 
     The BorderImage element is used to create borders out of images by scaling or tiling
     parts of each image.

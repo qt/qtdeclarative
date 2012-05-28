@@ -1,0 +1,166 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-syntax-imports.html
+\title Import Statements
+\brief Description of import statements in QML
+
+\section1 Syntax Of An Import Statement
+
+
+The \c import statement is used to provide the QML engine with access to the modules that define the types that are referred to from within the QML file.
+
+The syntax for the \c import statement is:
+
+\code
+import <module> <major version>.<minor version> [as <namespace>]
+\endcode
+
+When a QML file is loaded by the engine, the only QML types that are automatically made available to that file are those that are \l{Defining Object Types through QML Documents}{defined by .qml files} within the same directory. Any types defined elsewhere are not accessible unless an \c import statement has imported the module that contains the required type. For example, the \c QtQuick module must be imported in order to use any of its QML types:
+
+\qml
+import QtQuick 2.0
+
+Rectangle {}    // won't work if import line is missing, engine will refuse to load the file
+\endqml
+
+The \c <module> can be either a filesystem path to the module, or an identifier for the module if it is accessible to the import path. For example:
+
+\code
+import "../relative/path/to/module"
+import "/absolute/path/to/module"
+import com.company.module
+\endcode
+
+(See \l {QML Modules} for more information on defining and importing located and installed modules.)
+
+
+\note Import paths are network transparent: applications can import documents from remote paths just as simply as documents from local paths. See the general URL resolution rules for \l{qtqml-documents-networktransparency.html}{Network Transparency} in QML documents.
+
+
+\section2 Namespace Imports
+
+
+
+The \c import statement may optionally use the \c as keyword to specify that the module should be imported into a particular namespace. If a namespace is specified, then any references to the types made available by the module must be prefixed by the namespace qualifier.
+
+Below, the QtQuick module is imported into the namespace "CoreItems". Now, any references to types from the \c QtQuick module must be prefixed with the \c CoreItems name:
+
+\qml
+import QtQuick 2.0 as CoreItems
+
+CoreItems.Rectangle {
+    width: 100; height: 100
+
+    CoreItems.Text { text: "Hello, world!" }
+
+    // WRONG! No namespace prefix - the Text type won't be found
+    Text { text: "Hello, world!" }
+}
+\endqml
+
+A namespace acts as an identifier for a module within the scope of the file. The namespace does not become an attribute of the root object that can be referred to externally as can be done with properties, signals and methods.
+
+The namespaced import is useful if there is a requirement to use two QML types that have the same name but are located in different modules. In this case the two modules can be imported into different namespaces to ensure the code is referring to the correct type:
+
+\qml
+import QtQuick 2.0 as CoreItems
+import "../textwidgets" as MyModule
+
+CoreItems.Rectangle {
+    width: 100; height: 100
+
+    MyModule.Text { text: "Hello from my custom text item!" }
+    CoreItems.Text { text: "Hello from QtQuick!" }
+}
+\endqml
+
+Note that multiple modules can be imported into the same namespace in the same way that multiple modules can be imported into the global namespace. For example:
+
+\snippet qml/imports/merged-named-imports.qml imports
+
+
+
+
+\section2 Relative Directory Imports
+
+\section2 JavaScript File Imports
+
+
+JavaScript files must always be imported with a named import:
+
+\qml
+import "somescript.js" as MyScript
+
+Item {
+    //...
+    Component.onCompleted: MyScript.doSomething()
+}
+\endqml
+
+The qualifier ("MyScript" in the above example) must be unique within the QML document.
+Unlike ordinary modules, multiple scripts cannot be imported into the same namespace.
+
+Javascript files can be provided by modules, by adding Namespace definitions to the
+\l{Syntax of a qmldir file}{qmldir file} for the module.  For example:
+
+\code
+SystemFunctions 1.0 SystemFunctions.js
+UserFunctions 1.0 UserFunctions.js
+\endcode
+
+Javascript can be imported from a module, where they will have the namespace defined
+for them in the module's \c qmldir file:
+
+\qml
+import projects.MyQMLProject.MyFunctions 1.0
+
+Window {
+    Component.onCompleted: { SystemFunctions.cleanUp(); }
+}
+\endqml
+
+Javascript provided by modules can also be imported into namespaces:
+
+\qml
+import projects.MyQMLProject.MyFunctions 1.0 as MyFuncs
+import org.example.Functions 1.0 as TheirFuncs
+
+Window {
+    Component.onCompleted: {
+        MyFuncs.SystemFunctions.cleanUp();
+        TheirFuncs.SystemFunctions.shutdown();
+    }
+}
+\endqml
+
+
+\section2 Version Specification
+
+\section2 Import Qualifier
+
+*/
