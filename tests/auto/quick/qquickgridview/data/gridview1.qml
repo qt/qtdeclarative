@@ -8,6 +8,7 @@ Rectangle {
     property real cacheBuffer: 0
     property int added: -1
     property variant removed
+    property int lastKey: 0
 
     width: 240
     height: 320
@@ -66,4 +67,6 @@ Rectangle {
         cacheBuffer: root.cacheBuffer
         focus: true
     }
+
+    Keys.onPressed: lastKey = event.key
 }

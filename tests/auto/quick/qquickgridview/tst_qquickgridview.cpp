@@ -2027,6 +2027,25 @@ void tst_QQuickGridView::keyNavigation()
     QTRY_COMPARE(gridview->contentX(), contentPosAtFirstItem.x());
     QTRY_COMPARE(gridview->contentY(), contentPosAtFirstItem.y());
 
+    // Test key press still accepted when position wraps to same index.
+    canvas->rootObject()->setProperty("lastKey", 0);
+    model.removeItems(1, model.count() - 1);
+
+    QTest::keyClick(canvas, backwardsKey);
+    QCOMPARE(canvas->rootObject()->property("lastKey").toInt(), 0);
+
+    QTest::keyClick(canvas, forwardsKey);
+    QCOMPARE(canvas->rootObject()->property("lastKey").toInt(), 0);
+
+    // Test key press not accepted at limits when wrap is disabled.
+    gridview->setWrapEnabled(false);
+
+    QTest::keyClick(canvas, backwardsKey);
+    QCOMPARE(canvas->rootObject()->property("lastKey").toInt(), int(backwardsKey));
+
+    QTest::keyClick(canvas, forwardsKey);
+    QCOMPARE(canvas->rootObject()->property("lastKey").toInt(), int(forwardsKey));
+
     releaseView(canvas);
 }
 

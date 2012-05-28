@@ -2091,7 +2091,7 @@ void QQuickGridView::keyPressEvent(QKeyEvent *event)
         default:
             break;
         }
-        if (oldCurrent != currentIndex()) {
+        if (oldCurrent != currentIndex() || d->wrap) {
             event->accept();
             return;
         }
