@@ -321,11 +321,7 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
 {
     QImageReader imgio(dev);
 
-    bool force_scale = false;
-    if (url.path().endsWith(QLatin1String(".svg"),Qt::CaseInsensitive)) {
-        imgio.setFormat("svg"); // QSvgPlugin::capabilities bug QTBUG-9053
-        force_scale = true;
-    }
+    const bool force_scale = imgio.format() == "svg" || imgio.format() == "svgz";
 
     if (requestSize.width() > 0 || requestSize.height() > 0) {
         QSize s = imgio.size();

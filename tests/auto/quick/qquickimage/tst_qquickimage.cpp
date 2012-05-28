@@ -84,6 +84,7 @@ private slots:
     void smooth();
     void mirror();
     void svg();
+    void svg_data();
     void geometry();
     void geometry_data();
     void big();
@@ -144,7 +145,8 @@ void tst_qquickimage::imageSource_data()
     QTest::newRow("remote redirected") << SERVER_ADDR "/oldcolors.png" << 120.0 << 120.0 << true << false << false << "";
     if (QImageReader::supportedImageFormats().contains("svg"))
         QTest::newRow("remote svg") << SERVER_ADDR "/heart.svg" << 550.0 << 500.0 << true << false << false << "";
-
+    if (QImageReader::supportedImageFormats().contains("svgz"))
+        QTest::newRow("remote svgz") << SERVER_ADDR "/heart.svgz" << 550.0 << 500.0 << true << false << false << "";
     QTest::newRow("remote not found") << SERVER_ADDR "/no-such-file.png" << 0.0 << 0.0 << true
         << false << true << "file::2:1: QML Image: Error downloading " SERVER_ADDR "/no-such-file.png - server replied: Not found";
 
@@ -359,12 +361,22 @@ void tst_qquickimage::mirror()
     }
 }
 
+void tst_qquickimage::svg_data()
+{
+    QTest::addColumn<QString>("src");
+    QTest::addColumn<QByteArray>("format");
+
+    QTest::newRow("svg") << testFileUrl("heart.svg").toString() << QByteArray("svg");
+    QTest::newRow("svgz") << testFileUrl("heart.svgz").toString() << QByteArray("svgz");
+}
+
 void tst_qquickimage::svg()
 {
-    if (!QImageReader::supportedImageFormats().contains("svg"))
+    QFETCH(QString, src);
+    QFETCH(QByteArray, format);
+    if (!QImageReader::supportedImageFormats().contains(format))
         QSKIP("svg support not available");
 
-    QString src = testFileUrl("heart.svg").toString();
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; sourceSize.width: 300; sourceSize.height: 300 }";
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
