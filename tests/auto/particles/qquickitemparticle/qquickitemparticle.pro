@@ -1,4 +1,5 @@
 CONFIG += testcase
+CONFIG += parallel_test
 TARGET = tst_qquickitemparticle
 SOURCES += tst_qquickitemparticle.cpp
 macx:CONFIG -= app_bundle

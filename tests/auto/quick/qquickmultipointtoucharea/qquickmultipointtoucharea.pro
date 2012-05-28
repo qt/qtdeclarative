@@ -1,5 +1,6 @@
 TARGET = tst_qquickmultipointtoucharea
 CONFIG += testcase
+CONFIG += parallel_test
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qquickmultipointtoucharea.cpp
