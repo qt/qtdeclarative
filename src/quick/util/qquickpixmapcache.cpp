@@ -228,7 +228,7 @@ public:
     }
 
     QQuickPixmapData(QQuickPixmap *pixmap, const QUrl &u, QQuickTextureFactory *texture, const QSize &s, const QSize &r)
-    : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QQuickPixmap::Ready),
+    : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Ready),
       url(u), implicitSize(s), requestSize(r), textureFactory(texture), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
@@ -236,7 +236,7 @@ public:
     }
 
     QQuickPixmapData(QQuickPixmap *pixmap, QQuickTextureFactory *texture)
-    : refCount(1), inCache(false), privatePixmap(true), pixmapStatus(QQuickPixmap::Ready),
+    : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Ready),
       textureFactory(texture), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
@@ -264,7 +264,6 @@ public:
     uint refCount;
 
     bool inCache:1;
-    bool privatePixmap:1;
     
     QQuickPixmap::Status pixmapStatus;
     QUrl url;
