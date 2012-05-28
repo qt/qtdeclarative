@@ -692,4 +692,16 @@ CanvasTestCase {
        comparePixel(ctx, 50,25, 0,255,0,255, 2);
 
    }
+   function test_multiple_painting(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       loadImages(canvas);
+
+       ctx.fillStyle = '#0f0';
+       ctx.fillRect(0, 0, 100, 50);
+       ctx.drawImage('red.png', 0, 0, 50, 50);
+       ctx.drawImage('red.png', 50, 0, 100, 50);
+       comparePixel(ctx, 25,25, 255,0,0,255, 2);
+       comparePixel(ctx, 75,25, 255,0,0,255, 2);
+   }
 }

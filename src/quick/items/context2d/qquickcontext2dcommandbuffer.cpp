@@ -409,7 +409,11 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
                     qreal shadow_dy = dy + (state.shadowOffsetX < 0? state.shadowOffsetY:0);
                     p->drawImage(shadow_dx, shadow_dy, shadow);
                 }
+
+                //Strange OpenGL painting behavior here, without beginNativePainting/endNativePainting, only the first image is painted.
+                p->beginNativePainting();
                 p->drawImage(dx, dy, image);
+                p->endNativePainting();
             }
             break;
         }
