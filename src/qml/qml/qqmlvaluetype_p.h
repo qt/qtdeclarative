@@ -164,7 +164,7 @@ public:
     }
 
 private:
-    mutable QQmlValueType *valueTypes[QVariant::UserType - 1];
+    mutable QQmlValueType *valueTypes[QVariant::UserType];
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlPointFValueType : public QQmlValueTypeBase<QPointF>

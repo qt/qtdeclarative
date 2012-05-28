@@ -49,13 +49,13 @@ QT_BEGIN_NAMESPACE
 
 QQmlValueTypeFactory::QQmlValueTypeFactory()
 {
-    for (unsigned int ii = 0; ii < (QVariant::UserType - 1); ++ii)
+    for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
         valueTypes[ii] = 0;
 }
 
 QQmlValueTypeFactory::~QQmlValueTypeFactory()
 {
-    for (unsigned int ii = 0; ii < (QVariant::UserType - 1); ++ii)
+    for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
         delete valueTypes[ii];
 }
 
