@@ -1014,8 +1014,10 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
         if (!qIsFinite(x0)
          || !qIsFinite(y0)
          || !qIsFinite(x1)
-         || !qIsFinite(y1))
+         || !qIsFinite(y1)) {
+            delete r;
             V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createLinearGradient(): Incorrect arguments")
+        }
 
         r->brush = QLinearGradient(x0, y0, x1, y1);
         gradient->SetExternalResource(r);
@@ -1063,8 +1065,10 @@ static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &arg
          || !qIsFinite(x1)
          || !qIsFinite(r0)
          || !qIsFinite(r1)
-         || !qIsFinite(y1))
+         || !qIsFinite(y1)) {
+            delete r;
             V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createRadialGradient(): Incorrect arguments")
+        }
 
         if (r0 < 0 || r1 < 0)
             V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createRadialGradient(): Incorrect arguments")
@@ -1107,11 +1111,15 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
         qreal x = args[0]->NumberValue();
         qreal y = args[1]->NumberValue();
         qreal angle = DEGREES(args[2]->NumberValue());
-        if (!qIsFinite(x) || !qIsFinite(y))
+        if (!qIsFinite(x) || !qIsFinite(y)) {
+            delete r;
             V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createConicalGradient(): Incorrect arguments");
+        }
 
-        if (!qIsFinite(angle))
+        if (!qIsFinite(angle)) {
+            delete r;
             V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createConicalGradient(): Incorrect arguments");
+        }
 
         r->brush = QConicalGradient(x, y, angle);
         gradient->SetExternalResource(r);
