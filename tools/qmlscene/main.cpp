@@ -291,7 +291,7 @@ static bool checkVersion(const QUrl &url)
 
 static void displayFileDialog(Options *options)
 {
-#ifdef QT_WIDGETS_LIB
+#if defined(QT_WIDGETS_LIB) && !defined(QT_NO_FILEDIALOG)
     QString fileName = QFileDialog::getOpenFileName(0, "Open QML file", QString(), "QML Files (*.qml)");
     if (!fileName.isEmpty()) {
         QFileInfo fi(fileName);
