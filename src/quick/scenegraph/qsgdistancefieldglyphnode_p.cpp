@@ -188,6 +188,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
 QSGDistanceFieldTextMaterial::QSGDistanceFieldTextMaterial()
     : m_glyph_cache(0)
     , m_texture(0)
+    , m_fontScale(1.0)
 {
    setFlag(Blending | RequiresDeterminant, true);
 }

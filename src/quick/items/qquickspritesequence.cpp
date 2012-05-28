@@ -113,7 +113,8 @@ public:
 };
 
 QQuickSpriteSequenceMaterial::QQuickSpriteSequenceMaterial()
-    : animT(0.0f)
+    : texture(0)
+    , animT(0.0f)
     , animX1(0.0f)
     , animY1(0.0f)
     , animX2(0.0f)

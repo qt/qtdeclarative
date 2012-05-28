@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
 FxViewItem::FxViewItem(QQuickItem *i, bool own, bool trackGeometry)
     : item(i)
     , transitionableItem(0)
+    , attached(0)
     , ownItem(own)
     , releaseAfterTransition(false)
     , trackGeom(trackGeometry)
