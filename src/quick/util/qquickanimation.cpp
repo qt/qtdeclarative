@@ -164,15 +164,17 @@ void QQuickAbstractAnimationPrivate::commence()
 
     QAbstractAnimationJob *oldInstance = animationInstance;
     animationInstance = q->transition(actions, properties, QQuickAbstractAnimation::Forward);
-    if (oldInstance != animationInstance) {
-        animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
-        if (oldInstance)
-            delete oldInstance;
-    }
-    animationInstance->start();
-    if (animationInstance->isStopped()) {
-        running = false;
-        emit q->completed();
+    if (oldInstance && oldInstance != animationInstance)
+        delete oldInstance;
+
+    if (animationInstance) {
+        if (oldInstance != animationInstance)
+            animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
+        animationInstance->start();
+        if (animationInstance->isStopped()) {
+            running = false;
+            emit q->completed();
+        }
     }
 }
 
@@ -1693,7 +1695,8 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
         anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
-        inc == -1 ? ag->prependAnimation(anim) : ag->appendAnimation(anim);
+        if (anim)
+            inc == -1 ? ag->prependAnimation(anim) : ag->appendAnimation(anim);
     }
 
     return initInstance(ag);
@@ -1752,7 +1755,8 @@ QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &a
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
         anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
-        ag->appendAnimation(anim);
+        if (anim)
+            ag->appendAnimation(anim);
     }
     return initInstance(ag);
 }

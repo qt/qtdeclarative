@@ -204,11 +204,13 @@ void QQuickAnimationController::reload()
         d->animationInstance = d->animation->transition(actions, properties, QQuickAbstractAnimation::Forward);
         if (oldInstance && oldInstance != d->animationInstance)
             delete oldInstance;
-        d->animationInstance->setLoopCount(1);
-        d->animationInstance->setDisableUserControl();
-        d->animationInstance->start();
-        d->animationInstance->pause();
-        updateProgress();
+        if (d->animationInstance) {
+            d->animationInstance->setLoopCount(1);
+            d->animationInstance->setDisableUserControl();
+            d->animationInstance->start();
+            d->animationInstance->pause();
+            updateProgress();
+        }
     }
 }
 

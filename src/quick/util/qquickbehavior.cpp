@@ -204,13 +204,15 @@ void QQuickBehavior::write(const QVariant &value)
     QList<QQmlProperty> after;
     QAbstractAnimationJob *prev = d->animationInstance;
     d->animationInstance = d->animation->transition(actions, after, QQuickAbstractAnimation::Forward);
-    if (d->animationInstance != prev) {
-        d->animationInstance->addAnimationChangeListener(d, QAbstractAnimationJob::StateChange);
-        if (prev)
-            delete prev;
+    if (prev && prev != d->animationInstance)
+        delete prev;
+
+    if (d->animationInstance) {
+        if (d->animationInstance != prev)
+            d->animationInstance->addAnimationChangeListener(d, QAbstractAnimationJob::StateChange);
+        d->animationInstance->start();
+        d->blockRunningChanged = false;
     }
-    d->animationInstance->start();
-    d->blockRunningChanged = false;
     if (!after.contains(d->property))
         QQmlPropertyPrivate::write(d->property, value, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
 }

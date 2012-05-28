@@ -389,7 +389,8 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
             if (valid)
                 d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
             anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
-            ag->appendAnimation(anim);
+            if (anim)
+                ag->appendAnimation(anim);
         }
 
         //TODO: simplify/clarify logic
@@ -913,16 +914,16 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
         }
         pa->setFromSourcedValue(&data->fromSourced);
         pa->setAnimValue(data);
+        pa->setDuration(d->duration);
+        pa->setEasingCurve(d->easingCurve);
+        return initInstance(pa);
     } else {
         pa->setFromSourcedValue(0);
         pa->setAnimValue(0);
         delete pa;
         delete data;
     }
-
-    pa->setDuration(d->duration);
-    pa->setEasingCurve(d->easingCurve);
-    return initInstance(pa);
+    return 0;
 }
 
 void QQuickPathAnimationUpdater::setValue(qreal v)
