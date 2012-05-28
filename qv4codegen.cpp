@@ -1721,9 +1721,80 @@ bool Codegen::visit(ReturnStatement *ast)
     return false;
 }
 
-bool Codegen::visit(SwitchStatement *)
+bool Codegen::visit(SwitchStatement *ast)
 {
-    Q_ASSERT(!"not implemented");
+    IR::BasicBlock *switchend = _function->newBasicBlock();
+
+    if (ast->block) {
+        Result lhs = expression(ast->expression);
+        IR::BasicBlock *switchcond = _block;
+
+        QHash<Node *, IR::BasicBlock *> blockMap;
+
+        Loop loop(switchend, 0);
+        qSwap(_loop, loop);
+
+        for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+
+            _block = _function->newBasicBlock();
+            blockMap[clause] = _block;
+
+            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
+                statement(it2->statement);
+        }
+
+        if (ast->block->defaultClause) {
+            _block = _function->newBasicBlock();
+            blockMap[ast->block->defaultClause] = _block;
+
+            for (StatementList *it2 = ast->block->defaultClause->statements; it2; it2 = it2->next)
+                statement(it2->statement);
+        }
+
+        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+
+            _block = _function->newBasicBlock();
+            blockMap[clause] = _block;
+
+            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
+                statement(it2->statement);
+        }
+
+        qSwap(_loop, loop);
+
+        if (! _block->isTerminated())
+            _block->JUMP(switchend);
+
+        _block = switchcond;
+        for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+            Result rhs = expression(clause->expression);
+            IR::BasicBlock *iftrue = blockMap[clause];
+            IR::BasicBlock *iffalse = _function->newBasicBlock();
+            cjump(binop(IR::OpEqual, *lhs, *rhs), iftrue, iffalse);
+            _block = iffalse;
+        }
+
+        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+            Result rhs = expression(clause->expression);
+            IR::BasicBlock *iftrue = blockMap[clause];
+            IR::BasicBlock *iffalse = _function->newBasicBlock();
+            cjump(binop(IR::OpEqual, *lhs, *rhs), iftrue, iffalse);
+            _block = iffalse;
+        }
+
+        if (ast->block->defaultClause) {
+            _block->JUMP(blockMap[ast->block->defaultClause]);
+        }
+    }
+
+    if (! _block->isTerminated())
+        _block->JUMP(switchend);
+
+    _block = switchend;
     return false;
 }
 
