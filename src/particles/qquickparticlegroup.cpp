@@ -45,6 +45,7 @@
     \qmlclass ParticleGroup QQuickParticleGroup
     \inqmlmodule QtQuick.Particles 2
     \brief For setting attributes on a logical particle group
+    \ingroup qtquick-particles
 
     This element allows you to set timed transitions on particle groups.
 

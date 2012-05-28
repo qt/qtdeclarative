@@ -53,9 +53,9 @@ import QtQuick.XmlListModel 2.0
 \section1 Graphics and Special Effects
  \list
  \li \l{Basic Elements}{Basic Elements}
- \li \l{Painting with Canvas API}
+ \li \l{qtquick-canvas}{Painting with Canvas API}
  \li \l{Using the Qt Quick Particle System}{Particle Effects}
- \li \l{Shader Effects in QML}{Shader Effects}
+ \li \l{qtquick-shaders}{Shader Effects}
  \endlist
 
 \section1 Anchoring and Layouts

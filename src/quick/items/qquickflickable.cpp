@@ -504,7 +504,8 @@ is finished.
 /*!
     \qmlclass Flickable QQuickFlickable
     \inqmlmodule QtQuick 2
-    \ingroup qml-basic-interaction-elements
+    \ingroup qtquick-interaction
+    \ingroup qtquick-containers
 
     \brief For specifying a surface that can be "flicked"
     \inherits Item

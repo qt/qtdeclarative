@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Turbulence QQuickTurbulenceAffector
     \inqmlmodule QtQuick.Particles 2
+    \ingroup qtquick-particles
     \inherits Affector
     \brief Provides fluid-like forces from a noise image
 

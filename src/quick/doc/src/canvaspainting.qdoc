@@ -26,17 +26,13 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-canvaspainting.html
+\group qtquick-canvas
 \ingroup qml-features
-\title Painting with Canvas API
-\brief custom graphics with the Canvas API
+\title Canvas API
+\brief Custom graphics with the Canvas API
 
-\section1 Canvas Element
-
-\list
-    \li \l{Canvas}
-    \li \l{Context2D}
-\endlist
+\section1 Related Types
+\generatelist{related}
 
 The Canvas and Context2D elements implement the \l{HTML Canvas API 2D Context}
 and allows applications to have custom painting routines.

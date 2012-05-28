@@ -568,7 +568,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 /*!
     \qmlclass ViewTransition QQuickViewTransitionAttached
     \inqmlmodule QtQuick 2
-    \ingroup qml-view-elements
+    \ingroup qtquick-animation-properties
     \brief Specifies items under transition in a view
 
     With ListView and GridView, it is possible to specify transitions that should be applied whenever

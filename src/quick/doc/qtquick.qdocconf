@@ -98,3 +98,8 @@ imagedirs += ../../qml
 #add particles sources
 headerdirs += ../../particles
 sourcedirs += ../../particles
+
+#add imports directory because of dependencies
+headerdirs += ../../imports
+sourcedirs += ../../imports
+

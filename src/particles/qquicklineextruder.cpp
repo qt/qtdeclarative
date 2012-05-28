@@ -47,6 +47,7 @@
     \inqmlmodule QtQuick.Particles 2
     \inherits Shape
     \brief Represents a line for affectors and emitters
+    \ingroup qtquick-particles
 
 */
 

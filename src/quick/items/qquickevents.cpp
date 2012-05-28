@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass KeyEvent QQuickKeyEvent
     \inqmlmodule QtQuick 2
-    \ingroup qml-event-elements
+    \ingroup qtquick-interaction
 
     \brief Provides information about a key event
 
@@ -141,7 +141,7 @@ Item {
 /*!
     \qmlclass MouseEvent QQuickMouseEvent
     \inqmlmodule QtQuick 2
-    \ingroup qml-event-elements
+    \ingroup qtquick-interaction
 
     \brief Provides information about a mouse event
 
@@ -239,7 +239,7 @@ Item {
 /*!
     \qmlclass WheelEvent QQuickWheelEvent
     \inqmlmodule QtQuick 2
-    \ingroup qml-event-elements
+    \ingroup qtquick-interaction
 
     \brief Provides information about a mouse wheel event
 

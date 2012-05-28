@@ -148,19 +148,19 @@ QHash<QUrl, QQuickFontObject*> QQuickFontLoaderPrivate::fonts;
 /*!
     \qmlclass FontLoader QQuickFontLoader
     \inqmlmodule QtQuick 2
-  \ingroup qml-utility-elements
+    \ingroup qtquick-utility
     \brief Allows fonts to be loaded by name or URL
 
-    The FontLoader element is used to load fonts by name or URL. 
-    
-    The \l status indicates when the font has been loaded, which is useful 
+    The FontLoader element is used to load fonts by name or URL.
+
+    The \l status indicates when the font has been loaded, which is useful
     for fonts loaded from remote sources.
 
     For example:
     \qml
     import QtQuick 2.0
 
-    Column { 
+    Column {
         FontLoader { id: fixedFont; name: "Courier" }
         FontLoader { id: webFont; source: "http://www.mysite.com/myfont.ttf" }
 

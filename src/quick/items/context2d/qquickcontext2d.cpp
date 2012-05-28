@@ -74,6 +74,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Context2D QQuickContext2D
     \inqmlmodule QtQuick 2
+    \ingroup qtquick-canvas
     \since QtQuick 2.0
     \brief Provides 2D context for shapes on a Canvas item
 
@@ -2205,6 +2206,7 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
   \qmlclass TextMetrics
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
+    \ingroup qtquick-canvas
     \brief Provides a Context2D TextMetrics interface
 
     The TextMetrics object can be created by QtQuick2::Context2D::measureText method.
@@ -2406,6 +2408,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 /*!
     \qmlclass CanvasImageData
     \inqmlmodule QtQuick 2
+    \ingroup qtquick-canvas
     \brief Contains image pixel data in RGBA order
 
      The \a QtQuick2::CanvasImageData object holds the image pixel data.
@@ -2458,6 +2461,7 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::Acce
 /*!
     \qmlclass CanvasPixelArray
     \inqmlmodule QtQuick 2
+    \ingroup qtquick-canvas
     \brief Provides ordered and indexed access to the components of each pixel in image data
 
   The CanvasPixelArray object provides ordered, indexed access to the color components of each pixel of the image data.
@@ -2697,6 +2701,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
     \qmlclass CanvasGradient
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
+    \ingroup qtquick-canvas
     \brief Provides an opaque CanvasGradient interface
   */
 

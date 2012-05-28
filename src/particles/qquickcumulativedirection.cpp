@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles 2
     \inherits Direction
     \brief For specifying a direction made of other directions
+    \ingroup qtquick-particles
 
     The CumulativeDirection element will act as a direction that sums the directions within it.
 */

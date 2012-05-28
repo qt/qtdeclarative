@@ -26,22 +26,14 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-states.html
+\group qtquick-states
 \title Qt Quick States
 \brief Creating and setting states
 
-\target qmlstates
-\section1 States Elements
-\list
-\li \l State
-\li \l PropertyChanges
-\li \l StateGroup
-\li \l StateChangeScript
-\li \l ParentChange
-\li \l AnchorChanges
-\endlist
+\section1 Related Types
+\generatelist{related}
 
-Many user interface designs are \e state driven; interfaces have configurations
+Many user interface designs are \e{state driven}; interfaces have configurations
 that differ depending on the current state. For example, a traffic signal will
 configure its flags or lights depending on its state. While in the signal's
 \c stop state, a red light will turn on while the yellow and the green lights

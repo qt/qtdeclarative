@@ -61,7 +61,7 @@ QQuickAction::QQuickAction()
 
 QQuickAction::QQuickAction(QObject *target, const QString &propertyName,
                const QVariant &value)
-: restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false), 
+: restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false),
   property(target, propertyName, qmlEngine(target)), toValue(value),
   fromBinding(0), event(0),
   specifiedObject(target), specifiedProperty(propertyName)
@@ -122,7 +122,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
 /*!
     \qmlclass State QQuickState
     \inqmlmodule QtQuick 2
-    \ingroup qml-state-elements
+    \ingroup qtquick-states
     \brief Defines configurations of objects and properties
 
     A \e state is a set of batched changes from the default configuration.
@@ -665,7 +665,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
         }
         if (!found) {
             QVariant cur = d->revertList.at(ii).property().read();
-            QQmlAbstractBinding *delBinding = 
+            QQmlAbstractBinding *delBinding =
                 QQmlPropertyPrivate::setBinding(d->revertList.at(ii).property(), 0);
             if (delBinding)
                 delBinding->destroy();
@@ -700,7 +700,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
                 qWarning() << "    QQuickAction event:" << action.event->type();
             else
                 qWarning() << "    QQuickAction:" << action.property.object()
-                           << action.property.name() << "From:" << action.fromValue 
+                           << action.property.name() << "From:" << action.fromValue
                            << "To:" << action.toValue;
         }
     }

@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass PointDirection QQuickPointDirection
     \inqmlmodule QtQuick.Particles 2
+    \ingroup qtquick-particles
     \inherits Direction
     \brief For specifying a direction that varies in x and y components
 

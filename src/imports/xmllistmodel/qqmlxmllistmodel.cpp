@@ -71,8 +71,8 @@ typedef QPair<int, int> QQuickXmlListRange;
 /*!
     \qmlclass XmlRole QQuickXmlListModelRole
     \inqmlmodule QtQuick 2
-    \ingroup qml-working-with-data
     \brief For specifying a role to an XmlListModel
+    \ingroup qtquick-models
 
     \sa {QtQml}
 */
@@ -596,8 +596,8 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
 /*!
     \qmlclass XmlListModel QQuickXmlListModel
     \inqmlmodule QtQuick 2
-    \ingroup qml-working-with-data
     \brief For specifying a read-only model using XPath expressions
+    \ingroup qtquick-models
 
 
     To use this element, you will need to import the module with the following line:

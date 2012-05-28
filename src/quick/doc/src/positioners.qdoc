@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-positioners.html
+\group qtquick-positioners
 \ingroup qml-features
 \title Item Layouts
 
@@ -43,12 +43,7 @@ to be arranged in a regular layout.
 A set of standard positioners are provided in the basic set of Qt Quick
 graphical elements:
 
-\list
-\li \l{#Column}{Column} arranges its children in a column
-\li \l{#Row}{Row} arranges its children in a row
-\li \l{#Grid}{Grid} arranges its children in a grid
-\li \l{#Flow}{Flow} arranges its children like words on a page
-\endlist
+\generatelist{related}
 
 \section2 Column
 

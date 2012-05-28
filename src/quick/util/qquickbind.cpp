@@ -77,7 +77,7 @@ public:
 /*!
     \qmlclass Binding QQuickBind
     \inqmlmodule QtQuick 2
-    \ingroup qml-working-with-data
+    \ingroup qtquick-utility
     \brief Enables the arbitrary creation of property bindings
 
     \section1 Binding to an inaccessible property

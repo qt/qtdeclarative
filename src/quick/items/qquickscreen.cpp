@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Screen QQuickScreenAttached
     \inqmlmodule QtQuick.Window 2
+    \ingroup qtquick-utility
     \brief The Screen attached object provides information about the Screen an Item is displayed on.
 
     The Screen attached object is only valid inside Item or Item derived elements, after component completion.

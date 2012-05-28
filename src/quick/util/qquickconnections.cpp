@@ -73,7 +73,7 @@ public:
 /*!
     \qmlclass Connections QQuickConnections
     \inqmlmodule QtQuick 2
-    \ingroup qml-utility-elements
+    \ingroup qtquick-utility
     \brief Describes generalized connections to signals
 
     A Connections object creates a connection to a QML signal.
@@ -87,7 +87,7 @@ public:
     }
     \endqml
 
-    However, it is not possible to connect to a signal in this way in some 
+    However, it is not possible to connect to a signal in this way in some
     cases, such as when:
 
     \list

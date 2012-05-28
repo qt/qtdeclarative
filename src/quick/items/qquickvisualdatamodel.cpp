@@ -122,7 +122,7 @@ QQuickVisualDataModelParts::QQuickVisualDataModelParts(QQuickVisualDataModel *pa
 /*!
     \qmlclass VisualDataModel QQuickVisualDataModel
     \inqmlmodule QtQuick 2
-    \ingroup qml-working-with-data
+    \ingroup qtquick-models
     \brief Encapsulates a model and delegate
 
     A VisualDataModel encapsulates a model and the delegate that will
@@ -2057,7 +2057,7 @@ void QQuickVisualDataGroupPrivate::destroyingPackage(QQuickPackage *package)
 /*!
     \qmlclass VisualDataGroup QQuickVisualDataGroup
     \inqmlmodule QtQuick 2
-    \ingroup qml-working-with-data
+    \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items
 
 */

@@ -94,7 +94,7 @@ void QQuickAnimationControllerPrivate::animationCurrentTimeChanged(QAbstractAnim
 /*!
     \qmlclass AnimationController QQuickAnimationController
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-control
     \brief Enables manual control of animations
 
     Normally animations are driven by an internal timer, but the AnimationController

@@ -588,6 +588,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     \inqmlmodule QtQuick.Particles 2
     \inherits ParticlePainter
     \brief For visualizing logical particles using an image
+    \ingroup qtquick-particles
 
     This element renders a logical particle as an image. The image can be
     \list

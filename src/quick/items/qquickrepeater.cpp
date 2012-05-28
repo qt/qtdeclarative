@@ -64,7 +64,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 /*!
     \qmlclass Repeater QQuickRepeater
     \inqmlmodule QtQuick 2
-    \ingroup qml-utility-elements
+    \ingroup qtquick-models
     \inherits Item
     \brief Specifies how to repeately create an Item-based component using a model
 

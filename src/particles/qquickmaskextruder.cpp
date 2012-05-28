@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles 2
     \inherits Shape
     \brief For representing an image as a shape to affectors and emitters
+    \ingroup qtquick-particles
 
 */
 /*!

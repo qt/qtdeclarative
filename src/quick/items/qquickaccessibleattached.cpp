@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \brief Enables accessibility of QML items
 
     \inqmlmodule QtQuick 2
-    \ingroup qml-basic-interaction-elements
+    \ingroup qtquick-utility
     \ingroup accessibility
 
     This class is part of \l {Accessibility for Qt Quick Applications}.

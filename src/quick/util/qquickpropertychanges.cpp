@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass PropertyChanges QQuickPropertyChanges
     \inqmlmodule QtQuick 2
-    \ingroup qml-state-elements
+    \ingroup qtquick-states
     \brief Describes new property bindings or values for a state
 
     PropertyChanges is used to define the property values or bindings in a

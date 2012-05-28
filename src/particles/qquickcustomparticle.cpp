@@ -125,6 +125,7 @@ struct PlainVertices {
     \inqmlmodule QtQuick.Particles 2
     \inherits ParticlePainter
     \brief For specifying shaders to paint particles
+    \ingroup qtquick-particles
 
 */
 

@@ -118,7 +118,7 @@ public:
 /*!
     \qmlclass VisualItemModel QQuickVisualItemModel
     \inqmlmodule QtQuick 2
-    \ingroup qml-working-with-data
+    \ingroup qtquick-models
     \brief Defines items to be used added to a view
 
     A VisualItemModel contains the visual items to be used in a view.

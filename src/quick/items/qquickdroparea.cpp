@@ -91,6 +91,7 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
 /*!
     \qmlclass DropArea QQuickDropArea
     \inqmlmodule QtQuick 2
+    \ingroup qtquick-interaction
     \brief For specifying drag and drop handling in an area
 
     A DropArea is an invisible item which receives events when other items are
@@ -326,6 +327,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 /*!
     \qmlclass DragEvent QQuickDragEvent
     \inqmlmodule QtQuick 2
+    \ingroup qtquick-interaction
     \brief Provides information about a drag event
 
     The position of the drag event can be obtained from the \l x and \l y

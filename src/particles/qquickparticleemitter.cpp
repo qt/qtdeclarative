@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
     \qmlclass Emitter QQuickParticleEmitter
     \inqmlmodule QtQuick.Particles 2
     \brief Emits logical particles
+    \ingroup qtquick-particles
 
     This element emits logical particles into the ParticleSystem, with the
     given starting attributes.

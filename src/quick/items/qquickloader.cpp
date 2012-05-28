@@ -155,7 +155,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 /*!
     \qmlclass Loader QQuickLoader
     \inqmlmodule QtQuick 2
-    \ingroup qml-utility-elements
+    \ingroup qtquick-utility
     \inherits Item
 
     \brief Allows dynamical loading of an item-based subtree from a URL or Component

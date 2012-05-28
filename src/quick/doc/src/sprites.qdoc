@@ -26,10 +26,14 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-spriteengine.html
+\group qtquick-images-sprites
 \ingroup qml-features
 \title Sprite Animations
 \brief Sprite-based animations with flexible transitioning
+
+\section1 Related Types
+
+\generatelist{related}
 
 \section1 Sprite Engine
 
@@ -151,7 +155,7 @@ Cmd-line tool:
 http://www.imagemagick.org/script/montage.php
 
 
-\section2 Elements Using the Sprite Engine
+\section2 QML Types Using the Sprite Engine
 
 Sprites for the sprite engine can be defined using the \l Sprite element. This element includes the input parameters
 as well as the length of the animation and weighted transitions to other animations. It is purely a data class, and

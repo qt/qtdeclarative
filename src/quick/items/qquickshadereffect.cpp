@@ -533,9 +533,9 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
 /*!
     \qmlclass ShaderEffect QQuickShaderEffect
     \inqmlmodule QtQuick 2
-    \ingroup qml-basic-visual-elements
-    \brief Applies custom shaders to a rectangle
     \inherits Item
+    \ingroup qtquick-shaders
+    \brief Applies custom shaders to a rectangle
 
     The ShaderEffect element applies a custom OpenGL
     \l{vertexShader}{vertex} and \l{fragmentShader}{fragment} shader to a

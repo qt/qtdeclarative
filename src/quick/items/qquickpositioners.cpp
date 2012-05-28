@@ -495,7 +495,7 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
 /*!
     \qmlclass Positioner QQuickPositionerAttached
     \inqmlmodule QtQuick 2
-    \ingroup qml-positioning-elements
+    \ingroup qtquick-positioners
     \brief Provides attached properties that contain details on where an item exists in a positioner
 
     Positioner is an attached property that is attached to the top-level child item within a
@@ -577,9 +577,9 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 /*!
     \qmlclass Column QQuickColumn
     \inqmlmodule QtQuick 2
-    \ingroup qml-positioning-elements
-    \brief Positions its children in a column
     \inherits Item
+    \ingroup qtquick-positioners
+    \brief Positions its children in a column
 
     Column is an element that positions its child items along a single column.
     It can be used as a convenient way to vertically position a series of items without
@@ -745,9 +745,9 @@ void QQuickColumn::reportConflictingAnchors()
 /*!
     \qmlclass Row QQuickRow
     \inqmlmodule QtQuick 2
-    \ingroup qml-positioning-elements
-    \brief Positions its children in a row
     \inherits Item
+    \ingroup qtquick-positioners
+    \brief Positions its children in a row
 
     Row is an element that positions its child items along a single row.
     It can be used as a convenient way to horizontally position a series of items without
@@ -976,9 +976,9 @@ void QQuickRow::reportConflictingAnchors()
 /*!
     \qmlclass Grid QQuickGrid
     \inqmlmodule QtQuick 2
-    \ingroup qml-positioning-elements
-    \brief Positions its children in grid formation
     \inherits Item
+    \ingroup qtquick-positioners
+    \brief Positions its children in grid formation
 
     Grid is an element that positions its child items in grid formation.
 
@@ -1417,9 +1417,9 @@ void QQuickGrid::reportConflictingAnchors()
 /*!
     \qmlclass Flow QQuickFlow
     \inqmlmodule QtQuick 2
-    \ingroup qml-positioning-elements
-    \brief Positions its children side by side, wrapping as necessary
     \inherits Item
+    \ingroup qtquick-positioners
+    \brief Positions its children side by side, wrapping as necessary
 
     The Flow item positions its child items like words on a page, wrapping them
     to create rows or columns of items.

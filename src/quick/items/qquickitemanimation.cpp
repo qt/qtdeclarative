@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass ParentAnimation QQuickParentAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \since QtQuick 2.0
     \inherits Animation
     \brief Animates changes in parent values
@@ -417,7 +417,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 /*!
     \qmlclass AnchorAnimation QQuickAnchorAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \inherits Animation
     \brief Animates changes in anchor values
 

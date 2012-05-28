@@ -342,7 +342,7 @@ void QQuickSpringAnimationPrivate::updateMode()
 /*!
     \qmlclass SpringAnimation QQuickSpringAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \inherits NumberAnimation
 
     \brief Allows a property to track a value in a spring-like motion

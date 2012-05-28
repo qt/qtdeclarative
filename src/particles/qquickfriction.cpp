@@ -44,6 +44,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Friction QQuickFrictionAffector
     \inqmlmodule QtQuick.Particles 2
+    \ingroup qtquick-particles
     \inherits Affector
     \brief For applying friction proportional to the particle's current speed
 

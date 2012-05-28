@@ -90,9 +90,9 @@ public:
 /*!
     \qmlclass Flipable QQuickFlipable
     \inqmlmodule QtQuick 2
-    \ingroup qml-basic-interaction-elements
-    \brief For specifying a surface that can be flipped
     \inherits Item
+    \ingroup qtquick-containers
+    \brief For specifying a surface that can be flipped
 
     Flipable is an item that can be visibly "flipped" between its front and
     back sides, like a card. It is used together with \l Rotation, \l State

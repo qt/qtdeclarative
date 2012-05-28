@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass FocusScope QQuickFocusScope
     \inqmlmodule QtQuick 2
-    \ingroup qml-basic-interaction-elements
+    \ingroup qtquick-interaction
 
     \brief Explicitly creates a focus scope
     \inherits Item

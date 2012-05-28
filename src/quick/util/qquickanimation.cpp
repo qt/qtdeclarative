@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Animation QQuickAbstractAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \brief Is the base of all QML animations
 
     The Animation element cannot be used directly in a QML file.  It exists
@@ -617,7 +617,7 @@ void QQuickAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
 /*!
     \qmlclass PauseAnimation QQuickPauseAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-modifiers
     \inherits Animation
     \brief Provides a pause for an animation
 
@@ -687,7 +687,7 @@ QAbstractAnimationJob* QQuickPauseAnimation::transition(QQuickStateActions &acti
 /*!
     \qmlclass ColorAnimation QQuickColorAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \inherits PropertyAnimation
     \brief Animates changes in color values
 
@@ -831,7 +831,7 @@ void QActionAnimation::updateState(State newState, State oldState)
 /*!
     \qmlclass ScriptAction QQuickScriptAction
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-modifiers
     \inherits Animation
     \brief Defines scripts to be run during an animation
 
@@ -957,7 +957,7 @@ QAbstractAnimationJob* QQuickScriptAction::transition(QQuickStateActions &action
 /*!
     \qmlclass PropertyAction QQuickPropertyAction
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-modifiers
     \inherits Animation
     \brief Specifies immediate property changes during animation
 
@@ -1209,7 +1209,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
 /*!
     \qmlclass NumberAnimation QQuickNumberAnimation
     \inqmlmodule QtQuick 2
-  \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \inherits PropertyAnimation
     \brief Animates changes in qreal-type values
 
@@ -1321,7 +1321,7 @@ void QQuickNumberAnimation::setTo(qreal t)
 /*!
     \qmlclass Vector3dAnimation QQuickVector3dAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \inherits PropertyAnimation
     \brief Animates changes in QVector3d values
 
@@ -1397,7 +1397,7 @@ void QQuickVector3dAnimation::setTo(QVector3D t)
 /*!
     \qmlclass RotationAnimation QQuickRotationAnimation
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \inherits PropertyAnimation
     \brief Animates changes in rotation values
 
@@ -1637,7 +1637,7 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
 /*!
     \qmlclass SequentialAnimation QQuickSequentialAnimation
     \inqmlmodule QtQuick 2
-  \ingroup qml-animation-transition
+    \ingroup qtquick-animation-define
     \inherits Animation
     \brief Allows animations to be run sequentially
 
@@ -1710,7 +1710,7 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
 /*!
     \qmlclass ParallelAnimation QQuickParallelAnimation
     \inqmlmodule QtQuick 2
-  \ingroup qml-animation-transition
+    \ingroup qtquick-animation-define
     \inherits Animation
     \brief Enables animations to be run in parallel
 
@@ -1836,7 +1836,7 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
 /*!
     \qmlclass PropertyAnimation QQuickPropertyAnimation
     \inqmlmodule QtQuick 2
-  \ingroup qml-animation-transition
+    \ingroup qtquick-animation-properties
     \inherits Animation
     \brief Animates changes in property values
 

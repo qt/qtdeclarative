@@ -1148,7 +1148,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 /*!
     \qmlclass GridView QQuickGridView
     \inqmlmodule QtQuick 2
-    \ingroup qml-view-elements
+    \ingroup qtquick-views
 
     \inherits Flickable
     \brief For specifying a grid view of items provided by a model

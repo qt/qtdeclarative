@@ -56,7 +56,7 @@ To visualize data, bind the view's \c model property to a model and the
     Views are containers for collections of items. They are feature-rich and can be
     customizable to meet style or behavior requirements.
 
-    \keyword qml-view-elements
+    \keyword qtquick-views
     A set of standard views are provided in the basic set of Qt Quick
     graphical elements:
 

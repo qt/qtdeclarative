@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles 2
     \inherits ParticlePainter
     \brief For specifying a delegate to paint particles
+    \ingroup qtquick-particles
 
 */
 

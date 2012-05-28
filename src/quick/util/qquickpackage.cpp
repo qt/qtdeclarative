@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Package QQuickPackage
     \inqmlmodule QtQuick 2
-    \ingroup qml-working-with-data
+    \ingroup qtquick-views
     \brief Specifies a collection of named items
 
     The Package class is used in conjunction with
@@ -128,14 +128,14 @@ QQuickPackageAttached::~QQuickPackageAttached()
     attached.remove(parent());
 }
 
-QString QQuickPackageAttached::name() const 
-{ 
-    return _name; 
+QString QQuickPackageAttached::name() const
+{
+    return _name;
 }
 
-void QQuickPackageAttached::setName(const QString &n) 
-{ 
-    _name = n; 
+void QQuickPackageAttached::setName(const QString &n)
+{
+    _name = n;
 }
 
 QQuickPackage::QQuickPackage(QObject *parent)
@@ -150,9 +150,9 @@ QQuickPackage::~QQuickPackage()
 QQmlListProperty<QObject> QQuickPackage::data()
 {
     Q_D(QQuickPackage);
-    return QQmlListProperty<QObject>(this, &d->dataList, QQuickPackagePrivate::data_append, 
-                                                        QQuickPackagePrivate::data_count, 
-                                                        QQuickPackagePrivate::data_at, 
+    return QQmlListProperty<QObject>(this, &d->dataList, QQuickPackagePrivate::data_append,
+                                                        QQuickPackagePrivate::data_count,
+                                                        QQuickPackagePrivate::data_at,
                                                         QQuickPackagePrivate::data_clear);
 }
 

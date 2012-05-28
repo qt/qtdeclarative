@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
     \brief For altering particle ages
+    \ingroup qtquick-particles
 
     The Age affector allows you to alter where the particle is in its lifecycle. Common uses
     are to expire particles prematurely, possibly giving them time to animate out.

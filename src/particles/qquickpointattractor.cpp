@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Attractor QQuickAttractorAffector
     \inqmlmodule QtQuick.Particles 2
+    \ingroup qtquick-particles
     \inherits Affector
     \brief For attracting particles towards a specific point
 

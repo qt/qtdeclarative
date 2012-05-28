@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass TargetDirection QQuickTargetDirection
     \inqmlmodule QtQuick.Particles 2
+    \ingroup qtquick-particles
     \inherits Direction
     \brief For specifying a direction towards the target point
 

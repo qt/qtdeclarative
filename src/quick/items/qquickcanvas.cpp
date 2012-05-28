@@ -749,6 +749,7 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 /*!
     \qmlclass Window QQuickCanvas
     \inqmlmodule QtQuick.Window 2
+    \ingroup qtquick-visual-types
     \brief Creates a new top-level window
 
     The Window object creates a new top-level window for a QtQuick scene. It automatically sets up the

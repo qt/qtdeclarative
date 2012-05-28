@@ -46,6 +46,7 @@ const qreal CONV = 0.017453292520444443;
 /*!
     \qmlclass Gravity QQuickGravityAffector
     \inqmlmodule QtQuick.Particles 2
+    \ingroup qtquick-particles
     \inherits Affector
     \brief For applying accleration in an angle
 

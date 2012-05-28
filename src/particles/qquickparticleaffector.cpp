@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles 2
     \brief Applies alterations to the attributes of logical particles at any
     point in their lifetime
+    \ingroup qtquick-particles
 
     The base Affector does not alter any attributes, but can be used to emit a signal
     when a particle meets certain conditions.

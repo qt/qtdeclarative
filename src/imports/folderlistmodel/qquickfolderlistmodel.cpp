@@ -198,7 +198,7 @@ void QQuickFolderListModelPrivate::_q_sortFinished(const QList<FileProperty> &li
 
 /*!
     \qmlclass FolderListModel QQuickFolderListModel
-    \ingroup qml-working-with-data
+    \ingroup qtquick-models
     \brief The FolderListModel provides a model of the contents of a file system folder.
 
     FolderListModel provides access to information about the contents of a folder

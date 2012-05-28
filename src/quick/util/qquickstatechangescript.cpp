@@ -70,7 +70,7 @@ public:
 /*!
     \qmlclass StateChangeScript QQuickStateChangeScript
     \inqmlmodule QtQuick 2
-    \ingroup qml-state-elements
+    \ingroup qtquick-states
     \brief Specifies how to run a script in a state
 
     A StateChangeScript is run upon entering a state. You can optionally use

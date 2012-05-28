@@ -75,7 +75,7 @@ public:
 /*!
     \qmlclass Behavior QQuickBehavior
     \inqmlmodule QtQuick 2
-    \ingroup qml-animation-transition
+    \ingroup qtquick-animation-define
     \brief Defines a default animation for a property change
 
     A Behavior defines the default animation to be applied whenever a

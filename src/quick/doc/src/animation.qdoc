@@ -26,11 +26,12 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-animation.html
+\group qtquick-animation-define
 \title Animation and Transitions
 \brief the animation system in Qt Quick
 
 \section1 Animation and Transitions Elements
+\generatelist{related}
 \list
 \li \l {Transition} - Animates transitions during state changes
 \li \l {SequentialAnimation} - Runs animations sequentially
@@ -44,6 +45,8 @@
 \endlist
 
 Elements that animate properties based on data types
+\annotatedlist qtquick-property-animation
+
 \list
 \li \l {PropertyAnimation} - Animates property changes
 \li \l {NumberAnimation} - Animates properties of type qreal
@@ -248,4 +251,28 @@ Rectangle {
 }
 \endqml
 
+*/
+
+/*!
+\group qtquick-animation-properties
+\title Qt Quick Property Animation
+\brief Animate property changes
+
+\generatelist{related}
+*/
+
+/*!
+\group qtquick-animation-control
+\title Qt Quick Animation Controls
+\brief Control animation sequences
+
+\generatelist{related}
+*/
+
+/*!
+\group qtquick-animation-modifiers
+\title Qt Quick Animation Modifiers
+\brief Modify animation sequences
+
+\generatelist{related}
 */

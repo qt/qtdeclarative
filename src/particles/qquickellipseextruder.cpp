@@ -51,6 +51,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass EllipseShape QQuickEllipseExtruder
     \inqmlmodule QtQuick.Particles 2
+    \ingroup qtquick-particles
     \inherits Shape
     \brief Represents an ellipse to other particle system elements
 

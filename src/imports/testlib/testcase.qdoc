@@ -42,6 +42,7 @@
 /*!
     \qmlclass TestCase TestCase
     \brief Represents a unit test case
+    \ingroup qtquick-utility
     \since 4.8
     \ingroup qtest::qml
 

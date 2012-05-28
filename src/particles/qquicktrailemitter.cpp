@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles 2
     \inherits QQuickParticleEmitter
     \brief Emits logical particles from other logical particles
+    \ingroup qtquick-particles
 
     This element emits logical particles into the ParticleSystem, with the
     starting positions based on those of other logical particles.
