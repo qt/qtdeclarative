@@ -1380,7 +1380,7 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
     \inlineimage listmodel.png
     \enddiv
 
-    \snippet doc/snippets/qml/listmodel.qml 0
+    \snippet qml/listmodel/listmodel.qml 0
 
     Roles (properties) in each element must begin with a lower-case letter and
     should be common to all elements in a model. The ListElement documentation
@@ -1389,14 +1389,14 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
     Since the example model contains an \c id property, it can be referenced
     by views, such as the ListView in this example:
 
-    \snippet doc/snippets/qml/listmodel-simple.qml 0
+    \snippet qml/listmodel/listmodel-simple.qml 0
     \dots 8
-    \snippet doc/snippets/qml/listmodel-simple.qml 1
+    \snippet qml/listmodel/listmodel-simple.qml 1
 
     It is possible for roles to contain list data.  In the following example we
     create a list of fruit attributes:
 
-    \snippet doc/snippets/qml/listmodel-nested.qml model
+    \snippet qml/listmodel/listmodel-nested.qml model
 
     The delegate displays all the fruit attributes:
 
@@ -1404,14 +1404,14 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
     \inlineimage listmodel-nested.png
     \enddiv
 
-    \snippet doc/snippets/qml/listmodel-nested.qml delegate
+    \snippet qml/listmodel/listmodel-nested.qml delegate
 
     \section1 Modifying List Models
 
     The content of a ListModel may be created and modified using the clear(),
     append(), set(), insert() and setProperty() methods.  For example:
 
-    \snippet doc/snippets/qml/listmodel-modify.qml delegate
+    \snippet qml/listmodel/listmodel-modify.qml delegate
 
     Note that when creating content dynamically the set of available properties
     cannot be changed once set. Whatever properties are first added to the model
@@ -1427,11 +1427,11 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
     Here is an example that uses WorkerScript to periodically append the
     current time to a list model:
 
-    \snippet examples/declarative/threading/threadedlistmodel/timedisplay.qml 0
+    \snippet examples/quick/threading/threadedlistmodel/timedisplay.qml 0
 
     The included file, \tt dataloader.js, looks like this:
 
-    \snippet examples/declarative/threading/threadedlistmodel/dataloader.js 0
+    \snippet examples/quick/threading/threadedlistmodel/dataloader.js 0
 
     The timer in the main example sends messages to the worker script by calling
     \l WorkerScript::sendMessage(). When this message is received,
@@ -2456,12 +2456,12 @@ bool QQuickListModelParser::definesEmptyList(const QString &s)
     The following model defines a series of list elements, each of which
     contain "name" and "cost" roles and their associated values.
 
-    \snippet doc/snippets/qml/qml-data-models/listelements.qml model
+    \snippet qml/listmodel/listelements.qml model
 
     The delegate obtains the name and cost for each element by simply referring
     to \c name and \c cost:
 
-    \snippet doc/snippets/qml/qml-data-models/listelements.qml view
+    \snippet qml/listmodel/listelements.qml view
 
     \sa ListModel
 */

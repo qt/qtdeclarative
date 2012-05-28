@@ -41,7 +41,7 @@ diving deeper into QML. It is also helpful to have a basic understanding of
 other Web technologies like HTML and JSON, but it is not required.
 
 The examples shown in this guide are located in the
-\c{examples/declarative/tutorials/qmlintro} directory within the Qt source
+\c{examples/quick/tutorials/qmlintro} directory within the Qt source
 package. You can run then with the \l{QML Viewer} tool.
 
 \section1 \l{QML Concepts and Syntax}
@@ -75,7 +75,7 @@ The following example shows the basic syntax of QML. When opened in
 the \l{QML Viewer}{\QQV tool}, the output displayed should match the
 image shown on the right: a light blue rectangle.
 
-\snippet examples/declarative/tutorials/qmlintro/basic-syntax.qml document
+\snippet examples/quick/tutorials/qmlintro/basic-syntax.qml document
 
 In this example, we import the features defined by Qt Quick 1.0, and
 we declare and create a single rectangle with width, height and color.
@@ -103,7 +103,7 @@ defined for the object, such as its property values and any child objects.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-elements1.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/elements1.qml document
+\snippet examples/quick/tutorials/qmlintro/elements1.qml document
 
 Here, we create two elements: a rectangle with an image inside it. We say that
 the rectangle is the parent element and the image is its child. Since the
@@ -119,7 +119,7 @@ element.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-elements2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/elements2.qml document
+\snippet examples/quick/tutorials/qmlintro/elements2.qml document
 
 In this example, we can define as many elements inside the rectangle
 as we like, but we cannot define other top level elements. All the
@@ -218,11 +218,11 @@ display text.
 
 Grouped properties can be written like this:
 
-\snippet examples/declarative/tutorials/qmlintro/grouped-properties1.qml text with grouped properties
+\snippet examples/quick/tutorials/qmlintro/grouped-properties1.qml text with grouped properties
 
 or like this:
 
-\snippet examples/declarative/tutorials/qmlintro/grouped-properties2.qml text with grouped properties
+\snippet examples/quick/tutorials/qmlintro/grouped-properties2.qml text with grouped properties
 
 In the element documentation, grouped properties are shown using the "dot" notation.
 
@@ -276,7 +276,7 @@ automatically updated to the new value. For example:
 \br
 \inlineimage declarative-qmlintro-property-binding2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/property-binding.qml elements
+\snippet examples/quick/tutorials/qmlintro/property-binding.qml elements
 
 Here, the child \l Rectangle item's \c width property is set relative to
 the width of its parent. Whenever the parent's width changes, the width of
@@ -308,7 +308,7 @@ to be the same as that of the Text object by referring to
 \inlineimage declarative-qmlintro-object-identifiers.png
 \enddiv
 
-\snippet examples/declarative/tutorials/qmlintro/object-identifiers.qml document
+\snippet examples/quick/tutorials/qmlintro/object-identifiers.qml document
 
 An object can be referred to by its \c id from anywhere within the
 \l{QML Documents}{component} in which it is declared. Therefore, an
@@ -340,7 +340,7 @@ Comments are ignored by the QML engine. They are useful for explaining what
 you are doing; for referring back to at a later date, or for others reading
 your QML files.
 
-\snippet examples/declarative/tutorials/qmlintro/comments.qml commenting
+\snippet examples/quick/tutorials/qmlintro/comments.qml commenting
 
 Comments can also be used to prevent the execution of code, which is
 sometimes useful for tracking down problems. In the above example, the
@@ -363,7 +363,7 @@ For example, the \l MouseArea element has an \l{MouseArea::}{onClicked} handler
 that can be used to respond to a mouse click. Below, we use this handler to
 print a message whenever the mouse is clicked:
 
-\snippet examples/declarative/tutorials/qmlintro/signal-handlers.qml document
+\snippet examples/quick/tutorials/qmlintro/signal-handlers.qml document
 
 All signal handlers begin with \e "on".
 
@@ -372,7 +372,7 @@ the MouseArea \l{MouseArea::}{onPressed} signal handler has a \c mouse parameter
 that contains information about the mouse press. This parameter can be
 referred to in the JavaScript code, as below:
 
-\snippet examples/declarative/tutorials/qmlintro/signal-handlers-parameters.qml mouse area
+\snippet examples/quick/tutorials/qmlintro/signal-handlers-parameters.qml mouse area
 
 \section2 Property Change Notifications
 
@@ -396,7 +396,7 @@ The following code shows this in practice:
 \br
 \inlineimage declarative-qmlintro-property-change2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/property-change.qml property change
+\snippet examples/quick/tutorials/qmlintro/property-change.qml property change
 
 When the user modifies the text, the expression assigned to the \c textChanged
 handler will be evaluated. In this example, the text changes color when this
@@ -435,7 +435,7 @@ attaches properties for handling key presses to any item. For example:
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-attached-properties.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/attached-properties.qml attached properties
+\snippet examples/quick/tutorials/qmlintro/attached-properties.qml attached properties
 
 The \l Keys properties are not defined by the \l Item element. They are
 defined separately and attached to the item.
@@ -447,7 +447,7 @@ the \e ListView.isCurrentItem property to each delegate it creates:
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-attached-properties-view.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/attached-properties-view.qml delegate with attached property
+\snippet examples/quick/tutorials/qmlintro/attached-properties-view.qml delegate with attached property
 
 In effect, by attaching this property, \l ListView provides an interface
 that lets the delegate access information about the current item in the
@@ -528,7 +528,7 @@ center of a \l Rectangle.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-anchors-centerin.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/anchors.qml centered text
+\snippet examples/quick/tutorials/qmlintro/anchors.qml centered text
 
 In this case, the center of the text item is anchored to the center of
 its parent item by using the \c{anchors.centerIn} grouped property.
@@ -549,7 +549,7 @@ to define its position relative to the text item.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-anchors-edges.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/anchors2.qml anchored items
+\snippet examples/quick/tutorials/qmlintro/anchors2.qml anchored items
 
 By giving the text item the \c textItem identifier, we can refer to it when
 defining the anchors for the rectangle. We line up the right edge of the
@@ -575,7 +575,7 @@ the same width.
 \br
 \inlineimage declarative-qmlintro-anchors-expanding2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/anchors-expanding.qml anchored items
+\snippet examples/quick/tutorials/qmlintro/anchors-expanding.qml anchored items
 
 The anchor lines on the left and right edges of the rectangle are connected
 to those of the text input item. Since the text can be modified by the user,
@@ -597,7 +597,7 @@ between them.
 \br
 \inlineimage declarative-qmlintro-anchors-baseline-margins.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/anchors-margins.qml anchored items
+\snippet examples/quick/tutorials/qmlintro/anchors-margins.qml anchored items
 
 Note that the image also uses a margin to leave a gap between its left edge
 and the left edge of the user interface.
@@ -634,7 +634,7 @@ order in which items will be updated. Problems can occur if circular dependencie
 are created between items. The following example shows this occurring with a
 parent item and its child.
 
-\snippet examples/declarative/tutorials/qmlintro/circular.qml circular
+\snippet examples/quick/tutorials/qmlintro/circular.qml circular
 
 \section3 Strategies for Use
 
@@ -655,7 +655,7 @@ items contain an image and a text item that are anchored to their parent.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-anchors-strategy-annotated.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/anchors-strategy.qml anchor strategy
+\snippet examples/quick/tutorials/qmlintro/anchors-strategy.qml anchor strategy
 
 The above example shows how each item is anchored to its parent. This ensures
 that the dependencies introduced by the anchors all consistently point to each
@@ -687,7 +687,7 @@ item.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-anchors-stretch.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/anchors-stretch.qml items
+\snippet examples/quick/tutorials/qmlintro/anchors-stretch.qml items
 
 The rectangle uses anchors to define its top, left and right edges in terms
 of its parent item, and the bottom edge is aligned with the top of the text
@@ -745,7 +745,7 @@ include a small amount of space between the rectangles.
 \div {class="float-right"}
 \inlineimage qml-row.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/row.qml document
+\snippet examples/quick/tutorials/qmlintro/row.qml document
 
 We ensure that the parent \l Rectangle is large enough so that there is some space
 left around the edges of the horizontally centered Row item. The equally-sized
@@ -763,7 +763,7 @@ different sizes.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-row-anchors.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/row-anchors.qml row
+\snippet examples/quick/tutorials/qmlintro/row-anchors.qml row
 
 Note that the \l Row item itself uses \c horizontalCenter and \c verticalCenter
 anchors to place itself in the center of its parent. It is free to do this
@@ -787,7 +787,7 @@ include a small amount of space between the rectangles.
 \div {class="float-right"}
 \inlineimage qml-column.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/column.qml document
+\snippet examples/quick/tutorials/qmlintro/column.qml document
 
 In the above example, each of the rounded rectangles are positioned by the
 \l Column item. The column only changes the vertical positions of its
@@ -803,7 +803,7 @@ it will only be as wide as the widest child item.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-column-anchors.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/column-anchors.qml document
+\snippet examples/quick/tutorials/qmlintro/column-anchors.qml document
 
 The example above stretches the column horizontally to fill the entire
 user interface, and stretches each rectangle inside to fill the column.
@@ -819,7 +819,7 @@ can be specified using the \l{Grid::spacing}{spacing} property.
 \div {class="float-right"}
 \inlineimage qml-grid-spacing.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/grid-spacing.qml document
+\snippet examples/quick/tutorials/qmlintro/grid-spacing.qml document
 
 There is no difference between horizontal and vertical spacing inserted
 between items, so any additional space must be added within the items
@@ -836,8 +836,8 @@ them.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-grid-positioning.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/grid-positioning.qml document start
-\snippet examples/declarative/tutorials/qmlintro/grid-positioning.qml document end
+\snippet examples/quick/tutorials/qmlintro/grid-positioning.qml document start
+\snippet examples/quick/tutorials/qmlintro/grid-positioning.qml document end
 
 We only show the first item, but the principle is the same for the others.
 
@@ -861,7 +861,7 @@ screenshots.
 \br
 \inlineimage qml-flow-text2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/flow.qml document
+\snippet examples/quick/tutorials/qmlintro/flow.qml document
 
 The main differences between the \l Grid and \l Flow positioners are that
 items inside a \l Flow will wrap when they run out of space on the minor
@@ -878,7 +878,7 @@ items, placing one positioner inside another. The following example shows a
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-nested-positioners.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/nested-positioners.qml column
+\snippet examples/quick/tutorials/qmlintro/nested-positioners.qml column
 
 The example works around the restrictions on the use of anchors mentioned
 earlier by using appropriate anchors for each item. The innermost items,
@@ -941,7 +941,7 @@ is in the user interface, but it will not be visible in the running example.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-mousearea-annotated.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/mousearea.qml mouse area
+\snippet examples/quick/tutorials/qmlintro/mousearea.qml mouse area
 
 The \l{MouseArea::}{onPressed} and \l{MouseArea::}{onReleased} definitions
 are \l{QML Concepts and Syntax#Signal Handlers}{signal handlers} that
@@ -965,7 +965,7 @@ area, and defines two signal handlers to response to mouse button input.
 \br
 \inlineimage declarative-qmlintro-mouse-pressed2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/mouse-pressed-signals.qml text item
+\snippet examples/quick/tutorials/qmlintro/mouse-pressed-signals.qml text item
 
 The \l{MouseArea::}{onPressed} and \l{MouseArea::}{onReleased}
 signal handlers are defined for the mouse area. As a result, when the user
@@ -981,7 +981,7 @@ operator), as in the following example.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-mouse-pressed-buttons.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/mouse-pressed-buttons.qml items
+\snippet examples/quick/tutorials/qmlintro/mouse-pressed-buttons.qml items
 
 The mouse area covers the entire area of the user interface and accepts
 input from both left and right buttons. Each of the rectangles defines its
@@ -1005,7 +1005,7 @@ position of the cursor, as shown in the following example.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-mouse-pressed-position.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/mouse-pressed-position.qml text item
+\snippet examples/quick/tutorials/qmlintro/mouse-pressed-position.qml text item
 
 When the user presses the mouse button over the text item, the text changes
 to show the coordinates within the mouse area where the press occurred. If
@@ -1023,7 +1023,7 @@ case, we could try the following:
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-mouse-pressed-position2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/mouse-pressed-position2.qml text item
+\snippet examples/quick/tutorials/qmlintro/mouse-pressed-position2.qml text item
 
 When we run this example, the text item shows the initial, default value of
 the mouse area's \c mouseX and \c mouseY properties. Moving the cursor over
@@ -1038,7 +1038,7 @@ mouse cursor, we need to enable \e{mouse hover} by setting its
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-mouse-hover-enabled.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/mouse-hover-enabled.qml text item
+\snippet examples/quick/tutorials/qmlintro/mouse-hover-enabled.qml text item
 
 With mouse hover enabled, other properties of the \l MouseArea can be
 monitored. For example, the \l{MouseArea::}{containsMouse} property can be
@@ -1051,7 +1051,7 @@ press a mouse button over the area.
 \br
 \inlineimage declarative-qmlintro-mouse-hover-containsmouse2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/mouse-hover-containsmouse.qml items
+\snippet examples/quick/tutorials/qmlintro/mouse-hover-containsmouse.qml items
 
 The above example uses \l{QML Concepts and Syntax#Expressions}{an expression}
 to show the coordinates of the mouse cursor when it is in the mouse area,
@@ -1072,7 +1072,7 @@ following example shows how dragging is enabled for an item.
 \div {class="float-right"}
 \inlineimage declarative-qmlintro-mouse-drag.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/mouse-drag.qml draggable item
+\snippet examples/quick/tutorials/qmlintro/mouse-drag.qml draggable item
 
 The item to be dragged is the \l Rectangle containing a \l MouseArea and
 \l Text items. All that is required is to set the value of the
@@ -1135,7 +1135,7 @@ positioner. These are defined with identifiers, \c{leftRect} and
 \br
 \inlineimage declarative-qmlintro-key-navigation2.png
 \enddiv
-\snippet examples/declarative/tutorials/qmlintro/key-navigation.qml items
+\snippet examples/quick/tutorials/qmlintro/key-navigation.qml items
 
 The \c{leftRect} rectangle attaches the
 \l{KeyNavigation::right}{KeyNavigation.right} property, setting it to refer
@@ -1183,7 +1183,7 @@ The following example shows a repeater used with a \l{#Grid}{Grid} item to
 arrange a set of Rectangle items. The Repeater item creates a series of 24
 rectangles for the Grid item to position in a 5 by 5 arrangement.
 
-\snippet doc/snippets/qml/repeaters/repeater-grid-index.qml document
+\snippet qml/repeaters/repeater-grid-index.qml document
 
 The number of items created by a Repeater is held by its \l{Repeater::}{count}
 property. It is not possible to set this property to determine the number of

@@ -80,31 +80,31 @@ the component. This function can take one or two arguments:
 
 Here is an example. First there is \c Sprite.qml, which defines a simple QML component:
 
-\snippet doc/snippets/qml/Sprite.qml 0
+\snippet qml/Sprite.qml 0
 
 Our main application file, \c main.qml, imports a \c componentCreation.js JavaScript file
 that will create \c Sprite objects:
 
-\snippet doc/snippets/qml/createComponent.qml 0
+\snippet qml/createComponent.qml 0
 
 Here is \c componentCreation.js. Notice it checks whether the component \l{Component::status}{status} is
 \c Component.Ready before calling \l {Component::createObject()}{createObject()}
 in case the QML file is loaded over a network and thus is not ready immediately.
 
-\snippet doc/snippets/qml/componentCreation.js vars
+\snippet qml/componentCreation.js vars
 \codeline
-\snippet doc/snippets/qml/componentCreation.js func
-\snippet doc/snippets/qml/componentCreation.js remote
-\snippet doc/snippets/qml/componentCreation.js func-end
+\snippet qml/componentCreation.js func
+\snippet qml/componentCreation.js remote
+\snippet qml/componentCreation.js func-end
 \codeline
-\snippet doc/snippets/qml/componentCreation.js finishCreation
+\snippet qml/componentCreation.js finishCreation
 
 If you are certain the QML file to be loaded is a local file, you could omit the \c finishCreation()
 function and call \l {Component::createObject()}{createObject()} immediately:
 
-\snippet doc/snippets/qml/componentCreation.js func
-\snippet doc/snippets/qml/componentCreation.js local
-\snippet doc/snippets/qml/componentCreation.js func-end
+\snippet qml/componentCreation.js func
+\snippet qml/componentCreation.js local
+\snippet qml/componentCreation.js func-end
 
 Notice in both instances, \l {Component::createObject()}{createObject()} is called with
 \c appWindow passed as an argument so that the created object will become a child of the
@@ -126,7 +126,7 @@ It is also possible to instantiate components without blocking via the
 If the QML is not defined until runtime, you can create a QML item from
 a string of QML using the \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()} function, as in the following example:
 
-\snippet doc/snippets/qml/createQmlObject.qml 0
+\snippet qml/createQmlObject.qml 0
 
 The first argument is the string of QML to create. Just like in a new file, you will need to
 import any types you wish to use. The second argument is the parent item for the new item;
@@ -184,8 +184,8 @@ component. Each instance runs a NumberAnimation, and when the animation has fini
 \li \c SelfDestroyingRect.qml
 
 \row
-\li \snippet doc/snippets/qml/dynamicObjects-destroy.qml 0
-\li \snippet doc/snippets/qml/SelfDestroyingRect.qml 0
+\li \snippet qml/dynamicObjects-destroy.qml 0
+\li \snippet qml/SelfDestroyingRect.qml 0
 
 \endtable
 
@@ -212,6 +212,6 @@ destroyed if they were dynamically created.
 Objects created with \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}
 can similarly be destroyed using \c destroy():
 
-\snippet doc/snippets/qml/createQmlObject.qml 0
-\snippet doc/snippets/qml/createQmlObject.qml destroy
+\snippet qml/createQmlObject.qml 0
+\snippet qml/createQmlObject.qml destroy
 */

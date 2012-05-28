@@ -587,7 +587,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     Below is a Column that contains three rectangles of various sizes:
 
-    \snippet doc/snippets/qml/column/vertical-positioner.qml document
+    \snippet qml/column/vertical-positioner.qml document
 
     The Column automatically positions these items in a vertical formation, like this:
 
@@ -616,7 +616,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     For example, the Column below sets the \l move property to a specific \l Transition:
 
-    \snippet doc/snippets/qml/column/column-transitions.qml document
+    \snippet qml/column/column-transitions.qml document
 
     When the Space key is pressed, the \l {Item::visible}{visible} value of the green
     \l Rectangle is toggled. As it appears and disappears, the blue \l Rectangle moves within
@@ -755,7 +755,7 @@ void QQuickColumn::reportConflictingAnchors()
 
     Below is a Row that contains three rectangles of various sizes:
 
-    \snippet doc/snippets/qml/row/row.qml document
+    \snippet qml/row/row.qml document
 
     The Row automatically positions these items in a horizontal formation, like this:
 
@@ -993,7 +993,7 @@ void QQuickRow::reportConflictingAnchors()
 
     For example, below is a Grid that contains five rectangles of various sizes:
 
-    \snippet doc/snippets/qml/grid/grid.qml document
+    \snippet qml/grid/grid.qml document
 
     The Grid automatically positions the child items in a grid formation:
 
@@ -1426,7 +1426,7 @@ void QQuickGrid::reportConflictingAnchors()
 
     Below is a Flow that contains various \l Text items:
 
-    \snippet doc/snippets/qml/flow.qml flow item
+    \snippet qml/flow.qml flow item
 
     The Flow item automatically positions the child \l Text items side by
     side, wrapping as necessary:

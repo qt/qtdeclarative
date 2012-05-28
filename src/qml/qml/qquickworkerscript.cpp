@@ -574,12 +574,12 @@ void QQuickWorkerScriptEngine::run()
 
     An example:
 
-    \snippet doc/snippets/qml/workerscript.qml 0
+    \snippet qml/workerscript/workerscript.qml 0
 
     The above worker script specifies a JavaScript file, "script.js", that handles
     the operations to be performed in the new thread. Here is \c script.js:
 
-    \quotefile doc/src/snippets/qml/script.js
+    \quotefile qml/workerscript/script.js
 
     When the user clicks anywhere within the rectangle, \c sendMessage() is
     called, triggering the \tt WorkerScript.onMessage() handler in

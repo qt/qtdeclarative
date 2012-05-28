@@ -354,9 +354,9 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     The following example uses a MouseArea in a \l Rectangle that changes
     the \l Rectangle color to red when clicked:
 
-    \snippet doc/snippets/qml/mousearea/mousearea.qml import
+    \snippet qml/mousearea/mousearea.qml import
     \codeline
-    \snippet doc/snippets/qml/mousearea/mousearea.qml intro
+    \snippet qml/mousearea/mousearea.qml intro
 
     \clearfloat
     Many MouseArea signals pass a \l{MouseEvent}{mouse} parameter that contains
@@ -366,7 +366,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     Here is an extension of the previous example that produces a different
     color when the area is right clicked:
 
-    \snippet doc/snippets/qml/mousearea/mousearea.qml intro-extended
+    \snippet qml/mousearea/mousearea.qml intro-extended
 
   Behavioral Change in QtQuick 2.0
 
@@ -676,7 +676,7 @@ void QQuickMouseArea::setPropagateComposedEvents(bool prevent)
 
     The code below displays "right" when the right mouse buttons is pressed:
 
-    \snippet doc/snippets/qml/mousearea/mousearea.qml mousebuttons
+    \snippet qml/mousearea/mousearea.qml mousebuttons
 
     \sa acceptedButtons
 */
@@ -1181,7 +1181,7 @@ bool QQuickMouseArea::setPressed(bool p)
     The following example displays a \l Rectangle that can be dragged along the X-axis. The opacity
     of the rectangle is reduced when it is dragged to the right.
 
-    \snippet doc/snippets/qml/mousearea/mousearea.qml drag
+    \snippet qml/mousearea/mousearea.qml drag
 
     \note Items cannot be dragged if they are anchored for the requested
     \c drag.axis. For example, if \c anchors.left or \c anchors.right was set
@@ -1192,7 +1192,7 @@ bool QQuickMouseArea::setPressed(bool p)
     If \c drag.filterChildren is set to true, a drag can override descendant MouseAreas.  This
     enables a parent MouseArea to handle drags, for example, while descendants handle clicks:
 
-    \snippet doc/snippets/qml/mousearea/mouseareadragfilter.qml dragfilter
+    \snippet qml/mousearea/mouseareadragfilter.qml dragfilter
 
 */
 

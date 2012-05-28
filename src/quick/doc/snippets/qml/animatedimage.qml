@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 // This snippet should be turned into an example and put in
-// examples/declarative/imageelements/animatedimage
+// examples/quick/imageelements/animatedimage
 
 //! [document]
 import QtQuick 2.0

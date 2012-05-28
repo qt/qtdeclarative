@@ -46,14 +46,14 @@ models.
     Here is a ListView with a delegate that references its model item's
     value using the \c modelData role:
 
-    \snippet examples/declarative/modelviews/stringlistmodel/view.qml 0
+    \snippet examples/quick/modelviews/stringlistmodel/view.qml 0
 
     A Qt application can load this QML document and set the value of \c myModel
     to a QStringList:
 
-    \snippet examples/declarative/modelviews/stringlistmodel/main.cpp 0
+    \snippet examples/quick/modelviews/stringlistmodel/main.cpp 0
 
-    The complete example is available in Qt's \l {declarative/modelviews/stringlistmodel}{examples/declarative/modelviews/stringlistmodel} directory.
+    The complete example is available in Qt's \l {declarative/modelviews/stringlistmodel}{examples/quick/modelviews/stringlistmodel} directory.
 
     \b{Note:} There is no way for the view to know that the contents of a QStringList
     have changed.  If the QStringList changes, it will be necessary to reset
@@ -69,11 +69,11 @@ models.
     Q_PROPERTY values that will be accessible as named roles when a
     QList<DataObject*> is exposed to QML:
 
-    \snippet examples/declarative/modelviews/objectlistmodel/dataobject.h 0
+    \snippet examples/quick/modelviews/objectlistmodel/dataobject.h 0
     \dots 4
-    \snippet examples/declarative/modelviews/objectlistmodel/dataobject.h 1
+    \snippet examples/quick/modelviews/objectlistmodel/dataobject.h 1
     \codeline
-    \snippet examples/declarative/modelviews/objectlistmodel/main.cpp 0
+    \snippet examples/quick/modelviews/objectlistmodel/main.cpp 0
     \dots
 
     The QObject* is available as the \c modelData property.  As a convenience,
@@ -81,14 +81,14 @@ models.
     delegate's context. Here, \c view.qml references the \c DataModel properties in
     the ListView delegate:
 
-    \snippet examples/declarative/modelviews/objectlistmodel/view.qml 0
+    \snippet examples/quick/modelviews/objectlistmodel/view.qml 0
 
     Note the use of the fully qualified access to the \c color property.
     The properties of the object are not replicated in the \c model
     object, since they are easily available via the \c modelData
     object.
 
-    The complete example is available in Qt's \l {declarative/modelviews/objectlistmodel}{examples/declarative/modelviews/objectlistmodel} directory.
+    The complete example is available in Qt's \l {declarative/modelviews/objectlistmodel}{examples/quick/modelviews/objectlistmodel} directory.
 
     Note: There is no way for the view to know that the contents of a QList
     have changed.  If the QList changes, it will be necessary to reset
@@ -121,21 +121,21 @@ models.
     that has \e type and \e size roles. It calls QAbstractItemModel::setRoleNames() to set the
     role names for accessing the properties via QML:
 
-    \snippet examples/declarative/modelviews/abstractitemmodel/model.h 0
+    \snippet examples/quick/modelviews/abstractitemmodel/model.h 0
     \dots
-    \snippet examples/declarative/modelviews/abstractitemmodel/model.h 1
+    \snippet examples/quick/modelviews/abstractitemmodel/model.h 1
     \dots
-    \snippet examples/declarative/modelviews/abstractitemmodel/model.h 2
+    \snippet examples/quick/modelviews/abstractitemmodel/model.h 2
     \codeline
-    \snippet examples/declarative/modelviews/abstractitemmodel/model.cpp 0
+    \snippet examples/quick/modelviews/abstractitemmodel/model.cpp 0
     \codeline
-    \snippet examples/declarative/modelviews/abstractitemmodel/main.cpp 0
+    \snippet examples/quick/modelviews/abstractitemmodel/main.cpp 0
     \dots
 
     This model is displayed by a ListView delegate that accesses the \e type and \e size
     roles:
 
-    \snippet examples/declarative/modelviews/abstractitemmodel/view.qml 0
+    \snippet examples/quick/modelviews/abstractitemmodel/view.qml 0
 
     QML views are automatically updated when the model changes. Remember the model
     must follow the standard rules for model changes and notify the view when
@@ -143,7 +143,7 @@ models.
     QAbstractItemModel::beginInsertRows(), etc. See the \l {Model subclassing reference} for
     more information.
 
-    The complete example is available in Qt's \l {declarative/modelviews/abstractitemmodel}{examples/declarative/modelviews/abstractitemmodel} directory.
+    The complete example is available in Qt's \l {declarative/modelviews/abstractitemmodel}{examples/quick/modelviews/abstractitemmodel} directory.
 
     QAbstractItemModel presents a hierarchy of tables, but the views currently provided by QML
     can only display list data.

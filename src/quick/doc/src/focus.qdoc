@@ -56,8 +56,8 @@ If the \c {Rectangle} element in the following example has active focus and the 
 it will bubble up to its parent. However, pressing the \c B key will bubble up to the root
 item and thus subsequently be ignored.
 
-\snippet doc/snippets/qml/focus/rectangle.qml simple key event
-\snippet doc/snippets/qml/focus/rectangle.qml simple key event end
+\snippet qml/focus/rectangle.qml simple key event
+\snippet qml/focus/rectangle.qml simple key event end
 
 \li If the root \l Item is reached, the key event is \l {QEvent::ignore()}{ignored} and regular Qt key handling continues.
 
@@ -71,7 +71,7 @@ Whether or not an \l Item has active focus can be queried through the
 property \c {Item::activeFocus} property. For example, here we have a \l Text
 element whose text is determined by whether or not it has active focus.
 
-\snippet doc/snippets/qml/focus/rectangle.qml active focus
+\snippet qml/focus/rectangle.qml active focus
 
 \section1 Acquiring Focus and Focus Scopes
 
@@ -82,7 +82,7 @@ sufficient. If we run the following example with the \l {QML Viewer}, we see tha
 the \c {keyHandler} element has active focus and pressing the \c A, \c B,
 or \c C keys modifies the text appropriately.
 
-\snippet doc/snippets/qml/focus/basicwidget.qml focus true
+\snippet qml/focus/basicwidget.qml focus true
 
 \image declarative-qmlfocus1.png
 
@@ -95,10 +95,10 @@ set the first one to have focus. The intention is that when the \c A, \c B, or
 responds accordingly.
 
 The code that imports and creates two MyWidget instances:
-\snippet doc/snippets/qml/focus/widget.qml window
+\snippet qml/focus/widget.qml window
 
 The MyWidget code:
-\snippet doc/snippets/qml/focus/MyWidget.qml mywidget
+\snippet qml/focus/MyWidget.qml mywidget
 
 We would like to have the first MyWidget object to have the focus by setting its
 \c focus property to \c true. However, by running the code, we can confirm that
@@ -126,7 +126,7 @@ A focus scope is created by declaring the \l FocusScope element.
 In the next example, a \l FocusScope element is added to the component, and the
 visual result shown.
 
-\snippet doc/snippets/qml/focus/myfocusscopewidget.qml widget in focusscope
+\snippet qml/focus/myfocusscopewidget.qml widget in focusscope
 
 \image declarative-qmlfocus3.png
 
@@ -158,10 +158,10 @@ Now, clicking either MyClickableWidget gives it focus and the other widget
 loses the focus.
 
 The code that imports and creates two MyClickableWidget instances:
-\snippet doc/snippets/qml/focus/clickablewidget.qml clickable window
+\snippet qml/focus/clickablewidget.qml clickable window
 
 The MyClickableWidget code:
-\snippet doc/snippets/qml/focus/MyClickableWidget.qml clickable in focusscope
+\snippet qml/focus/MyClickableWidget.qml clickable in focusscope
 
 \image declarative-qmlfocus4.png
 
@@ -188,7 +188,7 @@ current item delegate to react to key presses.
 This contrived example shows how this works. Pressing the \c Return key will
 print the name of the current list item.
 
-\snippet doc/snippets/qml/focus/advancedFocus.qml FocusScope delegate
+\snippet qml/focus/advancedFocus.qml FocusScope delegate
 
 \image declarative-qmlfocus5.png
 

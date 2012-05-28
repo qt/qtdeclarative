@@ -83,7 +83,8 @@ headerdirs  += ..
 
 sourcedirs  += ..
 
-exampledirs += ../../../examples \
+exampledirs += ../../../ \
+               ../../../examples \
                ../ \
                snippets
 
@@ -91,10 +92,7 @@ imagedirs   += images
 
 #add qml sources because of dependencies
 headerdirs += ../../qml
-sourcedirs += ../../qml
-exampledirs += ../../qml/snippets \
-               ../../qml
-
+exampledirs += ../../qml
 imagedirs += ../../qml
 
 #add particles sources

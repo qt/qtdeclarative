@@ -68,7 +68,7 @@ Note that when \l LayoutMirroring is set, the \c horizontalAlignment property va
 the effective alignment of the text element that takes the mirroring into account can be read from the
 \c effectiveHorizontalAlignment property.
 
-\snippet doc/snippets/qml/righttoleft.qml 0
+\snippet qml/righttoleft.qml 0
 
 \section1 Layout direction of positioners and views
 
@@ -84,7 +84,7 @@ This causes the effective \c layoutDirection of positioners and views to be mirr
 of the \c layoutDirection property will remain unchanged; the effective layout direction of positioners and
 views that takes the mirroring into account can be read from the \c effectiveLayoutDirection property.
 
-\snippet doc/snippets/qml/righttoleft.qml 1
+\snippet qml/righttoleft.qml 1
 
 \section1 Layout mirroring
 
@@ -95,11 +95,11 @@ support for existing left-to-right Qt Quick applications. It mirrors the behavio
 
 You can enable layout mirroring for a particular \l Item:
 
-\snippet doc/snippets/qml/righttoleft.qml 2
+\snippet qml/righttoleft.qml 2
 
 Or set all child elements to also inherit the layout direction:
 
-\snippet doc/snippets/qml/righttoleft.qml 3
+\snippet qml/righttoleft.qml 3
 
 Applying mirroring in this manner does not change the actual value of the relevant anchor,
 \c layoutDirection or \c horizontalAlignment properties. The separate read-only property
@@ -116,7 +116,7 @@ especially in views that rely on both the anchors and x coordinate-based positio
 the \l LayoutMirroring attached property to apply mirroring to an item that is positioned using \l {Item::}{x}
 coordinates:
 
-\snippet doc/snippets/qml/righttoleft.qml 4
+\snippet qml/righttoleft.qml 4
 
 Not all layouts should necessarily be mirrored. There are cases where a visual element is positioned to
 the right side of the screen for improved one-handed use, because most people are right-handed, and not
@@ -135,7 +135,7 @@ aligned and just make sure that text is translated and aligned properly.
 Most images do not need to be mirrored, but some directional icons, such as arrows, may need to be mirrored.
 The painting of these icons can be mirrored with a dedicated \c mirror property introduced in Qt Quick 1.1:
 
-\snippet doc/snippets/qml/righttoleft.qml 5
+\snippet qml/righttoleft.qml 5
 
 \section1 Default layout direction
 

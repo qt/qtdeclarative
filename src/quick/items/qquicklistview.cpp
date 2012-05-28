@@ -1659,13 +1659,13 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     The following example shows the definition of a simple list model defined
     in a file called \c ContactModel.qml:
 
-    \snippet doc/snippets/qml/listview/ContactModel.qml 0
+    \snippet qml/listview/ContactModel.qml 0
 
     Another component can display this model data in a ListView, like this:
 
-    \snippet doc/snippets/qml/listview/listview.qml import
+    \snippet qml/listview/listview.qml import
     \codeline
-    \snippet doc/snippets/qml/listview/listview.qml classdocs simple
+    \snippet qml/listview/listview.qml classdocs simple
 
     \image listview-simple.png
 
@@ -1676,7 +1676,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     An improved list view is shown below. The delegate is visually improved and is moved
     into a separate \c contactDelegate component.
 
-    \snippet doc/snippets/qml/listview/listview.qml classdocs advanced
+    \snippet qml/listview/listview.qml classdocs advanced
     \image listview-highlight.png
 
     The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
@@ -1691,7 +1691,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     this attached property directly as \c ListView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.ListView.isCurrentItem.
 
-    \snippet doc/snippets/qml/listview/listview.qml isCurrentItem
+    \snippet qml/listview/listview.qml isCurrentItem
 
     \note Views do not enable \e clip automatically.  If the view
     is not clipped by another item or the screen, it will be necessary
@@ -1756,7 +1756,7 @@ QQuickListView::~QQuickListView()
 
     This property may be used to adjust the appearance of the current item, for example:
 
-    \snippet doc/snippets/qml/listview/listview.qml isCurrentItem
+    \snippet qml/listview/listview.qml isCurrentItem
 */
 
 /*!
@@ -1803,7 +1803,7 @@ QQuickListView::~QQuickListView()
     until an animation completes. The example delegate below ensures that the
     animation completes before the item is removed from the list.
 
-    \snippet doc/snippets/qml/listview/listview.qml delayRemove
+    \snippet qml/listview/listview.qml delayRemove
 
     If a \l remove transition has been specified, it will not be applied until
     delayRemove is returned to \c false.
@@ -1913,7 +1913,7 @@ QQuickListView::~QQuickListView()
 
     Here is a highlight with its motion defined by a \l {SpringAnimation} item:
 
-    \snippet doc/snippets/qml/listview/listview.qml highlightFollowsCurrentItem
+    \snippet qml/listview/listview.qml highlightFollowsCurrentItem
 
     Note that the highlight animation also affects the way that the view
     is scrolled.  This is because the view moves to maintain the
@@ -2172,7 +2172,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     each section.
 
 
-    \snippet examples/declarative/modelviews/listview/sections.qml 0
+    \snippet examples/quick/modelviews/listview/sections.qml 0
 
     \image qml-listview-sections-example.png
 

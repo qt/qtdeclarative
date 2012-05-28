@@ -56,7 +56,7 @@
     is the base class for all QPainter based items in the QML Scene Graph
     framework.
 
-    \snippet examples/declarative/painteditem/textballoons/textballoon.h 0
+    \snippet examples/quick/painteditem/textballoons/textballoon.h 0
 
     To implement a QQuickPaintedItem you must implement QQuickPaintedIem's pure
     virtual function \l {QQuickPaintedItem::}{paint()} which implements the
@@ -67,13 +67,13 @@
     We have to be sure to initialize the rightAligned property for a
     TextBalloon item.
 
-    \snippet examples/declarative/painteditem/textballoons/textballoon.cpp 0
+    \snippet examples/quick/painteditem/textballoons/textballoon.cpp 0
 
     Then we implement the \c paint() function which is automatically called by
     the Scenegraph framework to paint the contents of the item. The function
     paints the item in local coordinates.
 
-    \snippet examples/declarative/painteditem/textballoons/textballoon.cpp 1
+    \snippet examples/quick/painteditem/textballoons/textballoon.cpp 1
 
     We start with setting the pen and brush on the item to define the look of
     the item. After that we start drawing. Note that the \l {QQuickPaintedItem::}{boundingRect()}
@@ -88,7 +88,7 @@
 
     \section2 BalloonView
 
-    \snippet examples/declarative/painteditem/textballoons/textballoons.qml 0
+    \snippet examples/quick/painteditem/textballoons/textballoons.qml 0
 
     The balloonModel contains two elements at application start which will be
     displayed by the balloonView. The balloonView alernates the TextBalloon
@@ -96,7 +96,7 @@
 
     \section2 Controls
 
-    \snippet examples/declarative/painteditem/textballoons/textballoons.qml 1
+    \snippet examples/quick/painteditem/textballoons/textballoons.qml 1
 
     The controls part of the UI contains a rectangle with a MouseArea which
     changes color when the mouse hovers over it. This control 'button' adds

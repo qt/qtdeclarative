@@ -120,7 +120,7 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
   It can be useful to create a QtObject if you need an extremely
   lightweight element to enclose a set of custom properties:
 
-  \snippet doc/snippets/qml/qtobject.qml 0
+  \snippet qml/qtobject.qml 0
 
   It can also be useful for C++ integration, as it is just a plain
   QObject. See the QObject documentation for further details.
@@ -360,7 +360,7 @@ The following functions are also on the Qt object.
     The following example uses the \c application object to indicate
     whether the application is currently active:
 
-    \snippet doc/snippets/qml/application.qml document
+    \snippet qml/application.qml document
 */
 
 /*!

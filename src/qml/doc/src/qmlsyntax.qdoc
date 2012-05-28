@@ -133,7 +133,7 @@ Commenting in QML is similar to JavaScript.
 \li Multiline comments start with /* and finish with *\/
 \endlist
 
-\snippet doc/snippets/qml/comments.qml 0
+\snippet qml/comments.qml 0
 
 Comments are ignored by the engine. They are useful for explaining what you
 are doing; for referring back to at a later date, or for others reading

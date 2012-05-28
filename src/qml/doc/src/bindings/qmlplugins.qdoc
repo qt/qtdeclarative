@@ -63,7 +63,7 @@
     as a new QML element. It provides the current time through \c hour and \c minute
     properties.
 
-    \snippet examples/declarative/cppextensions/plugins/plugin.cpp 0
+    \snippet examples/qml/cppextensions/plugins/plugin.cpp 0
     \dots
 
     A plugin class, \c QExampleQMLPlugin, is a subclass of
@@ -75,9 +75,9 @@
     runtime with the qmlRegisterType() function. The Q_EXPORT_PLUGIN2() macro has
     two parameters, the generated plugin name and the class name.
 
-    \snippet examples/declarative/cppextensions/plugins/plugin.cpp plugin
+    \snippet examples/qml/cppextensions/plugins/plugin.cpp plugin
     \codeline
-    \snippet examples/declarative/cppextensions/plugins/plugin.cpp export
+    \snippet examples/qml/cppextensions/plugins/plugin.cpp export
 
     The \c TimeModel class receives a \c{1.0} version of this plugin library, as
     a QML type called \c Time. The Q_ASSERT() macro can ensure the module is
@@ -108,13 +108,13 @@
     includes a \c Clock.qml file that should be bundled with the plugin, so it
     needs to be specified in the \c qmldir file:
 
-    \quotefile examples/declarative/cppextensions/plugins/com/nokia/TimeExample/qmldir
+    \quotefile examples/qml/cppextensions/plugins/com/nokia/TimeExample/qmldir
 
     Once the project is built and installed, the new \c Time component is
     accessible by any QML component that imports the \c com.nokia.TimeExample
     module
 
-    \snippet examples/declarative/cppextensions/plugins/plugins.qml 0
+    \snippet examples/qml/cppextensions/plugins/plugins.qml 0
 
     The full source code is available in the \l {declarative/cppextensions/plugins}{plugins example}.
 

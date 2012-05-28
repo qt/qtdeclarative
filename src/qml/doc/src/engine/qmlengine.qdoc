@@ -98,8 +98,8 @@ specified in QML files, plugins, or applications.
 
     For example, suppose there is a \c MyItem.qml file that looks like this:
 
-    \snippet doc/snippets/qml/qtbinding/loading/MyItem.qml start
-    \snippet doc/snippets/qml/qtbinding/loading/MyItem.qml end
+    \snippet qml/qtbinding/loading/MyItem.qml start
+    \snippet qml/qtbinding/loading/MyItem.qml end
 
     This QML document can be loaded with QQmlComponent or
     QQuickView with the following C++ code. Using a QQmlComponent
@@ -110,24 +110,24 @@ specified in QML files, plugins, or applications.
     \table
     \row
     \li
-    \snippet doc/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-a
+    \snippet qml/qtbinding/loading/main.cpp QQmlComponent-a
     \dots 0
-    \snippet doc/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-b
+    \snippet qml/qtbinding/loading/main.cpp QQmlComponent-b
     \li
-    \snippet doc/snippets/qml/qtbinding/loading/main.cpp QQuickView
+    \snippet qml/qtbinding/loading/main.cpp QQuickView
     \endtable
 
     This \c object is the instance of the \c MyItem.qml component that has been
     created. You can now modify the item's properties using
     QObject::setProperty() or QQmlProperty:
 
-    \snippet doc/snippets/qml/qtbinding/loading/main.cpp properties
+    \snippet qml/qtbinding/loading/main.cpp properties
 
     Alternatively, you can cast the object to its actual type and call functions
     with compile-time safety. In this case the base object of \c MyItem.qml is
     an \l Item, which is defined by the QQuickItem class:
 
-    \snippet doc/snippets/qml/qtbinding/loading/main.cpp cast
+    \snippet qml/qtbinding/loading/main.cpp cast
 
     You can also connect to any signals or call functions defined in the
     component using QMetaObject::invokeMethod() and QObject::connect(). See \l
@@ -140,14 +140,14 @@ specified in QML files, plugins, or applications.
     the QObject::objectName property with QObject::findChild(). For example, if
     the root item in \c MyItem.qml had a child \l Rectangle item:
 
-    \snippet doc/snippets/qml/qtbinding/loading/MyItem.qml start
+    \snippet qml/qtbinding/loading/MyItem.qml start
     \codeline
-    \snippet doc/snippets/qml/qtbinding/loading/MyItem.qml child
-    \snippet doc/snippets/qml/qtbinding/loading/MyItem.qml end
+    \snippet qml/qtbinding/loading/MyItem.qml child
+    \snippet qml/qtbinding/loading/MyItem.qml end
 
     The child could be located like this:
 
-    \snippet doc/snippets/qml/qtbinding/loading/main.cpp findChild
+    \snippet qml/qtbinding/loading/main.cpp findChild
 
     If \c objectName is used inside a delegate of a ListView, \l Repeater or
     some other element that creates multiple instances of its delegates, there
@@ -178,13 +178,13 @@ specified in QML files, plugins, or applications.
     For example, here is a QML item that refers to a \c currentDateTime value
     that does not exist in the current scope:
 
-    \snippet doc/snippets/qml/qtbinding/context/MyItem.qml 0
+    \snippet qml/qtbinding/context/MyItem.qml 0
 
     This \c currentDateTime value can be set directly by the C++ application
     that loads the QML component, using
     QQmlContext::setContextProperty():
 
-    \snippet doc/snippets/qml/qtbinding/context/main.cpp 0
+    \snippet qml/qtbinding/context/main.cpp 0
 
     Context properties can hold either QVariant or QObject* values. This means
     custom C++ objects can also be injected using this approach, and these
@@ -195,11 +195,11 @@ specified in QML files, plugins, or applications.
     \table
     \row
     \li
-    \snippet doc/snippets/qml/qtbinding/context-advanced/applicationdata.h 0
+    \snippet qml/qtbinding/context-advanced/applicationdata.h 0
     \codeline
-    \snippet doc/snippets/qml/qtbinding/context-advanced/main.cpp 0
+    \snippet qml/qtbinding/context-advanced/main.cpp 0
     \li
-    \snippet doc/snippets/qml/qtbinding/context-advanced/MyItem.qml 0
+    \snippet qml/qtbinding/context-advanced/MyItem.qml 0
     \endtable
 
     (Note that date/time values returned from C++ to QML can be formatted through
@@ -211,7 +211,7 @@ specified in QML files, plugins, or applications.
     connected to using an \c onDataChanged handler within a \l Connections
     object:
 
-    \snippet doc/snippets/qml/qtbinding/context-advanced/connections.qml 0
+    \snippet qml/qtbinding/context-advanced/connections.qml 0
 
     Context properties can be useful for using C++ based data models in a QML view. See the
     \l {declarative/modelviews/stringlistmodel}{String ListModel},
@@ -245,8 +245,8 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \li \snippet doc/snippets/qml/qtbinding/functions-qml/MyItem.qml 0
-    \li \snippet doc/snippets/qml/qtbinding/functions-qml/main.cpp 0
+    \li \snippet qml/qtbinding/functions-qml/MyItem.qml 0
+    \li \snippet qml/qtbinding/functions-qml/main.cpp 0
     \endtable
 
     Notice the Q_RETURN_ARG() and Q_ARG() arguments for
@@ -261,11 +261,11 @@ specified in QML files, plugins, or applications.
     \table
     \row
     \li
-    \snippet doc/snippets/qml/qtbinding/functions-cpp/MyItem.qml 0
+    \snippet qml/qtbinding/functions-cpp/MyItem.qml 0
     \li
-    \snippet doc/snippets/qml/qtbinding/functions-cpp/myclass.h 0
+    \snippet qml/qtbinding/functions-cpp/myclass.h 0
     \codeline
-    \snippet doc/snippets/qml/qtbinding/functions-cpp/main.cpp 0
+    \snippet qml/qtbinding/functions-cpp/main.cpp 0
     \endtable
 
     QML supports the calling of overloaded C++ functions. If there are multiple
@@ -288,11 +288,11 @@ specified in QML files, plugins, or applications.
     \table
     \row
     \li
-    \snippet doc/snippets/qml/qtbinding/signals-qml/MyItem.qml 0
+    \snippet qml/qtbinding/signals-qml/MyItem.qml 0
     \li
-    \snippet doc/snippets/qml/qtbinding/signals-qml/myclass.h 0
+    \snippet qml/qtbinding/signals-qml/myclass.h 0
     \codeline
-    \snippet doc/snippets/qml/qtbinding/signals-qml/main.cpp 0
+    \snippet qml/qtbinding/signals-qml/main.cpp 0
     \endtable
 
     To connect to Qt C++ signals from within QML, use a signal handler with the
@@ -307,12 +307,12 @@ specified in QML files, plugins, or applications.
     \row
     \li
 
-    \snippet doc/snippets/qml/qtbinding/signals-cpp/imageviewer.h start
+    \snippet qml/qtbinding/signals-cpp/imageviewer.h start
     \dots 4
-    \snippet doc/snippets/qml/qtbinding/signals-cpp/imageviewer.h end
+    \snippet qml/qtbinding/signals-cpp/imageviewer.h end
 
     \li
-    \snippet doc/snippets/qml/qtbinding/signals-cpp/standalone.qml 0
+    \snippet qml/qtbinding/signals-cpp/standalone.qml 0
     \endtable
 
     (Note that if a signal has been declared as the NOTIFY signal for a
@@ -330,8 +330,8 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \li \snippet doc/snippets/qml/qtbinding/signals-cpp/main.cpp connections
-    \li \snippet doc/snippets/qml/qtbinding/signals-cpp/MyItem.qml 0
+    \li \snippet qml/qtbinding/signals-cpp/main.cpp connections
+    \li \snippet qml/qtbinding/signals-cpp/MyItem.qml 0
     \endtable
 
     C++ signals can use enum values as parameters provided that the enum is
@@ -345,12 +345,12 @@ specified in QML files, plugins, or applications.
     Any properties declared in a QML object are automatically accessible from
     C++. Given a QML item like this:
 
-    \snippet doc/snippets/qml/qtbinding/properties-qml/MyItem.qml 0
+    \snippet qml/qtbinding/properties-qml/MyItem.qml 0
 
     The value of the \c someNumber property can be set and read using
     QQmlProperty, or QObject::setProperty() and QObject::property():
 
-    \snippet doc/snippets/qml/qtbinding/properties-qml/main.cpp 0
+    \snippet qml/qtbinding/properties-qml/main.cpp 0
 
     You should always use QObject::setProperty(), QQmlProperty or
     QMetaProperty::write() to change a QML property value, to ensure the QML
@@ -380,8 +380,8 @@ specified in QML files, plugins, or applications.
 
     \table
     \row
-    \li \snippet doc/snippets/qml/qtbinding/properties-cpp/applicationdata.h 0
-    \li \snippet doc/snippets/qml/qtbinding/properties-cpp/MyItem.qml 0
+    \li \snippet qml/qtbinding/properties-cpp/applicationdata.h 0
+    \li \snippet qml/qtbinding/properties-cpp/MyItem.qml 0
     \endtable
 
     Notice the \c backgroundColorChanged signal is declared as the NOTIFY signal

@@ -357,7 +357,7 @@ void QQuickSpringAnimationPrivate::updateMode()
     on the \c x and \c y values indicates that whenever these values are
     changed, a SpringAnimation should be applied.
 
-    \snippet doc/snippets/qml/springanimation.qml 0
+    \snippet qml/springanimation.qml 0
 
     Like any other animation element, a SpringAnimation can be applied in a
     number of ways, including transitions, behaviors and property value

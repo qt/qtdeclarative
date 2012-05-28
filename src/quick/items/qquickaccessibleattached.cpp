@@ -98,13 +98,18 @@ QT_BEGIN_NAMESPACE
     \qml
     Item {
         id: myButton
+
         Text {
             id: label
             // ...
         }
+
         Accessible.name: label.text
         Accessible.role: Accessible.Button
-        funtion accessiblePressAction { ... }
+
+        function accessiblePressAction() {
+            //...
+        }
     }
     \endqml
 

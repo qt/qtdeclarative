@@ -57,7 +57,7 @@ A Dial element might define a \e value property that can be used to control
 the position of the needle on the dial. The element could be declared to
 use a slider that adjusts the value of this property.
 
-\snippet examples/declarative/ui-components/dialcontrol/qml/dialcontrol.qml the dial in use
+\snippet examples/tutorials/ui-components/dialcontrol/dialcontrol.qml the dial in use
 
 Building user interfaces by importing these elements and linking their properties
 together is one of the fundamental features of QML and Qt Quick.

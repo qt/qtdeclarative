@@ -111,12 +111,12 @@ typedef QPair<int, int> QQuickXmlListRange;
 
     For example, if there is an XML document like this:
 
-    \quotefile doc/src/snippets/qml/xmlrole.xml
+    \quotefile qml/xmlrole.xml
     Here are some valid XPath expressions for XmlRole queries on this document:
 
-    \snippet doc/src/snippets/qml/xmlrole.qml 0
+    \snippet qml/xmlrole.qml 0
     \dots 4
-    \snippet doc/src/snippets/qml/xmlrole.qml 1
+    \snippet qml/xmlrole.qml 1
 
     See the \l{http://www.w3.org/TR/xpath20/}{W3C XPath 2.0 specification} for more information.
 */

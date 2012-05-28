@@ -1167,7 +1167,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     The following example shows the definition of a simple list model defined
     in a file called \c ContactModel.qml:
 
-    \snippet doc/snippets/qml/gridview/ContactModel.qml 0
+    \snippet qml/gridview/ContactModel.qml 0
 
     \div {class="float-right"}
     \inlineimage gridview-simple.png
@@ -1181,9 +1181,9 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     (containing \l Image and \l Text elements) for its delegate.
 
     \clearfloat
-    \snippet doc/snippets/qml/gridview/gridview.qml import
+    \snippet qml/gridview/gridview.qml import
     \codeline
-    \snippet doc/snippets/qml/gridview/gridview.qml classdocs simple
+    \snippet qml/gridview/gridview.qml classdocs simple
 
     \div {class="float-right"}
     \inlineimage gridview-highlight.png
@@ -1196,7 +1196,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     into a separate \c contactDelegate component.
 
     \clearfloat
-    \snippet doc/snippets/qml/gridview/gridview.qml classdocs advanced
+    \snippet qml/gridview/gridview.qml classdocs advanced
 
     The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
     and \c focus is set to \c true to enable keyboard navigation for the grid view.
@@ -1210,7 +1210,7 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     this attached property directly as \c GridView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.GridView.isCurrentItem.
 
-    \snippet doc/snippets/qml/gridview/gridview.qml isCurrentItem
+    \snippet qml/gridview/gridview.qml isCurrentItem
 
     \note Views do not set the \l{Item::}{clip} property automatically.
     If the view is not clipped by another item or the screen, it will be necessary
@@ -1308,7 +1308,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     It is attached to each instance of the delegate.
 
-    \snippet doc/snippets/qml/gridview/gridview.qml isCurrentItem
+    \snippet qml/gridview/gridview.qml isCurrentItem
 */
 
 /*!
@@ -1320,7 +1320,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     until an animation completes. The example delegate below ensures that the
     animation completes before the item is removed from the list.
 
-    \snippet doc/snippets/qml/gridview/gridview.qml delayRemove
+    \snippet qml/gridview/gridview.qml delayRemove
 
     If a \l remove transition has been specified, it will not be applied until
     delayRemove is returned to \c false.
@@ -1428,7 +1428,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     Here is a highlight with its motion defined by a \l {SpringAnimation} item:
 
-    \snippet doc/snippets/qml/gridview/gridview.qml highlightFollowsCurrentItem
+    \snippet qml/gridview/gridview.qml highlightFollowsCurrentItem
 */
 
 

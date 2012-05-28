@@ -207,7 +207,7 @@ void QQuickGradientStop::updateGradient()
     with red, blending to yellow at one third of the height of the rectangle,
     and ending with green:
 
-    \snippet doc/snippets/qml/gradient.qml code
+    \snippet qml/gradient.qml code
 
     \clearfloat
     \section1 Performance and Limitations
@@ -309,7 +309,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
     The following example shows the effects of some of the common properties on a
     Rectangle item, which in this case is used to create a square:
 
-    \snippet doc/snippets/qml/rectangle/rectangle.qml document
+    \snippet qml/rectangle/rectangle.qml document
 
     \clearfloat
     \section1 Performance
@@ -370,7 +370,7 @@ void QQuickRectangle::doUpdate()
     \inlineimage rect-border-width.png
     \enddiv
 
-    \snippet doc/snippets/qml/rectangle/rect-border-width.qml 0
+    \snippet qml/rectangle/rect-border-width.qml 0
 
     \clearfloat
     Here, the innermost rectangle's border is clipped on the bottom and right edges by its
@@ -394,7 +394,7 @@ QQuickPen *QQuickRectangle::border()
     \inlineimage declarative-rect_gradient.png
     \enddiv
 
-    \snippet doc/snippets/qml/rectangle/rectangle-gradient.qml rectangles
+    \snippet qml/rectangle/rectangle-gradient.qml rectangles
     \clearfloat
 
     If both a gradient and a color are specified, the gradient will be used.
@@ -463,7 +463,7 @@ void QQuickRectangle::setRadius(qreal radius)
     The following example shows rectangles with colors specified
     using hexadecimal and named color notation:
 
-    \snippet doc/snippets/qml/rectangle/rectangle-colors.qml rectangles
+    \snippet qml/rectangle/rectangle-colors.qml rectangles
 
     \clearfloat
     If both a gradient and a color are specified, the gradient will be used.

@@ -113,7 +113,7 @@ public:
     degrees to produce the flipping effect. When \c flipped is false, the
     item reverts to the default state, in which the \c angle value is 0.
 
-    \snippet doc/snippets/qml/flipable/flipable.qml 0
+    \snippet qml/flipable/flipable.qml 0
 
     \image flipable.gif
 

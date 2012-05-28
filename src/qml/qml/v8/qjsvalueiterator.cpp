@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
     beginning of the sequence of properties. Here's how to iterate over
     all the properties of a QJSValue:
 
-    \snippet doc/snippets/code/src_script_qjsvalueiterator.cpp 0
+    \snippet code/src_script_qjsvalueiterator.cpp 0
 
     The next() advances the iterator. The name() and value()
     functions return the name and value of the last item that was
@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
     own properties; i.e. it does not follow the prototype chain. You can
     use a loop like this to follow the prototype chain:
 
-    \snippet doc/snippets/code/src_script_qjsvalueiterator.cpp 1
+    \snippet code/src_script_qjsvalueiterator.cpp 1
 
     \sa QJSValue::property()
 */

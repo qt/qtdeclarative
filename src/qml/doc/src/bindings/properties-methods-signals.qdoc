@@ -120,15 +120,15 @@ Q_PROPERTY(int size READ size CONSTANT)
     <group>.<property> notation. For example, shoe.color is the way to access
     the \c color property in the \c shoe property group .
 
-    \snippet examples/declarative/cppextensions/referenceexamples/grouped/example.qml ungrouped
+    \snippet examples/qml/cppextensions/referenceexamples/grouped/example.qml ungrouped
 
     Alternatively, the group can be accessed as a set.
-    \snippet examples/declarative/cppextensions/referenceexamples/grouped/example.qml grouped
+    \snippet examples/qml/cppextensions/referenceexamples/grouped/example.qml grouped
 
     A grouped property block is implemented as a read-only object property. The
     \c shoe property shown is declared like this:
 
-    \snippet examples/declarative/cppextensions/referenceexamples/grouped/person.h 1
+    \snippet examples/qml/cppextensions/referenceexamples/grouped/person.h 1
 
     The \c ShoeDescription type declares the properties available to the grouped
     property block - in this case the \c size, \c color, \c brand and \c price properties.
@@ -150,7 +150,7 @@ Q_PROPERTY(int size READ size CONSTANT)
     attaching type are those that become available for use as attached
     properties.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/attached/example.qml 1
+    \snippet examples/qml/cppextensions/referenceexamples/attached/example.qml 1
 
     The \c BirthdayParty is called the attaching type and the
     \c Boy instance the attachee object instance. The property \c rsvp is the
@@ -171,12 +171,12 @@ Q_PROPERTY(int size READ size CONSTANT)
     The \l {Extending QML - Attached Properties Example}{Birthday}
     class has \c BirthdayPartyAttached attached properties.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/attached/birthdayparty.h static attached
+    \snippet examples/qml/cppextensions/referenceexamples/attached/birthdayparty.h static attached
 
     The QML_DECLARE_TYPEINFO() macro can notify the runtime that the type has
     attached properties with the QML_HAS_ATTACHED_PROPERTIES argument.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/attached/birthdayparty.h declare attached
+    \snippet examples/qml/cppextensions/referenceexamples/attached/birthdayparty.h declare attached
 
     The qmlAttachedProperties method will be called at most once for each
     attachee object instance. The QML engine will cache the returned instance
@@ -186,9 +186,9 @@ Q_PROPERTY(int size READ size CONSTANT)
     A common usage scenario is for a type to enhance the properties
     available to its children in order to gather instance specific data.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/attached/example.qml begin
-    \snippet examples/declarative/cppextensions/referenceexamples/attached/example.qml rsvp
-    \snippet examples/declarative/cppextensions/referenceexamples/attached/example.qml end
+    \snippet examples/qml/cppextensions/referenceexamples/attached/example.qml begin
+    \snippet examples/qml/cppextensions/referenceexamples/attached/example.qml rsvp
+    \snippet examples/qml/cppextensions/referenceexamples/attached/example.qml end
 
     However, as a QML type cannot limit the instances to which the attachment
     object must attach, the following is also allowed, even though adding a
@@ -218,7 +218,7 @@ Q_PROPERTY(int size READ size CONSTANT)
     The \c rsvp properties of each guest in the \c Birthday party is accessible
     through the \c qmlAttachedPropertiesObject function.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/attached/main.cpp query rsvp
+    \snippet examples/qml/cppextensions/referenceexamples/attached/main.cpp query rsvp
 
     The
     \l {Extending QML - Attached Properties Example}{Attached Properties Example}
@@ -237,7 +237,7 @@ Q_PROPERTY(int size READ size CONSTANT)
     Q_PROPERTY() macro, just like other properties.  The \c host property
     declaration looks like this:
 
-    \snippet examples/declarative/cppextensions/referenceexamples/properties/birthdayparty.h 1
+    \snippet examples/qml/cppextensions/referenceexamples/properties/birthdayparty.h 1
 
     As long as the property type, in this case \c Person, is registered with QML the
     property can be assigned.
@@ -259,7 +259,7 @@ Q_PROPERTY(int size READ size CONSTANT)
     for assignment to appropriately typed properties.
 
 
-    \snippet examples/declarative/cppextensions/referenceexamples/properties/example.qml 0
+    \snippet examples/qml/cppextensions/referenceexamples/properties/example.qml 0
 
     The \c guests property is a \e{list property} of \c Person objects. A list
     of \c Person objects are bound to the \c BirthdayParty's \c host property,
@@ -269,12 +269,12 @@ Q_PROPERTY(int size READ size CONSTANT)
     the Q_PROPERTY() macro. However, list properties must have the type
     \l{QQmlListProperty}{QQmlListProperty<T>}.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/properties/birthdayparty.h 2
+    \snippet examples/qml/cppextensions/referenceexamples/properties/birthdayparty.h 2
 
     As with the other property types, the type of list content, \a T, must be
     \l{register-c++-type}{registered} into the runtime.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/properties/main.cpp register list
+    \snippet examples/qml/cppextensions/referenceexamples/properties/main.cpp register list
 
     \l {Extending QML - Object and List Property Types Example} shows the
     complete code used to create the \c BirthdayParty type. For more
@@ -352,7 +352,7 @@ Q_PROPERTY(int size READ size CONSTANT)
 
     Here is the \c host property declaration:
 
-    \snippet examples/declarative/cppextensions/referenceexamples/binding/birthdayparty.h 0
+    \snippet examples/qml/cppextensions/referenceexamples/binding/birthdayparty.h 0
 
     The NOTIFY attribute is followed by a signal name. It is the responsibility
     of the class implementer to ensure that whenever the property's value
@@ -393,7 +393,7 @@ Q_PROPERTY(int size READ size CONSTANT)
     attribute may be added to the property declaration instead of a NOTIFY
     signal.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/binding/person.h 0
+    \snippet examples/qml/cppextensions/referenceexamples/binding/person.h 0
 
     Extreme care must be taken here or applications using your type may misbehave.
     The CONSTANT attribute should only be used for properties whose value is set,
@@ -412,10 +412,10 @@ Q_PROPERTY(int size READ size CONSTANT)
     character of the signal is uppercased for the signal handler. The
     signal parameter is also availabe to the QML signal.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/signal/birthdayparty.h 0
+    \snippet examples/qml/cppextensions/referenceexamples/signal/birthdayparty.h 0
     The QML engine will create a handler for the \c partyStarted signal
     called \c onPartyStarted.
-    \snippet examples/declarative/cppextensions/referenceexamples/signal/example.qml 0
+    \snippet examples/qml/cppextensions/referenceexamples/signal/example.qml 0
 
     Classes may have multiple signals with the same name, but only the final
     signal is accessible as a QML signal. Note that signals with the same name
@@ -442,11 +442,11 @@ Q_PROPERTY(int size READ size CONSTANT)
 
     The Q_INVOKABLE macro exposes any Qt C++ method as a QML method.
 
-    \snippet examples/declarative/cppextensions/referenceexamples/methods/birthdayparty.h 0
+    \snippet examples/qml/cppextensions/referenceexamples/methods/birthdayparty.h 0
 
     In a QML file, we can invoke the method as we would a
     \l{JavaScript Expressions in QML}{JavaScript expression}.
-    \snippet examples/declarative/cppextensions/referenceexamples/methods/example.qml 0
+    \snippet examples/qml/cppextensions/referenceexamples/methods/example.qml 0
 
     \l {Extending QML - Methods Example}{Methods example} uses the Q_INVOKABLE
     method to expose methods and demonstrates some usages of the method in

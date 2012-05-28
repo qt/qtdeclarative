@@ -36,7 +36,7 @@ from text data.
 
 Here is a simple QML document:
 
-\snippet doc/snippets/qml/qml-documents/non-trivial.qml document
+\snippet qml/qml-documents/non-trivial.qml document
 
 QML documents are always encoded in UTF-8 format.
 
@@ -79,7 +79,7 @@ text property:
 \li application.qml
 
 \row
-\li \snippet doc/snippets/qml/qml-documents/qmldocuments.qml document
+\li \snippet qml/qml-documents/qmldocuments.qml document
 \li
 \qml
 import QtQuick 2.0
@@ -138,9 +138,9 @@ These final two examples perform identically to the original document.
 \table
 \row
 \li
-\snippet doc/snippets/qml/qml-documents/inline-component.qml document
+\snippet qml/qml-documents/inline-component.qml document
 \li
-\snippet doc/snippets/qml/qml-documents/inline-text-component.qml document
+\snippet qml/qml-documents/inline-text-component.qml document
 \endtable
 
 

@@ -309,7 +309,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 
     In the following example, we have two small rectangles that follow our touch points.
 
-    \snippet doc/snippets/qml/multipointtoucharea/multipointtoucharea.qml 0
+    \snippet qml/multipointtoucharea/multipointtoucharea.qml 0
 
     By default this property holds an empty list.
 

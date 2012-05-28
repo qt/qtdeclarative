@@ -89,7 +89,7 @@ private:
 tst_examples::tst_examples() : canvas(0)
 {
     // Add files to exclude here
-    excludedFiles << "snippets/qml/listmodel.qml"; //Just a ListModel, no root QQuickItem
+    excludedFiles << "snippets/qml/listmodel/listmodel.qml"; //Just a ListModel, no root QQuickItem
 
     // Add directories you want excluded here (don't add examples/, because they install to examples/qtdeclarative/)
     excludedDirs << "shared"; //Not an example

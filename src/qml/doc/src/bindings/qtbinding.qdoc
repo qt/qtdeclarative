@@ -115,8 +115,8 @@ a displayable QML component into a QWidget-based application.
 
 For example, suppose there is a \c MyItem.qml file that looks like this:
 
-\snippet doc/snippets/qml/qtbinding/loading/MyItem.qml start
-\snippet doc/snippets/qml/qtbinding/loading/MyItem.qml end
+\snippet qml/qtbinding/loading/MyItem.qml start
+\snippet qml/qtbinding/loading/MyItem.qml end
 
 This QML document can be loaded with QQmlComponent or QQuickView with the following
 C++ code. Using a QQmlComponent requires calling QQmlComponent::create() to create
@@ -126,23 +126,23 @@ component, which is accessible via QQuickView::rootObject():
 \table
 \row
 \li
-\snippet doc/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-a
+\snippet qml/qtbinding/loading/main.cpp QQmlComponent-a
 \dots 0
-\snippet doc/snippets/qml/qtbinding/loading/main.cpp QQmlComponent-b
+\snippet qml/qtbinding/loading/main.cpp QQmlComponent-b
 \li
-\snippet doc/snippets/qml/qtbinding/loading/main.cpp QQuickView
+\snippet qml/qtbinding/loading/main.cpp QQuickView
 \endtable
 
 This \c object is the instance of the \c MyItem.qml component that has been created. You can now
 modify the item's properties using QObject::setProperty() or QQmlProperty:
 
-\snippet doc/snippets/qml/qtbinding/loading/main.cpp properties
+\snippet qml/qtbinding/loading/main.cpp properties
 
 Alternatively, you can cast the object to its actual type and call functions with compile-time
 safety. In this case the base object of \c MyItem.qml is an \l Item, which is defined by the
 QQuickItem class:
 
-\snippet doc/snippets/qml/qtbinding/loading/main.cpp cast
+\snippet qml/qtbinding/loading/main.cpp cast
 
 You can also connect to any signals or call functions defined in the component using
 QMetaObject::invokeMethod() and QObject::connect(). See \l {Exchanging data between QML and C++}
@@ -154,14 +154,14 @@ QML components are essentially object trees with children that have siblings and
 Child objects of QML components can be located using the QObject::objectName property with
 QObject::findChild(). For example, if the root item in \c MyItem.qml had a child \l Rectangle item:
 
-\snippet doc/snippets/qml/qtbinding/loading/MyItem.qml start
+\snippet qml/qtbinding/loading/MyItem.qml start
 \codeline
-\snippet doc/snippets/qml/qtbinding/loading/MyItem.qml child
-\snippet doc/snippets/qml/qtbinding/loading/MyItem.qml end
+\snippet qml/qtbinding/loading/MyItem.qml child
+\snippet qml/qtbinding/loading/MyItem.qml end
 
 The child could be located like this:
 
-\snippet doc/snippets/qml/qtbinding/loading/main.cpp findChild
+\snippet qml/qtbinding/loading/main.cpp findChild
 
 If \c objectName is used inside a delegate of a ListView, \l Repeater or some other
 element that creates multiple instances of its delegates, there will be multiple children with
@@ -187,12 +187,12 @@ component, allowing data to be injected from C++ into QML.
 For example, here is a QML item that refers to a \c currentDateTime value that does not exist in
 the current scope:
 
-\snippet doc/snippets/qml/qtbinding/context/MyItem.qml 0
+\snippet qml/qtbinding/context/MyItem.qml 0
 
 This \c currentDateTime value can be set directly by the C++ application that loads the QML
 component, using QQmlContext::setContextProperty():
 
-\snippet doc/snippets/qml/qtbinding/context/main.cpp 0
+\snippet qml/qtbinding/context/main.cpp 0
 
 Context properties can hold either QVariant or QObject* values. This means custom C++ objects can
 also be injected using this approach, and these objects can be modified and read directly in QML.
@@ -202,11 +202,11 @@ invokes a method on the object instance:
 \table
 \row
 \li
-\snippet doc/snippets/qml/qtbinding/context-advanced/applicationdata.h 0
+\snippet qml/qtbinding/context-advanced/applicationdata.h 0
 \codeline
-\snippet doc/snippets/qml/qtbinding/context-advanced/main.cpp 0
+\snippet qml/qtbinding/context-advanced/main.cpp 0
 \li
-\snippet doc/snippets/qml/qtbinding/context-advanced/MyItem.qml 0
+\snippet qml/qtbinding/context-advanced/MyItem.qml 0
 \endtable
 
 (Note that date/time values returned from C++ to QML can be formatted through
@@ -217,7 +217,7 @@ If the QML item needs to receive signals from the context property, it can conne
 dataChanged(), this signal can be connected to using an \c onDataChanged handler within
 a \l Connections object:
 
-\snippet doc/snippets/qml/qtbinding/context-advanced/connections.qml 0
+\snippet qml/qtbinding/context-advanced/connections.qml 0
 
 Context properties can be useful for using C++ based data models in a QML view. See the
 \l {declarative/modelviews/stringlistmodel}{String ListModel},
@@ -242,17 +242,17 @@ it does not paint anything; you will need to clear this if your item is supposed
 
 For example, here is an \c ImageViewer class with an \c image URL property:
 
-\snippet doc/snippets/qml/qtbinding/newelements/imageviewer.h 0
+\snippet qml/qtbinding/newelements/imageviewer.h 0
 
 Aside from the fact that it inherits QQuickItem, this is an ordinary class that could
 exist outside of QML. However, once it is registered with the QML engine using qmlRegisterType():
 
-\snippet doc/snippets/qml/qtbinding/newelements/main.cpp register
+\snippet qml/qtbinding/newelements/main.cpp register
 
 Then, any QML code loaded by your C++ application or \l{QQmlExtensionPlugin}{plugin} can create and manipulate
 \c ImageViewer objects:
 
-\snippet doc/snippets/qml/qtbinding/newelements/standalone.qml 0
+\snippet qml/qtbinding/newelements/standalone.qml 0
 
 
 It is advised that you avoid using QGraphicsItem functionality beyond the properties documented in QQuickItem.
@@ -286,8 +286,8 @@ QMetaObject::invokeMethod(). Here is a C++ application that uses this to call a 
 
 \table
 \row
-\li \snippet doc/snippets/qml/qtbinding/functions-qml/MyItem.qml 0
-\li \snippet doc/snippets/qml/qtbinding/functions-qml/main.cpp 0
+\li \snippet qml/qtbinding/functions-qml/MyItem.qml 0
+\li \snippet qml/qtbinding/functions-qml/main.cpp 0
 \endtable
 
 Notice the Q_RETURN_ARG() and Q_ARG() arguments for QMetaObject::invokeMethod() must be specified as
@@ -300,11 +300,11 @@ methods on the \c myObject object, which has been set using QQmlContext::setCont
 \table
 \row
 \li
-\snippet doc/snippets/qml/qtbinding/functions-cpp/MyItem.qml 0
+\snippet qml/qtbinding/functions-cpp/MyItem.qml 0
 \li
-\snippet doc/snippets/qml/qtbinding/functions-cpp/myclass.h 0
+\snippet qml/qtbinding/functions-cpp/myclass.h 0
 \codeline
-\snippet doc/snippets/qml/qtbinding/functions-cpp/main.cpp 0
+\snippet qml/qtbinding/functions-cpp/main.cpp 0
 \endtable
 
 QML supports the calling of overloaded C++ functions. If there are multiple C++ functions with the
@@ -325,11 +325,11 @@ is emitted:
 \table
 \row
 \li
-\snippet doc/snippets/qml/qtbinding/signals-qml/MyItem.qml 0
+\snippet qml/qtbinding/signals-qml/MyItem.qml 0
 \li
-\snippet doc/snippets/qml/qtbinding/signals-qml/myclass.h 0
+\snippet qml/qtbinding/signals-qml/myclass.h 0
 \codeline
-\snippet doc/snippets/qml/qtbinding/signals-qml/main.cpp 0
+\snippet qml/qtbinding/signals-qml/main.cpp 0
 \endtable
 
 To connect to Qt C++ signals from within QML, use a signal handler with the \c on<SignalName> syntax.
@@ -342,12 +342,12 @@ C++ object are connected to through \c onImagedChanged and \c onLoadingError sig
 \row
 \li
 
-\snippet doc/snippets/qml/qtbinding/signals-cpp/imageviewer.h start
+\snippet qml/qtbinding/signals-cpp/imageviewer.h start
 \dots 4
-\snippet doc/snippets/qml/qtbinding/signals-cpp/imageviewer.h end
+\snippet qml/qtbinding/signals-cpp/imageviewer.h end
 
 \li
-\snippet doc/snippets/qml/qtbinding/signals-cpp/standalone.qml 0
+\snippet qml/qtbinding/signals-cpp/standalone.qml 0
 \endtable
 
 (Note that if a signal has been declared as the NOTIFY signal for a property, QML allows it to be
@@ -362,8 +362,8 @@ instead to create the signal handler:
 
 \table
 \row
-\li \snippet doc/snippets/qml/qtbinding/signals-cpp/main.cpp connections
-\li \snippet doc/snippets/qml/qtbinding/signals-cpp/MyItem.qml 0
+\li \snippet qml/qtbinding/signals-cpp/main.cpp connections
+\li \snippet qml/qtbinding/signals-cpp/MyItem.qml 0
 \endtable
 
 C++ signals can use enum values as parameters provided that the enum is declared in the
@@ -376,12 +376,12 @@ See \l {Using enumerations of a custom type} below for details.
 Any properties declared in a QML object are automatically accessible from C++. Given a QML item
 like this:
 
-\snippet doc/snippets/qml/qtbinding/properties-qml/MyItem.qml 0
+\snippet qml/qtbinding/properties-qml/MyItem.qml 0
 
 The value of the \c someNumber property can be set and read using QQmlProperty, or
 QObject::setProperty() and QObject::property():
 
-\snippet doc/snippets/qml/qtbinding/properties-qml/main.cpp 0
+\snippet qml/qtbinding/properties-qml/main.cpp 0
 
 You should always use QObject::setProperty(), QQmlProperty or QMetaProperty::write() to
 change a QML property value, to ensure the QML engine is made aware of the property change. For example,
@@ -410,8 +410,8 @@ property. This property can be written to and read from QML:
 
 \table
 \row
-\li \snippet doc/snippets/qml/qtbinding/properties-cpp/applicationdata.h 0
-\li \snippet doc/snippets/qml/qtbinding/properties-cpp/MyItem.qml 0
+\li \snippet qml/qtbinding/properties-cpp/applicationdata.h 0
+\li \snippet qml/qtbinding/properties-cpp/MyItem.qml 0
 \endtable
 
 Notice the \c backgroundColorChanged signal is declared as the NOTIFY signal for the
@@ -468,8 +468,8 @@ converted to JavaScript array and object values, repectively:
 \li String format
 \li Example
 \row
-\li \snippet doc/snippets/qml/qtbinding/variantlistmap/MyItem.qml 0
-\li \snippet doc/snippets/qml/qtbinding/variantlistmap/main.cpp 0
+\li \snippet qml/qtbinding/variantlistmap/MyItem.qml 0
+\li \snippet qml/qtbinding/variantlistmap/main.cpp 0
 \endtable
 
 This produces output like:
@@ -492,13 +492,13 @@ side, and is automatically converted to a QVariantList or QVariantMap when it is
 To use an enumeration from a custom C++ component, the enumeration must be declared with Q_ENUMS() to
 register it with Qt's meta object system. For example, the following C++ type has a \c Status enum:
 
-\snippet doc/snippets/qml/qtbinding/enums/imageviewer.h start
-\snippet doc/snippets/qml/qtbinding/enums/imageviewer.h end
+\snippet qml/qtbinding/enums/imageviewer.h start
+\snippet qml/qtbinding/enums/imageviewer.h end
 
 Providing the \c ImageViewer class has been registered using qmlRegisterType(), its \c Status enum can
 now be used from QML:
 
-\snippet doc/snippets/qml/qtbinding/enums/standalone.qml 0
+\snippet qml/qtbinding/enums/standalone.qml 0
 
 The C++ type must be registered with QML to use its enums. If your C++ type is not instantiable, it
 can be registered using qmlRegisterUncreatableType().  To be accessible from QML, the names of enum values
@@ -525,7 +525,7 @@ function, the enum type must be registered using qRegisterMetaType().
 
 For QML signals, enum values may be used as signal parameters using the \c int type:
 
-\snippet doc/snippets/qml/qtbinding/enums/standalone.qml 1
+\snippet qml/qtbinding/enums/standalone.qml 1
 
 
 \section2 Automatic Type Conversion from Strings
@@ -643,22 +643,22 @@ project
 The \c main.qml and \c background.png files will be packaged as resource files. This is
 done in the \c example.qrc resource collection file:
 
-\quotefile doc/src/snippets/qml/qtbinding/resources/example.qrc
+\quotefile qml/qtbinding/resources/example.qrc
 
 Since \c background.png is a resource file, \c main.qml can refer to it using the relative
 path specified in \c example.qrc:
 
-\snippet doc/snippets/qml/qtbinding/resources/main.qml 0
+\snippet qml/qtbinding/resources/main.qml 0
 
 To allow QML to locate resource files correctly, the \c main.cpp loads the main QML
 file, \c main.qml, as a resource file using the \c qrc scheme:
 
-\snippet doc/snippets/qml/qtbinding/resources/main.cpp 0
+\snippet qml/qtbinding/resources/main.cpp 0
 
 Finally \c project.pro uses the RESOURCES variable to indicate that \c example.qrc should
 be used to build the application resources:
 
-\quotefile doc/src/snippets/qml/qtbinding/resources/resources.pro
+\quotefile qml/qtbinding/resources/resources.pro
 
 See \l {The Qt Resource System} for more information.
 

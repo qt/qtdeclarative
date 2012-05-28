@@ -93,7 +93,7 @@ TextEdit {
     Note that the TextEdit does not implement scrolling, following the cursor, or other behaviors specific
     to a look-and-feel. For example, to add flickable scrolling that follows the cursor:
 
-    \snippet snippets/declarative/texteditor.qml 0
+    \snippet qml/texteditor.qml 0
 
     A particular look-and-feel might use smooth scrolling (eg. using SmoothedFollow), might have a visible
     scrollbar, or a scrollbar that fades in to show location, etc.
@@ -105,7 +105,7 @@ TextEdit {
     You can translate between cursor positions (characters from the start of the document) and pixel
     points using positionAt() and positionToRectangle().
 
-    \sa Text, TextInput, {declarative/text/textselection}{Text Selection example}
+    \sa Text, TextInput, {examples/quick/text/textselection}{Text Selection example}
 */
 
 /*!

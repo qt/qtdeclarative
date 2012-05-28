@@ -50,7 +50,7 @@ is the emphasis in QML.
 Any snippet of QML code may become a component, by placing the code in a QML
 file, whose file extension is \c .qml). A complete Button component that
 responds to user input may be in a Button.qml file.
-\snippet doc/snippets/qml/reusablecomponents/Button.qml document
+\snippet qml/reusablecomponents/Button.qml document
 
 The component name, \c Button, matches the QML filename, \c Button.qml.
 Also, the first character is in upper case. Matching the names allow
@@ -60,9 +60,9 @@ naming components with different filenames.
 
 Alternatively, a \l Component element may encapsulate a QML object to form a
 component.
-\snippet doc/snippets/qml/reusablecomponents/component.qml parent begin
-\snippet doc/snippets/qml/reusablecomponents/component.qml define inline component
-\snippet doc/snippets/qml/reusablecomponents/component.qml parent end
+\snippet qml/reusablecomponents/component.qml parent begin
+\snippet qml/reusablecomponents/component.qml define inline component
+\snippet qml/reusablecomponents/component.qml parent end
 
 
 Components may incorporate any \l{Qt Quick}{QML feature} such as:
@@ -89,7 +89,7 @@ A component defined in a \c .qml file is directly usable by declaring the name
 of the component. For example, a button defined in \c Button.qml is created by
 declaring a \c Button. The button is defined in the
 \l {qml-define-components}{Defining New Components} section.
-\snippet doc/snippets/qml/reusablecomponents/application.qml document
+\snippet qml/reusablecomponents/application.qml document
 
 Note that the component name, \c Button, matches the QML filename, \c Button.qml.
 Also, the first character is in upper case. Matching the names allow
@@ -100,7 +100,7 @@ For flexibility, a \c qmldir file is for dictating which additional components,
 plugins, or directories should be imported. By using a \c qmldir file, component
 names do not need to match the filenames. The \c qmldir file should, however, be
 in an imported path.
-\snippet doc/snippets/qml/reusablecomponents/qmldir document
+\snippet qml/reusablecomponents/qmldir document
 
 \section2 Loading an Inline Component
 
@@ -109,8 +109,8 @@ delayed. A component may be created during a MouseArea event or by using a
 \l Loader element. The component can create an object, which is addressable in a
 similar way as an \l {qml-id}{identifier}. Thus, the created object may
 have its bindings set and read like a normal QML object.
-\snippet doc/snippets/qml/reusablecomponents/component.qml define inline component
-\snippet doc/snippets/qml/reusablecomponents/component.qml create inline component
+\snippet qml/reusablecomponents/component.qml define inline component
+\snippet qml/reusablecomponents/component.qml create inline component
 
 \keyword qml-component-properties
 \section1 Component Properties
@@ -140,11 +140,11 @@ Consider the Button component from the
 object is a \l Rectangle. When imported, the Button component will possess the
 Rectangle's properties, methods, signals, and any custom properties.
 
-\snippet doc/snippets/qml/reusablecomponents/Button.qml parent begin
-\snippet doc/snippets/qml/reusablecomponents/Button.qml ellipses
-\snippet doc/snippets/qml/reusablecomponents/Button.qml properties
-\snippet doc/snippets/qml/reusablecomponents/Button.qml ellipses
-\snippet doc/snippets/qml/reusablecomponents/Button.qml parent end
+\snippet qml/reusablecomponents/Button.qml parent begin
+\snippet qml/reusablecomponents/Button.qml ellipses
+\snippet qml/reusablecomponents/Button.qml properties
+\snippet qml/reusablecomponents/Button.qml ellipses
+\snippet qml/reusablecomponents/Button.qml parent end
 
 The Button's \c text alias is accessible from outside the component as well as
 the Rectangle's visual properties and signals such as \c x, \c y, \c anchors,
@@ -156,7 +156,7 @@ children which is beneficial for certain types of interfaces. However, since
 \c FocusScopes are not visual elements, the visual properties of its child need
 to be exposed.
 
-\snippet doc/snippets/qml/reusablecomponents/focusbutton.qml document
+\snippet qml/reusablecomponents/focusbutton.qml document
 
 \keyword qml-id
 \section2 The Object Identifier
@@ -165,7 +165,7 @@ Each QML object may be given a special unique identifier called an \c id.
 No other object within the same QML component (see \l{QML Documents}) can have
 the same \c id value. QML objects may then access an object using the \c id
 property.
-\snippet doc/snippets/qml/properties.qml id property
+\snippet qml/properties.qml id property
 A component may readily access its parent's properties by using the \c parent
 property.
 
@@ -178,15 +178,15 @@ Note that an \c id must begin with a lower-case letter or an underscore. The
 Objects or Items declared within a component can be made accessible by binding their id to a
 property alias.
 
-\snippet doc/snippets/qml/reusablecomponents/Button.qml parent begin
-\snippet doc/snippets/qml/reusablecomponents/Button.qml object alias
-\snippet doc/snippets/qml/reusablecomponents/Button.qml text
-\snippet doc/snippets/qml/reusablecomponents/Button.qml parent end
+\snippet qml/reusablecomponents/Button.qml parent begin
+\snippet qml/reusablecomponents/Button.qml object alias
+\snippet qml/reusablecomponents/Button.qml text
+\snippet qml/reusablecomponents/Button.qml parent end
 
 The advantage of using an alias instead a property of type of the object is that the value of
 the alias cannot be overridden, and members of the object can be used in property bindings when
 declaring an instance of the component.
-\snippet doc/snippets/qml/reusablecomponents/application.qml grouped property
+\snippet qml/reusablecomponents/application.qml grouped property
 If a property of type \c Text was used instead of an alias in this instance there would be no
 guarantee that \c label would be initialized before the binding was attempted which would cause
 the binding to fail.

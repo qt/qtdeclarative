@@ -56,7 +56,7 @@
   evaluate() function, passing the script code (text) to evaluate
   as argument.
 
-  \snippet doc/snippets/qtjavascript/evaluation/main.cpp 0
+  \snippet qtjavascript/evaluation/main.cpp 0
 
   The return value will be the result of the evaluation (represented
   as a QJSValue object); this can be converted to standard C++
@@ -66,7 +66,7 @@
   them with the script engine. This is most easily done by setting
   properties of the script engine's \e{Global Object}:
 
-  \snippet doc/snippets/qtjavascript/registeringvalues/main.cpp 0
+  \snippet qtjavascript/registeringvalues/main.cpp 0
 
   This places the properties in the script environment, thus making them
   available to script code.
@@ -83,7 +83,7 @@
   Here's an example of making an instance of a QObject subclass
   available to script code under the name \c{"myObject"}:
 
-  \snippet doc/snippets/qtjavascript/registeringobjects/main.cpp 0
+  \snippet qtjavascript/registeringobjects/main.cpp 0
 
   This will create a global variable called \c{myObject} in the
   script environment. The variable serves as a proxy to the

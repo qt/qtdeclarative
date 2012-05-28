@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
     the transition, ensures the item animates smoothly as it moves to
     its new parent:
 
-    \snippet doc/snippets/qml/parentanimation.qml 0
+    \snippet qml/parentanimation.qml 0
 
     A ParentAnimation can contain any number of animations. These animations will
     be run in parallel; to run them sequentially, define them within a
@@ -425,7 +425,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
     In the following snippet we animate the addition of a right anchor to a \l Rectangle:
 
-    \snippet doc/snippets/qml/anchoranimation.qml 0
+    \snippet qml/anchoranimation.qml 0
 
     For convenience, when an AnchorAnimation is used in a \l Transition, it will
     animate any AnchorChanges that have occurred during the state change.

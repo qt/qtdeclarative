@@ -110,12 +110,12 @@ QT_BEGIN_NAMESPACE
     should be bundled with the plugin, so it needs to be specified in the \c qmldir
     file:
 
-    \quotefile examples/declarative/cppextensions/plugins/com/nokia/TimeExample/qmldir
+    \quotefile examples/qml/cppextensions/plugins/com/nokia/TimeExample/qmldir
 
     Once the project is built and installed, the new \c Time element can be 
     used by any QML component that imports the \c com.nokia.TimeExample module:
 
-    \snippet examples/declarative/cppextensions/plugins/plugins.qml 0
+    \snippet examples/qml/cppextensions/plugins/plugins.qml 0
 
     The full source code is available in the \l {declarative/cppextensions/plugins}{plugins example}.
 

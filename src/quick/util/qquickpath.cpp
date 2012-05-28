@@ -181,7 +181,7 @@ bool QQuickPath::hasEnd() const
         \li \l PathPercent - a way to spread out items along various segments of the path.
     \endlist
 
-    \snippet doc/snippets/qml/pathview/pathattributes.qml 2
+    \snippet qml/pathview/pathattributes.qml 2
 */
 
 QQmlListProperty<QQuickPathElement> QQuickPath::pathElements()
@@ -825,7 +825,7 @@ bool QQuickCurve::hasRelativeY()
     \row
     \li \image declarative-pathattribute.png
     \li
-    \snippet doc/snippets/qml/pathview/pathattributes.qml 0
+    \snippet qml/pathview/pathattributes.qml 0
     (see the PathView documentation for the specification of ContactModel.qml
      used for ContactModel above.)
     \endtable
@@ -1359,7 +1359,7 @@ void QQuickPathCubic::addToPath(QPainterPath &path, const QQuickPathData &data)
     PathCurve provides an easy way to specify a curve passing directly through a set of points.
     Typically multiple PathCurves are used in a series, as the following example demonstrates:
 
-    \snippet doc/snippets/qml/path/basiccurve.qml 0
+    \snippet qml/path/basiccurve.qml 0
 
     This example produces the following path (with the starting point and PathCurve points
     highlighted in red):
@@ -1508,7 +1508,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     \table
     \row
     \li \image declarative-patharc.png
-    \li \snippet doc/snippets/qml/path/basicarc.qml 0
+    \li \snippet qml/path/basicarc.qml 0
     \endtable
 
     Note that a single PathArc cannot be used to specify a circle. Instead, you can
@@ -1552,7 +1552,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     \table
     \row
     \li \image declarative-arcradius.png
-    \li \snippet doc/snippets/qml/path/arcradius.qml 0
+    \li \snippet qml/path/arcradius.qml 0
     \endtable
 */
 
@@ -1597,7 +1597,7 @@ void QQuickPathArc::setRadiusY(qreal radius)
     \table
     \row
     \li \image declarative-largearc.png
-    \li \snippet doc/snippets/qml/path/largearc.qml 0
+    \li \snippet qml/path/largearc.qml 0
     \endtable
 
     The default value is false.
@@ -1628,7 +1628,7 @@ void QQuickPathArc::setUseLargeArc(bool largeArc)
     \table
     \row
     \li \image declarative-arcdirection.png
-    \li \snippet doc/snippets/qml/path/arcdirection.qml 0
+    \li \snippet qml/path/arcdirection.qml 0
     \endtable
 
     \sa useLargeArc

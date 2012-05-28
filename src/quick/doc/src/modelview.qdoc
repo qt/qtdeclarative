@@ -80,13 +80,13 @@ To visualize data, bind the view's \c model property to a model and the
     Suppose that a specific club wants to decorate its members list with its brand
     colors. A member list is in a \c model and the \c delegate will display the
     model's content.
-    \snippet doc/snippets/qml/listview-decorations.qml model
-    \snippet doc/snippets/qml/listview-decorations.qml delegate
+    \snippet qml/listview-decorations.qml model
+    \snippet qml/listview-decorations.qml delegate
 
     The club may decorate the members list by binding visual objects to the \c
     header and \c footer properties. The visual object may be defined inline, in
     another file, or in a \l {Component} element.
-    \snippet doc/snippets/qml/listview-decorations.qml decorations
+    \snippet qml/listview-decorations.qml decorations
     \image listview-decorations.png
 
     \section2 Mouse and Touch Handling
@@ -110,8 +110,8 @@ To visualize data, bind the view's \c model property to a model and the
 
     A list may contain a list indicating people's names and the team on which
     team the person belongs.
-    \snippet doc/snippets/qml/listview-sections.qml model
-    \snippet doc/snippets/qml/listview-sections.qml delegate
+    \snippet qml/listview-sections.qml model
+    \snippet qml/listview-sections.qml delegate
 
     The ListView element has the \c section \l{Property Binding in QML#Attached
     Properties}{attached property} that can combine adjacent and related
@@ -119,7 +119,7 @@ To visualize data, bind the view's \c model property to a model and the
     which list element property to use as sections. The \c criteria can dictate
     how the section names are displayed and the \c delegate is similar to the
     views' \l {qml-view-delegate}{delegate} property.
-    \snippet doc/snippets/qml/listview-sections.qml section
+    \snippet qml/listview-sections.qml section
     \image listview-section.png
 
 \keyword qml-view-delegate
@@ -129,7 +129,7 @@ To visualize data, bind the view's \c model property to a model and the
     visualize each item list according to the template defined by the delegate.
     Items in a model are accessible through the \c index property as well as the
     item's properties.
-    \snippet doc/snippets/qml/listview.qml delegate
+    \snippet qml/listview.qml delegate
     \image listview-setup.png
 
     \section2 Accessing Views and Models from Delegates
@@ -150,7 +150,7 @@ To visualize data, bind the view's \c model property to a model and the
     the model, and the color of one of the fields depends on the property
     \e{fruit_color} of the view.
 
-    \snippet doc/snippets/qml/models/views-models-delegates.qml rectangle
+    \snippet qml/models/views-models-delegates.qml rectangle
 
 \keyword qml-data-models
 \section1 Models
@@ -159,7 +159,7 @@ To visualize data, bind the view's \c model property to a model and the
     bind to. Here is a ListModel with two roles, \e type and \e age, and a
     ListView with a delegate that binds to these roles to display their values:
 
-    \snippet doc/snippets/qml/qml-data-models/listmodel-listview.qml document
+    \snippet qml/qml-data-models/listmodel-listview.qml document
 
     If there is a naming clash between the model's properties and the delegate's
     properties, the roles can be accessed with the qualified \e model name
@@ -197,12 +197,12 @@ To visualize data, bind the view's \c model property to a model and the
     ListModel is a simple hierarchy of elements specified in QML.  The
     available roles are specified by the \l ListElement properties.
 
-    \snippet doc/snippets/qml/qml-data-models/listelements.qml model
+    \snippet qml/qml-data-models/listelements.qml model
 
     The above model has two roles, \e name and \e cost.  These can be bound
     to by a ListView delegate, for example:
 
-    \snippet doc/snippets/qml/qml-data-models/listelements.qml view
+    \snippet qml/qml-data-models/listelements.qml view
 
     ListModel provides methods to manipulate the ListModel directly via JavaScript.
     In this case, the first item inserted determines the roles available
@@ -210,9 +210,9 @@ To visualize data, bind the view's \c model property to a model and the
     created and populated via JavaScript, the roles provided by the first
     insertion are the only roles that will be shown in the view:
 
-    \snippet doc/snippets/qml/qml-data-models/dynamic-listmodel.qml model
+    \snippet qml/qml-data-models/dynamic-listmodel.qml model
     \dots
-    \snippet doc/snippets/qml/qml-data-models/dynamic-listmodel.qml mouse area
+    \snippet qml/qml-data-models/dynamic-listmodel.qml mouse area
 
     When the MouseArea is clicked, \c fruitModel will have two roles, \e cost and \e name.
     Even if subsequent roles are added, only the first two will be handled by views
@@ -253,7 +253,7 @@ To visualize data, bind the view's \c model property to a model and the
     VisualItemModel provide the contents of the delegate. The model
     does not provide any roles.
 
-    \snippet doc/snippets/qml/models/visual-model-and-view.qml visual model and view
+    \snippet qml/models/visual-model-and-view.qml visual model and view
 
     Note that in the above example there is no delegate required.
     The items of the model itself provide the visual elements that
@@ -347,7 +347,7 @@ The following example shows a repeater used with a \l{#Grid}{Grid} item to
 arrange a set of Rectangle items. The Repeater item creates a series of 24
 rectangles for the Grid item to position in a 5 by 5 arrangement.
 
-\snippet doc/snippets/qml/repeaters/repeater-grid-index.qml document
+\snippet qml/repeaters/repeater-grid-index.qml document
 
 The number of items created by a Repeater is held by its \l{Repeater::}{count}
 property. It is not possible to set this property to determine the number of

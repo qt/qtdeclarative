@@ -58,9 +58,9 @@ Attempting to declare two signals or methods with the same name in the same type
 block generates an error.  However, a new signal may reuse the name of an existing signal on the type. (This should be done with caution, as the existing signal may be hidden and become inaccessible.)
 
 Here are various examples of signal declarations:
-\snippet doc/snippets/qml/events.qml parent begin
-\snippet doc/snippets/qml/events.qml signal declaration
-\snippet doc/snippets/qml/events.qml parent end
+\snippet qml/events.qml parent begin
+\snippet qml/events.qml signal declaration
+\snippet qml/events.qml parent end
 
 If the signal has no parameters, the "\c{()}" brackets are optional. If
 parameters are used, the parameter types must be declared, as for the \c string
@@ -69,17 +69,17 @@ and \c variant arguments of the \c perform signal.
 Adding a signal to an item automatically adds a \e{signal handler} as well. The
 signal hander is named \c on<SignalName>, with the first letter of the signal in
 uppercase.  The previous signals have the following signal handlers:
-\snippet doc/snippets/qml/events.qml signal handler declaration
+\snippet qml/events.qml signal handler declaration
 
 Further, each QML properties have a \c{<property_name>Changed} signal and its
 corresponding \c{on<property_name>Changed} signal handler. As a result, property
 changes may notify other components for any changes.
-\snippet doc/snippets/qml/events.qml automatic signals
+\snippet qml/events.qml automatic signals
 
 To emit a signal, invoke it as a method. The signal handler binding is similar
 to a property binding and it is invoked when the signal is emitted. Use the
 defined argument names to access the respective arguments.
-\snippet doc/snippets/qml/events.qml signal emit
+\snippet qml/events.qml signal emit
 Note that the \c Component.onCompleted is an
 \l{attached-signalhandlers}{attached signal handler}; it is invoked when the
 \l Component initialization is complete.
@@ -93,7 +93,7 @@ automatically invoked whenever the signal is emitted. This mechanism enables a
 signal to be received by a method instead of a
 \l {Signal Handlers}{signal handler}.
 
-\snippet doc/snippets/qml/events.qml connect method
+\snippet qml/events.qml connect method
 The \c {connect()} method is appropriate when connecting a JavaScript method to
 a signal.
 
@@ -104,7 +104,7 @@ signals.
 
 By connecting signals to other signals, the \c connect() method can form different
 signal chains.
-\snippet doc/snippets/qml/events.qml forward signal
+\snippet qml/events.qml forward signal
 
 
 Whenever the \l MouseArea \c clicked signal is emitted, the \c send

@@ -104,10 +104,10 @@ public:
     other cirumstances). This often isn't possible to accomplish with a direct
     binding, as you need to supply values for all possible branches.
 
-    \qml
-    // warning: "Unable to assign [undefined] to double value"
+    \code
+    // produces warning: "Unable to assign [undefined] to double value"
     value: if (mouse.pressed) mouse.mouseX
-    \endqml
+    \endcode
 
     The above example will produce a warning whenever we release the mouse, as the value
     of the binding is undefined when the mouse isn't pressed. We can use the Binding
@@ -124,7 +124,7 @@ public:
     the property. In that sense, it functions much like a simplified State.
 
     \qml
-    // this is equivilant to the above Binding
+    // this is equivalent to the above Binding
     State {
         name: "pressed"
         when: mouse.pressed

@@ -55,13 +55,13 @@ code location of the call.
 \c console.assert tests that an expression is true. If not, it will write an optional message
 to the console and print the stack trace.
 
-\qml
+\code
 function f() {
   var x = 12
   console.assert(x == 12, "This will pass");
   console.assert(x > 12, "This will fail");
 }
-\endqml
+\endcode
 
 \section2 Timer
 
@@ -90,11 +90,11 @@ and column number. The stack trace is limited to last 10 stack frames.
 \c console.count prints the current number of times a particular piece of code has been executed,
 along with a message. That is,
 
-\qml
+\code
 function f() {
   console.count("f called");
 }
-\endqml
+\endcode
 
 will print \c{f called: 1}, \c{f called: 2} ... whenever \c{f()} is executed.
 

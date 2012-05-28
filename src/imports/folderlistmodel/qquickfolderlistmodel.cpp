@@ -250,7 +250,7 @@ void QQuickFolderListModelPrivate::_q_sortFinished(const QList<FileProperty> &li
     The following example shows a FolderListModel being used to provide a list
     of QML files in a \l ListView:
 
-    \snippet doc/src/snippets/qml/folderlistmodel.qml 0
+    \snippet qml/folderlistmodel.qml 0
 
     \section1 Path Separators
 

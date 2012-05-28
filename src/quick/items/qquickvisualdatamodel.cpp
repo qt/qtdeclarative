@@ -136,7 +136,7 @@ QQuickVisualDataModelParts::QQuickVisualDataModelParts(QQuickVisualDataModel *pa
 
     The example below illustrates using a VisualDataModel with a ListView.
 
-    \snippet doc/snippets/qml/visualdatamodel.qml 0
+    \snippet qml/visualdatamodel.qml 0
 */
 
 QQuickVisualDataModelPrivate::QQuickVisualDataModelPrivate(QQmlContext *ctxt)
@@ -374,10 +374,10 @@ void QQuickVisualDataModel::setDelegate(QQmlComponent *delegate)
     the new directory's contents.
 
     \c main.cpp:
-    \snippet doc/snippets/qml/visualdatamodel_rootindex/main.cpp 0
+    \snippet qml/visualdatamodel_rootindex/main.cpp 0
 
     \c view.qml:
-    \snippet doc/snippets/qml/visualdatamodel_rootindex/view.qml 0
+    \snippet qml/visualdatamodel_rootindex/view.qml 0
 
     If the \l model is a QAbstractItemModel subclass, the delegate can also
     reference a \c hasModelChildren property (optionally qualified by a
@@ -578,7 +578,7 @@ QQuickVisualDataGroup *QQuickVisualDataModelPrivate::group_at(
 
     The following example illustrates using groups to select items in a model.
 
-    \snippet doc/snippets/qml/visualdatagroup.qml 0
+    \snippet qml/visualdatagroup.qml 0
 */
 
 QQmlListProperty<QQuickVisualDataGroup> QQuickVisualDataModel::groups()

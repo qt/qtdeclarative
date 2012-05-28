@@ -76,7 +76,7 @@ public:
     group and uses this to color the window and text items
     appropriately:
 
-    \snippet doc/snippets/qml/systempalette.qml 0
+    \snippet qml/systempalette.qml 0
 
     \sa QPalette
 */

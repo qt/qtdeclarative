@@ -52,7 +52,7 @@ example, an \c import statement is required to use:
 An \c import statement includes the module name, and possibly a version number.
 This can be seen in the snippet commonly found at the top of QML files:
 
-\snippet doc/snippets/qml/imports/qtquick-1.0.qml import
+\snippet qml/imports/qtquick-1.0.qml import
 
 This imports version 1.0 of the "QtQuick" module into the global namespace. (The QML
 library itself must be imported to use any of the \l {QML Elements}, as they
@@ -111,7 +111,7 @@ Window {
 Similarly, if the directory resided on a network source, it could
 be imported like this:
 
-\snippet doc/snippets/qml/imports/network-imports.qml imports
+\snippet qml/imports/network-imports.qml imports
 
 A located module can also be imported as a network resource if it has a
 \l{Writing a qmldir file}{qmldir file} in the directory that specifies the QML files
@@ -161,7 +161,7 @@ path or network resource URL.
 When importing an installed module, an un-quoted URI is
 used, with a mandatory version number:
 
-\snippet doc/snippets/qml/imports/installed-module.qml imports
+\snippet qml/imports/installed-module.qml imports
 
 When a module is imported, the QML engine searches the QML import path for a matching
 module. The root directory of the module must contain a
@@ -244,7 +244,7 @@ qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
 This allows the application's QML files to use the \c PieChart type by importing the declared
 \c Charts module:
 
-\snippet doc/snippets/qml/imports/chart.qml import
+\snippet qml/imports/chart.qml import
 
 For \l{QQmlExtensionPlugin}{QML plugins}, the
 module URI is automatically passed to QQmlExtensionPlugin::registerTypes(). This method
@@ -252,12 +252,12 @@ can be reimplemented by the developer to register the necessary types for the mo
 \c registerTypes() implementation from the \l{declarative/cppextensions/plugins}{QML plugins}
 example:
 
-\snippet examples/declarative/cppextensions/plugins/plugin.cpp plugin
+\snippet examples/qml/cppextensions/plugins/plugin.cpp plugin
 
 Once the plugin is built and installed, and includes a \l{Writing a qmldir file}{qmldir file},
 the module can be imported from QML, like this:
 
-\snippet doc/snippets/qml/imports/timeexample.qml import
+\snippet qml/imports/timeexample.qml import
 
 Unlike QML types defined by QML files, a QML type defined in a C++ extension plugin cannot be loaded by
 a module that is imported as a network resource.
@@ -271,15 +271,15 @@ By default, when a module is imported, its contents are imported into the global
 
 To import a module into a specific namespace, use the \e as keyword:
 
-\snippet doc/snippets/qml/imports/named-imports.qml imports
+\snippet qml/imports/named-imports.qml imports
 
 Types from these modules can then only be used when qualified by the namespace:
 
-\snippet doc/snippets/qml/imports/named-imports.qml imported items
+\snippet qml/imports/named-imports.qml imported items
 
 Multiple modules can be imported into the same namespace in the same way that multiple modules can be imported into the global namespace:
 
-\snippet doc/snippets/qml/imports/merged-named-imports.qml imports
+\snippet qml/imports/merged-named-imports.qml imports
 
 \section2 JavaScript Files
 

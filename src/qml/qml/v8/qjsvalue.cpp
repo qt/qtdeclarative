@@ -77,7 +77,7 @@
   QJSValues. Use setProperty() to set a property of an object, and
   call property() to retrieve the value of a property.
 
-  \snippet doc/snippets/code/src_script_qjsvalue.cpp 0
+  \snippet code/src_script_qjsvalue.cpp 0
 
   If you want to iterate over the properties of a script object, use
   the QJSValueIterator class.
