@@ -188,7 +188,11 @@ void ScriptFunction::call(VM::Context *ctx)
 
 void ScriptFunction::construct(VM::Context *ctx)
 {
-    __qmljs_init_object(&ctx->thisObject, ctx->engine->newObject());
+    Object *obj = ctx->engine->newObject();
+    Value proto = getProperty(ctx, ctx->engine->id_prototype);
+    if (proto.isObject())
+        obj->prototype = proto.objectValue;
+    __qmljs_init_object(&ctx->thisObject, obj);
     function->code(ctx);
 }
 
@@ -224,6 +228,7 @@ ExecutionEngine::ExecutionEngine()
 
     id_length = identifier(QStringLiteral("length"));
     id_prototype = identifier(QStringLiteral("prototype"));
+    id_constructor = identifier(QStringLiteral("constructor"));
     id___proto__ = identifier(QStringLiteral("__proto__"));
 
     objectPrototype = new ObjectPrototype();
@@ -304,6 +309,9 @@ FunctionObject *ExecutionEngine::newNativeFunction(Context *scope, void (*code)(
 FunctionObject *ExecutionEngine::newScriptFunction(Context *scope, IR::Function *function)
 {
     ScriptFunction *f = new ScriptFunction(scope, function);
+    Object *proto = scope->engine->newObject();
+    proto->setProperty(scope, scope->engine->id_constructor, Value::fromObject(f));
+    f->setProperty(scope, scope->engine->id_prototype, Value::fromObject(proto));
     f->prototype = scope->engine->functionPrototype;
     return f;
 }
@@ -509,6 +517,8 @@ void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
 
     Value proto = f->getProperty(this, engine->id_prototype);
     thisObject.objectValue->prototype = proto.objectValue;
+    if (! thisObject.isObject())
+        thisObject.objectValue->prototype = engine->objectPrototype;
 
     leaveCallContext(f, returnValue);
 }

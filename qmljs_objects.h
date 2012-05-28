@@ -201,6 +201,7 @@ struct Object {
 
     virtual ~Object();
 
+    virtual QString className() { return QStringLiteral("Object"); }
     virtual BooleanObject *asBooleanObject() { return 0; }
     virtual NumberObject *asNumberObject() { return 0; }
     virtual StringObject *asStringObject() { return 0; }
@@ -229,24 +230,28 @@ struct Object {
 struct BooleanObject: Object {
     Value value;
     BooleanObject(const Value &value): value(value) {}
+    virtual QString className() { return QStringLiteral("Boolean"); }
     virtual BooleanObject *asBooleanObject() { return this; }
 };
 
 struct NumberObject: Object {
     Value value;
     NumberObject(const Value &value): value(value) {}
+    virtual QString className() { return QStringLiteral("Number"); }
     virtual NumberObject *asNumberObject() { return this; }
 };
 
 struct StringObject: Object {
     Value value;
     StringObject(const Value &value): value(value) {}
+    virtual QString className() { return QStringLiteral("String"); }
     virtual StringObject *asStringObject() { return this; }
 };
 
 struct DateObject: Object {
     Value value;
     DateObject(const Value &value): value(value) {}
+    virtual QString className() { return QStringLiteral("Date"); }
     virtual DateObject *asDateObject() { return this; }
 };
 
@@ -254,6 +259,7 @@ struct ArrayObject: Object {
     Array value;
     ArrayObject() {}
     ArrayObject(const Array &value): value(value) {}
+    virtual QString className() { return QStringLiteral("Array"); }
     virtual ArrayObject *asArrayObject() { return this; }
     virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes);
 };
@@ -274,6 +280,7 @@ struct FunctionObject: Object {
         , varCount(0)
         , needsActivation(true) {}
 
+    virtual QString className() { return QStringLiteral("Function"); }
     virtual FunctionObject *asFunctionObject() { return this; }
     virtual bool hasInstance(Context *ctx, const Value &value);
     virtual void call(Context *ctx);
@@ -301,12 +308,14 @@ struct ScriptFunction: FunctionObject {
 struct ErrorObject: Object {
     Value value;
     ErrorObject(const Value &message): value(message) {}
+    virtual QString className() { return QStringLiteral("Error"); }
     virtual ErrorObject *asErrorObject() { return this; }
 };
 
 struct ArgumentsObject: Object {
     Context *context;
     ArgumentsObject(Context *context): context(context) {}
+    virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
     virtual Value *getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes);
 };
@@ -410,6 +419,7 @@ struct ExecutionEngine
 
     String *id_length;
     String *id_prototype;
+    String *id_constructor;
     String *id___proto__;
 
     ExecutionEngine();

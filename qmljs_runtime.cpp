@@ -558,10 +558,11 @@ void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *na
     } else {
         Value o;
         __qmljs_to_object(ctx, &o, object);
+
         if (o.isObject())
             __qmljs_get_property(ctx, result, &o, name);
         else
-            ctx->throwTypeError();
+            ctx->throwTypeError(); // ### not necessary.
     }
 }
 
@@ -580,7 +581,10 @@ void __qmljs_get_activation(Context *ctx, Value *result)
 
 void __qmljs_get_thisObject(Context *ctx, Value *result)
 {
-    *result = ctx->thisObject;
+    if (ctx->thisObject.isObject())
+        *result = ctx->thisObject;
+    else
+        *result = ctx->engine->globalObject;
 }
 
 void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y, bool leftFirst)

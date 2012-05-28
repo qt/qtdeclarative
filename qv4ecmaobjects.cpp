@@ -497,7 +497,10 @@ void ObjectPrototype::init(Context *ctx, const Value &ctor)
 
 void ObjectPrototype::method_toString(Context *ctx)
 {
-    ctx->result = Value::fromString(ctx, "object");
+    if (! ctx->thisObject.isObject())
+        ctx->throwTypeError();
+    else
+        ctx->result = Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(ctx->thisObject.objectValue->className()));
 }
 
 //
