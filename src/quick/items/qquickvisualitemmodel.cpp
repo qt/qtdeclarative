@@ -192,8 +192,10 @@ QQuickItem *QQuickVisualItemModel::item(int index, bool)
     Q_D(QQuickVisualItemModel);
     QQuickVisualItemModelPrivate::Item &item = d->children[index];
     item.addRef();
-    emit initItem(index, item.item);
-    emit createdItem(index, item.item);
+    if (item.ref == 1) {
+        emit initItem(index, item.item);
+        emit createdItem(index, item.item);
+    }
     return item.item;
 }
 
@@ -205,6 +207,8 @@ QQuickVisualModel::ReleaseFlags QQuickVisualItemModel::release(QQuickItem *item)
         if (d->children[idx].deref()) {
             // XXX todo - the original did item->scene()->removeItem().  Why?
             item->setParentItem(0);
+        } else {
+            return QQuickVisualModel::Referenced;
         }
     }
     return 0;

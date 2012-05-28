@@ -126,6 +126,7 @@ private slots:
     void insertBeforeVisible_data();
     void swapWithFirstItem();
     void itemList();
+    void itemListFlicker();
     void currentIndex_delayedItemCreation();
     void currentIndex_delayedItemCreation_data();
     void currentIndex();
@@ -2638,6 +2639,55 @@ void tst_QQuickListView::itemList()
     text = findItem<QQuickText>(contentItem, "text3");
     QTRY_VERIFY(text);
     QTRY_COMPARE(text->text(), QLatin1String("index: 2"));
+
+    delete canvas;
+}
+
+void tst_QQuickListView::itemListFlicker()
+{
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("itemlist-flicker.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "view");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QQuickVisualItemModel *model = canvas->rootObject()->findChild<QQuickVisualItemModel*>("itemModel");
+    QTRY_VERIFY(model != 0);
+
+    QTRY_VERIFY(model->count() == 3);
+    QTRY_COMPARE(listview->currentIndex(), 0);
+
+    QQuickItem *item;
+
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item1"));
+    QVERIFY(item->isVisible());
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item2"));
+    QVERIFY(item->isVisible());
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item3"));
+    QVERIFY(item->isVisible());
+
+    listview->setCurrentIndex(1);
+
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item1"));
+    QVERIFY(item->isVisible());
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item2"));
+    QVERIFY(item->isVisible());
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item3"));
+    QVERIFY(item->isVisible());
+
+    listview->setCurrentIndex(2);
+
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item1"));
+    QVERIFY(item->isVisible());
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item2"));
+    QVERIFY(item->isVisible());
+    QVERIFY(item = findItem<QQuickItem>(contentItem, "item3"));
+    QVERIFY(item->isVisible());
 
     delete canvas;
 }
