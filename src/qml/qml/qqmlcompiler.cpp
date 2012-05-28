@@ -99,7 +99,7 @@ static QString qsTrId_string(QLatin1String("qsTrId"));
     Instantiate a new QQmlCompiler.
 */
 QQmlCompiler::QQmlCompiler(QQmlPool *pool)
-: pool(pool), output(0), engine(0), unitRoot(0), unit(0), cachedComponentTypeRef(-1),
+: compileState(0), pool(pool), output(0), engine(0), enginePrivate(0), unitRoot(0), unit(0), cachedComponentTypeRef(-1),
   cachedTranslationContextIndex(-1), componentStats(0)
 {
     if (compilerStatDump()) 

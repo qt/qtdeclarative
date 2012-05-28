@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 /*!
     Constructs a QQmlPropertyValueInterceptor.
 */
-QQmlPropertyValueInterceptor::QQmlPropertyValueInterceptor()
+QQmlPropertyValueInterceptor::QQmlPropertyValueInterceptor() : m_next(0)
 {
 }
 

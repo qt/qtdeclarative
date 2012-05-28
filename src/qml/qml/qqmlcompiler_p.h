@@ -437,7 +437,7 @@ private:
     // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat
     {
-        ComponentStat() : ids(0), objects(0) {}
+        ComponentStat() : lineNumber(0), ids(0), objects(0) {}
 
         int lineNumber;
 

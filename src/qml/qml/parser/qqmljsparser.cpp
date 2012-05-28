@@ -85,6 +85,7 @@ Parser::Parser(Engine *engine):
     state_stack(0),
     location_stack(0),
     string_stack(0),
+    program(0),
     first_token(0),
     last_token(0)
 {
