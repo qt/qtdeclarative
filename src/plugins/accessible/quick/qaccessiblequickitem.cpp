@@ -46,6 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_NO_ACCESSIBILITY
+
 QAccessibleQuickItem::QAccessibleQuickItem(QQuickItem *item)
     : QQmlAccessible(item)
 {
@@ -293,6 +295,6 @@ QRect itemScreenRect(QQuickItem *item)
     return QRect(screenPos, itemSize);
 }
 
-
+#endif // QT_NO_ACCESSIBILITY
 
 QT_END_NAMESPACE
