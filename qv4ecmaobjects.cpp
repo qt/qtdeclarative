@@ -1135,7 +1135,7 @@ void ArrayPrototype::method_concat(Context *ctx)
             result.concat(elt->value);
 
         else
-            result.assign(k, Value::fromString(arg.toString(ctx)));
+            result.assign(k, arg);
     }
 
     ctx->result = Value::fromObject(ctx->engine->newArrayObject(result));
