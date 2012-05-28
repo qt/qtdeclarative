@@ -583,7 +583,7 @@ replaceMatch()
     REPLACEMENT="$2"
     echo "Replacing $SYMBOL with $REPLACEMENT:"
 
-    CONTAINERS=$(find "$MODIFY_DIR" ! -path ".git" -type f | xargs grep -l -I "$SYMBOL")
+    CONTAINERS=$(find "$MODIFY_DIR" ! -path ".git" -type f -print0 | xargs -0 grep -l -I "$SYMBOL")
     for CONTAINER in $CONTAINERS
     do
         echo "    $CONTAINER"
@@ -628,13 +628,14 @@ replaceMatch "\basQDeclarativeContextPrivate\b" "asQQmlContextPrivate"
 
 # Replace any references to the 'declarative' module with 'qml'
 echo "Replacing module declarative with qml:"
-CONTAINERS=$(find "$MODIFY_DIR" \( -name \*\.pro -o -name \*\.pri \) | xargs grep -l -I "\bdeclarative\b")
+CONTAINERS=$(find "$MODIFY_DIR" \( -name \*\.pro -o -name \*\.pri \) -print0 | xargs -0 grep -l -I "\bdeclarative\b")
 for CONTAINER in $CONTAINERS
 do
     echo "    $CONTAINER"
     TMP_FILE="$CONTAINER.tmp"
 
-    sed 's|\bdeclarative\b|qml|g' <"$CONTAINER" >"$TMP_FILE"
+    # We only want to replace standalone 'declarative' and 'declarative-private' tokens
+    sed 's|\([[:space:]]\+\)declarative\([[:space:]]\+\)|\1qml\2|g' <"$CONTAINER" | sed 's|\([[:space:]]\+\)declarative$|\1qml|g' | sed 's|\([[:space:]]\+\)declarative-private\([[:space:]]\+\)|\1qml-private\2|g' | sed 's|\([[:space:]]\+\)declarative-private$|\1qml-private|g' >"$TMP_FILE"
     mv "$TMP_FILE" "$CONTAINER"
 done
 echo
