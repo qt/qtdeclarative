@@ -1105,10 +1105,8 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
     // Search order is applicationDirPath(), $QML_IMPORT_PATH, QLibraryInfo::ImportsPath
 
-#ifndef QT_NO_SETTINGS
     QString installImportsPath =  QLibraryInfo::location(QLibraryInfo::ImportsPath);
     addImportPath(installImportsPath);
-#endif // QT_NO_SETTINGS
 
     // env import paths
     QByteArray envImportPath = qgetenv("QML_IMPORT_PATH");

@@ -56,7 +56,7 @@ QSGContextPlugin::~QSGContextPlugin()
 {
 }
 
-#if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
+#ifndef QT_NO_LIBRARY
 Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
     (QSGContextFactoryInterface_iid, QLatin1String("/scenegraph")))
 #endif
@@ -97,7 +97,7 @@ QSGAdaptionPluginData *contextFactory()
         if (device.isEmpty())
             device = QString::fromLocal8Bit(qgetenv("QMLSCENE_DEVICE"));
 
-#if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
+#ifndef QT_NO_LIBRARY
         if (!device.isEmpty()) {
             const int index = loader()->indexOf(device);
             if (index != -1)
@@ -113,7 +113,7 @@ QSGAdaptionPluginData *contextFactory()
 #endif
         }
 
-#endif // QT_NO_LIBRARY || QT_NO_SETTINGS
+#endif // QT_NO_LIBRARY
     }
     return plugin;
 }
