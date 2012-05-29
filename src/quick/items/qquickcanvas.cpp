@@ -1124,6 +1124,7 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
         if (item->contains(p)) {
             QMouseEvent me(event->type(), p, event->windowPos(), event->screenPos(),
                            event->button(), event->buttons(), event->modifiers());
+            me.setTimestamp(event->timestamp());
             me.accept();
             item->grabMouse();
             q->sendEvent(item, &me);

@@ -384,6 +384,10 @@ void tst_qquickflickable::wheel()
 
 void tst_qquickflickable::movingAndDragging()
 {
+#ifdef Q_OS_MAC
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
+#endif
+
     QQuickView *canvas = new QQuickView;
     canvas->setSource(testFileUrl("flickable03.qml"));
     canvas->show();
@@ -449,9 +453,9 @@ void tst_qquickflickable::movingAndDragging()
     // underlying drivers will hopefully provide a pre-calculated velocity
     // (based on more data than what the UI gets), thus making this use case
     // working even with small movements.
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 10));
-    QTest::mouseMove(canvas, QPoint(50, 300), 10);
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 100), 10);
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 300));
+    QTest::mouseMove(canvas, QPoint(50, 10), 10);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 10), 10);
 
     QCOMPARE(vFlickSpy.count(), 1);
 
@@ -503,10 +507,6 @@ void tst_qquickflickable::movingAndDragging()
     QCOMPARE(dragStartSpy.count(), 1);
     QCOMPARE(dragEndSpy.count(), 1);
     // Don't test moving because a flick could occur
-
-#ifdef Q_OS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
-#endif
 
     QTRY_VERIFY(!flickable->isMoving());
     // Stop on a full pixel after user interaction
