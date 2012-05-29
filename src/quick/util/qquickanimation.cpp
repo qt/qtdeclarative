@@ -89,6 +89,8 @@ QQuickAbstractAnimation::QQuickAbstractAnimation(QObject *parent)
 QQuickAbstractAnimation::~QQuickAbstractAnimation()
 {
     Q_D(QQuickAbstractAnimation);
+    if (d->group)
+        setGroup(0);    //remove from group
     delete d->animationInstance;
 }
 
@@ -431,15 +433,12 @@ void QQuickAbstractAnimation::setGroup(QQuickAnimationGroup *g)
     if (d->group == g)
         return;
     if (d->group)
-        static_cast<QQuickAnimationGroupPrivate *>(d->group->d_func())->animations.removeAll(this);
+        d->group->d_func()->animations.removeAll(this);
 
     d->group = g;
 
-    if (d->group && !static_cast<QQuickAnimationGroupPrivate *>(d->group->d_func())->animations.contains(this))
-        static_cast<QQuickAnimationGroupPrivate *>(d->group->d_func())->animations.append(this);
-
-    //if (g) //if removed from a group, then the group should no longer be the parent
-        setParent(g);
+    if (d->group && !d->group->d_func()->animations.contains(this))
+        d->group->d_func()->animations.append(this);
 }
 
 /*!
@@ -1620,6 +1619,10 @@ void QQuickAnimationGroupPrivate::clear_animation(QQmlListProperty<QQuickAbstrac
 
 QQuickAnimationGroup::~QQuickAnimationGroup()
 {
+    Q_D(QQuickAnimationGroup);
+    for (int i = 0; i < d->animations.count(); ++i)
+        d->animations.at(i)->d_func()->group = 0;
+    d->animations.clear();
 }
 
 QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()

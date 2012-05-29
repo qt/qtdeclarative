@@ -139,6 +139,7 @@ private:
     void notifyRunningChanged(bool running);
     friend class QQuickBehavior;
     friend class QQuickBehaviorPrivate;
+    friend class QQuickAnimationGroup;
 };
 
 class QQuickPauseAnimationPrivate;
