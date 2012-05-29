@@ -689,8 +689,9 @@ int QQuickPathView::currentIndex() const
 void QQuickPathView::setCurrentIndex(int idx)
 {
     Q_D(QQuickPathView);
-    if (d->model && d->modelCount)
-        idx = qAbs(idx % d->modelCount);
+    idx = d->modelCount
+        ? ((idx % d->modelCount) + d->modelCount) % d->modelCount
+        : 0;
     if (d->model && (idx != d->currentIndex || !d->currentItem)) {
         if (d->currentItem) {
             if (QQuickPathViewAttached *att = d->attached(d->currentItem))
@@ -746,13 +747,8 @@ void QQuickPathView::incrementCurrentIndex()
 void QQuickPathView::decrementCurrentIndex()
 {
     Q_D(QQuickPathView);
-    if (d->model && d->modelCount) {
-        int idx = currentIndex()-1;
-        if (idx < 0)
-            idx = d->modelCount - 1;
-        d->moveDirection = QQuickPathViewPrivate::Negative;
-        setCurrentIndex(idx);
-    }
+    d->moveDirection = QQuickPathViewPrivate::Negative;
+    setCurrentIndex(currentIndex()-1);
 }
 
 /*!
@@ -1733,7 +1729,6 @@ void QQuickPathView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
             currentChanged = true;
         } else if (moveId == -1 && d->currentIndex >= r.index && d->currentIndex < r.index + r.count) {
             // current item has been removed.
-            d->currentIndex = qMin(r.index, d->modelCount - r.count - 1);
             if (r.isMove()) {
                 moveId = r.moveId;
                 moveOffset = d->currentIndex - r.index;
@@ -1743,6 +1738,7 @@ void QQuickPathView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
                 d->releaseItem(d->currentItem);
                 d->currentItem = 0;
             }
+            d->currentIndex = qMin(r.index, d->modelCount - r.count - 1);
             currentChanged = true;
         }
 
@@ -1776,6 +1772,8 @@ void QQuickPathView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
     d->offset = qmlMod(d->offset, d->modelCount);
     if (d->offset < 0)
         d->offset += d->modelCount;
+    if (d->currentIndex == -1)
+        d->currentIndex = d->calcCurrentIndex();
 
     d->itemCache += d->items;
     d->items.clear();
@@ -1832,7 +1830,7 @@ void QQuickPathView::movementEnding()
 // find the item closest to the snap position
 int QQuickPathViewPrivate::calcCurrentIndex()
 {
-    int current = -1;
+    int current = 0;
     if (modelCount && model && items.count()) {
         offset = qmlMod(offset, modelCount);
         if (offset < 0)
