@@ -368,10 +368,10 @@ void QSequentialAnimationGroupJob::animationRemoved(QAbstractAnimationJob *anim,
 
     // duration of the previous animations up to the current animation
     m_currentTime = 0;
-    for (QAbstractAnimationJob *anim = firstChild(); anim; anim = anim->nextSibling()) {
-        if (anim == m_currentAnimation)
+    for (QAbstractAnimationJob *job = firstChild(); job; job = job->nextSibling()) {
+        if (job == m_currentAnimation)
             break;
-        m_currentTime += animationActualTotalDuration(anim);
+        m_currentTime += animationActualTotalDuration(job);
 
     }
 
