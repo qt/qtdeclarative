@@ -75,6 +75,8 @@ class QSGTexture;
 class QQuickContext2D : public QQuickCanvasContext
 {
 public:
+    Q_DISABLE_COPY(QQuickContext2D)
+
     enum TextBaseLineType { Alphabetic=0, Top, Middle, Bottom, Hanging};
     enum TextAlignType { Start=0, End, Left, Right, Center};
     enum PaintCommand {
