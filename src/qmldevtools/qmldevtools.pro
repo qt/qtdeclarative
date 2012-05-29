@@ -2,7 +2,7 @@ load(qt_build_config)
 
 TARGET     = QtQmlDevTools
 QT         = core
-CONFIG += staticlib
+CONFIG += static
 
 load(qt_module_config)
 
