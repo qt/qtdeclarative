@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>data/SubDir.qml</file>
+    <file alias="main.qml">data/main.qml</file>
+    <file alias="SameDir.qml">data/SameDir.qml</file>
+</qresource>
+</RCC>
