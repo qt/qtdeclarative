@@ -213,7 +213,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
     struct QQuickParentAnimationData : public QAbstractAnimationAction
     {
-        QQuickParentAnimationData() {}
+        QQuickParentAnimationData() : reverse(false) {}
         ~QQuickParentAnimationData() { qDeleteAll(pc); }
 
         QQuickStateActions actions;
