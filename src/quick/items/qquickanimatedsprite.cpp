@@ -526,18 +526,19 @@ QSGGeometryNode* QQuickAnimatedSprite::buildNode()
 
     AnimatedSpriteVertices *p = (AnimatedSpriteVertices *) g->vertexData();
 
-    p->v1.tx = 0;
-    p->v1.ty = 0;
+    QRectF texRect = m_material->texture->normalizedTextureSubRect();
 
-    p->v2.tx = 1.0;
-    p->v2.ty = 0;
+    p->v1.tx = texRect.topLeft().x();
+    p->v1.ty = texRect.topLeft().y();
 
-    p->v3.tx = 0;
-    p->v3.ty = 1.0;
+    p->v2.tx = texRect.topRight().x();
+    p->v2.ty = texRect.topRight().y();
 
-    p->v4.tx = 1.0;
-    p->v4.ty = 1.0;
+    p->v3.tx = texRect.bottomLeft().x();
+    p->v3.ty = texRect.bottomLeft().y();
 
+    p->v4.tx = texRect.bottomRight().x();
+    p->v4.ty = texRect.bottomRight().y();
 
     quint16 *indices = g->indexDataAsUShort();
     indices[0] = 0;
