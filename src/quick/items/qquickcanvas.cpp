@@ -2355,10 +2355,21 @@ bool QQuickCanvas::clearBeforeRendering() const
     The caller of the function is responsible for deleting the returned texture.
     The actual GL texture will be deleted when the texture object is deleted.
 
+    Depending on the underlying implementation of the scene graph, the returned
+    texture may be part of an atlas. For code to be portable across implementations
+    one should always use the texture coordinates returned from
+    QSGTexture::normalizedTextureSubRect() when building geometry.
+
     \warning This function will return 0 if the scene graph has not yet been
     initialized.
 
-    This function can be called both from the GUI thread and the rendering thread.
+    \warning The returned texture is not memory managed by the scene graph and
+    must be explicitely deleted by the caller on the rendering thread.
+    This is acheived by deleting the texture from a QSGNode destructor
+    or by using deleteLater() in the case where the texture already has affinity
+    to the rendering thread.
+
+    This function can be called from any thread.
 
     \sa sceneGraphInitialized()
  */
