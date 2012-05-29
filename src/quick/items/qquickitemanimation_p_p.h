@@ -89,7 +89,7 @@ public:
 class QQuickPathAnimationUpdater : public QQuickBulkValueUpdater
 {
 public:
-    QQuickPathAnimationUpdater() : path(0), target(0), reverse(false),
+    QQuickPathAnimationUpdater() : path(0), pathLength(0), target(0), reverse(false),
         fromSourced(false), fromDefined(false), toDefined(false),
         toX(0), toY(0), currentV(0), orientation(QQuickPathAnimation::Fixed),
         entryInterval(0), exitInterval(0) {}
