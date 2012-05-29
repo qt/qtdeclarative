@@ -1,4 +1,5 @@
 CONFIG += testcase
+testcase.timeout = 400 # this test is slow
 TARGET = tst_examples
 macx:CONFIG -= app_bundle
 
