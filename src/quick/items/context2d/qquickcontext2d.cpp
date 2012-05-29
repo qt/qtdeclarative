@@ -1980,19 +1980,16 @@ static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
 static v8::Handle<v8::Value> ctx2d_drawFocusRing(const v8::Arguments &args)
 {
     V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::drawFocusRing is not supported");
-    return args.This();
 }
 
 static v8::Handle<v8::Value> ctx2d_setCaretSelectionRect(const v8::Arguments &args)
 {
     V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::setCaretSelectionRect is not supported");
-    return args.This();
 }
 
 static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
 {
     V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::caretBlinkRate is not supported");
-    return args.This();
 }
 // text
 /*!
