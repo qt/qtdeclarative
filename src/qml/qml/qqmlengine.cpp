@@ -1647,31 +1647,6 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
 }
 
 /*!
-  Imports the plugin named \a filePath with the \a uri provided.
-  Returns true if the plugin was successfully imported; otherwise returns false.
-
-  On failure and if non-null, *\a errorString will be set to a message describing the failure.
-
-  The plugin has to be a Qt plugin which implements the QQmlExtensionPlugin interface.
-*/
-bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QString *errorString)
-{
-    Q_D(QQmlEngine);
-    QList<QQmlError> errors;
-    bool retn = d->importDatabase.importPlugin(filePath, uri, &errors);
-    if (!errors.isEmpty()) {
-        QString builtError;
-        for (int i = 0; i < errors.size(); ++i) {
-            builtError = QString(QLatin1String("%1\n        %2"))
-                    .arg(builtError)
-                    .arg(errors.at(i).toString());
-        }
-        *errorString = builtError;
-    }
-    return retn;
-}
-
-/*!
   \property QQmlEngine::offlineStoragePath
   \brief the directory for storing offline user data
 

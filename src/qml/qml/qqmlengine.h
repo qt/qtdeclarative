@@ -114,7 +114,6 @@ public:
 
     bool addNamedBundle(const QString &name, const QString &fileName);
 
-    bool importPlugin(const QString &filePath, const QString &uri, QString *errorString); // XXX: Qt 5: Remove this function
     bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);
 
     void setNetworkAccessManagerFactory(QQmlNetworkAccessManagerFactory *);
