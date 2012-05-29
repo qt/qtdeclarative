@@ -232,7 +232,7 @@ class QV8Context2DResource : public QV8ObjectResource
 {
     V8_RESOURCE_TYPE(Context2DType)
 public:
-    QV8Context2DResource(QV8Engine *e) : QV8ObjectResource(e) {}
+    QV8Context2DResource(QV8Engine *e) : QV8ObjectResource(e), context(0) {}
     QQuickContext2D* context;
 };
 
