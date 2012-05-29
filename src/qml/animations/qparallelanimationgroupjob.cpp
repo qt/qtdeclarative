@@ -216,8 +216,8 @@ void QParallelAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimatio
         return;
 
     int maxDuration = 0;
-    for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling())
-        maxDuration = qMax(maxDuration, animation->totalDuration());
+    for (QAbstractAnimationJob *job = firstChild(); job; job = job->nextSibling())
+        maxDuration = qMax(maxDuration, job->totalDuration());
 
     if (m_currentTime >= maxDuration)
         stop();
