@@ -354,7 +354,7 @@ finishIncubate:
 
         if (0 == enginePriv->inProgressCreations) {
             while (enginePriv->erroredBindings) {
-                enginePriv->warning(enginePriv->erroredBindings->error);
+                enginePriv->warning(enginePriv->erroredBindings);
                 enginePriv->erroredBindings->removeError();
             }
         }
@@ -569,7 +569,7 @@ void QQmlIncubator::clear()
         enginePriv->inProgressCreations--;
         if (0 == enginePriv->inProgressCreations) {
             while (enginePriv->erroredBindings) {
-                enginePriv->warning(enginePriv->erroredBindings->error);
+                enginePriv->warning(enginePriv->erroredBindings);
                 enginePriv->erroredBindings->removeError();
             }
         }

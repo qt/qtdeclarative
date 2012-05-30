@@ -344,8 +344,10 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
     if (s->m_params) s->m_params->setValues(a);
     if (s->m_expression && s->m_expression->engine()) {
         s->m_expression->evaluate(s->m_params);
-        if (s->m_expression && s->m_expression->hasError())
-            QQmlEnginePrivate::warning(s->m_expression->engine(), s->m_expression->error());
+        if (s->m_expression && s->m_expression->hasError()) {
+            QQmlEngine *engine = s->m_expression->engine();
+            QQmlEnginePrivate::warning(engine, s->m_expression->error(engine));
+        }
     }
     if (s->m_params) s->m_params->clearValues();
 

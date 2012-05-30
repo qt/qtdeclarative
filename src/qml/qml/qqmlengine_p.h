@@ -252,8 +252,10 @@ public:
     void sendQuit();
     void warning(const QQmlError &);
     void warning(const QList<QQmlError> &);
+    void warning(QQmlDelayedError *);
     static void warning(QQmlEngine *, const QQmlError &);
     static void warning(QQmlEngine *, const QList<QQmlError> &);
+    static void warning(QQmlEngine *, QQmlDelayedError *);
     static void warning(QQmlEnginePrivate *, const QQmlError &);
     static void warning(QQmlEnginePrivate *, const QList<QQmlError> &);
 

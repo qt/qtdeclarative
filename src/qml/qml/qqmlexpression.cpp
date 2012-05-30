@@ -521,7 +521,7 @@ void QQmlExpression::clearError()
 QQmlError QQmlExpression::error() const
 {
     Q_D(const QQmlExpression);
-    return d->error();
+    return d->error(engine());
 }
 
 /*!

@@ -169,23 +169,20 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
                      &isUndefined);
 
         trace.event("writing V8 result");
-        bool needsErrorData = false;
+        bool needsErrorLocationData = false;
         if (!watcher.wasDeleted() && !destroyedFlag() && !hasError()) {
             typedef QQmlPropertyPrivate PP;
-            needsErrorData = !PP::writeBinding(*target, instruction->property, context, this, result,
+            needsErrorLocationData = !PP::writeBinding(*target, instruction->property, context, this, result,
                                                isUndefined, flags);
         }
 
         if (!watcher.wasDeleted() && !destroyedFlag()) {
 
-            if (needsErrorData) {
-                delayedError()->error.setUrl(parent->url());
-                delayedError()->error.setLine(instruction->line);
-                delayedError()->error.setColumn(-1);
-            }
+            if (needsErrorLocationData)
+                delayedError()->setErrorLocation(parent->url(), instruction->line, -1);
 
             if (hasError()) {
-                if (!delayedError()->addError(ep)) ep->warning(delayedError()->error);
+                if (!delayedError()->addError(ep)) ep->warning(this->error(context->engine));
             } else {
                 clearError();
             }

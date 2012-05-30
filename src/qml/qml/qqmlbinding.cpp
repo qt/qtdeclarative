@@ -238,23 +238,18 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
             trace.event("writing binding result");
 
-            bool needsErrorData = false;
+            bool needsErrorLocationData = false;
             if (!watcher.wasDeleted() && !hasError())
-                needsErrorData = !QQmlPropertyPrivate::writeBinding(*m_coreObject, m_core, context(),
+                needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(*m_coreObject, m_core, context(),
                                                                     this, result, isUndefined, flags);
 
             if (!watcher.wasDeleted()) {
                
-                if (needsErrorData) {
-                    QUrl url = QUrl(m_url);
-
-                    delayedError()->error.setUrl(url);
-                    delayedError()->error.setLine(m_lineNumber);
-                    delayedError()->error.setColumn(m_columnNumber);
-                }
+                if (needsErrorLocationData)
+                    delayedError()->setErrorLocation(QUrl(m_url), m_lineNumber, m_columnNumber);
 
                 if (hasError()) {
-                    if (!delayedError()->addError(ep)) ep->warning(this->error());
+                    if (!delayedError()->addError(ep)) ep->warning(this->error(context()->engine));
                 } else {
                     clearError();
                 }

@@ -884,7 +884,7 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
 
         if (0 == enginePriv->inProgressCreations) {
             while (enginePriv->erroredBindings) {
-                enginePriv->warning(enginePriv->erroredBindings->error);
+                enginePriv->warning(enginePriv->erroredBindings);
                 enginePriv->erroredBindings->removeError();
             }
         }

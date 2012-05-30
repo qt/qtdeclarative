@@ -61,6 +61,42 @@ bool QQmlDelayedError::addError(QQmlEnginePrivate *e)
     return true;
 }
 
+void QQmlDelayedError::setMessage(v8::Handle<v8::Message> message)
+{
+    qPersistentDispose(m_message);
+    m_message = qPersistentNew<v8::Message>(message);
+}
+
+void QQmlDelayedError::setErrorLocation(const QUrl &url, int line, int column)
+{
+    m_error.setUrl(url);
+    m_error.setLine(line);
+    m_error.setColumn(column);
+}
+
+void QQmlDelayedError::setErrorDescription(const QString &description)
+{
+    m_error.setDescription(description);
+}
+
+/*
+    Converting from a message to an error is relatively expensive.
+
+    We don't want to do this work for transient exceptions (exceptions
+    that occur during startup because of the order of binding
+    execution, but have gone away by the time startup has finished), so we
+    delay conversion until it is required for displaying the error.
+*/
+void QQmlDelayedError::convertMessageToError(QQmlEngine *engine) const
+{
+    if (!m_message.IsEmpty() && engine) {
+        v8::HandleScope handle_scope;
+        v8::Context::Scope context_scope(QQmlEnginePrivate::getV8Engine(engine)->context());
+        QQmlExpressionPrivate::exceptionToError(m_message, m_error);
+        qPersistentDispose(m_message);
+    }
+}
+
 QQmlJavaScriptExpression::QQmlJavaScriptExpression(VTable *v)
 : m_vtable(v)
 {
@@ -142,12 +178,12 @@ QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
             v8::Context::Scope scope(ep->v8engine()->context());
             v8::Local<v8::Message> message = try_catch.Message();
             if (!message.IsEmpty()) {
-                QQmlExpressionPrivate::exceptionToError(message, delayedError()->error);
+                delayedError()->setMessage(message);
             } else {
-                if (hasDelayedError()) delayedError()->error = QQmlError();
+                if (hasDelayedError()) delayedError()->clearError();
             }
         } else {
-            if (hasDelayedError()) delayedError()->error = QQmlError();
+            if (hasDelayedError()) delayedError()->clearError();
         }
     }
 
@@ -237,14 +273,14 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, 
 void QQmlJavaScriptExpression::clearError()
 {
     if (m_vtable.hasValue()) {
-        m_vtable.value().error = QQmlError();
+        m_vtable.value().clearError();
         m_vtable.value().removeError();
     }
 }
 
-QQmlError QQmlJavaScriptExpression::error() const
+QQmlError QQmlJavaScriptExpression::error(QQmlEngine *engine) const
 {
-    if (m_vtable.hasValue()) return m_vtable.constValue()->error;
+    if (m_vtable.hasValue()) return m_vtable.constValue()->error(engine);
     else return QQmlError();
 }
 

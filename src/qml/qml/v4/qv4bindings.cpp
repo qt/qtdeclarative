@@ -667,21 +667,18 @@ static void throwException(int id, QQmlDelayedError *error,
                            QV4Program *program, QQmlContextData *context,
                            const QString &description = QString())
 {
-    error->error.setUrl(context->url);
     if (description.isEmpty())
-        error->error.setDescription(QLatin1String("TypeError: Result of expression is not an object"));
+        error->setErrorDescription(QLatin1String("TypeError: Result of expression is not an object"));
     else
-        error->error.setDescription(description);
+        error->setErrorDescription(description);
     if (id != 0xFF) {
         quint64 e = *((quint64 *)(program->data() + program->exceptionDataOffset) + id); 
-        error->error.setLine((e >> 32) & 0xFFFFFFFF);
-        error->error.setColumn(e & 0xFFFFFFFF); 
+        error->setErrorLocation(context->url, (e >> 32) & 0xFFFFFFFF, e & 0xFFFFFFFF);
     } else {
-        error->error.setLine(-1);
-        error->error.setColumn(-1);
+        error->setErrorLocation(context->url, -1, -1);
     }
     if (!context->engine || !error->addError(QQmlEnginePrivate::get(context->engine)))
-        QQmlEnginePrivate::warning(context->engine, error->error);
+        QQmlEnginePrivate::warning(context->engine, error);
 }
 
 const double QV4Bindings::D32 = 4294967296.0;

@@ -1545,7 +1545,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
                 && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
             // we explicitly disallow this case to avoid confusion.  Users can still store one
             // in an array in a var property if they need to, but the common case is user error.
-            expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+            expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
 
@@ -1561,7 +1561,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
     } else if (type == qMetaTypeId<QJSValue>()) {
         if (!result.IsEmpty() && result->IsFunction()
                 && !result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty()) {
-            expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+            expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
         writeValueProperty(object, engine, core, QVariant::fromValue(v8engine->scriptValueFromInternal(result)), context, flags);
@@ -1571,13 +1571,13 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             errorStr += QLatin1String("[unknown property type]");
         else
             errorStr += QLatin1String(QMetaType::typeName(type));
-        expression->delayedError()->error.setDescription(errorStr);
+        expression->delayedError()->setErrorDescription(errorStr);
         return false;
     } else if (result->IsFunction()) {
         if (!result->ToObject()->GetHiddenValue(v8engine->bindingFlagKey()).IsEmpty())
-            expression->delayedError()->error.setDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+            expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
         else
-            expression->delayedError()->error.setDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));
+            expression->delayedError()->setErrorDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));
         return false;
     } else if (!writeValueProperty(object, engine, core, value, context, flags)) {
 
@@ -1606,10 +1606,10 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         if (!propertyType)
             propertyType = "[unknown property type]";
 
-        expression->delayedError()->error.setDescription(QLatin1String("Unable to assign ") +
-                                                         QLatin1String(valueType) +
-                                                         QLatin1String(" to ") +
-                                                         QLatin1String(propertyType));
+        expression->delayedError()->setErrorDescription(QLatin1String("Unable to assign ") +
+                                                        QLatin1String(valueType) +
+                                                        QLatin1String(" to ") +
+                                                        QLatin1String(propertyType));
         return false;
     }
 

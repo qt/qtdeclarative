@@ -65,9 +65,7 @@ class QQmlDelayedError
 {
 public:
     inline QQmlDelayedError() : nextError(0), prevError(0) {}
-    inline ~QQmlDelayedError() { removeError(); }
-
-    QQmlError error;
+    inline ~QQmlDelayedError() { qPersistentDispose(m_message); removeError(); }
 
     bool addError(QQmlEnginePrivate *);
 
@@ -79,7 +77,20 @@ public:
         prevError = 0;
     }
 
+    inline bool isValid() const { return !m_message.IsEmpty() || m_error.isValid(); }
+    inline const QQmlError &error(QQmlEngine *engine) const { convertMessageToError(engine); return m_error; }
+    inline void clearError() { qPersistentDispose(m_message); m_error = QQmlError(); }
+
+    void setMessage(v8::Handle<v8::Message> message);
+    void setErrorLocation(const QUrl &url, int line, int column);
+    void setErrorDescription(const QString &description);
+
 private:
+    void convertMessageToError(QQmlEngine *engine) const;
+
+    mutable QQmlError m_error;
+    mutable v8::Persistent<v8::Message> m_message;
+
     QQmlDelayedError  *nextError;
     QQmlDelayedError **prevError;
 };
@@ -128,7 +139,7 @@ public:
 
     inline bool hasError() const;
     inline bool hasDelayedError() const;
-    QQmlError error() const;
+    QQmlError error(QQmlEngine *) const;
     void clearError();
     QQmlDelayedError *delayedError();
 
@@ -242,7 +253,7 @@ void QQmlJavaScriptExpression::setScopeObject(QObject *v)
 
 bool QQmlJavaScriptExpression::hasError() const
 {
-    return m_vtable.hasValue() && m_vtable.constValue()->error.isValid();
+    return m_vtable.hasValue() && m_vtable.constValue()->isValid();
 }
 
 bool QQmlJavaScriptExpression::hasDelayedError() const
