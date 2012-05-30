@@ -53,7 +53,7 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
     IR::Module module;
     IR::Function *globalCode = 0;
 
-    const size_t codeSize = 10 * getpagesize();
+    const size_t codeSize = 30 * getpagesize();
     uchar *code = (uchar *) malloc(codeSize);
     assert(! (size_t(code) & 15));
 

@@ -490,7 +490,8 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
     locals = varCount ? new Value[varCount] : 0;
     hasUncaughtException = false;
     calledAsConstructor = false;
-    std::fill(locals, locals + varCount, Value::undefinedValue());
+    if (varCount)
+        std::fill(locals, locals + varCount, Value::undefinedValue());
 }
 
 void Context::leaveCallContext(FunctionObject *f, Value *returnValue)

@@ -180,6 +180,18 @@ void __qmljs_ne(Context *ctx, Value *result, const Value *left, const Value *rig
 void __qmljs_se(Context *ctx, Value *result, const Value *left, const Value *right);
 void __qmljs_sne(Context *ctx, Value *result, const Value *left, const Value *right);
 
+bool __qmljs_cmp_gt(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_lt(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_ge(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_le(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_eq(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_ne(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_se(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_sne(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_instanceof(Context *ctx, const Value *left, const Value *right);
+bool __qmljs_cmp_in(Context *ctx, const Value *left, const Value *right);
+
+
 } // extern "C"
 
 struct Value {
@@ -806,6 +818,76 @@ inline void __qmljs_sne(Context *ctx, Value *result, const Value *left, const Va
 {
     bool r = ! __qmljs_strict_equal(ctx, left, right);
     __qmljs_init_boolean(result, r);
+}
+
+inline bool __qmljs_cmp_gt(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_gt(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_lt(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_lt(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_ge(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_ge(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_le(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_le(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_eq(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_eq(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_ne(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_ne(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_se(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_se(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_sne(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_sne(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_instanceof(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_instanceof(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
+}
+
+inline bool __qmljs_cmp_in(Context *ctx, const Value *left, const Value *right)
+{
+    Value v;
+    __qmljs_in(ctx, &v, left, right);
+    return __qmljs_to_boolean(ctx, &v);
 }
 
 inline bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y)

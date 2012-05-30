@@ -41,9 +41,13 @@ struct String {
     String(const QString &text)
         : _text(text), _hashValue(0) {}
 
-    bool isEqualTo(const String *other) const {
-        if (other && hashValue() == other->hashValue())
-            return this == other || toQString() == other->toQString();
+    inline bool isEqualTo(const String *other) const {
+        if (other && hashValue() == other->hashValue()) {
+            if (this == other)
+                return true;
+            else
+                return toQString() == other->toQString();
+        }
         return false;
     }
 

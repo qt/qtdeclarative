@@ -414,7 +414,7 @@ void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
 
 void Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
-    if (! cond->asTemp()) {
+    if (! (cond->asTemp() || cond->asBinop())) {
         const unsigned t = _block->newTemp();
         _block->MOVE(_block->TEMP(t), cond);
         cond = _block->TEMP(t);
@@ -949,7 +949,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Lt:
     case QSOperator::StrictEqual:
     case QSOperator::StrictNotEqual:
-        if (false && _expr.accept(cx)) {
+        if (_expr.accept(cx)) {
             cjump(binop(IR::binaryOperator(ast->op), *left, *right), _expr.iftrue, _expr.iffalse);
         } else {
             IR::Expr *e = binop(IR::binaryOperator(ast->op), *left, *right);

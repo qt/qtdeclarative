@@ -4,6 +4,7 @@
 #include "qmljs_objects.h"
 
 #define TARGET_AMD64
+#define g_assert assert
 typedef quint64 guint64;
 typedef qint64 gint64;
 typedef uchar guint8;
@@ -467,7 +468,7 @@ void InstructionSelection::visitMove(IR::Move *s)
 
                 case IR::NumberType:
                     amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                    amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
+                    amd64_movsd_reg_regp(_codePtr, AMD64_XMM0, AMD64_RAX);
                     amd64_call_code(_codePtr, __qmljs_set_activation_property_number);
                     break;
 
@@ -534,9 +535,9 @@ void InstructionSelection::visitMove(IR::Move *s)
 
                 case IR::NumberType:
                     amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                    amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
+                    amd64_movsd_reg_regp(_codePtr, AMD64_XMM0, AMD64_RAX);
                     amd64_mov_membase_imm(_codePtr, AMD64_RSI, 0, NUMBER_TYPE, 4);
-                    amd64_movsd_membase_reg(_codePtr, AMD64_RSI, offsetof(Value, numberValue), X86_XMM0);
+                    amd64_movsd_membase_reg(_codePtr, AMD64_RSI, offsetof(Value, numberValue), AMD64_XMM0);
                     break;
 
                 default:
@@ -602,11 +603,11 @@ void InstructionSelection::visitMove(IR::Move *s)
                     loadTempAddress(AMD64_RDX, e);
                     void (*op)(Context *, Value *, const Value *) = 0;
                     switch (u->op) {
-                    case QQmlJS::IR::OpIfTrue: assert(!"unreachable"); break;
-                    case QQmlJS::IR::OpNot: op = __qmljs_not; break;
-                    case QQmlJS::IR::OpUMinus: op = __qmljs_uminus; break;
-                    case QQmlJS::IR::OpUPlus: op = __qmljs_uplus; break;
-                    case QQmlJS::IR::OpCompl: op = __qmljs_compl; break;
+                    case IR::OpIfTrue: assert(!"unreachable"); break;
+                    case IR::OpNot: op = __qmljs_not; break;
+                    case IR::OpUMinus: op = __qmljs_uminus; break;
+                    case IR::OpUPlus: op = __qmljs_uplus; break;
+                    case IR::OpCompl: op = __qmljs_compl; break;
                     default: assert(!"unreachable"); break;
                     } // switch
                     amd64_call_code(_codePtr, op);
@@ -633,30 +634,31 @@ void InstructionSelection::visitMove(IR::Move *s)
                         amd64_alu_membase_imm_size(_codePtr, X86_CMP, AMD64_RCX, 0, NUMBER_TYPE, 4);
                         label2 = _codePtr;
                         amd64_branch8(_codePtr, X86_CC_NE, 0, 0);
-                        amd64_movsd_reg_membase(_codePtr, X86_XMM0, AMD64_RDX, offsetof(Value, numberValue));
-                        amd64_movsd_reg_membase(_codePtr, X86_XMM1, AMD64_RCX, offsetof(Value, numberValue));
+                        amd64_movsd_reg_membase(_codePtr, AMD64_XMM0, AMD64_RDX, offsetof(Value, numberValue));
+                        amd64_movsd_reg_membase(_codePtr, AMD64_XMM1, AMD64_RCX, offsetof(Value, numberValue));
                         switch (b->op) {
                         case IR::OpAdd:
-                            amd64_sse_addsd_reg_reg(_codePtr, X86_XMM0, X86_XMM1);
+                            amd64_sse_addsd_reg_reg(_codePtr, AMD64_XMM0, AMD64_XMM1);
                             break;
                         case IR::OpSub:
-                            amd64_sse_subsd_reg_reg(_codePtr, X86_XMM0, X86_XMM1);
+                            amd64_sse_subsd_reg_reg(_codePtr, AMD64_XMM0, AMD64_XMM1);
                             break;
                         case IR::OpMul:
-                            amd64_sse_mulsd_reg_reg(_codePtr, X86_XMM0, X86_XMM1);
+                            amd64_sse_mulsd_reg_reg(_codePtr, AMD64_XMM0, AMD64_XMM1);
                             break;
                         case IR::OpDiv:
-                            amd64_sse_divsd_reg_reg(_codePtr, X86_XMM0, X86_XMM1);
+                            amd64_sse_divsd_reg_reg(_codePtr, AMD64_XMM0, AMD64_XMM1);
                             break;
                         default:
                             Q_UNREACHABLE();
                         } // switch
 
                         amd64_mov_membase_imm(_codePtr, AMD64_RSI, 0, NUMBER_TYPE, 4);
-                        amd64_movsd_membase_reg(_codePtr, AMD64_RSI, offsetof(Value, numberValue), X86_XMM0);
+                        amd64_movsd_membase_reg(_codePtr, AMD64_RSI, offsetof(Value, numberValue), AMD64_XMM0);
                         label3 = _codePtr;
                         amd64_jump32(_codePtr, 0);
                     }
+
 
                     if (label1 && label2) {
                         amd64_patch(label1, _codePtr);
@@ -666,43 +668,43 @@ void InstructionSelection::visitMove(IR::Move *s)
                     void (*op)(Context *, Value *, const Value *, const Value *) = 0;
 
                     switch ((IR::AluOp) b->op) {
-                    case QQmlJS::IR::OpInvalid:
-                    case QQmlJS::IR::OpIfTrue:
-                    case QQmlJS::IR::OpNot:
-                    case QQmlJS::IR::OpUMinus:
-                    case QQmlJS::IR::OpUPlus:
-                    case QQmlJS::IR::OpCompl:
+                    case IR::OpInvalid:
+                    case IR::OpIfTrue:
+                    case IR::OpNot:
+                    case IR::OpUMinus:
+                    case IR::OpUPlus:
+                    case IR::OpCompl:
                         assert(!"unreachable");
                         break;
 
-                    case QQmlJS::IR::OpBitAnd: op = __qmljs_bit_and; break;
-                    case QQmlJS::IR::OpBitOr: op = __qmljs_bit_or; break;
-                    case QQmlJS::IR::OpBitXor: op = __qmljs_bit_xor; break;
-                    case QQmlJS::IR::OpAdd: op = __qmljs_add; break;
-                    case QQmlJS::IR::OpSub: op = __qmljs_sub; break;
-                    case QQmlJS::IR::OpMul: op = __qmljs_mul; break;
-                    case QQmlJS::IR::OpDiv: op = __qmljs_div; break;
-                    case QQmlJS::IR::OpMod: op = __qmljs_mod; break;
-                    case QQmlJS::IR::OpLShift: op = __qmljs_shl; break;
-                    case QQmlJS::IR::OpRShift: op = __qmljs_shr; break;
-                    case QQmlJS::IR::OpURShift: op = __qmljs_ushr; break;
-                    case QQmlJS::IR::OpGt: op = __qmljs_gt; break;
-                    case QQmlJS::IR::OpLt: op = __qmljs_lt; break;
-                    case QQmlJS::IR::OpGe: op = __qmljs_ge; break;
-                    case QQmlJS::IR::OpLe: op = __qmljs_le; break;
-                    case QQmlJS::IR::OpEqual: op = __qmljs_eq; break;
-                    case QQmlJS::IR::OpNotEqual: op = __qmljs_ne; break;
-                    case QQmlJS::IR::OpStrictEqual: op = __qmljs_se; break;
-                    case QQmlJS::IR::OpStrictNotEqual: op = __qmljs_sne; break;
-                    case QQmlJS::IR::OpInstanceof: op = __qmljs_instanceof; break;
+                    case IR::OpBitAnd: op = __qmljs_bit_and; break;
+                    case IR::OpBitOr: op = __qmljs_bit_or; break;
+                    case IR::OpBitXor: op = __qmljs_bit_xor; break;
+                    case IR::OpAdd: op = __qmljs_add; break;
+                    case IR::OpSub: op = __qmljs_sub; break;
+                    case IR::OpMul: op = __qmljs_mul; break;
+                    case IR::OpDiv: op = __qmljs_div; break;
+                    case IR::OpMod: op = __qmljs_mod; break;
+                    case IR::OpLShift: op = __qmljs_shl; break;
+                    case IR::OpRShift: op = __qmljs_shr; break;
+                    case IR::OpURShift: op = __qmljs_ushr; break;
+                    case IR::OpGt: op = __qmljs_gt; break;
+                    case IR::OpLt: op = __qmljs_lt; break;
+                    case IR::OpGe: op = __qmljs_ge; break;
+                    case IR::OpLe: op = __qmljs_le; break;
+                    case IR::OpEqual: op = __qmljs_eq; break;
+                    case IR::OpNotEqual: op = __qmljs_ne; break;
+                    case IR::OpStrictEqual: op = __qmljs_se; break;
+                    case IR::OpStrictNotEqual: op = __qmljs_sne; break;
+                    case IR::OpInstanceof: op = __qmljs_instanceof; break;
 
-                    case QQmlJS::IR::OpIn:
+                    case IR::OpIn:
                         Q_UNIMPLEMENTED();
                         assert(!"TODO");
                         break;
 
-                    case QQmlJS::IR::OpAnd:
-                    case QQmlJS::IR::OpOr:
+                    case IR::OpAnd:
+                    case IR::OpOr:
                         assert(!"unreachable");
                         break;
                     }
@@ -730,7 +732,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     loadTempAddress(AMD64_RSI, base);
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
                     amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                    amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
+                    amd64_movsd_reg_regp(_codePtr, AMD64_XMM0, AMD64_RAX);
                     amd64_call_code(_codePtr, __qmljs_set_property_number);
                 } else if (IR::String *str = s->source->asString()) {
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
@@ -770,7 +772,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     loadTempAddress(AMD64_RSI, ss->base->asTemp());
                     loadTempAddress(AMD64_RDX, ss->index->asTemp());
                     amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                    amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
+                    amd64_movsd_reg_regp(_codePtr, AMD64_XMM0, AMD64_RAX);
                     amd64_call_code(_codePtr, __qmljs_set_element_number);
                 } else {
                     Q_UNIMPLEMENTED();
@@ -790,21 +792,21 @@ void InstructionSelection::visitMove(IR::Move *s)
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 loadTempAddress(AMD64_RSI, t);
                 amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                amd64_movsd_reg_regp(_codePtr, X86_XMM0, AMD64_RAX);
+                amd64_movsd_reg_regp(_codePtr, AMD64_XMM0, AMD64_RAX);
 
                 void (*op)(Context *, Value *, double);
                 switch (s->op) {
-                case QQmlJS::IR::OpBitAnd: op = __qmljs_inplace_bit_and; break;
-                case QQmlJS::IR::OpBitOr: op = __qmljs_inplace_bit_or; break;
-                case QQmlJS::IR::OpBitXor: op = __qmljs_inplace_bit_xor; break;
-                case QQmlJS::IR::OpAdd: op = __qmljs_inplace_add; break;
-                case QQmlJS::IR::OpSub: op = __qmljs_inplace_sub; break;
-                case QQmlJS::IR::OpMul: op = __qmljs_inplace_mul; break;
-                case QQmlJS::IR::OpDiv: op = __qmljs_inplace_div; break;
-                case QQmlJS::IR::OpMod: op = __qmljs_inplace_mod; break;
-                case QQmlJS::IR::OpLShift: op = __qmljs_inplace_shl; break;
-                case QQmlJS::IR::OpRShift: op = __qmljs_inplace_shr; break;
-                case QQmlJS::IR::OpURShift: op = __qmljs_inplace_ushr; break;
+                case IR::OpBitAnd: op = __qmljs_inplace_bit_and; break;
+                case IR::OpBitOr: op = __qmljs_inplace_bit_or; break;
+                case IR::OpBitXor: op = __qmljs_inplace_bit_xor; break;
+                case IR::OpAdd: op = __qmljs_inplace_add; break;
+                case IR::OpSub: op = __qmljs_inplace_sub; break;
+                case IR::OpMul: op = __qmljs_inplace_mul; break;
+                case IR::OpDiv: op = __qmljs_inplace_div; break;
+                case IR::OpMod: op = __qmljs_inplace_mod; break;
+                case IR::OpLShift: op = __qmljs_inplace_shl; break;
+                case IR::OpRShift: op = __qmljs_inplace_shr; break;
+                case IR::OpURShift: op = __qmljs_inplace_ushr; break;
                 default:
                     Q_UNREACHABLE();
                     break;
@@ -816,21 +818,20 @@ void InstructionSelection::visitMove(IR::Move *s)
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 loadTempAddress(AMD64_RSI, t);
                 amd64_mov_reg_reg(_codePtr, AMD64_RDX, AMD64_RSI, 8);
-                // loadTempAddress(AMD64_RDX, t);
                 loadTempAddress(AMD64_RCX, t2);
                 void (*op)(Context *, Value *, const Value *, const Value *);
                 switch (s->op) {
-                case QQmlJS::IR::OpBitAnd: op = __qmljs_bit_and; break;
-                case QQmlJS::IR::OpBitOr: op = __qmljs_bit_or; break;
-                case QQmlJS::IR::OpBitXor: op = __qmljs_bit_xor; break;
-                case QQmlJS::IR::OpAdd: op = __qmljs_add; break;
-                case QQmlJS::IR::OpSub: op = __qmljs_sub; break;
-                case QQmlJS::IR::OpMul: op = __qmljs_mul; break;
-                case QQmlJS::IR::OpDiv: op = __qmljs_div; break;
-                case QQmlJS::IR::OpMod: op = __qmljs_mod; break;
-                case QQmlJS::IR::OpLShift: op = __qmljs_shl; break;
-                case QQmlJS::IR::OpRShift: op = __qmljs_shr; break;
-                case QQmlJS::IR::OpURShift: op = __qmljs_ushr; break;
+                case IR::OpBitAnd: op = __qmljs_bit_and; break;
+                case IR::OpBitOr: op = __qmljs_bit_or; break;
+                case IR::OpBitXor: op = __qmljs_bit_xor; break;
+                case IR::OpAdd: op = __qmljs_add; break;
+                case IR::OpSub: op = __qmljs_sub; break;
+                case IR::OpMul: op = __qmljs_mul; break;
+                case IR::OpDiv: op = __qmljs_div; break;
+                case IR::OpMod: op = __qmljs_mod; break;
+                case IR::OpLShift: op = __qmljs_shl; break;
+                case IR::OpRShift: op = __qmljs_shr; break;
+                case IR::OpURShift: op = __qmljs_ushr; break;
                 default:
                     Q_UNREACHABLE();
                     break;
@@ -910,7 +911,48 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             amd64_jump32(_codePtr, 0);
         }
         return;
+    } else if (IR::Binop *b = s->cond->asBinop()) {
+        IR::Temp *l = b->left->asTemp();
+        IR::Temp *r = b->right->asTemp();
+        if (l && r) {
+            amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
+            loadTempAddress(AMD64_RSI, l);
+            loadTempAddress(AMD64_RDX, r);
+
+            // ### TODO: instruction selection for common cases (e.g. number1 < number2)
+
+            bool (*op)(Context *, const Value *, const Value *);
+            switch (b->op) {
+            default: Q_UNREACHABLE(); assert(!"todo"); break;
+            case IR::OpGt: op = __qmljs_cmp_gt; break;
+            case IR::OpLt: op = __qmljs_cmp_lt; break;
+            case IR::OpGe: op = __qmljs_cmp_ge; break;
+            case IR::OpLe: op = __qmljs_cmp_le; break;
+            case IR::OpEqual: op = __qmljs_cmp_eq; break;
+            case IR::OpNotEqual: op = __qmljs_cmp_ne; break;
+            case IR::OpStrictEqual: op = __qmljs_cmp_se; break;
+            case IR::OpStrictNotEqual: op = __qmljs_cmp_sne; break;
+            case IR::OpInstanceof: op = __qmljs_cmp_instanceof; break;
+            case IR::OpIn: op = __qmljs_cmp_in; break;
+            } // switch
+
+            amd64_call_code(_codePtr, op);
+            x86_alu_reg_imm(_codePtr, X86_CMP, X86_EAX, 0);
+
+            _patches[s->iftrue].append(_codePtr);
+            amd64_branch32(_codePtr, X86_CC_NZ, 0, 1);
+
+            if (_block->index + 1 != s->iffalse->index) {
+                _patches[s->iffalse].append(_codePtr);
+                amd64_jump32(_codePtr, 0);
+            }
+
+            return;
+        } else {
+            assert(!"wip");
+        }
     }
+
     Q_UNIMPLEMENTED();
     assert(!"TODO");
 }
