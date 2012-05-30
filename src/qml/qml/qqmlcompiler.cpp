@@ -3758,17 +3758,21 @@ QStringList QQmlCompiler::deferredProperties(QQmlScript::Object *obj)
     return rv;
 }
 
+QQmlPropertyCache *
+QQmlCompiler::propertyCacheForObject(QQmlScript::Object *object)
+ {
+     if (object->synthCache)
+        return object->synthCache;
+     else if (object->type != -1)
+        return output->types[object->type].createPropertyCache(engine);
+     else
+        return object->metatype;
+}
+
 QQmlPropertyData *
 QQmlCompiler::property(QQmlScript::Object *object, int index)
 {
-    QQmlPropertyCache *cache = 0;
-
-    if (object->synthCache)
-        cache = object->synthCache;
-    else if (object->type != -1)
-        cache = output->types[object->type].createPropertyCache(engine);
-    else
-        cache = object->metatype;
+    QQmlPropertyCache *cache = propertyCacheForObject(object);
 
     return cache->property(index);
 }
@@ -3778,14 +3782,7 @@ QQmlCompiler::property(QQmlScript::Object *object, const QHashedStringRef &name,
 {
     if (notInRevision) *notInRevision = false;
 
-    QQmlPropertyCache *cache = 0;
-
-    if (object->synthCache)
-        cache = object->synthCache;
-    else if (object->type != -1)
-        cache = output->types[object->type].createPropertyCache(engine);
-    else
-        cache = object->metatype;
+    QQmlPropertyCache *cache = propertyCacheForObject(object);
 
     QQmlPropertyData *d = cache->property(name);
 
@@ -3807,14 +3804,7 @@ QQmlCompiler::signal(QQmlScript::Object *object, const QHashedStringRef &name, b
 {
     if (notInRevision) *notInRevision = false;
 
-    QQmlPropertyCache *cache = 0;
-
-    if (object->synthCache)
-        cache = object->synthCache;
-    else if (object->type != -1)
-        cache = output->types[object->type].createPropertyCache(engine);
-    else
-        cache = object->metatype;
+    QQmlPropertyCache *cache = propertyCacheForObject(object);
 
 
     QQmlPropertyData *d = cache->property(name);

@@ -403,6 +403,7 @@ private:
 
     QStringList deferredProperties(QQmlScript::Object *);
 
+    QQmlPropertyCache *propertyCacheForObject(QQmlScript::Object *);
     QQmlPropertyData *property(QQmlScript::Object *, int);
     QQmlPropertyData *property(QQmlScript::Object *, const QHashedStringRef &,
                                        bool *notInRevision = 0);
