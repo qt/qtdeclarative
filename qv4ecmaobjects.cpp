@@ -113,7 +113,7 @@ static inline bool InLeapYear(double t)
     if (x == 365)
         return 0;
 
-    Q_ASSERT (x == 366);
+    assert(x == 366);
     return 1;
 }
 
@@ -1322,7 +1322,7 @@ void ArrayPrototype::method_splice(Context *ctx)
         for (size_t i = 2; i < ctx->argumentCount; ++i)
             items << ctx->argument(i);
         ArrayObject *otherInstance = a.asArrayObject();
-        Q_ASSERT(otherInstance);
+        assert(otherInstance);
         instance->value.splice(start, deleteCount, items, otherInstance->value);
         ctx->result = a;
     } else {

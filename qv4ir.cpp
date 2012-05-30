@@ -45,6 +45,7 @@
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>
 #include <math.h>
+#include <cassert>
 
 QT_BEGIN_NAMESPACE
 
@@ -598,7 +599,7 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
 
                 case OpInstanceof:
                 case OpIn:
-                    Q_ASSERT(!"unreachabe");
+                    assert(!"unreachabe");
                     break;
 
                 case OpIfTrue: // unary ops

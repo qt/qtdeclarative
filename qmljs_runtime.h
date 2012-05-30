@@ -364,7 +364,7 @@ inline bool __qmljs_to_boolean(Context *ctx, const Value *value)
     case OBJECT_TYPE:
         return true;
     }
-    Q_ASSERT(!"unreachable");
+    assert(!"unreachable");
     return false;
 }
 
@@ -908,7 +908,7 @@ inline bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y)
     case OBJECT_TYPE:
         return x->objectValue == y->objectValue;
     }
-    Q_ASSERT(!"unreachable");
+    assert(!"unreachable");
     return false;
 }
 
