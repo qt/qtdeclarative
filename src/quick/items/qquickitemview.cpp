@@ -1714,13 +1714,12 @@ void QQuickItemViewPrivate::regenerate()
 void QQuickItemViewPrivate::updateViewport()
 {
     Q_Q(QQuickItemView);
-    if (isValid()) {
-        qreal extra = headerSize() + footerSize();
-        if (layoutOrientation() == Qt::Vertical)
-            q->setContentHeight(endPosition() - startPosition() + extra);
-        else
-            q->setContentWidth(endPosition() - startPosition() + extra);
-    }
+    qreal extra = headerSize() + footerSize();
+    qreal contentSize = isValid() ? (endPosition() - startPosition()) : 0.0;
+    if (layoutOrientation() == Qt::Vertical)
+        q->setContentHeight(contentSize + extra);
+    else
+        q->setContentWidth(contentSize + extra);
 }
 
 void QQuickItemViewPrivate::layout()

@@ -1238,6 +1238,7 @@ void tst_QQuickGridView::clear()
     QVERIFY(gridview->currentItem() == 0);
     QVERIFY(gridview->contentY() == 0);
     QVERIFY(gridview->currentIndex() == -1);
+    QCOMPARE(gridview->contentHeight(), 0.0);
 
     // confirm sanity when adding an item to cleared list
     model.addItem("New", "1");
@@ -3146,6 +3147,10 @@ void tst_QQuickGridView::footer()
 
     // remove all items
     model.clear();
+    if (flow == QQuickGridView::FlowLeftToRight)
+        QTRY_COMPARE(gridview->contentHeight(), footer->height());
+    else
+        QTRY_COMPARE(gridview->contentWidth(), footer->width());
 
     QPointF posWhenNoItems(0, 0);
     if (layoutDirection == Qt::RightToLeft)
@@ -3360,6 +3365,10 @@ void tst_QQuickGridView::header()
     model.clear();
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
     QCOMPARE(header->pos(), initialHeaderPos); // header should stay where it is
+    if (flow == QQuickGridView::FlowLeftToRight)
+        QCOMPARE(gridview->contentHeight(), header->height());
+    else
+        QCOMPARE(gridview->contentWidth(), header->width());
 
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");

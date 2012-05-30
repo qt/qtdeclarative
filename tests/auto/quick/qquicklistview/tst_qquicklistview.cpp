@@ -1210,6 +1210,8 @@ void tst_QQuickListView::clear(const QUrl &source, QQuickItemView::VerticalLayou
         QTRY_COMPARE(listview->contentY(), -listview->height());
     QVERIFY(listview->currentIndex() == -1);
 
+    QCOMPARE(listview->contentHeight(), 0.0);
+
     // confirm sanity when adding an item to cleared list
     model.addItem("New", "1");
     QTRY_VERIFY(listview->count() == 1);
@@ -3343,6 +3345,10 @@ void tst_QQuickListView::header()
     model.clear();
     QTRY_COMPARE(listview->count(), model.count());
     QCOMPARE(header->pos(), initialHeaderPos); // header should stay where it is
+    if (orientation == QQuickListView::Vertical)
+        QCOMPARE(listview->contentHeight(), header->height());
+    else
+        QCOMPARE(listview->contentWidth(), header->width());
 
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
@@ -3559,6 +3565,10 @@ void tst_QQuickListView::footer()
 
     // remove all items
     model.clear();
+    if (orientation == QQuickListView::Vertical)
+        QTRY_COMPARE(listview->contentHeight(), footer->height());
+    else
+        QTRY_COMPARE(listview->contentWidth(), footer->width());
 
     QPointF posWhenNoItems(0, 0);
     if (orientation == QQuickListView::Horizontal && layoutDirection == Qt::RightToLeft)
