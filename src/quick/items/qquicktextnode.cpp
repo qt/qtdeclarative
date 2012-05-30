@@ -966,6 +966,7 @@ namespace {
         // font, selection state and clip node.
         typedef QPair<QFontEngine *, QPair<QSGClipNode *, QPair<QRgb, int> > > KeyType;
         QHash<KeyType, BinaryTreeNode *> map;
+        QList<BinaryTreeNode *> nodes;
         for (int i=0; i<m_processedNodes.size(); ++i) {
             BinaryTreeNode *node = m_processedNodes.data() + i;
 
@@ -999,6 +1000,7 @@ namespace {
 
                 } else {
                     map.insert(key, node);
+                    nodes.append(node);
                 }
             } else {
                 parentNode->addImage(node->boundingRect, node->image);
@@ -1011,10 +1013,7 @@ namespace {
         }
 
         // ...and add clip nodes and glyphs to tree.
-        QHash<KeyType, BinaryTreeNode *>::const_iterator it = map.constBegin();
-        while (it != map.constEnd()) {
-
-            BinaryTreeNode *node = it.value();
+        foreach (const BinaryTreeNode *node, nodes) {
 
             QSGClipNode *clipNode = node->clipNode;
             if (clipNode != 0 && clipNode->parent() == 0 )
@@ -1025,8 +1024,6 @@ namespace {
                     : node->color;
 
             parentNode->addGlyphs(node->position, node->glyphRun, color, style, styleColor, clipNode);
-
-            ++it;
         }
     }
 }
