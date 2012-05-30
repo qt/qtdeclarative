@@ -1602,7 +1602,7 @@ void tst_qquicktext::lineHeight()
 
     qreal h = myText->height();
     myText->setLineHeight(1.5);
-    QCOMPARE(myText->height(), qreal(qCeil(h * 1.5)));
+    QCOMPARE(myText->height(), qreal(qCeil(h)) * 1.5);
 
     myText->setLineHeightMode(QQuickText::FixedHeight);
     myText->setLineHeight(20);
