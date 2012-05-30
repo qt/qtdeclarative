@@ -69,6 +69,7 @@
 #include <qvariant.h>
 #include <qurl.h>
 #include <qstylehints.h>
+#include <qmetaobject.h>
 
 // ### these should come from QStyleHints
 const int textCursorWidth = 1;
@@ -321,8 +322,8 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
         doc->setUndoRedoEnabled(false);
 
     //Saving the index save some time.
-    static int contentsChangedIndex = QTextDocument::staticMetaObject.indexOfSignal("contentsChanged()");
-    static int textChangedIndex = QQuickTextControl::staticMetaObject.indexOfSignal("textChanged()");
+    static int contentsChangedIndex = QMetaMethod::fromSignal(&QTextDocument::contentsChanged).methodIndex();
+    static int textChangedIndex = QMetaMethod::fromSignal(&QQuickTextControl::textChanged).methodIndex();
     // avoid multiple textChanged() signals being emitted
     QMetaObject::disconnect(doc, contentsChangedIndex, q, textChangedIndex);
 

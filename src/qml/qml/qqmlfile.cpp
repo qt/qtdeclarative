@@ -43,6 +43,7 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qobject.h>
+#include <QtCore/qmetaobject.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
 
@@ -127,15 +128,14 @@ QQmlFileNetworkReply::QQmlFileNetworkReply(QQmlEngine *e, QQmlFilePrivate *p, co
 : m_engine(e), m_p(p), m_redirectCount(0), m_reply(0)
 {
     if (finishedIndex == -1) {
+        finishedIndex = QMetaMethod::fromSignal(&QQmlFileNetworkReply::finished).methodIndex();
+        downloadProgressIndex = QMetaMethod::fromSignal(&QQmlFileNetworkReply::downloadProgress).methodIndex();
         const QMetaObject *smo = &staticMetaObject;
-        finishedIndex = smo->indexOfSignal("finished()");
-        downloadProgressIndex = smo->indexOfSignal("downloadProgress(qint64,qint64)");
         networkFinishedIndex = smo->indexOfMethod("networkFinished()");
         networkDownloadProgressIndex = smo->indexOfMethod("networkDownloadProgress(qint64,qint64)");
 
-        const QMetaObject *rsmo = &QNetworkReply::staticMetaObject;
-        replyFinishedIndex = rsmo->indexOfSignal("finished()");
-        replyDownloadProgressIndex = rsmo->indexOfSignal("downloadProgress(qint64,qint64)");
+        replyFinishedIndex = QMetaMethod::fromSignal(&QNetworkReply::finished).methodIndex();
+        replyDownloadProgressIndex = QMetaMethod::fromSignal(&QNetworkReply::downloadProgress).methodIndex();
     }
     Q_ASSERT(finishedIndex != -1 && downloadProgressIndex != -1 &&
              networkFinishedIndex != -1 && networkDownloadProgressIndex != -1 &&

@@ -66,6 +66,7 @@
 #include <private/qobject_p.h>
 #include <QSslError>
 #include <QQmlFile>
+#include <QMetaMethod>
 
 #define IMAGEREQUEST_MAX_REQUEST_COUNT       8
 #define IMAGEREQUEST_MAX_REDIRECT_RECURSION 16
@@ -633,12 +634,10 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
 void QQuickPixmapReader::run()
 {
     if (replyDownloadProgress == -1) {
-        const QMetaObject *nr = &QNetworkReply::staticMetaObject;
-        const QMetaObject *pr = &QQuickPixmapReply::staticMetaObject;
+        replyDownloadProgress = QMetaMethod::fromSignal(&QNetworkReply::downloadProgress).methodIndex();
+        replyFinished = QMetaMethod::fromSignal(&QNetworkReply::finished).methodIndex();
+        downloadProgress = QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
         const QMetaObject *ir = &QQuickPixmapReaderThreadObject::staticMetaObject;
-        replyDownloadProgress = nr->indexOfSignal("downloadProgress(qint64,qint64)");
-        replyFinished = nr->indexOfSignal("finished()");
-        downloadProgress = pr->indexOfSignal("downloadProgress(qint64,qint64)");
         threadNetworkRequestDone = ir->indexOfSlot("networkRequestDone()");
     }
 
@@ -832,8 +831,8 @@ QQuickPixmapReply::QQuickPixmapReply(QQuickPixmapData *d)
 : data(d), engineForReader(0), requestSize(d->requestSize), url(d->url), loading(false), redirectCount(0)
 {
     if (finishedIndex == -1) {
-        finishedIndex = QQuickPixmapReply::staticMetaObject.indexOfSignal("finished()");
-        downloadProgressIndex = QQuickPixmapReply::staticMetaObject.indexOfSignal("downloadProgress(qint64,qint64)");
+        finishedIndex = QMetaMethod::fromSignal(&QQuickPixmapReply::finished).methodIndex();
+        downloadProgressIndex = QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
     }
 }
 

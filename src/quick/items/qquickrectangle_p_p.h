@@ -54,6 +54,7 @@
 //
 
 #include "qquickitem_p.h"
+#include <QtCore/qmetaobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -88,7 +89,7 @@ public:
             pen = new QQuickPen;
             static int penChangedSignalIdx = -1;
             if (penChangedSignalIdx < 0)
-                penChangedSignalIdx = QQuickPen::staticMetaObject.indexOfSignal("penChanged()");
+                penChangedSignalIdx = QMetaMethod::fromSignal(&QQuickPen::penChanged).methodIndex();
             if (doUpdateSlotIdx < 0)
                 doUpdateSlotIdx = QQuickRectangle::staticMetaObject.indexOfSlot("doUpdate()");
             QMetaObject::connect(pen, penChangedSignalIdx, q, doUpdateSlotIdx);

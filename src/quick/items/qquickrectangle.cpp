@@ -48,6 +48,7 @@
 #include <QtGui/qpixmapcache.h>
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qmath.h>
+#include <QtCore/qmetaobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -414,7 +415,7 @@ void QQuickRectangle::setGradient(QQuickGradient *gradient)
         return;
     static int updatedSignalIdx = -1;
     if (updatedSignalIdx < 0)
-        updatedSignalIdx = QQuickGradient::staticMetaObject.indexOfSignal("updated()");
+        updatedSignalIdx = QMetaMethod::fromSignal(&QQuickGradient::updated).methodIndex();
     if (d->doUpdateSlotIdx < 0)
         d->doUpdateSlotIdx = QQuickRectangle::staticMetaObject.indexOfSlot("doUpdate()");
     if (d->gradient)
