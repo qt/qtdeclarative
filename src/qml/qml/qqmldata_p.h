@@ -161,9 +161,14 @@ public:
 
     int bindingBitsSize;
     quint32 *bindingBits; 
-    bool hasBindingBit(int) const;
+
+    inline bool hasBindingBit(int) const;
     void clearBindingBit(int);
     void setBindingBit(QObject *obj, int);
+
+    inline bool hasPendingBindingBit(int) const;
+    void setPendingBindingBit(QObject *obj, int);
+    void clearPendingBindingBit(int);
 
     quint16 lineNumber;
     quint16 columnNumber;
@@ -201,9 +206,13 @@ public:
     static void markAsDeleted(QObject *);
     static void setQueuedForDeletion(QObject *);
 
+    static inline void flushPendingBinding(QObject *, int coreIndex);
+
 private:
     // For attachedProperties
     mutable QQmlDataExtended *extendedData;
+
+    void flushPendingBindingImpl(int coreIndex);
 };
 
 bool QQmlData::wasDeleted(QObject *object)
@@ -236,6 +245,31 @@ QQmlNotifierEndpoint *QQmlData::notify(int index)
     } else {
         return 0;
     }
+}
+
+bool QQmlData::hasBindingBit(int coreIndex) const
+{
+    int bit = coreIndex * 2;
+    if (bindingBitsSize > bit)
+        return bindingBits[bit / 32] & (1 << (bit % 32));
+    else
+        return false;
+}
+
+bool QQmlData::hasPendingBindingBit(int coreIndex) const
+{
+    int bit = coreIndex * 2 + 1;
+    if (bindingBitsSize > bit)
+        return bindingBits[bit / 32] & (1 << (bit % 32));
+    else
+        return false;
+}
+
+void QQmlData::flushPendingBinding(QObject *o, int coreIndex)
+{
+    QQmlData *data = QQmlData::get(o, false);
+    if (data && data->hasPendingBindingBit(coreIndex))
+        data->flushPendingBindingImpl(coreIndex);
 }
 
 QT_END_NAMESPACE

@@ -989,7 +989,6 @@ void tst_v4::debuggingDumpInstructions()
     QStringList expectedPreAddress;
     expectedPreAddress << "\t\tNoop";
     expectedPreAddress << "\t0:0:";
-    expectedPreAddress << "\t\tSubscribe\t\tObject_Reg(0) Notify_Signal(0) -> Subscribe_Slot(0)";
     expectedPreAddress << "\t\tSubscribeId\t\tId_Offset(0) -> Subscribe_Slot(0)";
     expectedPreAddress << "\t\tFetchAndSubscribe\tObject_Reg(0) Fast_Accessor(0x0) -> Output_Reg(0) Subscription_Slot(0)";
     expectedPreAddress << "\t\tLoadId\t\t\tId_Offset(0) -> Output_Reg(0)";

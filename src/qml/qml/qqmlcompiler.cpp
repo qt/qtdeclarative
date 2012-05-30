@@ -3578,6 +3578,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         store.context = js.bindingContext.stack;
         store.owner = js.bindingContext.owner;
         store.isAlias = prop->isAlias;
+        store.isSafe = js.isSafe;
         if (valueTypeProperty) {
             store.isRoot = (compileState->root == valueTypeProperty->parent);
         } else {
@@ -3699,7 +3700,9 @@ bool QQmlCompiler::completeComponentBuild()
         QQmlRewrite::RewriteBinding rewriteBinding;
         rewriteBinding.setName(QLatin1Char('$')+binding.property->name().toString());
         bool isSharable = false;
-        binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
+        bool isSafe = false;
+        binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable, &isSafe);
+        binding.isSafe = isSafe;
 
         if (isSharable && binding.property->type != qMetaTypeId<QQmlBinding*>()) {
             sharedBindings.append(b);

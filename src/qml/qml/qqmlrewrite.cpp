@@ -90,27 +90,112 @@ static void rewriteStringLiteral(AST::StringLiteral *ast, const QString *code, i
     }
 }
 
-bool SharedBindingTester::isSharable(const QString &code)
+SharedBindingTester::SharedBindingTester()
+: _sharable(false), _safe(false)
 {
+}
+
+void SharedBindingTester::parse(const QString &code)
+{
+    _sharable = _safe = false;
+
     Engine engine;
     Lexer lexer(&engine);
     Parser parser(&engine);
     lexer.setCode(code, 0);
     parser.parseStatement();
     if (!parser.statement()) 
-        return false;
+        return;
 
-    return isSharable(parser.statement());
+    return parse(parser.statement());
 }
 
-bool SharedBindingTester::isSharable(AST::Node *node)
+void SharedBindingTester::parse(AST::Node *node)
 {
     _sharable = true;
+    _safe = true;
+
     AST::Node::acceptChild(node, this);
-    return _sharable;
 }
 
-QString RewriteBinding::operator()(const QString &code, bool *ok, bool *sharable)
+bool SharedBindingTester::visit(AST::FunctionDeclaration *)
+{
+    _sharable = false;
+    return false;
+}
+
+bool SharedBindingTester::visit(AST::FunctionExpression *)
+{
+    _sharable = false;
+    return false;
+}
+
+bool SharedBindingTester::visit(AST::CallExpression *e)
+{
+    static const QString mathString = QStringLiteral("Math");
+
+    if (AST::IdentifierExpression *ie = AST::cast<AST::IdentifierExpression *>(e->base)) {
+        if (ie->name == mathString)
+            return true;
+    }
+
+    _safe = false;
+    return true;
+}
+
+bool SharedBindingTester::visit(AST::IdentifierExpression *e)
+{
+    static const QString evalString = QStringLiteral("eval");
+    if (e->name == evalString)
+        _sharable = false;
+
+    return false; // IdentifierExpression is a leaf node anyway
+}
+
+bool SharedBindingTester::visit(AST::PostDecrementExpression *)
+{
+    _safe = false;
+    return true;
+}
+
+bool SharedBindingTester::visit(AST::PostIncrementExpression *)
+{
+    _safe = false;
+    return true;
+}
+
+bool SharedBindingTester::visit(AST::PreDecrementExpression *)
+{
+    _safe = false;
+    return true;
+}
+
+bool SharedBindingTester::visit(AST::PreIncrementExpression *)
+{
+    _safe = false;
+    return true;
+}
+
+bool SharedBindingTester::visit(AST::BinaryExpression *e)
+{
+    if (e->op == QSOperator::InplaceAnd ||
+        e->op == QSOperator::Assign ||
+        e->op == QSOperator::InplaceSub ||
+        e->op == QSOperator::InplaceDiv ||
+        e->op == QSOperator::InplaceAdd ||
+        e->op == QSOperator::InplaceLeftShift ||
+        e->op == QSOperator::InplaceMod ||
+        e->op == QSOperator::InplaceMul ||
+        e->op == QSOperator::InplaceOr ||
+        e->op == QSOperator::InplaceRightShift ||
+        e->op == QSOperator::InplaceURightShift ||
+        e->op == QSOperator::InplaceXor)
+        _safe = false;
+
+    return true;
+}
+
+QString RewriteBinding::operator()(const QString &code, bool *ok, bool *sharable, bool *safe)
 {
     Engine engine;
     Lexer lexer(&engine);
@@ -122,22 +207,26 @@ QString RewriteBinding::operator()(const QString &code, bool *ok, bool *sharable
         return QString();
     } else {
         if (ok) *ok = true;
-        if (sharable) {
+        if (sharable || safe) {
             SharedBindingTester tester;
-            *sharable = tester.isSharable(parser.statement());
+            tester.parse(parser.statement());
+            if (sharable) *sharable = tester.isSharable();
+            if (safe) *safe = tester.isSafe();
         }
     }
     return rewrite(code, 0, parser.statement());
 }
 
-QString RewriteBinding::operator()(QQmlJS::AST::Node *node, const QString &code, bool *sharable)
+QString RewriteBinding::operator()(QQmlJS::AST::Node *node, const QString &code, bool *sharable, bool *safe)
 {
     if (!node)
         return code;
 
-    if (sharable) {
+    if (sharable || safe) {
         SharedBindingTester tester;
-        *sharable = tester.isSharable(node);
+        tester.parse(node);
+        if (sharable) *sharable = tester.isSharable();
+        if (safe) *safe = tester.isSafe();
     }
 
     QQmlJS::AST::ExpressionNode *expression = node->expressionCast();

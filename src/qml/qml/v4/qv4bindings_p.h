@@ -93,6 +93,8 @@ public:
 
         void disconnect();
 
+        void dump();
+
         struct Retarget {
             QObject *target;
             int targetProperty;

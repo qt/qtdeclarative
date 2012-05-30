@@ -627,6 +627,22 @@ void QQmlData::setQueuedForDeletion(QObject *object)
     }
 }
 
+void QQmlData::flushPendingBindingImpl(int coreIndex)
+{
+    clearPendingBindingBit(coreIndex);
+
+    // Find the binding
+    QQmlAbstractBinding *b = bindings;
+    while (b && *b->m_mePtr && b->propertyIndex() != coreIndex)
+        b = b->nextBinding();
+
+    if (b) {
+        b->m_mePtr = 0;
+        b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
+                            QQmlPropertyPrivate::DontRemoveBinding);
+    }
+}
+
 void QQmlEnginePrivate::init()
 {
     Q_Q(QQmlEngine);
@@ -1456,40 +1472,52 @@ void QQmlData::parentChanged(QObject *object, QObject *parent)
     }
 }
 
-bool QQmlData::hasBindingBit(int bit) const
+static void QQmlData_setBit(QQmlData *data, QObject *obj, int bit)
 {
-    if (bindingBitsSize > bit)
-        return bindingBits[bit / 32] & (1 << (bit % 32));
-    else
-        return false;
-}
-
-void QQmlData::clearBindingBit(int bit)
-{
-    if (bindingBitsSize > bit)
-        bindingBits[bit / 32] &= ~(1 << (bit % 32));
-}
-
-void QQmlData::setBindingBit(QObject *obj, int bit)
-{
-    if (bindingBitsSize <= bit) {
+    if (data->bindingBitsSize <= bit) {
         int props = QQmlMetaObject(obj).propertyCount();
-        Q_ASSERT(bit < props);
+        Q_ASSERT(bit < 2 * props);
 
-        int arraySize = (props + 31) / 32;
-        int oldArraySize = bindingBitsSize / 32;
+        int arraySize = (2 * props + 31) / 32;
+        int oldArraySize = data->bindingBitsSize / 32;
 
-        bindingBits = (quint32 *)realloc(bindingBits,
-                                         arraySize * sizeof(quint32));
+        data->bindingBits = (quint32 *)realloc(data->bindingBits,
+                                               arraySize * sizeof(quint32));
 
-        memset(bindingBits + oldArraySize,
+        memset(data->bindingBits + oldArraySize,
                0x00,
                sizeof(quint32) * (arraySize - oldArraySize));
 
-        bindingBitsSize = arraySize * 32;
+        data->bindingBitsSize = arraySize * 32;
     }
 
-    bindingBits[bit / 32] |= (1 << (bit % 32));
+    data->bindingBits[bit / 32] |= (1 << (bit % 32));
+}
+
+static void QQmlData_clearBit(QQmlData *data, int bit)
+{
+    if (data->bindingBitsSize > bit)
+        data->bindingBits[bit / 32] &= ~(1 << (bit % 32));
+}
+
+void QQmlData::clearBindingBit(int coreIndex)
+{
+    QQmlData_clearBit(this, coreIndex * 2);
+}
+
+void QQmlData::setBindingBit(QObject *obj, int coreIndex)
+{
+    QQmlData_setBit(this, obj, coreIndex * 2);
+}
+
+void QQmlData::clearPendingBindingBit(int coreIndex)
+{
+    QQmlData_clearBit(this, coreIndex * 2 + 1);
+}
+
+void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
+{
+    QQmlData_setBit(this, obj, coreIndex * 2 + 1);
 }
 
 void QQmlEnginePrivate::sendQuit()

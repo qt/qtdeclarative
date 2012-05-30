@@ -407,19 +407,20 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
             fetch.property = *e->property;
             gen(fetch);
         } else {
-            if (blockNeedsSubscription(_subscribeName) && e->property->notifyIndex != -1) {
-                Instr::Subscribe sub;
-                sub.reg = currentReg;
-                sub.offset = subscriptionIndex(_subscribeName);
-                sub.index = e->property->notifyIndex;
-                gen(sub);
-            }
-
             Instr::Fetch fetch;
             fetch.reg = currentReg;
             fetch.index = e->property->coreIndex;
             fetch.exceptionId = exceptionId(e->line, e->column);
             fetch.valueType = regType;
+
+            if (blockNeedsSubscription(_subscribeName) && e->property->notifyIndex != -1) {
+                fetch.subOffset = subscriptionIndex(_subscribeName);
+                fetch.subIndex = e->property->notifyIndex;
+            } else {
+                fetch.subOffset = static_cast<quint16>(-1);
+                fetch.subIndex = static_cast<quint32>(-1);
+            }
+
             gen(fetch);
         }
 

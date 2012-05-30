@@ -534,6 +534,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     if (!result)
         return v8::Handle<v8::Value>();
 
+    QQmlData::flushPendingBinding(object, result->coreIndex);
+
     if (revisionMode == QV8QObjectWrapper::CheckRevision && result->hasRevision()) {
         QQmlData *ddata = QQmlData::get(object);
         if (ddata && ddata->propertyCache && !ddata->propertyCache->isAllowedInRevision(result))

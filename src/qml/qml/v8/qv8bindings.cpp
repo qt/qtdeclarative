@@ -131,12 +131,18 @@ void QV8Bindings::Binding::update(QQmlAbstractBinding *_This, QQmlPropertyPrivat
     This->update(flags);
 }
 
+void QV8Bindings::Binding::dump()
+{
+    qWarning() << parent->url() << instruction->line << instruction->column;
+}
+
 void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
 {
     if (!enabledFlag())
         return;
 
     QQmlContextData *context = parent->context();
+
     if (!context || !context->isValid())
         return;
 

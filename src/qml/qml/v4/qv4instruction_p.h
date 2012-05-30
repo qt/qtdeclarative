@@ -67,7 +67,6 @@ QT_BEGIN_NAMESPACE
 #define FOR_EACH_V4_INSTR(F) \
     F(Noop, common) \
     F(BindingId, id) \
-    F(Subscribe, subscribeop) \
     F(SubscribeId, subscribeop) \
     F(FetchAndSubscribe, fetchAndSubscribe) \
     F(LoadId, load) \
@@ -291,6 +290,8 @@ union Q_AUTOTEST_EXPORT V4Instr {
         quint8 exceptionId;
         quint8 valueType;
         quint32 index;
+        quint16 subOffset;
+        quint32 subIndex;
     };
 
     struct instr_copy {

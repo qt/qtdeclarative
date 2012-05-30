@@ -67,13 +67,25 @@ using namespace QQmlJS;
 class SharedBindingTester : protected AST::Visitor
 {
     bool _sharable;
+    bool _safe;
 public:
-    bool isSharable(const QString &code);
-    bool isSharable(AST::Node *Node);
+    SharedBindingTester();
+
+    bool isSharable() const { return _sharable; }
+    bool isSafe() const { return isSharable() && _safe; }
+
+    void parse(const QString &code);
+    void parse(AST::Node *Node);
     
-    inline virtual bool visit(AST::FunctionDeclaration *);
-    inline virtual bool visit(AST::FunctionExpression *);
-    inline virtual bool visit(AST::IdentifierExpression *);
+    virtual bool visit(AST::FunctionDeclaration *);
+    virtual bool visit(AST::FunctionExpression *);
+    virtual bool visit(AST::IdentifierExpression *);
+    virtual bool visit(AST::CallExpression *);
+    virtual bool visit(AST::PostDecrementExpression *);
+    virtual bool visit(AST::PostIncrementExpression *);
+    virtual bool visit(AST::PreDecrementExpression *);
+    virtual bool visit(AST::PreIncrementExpression *);
+    virtual bool visit(AST::BinaryExpression *);
 };
 
 class RewriteBinding: protected AST::Visitor
@@ -84,8 +96,8 @@ class RewriteBinding: protected AST::Visitor
     const QString *_code;
 
 public:
-    QString operator()(const QString &code, bool *ok = 0, bool *sharable = 0);
-    QString operator()(QQmlJS::AST::Node *node, const QString &code, bool *sharable = 0);
+    QString operator()(const QString &code, bool *ok = 0, bool *sharable = 0, bool *safe = 0);
+    QString operator()(QQmlJS::AST::Node *node, const QString &code, bool *sharable = 0, bool *safe = 0);
 
     //name of the function:  used for the debugger
     void setName(const QString &name) { _name = name; }
@@ -176,27 +188,6 @@ private:
     int _parameterCountForJS;
     QString _error;
 };
-
-bool SharedBindingTester::visit(AST::FunctionDeclaration *)
-{
-    _sharable = false;
-    return false;
-}
-
-bool SharedBindingTester::visit(AST::FunctionExpression *)
-{
-    _sharable = false;
-    return false;
-}
-
-bool SharedBindingTester::visit(AST::IdentifierExpression *e)
-{
-    static const QString evalString = QStringLiteral("eval");
-    if (e->name == evalString)
-        _sharable = false;
-
-    return false; // IdentifierExpression is a leaf node anyway
-}
 
 } // namespace QQmlRewrite
 

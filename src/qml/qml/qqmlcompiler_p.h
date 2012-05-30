@@ -195,7 +195,7 @@ namespace QQmlCompilerTypes {
     struct JSBindingReference : public QQmlPool::Class,
                                 public BindingReference
     {
-        JSBindingReference() : nextReference(0) {}
+        JSBindingReference() : isSafe(false), nextReference(0) {}
 
         QQmlScript::Variant expression;
         QQmlScript::Property *property;
@@ -203,6 +203,7 @@ namespace QQmlCompilerTypes {
 
         int compiledIndex:15;
         int sharedIndex:15;
+        bool isSafe:1;
 
         QString rewrittenExpression;
         BindingContext bindingContext;

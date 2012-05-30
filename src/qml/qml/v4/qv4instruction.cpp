@@ -96,9 +96,6 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::BindingId:
         INSTR_DUMP << i->id.line << ':' << i->id.column << ':';
         break;
-    case V4Instr::Subscribe:
-        INSTR_DUMP << '\t' << "Subscribe" << "\t\t" << "Object_Reg(" << i->subscribeop.reg << ") Notify_Signal(" << i->subscribeop.index << ") -> Subscribe_Slot(" << i->subscribeop.offset << ')';
-        break;
     case V4Instr::SubscribeId:
         INSTR_DUMP << '\t' << "SubscribeId" << "\t\t" << "Id_Offset(" << i->subscribeop.index << ") -> Subscribe_Slot(" << i->subscribeop.offset << ')';
         break;

@@ -448,6 +448,11 @@ void QV4Bindings::Binding::disconnect()
     }
 }
 
+void QV4Bindings::Binding::dump()
+{
+    qWarning() << parent->context()->url << instruction->line << instruction->column;
+}
+
 QV4Bindings::Subscription::Subscription()
     : m_bindings(0)
 {
@@ -884,23 +889,33 @@ inline quint32 QV4Bindings::toUint32(double n)
     MARK_REGISTER(reg); \
 }
 
-//TODO: avoid construction of name and name-based lookup
-#define INVALIDATION_CHECK(inv, obj, index) { \
-    if ((inv) != 0) { \
-        QQmlData *data = QQmlData::get((obj)); \
-        if (data && !data->propertyCache) { \
-            data->propertyCache = QQmlEnginePrivate::get(context->engine)->cache(object); \
-            if (data->propertyCache) data->propertyCache->addref(); \
-        } \
-        QQmlPropertyData *prop = (data && data->propertyCache) ? data->propertyCache->property((index)) : 0; \
-        if (prop && prop->isOverridden()) { \
-            int resolvedIndex = data->propertyCache->property(prop->name(obj), obj, context)->coreIndex; \
-            if ((int)index < resolvedIndex) { \
-                *(inv) = true; \
-                goto programExit; \
-            } \
-        } \
-    } \
+namespace {
+
+bool bindingInvalidated(bool *invalidated, QObject *obj, QQmlContextData *context, int index)
+{
+    if (invalidated != 0) {
+        if (QQmlData *data = QQmlData::get(obj, true)) {
+            if (!data->propertyCache) {
+                data->propertyCache = QQmlEnginePrivate::get(context->engine)->cache(obj);
+                if (data->propertyCache) data->propertyCache->addref();
+            }
+
+            if (QQmlPropertyData *prop = data->propertyCache ? data->propertyCache->property(index) : 0) {
+                if (prop->isOverridden()) {
+                    // TODO: avoid construction of name and name-based lookup
+                    int resolvedIndex = data->propertyCache->property(prop->name(obj), obj, context)->coreIndex;
+                    if (index < resolvedIndex) {
+                        *invalidated = true;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 }
 
 #ifdef QML_THREADED_INTERPRETER
@@ -978,15 +993,6 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         subscribeId(context, instr->subscribeop.index, instr->subscribeop.offset);
     QML_V4_END_INSTR(SubscribeId, subscribeop)
 
-    QML_V4_BEGIN_INSTR(Subscribe, subscribeop)
-    {
-        QObject *o = 0;
-        const Register &object = registers[instr->subscribeop.reg];
-        if (!object.isUndefined()) o = object.getQObject();
-        subscribe(o, instr->subscribeop.index, instr->subscribeop.offset, context->engine);
-    }
-    QML_V4_END_INSTR(Subscribe, subscribeop)
-
     QML_V4_BEGIN_INSTR(FetchAndSubscribe, fetchAndSubscribe)
     {
         Register &reg = registers[instr->fetchAndSubscribe.reg];
@@ -998,12 +1004,16 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (!object) {
             THROW_EXCEPTION(instr->fetchAndSubscribe.exceptionId);
         } else {
-            INVALIDATION_CHECK(invalidated, object, instr->fetchAndSubscribe.property.coreIndex);
+            if (bindingInvalidated(invalidated, object, context, instr->fetchAndSubscribe.property.coreIndex))
+                goto programExit;
 
             const Register::Type valueType = (Register::Type)instr->fetchAndSubscribe.valueType;
             reg.init(valueType);
             if (instr->fetchAndSubscribe.valueType >= FirstCleanupType)
                 MARK_REGISTER(instr->fetchAndSubscribe.reg);
+
+            QQmlData::flushPendingBinding(object, instr->fetchAndSubscribe.property.coreIndex);
+
             QQmlAccessors *accessors = instr->fetchAndSubscribe.property.accessors;
             accessors->read(object, instr->fetchAndSubscribe.property.accessorData,
                             reg.typeDataPtr());
@@ -2313,12 +2323,16 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (!object) {
             THROW_EXCEPTION(instr->fetch.exceptionId);
         } else {
-            INVALIDATION_CHECK(invalidated, object, instr->fetch.index);
+            if (bindingInvalidated(invalidated, object, context, instr->fetch.index))
+                goto programExit;
 
             const Register::Type valueType = (Register::Type)instr->fetch.valueType;
             reg.init(valueType);
             if (instr->fetch.valueType >= FirstCleanupType)
                 MARK_REGISTER(instr->fetch.reg);
+
+            QQmlData::flushPendingBinding(object, instr->fetch.index);
+
             void *argv[] = { reg.typeDataPtr(), 0 };
             QMetaObject::metacall(object, QMetaObject::ReadProperty, instr->fetch.index, argv);
             if (valueType == FloatType) {
@@ -2326,6 +2340,10 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                 const double v = reg.getfloat();
                 reg.setnumber(v);
             }
+
+            if (instr->fetch.subIndex != static_cast<quint32>(-1))
+                subscribe(object, instr->fetch.subIndex, instr->fetch.subOffset, context->engine);
+
         }
     }
     QML_V4_END_INSTR(Fetch, fetch)

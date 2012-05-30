@@ -610,7 +610,7 @@ void tst_qqmlecmascript::methods()
 void tst_qqmlecmascript::bindingLoop()
 {
     QQmlComponent component(&engine, testFileUrl("bindingLoop.qml"));
-    QString warning = component.url().toString() + ":5:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
+    QString warning = component.url().toString() + ":9:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     QObject *object = component.create();
     QVERIFY(object != 0);

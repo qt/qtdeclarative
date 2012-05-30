@@ -201,12 +201,12 @@ QObject *QQmlVME::execute(QList<QQmlError> *errors, const Interrupt &interrupt)
 
 inline bool fastHasBinding(QObject *o, int index) 
 {
-    QQmlData *ddata = static_cast<QQmlData *>(QObjectPrivate::get(o)->declarativeData);
+    if (QQmlData *ddata = static_cast<QQmlData *>(QObjectPrivate::get(o)->declarativeData)) {
+        int coreIndex = index & 0x0000FFFF;
+        return ddata->hasBindingBit(coreIndex);
+    }
 
-    index &= 0x0000FFFF; // To handle value types
-
-    return ddata && (ddata->bindingBitsSize > index) && 
-           (ddata->bindingBits[index / 32] & (1 << (index % 32)));
+    return false;
 }
 
 static void removeBindingOnProperty(QObject *o, int index)
@@ -867,6 +867,13 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 CLEAN_PROPERTY(target, instr.property);
 
                 binding->addToObject();
+
+                if (instr.propType == 0) {
+                    // All non-valuetype V4 bindings are safe bindings
+                    QQmlData *data = QQmlData::get(target);
+                    Q_ASSERT(data);
+                    data->setPendingBindingBit(target, propertyIdx);
+                }
             }
         QML_END_INSTR(StoreV4Binding)
 
@@ -876,7 +883,9 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *scope = 
                 objects.at(objects.count() - 1 - instr.context);
 
-            if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
+            int coreIndex = instr.property.coreIndex;
+
+            if (instr.isRoot && BINDINGSKIPLIST.testBit(coreIndex))
                 QML_NEXT_INSTR(StoreV8Binding);
 
             QQmlAbstractBinding *binding = CTXT->v8bindings->configBinding(target, scope,
@@ -887,8 +896,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
                 if (instr.isAlias) {
                     QQmlAbstractBinding *old =
-                        QQmlPropertyPrivate::setBindingNoEnable(target,
-                                                                instr.property.coreIndex,
+                        QQmlPropertyPrivate::setBindingNoEnable(target, coreIndex,
                                                                 instr.property.getValueTypeCoreIndex(),
                                                                 binding);
                     if (old) { old->destroy(); }
@@ -900,6 +908,12 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                     CLEAN_PROPERTY(target, QDPP::bindingIndex(instr.property));
 
                     binding->addToObject();
+
+                    if (instr.isSafe && !instr.property.isValueTypeVirtual()) {
+                        QQmlData *data = QQmlData::get(target);
+                        Q_ASSERT(data);
+                        data->setPendingBindingBit(target, coreIndex);
+                    }
                 }
             }
         QML_END_INSTR(StoreV8Binding)
@@ -1289,6 +1303,9 @@ QQmlContextData *QQmlVME::complete(const Interrupt &interrupt)
 
         if (b) {
             b->m_mePtr = 0;
+            QQmlData *data = QQmlData::get(b->object());
+            Q_ASSERT(data);
+            data->clearPendingBindingBit(b->propertyIndex());
             b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
                                 QQmlPropertyPrivate::DontRemoveBinding);
         }

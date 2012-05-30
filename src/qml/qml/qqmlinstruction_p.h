@@ -199,8 +199,8 @@ union QQmlInstruction
         int data;
         ushort column;
         ushort line; 
-        bool isRoot;
-        bool parentToSuper;
+        bool isRoot:1;
+        bool parentToSuper:1;
     };
     struct instr_createSimple {
         QML_INSTR_HEADER
@@ -244,8 +244,8 @@ union QQmlInstruction
         int fallbackValue;
         short context;
         short owner;
-        bool isRoot;
-        bool isAlias;
+        bool isRoot:1;
+        bool isAlias:1;
         ushort line;
         ushort column;
     };
@@ -255,9 +255,10 @@ union QQmlInstruction
         int value;
         short context;
         short owner;
-        bool isRoot;
-        bool isAlias;
-        bool isFallback;
+        bool isRoot:1;
+        bool isAlias:1;
+        bool isFallback:1;
+        bool isSafe:1;
         ushort line;
         ushort column;
     };
@@ -334,8 +335,8 @@ union QQmlInstruction
         ushort line;
         ushort column;
         double numberValue;
-        bool isStringLiteral;
-        bool isNumberLiteral;
+        bool isStringLiteral:1;
+        bool isNumberLiteral:1;
     }; 
     struct instr_storeScript {
         QML_INSTR_HEADER

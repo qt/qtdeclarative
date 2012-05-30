@@ -104,6 +104,8 @@ public:
         QObject *object() const;
         void update(QQmlPropertyPrivate::WriteFlags flags);
 
+        void dump();
+
         QV8Bindings *parent;
 
         struct Retarget {
