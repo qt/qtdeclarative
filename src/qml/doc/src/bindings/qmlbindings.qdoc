@@ -26,9 +26,9 @@
 ****************************************************************************/
 
 /*!
-\page qml-plugin.html
-\title QML Plugins and C++ Binding
-\brief Provides an engine for running QML code
+\page qml-ctypes-in-qml.html
+\title C++ in QML Applications
+\brief For employing C++ types and data in QML applications
 
 To add functionality that is beyond QML and modules, C++ types are registered to
 the runtime as plugins. For example, to add a full network manager into
