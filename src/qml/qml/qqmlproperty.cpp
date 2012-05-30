@@ -1875,34 +1875,6 @@ QMetaMethod QQmlPropertyPrivate::findSignalByName(const QMetaObject *mo, const Q
     return QMetaMethod();
 }
 
-static inline int QMetaObject_methods(const QMetaObject *metaObject)
-{
-    struct Private
-    {
-        int revision;
-        int className;
-        int classInfoCount, classInfoData;
-        int methodCount, methodData;
-        int propertyCount, propertyData;
-    };
-
-    return reinterpret_cast<const Private *>(metaObject->d.data)->methodCount;
-}
-
-static inline int QMetaObject_properties(const QMetaObject *metaObject)
-{
-    struct Private
-    {
-        int revision;
-        int className;
-        int classInfoCount, classInfoData;
-        int methodCount, methodData;
-        int propertyCount, propertyData;
-    };
-
-    return reinterpret_cast<const Private *>(metaObject->d.data)->propertyCount;
-}
-
 static inline void flush_vme_signal(const QObject *object, int index)
 {
     QQmlData *data = static_cast<QQmlData *>(QObjectPrivate::get(const_cast<QObject *>(object))->declarativeData);
