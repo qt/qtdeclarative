@@ -171,28 +171,28 @@ const char *typeName(IR::Type t);
 
 struct ExprVisitor {
     virtual ~ExprVisitor() {}
-    virtual void visitConst(Const *) {}
-    virtual void visitString(String *) {}
-    virtual void visitName(Name *) {}
-    virtual void visitTemp(Temp *) {}
-    virtual void visitClosure(Closure *) {}
-    virtual void visitUnop(Unop *) {}
-    virtual void visitBinop(Binop *) {}
-    virtual void visitCall(Call *) {}
-    virtual void visitNew(New *) {}
-    virtual void visitSubscript(Subscript *) {}
-    virtual void visitMember(Member *) {}
+    virtual void visitConst(Const *) = 0;
+    virtual void visitString(String *) = 0;
+    virtual void visitName(Name *) = 0;
+    virtual void visitTemp(Temp *) = 0;
+    virtual void visitClosure(Closure *) = 0;
+    virtual void visitUnop(Unop *) = 0;
+    virtual void visitBinop(Binop *) = 0;
+    virtual void visitCall(Call *) = 0;
+    virtual void visitNew(New *) = 0;
+    virtual void visitSubscript(Subscript *) = 0;
+    virtual void visitMember(Member *) = 0;
 };
 
 struct StmtVisitor {
     virtual ~StmtVisitor() {}
-    virtual void visitExp(Exp *) {}
-    virtual void visitEnter(Enter *) {}
-    virtual void visitLeave(Leave *) {}
-    virtual void visitMove(Move *) {}
-    virtual void visitJump(Jump *) {}
-    virtual void visitCJump(CJump *) {}
-    virtual void visitRet(Ret *) {}
+    virtual void visitExp(Exp *) = 0;
+    virtual void visitEnter(Enter *) = 0;
+    virtual void visitLeave(Leave *) = 0;
+    virtual void visitMove(Move *) = 0;
+    virtual void visitJump(Jump *) = 0;
+    virtual void visitCJump(CJump *) = 0;
+    virtual void visitRet(Ret *) = 0;
 };
 
 struct Expr {

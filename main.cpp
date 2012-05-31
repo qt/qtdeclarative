@@ -2,6 +2,7 @@
 #include "qmljs_objects.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_p.h"
+#include "qv4isel_x86_64_p.h"
 #include "qv4syntaxchecker_p.h"
 #include "qv4ecmaobjects_p.h"
 
