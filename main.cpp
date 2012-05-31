@@ -15,6 +15,10 @@
 #include <sys/mman.h>
 #include <iostream>
 
+#ifdef WITH_LLVM
+#  include "qv4isel_llvm_p.h"
+#endif
+
 static inline bool protect(const void *addr, size_t size)
 {
     size_t pageSize = sysconf(_SC_PAGESIZE);
@@ -82,6 +86,14 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
             foreach (IR::Function *function, module.functions) {
                 isel(function);
             }
+
+#ifdef WITH_LLVM
+            LLVMInstructionSelection llvmIsel(llvm::getGlobalContext());
+            if (llvm::Module *llvmModule = llvmIsel.getLLVMModule(&module)) {
+                llvmModule->dump();
+                delete llvmModule;
+            }
+#endif
         }
     }
 

@@ -16,7 +16,8 @@ SOURCES += main.cpp \
     qv4syntaxchecker.cpp \
     qv4ecmaobjects.cpp \
     qv4array.cpp \
-    qv4isel_x86_64.cpp
+    qv4isel_x86_64.cpp \
+    qv4isel_llvm.cpp
 
 HEADERS += \
     qv4codegen_p.h \
@@ -29,7 +30,25 @@ HEADERS += \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
     qv4array_p.h \
-    qv4isel_x86_64_p.h
+    qv4isel_x86_64_p.h \
+    qv4isel_llvm_p.h
 
 
+llvm {
 
+DEFINES += \
+    WITH_LLVM
+
+INCLUDEPATH += \
+    $$system(llvm-config --includedir)
+
+DEFINES += \
+    __STDC_CONSTANT_MACROS \
+    __STDC_FORMAT_MACROS \
+    __STDC_LIMIT_MACROS
+
+LIBS += \
+    $$system(llvm-config --ldflags) \
+    $$system(llvm-config --libs core)
+
+}
