@@ -114,30 +114,16 @@ QT_BEGIN_NAMESPACE
     non-rectangular area.
 */
 /*!
-    \qmlsignal QtQuick.Particles2::Affector::onAffected(x, y)
-
-    This signal is emitted each time the affector actually affects a particle.
-
-    x,y are the coordinates of the affected particle, relative to the ParticleSystem.
-
-*/
-
-/*!
-    \qmlsignal QtQuick.Particles2::Affector::affectParticle(particle particle, real dt)
-
-    This handler is called when particles are selected to be affected.
-
-    dt is the time since the last time it was affected. Use dt to normalize
-    trajectory manipulations to real time.
-
-    Note that JS is slower to execute, so it is not recommended to use this in
-    high-volume particle systems.
-*/
-/*!
     \qmlsignal QtQuick.Particles2::Affector::affected(real x, real y)
 
-    This handler is called when a particle is selected to be affected. It will
-    only be called if signal is set to true.
+    This handler is called when a particle is selected to be affected. It will not be called
+    if a particle is considered by the Affector but not actually altered in any way.
+
+    In the special case where an Affector has no possible effect (e.g. Affector {}), affected
+    will be emitted for all particles being considered if you connect to it. This allows you to
+    execute arbitrary code in response to particles (see \l affectParticles if you want to execute
+    code which affects the particles themselves) . As this executes JS scritps per particle, it is
+    not recommended to use this signal with a high-volume particle system.
 
     x,y is the particles current position.
 */

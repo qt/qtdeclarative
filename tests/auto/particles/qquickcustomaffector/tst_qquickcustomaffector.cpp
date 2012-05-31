@@ -56,6 +56,7 @@ private slots:
     void initTestCase();
     void test_basic();
     void test_move();
+    void test_affectedSignal();
 };
 
 void tst_qquickcustomaffector::initTestCase()
@@ -121,6 +122,19 @@ void tst_qquickcustomaffector::test_move()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
+    delete view;
+}
+
+void tst_qquickcustomaffector::test_affectedSignal()
+{
+    QQuickView* view = createView(testFileUrl("affectedSignal.qml"), 600);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
+
+    QCOMPARE(system->property("resultX1").toInt(), 0);
+    QCOMPARE(system->property("resultY1").toInt(), 100);
+    QCOMPARE(system->property("resultX2").toInt(), 1234);
+    QCOMPARE(system->property("resultY2").toInt(), 1234);
     delete view;
 }
 

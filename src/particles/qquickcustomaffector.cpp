@@ -108,7 +108,12 @@ bool QQuickCustomAffector::isAffectConnected()
 
 void QQuickCustomAffector::affectSystem(qreal dt)
 {
-    if (!isAffectConnected()) {
+    //Acts a bit differently, just emits affected for everyone it might affect, when the only thing is connecting to affected(x,y)
+    bool justAffected = (m_acceleration == &m_nullVector
+        && m_speed == &m_nullVector
+        && m_position == &m_nullVector
+        && isAffectedConnected());
+    if (!isAffectConnected() && !justAffected) {
         QQuickParticleAffector::affectSystem(dt);
         return;
     }
@@ -125,6 +130,15 @@ void QQuickCustomAffector::affectSystem(qreal dt)
 
     if (toAffect.isEmpty())
         return;
+
+    if (justAffected) {
+        foreach (QQuickParticleData* d, toAffect) {//Not postAffect to avoid saying the particle changed
+            if (m_onceOff)
+                m_onceOffed << qMakePair(d->group, d->index);
+            emit affected(d->curX(), d->curY());
+        }
+        return;
+    }
 
     if (m_onceOff)
         dt = 1.0;
@@ -167,24 +181,30 @@ bool QQuickCustomAffector::affectParticle(QQuickParticleData *d, qreal dt)
 
     if (m_acceleration != &m_nullVector){
         QPointF pos = m_acceleration->sample(curPos);
+        QPointF curAcc = QPointF(d->curAX(), d->curAY());
         if (m_relative) {
             pos *= dt;
-            pos += QPointF(d->curAX(), d->curAY());
+            pos += curAcc;
         }
-        d->setInstantaneousAX(pos.x());
-        d->setInstantaneousAY(pos.y());
-        changed = true;
+        if (pos != curAcc) {
+            d->setInstantaneousAX(pos.x());
+            d->setInstantaneousAY(pos.y());
+            changed = true;
+        }
     }
 
     if (m_speed != &m_nullVector){
         QPointF pos = m_speed->sample(curPos);
+        QPointF curVel = QPointF(d->curVX(), d->curVY());
         if (m_relative) {
             pos *= dt;
-            pos += QPointF(d->curVX(), d->curVY());
+            pos += curVel;
         }
-        d->setInstantaneousVX(pos.x());
-        d->setInstantaneousVY(pos.y());
-        changed = true;
+        if (pos != curVel) {
+            d->setInstantaneousVX(pos.x());
+            d->setInstantaneousVY(pos.y());
+            changed = true;
+        }
     }
 
     if (m_position != &m_nullVector){
@@ -193,9 +213,11 @@ bool QQuickCustomAffector::affectParticle(QQuickParticleData *d, qreal dt)
             pos *= dt;
             pos += curPos;
         }
-        d->setInstantaneousX(pos.x());
-        d->setInstantaneousY(pos.y());
-        changed = true;
+        if (pos != curPos) {
+            d->setInstantaneousX(pos.x());
+            d->setInstantaneousY(pos.y());
+            changed = true;
+        }
     }
 
     return changed;
