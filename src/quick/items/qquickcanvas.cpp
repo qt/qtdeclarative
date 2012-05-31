@@ -814,7 +814,7 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
     QSGNode::preprocess() function invoked.
 
     \li The QQuickCanvas is cleared according to what is specified
-    using QQuickCanvas::setClearBeforeRenderig() and
+    using QQuickCanvas::setClearBeforeRendering() and
     QQuickCanvas::setClearColor().
 
     \li The scene graph is rendered.
