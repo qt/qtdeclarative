@@ -17,6 +17,8 @@ Rectangle {
     name:"AnimationController"
     when:windowShown
     function test_complete() {
+      skip("QTBUG-25967")
+
       ctrl.progress = 0;
       compare(rect.x, 0);
       ctrl.progress = 0.5;
