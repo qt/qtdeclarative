@@ -1603,6 +1603,8 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             valueType = "null";
         if (!propertyType)
             propertyType = QMetaType::typeName(type);
+        if (!propertyType)
+            propertyType = "[unknown property type]";
 
         expression->delayedError()->error.setDescription(QLatin1String("Unable to assign ") +
                                                          QLatin1String(valueType) +
