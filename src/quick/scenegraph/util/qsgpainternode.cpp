@@ -283,7 +283,9 @@ void QSGPainterNode::updateRenderTarget()
         m_image = QImage();
         delete m_fbo;
         delete m_multisampledFbo;
+        delete m_gl_device;
         m_fbo = m_multisampledFbo = 0;
+        m_gl_device = 0;
     }
 
     if (m_actualRenderTarget == QQuickPaintedItem::FramebufferObject ||
@@ -298,6 +300,8 @@ void QSGPainterNode::updateRenderTarget()
         delete m_fbo;
         delete m_multisampledFbo;
         m_fbo = m_multisampledFbo = 0;
+        if (m_gl_device)
+            m_gl_device->setSize(m_fboSize);
 
         if (m_smoothPainting && ctx->format().samples() && m_multisamplingSupported) {
             {
