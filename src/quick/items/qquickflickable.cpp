@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 // The maximum number of pixels a flick can overshoot
 #ifndef QML_FLICK_OVERSHOOT
-#define QML_FLICK_OVERSHOOT 200
+#define QML_FLICK_OVERSHOOT 150
 #endif
 
 // The number of samples to use in calculating the velocity of a flick
@@ -1329,22 +1329,30 @@ void QQuickFlickable::viewportMoved()
 
     if (!d->vData.inOvershoot && !d->vData.fixingUp && d->vData.flicking
             && (d->vData.move.value() > minYExtent() || d->vData.move.value() < maxYExtent())
-            && qAbs(d->vData.smoothVelocity.value()) > 100) {
+            && qAbs(d->vData.smoothVelocity.value()) > 10) {
         // Increase deceleration if we've passed a bound
+        qreal overBound = d->vData.move.value() > minYExtent()
+                ? d->vData.move.value() - minYExtent()
+                : maxYExtent() - d->vData.move.value();
         d->vData.inOvershoot = true;
-        qreal maxDistance = d->overShootDistance(height());
+        qreal maxDistance = d->overShootDistance(height()) - overBound;
         d->timeline.reset(d->vData.move);
-        d->timeline.accel(d->vData.move, -d->vData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
+        if (maxDistance > 0)
+            d->timeline.accel(d->vData.move, -d->vData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
         d->timeline.callback(QQuickTimeLineCallback(&d->vData.move, d->fixupY_callback, d));
     }
     if (!d->hData.inOvershoot && !d->hData.fixingUp && d->hData.flicking
             && (d->hData.move.value() > minXExtent() || d->hData.move.value() < maxXExtent())
-            && qAbs(d->hData.smoothVelocity.value()) > 100) {
+            && qAbs(d->hData.smoothVelocity.value()) > 10) {
         // Increase deceleration if we've passed a bound
+        qreal overBound = d->hData.move.value() > minXExtent()
+                ? d->hData.move.value() - minXExtent()
+                : maxXExtent() - d->hData.move.value();
         d->hData.inOvershoot = true;
-        qreal maxDistance = d->overShootDistance(width());
+        qreal maxDistance = d->overShootDistance(width()) - overBound;
         d->timeline.reset(d->hData.move);
-        d->timeline.accel(d->hData.move, -d->hData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
+        if (maxDistance > 0)
+            d->timeline.accel(d->hData.move, -d->hData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
         d->timeline.callback(QQuickTimeLineCallback(&d->hData.move, d->fixupX_callback, d));
     }
 
