@@ -1201,7 +1201,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
 
             QQmlPropertyData *olddata = data;
             data = This->overrideData(data);
-            if (data) Insert::in(This, properties, methods, iter, data);
+            if (data && !data->isFunction()) Insert::in(This, properties, methods, iter, data);
         } else {
             if (data->coreIndex < This->propertyIndexCacheStart)
                 return;

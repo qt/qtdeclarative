@@ -268,6 +268,7 @@ private slots:
     void qqmldataDestroyed();
     void secondAlias();
     void varAlias();
+    void overrideDataAssert();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -6958,6 +6959,16 @@ void tst_qqmlecmascript::varAlias()
     QObject *object = c.create();
     QVERIFY(object != 0);
     QCOMPARE(object->property("test").toInt(), 192);
+    delete object;
+}
+
+// Used to trigger an assert in the lazy meta object creation stage
+void tst_qqmlecmascript::overrideDataAssert()
+{
+    QQmlComponent c(&engine, testFileUrl("overrideDataAssert.qml"));
+    QObject *object = c.create();
+    QVERIFY(object != 0);
+    object->metaObject();
     delete object;
 }
 
