@@ -706,7 +706,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
             printf("                RenderThread: --- wait for swap...\n");
 #endif
 
-            if (canvasData->isVisible)
+            if (canvasData->isVisible && canvas->isExposed())
                 gl->swapBuffers(canvas);
 
             canvasPrivate->fireFrameSwapped();
