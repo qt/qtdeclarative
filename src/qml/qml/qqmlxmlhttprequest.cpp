@@ -982,7 +982,7 @@ public:
     const QByteArray & rawResponseBody() const;
     bool receivedXml() const;
 private slots:
-    void downloadProgress(qint64);
+    void readyRead();
     void error(QNetworkReply::NetworkError);
     void finished();
 
@@ -1181,8 +1181,8 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
     else if (m_method == QLatin1String("DELETE"))
         m_network = networkAccessManager()->deleteResource(request);
 
-    QObject::connect(m_network, SIGNAL(downloadProgress(qint64,qint64)), 
-                     this, SLOT(downloadProgress(qint64)));
+    QObject::connect(m_network, SIGNAL(readyRead()),
+                     this, SLOT(readyRead()));
     QObject::connect(m_network, SIGNAL(error(QNetworkReply::NetworkError)),
                      this, SLOT(error(QNetworkReply::NetworkError)));
     QObject::connect(m_network, SIGNAL(finished()),
@@ -1237,11 +1237,10 @@ void QQmlXMLHttpRequest::setMe(v8::Handle<v8::Object> me)
         m_me = qPersistentNew<v8::Object>(me);
 }
 
-void QQmlXMLHttpRequest::downloadProgress(qint64 bytes)
+void QQmlXMLHttpRequest::readyRead()
 {
     v8::HandleScope handle_scope;
 
-    Q_UNUSED(bytes)
     m_status = 
         m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     m_statusText =
