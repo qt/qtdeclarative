@@ -16,4 +16,6 @@ include (../../shared/util.pri)
 
 TESTDATA = data/*
 
-QT += core-private gui-private v8-private qml-private network widgets testlib
+QT += core-private gui-private v8-private qml-private network testlib
+!contains(QT_CONFIG, no-widgets): QT += widgets
+

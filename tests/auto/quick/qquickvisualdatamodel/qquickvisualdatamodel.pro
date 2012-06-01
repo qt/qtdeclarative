@@ -11,4 +11,5 @@ TESTDATA = data/*
 
 CONFIG += parallel_test
 
-QT += core-private gui-private v8-private qml-private quick-private widgets testlib
+QT += core-private gui-private v8-private qml-private quick-private testlib
+!contains(QT_CONFIG, no-widgets): QT += widgets

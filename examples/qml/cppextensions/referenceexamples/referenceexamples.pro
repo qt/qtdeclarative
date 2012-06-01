@@ -6,9 +6,10 @@ SUBDIRS += \
     binding \
     coercion \
     default \
-    extended \
     grouped \
     properties \
     signal \
     valuesource \
     methods
+
+!contains(QT_CONFIG, no-widgets): SUBDIRS += extended

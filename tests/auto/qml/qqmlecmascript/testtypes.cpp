@@ -39,8 +39,10 @@
 **
 ****************************************************************************/
 #include "testtypes.h"
-#include <QWidget>
-#include <QPlainTextEdit>
+#ifndef QT_NO_WIDGETS
+# include <QWidget>
+# include <QPlainTextEdit>
+#endif
 #include <QQmlEngine>
 #include <QJSEngine>
 #include <QThread>
@@ -201,8 +203,10 @@ void registerTypes()
     // MyRevisionedSubclass 1.1 uses MyRevisionedClass revision 1
     qmlRegisterType<MyRevisionedSubclass,1>("Qt.test",1,1,"MyRevisionedSubclass");
 
+#ifndef QT_NO_WIDGETS
     qmlRegisterExtendedType<QWidget,QWidgetDeclarativeUI>("Qt.test",1,0,"QWidget");
     qmlRegisterType<QPlainTextEdit>("Qt.test",1,0,"QPlainTextEdit");
+#endif
 
     qRegisterMetaType<MyQmlObject::MyType>("MyQmlObject::MyType");
 

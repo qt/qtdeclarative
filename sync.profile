@@ -13,7 +13,6 @@
 );
 %mastercontent = (
     "gui" => "#include <QtGui/QtGui>\n",
-    "script" => "#include <QtScript/QtScript>\n",
     "network" => "#include <QtNetwork/QtNetwork>\n",
     "testlib" => "#include <QtTest/QtTest>\n",
     "qml" => "#include <QtQml/QtQml>\n",

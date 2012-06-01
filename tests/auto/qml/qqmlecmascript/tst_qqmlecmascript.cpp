@@ -190,7 +190,9 @@ private slots:
     void qtbug_21580();
     void singleV8BindingDestroyedDuringEvaluation();
     void bug1();
+#ifndef QT_NO_WIDGETS
     void bug2();
+#endif
     void dynamicCreationCrash();
     void dynamicCreationOwnership();
     void regExpBug();
@@ -2042,6 +2044,7 @@ void tst_qqmlecmascript::bug1()
     delete object;
 }
 
+#ifndef QT_NO_WIDGETS
 void tst_qqmlecmascript::bug2()
 {
     QQmlComponent component(&engine);
@@ -2052,6 +2055,7 @@ void tst_qqmlecmascript::bug2()
 
     delete object;
 }
+#endif
 
 // Don't crash in createObject when the component has errors.
 void tst_qqmlecmascript::dynamicCreationCrash()

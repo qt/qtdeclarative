@@ -5,8 +5,6 @@ METATYPETESTS += \
 
 PUBLICTESTS += \
     parserstress \
-    qjsengine \
-    qjsvalue \
     qjsvalueiterator \
     qjsonbinding \
     qmlmin \
@@ -49,6 +47,15 @@ PRIVATETESTS += \
     qquickworkerscript \
     qqmlbundle \
     v4
+
+!contains(QT_CONFIG, no-widgets) {
+    PUBLICTESTS += \
+        qjsengine \
+        qjsvalue
+
+    PRIVATETESTS += \
+        qqmlecmascript
+}
 
 SUBDIRS += $$PUBLICTESTS
 SUBDIRS += $$METATYPETESTS

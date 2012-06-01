@@ -43,7 +43,6 @@
 
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
-#include <QStandardItemModel>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
@@ -61,6 +60,8 @@ using namespace QQuickVisualTestUtil;
 
 template <typename T, int N> int lengthOf(const T (&)[N]) { return N; }
 
+#ifndef QT_NO_WIDGETS
+#include <QStandardItemModel>
 static void initStandardTreeModel(QStandardItemModel *model)
 {
     QStandardItem *item;
@@ -78,6 +79,7 @@ static void initStandardTreeModel(QStandardItemModel *model)
     item->setIcon(QIcon());
     model->insertRow(2, item);
 }
+#endif
 
 class SingleRoleModel : public QAbstractListModel
 {
@@ -120,6 +122,7 @@ protected:
     }
 };
 
+#ifndef QT_NO_WIDGETS
 class StandardItem : public QObject, public QStandardItem
 {
     Q_OBJECT
@@ -143,6 +146,7 @@ public:
         static_cast<QStandardItemModel *>(property->object)->appendRow(item);
     }
 };
+#endif
 
 class DataObject : public QObject
 {
@@ -183,9 +187,11 @@ private:
 };
 
 QML_DECLARE_TYPE(SingleRoleModel)
+QML_DECLARE_TYPE(DataObject)
+#ifndef QT_NO_WIDGETS
 QML_DECLARE_TYPE(StandardItem)
 QML_DECLARE_TYPE(StandardItemModel)
-QML_DECLARE_TYPE(DataObject)
+#endif
 
 class tst_qquickvisualdatamodel : public QQmlDataTest
 {
@@ -196,18 +202,20 @@ public:
 private slots:
     void initTestCase();
     void cleanupTestCase();
+#ifndef QT_NO_WIDGETS
     void rootIndex();
     void updateLayout_data();
     void updateLayout();
     void childChanged_data();
     void childChanged();
-    void objectListModel();
-    void singleRole();
-    void modelProperties();
     void noDelegate_data();
     void noDelegate();
     void itemsDestroyed_data();
     void itemsDestroyed();
+#endif
+    void objectListModel();
+    void singleRole();
+    void modelProperties();
     void packagesDestroyed();
     void qaimRowsMoved();
     void qaimRowsMoved_data();
@@ -283,9 +291,11 @@ void tst_qquickvisualdatamodel::initTestCase()
     qRegisterMetaType<QQuickChangeSet>();
 
     qmlRegisterType<SingleRoleModel>("tst_qquickvisualdatamodel", 1, 0, "SingleRoleModel");
+    qmlRegisterType<DataObject>("tst_qquickvisualdatamodel", 1, 0, "DataObject");
+#ifndef QT_NO_WIDGETS
     qmlRegisterType<StandardItem>("tst_qquickvisualdatamodel", 1, 0, "StandardItem");
     qmlRegisterType<StandardItemModel>("tst_qquickvisualdatamodel", 1, 0, "StandardItemModel");
-    qmlRegisterType<DataObject>("tst_qquickvisualdatamodel", 1, 0, "DataObject");
+#endif
 }
 
 void tst_qquickvisualdatamodel::cleanupTestCase()
@@ -296,6 +306,7 @@ tst_qquickvisualdatamodel::tst_qquickvisualdatamodel()
 {
 }
 
+#ifndef QT_NO_WIDGETS
 void tst_qquickvisualdatamodel::rootIndex()
 {
     QQmlEngine engine;
@@ -437,6 +448,7 @@ void tst_qquickvisualdatamodel::childChanged()
     QVERIFY(name);
     QCOMPARE(name->text(), QString("Row 3 Item"));
 }
+#endif
 
 void tst_qquickvisualdatamodel::objectListModel()
 {
@@ -603,6 +615,7 @@ void tst_qquickvisualdatamodel::modelProperties()
         QCOMPARE(delegate->property("test8").toInt(),1);
     }
 
+#ifndef QT_NO_WIDGETS
     {
         QQuickView view;
 
@@ -644,10 +657,11 @@ void tst_qquickvisualdatamodel::modelProperties()
         QCOMPARE(delegate->property("test7").toInt(),1);
         QCOMPARE(delegate->property("test8").toInt(),1);
     }
-
+#endif
     //### should also test QStringList and QVariantList
 }
 
+#ifndef QT_NO_WIDGETS
 void tst_qquickvisualdatamodel::noDelegate_data()
 {
     QTest::addColumn<QUrl>("source");
@@ -711,6 +725,7 @@ void tst_qquickvisualdatamodel::itemsDestroyed()
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QVERIFY(!delegate);
 }
+#endif
 
 void tst_qquickvisualdatamodel::packagesDestroyed()
 {
@@ -2368,7 +2383,7 @@ void tst_qquickvisualdatamodel::insert_data()
                 << 4 << 5 << 0 << true << true << false << false << true
                 << QString("name")
                 << (QStringList() << "seven" << "one" << "two" << "three" << "four");
-
+#ifndef QT_NO_WIDGETS
         // AbstractItemModel (Multiple Roles).
         QTest::newRow("StandardItemModel.items prepend")
                 << multipleRoleSource[i]
@@ -2449,7 +2464,7 @@ void tst_qquickvisualdatamodel::insert_data()
                 << 4 << 5 << 0 << true << true << false << false << false
                 << QString("display")
                 << (QStringList() << "Row 7 Item" << "Row 1 Item" << "Row 2 Item" << "Row 3 Item" << "Row 4 Item");
-
+#endif
         // StringList.
         QTest::newRow("StringList.items prepend")
                 << stringListSource[i]
@@ -2949,6 +2964,7 @@ void tst_qquickvisualdatamodel::resolve_data()
                 << QString("name")
                 << (QStringList() << "one" << "two" << "three" << "four");
 
+#ifndef QT_NO_WIDGETS
         // AbstractItemModel (Multiple Roles)
         QTest::newRow("StandardItemModel.items prepend, resolve prepended")
                 << multipleRoleSource[i]
@@ -2973,7 +2989,7 @@ void tst_qquickvisualdatamodel::resolve_data()
                 << 5 << 4 << 4 << 2 << true << false << true << false << false
                 << QString("display")
                 << (QStringList() << "Row 1 Item" << "Row 2 Item" << "Row 3 Item" << "Row 4 Item");
-
+#endif
         // StringList
         QTest::newRow("StringList.items prepend, resolve prepended")
                 << stringListSource[i]

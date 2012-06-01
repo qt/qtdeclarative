@@ -53,7 +53,6 @@
 #include <QtQml/private/qquicklistmodel_p.h>
 #include <QtQml/private/qqmlvaluetype_p.h>
 #include <QStringListModel>
-#include <QStandardItemModel>
 #include <QFile>
 
 #include "../../shared/util.h"
@@ -65,6 +64,8 @@ using namespace QQuickVisualTestUtil;
 
 Q_DECLARE_METATYPE(QQuickPathView::HighlightRangeMode)
 
+#ifndef QT_NO_WIDGETS
+#include <QStandardItemModel>
 static void initStandardTreeModel(QStandardItemModel *model)
 {
     QStandardItem *item;
@@ -82,6 +83,7 @@ static void initStandardTreeModel(QStandardItemModel *model)
     item->setIcon(QIcon());
     model->insertRow(2, item);
 }
+#endif
 
 
 class tst_QQuickPathView : public QQmlDataTest
@@ -120,7 +122,9 @@ private slots:
     void visualDataModel();
     void undefinedPath();
     void mouseDrag();
+#ifndef QT_NO_WIDGETS
     void treeModel();
+#endif
     void changePreferredHighlight();
     void missingPercent();
     void creationContext();
@@ -1415,6 +1419,7 @@ void tst_QQuickPathView::mouseDrag()
     delete canvas;
 }
 
+#ifndef QT_NO_WIDGETS
 void tst_QQuickPathView::treeModel()
 {
     QQuickView *canvas = createView();
@@ -1442,6 +1447,7 @@ void tst_QQuickPathView::treeModel()
 
     delete canvas;
 }
+#endif
 
 void tst_QQuickPathView::changePreferredHighlight()
 {

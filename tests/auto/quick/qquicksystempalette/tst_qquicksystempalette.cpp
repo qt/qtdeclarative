@@ -56,7 +56,9 @@ private slots:
     void activePalette();
     void inactivePalette();
     void disabledPalette();
+#ifndef QT_NO_WIDGETS
     void paletteChanged();
+#endif
 
 private:
     QQmlEngine engine;
@@ -155,6 +157,7 @@ void tst_qquicksystempalette::disabledPalette()
     delete object;
 }
 
+#ifndef QT_NO_WIDGETS
 void tst_qquicksystempalette::paletteChanged()
 {
     QString componentStr = "import QtQuick 2.0\nSystemPalette { }";
@@ -179,6 +182,7 @@ void tst_qquicksystempalette::paletteChanged()
 
     delete object;
 }
+#endif
 
 QTEST_MAIN(tst_qquicksystempalette)
 
