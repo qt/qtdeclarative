@@ -562,12 +562,16 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
     if (m_canvasWindow.size().isEmpty() && !m_threadRendering) {
         delete m_fbo;
         delete m_multisampledFbo;
+        delete m_paint_device;
         m_fbo = 0;
         m_multisampledFbo = 0;
+        m_paint_device = 0;
         return 0;
     } else if (!m_fbo || m_canvasWindowChanged) {
         delete m_fbo;
         delete m_multisampledFbo;
+        delete m_paint_device;
+        m_paint_device = 0;
 
         m_fboSize = npotAdjustedSize(m_canvasWindow.size());
         m_canvasWindowChanged = false;
@@ -601,6 +605,7 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
     if (!m_paint_device) {
         QOpenGLPaintDevice *gl_device = new QOpenGLPaintDevice(m_fbo->size());
         gl_device->setPaintFlipped(true);
+        gl_device->setSize(m_fbo->size());
         m_paint_device = gl_device;
     }
 
