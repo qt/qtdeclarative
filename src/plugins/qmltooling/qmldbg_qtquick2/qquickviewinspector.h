@@ -91,9 +91,12 @@ protected:
 
     bool mouseMoveEvent(QMouseEvent *);
 
+    void setShowAppOnTop(bool appOnTop);
+
 private slots:
     void removeFromSelectedItems(QObject *);
     void onViewStatus(QQuickView::Status status);
+    void applyAppOnTop();
 
 private:
     bool syncSelectedItems(const QList<QQuickItem*> &items);
@@ -106,6 +109,7 @@ private:
     QList<QPointer<QQuickItem> > m_selectedItems;
     QHash<QQuickItem*, SelectionHighlight*> m_highlightItems;
     bool m_sendQmlReloadedMessage;
+    bool m_appOnTop;
 };
 
 } // namespace QtQuick2

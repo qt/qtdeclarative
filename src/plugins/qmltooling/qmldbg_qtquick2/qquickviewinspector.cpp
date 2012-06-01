@@ -339,6 +339,14 @@ void QQuickViewInspector::reloadQmlFile(const QHash<QString, QByteArray> &change
     view()->setSource(view()->source());
 }
 
+void QQuickViewInspector::setShowAppOnTop(bool appOnTop)
+{
+    m_appOnTop = appOnTop;
+    // Hack for QTCREATORBUG-6295.
+    // TODO: The root cause to be identified and fixed later.
+    QTimer::singleShot(100, this, SLOT(applyAppOnTop()));
+}
+
 void QQuickViewInspector::onViewStatus(QQuickView::Status status)
 {
     bool success = false;
@@ -360,6 +368,17 @@ void QQuickViewInspector::onViewStatus(QQuickView::Status status)
         m_sendQmlReloadedMessage = false;
         sendQmlFileReloaded(success);
     }
+}
+
+void QQuickViewInspector::applyAppOnTop()
+{
+    Qt::WindowFlags flags = windowFlags();
+    if (m_appOnTop)
+        flags |= Qt::WindowStaysOnTopHint;
+    else
+        flags &= ~Qt::WindowStaysOnTopHint;
+
+    setWindowFlags(flags);
 }
 
 } // namespace QtQuick2

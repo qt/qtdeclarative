@@ -109,14 +109,13 @@ protected:
     virtual bool mouseDoubleClickEvent(QMouseEvent *event);
     virtual bool wheelEvent(QWheelEvent *event);
     virtual bool touchEvent(QTouchEvent *event);
+    virtual void setShowAppOnTop(bool) = 0;
 
 private slots:
     void onQmlObjectDestroyed(QObject *object);
 
 private:
     void setEnabled(bool value);
-
-    void setShowAppOnTop(bool appOnTop);
 
     void setAnimationSpeed(qreal factor);
 

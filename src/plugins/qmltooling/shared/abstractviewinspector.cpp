@@ -139,17 +139,6 @@ void AbstractViewInspector::setAnimationSpeed(qreal slowDownFactor)
     QUnifiedTimer::instance()->setSlowdownFactor(slowDownFactor);
 }
 
-void AbstractViewInspector::setShowAppOnTop(bool appOnTop)
-{
-    Qt::WindowFlags flags = windowFlags();
-    if (appOnTop)
-        flags |= Qt::WindowStaysOnTopHint;
-    else
-        flags &= ~Qt::WindowStaysOnTopHint;
-
-    setWindowFlags(flags);
-}
-
 bool AbstractViewInspector::eventFilter(QObject *obj, QEvent *event)
 {
     if (!enabled())
