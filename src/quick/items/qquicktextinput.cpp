@@ -1723,7 +1723,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         if (cursorNode != 0 && !isReadOnly()) {
             cursorNode->setRect(cursorRectangle());
 
-            if (!d->cursorVisible || (!d->m_blinkStatus && d->m_blinkPeriod > 0)) {
+            if (!d->cursorVisible || d->cursorItem || (!d->m_blinkStatus && d->m_blinkPeriod > 0)) {
                 d->hideCursor();
             } else {
                 d->showCursor();
