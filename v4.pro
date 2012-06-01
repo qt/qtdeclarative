@@ -16,8 +16,7 @@ SOURCES += main.cpp \
     qv4syntaxchecker.cpp \
     qv4ecmaobjects.cpp \
     qv4array.cpp \
-    qv4isel_x86_64.cpp \
-    qv4isel_llvm.cpp
+    qv4isel_x86_64.cpp
 
 HEADERS += \
     qv4codegen_p.h \
@@ -30,11 +29,16 @@ HEADERS += \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
     qv4array_p.h \
-    qv4isel_x86_64_p.h \
-    qv4isel_llvm_p.h
+    qv4isel_x86_64_p.h
 
 
 llvm {
+
+SOURCES += \
+    qv4isel_llvm.cpp
+
+HEADERS += \
+    qv4isel_llvm_p.h
 
 DEFINES += \
     WITH_LLVM
