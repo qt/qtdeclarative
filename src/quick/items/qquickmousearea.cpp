@@ -521,7 +521,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 */
 
 /*!
-    \qmlsignal QtQuick2::MouseArea::onWheel(WheelEvent mouse)
+    \qmlsignal QtQuick2::MouseArea::onWheel(WheelEvent wheel)
 
     This handler is called in response to both mouse wheel and trackpad scroll gestures.
 
