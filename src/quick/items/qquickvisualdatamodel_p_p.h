@@ -210,6 +210,7 @@ public:
         return static_cast<QQuickVisualDataGroupPrivate *>(QObjectPrivate::get(group)); }
 
     void setModel(QQuickVisualDataModel *model, Compositor::Group group);
+    bool isChangedConnected();
     void emitChanges(QV8Engine *engine);
     void emitModelUpdated(bool reset);
 

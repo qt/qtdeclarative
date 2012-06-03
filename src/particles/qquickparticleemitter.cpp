@@ -255,7 +255,7 @@ QQuickParticleEmitter::~QQuickParticleEmitter()
 
 bool QQuickParticleEmitter::isEmitConnected()
 {
-    IS_SIGNAL_CONNECTED(this, "emitParticles(QQmlV8Handle)");
+    IS_SIGNAL_CONNECTED(this, QQuickParticleEmitter, emitParticles, (QQmlV8Handle));
 }
 
 void QQuickParticleEmitter::componentComplete()

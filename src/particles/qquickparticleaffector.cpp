@@ -135,7 +135,7 @@ QQuickParticleAffector::QQuickParticleAffector(QQuickItem *parent) :
 
 bool QQuickParticleAffector::isAffectedConnected()
 {
-    IS_SIGNAL_CONNECTED(this, "affected(qreal,qreal)");
+    IS_SIGNAL_CONNECTED(this, QQuickParticleAffector, affected, (qreal,qreal));
 }
 
 

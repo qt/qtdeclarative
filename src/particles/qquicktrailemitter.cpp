@@ -128,7 +128,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
 
 bool QQuickTrailEmitter::isEmitFollowConnected()
 {
-    IS_SIGNAL_CONNECTED(this, "emitFollowParticles(QQmlV8Handle,QQmlV8Handle)");
+    IS_SIGNAL_CONNECTED(this, QQuickTrailEmitter, emitFollowParticles, (QQmlV8Handle,QQmlV8Handle));
 }
 
 void QQuickTrailEmitter::recalcParticlesPerSecond(){

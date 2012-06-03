@@ -45,6 +45,7 @@
 #include <private/qtqmlglobal_p.h>
 #include <QtCore/QObject>
 #include <private/qqmlpropertycache_p.h>
+#include <private/qmetaobject_p.h>
 
 QT_BEGIN_HEADER
 
@@ -165,16 +166,13 @@ T qmlobject_cast(QObject *object)
 
 bool Q_QML_PRIVATE_EXPORT QQml_isSignalConnected(QObject*, int, int);
 
-#define IS_SIGNAL_CONNECTED(Sender, Signal) \
+#define IS_SIGNAL_CONNECTED(Sender, SenderType, Name, Arguments) \
 do { \
     QObject *sender = (Sender); \
-    const char *signal = (Signal); \
-    static int signalIdx = -1; \
-    static int methodIdx = -1; \
-    if (signalIdx < 0) { \
-        signalIdx = QObjectPrivate::get(sender)->signalIndex(signal); \
-        methodIdx = sender->metaObject()->indexOfSignal(signal); \
-    } \
+    void (SenderType::*signal)Arguments = &SenderType::Name; \
+    static QMetaMethod method = QMetaMethod::fromSignal(signal); \
+    static int signalIdx = QMetaObjectPrivate::signalIndex(method); \
+    static int methodIdx = method.methodIndex(); \
     return QQml_isSignalConnected(sender, signalIdx, methodIdx); \
 } while (0)
 

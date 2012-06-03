@@ -220,25 +220,25 @@ void QQuickMouseAreaPrivate::saveEvent(QMouseEvent *event)
 bool QQuickMouseAreaPrivate::isPressAndHoldConnected()
 {
     Q_Q(QQuickMouseArea);
-    IS_SIGNAL_CONNECTED(q, "pressAndHold(QQuickMouseEvent*)");
+    IS_SIGNAL_CONNECTED(q, QQuickMouseArea, pressAndHold, (QQuickMouseEvent *));
 }
 
 bool QQuickMouseAreaPrivate::isDoubleClickConnected()
 {
     Q_Q(QQuickMouseArea);
-    IS_SIGNAL_CONNECTED(q, "doubleClicked(QQuickMouseEvent*)");
+    IS_SIGNAL_CONNECTED(q, QQuickMouseArea, doubleClicked, (QQuickMouseEvent *));
 }
 
 bool QQuickMouseAreaPrivate::isClickConnected()
 {
     Q_Q(QQuickMouseArea);
-    IS_SIGNAL_CONNECTED(q, "clicked(QQuickMouseEvent*)");
+    IS_SIGNAL_CONNECTED(q, QQuickMouseArea, clicked, (QQuickMouseEvent *));
 }
 
 bool QQuickMouseAreaPrivate::isWheelConnected()
 {
     Q_Q(QQuickMouseArea);
-    IS_SIGNAL_CONNECTED(q, "wheel(QQuickWheelEvent*)");
+    IS_SIGNAL_CONNECTED(q, QQuickMouseArea, wheel, (QQuickWheelEvent *));
 }
 
 void QQuickMouseAreaPrivate::propagate(QQuickMouseEvent* event, PropagateType t)

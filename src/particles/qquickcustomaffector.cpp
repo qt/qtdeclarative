@@ -103,7 +103,7 @@ QQuickCustomAffector::QQuickCustomAffector(QQuickItem *parent) :
 
 bool QQuickCustomAffector::isAffectConnected()
 {
-    IS_SIGNAL_CONNECTED(this, "affectParticles(QQmlV8Handle,qreal)");
+    IS_SIGNAL_CONNECTED(this, QQuickCustomAffector, affectParticles, (QQmlV8Handle,qreal));
 }
 
 void QQuickCustomAffector::affectSystem(qreal dt)

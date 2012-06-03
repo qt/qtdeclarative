@@ -556,7 +556,7 @@ QQuickCanvasContext* QQuickCanvasItem::rawContext() const
 
 bool QQuickCanvasItem::isPaintConnected()
 {
-    IS_SIGNAL_CONNECTED(this, "paint(QRect)");
+    IS_SIGNAL_CONNECTED(this, QQuickCanvasItem, paint, (const QRect &));
 }
 
 void QQuickCanvasItem::sceneGraphInitialized()
