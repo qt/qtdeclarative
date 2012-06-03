@@ -146,7 +146,7 @@ void QQmlPropertyData::lazyLoad(const QMetaProperty &p, QQmlEngine *engine)
     Q_UNUSED(engine);
 
     coreIndex = p.propertyIndex();
-    notifyIndex = p.notifySignalIndex();
+    notifyIndex = QMetaObjectPrivate::signalIndex(p.notifySignal());
     Q_ASSERT(p.revision() <= Q_INT16_MAX);
     revision = p.revision();
 
@@ -171,7 +171,7 @@ void QQmlPropertyData::load(const QMetaProperty &p, QQmlEngine *engine)
 {
     propType = p.userType();
     coreIndex = p.propertyIndex();
-    notifyIndex = p.notifySignalIndex();
+    notifyIndex = QMetaObjectPrivate::signalIndex(p.notifySignal());
     flags = fastFlagsForProperty(p) | flagsForPropertyType(propType, engine);
     Q_ASSERT(p.revision() <= Q_INT16_MAX);
     revision = p.revision();
@@ -328,6 +328,11 @@ QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(QQmlEngine *, int propertyC
     return rv;
 }
 
+/*! \internal
+
+    \a notifyIndex MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
 void QQmlPropertyCache::appendProperty(const QString &name,
                                        quint32 flags, int coreIndex, int propType, int notifyIndex)
 {
@@ -840,6 +845,36 @@ void QQmlPropertyCache::update(QQmlEngine *engine, const QMetaObject *metaObject
     updateRecur(engine,metaObject);
 }
 
+/*! \internal
+    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
+QQmlPropertyData *
+QQmlPropertyCache::signal(int index) const
+{
+    if (index < 0 || index >= (signalHandlerIndexCacheStart + signalHandlerIndexCache.count()))
+        return 0;
+
+    if (index < signalHandlerIndexCacheStart)
+        return _parent->signal(index);
+
+    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
+    if (rv->notFullyResolved()) resolve(rv);
+    Q_ASSERT(rv->isSignal() || rv->coreIndex == -1);
+    return rv;
+}
+
+int QQmlPropertyCache::methodIndexToSignalIndex(int index) const
+{
+    if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
+        return index;
+
+    if (index < methodIndexCacheStart)
+        return _parent->methodIndexToSignalIndex(index);
+
+    return index - methodIndexCacheStart + signalHandlerIndexCacheStart;
+}
+
 QQmlPropertyData *
 QQmlPropertyCache::property(int index) const
 {
@@ -953,16 +988,20 @@ static int EnumType(const QMetaObject *metaobj, const QByteArray &str, int type)
     return type;
 }
 
-QList<QByteArray> QQmlPropertyCache::methodParameterNames(QObject *object, int index)
+/*! \internal
+    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
+QList<QByteArray> QQmlPropertyCache::signalParameterNames(QObject *object, int index)
 {
     QQmlData *data = QQmlData::get(object, false);
     if (data->propertyCache) {
-        QQmlPropertyData *p = data->propertyCache->method(index);
+        QQmlPropertyData *p = data->propertyCache->signal(index);
         if (!p->hasArguments())
             return QList<QByteArray>();
     }
 
-    return object->metaObject()->method(index).parameterNames();
+    return QMetaObjectPrivate::signal(object->metaObject(), index).parameterNames();
 }
 
 // Returns an array of the arguments for method \a index.  The first entry in the array
@@ -1236,7 +1275,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
 
         int notifierId = -1;
         if (data->notifyIndex != -1)
-            notifierId = data->notifyIndex - methodIndexCacheStart;
+            notifierId = data->notifyIndex - signalHandlerIndexCacheStart;
 
         QMetaPropertyBuilder property = builder.addProperty(properties.at(ii).first.toUtf8(),
                                                             QMetaType::typeName(data->propType),

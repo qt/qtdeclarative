@@ -129,6 +129,8 @@ public:
                                         const QQmlPropertyData &,
                                         QQmlContextData *);
 
+    int signalIndex() const;
+
     static inline QQmlPropertyPrivate *get(const QQmlProperty &p) {
         return p.d;
     }

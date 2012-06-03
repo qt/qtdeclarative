@@ -477,12 +477,15 @@ class QQmlThreadNotifierProxyObject : public QObject
 public:
     QPointer<QObject> target;
 
-    virtual int qt_metacall(QMetaObject::Call, int id, void **a) {
+    virtual int qt_metacall(QMetaObject::Call, int methodIndex, void **a) {
         if (!target)
             return -1;
 
+        QMetaMethod method = target->metaObject()->method(methodIndex);
+        Q_ASSERT(method.methodType() == QMetaMethod::Signal);
+        int signalIndex = QMetaObjectPrivate::signalIndex(method);
         QQmlData *ddata = QQmlData::get(target, false);
-        QQmlNotifierEndpoint *ep = ddata->notify(id);
+        QQmlNotifierEndpoint *ep = ddata->notify(signalIndex);
         if (ep) QQmlNotifier::emitNotify(ep, a);
 
         delete this;
@@ -508,7 +511,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
         if (!QObjectPrivate::get(object)->threadData->thread)
             return;
 
-        QMetaMethod m = object->metaObject()->method(index);
+        QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
         QList<QByteArray> parameterTypes = m.parameterTypes();
 
         int *types = (int *)malloc((parameterTypes.count() + 1) * sizeof(int));
@@ -536,7 +539,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
             args[ii + 1] = QMetaType::create(types[ii + 1], a[ii + 1]);
         }
 
-        QMetaCallEvent *ev = new QMetaCallEvent(index, 0, 0, object, index,
+        QMetaCallEvent *ev = new QMetaCallEvent(m.methodIndex(), 0, 0, object, index,
                                                 parameterTypes.count() + 1, types, args);
 
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
@@ -1288,15 +1291,15 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
     }
 }
 
-bool QQml_isSignalConnected(QObject *obj, int signal_index, int index)
+bool QQml_isSignalConnected(QObject *obj, int signal_index)
 {
     QQmlData *data = QQmlData::get(obj);
-    return QObjectPrivate::get(obj)->isSignalConnected(signal_index) || (data && data->signalHasEndpoint(index));
+    return QObjectPrivate::get(obj)->isSignalConnected(signal_index) || (data && data->signalHasEndpoint(signal_index));
 }
 
 /*
-    index MUST be the index returned by QMetaMethod::index()
-    This is different than the index returned by QObjectPrivate::signalIndex()
+    index MUST in the range returned by QObjectPrivate::signalIndex()
+    This is different than the index returned by QMetaMethod::methodIndex()
 */
 bool QQmlData::signalHasEndpoint(int index)
 {

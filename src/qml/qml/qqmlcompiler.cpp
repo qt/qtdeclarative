@@ -1669,7 +1669,7 @@ bool QQmlCompiler::buildSignal(QQmlScript::Property *prop, QQmlScript::Object *o
         if (prop->value || !prop->values.isOne())
             COMPILE_EXCEPTION(prop, tr("Incorrectly specified signal assignment"));
 
-        prop->index = sig->coreIndex;
+        prop->index = propertyCacheForObject(obj)->methodIndexToSignalIndex(sig->coreIndex);
         prop->core = *sig;
 
         obj->addSignalProperty(prop);
@@ -2981,7 +2981,7 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
 
 
     // Dynamic properties (except var and aliases)
-    effectiveMethodIndex = cache->methodIndexCacheStart;
+    int effectiveSignalIndex = cache->signalHandlerIndexCacheStart;
     for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p;
          p = obj->dynamicProperties.next(p)) {
 
@@ -3048,15 +3048,15 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                                            p->name.hash());
             if (p->isDefaultProperty) cache->_defaultPropertyName = propertyName.toUtf16();
             cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                  propertyType, effectiveMethodIndex);
+                                  propertyType, effectiveSignalIndex);
         } else {
             QString propertyName = p->name.toString();
             if (p->isDefaultProperty) cache->_defaultPropertyName = propertyName;
             cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                  propertyType, effectiveMethodIndex);
+                                  propertyType, effectiveSignalIndex);
         }
 
-        effectiveMethodIndex++;
+        effectiveSignalIndex++;
 
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
         (vmd->propertyData() + vmd->propertyCount)->propertyType = vmePropertyType;
@@ -3084,15 +3084,15 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
                                            p->name.hash());
             if (p->isDefaultProperty) cache->_defaultPropertyName = propertyName.toUtf16();
             cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                  QMetaType::QVariant, effectiveMethodIndex);
+                                  QMetaType::QVariant, effectiveSignalIndex);
         } else {
             QString propertyName = p->name.toString();
             if (p->isDefaultProperty) cache->_defaultPropertyName = propertyName;
             cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                  QMetaType::QVariant, effectiveMethodIndex);
+                                  QMetaType::QVariant, effectiveSignalIndex);
         }
 
-        effectiveMethodIndex++;
+        effectiveSignalIndex++;
     }
 
     // Alias property count.  Actual data is setup in buildDynamicMetaAliases
@@ -3147,7 +3147,7 @@ bool QQmlCompiler::buildDynamicMetaAliases(QQmlScript::Object *obj)
     QQmlPropertyCache *cache = obj->synthCache;
     char *cStringData = cache->_dynamicStringData.data();
 
-    int effectiveMethodIndex = cache->methodIndexCacheStart + cache->propertyIndexCache.count();
+    int effectiveSignalIndex = cache->signalHandlerIndexCacheStart + cache->propertyIndexCache.count();
     int effectivePropertyIndex = cache->propertyIndexCacheStart + cache->propertyIndexCache.count();
     int effectiveAliasIndex = 0;
 
@@ -3264,12 +3264,12 @@ bool QQmlCompiler::buildDynamicMetaAliases(QQmlScript::Object *obj)
                                            p->name.hash());
             if (p->isDefaultProperty) cache->_defaultPropertyName = propertyName.toUtf16();
             cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                  type, effectiveMethodIndex++);
+                                  type, effectiveSignalIndex++);
         } else {
             QString propertyName = p->name.toString();
             if (p->isDefaultProperty) cache->_defaultPropertyName = propertyName;
             cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                  type, effectiveMethodIndex++);
+                                  type, effectiveSignalIndex++);
         }
     }
 
@@ -3821,7 +3821,7 @@ QQmlCompiler::signal(QQmlScript::Object *object, const QHashedStringRef &name, b
 
         d = property(object, propName, notInRevision);
         if (d) 
-            return cache->method(d->notifyIndex);
+            return cache->signal(d->notifyIndex);
     }
 
     return 0;

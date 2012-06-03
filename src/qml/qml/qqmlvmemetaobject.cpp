@@ -1205,21 +1205,21 @@ void QQmlVMEMetaObject::connectAlias(int aliasId)
     }
 }
 
-void QQmlVMEMetaObject::connectAliasSignal(int index)
+void QQmlVMEMetaObject::connectAliasSignal(int index, bool indexInSignalRange)
 {
-    int aliasId = (index - methodOffset()) - metaData->propertyCount;
+    int aliasId = (index - (indexInSignalRange ? signalOffset() : methodOffset())) - metaData->propertyCount;
     if (aliasId < 0 || aliasId >= metaData->aliasCount)
         return;
 
     connectAlias(aliasId);
 }
 
+/*! \internal
+    \a index is in the method index range (QMetaMethod::methodIndex()).
+*/
 void QQmlVMEMetaObject::activate(QObject *object, int index, void **args)
 {
-    int signalOffset = cache->signalOffset();
-    int methodOffset = cache->methodOffset();
-
-    QMetaObject::activate(object, methodOffset, signalOffset, index - methodOffset, args);
+    QMetaObject::activate(object, signalOffset(), index - methodOffset(), args);
 }
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::getForProperty(QObject *o, int coreIndex)
@@ -1236,6 +1236,20 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::getForMethod(QObject *o, int coreIndex)
 {
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
     while (vme->methodOffset() > coreIndex) {
+        Q_ASSERT(vme->parent.isT1());
+        vme = static_cast<QQmlVMEMetaObject *>(vme->parent.asT1());
+    }
+    return vme;
+}
+
+/*! \internal
+    \a coreIndex is in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
+QQmlVMEMetaObject *QQmlVMEMetaObject::getForSignal(QObject *o, int coreIndex)
+{
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
+    while (vme->signalOffset() > coreIndex) {
         Q_ASSERT(vme->parent.isT1());
         vme = static_cast<QQmlVMEMetaObject *>(vme->parent.asT1());
     }

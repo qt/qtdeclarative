@@ -910,10 +910,8 @@ const QQuickKeysAttached::SigMap QQuickKeysAttached::sigMap[] = {
 bool QQuickKeysAttached::isConnected(const char *signalName)
 {
     Q_D(QQuickKeysAttached);
-    //### doing two string-based lookups isn't ideal
     int signal_index = d->signalIndex(signalName);
-    int index = metaObject()->indexOfSignal(signalName);
-    return QQml_isSignalConnected(this, signal_index, index);
+    return QQml_isSignalConnected(this, signal_index);
 }
 
 /*!

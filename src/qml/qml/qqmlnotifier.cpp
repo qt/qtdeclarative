@@ -89,6 +89,10 @@ void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
     } 
 }
 
+/*! \internal
+    \a sourceSignal MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
 void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine *engine)
 {
     disconnect();

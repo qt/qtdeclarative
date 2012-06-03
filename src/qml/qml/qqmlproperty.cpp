@@ -58,6 +58,7 @@
 #include "qqmlvaluetypeproxybinding_p.h"
 
 #include <QStringList>
+#include <private/qmetaobject_p.h>
 #include <QtCore/qdebug.h>
 
 #include <math.h>
@@ -362,7 +363,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
                 if (d && d->notifyIndex != -1) {
                     object = currentObject;
-                    core = *ddata->propertyCache->method(d->notifyIndex);
+                    core = *ddata->propertyCache->signal(d->notifyIndex);
                     return;
                 }
             }
@@ -388,6 +389,18 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         nameCache = terminal;
         isNameCached = true;
     }
+}
+
+/*! \internal
+    Returns the index of this property's signal, in the signal index range
+    (see QObjectPrivate::signalIndex()). This is different from
+    QMetaMethod::methodIndex().
+*/
+int QQmlPropertyPrivate::signalIndex() const
+{
+    Q_ASSERT(type() == QQmlProperty::SignalProperty);
+    QMetaMethod m = object->metaObject()->method(core.coreIndex);
+    return QMetaObjectPrivate::signalIndex(m);
 }
 
 /*!
@@ -963,7 +976,7 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
 
     QQmlAbstractBoundSignal *signalHandler = data->signalHandlers;
 
-    while (signalHandler && signalHandler->index() != that.index())
+    while (signalHandler && signalHandler->index() != QQmlPropertyPrivate::get(that)->signalIndex())
         signalHandler = signalHandler->m_nextSignal;
 
     if (signalHandler)
@@ -1011,14 +1024,15 @@ QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
 
     QQmlAbstractBoundSignal *signalHandler = data->signalHandlers;
 
-    while (signalHandler && signalHandler->index() != that.index())
+    while (signalHandler && signalHandler->index() != QQmlPropertyPrivate::get(that)->signalIndex())
         signalHandler = signalHandler->m_nextSignal;
 
     if (signalHandler)
         return signalHandler->takeExpression(expr);
 
     if (expr) {
-        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, that.index(), that.d->object,
+        int signalIndex = QQmlPropertyPrivate::get(that)->signalIndex();
+        QQmlBoundSignal *signal = new QQmlBoundSignal(that.d->object, signalIndex, that.d->object,
                                                       expr->context()->engine);
         signal->takeExpression(expr);
     }
@@ -1875,16 +1889,25 @@ QMetaMethod QQmlPropertyPrivate::findSignalByName(const QMetaObject *mo, const Q
     return QMetaMethod();
 }
 
-static inline void flush_vme_signal(const QObject *object, int index)
+/*! \internal
+    If \a indexInSignalRange is true, \a index is treated as a signal index
+    (see QObjectPrivate::signalIndex()), otherwise it is treated as a
+    method index (QMetaMethod::methodIndex()).
+*/
+static inline void flush_vme_signal(const QObject *object, int index, bool indexInSignalRange)
 {
     QQmlData *data = static_cast<QQmlData *>(QObjectPrivate::get(const_cast<QObject *>(object))->declarativeData);
     if (data && data->propertyCache) {
-        QQmlPropertyData *property = data->propertyCache->method(index);
+        QQmlPropertyData *property = indexInSignalRange ? data->propertyCache->signal(index)
+                                                        : data->propertyCache->method(index);
 
         if (property && property->isVMESignal()) {
-            QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForMethod(const_cast<QObject *>(object),
-                                                                     index);
-            vme->connectAliasSignal(index);
+            QQmlVMEMetaObject *vme;
+            if (indexInSignalRange)
+                vme = QQmlVMEMetaObject::getForSignal(const_cast<QObject *>(object), index);
+            else
+                vme = QQmlVMEMetaObject::getForMethod(const_cast<QObject *>(object), index);
+            vme->connectAliasSignal(index, indexInSignalRange);
         }
     }
 }
@@ -1900,15 +1923,21 @@ bool QQmlPropertyPrivate::connect(const QObject *sender, int signal_index,
                                           const QObject *receiver, int method_index,
                                           int type, int *types)
 {
-    flush_vme_signal(sender, signal_index);
-    flush_vme_signal(receiver, method_index);
+    static const bool indexInSignalRange = false;
+    flush_vme_signal(sender, signal_index, indexInSignalRange);
+    flush_vme_signal(receiver, method_index, indexInSignalRange);
 
     return QMetaObject::connect(sender, signal_index, receiver, method_index, type, types);
 }
 
+/*! \internal
+    \a signal_index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
 void QQmlPropertyPrivate::flushSignal(const QObject *sender, int signal_index)
 {
-    flush_vme_signal(sender, signal_index);
+    static const bool indexInSignalRange = true;
+    flush_vme_signal(sender, signal_index, indexInSignalRange);
 }
 
 QT_END_NAMESPACE

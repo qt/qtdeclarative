@@ -41,6 +41,7 @@
 
 #include "qqmlboundsignal_p.h"
 
+#include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include "qqmlengine_p.h"
 #include "qqmlexpression_p.h"
@@ -242,6 +243,10 @@ void QQmlAbstractBoundSignal::removeFromObject()
     }
 }
 
+/*! \internal
+    \a signal MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
 QQmlBoundSignal::QQmlBoundSignal(QObject *scope, int signal, QObject *owner,
                                  QQmlEngine *engine)
 : m_expression(0), m_params(0), m_scope(scope), m_index(signal)
@@ -259,10 +264,10 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *scope, int signal, QObject *owner,
     */
     if (QQmlData::get(scope, false) && QQmlData::get(scope, false)->propertyCache) {
         QQmlPropertyCache *cache = QQmlData::get(scope, false)->propertyCache;
-        while (cache->method(m_index)->isCloned())
+        while (cache->signal(m_index)->isCloned())
             --m_index;
     } else {
-        while (scope->metaObject()->method(m_index).attributes() & QMetaMethod::Cloned)
+        while (QMetaObjectPrivate::signal(scope->metaObject(), m_index).attributes() & QMetaMethod::Cloned)
             --m_index;
     }
 
@@ -275,6 +280,10 @@ QQmlBoundSignal::~QQmlBoundSignal()
     delete m_params;
 }
 
+/*!
+    Returns the signal index in the range returned by QObjectPrivate::signalIndex().
+    This is different from QMetaMethod::methodIndex().
+*/
 int QQmlBoundSignal::index() const
 {
     return m_index;
@@ -325,16 +334,16 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
         return;
 
     if (QQmlDebugService::isDebuggingEnabled())
-        QV8DebugService::instance()->signalEmitted(QString::fromLatin1(s->m_scope->metaObject()->method(s->m_index).methodSignature()));
+        QV8DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_scope->metaObject(), s->m_index).methodSignature()));
 
     QQmlHandlingSignalProfiler prof(s->m_expression);
 
     s->setIsEvaluating(true);
 
     if (!s->paramsValid()) {
-        QList<QByteArray> names = QQmlPropertyCache::methodParameterNames(*s->m_scope, s->m_index);
+        QList<QByteArray> names = QQmlPropertyCache::signalParameterNames(*s->m_scope, s->m_index);
         if (!names.isEmpty()) {
-            QMetaMethod signal = s->m_scope->metaObject()->method(s->m_index);
+            QMetaMethod signal = QMetaObjectPrivate::signal(s->m_scope->metaObject(), s->m_index);
             s->m_params = new QQmlBoundSignalParameters(signal, s);
         }
 

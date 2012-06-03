@@ -53,6 +53,7 @@
 
 #include <qjsengine.h>
 #include <QtCore/qvarlengtharray.h>
+#include <private/qmetaobject_p.h>
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
@@ -289,7 +290,7 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
 {
     Q_D(QQmlContext);
     if (d->notifyIndex == -1)
-        d->notifyIndex = this->metaObject()->methodCount();
+        d->notifyIndex = QMetaObjectPrivate::absoluteSignalCount(&QQmlContext::staticMetaObject);
 
     QQmlContextData *data = d->data;
 
@@ -322,7 +323,7 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         data->refreshExpressions();
     } else {
         d->propertyValues[idx] = value;
-        QMetaObject::activate(this, idx + d->notifyIndex, 0);
+        QMetaObject::activate(this, d->notifyIndex, idx, 0);
     }
 }
 
@@ -335,7 +336,7 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
 {
     Q_D(QQmlContext);
     if (d->notifyIndex == -1)
-        d->notifyIndex = this->metaObject()->methodCount();
+        d->notifyIndex = QMetaObjectPrivate::absoluteSignalCount(&QQmlContext::staticMetaObject);
 
     QQmlContextData *data = d->data;
 
@@ -359,7 +360,7 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
         data->refreshExpressions();
     } else {
         d->propertyValues[idx] = QVariant::fromValue(value);
-        QMetaObject::activate(this, idx + d->notifyIndex, 0);
+        QMetaObject::activate(this, d->notifyIndex, idx, 0);
     }
 }
 

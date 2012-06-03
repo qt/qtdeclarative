@@ -169,13 +169,14 @@ public:
     v8::Handle<v8::Value> vmeProperty(int index);
     void setVMEProperty(int index, v8::Handle<v8::Value> v);
 
-    void connectAliasSignal(int index);
+    void connectAliasSignal(int index, bool indexInSignalRange);
 
     virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o);
 
     static inline QQmlVMEMetaObject *get(QObject *o);
     static QQmlVMEMetaObject *getForProperty(QObject *o, int coreIndex);
     static QQmlVMEMetaObject *getForMethod(QObject *o, int coreIndex);
+    static QQmlVMEMetaObject *getForSignal(QObject *o, int coreIndex);
 
 protected:
     virtual int metaCall(QMetaObject::Call _c, int _id, void **_a);
@@ -191,6 +192,7 @@ public:
     const QQmlVMEMetaData *metaData;
     inline int propOffset() const;
     inline int methodOffset() const;
+    inline int signalOffset() const;
 
     bool hasAssignedMetaObjectData;
     QQmlVMEVariant *data;
@@ -260,6 +262,11 @@ int QQmlVMEMetaObject::propOffset() const
 int QQmlVMEMetaObject::methodOffset() const
 {
     return cache->methodOffset();
+}
+
+int QQmlVMEMetaObject::signalOffset() const
+{
+    return cache->signalOffset();
 }
 
 QT_END_NAMESPACE

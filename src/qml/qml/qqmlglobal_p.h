@@ -164,7 +164,7 @@ T qmlobject_cast(QObject *object)
         return 0;
 }
 
-bool Q_QML_PRIVATE_EXPORT QQml_isSignalConnected(QObject*, int, int);
+bool Q_QML_PRIVATE_EXPORT QQml_isSignalConnected(QObject*, int);
 
 #define IS_SIGNAL_CONNECTED(Sender, SenderType, Name, Arguments) \
 do { \
@@ -172,8 +172,7 @@ do { \
     void (SenderType::*signal)Arguments = &SenderType::Name; \
     static QMetaMethod method = QMetaMethod::fromSignal(signal); \
     static int signalIdx = QMetaObjectPrivate::signalIndex(method); \
-    static int methodIdx = method.methodIndex(); \
-    return QQml_isSignalConnected(sender, signalIdx, methodIdx); \
+    return QQml_isSignalConnected(sender, signalIdx); \
 } while (0)
 
 struct QQmlGraphics_DerivedObject : public QObject

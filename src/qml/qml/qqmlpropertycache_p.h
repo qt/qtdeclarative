@@ -172,6 +172,8 @@ public:
     };
     int coreIndex;
     union {
+        // The notify index is in the range returned by QObjectPrivate::signalIndex().
+        // This is different from QMetaMethod::methodIndex().
         int notifyIndex;  // When !IsFunction
         void *arguments;  // When IsFunction && HasArguments
     };
@@ -276,6 +278,8 @@ public:
     QQmlPropertyData *property(const QString &) const;
     QQmlPropertyData *property(int) const;
     QQmlPropertyData *method(int) const;
+    QQmlPropertyData *signal(int) const;
+    int methodIndexToSignalIndex(int) const;
     QStringList propertyNames() const;
 
     QString defaultPropertyName() const;
@@ -292,7 +296,7 @@ public:
                                               QQmlPropertyData &);
     static int *methodParameterTypes(QObject *, int index, QVarLengthArray<int, 9> &dummy,
                                      QByteArray *unknownTypeError);
-    static QList<QByteArray> methodParameterNames(QObject *, int index);
+    static QList<QByteArray> signalParameterNames(QObject *, int index);
 
     const char *className() const;
 

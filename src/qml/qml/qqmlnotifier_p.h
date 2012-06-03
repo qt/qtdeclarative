@@ -108,6 +108,8 @@ private:
     inline QQmlNotifier *senderAsNotifier() const;
 
     Callback callback:4;
+    // The index is in the range returned by QObjectPrivate::signalIndex().
+    // This is different from QMetaMethod::methodIndex().
     signed int sourceSignal:28;
 
     QQmlNotifierEndpoint  *next;
@@ -157,6 +159,10 @@ bool QQmlNotifierEndpoint::isConnected()
     return prev != 0;
 }
 
+/*! \internal
+    \a sourceSignal MUST be in the signal index range (see QObjectPrivate::signalIndex()).
+    This is different from QMetaMethod::methodIndex().
+*/
 bool QQmlNotifierEndpoint::isConnected(QObject *source, int sourceSignal)
 {
     return this->sourceSignal != -1 && senderAsObject() == source &&
