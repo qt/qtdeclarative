@@ -902,9 +902,10 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         amd64_call_code(_codePtr, __qmljs_to_boolean);
 
         amd64_patch(label2, _codePtr);
-        amd64_alu_reg_imm_size(_codePtr, X86_CMP, AMD64_RAX, 0, 4);
+        amd64_mov_reg_imm_size(_codePtr, AMD64_RDX, 1, 1);
+        amd64_alu_reg8_reg8(_codePtr, X86_CMP, AMD64_RAX, AMD64_RDX, 0, 0);
         _patches[s->iftrue].append(_codePtr);
-        amd64_branch32(_codePtr, X86_CC_NZ, 0, 1);
+        amd64_branch32(_codePtr, X86_CC_E, 0, 1);
 
         if (_block->index + 1 != s->iffalse->index) {
             _patches[s->iffalse].append(_codePtr);
@@ -915,11 +916,46 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         IR::Temp *l = b->left->asTemp();
         IR::Temp *r = b->right->asTemp();
         if (l && r) {
-            amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
             loadTempAddress(AMD64_RSI, l);
             loadTempAddress(AMD64_RDX, r);
 
-            // ### TODO: instruction selection for common cases (e.g. number1 < number2)
+            uchar *label1 = 0, *label2 = 0, *label3 = 0;
+            if (b->op != IR::OpInstanceof && b->op != IR::OpIn) {
+                amd64_alu_membase_imm_size(_codePtr, X86_CMP, AMD64_RSI, 0, NUMBER_TYPE, 4);
+                label1 = _codePtr;
+                amd64_branch8(_codePtr, X86_CC_NE, 0, 0);
+                amd64_alu_membase_imm_size(_codePtr, X86_CMP, AMD64_RDX, 0, NUMBER_TYPE, 4);
+                label2 = _codePtr;
+                amd64_branch8(_codePtr, X86_CC_NE, 0, 0);
+                amd64_movsd_reg_membase(_codePtr, AMD64_XMM0, AMD64_RSI, offsetof(Value, numberValue));
+                amd64_movsd_reg_membase(_codePtr, AMD64_XMM1, AMD64_RDX, offsetof(Value, numberValue));
+
+                int op;
+                switch (b->op) {
+                default: Q_UNREACHABLE(); assert(!"todo"); break;
+                case IR::OpGt: op = X86_CC_GT; break;
+                case IR::OpLt: op = X86_CC_LT; break;
+                case IR::OpGe: op = X86_CC_GE; break;
+                case IR::OpLe: op = X86_CC_LE; break;
+                case IR::OpEqual: op = X86_CC_EQ; break;
+                case IR::OpNotEqual: op = X86_CC_NE; break;
+                case IR::OpStrictEqual: op = X86_CC_EQ; break;
+                case IR::OpStrictNotEqual: op = X86_CC_NE; break;
+                }
+
+                amd64_sse_ucomisd_reg_reg(_codePtr, AMD64_XMM0, AMD64_XMM1);
+                amd64_set_reg_size(_codePtr, op, AMD64_RAX, 0, 1);
+
+                label3 = _codePtr;
+                amd64_jump32(_codePtr, 0);
+            }
+
+            if (label1 && label2) {
+                amd64_patch(label1, _codePtr);
+                amd64_patch(label2, _codePtr);
+            }
+
+            amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
 
             bool (*op)(Context *, const Value *, const Value *);
             switch (b->op) {
@@ -937,10 +973,15 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             } // switch
 
             amd64_call_code(_codePtr, op);
-            x86_alu_reg_imm(_codePtr, X86_CMP, X86_EAX, 0);
+
+            if (label3)
+                amd64_patch(label3, _codePtr);
+
+            x86_mov_reg_imm(_codePtr, X86_EDX, 1);
+            x86_alu_reg8_reg8(_codePtr, X86_CMP, X86_EAX, X86_EDX, 0, 0);
 
             _patches[s->iftrue].append(_codePtr);
-            amd64_branch32(_codePtr, X86_CC_NZ, 0, 1);
+            amd64_branch32(_codePtr, X86_CC_E, 0, 1);
 
             if (_block->index + 1 != s->iffalse->index) {
                 _patches[s->iffalse].append(_codePtr);
