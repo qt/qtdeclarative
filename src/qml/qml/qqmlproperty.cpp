@@ -369,7 +369,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
         } else {
             QMetaMethod method = findSignalByName(currentObject->metaObject(),
-                                                  signalName.toLatin1().constData());
+                                                  signalName.toLatin1());
             if (method.isValid()) {
                 object = currentObject;
                 core.load(method);
