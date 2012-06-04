@@ -44,8 +44,6 @@
 
 #include <QtCore/qmutex.h>
 #include "qquickcontext2d_p.h"
-#include <QtQuick/private/qquickpixmapcache_p.h>
-
 
 QT_BEGIN_HEADER
 
@@ -98,11 +96,18 @@ public:
         bools << repeatX << repeatY;
     }
 
-    inline void drawImage(const QImage& image, qreal sx, qreal sy, qreal sw, qreal sh, qreal dx, qreal dy, qreal dw, qreal dh)
+    inline void drawImage(const QImage& image,  const QRectF& sr, const QRectF& dr)
     {
         commands << QQuickContext2D::DrawImage;
         images << image;
-        reals << sx << sy << sw << sh << dx << dy << dw << dh;
+        rects << sr << dr;
+    }
+
+    inline void drawPixmap(QQmlRefPointer<QQuickCanvasPixmap> pixmap, const QRectF& sr, const QRectF& dr)
+    {
+        commands << QQuickContext2D::DrawPixmap;
+        pixmaps << pixmap;
+        rects << sr << dr;
     }
 
     inline qreal takeShadowOffsetX() { return takeReal(); }
@@ -117,22 +122,22 @@ public:
         matrixes << matrix;
     }
 
-    inline void clearRect(qreal x, qreal y, qreal w, qreal h)
+    inline void clearRect(const QRectF& r)
     {
         commands << QQuickContext2D::ClearRect;
-        reals << x << y << w << h;
+        rects << r;
     }
 
-    inline void fillRect(qreal x, qreal y, qreal w, qreal h)
+    inline void fillRect(const QRectF& r)
     {
         commands << QQuickContext2D::FillRect;
-        reals << x << y << w << h;
+        rects << r;
     }
 
-    inline void strokeRect(qreal x, qreal y, qreal w, qreal h)
+    inline void strokeRect(const QRectF& r)
     {
         QPainterPath p;
-        p.addRect(x, y, w, h);
+        p.addRect(r);
 
         commands << QQuickContext2D::Stroke;
         pathes << p;
@@ -218,19 +223,12 @@ public:
 
     inline QTransform takeMatrix() { return matrixes[matrixIdx++]; }
 
-    // rects
-    inline QRectF takeRect() {
-        qreal x, y, w, h;
-        x = takeReal();
-        y = takeReal();
-        w = takeReal();
-        h = takeReal();
-        return QRectF(x, y, w ,h);
-    }
+    inline QRectF takeRect() { return rects[rectIdx++]; }
 
     inline QPainterPath takePath() { return pathes[pathIdx++]; }
 
     inline const QImage& takeImage() { return images[imageIdx++]; }
+    inline QQmlRefPointer<QQuickCanvasPixmap> takePixmap() { return pixmaps[pixmapIdx++]; }
 
     inline int takeInt() { return ints[intIdx++]; }
     inline bool takeBool() {return bools[boolIdx++]; }
@@ -246,21 +244,25 @@ private:
     int intIdx;
     int boolIdx;
     int realIdx;
+    int rectIdx;
     int colorIdx;
     int matrixIdx;
     int brushIdx;
     int pathIdx;
     int imageIdx;
+    int pixmapIdx;
     QVector<QQuickContext2D::PaintCommand> commands;
 
     QVector<int> ints;
     QVector<bool> bools;
     QVector<qreal> reals;
+    QVector<QRectF> rects;
     QVector<QColor> colors;
     QVector<QTransform> matrixes;
     QVector<QBrush> brushes;
     QVector<QPainterPath> pathes;
     QVector<QImage> images;
+    QVector<QQmlRefPointer<QQuickCanvasPixmap> > pixmaps;
     QMutex queueLock;
 };
 

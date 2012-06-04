@@ -43,6 +43,10 @@
 #include "qquickcanvasitem_p.h"
 #include <qqml.h>
 #include <QtCore/QMutex>
+#include <QtQuick/qsgtexture.h>
+#include <QtGui/QOpenGLContext>
+#include <QtGui/QPaintEngine>
+#include <QtGui/private/qopenglpaintengine_p.h>
 
 #define HAS_SHADOW(offsetX, offsetY, blur, color) (color.isValid() && color.alpha() && (blur || offsetX || offsetY))
 
@@ -229,6 +233,44 @@ void QQuickContext2DCommandBuffer::setPainterState(QPainter* p, const QQuickCont
        p->setCompositionMode(state.globalCompositeOperation);
 }
 
+static void qt_drawImage(QPainter *p, QQuickContext2D::State& state, QImage image, const QRectF& sr, const QRectF& dr, bool shadow = false)
+{
+    Q_ASSERT(p);
+
+    if (image.isNull())
+        return;
+
+    qreal sx = sr.x();
+    qreal sy = sr.y();
+    qreal sw = sr.width();
+    qreal sh = sr.height();
+    qreal dx = dr.x();
+    qreal dy = dr.y();
+    qreal dw = dr.width();
+    qreal dh = dr.height();
+
+    if (sw == -1 || sh == -1) {
+        sw = image.width();
+        sh = image.height();
+    }
+    if (sx != 0 || sy != 0 || sw != image.width() || sh != image.height())
+        image = image.copy(sx, sy, sw, sh);
+
+    if (sw != dw || sh != dh)
+        image = image.scaled(dw, dh);
+
+    if (shadow) {
+        QImage shadow = makeShadowImage(image, state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
+        qreal shadow_dx = dx + (state.shadowOffsetX < 0? state.shadowOffsetY:0);
+        qreal shadow_dy = dy + (state.shadowOffsetX < 0? state.shadowOffsetY:0);
+        p->drawImage(shadow_dx, shadow_dy, shadow);
+    }
+    //Strange OpenGL painting behavior here, without beginNativePainting/endNativePainting, only the first image is painted.
+    p->beginNativePainting();
+    p->drawImage(dx, dy, image);
+    p->endNativePainting();
+}
+
 void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& state)
 {
     if (!p)
@@ -383,37 +425,49 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
         }
         case QQuickContext2D::DrawImage:
         {
-            qreal sx = takeReal();
-            qreal sy = takeReal();
-            qreal sw = takeReal();
-            qreal sh = takeReal();
-            qreal dx = takeReal();
-            qreal dy = takeReal();
-            qreal dw = takeReal();
-            qreal dh = takeReal();
-            QImage image = takeImage();
+            QRectF sr = takeRect();
+            QRectF dr = takeRect();
+            qt_drawImage(p, state, takeImage(), sr, dr, HAS_SHADOW(state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor));
+            break;
+        }
+        case QQuickContext2D::DrawPixmap:
+        {
+            QRectF sr = takeRect();
+            QRectF dr = takeRect();
 
-            if (!image.isNull()) {
-                if (sw == -1 || sh == -1) {
-                    sw = image.width();
-                    sh = image.height();
+            QQmlRefPointer<QQuickCanvasPixmap> pix = takePixmap();
+            Q_ASSERT(!pix.isNull());
+
+            const bool hasShadow = HAS_SHADOW(state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
+            if (p->paintEngine()->type() != QPaintEngine::OpenGL2 || hasShadow){
+                //TODO: generate shadow blur with shaders
+                qt_drawImage(p, state, pix->image(), sr, dr, hasShadow);
+            } else if (pix->texture()){
+                QSGTexture *tex = pix->texture();
+                QSGDynamicTexture *dynamicTexture = qobject_cast<QSGDynamicTexture *>(tex);
+                if (dynamicTexture)
+                    dynamicTexture->updateTexture();
+
+                if (tex->textureId()) {
+
+                    if (sr.width() < 0)
+                        sr.setWidth(tex->textureSize().width());
+                    if (sr.height() < 0)
+                        sr.setHeight(tex->textureSize().height());
+
+                    if (dr.width() < 0)
+                        dr.setWidth(sr.width());
+                    if (dr.height() < 0)
+                        dr.setHeight(sr.height());
+
+                    qreal srBottom = sr.bottom();
+                    sr.setBottom(sr.top());
+                    sr.setTop(srBottom);
+
+                    tex->bind();
+                    QOpenGL2PaintEngineEx *engine = dynamic_cast<QOpenGL2PaintEngineEx *>(p->paintEngine());
+                    engine->drawTexture(dr, tex->textureId(), tex->textureSize(), sr);
                 }
-                if (sx != 0 || sy != 0 || sw != image.width() || sh != image.height())
-                    image = image.copy(sx, sy, sw, sh);
-
-                image = image.scaled(dw, dh);
-
-                if (HAS_SHADOW(state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor)) {
-                    QImage shadow = makeShadowImage(image, state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
-                    qreal shadow_dx = dx + (state.shadowOffsetX < 0? state.shadowOffsetY:0);
-                    qreal shadow_dy = dy + (state.shadowOffsetX < 0? state.shadowOffsetY:0);
-                    p->drawImage(shadow_dx, shadow_dy, shadow);
-                }
-
-                //Strange OpenGL painting behavior here, without beginNativePainting/endNativePainting, only the first image is painted.
-                p->beginNativePainting();
-                p->drawImage(dx, dy, image);
-                p->endNativePainting();
             }
             break;
         }
@@ -435,11 +489,13 @@ QQuickContext2DCommandBuffer::QQuickContext2DCommandBuffer()
     , intIdx(0)
     , boolIdx(0)
     , realIdx(0)
+    , rectIdx(0)
     , colorIdx(0)
     , matrixIdx(0)
     , brushIdx(0)
     , pathIdx(0)
     , imageIdx(0)
+    , pixmapIdx(0)
 {
 }
 
@@ -454,11 +510,13 @@ void QQuickContext2DCommandBuffer::clear()
     ints.clear();
     bools.clear();
     reals.clear();
+    rects.clear();
     colors.clear();
     matrixes.clear();
     brushes.clear();
     pathes.clear();
     images.clear();
+    pixmaps.clear();
     reset();
 }
 
@@ -468,12 +526,13 @@ void QQuickContext2DCommandBuffer::reset()
     intIdx = 0;
     boolIdx = 0;
     realIdx = 0;
+    rectIdx = 0;
     colorIdx = 0;
     matrixIdx = 0;
     brushIdx = 0;
     pathIdx = 0;
     imageIdx = 0;
+    pixmapIdx = 0;
 }
 
 QT_END_NAMESPACE
-

@@ -50,7 +50,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QtCore/QThread>
-
+#include <QtCore/QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 

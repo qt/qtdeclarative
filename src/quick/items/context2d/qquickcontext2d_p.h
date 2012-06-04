@@ -109,6 +109,7 @@ public:
         FillText,
         StrokeText,
         DrawImage,
+        DrawPixmap,
         GetImageData
     };
 
@@ -223,7 +224,7 @@ public:
     bool isPointInPath(qreal x, qreal y) const;
 
     QPainterPath createTextGlyphs(qreal x, qreal y, const QString& text);
-    QImage createImage(const QUrl& url);
+    QQmlRefPointer<QQuickCanvasPixmap> createPixmap(const QUrl& url);
 
     QOpenGLContext *glContext() { return m_glContext; }
     QSurface *surface() { return m_surface; }

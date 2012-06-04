@@ -1204,7 +1204,7 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
                     patternTexture = pixelData->image;
                 }
             } else {
-                patternTexture = r->context->createImage(QUrl(engine->toString(args[0]->ToString())));
+                patternTexture = r->context->createPixmap(QUrl(engine->toString(args[0]->ToString())))->image();
             }
 
             if (!patternTexture.isNull()) {
@@ -1983,16 +1983,22 @@ static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
 
 static v8::Handle<v8::Value> ctx2d_drawFocusRing(const v8::Arguments &args)
 {
+    Q_UNUSED(args);
+
     V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::drawFocusRing is not supported");
 }
 
 static v8::Handle<v8::Value> ctx2d_setCaretSelectionRect(const v8::Arguments &args)
 {
+    Q_UNUSED(args);
+
     V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::setCaretSelectionRect is not supported");
 }
 
 static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
 {
+    Q_UNUSED(args);
+
     V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::caretBlinkRate is not supported");
 }
 // text
@@ -2309,44 +2315,51 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     if (!r->context->state.invertibleCTM)
         return args.This();
 
-    QImage image;
+    QQmlRefPointer<QQuickCanvasPixmap> pixmap;
+
     if (args[0]->IsString()) {
         QUrl url(engine->toString(args[0]->ToString()));
         if (!url.isValid())
             V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
 
-        image = r->context->createImage(url);
+        pixmap = r->context->createPixmap(url);
     } else if (args[0]->IsObject()) {
         QQuickImage *imageItem = qobject_cast<QQuickImage*>(engine->toQObject(args[0]->ToObject()));
         QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(engine->toQObject(args[0]->ToObject()));
 
         QV8Context2DPixelArrayResource *pix = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
-        if (pix) {
-            image = pix->image;
+        if (pix && !pix->image.isNull()) {
+            pixmap.take(new QQuickCanvasPixmap(pix->image, r->context->canvas()->canvas()));
         } else if (imageItem) {
-            image = imageItem->image();
+            pixmap.take(r->context->createPixmap(imageItem->source()));
         } else if (canvas) {
-            image = canvas->toImage();
+            QImage img = canvas->toImage();
+            if (!img.isNull())
+                pixmap.take(new QQuickCanvasPixmap(img, canvas->canvas()));
         } else {
             V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
         }
     } else {
         V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
     }
+
+    if (pixmap.isNull() || !pixmap->isValid())
+        return args.This();
+
     if (args.Length() == 3) {
         dx = args[1]->NumberValue();
         dy = args[2]->NumberValue();
         sx = 0;
         sy = 0;
-        sw = image.width();
-        sh = image.height();
+        sw = pixmap->width();
+        sh = pixmap->height();
         dw = sw;
         dh = sh;
     } else if (args.Length() == 5) {
         sx = 0;
         sy = 0;
-        sw = image.width();
-        sh = image.height();
+        sw = pixmap->width();
+        sh = pixmap->height();
         dx = args[1]->NumberValue();
         dy = args[2]->NumberValue();
         dw = args[3]->NumberValue();
@@ -2374,15 +2387,17 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
      || !qIsFinite(dh))
         return args.This();
 
-    if (!image.isNull()) {
-        if (sx < 0 || sy < 0 || sw == 0 || sh == 0
-         || sx + sw > image.width() || sy + sh > image.height()
-         || sx + sw < 0 || sy + sh < 0) {
+    if (sx < 0
+    || sy < 0
+    || sw == 0
+    || sh == 0
+    || sx + sw > pixmap->width()
+    || sy + sh > pixmap->height()
+    || sx + sw < 0 || sy + sh < 0) {
             V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "drawImage(), index size error");
-        }
-
-        r->context->buffer()->drawImage(image,sx, sy, sw, sh, dx, dy, dw, dh);
     }
+
+    r->context->buffer()->drawPixmap(pixmap, QRectF(sx, sy, sw, sh), QRectF(dx, dy, dw, dh));
 
     return args.This();
 }
@@ -2551,7 +2566,7 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
                 return qt_create_image_data(w, h, engine, QImage());
             }
         } else if (args[0]->IsString()) {
-            QImage image = r->context->createImage(QUrl(engine->toString(args[0]->ToString())));
+            QImage image = r->context->createPixmap(QUrl(engine->toString(args[0]->ToString())))->image();
             return qt_create_image_data(image.width(), image.height(), engine, image);
         }
     } else if (args.Length() == 2) {
@@ -2673,7 +2688,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
         }
 
         QImage image = pixelArray->image.copy(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
-        r->context->buffer()->drawImage(image, dirtyX, dirtyY, dirtyWidth, dirtyHeight, dx, dy, dirtyWidth, dirtyHeight);
+        r->context->buffer()->drawImage(image, QRectF(dirtyX, dirtyY, dirtyWidth, dirtyHeight), QRectF(dx, dy, dirtyWidth, dirtyHeight));
     }
     return args.This();
 }
@@ -2897,7 +2912,7 @@ void QQuickContext2D::fillRect(qreal x, qreal y, qreal w, qreal h)
     if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
         return;
 
-    buffer()->fillRect(x, y, w, h);
+    buffer()->fillRect(QRectF(x, y, w, h));
 }
 
 void QQuickContext2D::strokeRect(qreal x, qreal y, qreal w, qreal h)
@@ -2908,7 +2923,7 @@ void QQuickContext2D::strokeRect(qreal x, qreal y, qreal w, qreal h)
     if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
         return;
 
-    buffer()->strokeRect(x, y, w, h);
+    buffer()->strokeRect(QRectF(x, y, w, h));
 }
 
 void QQuickContext2D::clearRect(qreal x, qreal y, qreal w, qreal h)
@@ -2919,7 +2934,7 @@ void QQuickContext2D::clearRect(qreal x, qreal y, qreal w, qreal h)
     if (!qIsFinite(x) || !qIsFinite(y) || !qIsFinite(w) || !qIsFinite(h))
         return;
 
-    buffer()->clearRect(x, y, w, h);
+    buffer()->clearRect(QRectF(x, y, w, h));
 }
 
 void QQuickContext2D::drawText(const QString& text, qreal x, qreal y, bool fill)
@@ -3245,9 +3260,9 @@ static int textAlignOffset(QQuickContext2D::TextAlignType value, const QFontMetr
 }
 
 
-QImage QQuickContext2D::createImage(const QUrl& url)
+QQmlRefPointer<QQuickCanvasPixmap> QQuickContext2D::createPixmap(const QUrl& url)
 {
-    return m_canvas->loadedImage(url);
+    return m_canvas->loadedPixmap(url);
 }
 
 QPainterPath QQuickContext2D::createTextGlyphs(qreal x, qreal y, const QString& text)
@@ -3649,7 +3664,7 @@ void QQuickContext2D::reset()
     m_stateStack.clear();
     m_stateStack.push(newState);
     popState();
-    m_buffer->clearRect(0, 0, m_canvas->width(), m_canvas->height());
+    m_buffer->clearRect(QRectF(0, 0, m_canvas->width(), m_canvas->height()));
 }
 
 void QQuickContext2D::setV8Engine(QV8Engine *engine)

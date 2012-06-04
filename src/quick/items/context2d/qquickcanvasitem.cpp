@@ -53,6 +53,73 @@
 
 QT_BEGIN_NAMESPACE
 
+QQuickCanvasPixmap::QQuickCanvasPixmap(const QImage& image, QQuickCanvas *canvas)
+    : m_pixmap(0)
+    , m_image(image)
+    , m_texture(0)
+    , m_canvas(canvas)
+{
+
+}
+
+QQuickCanvasPixmap::QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickCanvas *canvas)
+    : m_pixmap(pixmap)
+    , m_texture(0)
+    , m_canvas(canvas)
+{
+
+}
+
+QQuickCanvasPixmap::~QQuickCanvasPixmap()
+{
+    delete m_pixmap;
+    if (m_texture)
+        m_texture->deleteLater();
+}
+
+qreal QQuickCanvasPixmap::width() const
+{
+    if (m_pixmap)
+        return m_pixmap->width();
+
+    return m_image.width();
+}
+
+qreal QQuickCanvasPixmap::height() const
+{
+    if (m_pixmap)
+        return m_pixmap->height();
+
+    return m_image.height();
+}
+
+bool QQuickCanvasPixmap::isValid() const
+{
+    if (m_pixmap)
+        return m_pixmap->isReady();
+    return !m_image.isNull();
+}
+
+QSGTexture *QQuickCanvasPixmap::texture()
+{
+    if (!m_texture) {
+        if (m_pixmap) {
+            Q_ASSERT(m_pixmap->textureFactory());
+            m_texture = m_pixmap->textureFactory()->createTexture(m_canvas);
+        } else {
+            m_texture = QQuickCanvasPrivate::get(m_canvas)->context->createTexture(m_image);
+        }
+    }
+    return m_texture;
+}
+QImage QQuickCanvasPixmap::image()
+{
+    if (m_image.isNull() && m_pixmap)
+        m_image = m_pixmap->image();
+
+    return m_image;
+}
+
 QHash<QQmlEngine *,QQuickContext2DRenderThread*> QQuickContext2DRenderThread::renderThreads;
 QMutex QQuickContext2DRenderThread::renderThreadsMutex;
 
@@ -95,7 +162,7 @@ class QQuickCanvasItemPrivate : public QQuickItemPrivate
 public:
     QQuickCanvasItemPrivate();
     ~QQuickCanvasItemPrivate();
-    QQuickCanvasContext* context;
+    QQuickCanvasContext *context;
     QSizeF canvasSize;
     QSize tileSize;
     QRectF canvasWindow;
@@ -108,7 +175,7 @@ public:
     QQuickCanvasItem::RenderTarget renderTarget;
     QQuickCanvasItem::RenderStrategy renderStrategy;
     QString contextType;
-    QHash<QUrl, QQuickPixmap*> images;
+    QHash<QUrl, QQmlRefPointer<QQuickCanvasPixmap> > pixmaps;
     QUrl baseUrl;
     QMap<int, v8::Persistent<v8::Function> > animationCallbacks;
 };
@@ -130,7 +197,7 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
 
 QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
 {
-    qDeleteAll(images);
+    pixmaps.clear();
 }
 
 
@@ -785,18 +852,14 @@ bool QQuickCanvasItem::save(const QString &filename) const
     return toImage().save(url.toLocalFile());
 }
 
-QImage QQuickCanvasItem::loadedImage(const QUrl& url)
+QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& url)
 {
     Q_D(QQuickCanvasItem);
     QUrl fullPathUrl = d->baseUrl.resolved(url);
-    if (!d->images.contains(fullPathUrl)) {
+    if (!d->pixmaps.contains(fullPathUrl)) {
         loadImage(url);
     }
-    QQuickPixmap* pix = d->images.value(fullPathUrl);
-    if (pix->isLoading() || pix->isError()) {
-        return QImage();
-    }
-    return pix->image();
+    return d->pixmaps.value(fullPathUrl);
 }
 
 /*!
@@ -814,9 +877,11 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
 {
     Q_D(QQuickCanvasItem);
     QUrl fullPathUrl = d->baseUrl.resolved(url);
-    if (!d->images.contains(fullPathUrl)) {
+    if (!d->pixmaps.contains(fullPathUrl)) {
         QQuickPixmap* pix = new QQuickPixmap();
-        d->images.insert(fullPathUrl, pix);
+        QQmlRefPointer<QQuickCanvasPixmap> canvasPix;
+        canvasPix.take(new QQuickCanvasPixmap(pix, d->canvas));
+        d->pixmaps.insert(fullPathUrl, canvasPix);
 
         pix->load(qmlEngine(this)
                 , fullPathUrl
@@ -838,11 +903,7 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
 void QQuickCanvasItem::unloadImage(const QUrl& url)
 {
     Q_D(QQuickCanvasItem);
-    QUrl removeThis = d->baseUrl.resolved(url);
-    if (d->images.contains(removeThis)) {
-        delete d->images.value(removeThis);
-        d->images.remove(removeThis);
-    }
+    d->pixmaps.remove(d->baseUrl.resolved(url));
 }
 
 /*!
@@ -855,8 +916,8 @@ bool QQuickCanvasItem::isImageError(const QUrl& url) const
 {
     Q_D(const QQuickCanvasItem);
     QUrl fullPathUrl = d->baseUrl.resolved(url);
-    return d->images.contains(fullPathUrl)
-        && d->images.value(fullPathUrl)->isError();
+    return d->pixmaps.contains(fullPathUrl)
+        && d->pixmaps.value(fullPathUrl)->pixmap()->isError();
 }
 
 /*!
@@ -869,8 +930,8 @@ bool QQuickCanvasItem::isImageLoading(const QUrl& url) const
 {
     Q_D(const QQuickCanvasItem);
     QUrl fullPathUrl = d->baseUrl.resolved(url);
-    return d->images.contains(fullPathUrl)
-        && d->images.value(fullPathUrl)->isLoading();
+    return d->pixmaps.contains(fullPathUrl)
+        && d->pixmaps.value(fullPathUrl)->pixmap()->isLoading();
 }
 /*!
   \qmlmethod void QtQuick2::Canvas::isImageLoaded(url image)
@@ -882,8 +943,8 @@ bool QQuickCanvasItem::isImageLoaded(const QUrl& url) const
 {
     Q_D(const QQuickCanvasItem);
     QUrl fullPathUrl = d->baseUrl.resolved(url);
-    return d->images.contains(fullPathUrl)
-        && d->images.value(fullPathUrl)->isReady();
+    return d->pixmaps.contains(fullPathUrl)
+        && d->pixmaps.value(fullPathUrl)->pixmap()->isReady();
 }
 
 QImage QQuickCanvasItem::toImage(const QRectF& rect) const

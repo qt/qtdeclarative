@@ -45,6 +45,7 @@
 #include <QtQuick/qquickitem.h>
 #include <private/qv8engine_p.h>
 #include <QtCore/QThread>
+#include <QtGui/QImage>
 
 QT_BEGIN_HEADER
 
@@ -53,15 +54,40 @@ QT_BEGIN_NAMESPACE
 class QQuickCanvasContext;
 
 class QQuickCanvasItemPrivate;
+class QSGTexture;
+class QQuickPixmap;
+
+class QQuickCanvasPixmap : public QQmlRefCount
+{
+public:
+    QQuickCanvasPixmap(const QImage& image, QQuickCanvas *canvas);
+    QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickCanvas *canvas);
+    ~QQuickCanvasPixmap();
+
+    QSGTexture *texture();
+    QImage image();
+
+    qreal width() const;
+    qreal height() const;
+    bool isValid() const;
+    QQuickPixmap *pixmap() const { return m_pixmap;}
+
+private:
+    QQuickPixmap *m_pixmap;
+    QImage m_image;
+    QSGTexture *m_texture;
+    QQuickCanvas *m_canvas;
+};
+
 class QQuickCanvasItem : public QQuickItem
 {
     Q_OBJECT
     Q_ENUMS(RenderTarget)
     Q_ENUMS(RenderStrategy)
 
-    Q_PROPERTY(bool available READ isAvailable NOTIFY availableChanged);
+    Q_PROPERTY(bool available READ isAvailable NOTIFY availableChanged)
     Q_PROPERTY(QString contextType READ contextType WRITE setContextType NOTIFY contextTypeChanged)
-    Q_PROPERTY(QQmlV8Handle context READ context NOTIFY contextChanged);
+    Q_PROPERTY(QQmlV8Handle context READ context NOTIFY contextChanged)
     Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize NOTIFY canvasSizeChanged)
     Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize NOTIFY tileSizeChanged)
     Q_PROPERTY(QRectF canvasWindow READ canvasWindow WRITE setCanvasWindow NOTIFY canvasWindowChanged)
@@ -105,7 +131,7 @@ public:
     RenderStrategy renderStrategy() const;
     void setRenderStrategy(RenderStrategy strategy);
 
-    QQuickCanvasContext* rawContext() const;
+    QQuickCanvasContext *rawContext() const;
 
     QImage toImage(const QRectF& rect = QRectF()) const;
 
@@ -119,7 +145,7 @@ public:
 
     Q_INVOKABLE bool save(const QString &filename) const;
     Q_INVOKABLE QString toDataURL(const QString& type = QLatin1String("image/png")) const;
-    QImage loadedImage(const QUrl& url);
+    QQmlRefPointer<QQuickCanvasPixmap> loadedPixmap(const QUrl& url);
 
 Q_SIGNALS:
     void paint(const QRect &region);
@@ -154,7 +180,6 @@ protected:
 
 private:
     Q_DECLARE_PRIVATE(QQuickCanvasItem)
-
     Q_INVOKABLE void delayedCreate();
     bool createContext(const QString &contextType);
     void initializeContext(QQuickCanvasContext *context, const QVariantMap &args = QVariantMap());
