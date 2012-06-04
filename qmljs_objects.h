@@ -24,6 +24,7 @@ struct StringObject;
 struct ArrayObject;
 struct DateObject;
 struct FunctionObject;
+struct RegExpObject;
 struct ErrorObject;
 struct ArgumentsObject;
 struct Context;
@@ -36,6 +37,7 @@ struct BooleanPrototype;
 struct ArrayPrototype;
 struct FunctionPrototype;
 struct DatePrototype;
+struct RegExpPrototype;
 
 struct String {
     String(const QString &text)
@@ -212,6 +214,7 @@ struct Object {
     virtual DateObject *asDateObject() { return 0; }
     virtual ArrayObject *asArrayObject() { return 0; }
     virtual FunctionObject *asFunctionObject() { return 0; }
+    virtual RegExpObject *asRegExpObject() { return 0; }
     virtual ErrorObject *asErrorObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
@@ -307,6 +310,13 @@ struct ScriptFunction: FunctionObject {
 
     virtual void call(Context *ctx);
     virtual void construct(Context *ctx);
+};
+
+struct RegExpObject: Object {
+    Value value;
+    RegExpObject(const Value &value): value(value) {}
+    virtual QString className() { return QStringLiteral("RegExp"); }
+    virtual RegExpObject *asRegExpObject() { return this; }
 };
 
 struct ErrorObject: Object {
@@ -410,6 +420,7 @@ struct ExecutionEngine
     Value arrayCtor;
     Value functionCtor;
     Value dateCtor;
+    Value regExpCtor;
 
     ObjectPrototype *objectPrototype;
     StringPrototype *stringPrototype;
@@ -418,6 +429,7 @@ struct ExecutionEngine
     ArrayPrototype *arrayPrototype;
     FunctionPrototype *functionPrototype;
     DatePrototype *datePrototype;
+    RegExpPrototype *regExpPrototype;
 
     QHash<QString, String *> identifiers;
 
@@ -457,6 +469,9 @@ struct ExecutionEngine
 
     Object *newDateObject(const Value &value);
     FunctionObject *newDateCtor(Context *ctx);
+
+    Object *newRegExpObject(const Value &value);
+    FunctionObject *newRegExpCtor(Context *ctx);
 
     Object *newErrorObject(const Value &value);
     Object *newMathObject(Context *ctx);

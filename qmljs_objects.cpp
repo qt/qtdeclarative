@@ -238,6 +238,7 @@ ExecutionEngine::ExecutionEngine()
     arrayPrototype = new ArrayPrototype();
     datePrototype = new DatePrototype();
     functionPrototype = new FunctionPrototype(rootContext);
+    regExpPrototype = new RegExpPrototype();
 
     stringPrototype->prototype = objectPrototype;
     numberPrototype->prototype = objectPrototype;
@@ -245,21 +246,24 @@ ExecutionEngine::ExecutionEngine()
     arrayPrototype->prototype = objectPrototype;
     datePrototype->prototype = objectPrototype;
     functionPrototype->prototype = objectPrototype;
+    regExpPrototype->prototype = objectPrototype;
 
-    Value objectCtor = Value::fromObject(new ObjectCtor(rootContext));
-    Value stringCtor = Value::fromObject(new StringCtor(rootContext));
-    Value numberCtor = Value::fromObject(new NumberCtor(rootContext));
-    Value booleanCtor = Value::fromObject(new BooleanCtor(rootContext));
-    Value arrayCtor = Value::fromObject(new ArrayCtor(rootContext));
-    Value functionCtor = Value::fromObject(new FunctionCtor(rootContext));
-    Value dateCtor = Value::fromObject(new DateCtor(rootContext));
+    objectCtor = Value::fromObject(new ObjectCtor(rootContext));
+    stringCtor = Value::fromObject(new StringCtor(rootContext));
+    numberCtor = Value::fromObject(new NumberCtor(rootContext));
+    booleanCtor = Value::fromObject(new BooleanCtor(rootContext));
+    arrayCtor = Value::fromObject(new ArrayCtor(rootContext));
+    functionCtor = Value::fromObject(new FunctionCtor(rootContext));
+    dateCtor = Value::fromObject(new DateCtor(rootContext));
+    regExpCtor = Value::fromObject(new RegExpCtor(rootContext));
 
-    stringCtor.objectValue->prototype = functionPrototype;
-    numberCtor.objectValue->prototype = functionPrototype;
-    booleanCtor.objectValue->prototype = functionPrototype;
-    arrayCtor.objectValue->prototype = functionPrototype;
+    stringCtor.objectValue->prototype = stringPrototype;
+    numberCtor.objectValue->prototype = numberPrototype;
+    booleanCtor.objectValue->prototype = booleanPrototype;
+    arrayCtor.objectValue->prototype = arrayPrototype;
     functionCtor.objectValue->prototype = functionPrototype;
-    dateCtor.objectValue->prototype = functionPrototype;
+    dateCtor.objectValue->prototype = datePrototype;
+    regExpCtor.objectValue->prototype = regExpPrototype;
 
     objectPrototype->init(rootContext, objectCtor);
     stringPrototype->init(rootContext, stringCtor);
@@ -268,6 +272,7 @@ ExecutionEngine::ExecutionEngine()
     arrayPrototype->init(rootContext, arrayCtor);
     datePrototype->init(rootContext, dateCtor);
     functionPrototype->init(rootContext, functionCtor);
+    regExpPrototype->init(rootContext, regExpCtor);
 
     //
     // set up the global object
@@ -283,6 +288,7 @@ ExecutionEngine::ExecutionEngine()
     glo->setProperty(rootContext, identifier(QStringLiteral("Array")), arrayCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("Function")), functionCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("Date")), dateCtor);
+    glo->setProperty(rootContext, identifier(QStringLiteral("RegExp")), regExpCtor);
     glo->setProperty(rootContext, identifier(QStringLiteral("Math")), Value::fromObject(newMathObject(rootContext)));
 }
 
@@ -410,6 +416,18 @@ Object *ExecutionEngine::newDateObject(const Value &value)
 FunctionObject *ExecutionEngine::newDateCtor(Context *ctx)
 {
     return new DateCtor(ctx);
+}
+
+Object *ExecutionEngine::newRegExpObject(const Value &value)
+{
+    Object *object = new RegExpObject(value);
+    object->prototype = regExpPrototype;
+    return object;
+}
+
+FunctionObject *ExecutionEngine::newRegExpCtor(Context *ctx)
+{
+    return new RegExpCtor(ctx);
 }
 
 Object *ExecutionEngine::newErrorObject(const Value &value)

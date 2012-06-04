@@ -235,6 +235,24 @@ struct DatePrototype: DateObject
     static void method_toUTCString(Context *ctx);
 };
 
+struct RegExpCtor: FunctionObject
+{
+    RegExpCtor(Context *scope);
+
+    virtual void construct(Context *ctx);
+    virtual void call(Context *ctx);
+};
+
+struct RegExpPrototype: RegExpObject
+{
+    RegExpPrototype(): RegExpObject(Value::fromNumber(qSNaN())) {}
+    void init(Context *ctx, const Value &ctor);
+
+    static void method_exec(Context *ctx);
+    static void method_test(Context *ctx);
+    static void method_toString(Context *ctx);
+};
+
 struct MathObject: Object
 {
     MathObject(Context *ctx);

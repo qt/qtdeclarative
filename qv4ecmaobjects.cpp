@@ -2330,6 +2330,48 @@ void DatePrototype::method_toUTCString(Context *ctx)
 }
 
 //
+// RegExp object
+//
+RegExpCtor::RegExpCtor(Context *scope)
+    : FunctionObject(scope)
+{
+}
+
+void RegExpCtor::construct(Context *ctx)
+{
+    __qmljs_init_object(&ctx->thisObject, ctx->engine->newStringObject(Value::undefinedValue()));
+}
+
+void RegExpCtor::call(Context *ctx)
+{
+    __qmljs_init_object(&ctx->result, ctx->engine->newRegExpObject(Value::undefinedValue()));
+}
+
+void RegExpPrototype::init(Context *ctx, const Value &ctor)
+{
+    ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    setProperty(ctx, QStringLiteral("constructor"), ctor);
+    setProperty(ctx, QStringLiteral("exec"), method_exec, 0);
+    setProperty(ctx, QStringLiteral("test"), method_test, 0);
+    setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+}
+
+void RegExpPrototype::method_exec(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("RegExp.prototype.exec"));
+}
+
+void RegExpPrototype::method_test(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("RegExp.prototype.test"));
+}
+
+void RegExpPrototype::method_toString(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("RegExp.prototype.toString"));
+}
+
+//
 // Math object
 //
 MathObject::MathObject(Context *ctx)
