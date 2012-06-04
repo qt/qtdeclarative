@@ -257,13 +257,13 @@ ExecutionEngine::ExecutionEngine()
     dateCtor = Value::fromObject(new DateCtor(rootContext));
     regExpCtor = Value::fromObject(new RegExpCtor(rootContext));
 
-    stringCtor.objectValue->prototype = stringPrototype;
-    numberCtor.objectValue->prototype = numberPrototype;
-    booleanCtor.objectValue->prototype = booleanPrototype;
-    arrayCtor.objectValue->prototype = arrayPrototype;
+    stringCtor.objectValue->prototype = functionPrototype;
+    numberCtor.objectValue->prototype = functionPrototype;
+    booleanCtor.objectValue->prototype = functionPrototype;
+    arrayCtor.objectValue->prototype = functionPrototype;
     functionCtor.objectValue->prototype = functionPrototype;
-    dateCtor.objectValue->prototype = datePrototype;
-    regExpCtor.objectValue->prototype = regExpPrototype;
+    dateCtor.objectValue->prototype = functionPrototype;
+    regExpCtor.objectValue->prototype = functionPrototype;
 
     objectPrototype->init(rootContext, objectCtor);
     stringPrototype->init(rootContext, stringCtor);

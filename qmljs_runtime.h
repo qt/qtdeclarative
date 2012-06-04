@@ -232,7 +232,11 @@ struct Value {
 
     static inline Value fromObject(Object *value) {
         Value v;
-        __qmljs_init_object(&v, value);
+        if (value) {
+            __qmljs_init_object(&v, value);
+        } else {
+            __qmljs_init_null(&v);
+        }
         return v;
     }
 
@@ -255,6 +259,7 @@ struct Value {
     double toInteger(Context *ctx) const;
     double toNumber(Context *ctx) const;
     String *toString(Context *ctx) const;
+    Value toObject(Context *ctx) const;
 
     inline bool isUndefined() const { return is(UNDEFINED_TYPE); }
     inline bool isNull() const { return is(NULL_TYPE); }

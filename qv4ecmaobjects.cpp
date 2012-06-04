@@ -523,7 +523,12 @@ void ObjectPrototype::init(Context *ctx, const Value &ctor)
 
 void ObjectPrototype::method_getPrototypeOf(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.getPrototypeOf"));
+    Value o = ctx->argument(0);
+    if (! o.isObject()) {
+        ctx->throwTypeError();
+    } else {
+        ctx->result = Value::fromObject(o.objectValue->prototype);
+    }
 }
 
 void ObjectPrototype::method_getOwnPropertyDescriptor(Context *ctx)
@@ -601,7 +606,8 @@ void ObjectPrototype::method_toLocaleString(Context *ctx)
 
 void ObjectPrototype::method_valueOf(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.prototype.valueOf"));
+    Value o = ctx->thisObject.toObject(ctx);
+    ctx->result = o;
 }
 
 void ObjectPrototype::method_hasOwnProperty(Context *ctx)

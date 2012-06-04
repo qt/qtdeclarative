@@ -126,6 +126,13 @@ String *Value::toString(Context *ctx) const
     return v.stringValue;
 }
 
+Value Value::toObject(Context *ctx) const
+{
+    Value v;
+    __qmljs_to_object(ctx, &v, this);
+    return v;
+}
+
 bool Value::isFunctionObject() const
 {
     return type == OBJECT_TYPE ? objectValue->asFunctionObject() != 0 : false;
