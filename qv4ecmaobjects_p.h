@@ -13,6 +13,7 @@ struct ObjectCtor: FunctionObject
 
     virtual void construct(Context *ctx);
     virtual void call(Context *ctx);
+    virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes);
 };
 
 struct ObjectPrototype: Object

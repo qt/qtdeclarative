@@ -488,6 +488,13 @@ void ObjectCtor::call(Context *ctx)
     __qmljs_init_object(&ctx->result, ctx->engine->newObject());
 }
 
+Value ObjectCtor::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+{
+    if (name == ctx->engine->id_length)
+        return Value::fromNumber(1);
+    return Object::getProperty(ctx, name, attributes);
+}
+
 void ObjectPrototype::init(Context *ctx, const Value &ctor)
 {
     ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
