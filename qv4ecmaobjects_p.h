@@ -19,7 +19,26 @@ struct ObjectPrototype: Object
 {
     void init(Context *ctx, const Value &ctor);
 
+    static void method_getPrototypeOf(Context *ctx);
+    static void method_getOwnPropertyDescriptor(Context *ctx);
+    static void method_getOwnPropertyNames(Context *ctx);
+    static void method_create(Context *ctx);
+    static void method_defineProperty(Context *ctx);
+    static void method_defineProperties(Context *ctx);
+    static void method_seal(Context *ctx);
+    static void method_freeze(Context *ctx);
+    static void method_preventExtensions(Context *ctx);
+    static void method_isSealed(Context *ctx);
+    static void method_isFrozen(Context *ctx);
+    static void method_isExtensible(Context *ctx);
+    static void method_keys(Context *ctx);
+
     static void method_toString(Context *ctx);
+    static void method_toLocaleString(Context *ctx);
+    static void method_valueOf(Context *ctx);
+    static void method_hasOwnProperty(Context *ctx);
+    static void method_isPrototypeOf(Context *ctx);
+    static void method_propertyIsEnumerable(Context *ctx);
 };
 
 struct StringCtor: FunctionObject

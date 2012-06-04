@@ -491,8 +491,92 @@ void ObjectCtor::call(Context *ctx)
 void ObjectPrototype::init(Context *ctx, const Value &ctor)
 {
     ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue->setProperty(ctx, QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("create"), method_create, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("defineProperty"), method_defineProperty, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("defineProperties"), method_defineProperties, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("seal"), method_seal, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("freeze"), method_freeze, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("preventExtensions"), method_preventExtensions, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("isSealed"), method_isSealed, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("isFrozen"), method_isFrozen, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("isExtensible"), method_isExtensible, 0);
+    ctor.objectValue->setProperty(ctx, QStringLiteral("keys"), method_keys, 0);
+
     setProperty(ctx, QStringLiteral("constructor"), ctor);
     setProperty(ctx, QStringLiteral("toString"), method_toString, 0);
+    setProperty(ctx, QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    setProperty(ctx, QStringLiteral("valueOf"), method_valueOf, 0);
+    setProperty(ctx, QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 0);
+    setProperty(ctx, QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 0);
+    setProperty(ctx, QStringLiteral("propertyIsEnumerable"), method_propertyIsEnumerable, 0);
+}
+
+void ObjectPrototype::method_getPrototypeOf(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.getPrototypeOf"));
+}
+
+void ObjectPrototype::method_getOwnPropertyDescriptor(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.getOwnPropertyDescriptors"));
+}
+
+void ObjectPrototype::method_getOwnPropertyNames(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.getOwnPropertyNames"));
+}
+
+void ObjectPrototype::method_create(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.create"));
+}
+
+void ObjectPrototype::method_defineProperty(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.defineProperty"));
+}
+
+void ObjectPrototype::method_defineProperties(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.defineProperties"));
+}
+
+void ObjectPrototype::method_seal(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.seal"));
+}
+
+void ObjectPrototype::method_freeze(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.freeze"));
+}
+
+void ObjectPrototype::method_preventExtensions(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.preventExtensions"));
+}
+
+void ObjectPrototype::method_isSealed(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.isSealed"));
+}
+
+void ObjectPrototype::method_isFrozen(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.isFrozen"));
+}
+
+void ObjectPrototype::method_isExtensible(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.isExtensible"));
+}
+
+void ObjectPrototype::method_keys(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.keys"));
 }
 
 void ObjectPrototype::method_toString(Context *ctx)
@@ -501,6 +585,31 @@ void ObjectPrototype::method_toString(Context *ctx)
         ctx->throwTypeError();
     else
         ctx->result = Value::fromString(ctx, QString::fromUtf8("[object %1]").arg(ctx->thisObject.objectValue->className()));
+}
+
+void ObjectPrototype::method_toLocaleString(Context *ctx)
+{
+    method_toString(ctx);
+}
+
+void ObjectPrototype::method_valueOf(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.prototype.valueOf"));
+}
+
+void ObjectPrototype::method_hasOwnProperty(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.prototype.hasOwnProperty"));
+}
+
+void ObjectPrototype::method_isPrototypeOf(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.prototype.isPrototypeOf"));
+}
+
+void ObjectPrototype::method_propertyIsEnumerable(Context *ctx)
+{
+    ctx->throwUnimplemented(QStringLiteral("Object.prototype.propertyIsEnumerable"));
 }
 
 //
