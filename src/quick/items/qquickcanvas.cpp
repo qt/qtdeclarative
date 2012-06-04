@@ -1711,6 +1711,22 @@ bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
     return false;
 }
 
+bool QQuickCanvasPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event)
+{
+    QStyleHints *styleHints = qApp->styleHints();
+    QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
+    bool dragVelocityLimitAvailable = extended
+        && extended->capabilities().testFlag(QTouchDevice::Velocity)
+        && styleHints->startDragVelocity();
+    bool overThreshold = qAbs(d) > styleHints->startDragDistance();
+    if (dragVelocityLimitAvailable) {
+        qreal velocity = axis == Qt::XAxis ? extended->velocity().x()
+                                           : extended->velocity().y();
+        overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
+    }
+    return overThreshold;
+}
+
 /*!
     Propagates an event to a QQuickItem on the canvas
 */

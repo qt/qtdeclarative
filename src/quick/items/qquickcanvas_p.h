@@ -196,6 +196,8 @@ public:
 
     mutable QQuickCanvasIncubationController *incubationController;
 
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event);
+
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);
 };

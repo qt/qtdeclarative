@@ -746,7 +746,6 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
             curLocalPos = event->windowPos();
         }
 
-        const int dragThreshold = qApp->styleHints()->startDragDistance();
         qreal dx = qAbs(curLocalPos.x() - startLocalPos.x());
         qreal dy = qAbs(curLocalPos.y() - startLocalPos.y());
 
@@ -778,9 +777,11 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
         d->drag->target()->setPos(dragPos);
 
         if (!keepMouseGrab()) {
-            if ((!d->dragY && dy < dragThreshold && d->dragX && dx > dragThreshold)
-                || (!d->dragX && dx < dragThreshold && d->dragY && dy > dragThreshold)
-                || (d->dragX && d->dragY && (dx > dragThreshold || dy > dragThreshold))) {
+            bool xDragged = QQuickCanvasPrivate::dragOverThreshold(dx, Qt::XAxis, event);
+            bool yDragged = QQuickCanvasPrivate::dragOverThreshold(dy, Qt::YAxis, event);
+            if ((!d->dragY && !yDragged && d->dragX && xDragged)
+                || (!d->dragX && !xDragged && d->dragY && yDragged)
+                || (d->dragX && d->dragY && (xDragged || yDragged))) {
                 setKeepMouseGrab(true);
                 d->stealMouse = true;
             }

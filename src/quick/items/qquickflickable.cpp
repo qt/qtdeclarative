@@ -914,10 +914,10 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     bool stealX = stealMouse;
 
     qint64 elapsedSincePress = computeCurrentTime(event) - lastPressTime;
-
     if (q->yflick()) {
         qreal dy = event->localPos().y() - pressPos.y();
-        if (qAbs(dy) > qApp->styleHints()->startDragDistance() || elapsedSincePress > 200) {
+        bool overThreshold = QQuickCanvasPrivate::dragOverThreshold(dy, Qt::YAxis, event);
+        if (overThreshold || elapsedSincePress > 200) {
             if (!vMoved)
                 vData.dragStartOffset = dy;
             qreal newY = dy + vData.pressPos - vData.dragStartOffset;
@@ -943,14 +943,15 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 vData.move.setValue(newY);
                 vMoved = true;
             }
-            if (qAbs(dy) > qApp->styleHints()->startDragDistance())
+            if (overThreshold)
                 stealY = true;
         }
     }
 
     if (q->xflick()) {
         qreal dx = event->localPos().x() - pressPos.x();
-        if (qAbs(dx) > qApp->styleHints()->startDragDistance() || elapsedSincePress > 200) {
+        bool overThreshold = QQuickCanvasPrivate::dragOverThreshold(dx, Qt::XAxis, event);
+        if (overThreshold || elapsedSincePress > 200) {
             if (!hMoved)
                 hData.dragStartOffset = dx;
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
@@ -977,7 +978,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 hMoved = true;
             }
 
-            if (qAbs(dx) > qApp->styleHints()->startDragDistance())
+            if (overThreshold)
                 stealX = true;
         }
     }
