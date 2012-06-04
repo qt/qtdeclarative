@@ -851,10 +851,11 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             binding->m_mePtr = &bindValues.top();
 
             if (instr.isAlias) {
+                int valueTypeIndex = (property & 0x00FF0000) ? (property >> 24) : -1;
                 QQmlAbstractBinding *old =
                     QQmlPropertyPrivate::setBindingNoEnable(target,
-                                                            instr.property & 0xFFFF,
-                                                            instr.property >> 24,
+                                                            property & 0xFFFF,
+                                                            valueTypeIndex,
                                                             binding);
                 if (old) { old->destroy(); }
             } else {
