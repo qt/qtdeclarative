@@ -31,6 +31,7 @@ public:
     inline void splice(double start, double deleteCount,
                        const QVector<Value> &items,
                        Array &other);
+    inline void push(const Value &value);
 
 private:
     std::deque<Value> *to_vector;
@@ -145,6 +146,11 @@ inline void Array::sort(Context *context, const Value &comparefn)
 {
     ArrayElementLessThan lessThan(context, comparefn);
     std::sort(to_vector->begin(), to_vector->end(), lessThan);
+}
+
+inline void Array::push(const Value &value)
+{
+    to_vector->push_back(value);
 }
 
 inline void Array::splice(double start, double deleteCount,

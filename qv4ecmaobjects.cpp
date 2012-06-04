@@ -538,7 +538,21 @@ void ObjectPrototype::method_getOwnPropertyDescriptor(Context *ctx)
 
 void ObjectPrototype::method_getOwnPropertyNames(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.getOwnPropertyNames"));
+    Value O = ctx->argument(0);
+    if (! O.isObject())
+        ctx->throwTypeError();
+    else {
+        ArrayObject *array = ctx->engine->newArrayObject()->asArrayObject();
+        Array &a = array->value;
+        if (Table *members = O.objectValue->members) {
+            for (Property **it = members->begin(), **end = members->end(); it != end; ++it) {
+                if (Property *prop = *it) {
+                    a.push(Value::fromString(prop->name));
+                }
+            }
+        }
+        ctx->result = Value::fromObject(array);
+    }
 }
 
 void ObjectPrototype::method_create(Context *ctx)
