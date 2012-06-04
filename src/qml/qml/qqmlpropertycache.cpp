@@ -347,6 +347,7 @@ void QQmlPropertyCache::appendProperty(const QString &name,
     if (QQmlPropertyData **old = stringCache.value(string)) {
         data.overrideIndexIsProperty = !(*old)->isFunction();
         data.overrideIndex = (*old)->coreIndex;
+        (*old)->flags |= QQmlPropertyData::IsOverridden;
     }
 
     propertyIndexCache.append(data);
@@ -366,6 +367,7 @@ void QQmlPropertyCache::appendProperty(const QHashedCStringRef &name,
     if (QQmlPropertyData **old = stringCache.value(name)) {
         data.overrideIndexIsProperty = !(*old)->isFunction();
         data.overrideIndex = (*old)->coreIndex;
+        (*old)->flags |= QQmlPropertyData::IsOverridden;
     }
 
     propertyIndexCache.append(data);
@@ -403,6 +405,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, quint32 flags, int cor
     if (QQmlPropertyData **old = stringCache.value(string)) {
         data.overrideIndexIsProperty = !(*old)->isFunction();
         data.overrideIndex = (*old)->coreIndex;
+        (*old)->flags |= QQmlPropertyData::IsOverridden;
     }
 
     methodIndexCache.append(data);
@@ -441,6 +444,7 @@ void QQmlPropertyCache::appendSignal(const QHashedCStringRef &name, quint32 flag
     if (QQmlPropertyData **old = stringCache.value(name)) {
         data.overrideIndexIsProperty = !(*old)->isFunction();
         data.overrideIndex = (*old)->coreIndex;
+        (*old)->flags |= QQmlPropertyData::IsOverridden;
     }
 
     methodIndexCache.append(data);
@@ -477,6 +481,7 @@ void QQmlPropertyCache::appendMethod(const QString &name, quint32 flags, int cor
     if (QQmlPropertyData **old = stringCache.value(string)) {
         data.overrideIndexIsProperty = !(*old)->isFunction();
         data.overrideIndex = (*old)->coreIndex;
+        (*old)->flags |= QQmlPropertyData::IsOverridden;
     }
 
     methodIndexCache.append(data);
@@ -510,6 +515,7 @@ void QQmlPropertyCache::appendMethod(const QHashedCStringRef &name, quint32 flag
     if (QQmlPropertyData **old = stringCache.value(name)) {
         data.overrideIndexIsProperty = !(*old)->isFunction();
         data.overrideIndex = (*old)->coreIndex;
+        (*old)->flags |= QQmlPropertyData::IsOverridden;
     }
 
     methodIndexCache.append(data);
@@ -738,6 +744,7 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
                 data->flags |= QQmlPropertyData::IsOverload;
             data->overrideIndexIsProperty = !old->isFunction();
             data->overrideIndex = old->coreIndex;
+            old->flags |= QQmlPropertyData::IsOverridden;
         }
     }
 
@@ -797,6 +804,7 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
         } else if (old) {
             data->overrideIndexIsProperty = !old->isFunction();
             data->overrideIndex = old->coreIndex;
+            old->flags |= QQmlPropertyData::IsOverridden;
         }
     }
 }

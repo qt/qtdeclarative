@@ -55,7 +55,7 @@ class QV4IRBuilder : public QQmlJS::AST::Visitor
 public:
     QV4IRBuilder(const QV4Compiler::Expression *, QQmlEnginePrivate *);
 
-    bool operator()(QQmlJS::IR::Function *, QQmlJS::AST::Node *);
+    bool operator()(QQmlJS::IR::Function *, QQmlJS::AST::Node *, bool *invalidatable);
 
 protected:
     struct ExprResult {
@@ -229,6 +229,7 @@ private:
     QQmlJS::IR::Function *_function;
     QQmlJS::IR::BasicBlock *_block;
     bool _discard;
+    bool _invalidatable;
 
     ExprResult _expr;
 };

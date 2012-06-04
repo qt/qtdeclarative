@@ -91,14 +91,15 @@ static IR::Type irTypeFromVariantType(int t, QQmlEnginePrivate *engine)
     }
 }
 
-QV4IRBuilder::QV4IRBuilder(const QV4Compiler::Expression *expr, 
-                                                             QQmlEnginePrivate *engine)
-: m_expression(expr), m_engine(engine), _function(0), _block(0), _discard(false)
+QV4IRBuilder::QV4IRBuilder(const QV4Compiler::Expression *expr,
+                           QQmlEnginePrivate *engine)
+: m_expression(expr), m_engine(engine), _function(0), _block(0), _discard(false),
+  _invalidatable(false)
 {
 }
 
 bool QV4IRBuilder::operator()(QQmlJS::IR::Function *function,
-                                         QQmlJS::AST::Node *ast)
+                              QQmlJS::AST::Node *ast, bool *invalidatable)
 {
     bool discarded = false;
 
@@ -142,6 +143,7 @@ bool QV4IRBuilder::operator()(QQmlJS::IR::Function *function,
     qSwap(_function, function);
     qSwap(_discard, discarded);
 
+    *invalidatable = _invalidatable;
     return !discarded;
 }
 
@@ -615,12 +617,8 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)
 
-                    if(!data->isFinal()) {
-                        if (qmlVerboseCompiler())
-                            qWarning() << "*** non-final attached property:"
-                                       << (*baseName->id + QLatin1Char('.') + ast->name.toString());
-                        return false; // We don't know enough about this property
-                    }
+                    if (!data->isFinal())
+                        _invalidatable = true;
 
                     IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
                     _expr.code = _block->SYMBOL(baseName, irType, name, attachedMeta, data, line, column);
@@ -654,12 +652,8 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)
 
-                    if (!data->isFinal()) {
-                        if (qmlVerboseCompiler())
-                            qWarning() << "*** non-final attached property:"
-                                       << (*baseName->id + QLatin1Char('.') + ast->name.toString());
-                        return false; // We don't know enough about this property
-                    }
+                    if (!data->isFinal())
+                        _invalidatable = true;
 
                     IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
                     _expr.code = _block->SYMBOL(baseName, irType, name, baseName->meta, data, line, column);
@@ -690,20 +684,15 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 break;
 
             case IR::Name::Property: 
-                if (baseName->type == IR::ObjectType && !baseName->meta.isNull() &&
-                    baseName->property->isFinal()) {
+                if (baseName->type == IR::ObjectType && !baseName->meta.isNull()) {
                     QQmlMetaObject meta = m_engine->metaObjectForType(baseName->property->propType);
                     QQmlPropertyCache *cache = meta.propertyCache(m_engine);
                     if (!cache)
                         return false;
 
                     if (QQmlPropertyData *data = cache->property(name)) {
-                        if (!data->isFinal()) {
-                            if (qmlVerboseCompiler())
-                                qWarning() << "*** non-final property access:"
-                                           << (*baseName->id + QLatin1Char('.') + ast->name.toString());
-                            return false; // We don't know enough about this property
-                        }
+                        if (!baseName->property->isFinal() || !data->isFinal())
+                            _invalidatable = true;
 
                         IR::Type irType = irTypeFromVariantType(data->propType, m_engine);
                         _expr.code = _block->SYMBOL(baseName, irType, name,

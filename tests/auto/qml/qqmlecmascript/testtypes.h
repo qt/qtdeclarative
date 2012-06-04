@@ -1496,6 +1496,104 @@ private:
     MyEnum m_ev;
 };
 
+class FallbackBindingsObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY (int test READ test NOTIFY testChanged)
+public:
+    FallbackBindingsObject(QObject* parent = 0)
+        : QObject(parent), m_test(100)
+    {
+    }
+
+    int test() const { return m_test; }
+
+Q_SIGNALS:
+    void testChanged();
+
+private:
+    int m_test;
+};
+
+class FallbackBindingsDerived : public FallbackBindingsObject
+{
+    Q_OBJECT
+    Q_PROPERTY (QString test READ test NOTIFY testChanged)
+public:
+    FallbackBindingsDerived(QObject* parent = 0)
+        : FallbackBindingsObject(parent), m_test("hello")
+    {
+    }
+
+    QString test() const { return m_test; }
+
+Q_SIGNALS:
+    void testChanged();
+
+private:
+    QString m_test;
+};
+
+class FallbackBindingsAttachedObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY (int test READ test NOTIFY testChanged)
+public:
+    FallbackBindingsAttachedObject(QObject *parent) : QObject(parent), m_test(100) {}
+
+    int test() const { return m_test; }
+
+Q_SIGNALS:
+    void testChanged();
+
+private:
+    int m_test;
+};
+
+class FallbackBindingsAttachedDerived : public FallbackBindingsAttachedObject
+{
+    Q_OBJECT
+    Q_PROPERTY (QString test READ test NOTIFY testChanged)
+public:
+    FallbackBindingsAttachedDerived(QObject* parent = 0)
+        : FallbackBindingsAttachedObject(parent), m_test("hello")
+    {
+    }
+
+    QString test() const { return m_test; }
+
+Q_SIGNALS:
+    void testChanged();
+
+private:
+    QString m_test;
+};
+
+class FallbackBindingsTypeObject : public QObject
+{
+    Q_OBJECT
+public:
+    FallbackBindingsTypeObject() : QObject() {}
+
+    static FallbackBindingsAttachedObject *qmlAttachedProperties(QObject *o) {
+        return new FallbackBindingsAttachedObject(o);
+    }
+};
+
+class FallbackBindingsTypeDerived : public QObject
+{
+    Q_OBJECT
+public:
+    FallbackBindingsTypeDerived() : QObject() {}
+
+    static FallbackBindingsAttachedObject *qmlAttachedProperties(QObject *o) {
+        return new FallbackBindingsAttachedDerived(o);
+    }
+};
+
+QML_DECLARE_TYPEINFO(FallbackBindingsTypeObject, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPEINFO(FallbackBindingsTypeDerived, QML_HAS_ATTACHED_PROPERTIES)
+
 void registerTypes();
 
 #endif // TESTTYPES_H

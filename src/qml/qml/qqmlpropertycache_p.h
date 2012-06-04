@@ -89,33 +89,34 @@ public:
         IsResettable       = 0x00000004, // Has RESET function
         IsAlias            = 0x00000008, // Is a QML alias to another property
         IsFinal            = 0x00000010, // Has FINAL flag
-        IsDirect           = 0x00000020, // Exists on a C++ QMetaObject
-        HasAccessors       = 0x00000040, // Has property accessors
+        IsOverridden       = 0x00000020, // Is overridden by a extension property
+        IsDirect           = 0x00000040, // Exists on a C++ QMetaObject
+        HasAccessors       = 0x00000080, // Has property accessors
 
         // These are mutualy exclusive
-        IsFunction         = 0x00000080, // Is an invokable
-        IsQObjectDerived   = 0x00000100, // Property type is a QObject* derived type
-        IsEnumType         = 0x00000200, // Property type is an enum
-        IsQList            = 0x00000400, // Property type is a QML list
-        IsQmlBinding       = 0x00000800, // Property type is a QQmlBinding*
-        IsQJSValue         = 0x00001000, // Property type is a QScriptValue
-        IsV8Handle         = 0x00002000, // Property type is a QQmlV8Handle
-        IsVarProperty      = 0x00004000, // Property type is a "var" property of VMEMO
-        IsValueTypeVirtual = 0x00008000, // Property is a value type "virtual" property
-        IsQVariant         = 0x00010000, // Property is a QVariant
+        IsFunction         = 0x00000100, // Is an invokable
+        IsQObjectDerived   = 0x00000200, // Property type is a QObject* derived type
+        IsEnumType         = 0x00000400, // Property type is an enum
+        IsQList            = 0x00000800, // Property type is a QML list
+        IsQmlBinding       = 0x00001000, // Property type is a QQmlBinding*
+        IsQJSValue         = 0x00002000, // Property type is a QScriptValue
+        IsV8Handle         = 0x00004000, // Property type is a QQmlV8Handle
+        IsVarProperty      = 0x00008000, // Property type is a "var" property of VMEMO
+        IsValueTypeVirtual = 0x00010000, // Property is a value type "virtual" property
+        IsQVariant         = 0x00020000, // Property is a QVariant
 
         // Apply only to IsFunctions
-        IsVMEFunction      = 0x00020000, // Function was added by QML
-        HasArguments       = 0x00040000, // Function takes arguments
-        IsSignal           = 0x00080000, // Function is a signal
-        IsVMESignal        = 0x00100000, // Signal was added by QML
-        IsV8Function       = 0x00200000, // Function takes QQmlV8Function* args
-        IsSignalHandler    = 0x00400000, // Function is a signal handler
-        IsOverload         = 0x00800000, // Function is an overload of another function
-        IsCloned           = 0x01000000, // The function was marked as cloned
+        IsVMEFunction      = 0x00040000, // Function was added by QML
+        HasArguments       = 0x00080000, // Function takes arguments
+        IsSignal           = 0x00100000, // Function is a signal
+        IsVMESignal        = 0x00200000, // Signal was added by QML
+        IsV8Function       = 0x00400000, // Function takes QQmlV8Function* args
+        IsSignalHandler    = 0x00800000, // Function is a signal handler
+        IsOverload         = 0x01000000, // Function is an overload of another function
+        IsCloned           = 0x02000000, // The function was marked as cloned
 
         // Internal QQmlPropertyCache flags
-        NotFullyResolved   = 0x02000000, // True if the type data is to be lazily resolved
+        NotFullyResolved   = 0x04000000, // True if the type data is to be lazily resolved
 
         // Flags that are set based on the propType field
         PropTypeFlagMask = IsQObjectDerived | IsEnumType | IsQList | IsQmlBinding | IsQJSValue |
@@ -133,6 +134,7 @@ public:
     bool isResettable() const { return flags & IsResettable; }
     bool isAlias() const { return flags & IsAlias; }
     bool isFinal() const { return flags & IsFinal; }
+    bool isOverridden() const { return flags & IsOverridden; }
     bool isDirect() const { return flags & IsDirect; }
     bool hasAccessors() const { return flags & HasAccessors; }
     bool isFunction() const { return flags & IsFunction; }

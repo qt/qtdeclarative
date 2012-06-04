@@ -847,7 +847,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 QML_NEXT_INSTR(StoreV4Binding);
 
             QQmlAbstractBinding *binding = 
-                CTXT->v4bindings->configBinding(instr.value, target, scope, property,
+                CTXT->v4bindings->configBinding(instr.value, instr.fallbackValue, target, scope, property,
                                                 instr.line, instr.column);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
@@ -881,7 +881,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
 
             QQmlAbstractBinding *binding = CTXT->v8bindings->configBinding(target, scope,
                                                                                    &instr);
-            if (binding) {
+            if (binding && !instr.isFallback) {
                 bindValues.push(binding);
                 binding->m_mePtr = &bindValues.top();
 

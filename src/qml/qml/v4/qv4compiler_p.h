@@ -89,7 +89,7 @@ public:
     };
 
     // -1 on failure, otherwise the binding index to use
-    int compile(const Expression &, QQmlEnginePrivate *);
+    int compile(const Expression &, QQmlEnginePrivate *, bool *);
 
     // Returns the compiled program
     QByteArray program() const;

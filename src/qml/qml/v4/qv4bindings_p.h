@@ -71,7 +71,7 @@ public:
     QV4Bindings(const char *program, QQmlContextData *context);
     virtual ~QV4Bindings();
 
-    QQmlAbstractBinding *configBinding(int index, QObject *target, 
+    QQmlAbstractBinding *configBinding(int index, int fallbackIndex, QObject *target,
                                                QObject *scope, int property,
                                                int line, int column);
 
@@ -80,8 +80,8 @@ public:
 #endif
 
     struct Binding : public QQmlAbstractBinding, public QQmlDelayedError {
-        Binding() : QQmlAbstractBinding(V4), enabled(false), updating(0), property(0),
-                    scope(0), target(0), executedBlocks(0), parent(0) {}
+        Binding() : QQmlAbstractBinding(V4), index(-1), fallbackIndex(-1), enabled(false),
+                    updating(0), property(0), scope(0), target(0), executedBlocks(0), parent(0) {}
 
         // Inherited from QQmlAbstractBinding
         static void destroy(QQmlAbstractBinding *);
@@ -96,9 +96,11 @@ public:
             int targetProperty;
         };
 
-        int index:30;
+        int index:15;
+        int fallbackIndex:15;
         bool enabled:1;
         bool updating:1;
+
         // Encoding of property is coreIndex | (propType << 16) | (valueTypeIndex << 24)
         // propType and valueTypeIndex are only set if the property is a value type property
         int property;
@@ -134,7 +136,8 @@ private:
     void init();
     void run(int instr, quint32 &executedBlocks, QQmlContextData *context,
              QQmlDelayedError *error, QObject *scope, QObject *output, 
-             QQmlPropertyPrivate::WriteFlags storeFlags
+             QQmlPropertyPrivate::WriteFlags storeFlags,
+             bool *invalidated
 #ifdef QML_THREADED_INTERPRETER
              , void ***decode_instr = 0
 #endif

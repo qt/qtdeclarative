@@ -127,6 +127,8 @@ public:
 
     bool compile(QQmlJS::AST::Node *);
 
+    bool isInvalidatable() const { return invalidatable; }
+
     int registerLiteralString(quint8 reg, const QStringRef &);
     QByteArray data;
 
@@ -235,6 +237,7 @@ private:
     quint32 currentBlockMask;
     int bindingLine;
     int bindingColumn;
+    bool invalidatable;
 };
 
 

@@ -272,6 +272,8 @@ private slots:
     void secondAlias();
     void varAlias();
     void overrideDataAssert();
+    void fallbackBindings_data();
+    void fallbackBindings();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -6994,6 +6996,29 @@ void tst_qqmlecmascript::overrideDataAssert()
     QVERIFY(object != 0);
     object->metaObject();
     delete object;
+}
+
+void tst_qqmlecmascript::fallbackBindings_data()
+{
+    QTest::addColumn<QString>("source");
+
+    QTest::newRow("Property without fallback") << "fallbackBindings.1.qml";
+    QTest::newRow("Property fallback") << "fallbackBindings.2.qml";
+    QTest::newRow("ModuleAPI without fallback") << "fallbackBindings.3.qml";
+    QTest::newRow("ModuleAPI fallback") << "fallbackBindings.4.qml";
+    QTest::newRow("Attached without fallback") << "fallbackBindings.5.qml";
+    QTest::newRow("Attached fallback") << "fallbackBindings.6.qml";
+}
+
+void tst_qqmlecmascript::fallbackBindings()
+{
+    QFETCH(QString, source);
+
+    QQmlComponent component(&engine, testFileUrl(source));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("success").toBool(), true);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

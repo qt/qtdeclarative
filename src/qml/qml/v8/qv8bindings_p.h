@@ -129,6 +129,8 @@ public:
     inline void addref();
     inline void release();
 
+    QQmlAbstractBinding *binding(int index) const { return bindings + index; }
+
 private:
     Q_DISABLE_COPY(QV8Bindings)
 

@@ -66,7 +66,7 @@ using namespace QQmlJS;
 QV4CompilerPrivate::QV4CompilerPrivate()
     : subscriptionOffset(0)
     , _function(0) , _block(0) , _discarded(false), registerCount(0)
-    , bindingLine(0), bindingColumn(0)
+    , bindingLine(0), bindingColumn(0), invalidatable(false)
 {
 }
 
@@ -1258,6 +1258,7 @@ void QV4CompilerPrivate::resetInstanceState()
     patches.clear();
     pool.clear();
     currentReg = 0;
+    invalidatable = false;
 }
 
 /*!
@@ -1304,7 +1305,7 @@ bool QV4CompilerPrivate::compile(QQmlJS::AST::Node *node)
     IR::Function thisFunction(&pool), *function = &thisFunction;
 
     QV4IRBuilder irBuilder(expression, engine);
-    if (!irBuilder(function, node))
+    if (!irBuilder(function, node, &invalidatable))
         return false;
 
     bool discarded = false;
@@ -1445,7 +1446,7 @@ bool QV4Compiler::isValid() const
 /* 
 -1 on failure, otherwise the binding index to use.
 */
-int QV4Compiler::compile(const Expression &expression, QQmlEnginePrivate *engine)
+int QV4Compiler::compile(const Expression &expression, QQmlEnginePrivate *engine, bool *invalidatable)
 {
     if (!expression.expression.asAST()) return false;
 
@@ -1456,6 +1457,7 @@ int QV4Compiler::compile(const Expression &expression, QQmlEnginePrivate *engine
     d->engine = engine;
 
     if (d->compile(expression.expression.asAST())) {
+        *invalidatable = d->isInvalidatable();
         return d->commitCompile();
     } else {
         return -1;

@@ -201,7 +201,8 @@ namespace QQmlCompilerTypes {
         QQmlScript::Property *property;
         QQmlScript::Value *value;
 
-        int compiledIndex;
+        int compiledIndex:15;
+        int sharedIndex:15;
 
         QString rewrittenExpression;
         BindingContext bindingContext;

@@ -3458,6 +3458,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
 
         Instruction::StoreV4Binding store;
         store.value = js.compiledIndex;
+        store.fallbackValue = js.sharedIndex;
         store.context = js.bindingContext.stack;
         store.owner = js.bindingContext.owner;
         store.isAlias = prop->isAlias;
@@ -3473,11 +3474,18 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         store.line = binding->location.start.line;
         store.column = binding->location.start.column;
         output->addInstruction(store);
+
+        if (store.fallbackValue > -1) {
+            //also create v8 instruction (needed to properly configure the fallback v8 binding)
+            JSBindingReference &js = static_cast<JSBindingReference &>(*binding->bindingReference);
+            js.dataType = BindingReference::V8;
+            genBindingAssignment(binding, prop, obj, valueTypeProperty);
+        }
     } else if (ref.dataType == BindingReference::V8) {
         const JSBindingReference &js = static_cast<const JSBindingReference &>(ref);
 
         Instruction::StoreV8Binding store;
-        store.value = js.compiledIndex;
+        store.value = js.sharedIndex;
         store.context = js.bindingContext.stack;
         store.owner = js.bindingContext.owner;
         store.isAlias = prop->isAlias;
@@ -3486,6 +3494,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         } else {
             store.isRoot = (compileState->root == obj);
         }
+        store.isFallback = js.compiledIndex > -1;
         store.line = binding->location.start.line;
         store.column = binding->location.start.column;
 
@@ -3514,6 +3523,7 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         } else {
             store.isRoot = (compileState->root == obj);
         }
+        store.isFallback = false;
 
         Q_ASSERT(js.bindingContext.owner == 0 ||
                  (js.bindingContext.owner != 0 && valueTypeProperty));
@@ -3579,13 +3589,22 @@ bool QQmlCompiler::completeComponentBuild()
         expr.property = binding.property;
         expr.expression = binding.expression;
 
-        int index = bindingCompiler.compile(expr, enginePrivate);
+        bool needsFallback = false;
+        int index = bindingCompiler.compile(expr, enginePrivate, &needsFallback);
         if (index != -1) {
+            // Ensure the index value fits within the available space
+            Q_ASSERT(index < (1 << 15));
+
             binding.dataType = BindingReference::V4;
             binding.compiledIndex = index;
+            binding.sharedIndex = -1;
             if (componentStats)
                 componentStats->componentStat.optimizedBindings.append(b->value->location);
-            continue;
+
+            if (!needsFallback)
+                continue;
+
+            // Drop through. We need to create a V8 binding in case the V4 binding is invalidated
         }
 
         // Pre-rewrite the expression
@@ -3597,12 +3616,17 @@ bool QQmlCompiler::completeComponentBuild()
         binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
 
         if (isSharable && binding.property->type != qMetaTypeId<QQmlBinding*>()) {
-            binding.dataType = BindingReference::V8;
             sharedBindings.append(b);
 
-            if (componentStats)
-                componentStats->componentStat.sharedBindings.append(b->value->location);
+            if (!needsFallback) {
+                binding.dataType = BindingReference::V8;
+                binding.compiledIndex = -1;
+
+                if (componentStats)
+                    componentStats->componentStat.sharedBindings.append(b->value->location);
+            }
         } else {
+            Q_ASSERT(!needsFallback);
             binding.dataType = BindingReference::QtScript;
 
             if (componentStats)
@@ -3639,7 +3663,10 @@ bool QQmlCompiler::completeComponentBuild()
 
             functionArray += expression.toUtf8();
             lineNumber += expression.count(QLatin1Char('\n'));
-            reference->compiledIndex = ii;
+
+            // Ensure the index value fits within the available space
+            Q_ASSERT(ii < (1 << 15));
+            reference->sharedIndex = ii;
         }
         functionArray.append("]", 1);
 

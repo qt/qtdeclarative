@@ -240,6 +240,7 @@ union QQmlInstruction
         QML_INSTR_HEADER
         unsigned int property;
         int value;
+        int fallbackValue;
         short context;
         short owner;
         bool isRoot;
@@ -255,6 +256,7 @@ union QQmlInstruction
         short owner;
         bool isRoot;
         bool isAlias;
+        bool isFallback;
         ushort line;
         ushort column;
     };

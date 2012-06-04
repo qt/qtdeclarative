@@ -157,6 +157,22 @@ static QObject *qobject_api_engine_parent(QQmlEngine *engine, QJSEngine *scriptE
     return o;
 }
 
+static QObject *fallback_bindings_object(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    return new FallbackBindingsObject();
+}
+
+static QObject *fallback_bindings_derived(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    return new FallbackBindingsDerived();
+}
+
 class MyWorkerObjectThread : public QThread
 {
 public:
@@ -231,6 +247,12 @@ void registerTypes()
     qmlRegisterType<MySequenceConversionObject>("Qt.test", 1, 0, "MySequenceConversionObject");
 
     qmlRegisterType<MyUnregisteredEnumTypeObject>("Qt.test", 1, 0, "MyUnregisteredEnumTypeObject");
+
+    qmlRegisterModuleApi<FallbackBindingsObject>("Qt.test.fallbackBindingsObject", 1, 0, fallback_bindings_object);
+    qmlRegisterModuleApi<FallbackBindingsObject>("Qt.test.fallbackBindingsDerived", 1, 0, fallback_bindings_derived);
+
+    qmlRegisterType<FallbackBindingsTypeObject>("Qt.test.fallbackBindingsObject", 1, 0, "FallbackBindingsType");
+    qmlRegisterType<FallbackBindingsTypeDerived>("Qt.test.fallbackBindingsDerived", 1, 0, "FallbackBindingsType");
 }
 
 #include "testtypes.moc"

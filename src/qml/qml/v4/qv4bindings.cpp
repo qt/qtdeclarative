@@ -298,13 +298,14 @@ QV4Bindings::~QV4Bindings()
     delete [] subscriptions; subscriptions = 0;
 }
 
-QQmlAbstractBinding *QV4Bindings::configBinding(int index, QObject *target, 
+QQmlAbstractBinding *QV4Bindings::configBinding(int index, int fallbackIndex, QObject *target,
                                                         QObject *scope, int property,
                                                         int line, int column)
 {
     Binding *rv = bindings + index;
 
     rv->index = index;
+    rv->fallbackIndex = fallbackIndex;
     rv->property = property;
     rv->target = target;
     rv->scope = scope;
@@ -436,6 +437,9 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
         return;
     }
 
+    bool invalidated = false;
+    bool *inv = (binding->fallbackIndex != -1) ? &invalidated : 0;
+
     binding->updating = true;
     if (binding->property & 0xFFFF0000) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
@@ -445,9 +449,11 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
         vt->read(*binding->target, binding->property & 0xFFFF);
 
         QObject *target = vt;
-        run(binding->index, binding->executedBlocks, context, binding, binding->scope, target, flags);
+        run(binding->index, binding->executedBlocks, context, binding, binding->scope, target, flags, inv);
 
-        vt->write(*binding->target, binding->property & 0xFFFF, flags);
+        if (!invalidated) {
+            vt->write(*binding->target, binding->property & 0xFFFF, flags);
+        }
     } else {
         QQmlData *data = QQmlData::get(*binding->target);
         QQmlPropertyData *propertyData = (data && data->propertyCache ? data->propertyCache->property(binding->property) : 0);
@@ -457,12 +463,20 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
             v8::HandleScope handle_scope;
             v8::Context::Scope context_scope(QQmlEnginePrivate::get(context->engine)->v8engine()->context());
 
-            run(binding->index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags);
+            run(binding->index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags, inv);
         } else {
-            run(binding->index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags);
+            run(binding->index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags, inv);
         }
     }
     binding->updating = false;
+
+    if (invalidated) {
+        // This binding is no longer valid - fallback to V8
+        Q_ASSERT(binding->fallbackIndex > -1);
+        QQmlAbstractBinding *b = QQmlPropertyPrivate::activateSharedBinding(context, binding->fallbackIndex, flags);
+        Q_ASSERT(b == binding);
+        b->destroy();
+    }
 }
 
 
@@ -765,6 +779,25 @@ inline quint32 QV4Bindings::toUint32(double n)
     MARK_REGISTER(reg); \
 }
 
+//TODO: avoid construction of name and name-based lookup
+#define INVALIDATION_CHECK(inv, obj, index) { \
+    if ((inv) != 0) { \
+        QQmlData *data = QQmlData::get((obj)); \
+        if (data && !data->propertyCache) { \
+            data->propertyCache = QQmlEnginePrivate::get(context->engine)->cache(object); \
+            if (data->propertyCache) data->propertyCache->addref(); \
+        } \
+        QQmlPropertyData *prop = (data && data->propertyCache) ? data->propertyCache->property((index)) : 0; \
+        if (prop && prop->isOverridden()) { \
+            int resolvedIndex = data->propertyCache->property(prop->name(obj))->coreIndex; \
+            if (index < resolvedIndex) { \
+                *(inv) = true; \
+                goto programExit; \
+            } \
+        } \
+    } \
+}
+
 #ifdef QML_THREADED_INTERPRETER
 void **QV4Bindings::getDecodeInstrTable()
 {
@@ -774,7 +807,7 @@ void **QV4Bindings::getDecodeInstrTable()
         quint32 executedBlocks = 0;
         dummy->run(0, executedBlocks, 0, 0, 0, 0, 
                    QQmlPropertyPrivate::BypassInterceptor, 
-                   &decode_instr);
+                   0, &decode_instr);
         dummy->release();
     }
     return decode_instr;
@@ -784,7 +817,8 @@ void **QV4Bindings::getDecodeInstrTable()
 void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                                  QQmlContextData *context, QQmlDelayedError *error,
                                  QObject *scope, QObject *output, 
-                                 QQmlPropertyPrivate::WriteFlags storeFlags
+                                 QQmlPropertyPrivate::WriteFlags storeFlags,
+                                 bool *invalidated
 #ifdef QML_THREADED_INTERPRETER
                                  ,void ***table
 #endif
@@ -857,8 +891,10 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
 
         QObject *object = reg.getQObject();
         if (!object) {
-            reg.setUndefined();
+            THROW_EXCEPTION(instr->fetchAndSubscribe.exceptionId);
         } else {
+            INVALIDATION_CHECK(invalidated, object, instr->fetchAndSubscribe.property.coreIndex);
+
             int subIdx = instr->fetchAndSubscribe.subscription;
             Subscription *sub = 0;
             if (subIdx != -1) {
@@ -2111,6 +2147,8 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (!object) {
             THROW_EXCEPTION(instr->fetch.exceptionId);
         } else {
+            INVALIDATION_CHECK(invalidated, object, instr->fetch.index);
+
             const Register::Type valueType = (Register::Type)instr->fetch.valueType;
             reg.init(valueType);
             if (instr->fetch.valueType >= FirstCleanupType)

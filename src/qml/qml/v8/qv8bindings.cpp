@@ -296,7 +296,8 @@ QV8Bindings::configBinding(QObject *target, QObject *scope,
     rv->setNotifyOnValueChanged(true);
     rv->parent = this;
 
-    addref(); // This is decremented in Binding::destroy()
+    if (!i->isFallback)
+        addref(); // This is decremented in Binding::destroy()
 
     return rv;
 }
