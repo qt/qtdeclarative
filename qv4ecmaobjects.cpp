@@ -612,7 +612,10 @@ void ObjectPrototype::method_valueOf(Context *ctx)
 
 void ObjectPrototype::method_hasOwnProperty(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.prototype.hasOwnProperty"));
+    String *P = ctx->argument(0).toString(ctx);
+    Value O = ctx->thisObject.toObject(ctx);
+    bool r = O.objectValue->getOwnProperty(ctx, P) != 0;
+    ctx->result = Value::fromBoolean(r);
 }
 
 void ObjectPrototype::method_isPrototypeOf(Context *ctx)
