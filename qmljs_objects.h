@@ -94,7 +94,7 @@ public:
         : _properties(0)
         , _buckets(0)
         , _propertyCount(-1)
-        , _bucketCount(11)
+        , _bucketCount(0)
         , _allocated(0) {}
 
     ~Table()
@@ -121,7 +121,7 @@ public:
     {
         if (_properties) {
             for (Property *prop = _buckets[name->hashValue() % _bucketCount]; prop; prop = prop->next) {
-                if (prop->hasName(name))
+                if (prop->name == name || prop->hasName(name))
                     return prop;
             }
         }
@@ -168,10 +168,10 @@ private:
     {
         if (_bucketCount)
             _bucketCount *= 2; // ### next prime
+        else
+            _bucketCount = 11;
 
-        if (_buckets)
-            delete[] _buckets;
-
+        delete[] _buckets;
         _buckets = new Property *[_bucketCount];
         std::fill(_buckets, _buckets + _bucketCount, (Property *) 0);
 
