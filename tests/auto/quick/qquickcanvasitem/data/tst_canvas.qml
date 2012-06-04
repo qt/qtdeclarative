@@ -178,7 +178,9 @@ CanvasTestCase {
        verify(c);
        var ctx = c.getContext("2d");
        tryCompare(c, "availableChangedCount", 1);
-
+       //scene graph could be available immediately
+       //in this case, we force waiting a short while until the init paint finished
+       tryCompare(c, "paintedCount", 1);
        ctx.fillRect(0, 0, c.width, c.height);
        c.toDataURL();
        tryCompare(c, "paintedCount", 2);
@@ -229,3 +231,4 @@ CanvasTestCase {
 
   }
 }
+
