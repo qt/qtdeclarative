@@ -620,7 +620,14 @@ void ObjectPrototype::method_hasOwnProperty(Context *ctx)
 
 void ObjectPrototype::method_isPrototypeOf(Context *ctx)
 {
-    ctx->throwUnimplemented(QStringLiteral("Object.prototype.isPrototypeOf"));
+    Value V = ctx->argument(0);
+    if (! V.isObject())
+        ctx->result = Value::fromBoolean(false);
+    else {
+        Value O = ctx->thisObject.toObject(ctx);
+        Object *proto = V.objectValue->prototype;
+        ctx->result = Value::fromBoolean(proto && O.objectValue == proto);
+    }
 }
 
 void ObjectPrototype::method_propertyIsEnumerable(Context *ctx)
