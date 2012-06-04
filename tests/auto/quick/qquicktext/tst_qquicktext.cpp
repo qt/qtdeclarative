@@ -117,6 +117,7 @@ private slots:
     void boundingRect();
     void clipRect();
     void lineLaidOut();
+    void lineLaidOutRelayout();
 
     void imgTagsBaseUrl_data();
     void imgTagsBaseUrl();
@@ -1892,6 +1893,42 @@ void tst_qquicktext::lineLaidOut()
         if (i >= 60) {
             QVERIFY(r.x() == r.width() * 2 + 60);
             QVERIFY(r.height() == 20);
+        }
+    }
+
+    delete canvas;
+}
+
+void tst_qquicktext::lineLaidOutRelayout()
+{
+    QQuickView *canvas = createView(testFile("lineLayoutRelayout.qml"));
+
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+
+    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(myText != 0);
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QVERIFY(textPrivate != 0);
+
+    QVERIFY(!textPrivate->extra.isAllocated());
+
+#if defined(Q_OS_MAC)
+    QVERIFY(myText->lineCount() == textPrivate->linesRects.count());
+#endif
+
+    qreal maxH = 0;
+    for (int i = 0; i < textPrivate->layout.lineCount(); ++i) {
+        QRectF r = textPrivate->layout.lineAt(i).rect();
+
+        if (r.x() == 0) {
+            QCOMPARE(r.y(), i * r.height());
+            maxH = qMax(maxH, r.y() + r.height());
+        } else {
+            QCOMPARE(r.x(), myText->width() / 2);
+            QCOMPARE(r.y(), (i * r.height()) - maxH);
         }
     }
 

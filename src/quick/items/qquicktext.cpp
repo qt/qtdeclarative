@@ -2079,7 +2079,7 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     if (!widthChanged && !wrapped && d->singleline && !scaleFont)
         goto geomChangeDone; // only height has changed which doesn't affect single line unwrapped text
 
-    if (!widthChanged && wrapped && d->elideMode != QQuickText::ElideRight && !scaleFont)
+    if (!widthChanged && wrapped && d->elideMode != QQuickText::ElideRight && !scaleFont && !d->isLineLaidOutConnected())
         goto geomChangeDone; // only height changed and no multiline eliding.
 
     if (leftAligned && d->elideMode == QQuickText::ElideRight && !d->truncated && d->singleline
