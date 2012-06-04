@@ -8,7 +8,7 @@ Flickable {
         id: column
         Repeater {
             model: 20
-            Rectangle { width: 200; height: 300; color: "blue" }
+            Rectangle { width: 200; height: 300; border.width: 1; color: "yellow" }
         }
     }
 }

@@ -229,7 +229,7 @@ public:
     virtual void updateViewport();
     virtual void fixupPosition();
     virtual void fixup(AxisData &data, qreal minExtent, qreal maxExtent);
-    virtual void flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+    virtual bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                         QQuickTimeLineCallback::Callback fixupCallback, qreal velocity);
 
     QQuickGridView::Flow flow;
@@ -1023,16 +1023,14 @@ void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
     fixupMode = Normal;
 }
 
-void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                                         QQuickTimeLineCallback::Callback fixupCallback, qreal velocity)
 {
-    Q_Q(QQuickGridView);
     data.fixingUp = false;
     moveReason = Mouse;
     if ((!haveHighlightRange || highlightRange != QQuickGridView::StrictlyEnforceRange)
         && snapMode == QQuickGridView::NoSnap) {
-        QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, velocity);
-        return;
+        return QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, velocity);
     }
     qreal maxDistance = 0;
     qreal dataValue = isContentFlowReversed() ? -data.move.value()+size() : data.move.value();
@@ -1125,21 +1123,11 @@ void QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         timeline.reset(data.move);
         timeline.accel(data.move, v, accel, maxDistance + overshootDist);
         timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
-        if (!hData.flicking && q->xflick()) {
-            hData.flicking = true;
-            emit q->flickingChanged();
-            emit q->flickingHorizontallyChanged();
-            emit q->flickStarted();
-        }
-        if (!vData.flicking && q->yflick()) {
-            vData.flicking = true;
-            emit q->flickingChanged();
-            emit q->flickingVerticallyChanged();
-            emit q->flickStarted();
-        }
+        return true;
     } else {
         timeline.reset(data.move);
         fixup(data, minExtent, maxExtent);
+        return false;
     }
 }
 

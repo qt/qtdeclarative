@@ -145,10 +145,11 @@ public:
         mutable bool maxExtentDirty : 1;
     };
 
-    void flickX(qreal velocity);
-    void flickY(qreal velocity);
-    virtual void flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+    bool flickX(qreal velocity);
+    bool flickY(qreal velocity);
+    virtual bool flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                         QQuickTimeLineCallback::Callback fixupCallback, qreal velocity);
+    void flickingStarted(bool flickingH, bool flickingV);
 
     void fixupX();
     void fixupY();

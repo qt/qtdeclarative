@@ -132,7 +132,7 @@ public:
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual void fixupPosition();
     virtual void fixup(AxisData &data, qreal minExtent, qreal maxExtent);
-    virtual void flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+    virtual bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                         QQuickTimeLineCallback::Callback fixupCallback, qreal velocity);
 
     QQuickListView::Orientation orient;
@@ -1471,17 +1471,14 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
     fixupMode = Normal;
 }
 
-void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                                         QQuickTimeLineCallback::Callback fixupCallback, qreal velocity)
 {
-    Q_Q(QQuickListView);
-
     data.fixingUp = false;
     moveReason = Mouse;
     if ((!haveHighlightRange || highlightRange != QQuickListView::StrictlyEnforceRange) && snapMode == QQuickListView::NoSnap) {
         correctFlick = true;
-        QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, velocity);
-        return;
+        return QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, velocity);
     }
     qreal maxDistance = 0;
     qreal dataValue = isContentFlowReversed() ? -data.move.value()+size() : data.move.value();
@@ -1587,19 +1584,8 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             timeline.reset(data.move);
             timeline.accel(data.move, v, accel, maxDistance + overshootDist);
             timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
-            if (!hData.flicking && q->xflick()) {
-                hData.flicking = true;
-                emit q->flickingChanged();
-                emit q->flickingHorizontallyChanged();
-                emit q->flickStarted();
-            }
-            if (!vData.flicking && q->yflick()) {
-                vData.flicking = true;
-                emit q->flickingChanged();
-                emit q->flickingVerticallyChanged();
-                emit q->flickStarted();
-            }
             correctFlick = true;
+            return true;
         } else {
             // reevaluate the target boundary.
             qreal newtarget = data.flickTarget;
@@ -1615,7 +1601,7 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             if (newtarget == data.flickTarget) { // boundary unchanged - nothing to do
                 if (qAbs(velocity) < MinimumFlickVelocity)
                     correctFlick = false;
-                return;
+                return false;
             }
             data.flickTarget = newtarget;
             qreal dist = -newtarget + data.move.value();
@@ -1623,16 +1609,18 @@ void QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
                 correctFlick = false;
                 timeline.reset(data.move);
                 fixup(data, minExtent, maxExtent);
-                return;
+                return false;
             }
             timeline.reset(data.move);
             timeline.accelDistance(data.move, v, -dist);
             timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
+            return false;
         }
     } else {
         correctFlick = false;
         timeline.reset(data.move);
         fixup(data, minExtent, maxExtent);
+        return false;
     }
 }
 

@@ -73,7 +73,12 @@ private slots:
     void resizeContent();
     void returnToBounds();
     void wheel();
+    void movingAndFlicking();
+    void movingAndFlicking_data();
     void movingAndDragging();
+    void movingAndDragging_data();
+    void flickOnRelease();
+    void pressWhileFlicking();
     void disabled();
     void flickVelocity();
     void margins();
@@ -382,11 +387,205 @@ void tst_qquickflickable::wheel()
     delete canvas;
 }
 
+void tst_qquickflickable::movingAndFlicking_data()
+{
+    QTest::addColumn<bool>("verticalEnabled");
+    QTest::addColumn<bool>("horizontalEnabled");
+    QTest::addColumn<QPoint>("flickToWithoutSnapBack");
+    QTest::addColumn<QPoint>("flickToWithSnapBack");
+
+    QTest::newRow("vertical")
+            << true << false
+            << QPoint(50, 100)
+            << QPoint(50, 300);
+
+    QTest::newRow("horizontal")
+            << false << true
+            << QPoint(-50, 200)
+            << QPoint(150, 200);
+
+    QTest::newRow("both")
+            << true << true
+            << QPoint(-50, 100)
+            << QPoint(150, 300);
+}
+
+void tst_qquickflickable::movingAndFlicking()
+{
+#ifdef Q_OS_MAC
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
+#endif
+
+    QFETCH(bool, verticalEnabled);
+    QFETCH(bool, horizontalEnabled);
+    QFETCH(QPoint, flickToWithoutSnapBack);
+    QFETCH(QPoint, flickToWithSnapBack);
+
+    const QPoint flickFrom(50, 200);   // centre
+
+    QQuickView *canvas = new QQuickView;
+    canvas->setSource(testFileUrl("flickable03.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(canvas->rootObject());
+    QVERIFY(flickable != 0);
+
+    QSignalSpy vMoveSpy(flickable, SIGNAL(movingVerticallyChanged()));
+    QSignalSpy hMoveSpy(flickable, SIGNAL(movingHorizontallyChanged()));
+    QSignalSpy moveSpy(flickable, SIGNAL(movingChanged()));
+    QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
+    QSignalSpy hFlickSpy(flickable, SIGNAL(flickingHorizontallyChanged()));
+    QSignalSpy flickSpy(flickable, SIGNAL(flickingChanged()));
+
+    QSignalSpy moveStartSpy(flickable, SIGNAL(movementStarted()));
+    QSignalSpy moveEndSpy(flickable, SIGNAL(movementEnded()));
+    QSignalSpy flickStartSpy(flickable, SIGNAL(flickStarted()));
+    QSignalSpy flickEndSpy(flickable, SIGNAL(flickEnded()));
+
+    // do a flick that keeps the view within the bounds
+    flick(canvas, flickFrom, flickToWithoutSnapBack, 200);
+
+    QVERIFY(flickable->isMoving());
+    QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
+    QCOMPARE(flickable->isMovingVertically(), verticalEnabled);
+    QVERIFY(flickable->isFlicking());
+    QCOMPARE(flickable->isFlickingHorizontally(), horizontalEnabled);
+    QCOMPARE(flickable->isFlickingVertically(), verticalEnabled);
+
+    QCOMPARE(moveSpy.count(), 1);
+    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(flickSpy.count(), 1);
+    QCOMPARE(vFlickSpy.count(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hFlickSpy.count(), horizontalEnabled ? 1 : 0);
+
+    QCOMPARE(moveStartSpy.count(), 1);
+    QCOMPARE(flickStartSpy.count(), 1);
+
+    // wait for any motion to end
+    QTRY_VERIFY(!flickable->isMoving());
+
+    QVERIFY(!flickable->isMovingHorizontally());
+    QVERIFY(!flickable->isMovingVertically());
+    QVERIFY(!flickable->isFlicking());
+    QVERIFY(!flickable->isFlickingHorizontally());
+    QVERIFY(!flickable->isFlickingVertically());
+
+    QCOMPARE(moveSpy.count(), 2);
+    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(flickSpy.count(), 2);
+    QCOMPARE(vFlickSpy.count(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hFlickSpy.count(), horizontalEnabled ? 2 : 0);
+
+    QCOMPARE(moveStartSpy.count(), 1);
+    QCOMPARE(moveEndSpy.count(), 1);
+    QCOMPARE(flickStartSpy.count(), 1);
+    QCOMPARE(flickEndSpy.count(), 1);
+
+    // Stop on a full pixel after user interaction
+    if (verticalEnabled)
+        QCOMPARE(flickable->contentY(), (qreal)qRound(flickable->contentY()));
+    if (horizontalEnabled)
+        QCOMPARE(flickable->contentX(), (qreal)qRound(flickable->contentX()));
+
+    // clear for next flick
+    vMoveSpy.clear(); hMoveSpy.clear(); moveSpy.clear();
+    vFlickSpy.clear(); hFlickSpy.clear(); flickSpy.clear();
+    moveStartSpy.clear(); moveEndSpy.clear();
+    flickStartSpy.clear(); flickEndSpy.clear();
+
+    // do a flick that flicks the view out of bounds
+    flickable->setContentX(0);
+    flickable->setContentY(0);
+    QTRY_VERIFY(!flickable->isMoving());
+    flick(canvas, flickFrom, flickToWithSnapBack, 200);
+
+    QVERIFY(flickable->isMoving());
+    QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
+    QCOMPARE(flickable->isMovingVertically(), verticalEnabled);
+    QVERIFY(flickable->isFlicking());
+    QCOMPARE(flickable->isFlickingHorizontally(), horizontalEnabled);
+    QCOMPARE(flickable->isFlickingVertically(), verticalEnabled);
+
+    QCOMPARE(moveSpy.count(), 1);
+    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(flickSpy.count(), 1);
+    QCOMPARE(vFlickSpy.count(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hFlickSpy.count(), horizontalEnabled ? 1 : 0);
+
+    QCOMPARE(moveStartSpy.count(), 1);
+    QCOMPARE(moveEndSpy.count(), 0);
+    QCOMPARE(flickStartSpy.count(), 1);
+    QCOMPARE(flickEndSpy.count(), 0);
+
+    // wait for any motion to end
+    QTRY_VERIFY(!flickable->isMoving());
+
+    QVERIFY(!flickable->isMovingHorizontally());
+    QVERIFY(!flickable->isMovingVertically());
+    QVERIFY(!flickable->isFlicking());
+    QVERIFY(!flickable->isFlickingHorizontally());
+    QVERIFY(!flickable->isFlickingVertically());
+
+    QCOMPARE(moveSpy.count(), 2);
+    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(flickSpy.count(), 2);
+    QCOMPARE(vFlickSpy.count(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hFlickSpy.count(), horizontalEnabled ? 2 : 0);
+
+    QCOMPARE(moveStartSpy.count(), 1);
+    QCOMPARE(moveEndSpy.count(), 1);
+    QCOMPARE(flickStartSpy.count(), 1);
+    QCOMPARE(flickEndSpy.count(), 1);
+
+    QCOMPARE(flickable->contentX(), 0.0);
+    QCOMPARE(flickable->contentY(), 0.0);
+
+    delete canvas;
+}
+
+
+void tst_qquickflickable::movingAndDragging_data()
+{
+    QTest::addColumn<bool>("verticalEnabled");
+    QTest::addColumn<bool>("horizontalEnabled");
+    QTest::addColumn<QPoint>("moveByWithoutSnapBack");
+    QTest::addColumn<QPoint>("moveByWithSnapBack");
+
+    QTest::newRow("vertical")
+            << true << false
+            << QPoint(0, -10)
+            << QPoint(0, 20);
+
+    QTest::newRow("horizontal")
+            << false << true
+            << QPoint(-10, 0)
+            << QPoint(20, 0);
+
+    QTest::newRow("both")
+            << true << true
+            << QPoint(-10, -10)
+            << QPoint(20, 20);
+}
+
 void tst_qquickflickable::movingAndDragging()
 {
 #ifdef Q_OS_MAC
     QSKIP("Producing flicks on Mac CI impossible due to timing problems");
 #endif
+
+    QFETCH(bool, verticalEnabled);
+    QFETCH(bool, horizontalEnabled);
+    QFETCH(QPoint, moveByWithoutSnapBack);
+    QFETCH(QPoint, moveByWithSnapBack);
+
+    const QPoint moveFrom(50, 200);   // centre
 
     QQuickView *canvas = new QQuickView;
     canvas->setSource(testFileUrl("flickable03.qml"));
@@ -404,47 +603,170 @@ void tst_qquickflickable::movingAndDragging()
     QSignalSpy vMoveSpy(flickable, SIGNAL(movingVerticallyChanged()));
     QSignalSpy hMoveSpy(flickable, SIGNAL(movingHorizontallyChanged()));
     QSignalSpy moveSpy(flickable, SIGNAL(movingChanged()));
+
     QSignalSpy dragStartSpy(flickable, SIGNAL(dragStarted()));
     QSignalSpy dragEndSpy(flickable, SIGNAL(dragEnded()));
+    QSignalSpy moveStartSpy(flickable, SIGNAL(movementStarted()));
+    QSignalSpy moveEndSpy(flickable, SIGNAL(movementEnded()));
 
-    //Vertical
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 90));
+    // start the drag
+    QTest::mousePress(canvas, Qt::LeftButton, 0, moveFrom);
+    QTest::mouseMove(canvas, moveFrom + moveByWithoutSnapBack);
+    QTest::mouseMove(canvas, moveFrom + moveByWithoutSnapBack*2);
+    QTest::mouseMove(canvas, moveFrom + moveByWithoutSnapBack*3);
 
-    QTest::mouseMove(canvas, QPoint(50, 80));
-    QTest::mouseMove(canvas, QPoint(50, 70));
-    QTest::mouseMove(canvas, QPoint(50, 60));
-
-    QVERIFY(!flickable->isDraggingHorizontally());
-    QVERIFY(flickable->isDraggingVertically());
-    QVERIFY(flickable->isDragging());
-    QCOMPARE(vDragSpy.count(), 1);
-    QCOMPARE(dragSpy.count(), 1);
-    QCOMPARE(hDragSpy.count(), 0);
-    QCOMPARE(dragStartSpy.count(), 1);
-    QCOMPARE(dragEndSpy.count(), 0);
-
-    QVERIFY(!flickable->isMovingHorizontally());
-    QVERIFY(flickable->isMovingVertically());
     QVERIFY(flickable->isMoving());
-    QCOMPARE(vMoveSpy.count(), 1);
+    QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
+    QCOMPARE(flickable->isMovingVertically(), verticalEnabled);
+    QVERIFY(flickable->isDragging());
+    QCOMPARE(flickable->isDraggingHorizontally(), horizontalEnabled);
+    QCOMPARE(flickable->isDraggingVertically(), verticalEnabled);
+
     QCOMPARE(moveSpy.count(), 1);
-    QCOMPARE(hMoveSpy.count(), 0);
+    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(dragSpy.count(), 1);
+    QCOMPARE(vDragSpy.count(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hDragSpy.count(), horizontalEnabled ? 1 : 0);
 
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 60));
+    QCOMPARE(moveStartSpy.count(), 1);
+    QCOMPARE(dragStartSpy.count(), 1);
 
-    QTRY_VERIFY(!flickable->isDraggingVertically());
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, moveFrom + moveByWithoutSnapBack*3);
+
     QVERIFY(!flickable->isDragging());
-    QCOMPARE(vDragSpy.count(), 2);
+    QVERIFY(!flickable->isDraggingHorizontally());
+    QVERIFY(!flickable->isDraggingVertically());
     QCOMPARE(dragSpy.count(), 2);
-    QCOMPARE(hDragSpy.count(), 0);
+    QCOMPARE(vDragSpy.count(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hDragSpy.count(), horizontalEnabled ? 2 : 0);
     QCOMPARE(dragStartSpy.count(), 1);
     QCOMPARE(dragEndSpy.count(), 1);
+    // Don't test whether moving finished because a flick could occur
 
     // wait for any motion to end
     QTRY_VERIFY(flickable->isMoving() == false);
 
+    QVERIFY(!flickable->isMovingHorizontally());
+    QVERIFY(!flickable->isMovingVertically());
+    QVERIFY(!flickable->isDragging());
+    QVERIFY(!flickable->isDraggingHorizontally());
+    QVERIFY(!flickable->isDraggingVertically());
+
+    QCOMPARE(dragSpy.count(), 2);
+    QCOMPARE(vDragSpy.count(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hDragSpy.count(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(moveSpy.count(), 2);
+    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 2 : 0);
+
+    QCOMPARE(dragStartSpy.count(), 1);
+    QCOMPARE(dragEndSpy.count(), 1);
+    QCOMPARE(moveStartSpy.count(), 1);
+    QCOMPARE(moveEndSpy.count(), 1);
+
     // Stop on a full pixel after user interaction
-    QCOMPARE(flickable->contentY(), (qreal)qRound(flickable->contentY()));
+    if (verticalEnabled)
+        QCOMPARE(flickable->contentY(), (qreal)qRound(flickable->contentY()));
+    if (horizontalEnabled)
+        QCOMPARE(flickable->contentX(), (qreal)qRound(flickable->contentX()));
+
+    // clear for next drag
+     vMoveSpy.clear(); hMoveSpy.clear(); moveSpy.clear();
+     vDragSpy.clear(); hDragSpy.clear(); dragSpy.clear();
+     moveStartSpy.clear(); moveEndSpy.clear();
+     dragStartSpy.clear(); dragEndSpy.clear();
+
+     // do a drag that drags the view out of bounds
+     flickable->setContentX(0);
+     flickable->setContentY(0);
+     QTRY_VERIFY(!flickable->isMoving());
+     QTest::mousePress(canvas, Qt::LeftButton, 0, moveFrom);
+     QTest::mouseMove(canvas, moveFrom + moveByWithSnapBack);
+     QTest::mouseMove(canvas, moveFrom + moveByWithSnapBack*2);
+     QTest::mouseMove(canvas, moveFrom + moveByWithSnapBack*3);
+
+     QVERIFY(flickable->isMoving());
+     QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
+     QCOMPARE(flickable->isMovingVertically(), verticalEnabled);
+     QVERIFY(flickable->isDragging());
+     QCOMPARE(flickable->isDraggingHorizontally(), horizontalEnabled);
+     QCOMPARE(flickable->isDraggingVertically(), verticalEnabled);
+
+     QCOMPARE(moveSpy.count(), 1);
+     QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
+     QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
+     QCOMPARE(dragSpy.count(), 1);
+     QCOMPARE(vDragSpy.count(), verticalEnabled ? 1 : 0);
+     QCOMPARE(hDragSpy.count(), horizontalEnabled ? 1 : 0);
+
+     QCOMPARE(moveStartSpy.count(), 1);
+     QCOMPARE(moveEndSpy.count(), 0);
+     QCOMPARE(dragStartSpy.count(), 1);
+     QCOMPARE(dragEndSpy.count(), 0);
+
+     QTest::mouseRelease(canvas, Qt::LeftButton, 0, moveFrom + moveByWithSnapBack*3);
+
+     // should now start snapping back to bounds (moving but not dragging)
+     QVERIFY(flickable->isMoving());
+     QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
+     QCOMPARE(flickable->isMovingVertically(), verticalEnabled);
+     QVERIFY(!flickable->isDragging());
+     QVERIFY(!flickable->isDraggingHorizontally());
+     QVERIFY(!flickable->isDraggingVertically());
+
+     QCOMPARE(moveSpy.count(), 1);
+     QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
+     QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
+     QCOMPARE(dragSpy.count(), 2);
+     QCOMPARE(vDragSpy.count(), verticalEnabled ? 2 : 0);
+     QCOMPARE(hDragSpy.count(), horizontalEnabled ? 2 : 0);
+
+     QCOMPARE(moveStartSpy.count(), 1);
+     QCOMPARE(moveEndSpy.count(), 0);
+
+     // wait for any motion to end
+     QTRY_VERIFY(!flickable->isMoving());
+
+     QVERIFY(!flickable->isMovingHorizontally());
+     QVERIFY(!flickable->isMovingVertically());
+     QVERIFY(!flickable->isDragging());
+     QVERIFY(!flickable->isDraggingHorizontally());
+     QVERIFY(!flickable->isDraggingVertically());
+
+     QCOMPARE(moveSpy.count(), 2);
+     QCOMPARE(vMoveSpy.count(), verticalEnabled ? 2 : 0);
+     QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 2 : 0);
+     QCOMPARE(dragSpy.count(), 2);
+     QCOMPARE(vDragSpy.count(), verticalEnabled ? 2 : 0);
+     QCOMPARE(hDragSpy.count(), horizontalEnabled ? 2 : 0);
+
+     QCOMPARE(moveStartSpy.count(), 1);
+     QCOMPARE(moveEndSpy.count(), 1);
+     QCOMPARE(dragStartSpy.count(), 1);
+     QCOMPARE(dragEndSpy.count(), 1);
+
+     QCOMPARE(flickable->contentX(), 0.0);
+     QCOMPARE(flickable->contentY(), 0.0);
+
+    delete canvas;
+}
+
+void tst_qquickflickable::flickOnRelease()
+{
+#ifdef Q_OS_MAC
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
+#endif
+
+    QQuickView *canvas = new QQuickView;
+    canvas->setSource(testFileUrl("flickable03.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(canvas->rootObject());
+    QVERIFY(flickable != 0);
 
     // Vertical with a quick press-move-release: should cause a flick in release.
     QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
@@ -465,58 +787,30 @@ void tst_qquickflickable::movingAndDragging()
     // Stop on a full pixel after user interaction
     QCOMPARE(flickable->contentY(), (qreal)qRound(flickable->contentY()));
 
-    //Horizontal
-    vDragSpy.clear();
-    hDragSpy.clear();
-    dragSpy.clear();
-    vMoveSpy.clear();
-    hMoveSpy.clear();
-    moveSpy.clear();
-    dragStartSpy.clear();
-    dragEndSpy.clear();
+    delete canvas;
+}
 
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(90, 50));
+void tst_qquickflickable::pressWhileFlicking()
+{
+#ifdef Q_OS_MAC
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
+#endif
 
-    QTest::mouseMove(canvas, QPoint(80, 50));
-    QTest::mouseMove(canvas, QPoint(70, 50));
-    QTest::mouseMove(canvas, QPoint(60, 50));
+    QQuickView *canvas = new QQuickView;
+    canvas->setSource(testFileUrl("flickable03.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(canvas->rootObject() != 0);
 
-    QVERIFY(!flickable->isDraggingVertically());
-    QVERIFY(flickable->isDraggingHorizontally());
-    QVERIFY(flickable->isDragging());
-    QCOMPARE(vDragSpy.count(), 0);
-    QCOMPARE(dragSpy.count(), 1);
-    QCOMPARE(hDragSpy.count(), 1);
-    QCOMPARE(dragStartSpy.count(), 1);
-    QCOMPARE(dragEndSpy.count(), 0);
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(canvas->rootObject());
+    QVERIFY(flickable != 0);
 
-    QVERIFY(!flickable->isMovingVertically());
-    QVERIFY(flickable->isMovingHorizontally());
-    QVERIFY(flickable->isMoving());
-    QCOMPARE(vMoveSpy.count(), 0);
-    QCOMPARE(moveSpy.count(), 1);
-    QCOMPARE(hMoveSpy.count(), 1);
-
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(60, 50));
-
-    QTRY_VERIFY(!flickable->isDraggingHorizontally());
-    QVERIFY(!flickable->isDragging());
-    QCOMPARE(vDragSpy.count(), 0);
-    QCOMPARE(dragSpy.count(), 2);
-    QCOMPARE(hDragSpy.count(), 2);
-    QCOMPARE(dragStartSpy.count(), 1);
-    QCOMPARE(dragEndSpy.count(), 1);
-    // Don't test moving because a flick could occur
-
-    QTRY_VERIFY(!flickable->isMoving());
-    // Stop on a full pixel after user interaction
-    QCOMPARE(flickable->contentX(), (qreal)qRound(flickable->contentX()));
-
-    vMoveSpy.clear();
-    hMoveSpy.clear();
-    moveSpy.clear();
-    vFlickSpy.clear();
+    QSignalSpy vMoveSpy(flickable, SIGNAL(movingVerticallyChanged()));
+    QSignalSpy hMoveSpy(flickable, SIGNAL(movingHorizontallyChanged()));
+    QSignalSpy moveSpy(flickable, SIGNAL(movingChanged()));
     QSignalSpy hFlickSpy(flickable, SIGNAL(flickingHorizontallyChanged()));
+    QSignalSpy vFlickSpy(flickable, SIGNAL(flickingVerticallyChanged()));
     QSignalSpy flickSpy(flickable, SIGNAL(flickingChanged()));
 
     // flick then press while it is still moving

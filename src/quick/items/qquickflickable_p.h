@@ -237,10 +237,9 @@ protected:
 protected Q_SLOTS:
     void movementStarting();
     void movementEnding();
+    void movementEnding(bool hMovementEnding, bool vMovementEnding);
 
 protected:
-    void movementXEnding();
-    void movementYEnding();
     virtual qreal minXExtent() const;
     virtual qreal minYExtent() const;
     virtual qreal maxXExtent() const;

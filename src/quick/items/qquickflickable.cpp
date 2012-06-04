@@ -267,19 +267,19 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, const QRectF 
     }
 }
 
-void QQuickFlickablePrivate::flickX(qreal velocity)
+bool QQuickFlickablePrivate::flickX(qreal velocity)
 {
     Q_Q(QQuickFlickable);
-    flick(hData, q->minXExtent(), q->maxXExtent(), q->width(), fixupX_callback, velocity);
+    return flick(hData, q->minXExtent(), q->maxXExtent(), q->width(), fixupX_callback, velocity);
 }
 
-void QQuickFlickablePrivate::flickY(qreal velocity)
+bool QQuickFlickablePrivate::flickY(qreal velocity)
 {
     Q_Q(QQuickFlickable);
-    flick(vData, q->minYExtent(), q->maxYExtent(), q->height(), fixupY_callback, velocity);
+    return flick(vData, q->minYExtent(), q->maxYExtent(), q->height(), fixupY_callback, velocity);
 }
 
-void QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal,
+bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal,
                                          QQuickTimeLineCallback::Callback fixupCallback, qreal velocity)
 {
     Q_Q(QQuickFlickable);
@@ -318,23 +318,16 @@ void QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         else
             timeline.accel(data.move, v, accel, maxDistance);
         timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
-        if (!hData.flicking && q->xflick() && (&data == &hData)) {
-            hData.flicking = true;
-            emit q->flickingChanged();
-            emit q->flickingHorizontallyChanged();
-            if (!vData.flicking)
-                emit q->flickStarted();
-        }
-        if (!vData.flicking && q->yflick() && (&data == &vData)) {
-            vData.flicking = true;
-            emit q->flickingChanged();
-            emit q->flickingVerticallyChanged();
-            if (!hData.flicking)
-                emit q->flickStarted();
-        }
+
+        if (&data == &hData)
+            return !hData.flicking && q->xflick();
+        else if (&data == &vData)
+            return !vData.flicking && q->yflick();
+        return false;
     } else {
         timeline.reset(data.move);
         fixup(data, minExtent, maxExtent);
+        return false;
     }
 }
 
@@ -641,7 +634,7 @@ void QQuickFlickable::setContentX(qreal pos)
     d->hData.explicitValue = true;
     d->timeline.reset(d->hData.move);
     d->vTime = d->timeline.time();
-    movementXEnding();
+    movementEnding(true, false);
     if (-pos != d->hData.move.value())
         d->hData.move.setValue(-pos);
 }
@@ -658,7 +651,7 @@ void QQuickFlickable::setContentY(qreal pos)
     d->vData.explicitValue = true;
     d->timeline.reset(d->vData.move);
     d->vTime = d->timeline.time();
-    movementYEnding();
+    movementEnding(false, true);
     if (-pos != d->vData.move.value())
         d->vData.move.setValue(-pos);
 }
@@ -1083,24 +1076,27 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     flickBoost = canBoost ? qBound(1.0, flickBoost+0.25, QML_FLICK_MULTIFLICK_MAXBOOST) : 1.0;
 
+    bool flickedV = false;
     vVelocity *= flickBoost;
     if (q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
-        flickY(vVelocity);
+        flickedV = flickY(vVelocity);
     } else {
         fixupY();
     }
 
+    bool flickedH = false;
     hVelocity *= flickBoost;
     if (q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);
-        flickX(hVelocity);
+        flickedH = flickX(hVelocity);
     } else {
         fixupX();
     }
 
+    flickingStarted(flickedH, flickedV);
     if (!timeline.isActive())
         q->movementEnding();
 }
@@ -1159,6 +1155,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         if (valid) {
             d->vData.flicking = false;
             d->flickY(d->vData.velocity);
+            d->flickingStarted(false, true);
             if (d->vData.flicking) {
                 d->vMoved = true;
                 movementStarting();
@@ -1177,6 +1174,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         if (valid) {
             d->hData.flicking = false;
             d->flickX(d->hData.velocity);
+            d->flickingStarted(true, false);
             if (d->hData.flicking) {
                 d->hMoved = true;
                 movementStarting();
@@ -1411,8 +1409,30 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
 void QQuickFlickable::flick(qreal xVelocity, qreal yVelocity)
 {
     Q_D(QQuickFlickable);
-    d->flickX(xVelocity);
-    d->flickY(yVelocity);
+    bool flickedX = d->flickX(xVelocity);
+    bool flickedY = d->flickY(yVelocity);
+    d->flickingStarted(flickedX, flickedY);
+}
+
+void QQuickFlickablePrivate::flickingStarted(bool flickingH, bool flickingV)
+{
+    Q_Q(QQuickFlickable);
+    if (!flickingH && !flickingV)
+        return;
+
+    bool wasFlicking = hData.flicking || vData.flicking;
+    if (flickingH && !hData.flicking) {
+        hData.flicking = true;
+        emit q->flickingHorizontallyChanged();
+    }
+    if (flickingV && !vData.flicking) {
+        vData.flicking = true;
+        emit q->flickingVerticallyChanged();
+    }
+    if (!wasFlicking && (hData.flicking || vData.flicking)) {
+        emit q->flickingChanged();
+        emit q->flickStarted();
+    }
 }
 
 /*!
@@ -2091,75 +2111,72 @@ bool QQuickFlickable::isMovingVertically() const
 void QQuickFlickable::movementStarting()
 {
     Q_D(QQuickFlickable);
+    bool wasMoving = d->hData.moving || d->vData.moving;
     if (d->hMoved && !d->hData.moving) {
         d->hData.moving = true;
-        emit movingChanged();
         emit movingHorizontallyChanged();
-        if (!d->vData.moving)
-            emit movementStarted();
     }
-    else if (d->vMoved && !d->vData.moving) {
+    if (d->vMoved && !d->vData.moving) {
         d->vData.moving = true;
-        emit movingChanged();
         emit movingVerticallyChanged();
-        if (!d->hData.moving)
-            emit movementStarted();
+    }
+    if (!wasMoving && (d->hData.moving || d->vData.moving)) {
+        emit movingChanged();
+        emit movementStarted();
     }
 }
 
 void QQuickFlickable::movementEnding()
 {
-    Q_D(QQuickFlickable);
-    movementXEnding();
-    movementYEnding();
-    d->hData.smoothVelocity.setValue(0);
-    d->vData.smoothVelocity.setValue(0);
+    movementEnding(true, true);
 }
 
-void QQuickFlickable::movementXEnding()
+void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
 {
     Q_D(QQuickFlickable);
-    if (d->hData.flicking) {
+
+    // emit flicking signals
+    bool wasFlicking = d->hData.flicking || d->vData.flicking;
+    if (hMovementEnding && d->hData.flicking) {
         d->hData.flicking = false;
-        emit flickingChanged();
         emit flickingHorizontallyChanged();
-        if (!d->vData.flicking)
-           emit flickEnded();
     }
-    if (!d->pressed && !d->stealMouse) {
-        if (d->hData.moving) {
-            d->hData.moving = false;
-            d->hMoved = false;
-            emit movingChanged();
-            emit movingHorizontallyChanged();
-            if (!d->vData.moving)
-                emit movementEnded();
-        }
-    }
-    d->hData.fixingUp = false;
-}
-
-void QQuickFlickable::movementYEnding()
-{
-    Q_D(QQuickFlickable);
-    if (d->vData.flicking) {
+    if (vMovementEnding && d->vData.flicking) {
         d->vData.flicking = false;
-        emit flickingChanged();
         emit flickingVerticallyChanged();
-        if (!d->hData.flicking)
-           emit flickEnded();
     }
-    if (!d->pressed && !d->stealMouse) {
-        if (d->vData.moving) {
-            d->vData.moving = false;
-            d->vMoved = false;
-            emit movingChanged();
-            emit movingVerticallyChanged();
-            if (!d->hData.moving)
-                emit movementEnded();
-        }
+    if (wasFlicking && (!d->hData.flicking || !d->vData.flicking)) {
+        emit flickingChanged();
+        emit flickEnded();
     }
-    d->vData.fixingUp = false;
+
+    // emit moving signals
+    bool wasMoving = d->hData.moving || d->vData.moving;
+    if (hMovementEnding && d->hData.moving
+            && (!d->pressed && !d->stealMouse)) {
+        d->hData.moving = false;
+        d->hMoved = false;
+        emit movingHorizontallyChanged();
+    }
+    if (vMovementEnding && d->vData.moving
+            && (!d->pressed && !d->stealMouse)) {
+        d->vData.moving = false;
+        d->vMoved = false;
+        emit movingVerticallyChanged();
+    }
+    if (wasMoving && (!d->hData.moving || !d->vData.moving)) {
+        emit movingChanged();
+        emit movementEnded();
+    }
+
+    if (hMovementEnding) {
+        d->hData.fixingUp = false;
+        d->hData.smoothVelocity.setValue(0);
+    }
+    if (vMovementEnding) {
+        d->vData.fixingUp = false;
+        d->vData.smoothVelocity.setValue(0);
+    }
 }
 
 void QQuickFlickablePrivate::updateVelocity()
