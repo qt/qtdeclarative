@@ -170,7 +170,7 @@ bool Value::isErrorObject() const
 
 bool Value::isArgumentsObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asArgumentsObject() != 0 : false;
+    return type == OBJECT_TYPE ? objectValue->asActivationObject() != 0 : false;
 }
 
 Object *Value::asObject() const
@@ -213,9 +213,9 @@ ErrorObject *Value::asErrorObject() const
     return type == OBJECT_TYPE ? objectValue->asErrorObject() : 0;
 }
 
-ArgumentsObject *Value::asArgumentsObject() const
+ActivationObject *Value::asArgumentsObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asArgumentsObject() : 0;
+    return type == OBJECT_TYPE ? objectValue->asActivationObject() : 0;
 }
 
 Value Value::property(Context *ctx, String *name) const

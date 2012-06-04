@@ -48,7 +48,7 @@ struct StringObject;
 struct DateObject;
 struct ArrayObject;
 struct ErrorObject;
-struct ArgumentsObject;
+struct ActivationObject;
 
 extern "C" {
 
@@ -286,7 +286,7 @@ struct Value {
     DateObject *asDateObject() const;
     ArrayObject *asArrayObject() const;
     ErrorObject *asErrorObject() const;
-    ArgumentsObject *asArgumentsObject() const;
+    ActivationObject *asArgumentsObject() const;
 
     Value property(Context *ctx, String *name) const;
     Value *getPropertyDescriptor(Context *ctx, String *name) const;

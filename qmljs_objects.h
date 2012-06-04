@@ -26,6 +26,7 @@ struct DateObject;
 struct FunctionObject;
 struct RegExpObject;
 struct ErrorObject;
+struct ActivationObject;
 struct ArgumentsObject;
 struct Context;
 struct ExecutionEngine;
@@ -216,6 +217,7 @@ struct Object {
     virtual FunctionObject *asFunctionObject() { return 0; }
     virtual RegExpObject *asRegExpObject() { return 0; }
     virtual ErrorObject *asErrorObject() { return 0; }
+    virtual ActivationObject *asActivationObject() { return 0; }
     virtual ArgumentsObject *asArgumentsObject() { return 0; }
 
     virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes = 0);
@@ -326,11 +328,21 @@ struct ErrorObject: Object {
     virtual ErrorObject *asErrorObject() { return this; }
 };
 
+struct ActivationObject: Object {
+    Context *context;
+    Value arguments;
+    ActivationObject(Context *context): context(context), arguments(Value::undefinedValue()) {}
+    virtual QString className() { return QStringLiteral("Activation"); }
+    virtual ActivationObject *asActivationObject() { return this; }
+    virtual Value *getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes);
+};
+
 struct ArgumentsObject: Object {
     Context *context;
     ArgumentsObject(Context *context): context(context) {}
     virtual QString className() { return QStringLiteral("Arguments"); }
     virtual ArgumentsObject *asArgumentsObject() { return this; }
+    virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes);
     virtual Value *getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes);
 };
 
@@ -436,6 +448,7 @@ struct ExecutionEngine
     String *id_length;
     String *id_prototype;
     String *id_constructor;
+    String *id_arguments;
     String *id___proto__;
 
     ExecutionEngine();
@@ -475,7 +488,7 @@ struct ExecutionEngine
 
     Object *newErrorObject(const Value &value);
     Object *newMathObject(Context *ctx);
-    Object *newArgumentsObject(Context *ctx);
+    Object *newActivationObject(Context *ctx);
 };
 
 } // namespace VM

@@ -196,7 +196,7 @@ void ScriptFunction::construct(VM::Context *ctx)
     function->code(ctx);
 }
 
-Value *ArgumentsObject::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
+Value *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
 {
     if (context) {
         for (size_t i = 0; i < context->varCount; ++i) {
@@ -215,10 +215,35 @@ Value *ArgumentsObject::getPropertyDescriptor(Context *ctx, String *name, Proper
                 return &context->arguments[i];
             }
         }
+        if (name->isEqualTo(ctx->engine->id_arguments)) {
+            if (arguments.isUndefined()) {
+                arguments = Value::fromObject(new ArgumentsObject(ctx));
+                arguments.objectValue->prototype = ctx->engine->objectPrototype;
+            }
+
+            return &arguments;
+        }
     }
     if (Value *prop = Object::getPropertyDescriptor(ctx, name, attributes))
         return prop;
     return 0;
+}
+
+Value ArgumentsObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
+{
+    if (name->isEqualTo(ctx->engine->id_length))
+        return Value::fromNumber(context->argumentCount);
+    return Object::getProperty(ctx, name, attributes);
+}
+
+Value *ArgumentsObject::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
+{
+    if (context) {
+        const quint32 i = Value::fromString(name).toUInt32(ctx);
+        if (i < context->argumentCount)
+            return &context->arguments[i];
+    }
+    return Object::getPropertyDescriptor(ctx, name, attributes);
 }
 
 ExecutionEngine::ExecutionEngine()
@@ -229,6 +254,7 @@ ExecutionEngine::ExecutionEngine()
     id_length = identifier(QStringLiteral("length"));
     id_prototype = identifier(QStringLiteral("prototype"));
     id_constructor = identifier(QStringLiteral("constructor"));
+    id_arguments = identifier(QStringLiteral("arguments"));
     id___proto__ = identifier(QStringLiteral("__proto__"));
 
     objectPrototype = new ObjectPrototype();
@@ -277,7 +303,7 @@ ExecutionEngine::ExecutionEngine()
     //
     // set up the global object
     //
-    VM::Object *glo = newArgumentsObject(rootContext);
+    VM::Object *glo = newActivationObject(rootContext);
     __qmljs_init_object(&globalObject, glo);
     __qmljs_init_object(&rootContext->activation, glo);
 
@@ -444,9 +470,9 @@ Object *ExecutionEngine::newMathObject(Context *ctx)
     return object;
 }
 
-Object *ExecutionEngine::newArgumentsObject(Context *ctx)
+Object *ExecutionEngine::newActivationObject(Context *ctx)
 {
-    return new ArgumentsObject(ctx);
+    return new ActivationObject(ctx);
 }
 
 void Context::throwError(const Value &value)
@@ -486,7 +512,7 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
     parent = f->scope;
 
     if (f->needsActivation)
-        __qmljs_init_object(&activation, engine->newArgumentsObject(this));
+        __qmljs_init_object(&activation, engine->newActivationObject(this));
     else
         __qmljs_init_null(&activation);
 
