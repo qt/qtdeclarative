@@ -83,12 +83,12 @@ bool Object::canSetProperty(Context *ctx, String *name)
     return true;
 }
 
-bool Object::hasProperty(Context *, String *name) const
+bool Object::hasProperty(Context *ctx, String *name) const
 {
     if (members)
         return members->find(name) != 0;
 
-    return false;
+    return prototype ? prototype->hasProperty(ctx, name) : false;
 }
 
 bool Object::deleteProperty(Context *, String *name, bool flag)

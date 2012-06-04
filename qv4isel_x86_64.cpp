@@ -697,11 +697,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     case IR::OpStrictEqual: op = __qmljs_se; break;
                     case IR::OpStrictNotEqual: op = __qmljs_sne; break;
                     case IR::OpInstanceof: op = __qmljs_instanceof; break;
-
-                    case IR::OpIn:
-                        Q_UNIMPLEMENTED();
-                        assert(!"TODO");
-                        break;
+                    case IR::OpIn: op = __qmljs_in; break;
 
                     case IR::OpAnd:
                     case IR::OpOr:
