@@ -198,3 +198,29 @@
     \endcode
 */
 
+/*!
+    \qmlmethod string Date::timeZoneUpdated()
+
+    Informs the JS engine that the system's timezone has been changed, which is necessary
+    for the correct manipulation of date/time data.
+
+    JS stores Date objects in UTC time; all access to and from Date components in local
+    time involves the application of the current offset from UTC.  If the current offset
+    changes due to the timezone being updated, the JS engine needs to be informed so that
+    it can recalculate the offset.
+
+    This function should be called after the system's timezone has been updated.
+
+    For example, an application that changes the timezone would call timeZoneUpdated() after
+    setting the new time zone:
+
+    \code
+        property string selectedTimeZone
+
+        onSelectedTimeZoneChanged: {
+            MyFunctions.setSystemTimeZone(selectedTimeZone)
+            Date.timeZoneUpdated()
+        }
+    \endcode
+*/
+

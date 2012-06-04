@@ -66,6 +66,7 @@ private:
     static v8::Handle<v8::Value> fromLocaleString(const v8::Arguments& args);
     static v8::Handle<v8::Value> fromLocaleTimeString(const v8::Arguments& args);
     static v8::Handle<v8::Value> fromLocaleDateString(const v8::Arguments& args);
+    static v8::Handle<v8::Value> timeZoneUpdated(const v8::Arguments& args);
 };
 
 

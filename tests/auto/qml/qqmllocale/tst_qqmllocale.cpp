@@ -47,6 +47,8 @@
 #include <qcolor.h>
 #include "../../shared/util.h"
 
+#include <time.h>
+
 class tst_qqmllocale : public QQmlDataTest
 {
     Q_OBJECT
@@ -80,6 +82,7 @@ private slots:
     void dateTimeFormat();
     void timeFormat_data();
     void timeFormat();
+    void timeZoneUpdated();
 
     void dateToLocaleString_data();
     void dateToLocaleString();
@@ -1212,6 +1215,44 @@ void tst_qqmllocale::stringLocaleCompare()
     obj->setProperty("string2", string2);
 
     QCOMPARE(obj->property("comparison").toInt(), QString::localeAwareCompare(string1, string2));
+}
+
+static void setTimeZone(const QByteArray &tz)
+{
+    qputenv("TZ", tz);
+#if defined(Q_OS_WIN32)
+    ::_tzset();
+#elif defined(Q_OS_UNIX)
+    ::tzset();
+#endif
+}
+
+void tst_qqmllocale::timeZoneUpdated()
+{
+#if !defined(Q_OS_WIN32) && !defined(Q_OS_UINX)
+    QSKIP("Timezone manipulation not available for this platform");
+#endif
+
+    QByteArray original(qgetenv("TZ"));
+
+    // Set the timezone to Brisbane time
+    setTimeZone(QByteArray("AEST-10:00"));
+
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("timeZoneUpdated.qml"));
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(obj);
+    QCOMPARE(obj->property("success").toBool(), true);
+
+    // Change to Indian time
+    setTimeZone(QByteArray("IST-05:30"));
+
+    QMetaObject::invokeMethod(obj.data(), "check");
+
+    // Reset to original time
+    setTimeZone(original);
+
+    QCOMPARE(obj->property("success").toBool(), true);
 }
 
 QTEST_MAIN(tst_qqmllocale)

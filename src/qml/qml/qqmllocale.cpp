@@ -131,6 +131,13 @@ static const char *dateFromLocaleDateStringFunction =
         "  })"
         "})";
 
+static const char *dateTimeZoneUpdatedFunction =
+        "(function(timeZoneUpdatedFunc) { "
+        "  Date.timeZoneUpdated = (function() {"
+        "    return timeZoneUpdatedFunc.apply(null, arguments);"
+        "  })"
+        "})";
+
 
 static void registerFunction(QV8Engine *engine, const char *script, v8::InvocationCallback func)
 {
@@ -150,6 +157,7 @@ void QQmlDateExtension::registerExtension(QV8Engine *engine)
     registerFunction(engine, dateFromLocaleStringFunction, fromLocaleString);
     registerFunction(engine, dateFromLocaleTimeStringFunction, fromLocaleTimeString);
     registerFunction(engine, dateFromLocaleDateStringFunction, fromLocaleDateString);
+    registerFunction(engine, dateTimeZoneUpdatedFunction, timeZoneUpdated);
 }
 
 v8::Handle<v8::Value> QQmlDateExtension::toLocaleString(const v8::Arguments& args)
@@ -385,6 +393,16 @@ v8::Handle<v8::Value> QQmlDateExtension::fromLocaleDateString(const v8::Argument
     }
 
     return QJSConverter::toDateTime(QDateTime(dt));
+}
+
+v8::Handle<v8::Value> QQmlDateExtension::timeZoneUpdated(const v8::Arguments& args)
+{
+    if (args.Length() != 0)
+        V8THROW_ERROR("Locale: Date.timeZoneUpdated(): Invalid arguments");
+
+    v8::Date::DateTimeConfigurationChangeNotification();
+
+    return v8::Undefined();
 }
 
 //-----------------
