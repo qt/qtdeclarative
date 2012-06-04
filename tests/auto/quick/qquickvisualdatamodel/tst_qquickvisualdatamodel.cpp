@@ -525,12 +525,14 @@ void tst_qquickvisualdatamodel::objectListModel()
 
     QQuickText *name = findItem<QQuickText>(contentItem, "name", 0);
     QCOMPARE(name->text(), QString("Item 1"));
+    QCOMPARE(name->property("modelName").toString(), QString("Item 1"));
 
     QQuickText *section = findItem<QQuickText>(contentItem, "section", 0);
     QCOMPARE(section->text(), QString("Item 1"));
 
     dataList[0]->setProperty("name", QLatin1String("Changed"));
     QCOMPARE(name->text(), QString("Changed"));
+    QCOMPARE(name->property("modelName").toString(), QString("Changed"));
 }
 
 void tst_qquickvisualdatamodel::singleRole()

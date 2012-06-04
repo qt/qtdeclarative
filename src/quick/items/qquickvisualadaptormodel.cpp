@@ -882,7 +882,7 @@ public:
                 QMetaObject::metacall(m_data->object, call, id - m_type->propertyOffset + objectPropertyOffset, arguments);
             return -1;
         } else if (id >= m_type->signalOffset && call == QMetaObject::InvokeMetaMethod) {
-            QMetaObject::activate(m_data, this, id, 0);
+            QMetaObject::activate(m_data, this, id - m_type->signalOffset, 0);
             return -1;
         } else {
             return m_data->qt_metacall(call, id, arguments);
@@ -910,7 +910,7 @@ public:
         }
 
         const int previousMethodCount = methodCount();
-        int notifierId = previousMethodCount;
+        int notifierId = previousMethodCount - methodOffset();
         for (int propertyId = previousPropertyCount; propertyId < metaObject->propertyCount() - objectPropertyOffset; ++propertyId) {
             QMetaProperty property = metaObject->property(propertyId + objectPropertyOffset);
             QMetaPropertyBuilder propertyBuilder;
