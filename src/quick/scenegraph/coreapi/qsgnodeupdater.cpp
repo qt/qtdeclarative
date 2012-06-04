@@ -164,9 +164,6 @@ void QSGNodeUpdater::enterClipNode(QSGClipNode *c)
     qDebug() << "enter clip:" << c;
 #endif
 
-    if (c->dirtyState() & QSGNode::DirtyClipList)
-        ++m_force_update;
-
     c->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.last();
     c->m_clip_list = m_current_clip;
     m_current_clip = c;
@@ -178,9 +175,6 @@ void QSGNodeUpdater::leaveClipNode(QSGClipNode *c)
 #ifdef QSG_UPDATER_DEBUG
     qDebug() << "leave clip:" << c;
 #endif
-
-    if (c->dirtyState() & QSGNode::DirtyClipList)
-        --m_force_update;
 
     m_current_clip = c->m_clip_list;
 }

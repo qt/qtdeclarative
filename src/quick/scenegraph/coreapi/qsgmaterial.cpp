@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
     \class QSGMaterialShader
     \brief The QSGMaterialShader class represents an OpenGL shader program
     in the renderer.
+    \inmodule QtQuick
 
     The QSGMaterialShader API is very low-level. A more convenient API, which
     provides almost all the same features, is available through
@@ -60,9 +61,9 @@ QT_BEGIN_NAMESPACE
     to render that material, such as a shader to flat coloring of geometry.
     Each QSGGeometryNode can have a unique QSGMaterial containing the
     how the shader should be configured when drawing that node, such as
-    the actual color to used to render the geometry.
+    the actual color used to render the geometry.
 
-    An instance of QSGMaterialShader is never created explicitely by the user,
+    An instance of QSGMaterialShader is never created explicitly by the user,
     it will be created on demand by the scene graph through
     QSGMaterial::createShader(). The scene graph will make sure that there
     is only one instance of each shader implementation through a scene graph.
@@ -154,14 +155,57 @@ QSGMaterialShader::QSGMaterialShader()
 {
 }
 
+/*!
+    \fn QSGMaterialShader::~QSGMaterialShader()
+    \internal
+ */
+
+/*!
+    \fn char const *const *QSGMaterialShader::attributeNames() const
+
+    Returns a zero-terminated array describing the names of the
+    attributes used in the vertex shader.
+
+    This function is called when the shader is compiled to specify
+    which attributes exist. The order of the attribute names
+    defines the attribute register position in the vertex shader.
+ */
 
 
 /*!
-    \fn QOpenGLShaderProgram *QSGMaterialShader::program() const
+    \fn const char *QSGMaterialShader::vertexShader() const
+
+    Called when the shader is being initialized to get the vertex
+    shader source code.
+
+    The contents returned from this function should never change.
+*/
+
+
+/*!
+   \fn const char *QSGMaterialShader::fragmentShader() const
+
+    Called when the shader is being initialized to get the fragment
+    shader source code.
+
+    The contents returned from this function should never change.
+*/
+
+
+/*!
+    \fn QOpenGLShaderProgram *QSGMaterialShader::program()
 
     Returns the shader program used by this QSGMaterialShader.
  */
 
+
+/*!
+    \fn void QSGMaterialShader::initialize()
+
+    Reimplement this function to do one-time initialization when the
+    shader program is compiled. The OpenGL shader program is compiled
+    and linked, but not bound, when this function is called.
+ */
 
 
 /*!
@@ -304,8 +348,8 @@ void QSGMaterialShader::compile()
 /*!
     \fn bool QSGMaterialShader::RenderState::isMatrixDirty() const
 
-    Convenience function to check if the dirtyStates() indicates that the matrix
-    needs to be updated.
+    Returns \c true if the dirtyStates() contain the dirty matrix state,
+    otherwise returns \c false.
  */
 
 
@@ -313,8 +357,8 @@ void QSGMaterialShader::compile()
 /*!
     \fn bool QSGMaterialShader::RenderState::isOpacityDirty() const
 
-    Conveience function to check if the dirtyStates() indicates that the opacity
-    needs to be updated.
+    Returns \c true if the dirtyStates() contains the dirty opacity state,
+    otherwise returns \c false.
  */
 
 
@@ -330,7 +374,7 @@ void QSGMaterialShader::compile()
 
 
 /*!
-    Returns the accumulated opacity to be used for rendering
+    Returns the accumulated opacity to be used for rendering.
  */
 
 float QSGMaterialShader::RenderState::opacity() const
@@ -340,7 +384,7 @@ float QSGMaterialShader::RenderState::opacity() const
 }
 
 /*!
-    Returns the modelview determinant to be used for rendering
+    Returns the modelview determinant to be used for rendering.
  */
 
 float QSGMaterialShader::RenderState::determinant() const
@@ -434,6 +478,7 @@ static void qt_print_material_count()
 /*!
     \class QSGMaterialType
     \brief The QSGMaterialType class is used as a unique type token in combination with QSGMaterial.
+    \inmodule QtQuick
 
     It serves no purpose outside the QSGMaterial::type() function.
  */
@@ -441,6 +486,7 @@ static void qt_print_material_count()
 /*!
     \class QSGMaterial
     \brief The QSGMaterial class encapsulates rendering state for a shader program.
+    \inmodule QtQuick
 
     The QSGMaterial API is very low-level. A more convenient API, which
     provides almost all the same features, is available through
@@ -473,6 +519,10 @@ static void qt_print_material_count()
     and cannot be used from the GUI thread.
  */
 
+/*!
+    \internal
+ */
+
 QSGMaterial::QSGMaterial()
     : m_flags(0)
 {
@@ -485,6 +535,11 @@ QSGMaterial::QSGMaterial()
     }
 #endif
 }
+
+
+/*!
+    \internal
+ */
 
 QSGMaterial::~QSGMaterial()
 {
@@ -508,6 +563,12 @@ QSGMaterial::~QSGMaterial()
 
     \value RequiresFullMatrix Set this flag to true if the material relies on
     the full matrix of the geometry nodes for rendering.
+ */
+
+/*!
+    \fn QSGMaterial::Flags QSGMaterial::flags() const
+
+    Returns the material's flags.
  */
 
 

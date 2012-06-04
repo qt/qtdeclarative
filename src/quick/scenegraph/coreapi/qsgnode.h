@@ -66,15 +66,14 @@ class Q_QUICK_EXPORT QSGNode
 public:
     enum NodeType {
         BasicNodeType,
-        RootNodeType,
         GeometryNodeType,
         TransformNodeType,
         ClipNodeType,
         OpacityNodeType,
-#ifndef Q_QDOC
-        RenderNodeType, // internal
+#ifndef qdoc
+        RootNodeType,
+        RenderNodeType
 #endif
-        UserNodeType = 1024
     };
 
     enum Flag {
@@ -92,22 +91,23 @@ public:
     Q_DECLARE_FLAGS(Flags, Flag)
 
     enum DirtyStateBit {
-        DirtyUsePreprocess          = UsePreprocess,
-
         DirtyMatrix                 = 0x0100,
-        DirtyClipList               = 0x0200,
         DirtyNodeAdded              = 0x0400,
         DirtyNodeRemoved            = 0x0800,
         DirtyGeometry               = 0x1000,
         DirtyMaterial               = 0x2000,
         DirtyOpacity                = 0x4000,
+
+#ifndef qdoc
         DirtyForceUpdate            = 0x8000,
 
+        DirtyUsePreprocess          = UsePreprocess,
+
         DirtyPropagationMask        = DirtyMatrix
-                                      | DirtyClipList
                                       | DirtyNodeAdded
                                       | DirtyOpacity
                                       | DirtyForceUpdate
+#endif
 
     };
     Q_DECLARE_FLAGS(DirtyState, DirtyStateBit)
@@ -172,20 +172,9 @@ private:
     void *m_reserved;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::DirtyState)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::Flags)
-
 class Q_QUICK_EXPORT QSGBasicGeometryNode : public QSGNode
 {
 public:
-//    enum  UsagePattern {
-//        Static,
-//        Dynamic,
-//        Stream
-//    };
-//    void setUsagePattern(UsagePattern pattern);
-//    UsagePattern usagePattern() const { return m_pattern; }
-
     ~QSGBasicGeometryNode();
 
     void setGeometry(QSGGeometry *geometry);
@@ -207,8 +196,6 @@ private:
 
     const QMatrix4x4 *m_matrix;
     const QSGClipNode *m_clip_list;
-
-//    UsagePattern m_pattern;
 };
 
 class QSGMaterial;
@@ -342,6 +329,9 @@ Q_QUICK_EXPORT QDebug operator<<(QDebug, const QSGOpacityNode *n);
 Q_QUICK_EXPORT QDebug operator<<(QDebug, const QSGRootNode *n);
 
 #endif
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::DirtyState)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::Flags)
 
 QT_END_NAMESPACE
 

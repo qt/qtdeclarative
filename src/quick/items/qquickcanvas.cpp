@@ -765,6 +765,9 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 /*!
     \class QQuickCanvas
     \since QtQuick 2.0
+
+    \inmodule QtQuick
+
     \brief The QQuickCanvas class provides the canvas for displaying a graphical QML scene
 
     QQuickCanvas provides the graphical scene management needed to interact with and display
@@ -789,14 +792,14 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
     The rendering of each frame is broken down into the following
     steps, in the given order:
 
-    \list
+    \list 1
 
     \li The QQuickCanvas::beforeSynchronizing() signal is emitted.
     Applications can make direct connections (Qt::DirectConnection)
     to this signal to do any preparation required before calls to
     QQuickItem::updatePaintNode().
 
-    \li Synchronzation of the QML state into the scene graph. This is
+    \li Synchronization of the QML state into the scene graph. This is
     done by calling the QQuickItem::updatePaintNode() function on all
     items that have changed since the previous frame. When a dedicated
     rendering thread is used, the GUI thread is blocked during this

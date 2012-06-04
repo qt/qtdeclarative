@@ -42,7 +42,7 @@
 /*!
     \class QSGSimpleMaterialShader
 
-    \brief The QSGSimpleMaterialShader provides a convenient way of
+    \brief The QSGSimpleMaterialShader class provides a convenient way of
     building custom materials for the scene graph.
 
     \inmodule QtQuick
@@ -140,8 +140,38 @@
     renderer internally uses to identify this shader. For this reason,
     the unique QSGSimpleMaterialShader implemenation must be
     instantiated with a unique C++ type.
-
  */
+
+/*!
+    \fn char const *const *QSGSimpleMaterialShader::attributeNames() const
+    \internal
+ */
+
+/*!
+    \fn void QSGSimpleMaterialShader::initialize()
+    \internal
+ */
+
+/*!
+    \fn void QSGSimpleMaterialShader::resolveUniforms()
+    \internal
+ */
+
+/*!
+    \fn const char *QSGSimpleMaterialShader::uniformMatrixName() const
+    \internal
+ */
+
+/*!
+    \fn const char *QSGSimpleMaterialShader::uniformOpacityName() const
+    \internal
+ */
+
+/*!
+    \fn void QSGSimpleMaterialShader::updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+    \internal
+ */
+
 
 /*!
     \fn QList<QByteArray> QSGSimpleMaterialShader::attributes() const
@@ -153,8 +183,9 @@
 /*!
     \fn void QSGSimpleMaterialShader::updateState(const State *newState, const State *oldState)
 
-    Called whenever the state of this shader should be updated,
-    typical for each new set of geometries being drawn.
+    Called whenever the state of this shader should be updated from
+    \a oldState to \a newState, typical for each new set of
+    geometries being drawn.
 
     Both the old and the new state are passed in so that the
     implementation can compare and minimize the state changes when
@@ -162,26 +193,9 @@
 */
 
 /*!
-    \fn const char *QSGSimpleMaterialShader::vertexShader() const
-
-    Called when the shader is being initialized to get the vertex
-    shader source code.
-
-    The contents returned from this function should never change.
-*/
-
-
-/*!
-    \fn const char *QSGSimpleMaterialShader::fragmentShader() const
-
-    Called when the shader is being initialized to get the vertex
-    shader source code.
-
-    The contents returned from this function should never change.
-*/
-
-/*!
     \class QSGSimpleMaterial
+
+    \inmodule QtQuick
 
     \brief The QSGSimpleMaterial class is a template generated class
     used to store the state used with a QSGSimpleMateralShader.
@@ -193,10 +207,5 @@
 
     \sa QSGSimpleMaterialShader
 */
-
-
-
-
-
 
 

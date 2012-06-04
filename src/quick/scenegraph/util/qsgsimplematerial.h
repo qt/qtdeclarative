@@ -140,8 +140,8 @@ typedef QSGMaterialShader *(*PtrShaderCreateFunc)();
 template <typename State>
 class QSGSimpleMaterial : public QSGMaterial
 {
-
 public:
+#ifndef qdoc
     QSGSimpleMaterial(const State &state, PtrShaderCreateFunc func)
         : m_state(state)
         , m_func(func)
@@ -158,6 +158,7 @@ public:
 
     State *state() { return &m_state; }
     const State *state() const { return &m_state; }
+#endif
 
 private:
     static QSGMaterialType m_type;

@@ -59,6 +59,16 @@ Qt Quick features QML visual types, user input system, animation system, and dat
     \li \l{UI Creation with Qt Quick}
     \endlist
 
+\section1 QML Scene Graph
+
+Qt Quick features a high-performance rendering scene graph based on OpenGL.
+The scene graph offers a C++ API which allows developers to create their own unique
+and stunning graphical elements.
+
+    \list
+    \li \l{QML Scene Graph}
+    \endlist
+
 \section1 QML Engine
 There is a QML engine which runs QML applications. It includes C++ classes
 that loads and initializes QML code and a JavaScript engine for running

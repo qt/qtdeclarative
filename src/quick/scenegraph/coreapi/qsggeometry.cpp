@@ -104,24 +104,286 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 
 
 /*!
-    \class QSGGeometry
-    \brief The QSGGeometry class provides low-level storage for graphics primitives
-    in the QML Scene Graph.
+    \class QSGGeometry::Attribute
+    \brief The QSGGeometry::Attribute describes a single vertex attribute in a QSGGeometry
+    \inmodule QtQuick
 
-    The QSGGeometry class provides a few convenience attributes and attribute accessors
-    by default. The defaultAttributes_Point2D() function returns attributes to be used
-    in normal solid color rectangles, while the defaultAttributes_TexturedPoint2D function
-    returns attributes to be used for the common pixmap usecase.
+    The QSGGeometry::Attribute struct describes the attribute register position,
+    the size of the attribute tuple and the attribute type.
+
+    It also contains a hint to the renderer if this attribute is the attribute
+    describing the position. The scene graph renderer may use this information
+    to perform optimizations.
+
+    It contains a number of bits which are reserved for future use.
+
+    \sa QSGGeometry
+ */
+
+/*!
+    \fn QSGGeometry::Attribute QSGGeometry::Attribute::create(int pos, int tupleSize, int primitiveType, bool isPosition)
+
+    Creates a new QSGGeometry::Attribute for attribute register \a pos with \a
+    tupleSize. The \a primitiveType can be any of the supported OpenGL types,
+    such as \c GL_FLOAT or \c GL_UNSIGNED_BYTE.
+
+    If the attribute describes the position for the vertex, the \a isPosition hint
+    should be set to \c true. The scene graph renderer may use this information
+    to perform optimizations.
+
+    Use the create function to construct the attribute, rather than an
+    initialization list, to ensure that all fields are initialized.
+ */
+
+
+/*!
+    \class QSGGeometry::AttributeSet
+    \brief The QSGGeometry::AttributeSet describes how the vertices in a QSGGeometry
+    are built up.
+    \inmodule QtQuick
+
+    \sa QSGGeometry
+ */
+
+
+/*!
+   \class QSGGeometry::Point2D
+   \brief The QSGGeometry::Point2D struct is a convenience struct for accessing
+   2D Points.
+
+   \inmodule QtQuick
+ */
+
+
+/*!
+   \fn void QSGGeometry::Point2D::set(float x, float y)
+
+   Sets the x and y values of this point to \a x and \a y.
+ */
+
+
+/*!
+   \class QSGGeometry::ColoredPoint2D
+   \brief The QSGGeometry::ColoredPoint2D struct is a convenience struct for accessing
+   2D Points with a color.
+
+   \inmodule QtQuick
+ */
+
+
+/*!
+   \fn void QSGGeometry::ColoredPoint2D::set(float x, float y, uchar red, uchar green, uchar blue, uchar alpha)
+
+   Sets the position of the vertex to \a x and \a y and the color to \a red, \a
+   green, \a blue, and \a alpha.
+ */
+
+
+/*!
+   \class QSGGeometry::TexturedPoint2D
+   \brief The QSGGeometry::TexturedPoint2D struct is a convenience struct for accessing
+   2D Points with texture coordinates.
+
+   \inmodule QtQuick
+ */
+
+
+/*!
+   \fn void QSGGeometry::TexturedPoint2D::set(float x, float y, float tx, float ty)
+
+   Sets the position of the vertex to \a x and \a y and the texture coordinate
+   to \a tx and \a ty.
+ */
+
+
+
+/*!
+    \class QSGGeometry
+
+    \brief The QSGGeometry class provides low-level
+    storage for graphics primitives in the \l{QML Scene Graph}.
+
+    \inmodule QtQuick
+
+    The QSGGeometry class stores the geometry of the primitives
+    rendered with the scene graph. It contains vertex data and
+    optionally index data. The mode used to draw the geometry is
+    specified with setDrawingMode(), which maps directly to the OpenGL
+    drawing mode, such as \c GL_TRIANGLE_STRIP, \c GL_TRIANGLES, or
+    \c GL_POINTS.
+
+    Vertices can be as simple as points defined by x and y values or
+    can be more complex where each vertex contains a normal, texture
+    coordinates and a 3D position. The QSGGeometry::AttributeSet is
+    used to describe how the vertex data is built up. The attribute
+    set can only be specified on construction.  The QSGGeometry class
+    provides a few convenience attributes and attribute sets by
+    default. The defaultAttributes_Point2D() function returns an
+    attribute set to be used in normal solid color rectangles, while
+    the defaultAttributes_TexturedPoint2D function returns attributes
+    to be used for textured 2D geometry. The vertex data is internally
+    stored as a \c {void *} and is accessible with the vertexData()
+    function. Convenience accessors for the common attribute sets are
+    availble with vertexDataAsPoint2D() and
+    vertexDataAsTexturedPoint2D(). Vertex data is allocated by passing
+    a vertex count to the constructor or by calling allocate() later.
+
+    The QSGGeometry can optionally contain indices of either unsigned
+    32-bit, unsigned 16-bit, or unsigned 8-bit integers. The index type
+    must be specified during construction and cannot be changed.
+
+    Below is a snippet illustrating how a geometry composed of
+    position and color vertices can be built.
+
+    \code
+    struct MyPoint2D {
+        float x;
+        float y;
+        float r;
+        float g;
+        float b;
+        float a;
+
+        void set(float x_, float y_, float r_, float g_, float b_, float a_) {
+            x = x_;
+            y = y_;
+            r = r_;
+            g = g_;
+            b = b_;
+            a = a_;
+        }
+    };
+
+    QSGGeometry::Attribute MyPoint2D_Attributes[] = {
+        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
+        QSGGeometry::Attribute::create(1, 4, GL_FLOAT, false)
+    };
+
+    QSGGeometry::AttributeSet MyPoint2D_AttributeSet = {
+        2,
+        sizeof(MyPoint2D),
+        MyPoint2D_Attributes
+    };
+
+    ...
+
+    geometry = new QSGGeometry(MyPoint2D_AttributeSet, 2);
+    geometry->setDrawingMode(GL_LINES);
+
+    MyPoint2D *vertices = static_cast<MyPoint2D *>(geometry->vertexData());
+    vertices[0].set(0, 0, 1, 0, 0, 1);
+    vertices[1].set(width(), height(), 0, 0, 1, 1);
+    \endcode
+
+    The QSGGeometry is a software buffer and client-side in terms of
+    OpenGL rendering, as the buffers used in 2D graphics typically consist of
+    many small buffers that change every frame and do not benefit from
+    being uploaded to graphics memory. However, the QSGGeometry
+    supports hinting to the renderer that a buffer should be
+    uploaded using the setVertexDataPattern() and
+    setIndexDataPattern() functions. Whether this hint is respected or
+    not is implementation specific.
+
+    \sa QSGGeometryNode
+
+ */
+
+/*!
+    \fn int QSGGeometry::attributeCount() const
+
+    Returns the number of attributes in the attrbute set used by this geometry.
+ */
+
+/*!
+    \fn QSGGeometry::Attribute *QSGGeometry::attributes() const
+
+    Returns an array with the attributes of this geometry. The size of the array
+    is given with attributeCount().
+ */
+
+/*!
+    \fn uint *QSGGeometry::indexDataAsUInt()
+
+    Convenience function to access the index data as a mutable array of
+    32-bit unsigned integers.
+ */
+
+/*!
+    \fn const uint *QSGGeometry::indexDataAsUInt() const
+
+    Convenience function to access the index data as an immutable array of
+    32-bit unsigned integers.
+ */
+
+/*!
+    \fn quint16 *QSGGeometry::indexDataAsUShort()
+
+    Convenience function to access the index data as a mutable array of
+    16-bit unsigned integers.
+ */
+
+/*!
+    \fn const quint16 *QSGGeometry::indexDataAsUShort() const
+
+    Convenience function to access the index data as an immutable array of
+    16-bit unsigned integers.
+ */
+
+/*!
+    \fn const QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D() const
+
+    Convenience function to access the vertex data as an immuatble
+    array of QSGGeometry::ColoredPoint2D.
+ */
+
+/*!
+    \fn QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D()
+
+    Convenience function to access the vertex data as a muatble
+    array of QSGGeometry::ColoredPoint2D.
+ */
+
+/*!
+    \fn const QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D() const
+
+    Convenience function to access the vertex data as an immuatble
+    array of QSGGeometry::TexturedPoint2D.
+ */
+
+/*!
+    \fn QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D()
+
+    Convenience function to access the vertex data as a muatble
+    array of QSGGeometry::TexturedPoint2D.
+ */
+
+/*!
+    \fn const QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D() const
+
+    Convenience function to access the vertex data as an immuatble
+    array of QSGGeometry::Point2D.
+ */
+
+/*!
+    \fn QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D()
+
+    Convenience function to access the vertex data as a muatble
+    array of QSGGeometry::Point2D.
  */
 
 
 /*!
     Constructs a geometry object based on \a attributes.
 
-    The object allocate space for \a vertexCount vertices based on the accumulated
-    size in \a attributes and for \a indexCount.
+    The object allocate space for \a vertexCount vertices based on the
+    accumulated size in \a attributes and for \a indexCount.
 
-    Geometry objects are constructed with GL_TRIANGLE_STRIP as default drawing mode.
+    The \a indexType maps to the OpenGL index type and can be
+    \c GL_UNSIGNED_SHORT and \c GL_UNSIGNED_BYTE. On OpenGL implementations that
+    support it, such as desktop OpenGL, \c GL_UNSIGNED_INT can also be used.
+
+    Geometry objects are constructed with \c GL_TRIANGLE_STRIP as default
+    drawing mode.
 
     The attribute structure is assumed to be POD and the geometry object
     assumes this will not go away. There is no memory management involved.
@@ -179,9 +441,13 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
 
     Returns the byte size of the index type.
 
-    This value is either 1 when index type is GL_UNSIGNED_BYTE or 2 when
-    index type is GL_UNSIGNED_SHORT. For Desktop OpenGL, GL_UNSIGNED_INT
-    with the value 4 is also supported.
+    This value is either \c 1 when index type is \c GL_UNSIGNED_BYTE or \c 2
+    when index type is \c GL_UNSIGNED_SHORT. For Desktop OpenGL,
+    \c GL_UNSIGNED_INT with the value \c 4 is also supported.
+ */
+
+/*!
+    Destroys the geometry object and the vertex and index data it has allocated.
  */
 
 QSGGeometry::~QSGGeometry()
@@ -212,7 +478,7 @@ QSGGeometry::~QSGGeometry()
 
     Returns a pointer to the raw vertex data of this geometry object.
 
-    \sa vertexDataAsPoint2D(), vertexDataAsTexturedPoint2D
+    \sa vertexDataAsPoint2D(), vertexDataAsTexturedPoint2D()
  */
 
 /*!
@@ -220,7 +486,7 @@ QSGGeometry::~QSGGeometry()
 
     Returns a pointer to the raw vertex data of this geometry object.
 
-    \sa vertexDataAsPoint2D(), vertexDataAsTexturedPoint2D
+    \sa vertexDataAsPoint2D(), vertexDataAsTexturedPoint2D()
  */
 
 /*!
@@ -248,9 +514,9 @@ const void *QSGGeometry::indexData() const
 }
 
 /*!
-    Sets the drawing mode to be used for this geometry.
+    Sets the \a mode to be used for drawing this geometry.
 
-    The default value is GL_TRIANGLE_STRIP.
+    The default value is \c GL_TRIANGLE_STRIP.
  */
 void QSGGeometry::setDrawingMode(GLenum mode)
 {
@@ -261,7 +527,7 @@ void QSGGeometry::setDrawingMode(GLenum mode)
     Gets the current line width to be used for this geometry. This property only
     applies where the drawingMode is GL_LINES or a related value.
 
-    The default value is 1.0
+    The default value is \c 1.0
 
     \sa setLineWidth(), drawingMode()
 */
@@ -271,14 +537,14 @@ float QSGGeometry::lineWidth() const
 }
 
 /*!
-    Sets the line width to be used for this geometry. This property only applies
-    where the drawingMode is GL_LINES or a related value.
+    Sets the line width to be used for this geometry to \a width. The line width
+    only applies where the drawingMode is \c GL_LINES or a related value.
 
     \sa lineWidth(), drawingMode()
 */
-void QSGGeometry::setLineWidth(float w)
+void QSGGeometry::setLineWidth(float width)
 {
-    m_line_width = w;
+    m_line_width = width;
 }
 
 /*!
@@ -286,7 +552,7 @@ void QSGGeometry::setLineWidth(float w)
 
     Returns the drawing mode of this geometry.
 
-    The default value is GL_TRIANGLE_STRIP.
+    The default value is \c GL_TRIANGLE_STRIP.
  */
 
 /*!
@@ -403,20 +669,27 @@ void QSGGeometry::updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect,
 /*!
     \enum QSGGeometry::DataPattern
 
-    The DataPattern enum is used to specify the use pattern for the vertex
-    and index data in a geometry object.
+    The DataPattern enum is used to specify the use pattern for the
+    vertex and index data in a geometry object.
 
-    \value AlwaysUploadPattern The data is always uploaded. This means that
-    the user does not need to explicitly mark index and vertex data as
-    dirty after changing it. This is the default.
+    \value AlwaysUploadPattern The data is always uploaded. This means
+    that the user does not need to explicitly mark index and vertex
+    data as dirty after changing it. This is the default.
 
-    \value DynamicPattern The data is modified repeatedly and drawn many times.
-    This is a hint that may provide better performance. When set
-    the user must make sure to mark the data as dirty after changing it.
+    \value DynamicPattern The data is modified repeatedly and drawn
+    many times.  This is a hint that may provide better
+    performance. When set the user must make sure to mark the data as
+    dirty after changing it.
 
-    \value StaticPattern The data is modified once and drawn many times. This is
-    a hint that may provide better performance. When set the user must make sure
-    to mark the data as dirty after changing it.
+    \value StaticPattern The data is modified once and drawn many
+    times. This is a hint that may provide better performance. When
+    set the user must make sure to mark the data as dirty after
+    changing it.
+
+    \value StreamPattern The data is modified for almost every time it
+    is drawn. This is a hint that may provide better performance. When
+    set, the user must make sure to mark the data as dirty after
+    changing it.
  */
 
 

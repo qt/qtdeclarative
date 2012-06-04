@@ -130,6 +130,10 @@ const char *QSGVertexColorMaterialShader::fragmentShader() const {
  */
 
 
+/*!
+    Creates a new vertex color material.
+ */
+
 QSGVertexColorMaterial::QSGVertexColorMaterial()
 {
     setFlag(Blending, true);

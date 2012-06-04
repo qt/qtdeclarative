@@ -153,9 +153,6 @@ void QSGDefaultRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
     if (state & rebuildBits)
         m_rebuild_lists = true;
-
-    if (state & (rebuildBits | QSGNode::DirtyClipList))
-        m_needs_sorting = true;
 }
 
 void QSGDefaultRenderer::render()

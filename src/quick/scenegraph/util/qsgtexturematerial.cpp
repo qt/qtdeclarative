@@ -164,7 +164,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 
     The default mipmap filtering and filtering mode is set to
     QSGTexture::Nearest. The default wrap modes is set to
-    QSGTexture::ClampToEdge.
+    \c QSGTexture::ClampToEdge.
 
  */
 QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
@@ -236,7 +236,7 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
 
     Returns this material's mipmap filtering mode.
 
-    The default mipmap mode is QSGTexture::Nearest.
+    The default mipmap mode is \c QSGTexture::Nearest.
  */
 
 
@@ -253,17 +253,17 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
 
 
 /*!
-    \fn QSGTexture::Filtering filtering() const
+    \fn QSGTexture::Filtering QSGOpaqueTextureMaterial::filtering() const
 
     Returns this material's filtering mode.
 
-    The default filtering is QSGTexture::Nearest.
+    The default filtering is \c QSGTexture::Nearest.
  */
 
 
 
 /*!
-    \fn void setHorizontalWrapMode(QSGTexture::WrapMode mode)
+    \fn void QSGOpaqueTextureMaterial::setHorizontalWrapMode(QSGTexture::WrapMode mode)
 
     Sets the horizontal wrap mode to \a mode.
 
@@ -274,17 +274,17 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
 
 
  /*!
-     \fn QSGTexture::WrapMode horizontalWrapMode() const
+     \fn QSGTexture::WrapMode QSGOpaqueTextureMaterial::horizontalWrapMode() const
 
      Returns this material's horizontal wrap mode.
 
-     The default horizontal wrap mode is QSGTexutre::ClampToEdge
+     The default horizontal wrap mode is \c QSGTexutre::ClampToEdge.
   */
 
 
 
 /*!
-    \fn void setVerticalWrapMode(QSGTexture::WrapMode mode)
+    \fn void QSGOpaqueTextureMaterial::setVerticalWrapMode(QSGTexture::WrapMode mode)
 
     Sets the vertical wrap mode to \a mode.
 
@@ -295,11 +295,11 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
 
 
  /*!
-     \fn QSGTexture::WrapMode verticalWrapMode() const
+     \fn QSGTexture::WrapMode QSGOpaqueTextureMaterial::verticalWrapMode() const
 
      Returns this material's vertical wrap mode.
 
-     The default vertical wrap mode is QSGTexutre::ClampToEdge
+     The default vertical wrap mode is \c QSGTexutre::ClampToEdge.
   */
 
 

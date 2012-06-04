@@ -66,33 +66,163 @@ static void qt_print_node_count()
 
     The QSGNode class can be used as a child container. Children are added with
     the appendChildNode(), prependChildNode(), insertChildNodeBefore() and
-    insertChildNodeAfter(). Ordering of nodes is important as geometry nodes
-    will be rendered in the order they are added to the scene graph.
-    Actually, the scene may reorder nodes freely, but the resulting visual
-    order is still guaranteed.
+    insertChildNodeAfter(). The order of nodes is important as geometry nodes
+    are rendered according to their ordering in the scene graph.
 
     The scene graph nodes contains a mechanism to describe which
     parts of the scene has changed. This includes the combined matrices,
-    accumulated opacity, changes to the node hierarchy, etc. This information
-    can be used for optimizations inside the scene graph renderer. For
-    the renderer to properly render the nodes, it is important that users
+    accumulated opacity, changes to the node hierarchy, and so on. This
+    information can be used for optimizations inside the scene graph renderer.
+    For the renderer to properly render the nodes, it is important that users
     call QSGNode::markDirty() with the correct flags when nodes are changed.
-    Most of the functions on the node classes will implicitly call markDirty(),
-    e.g. QSGNode::appendChildNode() will call markDirty() passing in
+    Most of the functions on the node classes will implicitly call markDirty().
+    For example, QSGNode::appendChildNode() will call markDirty() passing in
     QSGNode::DirtyNodeAdded.
 
     If nodes change every frame, the preprocess() function can be used to
-    apply changes to a node for every frame its rendered. The use of preprocess()
-    must be explicitly enabled by setting the QSGNode::UsePreprocess flag
-    on the node.
+    apply changes to a node for every frame it is rendered. The use of
+    preprocess() must be explicitly enabled by setting the
+    QSGNode::UsePreprocess flag on the node.
 
     The virtual isSubtreeBlocked() function can be used to disable a subtree all
     together. Nodes in a blocked subtree will not be preprocessed() and not
     rendered.
 
-    \warning Anything related to QSGNode should happen on the scene graph rendering thread.
+    \warning Anything related to QSGNode should happen on the scene graph
+    rendering thread.
  */
 
+/*!
+    \enum QSGNode::DirtyStateBit
+
+    Used in QSGNode::markDirty() to indicate how the scene graph has changed.
+
+    \value DirtyMatrix The matrix in a QSGTransformNode has changed.
+    \value DirtyNodeAdded A node was added.
+    \value DirtyNodeRemoved A node was removed.
+    \value DirtyGeometry The geometry of a QSGGeometryNode has changed.
+    \value DirtyMaterial The material of a QSGGeometryNode has changed.
+    \value DirtyOpacity The opacity of a QSGOpacityNode has changed.
+
+    \sa QSGNode::markDirty()
+ */
+
+/*!
+    \enum QSGNode::Flag
+
+    The QSGNode::Flag enum describes flags on the QSGNode
+
+    \value OwnedByParent The node is owned by its parent and will be deleted
+    when the parent is deleted.
+    \value UsePreprocess The node's virtual preprocess() function will be called
+    before rendering starts.
+    \value OwnsGeometry Only valid for QSGGeometryNode and QSGClipNode.
+    The node has ownership over the QSGGeometry instance and will
+    delete it when the node is destroyed.
+    \value OwnsMaterial Only valid for QSGGeometryNode. The node has ownership
+    over the material and will delete it when the node is destroyed.
+    \value OwnsOpaqueMaterial Only valid for QSGGeometryNode. The node has
+    ownership over the opaque material and will delete it when the node is
+    destroyed.
+ */
+
+/*!
+    \enum QSGNode::NodeType
+
+    Can be used to figure out the type of node.
+
+    \value BasicNodeType The type of QSGNode
+    \value GeometryNodeType The type of QSGGeometryNode
+    \value TransformNodeType The type of QSGTransformNode
+    \value ClipNodeType The type of QSGClipNode
+    \value OpacityNodeType The type of QSGOpacityNode
+
+    \sa type()
+ */
+
+/*!
+    \fn QSGNode *QSGNode::childAtIndex(int i) const
+
+    Returns the child at index \a i.
+
+    Children are stored internally as a linked list, so iterating
+    over the children via the index is suboptimal.
+ */
+
+/*!
+    \fn int QSGNode::childCount() const
+
+    Returns the number of child nodes.
+ */
+
+/*!
+    \fn void QSGNode::clearDirty()
+
+    \internal
+ */
+
+/*!
+    \fn QSGNode *QSGNode::firstChild() const
+
+    Returns the first child of this node.
+
+    The children are stored in a linked list.
+ */
+
+/*!
+    \fn QSGNode *QSGNode::lastChild() const
+
+    Returns the last child of this node.
+
+    The children are stored as a linked list.
+ */
+
+/*!
+    \fn QSGNode::Flags QSGNode::flags() const
+
+    Returns the set of flags for this node.
+ */
+
+/*!
+    \fn QSGNode *QSGNode::nextSibling() const
+
+    Returns the node after this in the parent's list of children.
+
+    The children are stored as a linked list.
+ */
+
+/*!
+    \fn QSGNode *QSGNode::previousSibling() const
+
+    Returns the node before this in the parent's list of children.
+
+    The children are stored as a linked list.
+ */
+
+/*!
+    \fn QSGNode::Type QSGNode::type() const
+
+    Returns the type of this node. The node type must be one of the
+    predefined types defined in QSGNode::NodeType and can safely be
+    used to cast to the corresponding class.
+ */
+
+/*!
+    \fn QSGNode::DirtyState QSGNode::dirtyState() const
+
+    \internal
+ */
+
+/*!
+    \fn QSGNode *QSGNode::parent() const
+
+    Returns the parent node of this node.
+ */
+
+
+/*!
+ * Constructs a new node
+ */
 QSGNode::QSGNode()
     : m_parent(0)
     , m_type(BasicNodeType)
@@ -107,6 +237,11 @@ QSGNode::QSGNode()
     init();
 }
 
+/*!
+ * Constructs a new node with the given node type.
+ *
+ * \internal
+ */
 QSGNode::QSGNode(NodeType type)
     : m_parent(0)
     , m_type(type)
@@ -121,6 +256,9 @@ QSGNode::QSGNode(NodeType type)
     init();
 }
 
+/*!
+ * \internal
+ */
 void QSGNode::init()
 {
 #ifndef QT_NO_DEBUG
@@ -133,6 +271,12 @@ void QSGNode::init()
 #endif
 }
 
+/*!
+ * Destroys the node.
+ *
+ * Every child of this node that has the flag QSGNode::OwnedByParent set,
+ * will also be deleted.
+ */
 QSGNode::~QSGNode()
 {
 #ifndef QT_NO_DEBUG
@@ -464,9 +608,9 @@ void QSGNode::setFlags(Flags f, bool enabled)
 
 
 /*!
-    Marks this node with the states in \a flags as dirty.
+    Marks this node with the states in \a bits as dirty.
 
-    When a node is marked dirty, it recursively mark the parent chain
+    When a node is marked dirty, it recursively marks the parent chain
     as dirty and notify all connected renderers that the has dirty states.
  */
 
@@ -496,7 +640,7 @@ void QSGNode::markDirty(DirtyState bits)
 
 /*!
     \class QSGBasicGeometryNode
-    \brief The QSGBasicGeometryNode class serves as a baseclass for geometry based nodes
+    \brief The QSGBasicGeometryNode class serves as a baseclass for geometry based nodes.
 
     \inmodule QtQuick
 
@@ -506,7 +650,9 @@ void QSGNode::markDirty(DirtyState bits)
 
 
 /*!
-    Creates a new basic geometry node.
+    Creates a new basic geometry node of type \a type
+
+    \internal
  */
 QSGBasicGeometryNode::QSGBasicGeometryNode(NodeType type)
     : QSGNode(type)
@@ -532,11 +678,37 @@ QSGBasicGeometryNode::~QSGBasicGeometryNode()
 
 
 /*!
-    \fn QSGGeometry *QSGBasicGeometryNode::geometry() const
+    \fn QSGGeometry *QSGBasicGeometryNode::geometry()
 
     Returns this node's geometry.
 
     The geometry is null by default.
+ */
+
+/*!
+    \fn const QSGGeometry *QSGBasicGeometryNode::geometry() const
+
+    Returns this node's geometry.
+
+    The geometry is null by default.
+ */
+
+/*!
+    \fn QMatrix4x4 *QSGBasicGeometryNode::matrix() const
+
+    Will be set during rendering to contain transformation of the geometry
+    for that rendering pass.
+
+    \internal
+ */
+
+/*!
+    \fn QSGClipNode *QSGBasicGeometryNode::clipList() const
+
+    Will be set during rendering to contain the clip of the geometry
+    for that rendering pass.
+
+    \internal
  */
 
 
@@ -549,7 +721,7 @@ QSGBasicGeometryNode::~QSGBasicGeometryNode()
     If the geometry is changed whitout calling setGeometry() again, the user
     must also mark the geometry as dirty using QSGNode::markDirty().
 
-    \sa markDirty
+    \sa markDirty()
  */
 
 void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
@@ -646,17 +818,42 @@ QSGGeometryNode::~QSGGeometryNode()
     \internal
  */
 
+/*!
+    \fn QSGMaterial *QSGGeometryNode::material() const
+
+    Returns the material of the QSGGeometryNode.
+
+    \sa setMaterial()
+ */
+
+/*!
+    \fn QSGMaterial *QSGGeometryNode::opaqueMaterial() const
+
+    Returns the opaque material of the QSGGeometryNode.
+
+    \sa setOpaqueMaterial()
+ */
+
+/*!
+    \fn qreal QSGGeometryNode::inheritedOpacity() const
+
+    Set during rendering to specify the inherited opacity for that
+    rendering pass.
+
+    \internal
+ */
+
 
 /*!
     Sets the render order of this node to be \a order.
 
-    GeometryNodes are rendered in an order that visually looks like
+    Geometry nodes are rendered in an order that visually looks like
     low order nodes are rendered prior to high order nodes. For opaque
     geometry there is little difference as z-testing will handle
     the discard, but for translucent objects, the rendering should
     normally be specified in the order of back-to-front.
 
-    The default render order is 0.
+    The default render order is \c 0.
 
     \internal
   */
@@ -866,6 +1063,11 @@ void QSGClipNode::setClipRect(const QRectF &rect)
     be done with some care.
  */
 
+
+/*!
+    Create a new QSGTransformNode with its matrix set to the identity matrix.
+ */
+
 QSGTransformNode::QSGTransformNode()
     : QSGNode(TransformNodeType)
 {
@@ -900,6 +1102,16 @@ void QSGTransformNode::setMatrix(const QMatrix4x4 &matrix)
     m_matrix = matrix;
     markDirty(DirtyMatrix);
 }
+
+/*!
+    \fn const QMatrix4x4 &QSGTransformNode::combinedMatrix() const
+
+    Set during rendering to the combination of all parent matrices for
+    that rendering pass.
+
+    \internal
+ */
+
 
 
 /*!

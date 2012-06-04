@@ -119,6 +119,7 @@ const char *FlatColorMaterialShader::fragmentShader() const {
 
 /*!
     \class QSGFlatColorMaterial
+
     \brief The QSGFlatColorMaterial class provides a convenient way of rendering
     solid colored geometry in the scene graph.
 
@@ -133,7 +134,7 @@ const char *FlatColorMaterialShader::fragmentShader() const {
     set compatible with this material.
 
     The flat color material respects both current opacity and current matrix
-    when updating it's rendering state.
+    when updating its rendering state.
  */
 
 
@@ -150,7 +151,7 @@ QSGFlatColorMaterial::QSGFlatColorMaterial() : m_color(QColor(255, 255, 255))
 
 
 /*!
-    \fn QColor QSGFlatColorMaterial::color() const
+    \fn const QColor &QSGFlatColorMaterial::color() const
 
     Returns this flat color material's color.
 
@@ -191,6 +192,10 @@ QSGMaterialShader *QSGFlatColorMaterial::createShader() const
     return new FlatColorMaterialShader;
 }
 
+
+/*!
+    \internal
+ */
 
 int QSGFlatColorMaterial::compare(const QSGMaterial *other) const
 {

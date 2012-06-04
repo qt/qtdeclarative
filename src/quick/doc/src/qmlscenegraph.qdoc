@@ -1,0 +1,125 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\title QML Scene Graph
+\page qmlscenegraph.html
+
+Qt Quick 2 makes use of a dedicated scene graph based on OpenGL ES 2.0
+or OpenGL 2.0 for its rendering. Using a scene graph for graphics
+rather than the traditional imperative painting systems (QPainter and
+similar), means the scene to be rendered can be retained between
+frames and the complete set of primitives to render is known before
+rendering starts. This opens up for a number of optimizations, such as
+batch rendering to minimize state changes and discarding obscured primitives.
+
+The scene graph is closely tied to QML and can not be used as
+stand-alone. The scene graph is managed and rendered by the
+QQuickCanvas class and custom QML elements will add their graphical
+primitives into the scene graph through a call to
+QQuickItem::updatePaintNode().
+
+The QML scene graph is a graphical representation of the QML scene. It
+can be thought of as a graphical deep copy, an independent structure that
+contains enough information to render the QML Scene. Once it has been set
+up, it can be manipulated and rendered independently of the state of
+the QML scene. On some platforms, the scene graph will even be
+rendered on a dedicated render thread.
+
+
+
+\section1 Scene Graph Nodes
+
+The scene graph can only contain a predefined set of node types, each
+serving a dedicated purpose.
+
+\list
+
+\li QSGGeometryNode - for all rendered content in the scene
+graph. In most cases, it will be enough for a custom QQuickItem object to
+simply return a single QSGGeometryNode object from the
+QQuickItem::updatePaintNode() call.
+
+\li QSGTransformNode - implements transformations in the scene
+graph. Nested transforms are multiplied together.
+
+\li QSGOpacityNode - for node opacity changes. Nested opacity nodes have
+cumulative effect.
+
+\li QSGClipNode - implements clipping in the scene graph. Nested clips
+are intersected.
+
+\li QSGNode - base class for all nodes in the scene graph. Its primary purpose
+is provide the ability to insert nodes into the scene graph that do not affect
+the rendering, such as the shared root for a subtree of geometry nodes.
+
+\endlist
+
+
+
+\section1 Rendering
+
+The rendering of the scene graph happens internally in the
+QQuickCanvas class and is described under the \l{Scene Graph and
+Rendering} section.
+
+How to integrate QPainter based graphics is explained in \l{Custom
+Items using QPainter}.
+
+
+
+\section1 Scene Graph Backend
+
+In addition to the public API, the scene graph has an adaptation layer
+which opens up the implementation to do hardware specific
+adaptations. This is an undocumented, internal and private plugin API,
+which lets hardware adaptation teams make the most of their hardware.
+It includes:
+
+\list
+
+\li Custom textures; specifically the implementation of
+QQuickCanvas::createTextureFromImage and the internal representation
+of the texture used by \l Image and \l BorderImage elements.
+
+\li Custom renderer; the adaptation layer lets the plugin decide how
+the scene graph is traversed and rendered, making it possible to
+optimize the rendering algorithm for a specific hardware or to make
+use of extensions which improve performance.
+
+\li Custom scene graph implementation of many of the default QML
+elements, including its text and font rendering.
+
+\li Custom animation driver; allows the animation system to hook
+into the low-level display vertical refresh to get smooth rendering.
+
+\li Custom render loop; allows better control over how QML deals
+with multiple windows.
+
+\endlist
+
+*/
