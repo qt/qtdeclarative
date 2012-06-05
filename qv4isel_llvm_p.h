@@ -23,6 +23,7 @@ public:
     llvm::Value *getLLVMCondition(IR::Expr *expr);
     llvm::Value *getLLVMTemp(IR::Temp *temp);
     llvm::Value *getStringPtr(const QString &s);
+    void genBinop(llvm::Value *result, IR::Binop *e);
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);

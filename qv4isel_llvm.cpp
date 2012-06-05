@@ -273,9 +273,60 @@ void LLVMInstructionSelection::visitUnop(IR::Unop *e)
 
 void LLVMInstructionSelection::visitBinop(IR::Binop *e)
 {
-    llvm::Value *left = getLLVMValue(e->left);
-    llvm::Value *right = getLLVMValue(e->right);
-    Q_UNIMPLEMENTED();
+    llvm::Value *result = CreateAlloca(_valueTy);
+    genBinop(result, e);
+    _llvmValue = CreateLoad(result);
+}
+
+void LLVMInstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
+{
+    IR::Temp *t1 = e->left->asTemp();
+    IR::Temp *t2 = e->right->asTemp();
+    assert(t1 != 0);
+    assert(t2 != 0);
+
+    llvm::Value *left = getLLVMTemp(t1);
+    llvm::Value *right = getLLVMTemp(t2);
+    llvm::Value *op = 0;
+    switch (e->op) {
+    case IR::OpInvalid:
+    case IR::OpIfTrue:
+    case IR::OpNot:
+    case IR::OpUMinus:
+    case IR::OpUPlus:
+    case IR::OpCompl:
+        Q_UNREACHABLE();
+        break;
+
+    case IR::OpBitAnd: op = _llvmModule->getFunction("__qmljs_llvm_bit_and"); break;
+    case IR::OpBitOr: op = _llvmModule->getFunction("__qmljs_llvm_bit_or"); break;
+    case IR::OpBitXor: op = _llvmModule->getFunction("__qmljs_llvm_bit_xor"); break;
+    case IR::OpAdd: op = _llvmModule->getFunction("__qmljs_llvm_add"); break;
+    case IR::OpSub: op = _llvmModule->getFunction("__qmljs_llvm_sub"); break;
+    case IR::OpMul: op = _llvmModule->getFunction("__qmljs_llvm_mul"); break;
+    case IR::OpDiv: op = _llvmModule->getFunction("__qmljs_llvm_div"); break;
+    case IR::OpMod: op = _llvmModule->getFunction("__qmljs_llvm_mod"); break;
+    case IR::OpLShift: op = _llvmModule->getFunction("__qmljs_llvm_shl"); break;
+    case IR::OpRShift: op = _llvmModule->getFunction("__qmljs_llvm_shr"); break;
+    case IR::OpURShift: op = _llvmModule->getFunction("__qmljs_llvm_ushr"); break;
+    case IR::OpGt: op = _llvmModule->getFunction("__qmljs_llvm_gt"); break;
+    case IR::OpLt: op = _llvmModule->getFunction("__qmljs_llvm_lt"); break;
+    case IR::OpGe: op = _llvmModule->getFunction("__qmljs_llvm_ge"); break;
+    case IR::OpLe: op = _llvmModule->getFunction("__qmljs_llvm_le"); break;
+    case IR::OpEqual: op = _llvmModule->getFunction("__qmljs_llvm_eq"); break;
+    case IR::OpNotEqual: op = _llvmModule->getFunction("__qmljs_llvm_ne"); break;
+    case IR::OpStrictEqual: op = _llvmModule->getFunction("__qmljs_llvm_se"); break;
+    case IR::OpStrictNotEqual: op = _llvmModule->getFunction("__qmljs_llvm_sne"); break;
+    case IR::OpInstanceof: op = _llvmModule->getFunction("__qmljs_llvm_instanceof"); break;
+    case IR::OpIn: op = _llvmModule->getFunction("__qmljs_llvm_in"); break;
+
+    case IR::OpAnd:
+    case IR::OpOr:
+        Q_UNREACHABLE();
+        break;
+    }
+
+    CreateCall4(op, _llvmFunction->arg_begin(), result, left, right);
 }
 
 void LLVMInstructionSelection::visitCall(IR::Call *e)
