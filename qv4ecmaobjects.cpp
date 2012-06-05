@@ -1217,7 +1217,7 @@ void ArrayCtor::call(Context *ctx)
 
         value.resize(isize);
     } else {
-        for (size_t i = 0; i < ctx->argumentCount; ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             value.assign(i, ctx->argument(i));
         }
     }
@@ -1371,7 +1371,7 @@ void ArrayPrototype::method_push(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         uint pos = instance->value.size();
-        for (size_t i = 0; i < ctx->argumentCount; ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             Value val = ctx->argument(i);
             instance->value.assign(pos++, val);
         }
@@ -1379,7 +1379,7 @@ void ArrayPrototype::method_push(Context *ctx)
     } else {
         Value r1 = self.property(ctx, ctx->engine->id_length);
         quint32 n = !r1.isUndefined() ? r1.toUInt32(ctx) : 0;
-        for (size_t index = 0; index < ctx->argumentCount; ++index, ++n) {
+        for (unsigned int index = 0; index < ctx->argumentCount; ++index, ++n) {
             Value r3 = ctx->argument(index);
             String *name = Value::fromNumber(n).toString(ctx);
             self.objectValue->setProperty(ctx, name, r3);
@@ -1465,7 +1465,7 @@ void ArrayPrototype::method_splice(Context *ctx)
     Value self = ctx->thisObject;
     if (ArrayObject *instance = self.asArrayObject()) {
         QVector<Value> items;
-        for (size_t i = 2; i < ctx->argumentCount; ++i)
+        for (unsigned int i = 2; i < ctx->argumentCount; ++i)
             items << ctx->argument(i);
         ArrayObject *otherInstance = a.asArrayObject();
         assert(otherInstance);

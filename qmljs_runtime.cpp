@@ -2,6 +2,8 @@
 #include "qmljs_runtime.h"
 #include "qmljs_objects.h"
 #include "qv4ir_p.h"
+#include "qv4ecmaobjects_p.h"
+
 #include <QtCore/qmath.h>
 #include <QtCore/qnumeric.h>
 #include <QtCore/QDebug>
@@ -71,7 +73,7 @@ int Value::toInt32(double number)
     return (int) trunc(number); // ###
 }
 
-uint Value::toUInt32(double number)
+unsigned int Value::toUInt32(double number)
 {
     if (! number || isnan(number) || isinf(number))
         return +0;
@@ -98,7 +100,7 @@ int Value::toInt32(Context *ctx)
     return __qmljs_to_int32(ctx, this);
 }
 
-uint Value::toUInt32(Context *ctx)
+unsigned int Value::toUInt32(Context *ctx)
 {
     return __qmljs_to_int32(ctx, this);
 }
@@ -226,6 +228,129 @@ Value Value::property(Context *ctx, String *name) const
 Value *Value::getPropertyDescriptor(Context *ctx, String *name) const
 {
     return isObject() ? objectValue->getPropertyDescriptor(ctx, name) : 0;
+}
+
+void Context::init(ExecutionEngine *eng)
+{
+    engine = eng;
+    parent = 0;
+    arguments = 0;
+    argumentCount = 0;
+    locals = 0;
+    activation.type = NULL_TYPE;
+    thisObject.type = NULL_TYPE;
+    result.type = UNDEFINED_TYPE;
+    formals = 0;
+    formalCount = 0;
+    vars = 0;
+    varCount = 0;
+    calledAsConstructor = false;
+    hasUncaughtException = false;
+}
+
+Value *Context::lookupPropertyDescriptor(String *name)
+{
+    for (Context *ctx = this; ctx; ctx = ctx->parent) {
+        if (ctx->activation.is(OBJECT_TYPE)) {
+            if (Value *prop = ctx->activation.objectValue->getPropertyDescriptor(this, name)) {
+                return prop;
+            }
+        }
+    }
+    return 0;
+}
+
+void Context::throwError(const Value &value)
+{
+    result = value;
+    hasUncaughtException = true;
+}
+
+void Context::throwError(const QString &message)
+{
+    Value v = Value::fromString(this, message);
+    throwError(Value::fromObject(engine->newErrorObject(v)));
+}
+
+void Context::throwTypeError()
+{
+    Value v = Value::fromString(this, QStringLiteral("Type error"));
+    throwError(Value::fromObject(engine->newErrorObject(v)));
+}
+
+void Context::throwUnimplemented(const QString &message)
+{
+    Value v = Value::fromString(this, QStringLiteral("Unimplemented ") + message);
+    throwError(Value::fromObject(engine->newErrorObject(v)));
+}
+
+void Context::throwReferenceError(const Value &value)
+{
+    String *s = value.toString(this);
+    QString msg = s->toQString() + QStringLiteral(" is not defined");
+    throwError(Value::fromObject(engine->newErrorObject(Value::fromString(this, msg))));
+}
+
+void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
+{
+    engine = e;
+    parent = f->scope;
+
+    if (f->needsActivation)
+        __qmljs_init_object(&activation, engine->newActivationObject(this));
+    else
+        __qmljs_init_null(&activation);
+
+    if (object)
+        thisObject = *object;
+    else
+        __qmljs_init_null(&thisObject);
+
+    formals = f->formalParameterList;
+    formalCount = f->formalParameterCount;
+    arguments = args;
+    argumentCount = argc;
+    if (argc && f->needsActivation) {
+        arguments = new Value[argc];
+        std::copy(args, args + argc, arguments);
+    }
+    vars = f->varList;
+    varCount = f->varCount;
+    locals = varCount ? new Value[varCount] : 0;
+    hasUncaughtException = false;
+    calledAsConstructor = false;
+    if (varCount)
+        std::fill(locals, locals + varCount, Value::undefinedValue());
+}
+
+void Context::leaveCallContext(FunctionObject *f, Value *returnValue)
+{
+    if (returnValue)
+        __qmljs_copy(returnValue, &result);
+
+    if (! f->needsActivation) {
+        delete[] locals;
+        locals = 0;
+    }
+}
+
+void Context::initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
+{
+    initCallContext(e, object, f, args, argc);
+    calledAsConstructor = true;
+}
+
+void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
+{
+    assert(thisObject.is(OBJECT_TYPE));
+    result = thisObject;
+
+    Value proto = f->getProperty(this, engine->id_prototype);
+    thisObject.objectValue->prototype = proto.objectValue;
+    if (! thisObject.isObject())
+        thisObject.objectValue->prototype = engine->objectPrototype;
+
+    leaveCallContext(f, returnValue);
 }
 
 extern "C" {

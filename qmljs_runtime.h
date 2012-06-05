@@ -1,8 +1,10 @@
 #ifndef QMLJS_RUNTIME_H
 #define QMLJS_RUNTIME_H
 
-#include <QtCore/QString>
-#include <QtCore/QDebug>
+#ifndef QMLJS_LLVM_RUNTIME
+#  include <QtCore/QString>
+#endif
+
 #include <math.h>
 #include <cassert>
 
@@ -49,6 +51,7 @@ struct DateObject;
 struct ArrayObject;
 struct ErrorObject;
 struct ActivationObject;
+struct ExecutionEngine;
 
 extern "C" {
 
@@ -246,15 +249,17 @@ struct Value {
         return v;
     }
 
+#ifndef QMLJS_LLVM_RUNTIME
     static Value fromString(Context *ctx, const QString &fromString);
+#endif
 
     static int toInteger(double fromNumber);
     static int toInt32(double value);
-    static uint toUInt32(double value);
+    static unsigned int toUInt32(double value);
 
     int toUInt16(Context *ctx);
     int toInt32(Context *ctx);
-    uint toUInt32(Context *ctx);
+    unsigned int toUInt32(Context *ctx);
     bool toBoolean(Context *ctx) const;
     double toInteger(Context *ctx) const;
     double toNumber(Context *ctx) const;
@@ -291,6 +296,59 @@ struct Value {
     Value property(Context *ctx, String *name) const;
     Value *getPropertyDescriptor(Context *ctx, String *name) const;
 };
+
+struct Context {
+    ExecutionEngine *engine;
+    Context *parent;
+    Value activation;
+    Value thisObject;
+    Value *arguments;
+    unsigned int argumentCount;
+    Value *locals;
+    Value result;
+    String **formals;
+    unsigned int formalCount;
+    String **vars;
+    unsigned int varCount;
+    int calledAsConstructor;
+    int hasUncaughtException;
+
+    Value *lookupPropertyDescriptor(String *name);
+
+    inline Value argument(unsigned int index = 0)
+    {
+        Value arg;
+        getArgument(&arg, index);
+        return arg;
+    }
+
+    inline void getArgument(Value *result, unsigned int index)
+    {
+        if (index < argumentCount)
+            *result = arguments[index];
+        else
+            __qmljs_init_undefined(result);
+    }
+
+    void init(ExecutionEngine *eng);
+
+    void throwError(const Value &value);
+    void throwTypeError();
+    void throwReferenceError(const Value &value);
+
+#ifndef QMLJS_LLVM_RUNTIME
+    void throwError(const QString &message);
+    void throwUnimplemented(const QString &message);
+#endif
+
+    void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
+    void leaveCallContext(FunctionObject *f, Value *r);
+
+    void initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
+    void leaveConstructorContext(FunctionObject *f, Value *returnValue);
+};
+
+
 
 extern "C" {
 

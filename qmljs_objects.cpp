@@ -161,7 +161,7 @@ ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
     formalParameterCount = function->formals.size();
     if (formalParameterCount) {
         formalParameterList = new String*[formalParameterCount];
-        for (size_t i = 0; i < formalParameterCount; ++i) {
+        for (unsigned int i = 0; i < formalParameterCount; ++i) {
             formalParameterList[i] = scope->engine->identifier(*function->formals.at(i));
         }
     }
@@ -169,7 +169,7 @@ ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
     varCount = function->locals.size();
     if (varCount) {
         varList = new String*[varCount];
-        for (size_t i = 0; i < varCount; ++i) {
+        for (unsigned int i = 0; i < varCount; ++i) {
             varList[i] = scope->engine->identifier(*function->locals.at(i));
         }
     }
@@ -199,7 +199,7 @@ void ScriptFunction::construct(VM::Context *ctx)
 Value *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)
 {
     if (context) {
-        for (size_t i = 0; i < context->varCount; ++i) {
+        for (unsigned int i = 0; i < context->varCount; ++i) {
             String *var = context->vars[i];
             if (__qmljs_string_equal(context, var, name)) {
                 if (attributes)
@@ -207,7 +207,7 @@ Value *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, Prope
                 return &context->locals[i];
             }
         }
-        for (size_t i = 0; i < context->formalCount; ++i) {
+        for (unsigned int i = 0; i < context->formalCount; ++i) {
             String *formal = context->formals[i];
             if (__qmljs_string_equal(context, formal, name)) {
                 if (attributes)
@@ -473,97 +473,4 @@ Object *ExecutionEngine::newMathObject(Context *ctx)
 Object *ExecutionEngine::newActivationObject(Context *ctx)
 {
     return new ActivationObject(ctx);
-}
-
-void Context::throwError(const Value &value)
-{
-    result = value;
-    hasUncaughtException = true;
-}
-
-void Context::throwError(const QString &message)
-{
-    Value v = Value::fromString(this, message);
-    throwError(Value::fromObject(engine->newErrorObject(v)));
-}
-
-void Context::throwTypeError()
-{
-    Value v = Value::fromString(this, QStringLiteral("Type error"));
-    throwError(Value::fromObject(engine->newErrorObject(v)));
-}
-
-void Context::throwUnimplemented(const QString &message)
-{
-    Value v = Value::fromString(this, QStringLiteral("Unimplemented ") + message);
-    throwError(Value::fromObject(engine->newErrorObject(v)));
-}
-
-void Context::throwReferenceError(const Value &value)
-{
-    String *s = value.toString(this);
-    QString msg = s->toQString() + QStringLiteral(" is not defined");
-    throwError(Value::fromObject(engine->newErrorObject(Value::fromString(this, msg))));
-}
-
-void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
-{
-    engine = e;
-    parent = f->scope;
-
-    if (f->needsActivation)
-        __qmljs_init_object(&activation, engine->newActivationObject(this));
-    else
-        __qmljs_init_null(&activation);
-
-    if (object)
-        thisObject = *object;
-    else
-        __qmljs_init_null(&thisObject);
-
-    formals = f->formalParameterList;
-    formalCount = f->formalParameterCount;
-    arguments = args;
-    argumentCount = argc;
-    if (argc && f->needsActivation) {
-        arguments = new Value[argc];
-        std::copy(args, args + argc, arguments);
-    }
-    vars = f->varList;
-    varCount = f->varCount;
-    locals = varCount ? new Value[varCount] : 0;
-    hasUncaughtException = false;
-    calledAsConstructor = false;
-    if (varCount)
-        std::fill(locals, locals + varCount, Value::undefinedValue());
-}
-
-void Context::leaveCallContext(FunctionObject *f, Value *returnValue)
-{
-    if (returnValue)
-        __qmljs_copy(returnValue, &result);
-
-    if (! f->needsActivation) {
-        delete[] locals;
-        locals = 0;
-    }
-}
-
-void Context::initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
-{
-    initCallContext(e, object, f, args, argc);
-    calledAsConstructor = true;
-}
-
-void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
-{
-    assert(thisObject.is(OBJECT_TYPE));
-    result = thisObject;
-
-    Value proto = f->getProperty(this, engine->id_prototype);
-    thisObject.objectValue->prototype = proto.objectValue;
-    if (! thisObject.isObject())
-        thisObject.objectValue->prototype = engine->objectPrototype;
-
-    leaveCallContext(f, returnValue);
 }

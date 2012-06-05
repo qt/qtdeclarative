@@ -276,9 +276,9 @@ struct ArrayObject: Object {
 struct FunctionObject: Object {
     Context *scope;
     String **formalParameterList;
-    size_t formalParameterCount;
+    unsigned int formalParameterCount;
     String **varList;
-    size_t varCount;
+    unsigned int varCount;
     bool needsActivation;
 
     FunctionObject(Context *scope)
@@ -344,80 +344,6 @@ struct ArgumentsObject: Object {
     virtual ArgumentsObject *asArgumentsObject() { return this; }
     virtual Value getProperty(Context *ctx, String *name, PropertyAttributes *attributes);
     virtual Value *getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes);
-};
-
-struct Context {
-    ExecutionEngine *engine;
-    Context *parent;
-    Value activation;
-    Value thisObject;
-    Value *arguments;
-    size_t argumentCount;
-    Value *locals;
-    Value result;
-    String **formals;
-    size_t formalCount;
-    String **vars;
-    size_t varCount;
-    int calledAsConstructor;
-    int hasUncaughtException;
-
-    Value *lookupPropertyDescriptor(String *name)
-    {
-        for (Context *ctx = this; ctx; ctx = ctx->parent) {
-            if (ctx->activation.is(OBJECT_TYPE)) {
-                if (Value *prop = ctx->activation.objectValue->getPropertyDescriptor(this, name)) {
-                    return prop;
-                }
-            }
-        }
-        return 0;
-    }
-
-    inline Value argument(size_t index = 0)
-    {
-        Value arg;
-        getArgument(&arg, index);
-        return arg;
-    }
-
-    inline void getArgument(Value *result, size_t index)
-    {
-        if (index < argumentCount)
-            *result = arguments[index];
-        else
-            __qmljs_init_undefined(result);
-    }
-
-    void init(ExecutionEngine *eng)
-    {
-        engine = eng;
-        parent = 0;
-        arguments = 0;
-        argumentCount = 0;
-        locals = 0;
-        activation.type = NULL_TYPE;
-        thisObject.type = NULL_TYPE;
-        result.type = UNDEFINED_TYPE;
-        formals = 0;
-        formalCount = 0;
-        vars = 0;
-        varCount = 0;
-        calledAsConstructor = false;
-        hasUncaughtException = false;
-    }
-
-    void throwError(const Value &value);
-    void throwError(const QString &message);
-    void throwTypeError();
-    void throwUnimplemented(const QString &message);
-    void throwReferenceError(const Value &value);
-
-    void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
-    void leaveCallContext(FunctionObject *f, Value *r);
-
-    void initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
-    void leaveConstructorContext(FunctionObject *f, Value *returnValue);
 };
 
 struct ExecutionEngine

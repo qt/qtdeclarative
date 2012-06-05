@@ -2,6 +2,7 @@
 #define QV4ARRAY_P_H
 
 #include "qmljs_runtime.h"
+#include <QtCore/QVector>
 #include <deque>
 #include <algorithm>
 

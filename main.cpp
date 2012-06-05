@@ -38,7 +38,7 @@ struct Print: FunctionObject
 
     virtual void call(Context *ctx)
     {
-        for (size_t i = 0; i < ctx->argumentCount; ++i) {
+        for (unsigned int i = 0; i < ctx->argumentCount; ++i) {
             String *s = ctx->argument(i).toString(ctx);
             if (i)
                 std::cout << ' ';
@@ -111,7 +111,7 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
         ctx->locals = new VM::Value[ctx->varCount];
         ctx->vars = new VM::String*[ctx->varCount];
         std::fill(ctx->locals, ctx->locals + ctx->varCount, VM::Value::undefinedValue());
-        for (size_t i = 0; i < ctx->varCount; ++i)
+        for (unsigned int i = 0; i < ctx->varCount; ++i)
             ctx->vars[i] = ctx->engine->identifier(*globalCode->locals.at(i));
     }
 
