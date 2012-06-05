@@ -154,4 +154,14 @@ void __qmljs_llvm_not(Context *ctx, Value *result, const Value *value)
     __qmljs_not(ctx, result, value);
 }
 
+String *__qmljs_llvm_get_identifier(Context *ctx, const char *str)
+{
+    return __qmljs_string_from_utf8(ctx, str); // ### make it unique
+}
+
+void __qmljs_llvm_call_activation_property(Context *context, Value *result, String *name, Value *args, int argc)
+{
+    __qmljs_call_activation_property(context, result, name, args, argc);
+}
+
 } // extern "C"

@@ -6,6 +6,7 @@
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/Linker.h>
+#include <cstdio>
 
 using namespace QQmlJS;
 
@@ -354,8 +355,37 @@ void LLVMInstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
 
 void LLVMInstructionSelection::visitCall(IR::Call *e)
 {
-    llvm::Value *base = getLLVMValue(e->base);
-    Q_UNIMPLEMENTED();
+    llvm::Value *func = 0;
+    llvm::Value *base = 0;
+    if (IR::Temp *t = e->asTemp()) {
+        base = getLLVMTemp(t);
+        func = _llvmModule->getFunction("__qmljs_llvm_call_value");
+    } else if (IR::Name *n = e->asName()) {
+        llvm::Value *str = getStringPtr(*n->id);
+        base = CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_identifier"),
+                           _llvmFunction->arg_begin(), str);
+        func = _llvmModule->getFunction("__qmljs_llvm_call_activation_property");
+    }
+
+    int argc = 0;
+    for (IR::ExprList *it = e->args; it; it = it->next) {
+        ++argc;
+    }
+
+    llvm::Value *args = argc ? CreateAlloca(_valueTy, getInt32(argc)) : 0;
+
+    int i = 0;
+    for (IR::ExprList *it = e->args; it; it = it->next) {
+        llvm::Value *arg = getLLVMValue(it->expr);
+        CreateStore(arg, CreateConstGEP1_32(args, i++));
+    }
+
+    if (func) {
+        llvm::Value *result = llvm::Constant::getNullValue(_valueTy);
+        CreateCall5(func, _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
+    } else {
+        Q_UNIMPLEMENTED();
+    }
 }
 
 void LLVMInstructionSelection::visitNew(IR::New *e)
