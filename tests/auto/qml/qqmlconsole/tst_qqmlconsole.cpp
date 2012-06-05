@@ -77,15 +77,16 @@ void tst_qqmlconsole::logging()
     QTest::ignoreMessage(QtDebugMsg, ": 2");
 
     QTest::ignoreMessage(QtDebugMsg, "[1,2]");
-    QTest::ignoreMessage(QtDebugMsg, "Object");
+    QTest::ignoreMessage(QtDebugMsg, "{\"a\":\"hello\",\"d\":1}");
     QTest::ignoreMessage(QtDebugMsg, "undefined");
     QTest::ignoreMessage(QtDebugMsg, "12");
     QTest::ignoreMessage(QtDebugMsg, "function () { return 5;}");
     QTest::ignoreMessage(QtDebugMsg, "true");
-    QTest::ignoreMessage(QtDebugMsg, "Object");
-    QTest::ignoreMessage(QtDebugMsg, "Object");
-    QTest::ignoreMessage(QtDebugMsg, "1 pong! Object");
-    QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] Object 2");
+    // Printing QML object prints out the class/type of QML object with the memory address
+//    QTest::ignoreMessage(QtDebugMsg, "QtObject_QML_0(0xABCD..)");
+    QTest::ignoreMessage(QtDebugMsg, "[object Object]");
+    QTest::ignoreMessage(QtDebugMsg, "1 pong! [object Object]");
+    QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] [object Object] 2");
 
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();

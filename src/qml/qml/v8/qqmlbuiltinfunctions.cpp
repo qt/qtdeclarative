@@ -114,24 +114,35 @@ v8::Handle<v8::Value> console(ConsoleLogTypes logType, const v8::Arguments &args
     v8::HandleScope handleScope;
 
     QString result;
+    QV8Engine *engine = V8ENGINE();
     for (int i = 0; i < args.Length(); ++i) {
         if (i != 0)
             result.append(QLatin1Char(' '));
 
         v8::Local<v8::Value> value = args[i];
-        //Check for Object Type
-        if (value->IsObject() && !value->IsFunction()
-                && !value->IsArray() && !value->IsDate()
-                && !value->IsRegExp()) {
-            result.append(QLatin1String("Object"));
-        } else {
-            v8::Local<v8::String> jsstr = value->ToString();
-            QString tmp = V8ENGINE()->toString(jsstr);
-            if (value->IsArray())
-                result.append(QString::fromLatin1("[%1]").arg(tmp));
-            else
-                result.append(tmp);
+
+        v8::TryCatch tryCatch;
+        v8::Local<v8::String> toString = value->ToString();
+        if (tryCatch.HasCaught()) {
+            // toString() threw Exception
+            // Is it possible for value to be anything other than Object?
+            QString str;
+            if (value->IsObject()) {
+                str = QStringLiteral("[object Object]");
+            } else {
+                toString = tryCatch.Exception()->ToString();
+                str = QStringLiteral("toString() threw exception: %1")
+                        .arg(engine->toString(toString));
+            }
+            result.append(str);
+            continue;
         }
+
+        QString tmp = engine->toString(toString);
+        if (value->IsArray())
+            result.append(QStringLiteral("[%1]").arg(tmp));
+        else
+            result.append(tmp);
     }
 
     if (printStack) {

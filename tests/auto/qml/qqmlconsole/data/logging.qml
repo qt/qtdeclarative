@@ -62,6 +62,7 @@ QtObject {
 
         var a = [1, 2];
         var b = {a: "hello", d: 1 };
+        b.toString = function() { return JSON.stringify(b) }
         var c
         var d = 12;
         var e = function() { return 5;};
