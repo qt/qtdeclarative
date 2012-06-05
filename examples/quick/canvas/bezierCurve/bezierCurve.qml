@@ -64,8 +64,6 @@ Item {
       property real scaleY : scaleYCtrl.value
       property real rotate : rotateCtrl.value
       smooth:true
-      renderTarget:Canvas.Image
-      renderStrategy: Canvas.Immediate
 
 
       Behavior on scaleX { SpringAnimation { spring: 2; damping: 0.2; loops:Animation.Infinite } }

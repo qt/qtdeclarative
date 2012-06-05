@@ -13,13 +13,12 @@ TestCase {
   function testData(type) {
     if (type === "2d")
       return [
-             { tag:"image threaded", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Threaded}}
-             //TODO: Enable the followings later
-             //{ tag:"image cooperative", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Cooperative}},
-             //{ tag:"image immediate", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Immediate}},
-             //{ tag:"fbo cooperative", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Cooperative}},
-             //{ tag:"fbo immediate", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Immediate}},
-             //{ tag:"fbo threaded", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Threaded}}
+             { tag:"image threaded", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Threaded}},
+//             { tag:"image cooperative", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Cooperative}},
+             { tag:"image immediate", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Immediate}},
+//             { tag:"fbo cooperative", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Cooperative}},
+//             { tag:"fbo immediate", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Immediate}},
+//             { tag:"fbo threaded", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Threaded}}
            ];
      return [];
   }

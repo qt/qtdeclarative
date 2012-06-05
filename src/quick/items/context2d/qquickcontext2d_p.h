@@ -53,7 +53,7 @@
 #include <QtCore/qstack.h>
 #include <QtCore/qqueue.h>
 #include <private/qv8engine_p.h>
-
+#include <QtCore/QWaitCondition>
 
 
 //#define QQUICKCONTEXT2D_DEBUG //enable this for just DEBUG purpose!
@@ -172,6 +172,7 @@ public:
     void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
     void flush();
     void sync();
+    QThread *thread() const {return m_thread;}
     QSGDynamicTexture *texture() const;
     QImage toImage(const QRectF& bounds);
 
@@ -228,6 +229,7 @@ public:
 
     QOpenGLContext *glContext() { return m_glContext; }
     QSurface *surface() { return m_surface; }
+    void setGrabbedImage(const QImage& grab);
 
     State state;
     QStack<QQuickContext2D::State> m_stateStack;
@@ -246,7 +248,11 @@ public:
     QQuickCanvasItem::RenderTarget m_renderTarget;
     QQuickCanvasItem::RenderStrategy m_renderStrategy;
     QQueue<QQuickContext2DCommandBuffer*> m_bufferQueue;
-    QMutex m_bufferMutex;
+    QThread *m_thread;
+    QImage m_grabbedImage;
+    bool m_grabbed:1;
+
+    QMutex m_mutex;
 };
 
 

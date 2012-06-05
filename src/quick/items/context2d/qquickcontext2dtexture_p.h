@@ -70,15 +70,7 @@ public:
     virtual bool hasAlphaChannel() const {return true;}
     virtual bool hasMipmaps() const {return false;}
     virtual QSize textureSize() const;
-    virtual void lock() {}
-    virtual void unlock() {}
-    virtual void wait() {}
-    virtual void wake() {}
-    bool threadRendering() const {return m_threadRendering;}
-    virtual bool supportThreadRendering() const = 0;
-    virtual bool supportDirectRendering() const = 0;
     virtual QQuickCanvasItem::RenderTarget renderTarget() const = 0;
-    virtual QImage toImage(const QRectF& region = QRectF()) = 0;
     static QRect tiledRect(const QRectF& window, const QSize& tileSize);
 
     bool setCanvasSize(const QSize &size);
@@ -86,18 +78,20 @@ public:
     bool setCanvasWindow(const QRect& canvasWindow);
     void setSmooth(bool smooth);
     bool setDirtyRect(const QRect &dirtyRect);
-    virtual void canvasChanged(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
     bool canvasDestroyed();
+
 Q_SIGNALS:
     void textureChanged();
 
 public Q_SLOTS:
     void markDirtyTexture();
     void setItem(QQuickCanvasItem* item);
-    void paint();
+    void canvasChanged(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
+    void paint(QQuickContext2DCommandBuffer *ccb);
+    virtual void grabImage(const QRectF& region = QRectF()) = 0;
 
 protected:
-    void paintWithoutTiles();
+    void paintWithoutTiles(QQuickContext2DCommandBuffer *ccb);
     virtual QPaintDevice* beginPainting() {m_painting = true; return 0; }
     virtual void endPainting() {m_painting = false;}
     virtual QQuickContext2DTile* createTile() const = 0;
@@ -120,10 +114,8 @@ protected:
     uint m_dirtyCanvas : 1;
     uint m_canvasWindowChanged : 1;
     uint m_dirtyTexture : 1;
-    uint m_threadRendering : 1;
     uint m_smooth : 1;
     uint m_tiledCanvas : 1;
-    uint m_doGrabImage : 1;
     uint m_painting : 1;
 };
 
@@ -137,23 +129,19 @@ public:
     virtual int textureId() const;
     virtual bool updateTexture();
     virtual QQuickContext2DTile* createTile() const;
-    virtual QImage toImage(const QRectF& region = QRectF());
     virtual QPaintDevice* beginPainting();
     virtual void endPainting();
     QRectF normalizedTextureSubRect() const;
-    virtual bool supportThreadRendering() const {return false;}
-    virtual bool supportDirectRendering() const {return false;}
     virtual QQuickCanvasItem::RenderTarget renderTarget() const;
     virtual void compositeTile(QQuickContext2DTile* tile);
     virtual void bind();
     QSize adjustedTileSize(const QSize &ts);
 
-private Q_SLOTS:
-    void grabImage();
+public Q_SLOTS:
+    virtual void grabImage(const QRectF& region = QRectF());
 
 private:
     bool doMultisampling() const;
-    QImage m_grabedImage;
     QOpenGLFramebufferObject *m_fbo;
     QOpenGLFramebufferObject *m_multisampledFbo;
     QMutex m_mutex;
@@ -168,31 +156,24 @@ class QQuickContext2DImageTexture : public QQuickContext2DTexture
     Q_OBJECT
 
 public:
-    QQuickContext2DImageTexture(bool threadRendering = true);
+    QQuickContext2DImageTexture();
     ~QQuickContext2DImageTexture();
     virtual int textureId() const;
     virtual void bind();
-    virtual bool supportThreadRendering() const {return true;}
-    virtual bool supportDirectRendering() const;
+
     virtual QQuickCanvasItem::RenderTarget renderTarget() const;
-    virtual void lock();
-    virtual void unlock();
-    virtual void wait();
-    virtual void wake();
 
     virtual bool updateTexture();
     virtual QQuickContext2DTile* createTile() const;
-    virtual QImage toImage(const QRectF& region = QRectF());
     virtual QPaintDevice* beginPainting();
     virtual void compositeTile(QQuickContext2DTile* tile);
 
-private Q_SLOTS:
-    void grabImage(const QRect& r);
+public Q_SLOTS:
+    virtual void grabImage(const QRectF& region = QRectF());
+
 private:
+    QSGPlainTexture *imageTexture() const;
     QImage m_image;
-    QImage m_grabedImage;
-    QMutex m_mutex;
-    QWaitCondition m_waitCondition;
     QPainter m_painter;
     QSGPlainTexture*  m_texture;
 };

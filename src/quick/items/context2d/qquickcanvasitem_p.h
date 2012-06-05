@@ -177,7 +177,7 @@ protected:
     void updatePolish();
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
-
+    void releaseResources();
 private:
     Q_DECLARE_PRIVATE(QQuickCanvasItem)
     Q_INVOKABLE void delayedCreate();

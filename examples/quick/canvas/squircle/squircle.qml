@@ -60,8 +60,6 @@ Item {
         width:320
         height:250
         smooth:true
-        renderTarget:Canvas.Image
-        renderStrategy: Canvas.Immediate
 
         property string strokeStyle:"blue"
         property string fillStyle:"steelblue"

@@ -65,8 +65,6 @@ Item {
       property real alpha:alphaCtrl.value
       property string imagefile:"../contents/qt-logo.png"
       smooth:true
-      renderTarget:Canvas.Image
-      renderStrategy: Canvas.Immediate
       Component.onCompleted:loadImage(canvas.imagefile);
 
     onAlphaChanged:requestPaint();

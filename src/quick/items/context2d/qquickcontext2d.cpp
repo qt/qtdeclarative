@@ -63,8 +63,6 @@
 #include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
 #include <private/qquickwindowmanager_p.h>
-#include <QtGui/private/qguiapplication_p.h>
-#include <qpa/qplatformintegration.h>
 
 #ifdef Q_OS_QNX
 #include <ctype.h>
@@ -3265,6 +3263,11 @@ static int textAlignOffset(QQuickContext2D::TextAlignType value, const QFontMetr
     return offset;
 }
 
+void QQuickContext2D::setGrabbedImage(const QImage& grab)
+{
+    m_grabbedImage = grab;
+    m_grabbed = true;
+}
 
 QQmlRefPointer<QQuickCanvasPixmap> QQuickContext2D::createPixmap(const QUrl& url)
 {
@@ -3347,12 +3350,15 @@ QQuickContext2D::QQuickContext2D(QObject *parent)
     , m_windowManager(0)
     , m_surface(0)
     , m_glContext(0)
+    , m_thread(0)
+    , m_grabbed(false)
 {
 }
 
 QQuickContext2D::~QQuickContext2D()
 {
     delete m_buffer;
+    m_texture->deleteLater();
 }
 
 v8::Handle<v8::Object> QQuickContext2D::v8value() const
@@ -3378,15 +3384,10 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
 
     switch (m_renderTarget) {
     case QQuickCanvasItem::Image:
-        m_texture = new QQuickContext2DImageTexture(m_renderStrategy == QQuickCanvasItem::Threaded);
+        m_texture = new QQuickContext2DImageTexture;
         break;
     case QQuickCanvasItem::FramebufferObject:
-    {
         m_texture = new QQuickContext2DFBOTexture;
-        // No BufferQueueingOpenGL, falls back to Cooperative mode
-        if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::BufferQueueingOpenGL))
-            m_renderStrategy = QQuickCanvasItem::Cooperative;
-    }
         break;
     }
 
@@ -3396,13 +3397,18 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_texture->setCanvasSize(canvasItem->canvasSize().toSize());
     m_texture->setSmooth(canvasItem->smooth());
 
-    QThread *renderThread = QThread::currentThread();
+    m_thread = QThread::currentThread();
+
+    QThread *renderThread = m_thread;
     QThread *sceneGraphThread = window->openglContext() ? window->openglContext()->thread() : 0;
 
     if (m_renderStrategy == QQuickCanvasItem::Threaded)
         renderThread = QQuickContext2DRenderThread::instance(qmlEngine(canvasItem));
     else if (m_renderStrategy == QQuickCanvasItem::Cooperative)
         renderThread = sceneGraphThread;
+
+    if (renderThread && renderThread != QThread::currentThread())
+        m_texture->moveToThread(renderThread);
 
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
          QOpenGLContext *cc = QQuickWindowPrivate::get(window)->context->glContext();
@@ -3421,32 +3427,24 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
 
 void QQuickContext2D::prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth)
 {
-    m_texture->canvasChanged(canvasSize, tileSize, canvasWindow, dirtyRect, smooth);
+    QMetaObject::invokeMethod(m_texture,
+                                                               "canvasChanged",
+                                                               Qt::AutoConnection,
+                                                               Q_ARG(QSize, canvasSize),
+                                                               Q_ARG(QSize, tileSize),
+                                                               Q_ARG(QRect, canvasWindow),
+                                                               Q_ARG(QRect, dirtyRect),
+                                                               Q_ARG(bool, smooth));
 }
 
 void QQuickContext2D::flush()
 {
-    if (!m_buffer->isEmpty()) {
-        QMutexLocker lock(&m_bufferMutex);
-        m_bufferQueue.enqueue(m_buffer);
-        m_buffer = new QQuickContext2DCommandBuffer;
-    } else
-        return;
-
-    switch (m_renderStrategy) {
-    case QQuickCanvasItem::Immediate:
-        // Cause the texture to consume paint commands immediately
-        m_texture->paint();
-        break;
-    case QQuickCanvasItem::Threaded:
-        // wake up thread to consume paint commands
-        m_texture->paint();
-        break;
-    case QQuickCanvasItem::Cooperative:
-        // NOTE: On SG Thread
-        m_texture->paint();
-        break;
-    }
+    if (m_buffer)
+        QMetaObject::invokeMethod(m_texture,
+                                                                   "paint",
+                                                                   Qt::AutoConnection,
+                                                                   Q_ARG(QQuickContext2DCommandBuffer*, m_buffer));
+    m_buffer = new QQuickContext2DCommandBuffer();
 }
 
 QSGDynamicTexture *QQuickContext2D::texture() const
@@ -3456,16 +3454,22 @@ QSGDynamicTexture *QQuickContext2D::texture() const
 
 QImage QQuickContext2D::toImage(const QRectF& bounds)
 {
-    switch (m_renderStrategy) {
-    case QQuickCanvasItem::Immediate:
-    case QQuickCanvasItem::Threaded:
-        flush();
-        break;
-    case QQuickCanvasItem::Cooperative:
-        break;
+    flush();
+    if (m_texture->thread() == QThread::currentThread())
+        m_texture->grabImage(bounds);
+    else if (m_renderStrategy == QQuickCanvasItem::Cooperative) {
+        qWarning() << "Pixel read back is not support in Cooperative mode, please try Theaded or Immediate mode";
+        return QImage();
+    } else {
+        QMetaObject::invokeMethod(m_texture,
+                                  "grabImage",
+                                  Qt::BlockingQueuedConnection,
+                                  Q_ARG(QRectF, bounds));
     }
-
-    return m_texture->toImage(bounds);
+    QImage img = m_grabbedImage;
+    m_grabbedImage = QImage();
+    m_grabbed = false;
+    return img;
 }
 
 
@@ -3696,7 +3700,7 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
 
 QQuickContext2DCommandBuffer* QQuickContext2D::nextBuffer()
 {
-    QMutexLocker lock(&m_bufferMutex);
+    QMutexLocker lock(&m_mutex);
     return m_bufferQueue.isEmpty() ? 0 : m_bufferQueue.dequeue();
 }
 

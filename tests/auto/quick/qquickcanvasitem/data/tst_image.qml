@@ -653,7 +653,7 @@ CanvasTestCase {
        var ctx = canvas.getContext('2d');
        loadImages(canvas);
 
-       var canvas2 = Qt.createQmlObject("import QtQuick 2.0; Canvas{renderTarget:Canvas.Image}", canvas);
+       var canvas2 = Qt.createQmlObject("import QtQuick 2.0; Canvas{renderTarget:Canvas.Image; renderStrategy:Canvas.Immediate}", canvas);
        canvas2.width = 100;
        canvas2.height = 50;
        var ctx2 = canvas2.getContext('2d');

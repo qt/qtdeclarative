@@ -54,8 +54,6 @@ Item {
         width:320
         height:280
         smooth:true
-        renderTarget:Canvas.Image
-        renderStrategy: Canvas.Immediate
 
         property int radius: rCtrl.value
         property int rectx: rxCtrl.value

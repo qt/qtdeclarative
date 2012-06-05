@@ -499,6 +499,11 @@ QQuickContext2DCommandBuffer::QQuickContext2DCommandBuffer()
     , imageIdx(0)
     , pixmapIdx(0)
 {
+    static bool registered = false;
+    if (!registered) {
+        qRegisterMetaType<QQuickContext2DCommandBuffer*>("QQuickContext2DCommandBuffer*");
+        registered = true;
+    }
 }
 
 

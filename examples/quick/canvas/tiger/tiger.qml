@@ -56,8 +56,6 @@ Item {
         width:320
         height:280
         smooth:true
-        renderTarget:Canvas.FramebufferObject
-        renderStrategy: Canvas.Cooperative
         property string strokeStyle:"steelblue"
         property string fillStyle:"yellow"
         property bool fill:true

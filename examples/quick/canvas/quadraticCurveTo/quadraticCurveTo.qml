@@ -64,8 +64,6 @@ Item {
       property real scaleY : scaleYCtrl.value
       property real rotate : rotateCtrl.value
       smooth:true
-      renderTarget:Canvas.Image
-      renderStrategy: Canvas.Immediate
 
       onLineWidthChanged:requestPaint();
       onFillChanged:requestPaint();

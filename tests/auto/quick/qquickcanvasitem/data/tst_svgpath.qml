@@ -23,16 +23,16 @@ CanvasTestCase {
                   ];
 
        var blues = [
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
+                   -1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    1, 1, 0, 0, 0, 0, 0, 0,-1, 1,
                     1, 1, 1, 0, 0, 0, 0, 0, 1, 1,
                     1, 1, 1, 0, 0, 0, 0, 0, 1, 1,
                     1, 1, 1, 0, 0, 0, 0, 0, 1, 0,
-                    1, 1, 1, 0, 0, 1, 1, 1, 0, 0,
+                    1, 1, 1, 0,-1, 1, 1, 1, 0, 0,
                     1, 1, 0, 1, 1, 1, 1, 1, 0, 0,
                     1, 0, 0, 1, 1, 1, 1, 1, 0, 0,
                     1, 0, 0, 1, 1, 1, 1, 1, 0, 0,
-                    1, 0, 0, 0, 1, 1, 1, 0, 0, 0
+                   -1, 0, 0, 0, 1, 1, 1, 0, 0, 0
                    ];
 
        ctx.fillRule = Qt.OddEvenFill;
@@ -45,6 +45,7 @@ CanvasTestCase {
            var x, y;
            for (x=0; x < 10; x++) {
                for (y=0; y < 10; y++) {
+                   if (blues[y*10 +x] == -1) continue; //edge point, different render target may have different value
                    if (blues[y * 10 + x]) {
                        comparePixel(ctx, x * 5, y * 5, 0, 0, 255, 255);
                    } else {

@@ -545,7 +545,6 @@ void QQuickCanvasItem::setRenderStrategy(QQuickCanvasItem::RenderStrategy strate
             qmlInfo(this) << "Canvas:renderStrategy not changeable once context is active.";
             return;
         }
-
         d->renderStrategy = strategy;
         emit renderStrategyChanged();
     }
@@ -601,6 +600,16 @@ void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &
 
     if (d->available)
         requestPaint();
+}
+
+void QQuickCanvasItem::releaseResources()
+{
+    Q_D(QQuickCanvasItem);
+
+    if (d->context) {
+        delete d->context;
+        d->context = 0;
+    }
 }
 
 void QQuickCanvasItem::componentComplete()
@@ -678,17 +687,9 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     if (!d->contextInitialized)
         return 0;
 
-    class CanvasTextureNode : public QSGSimpleTextureNode
-    {
-    public:
-        CanvasTextureNode() : QSGSimpleTextureNode() {}
-        ~CanvasTextureNode() {delete texture();}
-    };
-
-    CanvasTextureNode *node = static_cast<CanvasTextureNode*>(oldNode);
-    if (!node) {
-        node = new CanvasTextureNode;
-    }
+    QSGSimpleTextureNode *node = static_cast<QSGSimpleTextureNode*>(oldNode);
+    if (!node)
+        node = new QSGSimpleTextureNode;
 
     if (d->renderStrategy == QQuickCanvasItem::Cooperative)
         d->context->flush();
