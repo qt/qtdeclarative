@@ -24,4 +24,9 @@ void __qmljs_llvm_init_string(Context *ctx, Value *result, const char *str)
     __qmljs_init_string(result, __qmljs_string_from_utf8(ctx, str));
 }
 
+bool __qmljs_llvm_to_boolean(Context *ctx, const Value *value)
+{
+    return __qmljs_to_boolean(ctx, value);
+}
+
 } // extern "C"

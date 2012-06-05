@@ -135,14 +135,24 @@ llvm::Value *LLVMInstructionSelection::getLLVMValue(IR::Expr *expr)
 
 llvm::Value *LLVMInstructionSelection::getLLVMCondition(IR::Expr *expr)
 {
-    if (llvm::Value *value = getLLVMValue(expr)) {
-        if (value->getType() == getInt1Ty()) {
-            return value;
+    llvm::Value *value = 0;
+    if (IR::Temp *t = expr->asTemp()) {
+        value = getLLVMTemp(t);
+    } else {
+        value = getLLVMValue(expr);
+        if (! value) {
+            Q_UNIMPLEMENTED();
+            return getInt1(false);
         }
+
+        llvm::Value *tmp = CreateAlloca(_valueTy);
+        CreateStore(value, tmp);
+        value = tmp;
     }
 
-    Q_UNIMPLEMENTED();
-    return getInt1(false);
+    return CreateCall2(_llvmModule->getFunction("__qmljs_llvm_to_boolean"),
+                       _llvmFunction->arg_begin(),
+                       value);
 }
 
 llvm::Value *LLVMInstructionSelection::getLLVMTemp(IR::Temp *temp)
