@@ -357,14 +357,16 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
 {
     llvm::Value *func = 0;
     llvm::Value *base = 0;
-    if (IR::Temp *t = e->asTemp()) {
+    if (IR::Temp *t = e->base->asTemp()) {
         base = getLLVMTemp(t);
         func = _llvmModule->getFunction("__qmljs_llvm_call_value");
-    } else if (IR::Name *n = e->asName()) {
-        llvm::Value *str = getStringPtr(*n->id);
-        base = CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_identifier"),
-                           _llvmFunction->arg_begin(), str);
-        func = _llvmModule->getFunction("__qmljs_llvm_call_activation_property");
+    } else if (IR::Name *n = e->base->asName()) {
+        if (n->id) {
+            llvm::Value *str = getStringPtr(*n->id);
+            base = CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_identifier"),
+                               _llvmFunction->arg_begin(), str);
+            func = _llvmModule->getFunction("__qmljs_llvm_call_activation_property");
+        }
     }
 
     int argc = 0;
@@ -381,8 +383,9 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
     }
 
     if (func) {
-        llvm::Value *result = llvm::Constant::getNullValue(_valueTy);
-        CreateCall5(func, _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
+        llvm::Value *result = CreateAlloca(_valueTy);
+        CreateStore(llvm::Constant::getNullValue(_valueTy), result);
+        _llvmValue = CreateCall5(func, _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
     } else {
         Q_UNIMPLEMENTED();
     }
