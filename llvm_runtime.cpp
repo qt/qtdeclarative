@@ -134,5 +134,24 @@ void __qmljs_llvm_in(Context *ctx, Value *result, Value *left, Value *right)
     __qmljs_in(ctx, result, left, right);
 }
 
+void __qmljs_llvm_uplus(Context *ctx, Value *result, const Value *value)
+{
+    __qmljs_uplus(ctx, result, value);
+}
+
+void __qmljs_llvm_uminus(Context *ctx, Value *result, const Value *value)
+{
+    __qmljs_uminus(ctx, result, value);
+}
+
+void __qmljs_llvm_compl(Context *ctx, Value *result, const Value *value)
+{
+    __qmljs_compl(ctx, result, value);
+}
+
+void __qmljs_llvm_not(Context *ctx, Value *result, const Value *value)
+{
+    __qmljs_not(ctx, result, value);
+}
 
 } // extern "C"

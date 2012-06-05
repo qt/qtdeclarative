@@ -267,8 +267,9 @@ void LLVMInstructionSelection::visitClosure(IR::Closure *)
 
 void LLVMInstructionSelection::visitUnop(IR::Unop *e)
 {
-    llvm::Value *expr = getLLVMValue(e->expr);
-    Q_UNIMPLEMENTED();
+    llvm::Value *result = CreateAlloca(_valueTy);
+    genUnop(result, e);
+    _llvmValue = CreateLoad(result);
 }
 
 void LLVMInstructionSelection::visitBinop(IR::Binop *e)
@@ -276,6 +277,28 @@ void LLVMInstructionSelection::visitBinop(IR::Binop *e)
     llvm::Value *result = CreateAlloca(_valueTy);
     genBinop(result, e);
     _llvmValue = CreateLoad(result);
+}
+
+void LLVMInstructionSelection::genUnop(llvm::Value *result, IR::Unop *e)
+{
+    IR::Temp *t = e->expr->asTemp();
+    assert(t != 0);
+
+    llvm::Value *expr = getLLVMTemp(t);
+    llvm::Value *op = 0;
+
+    switch (e->op) {
+    default:
+        Q_UNREACHABLE();
+        break;
+
+    case IR::OpNot: _llvmModule->getFunction("__qmljs_llvm_not"); break;
+    case IR::OpUMinus: _llvmModule->getFunction("__qmljs_llvm_uminus"); break;
+    case IR::OpUPlus: _llvmModule->getFunction("__qmljs_llvm_uplus"); break;
+    case IR::OpCompl: _llvmModule->getFunction("__qmljs_llvm_compl"); break;
+    }
+
+    CreateCall3(op, _llvmFunction->arg_begin(), result, expr);
 }
 
 void LLVMInstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
