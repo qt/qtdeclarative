@@ -40,6 +40,7 @@
 ****************************************************************************/
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
+#include "../shared/viewtestutil.h"
 
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
@@ -47,6 +48,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
+#include <QtQml/qqmlincubator.h>
 #include <QtQuick/qquickview.h>
 #include <private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
@@ -57,6 +59,7 @@
 #include <math.h>
 
 using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtil;
 
 template <typename T, int N> int lengthOf(const T (&)[N]) { return N; }
 
@@ -186,6 +189,45 @@ private:
     QString m_color;
 };
 
+class ItemRequester : public QObject
+{
+    Q_OBJECT
+public:
+    ItemRequester(QObject *parent = 0)
+        : QObject(parent)
+        , itemInitialized(0)
+        , itemCreated(0)
+        , itemDestroyed(0)
+        , indexInitialized(-1)
+        , indexCreated(-1)
+    {
+    }
+
+    QQuickItem *itemInitialized;
+    QQuickItem *itemCreated;
+    QQuickItem *itemDestroyed;
+    int indexInitialized;
+    int indexCreated;
+
+public Q_SLOTS:
+    void initItem(int index, QQuickItem *item)
+    {
+        itemInitialized = item;
+        indexInitialized = index;
+    }
+
+    void createdItem(int index, QQuickItem *item)
+    {
+        itemCreated = item;
+        indexCreated = index;
+    }
+
+    void destroyingItem(QQuickItem *item)
+    {
+        itemDestroyed = item;
+    }
+};
+
 QML_DECLARE_TYPE(SingleRoleModel)
 QML_DECLARE_TYPE(DataObject)
 #ifndef QT_NO_WIDGETS
@@ -238,6 +280,13 @@ private slots:
     void warnings_data();
     void warnings();
     void invalidAttachment();
+    void asynchronousInsert_data();
+    void asynchronousInsert();
+    void asynchronousRemove_data();
+    void asynchronousRemove();
+    void asynchronousMove();
+    void asynchronousMove_data();
+    void asynchronousCancel();
 
 private:
     template <int N> void groups_verify(
@@ -263,6 +312,7 @@ private:
             const bool (&sMember)[N]);
 
     bool failed;
+    QQmlIncubationController controller;
     QQmlEngine engine;
 };
 
@@ -296,6 +346,8 @@ void tst_qquickvisualdatamodel::initTestCase()
     qmlRegisterType<StandardItem>("tst_qquickvisualdatamodel", 1, 0, "StandardItem");
     qmlRegisterType<StandardItemModel>("tst_qquickvisualdatamodel", 1, 0, "StandardItemModel");
 #endif
+
+    engine.setIncubationController(&controller);
 }
 
 void tst_qquickvisualdatamodel::cleanupTestCase()
@@ -3480,6 +3532,236 @@ void tst_qquickvisualdatamodel::invalidAttachment()
     QVERIFY(!property.value<QQuickVisualDataModel *>());
 }
 
+void tst_qquickvisualdatamodel::asynchronousInsert_data()
+{
+    QTest::addColumn<int>("requestIndex");
+    QTest::addColumn<int>("insertIndex");
+    QTest::addColumn<int>("insertCount");
+    QTest::addColumn<int>("completeIndex");
+
+    QTest::newRow("insert before") << 4 << 1 << 3 << 7;
+    QTest::newRow("insert after")  << 4 << 6 << 3 << 4;
+    QTest::newRow("insert at")     << 4 << 4 << 3 << 7;
+}
+
+void tst_qquickvisualdatamodel::asynchronousInsert()
+{
+    QFETCH(int, requestIndex);
+    QFETCH(int, insertIndex);
+    QFETCH(int, insertCount);
+    QFETCH(int, completeIndex);
+
+    QCOMPARE(controller.incubatingObjectCount(), 0);
+
+    QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
+
+    QmlListModel model;
+    for (int i = 0; i < 8; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    engine.rootContext()->setContextProperty("myModel", &model);
+
+    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QVERIFY(visualModel);
+
+    ItemRequester requester;
+    connect(visualModel, SIGNAL(initItem(int,QQuickItem*)), &requester, SLOT(initItem(int,QQuickItem*)));
+    connect(visualModel, SIGNAL(createdItem(int,QQuickItem*)), &requester, SLOT(createdItem(int,QQuickItem*)));
+    connect(visualModel, SIGNAL(destroyingItem(QQuickItem*)), &requester, SLOT(destroyingItem(QQuickItem*)));
+
+    QQuickItem *item = visualModel->item(requestIndex, true);
+    QVERIFY(!item);
+
+    QVERIFY(!requester.itemInitialized);
+    QVERIFY(!requester.itemCreated);
+    QVERIFY(!requester.itemDestroyed);
+
+    QList<QPair<QString, QString> > newItems;
+    for (int i = 0; i < insertCount; i++)
+        newItems.append(qMakePair(QLatin1String("New item") + QString::number(i), QString(QLatin1String(""))));
+    model.insertItems(insertIndex, newItems);
+
+    item = visualModel->item(completeIndex, false);
+    QVERIFY(item);
+
+    QCOMPARE(requester.itemInitialized, item);
+    QCOMPARE(requester.indexInitialized, completeIndex);
+    QCOMPARE(requester.itemCreated, item);
+    QCOMPARE(requester.indexCreated, completeIndex);
+    QVERIFY(!requester.itemDestroyed);
+
+    QCOMPARE(controller.incubatingObjectCount(), 0);
+
+    visualModel->release(item);
+
+    QCOMPARE(requester.itemDestroyed, item);
+}
+
+void tst_qquickvisualdatamodel::asynchronousRemove_data()
+{
+    QTest::addColumn<int>("requestIndex");
+    QTest::addColumn<int>("removeIndex");
+    QTest::addColumn<int>("removeCount");
+    QTest::addColumn<int>("completeIndex");
+
+    QTest::newRow("remove before")    << 4 << 1 << 3 << 1;
+    QTest::newRow("remove after")     << 4 << 6 << 2 << 4;
+    QTest::newRow("remove requested") << 4 << 4 << 3 << -1;
+}
+
+void tst_qquickvisualdatamodel::asynchronousRemove()
+{
+    QFETCH(int, requestIndex);
+    QFETCH(int, removeIndex);
+    QFETCH(int, removeCount);
+    QFETCH(int, completeIndex);
+
+    QCOMPARE(controller.incubatingObjectCount(), 0);
+
+    QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
+
+    QmlListModel model;
+    for (int i = 0; i < 8; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    engine.rootContext()->setContextProperty("myModel", &model);
+
+    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QVERIFY(visualModel);
+
+    ItemRequester requester;
+    connect(visualModel, SIGNAL(initItem(int,QQuickItem*)), &requester, SLOT(initItem(int,QQuickItem*)));
+    connect(visualModel, SIGNAL(createdItem(int,QQuickItem*)), &requester, SLOT(createdItem(int,QQuickItem*)));
+    connect(visualModel, SIGNAL(destroyingItem(QQuickItem*)), &requester, SLOT(destroyingItem(QQuickItem*)));
+
+    QQuickItem *item = visualModel->item(requestIndex, true);
+    QVERIFY(!item);
+
+    QVERIFY(!requester.itemInitialized);
+    QVERIFY(!requester.itemCreated);
+    QVERIFY(!requester.itemDestroyed);
+
+    model.removeItems(removeIndex, removeCount);
+
+    if (completeIndex == -1) {
+        QElapsedTimer timer;
+        timer.start();
+        do {
+            controller.incubateFor(50);
+        } while (timer.elapsed() < 1000 && controller.incubatingObjectCount() > 0);
+
+        QVERIFY(requester.itemInitialized);
+        QCOMPARE(requester.itemCreated, requester.itemInitialized);
+        QCOMPARE(requester.itemDestroyed, requester.itemInitialized);
+    } else {
+        item = visualModel->item(completeIndex, false);
+        QVERIFY(item);
+
+        QCOMPARE(requester.itemInitialized, item);
+        QCOMPARE(requester.indexInitialized, completeIndex);
+        QCOMPARE(requester.itemCreated, item);
+        QCOMPARE(requester.indexCreated, completeIndex);
+        QVERIFY(!requester.itemDestroyed);
+
+        QCOMPARE(controller.incubatingObjectCount(), 0);
+
+        visualModel->release(item);
+
+        QCOMPARE(requester.itemDestroyed, item);
+    }
+}
+
+void tst_qquickvisualdatamodel::asynchronousMove_data()
+{
+    QTest::addColumn<int>("requestIndex");
+    QTest::addColumn<int>("from");
+    QTest::addColumn<int>("to");
+    QTest::addColumn<int>("count");
+    QTest::addColumn<int>("completeIndex");
+
+    QTest::newRow("move before")          << 4 << 1 << 0 << 3 << 4;
+    QTest::newRow("move after")           << 4 << 6 << 5 << 2 << 4;
+    QTest::newRow("move requested")       << 4 << 4 << 3 << 2 << 3;
+    QTest::newRow("move before to after") << 4 << 1 << 4 << 3 << 1;
+    QTest::newRow("move after to before") << 4 << 6 << 2 << 2 << 6;
+}
+
+void tst_qquickvisualdatamodel::asynchronousMove()
+{
+    QFETCH(int, requestIndex);
+    QFETCH(int, from);
+    QFETCH(int, to);
+    QFETCH(int, count);
+    QFETCH(int, completeIndex);
+
+    QCOMPARE(controller.incubatingObjectCount(), 0);
+
+    QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
+
+    QmlListModel model;
+    for (int i = 0; i < 8; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    engine.rootContext()->setContextProperty("myModel", &model);
+
+    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QVERIFY(visualModel);
+
+    ItemRequester requester;
+    connect(visualModel, SIGNAL(initItem(int,QQuickItem*)), &requester, SLOT(initItem(int,QQuickItem*)));
+    connect(visualModel, SIGNAL(createdItem(int,QQuickItem*)), &requester, SLOT(createdItem(int,QQuickItem*)));
+    connect(visualModel, SIGNAL(destroyingItem(QQuickItem*)), &requester, SLOT(destroyingItem(QQuickItem*)));
+
+    QQuickItem *item = visualModel->item(requestIndex, true);
+    QVERIFY(!item);
+
+    QVERIFY(!requester.itemInitialized);
+    QVERIFY(!requester.itemCreated);
+    QVERIFY(!requester.itemDestroyed);
+
+    model.moveItems(from, to, count);
+
+    item = visualModel->item(completeIndex, false);
+    QVERIFY(item);
+
+
+    QCOMPARE(requester.itemInitialized, item);
+    QCOMPARE(requester.indexInitialized, completeIndex);
+    QCOMPARE(requester.itemCreated, item);
+    QCOMPARE(requester.indexCreated, completeIndex);
+    QVERIFY(!requester.itemDestroyed);
+
+    QCOMPARE(controller.incubatingObjectCount(), 0);
+
+    visualModel->release(item);
+
+    QCOMPARE(requester.itemDestroyed, item);
+}
+
+void tst_qquickvisualdatamodel::asynchronousCancel()
+{
+    const int requestIndex = 4;
+
+    QCOMPARE(controller.incubatingObjectCount(), 0);
+
+    QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
+
+    QmlListModel model;
+    for (int i = 0; i < 8; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    engine.rootContext()->setContextProperty("myModel", &model);
+
+    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create());
+    QVERIFY(visualModel);
+
+    QQuickItem *item = visualModel->item(requestIndex, true);
+    QVERIFY(!item);
+    QCOMPARE(controller.incubatingObjectCount(), 1);
+
+    visualModel->cancel(requestIndex);
+    QCOMPARE(controller.incubatingObjectCount(), 0);
+}
 
 QTEST_MAIN(tst_qquickvisualdatamodel)
 

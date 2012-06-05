@@ -244,7 +244,7 @@ public:
     void init();
     void connectModel(QQuickVisualAdaptorModel *model);
 
-    QObject *object(Compositor::Group group, int index, bool asynchronous, bool reference);
+    QObject *object(Compositor::Group group, int index, bool asynchronous);
     QQuickVisualDataModel::ReleaseFlags release(QObject *object);
     QString stringValue(Compositor::Group group, int index, const QString &name);
     void emitCreatedPackage(QQuickVisualDataModelItem *cacheItem, QQuickPackage *package);
@@ -255,6 +255,7 @@ public:
         emit q_func()->initItem(cacheItem->index[m_compositorGroup], item); }
     void emitDestroyingPackage(QQuickPackage *package);
     void emitDestroyingItem(QQuickItem *item) { emit q_func()->destroyingItem(item); }
+    void removeCacheItem(QQuickVisualDataModelItem *cacheItem);
 
     void updateFilterGroup();
 
