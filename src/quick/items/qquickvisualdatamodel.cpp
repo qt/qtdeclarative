@@ -1612,18 +1612,6 @@ int QQuickVisualDataModelItemMetaType::parseGroups(const v8::Local<v8::Value> &g
     return groupFlags;
 }
 
-void QQuickVisualDataModelItemMetaType::release_index(v8::Persistent<v8::Value> object, void *data)
-{
-    static_cast<QQuickVisualDataModelItem *>(data)->indexHandle.Clear();
-    qPersistentDispose(object);
-}
-
-void QQuickVisualDataModelItemMetaType::release_model(v8::Persistent<v8::Value> object, void *data)
-{
-    static_cast<QQuickVisualDataModelItem *>(data)->modelHandle.Clear();
-    qPersistentDispose(object);
-}
-
 v8::Handle<v8::Value> QQuickVisualDataModelItemMetaType::get_model(
         v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -1632,14 +1620,7 @@ v8::Handle<v8::Value> QQuickVisualDataModelItemMetaType::get_model(
     if (!cacheItem->metaType->model)
         return v8::Undefined();
 
-    if (cacheItem->modelHandle.IsEmpty()) {
-        cacheItem->modelHandle = qPersistentNew(cacheItem->get());
-        cacheItem->modelHandle.MakeWeak(cacheItem, &release_model);
-
-        ++cacheItem->scriptRef;
-    }
-
-    return cacheItem->modelHandle;
+    return cacheItem->get();
 }
 
 v8::Handle<v8::Value> QQuickVisualDataModelItemMetaType::get_groups(
@@ -1739,8 +1720,6 @@ QQuickVisualDataModelItem::~QQuickVisualDataModelItem()
     Q_ASSERT(scriptRef == 0);
     Q_ASSERT(objectRef == 0);
     Q_ASSERT(!object);
-    Q_ASSERT(indexHandle.IsEmpty());
-    Q_ASSERT(modelHandle.IsEmpty());
 
     if (incubationTask && metaType->model)
         QQuickVisualDataModelPrivate::get(metaType->model)->releaseIncubator(incubationTask);
@@ -2257,17 +2236,13 @@ QQmlV8Handle QQuickVisualDataGroup::get(int index)
         model->m_compositor.setFlags(it, 1, Compositor::CacheFlag);
     }
 
-    if (cacheItem->indexHandle.IsEmpty()) {
-        if (model->m_cacheMetaType->constructor.IsEmpty())
-            model->m_cacheMetaType->initializeConstructor();
-        cacheItem->indexHandle = qPersistentNew(model->m_cacheMetaType->constructor->NewInstance());
-        cacheItem->indexHandle->SetExternalResource(cacheItem);
-        cacheItem->indexHandle.MakeWeak(cacheItem, QQuickVisualDataModelItemMetaType::release_index);
+    if (model->m_cacheMetaType->constructor.IsEmpty())
+        model->m_cacheMetaType->initializeConstructor();
+    v8::Local<v8::Object> handle = model->m_cacheMetaType->constructor->NewInstance();
+    handle->SetExternalResource(cacheItem);
+    ++cacheItem->scriptRef;
 
-        ++cacheItem->scriptRef;
-    }
-
-    return QQmlV8Handle::fromHandle(cacheItem->indexHandle);
+    return QQmlV8Handle::fromHandle(handle);
 }
 
 bool QQuickVisualDataGroupPrivate::parseIndex(

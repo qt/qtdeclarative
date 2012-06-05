@@ -401,6 +401,7 @@ public:
         }
         v8::Local<v8::Object> data = type->constructor->NewInstance();
         data->SetExternalResource(this);
+        ++scriptRef;
         return data;
     }
 
@@ -559,6 +560,7 @@ public:
         }
         v8::Local<v8::Object> data = type->constructor->NewInstance();
         data->SetExternalResource(this);
+        ++scriptRef;
         return data;
     }
 };

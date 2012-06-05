@@ -151,8 +151,6 @@ public:
     QObject *object;
     QQuickVisualDataModelAttached *attached;
     QVDMIncubationTask *incubationTask;
-    v8::Persistent<v8::Object> indexHandle;
-    v8::Persistent<v8::Value> modelHandle;
     int objectRef;
     int scriptRef;
     int groups;
