@@ -1,4 +1,5 @@
 #include "qmljs_runtime.h"
+#include <stdio.h>
 
 using namespace QQmlJS::VM;
 

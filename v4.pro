@@ -7,6 +7,8 @@ DEFINES += __default_codegen__
 udis86:LIBS += -ludis86
 else:DEFINES += NO_UDIS86
 
+LIBS += -rdynamic
+
 SOURCES += main.cpp \
     qv4codegen.cpp \
     qv4ir.cpp \
@@ -16,7 +18,8 @@ SOURCES += main.cpp \
     qv4syntaxchecker.cpp \
     qv4ecmaobjects.cpp \
     qv4array.cpp \
-    qv4isel_x86_64.cpp
+    qv4isel_x86_64.cpp \
+    llvm_runtime.cpp
 
 HEADERS += \
     qv4codegen_p.h \

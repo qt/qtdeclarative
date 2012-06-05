@@ -58,7 +58,7 @@ struct Print: FunctionObject
 } // builtins
 
 #ifndef QMLJS_NO_LLVM
-void compile(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QString &source)
+void compile(const QString &fileName, const QString &source)
 {
     using namespace QQmlJS;
 
@@ -91,11 +91,52 @@ void compile(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QSt
             PM.add(llvm::createFunctionInliningPass());
             PM.add(llvm::createPrintModulePass(&llvm::outs()));
             PM.run(*llvmModule);
-            //llvmModule->dump();
             delete llvmModule;
         }
     }
 }
+
+int compileFiles(const QStringList &files)
+{
+    foreach (const QString &fileName, files) {
+        QFile file(fileName);
+        if (file.open(QFile::ReadOnly)) {
+            QString source = QString::fromUtf8(file.readAll());
+            compile(fileName, source);
+        }
+    }
+    return 0;
+}
+
+int evaluateCompiledCode(const QStringList &files)
+{
+    using namespace QQmlJS;
+
+    foreach (const QString &libName, files) {
+        QLibrary lib(libName);
+        lib.load();
+        QFunctionPointer ptr = lib.resolve("_25_entry");
+        void (*code)(VM::Context *) = (void (*)(VM::Context *)) ptr;
+
+        VM::ExecutionEngine vm;
+        VM::Context *ctx = vm.rootContext;
+
+        QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue;
+        globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
+                                  QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
+
+        code(ctx);
+
+        if (ctx->hasUncaughtException) {
+            if (VM::ErrorObject *e = ctx->result.asErrorObject())
+                std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
+            else
+                std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+        }
+    }
+    return 0;
+}
+
 #endif
 
 void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QString &source)
@@ -173,17 +214,34 @@ int main(int argc, char *argv[])
     QStringList args = app.arguments();
     args.removeFirst();
 
+#ifndef QMLJS_NO_LLVM
+    if (args.isEmpty()) {
+        std::cerr << "Usage: v4 [--compile|--aot] file..." << std::endl;
+        return 0;
+    }
+
+    if (args.first() == QLatin1String("--compile")) {
+        args.removeFirst();
+        return compileFiles(args);
+    } else if (args.first() == QLatin1String("--aot")) {
+        args.removeFirst();
+        return evaluateCompiledCode(args);
+    }
+#endif
+
     foreach (const QString &fn, args) {
         QFile file(fn);
         if (file.open(QFile::ReadOnly)) {
             const QString code = QString::fromUtf8(file.readAll());
             file.close();
             QQmlJS::VM::ExecutionEngine vm;
-#ifndef QMLJS_NO_LLVM
-            compile(&vm, fn, code);
-#else
+            QQmlJS::VM::Context *ctx = vm.rootContext;
+
+            QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue;
+            globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
+                                      QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
+
             evaluate(&vm, fn, code);
-#endif
         }
     }
 }
