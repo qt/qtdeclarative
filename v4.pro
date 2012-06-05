@@ -40,9 +40,6 @@ SOURCES += \
 HEADERS += \
     qv4isel_llvm_p.h
 
-DEFINES += \
-    WITH_LLVM
-
 INCLUDEPATH += \
     $$system(llvm-config --includedir)
 
@@ -53,6 +50,16 @@ DEFINES += \
 
 LIBS += \
     $$system(llvm-config --ldflags) \
-    $$system(llvm-config --libs core)
+    $$system(llvm-config --libs core jit bitreader linker ipo)
+
+QMAKE_EXTRA_TARGETS += gen_llvm_runtime
+
+gen_llvm_runtime.target = llvm_runtime
+gen_llvm_runtime.commands = clang -emit-llvm -c -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp  -o llvm_runtime.bc
+
+
+} else {
+
+DEFINES += QMLJS_NO_LLVM
 
 }

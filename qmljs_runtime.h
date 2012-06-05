@@ -91,6 +91,7 @@ void __qmljs_string_literal_string(Context *ctx, Value *result);
 void __qmljs_string_literal_function(Context *ctx, Value *result);
 
 // strings
+String *__qmljs_string_from_utf8(Context *ctx, const char *s);
 int __qmljs_string_length(Context *ctx, String *string);
 double __qmljs_string_to_number(Context *ctx, String *string);
 void __qmljs_string_from_number(Context *ctx, Value *result, double number);

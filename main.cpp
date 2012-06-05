@@ -15,8 +15,15 @@
 #include <sys/mman.h>
 #include <iostream>
 
-#ifdef WITH_LLVM
+#ifndef QMLJS_NO_LLVM
 #  include "qv4isel_llvm_p.h"
+
+#  include <llvm/PassManager.h>
+#  include <llvm/Analysis/Passes.h>
+#  include <llvm/Transforms/Scalar.h>
+#  include <llvm/Transforms/IPO.h>
+#  include <llvm/Assembly/PrintModulePass.h>
+#  include <llvm/Support/raw_ostream.h>
 #endif
 
 static inline bool protect(const void *addr, size_t size)
@@ -50,6 +57,46 @@ struct Print: FunctionObject
 
 } // builtins
 
+#ifndef QMLJS_NO_LLVM
+void compile(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QString &source)
+{
+    using namespace QQmlJS;
+
+    IR::Module module;
+    QQmlJS::Engine ee, *engine = &ee;
+    Lexer lexer(engine);
+    lexer.setCode(source, 1, false);
+    Parser parser(engine);
+
+    const bool parsed = parser.parseProgram();
+
+    foreach (const DiagnosticMessage &m, parser.diagnosticMessages()) {
+        std::cerr << qPrintable(fileName) << ':' << m.loc.startLine << ':' << m.loc.startColumn
+                  << ": error: " << qPrintable(m.message) << std::endl;
+    }
+
+    if (parsed) {
+        using namespace AST;
+        Program *program = AST::cast<Program *>(parser.rootNode());
+
+        Codegen cg;
+        /*IR::Function *globalCode =*/ cg(program, &module);
+
+        LLVMInstructionSelection llvmIsel(llvm::getGlobalContext());
+        if (llvm::Module *llvmModule = llvmIsel.getLLVMModule(&module)) {
+            llvm::PassManager PM;
+            PM.add(llvm::createScalarReplAggregatesPass());
+            PM.add(llvm::createInstructionCombiningPass());
+            PM.add(llvm::createGlobalOptimizerPass());
+            PM.add(llvm::createFunctionInliningPass());
+            PM.add(llvm::createPrintModulePass(&llvm::outs()));
+            PM.run(*llvmModule);
+            //llvmModule->dump();
+            delete llvmModule;
+        }
+    }
+}
+#endif
 
 void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QString &source)
 {
@@ -86,14 +133,6 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
             foreach (IR::Function *function, module.functions) {
                 isel(function);
             }
-
-#ifdef WITH_LLVM
-            LLVMInstructionSelection llvmIsel(llvm::getGlobalContext());
-            if (llvm::Module *llvmModule = llvmIsel.getLLVMModule(&module)) {
-                llvmModule->dump();
-                delete llvmModule;
-            }
-#endif
         }
     }
 
@@ -140,7 +179,11 @@ int main(int argc, char *argv[])
             const QString code = QString::fromUtf8(file.readAll());
             file.close();
             QQmlJS::VM::ExecutionEngine vm;
+#ifndef QMLJS_NO_LLVM
+            compile(&vm, fn, code);
+#else
             evaluate(&vm, fn, code);
+#endif
         }
     }
 }

@@ -437,6 +437,11 @@ void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *rig
     }
 }
 
+String *__qmljs_string_from_utf8(Context *ctx, const char *s)
+{
+    return ctx->engine->newString(QString::fromUtf8(s));
+}
+
 int __qmljs_string_length(Context *, String *string)
 {
     return string->toQString().length();

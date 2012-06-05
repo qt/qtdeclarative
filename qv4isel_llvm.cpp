@@ -2,6 +2,11 @@
 #include "qv4isel_llvm_p.h"
 #include "qv4ir_p.h"
 
+#include <llvm/Support/system_error.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/Linker.h>
+
 using namespace QQmlJS;
 
 LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
@@ -11,34 +16,53 @@ LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
     , _llvmValue(0)
     , _numberTy(0)
     , _valueTy(0)
-    , _contextTy(0)
+    , _contextPtrTy(0)
+    , _stringPtrTy(0)
     , _functionTy(0)
     , _function(0)
     , _block(0)
 {
-    _numberTy = getDoubleTy();
-
-    {
-        llvm::StructType *ty = llvm::StructType::create(getContext(), llvm::StringRef("Value"));
-        ty->setBody(getInt32Ty(), llvm::StructType::get(_numberTy, NULL), NULL);
-        _valueTy = ty;
-    }
-
-    {
-        // ### we use a pointer for now
-        _contextTy = getInt1Ty()->getPointerTo();
-    }
-
-    {
-        llvm::Type *args[] = { _contextTy };
-        _functionTy = llvm::FunctionType::get(getVoidTy(), llvm::makeArrayRef(args), false);
-    }
 }
 
 llvm::Module *LLVMInstructionSelection::getLLVMModule(IR::Module *module)
 {
     llvm::Module *llvmModule = new llvm::Module("a.out", getContext());
     qSwap(_llvmModule, llvmModule);
+
+    _numberTy = getDoubleTy();
+
+    std::string err;
+
+    llvm::OwningPtr<llvm::MemoryBuffer> buffer;
+    llvm::error_code ec = llvm::MemoryBuffer::getFile(llvm::StringRef("llvm_runtime.bc"), buffer);
+    if (ec) {
+        qWarning() << ec.message().c_str();
+        assert(!"cannot load QML/JS LLVM runtime, you can generate the runtime with the command `make llvm_runtime'");
+    }
+
+    llvm::Module *llvmRuntime = llvm::getLazyBitcodeModule(buffer.get(), getContext(), &err);
+    if (! err.empty()) {
+        qWarning() << err.c_str();
+        assert(!"cannot load QML/JS LLVM runtime");
+    }
+
+    err.clear();
+    llvm::Linker::LinkModules(_llvmModule, llvmRuntime, llvm::Linker::DestroySource, &err);
+    if (! err.empty()) {
+        qWarning() << err.c_str();
+        assert(!"cannot link the QML/JS LLVM runtime");
+    }
+
+    _valueTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::Value");
+    _contextPtrTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::Context")->getPointerTo();
+    _stringPtrTy = _llvmModule->getTypeByName("struct.QQmlJS::VM::String")->getPointerTo();
+
+    {
+        llvm::Type *args[] = { _contextPtrTy };
+        _functionTy = llvm::FunctionType::get(getVoidTy(), llvm::makeArrayRef(args), false);
+    }
+
+
     foreach (IR::Function *function, module->functions)
         (void) getLLVMFunction(function);
     qSwap(_llvmModule, llvmModule);
@@ -48,7 +72,7 @@ llvm::Module *LLVMInstructionSelection::getLLVMModule(IR::Module *module)
 llvm::Function *LLVMInstructionSelection::getLLVMFunction(IR::Function *function)
 {
     llvm::Function *llvmFunction =
-            llvm::Function::Create(_functionTy, llvm::Function::InternalLinkage,
+            llvm::Function::Create(_functionTy, llvm::Function::ExternalLinkage, // ### make it internal
                                    llvm::Twine(function->name ? qPrintable(*function->name) : 0), _llvmModule);
 
     QHash<IR::BasicBlock *, llvm::BasicBlock *> blockMap;
@@ -124,12 +148,23 @@ llvm::Value *LLVMInstructionSelection::getLLVMCondition(IR::Expr *expr)
 llvm::Value *LLVMInstructionSelection::getLLVMTemp(IR::Temp *temp)
 {
     if (temp->index < 0) {
-        // it's an actual argument
-        Q_UNIMPLEMENTED();
-        return 0;
+        const int index = -temp->index -1;
+        return CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_argument"),
+                           _llvmFunction->arg_begin(), getInt32(index));
     }
 
     return _tempMap[temp->index];
+}
+
+llvm::Value *LLVMInstructionSelection::getStringPtr(const QString &s)
+{
+    llvm::Value *&value = _stringMap[s];
+    if (! value) {
+        const QByteArray bytes = s.toUtf8();
+        value = CreateGlobalStringPtr(llvm::StringRef(bytes.constData(), bytes.size()));
+        _stringMap[s] = value;
+    }
+    return value;
 }
 
 void LLVMInstructionSelection::visitExp(IR::Exp *s)
@@ -139,18 +174,26 @@ void LLVMInstructionSelection::visitExp(IR::Exp *s)
 
 void LLVMInstructionSelection::visitEnter(IR::Enter *)
 {
+    Q_UNREACHABLE();
 }
 
 void LLVMInstructionSelection::visitLeave(IR::Leave *)
 {
+    Q_UNREACHABLE();
 }
 
 void LLVMInstructionSelection::visitMove(IR::Move *s)
 {
     if (IR::Temp *t = s->target->asTemp()) {
-        if (llvm::Value *target = getLLVMTemp(t)) {
-            return;
+        llvm::Value *target = getLLVMTemp(t);
+        llvm::Value *source = getLLVMValue(s->source);
+        assert(source);
+        if (source->getType()->getPointerTo() != target->getType()) {
+            source->dump();
+            assert(!"not cool");
         }
+        CreateStore(source, target);
+        return;
     }
     Q_UNIMPLEMENTED();
 }
@@ -164,23 +207,35 @@ void LLVMInstructionSelection::visitCJump(IR::CJump *s)
 {
     CreateCondBr(getLLVMCondition(s->cond),
                  getLLVMBasicBlock(s->iftrue),
-                 getLLVMBasicBlock(_function->basicBlocks.at(_block->index + 1)));
+                 getLLVMBasicBlock(s->iffalse));
 }
 
 void LLVMInstructionSelection::visitRet(IR::Ret *s)
 {
-    CreateRet(getLLVMValue(s->expr));
+    IR::Temp *t = s->expr->asTemp();
+    assert(t != 0);
+    llvm::Value *result = getLLVMTemp(t);
+    llvm::Value *ctx = _llvmFunction->arg_begin();
+    CreateCall2(_llvmModule->getFunction("__qmljs_llvm_return"), ctx, result);
+    CreateRetVoid();
 }
 
 
 void LLVMInstructionSelection::visitConst(IR::Const *e)
 {
-    _llvmValue = llvm::ConstantFP::get(_numberTy, e->value);
+    llvm::Value *k = llvm::ConstantFP::get(_numberTy, e->value);
+    llvm::Value *tmp = CreateAlloca(_valueTy);
+    CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_number"), tmp, k);
+    _llvmValue = CreateLoad(tmp);
 }
 
-void LLVMInstructionSelection::visitString(IR::String *)
+void LLVMInstructionSelection::visitString(IR::String *e)
 {
-    Q_UNIMPLEMENTED();
+    llvm::Value *tmp = CreateAlloca(_valueTy);
+    CreateCall3(_llvmModule->getFunction("__qmljs_llvm_init_string"),
+                _llvmFunction->arg_begin(), tmp,
+                getStringPtr(*e->value));
+    _llvmValue = CreateLoad(tmp);
 }
 
 void LLVMInstructionSelection::visitName(IR::Name *)
@@ -200,23 +255,28 @@ void LLVMInstructionSelection::visitClosure(IR::Closure *)
     Q_UNIMPLEMENTED();
 }
 
-void LLVMInstructionSelection::visitUnop(IR::Unop *)
+void LLVMInstructionSelection::visitUnop(IR::Unop *e)
 {
+    llvm::Value *expr = getLLVMValue(e->expr);
     Q_UNIMPLEMENTED();
 }
 
 void LLVMInstructionSelection::visitBinop(IR::Binop *e)
 {
+    llvm::Value *left = getLLVMValue(e->left);
+    llvm::Value *right = getLLVMValue(e->right);
     Q_UNIMPLEMENTED();
 }
 
-void LLVMInstructionSelection::visitCall(IR::Call *)
+void LLVMInstructionSelection::visitCall(IR::Call *e)
 {
+    llvm::Value *base = getLLVMValue(e->base);
     Q_UNIMPLEMENTED();
 }
 
-void LLVMInstructionSelection::visitNew(IR::New *)
+void LLVMInstructionSelection::visitNew(IR::New *e)
 {
+    llvm::Value *base = getLLVMValue(e->base);
     Q_UNIMPLEMENTED();
 }
 

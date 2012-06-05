@@ -22,6 +22,7 @@ public:
     llvm::Value *getLLVMValue(IR::Expr *expr);
     llvm::Value *getLLVMCondition(IR::Expr *expr);
     llvm::Value *getLLVMTemp(IR::Temp *temp);
+    llvm::Value *getStringPtr(const QString &s);
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);
@@ -49,13 +50,15 @@ private:
     llvm::Value *_llvmValue;
     llvm::Type *_numberTy;
     llvm::Type *_valueTy;
-    llvm::Type *_contextTy;
+    llvm::Type *_contextPtrTy;
+    llvm::Type *_stringPtrTy;
     llvm::FunctionType *_functionTy;
     IR::Function *_function;
     IR::BasicBlock *_block;
     QHash<IR::Function *, llvm::Function *> _functionMap;
     QHash<IR::BasicBlock *, llvm::BasicBlock *> _blockMap;
     QVector<llvm::Value *> _tempMap;
+    QHash<QString, llvm::Value *> _stringMap;
 };
 
 } // end of namespace QQmlJS
