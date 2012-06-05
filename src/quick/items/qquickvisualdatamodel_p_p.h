@@ -136,8 +136,10 @@ public:
 
     static QQuickVisualDataModelItem *dataForObject(QObject *object);
 
-    int modelIndex() const { return index[0]; }
-    void setModelIndex(int idx) { index[0] = idx; emit modelIndexChanged(); }
+    int groupIndex(Compositor::Group group);
+
+    int modelIndex() const { return index; }
+    void setModelIndex(int idx) { index = idx; emit modelIndexChanged(); }
 
     virtual v8::Handle<v8::Value> get() { return engine->newQObject(this); }
 
@@ -154,7 +156,7 @@ public:
     int objectRef;
     int scriptRef;
     int groups;
-    int index[QQuickListCompositor::MaximumGroupCount];
+    int index;
 
 
 Q_SIGNALS:
@@ -178,9 +180,8 @@ public:
     virtual void setInitialState(QObject *);
 
     QQuickVisualDataModelItem *incubating;
-
-private:
     QQuickVisualDataModelPrivate *vdm;
+    int index[QQuickListCompositor::MaximumGroupCount];
 };
 
 
@@ -247,12 +248,12 @@ public:
     QObject *object(Compositor::Group group, int index, bool asynchronous);
     QQuickVisualDataModel::ReleaseFlags release(QObject *object);
     QString stringValue(Compositor::Group group, int index, const QString &name);
-    void emitCreatedPackage(QQuickVisualDataModelItem *cacheItem, QQuickPackage *package);
-    void emitInitPackage(QQuickVisualDataModelItem *cacheItem, QQuickPackage *package);
-    void emitCreatedItem(QQuickVisualDataModelItem *cacheItem, QQuickItem *item) {
-        emit q_func()->createdItem(cacheItem->index[m_compositorGroup], item); }
-    void emitInitItem(QQuickVisualDataModelItem *cacheItem, QQuickItem *item) {
-        emit q_func()->initItem(cacheItem->index[m_compositorGroup], item); }
+    void emitCreatedPackage(QVDMIncubationTask *incubationTask, QQuickPackage *package);
+    void emitInitPackage(QVDMIncubationTask *incubationTask, QQuickPackage *package);
+    void emitCreatedItem(QVDMIncubationTask *incubationTask, QQuickItem *item) {
+        emit q_func()->createdItem(incubationTask->index[m_compositorGroup], item); }
+    void emitInitItem(QVDMIncubationTask *incubationTask, QQuickItem *item) {
+        emit q_func()->initItem(incubationTask->index[m_compositorGroup], item); }
     void emitDestroyingPackage(QQuickPackage *package);
     void emitDestroyingItem(QQuickItem *item) { emit q_func()->destroyingItem(item); }
     void removeCacheItem(QQuickVisualDataModelItem *cacheItem);

@@ -70,7 +70,7 @@ static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::Accessor
     if (!data)
         V8THROW_ERROR("Not a valid VisualData object");
 
-    return v8::Int32::New(data->index[0]);
+    return v8::Int32::New(data->index);
 }
 
 static v8::Local<v8::ObjectTemplate> createConstructor()
@@ -252,7 +252,7 @@ int QQuickVDMCachedModelData::metaCall(QMetaObject::Call call, int id, void **ar
 {
     if (call == QMetaObject::ReadProperty && id >= type->propertyOffset) {
         const int propertyIndex = id - type->propertyOffset;
-        if (index[0] == -1) {
+        if (index == -1) {
             if (!cachedData.isEmpty()) {
                 *static_cast<QVariant *>(arguments[0]) = cachedData.at(
                     type->hasModelData ? 0 : propertyIndex);
@@ -263,7 +263,7 @@ int QQuickVDMCachedModelData::metaCall(QMetaObject::Call call, int id, void **ar
         return -1;
     } else if (call == QMetaObject::WriteProperty && id >= type->propertyOffset) {
         const int propertyIndex = id - type->propertyOffset;
-        if (index[0] == -1) {
+        if (index == -1) {
             const QMetaObject *meta = metaObject();
             if (cachedData.count() > 1) {
                 cachedData[propertyIndex] = *static_cast<QVariant *>(arguments[0]);
@@ -297,9 +297,9 @@ void QQuickVDMCachedModelData::setValue(const QString &role, const QVariant &val
 
 bool QQuickVDMCachedModelData::resolveIndex(const QQuickVisualAdaptorModel &, int idx)
 {
-    if (index[0] == -1) {
+    if (index == -1) {
         Q_ASSERT(idx >= 0);
-        index[0] = idx;
+        index = idx;
         cachedData.clear();
         emit modelIndexChanged();
         const QMetaObject *meta = metaObject();
@@ -321,7 +321,7 @@ v8::Handle<v8::Value> QQuickVDMCachedModelData::get_property(
 
     QQuickVDMCachedModelData *modelData = static_cast<QQuickVDMCachedModelData *>(data);
     const int propertyId = info.Data()->Int32Value();
-    if (data->index[0] == -1) {
+    if (data->index == -1) {
         if (!modelData->cachedData.isEmpty()) {
             return data->engine->fromVariant(
                     modelData->cachedData.at(modelData->type->hasModelData ? 0 : propertyId));
@@ -341,7 +341,7 @@ void QQuickVDMCachedModelData::set_property(
         V8THROW_ERROR_SETTER("Not a valid VisualData object");
 
     const int propertyId = info.Data()->Int32Value();
-    if (data->index[0] == -1) {
+    if (data->index == -1) {
         QQuickVDMCachedModelData *modelData = static_cast<QQuickVDMCachedModelData *>(data);
         if (!modelData->cachedData.isEmpty()) {
             if (modelData->cachedData.count() > 1) {
@@ -375,9 +375,9 @@ public:
 
     bool hasModelChildren() const
     {
-        if (index[0] >= 0 && *type->model) {
+        if (index >= 0 && *type->model) {
             const QAbstractItemModel * const model = type->model->aim();
-            return model->hasChildren(model->index(index[0], 0, type->model->rootIndex));
+            return model->hasChildren(model->index(index, 0, type->model->rootIndex));
         } else {
             return false;
         }
@@ -385,13 +385,13 @@ public:
 
     QVariant value(int role) const
     {
-        return type->model->aim()->index(index[0], 0, type->model->rootIndex).data(role);
+        return type->model->aim()->index(index, 0, type->model->rootIndex).data(role);
     }
 
     void setValue(int role, const QVariant &value)
     {
         type->model->aim()->setData(
-                type->model->aim()->index(index[0], 0, type->model->rootIndex), value, role);
+                type->model->aim()->index(index, 0, type->model->rootIndex), value, role);
     }
 
     v8::Handle<v8::Value> get()
@@ -414,9 +414,9 @@ public:
             V8THROW_ERROR("Not a valid VisualData object");
 
         const QQuickVisualAdaptorModel *const model = static_cast<QQuickVDMCachedModelData *>(data)->type->model;
-        if (data->index[0] >= 0 && *model) {
+        if (data->index >= 0 && *model) {
             const QAbstractItemModel * const aim = model->aim();
-            return v8::Boolean::New(aim->hasChildren(aim->index(data->index[0], 0, model->rootIndex)));
+            return v8::Boolean::New(aim->hasChildren(aim->index(data->index, 0, model->rootIndex)));
         } else {
             return v8::Boolean::New(false);
         }
@@ -549,7 +549,7 @@ public:
 
     QVariant value(int role) const
     {
-        return type->model->lmi()->data(index[0], role);
+        return type->model->lmi()->data(index, role);
     }
 
     void setValue(int, const QVariant &) {}
@@ -673,7 +673,7 @@ public:
 
     void setModelData(const QVariant &data)
     {
-        if (index[0] == -1 && data != cachedData) {
+        if (index == -1 && data != cachedData) {
             cachedData = data;
             emit modelDataChanged();
         }
@@ -706,8 +706,8 @@ public:
 
     bool resolveIndex(const QQuickVisualAdaptorModel &model, int idx)
     {
-        if (index[0] == -1) {
-            index[0] = idx;
+        if (index == -1) {
+            index = idx;
             cachedData = model.list.at(idx);
             emit modelIndexChanged();
             emit modelDataChanged();

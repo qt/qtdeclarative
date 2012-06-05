@@ -221,6 +221,7 @@ Q_SIGNALS:
 public:
     QQuickVisualDataModelItem *m_cacheItem;
     int m_previousGroups;
+    int m_currentIndex[QQuickListCompositor::MaximumGroupCount];
     int m_previousIndex[QQuickListCompositor::MaximumGroupCount];
     bool m_modelChanged;
 
