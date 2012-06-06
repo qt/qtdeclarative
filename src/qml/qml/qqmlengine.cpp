@@ -472,6 +472,25 @@ void QQmlData::parentChanged(QAbstractDeclarativeData *d, QObject *o, QObject *p
     static_cast<QQmlData *>(d)->parentChanged(o, p);
 }
 
+class QQmlThreadNotifierProxyObject : public QObject
+{
+public:
+    QPointer<QObject> target;
+
+    virtual int qt_metacall(QMetaObject::Call, int id, void **a) {
+        if (!target)
+            return -1;
+
+        QQmlData *ddata = QQmlData::get(target, false);
+        QQmlNotifierEndpoint *ep = ddata->notify(id);
+        if (ep) QQmlNotifier::emitNotify(ep, a);
+
+        delete this;
+
+        return -1;
+    }
+};
+
 void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int index, void **a)
 {
     QQmlData *ddata = QQmlData::get(object, false);
@@ -485,6 +504,9 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
     // by the qqmlecmascript::threadSignal() autotest.
     if (ddata->notifyList &&
         QThread::currentThreadId() != QObjectPrivate::get(object)->threadData->threadId) {
+
+        if (!QObjectPrivate::get(object)->threadData->thread)
+            return;
 
         QMetaMethod m = object->metaObject()->method(index);
         QList<QByteArray> parameterTypes = m.parameterTypes();
@@ -516,7 +538,11 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 
         QMetaCallEvent *ev = new QMetaCallEvent(index, 0, 0, object, index,
                                                 parameterTypes.count() + 1, types, args);
-        QCoreApplication::postEvent(object, ev);
+
+        QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
+        mpo->target = object;
+        mpo->moveToThread(QObjectPrivate::get(object)->threadData->thread);
+        QCoreApplication::postEvent(mpo, ev);
 
     } else {
         QQmlNotifierEndpoint *ep = ddata->notify(index);

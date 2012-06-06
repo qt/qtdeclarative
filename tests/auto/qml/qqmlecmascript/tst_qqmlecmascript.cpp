@@ -6896,11 +6896,23 @@ void tst_qqmlecmascript::signalEmitted()
 // QTBUG-25647
 void tst_qqmlecmascript::threadSignal()
 {
+    {
     QQmlComponent c(&engine, testFileUrl("threadSignal.qml"));
     QObject *object = c.create();
     QVERIFY(object != 0);
     QTRY_VERIFY(object->property("passed").toBool());
     delete object;
+    }
+    {
+    QQmlComponent c(&engine, testFileUrl("threadSignal.2.qml"));
+    QObject *object = c.create();
+    QVERIFY(object != 0);
+    QSignalSpy doneSpy(object, SIGNAL(done(const QString &)));
+    QMetaObject::invokeMethod(object, "doIt");
+    QTRY_VERIFY(object->property("passed").toBool());
+    QCOMPARE(doneSpy.count(), 1);
+    delete object;
+    }
 }
 
 // ensure that the qqmldata::destroyed() handler doesn't cause problems

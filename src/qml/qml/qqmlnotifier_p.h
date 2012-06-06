@@ -58,6 +58,7 @@ public:
 private:
     friend class QQmlData;
     friend class QQmlNotifierEndpoint;
+    friend class QQmlThreadNotifierProxyObject;
 
     static void emitNotify(QQmlNotifierEndpoint *, void **a);
     QQmlNotifierEndpoint *endpoints;
