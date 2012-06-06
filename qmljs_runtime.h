@@ -732,7 +732,7 @@ inline void __qmljs_inplace_ushr(Context *ctx, Value *result, double value)
 
 inline void __qmljs_add(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (left->type == NUMBER_TYPE == right->type == NUMBER_TYPE)
+    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE)
         __qmljs_init_number(result, left->numberValue + right->numberValue);
     else
         __qmljs_add_helper(ctx, result, left, right);

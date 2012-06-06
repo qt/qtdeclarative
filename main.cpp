@@ -119,7 +119,7 @@ void compile(const QString &fileName, const QString &source)
             PM.add(llvm::createScalarReplAggregatesPass());
             PM.add(llvm::createInstructionCombiningPass());
             PM.add(llvm::createGlobalOptimizerPass());
-            PM.add(llvm::createFunctionInliningPass());
+            PM.add(llvm::createFunctionInliningPass(25));
             targetMachine->addPassesToEmitFile(PM, out, llvm::TargetMachine::CGFT_AssemblyFile);
             PM.run(*llvmModule);
             delete llvmModule;

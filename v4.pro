@@ -58,7 +58,7 @@ LIBS += \
 QMAKE_EXTRA_TARGETS += gen_llvm_runtime
 
 gen_llvm_runtime.target = llvm_runtime
-gen_llvm_runtime.commands = clang -emit-llvm -c -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp  -o llvm_runtime.bc
+gen_llvm_runtime.commands = clang -O2 -emit-llvm -c -DQMLJS_LLVM_RUNTIME llvm_runtime.cpp  -o llvm_runtime.bc
 
 
 } else {
