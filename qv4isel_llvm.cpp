@@ -144,6 +144,16 @@ llvm::Value *LLVMInstructionSelection::getLLVMValue(IR::Expr *expr)
     return llvmValue;
 }
 
+llvm::Value *LLVMInstructionSelection::getLLVMTempReference(IR::Expr *expr)
+{
+    if (IR::Temp *t = expr->asTemp())
+        return getLLVMTemp(t);
+
+    llvm::Value *addr = newLLVMTemp(_valueTy);
+    CreateStore(getLLVMValue(expr), addr);
+    return addr;
+}
+
 llvm::Value *LLVMInstructionSelection::getLLVMCondition(IR::Expr *expr)
 {
     llvm::Value *value = 0;
@@ -211,8 +221,22 @@ void LLVMInstructionSelection::visitLeave(IR::Leave *)
     Q_UNREACHABLE();
 }
 
+void LLVMInstructionSelection::genMoveSubscript(IR::Move *s)
+{
+    IR::Subscript *subscript = s->target->asSubscript();
+    llvm::Value *base = getLLVMTempReference(subscript->base);
+    llvm::Value *index = getLLVMTempReference(subscript->index);
+    llvm::Value *source = getLLVMTempReference(s->source);
+    CreateCall4(_llvmModule->getFunction("__qmljs_llvm_set_element"),
+                _llvmFunction->arg_begin(), base, index, source);
+}
+
 void LLVMInstructionSelection::visitMove(IR::Move *s)
 {
+    if (s->target->asSubscript()) {
+        genMoveSubscript(s);
+        return;
+    }
     if (IR::Temp *t = s->target->asTemp()) {
         llvm::Value *target = getLLVMTemp(t);
         llvm::Value *source = getLLVMValue(s->source);
@@ -515,9 +539,21 @@ void LLVMInstructionSelection::visitNew(IR::New *e)
     }
 }
 
-void LLVMInstructionSelection::visitSubscript(IR::Subscript *)
+void LLVMInstructionSelection::visitSubscript(IR::Subscript *e)
 {
-    Q_UNIMPLEMENTED();
+    IR::Temp *t = e->base->asTemp();
+    llvm::Value *result = newLLVMTemp(_valueTy);
+    llvm::Value *base = getLLVMTemp(t);
+    llvm::Value *index = 0;
+    if (IR::Temp *i = e->index->asTemp())
+        index = getLLVMTemp(i);
+    else {
+        index = newLLVMTemp(_valueTy);
+        CreateStore(getLLVMValue(e->index), index);
+    }
+    CreateCall4(_llvmModule->getFunction("__qmljs_llvm_get_element"),
+                _llvmFunction->arg_begin(), result, base, index);
+    _llvmValue = CreateLoad(result);
 }
 
 void LLVMInstructionSelection::visitMember(IR::Member *e)

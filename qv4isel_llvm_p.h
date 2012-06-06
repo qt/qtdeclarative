@@ -20,6 +20,7 @@ public:
     llvm::Function *getLLVMFunction(IR::Function *function);
     llvm::BasicBlock *getLLVMBasicBlock(IR::BasicBlock *block);
     llvm::Value *getLLVMValue(IR::Expr *expr);
+    llvm::Value *getLLVMTempReference(IR::Expr *expr);
     llvm::Value *getLLVMCondition(IR::Expr *expr);
     llvm::Value *getLLVMTemp(IR::Temp *temp);
     llvm::Value *getStringPtr(const QString &s);
@@ -30,6 +31,7 @@ public:
     llvm::Value * genArguments(IR::ExprList *args, int &argc);
     void genCallMember(IR::Call *e, llvm::Value *result = 0);
     void genConstructMember(IR::New *e, llvm::Value *result = 0);
+    void genMoveSubscript(IR::Move *s);
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);
