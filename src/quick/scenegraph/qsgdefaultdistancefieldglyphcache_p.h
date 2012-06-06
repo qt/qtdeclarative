@@ -46,6 +46,7 @@
 #include <QtGui/qopenglfunctions.h>
 #include <qopenglshaderprogram.h>
 #include <QtGui/private/qopenglengineshadersource_p.h>
+#include <private/qsgareaallocator_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,10 +61,6 @@ public:
     void referenceGlyphs(const QSet<glyph_t> &glyphs);
     void releaseGlyphs(const QSet<glyph_t> &glyphs);
 
-    bool cacheIsFull() const {
-        return m_textures.count() == m_maxTextureCount
-                && textureIsFull(m_currentTexture);
-    }
     bool useWorkaroundBrokenFBOReadback() const;
     int maxTextureSize() const;
 
@@ -74,22 +71,22 @@ private:
     struct TextureInfo {
         GLuint texture;
         QSize size;
-        int currX;
-        int currY;
+        QRect allocatedArea;
         QImage image;
 
-        TextureInfo() : texture(0), currX(0), currY(0)
+        TextureInfo() : texture(0)
         { }
     };
 
     void createTexture(TextureInfo * texInfo, int width, int height);
     void resizeTexture(TextureInfo * texInfo, int width, int height);
-    bool textureIsFull (const TextureInfo *tex) const { return tex->currY >= maxTextureSize(); }
 
-    TextureInfo *createTextureInfo()
+    TextureInfo *textureInfo(int index)
     {
-        m_textures.append(TextureInfo());
-        return &m_textures.last();
+        for (int i = m_textures.count(); i <= index; ++i)
+            m_textures.append(TextureInfo());
+
+        return &m_textures[index];
     }
 
     void createBlitProgram()
@@ -123,11 +120,12 @@ private:
     mutable int m_maxTextureSize;
     int m_maxTextureCount;
 
-    TextureInfo *m_currentTexture;
     QList<TextureInfo> m_textures;
     QHash<glyph_t, TextureInfo *> m_glyphsTexture;
     GLuint m_fbo;
     QSet<glyph_t> m_unusedGlyphs;
+
+    QSGAreaAllocator *m_areaAllocator;
 
     QOpenGLShaderProgram *m_blitProgram;
     GLfloat m_blitVertexCoordinateArray[8];

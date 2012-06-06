@@ -117,21 +117,22 @@ void QSGDistanceFieldGlyphCache::populate(const QVector<glyph_t> &glyphs)
         ++gd.ref;
         referencedGlyphs.insert(glyphIndex);
 
-        if (gd.texCoord.isValid() || newGlyphs.contains(glyphIndex))
+        if (gd.texCoord.isValid() || m_populatingGlyphs.contains(glyphIndex))
             continue;
 
-        gd.texCoord.width = 0;
-        gd.texCoord.height = 0;
+        m_populatingGlyphs.insert(glyphIndex);
 
-        if (!gd.boundingRect.isEmpty())
+        if (gd.boundingRect.isEmpty()) {
+            gd.texCoord.width = 0;
+            gd.texCoord.height = 0;
+        } else {
             newGlyphs.insert(glyphIndex);
+        }
     }
 
-    if (newGlyphs.isEmpty())
-        return;
-
     referenceGlyphs(referencedGlyphs);
-    requestGlyphs(newGlyphs);
+    if (!newGlyphs.isEmpty())
+        requestGlyphs(newGlyphs);
 }
 
 void QSGDistanceFieldGlyphCache::release(const QVector<glyph_t> &glyphs)
@@ -149,6 +150,8 @@ void QSGDistanceFieldGlyphCache::release(const QVector<glyph_t> &glyphs)
 
 void QSGDistanceFieldGlyphCache::update()
 {
+    m_populatingGlyphs.clear();
+
     if (m_pendingGlyphs.isEmpty())
         return;
 

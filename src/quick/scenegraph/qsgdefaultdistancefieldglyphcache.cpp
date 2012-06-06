@@ -44,6 +44,7 @@
 #include <QtGui/private/qdistancefield_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <qopenglfunctions.h>
+#include <qmath.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,8 +56,6 @@ QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistance
     , m_fbo(0)
     , m_blitProgram(0)
 {
-    m_currentTexture = createTextureInfo();
-
     m_blitVertexCoordinateArray[0] = -1.0f;
     m_blitVertexCoordinateArray[1] = -1.0f;
     m_blitVertexCoordinateArray[2] =  1.0f;
@@ -74,6 +73,8 @@ QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistance
     m_blitTextureCoordinateArray[5] = 1.0f;
     m_blitTextureCoordinateArray[6] = 0.0f;
     m_blitTextureCoordinateArray[7] = 1.0f;
+
+    m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()));
 }
 
 QSGDefaultDistanceFieldGlyphCache::~QSGDefaultDistanceFieldGlyphCache()
@@ -82,6 +83,7 @@ QSGDefaultDistanceFieldGlyphCache::~QSGDefaultDistanceFieldGlyphCache()
         glDeleteTextures(1, &m_textures[i].texture);
     ctx->functions()->glDeleteFramebuffers(1, &m_fbo);
     delete m_blitProgram;
+    delete m_areaAllocator;
 }
 
 void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
@@ -92,44 +94,42 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
     for (QSet<glyph_t>::const_iterator it = glyphs.constBegin(); it != glyphs.constEnd() ; ++it) {
         glyph_t glyphIndex = *it;
 
-        if (cacheIsFull() && m_unusedGlyphs.isEmpty())
-            continue;
+        int glyphWidth = qCeil(glyphData(glyphIndex).boundingRect.width()) + distanceFieldRadius() * 2;
+        QSize glyphSize(glyphWidth, QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()));
+        QRect alloc = m_areaAllocator->allocate(glyphSize);
 
-        if (textureIsFull(m_currentTexture) && m_textures.count() < m_maxTextureCount)
-            m_currentTexture = createTextureInfo();
-
-        m_unusedGlyphs.remove(glyphIndex);
-
-        TextureInfo *tex = m_currentTexture;
-
-        GlyphPosition p;
-        p.glyph = glyphIndex;
-        p.position = QPointF(tex->currX, tex->currY);
-
-        if (!cacheIsFull()) {
-            tex->currX += QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution());
-            if (tex->currX >= maxTextureSize()) {
-                tex->currX = 0;
-                tex->currY += QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution());
-            }
-        } else {
-            // Recycle glyphs
-            if (!m_unusedGlyphs.isEmpty()) {
+        if (alloc.isNull()) {
+            // Unallocate unused glyphs until we can allocated the new glyph
+            while (alloc.isNull() && !m_unusedGlyphs.isEmpty()) {
                 glyph_t unusedGlyph = *m_unusedGlyphs.constBegin();
+
                 TexCoord unusedCoord = glyphTexCoord(unusedGlyph);
-                tex = m_glyphsTexture.value(unusedGlyph);
-                p.position = QPointF(unusedCoord.x, unusedCoord.y);
+                int unusedGlyphWidth = qCeil(glyphData(unusedGlyph).boundingRect.width()) + distanceFieldRadius() * 2;
+                m_areaAllocator->deallocate(QRect(unusedCoord.x, unusedCoord.y, unusedGlyphWidth, QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution())));
+
                 m_unusedGlyphs.remove(unusedGlyph);
                 m_glyphsTexture.remove(unusedGlyph);
                 removeGlyph(unusedGlyph);
+
+                alloc = m_areaAllocator->allocate(glyphSize);
             }
+
+            // Not enough space left for this glyph... skip to the next one
+            if (alloc.isNull())
+                continue;
         }
 
-        if (p.position.y() < maxTextureSize()) {
-            glyphPositions.append(p);
-            glyphsToRender.append(glyphIndex);
-            m_glyphsTexture.insert(glyphIndex, tex);
-        }
+        TextureInfo *tex = textureInfo(alloc.y() / maxTextureSize());
+        alloc = QRect(alloc.x(), alloc.y() % maxTextureSize(), alloc.width(), alloc.height());
+        tex->allocatedArea |= alloc;
+
+        GlyphPosition p;
+        p.glyph = glyphIndex;
+        p.position = alloc.topLeft();
+
+        glyphPositions.append(p);
+        glyphsToRender.append(glyphIndex);
+        m_glyphsTexture.insert(glyphIndex, tex);
     }
 
     setGlyphsPosition(glyphPositions);
@@ -138,9 +138,6 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
 
 void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage> &glyphs)
 {
-    int requiredWidth = maxTextureSize();
-    int rows = 128 / (requiredWidth / QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution())); // Enough rows to fill the latin1 set by default..
-
     QHash<TextureInfo *, QVector<glyph_t> > glyphTextures;
 
     QHash<glyph_t, QImage>::const_iterator it;
@@ -149,16 +146,15 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QHash<glyph_t, QImage>
         TexCoord c = glyphTexCoord(glyphIndex);
         TextureInfo *texInfo = m_glyphsTexture.value(glyphIndex);
 
-        int requiredHeight = qMin(maxTextureSize(),
-                                  qMax(texInfo->currY + QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()),
-                                       QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()) * rows));
-
-        resizeTexture(texInfo, requiredWidth, requiredHeight);
+        resizeTexture(texInfo, texInfo->allocatedArea.width(), texInfo->allocatedArea.height());
         glBindTexture(GL_TEXTURE_2D, texInfo->texture);
 
         glyphTextures[texInfo].append(glyphIndex);
 
         QImage glyph = it.value();
+        int expectedWidth = qCeil(c.width + c.xMargin * 2);
+        if (glyph.width() != expectedWidth)
+            glyph = glyph.copy(0, 0, expectedWidth, glyph.height());
 
         if (useWorkaroundBrokenFBOReadback()) {
             uchar *inBits = glyph.scanLine(0);

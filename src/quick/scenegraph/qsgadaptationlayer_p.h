@@ -189,7 +189,7 @@ public:
     }
     int distanceFieldRadius() const
     {
-        return QT_DISTANCEFIELD_DEFAULT_RADIUS / QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution);
+        return QT_DISTANCEFIELD_RADIUS(m_doubleGlyphResolution) / QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution);
     }
     int glyphCount() const { return m_glyphCount; }
     bool doubleGlyphResolution() const { return m_doubleGlyphResolution; }
@@ -216,6 +216,15 @@ protected:
         QPointF position;
     };
 
+    struct GlyphData {
+        Texture *texture;
+        TexCoord texCoord;
+        QRectF boundingRect;
+        quint32 ref;
+
+        GlyphData() : texture(0), ref(0) { }
+    };
+
     virtual void requestGlyphs(const QSet<glyph_t> &glyphs) = 0;
     virtual void storeGlyphs(const QHash<glyph_t, QImage> &glyphs) = 0;
     virtual void referenceGlyphs(const QSet<glyph_t> &glyphs) = 0;
@@ -231,20 +240,11 @@ protected:
     inline bool containsGlyph(glyph_t glyph);
     GLuint textureIdForGlyph(glyph_t glyph) const;
 
+    GlyphData &glyphData(glyph_t glyph);
+
     QOpenGLContext *ctx;
 
 private:
-    struct GlyphData {
-        Texture *texture;
-        TexCoord texCoord;
-        QRectF boundingRect;
-        quint32 ref;
-
-        GlyphData() : texture(0), ref(0) { }
-    };
-
-    GlyphData &glyphData(glyph_t glyph);
-
     QSGDistanceFieldGlyphCacheManager *m_manager;
 
     QRawFont m_referenceFont;
@@ -255,6 +255,7 @@ private:
     QList<Texture> m_textures;
     QHash<glyph_t, GlyphData> m_glyphsData;
     QDataBuffer<glyph_t> m_pendingGlyphs;
+    QSet<glyph_t> m_populatingGlyphs;
     QLinkedList<QSGDistanceFieldGlyphConsumer*> m_registeredNodes;
 
     static Texture s_emptyTexture;
