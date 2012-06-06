@@ -144,7 +144,8 @@ int evaluateCompiledCode(const QStringList &files)
     using namespace QQmlJS;
 
     foreach (const QString &libName, files) {
-        QLibrary lib(libName);
+        QFileInfo libInfo(libName);
+        QLibrary lib(libInfo.absoluteFilePath());
         lib.load();
         QFunctionPointer ptr = lib.resolve("_25_entry");
         void (*code)(VM::Context *) = (void (*)(VM::Context *)) ptr;
