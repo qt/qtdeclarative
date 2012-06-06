@@ -184,6 +184,8 @@ void __qmljs_ne(Context *ctx, Value *result, const Value *left, const Value *rig
 void __qmljs_se(Context *ctx, Value *result, const Value *left, const Value *right);
 void __qmljs_sne(Context *ctx, Value *result, const Value *left, const Value *right);
 
+void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Value *right);
+
 bool __qmljs_cmp_gt(Context *ctx, const Value *left, const Value *right);
 bool __qmljs_cmp_lt(Context *ctx, const Value *left, const Value *right);
 bool __qmljs_cmp_ge(Context *ctx, const Value *left, const Value *right);
@@ -730,21 +732,10 @@ inline void __qmljs_inplace_ushr(Context *ctx, Value *result, double value)
 
 inline void __qmljs_add(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    Value pleft, pright;
-    __qmljs_to_primitive(ctx, &pleft, left, PREFERREDTYPE_HINT);
-    __qmljs_to_primitive(ctx, &pright, right, PREFERREDTYPE_HINT);
-    if (pleft.type == STRING_TYPE || pright.type == STRING_TYPE) {
-        if (pleft.type != STRING_TYPE)
-            __qmljs_to_string(ctx, &pleft, &pleft);
-        if (pright.type != STRING_TYPE)
-            __qmljs_to_string(ctx, &pright, &pright);
-        String *string = __qmljs_string_concat(ctx, pleft.stringValue, pright.stringValue);
-        __qmljs_init_string(result, string);
-    } else {
-        double x = __qmljs_to_number(ctx, &pleft);
-        double y = __qmljs_to_number(ctx, &pright);
-        __qmljs_init_number(result, x + y);
-    }
+    if (left->type == NUMBER_TYPE == right->type == NUMBER_TYPE)
+        __qmljs_init_number(result, left->numberValue + right->numberValue);
+    else
+        __qmljs_add_helper(ctx, result, left, right);
 }
 
 inline void __qmljs_sub(Context *ctx, Value *result, const Value *left, const Value *right)

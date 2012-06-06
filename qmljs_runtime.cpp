@@ -414,6 +414,25 @@ void __qmljs_delete(Context *ctx, Value *result, const Value *value)
     assert(!"TODO");
 }
 
+void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Value *right)
+{
+    Value pleft, pright;
+    __qmljs_to_primitive(ctx, &pleft, left, PREFERREDTYPE_HINT);
+    __qmljs_to_primitive(ctx, &pright, right, PREFERREDTYPE_HINT);
+    if (pleft.type == STRING_TYPE || pright.type == STRING_TYPE) {
+        if (pleft.type != STRING_TYPE)
+            __qmljs_to_string(ctx, &pleft, &pleft);
+        if (pright.type != STRING_TYPE)
+            __qmljs_to_string(ctx, &pright, &pright);
+        String *string = __qmljs_string_concat(ctx, pleft.stringValue, pright.stringValue);
+        __qmljs_init_string(result, string);
+    } else {
+        double x = __qmljs_to_number(ctx, &pleft);
+        double y = __qmljs_to_number(ctx, &pright);
+        __qmljs_init_number(result, x + y);
+    }
+}
+
 void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Value *right)
 {
     if (FunctionObject *function = right->asFunctionObject()) {
