@@ -12,7 +12,7 @@ for (var i = 0; i < 10000; i = i + 1)
 print("done in", new Date - d1)
 
 var s = "some cool stuff"
-for (var i = 0; i < 15; ++i) {
+for (var i = 0; i < 15; i = i + 1) {
     print(s[i])
 }
 
