@@ -18,6 +18,16 @@ Rectangle {
         contentWidth: 300
         contentHeight: 300
 
+        rebound: setRebound ? boundsTransition : null
+        Transition {
+            id: boundsTransition
+            objectName: "rebound"
+            NumberAnimation {
+                properties: "x,y"
+                easing.type: Easing.OutElastic
+            }
+        }
+
         Rectangle {
             width: flick.contentWidth
             height: flick.contentHeight

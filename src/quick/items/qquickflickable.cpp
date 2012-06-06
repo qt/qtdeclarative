@@ -45,6 +45,7 @@
 #include "qquickcanvas_p.h"
 #include "qquickevents_p_p.h"
 
+#include <QtQuick/private/qquicktransition_p.h>
 #include <private/qqmlglobal_p.h>
 
 #include <QtQml/qqmlinfo.h>
@@ -185,6 +186,78 @@ void QQuickFlickableVisibleArea::updateVisible()
 }
 
 
+class QQuickFlickableReboundTransition : public QQuickTransitionManager
+{
+public:
+    QQuickFlickableReboundTransition(QQuickFlickable *f, const QString &name)
+        : flickable(f), axisData(0), propName(name), active(false)
+    {
+    }
+
+    ~QQuickFlickableReboundTransition()
+    {
+        flickable = 0;
+    }
+
+    bool startTransition(QQuickFlickablePrivate::AxisData *data, qreal toPos) {
+        QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(flickable);
+        if (!fp->rebound || !fp->rebound->enabled())
+            return false;
+        active = true;
+        axisData = data;
+        axisData->transitionTo = toPos;
+        axisData->transitionToSet = true;
+
+        actions.clear();
+        actions << QQuickAction(fp->contentItem, propName, toPos);
+        QQuickTransitionManager::transition(actions, fp->rebound, fp->contentItem);
+        return true;
+    }
+
+    bool isActive() const {
+        return active;
+    }
+
+    void stopTransition() {
+        if (!flickable || !isRunning())
+            return;
+        QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(flickable);
+        if (axisData == &fp->hData)
+            axisData->move.setValue(-flickable->contentX());
+        else
+            axisData->move.setValue(-flickable->contentY());
+        cancel();
+        active = false;
+    }
+
+protected:
+    virtual void finished() {
+        if (!flickable)
+            return;
+        axisData->move.setValue(axisData->transitionTo);
+        QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(flickable);
+        active = false;
+
+        if (!fp->hData.transitionToBounds->isActive()
+                && !fp->vData.transitionToBounds->isActive()) {
+            flickable->movementEnding();
+        }
+    }
+
+private:
+    QQuickStateOperation::ActionList actions;
+    QQuickFlickable *flickable;
+    QQuickFlickablePrivate::AxisData *axisData;
+    QString propName;
+    bool active;
+};
+
+QQuickFlickablePrivate::AxisData::~AxisData()
+{
+    delete transitionToBounds;
+}
+
+
 QQuickFlickablePrivate::QQuickFlickablePrivate()
   : contentItem(new QQuickItem)
     , hData(this, &QQuickFlickablePrivate::setViewportX)
@@ -200,6 +273,7 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , flickBoost(1.0), fixupMode(Normal), vTime(0), visibleArea(0)
     , flickableDirection(QQuickFlickable::AutoFlickDirection)
     , boundsBehavior(QQuickFlickable::DragAndOvershootBounds)
+    , rebound(0)
 {
 }
 
@@ -209,7 +283,7 @@ void QQuickFlickablePrivate::init()
     QQml_setParent_noEvent(contentItem, q);
     contentItem->setParentItem(q);
     qmlobject_connect(&timeline, QQuickTimeLine, SIGNAL(completed()),
-                      q, QQuickFlickable, SLOT(movementEnding()))
+                      q, QQuickFlickable, SLOT(timelineCompleted()))
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFiltersChildMouseEvents(true);
     QQuickItemPrivate *viewportPrivate = QQuickItemPrivate::get(contentItem);
@@ -312,7 +386,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         dist = -target + data.move.value();
         accel = v2 / (2.0f * qAbs(dist));
 
-        timeline.reset(data.move);
+        resetTimeline(data);
         if (boundsBehavior == QQuickFlickable::DragAndOvershootBounds)
             timeline.accel(data.move, v, accel);
         else
@@ -325,7 +399,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
             return !vData.flicking && q->yflick();
         return false;
     } else {
-        timeline.reset(data.move);
+        resetTimeline(data);
         fixup(data, minExtent, maxExtent);
         return false;
     }
@@ -353,51 +427,62 @@ void QQuickFlickablePrivate::fixupY()
     fixup(vData, q->minYExtent(), q->maxYExtent());
 }
 
+void QQuickFlickablePrivate::adjustContentPos(AxisData &data, qreal toPos)
+{
+    Q_Q(QQuickFlickable);
+    switch (fixupMode) {
+    case Immediate:
+        timeline.set(data.move, toPos);
+        break;
+    case ExtentChanged:
+        // The target has changed. Don't start from the beginning; just complete the
+        // second half of the animation using the new extent.
+        timeline.move(data.move, toPos, QEasingCurve(QEasingCurve::OutExpo), 3*fixupDuration/4);
+        data.fixingUp = true;
+        break;
+    default: {
+            if (data.transitionToBounds && data.transitionToBounds->startTransition(&data, toPos)) {
+                q->movementStarting();
+                data.fixingUp = true;
+            } else {
+                qreal dist = toPos - data.move;
+                timeline.move(data.move, toPos - dist/2, QEasingCurve(QEasingCurve::InQuad), fixupDuration/4);
+                timeline.move(data.move, toPos, QEasingCurve(QEasingCurve::OutExpo), 3*fixupDuration/4);
+                data.fixingUp = true;
+            }
+        }
+    }
+}
+
+void QQuickFlickablePrivate::resetTimeline(AxisData &data)
+{
+    timeline.reset(data.move);
+    if (data.transitionToBounds)
+        data.transitionToBounds->stopTransition();
+}
+
+void QQuickFlickablePrivate::clearTimeline()
+{
+    timeline.clear();
+    if (hData.transitionToBounds)
+        hData.transitionToBounds->stopTransition();
+    if (vData.transitionToBounds)
+        vData.transitionToBounds->stopTransition();
+}
+
 void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 {
     if (data.move.value() > minExtent || maxExtent > minExtent) {
-        timeline.reset(data.move);
+        resetTimeline(data);
         if (data.move.value() != minExtent) {
-            switch (fixupMode) {
-            case Immediate:
-                timeline.set(data.move, minExtent);
-                break;
-            case ExtentChanged:
-                // The target has changed. Don't start from the beginning; just complete the
-                // second half of the animation using the new extent.
-                timeline.move(data.move, minExtent, QEasingCurve(QEasingCurve::OutExpo), 3*fixupDuration/4);
-                data.fixingUp = true;
-                break;
-            default: {
-                    qreal dist = minExtent - data.move;
-                    timeline.move(data.move, minExtent - dist/2, QEasingCurve(QEasingCurve::InQuad), fixupDuration/4);
-                    timeline.move(data.move, minExtent, QEasingCurve(QEasingCurve::OutExpo), 3*fixupDuration/4);
-                    data.fixingUp = true;
-                }
-            }
+            adjustContentPos(data, minExtent);
         }
     } else if (data.move.value() < maxExtent) {
-        timeline.reset(data.move);
-        switch (fixupMode) {
-        case Immediate:
-            timeline.set(data.move, maxExtent);
-            break;
-        case ExtentChanged:
-            // The target has changed. Don't start from the beginning; just complete the
-            // second half of the animation using the new extent.
-            timeline.move(data.move, maxExtent, QEasingCurve(QEasingCurve::OutExpo), 3*fixupDuration/4);
-            data.fixingUp = true;
-            break;
-        default: {
-                qreal dist = maxExtent - data.move;
-                timeline.move(data.move, maxExtent - dist/2, QEasingCurve(QEasingCurve::InQuad), fixupDuration/4);
-                timeline.move(data.move, maxExtent, QEasingCurve(QEasingCurve::OutExpo), 3*fixupDuration/4);
-                data.fixingUp = true;
-            }
-        }
+        resetTimeline(data);
+        adjustContentPos(data, maxExtent);
     } else if (qRound(data.move.value()) != data.move.value()) {
         // We could animate, but since it is less than 0.5 pixel it's probably not worthwhile.
-        timeline.reset(data.move);
+        resetTimeline(data);
         qreal val = data.move.value();
         if (qAbs(qRound(val) - val) < 0.25) // round small differences
             val = qRound(val);
@@ -632,7 +717,7 @@ void QQuickFlickable::setContentX(qreal pos)
 {
     Q_D(QQuickFlickable);
     d->hData.explicitValue = true;
-    d->timeline.reset(d->hData.move);
+    d->resetTimeline(d->hData);
     d->vTime = d->timeline.time();
     movementEnding(true, false);
     if (-pos != d->hData.move.value())
@@ -649,7 +734,7 @@ void QQuickFlickable::setContentY(qreal pos)
 {
     Q_D(QQuickFlickable);
     d->vData.explicitValue = true;
-    d->timeline.reset(d->vData.move);
+    d->resetTimeline(d->vData);
     d->vTime = d->timeline.time();
     movementEnding(false, true);
     if (-pos != d->vData.move.value())
@@ -681,7 +766,7 @@ void QQuickFlickable::setInteractive(bool interactive)
     if (interactive != d->interactive) {
         d->interactive = interactive;
         if (!interactive && (d->hData.flicking || d->vData.flicking)) {
-            d->timeline.clear();
+            d->clearTimeline();
             d->vTime = d->timeline.time();
             d->hData.flicking = false;
             d->vData.flicking = false;
@@ -865,10 +950,15 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     }
     q->setKeepMouseGrab(stealMouse);
     pressed = true;
+    if (hData.transitionToBounds)
+        hData.transitionToBounds->stopTransition();
+    if (vData.transitionToBounds)
+        vData.transitionToBounds->stopTransition();
     if (!hData.fixingUp)
-        timeline.reset(hData.move);
+        resetTimeline(hData);
     if (!vData.fixingUp)
-        timeline.reset(vData.move);
+        resetTimeline(vData);
+
     hData.reset();
     vData.reset();
     hData.dragMinBound = q->minXExtent();
@@ -906,6 +996,9 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     bool stealY = stealMouse;
     bool stealX = stealMouse;
 
+    bool prevHMoved = hMoved;
+    bool prevVMoved = vMoved;
+
     qint64 elapsedSincePress = computeCurrentTime(event) - lastPressTime;
     if (q->yflick()) {
         qreal dy = event->localPos().y() - pressPos.y();
@@ -932,7 +1025,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 }
             }
             if (!rejectY && stealMouse && dy != 0.0) {
-                timeline.clear();
+                clearTimeline();
                 vData.move.setValue(newY);
                 vMoved = true;
             }
@@ -966,7 +1059,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 }
             }
             if (!rejectX && stealMouse && dx != 0.0) {
-                timeline.clear();
+                clearTimeline();
                 hData.move.setValue(newX);
                 hMoved = true;
             }
@@ -989,7 +1082,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         hData.velocity = 0;
     }
 
-    if (hMoved || vMoved) {
+    if ((hMoved && !prevHMoved) || (vMoved && !prevVMoved)) {
         draggingStarting();
         q->movementStarting();
     }
@@ -1097,7 +1190,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
     }
 
     flickingStarted(flickedH, flickedV);
-    if (!timeline.isActive())
+    if (!isViewMoving())
         q->movementEnding();
 }
 
@@ -1336,7 +1429,7 @@ void QQuickFlickable::viewportMoved()
                 : maxYExtent() - d->vData.move.value();
         d->vData.inOvershoot = true;
         qreal maxDistance = d->overShootDistance(height()) - overBound;
-        d->timeline.reset(d->vData.move);
+        d->resetTimeline(d->vData);
         if (maxDistance > 0)
             d->timeline.accel(d->vData.move, -d->vData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
         d->timeline.callback(QQuickTimeLineCallback(&d->vData.move, d->fixupY_callback, d));
@@ -1350,7 +1443,7 @@ void QQuickFlickable::viewportMoved()
                 : maxXExtent() - d->hData.move.value();
         d->hData.inOvershoot = true;
         qreal maxDistance = d->overShootDistance(width()) - overBound;
-        d->timeline.reset(d->hData.move);
+        d->resetTimeline(d->hData);
         if (maxDistance > 0)
             d->timeline.accel(d->hData.move, -d->hData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
         d->timeline.callback(QQuickTimeLineCallback(&d->hData.move, d->fixupX_callback, d));
@@ -1444,8 +1537,8 @@ void QQuickFlickablePrivate::flickingStarted(bool flickingH, bool flickingV)
 void QQuickFlickable::cancelFlick()
 {
     Q_D(QQuickFlickable);
-    d->timeline.reset(d->hData.move);
-    d->timeline.reset(d->vData.move);
+    d->resetTimeline(d->hData);
+    d->resetTimeline(d->vData);
     movementEnding();
 }
 
@@ -1524,6 +1617,67 @@ void QQuickFlickable::setBoundsBehavior(BoundsBehavior b)
         return;
     d->boundsBehavior = b;
     emit boundsBehaviorChanged();
+}
+
+/*!
+    \qmlproperty Transition QtQuick2::Flickable::rebound
+
+    This holds the transition to be applied to the content view when
+    it snaps back to the bounds of the flickable. The transition is
+    triggered when the view is flicked or dragged past the edge of the
+    content area, or when returnToBounds() is called.
+
+    \qml
+    import QtQuick 2.0
+
+    Flickable {
+        width: 150; height: 150
+        contentWidth: 300; contentHeight: 300
+
+        rebound: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: 1000
+                easing.type: Easing.OutBounce
+            }
+        }
+
+        Rectangle {
+            width: 300; height: 300
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "lightsteelblue" }
+                GradientStop { position: 1.0; color: "blue" }
+            }
+        }
+    }
+    \endqml
+
+    When the above view is flicked beyond its bounds, it will return to its
+    bounds using the transition specified:
+
+    \image flickable-rebound.gif
+
+    If this property is not set, a default animation is applied.
+  */
+QQuickTransition *QQuickFlickable::rebound() const
+{
+    Q_D(const QQuickFlickable);
+    return d->rebound;
+}
+
+void QQuickFlickable::setRebound(QQuickTransition *transition)
+{
+    Q_D(QQuickFlickable);
+    if (transition) {
+        if (!d->hData.transitionToBounds)
+            d->hData.transitionToBounds = new QQuickFlickableReboundTransition(this, QLatin1String("x"));
+        if (!d->vData.transitionToBounds)
+            d->vData.transitionToBounds = new QQuickFlickableReboundTransition(this, QLatin1String("y"));
+    }
+    if (d->rebound != transition) {
+        d->rebound = transition;
+        emit reboundChanged();
+    }
 }
 
 /*!
@@ -1818,7 +1972,7 @@ void QQuickFlickable::mouseUngrabEvent()
         setKeepMouseGrab(false);
         d->fixupX();
         d->fixupY();
-        if (!d->timeline.isActive())
+        if (!d->isViewMoving())
             movementEnding();
     }
 }
@@ -2051,6 +2205,16 @@ void QQuickFlickablePrivate::draggingEnding()
     }
 }
 
+bool QQuickFlickablePrivate::isViewMoving() const
+{
+    if (timeline.isActive()
+            || (hData.transitionToBounds && hData.transitionToBounds->isActive())
+            || (vData.transitionToBounds && vData.transitionToBounds->isActive()) ) {
+        return true;
+    }
+    return false;
+}
+
 /*!
     \qmlproperty int QtQuick2::Flickable::pressDelay
 
@@ -2108,6 +2272,16 @@ bool QQuickFlickable::isMovingVertically() const
     return d->vData.moving;
 }
 
+void QQuickFlickable::timelineCompleted()
+{
+    Q_D(QQuickFlickable);
+    if ( (d->hData.transitionToBounds && d->hData.transitionToBounds->isActive())
+         || (d->vData.transitionToBounds && d->vData.transitionToBounds->isActive()) ) {
+        return;
+    }
+    movementEnding();
+}
+
 void QQuickFlickable::movementStarting()
 {
     Q_D(QQuickFlickable);
@@ -2120,6 +2294,7 @@ void QQuickFlickable::movementStarting()
         d->vData.moving = true;
         emit movingVerticallyChanged();
     }
+
     if (!wasMoving && (d->hData.moving || d->vData.moving)) {
         emit movingChanged();
         emit movementStarted();

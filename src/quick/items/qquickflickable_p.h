@@ -73,6 +73,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(qreal verticalVelocity READ verticalVelocity NOTIFY verticalVelocityChanged)
 
     Q_PROPERTY(BoundsBehavior boundsBehavior READ boundsBehavior WRITE setBoundsBehavior NOTIFY boundsBehaviorChanged)
+    Q_PROPERTY(QQuickTransition *rebound READ rebound WRITE setRebound NOTIFY reboundChanged)
     Q_PROPERTY(qreal maximumFlickVelocity READ maximumFlickVelocity WRITE setMaximumFlickVelocity NOTIFY maximumFlickVelocityChanged)
     Q_PROPERTY(qreal flickDeceleration READ flickDeceleration WRITE setFlickDeceleration NOTIFY flickDecelerationChanged)
     Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged)
@@ -115,6 +116,9 @@ public:
     enum BoundsBehavior { StopAtBounds, DragOverBounds, DragAndOvershootBounds };
     BoundsBehavior boundsBehavior() const;
     void setBoundsBehavior(BoundsBehavior);
+
+    QQuickTransition *rebound() const;
+    void setRebound(QQuickTransition *transition);
 
     qreal contentWidth() const;
     void setContentWidth(qreal);
@@ -213,6 +217,7 @@ Q_SIGNALS:
     void flickableDirectionChanged();
     void interactiveChanged();
     void boundsBehaviorChanged();
+    void reboundChanged();
     void maximumFlickVelocityChanged();
     void flickDecelerationChanged();
     void pressDelayChanged();
@@ -238,6 +243,7 @@ protected Q_SLOTS:
     void movementStarting();
     void movementEnding();
     void movementEnding(bool hMovementEnding, bool vMovementEnding);
+    void timelineCompleted();
 
 protected:
     virtual qreal minXExtent() const;
@@ -263,6 +269,7 @@ private:
     Q_DISABLE_COPY(QQuickFlickable)
     Q_DECLARE_PRIVATE(QQuickFlickable)
     friend class QQuickFlickableVisibleArea;
+    friend class QQuickFlickableReboundTransition;
 };
 
 QT_END_NAMESPACE

@@ -63,6 +63,7 @@
 
 #include <private/qquicktimeline_p_p.h>
 #include <private/qquickanimation_p_p.h>
+#include <private/qquicktransitionmanager_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,6 +71,9 @@ QT_BEGIN_NAMESPACE
 const qreal MinimumFlickVelocity = 75.0;
 
 class QQuickFlickableVisibleArea;
+class QQuickTransition;
+class QQuickFlickableReboundTransition;
+
 class Q_AUTOTEST_EXPORT QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickFlickable)
@@ -95,13 +99,19 @@ public:
 
     struct AxisData {
         AxisData(QQuickFlickablePrivate *fp, void (QQuickFlickablePrivate::*func)(qreal))
-            : move(fp, func), viewSize(-1), startMargin(0), endMargin(0)
+            : move(fp, func)
+            , transitionToBounds(0)
+            , viewSize(-1), startMargin(0), endMargin(0)
+            , transitionTo(0)
             , continuousFlickVelocity(0)
             , smoothVelocity(fp), atEnd(false), atBeginning(true)
+            , transitionToSet(false)
             , fixingUp(false), inOvershoot(false), moving(false), flicking(false)
             , dragging(false), extentsChanged(false)
             , explicitValue(false), minExtentDirty(true), maxExtentDirty(true)
         {}
+
+        ~AxisData();
 
         void reset() {
             velocityBuffer.clear();
@@ -116,10 +126,16 @@ public:
             extentsChanged = true;
         }
 
+        void resetTransitionTo() {
+            transitionTo = 0;
+            transitionToSet = false;
+        }
+
         void addVelocitySample(qreal v, qreal maxVelocity);
         void updateVelocity();
 
         QQuickTimeLineValueProxy<QQuickFlickablePrivate> move;
+        QQuickFlickableReboundTransition *transitionToBounds;
         qreal viewSize;
         qreal pressPos;
         qreal dragStartOffset;
@@ -129,11 +145,13 @@ public:
         qreal flickTarget;
         qreal startMargin;
         qreal endMargin;
+        qreal transitionTo;
         qreal continuousFlickVelocity;
         QQuickFlickablePrivate::Velocity smoothVelocity;
         QPODVector<qreal,10> velocityBuffer;
         bool atEnd : 1;
         bool atBeginning : 1;
+        bool transitionToSet : 1;
         bool fixingUp : 1;
         bool inOvershoot : 1;
         bool moving : 1;
@@ -154,6 +172,9 @@ public:
     void fixupX();
     void fixupY();
     virtual void fixup(AxisData &data, qreal minExtent, qreal maxExtent);
+    void adjustContentPos(AxisData &data, qreal toPos);
+    void resetTimeline(AxisData &data);
+    void clearTimeline();
 
     void updateBeginningEnd();
 
@@ -170,6 +191,8 @@ public:
 
     void draggingStarting();
     void draggingEnding();
+
+    bool isViewMoving() const;
 
 public:
     QQuickItem *contentItem;
@@ -214,6 +237,7 @@ public:
     QQuickFlickableVisibleArea *visibleArea;
     QQuickFlickable::FlickableDirection flickableDirection;
     QQuickFlickable::BoundsBehavior boundsBehavior;
+    QQuickTransition *rebound;
 
     void handleMousePressEvent(QMouseEvent *);
     void handleMouseMoveEvent(QMouseEvent *);

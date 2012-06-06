@@ -45,6 +45,7 @@
 #include <QtQuick/qquickview.h>
 #include <private/qquickflickable_p.h>
 #include <private/qquickflickable_p_p.h>
+#include <private/qquicktransition_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <math.h>
 #include "../../shared/util.h"
@@ -65,6 +66,7 @@ private slots:
     void verticalViewportSize();
     void properties();
     void boundsBehavior();
+    void rebound();
     void maximumFlickVelocity();
     void flickDeceleration();
     void pressDelay();
@@ -72,6 +74,7 @@ private slots:
     void flickableDirection();
     void resizeContent();
     void returnToBounds();
+    void returnToBounds_data();
     void wheel();
     void movingAndFlicking();
     void movingAndFlicking_data();
@@ -82,7 +85,7 @@ private slots:
     void disabled();
     void flickVelocity();
     void margins();
-    void cancel();
+    void cancelOnMouseGrab();
 
 private:
     QQmlEngine engine;
@@ -193,6 +196,108 @@ void tst_qquickflickable::boundsBehavior()
     QCOMPARE(spy.count(),3);
     flickable->setBoundsBehavior(QQuickFlickable::StopAtBounds);
     QCOMPARE(spy.count(),3);
+}
+
+void tst_qquickflickable::rebound()
+{
+#ifdef Q_OS_MAC
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
+#endif
+
+    QQuickView *canvas = new QQuickView;
+    canvas->setSource(testFileUrl("rebound.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(canvas->rootObject());
+    QVERIFY(flickable != 0);
+
+    QQuickTransition *rebound = canvas->rootObject()->findChild<QQuickTransition*>("rebound");
+    QVERIFY(rebound);
+    QSignalSpy reboundSpy(rebound, SIGNAL(runningChanged()));
+
+    QSignalSpy movementStartedSpy(flickable, SIGNAL(movementStarted()));
+    QSignalSpy movementEndedSpy(flickable, SIGNAL(movementEnded()));
+    QSignalSpy vMoveSpy(flickable, SIGNAL(movingVerticallyChanged()));
+    QSignalSpy hMoveSpy(flickable, SIGNAL(movingHorizontallyChanged()));
+
+    // flick and test the transition is run
+    flick(canvas, QPoint(20,20), QPoint(120,120), 200);
+
+    QTRY_COMPARE(canvas->rootObject()->property("transitionsStarted").toInt(), 2);
+    QCOMPARE(hMoveSpy.count(), 1);
+    QCOMPARE(vMoveSpy.count(), 1);
+    QCOMPARE(movementStartedSpy.count(), 1);
+    QCOMPARE(movementEndedSpy.count(), 0);
+    QVERIFY(rebound->running());
+
+    QTRY_VERIFY(!flickable->isMoving());
+    QCOMPARE(flickable->contentX(), 0.0);
+    QCOMPARE(flickable->contentY(), 0.0);
+
+    QCOMPARE(hMoveSpy.count(), 2);
+    QCOMPARE(vMoveSpy.count(), 2);
+    QCOMPARE(movementStartedSpy.count(), 1);
+    QCOMPARE(movementEndedSpy.count(), 1);
+    QCOMPARE(canvas->rootObject()->property("transitionsStarted").toInt(), 2);
+    QVERIFY(!rebound->running());
+    QCOMPARE(reboundSpy.count(), 2);
+
+    hMoveSpy.clear();
+    vMoveSpy.clear();
+    movementStartedSpy.clear();
+    movementEndedSpy.clear();
+    canvas->rootObject()->setProperty("transitionsStarted", 0);
+    canvas->rootObject()->setProperty("transitionsFinished", 0);
+
+    // flick and trigger the transition multiple times
+    // (moving signals are emitted as soon as the first transition starts)
+    flick(canvas, QPoint(20,20), QPoint(120,120), 200);     // both x and y will bounce back
+    flick(canvas, QPoint(20,120), QPoint(120,20), 200);     // only x will bounce back
+
+    QVERIFY(flickable->isMoving());
+    QVERIFY(canvas->rootObject()->property("transitionsStarted").toInt() >= 1);
+    QCOMPARE(hMoveSpy.count(), 1);
+    QCOMPARE(vMoveSpy.count(), 1);
+    QCOMPARE(movementStartedSpy.count(), 1);
+
+    QTRY_VERIFY(!flickable->isMoving());
+    QCOMPARE(flickable->contentX(), 0.0);
+
+    // moving started/stopped signals should only have been emitted once,
+    // and when they are, all transitions should have finished
+    QCOMPARE(hMoveSpy.count(), 2);
+    QCOMPARE(vMoveSpy.count(), 2);
+    QCOMPARE(movementStartedSpy.count(), 1);
+    QCOMPARE(movementEndedSpy.count(), 1);
+
+    hMoveSpy.clear();
+    vMoveSpy.clear();
+    movementStartedSpy.clear();
+    movementEndedSpy.clear();
+    canvas->rootObject()->setProperty("transitionsStarted", 0);
+    canvas->rootObject()->setProperty("transitionsFinished", 0);
+
+    // disable and the default transition should run
+    // (i.e. moving but transition->running = false)
+    canvas->rootObject()->setProperty("transitionEnabled", false);
+
+    flick(canvas, QPoint(20,20), QPoint(120,120), 200);
+    QCOMPARE(canvas->rootObject()->property("transitionsStarted").toInt(), 0);
+    QCOMPARE(hMoveSpy.count(), 1);
+    QCOMPARE(vMoveSpy.count(), 1);
+    QCOMPARE(movementStartedSpy.count(), 1);
+    QCOMPARE(movementEndedSpy.count(), 0);
+
+    QTRY_VERIFY(!flickable->isMoving());
+    QCOMPARE(hMoveSpy.count(), 2);
+    QCOMPARE(vMoveSpy.count(), 2);
+    QCOMPARE(movementStartedSpy.count(), 1);
+    QCOMPARE(movementEndedSpy.count(), 1);
+    QCOMPARE(canvas->rootObject()->property("transitionsStarted").toInt(), 0);
+
+    delete canvas;
 }
 
 void tst_qquickflickable::maximumFlickVelocity()
@@ -325,13 +430,19 @@ void tst_qquickflickable::resizeContent()
     delete root;
 }
 
-// QtQuick 1.1
 void tst_qquickflickable::returnToBounds()
 {
-    QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("resize.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
-    QQuickFlickable *obj = findItem<QQuickFlickable>(root, "flick");
+    QFETCH(bool, setRebound);
+
+    QQuickView *canvas = new QQuickView;
+    canvas->rootContext()->setContextProperty("setRebound", setRebound);
+    canvas->setSource(testFileUrl("resize.qml"));
+    QVERIFY(canvas->rootObject() != 0);
+    QQuickFlickable *obj = findItem<QQuickFlickable>(canvas->rootObject(), "flick");
+
+    QQuickTransition *rebound = canvas->rootObject()->findChild<QQuickTransition*>("rebound");
+    QVERIFY(rebound);
+    QSignalSpy reboundSpy(rebound, SIGNAL(runningChanged()));
 
     QVERIFY(obj != 0);
     QCOMPARE(obj->contentX(), 0.);
@@ -344,12 +455,26 @@ void tst_qquickflickable::returnToBounds()
     QTRY_COMPARE(obj->contentX(), 100.);
     QTRY_COMPARE(obj->contentY(), 400.);
 
-    QMetaObject::invokeMethod(root, "returnToBounds");
+    QMetaObject::invokeMethod(canvas->rootObject(), "returnToBounds");
+
+    if (setRebound)
+        QTRY_VERIFY(rebound->running());
 
     QTRY_COMPARE(obj->contentX(), 0.);
     QTRY_COMPARE(obj->contentY(), 0.);
 
-    delete root;
+    QVERIFY(!rebound->running());
+    QCOMPARE(reboundSpy.count(), setRebound ? 2 : 0);
+
+    delete canvas;
+}
+
+void tst_qquickflickable::returnToBounds_data()
+{
+    QTest::addColumn<bool>("setRebound");
+
+    QTest::newRow("with bounds transition") << true;
+    QTest::newRow("with bounds transition") << false;
 }
 
 void tst_qquickflickable::wheel()
@@ -576,10 +701,6 @@ void tst_qquickflickable::movingAndDragging_data()
 
 void tst_qquickflickable::movingAndDragging()
 {
-#ifdef Q_OS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
-#endif
-
     QFETCH(bool, verticalEnabled);
     QFETCH(bool, horizontalEnabled);
     QFETCH(QPoint, moveByWithoutSnapBack);
@@ -757,7 +878,6 @@ void tst_qquickflickable::flickOnRelease()
 #ifdef Q_OS_MAC
     QSKIP("Producing flicks on Mac CI impossible due to timing problems");
 #endif
-
     QQuickView *canvas = new QQuickView;
     canvas->setSource(testFileUrl("flickable03.qml"));
     canvas->show();
@@ -976,7 +1096,7 @@ void tst_qquickflickable::margins()
     delete root;
 }
 
-void tst_qquickflickable::cancel()
+void tst_qquickflickable::cancelOnMouseGrab()
 {
     QQuickView *canvas = new QQuickView;
     canvas->setSource(testFileUrl("cancel.qml"));
