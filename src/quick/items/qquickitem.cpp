@@ -3028,6 +3028,8 @@ void QQuickItem::setClip(bool c)
   This function is called to handle this item's changes in
   geometry from \a oldGeometry to \a newGeometry. If the two
   geometries are the same, it doesn't do anything.
+
+  Derived classes must call the base class method within their implementation.
  */
 void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
@@ -3641,6 +3643,11 @@ QQmlListProperty<QQuickTransform> QQuickItem::transform()
                                                      QQuickItemPrivate::transform_clear);
 }
 
+/*!
+  \reimp
+  Derived classes should call the base class method before adding their own action to
+  perform at classBegin.
+*/
 void QQuickItem::classBegin()
 {
     Q_D(QQuickItem);
@@ -3653,6 +3660,11 @@ void QQuickItem::classBegin()
         d->extra->layer->classBegin();
 }
 
+/*!
+  \reimp
+  Derived classes should call the base class method before adding their own actions to
+  perform at componentComplete.
+*/
 void QQuickItem::componentComplete()
 {
     Q_D(QQuickItem);
