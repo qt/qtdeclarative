@@ -47,6 +47,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qscopedpointer.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -138,6 +139,8 @@ public Q_SLOTS:
     bool isBenchmarkDone() const;
     void nextBenchmark();
     void stopBenchmark();
+
+    QObject *grabImage(QQuickItem *item);
 
 public:
     // Helper functions for the C++ main() shell.

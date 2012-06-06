@@ -374,6 +374,31 @@
 */
 
 /*!
+    \qmlmethod object TestCase::grabImage(item)
+
+    Returns a snapshot image object of the given \a item.
+
+    The returned image object has the following methods:
+    \list
+    \li red(x, y) Returns the red channel value of the pixel at \a x, \a y position
+    \li green(x, y) Returns the green channel value of the pixel at \a x, \a y position
+    \li blue(x, y) Returns the blue channel value of the pixel at \a x, \a y position
+    \li alpha(x, y) Returns the alpha channel value of the pixel at \a x, \a y position
+    \li pixel(x, y) Returns the color value of the pixel at \a x, \a y position
+    For example:
+
+    \code
+    var image = grabImage(rect);
+    compare(image.red(10, 10), 255);
+    compare(image.pixel(20, 20), Qt.rgba(255, 0, 0, 255);
+    \endcode
+
+    \endlist
+
+    \sa
+*/
+
+/*!
     \qmlmethod TestCase::skip(message = "")
 
     Skips the current test case and prints the optional \a message.

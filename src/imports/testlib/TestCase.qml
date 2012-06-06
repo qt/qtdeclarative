@@ -284,6 +284,10 @@ Item {
         }
     }
 
+    function grabImage(item) {
+        return qtest_results.grabImage(item);
+    }
+
     function tryCompare(obj, prop, value, timeout) {
         if (!timeout)
             timeout = 5000

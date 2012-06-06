@@ -55,12 +55,64 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/QUrl>
 #include <QtCore/QDir>
+#include <QtQuick/qquickcanvas.h>
 
 QT_BEGIN_NAMESPACE
 
 static const char *globalProgramName = 0;
 static bool loggingStarted = false;
 static QBenchmarkGlobalData globalBenchmarkData;
+
+class Q_QUICK_TEST_EXPORT QuickTestImageObject : public QObject
+{
+    Q_OBJECT
+public:
+    QuickTestImageObject(const QImage& img, QObject *parent = 0)
+        : QObject(parent)
+        , m_image(img)
+    {
+    }
+
+    ~QuickTestImageObject() {}
+
+public Q_SLOTS:
+    int red(int x, int y) const
+    {
+        return pixel(x, y).value<QColor>().red();
+    }
+
+    int green(int x, int y) const
+    {
+        return pixel(x, y).value<QColor>().green();
+    }
+
+    int blue(int x, int y) const
+    {
+        return pixel(x, y).value<QColor>().blue();
+    }
+
+    int alpha(int x, int y) const
+    {
+        return pixel(x, y).value<QColor>().alpha();
+    }
+
+    QVariant pixel(int x, int y) const
+    {
+        if (m_image.isNull()
+         || x >= m_image.width()
+         || y >= m_image.height()
+         || x < 0
+         || y < 0
+         || x * y >= m_image.width() * m_image.height())
+            return QVariant();
+
+        const QRgb* pixel = reinterpret_cast<const QRgb*>(m_image.constScanLine(y));
+        pixel += x;
+        return QColor::fromRgba(*pixel);
+    }
+private:
+    QImage m_image;
+};
 
 class QuickTestResultPrivate
 {
@@ -534,6 +586,18 @@ void QuickTestResult::stopBenchmark()
     d->benchmarkIter = 0;
 }
 
+QObject *QuickTestResult::grabImage(QQuickItem *item)
+{
+    Q_D(QuickTestResult);
+    if (item) {
+        QQuickCanvas *canvas = item->canvas();
+        QImage grabbed = canvas->grabFrameBuffer();
+        QRectF rf(item->x(), item->y(), item->width(), item->height());
+        rf = rf.intersected(QRectF(0, 0, grabbed.width(), grabbed.height()));
+        return new QuickTestImageObject(grabbed.copy(rf.toAlignedRect()));
+    }
+    return 0;
+}
 namespace QTest {
     void qtest_qParseArgs(int argc, char *argv[], bool qml);
 };
@@ -573,5 +637,7 @@ int QuickTestResult::exitCode()
     return qMin(QTestLog::failCount(), 127);
 #endif
 }
+
+#include "quicktestresult.moc"
 
 QT_END_NAMESPACE
