@@ -13,7 +13,7 @@
 using namespace QQmlJS;
 
 namespace {
-QTextStream qout(stdout, QIODevice::WriteOnly);
+QTextStream qerr(stderr, QIODevice::WriteOnly);
 }
 
 LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
@@ -249,6 +249,13 @@ void LLVMInstructionSelection::genMoveMember(IR::Move *s)
 
 void LLVMInstructionSelection::visitMove(IR::Move *s)
 {
+    if (s->op != IR::OpInvalid) {
+        s->dump(qerr, IR::Stmt::HIR);
+        qerr << endl;
+        Q_UNIMPLEMENTED();
+        return;
+    }
+
     if (s->target->asSubscript()) {
         genMoveSubscript(s);
     } else if (s->target->asMember()) {
@@ -263,8 +270,8 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
         llvm::Value *source = getLLVMValue(s->source);
         CreateStore(source, target);
     } else {
-        s->dump(qout, IR::Stmt::HIR);
-        qout << endl;
+        s->dump(qerr, IR::Stmt::HIR);
+        qerr << endl;
         Q_UNIMPLEMENTED();
     }
 }
