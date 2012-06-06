@@ -105,7 +105,7 @@ QmlDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRootObject(
 
 void tst_QQmlEngineDebugInspectorIntegration::init()
 {
-    const QString argument = "-qmljsdebugger=port:"STR_PORT",block";
+    const QString argument = "-qmljsdebugger=port:" STR_PORT ",block";
 
     m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
                                      + "/qmlscene");

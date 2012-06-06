@@ -208,9 +208,9 @@ bool tst_QV8ProfilerService::connect(bool block, const QString &testFile,
     QStringList arguments;
 
     if (block)
-        arguments << QString("-qmljsdebugger=port:"STR_PORT",block");
+        arguments << QString("-qmljsdebugger=port:" STR_PORT ",block");
     else
-        arguments << QString("-qmljsdebugger=port:"STR_PORT);
+        arguments << QString("-qmljsdebugger=port:" STR_PORT);
 
     arguments << QQmlDataTest::instance()->testFile(testFile);
 
