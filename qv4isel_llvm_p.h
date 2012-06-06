@@ -23,6 +23,7 @@ public:
     llvm::Value *getLLVMCondition(IR::Expr *expr);
     llvm::Value *getLLVMTemp(IR::Temp *temp);
     llvm::Value *getStringPtr(const QString &s);
+    llvm::Value *getIdentifier(const QString &s);
     void genUnop(llvm::Value *result, IR::Unop *e);
     void genBinop(llvm::Value *result, IR::Binop *e);
     llvm::AllocaInst *newLLVMTemp(llvm::Type *type, llvm::Value *size = 0);

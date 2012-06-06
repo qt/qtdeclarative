@@ -188,6 +188,14 @@ llvm::Value *LLVMInstructionSelection::getStringPtr(const QString &s)
     return value;
 }
 
+llvm::Value *LLVMInstructionSelection::getIdentifier(const QString &s)
+{
+    llvm::Value *str = getStringPtr(s);
+    llvm::Value *id = CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_identifier"),
+                                  _llvmFunction->arg_begin(), str);
+    return id;
+}
+
 void LLVMInstructionSelection::visitExp(IR::Exp *s)
 {
     getLLVMValue(s->expr);
@@ -378,9 +386,7 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
         func = _llvmModule->getFunction("__qmljs_llvm_call_value");
     } else if (IR::Name *n = e->base->asName()) {
         if (n->id) {
-            llvm::Value *str = getStringPtr(*n->id);
-            base = CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_identifier"),
-                               _llvmFunction->arg_begin(), str);
+            base = getIdentifier(*n->id);
             func = _llvmModule->getFunction("__qmljs_llvm_call_activation_property");
         }
     }
@@ -460,8 +466,16 @@ void LLVMInstructionSelection::visitSubscript(IR::Subscript *)
     Q_UNIMPLEMENTED();
 }
 
-void LLVMInstructionSelection::visitMember(IR::Member *)
+void LLVMInstructionSelection::visitMember(IR::Member *e)
 {
-    Q_UNIMPLEMENTED();
-}
+    IR::Temp *t = e->base->asTemp();
+    assert(t);
 
+    llvm::Value *result = newLLVMTemp(_valueTy);
+    llvm::Value *base = getLLVMTemp(t);
+    llvm::Value *name = getIdentifier(*e->name);
+
+    CreateCall4(_llvmModule->getFunction("__qmljs_llvm_get_property"),
+                _llvmFunction->arg_begin(), result, base, name);
+    _llvmValue = CreateLoad(result);
+}

@@ -170,4 +170,9 @@ void __qmljs_llvm_construct_activation_property(Context *context, Value *result,
     __qmljs_construct_activation_property(context, result, name, args, argc);
 }
 
+void __qmljs_llvm_get_property(Context *ctx, Value *result, Value *object, String *name)
+{
+    __qmljs_get_property(ctx, result, object, name);
+}
+
 } // extern "C"
