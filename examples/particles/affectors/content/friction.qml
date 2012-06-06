@@ -40,56 +40,73 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
-import "../exampleslauncher/content" as UI
 
-Rectangle {
+Item {
     width: 360
-    height: 540
-    ParticleSystem { id: particles }
-    ImageParticle {
-        system: particles
-        sprites: Sprite {
-            name: "snow"
-            source: "../images/snowflake.png"
-            frameCount: 51
-            frameDuration: 40
-            frameDurationVariation: 8
-        }
-    }
+    height: 600
 
-    Wander { 
-        id: wanderer
-        system: particles
+    Image {
+        source: "../../images/backgroundLeaves.jpg"
         anchors.fill: parent
-        xVariance: 360/(wanderer.affectedParameter+1);
-        pace: 100*(wanderer.affectedParameter+1);
+    }
+    ParticleSystem { id: sys }
+    Emitter {
+        system: sys
+        width: parent.width
+        emitRate: 4
+        lifeSpan: 14000
+        size: 80
+        speed: PointDirection { y: 160; yVariation: 80; xVariation: 20 }
     }
 
-    Emitter {
-        system: particles
-        emitRate: 20
-        lifeSpan: 7000
-        speed: PointDirection { y:80; yVariation: 40; }
-        acceleration: PointDirection { y: 4 }
-        size: 20
-        sizeVariation: 10
-        width: parent.width
+    ImageParticle {
+        anchors.fill: parent
+        id: particles
+        system: sys
+        sprites: [Sprite {
+                source: "../../images/realLeaf1.png"
+                frameCount: 1
+                frameDuration: 1
+                to: {"a":1, "b":1, "c":1, "d":1}
+            }, Sprite {
+                name: "a"
+                source: "../../images/realLeaf1.png"
+                frameCount: 1
+                frameDuration: 10000
+            },
+            Sprite {
+                name: "b"
+                source: "../../images/realLeaf2.png"
+                frameCount: 1
+                frameDuration: 10000
+            },
+            Sprite {
+                name: "c"
+                source: "../../images/realLeaf3.png"
+                frameCount: 1
+                frameDuration: 10000
+            },
+            Sprite {
+                name: "d"
+                source: "../../images/realLeaf4.png"
+                frameCount: 1
+                frameDuration: 10000
+            }
+        ]
+
+        width: 100
         height: 100
+        x: 20
+        y: 20
+        z:4
     }
-    Row {
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        UI.Button {
-            text:"dx/dt"
-            onClicked: wanderer.affectedParameter = Wander.Position;
-        }
-        UI.Button {
-            text:"dv/dt"
-            onClicked: wanderer.affectedParameter = Wander.Velocity;
-        }
-        UI.Button {
-            text:"da/dt"
-            onClicked: wanderer.affectedParameter = Wander.Acceleration;
-        }
+
+    //! [0]
+    Friction {
+        anchors.fill: parent
+        anchors.margins: -40
+        system: sys
+        factor: 0.4
     }
+    //! [0]
 }

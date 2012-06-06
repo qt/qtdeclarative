@@ -52,7 +52,7 @@ Item {
 
     ParticleSystem { id: sys }
     Image {
-        source: "../images/finalfrontier.png"
+        source: "../../images/finalfrontier.png"
         transformOrigin: Item.Center
         anchors.centerIn: parent
         smooth: true
@@ -67,7 +67,7 @@ Item {
     ImageParticle {
         system: sys
         groups: ["starfield"]
-        source: "../images/star.png"
+        source: "../../images/star.png"
         colorVariation: 0.3
         color: "white"
     }
@@ -104,37 +104,39 @@ Item {
         sprites:[Sprite {
                 id: spinState
                 name: "spinning"
-                source: "../images/meteor.png"
+                source: "../../images/meteor.png"
                 frameCount: 35
                 frameDuration: 40
                 randomStart: true
                 to: {"explode":0, "spinning":1}
             },Sprite {
                 name: "explode"
-                source: "../images/_explo.png"
+                source: "../../images/_explo.png"
                 frameCount: 22
                 frameDuration: 40
                 to: {"nullFrame":1}
             },Sprite {//Not sure if this is needed, but seemed easiest
                 name: "nullFrame"
-                source: "../images/nullRock.png"
+                source: "../../images/nullRock.png"
                 frameCount: 1
                 frameDuration: 1000
             }
         ]
     }
+    //! [0]
     SpriteGoal {
         groups: ["meteor"]
         system: sys
         goalState: "explode"
         jump: true
-        anchors.centerIn: holder//A bug in affectors currently isn't compensating for relative x,y. when that's fixed this can just anchors.fill: rocketShip
+        anchors.fill: rocketShip
         width: 60
         height: 60
     }
+    //! [0]
     Image {
         id: rocketShip
-        source: "../images/rocket.png"
+        source: "../../images/rocket.png"
         smooth: true
         anchors.centerIn: holder
         rotation: (circle.percent+0.25) * 360
@@ -170,7 +172,7 @@ Item {
         z:0 
         system: sys
         groups: ["exhaust"]
-        source: "../images/particle4.png"
+        source: "../../images/particle4.png"
 
         color: "orange"
         SequentialAnimation on color {

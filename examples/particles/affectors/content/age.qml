@@ -39,26 +39,61 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Particles 2.0
 
-Item {
-    id: container
+Rectangle {
+    id: root
+    width: 360
+    height: 600
+    color: "white"
 
-    property string text: "Button"
-    property string subText: ""
-    signal clicked
+    ParticleSystem { id: particles }
 
-    width: buttonLabel.width + 20; height: col.height + 12
-
-    MouseArea { id: mouseArea; anchors.fill: parent; onClicked: container.clicked() }
-
-    Column {
-        spacing: 2
-        id: col
-        Text {
-            id: buttonLabel; text: container.text; color: "black"; font.pixelSize: 24
+    ImageParticle {
+        system: particles
+        sprites: Sprite {
+            name: "snow"
+            source: "../../images/snowflake.png"
+            frameCount: 51
+            frameDuration: 40
+            frameDurationVariation: 8
         }
-        Text {
-            id: buttonLabel2; text: container.subText; color: "black"; font.pixelSize: 12
+    }
+
+    Emitter {
+        system: particles
+        emitRate: 20
+        lifeSpan: 8000
+        speed: PointDirection { y:80; yVariation: 40; }
+        acceleration: PointDirection { y: 4 }
+        size: 36
+        endSize: 12
+        sizeVariation: 8
+        width: parent.width
+        height: 100
+    }
+
+    MouseArea {
+        id: ma
+        anchors.fill: parent
+        hoverEnabled: true
+    }
+
+    Rectangle {
+        color: "#803333AA"
+        border.color: "black"
+        x: ma.mouseX - 36
+        y: ma.mouseY - 36
+        width: 72
+        height: 72
+        //! [0]
+        Age {
+            anchors.fill: parent
+            system: particles
+            once: true
+            lifeLeft: 1200
+            advancePosition: false
         }
+        //! [0]
     }
 }

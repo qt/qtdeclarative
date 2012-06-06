@@ -1,5 +1,5 @@
 /****************************************************************************
-**
+*
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
@@ -42,68 +42,64 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 
 Item {
-    width: 360
-    height: 600
-
-    Image {
-        source: "../images/backgroundLeaves.jpg"
+    id: window
+    width: 320; height: 480
+    Rectangle {
+        id: sky
         anchors.fill: parent
+        gradient: Gradient {
+            GradientStop {
+                position: 0.0
+                color: "DeepSkyBlue"
+            }
+            GradientStop {
+                position: 1.0
+                color: "SkyBlue"
+            }
+        }
     }
+
+    Rectangle {
+        id: ground
+        width: parent.height * 2
+        height: parent.height
+        y: parent.height/2
+        x: parent.width/2 - parent.height
+        transformOrigin: Item.Top
+        rotation: 0
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "ForestGreen"; }
+            GradientStop { position: 1.0; color: "DarkGreen"; }
+        }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        onPositionChanged: {
+            var rot = Math.atan2(mouseY - window.height/2,mouseX - window.width/2) * 180/Math.PI;
+            ground.rotation = rot;
+        }
+    }
+
     ParticleSystem { id: sys }
+    //! [0]
+    Gravity {
+        system: sys
+        magnitude: 32
+        angle: ground.rotation + 90
+    }
+    //! [0]
     Emitter {
         system: sys
-        width: parent.width
-        emitRate: 4
-        lifeSpan: 14000
-        size: 80
-        speed: PointDirection { y: 160; yVariation: 80; xVariation: 20 }
+        anchors.centerIn: parent
+        emitRate: 1
+        lifeSpan: 10000
+        size: 64
     }
-
     ImageParticle {
         anchors.fill: parent
-        id: particles
         system: sys
-        sprites: [Sprite {
-                source: "../images/realLeaf1.png"
-                frameCount: 1
-                frameDuration: 1
-                to: {"a":1, "b":1, "c":1, "d":1}
-            }, Sprite {
-                name: "a"
-                source: "../images/realLeaf1.png"
-                frameCount: 1
-                frameDuration: 10000
-            },
-            Sprite {
-                name: "b"
-                source: "../images/realLeaf2.png"
-                frameCount: 1
-                frameDuration: 10000
-            },
-            Sprite {
-                name: "c"
-                source: "../images/realLeaf3.png"
-                frameCount: 1
-                frameDuration: 10000
-            },
-            Sprite {
-                name: "d"
-                source: "../images/realLeaf4.png"
-                frameCount: 1
-                frameDuration: 10000
-            }
-        ]
+        source: "../../images/realLeaf1.png"
+    }
 
-        width: 100
-        height: 100
-        x: 20
-        y: 20
-        z:4
-    }
-    Friction {
-        anchors.fill: parent
-        anchors.margins: -40
-        system: sys
-        factor: 0.4
-    }
 }

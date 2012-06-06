@@ -46,7 +46,7 @@ Item {
     height: 600
 
     Image {
-        source: "../images/backgroundLeaves.jpg"
+        source: "../../images/backgroundLeaves.jpg"
         anchors.fill: parent
     }
     ParticleSystem {
@@ -68,6 +68,7 @@ Item {
         pace: 60
     }
 
+    //! [0]
     Affector {
         system: sys
         property real coefficient: 0.1
@@ -102,10 +103,11 @@ Item {
             }
         }
     }
+    //! [0]
 
+    //! [1]
     Affector {//Custom Friction, adds some 'randomness'
         system: sys
-        //onceOff: true
         x: -60
         width: parent.width + 120
         height: 100
@@ -128,37 +130,38 @@ Item {
             }
         }
     }
+    //! [1]
 
     ImageParticle {
         anchors.fill: parent
         id: particles
         system: sys
         sprites: [Sprite {
-                source: "../images/realLeaf1.png"
+                source: "../../images/realLeaf1.png"
                 frameCount: 1
                 frameDuration: 1
                 to: {"a":1, "b":1, "c":1, "d":1}
             }, Sprite {
                 name: "a"
-                source: "../images/realLeaf1.png"
+                source: "../../images/realLeaf1.png"
                 frameCount: 1
                 frameDuration: 10000
             },
             Sprite {
                 name: "b"
-                source: "../images/realLeaf2.png"
+                source: "../../images/realLeaf2.png"
                 frameCount: 1
                 frameDuration: 10000
             },
             Sprite {
                 name: "c"
-                source: "../images/realLeaf3.png"
+                source: "../../images/realLeaf3.png"
                 frameCount: 1
                 frameDuration: 10000
             },
             Sprite {
                 name: "d"
-                source: "../images/realLeaf4.png"
+                source: "../../images/realLeaf4.png"
                 frameCount: 1
                 frameDuration: 10000
             }

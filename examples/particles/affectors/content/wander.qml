@@ -40,64 +40,58 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
+import "../../../shared" as UI //Has a shared UI element
 
-Item {
-    id: window
-    width: 480; height: 480
-    Rectangle {
-        id: sky
-        anchors.fill: parent
-        gradient: Gradient {
-            GradientStop {
-                position: 0.0
-                color: "DeepSkyBlue"
-            }
-            GradientStop {
-                position: 1.0
-                color: "SkyBlue"
-            }
-        }
-    }
-
-    Rectangle {
-        id: ground
-        width: parent.width * 2
-        height: parent.height
-        y: parent.height/2
-        x: -parent.height/2
-        transformOrigin: Item.Top
-        rotation: 0
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "ForestGreen"; }
-            GradientStop { position: 1.0; color: "DarkGreen"; }
-        }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        onPositionChanged: {
-            var rot = Math.atan2(mouseY - window.height/2,mouseX - window.width/2) * 180/Math.PI;
-            ground.rotation = rot;
-        }
-    }
-
-    ParticleSystem { id: sys }
-    Gravity {
-        system: sys
-        magnitude: 32
-        angle: ground.rotation + 90
-    }
-    Emitter {
-        system: sys
-        anchors.centerIn: parent
-        emitRate: 1
-        lifeSpan: 10000
-        size: 64
-    }
+Rectangle {
+    width: 360
+    height: 540
+    ParticleSystem { id: particles }
     ImageParticle {
-        anchors.fill: parent
-        system: sys
-        source: "../images/realLeaf1.png"
+        system: particles
+        sprites: Sprite {
+            name: "snow"
+            source: "../../images/snowflake.png"
+            frameCount: 51
+            frameDuration: 40
+            frameDurationVariation: 8
+        }
     }
 
+    //! [0]
+    Wander { 
+        id: wanderer
+        system: particles
+        anchors.fill: parent
+        xVariance: 360/(wanderer.affectedParameter+1);
+        pace: 100*(wanderer.affectedParameter+1);
+    }
+    //! [0]
+
+    Emitter {
+        system: particles
+        emitRate: 20
+        lifeSpan: 7000
+        speed: PointDirection { y:80; yVariation: 40; }
+        acceleration: PointDirection { y: 4 }
+        size: 20
+        sizeVariation: 10
+        width: parent.width
+        height: 100
+    }
+    Row {
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        UI.Button {
+            text:"dx/dt"
+            onClicked: wanderer.affectedParameter = Wander.Position;
+        }
+        UI.Button {
+            text:"dv/dt"
+            onClicked: wanderer.affectedParameter = Wander.Velocity;
+        }
+        UI.Button {
+            text:"da/dt"
+            onClicked: wanderer.affectedParameter = Wander.Acceleration;
+        }
+    }
 }

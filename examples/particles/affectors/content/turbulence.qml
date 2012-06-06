@@ -42,15 +42,15 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 
 Rectangle {
-    width: 360
-    height: 600
+    width: 320
+    height: 480
     color: "#222222"
     id: root
     Image {
-        source: "../images/candle.png"
+        source: "../../images/candle.png"
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottomMargin: -8
+        anchors.bottomMargin: -60
         anchors.horizontalCenterOffset: 2
     }
     ParticleSystem {
@@ -61,28 +61,31 @@ Rectangle {
         onClicked: turb.enabled = !turb.enabled
     }
 
+    //! [0]
     Turbulence {
         id: turb
         system: ps
         enabled: true
-        height: (parent.height / 2)
-        width: parent.width / 2
+        height: (parent.height / 2) - 4
+        width: parent.width
         x: parent. width / 4
         anchors.fill: parent
         strength: 32
+        NumberAnimation on strength{from: 16; to: 64; easing.type: Easing.InOutBounce; duration: 1800; loops: -1}
     }
+    //! [0]
 
     ImageParticle {
         groups: ["smoke"]
         system: ps
-        source: "../images/particle.png"
+        source: "../../images/particle.png"
         color: "#11111111"
         colorVariation: 0
     }
     ImageParticle {
         groups: ["flame"]
         system: ps
-        source: "../images/particle.png"
+        source: "../../images/particle.png"
         color: "#11ff400f"
         colorVariation: 0.1
     }
@@ -102,7 +105,7 @@ Rectangle {
     TrailEmitter {
         id: smoke1
         width: root.width
-        height: root.height/2 - 20
+        height: root.height/2
         system: ps
         group: "smoke"
         follow: "flame"
@@ -119,7 +122,7 @@ Rectangle {
     TrailEmitter {
         id: smoke2
         width: root.width
-        height: root.height/2 - 40
+        height: root.height/2 - 20
         system: ps
         group: "smoke"
         follow: "flame"

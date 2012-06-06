@@ -50,7 +50,7 @@ Rectangle {
         ImageParticle {
             groups: ["A"]
             anchors.fill: parent
-            source: "../images/star.png"
+            source: "../../images/star.png"
             color:"#FF1010"
             redVariation: 0.8
         }
@@ -66,6 +66,7 @@ Rectangle {
             height: 80
         }
 
+        //! [A]
         Affector {
             groups: ["A"]
             x: 120
@@ -74,11 +75,12 @@ Rectangle {
             once: true
             position: PointDirection { x: 120; }
         }
+        //! [A]
 
         ImageParticle {
             groups: ["B"]
             anchors.fill: parent
-            source: "../images/star.png"
+            source: "../../images/star.png"
             color:"#10FF10"
             greenVariation: 0.8
         }
@@ -95,6 +97,7 @@ Rectangle {
             height: 10
         }
 
+        //! [B]
         Affector {
             groups: ["B"]
             x: 120
@@ -104,11 +107,12 @@ Rectangle {
             once: true
             speed: AngleDirection { angleVariation:360; magnitude: 72 }
         }
+        //! [B]
 
         ImageParticle {
             groups: ["C"]
             anchors.fill: parent
-            source: "../images/star.png"
+            source: "../../images/star.png"
             color:"#1010FF"
             blueVariation: 0.8
         }
@@ -126,6 +130,7 @@ Rectangle {
             height: 80
         }
 
+        //! [C]
         Affector {
             groups: ["C"]
             x: 120
@@ -136,6 +141,7 @@ Rectangle {
             relative: false
             acceleration: PointDirection { y: -80; }
         }
+        //! [C]
 
     }
 }

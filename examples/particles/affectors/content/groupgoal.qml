@@ -58,12 +58,13 @@ Rectangle {
     ParticleSystem {
         id: particles
         anchors.fill: parent
+        // ![unlit]
         ParticleGroup {
             name: "unlit"
             duration: 1000
             to: {"lighting":1, "unlit":99}
             ImageParticle {
-                source: "../images/particleA.png"
+                source: "../../images/particleA.png"
                 colorVariation: 0.1
                 color: "#2060160f"
             }
@@ -73,11 +74,15 @@ Rectangle {
                 jump: true
             }
         }
+        // ![unlit]
+        // ![lighting]
         ParticleGroup {
             name: "lighting"
             duration: 100
             to: {"lit":1}
         }
+        // ![lighting]
+        // ![lit]
         ParticleGroup {
             name: "lit"
             duration: 10000
@@ -99,6 +104,7 @@ Rectangle {
             TrailEmitter {
                 id: fireballSmoke
                 group: "smoke"
+        // ![lit]
 
                 emitRatePerParticle: 120
                 lifeSpan: 2000
@@ -118,7 +124,7 @@ Rectangle {
             id: smoke
             anchors.fill: parent
             groups: ["smoke"]
-            source: "../images/particle.png"
+            source: "../../images/particle.png"
             colorVariation: 0
             color: "#00111111"
         }
@@ -126,7 +132,7 @@ Rectangle {
             id: pilot
             anchors.fill: parent
             groups: ["pilot"]
-            source: "../images/particle.png"
+            source: "../../images/particle.png"
             redVariation: 0.01
             blueVariation: 0.4
             color: "#0010004f"
@@ -135,7 +141,7 @@ Rectangle {
             id: flame
             anchors.fill: parent
             groups: ["flame", "lit", "lighting"]
-            source: "../images/particleA.png"
+            source: "../../images/particleA.png"
             colorVariation: 0.1
             color: "#00ff400f"
         }
@@ -162,6 +168,7 @@ Rectangle {
             sizeVariation: 2
             endSize: 0
             speed: PointDirection { y:-100; yVariation: 4; xVariation: 4 }
+            // ![groupgoal-pilot]
             GroupGoal {
                 groups: ["unlit"]
                 goalState: "lit"
@@ -171,9 +178,11 @@ Rectangle {
                 y: -55
                 height: 75
                 width: 30
-                shape: MaskShape {source: "../images/matchmask.png"}
+                shape: MaskShape {source: "../../images/matchmask.png"}
             }
+            // ![groupgoal-pilot]
         }
+        // ![groupgoal-ma]
         //Click to enflame
         GroupGoal {
             groups: ["unlit"]
@@ -185,6 +194,7 @@ Rectangle {
             x: ma.mouseX - width/2
             y: ma.mouseY - height/2
         }
+        // ![groupgoal-ma]
         MouseArea {
             id: ma
             anchors.fill: parent

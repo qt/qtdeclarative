@@ -46,25 +46,10 @@ Rectangle {
     width: 360
     height: 540
     color: "black"
-    property bool spacePressed: false
-    focus: true
     Image {
-        source: "../images/finalfrontier.png"
+        source: "../../images/finalfrontier.png"
         anchors.centerIn:parent
     }
-    Keys.onPressed: {
-        if (event.key == Qt.Key_Space) {
-            spacePressed = true;
-            event.accepted = true;
-        }
-    }
-    Keys.onReleased: {
-        if (event.key == Qt.Key_Space) {
-            spacePressed = false;
-            event.accepted = true;
-        }
-    }
-
     Emitter {
         group: "stars"
         system: particles
@@ -95,7 +80,7 @@ Rectangle {
         id: stars
         groups: ["stars"]
         system: particles
-        source: "../images/star.png"
+        source: "../../images/star.png"
         color: "white"
         colorVariation: 0.1
         alpha: 0
@@ -107,7 +92,7 @@ Rectangle {
         sprites: Sprite {
             id: spinState
             name: "spinning"
-            source: "../images/meteor.png"
+            source: "../../images/meteor.png"
             frameCount: 35
             frameDuration: 60
         }
@@ -116,7 +101,7 @@ Rectangle {
         id: shot
         groups: ["shot"]
         system: particles
-        source: "../images/star.png"
+        source: "../../images/star.png"
 
         color: "#0FF06600"
         colorVariation: 0.3
@@ -125,7 +110,7 @@ Rectangle {
         id: engine
         groups: ["engine"]
         system: particles
-        source: "../images/particle4.png"
+        source: "../../images/particle4.png"
 
         color: "orange"
         SequentialAnimation on color {
@@ -144,12 +129,14 @@ Rectangle {
 
         colorVariation: 0.2
     }
+    //! [0]
     Attractor {
         id: gs; pointX: root.width/2; pointY: root.height/2; strength: 4000000;
         system: particles
         affectedParameter: Attractor.Acceleration
         proportionalToDistance: Attractor.InverseQuadratic
     }
+    //! [0]
     Age {
         system: particles
         x: gs.pointX - 8;
@@ -167,15 +154,20 @@ Rectangle {
     }
 
     Image {
-        source:"../images/rocket2.png"
+        source:"../../images/rocket2.png"
         id: ship
         width: 45
         height: 22
-        MouseArea {
-            id: ma
-            anchors.fill: parent;
-            drag.axis: Drag.XandYAxis
-            drag.target: ship
+        //Automatic movement
+        SequentialAnimation on x {
+            loops: -1
+            NumberAnimation{to: root.width-45; easing.type: Easing.InOutQuad; duration: 2000}
+            NumberAnimation{to: 0; easing.type: Easing.OutInQuad; duration: 6000}
+        }
+        SequentialAnimation on y {
+            loops: -1
+            NumberAnimation{to: root.height-22; easing.type: Easing.OutInQuad; duration: 6000}
+            NumberAnimation{to: 0; easing.type: Easing.InOutQuad; duration: 2000}
         }
     }
     Emitter {
@@ -196,18 +188,12 @@ Rectangle {
         group: "shot"
         system: particles
         emitRate: 32
-        lifeSpan: 2000
-        enabled: spacePressed
+        lifeSpan: 1000
+        enabled: true
         size: 40
         speed: PointDirection { x: 256; }
         x: ship.x + ship.width
         y: ship.y + ship.height/2
-    }
-
-    Text {
-        color: "white"
-        anchors.bottom: parent.bottom
-        text:"Drag the ship, Spacebar to fire."
     }
 }
 
