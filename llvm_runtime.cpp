@@ -165,4 +165,9 @@ void __qmljs_llvm_call_activation_property(Context *context, Value *result, Stri
     __qmljs_call_activation_property(context, result, name, args, argc);
 }
 
+void __qmljs_llvm_construct_activation_property(Context *context, Value *result, String *name, Value *args, int argc)
+{
+    __qmljs_construct_activation_property(context, result, name, args, argc);
+}
+
 } // extern "C"
