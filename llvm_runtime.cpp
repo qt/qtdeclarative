@@ -235,4 +235,19 @@ void __qmljs_llvm_set_property(Context *ctx, Value *object, String *name, Value 
     __qmljs_set_property(ctx, object, name, value);
 }
 
+void __qmljs_llvm_typeof(Context *ctx, Value *result, const Value *value)
+{
+    __qmljs_typeof(ctx, result, value);
+}
+
+void __qmljs_llvm_throw(Context *context, Value *value)
+{
+    __qmljs_throw(context, value);
+}
+
+void __qmljs_llvm_rethrow(Context *context, Value *result)
+{
+    __qmljs_rethrow(context, result);
+}
+
 } // extern "C"

@@ -570,35 +570,70 @@ void LLVMInstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
+void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
+{
+    IR::Name *base = e->base->asName();
+
+    if (! result)
+        result = newLLVMTemp(_valueTy);
+
+    if (! base->id) {
+        switch (base->builtin) {
+        case IR::Name::builtin_invalid:
+            break;
+
+        case IR::Name::builtin_typeof:
+            // inline void __qmljs_typeof(Context *ctx, Value *result, const Value *value)
+            CreateCall3(_llvmModule->getFunction("__qmljs_llvm_typeof"),
+                        _llvmFunction->arg_begin(), result, getLLVMTempReference(e->args->expr));
+            _llvmValue = CreateLoad(result);
+            return;
+
+        case IR::Name::builtin_throw:
+            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_throw"),
+                        _llvmFunction->arg_begin(), getLLVMTempReference(e->args->expr));
+            _llvmValue = llvm::UndefValue::get(_valueTy);
+            return;
+
+        case IR::Name::builtin_rethrow:
+            CreateCall2(_llvmModule->getFunction("__qmljs_llvm_rethrow"),
+                        _llvmFunction->arg_begin(), result);
+            _llvmValue = CreateLoad(result);
+            return;
+        }
+
+        Q_UNREACHABLE();
+    } else {
+        llvm::Value *name = getIdentifier(*base->id);
+
+        int argc = 0;
+        llvm::Value *args = genArguments(e->args, argc);
+
+        CreateCall5(_llvmModule->getFunction("__qmljs_call_activation_property"),
+                    _llvmFunction->arg_begin(), result, name, args, getInt32(argc));
+
+        _llvmValue = CreateLoad(result);
+    }
+}
+
 void LLVMInstructionSelection::visitCall(IR::Call *e)
 {
     if (e->base->asMember()) {
         genCallMember(e);
-        return;
     } else if (e->base->asTemp()) {
         genCallTemp(e);
-        return;
-    }
+    } else if (e->base->asName()) {
+        genCallName(e);
+    } else if (IR::Temp *t = e->base->asTemp()) {
+        llvm::Value *base = getLLVMTemp(t);
 
-    llvm::Value *func = 0;
-    llvm::Value *base = 0;
-    if (IR::Temp *t = e->base->asTemp()) {
-        base = getLLVMTemp(t);
-        func = _llvmModule->getFunction("__qmljs_llvm_call_value");
-    } else if (IR::Name *n = e->base->asName()) {
-        if (n->id) {
-            base = getIdentifier(*n->id);
-            func = _llvmModule->getFunction("__qmljs_llvm_call_activation_property");
-        }
-    }
+        int argc = 0;
+        llvm::Value *args = genArguments(e->args, argc);
 
-    int argc = 0;
-    llvm::Value *args = genArguments(e->args, argc);
-
-    if (func) {
         llvm::Value *result = newLLVMTemp(_valueTy);
         CreateStore(llvm::Constant::getNullValue(_valueTy), result);
-        CreateCall5(func, _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
+        CreateCall5(_llvmModule->getFunction("__qmljs_llvm_call_value"),
+                    _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
         _llvmValue = CreateLoad(result);
     } else {
         Q_UNIMPLEMENTED();

@@ -934,6 +934,17 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
     }
 }
 
+void __qmljs_throw(Context *context, Value *value)
+{
+    context->hasUncaughtException = true;
+    context->result = *value;
+}
+
+void __qmljs_rethrow(Context *context, Value *result)
+{
+    *result = context->result;
+}
+
 void __qmljs_builtin_typeof(Context *context, Value *result, Value *args, int argc)
 {
     Q_UNUSED(argc);
@@ -944,14 +955,12 @@ void __qmljs_builtin_throw(Context *context, Value *result, Value *args, int arg
 {
     Q_UNUSED(argc);
     Q_UNUSED(result);
-    context->hasUncaughtException = true;
-    context->result = args[0];
+    __qmljs_throw(context, &args[0]);
 }
 
 void __qmljs_builtin_rethrow(Context *context, Value *result, Value *, int)
 {
-    assert(result);
-    *result = context->result;
+    __qmljs_rethrow(context, result);
 }
 
 } // extern "C"
