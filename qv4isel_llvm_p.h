@@ -27,6 +27,9 @@ public:
     void genUnop(llvm::Value *result, IR::Unop *e);
     void genBinop(llvm::Value *result, IR::Binop *e);
     llvm::AllocaInst *newLLVMTemp(llvm::Type *type, llvm::Value *size = 0);
+    llvm::Value * genArguments(IR::ExprList *args, int &argc);
+    void genCallMember(IR::Call *e, llvm::Value *result = 0);
+    void genConstructMember(IR::New *e, llvm::Value *result = 0);
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);

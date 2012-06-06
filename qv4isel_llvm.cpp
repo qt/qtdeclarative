@@ -377,8 +377,85 @@ llvm::AllocaInst *LLVMInstructionSelection::newLLVMTemp(llvm::Type *type, llvm::
     return addr;
 }
 
+llvm::Value * LLVMInstructionSelection::genArguments(IR::ExprList *exprs, int &argc)
+{
+    llvm::Value *args = 0;
+
+    argc = 0;
+    for (IR::ExprList *it = exprs; it; it = it->next)
+        ++argc;
+
+    if (argc)
+        args = newLLVMTemp(_valueTy, getInt32(argc));
+    else
+        args = llvm::Constant::getNullValue(_valueTy->getPointerTo());
+
+    int i = 0;
+    for (IR::ExprList *it = exprs; it; it = it->next) {
+        llvm::Value *arg = getLLVMValue(it->expr);
+        CreateStore(arg, CreateConstGEP1_32(args, i++));
+    }
+
+    return args;
+}
+
+void LLVMInstructionSelection::genCallMember(IR::Call *e, llvm::Value *result)
+{
+    if (! result)
+        result = newLLVMTemp(_valueTy);
+
+    IR::Member *m = e->base->asMember();
+    llvm::Value *thisObject = getLLVMTemp(m->base->asTemp());
+    llvm::Value *name = getIdentifier(*m->name);
+
+    int argc = 0;
+    llvm::Value *args = genArguments(e->args, argc);
+
+    llvm::Value *actuals[] = {
+        _llvmFunction->arg_begin(),
+        result,
+        thisObject,
+        name,
+        args,
+        getInt32(argc)
+    };
+
+    CreateCall(_llvmModule->getFunction("__qmljs_llvm_call_property"), llvm::ArrayRef<llvm::Value *>(actuals));
+    _llvmValue = CreateLoad(result);
+}
+
+void LLVMInstructionSelection::genConstructMember(IR::New *e, llvm::Value *result)
+{
+    if (! result)
+        result = newLLVMTemp(_valueTy);
+
+    IR::Member *m = e->base->asMember();
+    llvm::Value *thisObject = getLLVMTemp(m->base->asTemp());
+    llvm::Value *name = getIdentifier(*m->name);
+
+    int argc = 0;
+    llvm::Value *args = genArguments(e->args, argc);
+
+    llvm::Value *actuals[] = {
+        _llvmFunction->arg_begin(),
+        result,
+        thisObject,
+        name,
+        args,
+        getInt32(argc)
+    };
+
+    CreateCall(_llvmModule->getFunction("__qmljs_llvm_construct_property"), llvm::ArrayRef<llvm::Value *>(actuals));
+    _llvmValue = CreateLoad(result);
+}
+
 void LLVMInstructionSelection::visitCall(IR::Call *e)
 {
+    if (e->base->asMember()) {
+        genCallMember(e);
+        return;
+    }
+
     llvm::Value *func = 0;
     llvm::Value *base = 0;
     if (IR::Temp *t = e->base->asTemp()) {
@@ -392,21 +469,7 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
     }
 
     int argc = 0;
-    for (IR::ExprList *it = e->args; it; it = it->next) {
-        ++argc;
-    }
-
-    llvm::Value *args = 0;
-    if (argc)
-        args = newLLVMTemp(_valueTy, getInt32(argc));
-    else
-        args = llvm::Constant::getNullValue(_valueTy->getPointerTo());
-
-    int i = 0;
-    for (IR::ExprList *it = e->args; it; it = it->next) {
-        llvm::Value *arg = getLLVMValue(it->expr);
-        CreateStore(arg, CreateConstGEP1_32(args, i++));
-    }
+    llvm::Value *args = genArguments(e->args, argc);
 
     if (func) {
         llvm::Value *result = newLLVMTemp(_valueTy);
@@ -420,6 +483,11 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
 
 void LLVMInstructionSelection::visitNew(IR::New *e)
 {
+    if (e->base->asMember()) {
+        genConstructMember(e);
+        return;
+    }
+
     llvm::Value *func = 0;
     llvm::Value *base = 0;
     if (IR::Temp *t = e->base->asTemp()) {
@@ -435,21 +503,7 @@ void LLVMInstructionSelection::visitNew(IR::New *e)
     }
 
     int argc = 0;
-    for (IR::ExprList *it = e->args; it; it = it->next) {
-        ++argc;
-    }
-
-    llvm::Value *args = 0;
-    if (argc)
-        args = newLLVMTemp(_valueTy, getInt32(argc));
-    else
-        args = llvm::Constant::getNullValue(_valueTy->getPointerTo());
-
-    int i = 0;
-    for (IR::ExprList *it = e->args; it; it = it->next) {
-        llvm::Value *arg = getLLVMValue(it->expr);
-        CreateStore(arg, CreateConstGEP1_32(args, i++));
-    }
+    llvm::Value *args = genArguments(e->args, argc);
 
     if (func) {
         llvm::Value *result = newLLVMTemp(_valueTy);

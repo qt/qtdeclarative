@@ -175,4 +175,14 @@ void __qmljs_llvm_get_property(Context *ctx, Value *result, Value *object, Strin
     __qmljs_get_property(ctx, result, object, name);
 }
 
+void __qmljs_llvm_call_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
+{
+    __qmljs_call_property(context, result, base, name, args, argc);
+}
+
+void __qmljs_llvm_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
+{
+    __qmljs_construct_property(context, result, base, name, args, argc);
+}
+
 } // extern "C"
