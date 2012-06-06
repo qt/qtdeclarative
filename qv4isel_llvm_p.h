@@ -18,6 +18,7 @@ public:
 
     llvm::Module *getLLVMModule(IR::Module *module);
     llvm::Function *getLLVMFunction(IR::Function *function);
+    llvm::Function *compileLLVMFunction(IR::Function *function);
     llvm::BasicBlock *getLLVMBasicBlock(IR::BasicBlock *block);
     llvm::Value *getLLVMValue(IR::Expr *expr);
     llvm::Value *getLLVMTempReference(IR::Expr *expr);
@@ -30,6 +31,7 @@ public:
     llvm::AllocaInst *newLLVMTemp(llvm::Type *type, llvm::Value *size = 0);
     llvm::Value * genArguments(IR::ExprList *args, int &argc);
     void genCallMember(IR::Call *e, llvm::Value *result = 0);
+    void genCallTemp(IR::Call *e, llvm::Value *result = 0);
     void genConstructMember(IR::New *e, llvm::Value *result = 0);
     void genMoveSubscript(IR::Move *s);
     void genMoveMember(IR::Move *s);

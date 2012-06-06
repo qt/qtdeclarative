@@ -360,6 +360,11 @@ void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
     __qmljs_init_object(result, ctx->engine->newScriptFunction(ctx, clos));
 }
 
+void __qmljs_init_native_function(Context *ctx, Value *result, void (*code)(Context *))
+{
+    __qmljs_init_object(result, ctx->engine->newNativeFunction(ctx, code));
+}
+
 void __qmljs_string_literal_undefined(Context *ctx, Value *result)
 {
     __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("undefined")));

@@ -76,6 +76,7 @@ void __qmljs_init_number(Value *result, double number);
 void __qmljs_init_string(Value *result, String *string);
 void __qmljs_init_object(Value *result, Object *object);
 void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos);
+void __qmljs_init_native_function(Context *ctx, Value *result, void (*code)(Context *));
 
 bool __qmljs_is_function(Context *ctx, const Value *value);
 

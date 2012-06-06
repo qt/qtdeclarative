@@ -72,16 +72,31 @@ llvm::Module *LLVMInstructionSelection::getLLVMModule(IR::Module *module)
 
 
     foreach (IR::Function *function, module->functions)
-        (void) getLLVMFunction(function);
+        (void) compileLLVMFunction(function);
     qSwap(_llvmModule, llvmModule);
     return llvmModule;
 }
 
 llvm::Function *LLVMInstructionSelection::getLLVMFunction(IR::Function *function)
 {
-    llvm::Function *llvmFunction =
-            llvm::Function::Create(_functionTy, llvm::Function::ExternalLinkage, // ### make it internal
-                                   llvm::Twine(function->name ? qPrintable(*function->name) : 0), _llvmModule);
+    llvm::Function *&f = _functionMap[function];
+    if (! f) {
+        QString name = QStringLiteral("__qmljs_native_");
+        if (function->name) {
+            if (*function->name == QStringLiteral("%entry"))
+                name = *function->name;
+            else
+                name += *function->name;
+        }
+        f = llvm::Function::Create(_functionTy, llvm::Function::ExternalLinkage, // ### make it internal
+                                   qPrintable(name), _llvmModule);
+    }
+    return f;
+}
+
+llvm::Function *LLVMInstructionSelection::compileLLVMFunction(IR::Function *function)
+{
+    llvm::Function *llvmFunction = getLLVMFunction(function);
 
     QHash<IR::BasicBlock *, llvm::BasicBlock *> blockMap;
     QVector<llvm::Value *> tempMap;
@@ -355,9 +370,13 @@ void LLVMInstructionSelection::visitTemp(IR::Temp *e)
     }
 }
 
-void LLVMInstructionSelection::visitClosure(IR::Closure *)
+void LLVMInstructionSelection::visitClosure(IR::Closure *e)
 {
-    Q_UNIMPLEMENTED();
+    llvm::Value *tmp = newLLVMTemp(_valueTy);
+    llvm::Value *clos = getLLVMFunction(e->value);
+    CreateCall3(_llvmModule->getFunction("__qmljs_init_native_function"),
+                _llvmFunction->arg_begin(), tmp, clos);
+    _llvmValue = CreateLoad(tmp);
 }
 
 void LLVMInstructionSelection::visitUnop(IR::Unop *e)
@@ -525,10 +544,39 @@ void LLVMInstructionSelection::genConstructMember(IR::New *e, llvm::Value *resul
     _llvmValue = CreateLoad(result);
 }
 
+void LLVMInstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
+{
+    if (! result)
+        result = newLLVMTemp(_valueTy);
+
+    llvm::Value *func = getLLVMTempReference(e->base);
+
+    int argc = 0;
+    llvm::Value *args = genArguments(e->args, argc);
+
+    llvm::Value *thisObject = llvm::Constant::getNullValue(_valueTy->getPointerTo());
+
+    llvm::Value *actuals[] = {
+        _llvmFunction->arg_begin(),
+        result,
+        thisObject,
+        func,
+        args,
+        getInt32(argc)
+    };
+
+    CreateCall(_llvmModule->getFunction("__qmljs_llvm_call_value"), actuals);
+
+    _llvmValue = CreateLoad(result);
+}
+
 void LLVMInstructionSelection::visitCall(IR::Call *e)
 {
     if (e->base->asMember()) {
         genCallMember(e);
+        return;
+    } else if (e->base->asTemp()) {
+        genCallTemp(e);
         return;
     }
 
