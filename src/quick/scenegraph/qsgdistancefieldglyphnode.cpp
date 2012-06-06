@@ -213,8 +213,14 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     QVector<ushort> ip;
     ip.reserve(indexes.size() * 6);
 
-    QPointF margins(2, 2);
-    QPointF texMargins = margins / m_glyph_cache->fontScale(fontPixelSize);
+    qreal maxTexMargin = m_glyph_cache->distanceFieldRadius() / 2;
+    qreal fontScale = m_glyph_cache->fontScale(fontPixelSize);
+    qreal margin = 2;
+    qreal texMargin = margin / fontScale;
+    if (texMargin > maxTexMargin) {
+        texMargin = maxTexMargin;
+        margin = maxTexMargin * fontScale;
+    }
 
     for (int i = 0; i < indexes.size(); ++i) {
         const int glyphIndex = indexes.at(i);
@@ -241,14 +247,14 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphIndex, fontPixelSize);
 
         if (!metrics.isNull() && !c.isNull()) {
-            metrics.width += margins.x() * 2;
-            metrics.height += margins.y() * 2;
-            metrics.baselineX -= margins.x();
-            metrics.baselineY += margins.y();
-            c.xMargin -= texMargins.x();
-            c.yMargin -= texMargins.y();
-            c.width += texMargins.x() * 2;
-            c.height += texMargins.y() * 2;
+            metrics.width += margin * 2;
+            metrics.height += margin * 2;
+            metrics.baselineX -= margin;
+            metrics.baselineY += margin;
+            c.xMargin -= texMargin;
+            c.yMargin -= texMargin;
+            c.width += texMargin * 2;
+            c.height += texMargin * 2;
         }
 
         qreal x = position.x() + metrics.baselineX + m_position.x();
@@ -303,6 +309,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         subNode->setColor(m_color);
         subNode->setStyle(m_style);
         subNode->setStyleColor(m_styleColor);
+        subNode->setPreferredAntialiasingMode(m_antialiasingMode);
         subNode->setGlyphs(m_originalPosition, subNodeGlyphRun);
         subNode->update();
         subNode->updateGeometry(); // we have to explicity call this now as preprocess won't be called before it's rendered
