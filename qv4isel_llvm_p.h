@@ -32,6 +32,7 @@ public:
     void genCallMember(IR::Call *e, llvm::Value *result = 0);
     void genConstructMember(IR::New *e, llvm::Value *result = 0);
     void genMoveSubscript(IR::Move *s);
+    void genMoveMember(IR::Move *s);
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);

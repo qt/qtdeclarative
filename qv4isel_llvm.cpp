@@ -231,20 +231,25 @@ void LLVMInstructionSelection::genMoveSubscript(IR::Move *s)
                 _llvmFunction->arg_begin(), base, index, source);
 }
 
+void LLVMInstructionSelection::genMoveMember(IR::Move *s)
+{
+    IR::Member *m = s->target->asMember();
+    llvm::Value *base = getLLVMTempReference(m->base);
+    llvm::Value *name = getIdentifier(*m->name);
+    llvm::Value *source = getLLVMTempReference(s->source);
+    CreateCall4(_llvmModule->getFunction("__qmljs_llvm_set_property"),
+                _llvmFunction->arg_begin(), base, name, source);
+}
+
 void LLVMInstructionSelection::visitMove(IR::Move *s)
 {
     if (s->target->asSubscript()) {
         genMoveSubscript(s);
-        return;
-    }
-    if (IR::Temp *t = s->target->asTemp()) {
+    } else if (s->target->asMember()) {
+        genMoveMember(s);
+    } else if (IR::Temp *t = s->target->asTemp()) {
         llvm::Value *target = getLLVMTemp(t);
         llvm::Value *source = getLLVMValue(s->source);
-        assert(source);
-        if (source->getType()->getPointerTo() != target->getType()) {
-            source->dump();
-            assert(!"not cool");
-        }
         CreateStore(source, target);
         return;
     }
@@ -541,16 +546,9 @@ void LLVMInstructionSelection::visitNew(IR::New *e)
 
 void LLVMInstructionSelection::visitSubscript(IR::Subscript *e)
 {
-    IR::Temp *t = e->base->asTemp();
     llvm::Value *result = newLLVMTemp(_valueTy);
-    llvm::Value *base = getLLVMTemp(t);
-    llvm::Value *index = 0;
-    if (IR::Temp *i = e->index->asTemp())
-        index = getLLVMTemp(i);
-    else {
-        index = newLLVMTemp(_valueTy);
-        CreateStore(getLLVMValue(e->index), index);
-    }
+    llvm::Value *base = getLLVMTempReference(e->base);
+    llvm::Value *index = getLLVMTempReference(e->index);
     CreateCall4(_llvmModule->getFunction("__qmljs_llvm_get_element"),
                 _llvmFunction->arg_begin(), result, base, index);
     _llvmValue = CreateLoad(result);
@@ -558,11 +556,8 @@ void LLVMInstructionSelection::visitSubscript(IR::Subscript *e)
 
 void LLVMInstructionSelection::visitMember(IR::Member *e)
 {
-    IR::Temp *t = e->base->asTemp();
-    assert(t);
-
     llvm::Value *result = newLLVMTemp(_valueTy);
-    llvm::Value *base = getLLVMTemp(t);
+    llvm::Value *base = getLLVMTempReference(e->base);
     llvm::Value *name = getIdentifier(*e->name);
 
     CreateCall4(_llvmModule->getFunction("__qmljs_llvm_get_property"),

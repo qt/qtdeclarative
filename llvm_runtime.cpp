@@ -190,9 +190,9 @@ void __qmljs_llvm_get_element(Context *ctx, Value *result, Value *object, Value 
     __qmljs_get_element(ctx, result, object, index);
 }
 
-void __qmljs_llvm_set_element(Context *ctx, Value *object, Value *index, Value *value)
+void __qmljs_llvm_set_property(Context *ctx, Value *object, String *name, Value *value)
 {
-    __qmljs_set_element(ctx, object, index, value);
+    __qmljs_set_property(ctx, object, name, value);
 }
 
 } // extern "C"
