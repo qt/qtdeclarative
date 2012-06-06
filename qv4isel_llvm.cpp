@@ -356,9 +356,15 @@ void LLVMInstructionSelection::visitString(IR::String *e)
 void LLVMInstructionSelection::visitName(IR::Name *e)
 {
     llvm::Value *result = newLLVMTemp(_valueTy);
-    llvm::Value *name = getIdentifier(*e->id);
-    CreateCall3(_llvmModule->getFunction("__qmljs_get_activation_property"),
-                _llvmFunction->arg_begin(), result, name);
+
+    if (e->id == QStringLiteral("this")) {
+        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_this_object"),
+                    _llvmFunction->arg_begin(), result);
+    } else {
+        llvm::Value *name = getIdentifier(*e->id);
+        CreateCall3(_llvmModule->getFunction("__qmljs_get_activation_property"),
+                    _llvmFunction->arg_begin(), result, name);
+    }
     _llvmValue = CreateLoad(result);
 
 }

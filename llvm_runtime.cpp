@@ -250,4 +250,9 @@ void __qmljs_llvm_rethrow(Context *context, Value *result)
     __qmljs_rethrow(context, result);
 }
 
+void __qmljs_llvm_get_this_object(Context *ctx, Value *result)
+{
+    __qmljs_get_thisObject(ctx, result);
+}
+
 } // extern "C"
