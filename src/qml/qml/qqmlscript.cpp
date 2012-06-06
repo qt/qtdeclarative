@@ -894,7 +894,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
 {
     static const struct TypeNameToType {
         const char *name;
-        int nameLength;
+        size_t nameLength;
         Object::DynamicProperty::Type type;
     } propTypeNameToTypes[] = {
         { "int", strlen("int"), Object::DynamicProperty::Int },
@@ -939,7 +939,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             const TypeNameToType *type = 0;
             for(int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
                 const TypeNameToType *t = propTypeNameToTypes + typeIndex;
-                if (t->nameLength == memberType.length() && 
+                if (t->nameLength == size_t(memberType.length()) &&
                     QHashedString::compare(memberType.constData(), t->name, t->nameLength)) {
                     type = t;
                     break;
@@ -978,7 +978,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
 
         for(int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
             const TypeNameToType *t = propTypeNameToTypes + ii;
-            if (t->nameLength == memberType.length() && 
+            if (t->nameLength == size_t(memberType.length()) &&
                 QHashedString::compare(memberType.constData(), t->name, t->nameLength)) {
                 type = t->type;
                 typeFound = true;
