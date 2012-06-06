@@ -374,7 +374,11 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
         ++argc;
     }
 
-    llvm::Value *args = argc ? CreateAlloca(_valueTy, getInt32(argc)) : 0;
+    llvm::Value *args = 0;
+    if (argc)
+        args = CreateAlloca(_valueTy, getInt32(argc));
+    else
+        args = llvm::Constant::getNullValue(_valueTy->getPointerTo());
 
     int i = 0;
     for (IR::ExprList *it = e->args; it; it = it->next) {
@@ -385,7 +389,8 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
     if (func) {
         llvm::Value *result = CreateAlloca(_valueTy);
         CreateStore(llvm::Constant::getNullValue(_valueTy), result);
-        _llvmValue = CreateCall5(func, _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
+        CreateCall5(func, _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
+        _llvmValue = CreateLoad(result);
     } else {
         Q_UNIMPLEMENTED();
     }
