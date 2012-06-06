@@ -53,7 +53,7 @@ DEFINES += \
 
 LIBS += \
     $$system(llvm-config --ldflags) \
-    $$system(llvm-config --libs core jit bitreader linker ipo)
+    $$system(llvm-config --libs core jit bitreader linker ipo target x86 arm)
 
 QMAKE_EXTRA_TARGETS += gen_llvm_runtime
 

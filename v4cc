@@ -1,0 +1,8 @@
+#!/bin/sh
+
+me=$(dirname $0)
+out=$(basename $1 .js).so
+($me/v4 --compile "$1" | gcc -shared -xassembler -o "$out" -) && \
+  (echo "compiled $out"; \
+  echo "run with ./v4 --aot $out")
+
