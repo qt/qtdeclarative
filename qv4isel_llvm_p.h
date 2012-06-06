@@ -25,6 +25,7 @@ public:
     llvm::Value *getStringPtr(const QString &s);
     void genUnop(llvm::Value *result, IR::Unop *e);
     void genBinop(llvm::Value *result, IR::Binop *e);
+    llvm::AllocaInst *newLLVMTemp(llvm::Type *type, llvm::Value *size = 0);
 
     virtual void visitExp(IR::Exp *);
     virtual void visitEnter(IR::Enter *);
@@ -55,6 +56,7 @@ private:
     llvm::Type *_contextPtrTy;
     llvm::Type *_stringPtrTy;
     llvm::FunctionType *_functionTy;
+    llvm::Instruction *_allocaInsertPoint;
     IR::Function *_function;
     IR::BasicBlock *_block;
     QHash<IR::Function *, llvm::Function *> _functionMap;

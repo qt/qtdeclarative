@@ -20,6 +20,7 @@ LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
     , _contextPtrTy(0)
     , _stringPtrTy(0)
     , _functionTy(0)
+    , _allocaInsertPoint(0)
     , _function(0)
     , _block(0)
 {
@@ -86,8 +87,13 @@ llvm::Function *LLVMInstructionSelection::getLLVMFunction(IR::Function *function
 
     // entry block
     SetInsertPoint(getLLVMBasicBlock(_function->basicBlocks.first()));
+
+    llvm::Instruction *allocaInsertPoint = new llvm::BitCastInst(llvm::UndefValue::get(getInt32Ty()),
+                                                                 getInt32Ty(), "", GetInsertBlock());
+    qSwap(_allocaInsertPoint, allocaInsertPoint);
+
     for (int i = 0; i < _function->tempCount; ++i) {
-        llvm::AllocaInst *t = CreateAlloca(_valueTy, 0, llvm::StringRef("t"));
+        llvm::AllocaInst *t = newLLVMTemp(_valueTy);
         _tempMap.append(t);
     }
 
@@ -102,6 +108,10 @@ llvm::Function *LLVMInstructionSelection::getLLVMFunction(IR::Function *function
             s->accept(this);
         qSwap(_block, block);
     }
+
+    qSwap(_allocaInsertPoint, allocaInsertPoint);
+
+    allocaInsertPoint->eraseFromParent();
 
     qSwap(_blockMap, blockMap);
     qSwap(_tempMap, tempMap);
@@ -146,7 +156,7 @@ llvm::Value *LLVMInstructionSelection::getLLVMCondition(IR::Expr *expr)
             return getInt1(false);
         }
 
-        llvm::Value *tmp = CreateAlloca(_valueTy);
+        llvm::Value *tmp = newLLVMTemp(_valueTy);
         CreateStore(value, tmp);
         value = tmp;
     }
@@ -235,14 +245,14 @@ void LLVMInstructionSelection::visitRet(IR::Ret *s)
 void LLVMInstructionSelection::visitConst(IR::Const *e)
 {
     llvm::Value *k = llvm::ConstantFP::get(_numberTy, e->value);
-    llvm::Value *tmp = CreateAlloca(_valueTy);
+    llvm::Value *tmp = newLLVMTemp(_valueTy);
     CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_number"), tmp, k);
     _llvmValue = CreateLoad(tmp);
 }
 
 void LLVMInstructionSelection::visitString(IR::String *e)
 {
-    llvm::Value *tmp = CreateAlloca(_valueTy);
+    llvm::Value *tmp = newLLVMTemp(_valueTy);
     CreateCall3(_llvmModule->getFunction("__qmljs_llvm_init_string"),
                 _llvmFunction->arg_begin(), tmp,
                 getStringPtr(*e->value));
@@ -268,14 +278,14 @@ void LLVMInstructionSelection::visitClosure(IR::Closure *)
 
 void LLVMInstructionSelection::visitUnop(IR::Unop *e)
 {
-    llvm::Value *result = CreateAlloca(_valueTy);
+    llvm::Value *result = newLLVMTemp(_valueTy);
     genUnop(result, e);
     _llvmValue = CreateLoad(result);
 }
 
 void LLVMInstructionSelection::visitBinop(IR::Binop *e)
 {
-    llvm::Value *result = CreateAlloca(_valueTy);
+    llvm::Value *result = newLLVMTemp(_valueTy);
     genBinop(result, e);
     _llvmValue = CreateLoad(result);
 }
@@ -353,6 +363,12 @@ void LLVMInstructionSelection::genBinop(llvm::Value *result, IR::Binop *e)
     CreateCall4(op, _llvmFunction->arg_begin(), result, left, right);
 }
 
+llvm::AllocaInst *LLVMInstructionSelection::newLLVMTemp(llvm::Type *type, llvm::Value *size)
+{
+    llvm::AllocaInst *addr = new llvm::AllocaInst(type, size, llvm::Twine(), _allocaInsertPoint);
+    return addr;
+}
+
 void LLVMInstructionSelection::visitCall(IR::Call *e)
 {
     llvm::Value *func = 0;
@@ -376,7 +392,7 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
 
     llvm::Value *args = 0;
     if (argc)
-        args = CreateAlloca(_valueTy, getInt32(argc));
+        args = newLLVMTemp(_valueTy, getInt32(argc));
     else
         args = llvm::Constant::getNullValue(_valueTy->getPointerTo());
 
@@ -387,7 +403,7 @@ void LLVMInstructionSelection::visitCall(IR::Call *e)
     }
 
     if (func) {
-        llvm::Value *result = CreateAlloca(_valueTy);
+        llvm::Value *result = newLLVMTemp(_valueTy);
         CreateStore(llvm::Constant::getNullValue(_valueTy), result);
         CreateCall5(func, _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
         _llvmValue = CreateLoad(result);
