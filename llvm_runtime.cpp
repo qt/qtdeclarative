@@ -15,6 +15,21 @@ Value *__qmljs_llvm_get_argument(Context *ctx, int index)
     return &ctx->arguments[index];
 }
 
+void __qmljs_llvm_init_undefined(Value *result)
+{
+    __qmljs_init_undefined(result);
+}
+
+void __qmljs_llvm_init_null(Value *result)
+{
+    __qmljs_init_null(result);
+}
+
+void __qmljs_llvm_init_boolean(Value *result, bool value)
+{
+    __qmljs_init_boolean(result, value);
+}
+
 void __qmljs_llvm_init_number(Value *result, double value)
 {
     __qmljs_init_number(result, value);
@@ -170,6 +185,16 @@ void __qmljs_llvm_construct_activation_property(Context *context, Value *result,
     __qmljs_construct_activation_property(context, result, name, args, argc);
 }
 
+void __qmljs_llvm_get_activation_property(Context *ctx, Value *result, String *name)
+{
+    __qmljs_get_activation_property(ctx, result, name);
+}
+
+void __qmljs_llvm_set_activation_property(Context *ctx, String *name, Value *value)
+{
+    __qmljs_set_activation_property(ctx, name, value);
+}
+
 void __qmljs_llvm_get_property(Context *ctx, Value *result, Value *object, String *name)
 {
     __qmljs_get_property(ctx, result, object, name);
@@ -188,6 +213,11 @@ void __qmljs_llvm_construct_property(Context *context, Value *result, const Valu
 void __qmljs_llvm_get_element(Context *ctx, Value *result, Value *object, Value *index)
 {
     __qmljs_get_element(ctx, result, object, index);
+}
+
+void __qmljs_llvm_set_element(Context *ctx, Value *object, Value *index, Value *value)
+{
+    __qmljs_set_element(ctx, object, index, value);
 }
 
 void __qmljs_llvm_set_property(Context *ctx, Value *object, String *name, Value *value)

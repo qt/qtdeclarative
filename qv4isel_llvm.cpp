@@ -2,6 +2,8 @@
 #include "qv4isel_llvm_p.h"
 #include "qv4ir_p.h"
 
+#include <QtCore/QTextStream>
+
 #include <llvm/Support/system_error.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Bitcode/ReaderWriter.h>
@@ -9,6 +11,10 @@
 #include <cstdio>
 
 using namespace QQmlJS;
+
+namespace {
+QTextStream qout(stdout, QIODevice::WriteOnly);
+}
 
 LLVMInstructionSelection::LLVMInstructionSelection(llvm::LLVMContext &context)
     : llvm::IRBuilder<>(context)
@@ -247,13 +253,20 @@ void LLVMInstructionSelection::visitMove(IR::Move *s)
         genMoveSubscript(s);
     } else if (s->target->asMember()) {
         genMoveMember(s);
+    } else if (IR::Name *n = s->target->asName()) {
+        llvm::Value *name = getIdentifier(*n->id);
+        llvm::Value *source = getLLVMTempReference(s->source);
+        CreateCall3(_llvmModule->getFunction("__qmljs_llvm_set_activation_property"),
+                    _llvmFunction->arg_begin(), name, source);
     } else if (IR::Temp *t = s->target->asTemp()) {
         llvm::Value *target = getLLVMTemp(t);
         llvm::Value *source = getLLVMValue(s->source);
         CreateStore(source, target);
-        return;
+    } else {
+        s->dump(qout, IR::Stmt::HIR);
+        qout << endl;
+        Q_UNIMPLEMENTED();
     }
-    Q_UNIMPLEMENTED();
 }
 
 void LLVMInstructionSelection::visitJump(IR::Jump *s)
@@ -281,9 +294,31 @@ void LLVMInstructionSelection::visitRet(IR::Ret *s)
 
 void LLVMInstructionSelection::visitConst(IR::Const *e)
 {
-    llvm::Value *k = llvm::ConstantFP::get(_numberTy, e->value);
     llvm::Value *tmp = newLLVMTemp(_valueTy);
-    CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_number"), tmp, k);
+
+    switch (e->type) {
+    case IR::UndefinedType:
+        CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_undefined"), tmp);
+        break;
+
+    case IR::NullType:
+        CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_null"), tmp);
+        break;
+
+    case IR::BoolType:
+        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_boolean"), tmp,
+                    getInt1(e->value ? 1 : 0));
+        break;
+
+    case IR::NumberType:
+        CreateCall2(_llvmModule->getFunction("__qmljs_llvm_init_number"), tmp,
+                    llvm::ConstantFP::get(_numberTy, e->value));
+        break;
+
+    default:
+        Q_UNREACHABLE();
+    }
+
     _llvmValue = CreateLoad(tmp);
 }
 
@@ -296,9 +331,14 @@ void LLVMInstructionSelection::visitString(IR::String *e)
     _llvmValue = CreateLoad(tmp);
 }
 
-void LLVMInstructionSelection::visitName(IR::Name *)
+void LLVMInstructionSelection::visitName(IR::Name *e)
 {
-    Q_UNIMPLEMENTED();
+    llvm::Value *result = newLLVMTemp(_valueTy);
+    llvm::Value *name = getIdentifier(*e->id);
+    CreateCall3(_llvmModule->getFunction("__qmljs_get_activation_property"),
+                _llvmFunction->arg_begin(), result, name);
+    _llvmValue = CreateLoad(result);
+
 }
 
 void LLVMInstructionSelection::visitTemp(IR::Temp *e)
