@@ -79,6 +79,8 @@ private slots:
     void sciSource();
     void sciSource_data();
     void invalidSciFile();
+    void validSciFiles_data();
+    void validSciFiles();
     void pendingRemoteRequest();
     void pendingRemoteRequest_data();
 
@@ -338,6 +340,33 @@ void tst_qquickborderimage::invalidSciFile()
     QCOMPARE(obj->status(), QQuickImageBase::Error);
     QCOMPARE(obj->horizontalTileMode(), QQuickBorderImage::Stretch);
     QCOMPARE(obj->verticalTileMode(), QQuickBorderImage::Stretch);
+
+    delete obj;
+}
+
+void tst_qquickborderimage::validSciFiles_data()
+{
+    QTest::addColumn<QString>("source");
+
+    QTest::newRow("valid1") << testFileUrl("valid1.sci").toString();
+    QTest::newRow("valid2") << testFileUrl("valid2.sci").toString();
+    QTest::newRow("valid3") << testFileUrl("valid3.sci").toString();
+    QTest::newRow("valid4") << testFileUrl("valid4.sci").toString();
+}
+
+void tst_qquickborderimage::validSciFiles()
+{
+    QFETCH(QString, source);
+
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + source +"\"; width: 300; height: 300 }";
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
+    QVERIFY(obj != 0);
+    QCOMPARE(obj->width(), 300.);
+    QCOMPARE(obj->height(), 300.);
+    QCOMPARE(obj->horizontalTileMode(), QQuickBorderImage::Round);
+    QCOMPARE(obj->verticalTileMode(), QQuickBorderImage::Repeat);
 
     delete obj;
 }

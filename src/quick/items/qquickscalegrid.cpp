@@ -152,9 +152,9 @@ QQuickGridScaledImage::QQuickGridScaledImage(QIODevice *data)
             b = list[1].toInt();
         else if (list[0] == QLatin1String("source"))
             imgFile = list[1];
-        else if (list[0] == QLatin1String("horizontalTileRule"))
+        else if (list[0] == QLatin1String("horizontalTileRule") || list[0] == QLatin1String("horizontalTileMode"))
             _h = stringToRule(list[1]);
-        else if (list[0] == QLatin1String("verticalTileRule"))
+        else if (list[0] == QLatin1String("verticalTileRule") || list[0] == QLatin1String("verticalTileMode"))
             _v = stringToRule(list[1]);
     }
 
@@ -170,11 +170,15 @@ QQuickGridScaledImage::QQuickGridScaledImage(QIODevice *data)
 
 QQuickBorderImage::TileMode QQuickGridScaledImage::stringToRule(const QString &s)
 {
-    if (s == QLatin1String("Stretch"))
+    QString string = s;
+    if (string.startsWith(QLatin1Char('"')) && string.endsWith(QLatin1Char('"')))
+        string = string.mid(1, string.size() - 2); // remove leading/trailing quotes.
+
+    if (string == QLatin1String("Stretch") || string == QLatin1String("BorderImage.Stretch"))
         return QQuickBorderImage::Stretch;
-    if (s == QLatin1String("Repeat"))
+    if (string == QLatin1String("Repeat") || string == QLatin1String("BorderImage.Repeat"))
         return QQuickBorderImage::Repeat;
-    if (s == QLatin1String("Round"))
+    if (string == QLatin1String("Round") || string == QLatin1String("BorderImage.Round"))
         return QQuickBorderImage::Round;
 
     qWarning("QQuickGridScaledImage: Invalid tile rule specified. Using Stretch.");
