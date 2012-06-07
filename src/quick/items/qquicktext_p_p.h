@@ -121,6 +121,8 @@ public:
     QThread *paintingThread;
 #endif
 
+    qreal lineWidth;
+
     QRgb color;
     QRgb linkColor;
     QRgb styleColor;
@@ -146,9 +148,12 @@ public:
     bool updateOnComponentComplete:1;
     bool richText:1;
     bool styledText:1;
-    bool singleline:1;
+    bool widthExceeded:1;
+    bool heightExceeded:1;
     bool internalWidthUpdate:1;
-    bool requireImplicitWidth:1;
+    bool requireImplicitSize:1;
+    bool implicitWidthValid:1;
+    bool implicitHeightValid:1;
     bool truncated:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
@@ -160,10 +165,11 @@ public:
     static const QChar elideChar;
 
     virtual qreal getImplicitWidth() const;
+    virtual qreal getImplicitHeight() const;
 
     void ensureDoc();
 
-    QRectF setupTextLayout(qreal *const naturalWidth,  qreal * const baseline);
+    QRectF setupTextLayout(qreal * const baseline);
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset = 0);
     bool isLinkActivatedConnected();
     static QString anchorAt(const QTextLayout *layout, const QPointF &mousePos);

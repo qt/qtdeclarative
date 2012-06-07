@@ -62,6 +62,10 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 Q_DECLARE_METATYPE(QQuickText::TextFormat)
 
+QT_BEGIN_NAMESPACE
+extern void qt_setQtEnableTestFont(bool value);
+QT_END_NAMESPACE
+
 class tst_qquicktext : public QQmlDataTest
 {
     Q_OBJECT
@@ -116,6 +120,7 @@ private slots:
     void contentSize();
     void implicitSizeBinding_data();
     void implicitSizeBinding();
+    void geometryChanged();
 
     void boundingRect_data();
     void boundingRect();
@@ -218,6 +223,7 @@ tst_qquicktext::tst_qquicktext()
     // << "#AA0011DD"
     // << "#00F16B11";
     //
+    qt_setQtEnableTestFont(true);
 }
 
 QQuickView *tst_qquicktext::createView(const QString &filename)
@@ -2029,6 +2035,260 @@ void tst_qquicktext::contentSize()
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
     QCOMPARE(spy.count(), ++spyCount);
+}
+
+void tst_qquicktext::geometryChanged()
+{
+    // Test that text is re-laid out when the geometry of the item by verifying changes in content
+    // size.  Implicit width is also tested as that in combination with item geometry provides a
+    // reference for expected content sizes.
+
+    QString componentStr = "import QtQuick 2.0\nText { font.family: \"__Qt__Box__Engine__\"; font.pixelSize: 10 }";
+    QQmlComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> object(textComponent.create());
+    QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+
+    const qreal implicitHeight = textObject->implicitHeight();
+
+    const qreal widths[] = { 100, 2000, 3000, -100, 100 };
+    const qreal heights[] = { implicitHeight, 2000, 3000, -implicitHeight, implicitHeight };
+
+    QCOMPARE(textObject->implicitWidth(), 0.);
+    QVERIFY(implicitHeight > 0.);
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), textObject->implicitWidth());
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setText("The quick red fox jumped over the lazy brown dog");
+
+    const qreal implicitWidth = textObject->implicitWidth();
+
+    QVERIFY(implicitWidth > 0.);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
+    QCOMPARE(textObject->contentWidth(), textObject->implicitWidth());
+    QCOMPARE(textObject->contentHeight(), textObject->implicitHeight());
+
+    // Changing the geometry with no eliding, or wrapping doesn't change the content size.
+    for (int i = 0; i < 5; ++i) {
+        textObject->setWidth(widths[i]);
+        QCOMPARE(textObject->implicitWidth(), implicitWidth);
+        QCOMPARE(textObject->implicitHeight(), implicitHeight);
+        QCOMPARE(textObject->width(), widths[i]);
+        QCOMPARE(textObject->height(), implicitHeight);
+        QCOMPARE(textObject->contentWidth(), implicitWidth);
+        QCOMPARE(textObject->contentHeight(), implicitHeight);
+    }
+
+    // With eliding enabled the content width is bounded to the item width, but is never
+    // larger than the implicit width.
+    textObject->setElideMode(QQuickText::ElideRight);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(2000.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), 2000.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), implicitWidth);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(3000.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), 3000.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), implicitWidth);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(-100);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), -100.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), 0.);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(100.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    // With wrapping enabled the implicit height changes with the width.
+    textObject->setElideMode(QQuickText::ElideNone);
+    textObject->setWrapMode(QQuickText::Wrap);
+    const qreal wrappedImplicitHeight = textObject->implicitHeight();
+
+    QVERIFY(wrappedImplicitHeight > implicitHeight);
+
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), wrappedImplicitHeight);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), wrappedImplicitHeight);
+
+    textObject->setWidth(2000.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), 2000.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), implicitWidth);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(3000.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), 3000.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), implicitWidth);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(-100);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), -100.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), implicitWidth);    // 0 or negative width item won't wrap.
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(100.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), wrappedImplicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), wrappedImplicitHeight);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), wrappedImplicitHeight);
+
+    // With no eliding or maximum line count the content height is the same as the implicit height.
+    for (int i = 0; i < 5; ++i) {
+        textObject->setHeight(heights[i]);
+        QCOMPARE(textObject->implicitWidth(), implicitWidth);
+        QCOMPARE(textObject->implicitHeight(), wrappedImplicitHeight);
+        QCOMPARE(textObject->width(), 100.);
+        QCOMPARE(textObject->height(), heights[i]);
+        QVERIFY(textObject->contentWidth() <= 100.);
+        QCOMPARE(textObject->contentHeight(), wrappedImplicitHeight);
+    }
+
+    // The implicit height is unaffected by eliding but the content height will change.
+    textObject->setElideMode(QQuickText::ElideRight);
+
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), wrappedImplicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setHeight(2000);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), wrappedImplicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), 2000.);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), wrappedImplicitHeight);
+
+    textObject->setHeight(3000);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), wrappedImplicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), 3000.);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), wrappedImplicitHeight);
+
+    textObject->setHeight(-implicitHeight);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), wrappedImplicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), -implicitHeight);
+    QVERIFY(textObject->contentWidth() <= 0.);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);  // content height is never less than font height. seems a little odd in this instance.
+
+    textObject->setHeight(implicitHeight);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), wrappedImplicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    // Varying the height with a maximum line count but no eliding won't affect the content height.
+    textObject->setElideMode(QQuickText::ElideNone);
+    textObject->setMaximumLineCount(2);
+    textObject->resetHeight();
+
+    const qreal maxLineCountImplicitHeight = textObject->implicitHeight();
+    QVERIFY(maxLineCountImplicitHeight > implicitHeight);
+    QVERIFY(maxLineCountImplicitHeight < wrappedImplicitHeight);
+
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), maxLineCountImplicitHeight);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), maxLineCountImplicitHeight);
+
+    for (int i = 0; i < 5; ++i) {
+        textObject->setHeight(heights[i]);
+        QCOMPARE(textObject->implicitWidth(), implicitWidth);
+        QCOMPARE(textObject->implicitHeight(), maxLineCountImplicitHeight);
+        QCOMPARE(textObject->width(), 100.);
+        QCOMPARE(textObject->height(), heights[i]);
+        QVERIFY(textObject->contentWidth() <= 100.);
+        QCOMPARE(textObject->contentHeight(), maxLineCountImplicitHeight);
+    }
+
+    // Varying the width with a maximum line count won't increase the implicit height beyond the
+    // height of the maximum number of lines.
+    textObject->setWidth(2000.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), 2000.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), implicitWidth);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(3000.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), 3000.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), implicitWidth);
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(-100);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), implicitHeight);
+    QCOMPARE(textObject->width(), -100.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QCOMPARE(textObject->contentWidth(), implicitWidth);    // 0 or negative width item won't wrap.
+    QCOMPARE(textObject->contentHeight(), implicitHeight);
+
+    textObject->setWidth(50.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), maxLineCountImplicitHeight);
+    QCOMPARE(textObject->width(), 50.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QVERIFY(textObject->contentWidth() <= 50.);
+    QCOMPARE(textObject->contentHeight(), maxLineCountImplicitHeight);
+
+    textObject->setWidth(100.);
+    QCOMPARE(textObject->implicitWidth(), implicitWidth);
+    QCOMPARE(textObject->implicitHeight(), maxLineCountImplicitHeight);
+    QCOMPARE(textObject->width(), 100.);
+    QCOMPARE(textObject->height(), implicitHeight);
+    QVERIFY(textObject->contentWidth() <= 100.);
+    QCOMPARE(textObject->contentHeight(), maxLineCountImplicitHeight);
 }
 
 void tst_qquicktext::implicitSizeBinding_data()

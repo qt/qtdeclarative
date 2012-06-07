@@ -78,7 +78,7 @@ QQuickItem *QQuickTextUtil::createCursor(
     return item;
 }
 
-qreal QQuickTextUtil::alignedX(const QRectF &rect, qreal width, int alignment)
+qreal QQuickTextUtil::alignedX(const qreal textWidth, const qreal itemWidth, int alignment)
 {
     qreal x = 0;
     switch (alignment) {
@@ -86,26 +86,26 @@ qreal QQuickTextUtil::alignedX(const QRectF &rect, qreal width, int alignment)
     case Qt::AlignJustify:
         break;
     case Qt::AlignRight:
-        x = width - rect.width();
+        x = itemWidth - textWidth;
         break;
     case Qt::AlignHCenter:
-        x = (width - rect.width()) / 2;
+        x = (itemWidth - textWidth) / 2;
         break;
     }
     return x;
 }
 
-qreal QQuickTextUtil::alignedY(const QRectF &rect, const qreal height, int alignment)
+qreal QQuickTextUtil::alignedY(const qreal textHeight, const qreal itemHeight, int alignment)
 {
     qreal y = 0;
     switch (alignment) {
     case Qt::AlignTop:
         break;
     case Qt::AlignBottom:
-        y = height - rect.height();
+        y = itemHeight - textHeight;
         break;
     case Qt::AlignVCenter:
-        y = (height - rect.height()) / 2;
+        y = (itemHeight - textHeight) / 2;
         break;
     }
     return y;

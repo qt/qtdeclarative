@@ -78,6 +78,7 @@ QQuickTextPrivate::QQuickTextPrivate()
 #if defined(Q_OS_MAC)
     , layoutThread(0), paintingThread(0)
 #endif
+    , lineWidth(0)
     , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
     , lineCount(1), multilengthEos(-1)
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
@@ -85,7 +86,8 @@ QQuickTextPrivate::QQuickTextPrivate()
     , style(QQuickText::Normal)
     , updateType(UpdatePaintNode)
     , maximumLineCountValid(false), updateOnComponentComplete(true), richText(false)
-    , styledText(false), singleline(false), internalWidthUpdate(false), requireImplicitWidth(false)
+    , styledText(false), widthExceeded(false), heightExceeded(false), internalWidthUpdate(false)
+    , requireImplicitSize(false), implicitWidthValid(false), implicitHeightValid(false)
     , truncated(false), hAlignImplicit(true), rightToLeftText(false)
     , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false), formatModifiesFontSize(false)
 {
@@ -278,14 +280,24 @@ QQuickTextPrivate::~QQuickTextPrivate()
 
 qreal QQuickTextPrivate::getImplicitWidth() const
 {
-    if (!requireImplicitWidth) {
+    if (!requireImplicitSize) {
         // We don't calculate implicitWidth unless it is required.
         // We need to force a size update now to ensure implicitWidth is calculated
         QQuickTextPrivate *me = const_cast<QQuickTextPrivate*>(this);
-        me->requireImplicitWidth = true;
+        me->requireImplicitSize = true;
         me->updateSize();
     }
     return implicitWidth;
+}
+
+qreal QQuickTextPrivate::getImplicitHeight() const
+{
+    if (!requireImplicitSize) {
+        QQuickTextPrivate *me = const_cast<QQuickTextPrivate*>(this);
+        me->requireImplicitSize = true;
+        me->updateSize();
+    }
+    return implicitHeight;
 }
 
 void QQuickText::q_imagesLoaded()
@@ -409,10 +421,11 @@ void QQuickTextPrivate::updateSize()
         return;
     }
 
-    if (!requireImplicitWidth) {
+    if (!requireImplicitSize) {
         emit q->implicitWidthChanged();
+        emit q->implicitHeightChanged();
         // if the implicitWidth is used, then updateSize() has already been called (recursively)
-        if (requireImplicitWidth)
+        if (requireImplicitSize)
             return;
     }
 
@@ -437,8 +450,6 @@ void QQuickTextPrivate::updateSize()
         return;
     }
 
-    qreal naturalWidth = 0;
-
     QSizeF size(0, 0);
     QSizeF previousSize = layedOutTextRect.size();
 #if defined(Q_OS_MAC)
@@ -448,7 +459,7 @@ void QQuickTextPrivate::updateSize()
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
         qreal baseline = 0;
-        QRectF textRect = setupTextLayout(&naturalWidth, &baseline);
+        QRectF textRect = setupTextLayout(&baseline);
 
         if (internalWidthUpdate)    // probably the result of a binding loop, but by letting it
             return;      // get this far we'll get a warning to that effect if it is.
@@ -457,7 +468,8 @@ void QQuickTextPrivate::updateSize()
         size = textRect.size();
         updateBaseline(baseline, q->height() - size.height());
     } else {
-        singleline = false; // richtext can't elide or be optimized for single-line case
+        widthExceeded = true; // always relayout rich text on width changes..
+        heightExceeded = false; // rich text layout isn't affected by height changes.
         ensureDoc();
         extra->doc->setDefaultFont(font);
         QQuickText::HAlignment horizontalAlignment = q->effectiveHAlign();
@@ -472,7 +484,8 @@ void QQuickTextPrivate::updateSize()
         option.setWrapMode(QTextOption::WrapMode(wrapMode));
         option.setUseDesignMetrics(true);
         extra->doc->setDefaultTextOption(option);
-        if (requireImplicitWidth && q->widthValid()) {
+        qreal naturalWidth = 0;
+        if (requireImplicitSize && q->widthValid()) {
             extra->doc->setTextWidth(-1);
             naturalWidth = extra->doc->idealWidth();
             const bool wasInLayout = internalWidthUpdate;
@@ -486,25 +499,27 @@ void QQuickTextPrivate::updateSize()
             extra->doc->setTextWidth(q->width());
         else
             extra->doc->setTextWidth(extra->doc->idealWidth()); // ### Text does not align if width is not set (QTextDoc bug)
+        widthExceeded = extra->doc->textWidth() < extra->doc->idealWidth();
         QSizeF dsize = extra->doc->size();
         layedOutTextRect = QRectF(QPointF(0,0), dsize);
         size = QSizeF(extra->doc->idealWidth(),dsize.height());
 
         QFontMetricsF fm(font);
         updateBaseline(fm.ascent(), q->height() - size.height());
+
+        //### need to confirm cost of always setting these for richText
+        internalWidthUpdate = true;
+        qreal iWidth = -1;
+        if (!q->widthValid())
+            iWidth = size.width();
+        if (iWidth > -1)
+            q->setImplicitSize(iWidth, size.height());
+        internalWidthUpdate = false;
+
+        if (iWidth == -1)
+            q->setImplicitHeight(size.height());
     }
 
-    //### need to comfirm cost of always setting these for richText
-    internalWidthUpdate = true;
-    qreal iWidth = -1;
-    if (!q->widthValid())
-        iWidth = size.width();
-    if (iWidth > -1)
-        q->setImplicitSize(iWidth, size.height());
-    internalWidthUpdate = false;
-
-    if (iWidth == -1)
-        q->setImplicitHeight(size.height());
     if (layedOutTextRect.size() != previousSize)
         emit q->contentSizeChanged();
     updateType = UpdatePaintNode;
@@ -661,7 +676,6 @@ void QQuickTextPrivate::elideFormats(
 QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine) const
 {
     if (nextLine) {
-        nextLine->setLineWidth(INT_MAX);
         return layout.engine()->elidedText(
                 Qt::TextElideMode(elideMode),
                 QFixed::fromReal(lineWidth),
@@ -690,22 +704,21 @@ QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QT
     already absolutely positioned horizontally).
 */
 
-QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *const baseline)
+QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 {
     Q_Q(QQuickText);
-    layout.setCacheEnabled(true);
 
-    QTextOption textOption = layout.textOption();
-    textOption.setAlignment(Qt::Alignment(q->effectiveHAlign()));
-    textOption.setWrapMode(QTextOption::WrapMode(wrapMode));
-    textOption.setUseDesignMetrics(true);
-    layout.setTextOption(textOption);
-    layout.setFont(font);
+    bool singlelineElide = elideMode != QQuickText::ElideNone && q->widthValid();
+    bool multilineElide = elideMode == QQuickText::ElideRight
+            && q->widthValid()
+            && (q->heightValid() || maximumLineCountValid);
 
-    if (!requireImplicitWidth
-            && ((q->widthValid() && q->width() <= 0. && elideMode != QQuickText::ElideNone)
-            || (q->heightValid() && q->height() <= 0. && wrapMode != QQuickText::NoWrap && elideMode == QQuickText::ElideRight))) {
+    if ((!requireImplicitSize || (implicitWidthValid && implicitHeightValid))
+            && ((singlelineElide && q->width() <= 0.) || (multilineElide && q->heightValid() && q->height() <= 0.))) {
         // we are elided and we have a zero width or height
+        widthExceeded = q->widthValid() && q->width() <= 0.;
+        heightExceeded = q->heightValid() && q->height() <= 0.;
+
         if (!truncated) {
             truncated = true;
             emit q->truncatedChanged();
@@ -716,21 +729,32 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
         }
 
         QFontMetricsF fm(font);
-        qreal height = (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : fm.height() * lineHeight();
+        qreal height = (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : qCeil(fm.height()) * lineHeight();
         *baseline = fm.ascent();
         return QRectF(0, 0, 0, height);
     }
 
-    qreal lineWidth = q->widthValid() && q->width() > 0 ? q->width() : FLT_MAX;
-    const qreal maxHeight = q->heightValid() ? q->height() : FLT_MAX;
+    layout.setCacheEnabled(true);
+    QTextOption textOption = layout.textOption();
+    if (textOption.alignment() != q->effectiveHAlign()
+            || textOption.wrapMode() != QTextOption::WrapMode(wrapMode)
+            || !textOption.useDesignMetrics()) {
+        textOption.setAlignment(Qt::Alignment(q->effectiveHAlign()));
+        textOption.setWrapMode(QTextOption::WrapMode(wrapMode));
+        textOption.setUseDesignMetrics(true);
+        layout.setTextOption(textOption);
+    }
+    if (layout.font() != font)
+        layout.setFont(font);
+
+    lineWidth = (q->widthValid() || implicitWidthValid) && q->width() > 0
+            ? q->width()
+            : FLT_MAX;
+    qreal maxHeight = q->heightValid() ? q->height() : FLT_MAX;
 
     const bool customLayout = isLineLaidOutConnected();
     const bool wasTruncated = truncated;
 
-    bool singlelineElide = elideMode != QQuickText::ElideNone && q->widthValid();
-    bool multilineElide = elideMode == QQuickText::ElideRight
-            && q->widthValid()
-            && (q->heightValid() || maximumLineCountValid);
     bool canWrap = wrapMode != QQuickText::NoWrap && q->widthValid();
 
     bool horizontalFit = fontSizeMode() & QQuickText::HorizontalFit && q->widthValid();
@@ -746,11 +770,13 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
             : largeFont;
     int scaledFontSize = largeFont;
 
+    widthExceeded = q->width() <= 0 && (singlelineElide || canWrap || horizontalFit);
+    heightExceeded = q->height() <= 0 && (multilineElide || verticalFit);
+
     QRectF br;
 
     QFont scaledFont = font;
 
-    QTextLine line;
     int visibleCount = 0;
     bool elide;
     qreal height = 0;
@@ -759,19 +785,19 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
     int elideStart = 0;
     int elideEnd = 0;
 
-    *naturalWidth = 0;
-
     int eos = multilengthEos;
 
     // Repeated layouts with reduced font sizes or abbreviated strings may be required if the text
-    // doesn't fit within the element dimensions.
+    // doesn't fit within the item dimensions,  or a binding to implicitWidth/Height changes
+    // the item dimensions.
     for (;;) {
         if (!once) {
             if (pixelSize)
                 scaledFont.setPixelSize(scaledFontSize);
             else
                 scaledFont.setPointSize(scaledFontSize);
-            layout.setFont(scaledFont);
+            if (layout.font() != scaledFont)
+                layout.setFont(scaledFont);
         }
 
         layout.beginLayout();
@@ -784,27 +810,31 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
         int unwrappedLineCount = 1;
         int maxLineCount = maximumLineCount();
         height = 0;
+        qreal naturalHeight = 0;
+        qreal previousHeight = 0;
         br = QRectF();
-        line = layout.createLine();
-        for (visibleCount = 1; ; ++visibleCount) {
-            qreal preLayoutHeight = height;
 
+        QRectF unelidedRect;
+        QTextLine line = layout.createLine();
+        for (visibleCount = 1; ; ++visibleCount) {
             if (customLayout) {
-                setupCustomLineGeometry(line, height);
+                setupCustomLineGeometry(line, naturalHeight);
             } else {
-                setLineGeometry(line, lineWidth, height);
+                setLineGeometry(line, lineWidth, naturalHeight);
             }
+
+            unelidedRect = br.united(line.naturalTextRect());
 
             // Elide the previous line if the accumulated height of the text exceeds the height
             // of the element.
-            if (multilineElide && height > maxHeight && visibleCount > 1) {
+            if (multilineElide && naturalHeight > maxHeight && visibleCount > 1) {
                 elide = true;
+                heightExceeded = true;
                 if (eos != -1)  // There's an abbreviated string available, skip the rest as it's
                     break;      // all going to be discarded.
 
                 truncated = true;
                 truncateHeight = true;
-                height = preLayoutHeight;
 
                 characterCount = line.textStart() + line.textLength();
                 visibleCount -= 1;
@@ -816,36 +846,37 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
                 elideStart = previousLine.textStart();
                 // elideEnd isn't required for right eliding.
 
-                line = previousLine;
-                height -= (lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : previousLine.height() * lineHeight();
+                height = previousHeight;
                 break;
             }
 
-            QTextLine nextLine = layout.createLine();
-            if (!nextLine.isValid()) {
-                characterCount = line.textStart() + line.textLength();
-                if (singlelineElide && visibleCount == 1 && line.naturalTextWidth() > lineWidth) {
-                    // Elide a single line of  text if its width exceeds the element width.
+            const QTextLine previousLine = line;
+            line = layout.createLine();
+            if (!line.isValid()) {
+                characterCount = previousLine.textStart() + previousLine.textLength();
+                if (singlelineElide && visibleCount == 1 && previousLine.naturalTextWidth() > lineWidth) {
+                    // Elide a single previousLine of  text if its width exceeds the element width.
                     elide = true;
+                    widthExceeded = true;
                     if (eos != -1) // There's an abbreviated string available.
                         break;
 
                     truncated = true;
-                    height = preLayoutHeight;
                     elideText = layout.engine()->elidedText(
                             Qt::TextElideMode(elideMode),
                             QFixed::fromReal(lineWidth),
                             0,
-                            line.textStart(),
-                            line.textLength());
-                    elideStart = line.textStart();
-                    elideEnd = elideStart + line.textLength();
+                            previousLine.textStart(),
+                            previousLine.textLength());
+                    elideStart = previousLine.textStart();
+                    elideEnd = elideStart + previousLine.textLength();
                 } else {
-                    br = br.united(line.naturalTextRect());
+                    br = unelidedRect;
+                    height = naturalHeight;
                 }
                 break;
             } else {
-                const bool wrappedLine = layoutText.at(nextLine.textStart() - 1) != QChar::LineSeparator;
+                const bool wrappedLine = layoutText.at(line.textStart() - 1) != QChar::LineSeparator;
                 wrapped |= wrappedLine;
 
                 if (!wrappedLine)
@@ -855,58 +886,66 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
                 // if enabled.
                 if (visibleCount == maxLineCount) {
                     truncated = true;
-                    characterCount = nextLine.textStart() + nextLine.textLength();
+                    heightExceeded |= wrapped;
+                    characterCount = line.textStart() + line.textLength();
 
                     if (multilineElide) {
                         elide = true;
                         if (eos != -1)  // There's an abbreviated string available
                             break;
-                        height = preLayoutHeight;
                         elideText = wrappedLine
-                                ? elidedText(lineWidth, line, &nextLine)
-                                : elidedText(lineWidth, line);
-                        elideStart = line.textStart();
+                                ? elidedText(lineWidth, previousLine, &line)
+                                : elidedText(lineWidth, previousLine);
+                        elideStart = previousLine.textStart();
                         // elideEnd isn't required for right eliding.
                     } else {
-                        br = br.united(line.naturalTextRect());
+                        br = unelidedRect;
+                        height = naturalHeight;
                     }
                     break;
                 }
             }
-            br = br.united(line.naturalTextRect());
-            line = nextLine;
+            br = unelidedRect;
+            previousHeight = height;
+            height = naturalHeight;
         }
-        layout.endLayout();
-        br.moveTop(0);
+        widthExceeded |= wrapped;
 
-        // Save the implicitWidth of the text on the first layout only.
+        // Save the implicit size of the text on the first layout only.
         if (once) {
-            *naturalWidth = layout.maximumWidth();
             once = false;
 
-            if (requireImplicitWidth
-                    && characterCount < layoutText.length()
-                    && unwrappedLineCount < maxLineCount) {
-                // Use a new layout to get the maximum width for the remaining text.  Using a
-                // different layout excludes the truncated text from rendering.
-                QTextLayout widthLayout(layoutText.mid(characterCount), scaledFont);
-                widthLayout.setTextOption(layout.textOption());
-
-                widthLayout.beginLayout();
-                for (; unwrappedLineCount <= maxLineCount; ++unwrappedLineCount) {
-                    QTextLine line = widthLayout.createLine();
+            // If implicit sizes are required layout any additional lines up to the maximum line
+            // count.
+            if ((requireImplicitSize) && line.isValid() && unwrappedLineCount < maxLineCount) {
+                // Layout the remainder of the wrapped lines up to maxLineCount to get the implicit
+                // height.
+                for (int lineCount = layout.lineCount(); lineCount < maxLineCount; ++lineCount) {
+                    line = layout.createLine();
                     if (!line.isValid())
                         break;
+                    if (layoutText.at(line.textStart() - 1) == QChar::LineSeparator)
+                        ++unwrappedLineCount;
+                    setLineGeometry(line, lineWidth, naturalHeight);
                 }
-                widthLayout.endLayout();
-                *naturalWidth = qMax(*naturalWidth, widthLayout.maximumWidth());
+
+                // Create the remainder of the unwrapped lines up to maxLineCount to get the
+                // implicit width.
+                if (line.isValid() && layoutText.at(line.textStart() + line.textLength()) != QChar::LineSeparator)
+                    line = layout.createLine();
+                for (; line.isValid() && unwrappedLineCount <= maxLineCount; ++unwrappedLineCount)
+                    line = layout.createLine();
             }
+            layout.endLayout();
+
+            const qreal naturalWidth = layout.maximumWidth();
 
             bool wasInLayout = internalWidthUpdate;
             internalWidthUpdate = true;
-            q->setImplicitWidth(*naturalWidth);
+            q->setImplicitSize(naturalWidth, naturalHeight);
             internalWidthUpdate = wasInLayout;
 
+            // Update any variables that are dependent on the validity of the width or height.
             singlelineElide = elideMode != QQuickText::ElideNone && q->widthValid();
             multilineElide = elideMode == QQuickText::ElideRight
                     && q->widthValid()
@@ -918,13 +957,38 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
                     && (q->heightValid() || (maximumLineCountValid && canWrap));
 
             const qreal oldWidth = lineWidth;
-            lineWidth = q->widthValid() && q->width() > 0 ? q->width() : *naturalWidth;
-            if (lineWidth != oldWidth && (singlelineElide || multilineElide || canWrap || horizontalFit))
+            const qreal oldHeight = maxHeight;
+
+            lineWidth = q->widthValid() && q->width() > 0 ? q->width() : naturalWidth;
+            maxHeight = q->heightValid() ? q->height() : FLT_MAX;
+
+            // If the width of the item has changed and it's possible the result of wrapping,
+            // eliding, or scaling has changed do another layout.
+            if ((lineWidth < qMin(oldWidth, naturalWidth) || (widthExceeded && lineWidth > oldWidth))
+                    && (singlelineElide || multilineElide || canWrap || horizontalFit)) {
+                widthExceeded = false;
+                heightExceeded = false;
                 continue;
+            }
+
+            // If the height of the item has changed and it's possible the result of eliding,
+            // line count truncation or scaling has changed, do another layout.
+            if ((maxHeight < qMin(oldHeight, naturalHeight) || (heightExceeded && maxHeight > oldHeight))
+                    && (multilineElide || (canWrap && maximumLineCountValid))) {
+                widthExceeded = false;
+                heightExceeded = false;
+                continue;
+            }
+
             // If the horizontal alignment is not left and the width was not valid we need to relayout
             // now that we know the maximum line width.
-            if (!q->widthValid() && maxLineCount > 1 && q->effectiveHAlign() != QQuickText::AlignLeft)
+            if (!implicitWidthValid && lineCount > 1 && q->effectiveHAlign() != QQuickText::AlignLeft) {
+                widthExceeded = false;
+                heightExceeded = false;
                 continue;
+            }
+        } else {
+            layout.endLayout();
         }
 
         // If the next needs to be elided and there's an abbreviated string available
@@ -939,14 +1003,15 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
             continue;
         }
 
+        br.moveTop(0);
+
         if (!horizontalFit && !verticalFit)
             break;
 
         // Try and find a font size that better fits the dimensions of the element.
-        QRectF unelidedRect = br.united(line.naturalTextRect());
-
         if (horizontalFit) {
             if (unelidedRect.width() > lineWidth || (!verticalFit && wrapped)) {
+                widthExceeded = true;
                 largeFont = scaledFontSize - 1;
                 if (smallFont > largeFont)
                     break;
@@ -966,6 +1031,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
 
         if (verticalFit) {
             if (truncateHeight || unelidedRect.height() > maxHeight) {
+                heightExceeded = true;
                 largeFont = scaledFontSize - 1;
                 if (smallFont > largeFont)
                     break;
@@ -979,6 +1045,9 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
             }
         }
     }
+
+    implicitWidthValid = true;
+    implicitHeightValid = true;
 
     if (eos != multilengthEos)
         truncated = true;
@@ -1023,7 +1092,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const naturalWidth, qreal *cons
         QTextLine elidedLine = elideLayout->createLine();
         elidedLine.setPosition(QPointF(0, height));
         if (customLayout) {
-            setupCustomLineGeometry(elidedLine, height, line.lineNumber());
+            setupCustomLineGeometry(elidedLine, height, visibleCount - 1);
         } else {
             setLineGeometry(elidedLine, lineWidth, height);
         }
@@ -1389,6 +1458,8 @@ void QQuickText::setFont(const QFont &font)
         // with headings or <font> tag, we need to re-parse
         if (d->formatModifiesFontSize)
             d->textHasChanged = true;
+        d->implicitWidthValid = false;
+        d->implicitHeightValid = false;
         d->updateLayout();
     }
 
@@ -1429,6 +1500,8 @@ void QQuickText::setText(const QString &n)
         d->determineHorizontalAlignment();
     }
     d->textHasChanged = true;
+    d->implicitWidthValid = false;
+    d->implicitHeightValid = false;
     qDeleteAll(d->imgTags);
     d->imgTags.clear();
     d->updateLayout();
@@ -1788,6 +1861,7 @@ void QQuickText::setMaximumLineCount(int lines)
     d->maximumLineCountValid = lines==INT_MAX ? false : true;
     if (d->maximumLineCount() != lines) {
         d->extra.value().maximumLineCount = lines;
+        d->implicitHeightValid = false;
         d->updateLayout();
         emit maximumLineCountChanged();
     }
@@ -2013,8 +2087,8 @@ QRectF QQuickText::boundingRect() const
     Q_D(const QQuickText);
 
     QRectF rect = d->layedOutTextRect;
-    rect.moveLeft(QQuickTextUtil::alignedX(rect, width(), d->hAlign));
-    rect.moveTop(QQuickTextUtil::alignedY(rect, height(), d->vAlign));
+    rect.moveLeft(QQuickTextUtil::alignedX(rect.width(), width(), d->hAlign));
+    rect.moveTop(QQuickTextUtil::alignedY(rect.height(), height(), d->vAlign));
 
     if (d->style != Normal)
         rect.adjust(-1, 0, 1, 2);
@@ -2044,32 +2118,54 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
 
     bool widthChanged = newGeometry.width() != oldGeometry.width();
     bool heightChanged = newGeometry.height() != oldGeometry.height();
-    bool leftAligned = effectiveHAlign() == QQuickText::AlignLeft;
     bool wrapped = d->wrapMode != QQuickText::NoWrap;
     bool elide = d->elideMode != QQuickText::ElideNone;
     bool scaleFont = d->fontSizeMode() != QQuickText::FixedSize && (widthValid() || heightValid());
+    bool verticalScale = (d->fontSizeMode() & QQuickText::VerticalFit) && heightValid();
+
+    bool widthMaximum = newGeometry.width() >= oldGeometry.width() && !d->widthExceeded;
+    bool heightMaximum = newGeometry.height() >= oldGeometry.height() && !d->heightExceeded;
 
     if ((!widthChanged && !heightChanged) || d->internalWidthUpdate)
         goto geomChangeDone;
 
-    if (leftAligned && !wrapped && !elide && !scaleFont)
+    if (effectiveHAlign() != QQuickText::AlignLeft && widthChanged) {
+        // If the width has changed and we're not left aligned do an update so the text is
+        // repositioned even if a full layout isn't required.
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
+        update();
+    }
+
+    if (!wrapped && !elide && !scaleFont)
         goto geomChangeDone; // left aligned unwrapped text without eliding never needs relayout
 
-    if (!widthChanged && !wrapped && d->singleline && !scaleFont)
-        goto geomChangeDone; // only height has changed which doesn't affect single line unwrapped text
+    if (elide // eliding and dimensions were and remain invalid;
+            && ((widthValid() && oldGeometry.width() <= 0 && newGeometry.width() <= 0)
+            || (heightValid() && oldGeometry.height() <= 0 && newGeometry.height() <= 0))) {
+        goto geomChangeDone;
+    }
 
-    if (!widthChanged && wrapped && d->elideMode != QQuickText::ElideRight && !scaleFont && !d->isLineLaidOutConnected())
-        goto geomChangeDone; // only height changed and no multiline eliding.
+    if (widthMaximum && heightMaximum && !d->isLineLaidOutConnected())  // Size is sufficient and growing.
+        goto geomChangeDone;
 
-    if (leftAligned && d->elideMode == QQuickText::ElideRight && !d->truncated && d->singleline
-            && !wrapped && newGeometry.width() > oldGeometry.width() && !scaleFont)
-        goto geomChangeDone; // Eliding not affected if we're not currently truncated and we get wider.
+    if (!(widthChanged || widthMaximum) && !d->isLineLaidOutConnected()) { // only height has changed
+        if (newGeometry.height() > oldGeometry.height()) {
+            if (!d->heightExceeded) // Height is adequate and growing.
+                goto geomChangeDone;
+            if (d->lineCount == d->maximumLineCount())  // Reached maximum line and height is growing.
+                goto geomChangeDone;
+        } else if (newGeometry.height() < oldGeometry.height()) {
+            if (d->lineCount < 2 && !verticalScale && newGeometry.height() > 0)  // A single line won't be truncated until the text is 0 height.
+                goto geomChangeDone;
 
-    if (d->elideMode == QQuickText::ElideRight && wrapped && newGeometry.height() > oldGeometry.height() && !scaleFont) {
-        if (!d->truncated)
-            goto geomChangeDone; // Multiline eliding not affected if we're not currently truncated and we get higher.
-        if (d->maximumLineCountValid && d->lineCount == d->maximumLineCount())
-            goto geomChangeDone; // Multiline eliding not affected if we're already at max line count and we get higher.
+            if (!verticalScale // no scaling, no eliding, and either unwrapped, or no maximum line count.
+                    && d->elideMode != QQuickText::ElideRight
+                    && !(d->maximumLineCountValid && d->widthExceeded)) {
+                goto geomChangeDone;
+            }
+        }
+    } else if (!heightChanged && widthMaximum) {
+        goto geomChangeDone;
     }
 
     if (d->updateOnComponentComplete || d->textHasChanged) {
@@ -2110,7 +2206,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     d->updateType = QQuickTextPrivate::UpdateNone;
 
-    const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect, height(), d->vAlign);
+    const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect.height(), height(), d->vAlign);
 
     // We need to make sure the layout is done in the current thread
 #if defined(Q_OS_MAC)
@@ -2134,29 +2230,30 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     const QColor linkColor = QColor::fromRgba(d->linkColor);
 
     if (d->richText) {
+        const qreal dx = QQuickTextUtil::alignedX(d->layedOutTextRect.width(), width(), d->hAlign);
         d->ensureDoc();
-        const qreal dx = QQuickTextUtil::alignedX(d->layedOutTextRect, width(), d->hAlign);
         node->addTextDocument(QPointF(dx, dy), d->extra->doc, color, d->style, styleColor, linkColor);
-    } else if (d->elideMode == QQuickText::ElideNone || d->layedOutTextRect.width() > 0.) {
+    } else if (d->layedOutTextRect.width() > 0) {
+        const qreal dx = QQuickTextUtil::alignedX(d->lineWidth, width(), d->hAlign);
         int unelidedLineCount = d->lineCount;
         if (d->elideLayout)
             unelidedLineCount -= 1;
         if (unelidedLineCount > 0) {
             node->addTextLayout(
-                        QPoint(0, dy),
+                        QPointF(dx, dy),
                         &d->layout,
                         color, d->style, styleColor, linkColor,
                         QColor(), QColor(), -1, -1,
                         0, unelidedLineCount);
         }
         if (d->elideLayout)
-            node->addTextLayout(QPoint(0, dy), d->elideLayout, color, d->style, styleColor, linkColor);
-    }
+            node->addTextLayout(QPointF(dx, dy), d->elideLayout, color, d->style, styleColor, linkColor);
 
-    foreach (QQuickStyledTextImgTag *img, d->visibleImgTags) {
-        QQuickPixmap *pix = img->pix;
-        if (pix && pix->isReady())
-            node->addImage(QRectF(img->pos.x(), img->pos.y() + dy, pix->width(), pix->height()), pix->image());
+        foreach (QQuickStyledTextImgTag *img, d->visibleImgTags) {
+            QQuickPixmap *pix = img->pix;
+            if (pix && pix->isReady())
+                node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, pix->width(), pix->height()), pix->image());
+        }
     }
     return node;
 }
@@ -2214,6 +2311,7 @@ void QQuickText::setLineHeight(qreal lineHeight)
         return;
 
     d->extra.value().lineHeight = lineHeight;
+    d->implicitHeightValid = false;
     d->updateLayout();
     emit lineHeightChanged(lineHeight);
 }
@@ -2242,6 +2340,7 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
     if (mode == d->lineHeightMode())
         return;
 
+    d->implicitHeightValid = false;
     d->extra.value().lineHeightMode = mode;
     d->updateLayout();
 
@@ -2400,14 +2499,14 @@ QString QQuickTextPrivate::anchorAt(const QPointF &mousePos) const
 {
     Q_Q(const QQuickText);
     QPointF translatedMousePos = mousePos;
-    translatedMousePos.ry() -= QQuickTextUtil::alignedY(layedOutTextRect, q->height(), vAlign);
+    translatedMousePos.ry() -= QQuickTextUtil::alignedY(layedOutTextRect.height(), q->height(), vAlign);
     if (styledText) {
         QString link = anchorAt(&layout, translatedMousePos);
         if (link.isEmpty() && elideLayout)
             link = anchorAt(elideLayout, translatedMousePos);
         return link;
     } else if (richText && extra.isAllocated() && extra->doc) {
-        translatedMousePos.rx() -= QQuickTextUtil::alignedX(layedOutTextRect, q->width(), hAlign);
+        translatedMousePos.rx() -= QQuickTextUtil::alignedX(layedOutTextRect.width(), q->width(), hAlign);
         return extra->doc->documentLayout()->anchorAt(translatedMousePos);
     }
     return QString();

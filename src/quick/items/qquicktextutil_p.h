@@ -66,8 +66,9 @@ public:
     template <typename Private> static void setCursorDelegate(Private *d, QQmlComponent *delegate);
     template <typename Private> static void createCursor(Private *d);
 
-    static qreal alignedX(const QRectF &rect, qreal width, int alignment);
-    static qreal alignedY(const QRectF &rect, qreal height, int alignment);
+
+    static qreal alignedX(qreal textWidth, qreal itemWidth, int alignment);
+    static qreal alignedY(qreal textHeight, qreal itemHeight, int alignment);
 
 private:
     static QQuickItem *createCursor(
