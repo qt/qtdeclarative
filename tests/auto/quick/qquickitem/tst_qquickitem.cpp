@@ -203,7 +203,7 @@ void tst_qquickitem::noCanvas()
     root->setFocus(true);
     scope->setFocus(true);
     scopedChild2->setFocus(true);
-    QCOMPARE(root->hasFocus(), true);
+    QCOMPARE(root->hasFocus(), false);
     QCOMPARE(child->hasFocus(), false);
     QCOMPARE(scope->hasFocus(), false);
     QCOMPARE(scopedChild->hasFocus(), false);
@@ -820,6 +820,32 @@ void tst_qquickitem::parentItemWithFocus()
     focusState[&child].set(false, false);
     focusState[&grandchild].set(true, true);
     focusState.active(&grandchild);
+    FVERIFY();
+    }
+
+    {
+    QQuickItem parent;
+    QQuickItem child1;
+    QQuickItem child2;
+
+    FocusState focusState;
+    focusState << &parent << &child1 << &child2;
+    parent.setFocus(true);
+    child1.setParentItem(&parent);
+    child2.setParentItem(&parent);
+    focusState[&parent].set(true, false);
+    focusState[&child1].set(false, false);
+    focusState[&child2].set(false, false);
+    FVERIFY();
+
+    child1.setFocus(true);
+    focusState[&parent].set(false, false);
+    focusState[&child1].set(true, false);
+    FVERIFY();
+
+    parent.setFocus(true);
+    focusState[&parent].set(true, false);
+    focusState[&child1].set(false, false);
     FVERIFY();
     }
 }

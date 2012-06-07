@@ -4953,6 +4953,9 @@ void QQuickItem::setFocus(bool focus)
                 QQuickItemPrivate::get(oldSubFocusItem)->updateSubFocusItem(scope, false);
                 QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
                 changed << oldSubFocusItem;
+            } else if (!scope->isFocusScope() && scope->hasFocus()) {
+                QQuickItemPrivate::get(scope)->focus = false;
+                changed << scope;
             }
             d->updateSubFocusItem(scope, focus);
 
@@ -4963,8 +4966,19 @@ void QQuickItem::setFocus(bool focus)
             QQuickCanvasPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
         }
     } else {
+        QVarLengthArray<QQuickItem *, 20> changed;
+        QQuickItem *oldSubFocusItem = d->subFocusItem;
+        if (!isFocusScope() && oldSubFocusItem) {
+            QQuickItemPrivate::get(oldSubFocusItem)->updateSubFocusItem(this, false);
+            QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
+            changed << oldSubFocusItem;
+        }
+
         d->focus = focus;
+        changed << this;
         emit focusChanged(focus);
+
+        QQuickCanvasPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
     }
 }
 
