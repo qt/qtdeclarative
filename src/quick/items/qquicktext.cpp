@@ -2165,7 +2165,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
             node->addTextLayout(
                         QPoint(0, bounds.y()),
                         &d->layout,
-                        d->color, d->style, d->styleColor, d->linkColor,
+                        color, d->style, styleColor, linkColor,
                         QColor(), QColor(), -1, -1,
                         0, unelidedLineCount);
         }
