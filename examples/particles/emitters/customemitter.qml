@@ -72,7 +72,11 @@ ParticleSystem {
             for (var i=0; i<particles.length; i++) {
                 var particle = particles[i];
                 particle.startSize = Math.max(02,Math.min(492,Math.tan(particle.t/2)*24));
-                var theta = Math.floor(Math.random() * 6.0) / 6.0;
+                var theta = Math.floor(Math.random() * 6.0);
+                particle.red = theta == 0 || theta == 1 || theta == 2 ? 0.2 : 1;
+                particle.green = theta == 2 || theta == 3 || theta == 4 ? 0.2 : 1;
+                particle.blue = theta == 4 || theta == 5 || theta == 0 ? 0.2 : 1;
+                theta /= 6.0;
                 theta *= 2.0*Math.PI;
                 theta += sys.convert(sys.petalRotation);
                 particle.initialVX = petalLength * Math.cos(theta);
@@ -86,7 +90,5 @@ ParticleSystem {
     ImageParticle {
         source: "../images/particle4.png"
         alpha: 0.0
-        redVariation: 0.6
-        color: "white"
     }
 }

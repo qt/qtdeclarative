@@ -472,7 +472,12 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
         }
     }
 
+    foreach (QQuickParticleData* d, toEmit)
+            m_system->emitParticle(d);
+
     if (isEmitConnected()) {
+        //Done after emitParticle so that the Painter::load is done first, this allows you to customize its static variables
+        //We then don't need to request another reload, because the first reload isn't scheduled until we get back to the render thread
         v8::HandleScope handle_scope;
         v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
         v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
@@ -481,8 +486,6 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
 
         emitParticles(QQmlV8Handle::fromHandle(array));//A chance for arbitrary JS changes
     }
-    foreach (QQuickParticleData* d, toEmit)
-            m_system->emitParticle(d);
 
     m_last_emission = pt;
 

@@ -118,7 +118,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitRatePerParticle
 */
 /*!
-    \qmlsignal QtQuick.Particles2::TrailEmitter::emitFollowParticles(Array particles, real followed)
+    \qmlsignal QtQuick.Particles2::TrailEmitter::emitFollowParticles(Array particles, QtQuick.Particles2::Particle followed)
 
     This handler is called when particles are emitted from the \a followed particle. \a particles contains an array of particle objects which can be directly manipulated.
 
@@ -264,6 +264,9 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
             }
         }
 
+        foreach (QQuickParticleData* d, toEmit)
+            m_system->emitParticle(d);
+
         if (isEmitConnected() || isEmitFollowConnected()) {
             v8::HandleScope handle_scope;
             v8::Context::Scope scope(QQmlEnginePrivate::getV8Engine(qmlEngine(this))->context());
@@ -276,8 +279,6 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
             else if (isEmitConnected())
                 emitParticles(QQmlV8Handle::fromHandle(array));//A chance for arbitrary JS changes
         }
-        foreach (QQuickParticleData* d, toEmit)
-            m_system->emitParticle(d);
         m_lastEmission[d->index] = pt;
     }
 
