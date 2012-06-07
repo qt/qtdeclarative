@@ -419,10 +419,10 @@ void LLVMInstructionSelection::genUnop(llvm::Value *result, IR::Unop *e)
         Q_UNREACHABLE();
         break;
 
-    case IR::OpNot: _llvmModule->getFunction("__qmljs_llvm_not"); break;
-    case IR::OpUMinus: _llvmModule->getFunction("__qmljs_llvm_uminus"); break;
-    case IR::OpUPlus: _llvmModule->getFunction("__qmljs_llvm_uplus"); break;
-    case IR::OpCompl: _llvmModule->getFunction("__qmljs_llvm_compl"); break;
+    case IR::OpNot: op = _llvmModule->getFunction("__qmljs_llvm_not"); break;
+    case IR::OpUMinus: op = _llvmModule->getFunction("__qmljs_llvm_uminus"); break;
+    case IR::OpUPlus: op = _llvmModule->getFunction("__qmljs_llvm_uplus"); break;
+    case IR::OpCompl: op = _llvmModule->getFunction("__qmljs_llvm_compl"); break;
     }
 
     CreateCall3(op, _llvmFunction->arg_begin(), result, expr);
