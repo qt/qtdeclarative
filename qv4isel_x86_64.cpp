@@ -10,7 +10,7 @@ typedef qint64 gint64;
 typedef uchar guint8;
 typedef uint guint32;
 typedef void *gpointer;
-#include "amd64-codegen.h"
+#include "asm/amd64-codegen.h"
 
 #include <sys/mman.h>
 #include <iostream>
