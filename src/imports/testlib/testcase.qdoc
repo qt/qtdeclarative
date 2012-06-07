@@ -345,7 +345,22 @@
     \a expected, and displays the optional \a message.  Similar
     to \c{QCOMPARE(actual, expected)} in C++.
 
-    \sa tryCompare()
+    \sa tryCompare(), fuzzyCompare
+*/
+
+
+/*!
+    \qmlmethod TestCase::fuzzyCompare(actual, expected, delta, message = "")
+
+    Fails the current test case if the difference betwen \a actual and \a expected
+    is greater than \a delta, and displays the optional \a message.  Similar
+    to \c{qFuzzyCompare(actual, expected)} in C++ but with a required \a delta value.
+
+    This funtion can also be used for color comparisons if both the \a actual and
+    \a expected values can be converted into color values. If any of the differences
+    for RGBA channel values are greater than \a delta, the test fails.
+
+    \sa tryCompare(), compare()
 */
 
 /*!

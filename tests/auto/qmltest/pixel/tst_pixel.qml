@@ -59,6 +59,10 @@ Rectangle {
            compare(img.blue(1,1), 0);
            compare(img.alpha(1,1), 255);
 
+           fuzzyCompare(img.red(1,1), 254, 2);
+           fuzzyCompare(img.pixel(1,1), Qt.rgba(254, 0, 0, 254), 2);
+           fuzzyCompare(img.pixel(1,1), "#FF0201", 2);
+
            rect.color = "blue";
            wait(200);
            img = grabImage(rect);

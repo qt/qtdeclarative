@@ -56,6 +56,8 @@
 #include <QtCore/QUrl>
 #include <QtCore/QDir>
 #include <QtQuick/qquickwindow.h>
+#include <QtGui/qvector3d.h>
+#include <QtQml/private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -426,15 +428,101 @@ bool QuickTestResult::verify
     }
 }
 
+bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expected, qreal delta)
+{
+    if (actual.type() == QVariant::Color || expected.type() == QVariant::Color) {
+        if (!actual.canConvert(QVariant::Color) || !expected.canConvert(QVariant::Color))
+            return false;
+
+        //fuzzy color comparison
+        QColor act;
+        QColor exp;
+        bool ok(false);
+
+        QVariant var = QQml_colorProvider()->colorFromString(actual.toString(), &ok);
+        if (!ok)
+            return false;
+        act = var.value<QColor>();
+
+        QQml_colorProvider()->colorFromString(expected.toString(), &ok);
+        if (!ok)
+            return false;
+        exp = var.value<QColor>();
+
+        return ( qAbs(act.red() - exp.red()) <= delta
+              && qAbs(act.green() - exp.green()) <= delta
+              && qAbs(act.blue() - exp.blue()) <= delta
+              && qAbs(act.alpha() - exp.alpha()) <= delta);
+    } else {
+        //number comparison
+        bool ok = true;
+        qreal act = actual.toFloat(&ok);
+        if (!ok)
+            return false;
+
+        qreal exp = expected.toFloat(&ok);
+        if (!ok)
+            return false;
+
+        return (qAbs(act - exp) <= delta);
+    }
+
+    return false;
+}
+
+void QuickTestResult::stringify(QQmlV8Function *args)
+{
+    if (args->Length() < 1)
+        args->returnValue(v8::Null());
+
+    v8::Local<v8::Value> value = (*args)[0];
+
+    QString result;
+    QV8Engine *engine = args->engine();
+
+    //Check for Object Type
+    if (value->IsObject()
+    && !value->IsFunction()
+    && !value->IsArray()
+    && !value->IsDate()
+    && !value->IsRegExp()) {
+        QVariant v = engine->toVariant(value, QMetaType::UnknownType);
+        if (v.isValid()) {
+            switch (v.type()) {
+            case QVariant::Vector3D:
+            {
+                QVector3D v3d = v.value<QVector3D>();
+                result = QString::fromLatin1("Qt.vector3d(%1, %2, %3)").arg(v3d.x()).arg(v3d.y()).arg(v3d.z());
+                break;
+            }
+            default:
+                result = v.toString();
+            }
+
+        } else {
+            result = QLatin1String("Object");
+        }
+    } else {
+        v8::Local<v8::String> jsstr = value->ToString();
+        QString tmp = engine->toString(jsstr);
+        if (value->IsArray())
+            result.append(QString::fromLatin1("[%1]").arg(tmp));
+        else
+            result.append(tmp);
+    }
+
+    args->returnValue(args->engine()->toString(result));
+}
+
 bool QuickTestResult::compare
     (bool success, const QString &message,
-     const QString &val1, const QString &val2,
+     const QVariant &val1, const QVariant &val2,
      const QUrl &location, int line)
 {
     return QTestResult::compare
         (success, message.toLocal8Bit().constData(),
-         QTest::toString(val1.toLatin1().constData()),
-         QTest::toString(val2.toLatin1().constData()),
+         QTest::toString(val1.toString().toLatin1().constData()),
+         QTest::toString(val2.toString().toLatin1().constData()),
          "", "",
          qtestFixUrl(location).toLatin1().constData(), line);
 }

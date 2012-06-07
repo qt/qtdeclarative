@@ -85,6 +85,10 @@ TestCase {
         function skip(msg, file, line) {
             failmsg = "skip:" + msg
         }
+
+        function stringify(str) {
+            return str;
+        }
     }
 
     TestCase {

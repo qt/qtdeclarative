@@ -253,24 +253,9 @@ Item {
         return true
     }
 
-    function qtest_formatValue(value) {
-        if (qtest_typeof(value) == "object") {
-            if ("x" in value && "y" in value && "z" in value) {
-                return "Qt.vector3d(" + value.x + ", " +
-                       value.y + ", " + value.z + ")"
-            }
-            try {
-                return JSON.stringify(value)
-            } catch (ex) {
-                // stringify might fail (e.g. due to circular references)
-            }
-        }
-        return value
-    }
-
     function compare(actual, expected, msg) {
-        var act = testCase.qtest_formatValue(actual)
-        var exp = testCase.qtest_formatValue(expected)
+        var act = qtest_results.stringify(actual)
+        var exp = qtest_results.stringify(expected)
 
         var success = qtest_compareInternal(actual, expected)
         if (msg === undefined) {
@@ -280,6 +265,23 @@ Item {
                 msg = "Compared values are not the same"
         }
         if (!qtest_results.compare(success, msg, act, exp, util.callerFile(), util.callerLine())) {
+            throw new Error("QtQuickTest::fail")
+        }
+    }
+
+    function fuzzyCompare(actual, expected, delta, msg) {
+        if (delta === undefined)
+            qtest_fail("A delta value is required for fuzzyCompare", 2)
+
+        var success = qtest_results.fuzzyCompare(actual, expected, delta)
+        if (msg === undefined) {
+            if (success)
+                msg = "FUZZYCOMPARE()"
+            else
+                msg = "Compared values are not the same with delta(" + delta + ")"
+        }
+
+        if (!qtest_results.compare(success, msg, actual, expected, util.callerFile(), util.callerLine())) {
             throw new Error("QtQuickTest::fail")
         }
     }
@@ -299,8 +301,8 @@ Item {
             i += 50
         }
         var actual = obj[prop]
-        var act = testCase.qtest_formatValue(actual)
-        var exp = testCase.qtest_formatValue(value)
+        var act = qtest_results.stringify(actual)
+        var exp = qtest_results.stringify(value)
         var success = qtest_compareInternal(actual, value)
         if (!qtest_results.compare(success, "property " + prop, act, exp, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")

@@ -277,7 +277,7 @@ public:
 };
 
 Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider *);
-Q_AUTOTEST_EXPORT QQmlColorProvider *QQml_colorProvider();
+Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_colorProvider();
 
 
 class Q_QML_PRIVATE_EXPORT QQmlGuiProvider

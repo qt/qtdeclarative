@@ -48,6 +48,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQml/private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -111,12 +112,15 @@ public Q_SLOTS:
     void finishTestDataCleanup();
     void finishTestFunction();
 
+    void stringify(QQmlV8Function *args);
+
     void fail(const QString &message, const QUrl &location, int line);
     bool verify(bool success, const QString &message,
                 const QUrl &location, int line);
     bool compare(bool success, const QString &message,
-                 const QString &val1, const QString &val2,
+                 const QVariant &val1, const QVariant &val2,
                  const QUrl &location, int line);
+    bool fuzzyCompare(const QVariant &actual, const QVariant &expected, qreal delta);
     void skip(const QString &message, const QUrl &location, int line);
     bool expectFail(const QString &tag, const QString &comment,
                     const QUrl &location, int line);
