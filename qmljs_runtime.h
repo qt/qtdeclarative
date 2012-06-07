@@ -99,10 +99,12 @@ void __qmljs_string_from_number(Context *ctx, Value *result, double number);
 bool __qmljs_string_compare(Context *ctx, String *left, String *right);
 bool __qmljs_string_equal(Context *ctx, String *left, String *right);
 String *__qmljs_string_concat(Context *ctx, String *first, String *second);
+String *__qmljs_identifier_from_utf8(Context *ctx, const char *s);
 
 // objects
 void __qmljs_object_default_value(Context *ctx, Value *result, const Value *object, int typeHint);
 void __qmljs_throw_type_error(Context *ctx, Value *result);
+void __qmljs_new_object(Context *ctx, Value *result);
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean);
 void __qmljs_new_number_object(Context *ctx, Value *result, double n);
 void __qmljs_new_string_object(Context *ctx, Value *result, String *string);

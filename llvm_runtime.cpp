@@ -175,9 +175,9 @@ void __qmljs_llvm_not(Context *ctx, Value *result, const Value *value)
     __qmljs_not(ctx, result, value);
 }
 
-String *__qmljs_llvm_get_identifier(Context *ctx, const char *str)
+String *__qmljs_llvm_identifier_from_utf8(Context *ctx, const char *str)
 {
-    return __qmljs_string_from_utf8(ctx, str); // ### make it unique
+    return __qmljs_identifier_from_utf8(ctx, str); // ### make it unique
 }
 
 void __qmljs_llvm_call_activation_property(Context *context, Value *result, String *name, Value *args, int argc)
@@ -193,6 +193,11 @@ void __qmljs_llvm_call_value(Context *context, Value *result, const Value *thisO
 void __qmljs_llvm_construct_activation_property(Context *context, Value *result, String *name, Value *args, int argc)
 {
     __qmljs_construct_activation_property(context, result, name, args, argc);
+}
+
+void __qmljs_llvm_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc)
+{
+    __qmljs_construct_value(context, result, func, args, argc);
 }
 
 void __qmljs_llvm_get_activation_property(Context *ctx, Value *result, String *name)
@@ -273,6 +278,12 @@ void __qmljs_llvm_delete_property(Context *ctx, Value *result, String *name)
 void __qmljs_llvm_delete_value(Context *ctx, Value *result, Value *value)
 {
     __qmljs_delete_value(ctx, result, value);
+}
+
+void __qmljs_llvm_init_this_object(Context *ctx)
+{
+    if (ctx->calledAsConstructor)
+        __qmljs_new_object(ctx, &ctx->thisObject);
 }
 
 } // extern "C"

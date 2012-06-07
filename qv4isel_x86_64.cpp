@@ -219,6 +219,9 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
             amd64_mov_reg_imm(_codePtr, AMD64_RCX, argc);
             amd64_call_code(_codePtr, __qmljs_builtin_typeof);
             break;
+        case IR::Name::builtin_delete:
+            Q_UNREACHABLE();
+            break;
         case IR::Name::builtin_throw:
             amd64_lea_membase(_codePtr, AMD64_RDX, AMD64_RSP, 0);
             amd64_mov_reg_imm(_codePtr, AMD64_RCX, argc);

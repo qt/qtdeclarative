@@ -494,6 +494,11 @@ String *__qmljs_string_from_utf8(Context *ctx, const char *s)
     return ctx->engine->newString(QString::fromUtf8(s));
 }
 
+String *__qmljs_identifier_from_utf8(Context *ctx, const char *s)
+{
+    return ctx->engine->identifier(QString::fromUtf8(s));
+}
+
 int __qmljs_string_length(Context *, String *string)
 {
     return string->toQString().length();
@@ -579,6 +584,11 @@ void __qmljs_throw_type_error(Context *ctx, Value *result)
     ctx->throwTypeError();
     if (result)
         *result = ctx->result;
+}
+
+void __qmljs_new_object(Context *ctx, Value *result)
+{
+    __qmljs_init_object(result, ctx->engine->newObject());
 }
 
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)

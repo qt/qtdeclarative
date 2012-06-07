@@ -106,6 +106,10 @@ llvm::Function *LLVMInstructionSelection::compileLLVMFunction(IR::Function *func
     qSwap(_tempMap, tempMap);
     qSwap(_blockMap, blockMap);
 
+    // create the LLVM blocks
+    foreach (IR::BasicBlock *block, _function->basicBlocks)
+        (void) getLLVMBasicBlock(block);
+
     // entry block
     SetInsertPoint(getLLVMBasicBlock(_function->basicBlocks.first()));
 
@@ -121,6 +125,9 @@ llvm::Function *LLVMInstructionSelection::compileLLVMFunction(IR::Function *func
     foreach (llvm::Value *t, _tempMap) {
         CreateStore(llvm::Constant::getNullValue(_valueTy), t);
     }
+
+    CreateCall(_llvmModule->getFunction("__qmljs_llvm_init_this_object"),
+               _llvmFunction->arg_begin());
 
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
         qSwap(_block, block);
@@ -222,7 +229,7 @@ llvm::Value *LLVMInstructionSelection::getStringPtr(const QString &s)
 llvm::Value *LLVMInstructionSelection::getIdentifier(const QString &s)
 {
     llvm::Value *str = getStringPtr(s);
-    llvm::Value *id = CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_identifier"),
+    llvm::Value *id = CreateCall2(_llvmModule->getFunction("__qmljs_identifier_from_utf8"),
                                   _llvmFunction->arg_begin(), str);
     return id;
 }
@@ -576,6 +583,29 @@ void LLVMInstructionSelection::genCallTemp(IR::Call *e, llvm::Value *result)
     _llvmValue = CreateLoad(result);
 }
 
+void LLVMInstructionSelection::genConstructTemp(IR::New *e, llvm::Value *result)
+{
+    if (! result)
+        result = newLLVMTemp(_valueTy);
+
+    llvm::Value *func = getLLVMTempReference(e->base);
+
+    int argc = 0;
+    llvm::Value *args = genArguments(e->args, argc);
+
+    llvm::Value *actuals[] = {
+        _llvmFunction->arg_begin(),
+        result,
+        func,
+        args,
+        getInt32(argc)
+    };
+
+    CreateCall(_llvmModule->getFunction("__qmljs_llvm_construct_value"), actuals);
+
+    _llvmValue = CreateLoad(result);
+}
+
 void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
 {
     IR::Name *base = e->base->asName();
@@ -656,6 +686,28 @@ void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
     }
 }
 
+void LLVMInstructionSelection::genConstructName(IR::New *e, llvm::Value *result)
+{
+    IR::Name *base = e->base->asName();
+
+    if (! result)
+        result = newLLVMTemp(_valueTy);
+
+    if (! base->id) {
+        Q_UNREACHABLE();
+    } else {
+        llvm::Value *name = getIdentifier(*base->id);
+
+        int argc = 0;
+        llvm::Value *args = genArguments(e->args, argc);
+
+        CreateCall5(_llvmModule->getFunction("__qmljs_construct_activation_property"),
+                    _llvmFunction->arg_begin(), result, name, args, getInt32(argc));
+
+        _llvmValue = CreateLoad(result);
+    }
+}
+
 void LLVMInstructionSelection::visitCall(IR::Call *e)
 {
     if (e->base->asMember()) {
@@ -684,30 +736,20 @@ void LLVMInstructionSelection::visitNew(IR::New *e)
 {
     if (e->base->asMember()) {
         genConstructMember(e);
-        return;
-    }
+    } else if (e->base->asTemp()) {
+        genConstructTemp(e);
+    } else if (e->base->asName()) {
+        genConstructName(e);
+    } else if (IR::Temp *t = e->base->asTemp()) {
+        llvm::Value *base = getLLVMTemp(t);
 
-    llvm::Value *func = 0;
-    llvm::Value *base = 0;
-    if (IR::Temp *t = e->base->asTemp()) {
-        base = getLLVMTemp(t);
-        func = _llvmModule->getFunction("__qmljs_llvm_construct_value");
-    } else if (IR::Name *n = e->base->asName()) {
-        if (n->id) {
-            llvm::Value *str = getStringPtr(*n->id);
-            base = CreateCall2(_llvmModule->getFunction("__qmljs_llvm_get_identifier"),
-                               _llvmFunction->arg_begin(), str);
-            func = _llvmModule->getFunction("__qmljs_llvm_construct_activation_property");
-        }
-    }
+        int argc = 0;
+        llvm::Value *args = genArguments(e->args, argc);
 
-    int argc = 0;
-    llvm::Value *args = genArguments(e->args, argc);
-
-    if (func) {
         llvm::Value *result = newLLVMTemp(_valueTy);
         CreateStore(llvm::Constant::getNullValue(_valueTy), result);
-        CreateCall5(func, _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
+        CreateCall5(_llvmModule->getFunction("__qmljs_llvm_construct_value"),
+                    _llvmFunction->arg_begin(), result, base, args, getInt32(argc));
         _llvmValue = CreateLoad(result);
     } else {
         Q_UNIMPLEMENTED();

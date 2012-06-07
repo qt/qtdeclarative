@@ -30,9 +30,11 @@ public:
     void genBinop(llvm::Value *result, IR::Binop *e);
     llvm::AllocaInst *newLLVMTemp(llvm::Type *type, llvm::Value *size = 0);
     llvm::Value * genArguments(IR::ExprList *args, int &argc);
-    void genCallMember(IR::Call *e, llvm::Value *result = 0);
     void genCallTemp(IR::Call *e, llvm::Value *result = 0);
     void genCallName(IR::Call *e, llvm::Value *result = 0);
+    void genCallMember(IR::Call *e, llvm::Value *result = 0);
+    void genConstructTemp(IR::New *e, llvm::Value *result = 0);
+    void genConstructName(IR::New *e, llvm::Value *result = 0);
     void genConstructMember(IR::New *e, llvm::Value *result = 0);
     void genMoveSubscript(IR::Move *s);
     void genMoveMember(IR::Move *s);
