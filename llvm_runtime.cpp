@@ -255,4 +255,24 @@ void __qmljs_llvm_get_this_object(Context *ctx, Value *result)
     __qmljs_get_thisObject(ctx, result);
 }
 
+void __qmljs_llvm_delete_subscript(Context *ctx, Value *result, Value *base, Value *index)
+{
+    __qmljs_delete_subscript(ctx, result, base, index);
+}
+
+void __qmljs_llvm_delete_member(Context *ctx, Value *result, Value *base, String *name)
+{
+    __qmljs_delete_member(ctx, result, base, name);
+}
+
+void __qmljs_llvm_delete_property(Context *ctx, Value *result, String *name)
+{
+    __qmljs_delete_property(ctx, result, name);
+}
+
+void __qmljs_llvm_delete_value(Context *ctx, Value *result, Value *value)
+{
+    __qmljs_delete_value(ctx, result, value);
+}
+
 } // extern "C"

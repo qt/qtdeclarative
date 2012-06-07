@@ -595,6 +595,40 @@ void LLVMInstructionSelection::genCallName(IR::Call *e, llvm::Value *result)
             _llvmValue = CreateLoad(result);
             return;
 
+        case IR::Name::builtin_delete: {
+            if (IR::Subscript *subscript = e->args->expr->asSubscript()) {
+                CreateCall4(_llvmModule->getFunction("__qmljs_llvm_delete_subscript"),
+                           _llvmFunction->arg_begin(),
+                           result,
+                           getLLVMTempReference(subscript->base),
+                           getLLVMTempReference(subscript->index));
+                _llvmValue = CreateLoad(result);
+                return;
+            } else if (IR::Member *member = e->args->expr->asMember()) {
+                CreateCall4(_llvmModule->getFunction("__qmljs_llvm_delete_member"),
+                           _llvmFunction->arg_begin(),
+                           result,
+                           getLLVMTempReference(member->base),
+                           getIdentifier(*member->name));
+                _llvmValue = CreateLoad(result);
+                return;
+            } else if (IR::Name *name = e->args->expr->asName()) {
+                CreateCall3(_llvmModule->getFunction("__qmljs_llvm_delete_property"),
+                           _llvmFunction->arg_begin(),
+                           result,
+                           getIdentifier(*name->id));
+                _llvmValue = CreateLoad(result);
+                return;
+            } else {
+                CreateCall3(_llvmModule->getFunction("__qmljs_llvm_delete_value"),
+                           _llvmFunction->arg_begin(),
+                           result,
+                           getLLVMTempReference(e->args->expr));
+                _llvmValue = CreateLoad(result);
+                return;
+            }
+        }   break;
+
         case IR::Name::builtin_throw:
             CreateCall2(_llvmModule->getFunction("__qmljs_llvm_throw"),
                         _llvmFunction->arg_begin(), getLLVMTempReference(e->args->expr));

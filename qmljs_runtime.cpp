@@ -410,13 +410,41 @@ void __qmljs_string_literal_function(Context *ctx, Value *result)
     __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("function")));
 }
 
-void __qmljs_delete(Context *ctx, Value *result, const Value *value)
+void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *index)
 {
-    Q_UNIMPLEMENTED();
-    (void) ctx;
-    (void) result;
-    (void) value;
-    assert(!"TODO");
+    if (ArrayObject *a = base->asArrayObject()) {
+        if (index->isNumber()) {
+            const quint32 n = index->numberValue;
+            if (n < a->value.size()) {
+                a->value.assign(n, Value::undefinedValue());
+                __qmljs_init_boolean(result, true);
+                return;
+            }
+        }
+    }
+
+    String *name = index->toString(ctx);
+    __qmljs_delete_member(ctx, result, base, name);
+}
+
+void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *name)
+{
+    Value obj = base->toObject(ctx);
+    __qmljs_init_boolean(result, obj.objectValue->deleteProperty(ctx, name, true));
+}
+
+void __qmljs_delete_property(Context *ctx, Value *result, String *name)
+{
+    Value obj = ctx->activation;
+    if (! obj.isObject())
+        obj = ctx->engine->globalObject;
+    __qmljs_init_boolean(result, obj.objectValue->deleteProperty(ctx, name, true));
+}
+
+void __qmljs_delete_value(Context *ctx, Value *result, Value *value)
+{
+    Q_UNUSED(value);
+    __qmljs_throw_type_error(ctx, result); // ### throw syntax error
 }
 
 void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Value *right)

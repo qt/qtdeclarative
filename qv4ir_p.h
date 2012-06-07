@@ -261,6 +261,7 @@ struct Name: Expr {
     enum Builtin {
         builtin_invalid,
         builtin_typeof,
+        builtin_delete,
         builtin_throw,
         builtin_rethrow
     };

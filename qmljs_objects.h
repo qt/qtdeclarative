@@ -6,6 +6,7 @@
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
+#include <cstdio>
 #include <cassert>
 
 namespace QQmlJS {
@@ -77,8 +78,17 @@ struct Property {
     Property *next;
     int index;
 
-    Property(String *name, const Value &value, PropertyAttributes flags = NoAttributes)
-        : name(name), value(value), attributes(flags), next(0), index(-1) {}
+    inline Property(String *name, const Value &value, PropertyAttributes flags = NoAttributes)
+    { init(name, value, flags); }
+
+    inline void init(String *name, const Value &value, PropertyAttributes flags = NoAttributes)
+    {
+        this->name = name;
+        this->value = value;
+        this->attributes = flags;
+        this->next = 0;
+        this->index = -1;
+    }
 
     inline bool isWritable() const { return attributes & WritableAttribute; }
     inline bool isEnumerable() const { return attributes & EnumerableAttribute; }
@@ -96,6 +106,7 @@ public:
     Table()
         : _properties(0)
         , _buckets(0)
+        , _freeList(0)
         , _propertyCount(-1)
         , _bucketCount(0)
         , _allocated(0) {}
@@ -115,16 +126,34 @@ public:
 
     bool remove(String *name)
     {
-        Q_UNUSED(name);
-        assert(!"TODO");
-        return false;
+        if (Property *prop = find(name)) {
+            // ### TODO check if the property can be removed
+
+            Property *bucket = _buckets[prop->hashValue() % _bucketCount];
+            if (bucket == prop) {
+                bucket = bucket->next;
+            } else {
+                for (Property *it = bucket; it; it = it->next) {
+                    if (it->next == prop) {
+                        it->next = it->next->next;
+                        break;
+                    }
+                }
+            }
+
+            _properties[prop->index] = 0;
+            prop->next = _freeList;
+            _freeList = prop;
+        }
+
+        return true;
     }
 
     Property *find(String *name) const
     {
         if (_properties) {
             for (Property *prop = _buckets[name->hashValue() % _bucketCount]; prop; prop = prop->next) {
-                if (prop->name == name || prop->hasName(name))
+                if (prop && (prop->name == name || prop->hasName(name)))
                     return prop;
             }
         }
@@ -151,7 +180,15 @@ public:
             _properties = properties;
         }
 
-        Property *prop = new Property(name, value);
+        Property *prop;
+        if (_freeList) {
+            prop = _freeList;
+            _freeList = _freeList->next;
+            prop->init(name, value);
+        } else {
+            prop = new Property(name, value);
+        }
+
         prop->index = _propertyCount;
         _properties[_propertyCount] = prop;
 
@@ -189,6 +226,7 @@ private:
 private:
     Property **_properties;
     Property **_buckets;
+    Property *_freeList;
     int _propertyCount;
     int _bucketCount;
     int _allocated;

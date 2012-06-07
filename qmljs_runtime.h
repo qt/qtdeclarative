@@ -151,7 +151,6 @@ bool __qmljs_equal(Context *ctx, const Value *x, const Value *y);
 bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y);
 
 // unary operators
-void __qmljs_delete(Context *ctx, Value *result, const Value *value);
 void __qmljs_postincr(Context *ctx, Value *result, const Value *value);
 void __qmljs_postdecr(Context *ctx, Value *result, const Value *value);
 void __qmljs_uplus(Context *ctx, Value *result, const Value *value);
@@ -160,6 +159,11 @@ void __qmljs_compl(Context *ctx, Value *result, const Value *value);
 void __qmljs_not(Context *ctx, Value *result, const Value *value);
 void __qmljs_preincr(Context *ctx, Value *result, const Value *value);
 void __qmljs_predecr(Context *ctx, Value *result, const Value *value);
+
+void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *index);
+void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *name);
+void __qmljs_delete_property(Context *ctx, Value *result, String *name);
+void __qmljs_delete_value(Context *ctx, Value *result, Value *value);
 
 void __qmljs_typeof(Context *ctx, Value *result, const Value *value);
 void __qmljs_throw(Context *context, Value *value);
