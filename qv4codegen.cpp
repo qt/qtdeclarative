@@ -1282,10 +1282,9 @@ bool Codegen::visit(FunctionDeclaration *ast)
 
 void Codegen::linearize(IR::Function *function)
 {
-    IR::BasicBlock *entryBlock = function->basicBlocks.at(0);
-    IR::BasicBlock *exitBlock = function->basicBlocks.at(1);
-
-    Q_UNUSED(entryBlock);
+    IR::BasicBlock *exitBlock = function->basicBlocks.last();
+    assert(exitBlock->isTerminated());
+    assert(exitBlock->terminator()->asRet());
 
     QSet<IR::BasicBlock *> V;
     V.insert(exitBlock);
@@ -1294,11 +1293,9 @@ void Codegen::linearize(IR::Function *function)
 
     for (int i = 0; i < function->basicBlocks.size(); ++i) {
         IR::BasicBlock *block = function->basicBlocks.at(i);
-        if (block->statements.isEmpty()) {
-            if ((i + 1) < function->basicBlocks.size()) {
-                IR::BasicBlock *next = function->basicBlocks.at(i + 1);
-                block->JUMP(next);
-            }
+        if (!block->isTerminated() && (i + 1) < function->basicBlocks.size()) {
+            IR::BasicBlock *next = function->basicBlocks.at(i + 1);
+            block->JUMP(next);
         }
     }
 
@@ -1440,7 +1437,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     enterEnvironment(ast);
     IR::Function *function = _module->newFunction(name);
     IR::BasicBlock *entryBlock = function->newBasicBlock();
-    IR::BasicBlock *exitBlock = function->newBasicBlock();
+    IR::BasicBlock *exitBlock = function->newBasicBlock(IR::Function::DontInsertBlock);
     IR::BasicBlock *throwBlock = function->newBasicBlock();
     IR::BasicBlock *handlersBlock = function->newBasicBlock();
     function->hasDirectEval = _env->hasDirectEval;
@@ -1477,6 +1474,8 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     }
 
     sourceElements(body);
+
+    _function->insertBasicBlock(_exitBlock);
 
     if (! _block->isTerminated())
         _block->JUMP(_exitBlock);

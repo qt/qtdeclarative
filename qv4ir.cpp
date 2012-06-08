@@ -493,9 +493,10 @@ const QString *Function::newString(const QString &text)
     return &*strings.insert(text);
 }
 
-BasicBlock *Function::newBasicBlock()
+BasicBlock *Function::newBasicBlock(BasicBlockInsertMode mode)
 {
-    return i(new BasicBlock(this));
+    BasicBlock *block = new BasicBlock(this);
+    return mode == InsertBlock ? insertBasicBlock(block) : block;
 }
 
 void Function::dump(QTextStream &out, Stmt::Mode mode)

@@ -624,13 +624,18 @@ struct Function {
 
     ~Function();
 
-    BasicBlock *newBasicBlock();
+    enum BasicBlockInsertMode {
+        InsertBlock,
+        DontInsertBlock
+    };
+
+    BasicBlock *newBasicBlock(BasicBlockInsertMode mode = InsertBlock);
     const QString *newString(const QString &text);
 
     void RECEIVE(const QString &name) { formals.append(newString(name)); }
     void LOCAL(const QString &name) { locals.append(newString(name)); }
 
-    inline BasicBlock *i(BasicBlock *block) { basicBlocks.append(block); return block; }
+    inline BasicBlock *insertBasicBlock(BasicBlock *block) { basicBlocks.append(block); return block; }
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 
