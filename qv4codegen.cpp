@@ -783,8 +783,7 @@ bool Codegen::visit(BinaryExpression *ast)
 
             _block = iftrue;
             move(_block->TEMP(r), *expression(ast->right));
-            if (! _block->isTerminated())
-                _block->JUMP(endif);
+            _block->JUMP(endif);
 
             _expr.code = _block->TEMP(r);
             _block = endif;
@@ -805,8 +804,7 @@ bool Codegen::visit(BinaryExpression *ast)
             cjump(_block->TEMP(r), endif, iffalse);
             _block = iffalse;
             move(_block->TEMP(r), *expression(ast->right));
-            if (! _block->isTerminated())
-                _block->JUMP(endif);
+            _block->JUMP(endif);
 
             _block = endif;
             _expr.code = _block->TEMP(r);
@@ -1393,11 +1391,9 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     _function->insertBasicBlock(_exitBlock);
 
-    if (! _block->isTerminated())
-        _block->JUMP(_exitBlock);
+    _block->JUMP(_exitBlock);
 
-    if (! _throwBlock->isTerminated())
-        _throwBlock->JUMP(_function->handlersBlock);
+    _throwBlock->JUMP(_function->handlersBlock);
 
     _handlersBlock->MOVE(_handlersBlock->TEMP(_returnAddress),
                          _handlersBlock->CALL(_handlersBlock->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
@@ -1519,8 +1515,7 @@ bool Codegen::visit(DoWhileStatement *ast)
 
     enterLoop(ast, loopend, loopbody);
 
-    if (_block->isTerminated())
-        _block->JUMP(loopbody);
+    _block->JUMP(loopbody);
     _block = loopbody;
     statement(ast->statement);
     condition(ast->expression, loopbody, loopend);
@@ -1558,21 +1553,18 @@ bool Codegen::visit(ForStatement *ast)
     enterLoop(ast, forend, forstep);
 
     statement(ast->initialiser);
-    if (! _block->isTerminated())
-        _block->JUMP(forcond);
+    _block->JUMP(forcond);
 
     _block = forcond;
     condition(ast->condition, forbody, forend);
 
     _block = forbody;
     statement(ast->statement);
-    if (! _block->isTerminated())
-        _block->JUMP(forstep);
+    _block->JUMP(forstep);
 
     _block = forstep;
     statement(ast->expression);
-    if (! _block->isTerminated())
-        _block->JUMP(forcond);
+    _block->JUMP(forcond);
     _block = forend;
 
     leaveLoop();
@@ -1589,14 +1581,12 @@ bool Codegen::visit(IfStatement *ast)
 
     _block = iftrue;
     statement(ast->ok);
-    if (! _block->isTerminated())
-        _block->JUMP(endif);
+    _block->JUMP(endif);
 
     if (ast->ko) {
         _block = iffalse;
         statement(ast->ko);
-        if (! _block->isTerminated())
-            _block->JUMP(endif);
+        _block->JUMP(endif);
     }
 
     _block = endif;
@@ -1643,21 +1633,18 @@ bool Codegen::visit(LocalForStatement *ast)
     enterLoop(ast, forend, forstep);
 
     variableDeclarationList(ast->declarations);
-    if (! _block->isTerminated())
-        _block->JUMP(forcond);
+    _block->JUMP(forcond);
 
     _block = forcond;
     condition(ast->condition, forbody, forend);
 
     _block = forbody;
     statement(ast->statement);
-    if (! _block->isTerminated())
-        _block->JUMP(forstep);
+    _block->JUMP(forstep);
 
     _block = forstep;
     statement(ast->expression);
-    if (! _block->isTerminated())
-        _block->JUMP(forcond);
+    _block->JUMP(forcond);
     _block = forend;
 
     leaveLoop();
@@ -1718,8 +1705,7 @@ bool Codegen::visit(SwitchStatement *ast)
 
         leaveLoop();
 
-        if (! _block->isTerminated())
-            _block->JUMP(switchend);
+        _block->JUMP(switchend);
 
         _block = switchcond;
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
@@ -1745,8 +1731,7 @@ bool Codegen::visit(SwitchStatement *ast)
         }
     }
 
-    if (! _block->isTerminated())
-        _block->JUMP(switchend);
+    _block->JUMP(switchend);
 
     _block = switchend;
     return false;
@@ -1786,8 +1771,7 @@ bool Codegen::visit(WhileStatement *ast)
 
     _block = whilebody;
     statement(ast->statement);
-    if (! _block->isTerminated())
-        _block->JUMP(whilecond);
+    _block->JUMP(whilecond);
 
     _block = whileend;
     leaveLoop();
