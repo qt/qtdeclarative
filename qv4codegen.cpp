@@ -1214,29 +1214,35 @@ void Codegen::linearize(IR::Function *function)
         }
     }
 
-    foreach (IR::BasicBlock *block, function->basicBlocks) {
-        while (block) {
-            if (V.contains(block))
-                break;
+    struct I { static void trace(IR::BasicBlock *block, QSet<IR::BasicBlock *> *V,
+                                 QVector<IR::BasicBlock *> *output) {
+            if (block == 0 || V->contains(block))
+                return;
 
-            V.insert(block);
-            block->index = trace.size();
-            trace.append(block);
+            V->insert(block);
+            block->index = output->size();
+            output->append(block);
 
             if (IR::Stmt *term = block->terminator()) {
-                block = 0;
-
                 if (IR::Jump *j = term->asJump()) {
-                    block = j->target;
+                    trace(j->target, V, output);
                 } else if (IR::CJump *cj = term->asCJump()) {
-                    if (! V.contains(cj->iffalse))
-                        block = cj->iffalse;
+                    if (! V->contains(cj->iffalse))
+                        trace(cj->iffalse, V, output);
                     else
-                        block = cj->iftrue;
+                        trace(cj->iftrue, V, output);
                 }
             }
+
+            // We could do this for each type above, but it is safer to have a
+            // "catchall" here
+            for (int ii = 0; ii < block->out.count(); ++ii)
+                trace(block->out.at(ii), V, output);
         }
-    }
+    };
+
+    I::trace(function->basicBlocks.first(), &V, &trace);
+
     exitBlock->index = trace.size();
     trace.append(exitBlock);
     function->basicBlocks = trace;
