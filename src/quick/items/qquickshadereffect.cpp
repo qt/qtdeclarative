@@ -315,6 +315,7 @@ void QQuickShaderEffectCommon::lookThroughShaderCode(QQuickItem *item, Key::Shad
             const int sampLen = sizeof("sampler2D") - 1;
             const int opLen = sizeof("qt_Opacity") - 1;
             const int matLen = sizeof("qt_Matrix") - 1;
+            const int srLen = sizeof("qt_SubRect_") - 1;
 
             UniformData d;
             QSignalMapper *mapper = 0;
@@ -323,6 +324,8 @@ void QQuickShaderEffectCommon::lookThroughShaderCode(QQuickItem *item, Key::Shad
                 d.specialType = UniformData::Opacity;
             } else if (nameLength == matLen && qstrncmp("qt_Matrix", s + nameIndex, matLen) == 0) {
                 d.specialType = UniformData::Matrix;
+            } else if (nameLength > srLen && qstrncmp("qt_SubRect_", s + nameIndex, srLen) == 0) {
+                d.specialType = UniformData::SubRect;
             } else {
                 mapper = new QSignalMapper;
                 mapper->setMapping(item, uniformData[shaderType].size() | (shaderType << 16));
@@ -385,23 +388,23 @@ void QQuickShaderEffectCommon::updateMaterial(QQuickShaderEffectNode *node,
 {
     if (updateUniforms) {
         for (int i = 0; i < material->textureProviders.size(); ++i) {
-            QSGTextureProvider *t = material->textureProviders.at(i).second;
+            QSGTextureProvider *t = material->textureProviders.at(i);
             if (t) {
                 QObject::disconnect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
                 QObject::disconnect(t, SIGNAL(destroyed(QObject*)), node, SLOT(textureProviderDestroyed(QObject*)));
             }
         }
-        material->textureProviders.clear();
 
+        // First make room in the textureProviders array. Set to proper value further down.
+        int textureProviderCount = 0;
         for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
             for (int i = 0; i < uniformData[shaderType].size(); ++i) {
-                const UniformData &d = uniformData[shaderType].at(i);
-                // First make room in the textureProviders array. Set to proper value further down.
-                if (d.specialType == UniformData::Sampler)
-                    material->textureProviders.append(qMakePair(d.name, (QSGTextureProvider *)0));
+                if (uniformData[shaderType].at(i).specialType == UniformData::Sampler)
+                    ++textureProviderCount;
             }
             material->uniforms[shaderType] = uniformData[shaderType];
         }
+        material->textureProviders.fill(0, textureProviderCount);
         updateUniformValues = false;
         updateTextureProviders = true;
     }
@@ -421,8 +424,7 @@ void QQuickShaderEffectCommon::updateMaterial(QQuickShaderEffectNode *node,
                 const UniformData &d = uniformData[shaderType].at(i);
                 if (d.specialType != UniformData::Sampler)
                     continue;
-                Q_ASSERT(material->textureProviders.at(index).first == d.name);
-                QSGTextureProvider *oldProvider = material->textureProviders.at(index).second;
+                QSGTextureProvider *oldProvider = material->textureProviders.at(index);
                 QSGTextureProvider *newProvider = 0;
                 QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                 if (source && source->isTextureProvider())
@@ -443,7 +445,7 @@ void QQuickShaderEffectCommon::updateMaterial(QQuickShaderEffectNode *node,
                         qWarning("ShaderEffect: Property '%s' is not assigned a valid texture provider (%s).",
                                  d.name.constData(), typeName);
                     }
-                    material->textureProviders[index].second = newProvider;
+                    material->textureProviders[index] = newProvider;
                 }
                 ++index;
             }
@@ -574,6 +576,20 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     \li \l Image, \l ShaderEffectSource -> sampler2D - Origin is in the top-left
        corner, and the color values are premultiplied.
     \endlist
+
+    The QML scene graph back-end may choose to allocate textures in texture
+    atlases. If a texture allocated in an atlas is passed to a ShaderEffect,
+    it is by default copied from the texture atlas into a stand-alone texture
+    so that the texture coordinates span from 0 to 1, and you get the expected
+    wrap modes. However, this will increase the memory usage. To avoid the
+    texture copy, you can for each "uniform sampler2D <name>" declare a
+    "uniform vec4 qt_SubRect_<name>" which will be assigned the texture's
+    normalized source rectangle. For stand-alone textures, the source rectangle
+    is [0, 1]x[0, 1]. For textures in an atlas, the source rectangle corresponds
+    to the part of the texture atlas where the texture is stored.
+    The correct way to calculate the texture coordinate for a texture called
+    "source" within a texture atlas is
+    "qt_SubRect_source.xy + qt_SubRect_source.zw * qt_MultiTexCoord0".
 
     The output from the \l fragmentShader should be premultiplied. If
     \l blending is enabled, source-over blending is used. However, additive

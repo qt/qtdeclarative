@@ -92,6 +92,8 @@ void QQuickCustomMaterialShader::deactivate()
 
 void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
+    typedef QQuickShaderEffectMaterial::UniformData UniformData;
+
     Q_ASSERT(newEffect != 0);
 
     QQuickShaderEffectMaterial *material = static_cast<QQuickShaderEffectMaterial *>(newEffect);
@@ -101,45 +103,56 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                                                                      : QQuickShaderEffect::Error);
     }
 
+    int textureProviderIndex = 0;
     if (!m_initialized) {
-        for (int i = 0; i < material->textureProviders.size(); ++i)
-            program()->setUniformValue(material->textureProviders.at(i).first.constData(), i);
-
         for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
             Q_ASSERT(m_uniformLocs[shaderType].isEmpty());
             m_uniformLocs[shaderType].reserve(material->uniforms[shaderType].size());
             for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
-                const QByteArray &name = material->uniforms[shaderType].at(i).name;
+                const UniformData &d = material->uniforms[shaderType].at(i);
+                QByteArray name = d.name;
+                if (d.specialType == UniformData::Sampler) {
+                    program()->setUniformValue(d.name.constData(), textureProviderIndex++);
+                    // We don't need to store the sampler uniform locations, since their values
+                    // only need to be set once. Look for the "qt_SubRect_" uniforms instead.
+                    // These locations are used when binding the textures later.
+                    name = "qt_SubRect_" + name;
+                }
                 m_uniformLocs[shaderType].append(program()->uniformLocation(name.constData()));
             }
         }
         m_initialized = true;
+        textureProviderIndex = 0;
     }
 
     QOpenGLFunctions *functions = state.context()->functions();
-    for (int i = material->textureProviders.size() - 1; i >= 0; --i) {
-        functions->glActiveTexture(GL_TEXTURE0 + i);
-        if (QSGTextureProvider *provider = material->textureProviders.at(i).second) {
-            if (QSGTexture *texture = provider->texture()) {
-                texture->bind();
-                continue;
-            }
-        }
-        qWarning("ShaderEffect: source or provider missing when binding textures");
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
     for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
         for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
-            const QQuickShaderEffectMaterial::UniformData &d = material->uniforms[shaderType].at(i);
+            const UniformData &d = material->uniforms[shaderType].at(i);
             int loc = m_uniformLocs[shaderType].at(i);
-
-            if (d.specialType == QQuickShaderEffectMaterial::UniformData::Opacity) {
+            if (d.specialType == UniformData::Sampler) {
+                int idx = textureProviderIndex++;
+                functions->glActiveTexture(GL_TEXTURE0 + idx);
+                if (QSGTextureProvider *provider = material->textureProviders.at(idx)) {
+                    if (QSGTexture *texture = provider->texture()) {
+                        if (loc >= 0) {
+                            QRectF r = texture->normalizedTextureSubRect();
+                            program()->setUniformValue(loc, r.x(), r.y(), r.width(), r.height());
+                        } else if (texture->isAtlasTexture()) {
+                            texture = texture->removedFromAtlas();
+                        }
+                        texture->bind();
+                        continue;
+                    }
+                }
+                qWarning("ShaderEffect: source or provider missing when binding textures");
+                glBindTexture(GL_TEXTURE_2D, 0);
+            } else if (d.specialType == UniformData::Opacity) {
                 program()->setUniformValue(loc, state.opacity());
-            } if (d.specialType == QQuickShaderEffectMaterial::UniformData::Matrix) {
+            } else if (d.specialType == UniformData::Matrix) {
                 if (state.isMatrixDirty())
                     program()->setUniformValue(loc, state.combinedMatrix());
-            } else {
+            } else if (d.specialType == UniformData::None) {
                 switch (d.value.type()) {
                 case QMetaType::QColor:
                     program()->setUniformValue(loc, qt_premultiply_color(qvariant_cast<QColor>(d.value)));
@@ -186,6 +199,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
             }
         }
     }
+    functions->glActiveTexture(GL_TEXTURE0);
 
     const QQuickShaderEffectMaterial *oldMaterial = static_cast<const QQuickShaderEffectMaterial *>(oldEffect);
     if (oldEffect == 0 || material->cullMode != oldMaterial->cullMode) {
@@ -353,7 +367,7 @@ void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectMateri
 void QQuickShaderEffectMaterial::updateTextures() const
 {
     for (int i = 0; i < textureProviders.size(); ++i) {
-        if (QSGTextureProvider *provider = textureProviders.at(i).second) {
+        if (QSGTextureProvider *provider = textureProviders.at(i)) {
             if (QSGDynamicTexture *texture = qobject_cast<QSGDynamicTexture *>(provider->texture()))
                 texture->updateTexture();
         }
@@ -363,8 +377,8 @@ void QQuickShaderEffectMaterial::updateTextures() const
 void QQuickShaderEffectMaterial::invalidateTextureProvider(QSGTextureProvider *provider)
 {
     for (int i = 0; i < textureProviders.size(); ++i) {
-        if (provider == textureProviders.at(i).second)
-            textureProviders[i].second = 0;
+        if (provider == textureProviders.at(i))
+            textureProviders[i] = 0;
     }
 }
 

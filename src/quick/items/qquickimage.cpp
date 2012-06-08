@@ -63,10 +63,6 @@ public:
     }
 
     QSGTexture *texture() const {
-
-        if (m_texture && m_texture->isAtlasTexture())
-            const_cast<QQuickImageTextureProvider *>(this)->m_texture = m_texture->removedFromAtlas();
-
         if (m_texture) {
             m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
             m_texture->setMipmapFiltering(QSGTexture::Nearest);

@@ -79,7 +79,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectMaterial : public QSGMaterial
 public:
     struct UniformData
     {
-        enum SpecialType { None, Sampler, Opacity, Matrix };
+        enum SpecialType { None, Sampler, SubRect, Opacity, Matrix };
 
         QByteArray name;
         QVariant value;
@@ -100,7 +100,7 @@ public:
 
     QVector<QByteArray> attributes;
     QVector<UniformData> uniforms[QQuickShaderEffectMaterialKey::ShaderTypeCount];
-    QVector<QPair<QByteArray, QSGTextureProvider *> > textureProviders;
+    QVector<QSGTextureProvider *> textureProviders;
     CullMode cullMode;
 
     void setProgramSource(const QQuickShaderEffectMaterialKey &source);
