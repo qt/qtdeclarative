@@ -534,7 +534,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
             break;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos, true);
-        item->item->setVisible(!doBuffer);
+        QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         visibleItems.append(item);
         if (++colNum >= columns) {
             colNum = 0;
@@ -572,7 +572,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         --visibleIndex;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos, true);
-        item->item->setVisible(!doBuffer);
+        QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         visibleItems.prepend(item);
         if (--colNum < 0) {
             colNum = columns-1;
@@ -2013,11 +2013,11 @@ void QQuickGridView::viewportMoved()
     qreal to = d->isContentFlowReversed() ? -d->position() : d->position()+d->size();
     for (int i = 0; i < d->visibleItems.count(); ++i) {
         FxGridItemSG *item = static_cast<FxGridItemSG*>(d->visibleItems.at(i));
-        item->item->setVisible(item->rowPos() + d->rowSize() >= from && item->rowPos() <= to);
+        QQuickItemPrivate::get(item->item)->setCulled(item->rowPos() + d->rowSize() < from || item->rowPos() > to);
     }
     if (d->currentItem) {
         FxGridItemSG *item = static_cast<FxGridItemSG*>(d->currentItem);
-        item->item->setVisible(item->rowPos() + d->rowSize() >= from && item->rowPos() <= to);
+        QQuickItemPrivate::get(item->item)->setCulled(item->rowPos() + d->rowSize() < from || item->rowPos() > to);
     }
 
     if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
@@ -2363,7 +2363,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
                 if (!item)
                     return false;
 
-                item->item->setVisible(true);
+                QQuickItemPrivate::get(item->item)->setCulled(false);
                 visibleItems.insert(insertionIdx, item);
                 if (insertionIdx == 0)
                     insertResult->changedFirstItem = true;
@@ -2395,7 +2395,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQuickChangeSet::Insert &
             if (!item)
                 return false;
 
-            item->item->setVisible(true);
+            QQuickItemPrivate::get(item->item)->setCulled(false);
             visibleItems.insert(index, item);
             if (index == 0)
                 insertResult->changedFirstItem = true;

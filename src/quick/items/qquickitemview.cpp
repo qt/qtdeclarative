@@ -87,7 +87,7 @@ void FxViewItem::setVisible(bool visible)
 {
     if (!visible && transitionableItem && transitionableItem->transitionScheduledOrRunning())
         return;
-    item->setVisible(visible);
+    QQuickItemPrivate::get(item)->setCulled(!visible);
 }
 
 QQuickItemViewTransitioner::TransitionType FxViewItem::scheduledTransitionType() const
@@ -1429,6 +1429,9 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , fillCacheBuffer(false), inRequest(false), requestedAsync(false)
     , runDelayedRemoveTransition(false)
 {
+    bufferPause.addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
+    bufferPause.setLoopCount(1);
+    bufferPause.setDuration(16);
 }
 
 QQuickItemViewPrivate::~QQuickItemViewPrivate()
@@ -1636,6 +1639,13 @@ void QQuickItemViewPrivate::mirrorChange()
     emit q->effectiveLayoutDirectionChanged();
 }
 
+void QQuickItemViewPrivate::animationFinished(QAbstractAnimationJob *)
+{
+    Q_Q(QQuickItemView);
+    fillCacheBuffer = true;
+    q->polish();
+}
+
 void QQuickItemViewPrivate::refill()
 {
     qreal s = qMax(size(), qreal(0.));
@@ -1651,6 +1661,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
     if (!isValid() || !q->isComponentComplete())
         return;
 
+    bufferPause.stop();
     currentChanges.reset();
 
     int prevCount = itemCount;
@@ -1667,8 +1678,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
         if (added) {
             // We've already created a new delegate this frame.
             // Just schedule a buffer refill.
-            fillCacheBuffer = true;
-            q->polish();
+            bufferPause.start();
         } else {
             if (bufferMode & BufferAfter)
                 fillTo = bufferTo;
@@ -2206,7 +2216,7 @@ void QQuickItemView::createdItem(int index, QQuickItem *item)
     if (d->requestedIndex != index) {
         item->setParentItem(contentItem());
         d->unrequestedItems.insert(item, index);
-        item->setVisible(false);
+        QQuickItemPrivate::get(item)->setCulled(true);
         d->repositionPackageItemAt(item, index);
     } else {
         d->requestedIndex = -1;
@@ -2224,8 +2234,7 @@ void QQuickItemView::initItem(int index, QQuickItem *item)
     item->setZ(1);
     if (d->requestedIndex == index) {
         if (d->requestedAsync)
-            item->setVisible(false);
-        item->setParentItem(contentItem());
+            QQuickItemPrivate::get(item)->setCulled(true);
         d->requestedItem = d->newViewItem(index, item);
     }
 }
@@ -2248,7 +2257,7 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
     QQuickVisualModel::ReleaseFlags flags = model->release(item->item);
     if (flags == 0) {
         // item was not destroyed, and we no longer reference it.
-        item->item->setVisible(false);
+        QQuickItemPrivate::get(item->item)->setCulled(true);
         unrequestedItems.insert(item->item, model->indexOf(item->item, q));
     }
     delete item;

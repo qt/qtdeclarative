@@ -664,13 +664,13 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
     qreal pos = itemEnd;
     while (modelIndex < model->count() && pos <= fillTo) {
 #ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: append item" << modelIndex << "pos" << pos;
+        qDebug() << "refill: append item" << modelIndex << "pos" << pos << "buffer" << doBuffer;
 #endif
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
             break;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(pos, true);
-        item->item->setVisible(!doBuffer);
+        QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         pos += item->size() + spacing;
         visibleItems.append(item);
         ++modelIndex;
@@ -682,7 +682,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
 
     while (visibleIndex > 0 && visibleIndex <= model->count() && visiblePos > fillFrom) {
 #ifdef DEBUG_DELEGATE_LIFECYCLE
-        qDebug() << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos;
+        qDebug() << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos << "buffer" << doBuffer;
 #endif
         if (!(item = static_cast<FxListItemSG*>(createItem(visibleIndex-1, doBuffer))))
             break;
@@ -690,7 +690,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
         visiblePos -= item->size() + spacing;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(visiblePos, true);
-        item->item->setVisible(!doBuffer);
+        QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         visibleItems.prepend(item);
         changed = true;
     }
@@ -787,7 +787,7 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
         bool fixedCurrent = currentItem && firstItem->item == currentItem->item;
         qreal sum = firstItem->size();
         qreal pos = firstItem->position() + firstItem->size() + spacing;
-        firstItem->item->setVisible(firstItem->endPosition() >= from && firstItem->position() <= to);
+        firstItem->setVisible(firstItem->endPosition() >= from && firstItem->position() <= to);
 
         for (int i=1; i < visibleItems.count(); ++i) {
             FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.at(i));
@@ -2659,10 +2659,10 @@ void QQuickListView::viewportMoved()
     qreal to = d->isContentFlowReversed() ? -d->position() : d->position()+d->size();
     for (int i = 0; i < d->visibleItems.count(); ++i) {
         FxViewItem *item = static_cast<FxListItemSG*>(d->visibleItems.at(i));
-        item->item->setVisible(item->endPosition() >= from && item->position() <= to);
+        QQuickItemPrivate::get(item->item)->setCulled(item->endPosition() < from || item->position() > to);
     }
     if (d->currentItem)
-        d->currentItem->item->setVisible(d->currentItem->endPosition() >= from && d->currentItem->position() <= to);
+        QQuickItemPrivate::get(d->currentItem->item)->setCulled(d->currentItem->endPosition() < from || d->currentItem->position() > to);
 
     if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
         d->moveReason = QQuickListViewPrivate::Mouse;

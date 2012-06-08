@@ -2435,7 +2435,7 @@ QQuickItemPrivate::QQuickItemPrivate()
   effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
   inheritMirrorFromParent(false), inheritMirrorFromItem(false),
-  isAccessible(false),
+  isAccessible(false), culled(false),
 
   dirtyAttributes(0), nextDirtyItem(0), prevDirtyItem(0),
 
@@ -4400,6 +4400,16 @@ void QQuickItemPrivate::derefFromEffectItem(bool unhide)
         if (--extra->hideRefCount == 0)
             dirty(HideReference);
     }
+}
+
+void QQuickItemPrivate::setCulled(bool cull)
+{
+    if (cull == culled)
+        return;
+
+    culled = cull;
+    if ((cull && ++extra->hideRefCount == 1) || (!cull && --extra->hideRefCount == 0))
+        dirty(HideReference);
 }
 
 void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)

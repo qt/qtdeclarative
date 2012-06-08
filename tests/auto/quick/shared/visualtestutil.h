@@ -53,6 +53,7 @@ namespace QQuickVisualTestUtil
 
     void dumpTree(QQuickItem *parent, int depth = 0);
 
+    bool delegateVisible(QQuickItem *item);
 
     /*
        Find an item with the specified objectName.  If index is supplied then the
@@ -90,7 +91,7 @@ namespace QQuickVisualTestUtil
         const QMetaObject &mo = T::staticMetaObject;
         for (int i = 0; i < parent->childItems().count(); ++i) {
             QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
-            if (!item || (visibleOnly && !item->isVisible()))
+            if (!item || (visibleOnly && (!item->isVisible() || QQuickItemPrivate::get(item)->culled)))
                 continue;
             if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))
                 items.append(static_cast<T*>(item));

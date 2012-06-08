@@ -406,7 +406,8 @@ public:
     bool inheritMirrorFromParent:1;
     bool inheritMirrorFromItem:1;
     bool isAccessible:1;
-    // bool dummy:3
+    bool culled:1;
+    // bool dummy:2
     // Bit 32
 
     enum DirtyType {
@@ -447,6 +448,8 @@ public:
     void removeFromDirtyList();
     QQuickItem *nextDirtyItem;
     QQuickItem**prevDirtyItem;
+
+    void setCulled(bool);
 
     QQuickCanvas *canvas;
     int canvasRefCount;

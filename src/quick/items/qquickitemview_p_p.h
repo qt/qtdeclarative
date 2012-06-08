@@ -120,7 +120,7 @@ public:
 };
 
 
-class QQuickItemViewPrivate : public QQuickFlickablePrivate, public QQuickItemViewTransitionChangeListener
+class QQuickItemViewPrivate : public QQuickFlickablePrivate, public QQuickItemViewTransitionChangeListener, public QAnimationJobChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickItemView)
 public:
@@ -188,6 +188,7 @@ public:
 
     void regenerate();
     void layout();
+    virtual void animationFinished(QAbstractAnimationJob *);
     void refill();
     void refill(qreal from, qreal to);
     void mirrorChange();
@@ -266,6 +267,7 @@ public:
     FxViewItem *requestedItem;
     QQuickItemViewChangeSet currentChanges;
     QQuickItemViewChangeSet bufferedChanges;
+    QPauseAnimationJob bufferPause;
 
     QQmlComponent *highlightComponent;
     FxViewItem *highlight;

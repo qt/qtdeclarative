@@ -44,12 +44,17 @@
 #include <QtQuick/QQuickItem>
 #include <QtCore/QDebug>
 
+bool QQuickVisualTestUtil::delegateVisible(QQuickItem *item)
+{
+    return item->isVisible() && !QQuickItemPrivate::get(item)->culled;
+}
+
 QQuickItem *QQuickVisualTestUtil::findVisibleChild(QQuickItem *parent, const QString &objectName)
 {
     QQuickItem *item = 0;
     QList<QQuickItem*> items = parent->findChildren<QQuickItem*>(objectName);
     for (int i = 0; i < items.count(); ++i) {
-        if (items.at(i)->isVisible()) {
+        if (items.at(i)->isVisible() && !QQuickItemPrivate::get(items.at(i))->culled) {
             item = items.at(i);
             break;
         }
