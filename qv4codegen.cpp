@@ -276,6 +276,8 @@ Codegen::Codegen()
     , _handlersBlock(0)
     , _returnAddress(0)
     , _env(0)
+    , _loop(0)
+    , _labelledStatement(0)
 {
 }
 
@@ -309,6 +311,20 @@ void Codegen::leaveEnvironment()
 {
     assert(_env);
     _env = _env->parent;
+}
+
+void Codegen::enterLoop(Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock)
+{
+    _loop = new Loop(node, breakBlock, continueBlock, _loop);
+    _loop->labelledStatement = _labelledStatement; // consume the enclosing labelled statement
+    _labelledStatement = 0;
+}
+
+void Codegen::leaveLoop()
+{
+    Loop *current = _loop;
+    _loop = _loop->parent;
+    delete current;
 }
 
 IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
@@ -1454,15 +1470,39 @@ bool Codegen::visit(Block *ast)
     return false;
 }
 
-bool Codegen::visit(BreakStatement *)
+bool Codegen::visit(BreakStatement *ast)
 {
-    _block->JUMP(_loop.breakBlock);
+    if (ast->label.isEmpty())
+        _block->JUMP(_loop->breakBlock);
+    else {
+        for (Loop *loop = _loop; _loop; _loop = _loop->parent) {
+            if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
+                _block->JUMP(loop->breakBlock);
+                return false;
+            }
+        }
+        assert(!"throw syntax error");
+    }
+
     return false;
 }
 
-bool Codegen::visit(ContinueStatement *)
+bool Codegen::visit(ContinueStatement *ast)
 {
-    _block->JUMP(_loop.continueBlock);
+    if (ast->label.isEmpty())
+        _block->JUMP(_loop->continueBlock);
+    else {
+        for (Loop *loop = _loop; _loop; _loop = _loop->parent) {
+            if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
+                if (! loop->continueBlock)
+                    break;
+
+                _block->JUMP(loop->continueBlock);
+                return false;
+            }
+        }
+        assert(!"throw syntax error");
+    }
     return false;
 }
 
@@ -1477,8 +1517,7 @@ bool Codegen::visit(DoWhileStatement *ast)
     IR::BasicBlock *loopbody = _function->newBasicBlock();
     IR::BasicBlock *loopend = _function->newBasicBlock();
 
-    Loop loop(loopend, loopbody);
-    qSwap(_loop, loop);
+    enterLoop(ast, loopend, loopbody);
 
     if (_block->isTerminated())
         _block->JUMP(loopbody);
@@ -1487,7 +1526,8 @@ bool Codegen::visit(DoWhileStatement *ast)
     condition(ast->expression, loopbody, loopend);
     _block = loopend;
 
-    qSwap(_loop, loop);
+    leaveLoop();
+
     return false;
 }
 
@@ -1515,8 +1555,7 @@ bool Codegen::visit(ForStatement *ast)
     IR::BasicBlock *forstep = _function->newBasicBlock();
     IR::BasicBlock *forend = _function->newBasicBlock();
 
-    Loop loop(forend, forstep);
-    qSwap(_loop, loop);
+    enterLoop(ast, forend, forstep);
 
     statement(ast->initialiser);
     if (! _block->isTerminated())
@@ -1536,7 +1575,7 @@ bool Codegen::visit(ForStatement *ast)
         _block->JUMP(forcond);
     _block = forend;
 
-    qSwap(_loop, loop);
+    leaveLoop();
 
     return false;
 }
@@ -1565,9 +1604,26 @@ bool Codegen::visit(IfStatement *ast)
     return false;
 }
 
-bool Codegen::visit(LabelledStatement *)
+bool Codegen::visit(LabelledStatement *ast)
 {
-    assert(!"not implemented");
+    _labelledStatement = ast;
+
+    if (AST::cast<AST::SwitchStatement *>(ast->statement) ||
+            AST::cast<AST::WhileStatement *>(ast->statement) ||
+            AST::cast<AST::DoWhileStatement *>(ast->statement) ||
+            AST::cast<AST::ForStatement *>(ast->statement) ||
+            AST::cast<AST::ForEachStatement *>(ast->statement) ||
+            AST::cast<AST::LocalForStatement *>(ast->statement) ||
+            AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
+        statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
+    } else {
+        IR::BasicBlock *breakBlock = _function->newBasicBlock();
+        enterLoop(ast->statement, breakBlock, /*continueBlock*/ 0);
+        statement(ast->statement);
+        leaveLoop();
+        _block = breakBlock;
+    }
+
     return false;
 }
 
@@ -1584,8 +1640,7 @@ bool Codegen::visit(LocalForStatement *ast)
     IR::BasicBlock *forstep = _function->newBasicBlock();
     IR::BasicBlock *forend = _function->newBasicBlock();
 
-    Loop loop(forend, forstep);
-    qSwap(_loop, loop);
+    enterLoop(ast, forend, forstep);
 
     variableDeclarationList(ast->declarations);
     if (! _block->isTerminated())
@@ -1605,7 +1660,8 @@ bool Codegen::visit(LocalForStatement *ast)
         _block->JUMP(forcond);
     _block = forend;
 
-    qSwap(_loop, loop);
+    leaveLoop();
+
     return false;
 }
 
@@ -1630,8 +1686,7 @@ bool Codegen::visit(SwitchStatement *ast)
 
         QHash<Node *, IR::BasicBlock *> blockMap;
 
-        Loop loop(switchend, 0);
-        qSwap(_loop, loop);
+        enterLoop(ast, switchend, 0);
 
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
             CaseClause *clause = it->clause;
@@ -1661,7 +1716,7 @@ bool Codegen::visit(SwitchStatement *ast)
                 statement(it2->statement);
         }
 
-        qSwap(_loop, loop);
+        leaveLoop();
 
         if (! _block->isTerminated())
             _block->JUMP(switchend);
@@ -1723,8 +1778,7 @@ bool Codegen::visit(WhileStatement *ast)
     IR::BasicBlock *whilebody = _function->newBasicBlock();
     IR::BasicBlock *whileend = _function->newBasicBlock();
 
-    Loop loop(whileend, whilecond);
-    qSwap(_loop, loop);
+    enterLoop(ast, whileend, whilecond);
 
     _block->JUMP(whilecond);
     _block = whilecond;
@@ -1736,7 +1790,7 @@ bool Codegen::visit(WhileStatement *ast)
         _block->JUMP(whilecond);
 
     _block = whileend;
-    qSwap(_loop, loop);
+    leaveLoop();
 
     return false;
 }

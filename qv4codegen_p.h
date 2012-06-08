@@ -110,18 +110,21 @@ protected:
     };
 
     struct Loop {
+        AST::LabelledStatement *labelledStatement;
+        AST::Statement *node;
         IR::BasicBlock *breakBlock;
         IR::BasicBlock *continueBlock;
+        Loop *parent;
 
-        Loop()
-            : breakBlock(0), continueBlock(0) {}
-
-        Loop(IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock)
-            : breakBlock(breakBlock), continueBlock(continueBlock) {}
+        Loop(AST::Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock, Loop *parent)
+            : labelledStatement(0), node(node), breakBlock(breakBlock), continueBlock(continueBlock), parent(parent) {}
     };
 
     void enterEnvironment(AST::Node *node);
     void leaveEnvironment();
+
+    void enterLoop(AST::Statement *node, IR::BasicBlock *breakBlock, IR::BasicBlock *continueBlock);
+    void leaveLoop();
 
     IR::Expr *member(IR::Expr *base, const QString *name);
     IR::Expr *subscript(IR::Expr *base, IR::Expr *index);
@@ -258,7 +261,6 @@ private:
     Result _expr;
     QString _property;
     UiMember _uiMember;
-    Loop _loop;
     IR::Module *_module;
     IR::Function *_function;
     IR::BasicBlock *_block;
@@ -267,6 +269,8 @@ private:
     IR::BasicBlock *_handlersBlock;
     unsigned _returnAddress;
     Environment *_env;
+    Loop *_loop;
+    AST::LabelledStatement *_labelledStatement;
     QHash<AST::Node *, Environment *> _envMap;
 
     class ScanFunctions;
