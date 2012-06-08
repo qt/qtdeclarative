@@ -73,3 +73,5 @@ gen_llvm_runtime.commands = clang -O2 -emit-llvm -c -DQMLJS_LLVM_RUNTIME llvm_ru
 DEFINES += QMLJS_NO_LLVM
 
 }
+
+include(moth/moth.pri)

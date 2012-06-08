@@ -2,6 +2,7 @@
 #include "qmljs_objects.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_x86_64_p.h"
+#include "qv4isel_moth_p.h"
 #include "qv4syntaxchecker_p.h"
 #include "qv4ecmaobjects_p.h"
 
@@ -181,6 +182,8 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
     uchar *code = (uchar *) malloc(codeSize);
     assert(! (size_t(code) & 15));
 
+    static bool useMoth = !qgetenv("USE_MOTH").isNull();
+
     {
         QQmlJS::Engine ee, *engine = &ee;
         Lexer lexer(engine);
@@ -201,12 +204,20 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
             Codegen cg;
             globalCode = cg(program, &module);
 
-            x86_64::InstructionSelection isel(vm, &module, code);
-            foreach (IR::Function *function, module.functions) {
-                isel(function);
+            if (useMoth) {
+                Moth::InstructionSelection isel(vm, &module, code);
+                foreach (IR::Function *function, module.functions)
+                    isel(function);
+            } else {
+                x86_64::InstructionSelection isel(vm, &module, code);
+                foreach (IR::Function *function, module.functions)
+                    isel(function);
             }
         }
     }
+
+    if (useMoth)
+        return;
 
     if (! protect(code, codeSize))
         Q_UNREACHABLE();
