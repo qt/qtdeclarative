@@ -108,20 +108,6 @@ void liveness(IR::Function *function)
     QSet<IR::BasicBlock *> V;
     QVector<IR::BasicBlock *> blocks;
 
-    //
-    // compute the CFG
-    //
-    foreach (IR::BasicBlock *block, function->basicBlocks) {
-        if (IR::Stmt *term = block->terminator()) {
-            if (IR::Jump *j = term->asJump())
-                edge(block, j->target);
-            else if (IR::CJump *cj = term->asCJump()) {
-                edge(block, cj->iftrue);
-                edge(block, cj->iffalse);
-            }
-        }
-    }
-
     ComputeUseDef computeUseDef(function);
     foreach (IR::BasicBlock *block, function->basicBlocks) {
         foreach (IR::Stmt *s, block->statements)

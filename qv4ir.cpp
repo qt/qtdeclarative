@@ -706,6 +706,13 @@ Stmt *BasicBlock::JUMP(BasicBlock *target)
     Jump *s = function->New<Jump>();
     s->init(target);
     statements.append(s);
+
+    assert(! out.contains(target));
+    out.append(target);
+
+    assert(! target->in.contains(this));
+    target->in.append(this);
+
     return s;
 }
 
@@ -714,9 +721,27 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     if (isTerminated())
         return 0;
 
+    if (iftrue == iffalse) {
+        MOVE(TEMP(newTemp()), cond);
+        return JUMP(iftrue);
+    }
+
     CJump *s = function->New<CJump>();
     s->init(cond, iftrue, iffalse);
     statements.append(s);
+
+    assert(! out.contains(iftrue));
+    out.append(iftrue);
+
+    assert(! iftrue->in.contains(this));
+    iftrue->in.append(this);
+
+    assert(! out.contains(iffalse));
+    out.append(iffalse);
+
+    assert(! iffalse->in.contains(this));
+    iffalse->in.append(this);
+
     return s;
 }
 
