@@ -1036,13 +1036,20 @@ bool Codegen::visit(NotExpression *ast)
 
 bool Codegen::visit(NullExpression *)
 {
-    _expr.code = _block->CONST(IR::NullType, 0);
+    if (_expr.accept(cx)) _block->JUMP(_expr.iffalse);
+    else _expr.code = _block->CONST(IR::NullType, 0);
+
     return false;
 }
 
 bool Codegen::visit(NumericLiteral *ast)
 {
-    _expr.code = _block->CONST(IR::NumberType, ast->value);
+    if (_expr.accept(cx)) {
+        if (ast->value) _block->JUMP(_expr.iftrue);
+        else _block->JUMP(_expr.iffalse);
+    } else {
+        _expr.code = _block->CONST(IR::NumberType, ast->value);
+    }
     return false;
 }
 
