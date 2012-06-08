@@ -6,6 +6,7 @@
 #include <QtCore/QBitArray>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
+#include <math.h>
 #include <iostream>
 #include <cassert>
 
@@ -317,7 +318,7 @@ void Codegen::leaveLoop()
 IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
 {
     if (base->asTemp() /*|| base->asName()*/)
-        return _block->MEMBER(base, name);
+        return _block->MEMBER(base->asTemp(), name);
     else {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), base);
@@ -339,7 +340,8 @@ IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
         index = _block->TEMP(t);
     }
 
-    return _block->SUBSCRIPT(base, index);
+    assert(base->asTemp() && index->asTemp());
+    return _block->SUBSCRIPT(base->asTemp(), index->asTemp());
 }
 
 IR::Expr *Codegen::argument(IR::Expr *expr)
@@ -359,24 +361,75 @@ IR::Expr *Codegen::unop(IR::AluOp op, IR::Expr *expr)
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);
     }
-    return _block->UNOP(op, expr);
+    assert(expr->asTemp());
+    return _block->UNOP(op, expr->asTemp());
 }
 
 IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
 {
-    if (left && ! left->asTemp()) {
+    if (IR::Const *c1 = left->asConst()) {
+        if (IR::Const *c2 = right->asConst()) {
+            const IR::Type ty = IR::Binop::typeForOp(op, left, right);
+
+            switch (op) {
+            case IR::OpAdd: return _block->CONST(ty, c1->value + c2->value);
+            case IR::OpAnd: return _block->CONST(ty, c1->value ? c2->value : 0);
+            case IR::OpBitAnd: return _block->CONST(ty, int(c1->value) & int(c2->value));
+            case IR::OpBitOr: return _block->CONST(ty, int(c1->value) | int(c2->value));
+            case IR::OpBitXor: return _block->CONST(ty, int(c1->value) ^ int(c2->value));
+            case IR::OpDiv: return _block->CONST(ty, c1->value / c2->value);
+            case IR::OpEqual: return _block->CONST(ty, c1->value == c2->value);
+            case IR::OpGe: return _block->CONST(ty, c1->value >= c2->value);
+            case IR::OpGt: return _block->CONST(ty, c1->value > c2->value);
+            case IR::OpLe: return _block->CONST(ty, c1->value <= c2->value);
+            case IR::OpLShift: return _block->CONST(ty, int(c1->value) << int(c2->value));
+            case IR::OpLt: return _block->CONST(ty, c1->value < c2->value);
+            case IR::OpMod: return _block->CONST(ty, ::fmod(c1->value, c2->value));
+            case IR::OpMul: return _block->CONST(ty, c1->value * c2->value);
+            case IR::OpNotEqual: return _block->CONST(ty, c1->value != c2->value);
+            case IR::OpOr: return _block->CONST(ty, c1->value ? c1->value : c2->value);
+            case IR::OpRShift: return _block->CONST(ty, int(c1->value) >> int(c2->value));
+            case IR::OpStrictEqual: return _block->CONST(ty, c1->value == c2->value);
+            case IR::OpStrictNotEqual: return _block->CONST(ty, c1->value != c2->value);
+            case IR::OpSub: return _block->CONST(ty, c1->value - c2->value);
+            case IR::OpURShift: return _block->CONST(ty, unsigned(c1->value) >> int(c2->value));
+
+            case IR::OpInstanceof:
+            case IR::OpIn:
+                assert(!"unreachabe");
+                break;
+
+            case IR::OpIfTrue: // unary ops
+            case IR::OpNot:
+            case IR::OpUMinus:
+            case IR::OpUPlus:
+            case IR::OpCompl:
+            case IR::OpInvalid:
+                break;
+            }
+        }
+    } else if (op == IR::OpAdd) {
+        if (IR::String *s1 = left->asString()) {
+            if (IR::String *s2 = right->asString()) {
+                return _block->STRING(_function->newString(*s1->value + *s2->value));
+            }
+        }
+    }
+
+    if (!left->asTemp()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), left);
         left = _block->TEMP(t);
     }
 
-    if (right && ! right->asTemp()) {
+    if (!right->asTemp()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), right);
         right = _block->TEMP(t);
     }
 
-    return _block->BINOP(op, left, right);
+    assert(left->asTemp() && right->asTemp());
+    return _block->BINOP(op, left->asTemp(), right->asTemp());
 }
 
 IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)

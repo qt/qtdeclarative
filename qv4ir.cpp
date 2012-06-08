@@ -561,66 +561,15 @@ Closure *BasicBlock::CLOSURE(Function *function)
     return clos;
 }
 
-Expr *BasicBlock::UNOP(AluOp op, Expr *expr) 
+Expr *BasicBlock::UNOP(AluOp op, Temp *expr)
 { 
     Unop *e = function->New<Unop>();
     e->init(op, expr);
     return e;
 }
 
-Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
+Expr *BasicBlock::BINOP(AluOp op, Temp *left, Temp *right)
 {
-    if (left && right) {
-        if (Const *c1 = left->asConst()) {
-            if (Const *c2 = right->asConst()) {
-                const IR::Type ty = Binop::typeForOp(op, left, right);
-
-                switch (op) {
-                case OpAdd: return CONST(ty, c1->value + c2->value);
-                case OpAnd: return CONST(ty, c1->value ? c2->value : 0);
-                case OpBitAnd: return CONST(ty, int(c1->value) & int(c2->value));
-                case OpBitOr: return CONST(ty, int(c1->value) | int(c2->value));
-                case OpBitXor: return CONST(ty, int(c1->value) ^ int(c2->value));
-                case OpDiv: return CONST(ty, c1->value / c2->value);
-                case OpEqual: return CONST(ty, c1->value == c2->value);
-                case OpGe: return CONST(ty, c1->value >= c2->value);
-                case OpGt: return CONST(ty, c1->value > c2->value);
-                case OpLe: return CONST(ty, c1->value <= c2->value);
-                case OpLShift: return CONST(ty, int(c1->value) << int(c2->value));
-                case OpLt: return CONST(ty, c1->value < c2->value);
-                case OpMod: return CONST(ty, ::fmod(c1->value, c2->value));
-                case OpMul: return CONST(ty, c1->value * c2->value);
-                case OpNotEqual: return CONST(ty, c1->value != c2->value);
-                case OpOr: return CONST(ty, c1->value ? c1->value : c2->value);
-                case OpRShift: return CONST(ty, int(c1->value) >> int(c2->value));
-                case OpStrictEqual: return CONST(ty, c1->value == c2->value);
-                case OpStrictNotEqual: return CONST(ty, c1->value != c2->value);
-                case OpSub: return CONST(ty, c1->value - c2->value);
-                case OpURShift: return CONST(ty, unsigned(c1->value) >> int(c2->value));
-
-                case OpInstanceof:
-                case OpIn:
-                    assert(!"unreachabe");
-                    break;
-
-                case OpIfTrue: // unary ops
-                case OpNot:
-                case OpUMinus:
-                case OpUPlus:
-                case OpCompl:
-                case OpInvalid:
-                    break;
-                }
-            }
-        } else if (op == OpAdd) {
-            if (String *s1 = left->asString()) {
-                if (String *s2 = right->asString()) {
-                    return STRING(function->newString(*s1->value + *s2->value));
-                }
-            }
-        }
-    }
-
     Binop *e = function->New<Binop>();
     e->init(op, left, right);
     return e;
@@ -640,14 +589,14 @@ Expr *BasicBlock::NEW(Expr *base, ExprList *args)
     return e;
 }
 
-Expr *BasicBlock::SUBSCRIPT(Expr *base, Expr *index)
+Expr *BasicBlock::SUBSCRIPT(Temp *base, Temp *index)
 {
     Subscript *e = function->New<Subscript>();
     e->init(base, index);
     return e;
 }
 
-Expr *BasicBlock::MEMBER(Expr *base, const QString *name)
+Expr *BasicBlock::MEMBER(Temp *base, const QString *name)
 {
     Member*e = function->New<Member>();
     e->init(base, name);
@@ -745,7 +694,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     return s;
 }
 
-Stmt *BasicBlock::RET(Expr *expr, Type type)
+Stmt *BasicBlock::RET(Temp *expr, Type type)
 {
     if (isTerminated())
         return 0;

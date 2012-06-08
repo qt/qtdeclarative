@@ -312,9 +312,9 @@ struct Closure: Expr {
 
 struct Unop: Expr {
     AluOp op;
-    Expr *expr;
+    Temp *expr;
 
-    void init(AluOp op, Expr *expr)
+    void init(AluOp op, Temp *expr)
     {
         this->type = this->typeForOp(op, expr);
         this->op = op;
@@ -332,10 +332,10 @@ private:
 
 struct Binop: Expr {
     AluOp op;
-    Expr *left;
-    Expr *right;
+    Temp *left;
+    Temp *right;
 
-    void init(AluOp op, Expr *left, Expr *right)
+    void init(AluOp op, Temp *left, Temp *right)
     {
         this->type = typeForOp(op, left, right);
         this->op = op;
@@ -352,8 +352,8 @@ struct Binop: Expr {
 };
 
 struct Call: Expr {
-    Expr *base;
-    ExprList *args;
+    Expr *base; // Name, Member, Temp
+    ExprList *args; // List of Temps
 
     void init(Expr *base, ExprList *args)
     {
@@ -378,8 +378,8 @@ private:
 };
 
 struct New: Expr {
-    Expr *base;
-    ExprList *args;
+    Expr *base; // Name, Member, Temp
+    ExprList *args; // List of Temps
 
     void init(Expr *base, ExprList *args)
     {
@@ -404,10 +404,10 @@ private:
 };
 
 struct Subscript: Expr {
-    Expr *base;
-    Expr *index;
+    Temp *base;
+    Temp *index;
 
-    void init(Expr *base, Expr *index)
+    void init(Temp *base, Temp *index)
     {
         this->type = typeForFunction(base);
         this->base = base;
@@ -424,10 +424,10 @@ private:
 };
 
 struct Member: Expr {
-    Expr *base;
+    Temp *base;
     const QString *name;
 
-    void init(Expr *base, const QString *name)
+    void init(Temp *base, const QString *name)
     {
         this->type = typeForFunction(base);
         this->base = base;
@@ -493,7 +493,7 @@ struct Exp: Stmt {
 };
 
 struct Move: Stmt {
-    Expr *target;
+    Expr *target; // LHS - Temp, Name, Member or Subscript
     Expr *source;
     AluOp op;
 
@@ -570,10 +570,10 @@ struct CJump: Stmt {
 };
 
 struct Ret: Stmt {
-    Expr *expr;
+    Temp *expr;
     Type type;
 
-    void init(Expr *expr, Type type)
+    void init(Temp *expr, Type type)
     {
         this->expr = expr;
         this->type = type;
@@ -685,12 +685,12 @@ struct BasicBlock {
 
     Closure *CLOSURE(Function *function);
 
-    Expr *UNOP(AluOp op, Expr *expr);
-    Expr *BINOP(AluOp op, Expr *left, Expr *right);
+    Expr *UNOP(AluOp op, Temp *expr);
+    Expr *BINOP(AluOp op, Temp *left, Temp *right);
     Expr *CALL(Expr *base, ExprList *args = 0);
     Expr *NEW(Expr *base, ExprList *args = 0);
-    Expr *SUBSCRIPT(Expr *base, Expr *index);
-    Expr *MEMBER(Expr *base, const QString *name);
+    Expr *SUBSCRIPT(Temp *base, Temp *index);
+    Expr *MEMBER(Temp *base, const QString *name);
 
     Stmt *EXP(Expr *expr);
     Stmt *ENTER(Expr *expr);
@@ -700,7 +700,7 @@ struct BasicBlock {
 
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
-    Stmt *RET(Expr *expr, Type type);
+    Stmt *RET(Temp *expr, Type type);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 };
