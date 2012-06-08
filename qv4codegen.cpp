@@ -945,7 +945,11 @@ bool Codegen::visit(DeleteExpression *)
 
 bool Codegen::visit(FalseLiteral *)
 {
-    _expr.code = _block->CONST(IR::BoolType, 0);
+    if (_expr.accept(cx)) {
+        _block->JUMP(_expr.iffalse);
+    } else {
+        _expr.code = _block->CONST(IR::BoolType, 0);
+    }
     return false;
 }
 
@@ -1137,7 +1141,11 @@ bool Codegen::visit(TildeExpression *ast)
 
 bool Codegen::visit(TrueLiteral *)
 {
-    _expr.code = _block->CONST(IR::BoolType, 1);
+    if (_expr.accept(cx)) {
+        _block->JUMP(_expr.iftrue);
+    } else {
+        _expr.code = _block->CONST(IR::BoolType, 1);
+    }
     return false;
 }
 
