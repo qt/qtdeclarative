@@ -64,7 +64,7 @@ class QQuickListModelWorkerAgent;
 class ListModel;
 class ListLayout;
 
-class Q_AUTOTEST_EXPORT QQuickListModel : public QListModelInterface
+class Q_QML_PRIVATE_EXPORT QQuickListModel : public QListModelInterface
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
