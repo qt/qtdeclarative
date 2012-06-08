@@ -1620,7 +1620,7 @@ bool Codegen::visit(LabelledStatement *ast)
         IR::BasicBlock *breakBlock = _function->newBasicBlock();
         enterLoop(ast->statement, breakBlock, /*continueBlock*/ 0);
         statement(ast->statement);
-        leaveLoop();
+        _block->JUMP(breakBlock);
         _block = breakBlock;
     }
 
