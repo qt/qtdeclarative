@@ -443,7 +443,14 @@ void Codegen::statement(ExpressionNode *ast)
         accept(ast);
         qSwap(_expr, r);
         if (r.format == ex) {
-            _block->EXP(*r);
+            if (r->asCall()) {
+                _block->EXP(*r); // the nest nx representation for calls is EXP(CALL(c..))
+            } else if (r->asTemp()) {
+                // there is nothing to do
+            } else {
+                int t = _block->newTemp();
+                _block->MOVE(_block->TEMP(t), *r);
+            }
         }
     }
 }
