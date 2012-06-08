@@ -148,29 +148,9 @@ protected:
 
     void accept(AST::Node *node);
 
-    void argumentList(AST::ArgumentList *ast);
-    void caseBlock(AST::CaseBlock *ast);
-    void caseClause(AST::CaseClause *ast);
-    void caseClauses(AST::CaseClauses *ast);
-    void catchNode(AST::Catch *ast);
-    void defaultClause(AST::DefaultClause *ast);
-    void elementList(AST::ElementList *ast);
-    void elision(AST::Elision *ast);
-    void finallyNode(AST::Finally *ast);
-    void formalParameterList(AST::FormalParameterList *ast);
     void functionBody(AST::FunctionBody *ast);
     void program(AST::Program *ast);
-    void propertyNameAndValueList(AST::PropertyNameAndValueList *ast);
     void sourceElements(AST::SourceElements *ast);
-    void statementList(AST::StatementList *ast);
-    void uiArrayMemberList(AST::UiArrayMemberList *ast);
-    void uiImport(AST::UiImport *ast);
-    void uiImportList(AST::UiImportList *ast);
-    void uiObjectInitializer(AST::UiObjectInitializer *ast);
-    void uiObjectMemberList(AST::UiObjectMemberList *ast);
-    void uiParameterList(AST::UiParameterList *ast);
-    void uiProgram(AST::UiProgram *ast);
-    void uiQualifiedId(AST::UiQualifiedId *ast);
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 

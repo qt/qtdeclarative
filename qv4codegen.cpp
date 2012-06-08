@@ -503,56 +503,6 @@ Codegen::UiMember Codegen::uiObjectMember(UiObjectMember *ast)
     return m;
 }
 
-void Codegen::argumentList(ArgumentList *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::caseBlock(CaseBlock *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::caseClause(CaseClause *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::caseClauses(CaseClauses *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::catchNode(Catch *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::defaultClause(DefaultClause *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::elementList(ElementList *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::elision(Elision *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::finallyNode(Finally *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::formalParameterList(FormalParameterList *)
-{
-    assert(!"not implemented");
-}
-
 void Codegen::functionBody(FunctionBody *ast)
 {
     if (ast)
@@ -566,61 +516,11 @@ void Codegen::program(Program *ast)
     }
 }
 
-void Codegen::propertyNameAndValueList(PropertyNameAndValueList *)
-{
-    assert(!"not implemented");
-}
-
 void Codegen::sourceElements(SourceElements *ast)
 {
     for (SourceElements *it = ast; it; it = it->next) {
         sourceElement(it->element);
     }
-}
-
-void Codegen::statementList(StatementList *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::uiArrayMemberList(UiArrayMemberList *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::uiImport(UiImport *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::uiImportList(UiImportList *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::uiObjectInitializer(UiObjectInitializer *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::uiObjectMemberList(UiObjectMemberList *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::uiParameterList(UiParameterList *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::uiProgram(UiProgram *)
-{
-    assert(!"not implemented");
-}
-
-void Codegen::uiQualifiedId(UiQualifiedId *)
-{
-    assert(!"not implemented");
 }
 
 void Codegen::variableDeclaration(VariableDeclaration *ast)
