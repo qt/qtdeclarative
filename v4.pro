@@ -14,7 +14,6 @@ SOURCES += main.cpp \
     qv4ir.cpp \
     qmljs_runtime.cpp \
     qmljs_objects.cpp \
-    qv4isel.cpp \
     qv4syntaxchecker.cpp \
     qv4ecmaobjects.cpp \
     qv4array.cpp \
@@ -26,7 +25,6 @@ HEADERS += \
     qv4ir_p.h \
     qmljs_runtime.h \
     qmljs_objects.h \
-    qv4isel_p.h \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
     qv4array_p.h \

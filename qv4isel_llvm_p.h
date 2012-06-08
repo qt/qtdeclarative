@@ -1,7 +1,6 @@
 #ifndef QV4ISEL_LLVM_P_H
 #define QV4ISEL_LLVM_P_H
 
-#include "qv4isel_p.h"
 #include "qv4ir_p.h"
 #include <llvm/Module.h>
 #include <llvm/Support/IRBuilder.h>

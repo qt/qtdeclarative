@@ -1,7 +1,6 @@
 
 #include "qmljs_objects.h"
 #include "qv4codegen_p.h"
-#include "qv4isel_p.h"
 #include "qv4isel_x86_64_p.h"
 #include "qv4syntaxchecker_p.h"
 #include "qv4ecmaobjects_p.h"
@@ -212,11 +211,7 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
     if (! protect(code, codeSize))
         Q_UNREACHABLE();
 
-    VM::Object *globalObject = vm->globalObject.objectValue;
     VM::Context *ctx = vm->rootContext;
-
-    globalObject->setProperty(ctx, vm->identifier(QStringLiteral("print")),
-                              VM::Value::fromObject(new builtins::Print(ctx)));
 
     ctx->varCount = globalCode->locals.size();
     if (ctx->varCount) {
