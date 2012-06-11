@@ -3,6 +3,7 @@
 #include "qv4codegen_p.h"
 #include "qv4isel_x86_64_p.h"
 #include "qv4isel_moth_p.h"
+#include "qv4vme_moth_p.h"
 #include "qv4syntaxchecker_p.h"
 #include "qv4ecmaobjects_p.h"
 
@@ -216,11 +217,10 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
         }
     }
 
-    if (useMoth)
-        return;
-
-    if (! protect(code, codeSize))
-        Q_UNREACHABLE();
+    if (!useMoth) {
+        if (! protect(code, codeSize))
+            Q_UNREACHABLE();
+    }
 
     VM::Context *ctx = vm->rootContext;
 
@@ -233,7 +233,12 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
             ctx->vars[i] = ctx->engine->identifier(*globalCode->locals.at(i));
     }
 
-    globalCode->code(ctx);
+    if (useMoth) {
+        Moth::VME vme;
+        vme(ctx, code);
+    } else {
+        globalCode->code(ctx);
+    }
 
     if (ctx->hasUncaughtException) {
         if (VM::ErrorObject *e = ctx->result.asErrorObject())

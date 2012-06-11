@@ -4,7 +4,8 @@
 #include <QtCore/qglobal.h>
 
 #define FOR_EACH_MOTH_INSTR(F) \
-    F(Nop, nop) \
+    F(Nop, common) \
+    F(Done, common) \
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -31,11 +32,11 @@ union Instr
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
     };
 
-    struct instr_nop {
+    struct instr_common {
         MOTH_INSTR_HEADER
     };
 
-    instr_nop nop;
+    instr_common common;
 
     static int size(Type type);
 };
