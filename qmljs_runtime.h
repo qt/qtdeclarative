@@ -550,7 +550,7 @@ inline int __qmljs_to_int32(Context *ctx, const Value *value)
     else if (sign != -1 && number >= D31)
         number -= D32;
 
-    return qint32(number);
+    return int(number);
 }
 
 inline unsigned __qmljs_to_uint32(Context *ctx, const Value *value)
