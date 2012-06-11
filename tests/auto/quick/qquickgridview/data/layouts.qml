@@ -51,6 +51,7 @@ Rectangle {
         height: 320
         cellWidth: 80
         cellHeight: 60
+        cacheBuffer: 0
         flow: (testTopToBottom == false) ? GridView.LeftToRight : GridView.TopToBottom
         layoutDirection: (testRightToLeft == true) ? Qt.RightToLeft : Qt.LeftToRight
         verticalLayoutDirection: (testBottomToTop == true) ? GridView.BottomToTop : GridView.TopToBottom

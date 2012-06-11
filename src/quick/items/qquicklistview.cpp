@@ -2094,8 +2094,10 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     area may be created/retained.  The buffered delegates are created asynchronously,
     allowing creation to occur across multiple frames and reducing the
     likelihood of skipping frames.  In order to improve painting performance
-    delegates outside the visible area have their \l visible property set to
-    false until they are moved into the visible area.
+    delegates outside the visible area are not painted.
+
+    The default value of this property is platform dependent, but will usually
+    be a non-zero value.
 
     Note that cacheBuffer is not a pixel buffer - it only maintains additional
     instantiated delegates.

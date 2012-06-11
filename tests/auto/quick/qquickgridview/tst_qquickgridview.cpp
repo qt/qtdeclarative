@@ -58,6 +58,7 @@
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
 #include <QtGui/qguiapplication.h>
+#include "qplatformdefs.h"
 
 Q_DECLARE_METATYPE(QQuickGridView::Flow)
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
@@ -2236,7 +2237,11 @@ void tst_QQuickGridView::defaultValues()
     QTRY_COMPARE(obj->highlightFollowsCurrentItem(), true);
     QTRY_VERIFY(obj->flow() == 0);
     QTRY_COMPARE(obj->isWrapEnabled(), false);
-    QTRY_COMPARE(obj->cacheBuffer(), 0);
+#ifdef QML_VIEW_DEFAULTCACHEBUFFER
+    QTRY_COMPARE(obj->cacheBuffer(), QML_VIEW_DEFAULTCACHEBUFFER);
+#else
+    QTRY_COMPARE(obj->cacheBuffer(), 320);
+#endif
     QTRY_COMPARE(obj->cellWidth(), qreal(100)); //### Should 100 be the default?
     QTRY_COMPARE(obj->cellHeight(), qreal(100));
     delete obj;

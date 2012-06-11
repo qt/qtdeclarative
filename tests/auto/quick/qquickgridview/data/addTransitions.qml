@@ -64,6 +64,7 @@ Rectangle {
         height: 320
         cellWidth: 80
         cellHeight: 60
+        cacheBuffer: 0
         anchors.centerIn: parent
         model: testModel
         delegate: myDelegate

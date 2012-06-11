@@ -45,6 +45,7 @@ Rectangle {
         objectName: "list"
         width: 240
         height: 320
+        cacheBuffer: 0
         model: testModel
         delegate: myDelegate
         highlight: myHighlight

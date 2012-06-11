@@ -41,9 +41,14 @@
 
 #include "qquickitemview_p_p.h"
 #include <QtQuick/private/qquicktransition_p.h>
+#include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
 
+// Default cacheBuffer for all views.
+#ifndef QML_VIEW_DEFAULTCACHEBUFFER
+#define QML_VIEW_DEFAULTCACHEBUFFER 320
+#endif
 
 FxViewItem::FxViewItem(QQuickItem *i, bool own, bool trackGeometry)
     : item(i)
@@ -1410,7 +1415,7 @@ void QQuickItemView::componentComplete()
 
 QQuickItemViewPrivate::QQuickItemViewPrivate()
     : itemCount(0)
-    , buffer(0), bufferMode(BufferBefore | BufferAfter)
+    , buffer(QML_VIEW_DEFAULTCACHEBUFFER), bufferMode(BufferBefore | BufferAfter)
     , layoutDirection(Qt::LeftToRight), verticalLayoutDirection(QQuickItemView::TopToBottom)
     , moveReason(Other)
     , visibleIndex(0)

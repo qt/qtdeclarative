@@ -12,6 +12,7 @@ Rectangle {
         id: list
         objectName: "list"
         width: 240
+        cacheBuffer: 0
         height: initialHeight
         model: testModel
         delegate: Rectangle {

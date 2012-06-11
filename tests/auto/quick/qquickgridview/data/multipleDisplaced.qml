@@ -45,6 +45,7 @@ Rectangle {
         anchors.centerIn: parent
         width: 240
         height: 320
+        cacheBuffer: 0
         cellWidth: 80
         cellHeight: 60
         model: testModel

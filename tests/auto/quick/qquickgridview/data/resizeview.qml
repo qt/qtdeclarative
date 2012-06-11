@@ -13,6 +13,7 @@ Rectangle {
         height: initialHeight
         cellWidth: 80
         cellHeight: 60
+        cacheBuffer: 0
         model: testModel
         delegate: Rectangle {
             objectName: "wrapper"

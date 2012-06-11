@@ -44,6 +44,7 @@ Item {
     ListView {
         id: leftList
         objectName: "leftList"
+        cacheBuffer: 0
         anchors {
             left: parent.left; top: parent.top;
             right: parent.horizontalCenter; bottom: parent.bottom
@@ -54,6 +55,7 @@ Item {
     ListView {
         id: rightList
         objectName: "rightList"
+        cacheBuffer: 0
         anchors {
             left: parent.horizontalCenter; top: parent.top;
             right: parent.right; bottom: parent.bottom

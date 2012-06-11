@@ -55,6 +55,7 @@ Rectangle {
         cellWidth: 80
         cellHeight: 60
         anchors.centerIn: parent
+        cacheBuffer: 0
         model: testModel
         delegate: myDelegate
 

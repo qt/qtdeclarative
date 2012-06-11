@@ -44,6 +44,7 @@ Rectangle {
         height: 320
         cellWidth: 100
         cellHeight: 80
+        cacheBuffer: 0
         leftMargin: 30
         rightMargin: 50
         flow: GridView.TopToBottom

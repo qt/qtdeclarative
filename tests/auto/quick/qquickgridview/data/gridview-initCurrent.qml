@@ -57,6 +57,7 @@ Rectangle {
         currentIndex: 35
         cellWidth: 80
         cellHeight: 60
+        cacheBuffer: 0
         delegate: myDelegate
         highlightMoveDuration: 400
         model: testModel

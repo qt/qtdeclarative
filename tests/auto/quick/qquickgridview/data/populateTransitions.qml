@@ -54,6 +54,7 @@ Rectangle {
         height: 320
         cellWidth: 80
         cellHeight: 60
+        cacheBuffer: 0
         model: testModel
         delegate: myDelegate
 

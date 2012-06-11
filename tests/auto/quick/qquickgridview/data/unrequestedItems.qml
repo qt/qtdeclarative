@@ -55,6 +55,7 @@ Item {
         model: visualModel.parts.left
         cellWidth: 60
         cellHeight: 80
+        cacheBuffer: 0
     }
 
     GridView {
@@ -67,5 +68,6 @@ Item {
         model: visualModel.parts.right
         cellWidth: 60
         cellHeight: 80
+        cacheBuffer: 0
     }
 }
