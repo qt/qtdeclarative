@@ -1266,6 +1266,7 @@ void Codegen::linearize(IR::Function *function)
     assert(exitBlock->terminator()->asRet());
 
     QSet<IR::BasicBlock *> V;
+    V.insert(function->handlersBlock);
     V.insert(exitBlock);
 
     QVector<IR::BasicBlock *> trace;
@@ -1307,8 +1308,12 @@ void Codegen::linearize(IR::Function *function)
 
     I::trace(function->basicBlocks.first(), &V, &trace);
 
+    function->handlersBlock->index = trace.size();
+    trace.append(function->handlersBlock);
+
     exitBlock->index = trace.size();
     trace.append(exitBlock);
+
     function->basicBlocks = trace;
 
 #ifndef QV4_NO_LIVENESS

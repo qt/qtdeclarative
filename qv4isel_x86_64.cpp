@@ -137,7 +137,8 @@ void InstructionSelection::operator()(IR::Function *function)
     QHashIterator<IR::BasicBlock *, QVector<uchar *> > it(_patches);
     while (it.hasNext()) {
         it.next();
-        uchar *target = _addrs.value(it.key());
+        IR::BasicBlock *block = it.key();
+        uchar *target = _addrs.value(block);
         assert(target != 0);
         foreach (uchar *instr, it.value()) {
             amd64_patch(instr, target);
