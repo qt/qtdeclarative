@@ -55,59 +55,12 @@ namespace IR {
 const char *typeName(Type t)
 {
     switch (t) {
-    case InvalidType: return "invalid";
     case UndefinedType: return "undefined";
     case NullType: return "null";
-    case VoidType: return "void";
-    case StringType: return "string";
-    case UrlType: return "QUrl";
-    case ColorType: return "QColor";
-    case SGAnchorLineType: return "SGAnchorLine";
-    case AttachType: return "AttachType";
-    case ObjectType: return "object";
-    case VariantType: return "variant";
-    case VarType: return "var";
     case BoolType: return "bool";
-    case IntType: return "int";
-    case FloatType: return "float";
     case NumberType: return "number";
     default: return "invalid";
     }
-}
-
-inline bool isNumberType(IR::Type ty)
-{
-    return ty >= IR::FirstNumberType;
-}
-
-inline bool isStringType(IR::Type ty)
-{
-    return ty == IR::StringType || ty == IR::UrlType || ty == IR::ColorType;
-}
-
-IR::Type maxType(IR::Type left, IR::Type right)
-{
-    if (isStringType(left) && isStringType(right)) {
-        // String promotions (url to string) are more specific than
-        // identity conversions (AKA left == right). That's because
-        // we want to ensure we convert urls to strings in binary
-        // expressions.
-        return IR::StringType;
-    } else if (left == right)
-        return left;
-    else if (isNumberType(left) && isNumberType(right)) {
-        IR::Type ty = qMax(left, right);
-        return ty == FloatType ? NumberType : ty; // promote floats
-    } else if ((isNumberType(left) && isStringType(right)) ||
-             (isNumberType(right) && isStringType(left)))
-        return IR::StringType;
-    else
-        return IR::InvalidType;
-}
-
-bool isRealType(IR::Type type)
-{
-    return type == IR::NumberType || type == IR::FloatType;
 }
 
 const char *opname(AluOp op)
@@ -194,9 +147,6 @@ void Const::dump(QTextStream &out)
     case QQmlJS::IR::NullType:
         out << "null";
         break;
-    case QQmlJS::IR::VoidType:
-        out << "void";
-        break;
     case QQmlJS::IR::BoolType:
         out << (value ? "true" : "false");
         break;
@@ -232,18 +182,16 @@ QString String::escape(const QString &s)
     return r;
 }
 
-void Name::init(Type type, const QString *id, quint32 line, quint32 column)
+void Name::init(const QString *id, quint32 line, quint32 column)
 {
-    this->type = type;
     this->id = id;
     this->builtin = builtin_invalid;
     this->line = line;
     this->column = column;
 }
 
-void Name::init(Type type, Builtin builtin, quint32 line, quint32 column)
+void Name::init(Builtin builtin, quint32 line, quint32 column)
 {
-    this->type = type;
     this->id = 0;
     this->builtin = builtin;
     this->line = line;
@@ -281,88 +229,11 @@ void Unop::dump(QTextStream &out)
     expr->dump(out);
 }
 
-Type Unop::typeForOp(AluOp op, Expr *expr)
-{
-    switch (op) {
-    case OpIfTrue: return BoolType;
-    case OpNot: return BoolType;
-
-    case OpUMinus:
-    case OpUPlus:
-    case OpCompl:
-        return maxType(expr->type, NumberType);
-
-    default:
-        break;
-    }
-
-    return InvalidType;
-}
-
 void Binop::dump(QTextStream &out)
 {
     left->dump(out);
     out << ' ' << opname(op) << ' ';
     right->dump(out);
-}
-
-Type Binop::typeForOp(AluOp op, Expr *left, Expr *right)
-{
-    if (! (left && right))
-        return InvalidType;
-
-    switch (op) {
-    case OpInvalid:
-        return InvalidType;
-
-    // unary operators
-    case OpIfTrue:
-    case OpNot:
-    case OpUMinus:
-    case OpUPlus:
-    case OpCompl:
-        return InvalidType;
-
-    // bit fields
-    case OpBitAnd:
-    case OpBitOr:
-    case OpBitXor:
-        return IntType;
-
-    case OpAdd:
-        if (left->type == StringType)
-            return StringType;
-        return NumberType;
-
-    case OpSub:
-    case OpMul:
-    case OpDiv:
-    case OpMod:
-        return NumberType;
-
-    case OpLShift:
-    case OpRShift:
-    case OpURShift:
-        return IntType;
-
-    case OpAnd:
-    case OpOr:
-        return BoolType;
-
-    case OpGt:
-    case OpLt:
-    case OpGe:
-    case OpLe:
-    case OpEqual:
-    case OpNotEqual:
-    case OpStrictEqual:
-    case OpStrictNotEqual:
-    case OpInstanceof:
-    case OpIn:
-        return BoolType;
-    } // switch
-
-    return InvalidType;
 }
 
 void Call::dump(QTextStream &out)
@@ -377,11 +248,6 @@ void Call::dump(QTextStream &out)
     out << ')';
 }
 
-Type Call::typeForFunction(Expr *)
-{
-    return InvalidType;
-}
-
 void New::dump(QTextStream &out)
 {
     out << "new ";
@@ -393,11 +259,6 @@ void New::dump(QTextStream &out)
         it->expr->dump(out);
     }
     out << ')';
-}
-
-Type New::typeForFunction(Expr *)
-{
-    return InvalidType;
 }
 
 void Subscript::dump(QTextStream &out)
@@ -522,11 +383,11 @@ unsigned BasicBlock::newTemp()
 Temp *BasicBlock::TEMP(int index)
 { 
     Temp *e = function->New<Temp>();
-    e->init(IR::InvalidType, index);
+    e->init(index);
     return e;
 }
 
-Expr *BasicBlock::CONST(Type type, double value) 
+Expr *BasicBlock::CONST(Type type, double value)
 { 
     Const *e = function->New<Const>();
     e->init(type, value);
@@ -543,21 +404,21 @@ Expr *BasicBlock::STRING(const QString *value)
 Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
 { 
     Name *e = function->New<Name>();
-    e->init(InvalidType, function->newString(id), line, column);
+    e->init(function->newString(id), line, column);
     return e;
 }
 
 Name *BasicBlock::NAME(Name::Builtin builtin, quint32 line, quint32 column)
 {
     Name *e = function->New<Name>();
-    e->init(InvalidType, builtin, line, column);
+    e->init(builtin, line, column);
     return e;
 }
 
 Closure *BasicBlock::CLOSURE(Function *function)
 {
     Closure *clos = function->New<Closure>();
-    clos->init(IR::InvalidType, function);
+    clos->init(function);
     return clos;
 }
 
@@ -694,13 +555,13 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     return s;
 }
 
-Stmt *BasicBlock::RET(Temp *expr, Type type)
+Stmt *BasicBlock::RET(Temp *expr)
 {
     if (isTerminated())
         return 0;
 
     Ret *s = function->New<Ret>();
-    s->init(expr, type);
+    s->init(expr);
     statements.append(s);
     return s;
 }

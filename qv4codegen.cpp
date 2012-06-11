@@ -369,43 +369,45 @@ IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right)
 {
     if (IR::Const *c1 = left->asConst()) {
         if (IR::Const *c2 = right->asConst()) {
-            const IR::Type ty = IR::Binop::typeForOp(op, left, right);
+            if (c1->type == IR::NumberType && c2->type == IR::NumberType) {
+                const IR::Type ty = IR::NumberType;
 
-            switch (op) {
-            case IR::OpAdd: return _block->CONST(ty, c1->value + c2->value);
-            case IR::OpAnd: return _block->CONST(ty, c1->value ? c2->value : 0);
-            case IR::OpBitAnd: return _block->CONST(ty, int(c1->value) & int(c2->value));
-            case IR::OpBitOr: return _block->CONST(ty, int(c1->value) | int(c2->value));
-            case IR::OpBitXor: return _block->CONST(ty, int(c1->value) ^ int(c2->value));
-            case IR::OpDiv: return _block->CONST(ty, c1->value / c2->value);
-            case IR::OpEqual: return _block->CONST(ty, c1->value == c2->value);
-            case IR::OpGe: return _block->CONST(ty, c1->value >= c2->value);
-            case IR::OpGt: return _block->CONST(ty, c1->value > c2->value);
-            case IR::OpLe: return _block->CONST(ty, c1->value <= c2->value);
-            case IR::OpLShift: return _block->CONST(ty, int(c1->value) << int(c2->value));
-            case IR::OpLt: return _block->CONST(ty, c1->value < c2->value);
-            case IR::OpMod: return _block->CONST(ty, ::fmod(c1->value, c2->value));
-            case IR::OpMul: return _block->CONST(ty, c1->value * c2->value);
-            case IR::OpNotEqual: return _block->CONST(ty, c1->value != c2->value);
-            case IR::OpOr: return _block->CONST(ty, c1->value ? c1->value : c2->value);
-            case IR::OpRShift: return _block->CONST(ty, int(c1->value) >> int(c2->value));
-            case IR::OpStrictEqual: return _block->CONST(ty, c1->value == c2->value);
-            case IR::OpStrictNotEqual: return _block->CONST(ty, c1->value != c2->value);
-            case IR::OpSub: return _block->CONST(ty, c1->value - c2->value);
-            case IR::OpURShift: return _block->CONST(ty, unsigned(c1->value) >> int(c2->value));
+                switch (op) {
+                case IR::OpAdd: return _block->CONST(ty, c1->value + c2->value);
+                case IR::OpAnd: return _block->CONST(ty, c1->value ? c2->value : 0);
+                case IR::OpBitAnd: return _block->CONST(ty, int(c1->value) & int(c2->value));
+                case IR::OpBitOr: return _block->CONST(ty, int(c1->value) | int(c2->value));
+                case IR::OpBitXor: return _block->CONST(ty, int(c1->value) ^ int(c2->value));
+                case IR::OpDiv: return _block->CONST(ty, c1->value / c2->value);
+                case IR::OpEqual: return _block->CONST(ty, c1->value == c2->value);
+                case IR::OpGe: return _block->CONST(ty, c1->value >= c2->value);
+                case IR::OpGt: return _block->CONST(ty, c1->value > c2->value);
+                case IR::OpLe: return _block->CONST(ty, c1->value <= c2->value);
+                case IR::OpLShift: return _block->CONST(ty, int(c1->value) << int(c2->value));
+                case IR::OpLt: return _block->CONST(ty, c1->value < c2->value);
+                case IR::OpMod: return _block->CONST(ty, ::fmod(c1->value, c2->value));
+                case IR::OpMul: return _block->CONST(ty, c1->value * c2->value);
+                case IR::OpNotEqual: return _block->CONST(ty, c1->value != c2->value);
+                case IR::OpOr: return _block->CONST(ty, c1->value ? c1->value : c2->value);
+                case IR::OpRShift: return _block->CONST(ty, int(c1->value) >> int(c2->value));
+                case IR::OpStrictEqual: return _block->CONST(ty, c1->value == c2->value);
+                case IR::OpStrictNotEqual: return _block->CONST(ty, c1->value != c2->value);
+                case IR::OpSub: return _block->CONST(ty, c1->value - c2->value);
+                case IR::OpURShift: return _block->CONST(ty, unsigned(c1->value) >> int(c2->value));
 
-            case IR::OpInstanceof:
-            case IR::OpIn:
-                assert(!"unreachabe");
-                break;
+                case IR::OpInstanceof:
+                case IR::OpIn:
+                    assert(!"unreachabe");
+                    break;
 
-            case IR::OpIfTrue: // unary ops
-            case IR::OpNot:
-            case IR::OpUMinus:
-            case IR::OpUPlus:
-            case IR::OpCompl:
-            case IR::OpInvalid:
-                break;
+                case IR::OpIfTrue: // unary ops
+                case IR::OpNot:
+                case IR::OpUMinus:
+                case IR::OpUPlus:
+                case IR::OpCompl:
+                case IR::OpInvalid:
+                    break;
+                }
             }
         }
     } else if (op == IR::OpAdd) {
@@ -1436,7 +1438,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     unsigned returnAddress = entryBlock->newTemp();
 
     entryBlock->MOVE(entryBlock->TEMP(returnAddress), entryBlock->CONST(IR::UndefinedType, 0));
-    exitBlock->RET(exitBlock->TEMP(returnAddress), IR::InvalidType);
+    exitBlock->RET(exitBlock->TEMP(returnAddress));
     IR::ExprList *throwArgs = function->New<IR::ExprList>();
     throwArgs->expr = throwBlock->TEMP(returnAddress);
     throwBlock->EXP(throwBlock->CALL(throwBlock->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));

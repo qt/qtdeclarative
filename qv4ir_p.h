@@ -146,28 +146,11 @@ AluOp binaryOperator(int op);
 const char *opname(IR::AluOp op);
 
 enum Type {
-    InvalidType,
     UndefinedType,
     NullType,
-    VoidType,
-    StringType,
-    UrlType,
-    ColorType,
-    SGAnchorLineType,
-    AttachType,
-    ObjectType,
-    VariantType,
-    VarType,
-
-    FirstNumberType,
-    BoolType = FirstNumberType,
-    IntType,
-    FloatType,
+    BoolType,
     NumberType
 };
-Type maxType(IR::Type left, IR::Type right);
-bool isRealType(IR::Type type);
-const char *typeName(IR::Type t);
 
 struct ExprVisitor {
     virtual ~ExprVisitor() {}
@@ -196,9 +179,6 @@ struct StmtVisitor {
 };
 
 struct Expr {
-    Type type;
-
-    Expr(): type(InvalidType) {}
     virtual ~Expr() {}
     virtual void accept(ExprVisitor *) = 0;
     virtual Const *asConst() { return 0; }
@@ -227,6 +207,7 @@ struct ExprList {
 };
 
 struct Const: Expr {
+    Type type;
     double value;
 
     void init(Type type, double value)
@@ -246,7 +227,6 @@ struct String: Expr {
 
     void init(const QString *value)
     {
-        this->type = StringType;
         this->value = value;
     }
 
@@ -271,8 +251,8 @@ struct Name: Expr {
     quint32 line;
     quint32 column;
 
-    void init(Type type, const QString *id, quint32 line, quint32 column);
-    void init(Type type, Builtin builtin, quint32 line, quint32 column);
+    void init(const QString *id, quint32 line, quint32 column);
+    void init(Builtin builtin, quint32 line, quint32 column);
 
     virtual void accept(ExprVisitor *v) { v->visitName(this); }
     virtual Name *asName() { return this; }
@@ -283,9 +263,8 @@ struct Name: Expr {
 struct Temp: Expr {
     int index;
 
-    void init(Type type, int index)
+    void init(int index)
     {
-        this->type = type;
         this->index = index;
     }
 
@@ -298,9 +277,8 @@ struct Temp: Expr {
 struct Closure: Expr {
     Function *value;
 
-    void init(Type type, Function *value)
+    void init(Function *value)
     {
-        this->type = type;
         this->value = value;
     }
 
@@ -316,7 +294,6 @@ struct Unop: Expr {
 
     void init(AluOp op, Temp *expr)
     {
-        this->type = this->typeForOp(op, expr);
         this->op = op;
         this->expr = expr;
     }
@@ -325,9 +302,6 @@ struct Unop: Expr {
     virtual Unop *asUnop() { return this; }
 
     virtual void dump(QTextStream &out);
-
-private:
-    static Type typeForOp(AluOp op, Expr *expr);
 };
 
 struct Binop: Expr {
@@ -337,7 +311,6 @@ struct Binop: Expr {
 
     void init(AluOp op, Temp *left, Temp *right)
     {
-        this->type = typeForOp(op, left, right);
         this->op = op;
         this->left = left;
         this->right = right;
@@ -347,8 +320,6 @@ struct Binop: Expr {
     virtual Binop *asBinop() { return this; }
 
     virtual void dump(QTextStream &out);
-
-    static Type typeForOp(AluOp op, Expr *left, Expr *right);
 };
 
 struct Call: Expr {
@@ -357,7 +328,6 @@ struct Call: Expr {
 
     void init(Expr *base, ExprList *args)
     {
-        this->type = typeForFunction(base);
         this->base = base;
         this->args = args;
     }
@@ -372,9 +342,6 @@ struct Call: Expr {
     virtual Call *asCall() { return this; }
 
     virtual void dump(QTextStream &out);
-
-private:
-    static Type typeForFunction(Expr *base);
 };
 
 struct New: Expr {
@@ -383,7 +350,6 @@ struct New: Expr {
 
     void init(Expr *base, ExprList *args)
     {
-        this->type = typeForFunction(base);
         this->base = base;
         this->args = args;
     }
@@ -398,9 +364,6 @@ struct New: Expr {
     virtual New *asNew() { return this; }
 
     virtual void dump(QTextStream &out);
-
-private:
-    static Type typeForFunction(Expr *base);
 };
 
 struct Subscript: Expr {
@@ -409,7 +372,6 @@ struct Subscript: Expr {
 
     void init(Temp *base, Temp *index)
     {
-        this->type = typeForFunction(base);
         this->base = base;
         this->index = index;
     }
@@ -418,9 +380,6 @@ struct Subscript: Expr {
     virtual Subscript *asSubscript() { return this; }
 
     virtual void dump(QTextStream &out);
-
-private:
-    static Type typeForFunction(Expr *) { return IR::InvalidType; }
 };
 
 struct Member: Expr {
@@ -429,7 +388,6 @@ struct Member: Expr {
 
     void init(Temp *base, const QString *name)
     {
-        this->type = typeForFunction(base);
         this->base = base;
         this->name = name;
     }
@@ -438,9 +396,6 @@ struct Member: Expr {
     virtual Member *asMember() { return this; }
 
     virtual void dump(QTextStream &out);
-
-private:
-    static Type typeForFunction(Expr *) { return IR::InvalidType; }
 };
 
 struct Stmt {
@@ -571,12 +526,10 @@ struct CJump: Stmt {
 
 struct Ret: Stmt {
     Temp *expr;
-    Type type;
 
-    void init(Temp *expr, Type type)
+    void init(Temp *expr)
     {
         this->expr = expr;
-        this->type = type;
     }
 
     virtual Stmt *asTerminator() { return this; }
@@ -700,7 +653,7 @@ struct BasicBlock {
 
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
-    Stmt *RET(Temp *expr, Type type);
+    Stmt *RET(Temp *expr);
 
     void dump(QTextStream &out, Stmt::Mode mode = Stmt::HIR);
 };
