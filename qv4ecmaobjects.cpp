@@ -679,6 +679,8 @@ void StringCtor::call(Context *ctx)
 void StringPrototype::init(Context *ctx, const Value &ctor)
 {
     ctor.objectValue->setProperty(ctx, ctx->engine->id_prototype, Value::fromObject(this));
+    ctor.objectValue->setProperty(ctx, QStringLiteral("fromCharCode"), method_fromCharCode);
+
     setProperty(ctx, QStringLiteral("constructor"), ctor);
     setProperty(ctx, QStringLiteral("toString"), method_toString);
     setProperty(ctx, QStringLiteral("valueOf"), method_valueOf);
@@ -699,7 +701,6 @@ void StringPrototype::init(Context *ctx, const Value &ctor)
     setProperty(ctx, QStringLiteral("toLocaleLowerCase"), method_toLocaleLowerCase);
     setProperty(ctx, QStringLiteral("toUpperCase"), method_toUpperCase);
     setProperty(ctx, QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
-    setProperty(ctx, QStringLiteral("fromCharCode"), method_fromCharCode);
 }
 
 QString StringPrototype::getThisString(Context *ctx)

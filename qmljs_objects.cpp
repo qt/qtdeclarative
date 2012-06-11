@@ -157,6 +157,8 @@ ScriptFunction::ScriptFunction(Context *scope, IR::Function *function)
     : FunctionObject(scope)
     , function(function)
 {
+    if (function->name)
+        name = scope->engine->identifier(*function->name);
     needsActivation = function->needsActivation();
     formalParameterCount = function->formals.size();
     if (formalParameterCount) {

@@ -3,6 +3,7 @@
 
 #ifndef QMLJS_LLVM_RUNTIME
 #  include <QtCore/QString>
+#  include <QtCore/QDebug>
 #endif
 
 #include <math.h>
@@ -196,41 +197,53 @@ void __qmljs_sne(Context *ctx, Value *result, const Value *left, const Value *ri
 
 void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Value *right);
 
-void __qmljs_inplace_bit_and(Context *ctx, Value *result, double value);
-void __qmljs_inplace_bit_or(Context *ctx, Value *result, double value);
-void __qmljs_inplace_bit_xor(Context *ctx, Value *result, double value);
-void __qmljs_inplace_add(Context *ctx, Value *result, double value);
-void __qmljs_inplace_sub(Context *ctx, Value *result, double value);
-void __qmljs_inplace_mul(Context *ctx, Value *result, double value);
-void __qmljs_inplace_div(Context *ctx, Value *result, double value);
-void __qmljs_inplace_mod(Context *ctx, Value *result, double value);
-void __qmljs_inplace_shl(Context *ctx, Value *result, double value);
-void __qmljs_inplace_shr(Context *ctx, Value *result, double value);
-void __qmljs_inplace_ushr(Context *ctx, Value *result, double value);
+void __qmljs_inplace_bit_and(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_bit_or(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_bit_xor(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_add(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_sub(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_mul(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_div(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_mod(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_shl(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_shr(Context *ctx, Value *result, Value *value);
+void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value);
 
-void __qmljs_inplace_bit_and_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_bit_or_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_bit_xor_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_add_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_sub_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_mul_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_div_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_mod_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_shl_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_shr_element(Context *ctx, Value *base, Value *index, double value);
-void __qmljs_inplace_ushr_element(Context *ctx, Value *base, Value *index, double value);
+void __qmljs_inplace_bit_and_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_bit_or_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_bit_xor_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_add_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_sub_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_mul_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_div_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_mod_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_shl_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_shr_name(Context *ctx, String *name, Value *value);
+void __qmljs_inplace_ushr_name(Context *ctx, String *name, Value *value);
 
-void __qmljs_inplace_bit_and_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_bit_or_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_bit_xor_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_add_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_sub_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_mul_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_div_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_mod_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_shl_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_shr_member(Context *ctx, Value *base, String *name, double value);
-void __qmljs_inplace_ushr_member(Context *ctx, Value *base, String *name, double value);
+void __qmljs_inplace_bit_and_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_bit_or_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_bit_xor_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_add_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_sub_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_mul_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_div_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_mod_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_shl_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_shr_element(Context *ctx, Value *base, Value *index, Value *value);
+void __qmljs_inplace_ushr_element(Context *ctx, Value *base, Value *index, Value *value);
+
+void __qmljs_inplace_bit_and_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_bit_or_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_bit_xor_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_add_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_sub_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_mul_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_div_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_mod_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_shl_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_shr_member(Context *ctx, Value *base, String *name, Value *value);
+void __qmljs_inplace_ushr_member(Context *ctx, Value *base, String *name, Value *value);
 
 bool __qmljs_cmp_gt(Context *ctx, const Value *left, const Value *right);
 bool __qmljs_cmp_lt(Context *ctx, const Value *left, const Value *right);
@@ -390,10 +403,10 @@ struct Context {
     void throwUnimplemented(const QString &message);
 #endif
 
-    void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
+    void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc);
     void leaveCallContext(FunctionObject *f, Value *r);
 
-    void initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc);
+    void initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc);
     void leaveConstructorContext(FunctionObject *f, Value *returnValue);
 };
 
@@ -515,26 +528,65 @@ inline double __qmljs_to_integer(Context *ctx, const Value *value)
 
 inline int __qmljs_to_int32(Context *ctx, const Value *value)
 {
-    const double number = __qmljs_to_number(ctx, value);
+    double number = __qmljs_to_number(ctx, value);
+
+    if ((number >= -2147483648.0 && number < 2147483648.0)) {
+        return static_cast<int>(number);
+    }
+
     if (! number || isnan(number) || isinf(number))
-        return +0;
-    return (int) trunc(number); // ###
+        return 0;
+
+    double D32 = 4294967296.0;
+    double sign = (number < 0) ? -1.0 : 1.0;
+    double abs_n = fabs(number);
+
+    number = ::fmod(sign * ::floor(abs_n), D32);
+    const double D31 = D32 / 2.0;
+
+    if (sign == -1 && number < -D31)
+        number += D32;
+
+    else if (sign != -1 && number >= D31)
+        number -= D32;
+
+    return qint32(number);
 }
 
 inline unsigned __qmljs_to_uint32(Context *ctx, const Value *value)
 {
-    const double number = __qmljs_to_number(ctx, value);
+    double number = __qmljs_to_number(ctx, value);
     if (! number || isnan(number) || isinf(number))
         return +0;
-    return (unsigned) trunc(number); // ###
+
+    double sign = (number < 0) ? -1.0 : 1.0;
+    double abs_n = ::fabs(number);
+
+    const double D32 = 4294967296.0;
+    number = ::fmod(sign * ::floor(abs_n), D32);
+
+    if (number < 0)
+        number += D32;
+
+    return unsigned(number);
 }
 
 inline unsigned short __qmljs_to_uint16(Context *ctx, const Value *value)
 {
-    const double number = __qmljs_to_number(ctx, value);
+    double number = __qmljs_to_number(ctx, value);
     if (! number || isnan(number) || isinf(number))
         return +0;
-    return (unsigned short) trunc(number); // ###
+
+    double sign = (number < 0) ? -1.0 : 1.0;
+    double abs_n = ::fabs(number);
+
+    double D16 = 65536.0;
+    number = ::fmod(sign * ::floor(abs_n), D16);
+
+    if (number < 0)
+        number += D16;
+
+    return (unsigned short)number;
 }
 
 inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
@@ -699,81 +751,59 @@ inline void __qmljs_bit_and(Context *ctx, Value *result, const Value *left, cons
     __qmljs_init_number(result, lval & rval);
 }
 
-inline void __qmljs_inplace_bit_and(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_bit_and(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_bit_xor(ctx, result, result, &v);
+    __qmljs_bit_xor(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_bit_or(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_bit_or(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_bit_or(ctx, result, result, &v);
+    __qmljs_bit_or(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_bit_xor(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_bit_xor(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_bit_xor(ctx, result, result, &v);
+    __qmljs_bit_xor(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_add(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_add(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_add(ctx, result, result, &v);
+    __qmljs_add(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_sub(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_sub(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_sub(ctx, result, result, &v);
+    __qmljs_sub(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_mul(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_mul(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_mul(ctx, result, result, &v);
+    __qmljs_mul(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_div(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_div(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_div(ctx, result, result, &v);
+    __qmljs_div(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_mod(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_mod(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_mod(ctx, result, result, &v);
+    __qmljs_mod(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_shl(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_shl(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_shl(ctx, result, result, &v);
+    __qmljs_shl(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_shr(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_shr(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_shr(ctx, result, result, &v);
+    __qmljs_shr(ctx, result, result, value);
 }
 
-inline void __qmljs_inplace_ushr(Context *ctx, Value *result, double value)
+inline void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value)
 {
-    Value v;
-    __qmljs_init_number(&v, value);
-    __qmljs_ushr(ctx, result, result, &v);
+    __qmljs_ushr(ctx, result, result, value);
 }
 
 inline void __qmljs_add(Context *ctx, Value *result, const Value *left, const Value *right)
@@ -830,7 +860,7 @@ inline void __qmljs_ushr(Context *ctx, Value *result, const Value *left, const V
 {
     unsigned lval = __qmljs_to_uint32(ctx, left);
     unsigned rval = __qmljs_to_uint32(ctx, right);
-    __qmljs_init_number(result, lval << rval);
+    __qmljs_init_number(result, lval >> rval);
 }
 
 inline void __qmljs_gt(Context *ctx, Value *result, const Value *left, const Value *right)
@@ -901,8 +931,8 @@ inline void __qmljs_ne(Context *ctx, Value *result, const Value *left, const Val
 {
     if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
         __qmljs_init_boolean(result, left->numberValue != right->numberValue);
-    } else if (left->type == STRING_TYPE && right->type != STRING_TYPE) {
-        __qmljs_init_boolean(result, __qmljs_string_equal(ctx, left->stringValue, right->stringValue));
+    } else if (left->type == STRING_TYPE && right->type == STRING_TYPE) {
+        __qmljs_init_boolean(result, !__qmljs_string_equal(ctx, left->stringValue, right->stringValue));
     } else {
         bool r = ! __qmljs_equal(ctx, left, right);
         __qmljs_init_boolean(result, r);

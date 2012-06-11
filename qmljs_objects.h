@@ -46,12 +46,10 @@ struct String {
         : _text(text), _hashValue(0) {}
 
     inline bool isEqualTo(const String *other) const {
-        if (other && hashValue() == other->hashValue()) {
-            if (this == other)
-                return true;
-            else
-                return toQString() == other->toQString();
-        }
+        if (this == other)
+            return true;
+        else if (other && hashValue() == other->hashValue())
+            return toQString() == other->toQString();
         return false;
     }
 
@@ -313,6 +311,7 @@ struct ArrayObject: Object {
 
 struct FunctionObject: Object {
     Context *scope;
+    String *name;
     String **formalParameterList;
     unsigned int formalParameterCount;
     String **varList;
@@ -321,11 +320,12 @@ struct FunctionObject: Object {
 
     FunctionObject(Context *scope)
         : scope(scope)
+        , name(0)
         , formalParameterList(0)
         , formalParameterCount(0)
         , varList(0)
         , varCount(0)
-        , needsActivation(true) {}
+        , needsActivation(false) {}
 
     virtual QString className() { return QStringLiteral("Function"); }
     virtual FunctionObject *asFunctionObject() { return this; }

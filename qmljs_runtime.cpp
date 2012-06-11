@@ -291,7 +291,7 @@ void Context::throwReferenceError(const Value &value)
     throwError(Value::fromObject(engine->newErrorObject(Value::fromString(this, msg))));
 }
 
-void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
+void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc)
 {
     engine = e;
     parent = f->scope;
@@ -310,9 +310,12 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
     formalCount = f->formalParameterCount;
     arguments = args;
     argumentCount = argc;
-    if (argc && f->needsActivation) {
-        arguments = new Value[argc];
-        std::copy(args, args + argc, arguments);
+    if (f->needsActivation || argc < formalCount){
+        arguments = new Value[qMax(argc, formalCount)];
+        if (argc)
+            std::copy(args, args + argc, arguments);
+        if (argc < formalCount)
+            std::fill(arguments + argc, arguments + formalCount, Value::undefinedValue());
     }
     vars = f->varList;
     varCount = f->varCount;
@@ -334,7 +337,7 @@ void Context::leaveCallContext(FunctionObject *f, Value *returnValue)
     }
 }
 
-void Context::initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, int argc)
+void Context::initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc)
 {
     initCallContext(e, object, f, args, argc);
     calledAsConstructor = true;
@@ -489,112 +492,214 @@ void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *rig
     }
 }
 
-void __qmljs_inplace_bit_and_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_bit_and_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_bit_or_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_bit_or_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_bit_xor_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_bit_xor_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_add_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_add_name(Context *ctx, String *name, Value *value)
+{
+    if (Value *prop = ctx->lookupPropertyDescriptor(name))
+        __qmljs_add(ctx, prop, prop, value);
+    else
+        ctx->throwReferenceError(Value::fromString(name));
+}
+
+void __qmljs_inplace_sub_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_sub_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_mul_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_mul_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_div_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_div_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_mod_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_mod_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_shl_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_shl_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_shr_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_shr_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_ushr_name(Context *ctx, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_ushr_element(Context *ctx, Value *base, Value *index, double value)
+void __qmljs_inplace_bit_and_element(Context *ctx, Value *base, Value *index, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_bit_and_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_bit_or_element(Context *ctx, Value *base, Value *index, Value *value)
+{
+    Object *obj = base->toObject(ctx).objectValue;
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index->isNumber()) {
+            const quint32 idx = index->toUInt32(ctx);
+            Value v = a->value.at(idx);
+            __qmljs_bit_or(ctx, &v, &v, value);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
+    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+}
+
+void __qmljs_inplace_bit_xor_element(Context *ctx, Value *base, Value *index, Value *value)
+{
+    Object *obj = base->toObject(ctx).objectValue;
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index->isNumber()) {
+            const quint32 idx = index->toUInt32(ctx);
+            Value v = a->value.at(idx);
+            __qmljs_bit_xor(ctx, &v, &v, value);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
+    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+}
+
+void __qmljs_inplace_add_element(Context *ctx, Value *base, Value *index, Value *value)
+{
+    Object *obj = base->toObject(ctx).objectValue;
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index->isNumber()) {
+            const quint32 idx = index->toUInt32(ctx);
+            Value v = a->value.at(idx);
+            __qmljs_add(ctx, &v, &v, value);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
+    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+}
+
+void __qmljs_inplace_sub_element(Context *ctx, Value *base, Value *index, Value *value)
+{
+    Object *obj = base->toObject(ctx).objectValue;
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index->isNumber()) {
+            const quint32 idx = index->toUInt32(ctx);
+            Value v = a->value.at(idx);
+            __qmljs_sub(ctx, &v, &v, value);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
+    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+}
+
+void __qmljs_inplace_mul_element(Context *ctx, Value *base, Value *index, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_bit_or_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_div_element(Context *ctx, Value *base, Value *index, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_bit_xor_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_mod_element(Context *ctx, Value *base, Value *index, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_add_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_shl_element(Context *ctx, Value *base, Value *index, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_sub_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_shr_element(Context *ctx, Value *base, Value *index, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_mul_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_ushr_element(Context *ctx, Value *base, Value *index, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_div_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_bit_and_member(Context *ctx, Value *base, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_mod_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_bit_or_member(Context *ctx, Value *base, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_shl_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_bit_xor_member(Context *ctx, Value *base, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_shr_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_add_member(Context *ctx, Value *base, String *name, Value *value)
+{
+    Value prop = base->objectValue->getProperty(ctx, name);
+    __qmljs_add(ctx, &prop, &prop, value);
+    base->objectValue->setProperty(ctx, name, prop);
+}
+
+void __qmljs_inplace_sub_member(Context *ctx, Value *base, String *name, Value *value)
+{
+    Value prop = base->objectValue->getProperty(ctx, name);
+    __qmljs_sub(ctx, &prop, &prop, value);
+    base->objectValue->setProperty(ctx, name, prop);
+}
+
+void __qmljs_inplace_mul_member(Context *ctx, Value *base, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
-void __qmljs_inplace_ushr_member(Context *ctx, Value *base, String *name, double value)
+void __qmljs_inplace_div_member(Context *ctx, Value *base, String *name, Value *value)
+{
+    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+}
+
+void __qmljs_inplace_mod_member(Context *ctx, Value *base, String *name, Value *value)
+{
+    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+}
+
+void __qmljs_inplace_shl_member(Context *ctx, Value *base, String *name, Value *value)
+{
+    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+}
+
+void __qmljs_inplace_shr_member(Context *ctx, Value *base, String *name, Value *value)
+{
+    ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
+}
+
+void __qmljs_inplace_ushr_member(Context *ctx, Value *base, String *name, Value *value)
 {
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
@@ -616,7 +721,10 @@ int __qmljs_string_length(Context *, String *string)
 
 double __qmljs_string_to_number(Context *, String *string)
 {
-    bool ok;
+    const QString s = string->toQString();
+    if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
+        return s.toLong(0, 16);
+    bool ok = false;
     return string->toQString().toDouble(&ok); // ### TODO
 }
 
@@ -633,9 +741,7 @@ bool __qmljs_string_compare(Context *, String *left, String *right)
 
 bool __qmljs_string_equal(Context *, String *left, String *right)
 {
-    return left == right ||
-            (left->hashValue() == right->hashValue() &&
-             left->toQString() == right->toQString());
+    return left == right || left->isEqualTo(right);
 }
 
 String *__qmljs_string_concat(Context *ctx, String *first, String *second)
