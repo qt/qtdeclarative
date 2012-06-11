@@ -110,6 +110,8 @@ void InstructionSelection::operator()(IR::Function *function)
     _code = (uchar *) ((size_t(_code) + 15) & ~15);
     _function->code = (void (*)(VM::Context *)) _code;
     _codePtr = _code;
+    _patches.clear();
+    _addrs.clear();
 
     int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) * sizeof(Value);
     locals = (locals + 15) & ~15;
@@ -135,7 +137,8 @@ void InstructionSelection::operator()(IR::Function *function)
     QHashIterator<IR::BasicBlock *, QVector<uchar *> > it(_patches);
     while (it.hasNext()) {
         it.next();
-        uchar *target = _addrs[it.key()];
+        uchar *target = _addrs.value(it.key());
+        assert(target != 0);
         foreach (uchar *instr, it.value()) {
             amd64_patch(instr, target);
         }
