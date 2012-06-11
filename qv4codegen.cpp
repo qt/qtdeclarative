@@ -237,6 +237,7 @@ protected:
 
     virtual bool visit(FunctionDeclaration *ast)
     {
+        _env->functions.append(ast);
         _env->hasNestedFunctions = true;
         _env->enter(ast->name.toString());
         enterEnvironment(ast);
@@ -390,14 +391,14 @@ IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
 void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
 {
     if (op != IR::OpInvalid) {
-        if (! (source->asTemp() || source->asConst())) {
+        if (! (source->asTemp() /*|| source->asConst()*/)) {
             const unsigned t = _block->newTemp();
             _block->MOVE(_block->TEMP(t), source);
             _block->MOVE(target, _block->TEMP(t), op);
             return;
         }
     } else if (target->asMember() || target->asSubscript()) {
-        if (! (source->asTemp() || source->asConst())) {
+        if (! (source->asTemp() /*|| source->asConst()*/)) {
             const unsigned t = _block->newTemp();
             _block->MOVE(_block->TEMP(t), source);
             _block->MOVE(target, _block->TEMP(t), op);
@@ -814,13 +815,17 @@ bool Codegen::visit(BinaryExpression *ast)
         break;
 
     case QSOperator::Assign:
+        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
+            assert(!"syntax error");
+        }
+
         if (_expr.accept(nx)) {
             move(*left, *right);
         } else {
             const unsigned t = _block->newTemp();
             move(_block->TEMP(t), *right);
             move(*left, _block->TEMP(t));
-            _expr.code = _block->TEMP(t);
+            _expr.code = *left;
         }
         break;
 
@@ -835,13 +840,17 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceRightShift:
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
+        if (! (left->asTemp() || left->asName() || left->asSubscript() || left->asMember())) {
+            assert(!"syntax error");
+        }
+
         if (_expr.accept(nx)) {
             move(*left, *right, baseOp(ast->op));
         } else {
             const unsigned t = _block->newTemp();
             move(_block->TEMP(t), *right);
             move(*left, _block->TEMP(t), baseOp(ast->op));
-            _expr.code = _block->TEMP(t);
+            _expr.code = *left;
         }
         break;
     }
@@ -1191,14 +1200,7 @@ bool Codegen::visit(VoidExpression *ast)
 
 bool Codegen::visit(FunctionDeclaration *ast)
 {
-    IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0, true);
-    if (_expr.accept(nx)) {
-        const int index = _env->findMember(ast->name.toString());
-        assert(index != -1);
-        move(_block->TEMP(index), _block->CLOSURE(function));
-    } else {
-        _expr.code = _block->CLOSURE(function);
-    }
+    _expr.accept(nx);
     return false;
 }
 
@@ -1401,6 +1403,13 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
         _function->LOCAL(local);
     }
 
+    foreach (AST::FunctionDeclaration *f, _env->functions) {
+        IR::Function *function = defineFunction(f->name.toString(), f, f->formals,
+                                                f->body ? f->body->elements : 0, true);
+        _block->MOVE(_block->TEMP(_env->findMember(f->name.toString())),
+                     _block->CLOSURE(function));
+    }
+
     sourceElements(body);
 
     _function->insertBasicBlock(_exitBlock);
@@ -1485,7 +1494,7 @@ bool Codegen::visit(BreakStatement *ast)
     if (ast->label.isEmpty())
         _block->JUMP(_loop->breakBlock);
     else {
-        for (Loop *loop = _loop; _loop; _loop = _loop->parent) {
+        for (Loop *loop = _loop; loop; loop = loop->parent) {
             if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
                 _block->JUMP(loop->breakBlock);
                 return false;
@@ -1502,7 +1511,7 @@ bool Codegen::visit(ContinueStatement *ast)
     if (ast->label.isEmpty())
         _block->JUMP(_loop->continueBlock);
     else {
-        for (Loop *loop = _loop; _loop; _loop = _loop->parent) {
+        for (Loop *loop = _loop; loop; loop = loop->parent) {
             if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
                 if (! loop->continueBlock)
                     break;

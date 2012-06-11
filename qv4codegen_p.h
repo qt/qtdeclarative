@@ -57,6 +57,7 @@ protected:
         Environment *parent;
         QHash<QString, int> members;
         QVector<QString> vars;
+        QVector<AST::FunctionDeclaration *> functions;
         int maxNumberOfArguments;
         bool hasDirectEval;
         bool hasNestedFunctions;
@@ -272,6 +273,7 @@ private:
     Loop *_loop;
     AST::LabelledStatement *_labelledStatement;
     QHash<AST::Node *, Environment *> _envMap;
+    QHash<AST::FunctionExpression *, int> _functionMap;
 
     class ScanFunctions;
 };
