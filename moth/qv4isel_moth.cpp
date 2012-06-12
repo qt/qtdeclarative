@@ -45,7 +45,7 @@ void InstructionSelection::operator()(IR::Function *function)
         for (int ii = 0; ii < patchList.count(); ++ii) {
             ptrdiff_t patch = patchList.at(ii);
 
-            *((ptrdiff_t *)(_code + patch)) = target;
+            *((ptrdiff_t *)(_code + patch)) = target - patch;
         }
     }
 

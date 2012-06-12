@@ -52,7 +52,7 @@ static inline VM::Value *tempValue(QQmlJS::VM::Context *context, QVector<VM::Val
 
 #define TEMP(index) *tempValue(context, stack, index)
 
-void VME::operator()(QQmlJS::VM::Context *context, const uchar *basecode
+void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -70,8 +70,6 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *basecode
         return;
     }
 #endif
-
-    const uchar *code = basecode;
 
     QVector<VM::Value> stack;
     VM::Value tempRegister;
@@ -139,12 +137,12 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *basecode
     MOTH_END_INSTR(Call)
 
     MOTH_BEGIN_INSTR(Jump)
-        code = basecode + instr.offset;
+        code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(Jump)
 
     MOTH_BEGIN_INSTR(CJump)
         if (__qmljs_to_boolean(context, &tempRegister))
-            code = basecode + instr.offset;
+            code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(CJump)
 
     MOTH_BEGIN_INSTR(Binop)
