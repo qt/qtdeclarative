@@ -209,6 +209,8 @@ private slots:
     void flickBeyondBounds();
     void destroyItemOnCreation();
 
+    void parentBinding();
+
 private:
     template <class T> void items(const QUrl &source, bool forceLayout);
     template <class T> void changed(const QUrl &source, bool forceLayout);
@@ -261,9 +263,17 @@ private:
     }
 #endif
 
+    static void errorMsgHandler(QtMsgType, const char *)
+    {
+        ++m_errorCount;
+    }
+
     QQuickView *m_view;
     QString testForView;
+    static int m_errorCount;
 };
+
+int tst_QQuickListView::m_errorCount = 0;
 
 class TestObject : public QObject
 {
@@ -6710,6 +6720,35 @@ void tst_QQuickListView::destroyItemOnCreation()
     QCOMPARE(model.count(), 0);
 
     delete canvas;
+}
+
+void tst_QQuickListView::parentBinding()
+{
+    QQuickView *canvas = createView();
+
+    m_errorCount = 0;
+    QtMsgHandler old = qInstallMsgHandler(errorMsgHandler);
+
+    canvas->setSource(testFileUrl("parentBinding.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
+    QVERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
+    QVERIFY(item);
+    QCOMPARE(item->width(), listview->width());
+    QCOMPARE(item->height(), listview->height()/12);
+
+    // there should be no transient binding error
+    QVERIFY(!m_errorCount);
+
+    qInstallMsgHandler(old);
 }
 
 QTEST_MAIN(tst_QQuickListView)

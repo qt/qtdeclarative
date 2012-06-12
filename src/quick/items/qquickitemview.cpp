@@ -2235,6 +2235,7 @@ void QQuickItemView::initItem(int index, QQuickItem *item)
     if (d->requestedIndex == index) {
         if (d->requestedAsync)
             QQuickItemPrivate::get(item)->setCulled(true);
+        item->setParentItem(contentItem());
         d->requestedItem = d->newViewItem(index, item);
     }
 }

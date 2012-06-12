@@ -3682,6 +3682,11 @@ void QQuickItem::componentComplete()
 
     if (d->extra.isAllocated() && d->extra->contents)
         d->extra->contents->complete();
+
+    if (d->canvas && d->dirtyAttributes) {
+        d->addToDirtyList();
+        QQuickCanvasPrivate::get(d->canvas)->dirtyItem(this);
+    }
 }
 
 QQuickStateGroup *QQuickItemPrivate::_states()
@@ -4336,7 +4341,7 @@ void QQuickItemPrivate::dirty(DirtyType type)
 
     if (!(dirtyAttributes & type) || (canvas && !prevDirtyItem)) {
         dirtyAttributes |= type;
-        if (canvas) {
+        if (canvas && componentComplete) {
             addToDirtyList();
             QQuickCanvasPrivate::get(canvas)->dirtyItem(q);
         }
