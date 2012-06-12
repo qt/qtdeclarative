@@ -38,7 +38,21 @@ using namespace QQmlJS::Moth;
 
 #endif
 
-void VME::operator()(QQmlJS::VM::Context *, const uchar *code
+static inline VM::Value *tempValue(QQmlJS::VM::Context *context, QVector<VM::Value> &stack, int index)
+{
+    if (index < 0) {
+        const int arg = -index - 1;
+        return context->arguments + arg;
+    } else if (index < stack.count()) {
+        return stack.data() + index;
+    } else {
+        return context->locals + index - stack.count();
+    }
+}
+
+#define TEMP(index) *tempValue(context, stack, index)
+
+void VME::operator()(QQmlJS::VM::Context *context, const uchar *basecode
 #ifdef MOTH_THREADED_INTERPRETER
         , void ***storeJumpTable
 #endif
@@ -57,6 +71,11 @@ void VME::operator()(QQmlJS::VM::Context *, const uchar *code
     }
 #endif
 
+    const uchar *code = basecode;
+
+    QVector<VM::Value> stack;
+    VM::Value tempRegister;
+
 #ifdef MOTH_THREADED_INTERPRETER
     const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
     goto *genericInstr->common.code;
@@ -66,13 +85,76 @@ void VME::operator()(QQmlJS::VM::Context *, const uchar *code
         switch (genericInstr->common.instructionType) {
 #endif
 
-    MOTH_BEGIN_INSTR(Nop)
-        qWarning("NOP");
-    MOTH_END_INSTR(Nop)
+    MOTH_BEGIN_INSTR(StoreTemp)
+        TEMP(instr.tempIndex) = tempRegister;
+    MOTH_END_INSTR(StoreTemp)
 
-    MOTH_BEGIN_INSTR(Done)
+    MOTH_BEGIN_INSTR(LoadTemp)
+        tempRegister = TEMP(instr.tempIndex);
+    MOTH_END_INSTR(LoadTemp)
+
+    MOTH_BEGIN_INSTR(MoveTemp)
+        TEMP(instr.toTempIndex) = TEMP(instr.fromTempIndex);
+    MOTH_END_INSTR(MoveTemp)
+
+    MOTH_BEGIN_INSTR(LoadUndefined)
+        tempRegister = VM::Value::undefinedValue();
+    MOTH_END_INSTR(LoadUndefined)
+
+    MOTH_BEGIN_INSTR(LoadNull)
+        tempRegister = VM::Value::nullValue();
+    MOTH_END_INSTR(LoadNull)
+
+    MOTH_BEGIN_INSTR(LoadTrue)
+        tempRegister = VM::Value::fromBoolean(true);
+    MOTH_END_INSTR(LoadTrue)
+
+    MOTH_BEGIN_INSTR(LoadFalse)
+        tempRegister = VM::Value::fromBoolean(false);
+    MOTH_END_INSTR(LoadFalse)
+
+    MOTH_BEGIN_INSTR(LoadNumber)
+        tempRegister = VM::Value::fromNumber(instr.value);
+    MOTH_END_INSTR(LoadNumber)
+
+    MOTH_BEGIN_INSTR(LoadString)
+        tempRegister = VM::Value::fromString(instr.value);
+    MOTH_END_INSTR(LoadString)
+
+    MOTH_BEGIN_INSTR(LoadClosure)
+        __qmljs_init_closure(context, &tempRegister, instr.value);
+    MOTH_END_INSTR(LoadClosure)
+
+    MOTH_BEGIN_INSTR(LoadName)
+        __qmljs_get_activation_property(context, &tempRegister, instr.value);  
+    MOTH_END_INSTR(LoadName)
+
+    MOTH_BEGIN_INSTR(Push)
+        stack.resize(instr.value);
+    MOTH_END_INSTR(Push)
+
+    MOTH_BEGIN_INSTR(Call)
+        VM::Value *args = stack.data() + instr.args;
+        __qmljs_call_value(context, &tempRegister, /*thisObject=*/0, &tempRegister, args, instr.argc);
+    MOTH_END_INSTR(Call)
+
+    MOTH_BEGIN_INSTR(Jump)
+        code = basecode + instr.offset;
+    MOTH_END_INSTR(Jump)
+
+    MOTH_BEGIN_INSTR(CJump)
+        if (__qmljs_to_boolean(context, &tempRegister))
+            code = basecode + instr.offset;
+    MOTH_END_INSTR(CJump)
+
+    MOTH_BEGIN_INSTR(Binop)
+        instr.alu(context, &tempRegister, &TEMP(instr.lhsTempIndex), &TEMP(instr.rhsTempIndex));
+    MOTH_END_INSTR(Binop)
+
+    MOTH_BEGIN_INSTR(Ret)
+        context->result = TEMP(instr.tempIndex);
         return;
-    MOTH_END_INSTR(Done)
+    MOTH_END_INSTR(Ret)
 
 #ifdef MOTH_THREADED_INTERPRETER
     // nothing to do
@@ -97,4 +179,10 @@ void **VME::instructionJumpTable()
     return jumpTable;
 }
 #endif
+
+void VME::exec(VM::Context *ctxt, const uchar *code)
+{
+    VME vme;
+    vme(ctxt, code);
+}
 

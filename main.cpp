@@ -213,16 +213,14 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
                 x86_64::InstructionSelection isel(vm, &module, code);
                 foreach (IR::Function *function, module.functions)
                     isel(function);
+
+                if (! protect(code, codeSize))
+                    Q_UNREACHABLE();
             }
         }
 
         if (! globalCode)
             return;
-    }
-
-    if (!useMoth) {
-        if (! protect(code, codeSize))
-            Q_UNREACHABLE();
     }
 
     VM::Context *ctx = vm->rootContext;
@@ -240,7 +238,7 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
         Moth::VME vme;
         vme(ctx, code);
     } else {
-        globalCode->code(ctx);
+        globalCode->code(ctx, globalCode->codeData);
     }
 
     if (ctx->hasUncaughtException) {

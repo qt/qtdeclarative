@@ -10,6 +10,8 @@ namespace Moth {
 class VME
 {
 public:
+    static void exec(VM::Context *, const uchar *);
+
     void operator()(QQmlJS::VM::Context *, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
             , void ***storeJumpTable = 0

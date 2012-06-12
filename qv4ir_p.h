@@ -505,7 +505,7 @@ struct Jump: Stmt {
 };
 
 struct CJump: Stmt {
-    Expr *cond;
+    Expr *cond; // Temp, Binop
     BasicBlock *iftrue;
     BasicBlock *iffalse;
 
@@ -558,7 +558,10 @@ struct Function {
     QList<const QString *> formals;
     QList<const QString *> locals;
     IR::BasicBlock *handlersBlock;
-    void (*code)(VM::Context *);
+
+    void (*code)(VM::Context *, const uchar *);
+    const uchar *codeData;
+
     bool hasDirectEval: 1;
     bool hasNestedFunctions: 1;
 
@@ -571,6 +574,7 @@ struct Function {
         , maxNumberOfArguments(0)
         , handlersBlock(0)
         , code(0)
+        , codeData(0)
         , hasDirectEval(false)
         , hasNestedFunctions(false)
     { this->name = newString(name); }

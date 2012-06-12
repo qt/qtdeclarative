@@ -185,7 +185,7 @@ ScriptFunction::~ScriptFunction()
 
 void ScriptFunction::call(VM::Context *ctx)
 {
-    function->code(ctx);
+    function->code(ctx, function->codeData);
 }
 
 void ScriptFunction::construct(VM::Context *ctx)
@@ -195,7 +195,7 @@ void ScriptFunction::construct(VM::Context *ctx)
     if (proto.isObject())
         obj->prototype = proto.objectValue;
     __qmljs_init_object(&ctx->thisObject, obj);
-    function->code(ctx);
+    function->code(ctx, function->codeData);
 }
 
 Value *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, PropertyAttributes *attributes)

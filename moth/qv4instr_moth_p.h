@@ -2,10 +2,26 @@
 #define QV4INSTR_MOTH_P_H
 
 #include <QtCore/qglobal.h>
+#include "qmljs_objects.h"
 
 #define FOR_EACH_MOTH_INSTR(F) \
-    F(Nop, common) \
-    F(Done, common) \
+    F(Ret, ret) \
+    F(LoadUndefined, common) \
+    F(LoadNull, common) \
+    F(LoadFalse, common) \
+    F(LoadTrue, common) \
+    F(LoadNumber, loadNumber) \
+    F(LoadString, loadString) \
+    F(LoadClosure, loadClosure) \
+    F(StoreTemp, storeTemp) \
+    F(LoadTemp, loadTemp) \
+    F(MoveTemp, moveTemp) \
+    F(LoadName, loadName) \
+    F(Push, push) \
+    F(Call, call) \
+    F(Jump, jump) \
+    F(CJump, jump) \
+    F(Binop, binop) \
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -35,8 +51,72 @@ union Instr
     struct instr_common {
         MOTH_INSTR_HEADER
     };
+    struct instr_ret {
+        MOTH_INSTR_HEADER
+        int tempIndex;
+    }; 
+    struct instr_storeTemp {
+        MOTH_INSTR_HEADER
+        int tempIndex;
+    };
+    struct instr_loadTemp {
+        MOTH_INSTR_HEADER
+        int tempIndex;
+    };
+    struct instr_moveTemp {
+        MOTH_INSTR_HEADER
+        int fromTempIndex;
+        int toTempIndex;
+    };
+    struct instr_loadNumber {
+        MOTH_INSTR_HEADER
+        double value;
+    };
+    struct instr_loadString {
+        MOTH_INSTR_HEADER
+        VM::String *value;
+    }; 
+    struct instr_loadClosure {
+        MOTH_INSTR_HEADER
+        IR::Function *value;
+    };
+    struct instr_loadName {
+        MOTH_INSTR_HEADER
+        VM::String *value;
+    };
+    struct instr_push {
+        MOTH_INSTR_HEADER
+        quint32 value;
+    };
+    struct instr_call {
+        MOTH_INSTR_HEADER
+        quint32 argc;
+        quint32 args;
+    };
+    struct instr_jump {
+        MOTH_INSTR_HEADER
+        ptrdiff_t offset; 
+    };
+    struct instr_binop {
+        MOTH_INSTR_HEADER
+        int lhsTempIndex;
+        int rhsTempIndex;
+        void (*alu)(VM::Context *, VM::Value *, const VM::Value *, const VM::Value *);
+    };
 
     instr_common common;
+    instr_ret ret;
+    instr_storeTemp storeTemp;
+    instr_loadTemp loadTemp;
+    instr_moveTemp moveTemp;
+    instr_loadNumber loadNumber;
+    instr_loadString loadString;
+    instr_loadClosure loadClosure;
+    instr_loadName loadName;
+    instr_push push;
+    instr_call call;
+    instr_jump jump;
+    instr_binop binop;
 
     static int size(Type type);
 };

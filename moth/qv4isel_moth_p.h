@@ -34,19 +34,26 @@ private:
         Instruction();
     };
 
-    template <int Instr>
-    inline int addInstruction(const InstrData<Instr> &data);
-    int addInstructionHelper(Instr::Type type, Instr &instr);
+    void simpleMove(IR::Move *);
+    void call(IR::ExprList *);
 
+    template <int Instr>
+    inline ptrdiff_t addInstruction(const InstrData<Instr> &data);
+    ptrdiff_t addInstructionHelper(Instr::Type type, Instr &instr);
+
+    VM::ExecutionEngine *_engine;
     IR::Function *_function;
     IR::BasicBlock *_block;
+
+    QHash<IR::BasicBlock *, QVector<ptrdiff_t> > _patches;
+    QHash<IR::BasicBlock *, ptrdiff_t> _addrs;
 
     uchar *_code;
     uchar *_ccode;
 };
 
 template<int InstrT>
-int InstructionSelection::addInstruction(const InstrData<InstrT> &data)
+ptrdiff_t InstructionSelection::addInstruction(const InstrData<InstrT> &data)
 {
     Instr genericInstr;
     InstrMeta<InstrT>::setData(genericInstr, data);

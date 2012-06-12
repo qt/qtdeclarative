@@ -108,7 +108,7 @@ void InstructionSelection::operator()(IR::Function *function)
 
     _code = _codePtr;
     _code = (uchar *) ((size_t(_code) + 15) & ~15);
-    _function->code = (void (*)(VM::Context *)) _code;
+    _function->code = (void (*)(VM::Context *, const uchar *)) _code;
     _codePtr = _code;
     _patches.clear();
     _addrs.clear();
