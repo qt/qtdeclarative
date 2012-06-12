@@ -13,3 +13,4 @@ include (../shared/util.pri)
 TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private v8-private testlib
+CONFIG += insignificant_test
