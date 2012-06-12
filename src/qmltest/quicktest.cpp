@@ -62,6 +62,8 @@
 #include <stdio.h>
 #include <QtGui/QGuiApplication>
 #include <QtCore/QTranslator>
+#include <QtTest/QSignalSpy>
+
 QT_BEGIN_NAMESPACE
 
 class QTestRootObject : public QObject
@@ -143,6 +145,24 @@ void handleCompileErrors(const QFileInfo &fi, QQuickView *view)
     results.finishTestFunction();
     results.setFunctionName(QString());
     results.stopLogging();
+}
+
+static bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
+{
+    QSignalSpy spy(obj, signal);
+    QElapsedTimer timer;
+    timer.start();
+
+    while (!spy.size()) {
+        int remaining = timeout - int(timer.elapsed());
+        if (remaining <= 0)
+            break;
+        QCoreApplication::processEvents(QEventLoop::AllEvents, remaining);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QTest::qSleep(10);
+    }
+
+    return spy.size();
 }
 
 int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir)
@@ -284,10 +304,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             // If the test already quit, then it was performed
             // synchronously during setSource().  Otherwise it is
             // an asynchronous test and we need to show the window
-            // and wait for the quit indication.
+            // and wait for the first frame to be rendered
+            // and then wait for quit indication.
             view->show();
-            QTest::qWaitForWindowShown(view);
-            rootobj.setWindowShown(true);
+            if (qWaitForSignal(view, SIGNAL(frameSwapped())))
+                rootobj.setWindowShown(true);
             if (!rootobj.hasQuit && rootobj.hasTestCase())
                 eventLoop.exec();
         }

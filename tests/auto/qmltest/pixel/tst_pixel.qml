@@ -52,7 +52,6 @@ Rectangle {
         when: windowShown
 
         function test_pixel() {
-           wait(200);
            var img = grabImage(rect);
            compare(img.pixel(20, 20), Qt.rgba(255, 0, 0, 255));
            compare(img.red(1,1), 255);
