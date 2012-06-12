@@ -1,5 +1,5 @@
 CONFIG += testcase
-testcase.timeout = 600 # this test is slow
+testcase.timeout = 900 # this test is slow
 TARGET = tst_qquicklistview
 macx:CONFIG -= app_bundle
 
@@ -13,4 +13,3 @@ include (../shared/util.pri)
 TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private v8-private testlib
-CONFIG += insignificant_test
