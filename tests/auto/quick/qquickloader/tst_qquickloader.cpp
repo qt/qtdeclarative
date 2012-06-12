@@ -783,12 +783,17 @@ void tst_QQuickLoader::deleteComponentCrash()
 void tst_QQuickLoader::nonItem()
 {
     QQmlComponent component(&engine, testFileUrl("nonItem.qml"));
-    QString err = testFileUrl("nonItem.qml").toString() + ":3:1: QML Loader: Loader does not support loading non-visual elements.";
 
-    QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader);
-    QVERIFY(loader->item() == 0);
+    QVERIFY(loader->item());
+
+    QCOMPARE(loader, loader->item()->parent());
+
+    QPointer<QObject> item = loader->item();
+    loader->setActive(false);
+    QVERIFY(!loader->item());
+    QTRY_VERIFY(!item);
 
     delete loader;
 }

@@ -104,6 +104,7 @@ public:
 
     QUrl source;
     QQuickItem *item;
+    QObject *object;
     QQmlComponent *component;
     QQmlContext *itemContext;
     QQuickLoaderIncubator *incubator;

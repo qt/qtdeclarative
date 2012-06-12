@@ -57,7 +57,7 @@ class Q_AUTOTEST_EXPORT QQuickLoader : public QQuickImplicitSizeItem
     Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(QQmlComponent *sourceComponent READ sourceComponent WRITE setSourceComponent RESET resetSourceComponent NOTIFY sourceComponentChanged)
-    Q_PROPERTY(QQuickItem *item READ item NOTIFY itemChanged)
+    Q_PROPERTY(QObject *item READ item NOTIFY itemChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
@@ -85,7 +85,7 @@ public:
     bool asynchronous() const;
     void setAsynchronous(bool a);
 
-    QQuickItem *item() const;
+    QObject *item() const;
 
 Q_SIGNALS:
     void itemChanged();
