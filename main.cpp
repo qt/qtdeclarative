@@ -215,6 +215,9 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
                     isel(function);
             }
         }
+
+        if (! globalCode)
+            return;
     }
 
     if (!useMoth) {
