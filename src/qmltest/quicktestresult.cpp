@@ -65,6 +65,8 @@ static const char *globalProgramName = 0;
 static bool loggingStarted = false;
 static QBenchmarkGlobalData globalBenchmarkData;
 
+extern bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000);
+
 class Q_QUICK_TEST_EXPORT QuickTestImageObject : public QObject
 {
     Q_OBJECT
@@ -571,6 +573,13 @@ void QuickTestResult::wait(int ms)
 void QuickTestResult::sleep(int ms)
 {
     QTest::qSleep(ms);
+}
+
+bool QuickTestResult::waitForRendering(QQuickItem *item, int timeout)
+{
+    Q_ASSERT(item);
+
+    return qWaitForSignal(item->canvas(), SIGNAL(frameSwapped()), timeout);
 }
 
 void QuickTestResult::startMeasurement()

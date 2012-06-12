@@ -132,6 +132,7 @@ public Q_SLOTS:
 
     void wait(int ms);
     void sleep(int ms);
+    bool waitForRendering(QQuickItem *item, int timeout = 5000);
 
     void startMeasurement();
     void beginDataRun();

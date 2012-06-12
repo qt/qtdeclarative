@@ -474,7 +474,17 @@
 
     Waits for \a ms milliseconds while processing Qt events.
 
-    \sa sleep()
+    \sa sleep(), waitForRendering()
+*/
+
+/*!
+    \qmlmethod TestCase::waitForRendering(item, timeout = 5000)
+
+    Waits for \a timeout milliseconds or until the \a item is rendered by the renderer.
+    Returns true if \c item is rendered in \a timeout milliseconds, otherwise returns false.
+    The default \a timeout value is 5000.
+
+    \sa sleep(), wait()
 */
 
 /*!
@@ -482,7 +492,7 @@
 
     Sleeps for \a ms milliseconds without processing Qt events.
 
-    \sa wait()
+    \sa wait(), waitForRendering()
 */
 
 /*!

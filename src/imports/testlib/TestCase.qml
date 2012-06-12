@@ -357,6 +357,12 @@ Item {
         qtest_results.wait(ms)
     }
 
+    function waitForRendering(item, timeout) {
+        if (timeout === undefined)
+            timeout = 5000
+        return qtest_results.waitForRendering(item, timeout)
+    }
+
     function sleep(ms) {
         qtest_results.sleep(ms)
     }

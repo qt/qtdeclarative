@@ -147,7 +147,7 @@ void handleCompileErrors(const QFileInfo &fi, QQuickView *view)
     results.stopLogging();
 }
 
-static bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
+bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
 {
     QSignalSpy spy(obj, signal);
     QElapsedTimer timer;
