@@ -1746,8 +1746,27 @@ void FunctionPrototype::method_toString(Context *ctx)
 void FunctionPrototype::method_apply(Context *ctx)
 {
     if (FunctionObject *fun = ctx->thisObject.asFunctionObject()) {
-        Q_UNUSED(fun);
-        ctx->throwUnimplemented(QStringLiteral("Function.prototype.apply"));
+
+        Value thisObject = ctx->argument(0).toObject(ctx);
+        if (thisObject.isNull() || thisObject.isUndefined())
+            thisObject = ctx->engine->globalObject;
+
+        Value arg = ctx->argument(1);
+        QVector<Value> args;
+
+        if (ArrayObject *arr = arg.asArrayObject()) {
+            const Array &actuals = arr->value;
+
+            for (quint32 i = 0; i < actuals.count(); ++i) {
+                Value a = actuals.at(i);
+                args.append(a);
+            }
+        } else if (!(arg.isUndefined() || arg.isNull())) {
+            ctx->throwError(QLatin1String("Function.prototype.apply: second argument is not an array"));
+            return;
+        }
+
+        __qmljs_call_value(ctx, &ctx->result, &thisObject, &ctx->thisObject, args.data(), args.size());
     } else {
         ctx->throwTypeError();
     }
