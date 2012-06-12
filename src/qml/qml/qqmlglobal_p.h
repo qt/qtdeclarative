@@ -158,7 +158,7 @@ QT_BEGIN_NAMESPACE
 template<class T>
 T qmlobject_cast(QObject *object)
 {
-    if (QQmlMetaObject::canConvert(object, &reinterpret_cast<T>(object)->staticMetaObject))
+    if (object && QQmlMetaObject::canConvert(object, &reinterpret_cast<T>(object)->staticMetaObject))
         return static_cast<T>(object);
     else
         return 0;

@@ -51,6 +51,7 @@ public:
 
 private slots:
     void fastConnect();
+    void fastCast();
 };
 
 class MyObject : public QObject {
@@ -98,6 +99,25 @@ void tst_qqmlcpputils::fastConnect()
         QCOMPARE(spy.count(), 1);
 
         delete obj;
+    }
+}
+
+void tst_qqmlcpputils::fastCast()
+{
+    {
+        QObject *myObj = new MyObject;
+        MyObject *obj = qmlobject_cast<MyObject*>(myObj);
+        QVERIFY(obj);
+        QCOMPARE(obj->metaObject(), myObj->metaObject());
+        obj->slot1();
+        QCOMPARE(obj->slotCount, 1);
+        delete myObj;
+    }
+
+    {
+        QObject *nullObj = 0;
+        QObject *obj = qmlobject_cast<QObject *>(nullObj);
+        QCOMPARE(obj, nullObj); // shouldn't crash/assert.
     }
 }
 
