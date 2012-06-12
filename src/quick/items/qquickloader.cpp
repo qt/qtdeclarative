@@ -675,6 +675,7 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
             emit q->sourceComponentChanged();
         emit q->statusChanged();
         emit q->progressChanged();
+        emit q->itemChanged(); //Like clearing source, emit itemChanged even if previous item was also null
         disposeInitialPropertyValues(); // cleanup
         return;
     }

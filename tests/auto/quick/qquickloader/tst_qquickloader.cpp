@@ -187,7 +187,7 @@ void tst_QQuickLoader::sourceOrComponent()
     QCOMPARE(loader->property("onStatusChangedCount").toInt(), 1);
     QCOMPARE(loader->property("onProgressChangedCount").toInt(), 1);
 
-    QCOMPARE(loader->property("onItemChangedCount").toInt(), error ? 0 : 1);
+    QCOMPARE(loader->property("onItemChangedCount").toInt(), 1);
     QCOMPARE(loader->property("onLoadedCount").toInt(), error ? 0 : 1);
 
     delete loader;
