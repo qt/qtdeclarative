@@ -16,7 +16,9 @@ Rectangle {
         TextInput {
             id: text
             objectName: "text"
-            anchors.fill: parent
+            anchors.left: parent.left
+            anchors.top: parent.top
+            width: 180
             text: top.text
             focus: true
 

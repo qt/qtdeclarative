@@ -1441,6 +1441,11 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignLeft);
     platformInputContext.setInputDirection(Qt::RightToLeft);
     QCOMPARE(textInput->effectiveHAlign(), QQuickTextInput::AlignRight);
+
+    // changing width keeps right aligned cursor on proper position
+    textInput->setText("");
+    textInput->setWidth(500);
+    QVERIFY(textInput->positionToRectangle(0).x() > textInput->width() / 2);
 }
 
 void tst_qquicktextinput::verticalAlignment()

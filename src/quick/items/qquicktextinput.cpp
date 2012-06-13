@@ -1588,7 +1588,7 @@ void QQuickTextInput::geometryChanged(const QRectF &newGeometry,
 {
     Q_D(QQuickTextInput);
     if (!d->inLayout) {
-        if (newGeometry.width() != oldGeometry.width() && d->wrapMode != NoWrap)
+        if (newGeometry.width() != oldGeometry.width())
             d->updateLayout();
         updateCursorRectangle();
     }
