@@ -185,6 +185,8 @@ private slots:
     void crash2();
 
     void globalEnums();
+    void literals_data();
+    void literals();
 
 private:
     QQmlEngine engine;
@@ -2785,6 +2787,48 @@ void tst_qqmllanguage::globalEnums()
     QVERIFY(enum2Class->property("e2Value") == 76);
 
     delete o;
+}
+
+void tst_qqmllanguage::literals_data()
+{
+    QTest::addColumn<QString>("property");
+    QTest::addColumn<QVariant>("value");
+
+    QTest::newRow("hex") << "n1" << QVariant(0xfe32);
+    // Octal integer literals are deprecated
+//    QTest::newRow("octal") << "n2" << QVariant(015);
+    QTest::newRow("fp1") << "n3" << QVariant(-4.2E11);
+    QTest::newRow("fp2") << "n4" << QVariant(.1e9);
+    QTest::newRow("fp3") << "n5" << QVariant(3e-12);
+    QTest::newRow("fp4") << "n6" << QVariant(3e+12);
+    QTest::newRow("fp5") << "n7" << QVariant(0.1e9);
+
+    QTest::newRow("special1") << "c1" << QVariant(QString("\b"));
+    QTest::newRow("special2") << "c2" << QVariant(QString("\f"));
+    QTest::newRow("special3") << "c3" << QVariant(QString("\n"));
+    QTest::newRow("special4") << "c4" << QVariant(QString("\r"));
+    QTest::newRow("special5") << "c5" << QVariant(QString("\t"));
+    QTest::newRow("special6") << "c6" << QVariant(QString("\v"));
+    QTest::newRow("special7") << "c7" << QVariant(QString("\'"));
+    QTest::newRow("special8") << "c8" << QVariant(QString("\""));
+    QTest::newRow("special9") << "c9" << QVariant(QString("\\"));
+    // We don't handle octal escape sequences
+//    QTest::newRow("special10") << "c10" << QVariant(QString("\251"));
+    QTest::newRow("special11") << "c11" << QVariant(QString::fromLatin1("\xa9"));
+    QTest::newRow("special12") << "c12" << QVariant(QString::fromUtf8("\u00A9"));
+}
+
+void tst_qqmllanguage::literals()
+{
+    QFETCH(QString, property);
+    QFETCH(QVariant, value);
+
+    QQmlComponent component(&engine, TEST_FILE("literals.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property(property.toLatin1()), value);
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmllanguage)
