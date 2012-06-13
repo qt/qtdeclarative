@@ -15,7 +15,13 @@ class Codegen: protected AST::Visitor
 public:
     Codegen();
 
-    IR::Function *operator()(AST::Program *ast, IR::Module *module);
+    enum Mode {
+        GlobalCode,
+        EvalCode,
+        FunctionCode
+    };
+
+    IR::Function *operator()(AST::Program *ast, IR::Module *module, Mode mode = GlobalCode);
 
 protected:
     enum Format { ex, cx, nx };
@@ -138,7 +144,7 @@ protected:
 
     void linearize(IR::Function *function);
     IR::Function *defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals,
-                                 AST::SourceElements *body, bool isDeclaration = false);
+                                 AST::SourceElements *body, Mode mode = FunctionCode);
     int indexOfLocal(const QStringRef &string) const;
     int indexOfArgument(const QStringRef &string) const;
 
@@ -269,6 +275,7 @@ private:
     IR::BasicBlock *_throwBlock;
     IR::BasicBlock *_handlersBlock;
     unsigned _returnAddress;
+    Mode _mode;
     Environment *_env;
     Loop *_loop;
     AST::LabelledStatement *_labelledStatement;

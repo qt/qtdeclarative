@@ -295,6 +295,7 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
 {
     engine = e;
     parent = f->scope;
+    __qmljs_init_undefined(&result);
 
     if (f->needsActivation)
         __qmljs_init_object(&activation, engine->newActivationObject(this));

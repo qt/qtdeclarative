@@ -263,13 +263,14 @@ Codegen::Codegen()
     , _throwBlock(0)
     , _handlersBlock(0)
     , _returnAddress(0)
+    , _mode(GlobalCode)
     , _env(0)
     , _loop(0)
     , _labelledStatement(0)
 {
 }
 
-IR::Function *Codegen::operator()(Program *node, IR::Module *module)
+IR::Function *Codegen::operator()(Program *node, IR::Module *module, Mode mode)
 {
     _module = module;
     _env = 0;
@@ -277,7 +278,7 @@ IR::Function *Codegen::operator()(Program *node, IR::Module *module)
     ScanFunctions scan(this);
     scan(node);
 
-    IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0, node->elements);
+    IR::Function *globalCode = defineFunction(QStringLiteral("%entry"), node, 0, node->elements, mode);
 
     foreach (IR::Function *function, _module->functions) {
         linearize(function);
@@ -479,7 +480,13 @@ void Codegen::statement(Statement *ast)
 
 void Codegen::statement(ExpressionNode *ast)
 {
-    if (ast) {
+    if (! ast) {
+        return;
+    } else if (_mode != FunctionCode) {
+        Result e = expression(ast);
+        if (*e)
+            _block->MOVE(_block->TEMP(_returnAddress), *e);
+    } else {
         Result r(nx);
         qSwap(_expr, r);
         accept(ast);
@@ -490,7 +497,7 @@ void Codegen::statement(ExpressionNode *ast)
             } else if (r->asTemp()) {
                 // there is nothing to do
             } else {
-                int t = _block->newTemp();
+                unsigned t = _block->newTemp();
                 _block->MOVE(_block->TEMP(t), *r);
             }
         }
@@ -1012,14 +1019,8 @@ bool Codegen::visit(FieldMemberExpression *ast)
 
 bool Codegen::visit(FunctionExpression *ast)
 {
-    IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0, false);
-    if (_expr.accept(nx)) {
-        const int index = _env->findMember(ast->name.toString());
-        assert(index != -1);
-        move(_block->TEMP(index), _block->CLOSURE(function));
-    } else {
-        _expr.code = _block->CLOSURE(function);
-    }
+    IR::Function *function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    _expr.code = _block->CLOSURE(function);
     return false;
 }
 
@@ -1408,8 +1409,10 @@ void Codegen::linearize(IR::Function *function)
 
 IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
                                       AST::FormalParameterList *formals,
-                                      AST::SourceElements *body, bool /*isDeclaration*/)
+                                      AST::SourceElements *body, Mode mode)
 {
+    qSwap(_mode, mode); // enter function code.
+
     enterEnvironment(ast);
     IR::Function *function = _module->newFunction(name);
     IR::BasicBlock *entryBlock = function->newBasicBlock();
@@ -1451,7 +1454,7 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     foreach (AST::FunctionDeclaration *f, _env->functions) {
         IR::Function *function = defineFunction(f->name.toString(), f, f->formals,
-                                                f->body ? f->body->elements : 0, true);
+                                                f->body ? f->body->elements : 0);
         _block->MOVE(_block->TEMP(_env->findMember(f->name.toString())),
                      _block->CLOSURE(function));
     }
@@ -1476,6 +1479,9 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_returnAddress, returnAddress);
 
     leaveEnvironment();
+
+    qSwap(_mode, mode);
+
     return function;
 }
 

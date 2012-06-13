@@ -246,6 +246,9 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
             std::cerr << "Uncaught exception: " << qPrintable(e->value.toString(ctx)->toQString()) << std::endl;
         else
             std::cerr << "Uncaught exception: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
+    } else if (! ctx->result.isUndefined()) {
+        if (! qgetenv("SHOW_EXIT_VALUE").isNull())
+            std::cout << "exit value: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
     }
 
     delete[] ctx->locals;
