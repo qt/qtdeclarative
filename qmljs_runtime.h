@@ -109,24 +109,14 @@ void __qmljs_new_object(Context *ctx, Value *result);
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean);
 void __qmljs_new_number_object(Context *ctx, Value *result, double n);
 void __qmljs_new_string_object(Context *ctx, Value *result, String *string);
-void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value);
-void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool value);
-void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double value);
-void __qmljs_set_property_string(Context *ctx, Value *object, String *name, String *value);
-void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR::Function *function);
 void __qmljs_set_activation_property(Context *ctx, String *name, Value *value);
-void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool value);
-void __qmljs_set_activation_property_number(Context *ctx, String *name, double value);
-void __qmljs_set_activation_property_string(Context *ctx, String *name, String *value);
-void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Function *function);
+void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value);
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name);
 void __qmljs_get_activation_property(Context *ctx, Value *result, String *name);
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other);
 
 void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index);
-
 void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value);
-void __qmljs_set_element_number(Context *ctx, Value *object, Value *index, double number);
 
 void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Value *value);
 

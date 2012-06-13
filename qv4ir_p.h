@@ -181,6 +181,7 @@ struct StmtVisitor {
 struct Expr {
     virtual ~Expr() {}
     virtual void accept(ExprVisitor *) = 0;
+    virtual bool isLValue() { return false; }
     virtual Const *asConst() { return 0; }
     virtual String *asString() { return 0; }
     virtual Name *asName() { return 0; }
@@ -255,6 +256,7 @@ struct Name: Expr {
     void init(Builtin builtin, quint32 line, quint32 column);
 
     virtual void accept(ExprVisitor *v) { v->visitName(this); }
+    virtual bool isLValue() { return true; }
     virtual Name *asName() { return this; }
 
     virtual void dump(QTextStream &out);
@@ -269,6 +271,7 @@ struct Temp: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
+    virtual bool isLValue() { return true; }
     virtual Temp *asTemp() { return this; }
 
     virtual void dump(QTextStream &out);
@@ -377,6 +380,7 @@ struct Subscript: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitSubscript(this); }
+    virtual bool isLValue() { return true; }
     virtual Subscript *asSubscript() { return this; }
 
     virtual void dump(QTextStream &out);
@@ -393,6 +397,7 @@ struct Member: Expr {
     }
 
     virtual void accept(ExprVisitor *v) { v->visitMember(this); }
+    virtual bool isLValue() { return true; }
     virtual Member *asMember() { return this; }
 
     virtual void dump(QTextStream &out);

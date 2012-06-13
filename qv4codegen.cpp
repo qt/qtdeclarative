@@ -445,28 +445,14 @@ IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
 
 void Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
 {
-    if (op != IR::OpInvalid) {
-        if (! (source->asTemp() /*|| source->asConst()*/)) {
-            const unsigned t = _block->newTemp();
-            _block->MOVE(_block->TEMP(t), source);
-            _block->MOVE(target, _block->TEMP(t), op);
-            return;
-        }
-    } else if (target->asMember() || target->asSubscript()) {
-        if (! (source->asTemp() /*|| source->asConst()*/)) {
-            const unsigned t = _block->newTemp();
-            _block->MOVE(_block->TEMP(t), source);
-            _block->MOVE(target, _block->TEMP(t), op);
-            return;
-        }
-    } else if (! target->asTemp())  {
-        if (! (source->asConst() || source->asTemp() || source->asName() || source->asSubscript())) {
-            const unsigned t = _block->newTemp();
-            _block->MOVE(_block->TEMP(t), source);
-            _block->MOVE(target, _block->TEMP(t), op);
-            return;
-        }
+    assert(target->isLValue());
+
+    if (! source->asTemp()) {
+        unsigned t = _block->newTemp();
+        _block->MOVE(_block->TEMP(t), source);
+        source = _block->TEMP(t);
     }
+
     _block->MOVE(target, source, op);
 }
 

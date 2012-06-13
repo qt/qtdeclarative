@@ -469,53 +469,16 @@ void InstructionSelection::visitMove(IR::Move *s)
         if (IR::Name *n = s->target->asName()) {
             String *propertyName = identifier(*n->id);
 
-            if (IR::Const *c = s->source->asConst()) {
-                amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
-
-                switch (c->type) {
-                case IR::BoolType:
-                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, c->value != 0);
-                    qmljs_call_code(_codePtr, __qmljs_set_activation_property_boolean);
-                    break;
-
-                case IR::NumberType:
-                    amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                    amd64_movsd_reg_regp(_codePtr, AMD64_XMM0, AMD64_RAX);
-                    qmljs_call_code(_codePtr, __qmljs_set_activation_property_number);
-                    break;
-
-                default:
-                    Q_UNIMPLEMENTED();
-                    assert(!"TODO");
-                }
-            } else if (IR::String *str = s->source->asString()) {
-                amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
-                amd64_mov_reg_imm(_codePtr, AMD64_RDX, _engine->newString(*str->value));
-                qmljs_call_code(_codePtr, __qmljs_set_activation_property_string);
-            } else if (IR::Temp *t = s->source->asTemp()) {
+            if (IR::Temp *t = s->source->asTemp()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                 amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
                 loadTempAddress(AMD64_RDX, t);
                 qmljs_call_code(_codePtr, __qmljs_set_activation_property);
-            } else if (IR::Name *other = s->source->asName()) {
-                amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
-                amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*other->id));
-                qmljs_call_code(_codePtr, __qmljs_copy_activation_property);
-            } else if (IR::Closure *clos = s->source->asClosure()) {
-                amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                amd64_mov_reg_imm(_codePtr, AMD64_RSI, propertyName);
-                amd64_mov_reg_imm(_codePtr, AMD64_RDX, clos->value);
-                qmljs_call_code(_codePtr, __qmljs_set_activation_property_closure);
+                checkExceptions();
+                return;
             } else {
-                Q_UNIMPLEMENTED();
-                assert(!"TODO");
+                Q_UNREACHABLE();
             }
-
-            checkExceptions();
-            return;
         } else if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
                 amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
@@ -733,38 +696,17 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Member *m = s->target->asMember()) {
             if (IR::Temp *base = m->base->asTemp()) {
-                if (IR::Const *c = s->source->asConst()) {
-                    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                    loadTempAddress(AMD64_RSI, base);
-                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
-                    amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                    amd64_movsd_reg_regp(_codePtr, AMD64_XMM0, AMD64_RAX);
-                    qmljs_call_code(_codePtr, __qmljs_set_property_number);
-                } else if (IR::String *str = s->source->asString()) {
-                    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                    loadTempAddress(AMD64_RSI, base);
-                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
-                    amd64_mov_reg_imm(_codePtr, AMD64_RCX, _engine->newString(*str->value));
-                    qmljs_call_code(_codePtr, __qmljs_set_property_string);
-                } else if (IR::Temp *t = s->source->asTemp()) {
-                    // __qmljs_set_property(ctx, object, name, value);
+                if (IR::Temp *t = s->source->asTemp()) {
                     amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
                     loadTempAddress(AMD64_RSI, base);
                     amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
                     loadTempAddress(AMD64_RCX, t);
                     qmljs_call_code(_codePtr, __qmljs_set_property);
-                } else if (IR::Closure *clos = s->source->asClosure()) {
-                    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                    loadTempAddress(AMD64_RSI, base);
-                    amd64_mov_reg_imm(_codePtr, AMD64_RDX, identifier(*m->name));
-                    amd64_mov_reg_imm(_codePtr, AMD64_RCX, clos->value);
-                    qmljs_call_code(_codePtr, __qmljs_set_property_closure);
+                    checkExceptions();
+                    return;
                 } else {
-                    Q_UNIMPLEMENTED();
-                    assert(!"TODO");
+                    Q_UNREACHABLE();
                 }
-                checkExceptions();
-                return;
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
             if (IR::Temp *t2 = s->source->asTemp()) {
@@ -772,26 +714,11 @@ void InstructionSelection::visitMove(IR::Move *s)
                 loadTempAddress(AMD64_RDX, ss->index->asTemp());
                 loadTempAddress(AMD64_RCX, t2);
                 qmljs_call_code(_codePtr, __qmljs_set_element);
-            } else if (IR::Const *c = s->source->asConst()) {
-                if (c->type == IR::NumberType) {
-                    amd64_mov_reg_reg(_codePtr, AMD64_RDI, AMD64_R14, 8);
-                    loadTempAddress(AMD64_RSI, ss->base->asTemp());
-                    loadTempAddress(AMD64_RDX, ss->index->asTemp());
-                    amd64_mov_reg_imm(_codePtr, AMD64_RAX, &c->value);
-                    amd64_movsd_reg_regp(_codePtr, AMD64_XMM0, AMD64_RAX);
-                    qmljs_call_code(_codePtr, __qmljs_set_element_number);
-                } else {
-                    s->dump(qout, IR::Stmt::MIR);
-                    qout << endl;
-                    Q_UNIMPLEMENTED();
-                    assert(!"TODO");
-                }
+                checkExceptions();
+                return;
             } else {
                 Q_UNIMPLEMENTED();
-                assert(!"TODO");
             }
-            checkExceptions();
-            return;
         }
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...
