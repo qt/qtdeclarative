@@ -588,7 +588,6 @@ void QuickTestResult::stopBenchmark()
 
 QObject *QuickTestResult::grabImage(QQuickItem *item)
 {
-    Q_D(QuickTestResult);
     if (item) {
         QQuickCanvas *canvas = item->canvas();
         QImage grabbed = canvas->grabFrameBuffer();

@@ -135,7 +135,6 @@ public:
 
 void QQuickDragAttachedPrivate::itemGeometryChanged(QQuickItem *, const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    Q_Q(QQuickDragAttached);
     if (newGeometry.topLeft() == oldGeometry.topLeft() || !active || itemMoved)
         return;
     updatePosition();
@@ -143,7 +142,6 @@ void QQuickDragAttachedPrivate::itemGeometryChanged(QQuickItem *, const QRectF &
 
 void QQuickDragAttachedPrivate::itemParentChanged(QQuickItem *, QQuickItem *)
 {
-    Q_Q(QQuickDragAttached);
     if (!active || dragRestarted)
         return;
 

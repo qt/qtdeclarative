@@ -1238,7 +1238,6 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
             // Overrides can cause the entry to already exist
             if (!methods.contains(entry)) methods.append(entry);
 
-            QQmlPropertyData *olddata = data;
             data = This->overrideData(data);
             if (data && !data->isFunction()) Insert::in(This, properties, methods, iter, data);
         } else {
@@ -1249,7 +1248,6 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
             // Overrides can cause the entry to already exist
             if (!properties.contains(entry)) properties.append(entry);
 
-            QQmlPropertyData *olddata = data;
             data = This->overrideData(data);
             if (data) Insert::in(This, properties, methods, iter, data);
         }
