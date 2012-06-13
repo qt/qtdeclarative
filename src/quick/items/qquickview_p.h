@@ -89,7 +89,7 @@ public:
 
     QUrl source;
 
-    QWeakPointer<QQmlEngine> engine;
+    QPointer<QQmlEngine> engine;
     QQmlComponent *component;
     QBasicTimer resizetimer;
 

@@ -53,7 +53,7 @@
 #include <QtQuick/private/qquickpropertychanges_p.h>
 #include <QtQuick/private/qquickstate_p.h>
 #include <qqmlproperty.h>
-#include <QtCore/QWeakPointer>
+#include <QtCore/QPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -78,7 +78,7 @@ public:
 private:
     void buildStatesList(QObject *obj);
 
-    QList<QWeakPointer<QQuickState> > m_allStates;
+    QList<QPointer<QQuickState> > m_allStates;
 };
 
 QQmlQtQuick2DebugStatesDelegate::QQmlQtQuick2DebugStatesDelegate()
@@ -119,9 +119,10 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
                                                             const QString &fileName, int line, int column,
                                                             bool *inBaseState)
 {
+    typedef QPointer<QQuickState> QuickStatePointer;
     QObject *object = property.object();
     QString propertyName = property.name();
-    foreach (QWeakPointer<QQuickState> statePointer, m_allStates) {
+    foreach (const QuickStatePointer& statePointer, m_allStates) {
         if (QQuickState *state = statePointer.data()) {
             // here we assume that the revert list on itself defines the base state
             if (state->isStateActive() && state->containsPropertyInRevertList(object, propertyName)) {
