@@ -400,7 +400,8 @@ void QQuickAnimatedSprite::componentComplete()
 
 void QQuickAnimatedSprite::start()
 {
-    if (m_running)
+    m_running = true;
+    if (!isComponentComplete())
         return;
     m_curLoop = 0;
     m_timestamp.start();
@@ -409,16 +410,16 @@ void QQuickAnimatedSprite::start()
         m_spriteEngine->updateSprites(0);
         m_spriteEngine->start(0);
     }
-    m_running = true;
+    emit currentFrameChanged(0);
     emit runningChanged(true);
     update();
 }
 
 void QQuickAnimatedSprite::stop()
 {
-    if (!m_running)
-        return;
     m_running = false;
+    if (!isComponentComplete())
+        return;
     m_pauseOffset = 0;
     emit runningChanged(false);
 }
