@@ -482,7 +482,7 @@ void Codegen::statement(ExpressionNode *ast)
 {
     if (! ast) {
         return;
-    } else if (_mode != FunctionCode) {
+    } else if (_mode == EvalCode) {
         Result e = expression(ast);
         if (*e)
             _block->MOVE(_block->TEMP(_returnAddress), *e);
