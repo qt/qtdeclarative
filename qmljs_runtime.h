@@ -129,7 +129,6 @@ void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value
 void __qmljs_set_element_number(Context *ctx, Value *object, Value *index, double number);
 
 void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Value *value);
-void __qmljs_set_activation_element_number(Context *ctx, String *name, Value *index, double number);
 
 // context
 void __qmljs_get_activation(Context *ctx, Value *result);

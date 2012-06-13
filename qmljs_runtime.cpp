@@ -913,13 +913,6 @@ void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Va
     }
 }
 
-void __qmljs_set_activation_element_number(Context *ctx, String *name, Value *index, double number)
-{
-    Value v;
-    __qmljs_init_number(&v, number);
-    __qmljs_set_activation_element(ctx, name, index, &v);
-}
-
 void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name)) {
