@@ -660,8 +660,8 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
 
     QQuickView *canvas = QQuickViewTestUtil::createView();
     QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("usePopulateTransition", false);
-    ctxt->setContextProperty("enableAddTransition", true);
+    ctxt->setContextProperty("usePopulateTransition", QVariant(false));
+    ctxt->setContextProperty("enableAddTransition", QVariant(true));
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
@@ -773,7 +773,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
 
     QQuickView *canvas = QQuickViewTestUtil::createView();
     QQmlContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("usePopulateTransition", false);
+    ctxt->setContextProperty("usePopulateTransition", QVariant(false));
     ctxt->setContextProperty("enableAddTransition", QVariant(false));
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
@@ -803,6 +803,8 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
         case ListChange::SetCurrent:
         case ListChange::SetContentY:
             QVERIFY(false);
+            break;
+         case ListChange::Polish:
             break;
     }
 

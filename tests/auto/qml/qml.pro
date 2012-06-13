@@ -52,9 +52,6 @@ PRIVATETESTS += \
     PUBLICTESTS += \
         qjsengine \
         qjsvalue
-
-    PRIVATETESTS += \
-        qqmlecmascript
 }
 
 SUBDIRS += $$PUBLICTESTS

@@ -54,7 +54,7 @@ void QQmlDebugTestService::messageReceived(const QByteArray &ba)
     QMetaObject::invokeMethod(this, "_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, ba));
 }
 
-void QQmlDebugTestService::stateAboutToBeChanged(QQmlDebugService::State state)
+void QQmlDebugTestService::stateAboutToBeChanged(QQmlDebugService::State)
 {
     Q_ASSERT(QThread::currentThread() != thread());
 }

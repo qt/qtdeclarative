@@ -1158,9 +1158,8 @@ public:
         m_referenced.MakeWeak(static_cast<void*>(this), wrcallback);
     }
 
-    static void wrcallback(v8::Persistent<v8::Value> handle, void *params)
+    static void wrcallback(v8::Persistent<v8::Value> handle, void *)
     {
-        CircularReferenceHandle *crh = static_cast<CircularReferenceHandle*>(params);
         qPersistentDispose(handle);
     }
 

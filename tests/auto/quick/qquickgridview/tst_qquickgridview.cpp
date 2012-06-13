@@ -1313,8 +1313,8 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item &&
-                ( (flow == QQuickGridView::FlowLeftToRight && i >= firstVisibleIndex + (3*6))
-                || flow == QQuickGridView::FlowTopToBottom && i >= firstVisibleIndex + (5*3) ) ) {
+                (  (flow == QQuickGridView::FlowLeftToRight && i >= firstVisibleIndex + (3*6))
+                || (flow == QQuickGridView::FlowTopToBottom && i >= firstVisibleIndex + (5*3)) ) ) {
             continue;   // index has moved out of view
         }
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -1558,6 +1558,8 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
                 break;
             case ListChange::SetContentY:
                 gridview->setContentY(changes[i].pos);
+                break;
+            case ListChange::Polish:
                 break;
         }
         if (condensed) {
@@ -5428,6 +5430,7 @@ void tst_QQuickGridView::displacedTransitions()
             break;
         case ListChange::SetCurrent:
         case ListChange::SetContentY:
+        case ListChange::Polish:
             break;
     }
 
@@ -5673,6 +5676,8 @@ void tst_QQuickGridView::multipleTransitions()
             case ListChange::SetContentY:
                 gridview->setContentY(changes[i].pos);
                 QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+                break;
+            case ListChange::Polish:
                 break;
         }
     }

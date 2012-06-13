@@ -4169,7 +4169,6 @@ void tst_QQuickListView::repositionResizedDelegate()
     QFETCH(Qt::LayoutDirection, layoutDirection);
     QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(QPointF, contentPos_itemFirstHalfVisible);
-    QFETCH(QPointF, contentPos_itemStart);
     QFETCH(QPointF, contentPos_itemSecondHalfVisible);
     QFETCH(QRectF, origPositionerRect);
     QFETCH(QRectF, resizedPositionerRect);
@@ -4238,32 +4237,31 @@ void tst_QQuickListView::repositionResizedDelegate_data()
     QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
     QTest::addColumn<QQuickListView::VerticalLayoutDirection>("verticalLayoutDirection");
     QTest::addColumn<QPointF>("contentPos_itemFirstHalfVisible");
-    QTest::addColumn<QPointF>("contentPos_itemStart");
     QTest::addColumn<QPointF>("contentPos_itemSecondHalfVisible");
     QTest::addColumn<QRectF>("origPositionerRect");
     QTest::addColumn<QRectF>("resizedPositionerRect");
 
     QTest::newRow("vertical")
             << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
-            << QPointF(0, 60) << QPointF(0, 200) << QPointF(0, 200 + 60)
+            << QPointF(0, 60) << QPointF(0, 200 + 60)
             << QRectF(0, 200, 120, 120)
             << QRectF(0, 200, 120, 120 * 2);
 
     QTest::newRow("vertical, BottomToTop")
             << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
-            << QPointF(0, -200 - 60) << QPointF(0, -200 - 200) << QPointF(0, -200 - 260)
+            << QPointF(0, -200 - 60) << QPointF(0, -200 - 260)
             << QRectF(0, -200 - 120, 120, 120)
             << QRectF(0, -200 - 120*2, 120, 120 * 2);
 
     QTest::newRow("horizontal")
             << QQuickListView::Horizontal<< Qt::LeftToRight << QQuickItemView::TopToBottom
-            << QPointF(60, 0) << QPointF(200, 0) << QPointF(260, 0)
+            << QPointF(60, 0) << QPointF(260, 0)
             << QRectF(200, 0, 120, 120)
             << QRectF(200, 0, 120 * 2, 120);
 
     QTest::newRow("horizontal, rtl")
             << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
-            << QPointF(-200 - 60, 0) << QPointF(-200 - 200, 0) << QPointF(-200 - 260, 0)
+            << QPointF(-200 - 60, 0) << QPointF(-200 - 260, 0)
             << QRectF(-200 - 120, 0, 120, 120)
             << QRectF(-200 - 120 * 2, 0, 120 * 2, 120);
 }
@@ -6238,6 +6236,7 @@ void tst_QQuickListView::displacedTransitions()
             break;
         case ListChange::SetCurrent:
         case ListChange::SetContentY:
+        case ListChange::Polish:
             break;
     }
 
@@ -6483,6 +6482,8 @@ void tst_QQuickListView::multipleTransitions()
             case ListChange::SetContentY:
                 listview->setContentY(changes[i].pos);
                 QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+                break;
+            case ListChange::Polish:
                 break;
         }
     }
