@@ -253,7 +253,7 @@ protected:
     qreal vWidth() const;
     qreal vHeight() const;
     virtual void componentComplete();
-    virtual void viewportMoved();
+    virtual void viewportMoved(Qt::Orientations orient);
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
     void mouseUngrabEvent();

@@ -330,13 +330,16 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, const QRectF 
 {
     Q_Q(QQuickFlickable);
     if (item == contentItem) {
-        bool xChanged = newGeom.x() != oldGeom.x();
-        bool yChanged = newGeom.y() != oldGeom.y();
-        if (xChanged || yChanged)
-            q->viewportMoved();
-        if (xChanged)
+        Qt::Orientations orient = 0;
+        if (newGeom.x() != oldGeom.x())
+            orient |= Qt::Horizontal;
+        if (newGeom.y() != oldGeom.y())
+            orient |= Qt::Vertical;
+        if (orient)
+            q->viewportMoved(orient);
+        if (orient & Qt::Horizontal)
             emit q->contentXChanged();
-        if (yChanged)
+        if (orient & Qt::Vertical)
             emit q->contentYChanged();
     }
 }
@@ -496,7 +499,7 @@ void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExt
     }
     data.inOvershoot = false;
     fixupMode = Normal;
-    vTime = timeline.time();
+    data.vTime = timeline.time();
 }
 
 void QQuickFlickablePrivate::updateBeginningEnd()
@@ -718,7 +721,7 @@ void QQuickFlickable::setContentX(qreal pos)
     Q_D(QQuickFlickable);
     d->hData.explicitValue = true;
     d->resetTimeline(d->hData);
-    d->vTime = d->timeline.time();
+    d->hData.vTime = d->timeline.time();
     movementEnding(true, false);
     if (-pos != d->hData.move.value())
         d->hData.move.setValue(-pos);
@@ -735,7 +738,7 @@ void QQuickFlickable::setContentY(qreal pos)
     Q_D(QQuickFlickable);
     d->vData.explicitValue = true;
     d->resetTimeline(d->vData);
-    d->vTime = d->timeline.time();
+    d->vData.vTime = d->timeline.time();
     movementEnding(false, true);
     if (-pos != d->vData.move.value())
         d->vData.move.setValue(-pos);
@@ -767,7 +770,7 @@ void QQuickFlickable::setInteractive(bool interactive)
         d->interactive = interactive;
         if (!interactive && (d->hData.flicking || d->vData.flicking)) {
             d->clearTimeline();
-            d->vTime = d->timeline.time();
+            d->hData.vTime = d->vData.vTime = d->timeline.time();
             d->hData.flicking = false;
             d->vData.flicking = false;
             emit flickingChanged();
@@ -982,7 +985,8 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     if (wasFlicking)
         emit q->flickingChanged();
     lastPosTime = lastPressTime = computeCurrentTime(event);
-    QQuickItemPrivate::start(velocityTime);
+    QQuickItemPrivate::start(vData.velocityTime);
+    QQuickItemPrivate::start(hData.velocityTime);
 }
 
 void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
@@ -1131,7 +1135,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
     if (lastPosTime == -1)
         return;
 
-    vTime = timeline.time();
+    hData.vTime = vData.vTime = timeline.time();
 
     bool canBoost = false;
 
@@ -1382,77 +1386,57 @@ void QQuickFlickable::componentComplete()
         setContentY(-minYExtent());
 }
 
-void QQuickFlickable::viewportMoved()
+void QQuickFlickable::viewportMoved(Qt::Orientations orient)
 {
     Q_D(QQuickFlickable);
+    if (orient & Qt::Vertical)
+        d->viewportAxisMoved(d->vData, minYExtent(), maxYExtent(), height(), d->fixupY_callback);
+    if (orient & Qt::Horizontal)
+        d->viewportAxisMoved(d->hData, minXExtent(), maxXExtent(), width(), d->fixupX_callback);
+    d->updateBeginningEnd();
+}
 
-    qreal prevX = d->lastFlickablePosition.x();
-    qreal prevY = d->lastFlickablePosition.y();
-    if (d->pressed || d->calcVelocity) {
-        int elapsed = QQuickItemPrivate::restart(d->velocityTime);
+void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+                                           QQuickTimeLineCallback::Callback fixupCallback)
+{
+    if (pressed || calcVelocity) {
+        int elapsed = QQuickItemPrivate::restart(data.velocityTime);
         if (elapsed > 0) {
-            qreal horizontalVelocity = (prevX - d->hData.move.value()) * 1000 / elapsed;
-            if (qAbs(horizontalVelocity) > 0) {
-                d->velocityTimeline.reset(d->hData.smoothVelocity);
-                if (d->calcVelocity)
-                    d->velocityTimeline.set(d->hData.smoothVelocity, horizontalVelocity);
+            qreal velocity = (data.lastPos - data.move.value()) * 1000 / elapsed;
+            if (qAbs(velocity) > 0) {
+                velocityTimeline.reset(data.smoothVelocity);
+                if (calcVelocity)
+                    velocityTimeline.set(data.smoothVelocity, velocity);
                 else
-                    d->velocityTimeline.move(d->hData.smoothVelocity, horizontalVelocity, d->reportedVelocitySmoothing);
-                d->velocityTimeline.move(d->hData.smoothVelocity, 0, d->reportedVelocitySmoothing);
-            }
-            qreal verticalVelocity = (prevY - d->vData.move.value()) * 1000 / elapsed;
-            if (qAbs(verticalVelocity) > 0) {
-                d->velocityTimeline.reset(d->vData.smoothVelocity);
-                if (d->calcVelocity)
-                    d->velocityTimeline.set(d->vData.smoothVelocity, verticalVelocity);
-                else
-                    d->velocityTimeline.move(d->vData.smoothVelocity, verticalVelocity, d->reportedVelocitySmoothing);
-                d->velocityTimeline.move(d->vData.smoothVelocity, 0, d->reportedVelocitySmoothing);
+                    velocityTimeline.move(data.smoothVelocity, velocity, reportedVelocitySmoothing);
+                velocityTimeline.move(data.smoothVelocity, 0, reportedVelocitySmoothing);
             }
         }
     } else {
-        if (d->timeline.time() > d->vTime) {
-            d->velocityTimeline.clear();
-            qreal horizontalVelocity = (prevX - d->hData.move.value()) * 1000 / (d->timeline.time() - d->vTime);
-            qreal verticalVelocity = (prevY - d->vData.move.value()) * 1000 / (d->timeline.time() - d->vTime);
-            d->hData.smoothVelocity.setValue(horizontalVelocity);
-            d->vData.smoothVelocity.setValue(verticalVelocity);
+        if (timeline.time() > data.vTime) {
+            velocityTimeline.reset(data.smoothVelocity);
+            qreal velocity = (data.lastPos - data.move.value()) * 1000 / (timeline.time() - data.vTime);
+            data.smoothVelocity.setValue(velocity);
         }
     }
 
-    if (!d->vData.inOvershoot && !d->vData.fixingUp && d->vData.flicking
-            && (d->vData.move.value() > minYExtent() || d->vData.move.value() < maxYExtent())
-            && qAbs(d->vData.smoothVelocity.value()) > 10) {
+    if (!data.inOvershoot && !data.fixingUp && data.flicking
+            && (data.move.value() > minExtent || data.move.value() < maxExtent)
+            && qAbs(data.smoothVelocity.value()) > 10) {
         // Increase deceleration if we've passed a bound
-        qreal overBound = d->vData.move.value() > minYExtent()
-                ? d->vData.move.value() - minYExtent()
-                : maxYExtent() - d->vData.move.value();
-        d->vData.inOvershoot = true;
-        qreal maxDistance = d->overShootDistance(height()) - overBound;
-        d->resetTimeline(d->vData);
+        qreal overBound = data.move.value() > minExtent
+                ? data.move.value() - minExtent
+                : maxExtent - data.move.value();
+        data.inOvershoot = true;
+        qreal maxDistance = overShootDistance(vSize) - overBound;
+        resetTimeline(data);
         if (maxDistance > 0)
-            d->timeline.accel(d->vData.move, -d->vData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
-        d->timeline.callback(QQuickTimeLineCallback(&d->vData.move, d->fixupY_callback, d));
-    }
-    if (!d->hData.inOvershoot && !d->hData.fixingUp && d->hData.flicking
-            && (d->hData.move.value() > minXExtent() || d->hData.move.value() < maxXExtent())
-            && qAbs(d->hData.smoothVelocity.value()) > 10) {
-        // Increase deceleration if we've passed a bound
-        qreal overBound = d->hData.move.value() > minXExtent()
-                ? d->hData.move.value() - minXExtent()
-                : maxXExtent() - d->hData.move.value();
-        d->hData.inOvershoot = true;
-        qreal maxDistance = d->overShootDistance(width()) - overBound;
-        d->resetTimeline(d->hData);
-        if (maxDistance > 0)
-            d->timeline.accel(d->hData.move, -d->hData.smoothVelocity.value(), d->deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
-        d->timeline.callback(QQuickTimeLineCallback(&d->hData.move, d->fixupX_callback, d));
+            timeline.accel(data.move, -data.smoothVelocity.value(), deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
+        timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
     }
 
-    d->lastFlickablePosition = QPointF(d->hData.move.value(), d->vData.move.value());
-
-    d->vTime = d->timeline.time();
-    d->updateBeginningEnd();
+    data.lastPos = data.move.value();
+    data.vTime = timeline.time();
 }
 
 void QQuickFlickable::geometryChanged(const QRectF &newGeometry,

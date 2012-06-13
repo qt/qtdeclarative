@@ -2631,10 +2631,10 @@ void QQuickListView::setSnapMode(SnapMode mode)
     \sa addDisplaced, moveDisplaced, removeDisplaced, ViewTransition
 */
 
-void QQuickListView::viewportMoved()
+void QQuickListView::viewportMoved(Qt::Orientations orient)
 {
     Q_D(QQuickListView);
-    QQuickItemView::viewportMoved();
+    QQuickItemView::viewportMoved(orient);
     if (!d->itemCount)
         return;
     // Recursion can occur due to refill changing the content size.

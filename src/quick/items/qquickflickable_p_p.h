@@ -103,7 +103,7 @@ public:
             , transitionToBounds(0)
             , viewSize(-1), startMargin(0), endMargin(0)
             , transitionTo(0)
-            , continuousFlickVelocity(0)
+            , continuousFlickVelocity(0), vTime(0)
             , smoothVelocity(fp), atEnd(false), atBeginning(true)
             , transitionToSet(false)
             , fixingUp(false), inOvershoot(false), moving(false), flicking(false)
@@ -138,6 +138,7 @@ public:
         QQuickFlickableReboundTransition *transitionToBounds;
         qreal viewSize;
         qreal pressPos;
+        qreal lastPos;
         qreal dragStartOffset;
         qreal dragMinBound;
         qreal dragMaxBound;
@@ -147,6 +148,8 @@ public:
         qreal endMargin;
         qreal transitionTo;
         qreal continuousFlickVelocity;
+        QElapsedTimer velocityTime;
+        int vTime;
         QQuickFlickablePrivate::Velocity smoothVelocity;
         QPODVector<qreal,10> velocityBuffer;
         bool atEnd : 1;
@@ -215,8 +218,6 @@ public:
     QPointF pressPos;
     qreal deceleration;
     qreal maxVelocity;
-    QElapsedTimer velocityTime;
-    QPointF lastFlickablePosition;
     qreal reportedVelocitySmoothing;
     QMouseEvent *delayedPressEvent;
     QQuickItem *delayedPressTarget;
@@ -238,6 +239,9 @@ public:
     QQuickFlickable::FlickableDirection flickableDirection;
     QQuickFlickable::BoundsBehavior boundsBehavior;
     QQuickTransition *rebound;
+
+    void viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+                       QQuickTimeLineCallback::Callback fixupCallback);
 
     void handleMousePressEvent(QMouseEvent *);
     void handleMouseMoveEvent(QMouseEvent *);

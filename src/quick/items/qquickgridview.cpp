@@ -1986,10 +1986,10 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     \sa addDisplaced, moveDisplaced, removeDisplaced, ViewTransition
 */
 
-void QQuickGridView::viewportMoved()
+void QQuickGridView::viewportMoved(Qt::Orientations orient)
 {
     Q_D(QQuickGridView);
-    QQuickItemView::viewportMoved();
+    QQuickItemView::viewportMoved(orient);
     if (!d->itemCount)
         return;
     if (d->inViewportMoved)

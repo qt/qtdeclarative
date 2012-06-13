@@ -109,7 +109,7 @@ Q_SIGNALS:
     void snapModeChanged();
 
 protected:
-    virtual void viewportMoved();
+    virtual void viewportMoved(Qt::Orientations);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
 };
