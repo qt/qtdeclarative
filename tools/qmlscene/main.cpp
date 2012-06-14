@@ -144,6 +144,7 @@ struct Options
         , originalQmlRaster(false)
         , maximized(false)
         , fullscreen(false)
+        , transparent(false)
         , clip(false)
         , versionDetection(true)
         , slowAnimations(false)
@@ -157,6 +158,7 @@ struct Options
     bool originalQmlRaster;
     bool maximized;
     bool fullscreen;
+    bool transparent;
     bool scenegraphOnGraphicsview;
     bool clip;
     bool versionDetection;
@@ -336,6 +338,7 @@ static void usage()
     qWarning(" options:");
     qWarning("  --maximized ............................... run maximized");
     qWarning("  --fullscreen .............................. run fullscreen");
+    qWarning("  --transparent ............................. Make the window transparent");
     qWarning("  --no-multisample .......................... Disable multisampling (anti-aliasing)");
     qWarning("  --no-version-detection .................... Do not try to detect the version of the .qml file");
     qWarning("  --slow-animations ......................... Run all animations in slow motion");
@@ -363,6 +366,8 @@ int main(int argc, char ** argv)
                 options.maximized = true;
             else if (lowerArgument == QLatin1String("--fullscreen"))
                 options.fullscreen = true;
+            else if (lowerArgument == QLatin1String("--transparent"))
+                options.transparent = true;
             else if (lowerArgument == QLatin1String("--clip"))
                 options.clip = true;
             else if (lowerArgument == QLatin1String("--no-version-detection"))
@@ -431,6 +436,15 @@ int main(int argc, char ** argv)
                 qxView->setResizeMode(QQuickView::SizeViewToRootObject);
             else
                 qxView->setResizeMode(QQuickView::SizeRootObjectToView);
+
+            if (options.transparent) {
+                QSurfaceFormat surfaceFormat;
+                surfaceFormat.setAlphaBufferSize(8);
+                qxView->setFormat(surfaceFormat);
+                qxView->setClearBeforeRendering(true);
+                qxView->setClearColor(QColor(Qt::transparent));
+                qxView->setWindowFlags(Qt::FramelessWindowHint);
+            }
 
             window->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
             if (options.fullscreen)
