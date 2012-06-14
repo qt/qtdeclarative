@@ -141,6 +141,8 @@ private slots:
     void qAbstractItemModel_sections();
     void sectionsPositioning();
     void sectionsDelegate();
+    void sectionsDragOutsideBounds_data();
+    void sectionsDragOutsideBounds();
     void sectionPropertyChange();
     void cacheBuffer();
     void positionViewAtIndex();
@@ -1939,7 +1941,7 @@ void tst_QQuickListView::sections(const QUrl &source)
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QTRY_VERIFY(item);
+        QVERIFY(item);
         QTRY_COMPARE(item->y(), qreal(i*20 + ((i+4)/5) * 20));
         QQuickText *next = findItem<QQuickText>(item, "nextSection");
         QCOMPARE(next->text().toInt(), (i+1)/5);
@@ -2109,29 +2111,67 @@ void tst_QQuickListView::sectionsDelegate()
         QTRY_COMPARE(item->y(), qreal(i*20*4));
     }
 
+    delete canvas;
+}
+
+void tst_QQuickListView::sectionsDragOutsideBounds_data()
+{
+    QTest::addColumn<int>("distance");
+    QTest::addColumn<int>("cacheBuffer");
+
+    QTest::newRow("500, no cache buffer") << 500 << 0;
+    QTest::newRow("1000, no cache buffer") << 1000 << 0;
+    QTest::newRow("500, cache buffer") << 500 << 320;
+    QTest::newRow("1000, cache buffer") << 1000 << 320;
+}
+
+void tst_QQuickListView::sectionsDragOutsideBounds()
+{
+    QFETCH(int, distance);
+    QFETCH(int, cacheBuffer);
+
+    QQuickView *canvas = getView();
+
+    QmlListModel model;
+    for (int i = 0; i < 10; i++)
+        model.addItem("Item" + QString::number(i), QString::number(i/5));
+
+    QQmlContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(testFileUrl("listview-sections_delegate.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    listview->setCacheBuffer(cacheBuffer);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
     // QTBUG-17769
-    model.removeItems(10, 20);
-    // ensure view has settled.
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 10);
     // Drag view up beyond bounds
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(20,20));
-    {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(20,0), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(canvas, &mv);
-    }
-    {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(20,-50), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(canvas, &mv);
-    }
-    {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(20,-200), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(canvas, &mv);
-    }
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(20,-200));
+    QTest::mouseMove(canvas, QPoint(20,0));
+    QTest::mouseMove(canvas, QPoint(20,-50));
+    QTest::mouseMove(canvas, QPoint(20,-distance));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(20,-distance));
     // view should settle back at 0
     QTRY_COMPARE(listview->contentY(), 0.0);
 
-    delete canvas;
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(20,0));
+    QTest::mouseMove(canvas, QPoint(20,20));
+    QTest::mouseMove(canvas, QPoint(20,70));
+    QTest::mouseMove(canvas, QPoint(20,distance));
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(20,distance));
+    // view should settle back at 0
+    QTRY_COMPARE(listview->contentY(), 0.0);
+
+    releaseView(canvas);
 }
 
 void tst_QQuickListView::sectionsPositioning()

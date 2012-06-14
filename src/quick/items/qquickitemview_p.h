@@ -261,7 +261,7 @@ protected slots:
     virtual void updateSections() {}
     void destroyRemoved();
     void createdItem(int index, QQuickItem *item);
-    void initItem(int index, QQuickItem *item);
+    virtual void initItem(int index, QQuickItem *item);
     void modelUpdated(const QQuickChangeSet &changeSet, bool reset);
     void destroyingItem(QQuickItem *item);
     void animStopped();

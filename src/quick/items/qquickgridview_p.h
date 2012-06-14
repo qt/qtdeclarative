@@ -112,6 +112,7 @@ protected:
     virtual void viewportMoved(Qt::Orientations);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    virtual void initItem(int index, QQuickItem *item);
 };
 
 class QQuickGridViewAttached : public QQuickItemViewAttached

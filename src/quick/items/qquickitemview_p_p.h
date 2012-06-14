@@ -264,7 +264,6 @@ public:
     FxViewItem *trackedItem;
     QHash<QQuickItem*,int> unrequestedItems;
     int requestedIndex;
-    FxViewItem *requestedItem;
     QQuickItemViewChangeSet currentChanges;
     QQuickItemViewChangeSet bufferedChanges;
     QPauseAnimationJob bufferPause;
@@ -305,7 +304,6 @@ public:
     bool highlightRangeEndValid : 1;
     bool fillCacheBuffer : 1;
     bool inRequest : 1;
-    bool requestedAsync : 1;
     bool runDelayedRemoveTransition : 1;
 
 protected:
@@ -331,7 +329,7 @@ protected:
     virtual void setPosition(qreal pos) = 0;
     virtual void fixupPosition() = 0;
 
-    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer) = 0;
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer) = 0;
     virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) = 0;
     virtual void visibleItemsChanged() {}
 

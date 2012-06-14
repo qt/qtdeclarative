@@ -88,7 +88,7 @@ public:
     virtual void init();
     virtual void clear();
 
-    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer);
     virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
     virtual void visibleItemsChanged();
 
@@ -237,8 +237,6 @@ class FxListItemSG : public FxViewItem
 public:
     FxListItemSG(QQuickItem *i, QQuickListView *v, bool own, bool trackGeometry) : FxViewItem(i, own, trackGeometry), view(v) {
         attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(item));
-        if (attached)
-            static_cast<QQuickListViewAttached*>(attached)->setView(view);
         if (trackGeometry) {
             QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
             itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
@@ -569,18 +567,18 @@ FxViewItem *QQuickListViewPrivate::newViewItem(int modelIndex, QQuickItem *item)
     // initialise attached properties
     if (sectionCriteria) {
         QString propValue = model->stringValue(modelIndex, sectionCriteria->property());
-        listItem->attached->m_section = sectionCriteria->sectionString(propValue);
+        listItem->attached->setSection(sectionCriteria->sectionString(propValue));
         if (modelIndex > 0) {
             if (FxViewItem *item = itemBefore(modelIndex))
-                listItem->attached->m_prevSection = item->attached->section();
+                listItem->attached->setPrevSection(item->attached->section());
             else
-                listItem->attached->m_prevSection = sectionAt(modelIndex-1);
+                listItem->attached->setPrevSection(sectionAt(modelIndex-1));
         }
         if (modelIndex < model->count()-1) {
             if (FxViewItem *item = visibleItem(modelIndex+1))
-                listItem->attached->m_nextSection = static_cast<QQuickListViewAttached*>(item->attached)->section();
+                listItem->attached->setNextSection(static_cast<QQuickListViewAttached*>(item->attached)->section());
             else
-                listItem->attached->m_nextSection = sectionAt(modelIndex+1);
+                listItem->attached->setNextSection(sectionAt(modelIndex+1));
         }
     }
 
@@ -627,7 +625,7 @@ bool QQuickListViewPrivate::releaseItem(FxViewItem *item)
     return released;
 }
 
-bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer)
+bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer)
 {
     qreal itemEnd = visiblePos;
     if (visibleItems.count()) {
@@ -639,8 +637,8 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
     bool haveValidItems = modelIndex >= 0;
     modelIndex = modelIndex < 0 ? visibleIndex : modelIndex + 1;
 
-    if (haveValidItems && (fillFrom > itemEnd+averageSize+spacing
-        || fillTo < visiblePos - averageSize - spacing)) {
+    if (haveValidItems && (bufferFrom > itemEnd+averageSize+spacing
+        || bufferTo < visiblePos - averageSize - spacing)) {
         // We've jumped more than a page.  Estimate which items are now
         // visible and fill from there.
         int count = (fillFrom - itemEnd) / (averageSize + spacing);
@@ -2737,6 +2735,15 @@ void QQuickListView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
         setContentY(contentY() - dy);
     }
     QQuickItemView::geometryChanged(newGeometry, oldGeometry);
+}
+
+void QQuickListView::initItem(int index, QQuickItem *item)
+{
+    QQuickItemView::initItem(index, item);
+    QQuickListViewAttached *attached = static_cast<QQuickListViewAttached *>(
+            qmlAttachedPropertiesObject<QQuickListView>(item));
+    if (attached)
+        attached->setView(this);
 }
 
 

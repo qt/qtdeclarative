@@ -68,8 +68,6 @@ class FxGridItemSG : public FxViewItem
 public:
     FxGridItemSG(QQuickItem *i, QQuickGridView *v, bool own, bool trackGeometry) : FxViewItem(i, own, trackGeometry), view(v) {
         attached = static_cast<QQuickGridViewAttached*>(qmlAttachedPropertiesObject<QQuickGridView>(item));
-        if (attached)
-            static_cast<QQuickGridViewAttached*>(attached)->setView(view);
         if (trackGeometry) {
             QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
             itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
@@ -196,7 +194,7 @@ public:
 
     void resetColumns();
 
-    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer);
     virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
 
     virtual FxViewItem *newViewItem(int index, QQuickItem *item);
@@ -485,7 +483,7 @@ void QQuickGridViewPrivate::initializeViewItem(FxViewItem *item)
     itemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
 }
 
-bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer)
+bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal bufferFrom, qreal bufferTo, bool doBuffer)
 {
     qreal colPos = colPosAt(visibleIndex);
     qreal rowPos = rowPosAt(visibleIndex);
@@ -503,8 +501,8 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool d
     int modelIndex = findLastVisibleIndex();
     modelIndex = modelIndex < 0 ? visibleIndex : modelIndex + 1;
 
-    if (visibleItems.count() && (fillFrom > rowPos + rowSize()*2
-        || fillTo < rowPosAt(visibleIndex) - rowSize())) {
+    if (visibleItems.count() && (bufferFrom > rowPos + rowSize()*2
+        || bufferTo < rowPosAt(visibleIndex) - rowSize())) {
         // We've jumped more than a page.  Estimate which items are now
         // visible and fill from there.
         int count = (fillFrom - (rowPos + rowSize())) / (rowSize()) * columns;
@@ -2105,6 +2103,15 @@ void QQuickGridView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
     }
 
     QQuickItemView::geometryChanged(newGeometry, oldGeometry);
+}
+
+void QQuickGridView::initItem(int index, QQuickItem *item)
+{
+    QQuickItemView::initItem(index, item);
+    QQuickGridViewAttached *attached = static_cast<QQuickGridViewAttached *>(
+            qmlAttachedPropertiesObject<QQuickGridView>(item));
+    if (attached)
+        attached->setView(this);
 }
 
 /*!

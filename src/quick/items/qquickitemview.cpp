@@ -403,7 +403,7 @@ int QQuickItemView::currentIndex() const
 void QQuickItemView::setCurrentIndex(int index)
 {
     Q_D(QQuickItemView);
-    if (d->requestedIndex >= 0 && !d->requestedAsync)  // currently creating item
+    if (d->inRequest)  // currently creating item
         return;
     d->currentIndexCleared = (index == -1);
 
@@ -1420,7 +1420,7 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , moveReason(Other)
     , visibleIndex(0)
     , currentIndex(-1), currentItem(0)
-    , trackedItem(0), requestedIndex(-1), requestedItem(0)
+    , trackedItem(0), requestedIndex(-1)
     , highlightComponent(0), highlight(0)
     , highlightRange(QQuickItemView::NoHighlightRange)
     , highlightRangeStart(0), highlightRangeEnd(0)
@@ -1431,7 +1431,7 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , ownModel(false), wrap(false)
     , inLayout(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
-    , fillCacheBuffer(false), inRequest(false), requestedAsync(false)
+    , fillCacheBuffer(false), inRequest(false)
     , runDelayedRemoveTransition(false)
 {
     bufferPause.addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
@@ -1626,7 +1626,7 @@ void QQuickItemViewPrivate::clear()
     createHighlight();
     trackedItem = 0;
 
-    if (requestedIndex >= 0 && requestedAsync) {
+    if (requestedIndex >= 0) {
         if (model)
             model->cancel(requestedIndex);
         requestedIndex = -1;
@@ -1676,7 +1676,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
     qreal fillFrom = from;
     qreal fillTo = to;
 
-    bool added = addVisibleItems(fillFrom, fillTo, false);
+    bool added = addVisibleItems(fillFrom, fillTo, bufferFrom, bufferTo, false);
     bool removed = removeNonVisibleItems(bufferFrom, bufferTo);
 
     if (requestedIndex == -1 && buffer && bufferMode != NoBuffer) {
@@ -1689,7 +1689,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
                 fillTo = bufferTo;
             if (bufferMode & BufferBefore)
                 fillFrom = bufferFrom;
-            added |= addVisibleItems(fillFrom, fillTo, true);
+            added |= addVisibleItems(fillFrom, fillTo, bufferFrom, bufferTo, true);
         }
     }
 
@@ -2171,15 +2171,8 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
 {
     Q_Q(QQuickItemView);
 
-    if (requestedIndex == modelIndex && (asynchronous || requestedAsync == asynchronous))
+    if (requestedIndex == modelIndex && asynchronous)
         return 0;
-
-    if (requestedIndex != -1 && requestedIndex != modelIndex) {
-        if (requestedItem && requestedItem->item)
-            requestedItem->item->setParentItem(0);
-        delete requestedItem;
-        requestedItem = 0;
-    }
 
     for (int i=0; i<releasePendingTransition.count(); i++) {
         if (releasePendingTransition[i]->index == modelIndex
@@ -2189,16 +2182,15 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
         }
     }
 
-    requestedIndex = modelIndex;
-    requestedAsync = asynchronous;
+    if (asynchronous)
+        requestedIndex = modelIndex;
     inRequest = true;
 
     if (QQuickItem *item = model->item(modelIndex, asynchronous)) {
         item->setParentItem(q->contentItem());
-        requestedIndex = -1;
-        FxViewItem *viewItem = requestedItem;
-        if (!viewItem)
-            viewItem = newViewItem(modelIndex, item); // already in cache, so viewItem not initialized in initItem()
+        if (requestedIndex == modelIndex)
+            requestedIndex = -1;
+        FxViewItem *viewItem = newViewItem(modelIndex, item);
         if (viewItem) {
             viewItem->index = modelIndex;
             // do other set up for the new item that should not happen
@@ -2206,7 +2198,6 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
             initializeViewItem(viewItem);
             unrequestedItems.remove(item);
         }
-        requestedItem = 0;
         inRequest = false;
         return viewItem;
     }
@@ -2218,31 +2209,26 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
 void QQuickItemView::createdItem(int index, QQuickItem *item)
 {
     Q_D(QQuickItemView);
-    if (d->requestedIndex != index) {
-        item->setParentItem(contentItem());
+
+    if (!d->inRequest) {
         d->unrequestedItems.insert(item, index);
-        QQuickItemPrivate::get(item)->setCulled(true);
-        d->repositionPackageItemAt(item, index);
-    } else {
         d->requestedIndex = -1;
-        if (!d->inRequest) {
-            if (index == d->currentIndex)
-                d->updateCurrent(index);
+        if (d->hasPendingChanges())
+            d->layout();
+        else
             d->refill();
-        }
+        if (d->unrequestedItems.contains(item))
+            d->repositionPackageItemAt(item, index);
+        else if (index == d->currentIndex)
+            d->updateCurrent(index);
     }
 }
 
-void QQuickItemView::initItem(int index, QQuickItem *item)
+void QQuickItemView::initItem(int, QQuickItem *item)
 {
-    Q_D(QQuickItemView);
     item->setZ(1);
-    if (d->requestedIndex == index) {
-        if (d->requestedAsync)
-            QQuickItemPrivate::get(item)->setCulled(true);
-        item->setParentItem(contentItem());
-        d->requestedItem = d->newViewItem(index, item);
-    }
+    item->setParentItem(contentItem());
+    QQuickItemPrivate::get(item)->setCulled(true);
 }
 
 void QQuickItemView::destroyingItem(QQuickItem *item)
