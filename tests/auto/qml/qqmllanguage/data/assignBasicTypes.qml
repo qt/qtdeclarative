@@ -2,6 +2,8 @@ import Test 1.0
 MyTypeObject {
     flagProperty: "FlagVal1 | FlagVal3"
     enumProperty: "EnumVal2"
+    qtEnumProperty: Qt.RichText
+    mirroredEnumProperty: Qt.AlignHCenter
     stringProperty: "Hello World!"
     uintProperty: 10
     intProperty: -19
@@ -25,4 +27,10 @@ MyTypeObject {
     urlProperty: "main.qml?with%3cencoded%3edata"
 
     objectProperty: MyTypeObject { intProperty: 8 }
+
+    property bool qtEnumTriggeredChange: false
+    onQtEnumPropertyChanged: qtEnumTriggeredChange = true
+
+    property bool mirroredEnumTriggeredChange: false
+    onMirroredEnumPropertyChanged: mirroredEnumTriggeredChange = true
 }

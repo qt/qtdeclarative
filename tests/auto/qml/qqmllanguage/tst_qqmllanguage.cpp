@@ -579,6 +579,8 @@ void tst_qqmllanguage::assignBasicTypes()
     QVERIFY(object != 0);
     QCOMPARE(object->flagProperty(), MyTypeObject::FlagVal1 | MyTypeObject::FlagVal3);
     QCOMPARE(object->enumProperty(), MyTypeObject::EnumVal2);
+    QCOMPARE(object->qtEnumProperty(), Qt::RichText);
+    QCOMPARE(object->mirroredEnumProperty(), MyTypeObject::MirroredEnumVal3);
     QCOMPARE(object->stringProperty(), QString("Hello World!"));
     QCOMPARE(object->uintProperty(), uint(10));
     QCOMPARE(object->intProperty(), -19);
@@ -606,6 +608,10 @@ void tst_qqmllanguage::assignBasicTypes()
     MyTypeObject *child = qobject_cast<MyTypeObject *>(object->objectProperty());
     QVERIFY(child != 0);
     QCOMPARE(child->intProperty(), 8);
+
+    //these used to go via script. Ensure they no longer do
+    QCOMPARE(object->property("qtEnumTriggeredChange").toBool(), false);
+    QCOMPARE(object->property("mirroredEnumTriggeredChange").toBool(), false);
 }
 
 // Test edge case type assignments

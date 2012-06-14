@@ -209,6 +209,7 @@ class MyTypeObject : public QObject
 {
     Q_OBJECT
     Q_ENUMS(MyEnum)
+    Q_ENUMS(MyMirroredEnum)
     Q_FLAGS(MyFlags)
 
     Q_PROPERTY(QString id READ id WRITE setId)
@@ -217,6 +218,8 @@ class MyTypeObject : public QObject
     Q_PROPERTY(MyFlags flagProperty READ flagProperty WRITE setFlagProperty NOTIFY flagPropertyChanged)
     Q_PROPERTY(MyEnum enumProperty READ enumProperty WRITE setEnumProperty NOTIFY enumPropertyChanged)
     Q_PROPERTY(MyEnum readOnlyEnumProperty READ readOnlyEnumProperty)
+    Q_PROPERTY(Qt::TextFormat qtEnumProperty READ qtEnumProperty WRITE setQtEnumProperty NOTIFY qtEnumPropertyChanged)
+    Q_PROPERTY(MyMirroredEnum mirroredEnumProperty READ mirroredEnumProperty WRITE setMirroredEnumProperty NOTIFY mirroredEnumPropertyChanged)
     Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringPropertyChanged)
     Q_PROPERTY(uint uintProperty READ uintProperty WRITE setUintProperty NOTIFY uintPropertyChanged)
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intPropertyChanged)
@@ -296,6 +299,28 @@ public:
 
     MyEnum readOnlyEnumProperty() const {
         return EnumVal1;
+    }
+
+    Qt::TextFormat qtEnumPropertyValue;
+    Qt::TextFormat qtEnumProperty() const {
+        return qtEnumPropertyValue;
+    }
+    void setQtEnumProperty(Qt::TextFormat v) {
+        qtEnumPropertyValue = v;
+        emit qtEnumPropertyChanged();
+    }
+
+    enum MyMirroredEnum {
+        MirroredEnumVal1 = Qt::AlignLeft,
+        MirroredEnumVal2 = Qt::AlignRight,
+        MirroredEnumVal3 = Qt::AlignHCenter };
+    MyMirroredEnum mirroredEnumPropertyValue;
+    MyMirroredEnum mirroredEnumProperty() const {
+        return mirroredEnumPropertyValue;
+    }
+    void setMirroredEnumProperty(MyMirroredEnum v) {
+        mirroredEnumPropertyValue = v;
+        emit mirroredEnumPropertyChanged();
     }
 
     QString stringPropertyValue;
@@ -515,6 +540,8 @@ signals:
     void objectPropertyChanged();
     void flagPropertyChanged();
     void enumPropertyChanged();
+    void qtEnumPropertyChanged();
+    void mirroredEnumPropertyChanged();
     void stringPropertyChanged();
     void uintPropertyChanged();
     void intPropertyChanged();

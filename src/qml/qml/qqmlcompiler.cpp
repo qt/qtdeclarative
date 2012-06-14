@@ -2480,6 +2480,12 @@ bool QQmlCompiler::buildPropertyLiteralAssignment(QQmlScript::Property *prop,
     return true;
 }
 
+struct StaticQtMetaObject : public QObject
+{
+    static const QMetaObject *get()
+        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
+};
+
 bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
                                                        QQmlScript::Object *obj,
                                                        QQmlScript::Value *v,
@@ -2523,13 +2529,13 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
     QQmlType *type = 0;
     unit->imports().resolveType(typeName, &type, 0, 0, 0, 0);
 
-    if (!type)
+    if (!type && typeName != QLatin1String("Qt"))
         return true;
 
     int value = 0;
     bool ok;
 
-    if (toQmlType(obj) == type) {
+    if (type && toQmlType(obj) == type) {
         // When these two match, we can short cut the search
         if (mprop.isFlagType()) {
             value = mprop.enumerator().keysToValue(enumValue.toUtf8().constData(), &ok);
@@ -2540,7 +2546,7 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
         // Otherwise we have to search the whole type
         // This matches the logic in QV8TypeWrapper
         QByteArray enumName = enumValue.toUtf8();
-        const QMetaObject *metaObject = type->baseMetaObject();
+        const QMetaObject *metaObject = type ? type->baseMetaObject() : StaticQtMetaObject::get();
         ok = false;
         for (int ii = metaObject->enumeratorCount() - 1; !ok && ii >= 0; --ii) {
             QMetaEnum e = metaObject->enumerator(ii);
@@ -2557,12 +2563,6 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
 
     return true;
 }
-
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
-};
 
 // Similar logic to above, but not knowing target property.
 int QQmlCompiler::evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue) const
