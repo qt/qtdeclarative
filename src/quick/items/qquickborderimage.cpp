@@ -305,6 +305,7 @@ void QQuickBorderImage::load()
         setImplicitSize(0, 0);
         emit statusChanged(d->status);
         update();
+        return;
     } else {
         d->status = Loading;
         if (d->url.path().endsWith(QLatin1String("sci"))) {
@@ -347,6 +348,7 @@ void QQuickBorderImage::load()
                 emit statusChanged(d->status);
                 emit progressChanged(d->progress);
                 update();
+                return;
             }
         }
     }

@@ -44,6 +44,7 @@
 #include <QTcpSocket>
 #include <QDir>
 #include <QPainter>
+#include <QSignalSpy>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -59,6 +60,8 @@
 
 #define SERVER_PORT 14446
 #define SERVER_ADDR "http://127.0.0.1:14446"
+
+Q_DECLARE_METATYPE(QQuickImageBase::Status)
 
 class tst_qquickborderimage : public QQmlDataTest
 
@@ -83,6 +86,9 @@ private slots:
     void validSciFiles();
     void pendingRemoteRequest();
     void pendingRemoteRequest_data();
+
+    void statusChanges();
+    void statusChanges_data();
 
 private:
     QQmlEngine engine;
@@ -394,6 +400,51 @@ void tst_qquickborderimage::pendingRemoteRequest_data()
 
     QTest::newRow("png file") << "http://localhost/none.png";
     QTest::newRow("sci file") << "http://localhost/none.sci";
+}
+
+//QTBUG-26155
+void tst_qquickborderimage::statusChanges_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<int>("emissions");
+    QTest::addColumn<bool>("remote");
+    QTest::addColumn<QQuickImageBase::Status>("finalStatus");
+
+    QTest::newRow("localfile") << testFileUrl("colors.png").toString() << 1 << false << QQuickImageBase::Ready;
+    QTest::newRow("nofile") << "" << 0 << false << QQuickImageBase::Null;
+    QTest::newRow("nonexistent") << testFileUrl("thisfiledoesnotexist.png").toString() << 1 << false << QQuickImageBase::Error;
+    QTest::newRow("noprotocol") << QString("thisfiledoesnotexisteither.png") << 2 << false << QQuickImageBase::Error;
+    QTest::newRow("remote") << "http://localhost:14446/colors.png" << 2 << true << QQuickImageBase::Ready;
+}
+
+void tst_qquickborderimage::statusChanges()
+{
+    QFETCH(QString, source);
+    QFETCH(int, emissions);
+    QFETCH(bool, remote);
+    QFETCH(QQuickImageBase::Status, finalStatus);
+
+    TestHTTPServer *server = 0;
+    if (remote) {
+        server = new TestHTTPServer(SERVER_PORT);
+        QVERIFY(server->isValid());
+        server->serveDirectory(dataDirectory(), TestHTTPServer::Delay);
+    }
+
+    QString componentStr = "import QtQuick 2.0\nBorderImage { width: 300; height: 300 }";
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl(""));
+
+    QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
+    qRegisterMetaType<QQuickImageBase::Status>();
+    QSignalSpy spy(obj, SIGNAL(statusChanged(QQuickImageBase::Status)));
+    QVERIFY(obj != 0);
+    obj->setSource(source);
+    QTRY_VERIFY(obj->status() == finalStatus);
+    QCOMPARE(spy.count(), emissions);
+
+    delete obj;
+    delete server;
 }
 
 QTEST_MAIN(tst_qquickborderimage)
