@@ -124,5 +124,6 @@ Rectangle {
             model.insert(0, obj)
         }
 
+        signal autoSearch(string type, string str) // To communicate with Footer instance
     }
 }

@@ -67,8 +67,6 @@ Item {
 
         property bool flipped: false
         delta: startRotation
-//        wiggleDuration: 120
-//        wiggleRoom: 2
 
         anchors.bottom: parent.bottom
         width: container.ListView.view ? container.ListView.view.width : 0
@@ -88,10 +86,19 @@ Item {
                 x: 10; y: 9
                 visible: avatar.status != Image.Ready
             }
+
             Image {
                 id: avatar
                 source: model.userImage
                 anchors.fill: placeHolder
+                MouseArea {
+                    id: mouseArea
+                    anchors.fill: parent
+                    onClicked: {
+                        flipBar.flipUp()
+                        flipBar.flipped = true
+                    }
+                }
             }
 
             Text {
@@ -113,19 +120,23 @@ Item {
                 font.bold: false
                 color: "#adebff"
                 linkColor: "white"
-            }
-
-            MouseArea {
-                id: mouseArea
-                anchors.fill: parent
-                onClicked: {
-                    if (!flipBar.flipped) {
-                        flipBar.flipUp()
-                        flipBar.flipped = true
-                    } else {
-                        flipBar.flipDown()
-                        flipBar.flipped = false
-                    }
+                onLinkActivated: {
+                    var tag = link.split("http://search.twitter.com/search?q=%23")
+                    var user = link.split("https://twitter.com/")
+                    if (tag[1] != undefined) {
+                        mainListView.positionViewAtBeginning()
+                        mainListView.clear()
+                        mainListView.autoSearch('tag', tag[1])
+                        tweetsModel.from = ""
+                        tweetsModel.phrase = "#" + tag[1]
+                    } else if (user[1] != undefined) {
+                        mainListView.positionViewAtBeginning()
+                        mainListView.clear()
+                        mainListView.autoSearch('user', user[1])
+                        tweetsModel.phrase = ""
+                        tweetsModel.from = user[1]
+                    } else
+                        Qt.openUrlExternally(link)
                 }
             }
         }
@@ -144,6 +155,13 @@ Item {
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 y: 9
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        flipBar.flipDown()
+                        flipBar.flipped = false
+                    }
+                }
             }
 
             Text {
@@ -165,7 +183,6 @@ Item {
                 color: "#ffc2ad"
                 linkColor: "white"
                 onLinkActivated: Qt.openUrlExternally(link);
-
             }
         }
     }

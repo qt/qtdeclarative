@@ -45,6 +45,21 @@ Rectangle {
     width: parent.width
     height: childrenRect.height
     z: 2
+    Connections {
+        target: mainListView
+        onAutoSearch: {
+            if (type == 'tag') {
+                tagSearch.open()
+                tagSearch.searchText = str
+            } else if (type == 'user'){
+                userSearch.open()
+                userSearch.searchText = str
+            } else {
+                wordSearch.open()
+                wordSearch.searchText = str
+            }
+        }
+    }
 
     Column {
         width: parent.width

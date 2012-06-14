@@ -17,4 +17,3 @@ function formatDate(date)
     var da = new Date(date)
     return da.toDateString()
 }
-

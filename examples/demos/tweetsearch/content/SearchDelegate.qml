@@ -96,7 +96,6 @@ FlipBar {
             font.pixelSize: 18
             color: "#ffffff"
         }
-
     }
 
     back: FocusScope {
