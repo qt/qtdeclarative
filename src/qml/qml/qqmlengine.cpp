@@ -570,6 +570,11 @@ int QQmlData::receivers(QAbstractDeclarativeData *d, const QObject *, int index)
     return static_cast<QQmlData *>(d)->endpointCount(index);
 }
 
+bool QQmlData::isSignalConnected(QAbstractDeclarativeData *d, const QObject *, int index)
+{
+    return static_cast<QQmlData *>(d)->signalHasEndpoint(index);
+}
+
 int QQmlData::endpointCount(int index)
 {
     int count = 0;
@@ -1302,12 +1307,6 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
         endpoint->prev = &notifyList->todo;
         notifyList->todo = endpoint;
     }
-}
-
-bool QQml_isSignalConnected(QObject *obj, int signal_index)
-{
-    QQmlData *data = QQmlData::get(obj);
-    return QObjectPrivate::get(obj)->isSignalConnected(signal_index) || (data && data->signalHasEndpoint(signal_index));
 }
 
 /*

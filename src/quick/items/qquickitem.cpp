@@ -911,7 +911,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
 {
     Q_D(QQuickKeysAttached);
     int signal_index = d->signalIndex(signalName);
-    return QQml_isSignalConnected(this, signal_index);
+    return d->isSignalConnected(signal_index);
 }
 
 /*!

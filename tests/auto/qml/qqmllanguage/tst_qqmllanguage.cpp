@@ -2738,6 +2738,11 @@ void tst_qqmllanguage::receivers()
     QVERIFY(o != 0);
     QCOMPARE(o->mySignalCount(), 1);
     QCOMPARE(o->propChangedCount(), 2);
+    QCOMPARE(o->myUnconnectedSignalCount(), 0);
+
+    QVERIFY(o->isSignalConnected(QMetaMethod::fromSignal(&MyReceiversTestObject::mySignal)));
+    QVERIFY(o->isSignalConnected(QMetaMethod::fromSignal(&MyReceiversTestObject::propChanged)));
+    QVERIFY(!o->isSignalConnected(QMetaMethod::fromSignal(&MyReceiversTestObject::myUnconnectedSignal)));
 
     delete o;
 }

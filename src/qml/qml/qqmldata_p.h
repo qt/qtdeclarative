@@ -95,6 +95,7 @@ public:
             QAbstractDeclarativeData::parentChanged = parentChanged;
             QAbstractDeclarativeData::signalEmitted = signalEmitted;
             QAbstractDeclarativeData::receivers = receivers;
+            QAbstractDeclarativeData::isSignalConnected = isSignalConnected;
         }
     }
 
@@ -102,6 +103,7 @@ public:
     static void parentChanged(QAbstractDeclarativeData *, QObject *, QObject *);
     static void signalEmitted(QAbstractDeclarativeData *, QObject *, int, void **);
     static int receivers(QAbstractDeclarativeData *, const QObject *, int);
+    static bool isSignalConnected(QAbstractDeclarativeData *, const QObject *, int);
 
     void destroyed(QObject *);
     void parentChanged(QObject *, QObject *);

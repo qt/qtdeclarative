@@ -643,10 +643,15 @@ public:
 
     int mySignalCount() { return receivers(SIGNAL(mySignal())); }
     int propChangedCount() { return receivers(SIGNAL(propChanged())); }
+    int myUnconnectedSignalCount() { return receivers(SIGNAL(myUnconnectedSignal())); }
 
 signals:
     void mySignal();
     void propChanged();
+    void myUnconnectedSignal();
+
+private:
+    friend class tst_qqmllanguage;
 };
 
 class MyDotPropertyObject : public QObject
