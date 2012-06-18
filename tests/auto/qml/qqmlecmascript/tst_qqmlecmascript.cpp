@@ -245,6 +245,7 @@ private slots:
     void callQtInvokables();
     void invokableObjectArg();
     void invokableObjectRet();
+    void invokableEnumRet();
     void qtbug_20344();
     void qtbug_22679();
     void qtbug_22843_data();
@@ -2288,9 +2289,9 @@ void tst_qqmlecmascript::callQtInvokables()
     }
 
     o.reset();
-    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_unknown()", v8::Undefined()));
+    QVERIFY(EVALUATE_ERROR("object.method_NoArgs_unknown()"));
     QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 5);
+    QCOMPARE(o.invoked(), -1);
     QCOMPARE(o.actuals().count(), 0);
 
     o.reset();
@@ -2741,6 +2742,12 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o.invoked(), 27);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Undefined));
+
+    o.reset();
+    QVERIFY(EVALUATE_ERROR("object.method_unknown(null)"));
+    QCOMPARE(o.error(), false);
+    QCOMPARE(o.invoked(), -1);
+    QCOMPARE(o.actuals().count(), 0);
 }
 
 // QTBUG-13047 (check that you can pass registered object types as args)
@@ -2761,6 +2768,16 @@ void tst_qqmlecmascript::invokableObjectArg()
 void tst_qqmlecmascript::invokableObjectRet()
 {
     QQmlComponent component(&engine, testFileUrl("invokableObjectRet.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o);
+    QCOMPARE(o->property("test").toBool(), true);
+    delete o;
+}
+
+void tst_qqmlecmascript::invokableEnumRet()
+{
+    QQmlComponent component(&engine, testFileUrl("invokableEnumRet.qml"));
 
     QObject *o = component.create();
     QVERIFY(o);

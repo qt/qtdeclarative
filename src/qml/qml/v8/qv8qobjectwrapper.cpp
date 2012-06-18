@@ -1762,11 +1762,21 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
 static v8::Handle<v8::Value> CallPrecise(QObject *object, const QQmlPropertyData &data,
                                          QV8Engine *engine, CallArgs &callArgs)
 {
+    QByteArray unknownTypeError;
+
+    int returnType = QQmlPropertyCache::methodReturnType(object, data, &unknownTypeError);
+
+    if (returnType == QMetaType::UnknownType) {
+        QString typeName = QString::fromLatin1(unknownTypeError);
+        QString error = QString::fromLatin1("Unknown method return type: %1").arg(typeName);
+        v8::ThrowException(v8::Exception::Error(engine->toString(error)));
+        return v8::Handle<v8::Value>();
+    }
+
     if (data.hasArguments()) {
 
         int *args = 0;
         QVarLengthArray<int, 9> dummy;
-        QByteArray unknownTypeError;
 
         args = QQmlPropertyCache::methodParameterTypes(object, data.coreIndex, dummy, 
                                                                &unknownTypeError);
@@ -1784,11 +1794,11 @@ static v8::Handle<v8::Value> CallPrecise(QObject *object, const QQmlPropertyData
             return v8::Handle<v8::Value>();
         }
 
-        return CallMethod(object, data.coreIndex, data.propType, args[0], args + 1, engine, callArgs);
+        return CallMethod(object, data.coreIndex, returnType, args[0], args + 1, engine, callArgs);
 
     } else {
 
-        return CallMethod(object, data.coreIndex, data.propType, 0, 0, engine, callArgs);
+        return CallMethod(object, data.coreIndex, returnType, 0, 0, engine, callArgs);
 
     }
 }

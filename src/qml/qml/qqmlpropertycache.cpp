@@ -1095,6 +1095,56 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
     }
 }
 
+// Returns the return type of the method.
+int QQmlPropertyCache::methodReturnType(QObject *object, const QQmlPropertyData &data,
+                                        QByteArray *unknownTypeError)
+{
+    Q_ASSERT(object && data.coreIndex >= 0);
+
+    int type = data.propType;
+
+    const char *propTypeName = 0;
+
+    if (type == QMetaType::UnknownType) {
+        // Find the return type name from the method info
+        QMetaMethod m;
+
+        QQmlData *ddata = QQmlData::get(object, false);
+        if (ddata && ddata->propertyCache) {
+            QQmlPropertyCache *c = ddata->propertyCache;
+            Q_ASSERT(data.coreIndex < c->methodIndexCacheStart + c->methodIndexCache.count());
+
+            while (data.coreIndex < c->methodIndexCacheStart)
+                c = c->_parent;
+
+            const QMetaObject *metaObject = c->createMetaObject();
+            Q_ASSERT(metaObject);
+            m = metaObject->method(data.coreIndex);
+        } else {
+            m = object->metaObject()->method(data.coreIndex);
+        }
+
+        type = m.returnType();
+        propTypeName = m.typeName();
+    }
+
+    QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
+    if (flags & QMetaType::IsEnumeration) {
+        type = QVariant::Int;
+    } else if (type == QMetaType::UnknownType ||
+               (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+               type != qMetaTypeId<QJSValue>())) {
+        //the UserType clause is to catch registered QFlags
+        type = EnumType(object->metaObject(), propTypeName, type);
+    }
+
+    if (type == QMetaType::UnknownType) {
+        if (unknownTypeError) *unknownTypeError = propTypeName;
+    }
+
+    return type;
+}
+
 QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QString &property)
 {
     Q_ASSERT(metaObject);

@@ -187,6 +187,8 @@ public:
     int intProperty() const { return m_intProperty; }
     void setIntProperty(int i) { m_intProperty = i; emit intChanged(); }
     
+    Q_INVOKABLE MyEnum2 getEnumValue() const { return EnumValue4; }
+
 signals:
     void basicSignal();
     void argumentSignal(int a, QString b, qreal c, MyEnum2 d, Qt::MouseButtons e);
@@ -694,6 +696,8 @@ public:
     Q_INVOKABLE void method_overload(const QJsonObject &a) { invoke(25); m_actuals << QVariant::fromValue(a); }
     Q_INVOKABLE void method_overload(const QJsonArray &a) { invoke(26); m_actuals << QVariant::fromValue(a); }
     Q_INVOKABLE void method_overload(const QJsonValue &a) { invoke(27); m_actuals << QVariant::fromValue(a); }
+
+    Q_INVOKABLE void method_unknown(MyInvokableObject *o) { invoke(28); }
 
 private:
     friend class MyInvokableBaseObject;

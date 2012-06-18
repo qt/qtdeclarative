@@ -296,6 +296,8 @@ public:
                                               QQmlPropertyData &);
     static int *methodParameterTypes(QObject *, int index, QVarLengthArray<int, 9> &dummy,
                                      QByteArray *unknownTypeError);
+    static int methodReturnType(QObject *, const QQmlPropertyData &data,
+                                QByteArray *unknownTypeError);
     static QList<QByteArray> signalParameterNames(QObject *, int index);
 
     const char *className() const;
