@@ -410,56 +410,53 @@ int main(int argc, char ** argv)
         displayFileDialog(&options);
 #endif
 
-    QWindow *window = 0;
     QQmlEngine *engine = 0;
 
     int exitCode = 0;
 
     if (!options.file.isEmpty()) {
         if (!options.versionDetection || checkVersion(options.file)) {
-            QQuickView *qxView = new QQuickView();
-            engine = qxView->engine();
+            QQuickView qxView;
+            engine = qxView.engine();
             for (int i = 0; i < imports.size(); ++i)
                 engine->addImportPath(imports.at(i));
             for (int i = 0; i < bundles.size(); ++i)
                 engine->addNamedBundle(bundles.at(i).first, bundles.at(i).second);
-            window = qxView;
             if (options.file.isLocalFile()) {
                 QFileInfo fi(options.file.toLocalFile());
                 loadDummyDataFiles(*engine, fi.path());
             }
-            qxView->setSource(options.file);
+            qxView.setSource(options.file);
 
             QObject::connect(engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
 
             if (options.resizeViewToRootItem)
-                qxView->setResizeMode(QQuickView::SizeViewToRootObject);
+                qxView.setResizeMode(QQuickView::SizeViewToRootObject);
             else
-                qxView->setResizeMode(QQuickView::SizeRootObjectToView);
+                qxView.setResizeMode(QQuickView::SizeRootObjectToView);
 
             if (options.transparent) {
                 QSurfaceFormat surfaceFormat;
                 surfaceFormat.setAlphaBufferSize(8);
-                qxView->setFormat(surfaceFormat);
-                qxView->setClearBeforeRendering(true);
-                qxView->setClearColor(QColor(Qt::transparent));
-                qxView->setWindowFlags(Qt::FramelessWindowHint);
+                qxView.setFormat(surfaceFormat);
+                qxView.setClearBeforeRendering(true);
+                qxView.setClearColor(QColor(Qt::transparent));
+                qxView.setWindowFlags(Qt::FramelessWindowHint);
             }
 
-            window->setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+            qxView.setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+
             if (options.fullscreen)
-                window->showFullScreen();
+                qxView.showFullScreen();
             else if (options.maximized)
-                window->showMaximized();
+                qxView.showMaximized();
             else
-                window->show();
+                qxView.show();
 
             if (options.quitImmediately)
                 QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 
             exitCode = app.exec();
-
-            delete window;
 
 #ifdef QML_RUNTIME_TESTING
             RenderStatistics::printTotalStats();
