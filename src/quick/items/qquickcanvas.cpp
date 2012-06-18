@@ -1836,11 +1836,13 @@ void QQuickCanvasPrivate::cleanupNodesOnShutdown(QQuickItem *item)
 // This must be called from the render thread, with the main thread frozen
 void QQuickCanvasPrivate::cleanupNodesOnShutdown()
 {
+    Q_Q(QQuickCanvas);
     cleanupNodes();
     cleanupNodesOnShutdown(rootItem);
     QSet<QQuickItem *>::const_iterator it = parentlessItems.begin();
     for (; it != parentlessItems.end(); ++it)
         cleanupNodesOnShutdown(*it);
+    q->cleanupSceneGraph();
 }
 
 void QQuickCanvasPrivate::updateDirtyNodes()
