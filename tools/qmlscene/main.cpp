@@ -242,9 +242,8 @@ static int displayOptionsDialog(Options *options)
 
 static bool checkVersion(const QUrl &url)
 {
-    if (!qgetenv("QMLSCENE_IMPORT_NAME").isEmpty()) {
+    if (!qgetenv("QMLSCENE_IMPORT_NAME").isEmpty())
         qWarning("QMLSCENE_IMPORT_NAME is no longer supported.");
-    }
 
     QString fileName = url.toLocalFile();
     if (fileName.isEmpty()) {
@@ -270,11 +269,10 @@ static bool checkVersion(const QUrl &url)
             codeFound = true;
         } else {
             QString import;
-            if (quick1.indexIn(line) >= 0) {
+            if (quick1.indexIn(line) >= 0)
                 import = quick1.cap(0).trimmed();
-            } else if (qt47.indexIn(line) >= 0) {
+            else if (qt47.indexIn(line) >= 0)
                 import = qt47.cap(0).trimmed();
-            }
 
             if (!import.isNull()) {
                 qWarning("qmlscene: '%s' is no longer supported.\n"
@@ -318,9 +316,8 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 
         if(comp.isError()) {
             QList<QQmlError> errors = comp.errors();
-            foreach (const QQmlError &error, errors) {
+            foreach (const QQmlError &error, errors)
                 qWarning() << error;
-            }
         }
 
         if (dummyData) {
@@ -443,9 +440,8 @@ int main(int argc, char ** argv)
             else
                 window->show();
 
-            if (options.quitImmediately) {
+            if (options.quitImmediately)
                 QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
-            }
 
             exitCode = app.exec();
 
