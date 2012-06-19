@@ -43,7 +43,7 @@
 {\
     QGuiApplication app(argc,argv);\
     QQuickView view;\
-    view.setSource(QUrl::fromLocalFile(#NAME ".qml"));\
+    view.setSource(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + QLatin1String("/" #NAME ".qml")));\
     view.show();\
     return app.exec();\
 }
