@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += qml
+QT += qml quick
 SOURCES += main.cpp
 
 target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/demos/samegame
