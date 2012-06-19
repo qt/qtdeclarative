@@ -43,6 +43,7 @@
 #define QQMLACCESSORS_P_H
 
 #include <private/qtqmlglobal_p.h>
+#include <QtCore/qbytearray.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qhash.h>
 #include <QtCore/QReadWriteLock>
@@ -56,6 +57,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QObject;
+class QMetaObject;
 class QQmlNotifier;
 
 // QML "accessor properties" allow V4 and V8 to bypass Qt's meta system to read and, more
