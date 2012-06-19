@@ -201,6 +201,10 @@ void tst_QQuickLoader::sourceOrComponent_data()
     QTest::addColumn<QString>("errorString");
 
     QTest::newRow("source") << "source" << "source: 'Rect120x60.qml'\n" << testFileUrl("Rect120x60.qml") << "";
+    QTest::newRow("source with subdir") << "source" << "source: 'subdir/Test.qml'\n" << testFileUrl("subdir/Test.qml") << "";
+    QTest::newRow("source with encoded subdir literal") << "source" << "source: 'subdir%2fTest.qml'\n" << testFileUrl("subdir/Test.qml") << "";
+    QTest::newRow("source with encoded subdir optimized binding") << "source" << "source: 'subdir' + '%2fTest.qml'\n" << testFileUrl("subdir/Test.qml") << "";
+    QTest::newRow("source with encoded subdir binding") << "source" << "source: encodeURIComponent('subdir/Test.qml')\n" << testFileUrl("subdir/Test.qml") << "";
     QTest::newRow("sourceComponent") << "component" << "Component { id: comp; Rectangle { width: 100; height: 50 } }\n sourceComponent: comp\n" << QUrl() << "";
     QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << testFileUrl("IDontExist.qml")
             << QString(testFileUrl("IDontExist.qml").toString() + ": File not found");

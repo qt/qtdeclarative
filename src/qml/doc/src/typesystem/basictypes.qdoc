@@ -167,6 +167,21 @@ See \l {QML Basic Types} for the list of basic types that are supported by the Q
     Usually you will only have to do this once, because relative URLs resolved from
     that file will use the same protocol.
 
+    URLs may contain encoded characters using the 'percent-encoding' scheme
+    specified by \l {http://tools.ietf.org/html/rfc3986}{RFC 3986}.  These characters
+    will be preserved within properties of type \c url, to allow QML code to
+    construct precise URL values. An exception to this rule is the preemptive
+    decoding of directory-separator characters (\c '/') - these characters are decoded
+    to allow the URL to be correctly classified.
+
+    For example, a local file containing a '#' character, which would normally be
+    interpreted as the beginning of the URL 'fragment' element, can be accessed by
+    encoding the characters of the file name:
+
+    \qml
+    Image { source: encodeURIComponent("/tmp/test#1.png") }
+    \endqml
+
     \sa {QML Basic Types}
 */
 

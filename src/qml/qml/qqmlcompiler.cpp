@@ -515,6 +515,8 @@ void QQmlCompiler::genLiteralAssignment(QQmlScript::Property *prop,
             {
             Instruction::StoreUrl instr;
             QString string = v->value.asString();
+            // Encoded dir-separators defeat QUrl processing - decode them first
+            string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
             QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
             instr.propertyIndex = prop->index;
             instr.value = output->indexForUrl(u);

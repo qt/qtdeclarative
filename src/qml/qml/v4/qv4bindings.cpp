@@ -1296,7 +1296,9 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (src.isUndefined()) {
             output.setUndefined();
         } else {
-            const QString tmp(*src.getstringptr());
+            QString tmp(*src.getstringptr());
+            // Encoded dir-separators defeat QUrl processing - decode them first
+            tmp.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
             if (instr->unaryop.src == instr->unaryop.output) {
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
@@ -1326,7 +1328,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
             COLOR_REGISTER(instr->unaryop.output);
         }
     }
-    QML_V4_END_INSTR(ConvertStringToUrl, unaryop)
+    QML_V4_END_INSTR(ConvertStringToColor, unaryop)
 
     QML_V4_BEGIN_INSTR(ConvertStringToVariant, unaryop)
     {

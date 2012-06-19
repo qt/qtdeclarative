@@ -1557,11 +1557,12 @@ void tst_qqmlproperty::urlHandling_data()
         << QString("/main.qml")
         << QByteArray("http://www.example.com/main.qml?type=text/qml&comment=now%20working?");
 
+    // Although 'text%2Fqml' is pre-encoded, it will be decoded to allow correct QUrl classification
     QTest::newRow("preencodedQuery")
         << QByteArray("http://www.example.com/main.qml?type=text%2Fqml&comment=now working%3F")
         << QString("http")
         << QString("/main.qml")
-        << QByteArray("http://www.example.com/main.qml?type=text%2Fqml&comment=now%20working%3F");
+        << QByteArray("http://www.example.com/main.qml?type=text/qml&comment=now%20working%3F");
 
     QTest::newRow("encodableFragment")
         << QByteArray("http://www.example.com/main.qml?type=text/qml#start+30000|volume+50%")

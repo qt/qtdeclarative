@@ -1319,10 +1319,16 @@ bool QQmlPropertyPrivate::write(QObject *object,
             u = value.toUrl();
             found = true;
         } else if (variantType == QVariant::ByteArray) {
-            u = QUrl(QString::fromUtf8(value.toByteArray()));
+            QString input(QString::fromUtf8(value.toByteArray()));
+            // Encoded dir-separators defeat QUrl processing - decode them first
+            input.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
+            u = QUrl(input);
             found = true;
         } else if (variantType == QVariant::String) {
-            u = QUrl(value.toString());
+            QString input(value.toString());
+            // Encoded dir-separators defeat QUrl processing - decode them first
+            input.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
+            u = QUrl(input);
             found = true;
         }
 
