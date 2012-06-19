@@ -166,7 +166,8 @@ public:
     QRectF setupTextLayout(qreal *const naturalWidth,  qreal * const baseline);
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int lineOffset = 0);
     bool isLinkActivatedConnected();
-    QString anchorAt(const QPointF &pos);
+    static QString anchorAt(const QTextLayout *layout, const QPointF &mousePos);
+    QString anchorAt(const QPointF &pos) const;
 
     inline qreal lineHeight() const { return extra.isAllocated() ? extra->lineHeight : 1.0; }
     inline int maximumLineCount() const { return extra.isAllocated() ? extra->maximumLineCount : INT_MAX; }

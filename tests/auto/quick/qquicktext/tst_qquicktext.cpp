@@ -105,6 +105,7 @@ private slots:
     void letterSpacing();
     void wordSpacing();
 
+    void clickLink_data();
     void clickLink();
 
     void implicitSize_data();
@@ -1438,6 +1439,8 @@ public:
             mousePressEvent(event);
         else if (event->type() == QEvent::MouseButtonRelease)
             mouseReleaseEvent(event);
+        else if (event->type() == QEvent::MouseMove)
+            mouseMoveEvent(event);
         else
             qWarning() << "Trying to send unsupported event type";
     }
@@ -1455,36 +1458,339 @@ public slots:
     void linkClicked(QString l) { link = l; }
 };
 
+class TextMetrics
+{
+public:
+    TextMetrics(const QString &text, Qt::TextElideMode elideMode = Qt::ElideNone)
+    {
+        QString adjustedText = text;
+        adjustedText.replace(QLatin1Char('\n'), QChar(QChar::LineSeparator));
+        if (elideMode == Qt::ElideLeft)
+            adjustedText = QChar(0x2026) + adjustedText;
+        else if (elideMode == Qt::ElideRight)
+            adjustedText = adjustedText + QChar(0x2026);
+
+        layout.setText(adjustedText);
+        QTextOption option;
+        option.setUseDesignMetrics(true);
+        layout.setTextOption(option);
+
+        layout.beginLayout();
+        qreal height = 0;
+        QTextLine line = layout.createLine();
+        while (line.isValid()) {
+            line.setLineWidth(FLT_MAX);
+            line.setPosition(QPointF(0, height));
+            height += line.height();
+            line = layout.createLine();
+        }
+        layout.endLayout();
+    }
+
+    qreal width() const { return layout.maximumWidth(); }
+
+    QRectF characterRectangle(
+            int position,
+            int hAlign = Qt::AlignLeft,
+            int vAlign = Qt::AlignTop,
+            const QSizeF &bounds = QSizeF(240, 320)) const
+    {
+        qreal dy = 0;
+        switch (vAlign) {
+        case Qt::AlignBottom:
+            dy = bounds.height() - layout.boundingRect().height();
+            break;
+        case Qt::AlignVCenter:
+            dy = (bounds.height() - layout.boundingRect().height()) / 2;
+            break;
+        default:
+            break;
+        }
+
+        for (int i = 0; i < layout.lineCount(); ++i) {
+            QTextLine line = layout.lineAt(i);
+            if (position >= line.textStart() + line.textLength())
+                continue;
+            qreal dx = 0;
+            switch (hAlign) {
+            case Qt::AlignRight:
+                dx = bounds.width() - line.naturalTextWidth();
+                break;
+            case Qt::AlignHCenter:
+                dx = (bounds.width() - line.naturalTextWidth()) / 2;
+                break;
+            default:
+                break;
+            }
+
+            QRectF rect;
+            rect.setLeft(dx + line.cursorToX(position, QTextLine::Leading));
+            rect.setRight(dx + line.cursorToX(position, QTextLine::Trailing));
+            rect.setTop(dy + line.y());
+            rect.setBottom(dy + line.y() + line.height());
+
+            return rect;
+        }
+        return QRectF();
+    }
+
+    QTextLayout layout;
+};
+
+
+typedef QVector<QPointF> PointVector;
+Q_DECLARE_METATYPE(PointVector);
+
+void tst_qquicktext::clickLink_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<qreal>("width");
+    QTest::addColumn<QString>("bindings");
+    QTest::addColumn<PointVector>("mousePositions");
+    QTest::addColumn<QString>("link");
+
+    const QString singleLineText = "this text has a <a href=\\\"http://qt-project.org/single\\\">link</a> in it";
+    const QString singleLineLink = "http://qt-project.org/single";
+    const QString multipleLineText = "this text<br/>has <a href=\\\"http://qt-project.org/multiple\\\">multiple<br/>lines</a> in it";
+    const QString multipleLineLink = "http://qt-project.org/multiple";
+    const QString nestedText = "this text has a <a href=\\\"http://qt-project.org/outer\\\">nested <a href=\\\"http://qt-project.org/inner\\\">link</a> in it</a>";
+    const QString outerLink = "http://qt-project.org/outer";
+    const QString innerLink = "http://qt-project.org/inner";
+
+    {
+        const TextMetrics metrics("this text has a link in it");
+
+        QTest::newRow("click on link")
+                << singleLineText << 240.
+                << ""
+                << (PointVector() << metrics.characterRectangle(18).center())
+                << singleLineLink;
+        QTest::newRow("click on text")
+                << singleLineText << 240.
+                << ""
+                << (PointVector() << metrics.characterRectangle(13).center())
+                << QString();
+        QTest::newRow("drag within link")
+                << singleLineText << 240.
+                << ""
+                << (PointVector()
+                    << metrics.characterRectangle(17).center()
+                    << metrics.characterRectangle(19).center())
+                << singleLineLink;
+        QTest::newRow("drag away from link")
+                << singleLineText << 240.
+                << ""
+                << (PointVector()
+                    << metrics.characterRectangle(18).center()
+                    << metrics.characterRectangle(13).center())
+                << QString();
+        QTest::newRow("drag on to link")
+                << singleLineText << 240.
+                << ""
+                << (PointVector()
+                    << metrics.characterRectangle(13).center()
+                    << metrics.characterRectangle(18).center())
+                << QString();
+        QTest::newRow("click on bottom right aligned link")
+                << singleLineText << 240.
+                << "horizontalAlignment: Text.AlignRight; verticalAlignment: Text.AlignBottom"
+                << (PointVector() << metrics.characterRectangle(18, Qt::AlignRight, Qt::AlignBottom).center())
+                << singleLineLink;
+        QTest::newRow("click on center aligned link")
+                << singleLineText << 240.
+                << "horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter"
+                << (PointVector() << metrics.characterRectangle(18, Qt::AlignHCenter, Qt::AlignVCenter).center())
+                << singleLineLink;
+        QTest::newRow("click on rich text link")
+                << singleLineText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector() << metrics.characterRectangle(18).center())
+                << singleLineLink;
+        QTest::newRow("click on rich text")
+                << singleLineText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector() << metrics.characterRectangle(13).center())
+                << QString();
+        QTest::newRow("click on bottom right aligned rich text link")
+                << singleLineText << 240.
+                << "textFormat: Text.RichText; horizontalAlignment: Text.AlignRight; verticalAlignment: Text.AlignBottom"
+                << (PointVector() << metrics.characterRectangle(18, Qt::AlignRight, Qt::AlignBottom).center())
+                << singleLineLink;
+        QTest::newRow("click on center aligned rich text link")
+                << singleLineText << 240.
+                << "textFormat: Text.RichText; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter"
+                << (PointVector() << metrics.characterRectangle(18, Qt::AlignHCenter, Qt::AlignVCenter).center())
+                << singleLineLink;
+    } {
+        const TextMetrics metrics("this text has a li", Qt::ElideRight);
+        QTest::newRow("click on right elided link")
+                << singleLineText << metrics.width() +  2
+                << "elide: Text.ElideRight"
+                << (PointVector() << metrics.characterRectangle(17).center())
+                << singleLineLink;
+    } {
+        const TextMetrics metrics("ink in it", Qt::ElideLeft);
+        QTest::newRow("click on left elided link")
+                << singleLineText << metrics.width() +  2
+                << "elide: Text.ElideLeft"
+                << (PointVector() << metrics.characterRectangle(2).center())
+                << singleLineLink;
+    } {
+        const TextMetrics metrics("this text\nhas multiple\nlines in it");
+        QTest::newRow("click on second line")
+                << multipleLineText << 240.
+                << ""
+                << (PointVector() << metrics.characterRectangle(18).center())
+                << multipleLineLink;
+        QTest::newRow("click on third line")
+                << multipleLineText << 240.
+                << ""
+                << (PointVector() << metrics.characterRectangle(25).center())
+                << multipleLineLink;
+        QTest::newRow("drag from second line to third")
+                << multipleLineText << 240.
+                << ""
+                << (PointVector()
+                    << metrics.characterRectangle(18).center()
+                    << metrics.characterRectangle(25).center())
+                << multipleLineLink;
+        QTest::newRow("click on rich text second line")
+                << multipleLineText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector() << metrics.characterRectangle(18).center())
+                << multipleLineLink;
+        QTest::newRow("click on rich text third line")
+                << multipleLineText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector() << metrics.characterRectangle(25).center())
+                << multipleLineLink;
+        QTest::newRow("drag rich text from second line to third")
+                << multipleLineText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector()
+                    << metrics.characterRectangle(18).center()
+                    << metrics.characterRectangle(25).center())
+                << multipleLineLink;
+    } {
+        const TextMetrics metrics("this text has a nested link in it");
+        QTest::newRow("click on left outer link")
+                << nestedText << 240.
+                << ""
+                << (PointVector() << metrics.characterRectangle(22).center())
+                << outerLink;
+        QTest::newRow("click on right outer link")
+                << nestedText << 240.
+                << ""
+                << (PointVector() << metrics.characterRectangle(27).center())
+                << outerLink;
+        QTest::newRow("click on inner link left")
+                << nestedText << 240.
+                << ""
+                << (PointVector() << metrics.characterRectangle(23).center())
+                << innerLink;
+        QTest::newRow("click on inner link right")
+                << nestedText << 240.
+                << ""
+                << (PointVector() << metrics.characterRectangle(26).center())
+                << innerLink;
+        QTest::newRow("drag from inner to outer link")
+                << nestedText << 240.
+                << ""
+                << (PointVector()
+                    << metrics.characterRectangle(25).center()
+                    << metrics.characterRectangle(30).center())
+                << QString();
+        QTest::newRow("drag from outer to inner link")
+                << nestedText << 240.
+                << ""
+                << (PointVector()
+                    << metrics.characterRectangle(30).center()
+                    << metrics.characterRectangle(25).center())
+                << QString();
+        QTest::newRow("click on left outer rich text link")
+                << nestedText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector() << metrics.characterRectangle(22).center())
+                << outerLink;
+        QTest::newRow("click on right outer rich text link")
+                << nestedText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector() << metrics.characterRectangle(27).center())
+                << outerLink;
+        QTest::newRow("click on inner rich text link left")
+                << nestedText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector() << metrics.characterRectangle(23).center())
+                << innerLink;
+        QTest::newRow("click on inner rich text link right")
+                << nestedText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector() << metrics.characterRectangle(26).center())
+                << innerLink;
+        QTest::newRow("drag from inner to outer rich text link")
+                << nestedText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector()
+                    << metrics.characterRectangle(25).center()
+                    << metrics.characterRectangle(30).center())
+                << QString();
+        QTest::newRow("drag from outer to inner rich text link")
+                << nestedText << 240.
+                << "textFormat: Text.RichText"
+                << (PointVector()
+                    << metrics.characterRectangle(30).center()
+                    << metrics.characterRectangle(25).center())
+                << QString();
+    }
+}
+
 void tst_qquicktext::clickLink()
 {
+    QFETCH(QString, text);
+    QFETCH(qreal, width);
+    QFETCH(QString, bindings);
+    QFETCH(PointVector, mousePositions);
+    QFETCH(QString, link);
+
+    QString componentStr =
+            "import QtQuick 2.0\nText {\n"
+                "width: " + QString::number(width) + "\n"
+                "height: 320\n"
+                "text: \"" + text + "\"\n"
+                "" + bindings + "\n"
+            "}";
+    QQmlComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
+
+    QVERIFY(textObject != 0);
+
+    LinkTest test;
+    QObject::connect(textObject, SIGNAL(linkActivated(QString)), &test, SLOT(linkClicked(QString)));
+
+    QVERIFY(mousePositions.count() > 0);
+
+    QPointF mousePosition = mousePositions.first();
     {
-        QString componentStr = "import QtQuick 2.0\nText { text: \"<a href=\\\"http://qt.nokia.com\\\">Hello world!</a>\" }";
-        QQmlComponent textComponent(&engine);
-        textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-        QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
-
-        QVERIFY(textObject != 0);
-
-        LinkTest test;
-        QObject::connect(textObject, SIGNAL(linkActivated(QString)), &test, SLOT(linkClicked(QString)));
-
-        {
-            QMouseEvent me(QEvent::MouseButtonPress,QPointF(textObject->x()/2, textObject->y()/2), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-            static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&me);
-
-        }
-
-        {
-            QMouseEvent me(QEvent::MouseButtonRelease,QPointF(textObject->x()/2, textObject->y()/2), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-            static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&me);
-
-        }
-
-
-        QCOMPARE(test.link, QLatin1String("http://qt.nokia.com"));
-
-        delete textObject;
+        QMouseEvent me(QEvent::MouseButtonPress, mousePosition, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&me);
     }
+
+    for (int i = 1; i < mousePositions.count(); ++i) {
+        mousePosition = mousePositions.at(i);
+
+        QMouseEvent me(QEvent::MouseMove, mousePosition, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&me);
+    }
+
+    {
+        QMouseEvent me(QEvent::MouseButtonRelease, mousePosition, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&me);
+    }
+
+    QCOMPARE(test.link, link);
+
+    delete textObject;
 }
 
 void tst_qquicktext::baseUrl()

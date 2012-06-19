@@ -78,4 +78,37 @@ QQuickItem *QQuickTextUtil::createCursor(
     return item;
 }
 
+qreal QQuickTextUtil::alignedX(const QRectF &rect, qreal width, int alignment)
+{
+    qreal x = 0;
+    switch (alignment) {
+    case Qt::AlignLeft:
+    case Qt::AlignJustify:
+        break;
+    case Qt::AlignRight:
+        x = width - rect.width();
+        break;
+    case Qt::AlignHCenter:
+        x = (width - rect.width()) / 2;
+        break;
+    }
+    return x;
+}
+
+qreal QQuickTextUtil::alignedY(const QRectF &rect, const qreal height, int alignment)
+{
+    qreal y = 0;
+    switch (alignment) {
+    case Qt::AlignTop:
+        break;
+    case Qt::AlignBottom:
+        y = height - rect.height();
+        break;
+    case Qt::AlignVCenter:
+        y = (height - rect.height()) / 2;
+        break;
+    }
+    return y;
+}
+
 QT_END_NAMESPACE

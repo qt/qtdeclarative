@@ -47,6 +47,8 @@
 #include <private/qsgadaptationlayer_p.h>
 #include "qquicktextnode_p.h"
 #include "qquickimage_p_p.h"
+#include "qquicktextutil_p.h"
+
 #include <QtQuick/private/qsgtexture_p.h>
 
 #include <QtQml/qqmlinfo.h>
@@ -2011,35 +2013,12 @@ QRectF QQuickText::boundingRect() const
     Q_D(const QQuickText);
 
     QRectF rect = d->layedOutTextRect;
+    rect.moveLeft(QQuickTextUtil::alignedX(rect, width(), d->hAlign));
+    rect.moveTop(QQuickTextUtil::alignedY(rect, height(), d->vAlign));
+
     if (d->style != Normal)
         rect.adjust(-1, 0, 1, 2);
-
     // Could include font max left/right bearings to either side of rectangle.
-
-    qreal w = width();
-    switch (d->hAlign) {
-    case AlignLeft:
-    case AlignJustify:
-        break;
-    case AlignRight:
-        rect.moveLeft(w - rect.width());
-        break;
-    case AlignHCenter:
-        rect.moveLeft((w - rect.width()) / 2);
-        break;
-    }
-
-    qreal h = height();
-    switch (d->vAlign) {
-    case AlignTop:
-        break;
-    case AlignBottom:
-        rect.moveTop(h - rect.height());
-        break;
-    case AlignVCenter:
-        rect.moveTop((h - rect.height()) / 2);
-        break;
-    }
 
     return rect;
 }
@@ -2131,7 +2110,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     d->updateType = QQuickTextPrivate::UpdateNone;
 
-    QRectF bounds = boundingRect();
+    const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect, height(), d->vAlign);
 
     // We need to make sure the layout is done in the current thread
 #if defined(Q_OS_MAC)
@@ -2156,27 +2135,28 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     if (d->richText) {
         d->ensureDoc();
-        node->addTextDocument(bounds.topLeft(), d->extra->doc, color, d->style, styleColor, linkColor);
-    } else if (d->elideMode == QQuickText::ElideNone || bounds.width() > 0.) {
+        const qreal dx = QQuickTextUtil::alignedX(d->layedOutTextRect, width(), d->hAlign);
+        node->addTextDocument(QPointF(dx, dy), d->extra->doc, color, d->style, styleColor, linkColor);
+    } else if (d->elideMode == QQuickText::ElideNone || d->layedOutTextRect.width() > 0.) {
         int unelidedLineCount = d->lineCount;
         if (d->elideLayout)
             unelidedLineCount -= 1;
         if (unelidedLineCount > 0) {
             node->addTextLayout(
-                        QPoint(0, bounds.y()),
+                        QPoint(0, dy),
                         &d->layout,
                         color, d->style, styleColor, linkColor,
                         QColor(), QColor(), -1, -1,
                         0, unelidedLineCount);
         }
         if (d->elideLayout)
-            node->addTextLayout(QPoint(0, bounds.y()), d->elideLayout, color, d->style, styleColor, linkColor);
+            node->addTextLayout(QPoint(0, dy), d->elideLayout, color, d->style, styleColor, linkColor);
     }
 
     foreach (QQuickStyledTextImgTag *img, d->visibleImgTags) {
         QQuickPixmap *pix = img->pix;
         if (pix && pix->isReady())
-            node->addImage(QRectF(img->pos.x(), img->pos.y() + bounds.y(), pix->width(), pix->height()), pix->image());
+            node->addImage(QRectF(img->pos.x(), img->pos.y() + dy, pix->width(), pix->height()), pix->image());
     }
     return node;
 }
@@ -2397,24 +2377,38 @@ void QQuickText::componentComplete()
         d->updateLayout();
 }
 
-
-QString QQuickTextPrivate::anchorAt(const QPointF &mousePos)
+QString QQuickTextPrivate::anchorAt(const QTextLayout *layout, const QPointF &mousePos)
 {
-    if (styledText) {
-        for (int i = 0; i < layout.lineCount(); ++i) {
-            QTextLine line = layout.lineAt(i);
-            if (line.naturalTextRect().contains(mousePos)) {
-                int charPos = line.xToCursor(mousePos.x());
-                foreach (const QTextLayout::FormatRange &formatRange, layout.additionalFormats()) {
-                    if (formatRange.format.isAnchor()
-                            && charPos >= formatRange.start
-                            && charPos <= formatRange.start + formatRange.length) {
-                        return formatRange.format.anchorHref();
-                    }
+    for (int i = 0; i < layout->lineCount(); ++i) {
+        QTextLine line = layout->lineAt(i);
+        if (line.naturalTextRect().contains(mousePos)) {
+            int charPos = line.xToCursor(mousePos.x(), QTextLine::CursorOnCharacter);
+            foreach (const QTextLayout::FormatRange &formatRange, layout->additionalFormats()) {
+                if (formatRange.format.isAnchor()
+                        && charPos >= formatRange.start
+                        && charPos < formatRange.start + formatRange.length) {
+                    return formatRange.format.anchorHref();
                 }
-                break;
             }
+            break;
         }
+    }
+    return QString();
+}
+
+QString QQuickTextPrivate::anchorAt(const QPointF &mousePos) const
+{
+    Q_Q(const QQuickText);
+    QPointF translatedMousePos = mousePos;
+    translatedMousePos.ry() -= QQuickTextUtil::alignedY(layedOutTextRect, q->height(), vAlign);
+    if (styledText) {
+        QString link = anchorAt(&layout, translatedMousePos);
+        if (link.isEmpty() && elideLayout)
+            link = anchorAt(elideLayout, translatedMousePos);
+        return link;
+    } else if (richText && extra.isAllocated() && extra->doc) {
+        translatedMousePos.rx() -= QQuickTextUtil::alignedX(layedOutTextRect, q->width(), hAlign);
+        return extra->doc->documentLayout()->anchorAt(translatedMousePos);
     }
     return QString();
 }
@@ -2431,14 +2425,8 @@ void QQuickText::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickText);
 
     QString link;
-    if (d->isLinkActivatedConnected()) {
-        if (d->styledText)
-            link = d->anchorAt(event->localPos());
-        else if (d->richText) {
-            d->ensureDoc();
-            link = d->extra->doc->documentLayout()->anchorAt(event->localPos());
-        }
-    }
+    if (d->isLinkActivatedConnected())
+        link = d->anchorAt(event->localPos());
 
     if (link.isEmpty()) {
         event->setAccepted(false);
@@ -2450,8 +2438,8 @@ void QQuickText::mousePressEvent(QMouseEvent *event)
 
     if (!event->isAccepted())
         QQuickItem::mousePressEvent(event);
-
 }
+
 
 /*! \internal */
 void QQuickText::mouseReleaseEvent(QMouseEvent *event)
@@ -2461,14 +2449,8 @@ void QQuickText::mouseReleaseEvent(QMouseEvent *event)
     // ### confirm the link, and send a signal out
 
     QString link;
-    if (d->isLinkActivatedConnected()) {
-        if (d->styledText)
-            link = d->anchorAt(event->localPos());
-        else if (d->richText) {
-            d->ensureDoc();
-            link = d->extra->doc->documentLayout()->anchorAt(event->localPos());
-        }
-    }
+    if (d->isLinkActivatedConnected())
+        link = d->anchorAt(event->localPos());
 
     if (!link.isEmpty() && d->extra.isAllocated() && d->extra->activeLink == link)
         emit linkActivated(d->extra->activeLink);
