@@ -852,19 +852,45 @@ bool QQmlImportsPrivate::addImport(const QQmlDirComponents &qmldircomponentsnetw
                 typedef QQmlDirComponents::const_iterator ConstIterator;
                 typedef QList<QQmlDirParser::Script>::const_iterator SConstIterator;
 
-                ConstIterator cend = qmldircomponents.end();
-                for (ConstIterator cit = qmldircomponents.begin(); cit != cend; ++cit) {
+                ConstIterator cend = qmldircomponents.constEnd();
+                for (ConstIterator cit = qmldircomponents.constBegin(); cit != cend; ++cit) {
+                    for (ConstIterator cit2 = qmldircomponents.constBegin(); cit2 != cit; ++cit2) {
+                        if ((cit2->typeName == cit->typeName) &&
+                            (cit2->majorVersion == cit->majorVersion) &&
+                            (cit2->minorVersion == cit->minorVersion)) {
+                            // This is entry clashes with a predecessor
+                            QQmlError error;
+                            error.setDescription(tr("\"%1\" version %2.%3 is already defined in module \"%4\"")
+                                                 .arg(cit->typeName).arg(cit->majorVersion).arg(cit->minorVersion).arg(importedUri));
+                            errors->prepend(error);
+                            return false;
+                        }
+                    }
+
                     if (cit->majorVersion == vmaj) {
                         lowest_min = qMin(lowest_min, cit->minorVersion);
                         highest_min = qMax(highest_min, cit->minorVersion);
                     }
                 }
 
-                for (SConstIterator cit = qmldirscripts.constBegin();
-                     cit != qmldirscripts.constEnd(); ++cit) {
-                    if (cit->majorVersion == vmaj) {
-                        lowest_min = qMin(lowest_min, cit->minorVersion);
-                        highest_min = qMax(highest_min, cit->minorVersion);
+                SConstIterator send = qmldirscripts.constEnd();
+                for (SConstIterator sit = qmldirscripts.constBegin(); sit != send; ++sit) {
+                    for (SConstIterator sit2 = qmldirscripts.constBegin(); sit2 != sit; ++sit2) {
+                        if ((sit2->nameSpace == sit->nameSpace) &&
+                            (sit2->majorVersion == sit->majorVersion) &&
+                            (sit2->minorVersion == sit->minorVersion)) {
+                            // This is entry clashes with a predecessor
+                            QQmlError error;
+                            error.setDescription(tr("\"%1\" version %2.%3 is already defined in module \"%4\"")
+                                                 .arg(sit->nameSpace).arg(sit->majorVersion).arg(sit->minorVersion).arg(importedUri));
+                            errors->prepend(error);
+                            return false;
+                        }
+                    }
+
+                    if (sit->majorVersion == vmaj) {
+                        lowest_min = qMin(lowest_min, sit->minorVersion);
+                        highest_min = qMax(highest_min, sit->minorVersion);
                     }
                 }
 
