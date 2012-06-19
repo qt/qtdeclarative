@@ -42,7 +42,7 @@
 import QtQuick 2.0
 import "content" as Content
 import "content/snake.js" as Logic
-Item{
+
 Rectangle {
     id: screen;
     SystemPalette { id: activePalette }
@@ -269,5 +269,4 @@ Rectangle {
         }
     ]
 
-}
 }
