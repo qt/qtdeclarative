@@ -45,6 +45,7 @@ Rectangle {
     id: main
     width: 320
     height: 480
+    color: "#d6d6d6"
 
     property string searchTerms: ""
     property int inAnimDur: 250

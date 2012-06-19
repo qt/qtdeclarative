@@ -75,11 +75,6 @@ Item {
         front.visible = frontShown
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: "white"
-    }
-
     function flipUp(start) {
         effect.visible = true;
         effect.sourceA = effect.source1

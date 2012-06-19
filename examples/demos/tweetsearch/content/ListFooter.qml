@@ -114,17 +114,41 @@ Rectangle {
             }
         }
 
-        AnimatedSprite {
+        SpriteSequence {
             id: sprite
             anchors.horizontalCenter: parent.horizontalCenter
             width: 320
             height: 300
-            source: "resources/bird-anim-sprites.png"
-            frameCount: 6
-            frameRate: 3
-            frameWidth: 320
-            frameHeight: 360
             running: true
+            interpolate: false
+            Sprite {
+                name: "bird"
+                source: "resources/bird-anim-sprites.png"
+                frameCount: 1
+                frameRate: 1
+                frameWidth: 320
+                frameHeight: 300
+                to: { "bird":10, "trill":1, "blink":1 }
+            }
+            Sprite {
+                name: "trill"
+                source: "resources/bird-anim-sprites.png"
+                frameCount: 5
+                frameRate: 3
+                frameWidth: 320
+                frameHeight: 300
+                to: {"bird":1}
+            }
+            Sprite {
+                name: "blink"
+                source: "resources/bird-anim-sprites.png"
+                frameCount: 1
+                frameRate: 3
+                frameWidth: 320
+                frameHeight: 300
+                frameX: 1600
+                to: {"bird":1}
+            }
         }
     }
 }

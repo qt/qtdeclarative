@@ -61,9 +61,9 @@ Item {
         Text {
             id: label
             anchors.verticalCenter: arrow.verticalCenter
-            text: "Pull to refresh"
-            font.pixelSize: 20
-            color: "#c1c1c1"
+            text: "Pull to refresh...    "
+            font.pixelSize: 18
+            color: "#999999"
         }
     }
 
@@ -74,7 +74,7 @@ Item {
         },
         State {
             name: "pulled"; when: mainListView.contentY < -120
-            PropertyChanges { target: label; text: "Release to refresh" }
+            PropertyChanges { target: label; text: "Release to refresh..." }
             PropertyChanges { target: arrow; rotation: 0 }
         }
     ]
