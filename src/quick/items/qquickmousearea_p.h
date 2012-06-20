@@ -50,8 +50,11 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDragAttached;
 class QQuickMouseEvent;
+
+#ifndef QT_NO_DRAGANDDROP
+
+class QQuickDragAttached;
 class Q_AUTOTEST_EXPORT QQuickDrag : public QObject
 {
     Q_OBJECT
@@ -118,6 +121,8 @@ private:
     Q_DISABLE_COPY(QQuickDrag)
 };
 
+#endif // QT_NO_DRAGANDDROP
+
 class QQuickMouseAreaPrivate;
 class QQuickWheelEvent;
 // used in QtLocation
@@ -133,7 +138,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedChanged)
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged)
+#ifndef QT_NO_DRAGANDDROP
     Q_PROPERTY(QQuickDrag *drag READ drag CONSTANT) //### add flicking to QQuickDrag or add a QQuickFlick ???
+#endif
     Q_PROPERTY(bool preventStealing READ preventStealing WRITE setPreventStealing NOTIFY preventStealingChanged)
     Q_PROPERTY(bool propagateComposedEvents READ propagateComposedEvents WRITE setPropagateComposedEvents NOTIFY propagateComposedEventsChanged)
 
@@ -158,7 +165,9 @@ public:
     bool hoverEnabled() const;
     void setHoverEnabled(bool h);
 
+#ifndef QT_NO_DRAGANDDROP
     QQuickDrag *drag();
+#endif
 
     bool preventStealing() const;
     void setPreventStealing(bool prevent);
@@ -223,8 +232,10 @@ private:
 
 QT_END_NAMESPACE
 
+#ifndef QT_NO_DRAGANDDROP
 QML_DECLARE_TYPE(QQuickDrag)
 QML_DECLARE_TYPEINFO(QQuickDrag, QML_HAS_ATTACHED_PROPERTIES)
+#endif
 QML_DECLARE_TYPE(QQuickMouseArea)
 
 QT_END_HEADER

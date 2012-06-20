@@ -96,7 +96,9 @@ public:
     bool doubleClick : 1;
     bool preventStealing : 1;
     bool propagateComposedEvents : 1;
+#ifndef QT_NO_DRAGANDDROP
     QQuickDrag *drag;
+#endif
     QPointF startScene;
     QPointF targetStartPos;
     QPointF lastPos;

@@ -49,6 +49,8 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 
+#ifndef QT_NO_DRAGANDDROP
+
 QT_BEGIN_NAMESPACE
 
 class QQuickDragAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
@@ -614,3 +616,5 @@ void QQuickDragAttached::cancel()
 }
 
 QT_END_NAMESPACE
+
+#endif // QT_NO_DRAGANDDROP

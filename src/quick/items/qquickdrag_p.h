@@ -49,6 +49,7 @@
 #include <QtCore/qmimedata.h>
 #include <QtCore/qstringlist.h>
 
+#ifndef QT_NO_DRAGANDDROP
 
 QT_BEGIN_HEADER
 
@@ -205,5 +206,7 @@ private:
 QT_END_NAMESPACE
 
 QT_END_HEADER
+
+#endif // QT_NO_DRAGANDDROP
 
 #endif

@@ -214,10 +214,12 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathAnimation>("QtQuick",2,0,"PathAnimation");
     qmlRegisterType<QQuickPathInterpolator>("QtQuick",2,0,"PathInterpolator");
 
+#ifndef QT_NO_DRAGANDDROP
     qmlRegisterType<QQuickDropArea>("QtQuick", 2, 0, "DropArea");
     qmlRegisterType<QQuickDropEvent>();
     qmlRegisterType<QQuickDropAreaDrag>();
     qmlRegisterUncreatableType<QQuickDrag>("QtQuick", 2, 0, "Drag", QQuickDragAttached::tr("Drag is only available via attached properties"));
+#endif
 
     qmlRegisterType<QQuickMultiPointTouchArea>("QtQuick", 2, 0, "MultiPointTouchArea");
     qmlRegisterType<QQuickTouchPoint>("QtQuick", 2, 0, "TouchPoint");

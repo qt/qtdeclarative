@@ -59,6 +59,8 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
 static const int PressAndHoldDelay = 800;
 
+#ifndef QT_NO_DRAGANDDROP
+
 QQuickDrag::QQuickDrag(QObject *parent)
 : QObject(parent), _target(0), _axis(XandYAxis), _xmin(-FLT_MAX),
 _xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false)
@@ -186,16 +188,23 @@ QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
     return new QQuickDragAttached(obj);
 }
 
+#endif // QT_NO_DRAGANDDROP
+
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), hovered(false), pressed(false), longPress(false),
   moved(false), dragX(true), dragY(true), stealMouse(false), doubleClick(false), preventStealing(false),
-  propagateComposedEvents(false), drag(0)
+  propagateComposedEvents(false)
+#ifndef QT_NO_DRAGANDDROP
+  , drag(0)
+#endif
 {
 }
 
 QQuickMouseAreaPrivate::~QQuickMouseAreaPrivate()
 {
+#ifndef QT_NO_DRAGANDDROP
     delete drag;
+#endif
 }
 
 void QQuickMouseAreaPrivate::init()
@@ -696,18 +705,22 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
     else {
         d->longPress = false;
         d->saveEvent(event);
+#ifndef QT_NO_DRAGANDDROP
         if (d->drag)
             d->drag->setActive(false);
+#endif
         setHovered(true);
         d->startScene = event->windowPos();
         d->pressAndHoldTimer.start(PressAndHoldDelay, this);
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(true));
 
+#ifndef QT_NO_DRAGANDDROP
         if (d->drag) {
             d->dragX = drag()->axis() & QQuickDrag::XAxis;
             d->dragY = drag()->axis() & QQuickDrag::YAxis;
         }
+#endif
     }
 }
 
@@ -729,6 +742,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
     else if (!d->hovered && isInside)
         setHovered(true);
 
+#ifndef QT_NO_DRAGANDDROP
     if (d->drag && d->drag->target()) {
         if (!d->moved) {
             d->targetStartPos = d->drag->target()->parentItem()
@@ -789,6 +803,8 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 
         d->moved = true;
     }
+#endif
+
     QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
     emit mouseXChanged(&me);
     me.setPosition(d->lastPos);
@@ -806,8 +822,10 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
     } else {
         d->saveEvent(event);
         setPressed(false);
+#ifndef QT_NO_DRAGANDDROP
         if (d->drag)
             d->drag->setActive(false);
+#endif
         // If we don't accept hover, we need to reset containsMouse.
         if (!acceptHoverEvents())
             setHovered(false);
@@ -969,7 +987,13 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
 bool QQuickMouseArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickMouseArea);
-    if (!d->pressed && (!d->enabled || !isVisible() || !d->drag || !d->drag->filterChildren()))
+    if (!d->pressed &&
+            (!d->enabled || !isVisible()
+#ifndef QT_NO_DRAGANDDROP
+             || !d->drag || !d->drag->filterChildren()
+#endif
+            )
+       )
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::MouseButtonPress:
@@ -988,7 +1012,11 @@ void QQuickMouseArea::timerEvent(QTimerEvent *event)
     Q_D(QQuickMouseArea);
     if (event->timerId() == d->pressAndHoldTimer.timerId()) {
         d->pressAndHoldTimer.stop();
+#ifndef QT_NO_DRAGANDDROP
         bool dragged = d->drag && d->drag->active();
+#else
+        bool dragged = false;
+#endif
         if (d->pressed && dragged == false && d->hovered == true) {
             d->longPress = true;
             QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
@@ -1129,7 +1157,11 @@ void QQuickMouseArea::setAcceptedButtons(Qt::MouseButtons buttons)
 bool QQuickMouseArea::setPressed(bool p)
 {
     Q_D(QQuickMouseArea);
+#ifndef QT_NO_DRAGANDDROP
     bool dragged = d->drag && d->drag->active();
+#else
+    bool dragged = false;
+#endif
     bool isclick = d->pressed == true && p == false && dragged == false && d->hovered == true;
 
     if (d->pressed != p) {
@@ -1197,6 +1229,7 @@ bool QQuickMouseArea::setPressed(bool p)
 
 */
 
+#ifndef QT_NO_DRAGANDDROP
 QQuickDrag *QQuickMouseArea::drag()
 {
     Q_D(QQuickMouseArea);
@@ -1204,6 +1237,7 @@ QQuickDrag *QQuickMouseArea::drag()
         d->drag = new QQuickDrag;
     return d->drag;
 }
+#endif
 
 QSGNode *QQuickMouseArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {

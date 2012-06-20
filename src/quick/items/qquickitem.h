@@ -384,10 +384,12 @@ protected:
     virtual void hoverEnterEvent(QHoverEvent *event);
     virtual void hoverMoveEvent(QHoverEvent *event);
     virtual void hoverLeaveEvent(QHoverEvent *event);
+#ifndef QT_NO_DRAGANDDROP
     virtual void dragEnterEvent(QDragEnterEvent *);
     virtual void dragMoveEvent(QDragMoveEvent *);
     virtual void dragLeaveEvent(QDragLeaveEvent *);
     virtual void dropEvent(QDropEvent *);
+#endif
     virtual bool childMouseEventFilter(QQuickItem *, QEvent *);
     virtual void windowDeactivateEvent();
 

@@ -3254,6 +3254,7 @@ void QQuickItem::hoverLeaveEvent(QHoverEvent *event)
     Q_UNUSED(event);
 }
 
+#ifndef QT_NO_DRAGANDDROP
 void QQuickItem::dragEnterEvent(QDragEnterEvent *event)
 {
     Q_UNUSED(event);
@@ -3275,6 +3276,7 @@ void QQuickItem::dropEvent(QDropEvent *event)
 {
     Q_UNUSED(event);
 }
+#endif // QT_NO_DRAGANDDROP
 
 bool QQuickItem::childMouseEventFilter(QQuickItem *, QEvent *)
 {
@@ -3860,6 +3862,7 @@ void QQuickItemPrivate::deliverHoverEvent(QHoverEvent *e)
     }
 }
 
+#ifndef QT_NO_DRAGANDDROP
 void QQuickItemPrivate::deliverDragEvent(QEvent *e)
 {
     Q_Q(QQuickItem);
@@ -3880,6 +3883,7 @@ void QQuickItemPrivate::deliverDragEvent(QEvent *e)
         break;
     }
 }
+#endif // QT_NO_DRAGANDDROP
 
 void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 {

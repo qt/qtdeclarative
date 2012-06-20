@@ -1062,12 +1062,14 @@ bool QQuickCanvas::event(QEvent *e)
         d->clearHover();
         d->lastMousePosition = QPoint();
         break;
+#ifndef QT_NO_DRAGANDDROP
     case QEvent::DragEnter:
     case QEvent::DragLeave:
     case QEvent::DragMove:
     case QEvent::Drop:
         d->deliverDragEvent(&d->dragGrabber, e);
         break;
+#endif
     case QEvent::WindowDeactivate:
         rootItem()->windowDeactivateEvent();
         break;
@@ -1578,6 +1580,7 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     return false;
 }
 
+#ifndef QT_NO_DRAGANDDROP
 void QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *event)
 {
     Q_Q(QQuickCanvas);
@@ -1697,6 +1700,7 @@ bool QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
 
     return accepted;
 }
+#endif // QT_NO_DRAGANDDROP
 
 bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem *item, QEvent *event)
 {
@@ -1792,12 +1796,14 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
             QQuickItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
         }
         break;
+#ifndef QT_NO_DRAGANDDROP
     case QEvent::DragEnter:
     case QEvent::DragMove:
     case QEvent::DragLeave:
     case QEvent::Drop:
         QQuickItemPrivate::get(item)->deliverDragEvent(e);
         break;
+#endif
     default:
         break;
     }

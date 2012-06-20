@@ -112,7 +112,9 @@ public:
 
     QQuickItem *activeFocusItem;
     QQuickItem *mouseGrabberItem;
+#ifndef QT_NO_DRAGANDDROP
     QQuickDragGrabber dragGrabber;
+#endif
     int touchMouseId;
     ulong touchMousePressTimestamp;
 
@@ -132,8 +134,10 @@ public:
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,
                         Qt::KeyboardModifiers modifiers, bool accepted);
     bool clearHover();
+#ifndef QT_NO_DRAGANDDROP
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);
     bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *);
+#endif
 
     QList<QQuickItem*> hoverItems;
     enum FocusOption {

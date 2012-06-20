@@ -49,6 +49,8 @@
 
 #include <QtGui/qevent.h>
 
+#ifndef QT_NO_DRAGANDDROP
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -161,5 +163,7 @@ QML_DECLARE_TYPE(QQuickDropEvent)
 QML_DECLARE_TYPE(QQuickDropArea)
 
 QT_END_HEADER
+
+#endif // QT_NO_DRAGANDDROP
 
 #endif // QQUICKDROPAREA_P_H

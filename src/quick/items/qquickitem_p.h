@@ -532,7 +532,9 @@ public:
     void deliverWheelEvent(QWheelEvent *);
     void deliverTouchEvent(QTouchEvent *);
     void deliverHoverEvent(QHoverEvent *);
+#ifndef QT_NO_DRAGANDDROP
     void deliverDragEvent(QEvent *);
+#endif
 
     bool calcEffectiveVisible() const;
     bool setEffectiveVisibleRecur(bool);

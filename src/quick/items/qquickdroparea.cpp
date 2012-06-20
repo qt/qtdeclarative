@@ -46,6 +46,8 @@
 
 #include <private/qqmlengine_p.h>
 
+#ifndef QT_NO_DRAGANDDROP
+
 QT_BEGIN_NAMESPACE
 
 QQuickDropAreaDrag::QQuickDropAreaDrag(QQuickDropAreaPrivate *d, QObject *parent)
@@ -429,3 +431,4 @@ void QQuickDropEvent::accept(QQmlV8Function *args)
 
 QT_END_NAMESPACE
 
+#endif // QT_NO_DRAGANDDROP
