@@ -57,7 +57,7 @@ class Q_QML_PRIVATE_EXPORT QQmlBundle
 {
     Q_DISABLE_COPY(QQmlBundle)
 public:
-    struct Q_PACKED Q_QML_PRIVATE_EXPORT Entry
+    struct Q_QML_PRIVATE_EXPORT Entry
     {
         enum Kind {
             File = 123, // Normal file
@@ -68,24 +68,24 @@ public:
         };
 
         int kind;
-        quint64 size;
+        quint32 size;
     };
 
-    struct Q_PACKED Q_QML_PRIVATE_EXPORT RawEntry : public Entry
+    struct Q_QML_PRIVATE_EXPORT RawEntry : public Entry
     {
         char data[]; // trailing data
     };
 
-    struct Q_PACKED Q_QML_PRIVATE_EXPORT FileEntry : public Entry
+    struct Q_QML_PRIVATE_EXPORT FileEntry : public Entry
     {
-        quint64 link;
+        quint32 link;
         int fileNameLength;
         char data[]; // trailing data
 
         QString fileName() const;
         bool isFileName(const QString &) const;
 
-        quint64 fileSize() const;
+        quint32 fileSize() const;
         const char *contents() const;
     };
 
@@ -112,12 +112,12 @@ public:
     static int bundleHeaderLength();
     static bool isBundleHeader(const char *, int size);
 private:
-    const Entry *findInsertPoint(quint64 size, qint64 *offset);
+    const Entry *findInsertPoint(quint32 size, qint32 *offset);
 
 private:
     QFile file;
     uchar *buffer;
-    quint64 bufferSize;
+    quint32 bufferSize;
     bool opened:1;
     bool headerWritten:1;
 };

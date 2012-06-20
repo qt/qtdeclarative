@@ -65,7 +65,7 @@ const char *QQmlBundle::FileEntry::contents() const {
     return &data[fileNameLength];
 }
 
-quint64 QQmlBundle::FileEntry::fileSize() const
+quint32 QQmlBundle::FileEntry::fileSize() const
 {
     return size - (sizeof(FileEntry) + fileNameLength);
 }
@@ -174,7 +174,7 @@ bool QQmlBundle::isBundleHeader(const char *data, int size)
 //
 // find a some empty space we can use to insert new entries.
 //
-const QQmlBundle::Entry *QQmlBundle::findInsertPoint(quint64 size, qint64 *offset)
+const QQmlBundle::Entry *QQmlBundle::findInsertPoint(quint32 size, qint32 *offset)
 {
     const char *ptr = (const char *) buffer + qmlBundleHeaderLength;
     const char *end = (const char *) buffer + bufferSize;
@@ -255,7 +255,7 @@ bool QQmlBundle::add(const QString &name, const QString &fileName)
         file.seek(file.size());
 
     FileEntry cmd;
-    const quint64 inputFileSize = inputFile.size();
+    const quint32 inputFileSize = inputFile.size();
 
     cmd.kind = Entry::File;
     cmd.link = 0;
@@ -298,7 +298,7 @@ bool QQmlBundle::addMetaLink(const QString &fileName,
 
     FileEntry cmd;
 
-    const quint64 inputFileSize = data.size();
+    const quint32 inputFileSize = data.size();
 
     cmd.kind = Entry::Link;
     cmd.link = fileEntry->link;
