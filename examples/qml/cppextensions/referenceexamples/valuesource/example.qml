@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import People 1.0
+import QtQuick 2.0  // For QColor
 
 // ![0]
 BirthdayParty {

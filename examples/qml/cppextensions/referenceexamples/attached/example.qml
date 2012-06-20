@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import People 1.0
+import QtQuick 2.0  // For QColor
 
 //! [begin]
 BirthdayParty {
@@ -58,7 +59,7 @@ BirthdayParty {
         BirthdayParty.rsvp: "2009-07-06"
     }
     // ![1]
-    Boy {
+    host: Boy {
         name: "Jack Smith"
         shoe { size: 8; color: "blue"; brand: "Puma"; price: 19.95 }
     }
