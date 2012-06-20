@@ -39,7 +39,7 @@
 ****************************************************************************/
 import QtQuick 2.0
 
-ListView {
+Item {
     //model is a list of {"name":"somename", "url":"file:///some/url/mainfile.qml"}
     //function used to add to model A) to enforce scheme B) to allow Qt.resolveUrl in url assignments
     function addExample(name, desc, url)
@@ -51,9 +51,13 @@ ListView {
         ei.visible = false;
     }
 
-    clip: true
-    delegate: SimpleLauncherDelegate{exampleItem: ei}
-    model: ListModel {id:myModel}
+    ListView {
+        clip: true
+        delegate: SimpleLauncherDelegate{exampleItem: ei}
+        model: ListModel {id:myModel}
+        anchors.fill: parent
+    }
+
     Item {
         id: ei
         visible: false
@@ -73,6 +77,7 @@ ListView {
             //Eats mouse events
         }
         Loader{
+            focus: true
             source: ei.exampleUrl
             anchors.fill: parent
         }
