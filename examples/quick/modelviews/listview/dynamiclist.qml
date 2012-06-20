@@ -88,7 +88,7 @@ Rectangle {
         Item {
 //! [0]
             id: delegateItem
-            width: listView.width; height: 100
+            width: listView.width; height: 80
             clip: true
 
             Column {
@@ -173,7 +173,7 @@ Rectangle {
 //! [1]
             ListView.onAdd: SequentialAnimation {
                 PropertyAction { target: delegateItem; property: "height"; value: 0 }
-                NumberAnimation { target: delegateItem; property: "height"; to: 55; duration: 250; easing.type: Easing.InOutQuad }
+                NumberAnimation { target: delegateItem; property: "height"; to: 80; duration: 250; easing.type: Easing.InOutQuad }
             }
 
             ListView.onRemove: SequentialAnimation {
