@@ -43,6 +43,7 @@
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlcontext.h>
 #include <QtCore/QDateTime>
 #include <qcolor.h>
 #include "../../shared/util.h"
@@ -1227,9 +1228,30 @@ static void setTimeZone(const QByteArray &tz)
 #endif
 }
 
+class DateFormatter : public QObject
+{
+    Q_OBJECT
+public:
+    DateFormatter() : QObject() {}
+
+    Q_INVOKABLE QString getLocalizedForm(const QString &isoTimestamp);
+};
+
+QString DateFormatter::getLocalizedForm(const QString &isoTimestamp)
+{
+    QDateTime input = QDateTime::fromString(isoTimestamp, Qt::ISODate);
+    QLocale locale;
+    return locale.toString(input);
+}
+
 void tst_qqmllocale::timeZoneUpdated()
 {
-#if !defined(Q_OS_WIN32) && !defined(Q_OS_UINX)
+#if !defined(Q_OS_UNIX)
+    // Currently disabled on Windows as adjusting the timezone
+    // requires additional privileges that aren't normally
+    // enabled for a process. This can be achieved by calling
+    // AdjustTokenPrivileges() and then SetTimeZoneInformation(),
+    // which will require linking to a different library to access that API.
     QSKIP("Timezone manipulation not available for this platform");
 #endif
 
@@ -1238,7 +1260,11 @@ void tst_qqmllocale::timeZoneUpdated()
     // Set the timezone to Brisbane time
     setTimeZone(QByteArray("AEST-10:00"));
 
+    DateFormatter formatter;
+
     QQmlEngine e;
+    e.rootContext()->setContextObject(&formatter);
+
     QQmlComponent c(&e, testFileUrl("timeZoneUpdated.qml"));
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(obj);
@@ -1251,6 +1277,7 @@ void tst_qqmllocale::timeZoneUpdated()
 
     // Reset to original time
     setTimeZone(original);
+    QMetaObject::invokeMethod(obj.data(), "resetTimeZone");
 
     QCOMPARE(obj->property("success").toBool(), true);
 }
