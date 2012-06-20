@@ -652,6 +652,8 @@ void QQuickRenderThreadSingleContextWindowManager::run()
         }
         inSync = false;
 
+        handleRemovedWindows();
+
         // Wake GUI after sync to let it continue animating and event processing.
         allowMainThreadProcessingFlag = true;
         wake();
@@ -726,8 +728,6 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 #endif
 
         lock();
-
-        handleRemovedWindows();
 
         // Update sizes...
         for (QHash<QQuickWindow *, WindowData *>::const_iterator it = m_rendered_windows.constBegin();
