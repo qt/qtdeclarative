@@ -150,10 +150,10 @@ void FileInfoThread::setShowDirs(bool showFolders)
     condition.wakeAll();
 }
 
-void FileInfoThread::setShowDirsFirst(bool showDirsFirst)
+void FileInfoThread::setShowDirsFirst(bool show)
 {
     QMutexLocker locker(&mutex);
-    showDirsFirst = showDirsFirst;
+    showDirsFirst = show;
     folderUpdate = true;
     condition.wakeAll();
 }

@@ -71,7 +71,7 @@ public:
     void setSortFlags(QDir::SortFlags flags);
     void setNameFilters(const QStringList & nameFilters);
     void setShowDirs(bool showFolders);
-    void setShowDirsFirst(bool showDirsFirst);
+    void setShowDirsFirst(bool show);
     void setShowDotDot(bool on);
     void setShowOnlyReadable(bool on);
 
