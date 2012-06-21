@@ -340,6 +340,10 @@ private Q_SLOTS:
     void q_updateAlignment();
     void triggerPreprocess();
 
+#ifndef QT_NO_VALIDATOR
+    void q_validatorChanged();
+#endif
+
 private:
     friend class QQuickTextUtil;
 

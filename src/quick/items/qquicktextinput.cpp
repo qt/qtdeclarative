@@ -1053,12 +1053,30 @@ void QQuickTextInput::setValidator(QValidator* v)
     if (d->m_validator == v)
         return;
 
+    if (d->m_validator) {
+        qmlobject_disconnect(
+                d->m_validator, QValidator, SIGNAL(changed()),
+                this, QQuickTextInput, SLOT(q_validatorChanged()));
+    }
+
     d->m_validator = v;
+
+    if (d->m_validator) {
+        qmlobject_connect(
+                d->m_validator, QValidator, SIGNAL(changed()),
+                this, QQuickTextInput, SLOT(q_validatorChanged()));
+    }
 
     if (isComponentComplete())
         d->checkIsValid();
 
     emit validatorChanged();
+}
+
+void QQuickTextInput::q_validatorChanged()
+{
+    Q_D(QQuickTextInput);
+    d->checkIsValid();
 }
 
 #endif // QT_NO_VALIDATOR

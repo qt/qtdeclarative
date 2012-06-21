@@ -2031,6 +2031,16 @@ void tst_qquicktextinput::validators()
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblSpy.count(), 3);
 
+    // Changing the validator properties will re-evaluate whether the input is acceptable.
+    intValidator->setTop(10);
+    QCOMPARE(dblInput->property("acceptable").toBool(), false);
+    QCOMPARE(dblInput->hasAcceptableInput(), false);
+    QCOMPARE(dblSpy.count(), 4);
+    intValidator->setTop(12);
+    QCOMPARE(dblInput->property("acceptable").toBool(), true);
+    QCOMPARE(dblInput->hasAcceptableInput(), true);
+    QCOMPARE(dblSpy.count(), 5);
+
     QQuickTextInput *strInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("strInput")));
     QVERIFY(strInput);
     QSignalSpy strSpy(strInput, SIGNAL(acceptableInputChanged()));
