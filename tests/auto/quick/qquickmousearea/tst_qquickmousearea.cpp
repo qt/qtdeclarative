@@ -50,23 +50,28 @@
 #include "../../shared/util.h"
 #include <QtGui/qstylehints.h>
 
-//#define OLDWAY
-
 class tst_QQuickMouseArea: public QQmlDataTest
 {
     Q_OBJECT
 private slots:
     void dragProperties();
     void resetDrag();
+    void dragging_data() { acceptedButton_data(); }
     void dragging();
+    void invalidDrag_data() { rejectedButton_data(); }
+    void invalidDrag();
     void setDragOnPressed();
     void updateMouseAreaPosOnClick();
     void updateMouseAreaPosOnResize();
     void noOnClickedWithPressAndHold();
     void onMousePressRejected();
     void pressedCanceledOnWindowDeactivate();
+    void doubleClick_data() { acceptedButton_data(); }
     void doubleClick();
+    void clickTwice_data() { acceptedButton_data(); }
     void clickTwice();
+    void invalidClick_data() { rejectedButton_data(); }
+    void invalidClick();
     void pressedOrdering();
     void preventStealing();
     void clickThrough();
@@ -77,8 +82,38 @@ private slots:
     void onWheel();
 
 private:
+    void acceptedButton_data();
+    void rejectedButton_data();
+
     QQuickView *createView();
 };
+
+Q_DECLARE_METATYPE(Qt::MouseButton)
+Q_DECLARE_METATYPE(Qt::MouseButtons)
+
+void tst_QQuickMouseArea::acceptedButton_data()
+{
+    QTest::addColumn<Qt::MouseButtons>("acceptedButtons");
+    QTest::addColumn<Qt::MouseButton>("button");
+
+    QTest::newRow("left") << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton;
+    QTest::newRow("right") << Qt::MouseButtons(Qt::RightButton) << Qt::RightButton;
+    QTest::newRow("middle") << Qt::MouseButtons(Qt::MiddleButton) << Qt::MiddleButton;
+
+    QTest::newRow("left (left|right)") << Qt::MouseButtons(Qt::LeftButton | Qt::RightButton) << Qt::LeftButton;
+    QTest::newRow("right (right|middle)") << Qt::MouseButtons(Qt::RightButton | Qt::MiddleButton) << Qt::RightButton;
+    QTest::newRow("middle (left|middle)") << Qt::MouseButtons(Qt::LeftButton | Qt::MiddleButton) << Qt::MiddleButton;
+}
+
+void tst_QQuickMouseArea::rejectedButton_data()
+{
+    QTest::addColumn<Qt::MouseButtons>("acceptedButtons");
+    QTest::addColumn<Qt::MouseButton>("button");
+
+    QTest::newRow("middle (left|right)") << Qt::MouseButtons(Qt::LeftButton | Qt::RightButton) << Qt::MiddleButton;
+    QTest::newRow("left (right|middle)") << Qt::MouseButtons(Qt::RightButton | Qt::MiddleButton) << Qt::LeftButton;
+    QTest::newRow("right (left|middle)") << Qt::MouseButtons(Qt::LeftButton | Qt::MiddleButton) << Qt::RightButton;
+}
 
 void tst_QQuickMouseArea::dragProperties()
 {
@@ -195,9 +230,11 @@ void tst_QQuickMouseArea::resetDrag()
     delete canvas;
 }
 
-
 void tst_QQuickMouseArea::dragging()
 {
+    QFETCH(Qt::MouseButtons, acceptedButtons);
+    QFETCH(Qt::MouseButton, button);
+
     QQuickView *canvas = createView();
 
     canvas->setSource(testFileUrl("dragging.qml"));
@@ -211,6 +248,8 @@ void tst_QQuickMouseArea::dragging()
     QVERIFY(mouseRegion != 0);
     QVERIFY(drag != 0);
 
+    mouseRegion->setAcceptedButtons(acceptedButtons);
+
     // target
     QQuickItem *blackRect = canvas->rootObject()->findChild<QQuickItem*>("blackrect");
     QVERIFY(blackRect != 0);
@@ -218,12 +257,7 @@ void tst_QQuickMouseArea::dragging()
 
     QVERIFY(!drag->active());
 
-#ifdef OLDWAY
-    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QGuiApplication::sendEvent(canvas, &pressEvent);
-#else
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
-#endif
+    QTest::mousePress(canvas, button, 0, QPoint(100,100));
 
     QVERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 50.0);
@@ -241,17 +275,67 @@ void tst_QQuickMouseArea::dragging()
     QCOMPARE(blackRect->x(), 72.0);
     QCOMPARE(blackRect->y(), 72.0);
 
-#ifdef OLDWAY
-    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QGuiApplication::sendEvent(canvas, &releaseEvent);
-#else
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(122,122));
+    QTest::mouseRelease(canvas, button, 0, QPoint(122,122));
     QTest::qWait(50);
-#endif
 
     QVERIFY(!drag->active());
     QCOMPARE(blackRect->x(), 72.0);
     QCOMPARE(blackRect->y(), 72.0);
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::invalidDrag()
+{
+    QFETCH(Qt::MouseButtons, acceptedButtons);
+    QFETCH(Qt::MouseButton, button);
+
+    QQuickView *canvas = createView();
+
+    canvas->setSource(testFileUrl("dragging.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTest::qWait(20);
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickMouseArea *mouseRegion = canvas->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
+    QQuickDrag *drag = mouseRegion->drag();
+    QVERIFY(mouseRegion != 0);
+    QVERIFY(drag != 0);
+
+    mouseRegion->setAcceptedButtons(acceptedButtons);
+
+    // target
+    QQuickItem *blackRect = canvas->rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect == drag->target());
+
+    QVERIFY(!drag->active());
+
+    QTest::mousePress(canvas, button, 0, QPoint(100,100));
+
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 50.0);
+    QCOMPARE(blackRect->y(), 50.0);
+
+    // First move event triggers drag, second is acted upon.
+    // This is due to possibility of higher stacked area taking precedence.
+
+    QTest::mouseMove(canvas, QPoint(111,111));
+    QTest::qWait(50);
+    QTest::mouseMove(canvas, QPoint(122,122));
+    QTest::qWait(50);
+
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 50.0);
+    QCOMPARE(blackRect->y(), 50.0);
+
+    QTest::mouseRelease(canvas, button, 0, QPoint(122,122));
+    QTest::qWait(50);
+
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 50.0);
+    QCOMPARE(blackRect->y(), 50.0);
 
     delete canvas;
 }
@@ -509,26 +593,34 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 
     delete canvas;
 }
+
 void tst_QQuickMouseArea::doubleClick()
 {
+    QFETCH(Qt::MouseButtons, acceptedButtons);
+    QFETCH(Qt::MouseButton, button);
+
     QQuickView *canvas = createView();
     canvas->setSource(testFileUrl("doubleclick.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
+    QQuickMouseArea *mouseArea = canvas->rootObject()->findChild<QQuickMouseArea *>("mousearea");
+    QVERIFY(mouseArea);
+    mouseArea->setAcceptedButtons(acceptedButtons);
+
     // The sequence for a double click is:
     // press, release, (click), press, double click, release
-    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), button, button, 0);
     QGuiApplication::sendEvent(canvas, &pressEvent);
 
-    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), button, button, 0);
     QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 1);
 
     QGuiApplication::sendEvent(canvas, &pressEvent);
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, 0);
     QGuiApplication::sendEvent(canvas, &pressEvent);
     QGuiApplication::sendEvent(canvas, &releaseEvent);
 
@@ -542,16 +634,23 @@ void tst_QQuickMouseArea::doubleClick()
 // QTBUG-14832
 void tst_QQuickMouseArea::clickTwice()
 {
+    QFETCH(Qt::MouseButtons, acceptedButtons);
+    QFETCH(Qt::MouseButton, button);
+
     QQuickView *canvas = createView();
     canvas->setSource(testFileUrl("clicktwice.qml"));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
-    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QQuickMouseArea *mouseArea = canvas->rootObject()->findChild<QQuickMouseArea *>("mousearea");
+    QVERIFY(mouseArea);
+    mouseArea->setAcceptedButtons(acceptedButtons);
+
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), button, button, 0);
     QGuiApplication::sendEvent(canvas, &pressEvent);
 
-    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), button, button, 0);
     QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("pressed").toInt(), 1);
@@ -559,13 +658,50 @@ void tst_QQuickMouseArea::clickTwice()
     QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 1);
 
     QGuiApplication::sendEvent(canvas, &pressEvent);
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, 0);
     QGuiApplication::sendEvent(canvas, &pressEvent);
     QGuiApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("pressed").toInt(), 2);
     QCOMPARE(canvas->rootObject()->property("released").toInt(), 2);
     QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 2);
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::invalidClick()
+{
+    QFETCH(Qt::MouseButtons, acceptedButtons);
+    QFETCH(Qt::MouseButton, button);
+
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("doubleclick.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickMouseArea *mouseArea = canvas->rootObject()->findChild<QQuickMouseArea *>("mousearea");
+    QVERIFY(mouseArea);
+    mouseArea->setAcceptedButtons(acceptedButtons);
+
+    // The sequence for a double click is:
+    // press, release, (click), press, double click, release
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), button, button, 0);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
+
+    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), button, button, 0);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
+
+    QCOMPARE(canvas->rootObject()->property("released").toInt(), 0);
+
+    QGuiApplication::sendEvent(canvas, &pressEvent);
+    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, 0);
+    QGuiApplication::sendEvent(canvas, &pressEvent);
+    QGuiApplication::sendEvent(canvas, &releaseEvent);
+
+    QCOMPARE(canvas->rootObject()->property("clicked").toInt(), 0);
+    QCOMPARE(canvas->rootObject()->property("doubleClicked").toInt(), 0);
+    QCOMPARE(canvas->rootObject()->property("released").toInt(), 0);
 
     delete canvas;
 }

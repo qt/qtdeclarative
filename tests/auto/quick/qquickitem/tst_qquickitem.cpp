@@ -166,6 +166,8 @@ private slots:
     void paintOrder_data();
     void paintOrder();
 
+    void acceptedMouseButtons();
+
 private:
 
     enum PaintOrderOp {
@@ -1663,6 +1665,67 @@ void tst_qquickitem::paintOrder()
         items << list.at(i)->objectName();
 
     QCOMPARE(items, expected);
+}
+
+void tst_qquickitem::acceptedMouseButtons()
+{
+    TestItem item;
+    QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::NoButton));
+
+    QQuickCanvas canvas;
+    item.setSize(QSizeF(200,100));
+    item.setParentItem(canvas.rootItem());
+
+    QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 0);
+    QCOMPARE(item.releaseCount, 0);
+
+    QTest::mousePress(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 0);
+    QCOMPARE(item.releaseCount, 0);
+
+    QTest::mousePress(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 0);
+    QCOMPARE(item.releaseCount, 0);
+
+    item.setAcceptedMouseButtons(Qt::LeftButton);
+    QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::LeftButton));
+
+    QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 1);
+    QCOMPARE(item.releaseCount, 1);
+
+    QTest::mousePress(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 1);
+    QCOMPARE(item.releaseCount, 1);
+
+    QTest::mousePress(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 1);
+    QCOMPARE(item.releaseCount, 1);
+
+    item.setAcceptedMouseButtons(Qt::RightButton | Qt::MiddleButton);
+    QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::RightButton | Qt::MiddleButton));
+
+    QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 1);
+    QCOMPARE(item.releaseCount, 1);
+
+    QTest::mousePress(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 2);
+    QCOMPARE(item.releaseCount, 2);
+
+    QTest::mousePress(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QCOMPARE(item.pressCount, 3);
+    QCOMPARE(item.releaseCount, 3);
 }
 
 
