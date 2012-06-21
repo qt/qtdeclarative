@@ -111,7 +111,7 @@ public:
     MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13), m_intProperty(0), m_buttons(0) {}
 
     enum MyEnum { EnumValue1 = 0, EnumValue2 = 1 };
-    enum MyEnum2 { EnumValue3 = 2, EnumValue4 = 3 };
+    enum MyEnum2 { EnumValue3 = 2, EnumValue4 = 3, EnumValue5 = -1 };
 
     bool trueProperty() const { return true; }
     bool falseProperty() const { return false; }

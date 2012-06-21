@@ -2517,8 +2517,9 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
 
     if (isIntProp) {
         // Allow enum assignment to ints.
-        int enumval = evaluateEnum(typeName, enumValue.toUtf8());
-        if (enumval != -1) {
+        bool ok;
+        int enumval = evaluateEnum(typeName, enumValue.toUtf8(), &ok);
+        if (ok) {
             v->type = Value::Literal;
             v->value = QQmlScript::Variant((double)enumval);
             *isAssignment = true;
@@ -2565,8 +2566,10 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
 }
 
 // Similar logic to above, but not knowing target property.
-int QQmlCompiler::evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue) const
+int QQmlCompiler::evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const
 {
+    Q_ASSERT_X(ok, "QQmlCompiler::evaluateEnum", "ok must not be a null pointer");
+    *ok = false;
     QQmlType *type = 0;
     if (scope != QLatin1String("Qt")) {
         unit->imports().resolveType(scope, &type, 0, 0, 0, 0);
@@ -2577,9 +2580,8 @@ int QQmlCompiler::evaluateEnum(const QHashedStringRef &scope, const QByteArray& 
     const QMetaObject *mo = type ? type->metaObject() : StaticQtMetaObject::get();
     int i = mo->enumeratorCount();
     while (i--) {
-        bool ok;
-        int v = mo->enumerator(i).keyToValue(enumValue.constData(), &ok);
-        if (ok)
+        int v = mo->enumerator(i).keyToValue(enumValue.constData(), ok);
+        if (*ok)
             return v;
     }
     return -1;

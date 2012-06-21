@@ -2229,8 +2229,9 @@ bool QQuickListModelParser::compileProperty(const QQmlCustomParserProperty &prop
                     d[0] = char(QQmlScript::Variant::Invalid); // marks empty list
                 } else {
                     QByteArray script = variant.asScript().toUtf8();
-                    int v = evaluateEnum(script);
-                    if (v<0) {
+                    bool ok;
+                    int v = evaluateEnum(script, &ok);
+                    if (!ok) {
                         using namespace QQmlJS;
                         AST::Node *node = variant.asAST();
                         AST::StringLiteral *literal = 0;

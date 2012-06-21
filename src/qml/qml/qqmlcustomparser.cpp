@@ -279,18 +279,22 @@ void QQmlCustomParser::error(const QQmlCustomParserNode& node, const QString& de
 }
 
 /*!
-    If \a script is a simply enum expression (eg. Text.AlignLeft),
-    returns the integer equivalent (eg. 1).
+    If \a script is a simple enum expression (eg. Text.AlignLeft),
+    returns the integer equivalent (eg. 1), and sets \a ok to true.
 
-    Otherwise, returns -1.
+    Otherwise sets \a ok to false.
+
+    A valid \a ok must be provided, or the function will assert.
 */
-int QQmlCustomParser::evaluateEnum(const QByteArray& script) const
+int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
 {
+    Q_ASSERT_X(ok, "QQmlCustomParser::evaluateEnum", "ok must not be a null pointer");
+    *ok = false;
     int dot = script.indexOf('.');
     if (dot == -1)
         return -1;
 
-    return compiler->evaluateEnum(QString::fromUtf8(script.left(dot)), script.mid(dot+1));
+    return compiler->evaluateEnum(QString::fromUtf8(script.left(dot)), script.mid(dot+1), ok);
 }
 
 /*!

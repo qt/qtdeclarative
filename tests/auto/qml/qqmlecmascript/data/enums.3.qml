@@ -19,6 +19,9 @@ Item {
     property int h: Namespace.MyQmlObject.EnumValue3
     property int i: Namespace.MyQmlObject.EnumValue4
 
+    // -1 enum
+    property int j: MyQmlObject.EnumValue5
+
     // Count the onChanged signals to see whether
     // they're assigned as literals or via bindings
     property int ac: 0
@@ -29,6 +32,7 @@ Item {
     property int fc: 0
     property int hc: 0
     property int ic: 0
+    property int jc: 0
 
     onAChanged: ac++
     onBChanged: bc++
@@ -38,4 +42,5 @@ Item {
     onFChanged: fc++
     onHChanged: hc++
     onIChanged: ic++
+    onJChanged: jc++
 }

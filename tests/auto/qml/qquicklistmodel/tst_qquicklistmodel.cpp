@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickanimation_p.h>
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qquicklistmodel_p.h>
 #include <QtQml/private/qqmlexpression_p.h>
@@ -226,6 +227,11 @@ void tst_qquicklistmodel::static_types_data()
     QTest::newRow("Qt enum")
         << "ListElement { foo: Qt.AlignBottom }"
         << QVariant(double(Qt::AlignBottom))
+        << QString();
+
+    QTest::newRow("negative enum")
+        << "ListElement { foo: Animation.Infinite }"
+        << QVariant(double(QQuickAbstractAnimation::Infinite))
         << QString();
 
     QTest::newRow("role error")

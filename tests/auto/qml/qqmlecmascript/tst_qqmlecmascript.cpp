@@ -983,6 +983,7 @@ void tst_qqmlecmascript::enums()
     QCOMPARE(object->property("f").toInt(), 3);
     QCOMPARE(object->property("h").toInt(), 2);
     QCOMPARE(object->property("i").toInt(), 3);
+    QCOMPARE(object->property("j").toInt(), -1);
 
     // count of change signals
     QCOMPARE(object->property("ac").toInt(), 0);
@@ -993,6 +994,7 @@ void tst_qqmlecmascript::enums()
     QCOMPARE(object->property("fc").toInt(), 0);
     QCOMPARE(object->property("hc").toInt(), 1); // namespace -> binding
     QCOMPARE(object->property("ic").toInt(), 1); // namespace -> binding
+    QCOMPARE(object->property("jc").toInt(), 0);
 
     delete object;
     }

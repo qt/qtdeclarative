@@ -137,7 +137,7 @@ protected:
     void error(const QQmlCustomParserProperty&, const QString& description);
     void error(const QQmlCustomParserNode&, const QString& description);
 
-    int evaluateEnum(const QByteArray&) const;
+    int evaluateEnum(const QByteArray&, bool *ok) const;
 
     const QMetaObject *resolveType(const QString&) const;
 

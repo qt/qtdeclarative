@@ -295,7 +295,7 @@ public:
     static bool isAttachedPropertyName(const QHashedStringRef &);
     static bool isSignalPropertyName(const QHashedStringRef &);
 
-    int evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue) const; // for QQmlCustomParser::evaluateEnum
+    int evaluateEnum(const QHashedStringRef &scope, const QByteArray& enumValue, bool *ok) const; // for QQmlCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QString& name) const; // for QQmlCustomParser::resolveType
     int rewriteBinding(const QQmlScript::Variant& value, const QString& name); // for QQmlCustomParser::rewriteBinding
     QString rewriteSignalHandler(const QQmlScript::Variant& value, const QString &name);  // for QQmlCustomParser::rewriteSignalHandler
