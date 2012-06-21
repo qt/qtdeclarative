@@ -374,6 +374,8 @@ QQuickPixmapReader::~QQuickPixmapReader()
     mutex.lock();
     // manually cancel all outstanding jobs.
     foreach (QQuickPixmapReply *reply, jobs) {
+        if (reply->data && reply->data->reply == reply)
+            reply->data->reply = 0;
         delete reply;
     }
     jobs.clear();
@@ -838,6 +840,8 @@ QQuickPixmapReply::QQuickPixmapReply(QQuickPixmapData *d)
 
 QQuickPixmapReply::~QQuickPixmapReply()
 {
+    // note: this->data->reply must be set to zero if this->data->reply == this
+    // but it must be done within mutex locking, to be guaranteed to be safe.
 }
 
 bool QQuickPixmapReply::event(QEvent *event)
