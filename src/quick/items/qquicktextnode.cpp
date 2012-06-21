@@ -40,10 +40,11 @@
 ****************************************************************************/
 
 #include "qquicktextnode_p.h"
+
 #include <QtQuick/qsgsimplerectnode.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgdistancefieldglyphnode_p.h>
-
+#include <private/qquickclipnode_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
 #include <QtCore/qpoint.h>
@@ -214,7 +215,7 @@ namespace {
         QGlyphRun glyphRun;
         QRectF boundingRect;
         SelectionState selectionState;
-        QSGClipNode *clipNode;
+        QQuickDefaultClipNode *clipNode;
         QQuickTextNode::Decorations decorations;
         QColor color;
         QColor backgroundColor;
@@ -512,7 +513,7 @@ namespace {
         QVarLengthArray<TextDecoration> pendingOverlines;
         QVarLengthArray<TextDecoration> pendingStrikeOuts;
         if (!sortedIndexes.isEmpty()) {
-            QSGClipNode *currentClipNode = m_hasSelection ? new QSGClipNode : 0;
+            QQuickDefaultClipNode *currentClipNode = m_hasSelection ? new QQuickDefaultClipNode(QRectF()) : 0;
             bool currentClipNodeUsed = false;
             for (int i=0; i<=sortedIndexes.size(); ++i) {
                 BinaryTreeNode *node = 0;
@@ -566,12 +567,13 @@ namespace {
                             delete currentClipNode;
                         } else {
                             currentClipNode->setIsRectangular(true);
-                            currentClipNode->setClipRect(currentRect);
+                            currentClipNode->setRect(currentRect);
+                            currentClipNode->update();
                         }
                     }
 
                     if (node != 0 && m_hasSelection)
-                        currentClipNode = new QSGClipNode;
+                        currentClipNode = new QQuickDefaultClipNode(QRectF());
                     else
                         currentClipNode = 0;
                     currentClipNodeUsed = false;
@@ -964,7 +966,7 @@ namespace {
 
         // Then, go through all the nodes for all lines and combine all QGlyphRuns with a common
         // font, selection state and clip node.
-        typedef QPair<QFontEngine *, QPair<QSGClipNode *, QPair<QRgb, int> > > KeyType;
+        typedef QPair<QFontEngine *, QPair<QQuickDefaultClipNode *, QPair<QRgb, int> > > KeyType;
         QHash<KeyType, BinaryTreeNode *> map;
         QList<BinaryTreeNode *> nodes;
         for (int i=0; i<m_processedNodes.size(); ++i) {
@@ -1015,7 +1017,7 @@ namespace {
         // ...and add clip nodes and glyphs to tree.
         foreach (const BinaryTreeNode *node, nodes) {
 
-            QSGClipNode *clipNode = node->clipNode;
+            QQuickDefaultClipNode *clipNode = node->clipNode;
             if (clipNode != 0 && clipNode->parent() == 0 )
                 parentNode->appendChildNode(clipNode);
 
