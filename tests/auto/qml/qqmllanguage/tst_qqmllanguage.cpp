@@ -337,6 +337,7 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("missingObject") << "missingObject.qml" << "missingObject.errors.txt" << false;
     QTest::newRow("failingComponent") << "failingComponentTest.qml" << "failingComponent.errors.txt" << false;
     QTest::newRow("missingSignal") << "missingSignal.qml" << "missingSignal.errors.txt" << false;
+    QTest::newRow("missingSignal2") << "missingSignal.2.qml" << "missingSignal.2.errors.txt" << false;
     QTest::newRow("finalOverride") << "finalOverride.qml" << "finalOverride.errors.txt" << false;
     QTest::newRow("customParserIdNotAllowed") << "customParserIdNotAllowed.qml" << "customParserIdNotAllowed.errors.txt" << false;
 

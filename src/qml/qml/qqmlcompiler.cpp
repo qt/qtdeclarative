@@ -3812,7 +3812,7 @@ QQmlCompiler::signal(QQmlScript::Object *object, const QHashedStringRef &name, b
     if (d && !cache->isAllowedInRevision(d)) {
         if (notInRevision) *notInRevision = true;
         return 0;
-    } else if (d) {
+    } else if (d && d->isSignal()) {
         return d;
     }
 

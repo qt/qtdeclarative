@@ -1870,7 +1870,7 @@ QMetaMethod QQmlPropertyPrivate::findSignalByName(const QMetaObject *mo, const Q
     for (int ii = methods - 1; ii >= 2; --ii) { // >= 2 to block the destroyed signal
         QMetaMethod method = mo->method(ii);
 
-        if (method.name() == name)
+        if (method.name() == name && (method.methodType() & QMetaMethod::Signal))
             return method;
     }
 
