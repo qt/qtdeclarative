@@ -10,4 +10,4 @@ include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 
-QT += core qml testlib
+QT += core qml testlib gui-private

@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qmlmin
-QT += qml testlib
+QT += qml testlib gui-private
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qmlmin.cpp

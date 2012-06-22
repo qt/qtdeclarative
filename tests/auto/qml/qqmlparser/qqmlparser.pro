@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qqmlparser
-QT += qmldevtools-private testlib
+QT += qmldevtools-private testlib gui-private
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmlparser.cpp

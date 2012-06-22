@@ -10,4 +10,4 @@ TESTDATA = data/*
 
 CONFIG += parallel_test
 
-QT += qml testlib
+QT += qml testlib gui-private

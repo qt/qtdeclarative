@@ -1,7 +1,7 @@
 CONFIG += testcase
 TARGET = tst_qqmlinspector
 
-QT += qml testlib
+QT += qml testlib gui-private
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmlinspector.cpp

@@ -13,4 +13,4 @@ include(../shared/debugutil.pri)
 
 DEFINES += QT_QML_DEBUG_NO_WARNING
 
-QT += qml-private testlib
+QT += qml-private testlib gui-private

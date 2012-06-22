@@ -11,5 +11,5 @@ TESTDATA = data/*
 
 CONFIG += parallel_test
 
-QT += qml-private testlib
+QT += qml-private testlib gui-private
 

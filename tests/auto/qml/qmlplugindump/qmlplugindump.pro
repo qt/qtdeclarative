@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qmlplugindump
-QT += testlib
+QT += testlib gui-private
 macx:CONFIG -= app_bundle
 CONFIG += parallel_test
 

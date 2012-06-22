@@ -10,5 +10,5 @@ include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 
-QT += qml testlib
+QT += qml testlib gui-private
 

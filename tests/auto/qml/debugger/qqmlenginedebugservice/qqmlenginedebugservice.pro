@@ -12,4 +12,4 @@ include(../shared/debugutil.pri)
 
 DEFINES += QT_QML_DEBUG_NO_WARNING
 
-QT += core-private qml-private quick-private v8-private testlib
+QT += core-private qml-private quick-private v8-private testlib gui-private

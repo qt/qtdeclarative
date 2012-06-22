@@ -1,7 +1,7 @@
 CONFIG += testcase
 
 TARGET = tst_qquickaccessible
-QT += qml-private network quick-private testlib
+QT += qml-private network quick-private testlib gui-private
 macx:CONFIG -= app_bundle
 
 SOURCES  += tst_qquickaccessible.cpp
