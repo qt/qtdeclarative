@@ -3,8 +3,8 @@ TEMPLATE = app
 QT += quick qml
 SOURCES += main.cpp
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qtquick/text
+target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/quick/text
 qml.files = fonts imgtag styledtext-layout.qml text.qml textselection
-qml.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qtquick/text
+qml.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/quick/text
 INSTALLS += target qml
 
