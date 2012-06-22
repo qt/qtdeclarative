@@ -86,11 +86,22 @@ private:
     int m_value2;
 };
 
+class MyEnumContainer : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(RelatedEnum)
+
+public:
+    enum RelatedEnum { RelatedInvalid = -1, RelatedValue = 42, MultiplyDefined = 666 };
+};
+
 class MyQmlObject : public QObject
 {
     Q_OBJECT
     Q_ENUMS(MyEnum)
     Q_ENUMS(MyEnum2)
+    Q_ENUMS(MyEnum3)
+    Q_ENUMS(MyEnumContainer::RelatedEnum)
     Q_PROPERTY(int deleteOnSet READ deleteOnSet WRITE setDeleteOnSet)
     Q_PROPERTY(bool trueProperty READ trueProperty CONSTANT)
     Q_PROPERTY(bool falseProperty READ falseProperty CONSTANT)
@@ -106,12 +117,17 @@ class MyQmlObject : public QObject
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intChanged)
     Q_PROPERTY(QJSValue qjsvalue READ qjsvalue WRITE setQJSValue NOTIFY qjsvalueChanged)
     Q_PROPERTY(QJSValue qjsvalueWithReset READ qjsvalue WRITE setQJSValue RESET resetQJSValue NOTIFY qjsvalueChanged)
+    Q_PROPERTY(MyEnum enumProperty READ enumProperty WRITE setEnumProperty)
+    Q_PROPERTY(MyEnumContainer::RelatedEnum relatedEnumProperty READ relatedEnumProperty WRITE setRelatedEnumProperty)
+    Q_PROPERTY(MyEnumContainer::RelatedEnum unrelatedEnumProperty READ unrelatedEnumProperty WRITE setUnrelatedEnumProperty)
+    Q_PROPERTY(MyEnum qtEnumProperty READ qtEnumProperty WRITE setQtEnumProperty)
 
 public:
     MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13), m_intProperty(0), m_buttons(0) {}
 
     enum MyEnum { EnumValue1 = 0, EnumValue2 = 1 };
     enum MyEnum2 { EnumValue3 = 2, EnumValue4 = 3, EnumValue5 = -1 };
+    enum MyEnum3 { MultiplyDefined = 333 };
 
     bool trueProperty() const { return true; }
     bool falseProperty() const { return false; }
@@ -188,6 +204,38 @@ public:
     void setIntProperty(int i) { m_intProperty = i; emit intChanged(); }
     
     Q_INVOKABLE MyEnum2 getEnumValue() const { return EnumValue4; }
+
+    MyEnum enumPropertyValue;
+    MyEnum enumProperty() const {
+        return enumPropertyValue;
+    }
+    void setEnumProperty(MyEnum v) {
+        enumPropertyValue = v;
+    }
+
+    MyEnumContainer::RelatedEnum relatedEnumPropertyValue;
+    MyEnumContainer::RelatedEnum relatedEnumProperty() const {
+        return relatedEnumPropertyValue;
+    }
+    void setRelatedEnumProperty(MyEnumContainer::RelatedEnum v) {
+        relatedEnumPropertyValue = v;
+    }
+
+    MyEnumContainer::RelatedEnum unrelatedEnumPropertyValue;
+    MyEnumContainer::RelatedEnum unrelatedEnumProperty() const {
+        return unrelatedEnumPropertyValue;
+    }
+    void setUnrelatedEnumProperty(MyEnumContainer::RelatedEnum v) {
+        unrelatedEnumPropertyValue = v;
+    }
+
+    MyEnum qtEnumPropertyValue;
+    MyEnum qtEnumProperty() const {
+        return qtEnumPropertyValue;
+    }
+    void setQtEnumProperty(MyEnum v) {
+        qtEnumPropertyValue = v;
+    }
 
 signals:
     void basicSignal();
@@ -354,6 +402,7 @@ class MyTypeObject : public QObject
 {
     Q_OBJECT
     Q_ENUMS(MyEnum)
+    Q_ENUMS(MyEnumContainer::RelatedEnum)
     Q_FLAGS(MyFlags)
 
     Q_PROPERTY(QString id READ id WRITE setId)
@@ -361,6 +410,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QQmlComponent *componentProperty READ componentProperty WRITE setComponentProperty)
     Q_PROPERTY(MyFlags flagProperty READ flagProperty WRITE setFlagProperty)
     Q_PROPERTY(MyEnum enumProperty READ enumProperty WRITE setEnumProperty)
+    Q_PROPERTY(MyEnumContainer::RelatedEnum relatedEnumProperty READ relatedEnumProperty WRITE setRelatedEnumProperty)
     Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty)
     Q_PROPERTY(uint uintProperty READ uintProperty WRITE setUintProperty)
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty)
@@ -431,6 +481,14 @@ public:
     }
     void setEnumProperty(MyEnum v) {
         enumPropertyValue = v;
+    }
+
+    MyEnumContainer::RelatedEnum relatedEnumPropertyValue;
+    MyEnumContainer::RelatedEnum relatedEnumProperty() const {
+        return relatedEnumPropertyValue;
+    }
+    void setRelatedEnumProperty(MyEnumContainer::RelatedEnum v) {
+        relatedEnumPropertyValue = v;
     }
 
     QString stringPropertyValue;

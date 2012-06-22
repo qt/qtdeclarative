@@ -1,9 +1,12 @@
 import Test 1.0
+import QtQuick 2.0
+
 MyTypeObject {
     flagProperty: "FlagVal1 | FlagVal3"
     enumProperty: "EnumVal2"
     qtEnumProperty: Qt.RichText
     mirroredEnumProperty: Qt.AlignHCenter
+    relatedEnumProperty: "RelatedValue"
     stringProperty: "Hello World!"
     uintProperty: 10
     intProperty: -19

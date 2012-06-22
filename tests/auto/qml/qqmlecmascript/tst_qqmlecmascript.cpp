@@ -295,6 +295,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QVERIFY(object != 0);
     QCOMPARE(object->flagProperty(), MyTypeObject::FlagVal1 | MyTypeObject::FlagVal3);
     QCOMPARE(object->enumProperty(), MyTypeObject::EnumVal2);
+    QCOMPARE(object->relatedEnumProperty(), MyEnumContainer::RelatedValue);
     QCOMPARE(object->stringProperty(), QString("Hello World!"));
     QCOMPARE(object->uintProperty(), uint(10));
     QCOMPARE(object->intProperty(), -19);
@@ -323,6 +324,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QVERIFY(object != 0);
     QCOMPARE(object->flagProperty(), MyTypeObject::FlagVal1 | MyTypeObject::FlagVal3);
     QCOMPARE(object->enumProperty(), MyTypeObject::EnumVal2);
+    QCOMPARE(object->relatedEnumProperty(), MyEnumContainer::RelatedValue);
     QCOMPARE(object->stringProperty(), QString("Hello World!"));
     QCOMPARE(object->uintProperty(), uint(10));
     QCOMPARE(object->intProperty(), -19);
@@ -910,6 +912,10 @@ void tst_qqmlecmascript::enums()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
+    QCOMPARE(object->property("enumProperty").toInt(), (int)MyQmlObject::EnumValue2);
+    QCOMPARE(object->property("relatedEnumProperty").toInt(), (int)MyEnumContainer::RelatedValue);
+    QCOMPARE(object->property("unrelatedEnumProperty").toInt(), (int)MyEnumContainer::RelatedValue);
+    QCOMPARE(object->property("qtEnumProperty").toInt(), (int)Qt::CaseInsensitive);
     QCOMPARE(object->property("a").toInt(), 0);
     QCOMPARE(object->property("b").toInt(), 1);
     QCOMPARE(object->property("c").toInt(), 2);
@@ -920,6 +926,8 @@ void tst_qqmlecmascript::enums()
     QCOMPARE(object->property("h").toInt(), 3);
     QCOMPARE(object->property("i").toInt(), 19);
     QCOMPARE(object->property("j").toInt(), 19);
+    QCOMPARE(object->property("k").toInt(), 42);
+    QCOMPARE(object->property("l").toInt(), 333);
 
     delete object;
     }
@@ -984,6 +992,7 @@ void tst_qqmlecmascript::enums()
     QCOMPARE(object->property("h").toInt(), 2);
     QCOMPARE(object->property("i").toInt(), 3);
     QCOMPARE(object->property("j").toInt(), -1);
+    QCOMPARE(object->property("k").toInt(), 42);
 
     // count of change signals
     QCOMPARE(object->property("ac").toInt(), 0);
@@ -995,6 +1004,7 @@ void tst_qqmlecmascript::enums()
     QCOMPARE(object->property("hc").toInt(), 1); // namespace -> binding
     QCOMPARE(object->property("ic").toInt(), 1); // namespace -> binding
     QCOMPARE(object->property("jc").toInt(), 0);
+    QCOMPARE(object->property("kc").toInt(), 0);
 
     delete object;
     }

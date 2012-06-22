@@ -587,6 +587,7 @@ void tst_qqmllanguage::assignBasicTypes()
     QCOMPARE(object->enumProperty(), MyTypeObject::EnumVal2);
     QCOMPARE(object->qtEnumProperty(), Qt::RichText);
     QCOMPARE(object->mirroredEnumProperty(), MyTypeObject::MirroredEnumVal3);
+    QCOMPARE(object->relatedEnumProperty(), MyEnumContainer::RelatedValue);
     QCOMPARE(object->stringProperty(), QString("Hello World!"));
     QCOMPARE(object->uintProperty(), uint(10));
     QCOMPARE(object->intProperty(), -19);

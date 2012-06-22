@@ -143,6 +143,7 @@ private:
     static CompareFunction anchorLineCompareFunction;
 };
 
+class QHashedCStringRef;
 class QHashedV8String;
 class Q_QML_PRIVATE_EXPORT QQmlType
 {
@@ -191,8 +192,9 @@ public:
 
     int index() const;
 
-    int enumValue(const QHashedStringRef &) const;
-    int enumValue(const QHashedV8String &) const;
+    int enumValue(const QHashedStringRef &, bool *ok) const;
+    int enumValue(const QHashedCStringRef &, bool *ok) const;
+    int enumValue(const QHashedV8String &, bool *ok) const;
 private:
     QQmlType *superType() const;
     friend class QQmlTypePrivate;

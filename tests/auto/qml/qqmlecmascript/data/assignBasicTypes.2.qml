@@ -3,6 +3,7 @@ import Qt.test 1.0
 MyTypeObject {
     flagProperty: if(1) "FlagVal1 | FlagVal3"
     enumProperty: if(1) "EnumVal2"
+    relatedEnumProperty: if(1) "RelatedValue"
     stringProperty: if(1) "Hello World!"
     uintProperty: if(1) 10
     intProperty: if(1) -19

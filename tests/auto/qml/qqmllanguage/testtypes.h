@@ -205,11 +205,21 @@ private:
 };
 
 
+class MyEnumContainer : public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(RelatedEnum)
+
+public:
+    enum RelatedEnum { RelatedInvalid = -1, RelatedValue = 42 };
+};
+
 class MyTypeObject : public QObject
 {
     Q_OBJECT
     Q_ENUMS(MyEnum)
     Q_ENUMS(MyMirroredEnum)
+    Q_ENUMS(MyEnumContainer::RelatedEnum)
     Q_FLAGS(MyFlags)
 
     Q_PROPERTY(QString id READ id WRITE setId)
@@ -220,6 +230,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(MyEnum readOnlyEnumProperty READ readOnlyEnumProperty)
     Q_PROPERTY(Qt::TextFormat qtEnumProperty READ qtEnumProperty WRITE setQtEnumProperty NOTIFY qtEnumPropertyChanged)
     Q_PROPERTY(MyMirroredEnum mirroredEnumProperty READ mirroredEnumProperty WRITE setMirroredEnumProperty NOTIFY mirroredEnumPropertyChanged)
+    Q_PROPERTY(MyEnumContainer::RelatedEnum relatedEnumProperty READ relatedEnumProperty WRITE setRelatedEnumProperty)
     Q_PROPERTY(QString stringProperty READ stringProperty WRITE setStringProperty NOTIFY stringPropertyChanged)
     Q_PROPERTY(uint uintProperty READ uintProperty WRITE setUintProperty NOTIFY uintPropertyChanged)
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intPropertyChanged)
@@ -321,6 +332,14 @@ public:
     void setMirroredEnumProperty(MyMirroredEnum v) {
         mirroredEnumPropertyValue = v;
         emit mirroredEnumPropertyChanged();
+    }
+
+    MyEnumContainer::RelatedEnum relatedEnumPropertyValue;
+    MyEnumContainer::RelatedEnum relatedEnumProperty() const {
+        return relatedEnumPropertyValue;
+    }
+    void setRelatedEnumProperty(MyEnumContainer::RelatedEnum v) {
+        relatedEnumPropertyValue = v;
     }
 
     QString stringPropertyValue;

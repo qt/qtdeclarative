@@ -153,6 +153,7 @@ public:
 
     void init() const;
     void initEnums() const;
+    void insertEnums(const QMetaObject *metaObject) const;
 
     bool m_isInterface : 1;
     const char *m_iid;
@@ -487,16 +488,28 @@ void QQmlTypePrivate::initEnums() const
     QWriteLocker lock(metaTypeDataLock());
     if (m_isEnumSetup) return;
 
-    const QMetaObject *metaObject = m_baseMetaObject;
-    for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
-
-        QMetaEnum e = metaObject->enumerator(ii);
-
-        for (int jj = 0; jj < e.keyCount(); ++jj) 
-            m_enums.insert(QString::fromUtf8(e.key(jj)), e.value(jj));
-    }
+    insertEnums(m_baseMetaObject);
 
     m_isEnumSetup = true;
+}
+
+void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
+{
+    // Add any enum values defined by 'related' classes
+    if (metaObject->d.relatedMetaObjects) {
+        const QMetaObject **related = metaObject->d.relatedMetaObjects;
+        if (related) {
+            while (*related)
+                insertEnums(*related++);
+        }
+    }
+
+    // Add any enum values defined by this class, overwriting any inherited values
+    for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
+        QMetaEnum e = metaObject->enumerator(ii);
+        for (int jj = 0; jj < e.keyCount(); ++jj)
+            m_enums.insert(QString::fromUtf8(e.key(jj)), e.value(jj));
+    }
 }
 
 QByteArray QQmlType::typeName() const
@@ -671,20 +684,49 @@ int QQmlType::index() const
     return d->m_index;
 }
 
-int QQmlType::enumValue(const QHashedStringRef &name) const
+int QQmlType::enumValue(const QHashedStringRef &name, bool *ok) const
 {
+    Q_ASSERT(ok);
+    *ok = true;
+
     d->initEnums();
 
     int *rv = d->m_enums.value(name);
-    return rv?*rv:-1;
+    if (rv)
+        return *rv;
+
+    *ok = false;
+    return -1;
 }
 
-int QQmlType::enumValue(const QHashedV8String &name) const
+int QQmlType::enumValue(const QHashedCStringRef &name, bool *ok) const
 {
+    Q_ASSERT(ok);
+    *ok = true;
+
     d->initEnums();
 
     int *rv = d->m_enums.value(name);
-    return rv?*rv:-1;
+    if (rv)
+        return *rv;
+
+    *ok = false;
+    return -1;
+}
+
+int QQmlType::enumValue(const QHashedV8String &name, bool *ok) const
+{
+    Q_ASSERT(ok);
+    *ok = true;
+
+    d->initEnums();
+
+    int *rv = d->m_enums.value(name);
+    if (rv)
+        return *rv;
+
+    *ok = false;
+    return -1;
 }
 
 QQmlTypeModule::QQmlTypeModule()

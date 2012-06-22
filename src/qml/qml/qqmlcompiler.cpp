@@ -2536,7 +2536,7 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
         return true;
 
     int value = 0;
-    bool ok;
+    bool ok = false;
 
     if (type && toQmlType(obj) == type) {
         // When these two match, we can short cut the search
@@ -2547,13 +2547,15 @@ bool QQmlCompiler::testQualifiedEnumAssignment(QQmlScript::Property *prop,
         }
     } else {
         // Otherwise we have to search the whole type
-        // This matches the logic in QV8TypeWrapper
-        QByteArray enumName = enumValue.toUtf8();
-        const QMetaObject *metaObject = type ? type->baseMetaObject() : StaticQtMetaObject::get();
-        ok = false;
-        for (int ii = metaObject->enumeratorCount() - 1; !ok && ii >= 0; --ii) {
-            QMetaEnum e = metaObject->enumerator(ii);
-            value = e.keyToValue(enumName.constData(), &ok);
+        if (type) {
+            value = type->enumValue(QHashedStringRef(enumValue), &ok);
+        } else {
+            QByteArray enumName = enumValue.toUtf8();
+            const QMetaObject *metaObject = StaticQtMetaObject::get();
+            for (int ii = metaObject->enumeratorCount() - 1; !ok && ii >= 0; --ii) {
+                QMetaEnum e = metaObject->enumerator(ii);
+                value = e.keyToValue(enumName.constData(), &ok);
+            }
         }
     }
 
@@ -2572,14 +2574,14 @@ int QQmlCompiler::evaluateEnum(const QHashedStringRef &scope, const QByteArray& 
 {
     Q_ASSERT_X(ok, "QQmlCompiler::evaluateEnum", "ok must not be a null pointer");
     *ok = false;
-    QQmlType *type = 0;
-    if (scope != QLatin1String("Qt")) {
-        unit->imports().resolveType(scope, &type, 0, 0, 0, 0);
-        if (!type)
-            return -1;
 
+    if (scope != QLatin1String("Qt")) {
+        QQmlType *type = 0;
+        unit->imports().resolveType(scope, &type, 0, 0, 0, 0);
+        return type ? type->enumValue(QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
     }
-    const QMetaObject *mo = type ? type->metaObject() : StaticQtMetaObject::get();
+
+    const QMetaObject *mo = StaticQtMetaObject::get();
     int i = mo->enumeratorCount();
     while (i--) {
         int v = mo->enumerator(i).keyToValue(enumValue.constData(), ok);

@@ -173,8 +173,9 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
         QQmlType *type = resource->type;
 
         if (QV8Engine::startsWithUpper(property)) {
-            int value = type->enumValue(propertystring);
-            if (-1 != value)
+            bool ok = false;
+            int value = type->enumValue(propertystring, &ok);
+            if (ok)
                 return v8::Integer::New(value);
 
             // Fall through to return empty handle
