@@ -265,6 +265,9 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     \code
     template<typename T, int metaObjectRevision>
     int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
+
+    template<typename T, int metaObjectRevision>
+    int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
     \endcode
 
     For example, if \c BaseObject is changed and now has a revision 1, you can specify that

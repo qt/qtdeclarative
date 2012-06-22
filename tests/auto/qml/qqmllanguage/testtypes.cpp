@@ -83,6 +83,12 @@ void registerTypes()
     qmlRegisterType<MyEnumDerivedClass>("Test",1,0,"MyEnumDerivedClass");
 
     qmlRegisterType<MyReceiversTestObject>("Test",1,0,"MyReceiversTestObject");
+
+    qmlRegisterUncreatableType<MyUncreateableBaseClass>("Test", 1, 0, "MyUncreateableBaseClass", "Cannot create MyUncreateableBaseClass");
+    qmlRegisterType<MyCreateableDerivedClass>("Test", 1, 0, "MyCreateableDerivedClass");
+
+    qmlRegisterUncreatableType<MyUncreateableBaseClass,1>("Test", 1, 1, "MyUncreateableBaseClass", "Cannot create MyUncreateableBaseClass");
+    qmlRegisterType<MyCreateableDerivedClass,1>("Test", 1, 1, "MyCreateableDerivedClass");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

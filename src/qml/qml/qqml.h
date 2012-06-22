@@ -167,6 +167,37 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
+template<typename T, int metaObjectRevision>
+int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
+{
+    QML_GETTYPENAMES
+
+    QQmlPrivate::RegisterType type = {
+        1,
+
+        qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+        qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+        0, 0,
+        reason,
+
+        uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
+
+        QQmlPrivate::attachedPropertiesFunc<T>(),
+        QQmlPrivate::attachedPropertiesMetaObject<T>(),
+
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
+
+        0, 0,
+
+        0,
+        metaObjectRevision
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
+}
+
 template<typename T>
 int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {

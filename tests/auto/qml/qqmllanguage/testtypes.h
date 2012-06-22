@@ -910,6 +910,41 @@ protected:
     qreal m_p5;
 };
 
+class MyUncreateableBaseClass : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool prop1 READ prop1 WRITE setprop1)
+    Q_PROPERTY(bool prop2 READ prop2 WRITE setprop2 REVISION 1)
+    Q_PROPERTY(bool prop3 READ prop3 WRITE setprop3 REVISION 1)
+public:
+    explicit MyUncreateableBaseClass(bool arg, QObject *parent = 0)
+        : QObject(parent), _prop1(false), _prop2(false), _prop3(false)
+    {
+    }
+
+    bool _prop1;
+    bool prop1() const { return _prop1; }
+    void setprop1(bool p) { _prop1 = p; }
+    bool _prop2;
+    bool prop2() const { return _prop2; }
+    void setprop2(bool p) { _prop2 = p; }
+    bool _prop3;
+    bool prop3() const { return _prop3; }
+    void setprop3(bool p) { _prop3 = p; }
+};
+
+class MyCreateableDerivedClass : public MyUncreateableBaseClass
+{
+    Q_OBJECT
+    Q_PROPERTY(bool prop2 READ prop2 WRITE setprop2 REVISION 1)
+
+public:
+    MyCreateableDerivedClass(QObject *parent = 0)
+        : MyUncreateableBaseClass(true, parent)
+    {
+    }
+};
+
 class MyVersion2Class : public QObject
 {
     Q_OBJECT
