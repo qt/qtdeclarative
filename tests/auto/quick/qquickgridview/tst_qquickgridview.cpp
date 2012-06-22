@@ -3585,13 +3585,13 @@ void tst_QQuickGridView::extents()
     QCOMPARE(static_cast<GVAccessor*>(gridview)->maxX(), maxPos.x());
     QCOMPARE(static_cast<GVAccessor*>(gridview)->maxY(), maxPos.y());
 
-    QCOMPARE(gridview->xOrigin(), origin_empty.x());
-    QCOMPARE(gridview->yOrigin(), origin_empty.y());
+    QCOMPARE(gridview->originX(), origin_empty.x());
+    QCOMPARE(gridview->originY(), origin_empty.y());
     for (int i=0; i<30; i++)
         model.addItem("Item" + QString::number(i), "");
     QTRY_COMPARE(gridview->count(), model.count());
-    QCOMPARE(gridview->xOrigin(), origin_nonEmpty.x());
-    QCOMPARE(gridview->yOrigin(), origin_nonEmpty.y());
+    QCOMPARE(gridview->originX(), origin_nonEmpty.x());
+    QCOMPARE(gridview->originY(), origin_nonEmpty.y());
 
     releaseView(canvas);
 }
@@ -4180,7 +4180,7 @@ void tst_QQuickGridView::margins()
         QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
         QCOMPARE(gridview->contentX(), -30.);
-        QCOMPARE(gridview->xOrigin(), 0.);
+        QCOMPARE(gridview->originX(), 0.);
 
         // check end bound
         gridview->positionViewAtEnd();
@@ -4190,23 +4190,23 @@ void tst_QQuickGridView::margins()
         QTRY_COMPARE(gridview->contentX(), pos + 50);
 
         // remove item before visible and check that left margin is maintained
-        // and xOrigin is updated
+        // and originX is updated
         gridview->setContentX(200);
         model.removeItems(0, 4);
         QTest::qWait(100);
         gridview->setContentX(-50);
         gridview->returnToBounds();
-        QCOMPARE(gridview->xOrigin(), 100.);
+        QCOMPARE(gridview->originX(), 100.);
         QTRY_COMPARE(gridview->contentX(), 70.);
 
         // reduce left margin
         gridview->setLeftMargin(20);
-        QCOMPARE(gridview->xOrigin(), 100.);
+        QCOMPARE(gridview->originX(), 100.);
         QTRY_COMPARE(gridview->contentX(), 80.);
 
         // check end bound
         gridview->positionViewAtEnd();
-        QCOMPARE(gridview->xOrigin(), 0.); // positionViewAtEnd() resets origin
+        QCOMPARE(gridview->originX(), 0.); // positionViewAtEnd() resets origin
         pos = gridview->contentX();
         gridview->setContentX(pos + 80);
         gridview->returnToBounds();
@@ -4215,7 +4215,7 @@ void tst_QQuickGridView::margins()
         // reduce right margin
         pos = gridview->contentX();
         gridview->setRightMargin(40);
-        QCOMPARE(gridview->xOrigin(), 0.);
+        QCOMPARE(gridview->originX(), 0.);
         QTRY_COMPARE(gridview->contentX(), pos-10);
 
         delete canvas;
@@ -4243,7 +4243,7 @@ void tst_QQuickGridView::margins()
         QTRY_VERIFY(contentItem != 0);
 
         QTRY_COMPARE(gridview->contentX(), -240+50.);
-        QTRY_COMPARE(gridview->xOrigin(), -100. * 10);
+        QTRY_COMPARE(gridview->originX(), -100. * 10);
 
         // check end bound
         gridview->positionViewAtEnd();
@@ -4253,25 +4253,25 @@ void tst_QQuickGridView::margins()
         QTRY_COMPARE(gridview->contentX(), pos - 30);
 
         // remove item before visible and check that left margin is maintained
-        // and xOrigin is updated
+        // and originX is updated
         gridview->setContentX(-400);
         QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
         model.removeItems(0, 4);
         QTRY_COMPARE(model.count(), gridview->count());
         gridview->setContentX(-240+50);
         gridview->returnToBounds();
-        QCOMPARE(gridview->xOrigin(), -1000.);
+        QCOMPARE(gridview->originX(), -1000.);
         QTRY_COMPARE(gridview->contentX(), -240-50.);
 
         // reduce right margin
         pos = gridview->contentX();
         gridview->setRightMargin(40);
-        QCOMPARE(gridview->xOrigin(), -1000.);
+        QCOMPARE(gridview->originX(), -1000.);
         QTRY_COMPARE(gridview->contentX(), -240-100 + 40.);
 
         // check end bound
         gridview->positionViewAtEnd();
-        QCOMPARE(gridview->xOrigin(), -900.); // positionViewAtEnd() resets origin
+        QCOMPARE(gridview->originX(), -900.); // positionViewAtEnd() resets origin
         pos = gridview->contentX();
         gridview->setContentX(pos - 80);
         gridview->returnToBounds();
@@ -4280,7 +4280,7 @@ void tst_QQuickGridView::margins()
         // reduce left margin
         pos = gridview->contentX();
         gridview->setLeftMargin(20);
-        QCOMPARE(gridview->xOrigin(), -900.);
+        QCOMPARE(gridview->originX(), -900.);
         QTRY_COMPARE(gridview->contentX(), pos+10);
 
         delete canvas;

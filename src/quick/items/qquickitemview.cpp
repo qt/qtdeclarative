@@ -1347,7 +1347,7 @@ void QQuickItemView::setContentY(qreal pos)
     QQuickFlickable::setContentY(pos);
 }
 
-qreal QQuickItemView::xOrigin() const
+qreal QQuickItemView::originX() const
 {
     Q_D(const QQuickItemView);
     if (d->layoutOrientation() == Qt::Horizontal
@@ -1355,10 +1355,10 @@ qreal QQuickItemView::xOrigin() const
             && contentWidth() < width()) {
         return d->lastPosition() - d->footerSize();
     }
-    return QQuickFlickable::xOrigin();
+    return QQuickFlickable::originX();
 }
 
-qreal QQuickItemView::yOrigin() const
+qreal QQuickItemView::originY() const
 {
     Q_D(const QQuickItemView);
     if (d->layoutOrientation() == Qt::Vertical
@@ -1366,7 +1366,7 @@ qreal QQuickItemView::yOrigin() const
             && contentHeight() < height()) {
         return d->lastPosition() - d->footerSize();
     }
-    return QQuickFlickable::yOrigin();
+    return QQuickFlickable::originY();
 }
 
 void QQuickItemView::updatePolish()

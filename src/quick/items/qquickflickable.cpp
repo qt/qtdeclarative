@@ -539,12 +539,12 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     if (vData.extentsChanged) {
         vData.extentsChanged = false;
-        emit q->yOriginChanged();
+        emit q->originYChanged();
     }
 
     if (hData.extentsChanged) {
         hData.extentsChanged = false;
-        emit q->xOriginChanged();
+        emit q->originXChanged();
     }
 
     if (atBoundaryChange)
@@ -1835,21 +1835,24 @@ void QQuickFlickable::setRightMargin(qreal m)
 }
 
 /*!
-    \qmlproperty real QtQuick2::Flickable::xOrigin
-    \qmlproperty real QtQuick2::Flickable::yOrigin
+    \qmlproperty real QtQuick2::Flickable::originX
+    \qmlproperty real QtQuick2::Flickable::originY
 
-    These properties hold the origin of the content.  This is usually (0,0), however
-    ListView and GridView may have an arbitrary origin due to delegate size variation,
-    or item insertion/removal outside the visible region.
+    These properties hold the origin of the content. This value always refers
+    to the top-left position of the content regardless of layout direction.
+
+    This is usually (0,0), however ListView and GridView may have an arbitrary
+    origin due to delegate size variation, or item insertion/removal outside
+    the visible region.
 */
 
-qreal QQuickFlickable::yOrigin() const
+qreal QQuickFlickable::originY() const
 {
     Q_D(const QQuickFlickable);
     return -minYExtent() + d->vData.startMargin;
 }
 
-qreal QQuickFlickable::xOrigin() const
+qreal QQuickFlickable::originX() const
 {
     Q_D(const QQuickFlickable);
     return -minXExtent() + d->hData.startMargin;

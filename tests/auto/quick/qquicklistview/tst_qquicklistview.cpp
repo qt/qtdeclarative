@@ -3740,13 +3740,13 @@ void tst_QQuickListView::extents()
     QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), maxPos.x());
     QCOMPARE(static_cast<LVAccessor*>(listview)->maxY(), maxPos.y());
 
-    QCOMPARE(listview->xOrigin(), origin_empty.x());
-    QCOMPARE(listview->yOrigin(), origin_empty.y());
+    QCOMPARE(listview->originX(), origin_empty.x());
+    QCOMPARE(listview->originY(), origin_empty.y());
     for (int i=0; i<30; i++)
         model.addItem("Item" + QString::number(i), "");
     QTRY_COMPARE(listview->count(), model.count());
-    QCOMPARE(listview->xOrigin(), origin_nonEmpty.x());
-    QCOMPARE(listview->yOrigin(), origin_nonEmpty.y());
+    QCOMPARE(listview->originX(), origin_nonEmpty.x());
+    QCOMPARE(listview->originY(), origin_nonEmpty.y());
 
     releaseView(canvas);
 }
@@ -4606,7 +4606,7 @@ void tst_QQuickListView::margins()
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QCOMPARE(listview->contentY(), -30.);
-    QCOMPARE(listview->yOrigin(), 0.);
+    QCOMPARE(listview->originY(), 0.);
 
     // check end bound
     listview->positionViewAtEnd();
@@ -4617,19 +4617,19 @@ void tst_QQuickListView::margins()
     QTRY_COMPARE(listview->contentY(), pos + 50);
 
     // remove item before visible and check that top margin is maintained
-    // and yOrigin is updated
+    // and originY is updated
     listview->setContentY(100);
     model.removeItem(1);
     QTRY_COMPARE(listview->count(), model.count());
     listview->setContentY(-50);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     listview->returnToBounds();
-    QCOMPARE(listview->yOrigin(), 20.);
+    QCOMPARE(listview->originY(), 20.);
     QTRY_COMPARE(listview->contentY(), -10.);
 
     // reduce top margin
     listview->setTopMargin(20);
-    QCOMPARE(listview->yOrigin(), 20.);
+    QCOMPARE(listview->originY(), 20.);
     QTRY_COMPARE(listview->contentY(), 0.);
 
     // check end bound
@@ -4642,7 +4642,7 @@ void tst_QQuickListView::margins()
     // reduce bottom margin
     pos = listview->contentY();
     listview->setBottomMargin(40);
-    QCOMPARE(listview->yOrigin(), 20.);
+    QCOMPARE(listview->originY(), 20.);
     QTRY_COMPARE(listview->contentY(), pos-10);
 
     delete canvas;

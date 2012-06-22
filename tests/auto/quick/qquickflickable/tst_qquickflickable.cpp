@@ -1050,8 +1050,8 @@ void tst_qquickflickable::margins()
     QCOMPARE(obj->contentY(), -20.);
     QCOMPARE(obj->contentWidth(), 1600.);
     QCOMPARE(obj->contentHeight(), 600.);
-    QCOMPARE(obj->xOrigin(), 0.);
-    QCOMPARE(obj->yOrigin(), 0.);
+    QCOMPARE(obj->originX(), 0.);
+    QCOMPARE(obj->originY(), 0.);
 
     // Reduce left margin
     obj->setLeftMargin(30);

@@ -63,11 +63,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
 
     Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin NOTIFY topMarginChanged)
     Q_PROPERTY(qreal bottomMargin READ bottomMargin WRITE setBottomMargin NOTIFY bottomMarginChanged)
-    Q_PROPERTY(qreal yOrigin READ yOrigin NOTIFY yOriginChanged)
+    Q_PROPERTY(qreal originY READ originY NOTIFY originYChanged)
 
     Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin NOTIFY leftMarginChanged)
     Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin NOTIFY rightMarginChanged)
-    Q_PROPERTY(qreal xOrigin READ xOrigin NOTIFY xOriginChanged)
+    Q_PROPERTY(qreal originX READ originX NOTIFY originXChanged)
 
     Q_PROPERTY(qreal horizontalVelocity READ horizontalVelocity NOTIFY horizontalVelocityChanged)
     Q_PROPERTY(qreal verticalVelocity READ verticalVelocity NOTIFY verticalVelocityChanged)
@@ -144,8 +144,8 @@ public:
     qreal rightMargin() const;
     void setRightMargin(qreal m);
 
-    virtual qreal yOrigin() const;
-    virtual qreal xOrigin() const;
+    virtual qreal originY() const;
+    virtual qreal originX() const;
 
     bool isMoving() const;
     bool isMovingHorizontally() const;
@@ -200,8 +200,8 @@ Q_SIGNALS:
     void bottomMarginChanged();
     void leftMarginChanged();
     void rightMarginChanged();
-    void yOriginChanged();
-    void xOriginChanged();
+    void originYChanged();
+    void originXChanged();
     void movingChanged();
     void movingHorizontallyChanged();
     void movingVerticallyChanged();

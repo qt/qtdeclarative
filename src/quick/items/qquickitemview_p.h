@@ -209,8 +209,8 @@ public:
 
     virtual void setContentX(qreal pos);
     virtual void setContentY(qreal pos);
-    virtual qreal xOrigin() const;
-    virtual qreal yOrigin() const;
+    virtual qreal originX() const;
+    virtual qreal originY() const;
 
 signals:
     void modelChanged();
