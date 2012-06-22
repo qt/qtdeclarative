@@ -1,3 +1,6 @@
+include(global/qt-html-templates-offline.qdocconf)
+include(global/qt-cpp-ignore.qdocconf)
+
 project                 = QtQml
 description             = Qt QML Reference Documentation
 url                     = http://qt-project.org/doc/qt-5.0/qtqml
@@ -8,7 +11,7 @@ outputencoding          = UTF-8
 naturallanguage         = en_US
 qhp.projects            = QtCore
 
-depends += qtcore qtjsbackend qtxmlpatterns qtquick
+depends += qtcore qtxmlpatterns
 
 qhp.QtQml.file                = qtqml.qhp
 qhp.QtQml.namespace           = org.qt-project.qtqml.500
@@ -52,7 +55,7 @@ HTML.nobreadcrumbs      = "true"
 
 HTML.templatedir = .
 
-HTML.stylesheets = ../../../doc/global/style/offline.css
+HTML.stylesheets = global/style/offline.css
 
 HTML.headerstyles = \
     "  <link rel=\"stylesheet\" type=\"text/css\" href=\"style/offline.css\" />\n"

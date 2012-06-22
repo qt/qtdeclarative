@@ -1,9 +1,12 @@
+include(global/qt-html-templates-offline.qdocconf)
+include(global/qt-cpp-ignore.qdocconf)
+
 project                 = QtQuick
 description             = Qt Quick Reference Documentation
 url                     = http://qt-project.org/doc/qt-5.0/qtquick
 version                 = 5.0.0
 
-depends += qtqcore qtxmlpatterns qtjsbackend qtqml
+depends += qtqcore qtxmlpatterns qtqml
 
 sourceencoding          = UTF-8
 outputencoding          = UTF-8
@@ -52,7 +55,7 @@ HTML.nobreadcrumbs      = "true"
 
 HTML.templatedir = .
 
-HTML.stylesheets = ../../../doc/global/style/offline.css
+HTML.stylesheets = global/style/offline.css
 
 HTML.headerstyles = \
     "  <link rel=\"stylesheet\" type=\"text/css\" href=\"style/offline.css\" />\n"
