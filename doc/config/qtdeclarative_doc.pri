@@ -15,11 +15,11 @@ $$unixstyle {
     DITA_DOCS = $$replace(ONLINE_CONF, "/", "\\")
 }
 
-online_docs.commands = $$QDOC $$ONLINE_CONF
-dita_docs.commands = $$QDOC $$DITA_CONF
+qtquick_online_docs.commands = $$QDOC $$ONLINE_CONF
+qtquick_dita_docs.commands = $$QDOC $$DITA_CONF
 
-docs.depends = dita_docs online_docs
-QMAKE_EXTRA_TARGETS = docs dita_docs online_docs
+qtquick_docs.depends = qtquick_dita_docs qtquick_online_docs
+QMAKE_EXTRA_TARGETS = qtquick_docs qtquick_dita_docs qtquick_online_docs
 QMAKE_CLEAN += \
                "-r $$PWD/html" \
                "-r $$PWD/ditaxml"

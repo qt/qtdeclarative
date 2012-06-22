@@ -23,6 +23,8 @@ exists("qqml_enable_gcov") {
 
 load(qt_module_config)
 
+QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf
+
 # private dependencies
 QT += v8-private
 
