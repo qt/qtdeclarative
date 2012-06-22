@@ -46,6 +46,7 @@ PRIVATETESTS += \
     qquicklistmodelworkerscript \
     qquickworkerscript \
     qqmlbundle \
+    qrcqml \
     v4
 
 !contains(QT_CONFIG, no-widgets) {

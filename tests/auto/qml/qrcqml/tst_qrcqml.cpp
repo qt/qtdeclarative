@@ -66,9 +66,6 @@ void tst_qrcqml::basicLoad()
 {
     QQmlEngine e;
     QQmlComponent c(&e, QUrl("qrc:/main.qml"));
-    if (c.isError())
-        qDebug() << "Error: " << c.errors();
-    QEXPECT_FAIL("", "QTBUG-25937", Abort);
     QVERIFY(c.isReady());
     QObject* o = c.create();
     QVERIFY(o);

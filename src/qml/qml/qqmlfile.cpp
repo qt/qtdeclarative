@@ -51,7 +51,7 @@
 \class QQmlFile
 \brief The QQmlFile class gives access to local and remote files.
 
-Supports file://, qrc://, bundle:// uris and whatever QNetworkAccessManager supports.
+Supports file://, qrc:/, bundle:// uris and whatever QNetworkAccessManager supports.
 */
 
 #define QQMLFILE_MAX_REDIRECT_RECURSION 16
@@ -481,7 +481,7 @@ bool QQmlFile::connectDownloadProgress(QObject *object, int method)
 /*!
 Returns true if QQmlFile will open \a url synchronously.
 
-Synchronous urls have a qrc://, file://, or bundle:// scheme.
+Synchronous urls have a qrc:/, file://, or bundle:// scheme.
 */
 bool QQmlFile::isSynchronous(const QUrl &url)
 {
@@ -498,11 +498,11 @@ bool QQmlFile::isSynchronous(const QUrl &url)
 /*!
 Returns true if QQmlFile will open \a url synchronously.
 
-Synchronous urls have a qrc://, file://, or bundle:// scheme.
+Synchronous urls have a qrc:/, file://, or bundle:// scheme.
 */
 bool QQmlFile::isSynchronous(const QString &url)
 {
-    if (url.length() < 6 /* qrc:// */)
+    if (url.length() < 5 /* qrc:/ */)
         return false;
 
     QChar f = url[0];
@@ -521,9 +521,9 @@ bool QQmlFile::isSynchronous(const QString &url)
 
     } else if (f == QLatin1Char('q') || f == QLatin1Char('Q')) {
 
-        return url.length() >= 6 /* bundle:// */ &&
+        return url.length() >= 5 /* qrc:/ */ &&
                url.startsWith(qrc_string, Qt::CaseInsensitive) &&
-               url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/') && url[5] == QLatin1Char('/');
+               url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/');
 
     }
 
@@ -556,7 +556,7 @@ bool QQmlFile::isBundle(const QUrl &url)
 /*!
 Returns true if \a url is a local file that can be opened with QFile.
 
-Local file urls have either a qrc:// or file:// scheme.
+Local file urls have either a qrc:/ or file:// scheme.
 */
 bool QQmlFile::isLocalFile(const QUrl &url)
 {
@@ -572,11 +572,11 @@ bool QQmlFile::isLocalFile(const QUrl &url)
 /*!
 Returns true if \a url is a local file that can be opened with QFile.
 
-Local file urls have either a qrc:// or file:// scheme.
+Local file urls have either a qrc:/ or file:// scheme.
 */
 bool QQmlFile::isLocalFile(const QString &url)
 {
-    if (url.length() < 6 /* qrc:// */)
+    if (url.length() < 5 /* qrc:/ */)
         return false;
 
     QChar f = url[0];
@@ -589,9 +589,9 @@ bool QQmlFile::isLocalFile(const QString &url)
 
     } else if (f == QLatin1Char('q') || f == QLatin1Char('Q')) {
 
-        return url.length() >= 6 /* bundle:// */ &&
+        return url.length() >= 5 /* qrc:/ */ &&
                url.startsWith(qrc_string, Qt::CaseInsensitive) &&
-               url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/') && url[5] == QLatin1Char('/');
+               url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/');
 
     }
 
