@@ -1142,7 +1142,7 @@ bool QQuickAnchorsPrivate::checkHValid() const
     if (usedAnchors & QQuickAnchors::LeftAnchor &&
         usedAnchors & QQuickAnchors::RightAnchor &&
         usedAnchors & QQuickAnchors::HCenterAnchor) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot specify left, right, and hcenter anchors.");
+        qmlInfo(item) << QQuickAnchors::tr("Cannot specify left, right, and horizontalCenter anchors at the same time.");
         return false;
     }
 
@@ -1173,13 +1173,13 @@ bool QQuickAnchorsPrivate::checkVValid() const
     if (usedAnchors & QQuickAnchors::TopAnchor &&
         usedAnchors & QQuickAnchors::BottomAnchor &&
         usedAnchors & QQuickAnchors::VCenterAnchor) {
-        qmlInfo(item) << QQuickAnchors::tr("Cannot specify top, bottom, and vcenter anchors.");
+        qmlInfo(item) << QQuickAnchors::tr("Cannot specify top, bottom, and verticalCenter anchors at the same time.");
         return false;
     } else if (usedAnchors & QQuickAnchors::BaselineAnchor &&
                (usedAnchors & QQuickAnchors::TopAnchor ||
                 usedAnchors & QQuickAnchors::BottomAnchor ||
                 usedAnchors & QQuickAnchors::VCenterAnchor)) {
-        qmlInfo(item) << QQuickAnchors::tr("Baseline anchor cannot be used in conjunction with top, bottom, or vcenter anchors.");
+        qmlInfo(item) << QQuickAnchors::tr("Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors.");
         return false;
     }
 

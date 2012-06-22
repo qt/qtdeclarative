@@ -308,7 +308,7 @@ void tst_qquickanchors::illegalSets_data()
 
     QTest::newRow("H - too many anchors")
         << "Rectangle { id: rect; Rectangle { anchors.left: rect.left; anchors.right: rect.right; anchors.horizontalCenter: rect.horizontalCenter } }"
-        << "file::2:23: QML Rectangle: Cannot specify left, right, and hcenter anchors.";
+        << "file::2:23: QML Rectangle: Cannot specify left, right, and horizontalCenter anchors at the same time.";
 
     foreach (const QString &side, QStringList() << "left" << "right") {
         QTest::newRow("H - anchor to V")
@@ -327,11 +327,11 @@ void tst_qquickanchors::illegalSets_data()
 
     QTest::newRow("V - too many anchors")
         << "Rectangle { id: rect; Rectangle { anchors.top: rect.top; anchors.bottom: rect.bottom; anchors.verticalCenter: rect.verticalCenter } }"
-        << "file::2:23: QML Rectangle: Cannot specify top, bottom, and vcenter anchors.";
+        << "file::2:23: QML Rectangle: Cannot specify top, bottom, and verticalCenter anchors at the same time.";
 
     QTest::newRow("V - too many anchors with baseline")
         << "Rectangle { Text { id: text1; text: \"Hello\" } Text { anchors.baseline: text1.baseline; anchors.top: text1.top; } }"
-        << "file::2:47: QML Text: Baseline anchor cannot be used in conjunction with top, bottom, or vcenter anchors.";
+        << "file::2:47: QML Text: Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors.";
 
     foreach (const QString &side, QStringList() << "top" << "bottom" << "baseline") {
 
