@@ -130,9 +130,6 @@ public:
         SelectWords
     };
 
-    Q_INVOKABLE void openSoftwareInputPanel();
-    Q_INVOKABLE void closeSoftwareInputPanel();
-
     QString text() const;
     void setText(const QString &);
 

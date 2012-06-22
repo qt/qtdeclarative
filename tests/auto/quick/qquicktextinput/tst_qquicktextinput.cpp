@@ -3216,14 +3216,6 @@ void tst_qquicktextinput::openInputPanel()
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
     QCOMPARE(qApp->inputMethod()->isVisible(), false);
-
-    // input panel should open when openSoftwareInputPanel is called
-    input->openSoftwareInputPanel();
-    QCOMPARE(qApp->inputMethod()->isVisible(), true);
-
-    // input panel should close when closeSoftwareInputPanel is called
-    input->closeSoftwareInputPanel();
-    QCOMPARE(qApp->inputMethod()->isVisible(), false);
 }
 
 class MyTextInput : public QQuickTextInput

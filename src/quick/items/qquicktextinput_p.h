@@ -157,9 +157,6 @@ public:
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
 
-    Q_INVOKABLE void openSoftwareInputPanel();
-    Q_INVOKABLE void closeSoftwareInputPanel();
-
     QString text() const;
     void setText(const QString &);
 

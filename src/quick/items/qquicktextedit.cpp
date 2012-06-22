@@ -1480,7 +1480,7 @@ void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
         forceActiveFocus();
         // re-open input panel on press if already focused
         if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
-            openSoftwareInputPanel();
+            qGuiApp->inputMethod()->show();
     }
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mousePressEvent(event);
@@ -2044,99 +2044,11 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
     }
 }
 
-
-
-/*!
-    \qmlmethod void QtQuick2::TextEdit::openSoftwareInputPanel()
-
-    Opens software input panels like virtual keyboards for typing, useful for
-    customizing when you want the input keyboard to be shown and hidden in
-    your application.
-
-    By default the opening of input panels follows the platform style. Input panels are
-    always closed if no editor has active focus.
-
-    You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
-    and use functions openSoftwareInputPanel() and closeSoftwareInputPanel() to implement
-    the behavior you want.
-
-    Only relevant on platforms, which provide virtual keyboards.
-
-    \code
-        import QtQuick 2.0
-        TextEdit {
-            id: textEdit
-            text: "Hello world!"
-            activeFocusOnPress: false
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    if (!textEdit.activeFocus) {
-                        textEdit.forceActiveFocus();
-                        textEdit.openSoftwareInputPanel();
-                    } else {
-                        textEdit.focus = false;
-                    }
-                }
-                onPressAndHold: textEdit.closeSoftwareInputPanel();
-            }
-        }
-    \endcode
-*/
-void QQuickTextEdit::openSoftwareInputPanel()
-{
-    if (qGuiApp)
-        qGuiApp->inputMethod()->show();
-}
-
-/*!
-    \qmlmethod void QtQuick2::TextEdit::closeSoftwareInputPanel()
-
-    Closes a software input panel like a virtual keyboard shown on the screen, useful
-    for customizing when you want the input keyboard to be shown and hidden in
-    your application.
-
-    By default the opening of input panels follows the platform style. Input panels are
-    always closed if no editor has active focus.
-
-    You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
-    and use functions openSoftwareInputPanel() and closeSoftwareInputPanel() to implement
-    the behavior you want.
-
-    Only relevant on platforms, which provide virtual keyboards.
-
-    \code
-        import QtQuick 2.0
-        TextEdit {
-            id: textEdit
-            text: "Hello world!"
-            activeFocusOnPress: false
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    if (!textEdit.activeFocus) {
-                        textEdit.forceActiveFocus();
-                        textEdit.openSoftwareInputPanel();
-                    } else {
-                        textEdit.focus = false;
-                    }
-                }
-                onPressAndHold: textEdit.closeSoftwareInputPanel();
-            }
-        }
-    \endcode
-*/
-void QQuickTextEdit::closeSoftwareInputPanel()
-{
-    if (qGuiApp)
-        qGuiApp->inputMethod()->hide();
-}
-
 void QQuickTextEdit::focusInEvent(QFocusEvent *event)
 {
     Q_D(const QQuickTextEdit);
     if (d->focusOnPress && !isReadOnly())
-        openSoftwareInputPanel();
+        qGuiApp->inputMethod()->show();
     QQuickImplicitSizeItem::focusInEvent(event);
 }
 

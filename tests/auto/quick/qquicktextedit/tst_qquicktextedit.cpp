@@ -2656,14 +2656,6 @@ void tst_qquicktextedit::openInputPanel()
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
     QCOMPARE(qApp->inputMethod()->isVisible(), false);
 
-    // input panel should open when openSoftwareInputPanel is called
-    edit->openSoftwareInputPanel();
-    QCOMPARE(qApp->inputMethod()->isVisible(), true);
-
-    // input panel should close when closeSoftwareInputPanel is called
-    edit->closeSoftwareInputPanel();
-    QCOMPARE(qApp->inputMethod()->isVisible(), false);
-
     inputMethodPrivate->testContext = 0;
 }
 
