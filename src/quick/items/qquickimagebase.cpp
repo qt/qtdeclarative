@@ -100,8 +100,8 @@ QUrl QQuickImageBase::source() const
 void QQuickImageBase::setSource(const QUrl &url)
 {
     Q_D(QQuickImageBase);
-    //equality is fairly expensive, so we bypass for simple, common case
-    if ((d->url.isEmpty() == url.isEmpty()) && url == d->url)
+
+    if (url == d->url)
         return;
 
     d->url = url;
