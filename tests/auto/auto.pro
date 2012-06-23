@@ -5,6 +5,7 @@ SUBDIRS=\
     headersclean \
     particles \
     qmltest \
-    qmldevtools
+    qmldevtools \
+    cmake
 
 testcocoon: SUBDIRS -= headersclean
