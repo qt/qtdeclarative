@@ -69,7 +69,6 @@ public:
     QQuickImageBasePrivate()
       : status(QQuickImageBase::Null),
         progress(0.0),
-        explicitSourceSize(false),
         async(false),
         cache(true),
         mirror(false)
@@ -81,7 +80,6 @@ public:
     QUrl url;
     qreal progress;
     QSize sourcesize;
-    bool explicitSourceSize : 1;
     bool async : 1;
     bool cache : 1;
     bool mirror: 1;

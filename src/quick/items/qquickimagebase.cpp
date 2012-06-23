@@ -118,7 +118,6 @@ void QQuickImageBase::setSourceSize(const QSize& size)
         return;
 
     d->sourcesize = size;
-    d->explicitSourceSize = true;
     emit sourceSizeChanged();
     if (isComponentComplete())
         load();
@@ -135,14 +134,7 @@ QSize QQuickImageBase::sourceSize() const
 
 void QQuickImageBase::resetSourceSize()
 {
-    Q_D(QQuickImageBase);
-    if (!d->explicitSourceSize)
-        return;
-    d->explicitSourceSize = false;
-    d->sourcesize = QSize();
-    emit sourceSizeChanged();
-    if (isComponentComplete())
-        load();
+    setSourceSize(QSize());
 }
 
 bool QQuickImageBase::cache() const
@@ -209,7 +201,7 @@ void QQuickImageBase::load()
             options |= QQuickPixmap::Cache;
         d->pix.clear(this);
         pixmapChange();
-        d->pix.load(qmlEngine(this), d->url, d->explicitSourceSize ? sourceSize() : QSize(), options);
+        d->pix.load(qmlEngine(this), d->url, d->sourcesize, options);
 
         if (d->pix.isLoading()) {
             d->progress = 0.0;
