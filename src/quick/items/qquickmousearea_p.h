@@ -143,6 +143,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
 #endif
     Q_PROPERTY(bool preventStealing READ preventStealing WRITE setPreventStealing NOTIFY preventStealingChanged)
     Q_PROPERTY(bool propagateComposedEvents READ propagateComposedEvents WRITE setPropagateComposedEvents NOTIFY propagateComposedEventsChanged)
+#ifndef QT_NO_CURSOR
+    Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape NOTIFY cursorShapeChanged)
+#endif
 
 public:
     QQuickMouseArea(QQuickItem *parent=0);
@@ -175,12 +178,20 @@ public:
     bool propagateComposedEvents() const;
     void setPropagateComposedEvents(bool propagate);
 
+#ifndef QT_NO_CURSOR
+    Qt::CursorShape cursorShape() const;
+    void setCursorShape(Qt::CursorShape shape);
+#endif
+
 Q_SIGNALS:
     void hoveredChanged();
     void pressedChanged();
     void enabledChanged();
     void acceptedButtonsChanged();
     void hoverEnabledChanged();
+#ifndef QT_NO_CURSOR
+    void cursorShapeChanged();
+#endif
     void positionChanged(QQuickMouseEvent *mouse);
     void mouseXChanged(QQuickMouseEvent *mouse);
     void mouseYChanged(QQuickMouseEvent *mouse);

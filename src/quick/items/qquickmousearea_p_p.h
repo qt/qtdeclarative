@@ -107,6 +107,9 @@ public:
     Qt::MouseButtons lastButtons;
     Qt::KeyboardModifiers lastModifiers;
     QBasicTimer pressAndHoldTimer;
+#ifndef QT_NO_CURSOR
+    QCursor *cursor;
+#endif
 };
 
 QT_END_NAMESPACE

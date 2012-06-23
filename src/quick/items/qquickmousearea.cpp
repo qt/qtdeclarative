@@ -197,6 +197,9 @@ QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 #ifndef QT_NO_DRAGANDDROP
   , drag(0)
 #endif
+#ifndef QT_NO_CURSOR
+  , cursor(0)
+#endif
 {
 }
 
@@ -204,6 +207,9 @@ QQuickMouseAreaPrivate::~QQuickMouseAreaPrivate()
 {
 #ifndef QT_NO_DRAGANDDROP
     delete drag;
+#endif
+#ifndef QT_NO_CURSOR
+    delete cursor;
 #endif
 }
 
@@ -1119,8 +1125,18 @@ void QQuickMouseArea::setHovered(bool h)
         d->hovered = h;
         emit hoveredChanged();
         d->hovered ? emit entered() : emit exited();
+#ifndef QT_NO_CURSOR
+        if (d->cursor) {
+            if (d->hovered) {
+                canvas()->setCursor(QCursor(*d->cursor));
+            } else {
+                canvas()->unsetCursor();
+            }
+        }
+#endif
     }
 }
+
 /*!
     \qmlproperty QtQuick2::Qt::MouseButtons MouseArea::acceptedButtons
     This property holds the mouse buttons that the mouse area reacts to.
@@ -1191,6 +1207,68 @@ bool QQuickMouseArea::setPressed(bool p)
     }
     return false;
 }
+
+
+/*!
+    \qmlproperty QtQuick2::Qt::CursorShape MouseArea::cursorShape
+    This property holds the cursor shape for this mouse area.
+    Note that on platforms that do not display a mouse cursor this may have
+    no effect.
+
+    The available cursor shapes are:
+    \list
+    \li Qt.ArrowCursor
+    \li Qt.UpArrowCursor
+    \li Qt.CrossCursor
+    \li Qt.WaitCursor
+    \li Qt.IBeamCursor
+    \li Qt.SizeVerCursor
+    \li Qt.SizeHorCursor
+    \li Qt.SizeBDiagCursor
+    \li Qt.SizeFDiagCursor
+    \li Qt.SizeAllCursor
+    \li Qt.BlankCursor
+    \li Qt.SplitVCursor
+    \li Qt.SplitHCursor
+    \li Qt.PointingHandCursor
+    \li Qt.ForbiddenCursor
+    \li Qt.WhatsThisCursor
+    \li Qt.BusyCursor
+    \li Qt.OpenHandCursor
+    \li Qt.ClosedHandCursor
+    \li Qt.DragCopyCursor
+    \li Qt.DragMoveCursor
+    \li Qt.DragLinkCursor
+    \endlist
+
+    In order to only set a mouse cursor shape for a region without reacting
+    to mouse events set the acceptedButtons to none:
+
+    \code
+    MouseArea { cursorShape: Qt.IBeamCursor; acceptedButtons: Qt.NoButton }
+    \endcode
+
+    The default value is \c Qt.ArrowCursor.
+    \sa Qt::CursorShape
+*/
+
+#ifndef QT_NO_CURSOR
+Qt::CursorShape QQuickMouseArea::cursorShape() const
+{
+    Q_D(const QQuickMouseArea);
+    if (d->cursor)
+        return d->cursor->shape();
+    return Qt::ArrowCursor;
+}
+
+void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
+{
+    Q_D(QQuickMouseArea);
+    setHoverEnabled(true);
+    delete d->cursor;
+    d->cursor = new QCursor(shape);
+}
+#endif
 
 /*!
     \qmlproperty Item QtQuick2::MouseArea::drag.target
