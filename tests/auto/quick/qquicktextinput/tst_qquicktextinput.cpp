@@ -2368,7 +2368,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence() {
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     // copy and paste
     QVERIFY(textInput->hasActiveFocus());
@@ -3093,7 +3093,7 @@ void tst_qquicktextinput::focusOnPress()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     QCOMPARE(textInputObject->hasFocus(), false);
     QCOMPARE(textInputObject->hasActiveFocus(), false);
@@ -4768,7 +4768,7 @@ void tst_qquicktextinput::keySequence()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     simulateKey(&canvas, layoutDirection);
 
@@ -4929,7 +4929,7 @@ void tst_qquicktextinput::undo()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     QVERIFY(!textInput->canUndo());
 
@@ -5015,7 +5015,7 @@ void tst_qquicktextinput::redo()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     QVERIFY(!textInput->canUndo());
     QVERIFY(!textInput->canRedo());
@@ -5217,7 +5217,7 @@ void tst_qquicktextinput::undo_keypressevents()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     simulateKeys(&canvas, keys);
 
@@ -5587,7 +5587,7 @@ void tst_qquicktextinput::setInputMask()
         canvas.show();
         canvas.requestActivateWindow();
         QTest::qWaitForWindowShown(&canvas);
-        QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+        QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
         simulateKey(&canvas, Qt::Key_Home);
         for (int i = 0; i < input.length(); i++)
@@ -5717,7 +5717,7 @@ void tst_qquicktextinput::keypress_inputMask()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     simulateKeys(&canvas, keys);
 
@@ -5763,7 +5763,7 @@ void tst_qquicktextinput::hasAcceptableInputMask()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     // test that invalid input (for required) work for optionalMask
     textInput->setText(invalid);
@@ -5826,7 +5826,7 @@ void tst_qquicktextinput::maskCharacter()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     for (int i = 0; i < input.size(); ++i) {
         QString in = QString(input.at(i));

@@ -1154,7 +1154,7 @@ void tst_qquicktextedit::focusOnPress()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     QCOMPARE(textEditObject->hasFocus(), false);
     QCOMPARE(textEditObject->hasActiveFocus(), false);
@@ -3942,7 +3942,7 @@ void tst_qquicktextedit::keySequence()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     simulateKey(&canvas, layoutDirection);
 
@@ -4104,7 +4104,7 @@ void tst_qquicktextedit::undo()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     QVERIFY(!textEdit->canUndo());
 
@@ -4190,7 +4190,7 @@ void tst_qquicktextedit::redo()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     QVERIFY(!textEdit->canUndo());
     QVERIFY(!textEdit->canRedo());
@@ -4383,7 +4383,7 @@ void tst_qquicktextedit::undo_keypressevents()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     simulateKeys(&canvas, keys);
 
