@@ -85,7 +85,7 @@ void tst_qquickapplication::active()
     // not active
     QVERIFY(!item->property("active").toBool());
     QVERIFY(!item->property("active2").toBool());
-    QCOMPARE(item->property("active").toBool(), QGuiApplication::activeWindow() != 0);
+    QCOMPARE(item->property("active").toBool(), QGuiApplication::focusWindow() != 0);
 
     // active
     view.show();
@@ -93,8 +93,8 @@ void tst_qquickapplication::active()
     QTest::qWait(50);
     QEXPECT_FAIL("", "QTBUG-21573", Abort);
     QTRY_COMPARE(view.status(), QQuickView::Ready);
-    QCOMPARE(item->property("active").toBool(), QGuiApplication::activeWindow() != 0);
-    QCOMPARE(item->property("active2").toBool(), QGuiApplication::activeWindow() != 0);
+    QCOMPARE(item->property("active").toBool(), QGuiApplication::focusWindow() != 0);
+    QCOMPARE(item->property("active2").toBool(), QGuiApplication::focusWindow() != 0);
 
 #if 0
     // QGuiApplication has no equivalent of setActiveWindow(0). QTBUG-21573
@@ -107,7 +107,7 @@ void tst_qquickapplication::active()
     // not active again
     QGuiApplication::setActiveWindow(0);
     QVERIFY(!item->property("active").toBool());
-    QCOMPARE(item->property("active").toBool(), QGuiApplication::activeWindow() != 0);
+    QCOMPARE(item->property("active").toBool(), QGuiApplication::focusWindow() != 0);
 #endif
 
 }
