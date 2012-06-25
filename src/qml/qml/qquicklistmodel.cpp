@@ -2327,6 +2327,8 @@ void QQuickListModelParser::setCustomData(QObject *obj, const QByteArray &d)
     const ListModelData *lmd = (const ListModelData *)d.constData();
     const char *data = ((const char *)lmd) + lmd->dataOffset;
 
+    bool setRoles = false;
+
     QStack<DataStackElement> stack;
 
     for (int ii = 0; ii < lmd->instrCount; ++ii) {
@@ -2398,6 +2400,7 @@ void QQuickListModelParser::setCustomData(QObject *obj, const QByteArray &d)
                 }
 
                 e1.model->setOrCreateProperty(e1.elementIndex, name, value);
+                setRoles = true;
             }
             break;
 
@@ -2410,6 +2413,9 @@ void QQuickListModelParser::setCustomData(QObject *obj, const QByteArray &d)
             break;
         }
     }
+
+    if (setRoles == false)
+        qmlInfo(obj) << "All ListElement declarations are empty, no roles can be created unless dynamicRoles is set.";
 }
 
 bool QQuickListModelParser::definesEmptyList(const QString &s)

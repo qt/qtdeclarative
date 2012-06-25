@@ -123,6 +123,8 @@ private slots:
     void role_mode_data();
     void role_mode();
     void string_to_list_crash();
+    void empty_element_warning();
+    void empty_element_warning_data();
 };
 
 bool tst_qquicklistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1187,6 +1189,41 @@ void tst_qquicklistmodel::string_to_list_crash()
     QQmlExpression e(engine.rootContext(), &model, script);
     // Don't crash!
     e.evaluate();
+}
+
+void tst_qquicklistmodel::empty_element_warning_data()
+{
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<bool>("warning");
+
+    QTest::newRow("empty") << "import QtQuick 2.0\nListModel {}" << false;
+    QTest::newRow("withid") << "import QtQuick 2.0\nListModel { id: model }" << false;
+    QTest::newRow("emptyElement") << "import QtQuick 2.0\nListModel { ListElement {} }" << true;
+    QTest::newRow("emptyElements") << "import QtQuick 2.0\nListModel { ListElement {} ListElement {} }" << true;
+    QTest::newRow("role1") << "import QtQuick 2.0\nListModel { ListElement {a:1} }" << false;
+    QTest::newRow("role2") << "import QtQuick 2.0\nListModel { ListElement {} ListElement {a:1} ListElement {} }" << false;
+    QTest::newRow("role3") << "import QtQuick 2.0\nListModel { ListElement {} ListElement {a:1} ListElement {b:2} }" << false;
+}
+
+void tst_qquicklistmodel::empty_element_warning()
+{
+    QFETCH(QString, qml);
+    QFETCH(bool, warning);
+
+    if (warning) {
+        QString warningString = QLatin1String("file:dummy.qml:2:1: QML ListModel: All ListElement declarations are empty, no roles can be created unless dynamicRoles is set.");
+        QTest::ignoreMessage(QtWarningMsg, warningString.toLatin1());
+    }
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(qml.toUtf8(), QUrl::fromLocalFile(QString("dummy.qml")));
+    QVERIFY(!component.isError());
+
+    QObject *obj = component.create();
+    QVERIFY(obj != 0);
+
+    delete obj;
 }
 
 QTEST_MAIN(tst_qquicklistmodel)
