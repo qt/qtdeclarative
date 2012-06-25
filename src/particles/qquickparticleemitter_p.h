@@ -73,9 +73,9 @@ class QQuickParticleEmitter : public QQuickItem
     Q_PROPERTY(qreal endSize READ particleEndSize WRITE setParticleEndSize NOTIFY particleEndSizeChanged)
     Q_PROPERTY(qreal sizeVariation READ particleSizeVariation WRITE setParticleSizeVariation NOTIFY particleSizeVariationChanged)
 
-    Q_PROPERTY(QQuickDirection *speed READ speed WRITE setSpeed NOTIFY speedChanged)
+    Q_PROPERTY(QQuickDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged)
     Q_PROPERTY(QQuickDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
-    Q_PROPERTY(qreal speedFromMovement READ speedFromMovement WRITE setSpeedFromMovement NOTIFY speedFromMovementChanged)
+    Q_PROPERTY(qreal velocityFromMovement READ velocityFromMovement WRITE setVelocityFromMovement NOTIFY velocityFromMovementChanged)
 
     Q_ENUMS(Lifetime)
 public:
@@ -117,8 +117,8 @@ public:
         return m_particleDurationVariation;
     }
 
-    qreal speedFromMovement() const { return m_speed_from_movement; }
-    void setSpeedFromMovement(qreal s);
+    qreal velocityFromMovement() const { return m_velocity_from_movement; }
+    void setVelocityFromMovement(qreal s);
     virtual void componentComplete();
 signals:
     void emitParticles(QQmlV8Handle particles);
@@ -140,14 +140,14 @@ signals:
 
     void particleSizeVariationChanged(qreal arg);
 
-    void speedChanged(QQuickDirection * arg);
+    void velocityChanged(QQuickDirection * arg);
 
     void accelerationChanged(QQuickDirection * arg);
 
     void maximumEmittedChanged(int arg);
     void particleCountChanged();
 
-    void speedFromMovementChanged();
+    void velocityFromMovementChanged();
 
     void startTimeChanged(int arg);
 
@@ -231,11 +231,11 @@ public slots:
         }
     }
 
-    void setSpeed(QQuickDirection * arg)
+    void setVelocity(QQuickDirection * arg)
     {
-        if (m_speed != arg) {
-            m_speed = arg;
-            emit speedChanged(arg);
+        if (m_velocity != arg) {
+            m_velocity = arg;
+            emit velocityChanged(arg);
         }
     }
 
@@ -281,9 +281,9 @@ public:
            return m_particleSizeVariation;
        }
 
-       QQuickDirection * speed() const
+       QQuickDirection * velocity() const
        {
-           return m_speed;
+           return m_velocity;
        }
 
        QQuickDirection * acceleration() const
@@ -311,13 +311,13 @@ protected:
        QQuickParticleExtruder* m_extruder;
        QQuickParticleExtruder* m_defaultExtruder;
        QQuickParticleExtruder* effectiveExtruder();
-       QQuickDirection * m_speed;
+       QQuickDirection * m_velocity;
        QQuickDirection * m_acceleration;
        qreal m_particleSize;
        qreal m_particleEndSize;
        qreal m_particleSizeVariation;
 
-       qreal m_speedFromMovement;
+       qreal m_velocityFromMovement;
        int m_startTime;
        bool m_overwrite;
 
@@ -326,7 +326,7 @@ protected:
        int m_maxParticleCount;
 
        //Used in default implementation, but might be useful
-       qreal m_speed_from_movement;
+       qreal m_velocity_from_movement;
 
        int m_emitCap;
        bool m_reset_last;

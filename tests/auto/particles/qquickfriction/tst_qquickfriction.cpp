@@ -114,7 +114,7 @@ void tst_qquickfriction::test_threshold()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
-    //Speed capped at 50, but it might take a frame or two to get there
+    //Velocity capped at 50, but it might take a frame or two to get there
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1.0f)

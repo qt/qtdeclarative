@@ -61,7 +61,7 @@ Rectangle {
         emitRate: 200
         lifeSpan: 4000
         startTime: 4000
-        speed: PointDirection { y: -120; }
+        velocity: PointDirection { y: -120; }
     }
 
     ImageParticle {

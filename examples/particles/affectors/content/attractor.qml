@@ -58,7 +58,7 @@ Rectangle {
         enabled: true
         size: 30
         sizeVariation: 10
-        speed: PointDirection { x: 220; xVariation: 40 }
+        velocity: PointDirection { x: 220; xVariation: 40 }
         height: parent.height
     }
     Emitter {
@@ -69,7 +69,7 @@ Rectangle {
         enabled: true
         size: 30
         sizeVariation: 10
-        speed: PointDirection { x: 220; xVariation: 40 }
+        velocity: PointDirection { x: 220; xVariation: 40 }
         height: parent.height
     }
     ParticleSystem {
@@ -178,7 +178,7 @@ Rectangle {
         size: 10
         endSize: 4
         sizeVariation: 4
-        speed: PointDirection { x: -128; xVariation: 32 }
+        velocity: PointDirection { x: -128; xVariation: 32 }
         height: ship.height
         y: ship.y
         x: ship.x
@@ -191,7 +191,7 @@ Rectangle {
         lifeSpan: 1000
         enabled: true
         size: 40
-        speed: PointDirection { x: 256; }
+        velocity: PointDirection { x: 256; }
         x: ship.x + ship.width
         y: ship.y + ship.height/2
     }

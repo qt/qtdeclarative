@@ -64,7 +64,7 @@ Rectangle {
             size: 32
             emitRatePerParticle: 2
             lifeSpan: 500
-            speed: PointDirection{ x: 500; y: 500 }
+            velocity: PointDirection{ x: 500; y: 500 }
         }
         Emitter{
             x: 4

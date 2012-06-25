@@ -61,7 +61,7 @@ Rectangle {
             size: 32
             emitRate: 1000
             lifeSpan: 500
-            speed: CumulativeDirection {
+            velocity: CumulativeDirection {
                 PointDirection { x: 100; y: -100 }
                 PointDirection { x: -100; y: 100 }
             }

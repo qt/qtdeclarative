@@ -58,7 +58,7 @@ Item {
         emitRate: 4
         lifeSpan: 14000
         size: 80
-        speed: PointDirection { y: 60 }
+        velocity: PointDirection { y: 60 }
     }
     Wander {
         system: sys
@@ -72,7 +72,7 @@ Item {
     Affector {
         system: sys
         property real coefficient: 0.1
-        property real speed: 1.5
+        property real velocity: 1.5
         width: parent.width
         height: parent.height - 100
         onAffectParticles: {
@@ -80,11 +80,11 @@ Item {
             if (particle.r == 0) {
                 particle.r = Math.random() > 0.5 ? -1 : 1;
             }else if (particle.r == 1) {
-                particle.rotation += speed * dt;
+                particle.rotation += velocity * dt;
                 if(particle.rotation >= maxAngle)
                     particle.r = -1;
             }else if (particle.r == -1) {
-                particle.rotation -= speed * dt;
+                particle.rotation -= velocity * dt;
                 if(particle.rotation <= -1 * maxAngle)
                     particle.r = 1;
             }
@@ -95,7 +95,7 @@ Item {
                 if (particle.r == 0.0) {
                     particle.r = Math.random() + 0.01;
                 }
-                particle.rotation += speed * particle.r * dt;
+                particle.rotation += velocity * particle.r * dt;
                 particle.r -= particle.rotation * coefficient;
                 if (particle.r == 0.0)
                     particle.r -= particle.rotation * 0.000001;

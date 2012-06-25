@@ -86,7 +86,7 @@ Item {
         }
         anchors.fill: parent
 
-        speed: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
+        velocity: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
         shape: EllipseShape{fill:true}
         enabled: false;
         lifeSpan: 700; lifeSpanVariation: 100

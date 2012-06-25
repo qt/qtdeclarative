@@ -72,7 +72,7 @@ Item {
         height: parent.height - 132/2
         x: -132/2
         y: 132/2
-        speed: PointDirection { x: 32; xVariation: 8 }
+        velocity: PointDirection { x: 32; xVariation: 8 }
         emitRate: 0.5
         lifeSpan: Emitter.InfiniteLife
         group: "photos"
@@ -160,7 +160,7 @@ Item {
     }
     Emitter {
         id: centerEmitter
-        speed: PointDirection { x: 32; xVariation: 8;}
+        velocity: PointDirection { x: 32; xVariation: 8;}
         emitRate: 0.5
         lifeSpan: 12000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
         maximumEmitted: 20
@@ -185,7 +185,7 @@ Item {
         enabled: false
         size: 32
         endSize: 8
-        speed: AngleDirection { magnitude: 160; magnitudeVariation: 120; angleVariation: 90; angle: 270 }
+        velocity: AngleDirection { magnitude: 160; magnitudeVariation: 120; angleVariation: 90; angle: 270 }
         acceleration: PointDirection { y: 160 }
     }
     Item { x: -1000; y: -1000 //offscreen

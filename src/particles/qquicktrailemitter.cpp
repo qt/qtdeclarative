@@ -80,12 +80,12 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
     The type of logical particle which this is emitting from.
 */
 /*!
-    \qmlproperty qreal QtQuick.Particles2::TrailEmitter::speedFromMovement
+    \qmlproperty qreal QtQuick.Particles2::TrailEmitter::velocityFromMovement
 
     If this value is non-zero, then any movement of the emitter will provide additional
     starting velocity to the particles based on the movement. The additional vector will be the
     same angle as the emitter's movement, with a magnitude that is the magnitude of the emitters
-    movement multiplied by speedFromMovement.
+    movement multiplied by velocityFromMovement.
 
     Default value is 0.
 */
@@ -170,7 +170,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
         }
     }
 
-    //TODO: Implement startTime and speedFromMovement
+    //TODO: Implement startTime and velocityFromMovement
     qreal time = timeStamp / 1000.;
     qreal particleRatio = 1. / m_particlesPerParticlePerSecond;
     qreal pt;
@@ -229,12 +229,12 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
                 datum->x = newPos.x();
                 datum->y = newPos.y();
 
-                // Particle speed
-                const QPointF &speed = m_speed->sample(newPos);
-                datum->vx = speed.x()
-                    + m_speed_from_movement * d->vx;
-                datum->vy = speed.y()
-                    + m_speed_from_movement * d->vy;
+                // Particle velocity
+                const QPointF &velocity = m_velocity->sample(newPos);
+                datum->vx = velocity.x()
+                    + m_velocity_from_movement * d->vx;
+                datum->vy = velocity.y()
+                    + m_velocity_from_movement * d->vy;
 
                 // Particle acceleration
                 const QPointF &accel = m_acceleration->sample(newPos);

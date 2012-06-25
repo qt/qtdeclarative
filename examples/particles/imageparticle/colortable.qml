@@ -72,9 +72,9 @@ Rectangle {
             from: 0; to: Math.PI * 2; duration: 10000; loops: Animation.Infinite
         }
 
-        speedFromMovement: 20
+        velocityFromMovement: 20
 
-        speed: PointDirection { xVariation: 5; yVariation: 5;}
+        velocity: PointDirection { xVariation: 5; yVariation: 5;}
         acceleration: PointDirection { xVariation: 5; yVariation: 5;}
 
         size: 16

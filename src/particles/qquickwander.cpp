@@ -120,7 +120,7 @@ WanderData* QQuickWanderAffector::getData(int idx)
 
 bool QQuickWanderAffector::affectParticle(QQuickParticleData* data, qreal dt)
 {
-    /*TODO: Add a mode which does basically this - picking a direction, going in it (random speed) and then going back
+    /*TODO: Add a mode which does basically this - picking a direction, going in it (random velocity) and then going back
     WanderData* d = getData(data->systemIndex);
     if (m_xVariance != 0.) {
         if ((d->x_vel > d->x_peak && d->x_var > 0.0) || (d->x_vel < -d->x_peak && d->x_var < 0.0)) {

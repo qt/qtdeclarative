@@ -198,7 +198,7 @@ public:
     float yx;
     float yy;
     float rotation;
-    float rotationSpeed;
+    float rotationVelocity;
     float autoRotate;//Assume that GPUs prefer floats to bools
     //Used by ImageParticle Sprite mode
     float animIdx;

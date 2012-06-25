@@ -77,7 +77,7 @@ Rectangle {
             emitRate: 1
             lifeSpan: 4800
             lifeSpanVariation: 1600
-            speed: AngleDirection {angleVariation: 360; magnitude: 40; magnitudeVariation: 20}
+            velocity: AngleDirection {angleVariation: 360; magnitude: 40; magnitudeVariation: 20}
         }
         ItemParticle {
             delegate: Text {

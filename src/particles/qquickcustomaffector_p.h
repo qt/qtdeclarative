@@ -57,7 +57,7 @@ class QQuickCustomAffector : public QQuickParticleAffector
     Q_OBJECT
     Q_PROPERTY(bool relative READ relative WRITE setRelative NOTIFY relativeChanged)
     Q_PROPERTY(QQuickDirection *position READ position WRITE setPosition NOTIFY positionChanged RESET positionReset)
-    Q_PROPERTY(QQuickDirection *speed READ speed WRITE setSpeed NOTIFY speedChanged RESET speedReset)
+    Q_PROPERTY(QQuickDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged RESET velocityReset)
     Q_PROPERTY(QQuickDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged RESET accelerationReset)
 
 public:
@@ -69,9 +69,9 @@ public:
         return m_position;
     }
 
-    QQuickDirection * speed() const
+    QQuickDirection * velocity() const
     {
-        return m_speed;
+        return m_velocity;
     }
 
     QQuickDirection * acceleration() const
@@ -84,9 +84,9 @@ public:
         m_position = &m_nullVector;
     }
 
-    void speedReset()
+    void velocityReset()
     {
-        m_speed = &m_nullVector;
+        m_velocity = &m_nullVector;
     }
 
     void accelerationReset()
@@ -105,7 +105,7 @@ signals:
 
     void positionChanged(QQuickDirection * arg);
 
-    void speedChanged(QQuickDirection * arg);
+    void velocityChanged(QQuickDirection * arg);
 
     void accelerationChanged(QQuickDirection * arg);
 
@@ -120,11 +120,11 @@ public slots:
         }
     }
 
-    void setSpeed(QQuickDirection * arg)
+    void setVelocity(QQuickDirection * arg)
     {
-        if (m_speed != arg) {
-            m_speed = arg;
-            emit speedChanged(arg);
+        if (m_velocity != arg) {
+            m_velocity = arg;
+            emit velocityChanged(arg);
         }
     }
 
@@ -150,7 +150,7 @@ protected:
 private:
     void affectProperties(const QList<QQuickParticleData*> particles, qreal dt);
     QQuickDirection * m_position;
-    QQuickDirection * m_speed;
+    QQuickDirection * m_velocity;
     QQuickDirection * m_acceleration;
 
     QQuickDirection m_nullVector;

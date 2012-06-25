@@ -55,7 +55,7 @@ Rectangle {
         ImageParticle {
             source: "../../shared/star.png"
             rotation: 90
-            rotationSpeed: 90
+            rotationVelocity: 90
             autoRotation: true
             yVector: PointDirection{x: 0.5; y: 0.5}
             xVector: PointDirection{x: 0.5; y: 0.5}

@@ -111,7 +111,7 @@ Rectangle {
                 emitWidth: 16
                 emitHeight: 16
 
-                speed: PointDirection {yVariation: 16; xVariation: 16}
+                velocity: PointDirection {yVariation: 16; xVariation: 16}
                 acceleration: PointDirection {y: -16}
 
                 size: 24
@@ -152,7 +152,7 @@ Rectangle {
             lifeSpan: 4000//TODO: Infinite & kill zone
             size: 24
             sizeVariation: 4
-            speed: PointDirection {x:120; xVariation: 80; yVariation: 50}
+            velocity: PointDirection {x:120; xVariation: 80; yVariation: 50}
             acceleration: PointDirection {y:120}
             group: "unlit"
         }
@@ -167,7 +167,7 @@ Rectangle {
             size: 24
             sizeVariation: 2
             endSize: 0
-            speed: PointDirection { y:-100; yVariation: 4; xVariation: 4 }
+            velocity: PointDirection { y:-100; yVariation: 4; xVariation: 4 }
             // ![groupgoal-pilot]
             GroupGoal {
                 groups: ["unlit"]

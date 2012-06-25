@@ -71,9 +71,9 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::Affector::speed
+    \qmlproperty StochasticDirection QtQuick.Particles2::Affector::velocity
 
-    Affected particles will have their speed set to this direction.
+    Affected particles will have their velocity set to this direction.
 */
 
 
@@ -87,7 +87,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty bool QtQuick.Particles2::Affector::relative
 
-    Whether the affected particles have their existing position/speed/acceleration added
+    Whether the affected particles have their existing position/velocity/acceleration added
     to the new one.
 
     Default is true.
@@ -95,7 +95,7 @@ QT_BEGIN_NAMESPACE
 QQuickCustomAffector::QQuickCustomAffector(QQuickItem *parent) :
     QQuickParticleAffector(parent)
     , m_position(&m_nullVector)
-    , m_speed(&m_nullVector)
+    , m_velocity(&m_nullVector)
     , m_acceleration(&m_nullVector)
     , m_relative(true)
 {
@@ -110,7 +110,7 @@ void QQuickCustomAffector::affectSystem(qreal dt)
 {
     //Acts a bit differently, just emits affected for everyone it might affect, when the only thing is connecting to affected(x,y)
     bool justAffected = (m_acceleration == &m_nullVector
-        && m_speed == &m_nullVector
+        && m_velocity == &m_nullVector
         && m_position == &m_nullVector
         && isAffectedConnected());
     if (!isAffectConnected() && !justAffected) {
@@ -193,8 +193,8 @@ bool QQuickCustomAffector::affectParticle(QQuickParticleData *d, qreal dt)
         }
     }
 
-    if (m_speed != &m_nullVector){
-        QPointF pos = m_speed->sample(curPos);
+    if (m_velocity != &m_nullVector){
+        QPointF pos = m_velocity->sample(curPos);
         QPointF curVel = QPointF(d->curVX(), d->curVY());
         if (m_relative) {
             pos *= dt;

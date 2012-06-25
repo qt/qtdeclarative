@@ -63,7 +63,7 @@ Rectangle {
         id: emitter
         system: sys
         width: parent.width/2
-        speed: PointDirection {y: 72; yVariation: 24}
+        velocity: PointDirection {y: 72; yVariation: 24}
         lifeSpan: 10000
         emitRate: 1000
         enabled: false

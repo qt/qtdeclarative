@@ -58,7 +58,7 @@ Rectangle {
         emitRate: 10
         size: 200
         lifeSpan: 10000
-        speed: AngleDirection {angleVariation: 360; magnitudeVariation: 100;}
+        velocity: AngleDirection {angleVariation: 360; magnitudeVariation: 100;}
     }
 
     MouseArea {

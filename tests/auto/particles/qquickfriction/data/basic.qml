@@ -63,7 +63,7 @@ Rectangle {
 
         Emitter{
             //0,0 position
-            speed: PointDirection{x:100}
+            velocity: PointDirection{x:100}
             size: 32
             emitRate: 1000
             lifeSpan: 500
@@ -78,7 +78,7 @@ Rectangle {
             //0,0 position
             group: "notdefault"
             y:200
-            speed: PointDirection{x:100}
+            velocity: PointDirection{x:100}
             size: 32
             emitRate: 1000
             lifeSpan: 500

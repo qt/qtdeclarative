@@ -68,7 +68,7 @@ Rectangle {
                 lifeSpan: 600
                 size: 16
                 endSize: 8
-                speed: AngleDirection {angleVariation:360; magnitude: 60}
+                velocity: AngleDirection {angleVariation:360; magnitude: 60}
             }
 
             property int life: 2600

@@ -68,7 +68,7 @@ Item {
                 system: ps
                 anchors.fill: parent
                 enabled: false
-                speed: AngleDirection {
+                velocity: AngleDirection {
                     angle: 0
                     angleVariation: 360
                     magnitude: 50

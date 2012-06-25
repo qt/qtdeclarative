@@ -53,10 +53,10 @@ ParticleSystem {
     }
     Emitter {
         id: emitter
-        speedFromMovement: 20
+        velocityFromMovement: 20
         emitRate: 80
         lifeSpan: 1500
-        speed: PointDirection{ y: -90; yVariation: 50; }
+        velocity: PointDirection{ y: -90; yVariation: 50; }
         acceleration: PointDirection{ xVariation: 100; yVariation: 90; }
         size: 51
         sizeVariation: 53

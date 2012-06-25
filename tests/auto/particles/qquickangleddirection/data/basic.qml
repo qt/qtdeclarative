@@ -61,7 +61,7 @@ Rectangle {
             size: 32
             emitRate: 1000
             lifeSpan: 500
-            speed: AngleDirection { angle: 45; magnitude: 500 }
+            velocity: AngleDirection { angle: 45; magnitude: 500 }
             acceleration: AngleDirection { angle: 45; angleVariation: 22; magnitude: 250; magnitudeVariation: 249}
         }
     }

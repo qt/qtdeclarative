@@ -172,14 +172,14 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::rotationSpeed
+    \qmlproperty real QtQuick.Particles2::Particle::rotationVelocity
     Degrees clockwise per second that the particle image is rotated at while alive.
 */
 /*!
     \qmlproperty bool QtQuick.Particles2::Particle::autoRotate
     If autoRotate is true, then the particle's rotation will be
     set so that it faces the direction of travel, plus any
-    rotation from the rotation or rotationSpeed properties.
+    rotation from the rotation or rotationVelocity properties.
 */
 
 /*!
@@ -409,7 +409,7 @@ FLOAT_GETTER_AND_SETTER(xy)
 FLOAT_GETTER_AND_SETTER(yx)
 FLOAT_GETTER_AND_SETTER(yy)
 FLOAT_GETTER_AND_SETTER(rotation)
-FLOAT_GETTER_AND_SETTER(rotationSpeed)
+FLOAT_GETTER_AND_SETTER(rotationVelocity)
 FLOAT_GETTER_AND_SETTER(animIdx)
 FLOAT_GETTER_AND_SETTER(frameDuration)
 FLOAT_GETTER_AND_SETTER(frameAt)
@@ -448,7 +448,7 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     REGISTER_ACCESSOR(ft, engine, yx, yDeformationVectorX);
     REGISTER_ACCESSOR(ft, engine, yy, yDeformationVectorY);
     REGISTER_ACCESSOR(ft, engine, rotation, rotation);
-    REGISTER_ACCESSOR(ft, engine, rotationSpeed, rotationSpeed);
+    REGISTER_ACCESSOR(ft, engine, rotationVelocity, rotationVelocity);
     REGISTER_ACCESSOR(ft, engine, autoRotate, autoRotate);
     REGISTER_ACCESSOR(ft, engine, animIdx, animationIndex);
     REGISTER_ACCESSOR(ft, engine, frameDuration, frameDuration);

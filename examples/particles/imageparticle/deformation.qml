@@ -52,7 +52,7 @@ Rectangle {
         groups: ["goingLeft", "goingRight"]
         source: "../images/starfish_4.png"
         rotation: 90
-        rotationSpeed: 90
+        rotationVelocity: 90
         autoRotation: true
     }
     ImageParticle {
@@ -89,7 +89,7 @@ Rectangle {
         system: sys
         enabled: false
         group: "goingRight"
-        speed: PointDirection { x: 100 }
+        velocity: PointDirection { x: 100 }
         lifeSpan: 4000
         emitRate: 1
         size: 128
@@ -101,7 +101,7 @@ Rectangle {
         system: sys
         enabled: false
         group: "goingLeft"
-        speed: PointDirection { x: -100 }
+        velocity: PointDirection { x: -100 }
         lifeSpan: 4000
         emitRate: 1
         size: 128
@@ -113,7 +113,7 @@ Rectangle {
         system: sys
         enabled: false
         group: "goingDown"
-        speed: PointDirection { x: 100 }
+        velocity: PointDirection { x: 100 }
         lifeSpan: 4000
         emitRate: 1
         size: 128

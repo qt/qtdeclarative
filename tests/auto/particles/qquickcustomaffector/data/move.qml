@@ -67,7 +67,7 @@ Rectangle {
             once: false
             relative: false
             position: PointDirection { x: 50; y: 50; }
-            speed: PointDirection { x: 50; y: 50; }
+            velocity: PointDirection { x: 50; y: 50; }
             acceleration: PointDirection { x: 50; y: 50; }
         }
     }

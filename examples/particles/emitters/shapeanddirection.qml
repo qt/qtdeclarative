@@ -74,7 +74,7 @@ Rectangle {
         sizeVariation: 2
         endSize: 0
         shape: EllipseShape {fill: false}
-        speed: TargetDirection {
+        velocity: TargetDirection {
             targetX: root.width/2 
             targetY: root.height/2
             proportionalMagnitude: true
@@ -93,7 +93,7 @@ Rectangle {
         sizeVariation: 2
         endSize: 16
         shape: EllipseShape {fill: false}
-        speed: TargetDirection {
+        velocity: TargetDirection {
             targetX: root.width/2 
             targetY: root.height/2
             proportionalMagnitude: true

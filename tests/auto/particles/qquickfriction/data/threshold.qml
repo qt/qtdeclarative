@@ -58,13 +58,13 @@ Rectangle {
         }
 
         Friction {
-            factor: 1000 //speed limit 50
+            factor: 1000 //velocity limit 50
             threshold: 50
         }
 
         Emitter{
             //0,0 position
-            speed: PointDirection{x:1000}
+            velocity: PointDirection{x:1000}
             size: 32
             emitRate: 1000
             lifeSpan: 500

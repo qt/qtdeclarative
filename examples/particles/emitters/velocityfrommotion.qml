@@ -100,9 +100,9 @@ Rectangle {
         y: mouseArea.pressed ? mouseArea.mouseY : circle.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle.cx
 
-        speed: PointDirection {xVariation: 4; yVariation: 4;}
+        velocity: PointDirection {xVariation: 4; yVariation: 4;}
         acceleration: PointDirection {xVariation: 10; yVariation: 10;}
-        speedFromMovement: 8
+        velocityFromMovement: 8
 
         size: 8
         sizeVariation: 4
@@ -139,9 +139,9 @@ Rectangle {
         y: mouseArea.pressed ? mouseArea.mouseY : circle.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle.cx
 
-        speed: PointDirection {xVariation: 4; yVariation: 4;}
+        velocity: PointDirection {xVariation: 4; yVariation: 4;}
         acceleration: PointDirection {xVariation: 10; yVariation: 10;}
-        speedFromMovement: 8
+        velocityFromMovement: 8
 
         size: 22
         sizeVariation: 4
@@ -179,9 +179,9 @@ Rectangle {
         y: mouseArea.pressed ? mouseArea.mouseY : circle2.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle2.cx
 
-        speedFromMovement: 16
+        velocityFromMovement: 16
 
-        speed: PointDirection {xVariation: 4; yVariation: 4;}
+        velocity: PointDirection {xVariation: 4; yVariation: 4;}
         acceleration: PointDirection {xVariation: 10; yVariation: 10;}
 
         size: 12
@@ -220,8 +220,8 @@ Rectangle {
         y: mouseArea.pressed ? mouseArea.mouseY : circle2.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle2.cx
 
-        speedFromMovement: 16
-        speed: PointDirection {xVariation: 2; yVariation: 2;}
+        velocityFromMovement: 16
+        velocity: PointDirection {xVariation: 2; yVariation: 2;}
         acceleration: PointDirection {xVariation: 10; yVariation: 10;}
 
         size: 22

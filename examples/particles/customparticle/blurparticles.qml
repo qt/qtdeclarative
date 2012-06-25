@@ -53,7 +53,7 @@ Rectangle {
         height: parent.height
         emitRate: 1
         lifeSpan: 12000
-        speed: PointDirection {x:20;}
+        velocity: PointDirection {x:20;}
         size: 128
     }
     ShaderEffectSource {

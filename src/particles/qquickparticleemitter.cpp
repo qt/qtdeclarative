@@ -167,9 +167,9 @@ QT_BEGIN_NAMESPACE
     Default value is 0.
 */
 /*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::speed
+    \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::velocity
 
-    The starting speed of the particles emitted.
+    The starting velocity of the particles emitted.
 */
 /*!
     \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::acceleration
@@ -177,12 +177,12 @@ QT_BEGIN_NAMESPACE
     The starting acceleraton of the particles emitted.
 */
 /*!
-    \qmlproperty qreal QtQuick.Particles2::Emitter::speedFromMovement
+    \qmlproperty qreal QtQuick.Particles2::Emitter::velocityFromMovement
 
     If this value is non-zero, then any movement of the emitter will provide additional
     starting velocity to the particles based on the movement. The additional vector will be the
     same angle as the emitter's movement, with a magnitude that is the magnitude of the emitters
-    movement multiplied by speedFromMovement.
+    movement multiplied by velocityFromMovement.
 
     Default value is 0.
 */
@@ -223,7 +223,7 @@ QQuickParticleEmitter::QQuickParticleEmitter(QQuickItem *parent) :
   , m_system(0)
   , m_extruder(0)
   , m_defaultExtruder(0)
-  , m_speed(&m_nullVector)
+  , m_velocity(&m_nullVector)
   , m_acceleration(&m_nullVector)
   , m_particleSize(16)
   , m_particleEndSize(-1)
@@ -232,13 +232,13 @@ QQuickParticleEmitter::QQuickParticleEmitter(QQuickItem *parent) :
   , m_overwrite(true)
   , m_pulseLeft(0)
   , m_maxParticleCount(-1)
-  , m_speed_from_movement(0)
+  , m_velocity_from_movement(0)
   , m_reset_last(true)
   , m_last_timestamp(-1)
   , m_last_emission(0)
 
 {
-    //TODO: Reset speed/acc back to null vector? Or allow null pointer?
+    //TODO: Reset velocity/acc back to null vector? Or allow null pointer?
     connect(this, SIGNAL(maximumEmittedChanged(int)),
             this, SIGNAL(particleCountChanged()));
     connect(this, SIGNAL(particlesPerSecondChanged(qreal)),
@@ -326,12 +326,12 @@ int QQuickParticleEmitter::particleCount() const
     return m_particlesPerSecond*((m_particleDuration+m_particleDurationVariation)/1000.0);
 }
 
-void QQuickParticleEmitter::setSpeedFromMovement(qreal t)
+void QQuickParticleEmitter::setVelocityFromMovement(qreal t)
 {
-    if (t == m_speed_from_movement)
+    if (t == m_velocity_from_movement)
         return;
-    m_speed_from_movement = t;
-    emit speedFromMovementChanged();
+    m_velocity_from_movement = t;
+    emit velocityFromMovementChanged();
 }
 
 void QQuickParticleEmitter::reset()
@@ -439,12 +439,12 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
             datum->x = newPos.x();
             datum->y = newPos.y();
 
-            // Particle speed
-            const QPointF &speed = m_speed->sample(newPos);
-            datum->vx = speed.x()
-                    + m_speed_from_movement * vx;
-            datum->vy = speed.y()
-                    + m_speed_from_movement * vy;
+            // Particle velocity
+            const QPointF &velocity = m_velocity->sample(newPos);
+            datum->vx = velocity.x()
+                    + m_velocity_from_movement * vx;
+            datum->vy = velocity.y()
+                    + m_velocity_from_movement * vy;
 
             // Particle acceleration
             const QPointF &accel = m_acceleration->sample(newPos);

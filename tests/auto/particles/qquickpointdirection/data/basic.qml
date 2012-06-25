@@ -59,7 +59,7 @@ Rectangle {
         Emitter{
             //0,0 position
             size: 32
-            speed: PointDirection{ x: 100; y: 100 }
+            velocity: PointDirection{ x: 100; y: 100 }
             acceleration: PointDirection{ x: 100; xVariation: 100; y: 100; yVariation: 100 }
             emitRate: 1000
             lifeSpan: 500

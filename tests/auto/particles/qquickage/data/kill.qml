@@ -60,7 +60,7 @@ Rectangle {
             size: 32
             emitRate: 1000
             lifeSpan: 500
-            speed: PointDirection{ x: 1000; y: 1000 }
+            velocity: PointDirection{ x: 1000; y: 1000 }
         }
     }
 }

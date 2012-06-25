@@ -71,7 +71,7 @@ Rectangle {
         system: particles
         emitRate: 20
         lifeSpan: 7000
-        speed: PointDirection { y:80; yVariation: 40; }
+        velocity: PointDirection { y:80; yVariation: 40; }
         acceleration: PointDirection { y: 4 }
         size: 20
         sizeVariation: 10

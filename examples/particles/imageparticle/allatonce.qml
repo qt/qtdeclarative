@@ -59,7 +59,7 @@ Rectangle {
             }
         ]
         colorVariation: 0.5
-        rotationSpeedVariation: 360
+        rotationVelocityVariation: 360
         system: sys
         colorTable: "../trails/../images/colortable.png"
     }
@@ -75,7 +75,7 @@ Rectangle {
         id: particles
         emitRate: 200
         lifeSpan: 6000
-        speed: AngleDirection {angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
+        velocity: AngleDirection {angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
         size: 60
         endSize: 120
     }

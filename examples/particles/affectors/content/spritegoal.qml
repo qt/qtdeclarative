@@ -81,7 +81,7 @@ Item {
 
         anchors.centerIn: parent
 
-        //acceleration: AngledDirection {angleVariation: 360; magnitude: 200}//Is this a better effect, more consistent speed?
+        //acceleration: AngledDirection {angleVariation: 360; magnitude: 200}//Is this a better effect, more consistent velocity?
         acceleration: PointDirection { xVariation: 200; yVariation: 200; }
 
         size: 0
@@ -203,8 +203,8 @@ Item {
         y: holder.y
         x: holder.x 
 
-        speed: PointDirection { xVariation: 40; yVariation: 40; }
-        speedFromMovement: 16
+        velocity: PointDirection { xVariation: 40; yVariation: 40; }
+        velocityFromMovement: 16
 
         acceleration: PointDirection { xVariation: 10; yVariation: 10; }
 

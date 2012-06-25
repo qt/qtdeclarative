@@ -104,7 +104,7 @@ struct DeformableVertex {
     float yx;
     float yy;
     float rotation;
-    float rotationSpeed;
+    float rotationVelocity;
     float autoRotate;//Assumed that GPUs prefer floats to bools
 };
 
@@ -127,7 +127,7 @@ struct SpriteVertex {
     float yx;
     float yy;
     float rotation;
-    float rotationSpeed;
+    float rotationVelocity;
     float autoRotate;//Assumed that GPUs prefer floats to bools
     float animW;
     float animH;
@@ -172,8 +172,8 @@ class QQuickImageParticle : public QQuickParticlePainter
 
     Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged RESET resetRotation)
     Q_PROPERTY(qreal rotationVariation READ rotationVariation WRITE setRotationVariation NOTIFY rotationVariationChanged RESET resetRotation)
-    Q_PROPERTY(qreal rotationSpeed READ rotationSpeed WRITE setRotationSpeed NOTIFY rotationSpeedChanged RESET resetRotation)
-    Q_PROPERTY(qreal rotationSpeedVariation READ rotationSpeedVariation WRITE setRotationSpeedVariation NOTIFY rotationSpeedVariationChanged RESET resetRotation)
+    Q_PROPERTY(qreal rotationVelocity READ rotationVelocity WRITE setRotationVelocity NOTIFY rotationVelocityChanged RESET resetRotation)
+    Q_PROPERTY(qreal rotationVelocityVariation READ rotationVelocityVariation WRITE setRotationVelocityVariation NOTIFY rotationVelocityVariationChanged RESET resetRotation)
     //If true, then will face the direction of motion. Stacks with rotation, e.g. setting rotation
     //to 180 will lead to facing away from the direction of motion
     Q_PROPERTY(bool autoRotation READ autoRotation WRITE setAutoRotation NOTIFY autoRotationChanged RESET resetRotation)
@@ -243,9 +243,9 @@ public:
 
     qreal rotationVariation() const { return m_rotationVariation; }
 
-    qreal rotationSpeed() const { return m_rotationSpeed; }
+    qreal rotationVelocity() const { return m_rotationVelocity; }
 
-    qreal rotationSpeedVariation() const { return m_rotationSpeedVariation; }
+    qreal rotationVelocityVariation() const { return m_rotationVelocityVariation; }
 
     bool autoRotation() const { return m_autoRotation; }
 
@@ -289,9 +289,9 @@ signals:
 
     void rotationVariationChanged(qreal arg);
 
-    void rotationSpeedChanged(qreal arg);
+    void rotationVelocityChanged(qreal arg);
 
-    void rotationSpeedVariationChanged(qreal arg);
+    void rotationVelocityVariationChanged(qreal arg);
 
     void autoRotationChanged(bool arg);
 
@@ -323,9 +323,9 @@ public slots:
 
     void setRotationVariation(qreal arg);
 
-    void setRotationSpeed(qreal arg);
+    void setRotationVelocity(qreal arg);
 
-    void setRotationSpeedVariation(qreal arg);
+    void setRotationVelocityVariation(qreal arg);
 
     void setAutoRotation(bool arg);
 
@@ -388,8 +388,8 @@ private:
     qreal m_blueVariation;
     qreal m_rotation;
     qreal m_rotationVariation;
-    qreal m_rotationSpeed;
-    qreal m_rotationSpeedVariation;
+    qreal m_rotationVelocity;
+    qreal m_rotationVelocityVariation;
     bool m_autoRotation;
     QQuickDirection* m_xVector;
     QQuickDirection* m_yVector;

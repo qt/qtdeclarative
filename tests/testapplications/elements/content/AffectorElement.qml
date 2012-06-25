@@ -91,7 +91,7 @@ Item {
             height: 5
             emitRate: 100
             lifeSpan: 10000
-            speed: AngleDirection { angle: 0; magnitude: 30 }
+            velocity: AngleDirection { angle: 0; magnitude: 30 }
         }
 
         // Affectors

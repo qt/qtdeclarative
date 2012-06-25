@@ -74,14 +74,14 @@ static const char vertexShaderCode[] =
     "attribute highp vec2 vPos;\n"
     "#endif\n"
     "attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize\n"
-    "attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration\n"
+    "attribute highp vec4 vVec; // x,y = constant velocity,  z,w = acceleration\n"
     "uniform highp float entry;\n"
     "#if defined(COLOR)\n"
     "attribute highp vec4 vColor;\n"
     "#endif\n"
     "#if defined(DEFORM)\n"
     "attribute highp vec4 vDeformVec; //x,y x unit vector; z,w = y unit vector\n"
-    "attribute highp vec3 vRotation; //x = radians of rotation, y=rotation speed, z= bool autoRotate\n"
+    "attribute highp vec3 vRotation; //x = radians of rotation, y=rotation velocity, z= bool autoRotate\n"
     "#endif\n"
     "#if defined(SPRITE)\n"
     "attribute highp vec3 vAnimData;// w,h(premultiplied of anim), interpolation progress\n"
@@ -177,11 +177,11 @@ static const char vertexShaderCode[] =
     "            pos = vPosTex.xy\n"
     "                  + rotatedDeform.xy\n"
     "                  + rotatedDeform.zw\n"
-    "                  + vVec.xy * t * vData.y         // apply speed\n"
+    "                  + vVec.xy * t * vData.y         // apply velocity\n"
     "                  + 0.5 * vVec.zw * pow(t * vData.y, 2.); // apply acceleration\n"
     "#else\n"
     "            pos = vPos\n"
-    "                  + vVec.xy * t * vData.y         // apply speed vector..\n"
+    "                  + vVec.xy * t * vData.y         // apply velocity vector..\n"
     "                  + 0.5 * vVec.zw * pow(t * vData.y, 2.);\n"
     "            gl_PointSize = currentSize;\n"
     "#endif\n"
@@ -731,14 +731,14 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationSpeed
+    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationVelocity
 
-    If set particles will rotate at this speed in degrees/second.
+    If set particles will rotate at this velocity in degrees/second.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationSpeedVariation
+    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationVelocityVariation
 
-    If set the rotationSpeed of individual particles will vary by up to this much
+    If set the rotationVelocity of individual particles will vary by up to this much
     between particles.
 
 */
@@ -812,8 +812,8 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_blueVariation(0.0)
     , m_rotation(0)
     , m_rotationVariation(0)
-    , m_rotationSpeed(0)
-    , m_rotationSpeedVariation(0)
+    , m_rotationVelocity(0)
+    , m_rotationVelocityVariation(0)
     , m_autoRotation(false)
     , m_xVector(0)
     , m_yVector(0)
@@ -1025,22 +1025,22 @@ void QQuickImageParticle::setRotationVariation(qreal arg)
         reset();
 }
 
-void QQuickImageParticle::setRotationSpeed(qreal arg)
+void QQuickImageParticle::setRotationVelocity(qreal arg)
 {
-    if (m_rotationSpeed != arg) {
-        m_rotationSpeed = arg;
-        emit rotationSpeedChanged(arg);
+    if (m_rotationVelocity != arg) {
+        m_rotationVelocity = arg;
+        emit rotationVelocityChanged(arg);
     }
     m_explicitRotation = true;
     if (perfLevel < Deformable)
         reset();
 }
 
-void QQuickImageParticle::setRotationSpeedVariation(qreal arg)
+void QQuickImageParticle::setRotationVelocityVariation(qreal arg)
 {
-    if (m_rotationSpeedVariation != arg) {
-        m_rotationSpeedVariation = arg;
-        emit rotationSpeedVariationChanged(arg);
+    if (m_rotationVelocityVariation != arg) {
+        m_rotationVelocityVariation = arg;
+        emit rotationVelocityVariationChanged(arg);
     }
     m_explicitRotation = true;
     if (perfLevel < Deformable)
@@ -1133,8 +1133,8 @@ void QQuickImageParticle::resetRotation()
                 d->rotationOwner = 0;
     m_rotation = 0;
     m_rotationVariation = 0;
-    m_rotationSpeed = 0;
-    m_rotationSpeedVariation = 0;
+    m_rotationVelocity = 0;
+    m_rotationVelocityVariation = 0;
     m_autoRotation = false;
 }
 
@@ -1324,7 +1324,7 @@ void QQuickImageParticle::finishBuildParticleNodes()
     } else if (m_colorTable || m_sizeTable || m_opacityTable) {
         perfLevel = Tabled;
     } else if (m_autoRotation || m_rotation || m_rotationVariation
-               || m_rotationSpeed || m_rotationSpeedVariation
+               || m_rotationVelocity || m_rotationVelocityVariation
                || m_xVector || m_yVector) {
         perfLevel = Deformable;
     } else if (m_alphaVariation || m_alpha != 1.0 || m_color.isValid() || m_color_variation
@@ -1713,7 +1713,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
     }
 
     float rotation;
-    float rotationSpeed;
+    float rotationVelocity;
     float autoRotate;
     switch (perfLevel){//Fall-through is intended on all of them
         case Sprites:
@@ -1780,16 +1780,16 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                     datum->rotationOwner = this;
                 rotation =
                         (m_rotation + (m_rotationVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVariation) ) * CONV;
-                rotationSpeed =
-                        (m_rotationSpeed + (m_rotationSpeedVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationSpeedVariation) ) * CONV;
+                rotationVelocity =
+                        (m_rotationVelocity + (m_rotationVelocityVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVelocityVariation) ) * CONV;
                 autoRotate = m_autoRotation?1.0:0.0;
                 if (datum->rotationOwner == this) {
                     datum->rotation = rotation;
-                    datum->rotationSpeed = rotationSpeed;
+                    datum->rotationVelocity = rotationVelocity;
                     datum->autoRotate = autoRotate;
                 } else {
                     getShadowDatum(datum)->rotation = rotation;
-                    getShadowDatum(datum)->rotationSpeed = rotationSpeed;
+                    getShadowDatum(datum)->rotationVelocity = rotationVelocity;
                     getShadowDatum(datum)->autoRotate = autoRotate;
                 }
             }
@@ -1855,11 +1855,11 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
             if (m_explicitRotation && datum->rotationOwner != this) {
                 QQuickParticleData* shadow = getShadowDatum(datum);
                 spriteVertices[i].rotation = shadow->rotation;
-                spriteVertices[i].rotationSpeed = shadow->rotationSpeed;
+                spriteVertices[i].rotationVelocity = shadow->rotationVelocity;
                 spriteVertices[i].autoRotate = shadow->autoRotate;
             } else {
                 spriteVertices[i].rotation = datum->rotation;
-                spriteVertices[i].rotationSpeed = datum->rotationSpeed;
+                spriteVertices[i].rotationVelocity = datum->rotationVelocity;
                 spriteVertices[i].autoRotate = datum->autoRotate;
             }
             //Sprite-related vertices updated per-frame in spritesUpdate(), not on demand
@@ -1906,11 +1906,11 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
             if (m_explicitRotation && datum->rotationOwner != this) {
                 QQuickParticleData* shadow = getShadowDatum(datum);
                 deformableVertices[i].rotation = shadow->rotation;
-                deformableVertices[i].rotationSpeed = shadow->rotationSpeed;
+                deformableVertices[i].rotationVelocity = shadow->rotationVelocity;
                 deformableVertices[i].autoRotate = shadow->autoRotate;
             } else {
                 deformableVertices[i].rotation = datum->rotation;
-                deformableVertices[i].rotationSpeed = datum->rotationSpeed;
+                deformableVertices[i].rotationVelocity = datum->rotationVelocity;
                 deformableVertices[i].autoRotate = datum->autoRotate;
             }
             if (m_explicitColor && datum->colorOwner != this) {

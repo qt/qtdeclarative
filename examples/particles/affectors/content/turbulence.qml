@@ -100,7 +100,7 @@ Rectangle {
         endSize: 10
         sizeVariation: 10
         acceleration: PointDirection { y: -40 }
-        speed: AngleDirection { angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
+        velocity: AngleDirection { angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
     }
     TrailEmitter {
         id: smoke1
@@ -117,7 +117,7 @@ Rectangle {
         endSize: 8
         sizeVariation: 8
         acceleration: PointDirection { y: -40 }
-        speed: AngleDirection { angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        velocity: AngleDirection { angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
     TrailEmitter {
         id: smoke2
@@ -133,6 +133,6 @@ Rectangle {
         endSize: 24
         sizeVariation: 12
         acceleration: PointDirection { y: -40 }
-        speed: AngleDirection { angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        velocity: AngleDirection { angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
 }

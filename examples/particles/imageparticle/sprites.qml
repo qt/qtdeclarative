@@ -98,7 +98,7 @@ Rectangle {
         system: sys
         emitRate: 2
         lifeSpan: 10000
-        speed: AngleDirection {angle: 90; magnitude: 60; angleVariation: 5}
+        velocity: AngleDirection {angle: 90; magnitude: 60; angleVariation: 5}
         acceleration: PointDirection { y: 10 }
         size: 160
         sizeVariation: 40

@@ -67,7 +67,7 @@ Item {
             anchors.fill: parent
             emitRate: 500
             lifeSpan: 2000
-            speed: TargetDirection {
+            velocity: TargetDirection {
                 targetX: particlesystem.width/2
                 targetY: particlesystem.height/2
                 proportionalMagnitude: true
@@ -82,7 +82,7 @@ Item {
             anchors.fill: parent
             emitRate: 200
             lifeSpan: 1000
-            speed: TargetDirection {
+            velocity: TargetDirection {
                 targetX: particlesystem.width/2
                 targetY: particlesystem.height/2
                 proportionalMagnitude: true

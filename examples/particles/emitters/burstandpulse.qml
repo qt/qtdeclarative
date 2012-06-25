@@ -77,7 +77,7 @@ Rectangle {
         emitRate: 2000
         lifeSpan: 2000
         enabled: false
-        speed: AngleDirection{magnitude: 64; angleVariation: 360}
+        velocity: AngleDirection{magnitude: 64; angleVariation: 360}
         size: 24
         sizeVariation: 8
     }

@@ -63,7 +63,7 @@ ParticleSystem {
         lifeSpan: 4000 + 800*(16-emitRate)
         maximumEmitted: 128
         size: 64
-        speed: PointDirection{ y: 40 + 10 * emitter.emitRate }
+        velocity: PointDirection{ y: 40 + 10 * emitter.emitRate }
     }
 
     Emitter {
@@ -74,7 +74,7 @@ ParticleSystem {
         emitRate: 1000
         size: 16
         endSize: 8
-        speed: CumulativeDirection { AngleDirection {angleVariation: 180; magnitudeVariation: 120;} PointDirection { y: -60 }}
+        velocity: CumulativeDirection { AngleDirection {angleVariation: 180; magnitudeVariation: 120;} PointDirection { y: -60 }}
         lifeSpan: 400
     }
     Emitter {
@@ -85,7 +85,7 @@ ParticleSystem {
         emitRate: 1000
         size: 16
         endSize: 8
-        speed: AngleDirection {angleVariation: 180; magnitudeVariation: 180;}
+        velocity: AngleDirection {angleVariation: 180; magnitudeVariation: 180;}
         lifeSpan: 600
     }
     Emitter {
@@ -96,7 +96,7 @@ ParticleSystem {
         emitRate: 1000
         size: 16
         endSize: 8
-        speed: CumulativeDirection { AngleDirection {angleVariation: 180; magnitudeVariation: 80;} PointDirection { y: 40 }}
+        velocity: CumulativeDirection { AngleDirection {angleVariation: 180; magnitudeVariation: 80;} PointDirection { y: 40 }}
         lifeSpan: 600
     }
 

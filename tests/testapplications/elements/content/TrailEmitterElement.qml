@@ -87,7 +87,7 @@ Item {
             emitRate: 1
             lifeSpan: 3000
             size: 20
-            speed: AngleDirection { angle: 270; angleVariation: 25; magnitude: 150 }
+            velocity: AngleDirection { angle: 270; angleVariation: 25; magnitude: 150 }
             group: "orangemissile"
         }
         Emitter {
@@ -98,7 +98,7 @@ Item {
             emitRate: 1
             lifeSpan: 3000
             size: 20
-            speed: AngleDirection { angle: 270; angleVariation: 25; magnitude: 150 }
+            velocity: AngleDirection { angle: 270; angleVariation: 25; magnitude: 150 }
             group: "greenmissile"
         }
         Gravity {
@@ -113,8 +113,8 @@ Item {
             anchors.fill: parent
             emitRatePerParticle: 50
             lifeSpan: 1000
-            speedFromMovement: .2
-            speed: AngleDirection { angle: 0; angleVariation: 360; magnitude: 5 }
+            velocityFromMovement: .2
+            velocity: AngleDirection { angle: 0; angleVariation: 360; magnitude: 5 }
             maximumEmitted: 500
             shape: basicshape
         }

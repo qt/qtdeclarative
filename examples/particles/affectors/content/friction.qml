@@ -56,7 +56,7 @@ Item {
         emitRate: 4
         lifeSpan: 14000
         size: 80
-        speed: PointDirection { y: 160; yVariation: 80; xVariation: 20 }
+        velocity: PointDirection { y: 160; yVariation: 80; xVariation: 20 }
     }
 
     ImageParticle {

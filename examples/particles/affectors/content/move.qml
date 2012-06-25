@@ -61,7 +61,7 @@ Rectangle {
             lifeSpan: 2800
             size: 32
             sizeVariation: 8
-            speed: PointDirection{ x: 66; xVariation: 20 }
+            velocity: PointDirection{ x: 66; xVariation: 20 }
             width: 80
             height: 80
         }
@@ -91,7 +91,7 @@ Rectangle {
             lifeSpan: 2800
             size: 32
             sizeVariation: 8
-            speed: PointDirection{ x: 240; xVariation: 60 }
+            velocity: PointDirection{ x: 240; xVariation: 60 }
             y: 260
             width: 10
             height: 10
@@ -105,7 +105,7 @@ Rectangle {
             width: 80
             height: 80
             once: true
-            speed: AngleDirection { angleVariation:360; magnitude: 72 }
+            velocity: AngleDirection { angleVariation:360; magnitude: 72 }
         }
         //! [B]
 
@@ -124,7 +124,7 @@ Rectangle {
             lifeSpan: 2800
             size: 32
             sizeVariation: 8
-            speed: PointDirection{ x: 80; xVariation: 10 }
+            velocity: PointDirection{ x: 80; xVariation: 10 }
             acceleration: PointDirection { y: 10; x: 20; }
             width: 80
             height: 80

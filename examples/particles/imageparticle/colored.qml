@@ -75,7 +75,7 @@ Rectangle {
             lifeSpan: 2400
             size: 48
             sizeVariation: 8
-            speed: AngleDirection {angleVariation: 180; magnitude: 60}
+            velocity: AngleDirection {angleVariation: 180; magnitude: 60}
         }
 
         Turbulence {

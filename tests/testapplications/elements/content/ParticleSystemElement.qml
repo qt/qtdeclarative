@@ -55,7 +55,7 @@ Item {
             id: particleemitter
             x: 50; y: 200
             emitRate: 100
-            speed: AngleDirection { angle: 0; angleVariation: 360; magnitude: 100 }
+            velocity: AngleDirection { angle: 0; angleVariation: 360; magnitude: 100 }
             Rectangle { anchors.centerIn: parent; height: 1; width: 1; color: "black" }
             SequentialAnimation {
                 running: true; paused: particlesystemelement.paused; loops: Animation.Infinite

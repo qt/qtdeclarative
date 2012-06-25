@@ -77,7 +77,7 @@ Item {
             emitRate: 50
             lifeSpan: 4000
             size: 20
-            speed: angledirectionelement
+            velocity: angledirectionelement
             AngleDirection { id: angledirectionelement; angle: -75; angleVariation: 5; magnitude: 150 }
             TargetDirection { id: targetdirectionelement; targetItem: targetbox; targetVariation: 10; magnitude: 150 }
             PointDirection { id: pointdirectionelement; y: -100; xVariation: 10; yVariation: 10; }
@@ -103,20 +103,20 @@ Item {
                 "Next, let's change the Emitter to target an item." }
         },
         State { name: "ontarget"; when: statenum == 2
-            PropertyChanges { target: emitter; speed: targetdirectionelement }
+            PropertyChanges { target: emitter; velocity: targetdirectionelement }
             PropertyChanges { target: targeticon; height: 50; width: 50 }
             PropertyChanges { target: directionelementtest
                 testtext: "The particles should be directed at the rectangle.\n"+
                 "Next, let's set an arbritary point to direct the particles to." }
         },
         State { name: "onpoint"; when: statenum == 3
-            PropertyChanges { target: emitter; speed: pointdirectionelement }
+            PropertyChanges { target: emitter; velocity: pointdirectionelement }
             PropertyChanges { target: directionelementtest
                 testtext: "The particles should be directed upwards with a small amount of spread.\n"+
                 "Next, let's create a fountain with CumulativeDirection and a downward PointDirection" }
         },
         State { name: "cumulative"; when: statenum == 4
-            PropertyChanges { target: emitter; emitRate: 200; speed: cumulativedirectionelement
+            PropertyChanges { target: emitter; emitRate: 200; velocity: cumulativedirectionelement
                 acceleration: pointdirectionelementdownward }
             PropertyChanges { target: imgparticle; color: "aqua"; colorVariation: .2 }
             PropertyChanges { target: directionelementtest

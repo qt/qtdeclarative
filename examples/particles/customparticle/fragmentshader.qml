@@ -63,7 +63,7 @@ ParticleSystem {
         lifeSpan: 8000
         size: 24
         sizeVariation: 16
-        speed: PointDirection {x: root.width/10; y: root.height/10;}
+        velocity: PointDirection {x: root.width/10; y: root.height/10;}
         //acceleration: AngledDirection {angle:225; magnitude: root.width/36; angleVariation: 45; magnitudeVariation: 80}
         acceleration: PointDirection {x: -root.width/40; y: -root.height/40; xVariation: -root.width/20; yVariation: -root.width/20}
     }
@@ -88,7 +88,7 @@ ParticleSystem {
 
                 highp vec2 pos = qt_ParticlePos
                 - currentSize / 2. + currentSize * qt_ParticleTex          // adjust size
-                + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply speed vector..
+                + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply velocity vector..
                 + 0.5 * qt_ParticleVec.zw * pow(t * qt_ParticleData.y, 2.);
 
                 gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);

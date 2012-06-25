@@ -50,7 +50,7 @@ static const char qt_particles_template_vertex_code[] =
         "attribute highp vec2 qt_ParticlePos;\n"
         "attribute highp vec2 qt_ParticleTex;\n"
         "attribute highp vec4 qt_ParticleData; //  x = time,  y = lifeSpan, z = size,  w = endSize\n"
-        "attribute highp vec4 qt_ParticleVec; // x,y = constant speed,  z,w = acceleration\n"
+        "attribute highp vec4 qt_ParticleVec; // x,y = constant velocity,  z,w = acceleration\n"
         "attribute highp float qt_ParticleR;\n"
         "uniform highp mat4 qt_Matrix;\n"
         "uniform highp float qt_Timestamp;\n"
@@ -65,7 +65,7 @@ static const char qt_particles_template_vertex_code[] =
         "        currentSize = 0.;\n"
         "    highp vec2 pos = qt_ParticlePos\n"
         "                   - currentSize / 2. + currentSize * qt_ParticleTex   // adjust size\n"
-        "                   + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply speed vector..\n"
+        "                   + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply velocity vector..\n"
         "                   + 0.5 * qt_ParticleVec.zw * pow(t * qt_ParticleData.y, 2.);\n"
         "    gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);\n"
         "}";
@@ -194,7 +194,7 @@ void QQuickCustomParticle::setFragmentShader(const QByteArray &code)
         attribute highp vec2 qt_ParticlePos;
         attribute highp vec2 qt_ParticleTex;
         attribute highp vec4 qt_ParticleData; //  x = time,  y = lifeSpan, z = size,  w = endSize
-        attribute highp vec4 qt_ParticleVec; // x,y = constant speed,  z,w = acceleration
+        attribute highp vec4 qt_ParticleVec; // x,y = constant velocity,  z,w = acceleration
         attribute highp float qt_ParticleR;
         uniform highp mat4 qt_Matrix;
         uniform highp float qt_Timestamp;
@@ -209,7 +209,7 @@ void QQuickCustomParticle::setFragmentShader(const QByteArray &code)
                 currentSize = 0.;
             highp vec2 pos = qt_ParticlePos
                            - currentSize / 2. + currentSize * qt_ParticleTex   // adjust size
-                           + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply speed vector..
+                           + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply velocity vector..
                            + 0.5 * qt_ParticleVec.zw * pow(t * qt_ParticleData.y, 2.);
             gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);
         }

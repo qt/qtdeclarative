@@ -460,7 +460,7 @@ QQuickParticleData::QQuickParticleData(QQuickParticleSystem* sys)
     yx = 0;
     yy = 1;
     rotation = 0;
-    rotationSpeed = 0;
+    rotationVelocity = 0;
     autoRotate = 0;
     animIdx = 0;
     frameDuration = 1;
@@ -502,7 +502,7 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
     yx = other.yx;
     yy = other.yy;
     rotation = other.rotation;
-    rotationSpeed = other.rotationSpeed;
+    rotationVelocity = other.rotationVelocity;
     autoRotate = other.autoRotate;
     animIdx = other.animIdx;
     frameDuration = other.frameDuration;

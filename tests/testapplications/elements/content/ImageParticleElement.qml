@@ -61,7 +61,7 @@ Item {
             anchors.centerIn: parent
             emitRate: 50
             lifeSpan: 3000
-            speed: AngleDirection { angle: 0; angleVariation: 360; magnitude: 60 }
+            velocity: AngleDirection { angle: 0; angleVariation: 360; magnitude: 60 }
         }
     }
 
@@ -85,13 +85,13 @@ Item {
                 "Next, let's get them spinning." }
         },
         State { name: "spinning"; when: statenum == 3
-            PropertyChanges { target: imageparticle; color: "lightgreen"; rotation: 360; rotationSpeed: 100 }
+            PropertyChanges { target: imageparticle; color: "lightgreen"; rotation: 360; rotationVelocity: 100 }
             PropertyChanges { target: imageparticleelementtest
                 testtext: "The particles should now be green and spinning.\n"+
                 "Next, let's get them popping in and out." }
         },
         State { name: "scaling"; when: statenum == 4
-            PropertyChanges { target: imageparticle; color: "lightgreen"; rotation: 360; rotationSpeed: 100; entryEffect: ImageParticle.Scale }
+            PropertyChanges { target: imageparticle; color: "lightgreen"; rotation: 360; rotationVelocity: 100; entryEffect: ImageParticle.Scale }
             PropertyChanges { target: imageparticleelementtest
                 testtext: "The particles should now be scaling in and out.\n"+
                 "Advance to restart the test." }

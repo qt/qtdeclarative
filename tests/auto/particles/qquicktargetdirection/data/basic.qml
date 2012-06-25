@@ -58,7 +58,7 @@ Rectangle {
 
         Emitter{
             //0,0 position
-            speed: TargetDirection{ targetItem: sys; proportionalMagnitude: true; magnitude: 1 }
+            velocity: TargetDirection{ targetItem: sys; proportionalMagnitude: true; magnitude: 1 }
             size: 32
             emitRate: 1000
             lifeSpan: 500

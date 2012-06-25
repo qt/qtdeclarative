@@ -64,7 +64,7 @@ Rectangle {
                 lifeSpan: 1000
                 maximumEmitted: 1200
                 size: 8
-                speed: AngleDirection {angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
+                velocity: AngleDirection {angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
                 acceleration: PointDirection {y:100; yVariation: 20}
             }
         }
@@ -92,7 +92,7 @@ Rectangle {
             enabled: false
             emitRate: 80
             lifeSpan: 6000
-            speed: PointDirection {y:-100;}
+            velocity: PointDirection {y:-100;}
             size: 32
         }
 
@@ -104,7 +104,7 @@ Rectangle {
             lifeSpan: 1600
             maximumEmitted: 6400
             size: 8
-            speed: CumulativeDirection {
+            velocity: CumulativeDirection {
                 PointDirection {y:-100}
                 AngleDirection {angleVariation: 360; magnitudeVariation: 80;}
             }

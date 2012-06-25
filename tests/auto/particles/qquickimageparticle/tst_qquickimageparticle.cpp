@@ -108,7 +108,7 @@ void tst_qquickimageparticle::test_basic()
         QCOMPARE(d->yy, 1.0f);
         QCOMPARE(d->yx, 0.0f);
         QCOMPARE(d->rotation, 0.0f);
-        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->rotationVelocity, 0.0f);
         QCOMPARE(d->autoRotate, 0.0f);
         QCOMPARE(d->animX, 0.0f);
         QCOMPARE(d->animY, 0.0f);
@@ -152,7 +152,7 @@ void tst_qquickimageparticle::test_colored()
         QCOMPARE(d->yy, 1.0f);
         QCOMPARE(d->yx, 0.0f);
         QCOMPARE(d->rotation, 0.0f);
-        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->rotationVelocity, 0.0f);
         QCOMPARE(d->autoRotate, 0.0f);
         QCOMPARE(d->animX, 0.0f);
         QCOMPARE(d->animY, 0.0f);
@@ -197,7 +197,7 @@ void tst_qquickimageparticle::test_colorVariance()
         QCOMPARE(d->yy, 1.0f);
         QCOMPARE(d->yx, 0.0f);
         QCOMPARE(d->rotation, 0.0f);
-        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->rotationVelocity, 0.0f);
         QCOMPARE(d->autoRotate, 0.0f);
         QCOMPARE(d->animX, 0.0f);
         QCOMPARE(d->animY, 0.0f);
@@ -241,7 +241,7 @@ void tst_qquickimageparticle::test_deformed()
         QCOMPARE(d->yy, 0.5f);
         QCOMPARE(d->yx, 0.5f);
         QCOMPARE(d->rotation, 90.0f * (float)CONV_FACTOR);
-        QCOMPARE(d->rotationSpeed, 90.0f * (float)CONV_FACTOR);
+        QCOMPARE(d->rotationVelocity, 90.0f * (float)CONV_FACTOR);
         QCOMPARE(d->autoRotate, 1.0f);
         QCOMPARE(d->animX, 0.0f);
         QCOMPARE(d->animY, 0.0f);
@@ -285,7 +285,7 @@ void tst_qquickimageparticle::test_tabled()
         QCOMPARE(d->yy, 1.0f);
         QCOMPARE(d->yx, 0.0f);
         QCOMPARE(d->rotation, 0.0f);
-        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->rotationVelocity, 0.0f);
         QCOMPARE(d->autoRotate, 0.0f);
         QCOMPARE(d->animX, 0.0f);
         QCOMPARE(d->animY, 0.0f);
@@ -330,7 +330,7 @@ void tst_qquickimageparticle::test_sprite()
         QCOMPARE(d->yy, 1.0f);
         QCOMPARE(d->yx, 0.0f);
         QCOMPARE(d->rotation, 0.0f);
-        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->rotationVelocity, 0.0f);
         QCOMPARE(d->autoRotate, 0.0f);
         QVERIFY(myFuzzyCompare(d->frameDuration, 120.f));
         QCOMPARE(d->frameCount, 6.0f);
