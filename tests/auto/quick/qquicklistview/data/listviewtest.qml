@@ -124,6 +124,8 @@ Rectangle {
         model: testModel
         delegate: testObject.animate ? animatedDelegate : myDelegate
         highlight: testObject.invalidHighlight ? invalidHl : myHighlight
+        highlightMoveSpeed: 1000
+        highlightResizeSpeed: 1000
         cacheBuffer: testObject.cacheBuffer
         header: root.showHeader ? headerFooter : null
         footer: root.showFooter ? headerFooter : null

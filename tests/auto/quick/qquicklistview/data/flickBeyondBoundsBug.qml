@@ -35,6 +35,8 @@ Rectangle {
         height: 320
         model: 2
         delegate: myDelegate
+        highlightMoveSpeed: 1000
+        highlightResizeSpeed: 1000
         cacheBuffer: 400
     }
     Text { anchors.bottom: parent.bottom; text: list.contentY }

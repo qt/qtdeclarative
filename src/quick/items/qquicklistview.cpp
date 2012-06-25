@@ -143,6 +143,8 @@ public:
 
     QSmoothedAnimation *highlightPosAnimator;
     QSmoothedAnimation *highlightSizeAnimator;
+    qreal highlightMoveSpeed;
+    qreal highlightResizeSpeed;
     int highlightResizeDuration;
 
     QQuickViewSection *sectionCriteria;
@@ -166,7 +168,7 @@ public:
         , averageSize(100.0), spacing(0.0)
         , snapMode(QQuickListView::NoSnap)
         , highlightPosAnimator(0), highlightSizeAnimator(0)
-        , highlightResizeDuration(250)
+        , highlightMoveSpeed(400), highlightResizeSpeed(400), highlightResizeDuration(-1)
         , sectionCriteria(0), currentSectionItem(0), nextSectionItem(0)
         , overshootDist(0.0), correctFlick(false), inFlickCorrection(false)
     {}
@@ -873,10 +875,12 @@ void QQuickListViewPrivate::createHighlight()
             const QLatin1String posProp(orient == QQuickListView::Vertical ? "y" : "x");
             highlightPosAnimator = new QSmoothedAnimation;
             highlightPosAnimator->target = QQmlProperty(item, posProp);
+            highlightPosAnimator->velocity = highlightMoveSpeed;
             highlightPosAnimator->userDuration = highlightMoveDuration;
 
             const QLatin1String sizeProp(orient == QQuickListView::Vertical ? "height" : "width");
             highlightSizeAnimator = new QSmoothedAnimation;
+            highlightSizeAnimator->velocity = highlightResizeSpeed;
             highlightSizeAnimator->userDuration = highlightResizeDuration;
             highlightSizeAnimator->target = QQmlProperty(item, sizeProp);
 
@@ -1901,7 +1905,7 @@ QQuickListView::~QQuickListView()
     is scrolled.  This is because the view moves to maintain the
     highlight within the preferred highlight range (or visible viewport).
 
-    \sa highlight
+    \sa highlight, highlightMoveSpeed
 */
 //###Possibly rename these properties, since they are very useful even without a highlight?
 /*!
@@ -2190,20 +2194,41 @@ QString QQuickListView::currentSection() const
 }
 
 /*!
+    \qmlproperty real QtQuick2::ListView::highlightMoveSpeed
     \qmlproperty int QtQuick2::ListView::highlightMoveDuration
+    \qmlproperty real QtQuick2::ListView::highlightResizeSpeed
     \qmlproperty int QtQuick2::ListView::highlightResizeDuration
 
-    These properties hold the move and resize animation duration of
-    the highlight delegate.
+    These properties hold the move and resize animation speed of the highlight delegate.
 
     \l highlightFollowsCurrentItem must be true for these properties
     to have effect.
 
-    The default value for highlightMoveDuration is 150ms and the
-    default value for highlightResizeDuration is 250ms.
+    The default value for the speed properties is 400 pixels/second.
+    The default value for the duration properties is -1, i.e. the
+    highlight will take as much time as necessary to move at the set speed.
+
+    These properties have the same characteristics as a SmoothedAnimation.
 
     \sa highlightFollowsCurrentItem
 */
+qreal QQuickListView::highlightMoveSpeed() const
+{
+    Q_D(const QQuickListView);
+    return d->highlightMoveSpeed;
+}
+
+void QQuickListView::setHighlightMoveSpeed(qreal speed)
+{
+    Q_D(QQuickListView);
+    if (d->highlightMoveSpeed != speed) {
+        d->highlightMoveSpeed = speed;
+        if (d->highlightPosAnimator)
+            d->highlightPosAnimator->velocity = d->highlightMoveSpeed;
+        emit highlightMoveSpeedChanged();
+    }
+}
+
 void QQuickListView::setHighlightMoveDuration(int duration)
 {
     Q_D(QQuickListView);
@@ -2211,6 +2236,23 @@ void QQuickListView::setHighlightMoveDuration(int duration)
         if (d->highlightPosAnimator)
             d->highlightPosAnimator->userDuration = duration;
         QQuickItemView::setHighlightMoveDuration(duration);
+    }
+}
+
+qreal QQuickListView::highlightResizeSpeed() const
+{
+    Q_D(const QQuickListView);
+    return d->highlightResizeSpeed;
+}
+
+void QQuickListView::setHighlightResizeSpeed(qreal speed)
+{
+    Q_D(QQuickListView);
+    if (d->highlightResizeSpeed != speed) {
+        d->highlightResizeSpeed = speed;
+        if (d->highlightSizeAnimator)
+            d->highlightSizeAnimator->velocity = d->highlightResizeSpeed;
+        emit highlightResizeSpeedChanged();
     }
 }
 

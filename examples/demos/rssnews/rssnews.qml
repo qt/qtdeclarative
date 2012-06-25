@@ -75,7 +75,7 @@ Rectangle {
                 footer: quitButtonDelegate
                 delegate: CategoryDelegate {}
                 highlight: Rectangle { color: "steelblue" }
-                highlightMoveDuration: 50
+                highlightMoveSpeed: 9999999
             }
             ScrollBar {
                 scrollArea: categories; height: categories.height; width: 8
