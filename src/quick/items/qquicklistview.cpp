@@ -1144,6 +1144,8 @@ void QQuickListViewPrivate::updateSections()
     lastVisibleSection = QString();
     updateCurrentSection();
     updateStickySections();
+    forceLayout = true;
+    q->polish();
 }
 
 void QQuickListViewPrivate::updateCurrentSection()

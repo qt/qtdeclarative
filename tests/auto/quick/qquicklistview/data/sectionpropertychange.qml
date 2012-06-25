@@ -23,10 +23,18 @@ Rectangle {
     }
 
     function switchGroups() {
+        myListView.model.move(0,1,1)
         if ("title" === myListView.groupBy)
             myListView.groupBy = "genre"
         else
             myListView.groupBy = "title"
+    }
+
+    function switchGrouped() {
+        if ("pageCount" === myListView.groupBy)
+            myListView.groupBy = "genre"
+        else
+            myListView.groupBy = "pageCount"
     }
 
     Component.onCompleted: {
@@ -56,11 +64,6 @@ Rectangle {
             Text { text: parent.y; anchors.right: parent.right }
         }
 
-        onGroupByChanged: {
-            model.move(0,1,1)
-            section.property = groupBy
-        }
-
         section {
             criteria: ViewSection.FullString
             delegate: Rectangle { width: 320; height: 25; color: "lightblue"
@@ -68,15 +71,15 @@ Rectangle {
                 Text {text: section }
                 Text { text: parent.y; anchors.right: parent.right }
             }
-            property: "title"
+            property: myListView.groupBy
         }
     }
 
     function generateModel(theParent)
     {
         var books = [
-                    { "author": "Billy Bob", "genre": "Anarchism", "title": "Frogs and Love" },
-                    { "author": "Lefty Smith", "genre": "Horror", "title": "Chainsaws for Noobs" }
+                { "author": "Billy Bob", "genre": "Anarchism", "title": "Frogs and Love", "pageCount": 80 },
+                { "author": "Lefty Smith", "genre": "Horror", "title": "Chainsaws for Noobs", "pageCount": 80 }
                 ];
 
         var model = Qt.createQmlObject("import QtQuick 2.0; ListModel {}", theParent);

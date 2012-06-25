@@ -2408,6 +2408,26 @@ void tst_QQuickListView::sectionPropertyChange()
         QTRY_COMPARE(item->y(), qreal(25. + i*75.));
     }
 
+    QMetaObject::invokeMethod(canvas->rootObject(), "switchGrouped");
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*50.));
+    }
+
+    QMetaObject::invokeMethod(canvas->rootObject(), "switchGrouped");
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // Confirm items positioned correctly
+    for (int i = 0; i < 2; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*75.));
+    }
+
     delete canvas;
 }
 
