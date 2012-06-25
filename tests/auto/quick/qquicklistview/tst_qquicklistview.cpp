@@ -144,6 +144,7 @@ private slots:
     void sectionsDelegate();
     void sectionsDragOutsideBounds_data();
     void sectionsDragOutsideBounds();
+    void sectionsDelegate_headerVisibility();
     void sectionPropertyChange();
     void cacheBuffer();
     void positionViewAtIndex();
@@ -2026,8 +2027,6 @@ void tst_QQuickListView::sections(const QUrl &source)
 
 void tst_QQuickListView::sectionsDelegate()
 {
-    QSKIP("QTBUG-24395");
-
     QQuickView *canvas = createView();
 
     QmlListModel model;
@@ -2064,12 +2063,6 @@ void tst_QQuickListView::sectionsDelegate()
         QVERIFY(item);
         QTRY_COMPARE(item->y(), qreal(i*20*6));
     }
-
-    // ensure section header is maintained in view
-    listview->setCurrentIndex(20);
-    QTRY_VERIFY(listview->contentY() >= 200.0);
-    listview->setCurrentIndex(0);
-    QTRY_COMPARE(listview->contentY(), 0.0);
 
     // change section
     model.modifyItem(0, "One", "aaa");
@@ -2185,6 +2178,39 @@ void tst_QQuickListView::sectionsDragOutsideBounds()
     QTRY_COMPARE(listview->contentY(), 0.0);
 
     releaseView(canvas);
+}
+
+void tst_QQuickListView::sectionsDelegate_headerVisibility()
+{
+    QSKIP("QTBUG-24395");
+
+    QQuickView *canvas = createView();
+
+    QmlListModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), QString::number(i/5));
+
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->setSource(testFileUrl("listview-sections_delegate.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    // ensure section header is maintained in view
+    listview->setCurrentIndex(20);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_COMPARE(listview->contentY(), 200.0);
+    QTRY_VERIFY(listview->isMoving() == false);
+    listview->setCurrentIndex(0);
+    QTRY_COMPARE(listview->contentY(), 0.0);
+
+    delete canvas;
 }
 
 void tst_QQuickListView::sectionsPositioning()
