@@ -6787,6 +6787,8 @@ void tst_QQuickListView::parentBinding()
     QVERIFY(!m_errorCount);
 
     qInstallMsgHandler(old);
+
+    delete canvas;
 }
 
 QTEST_MAIN(tst_QQuickListView)
