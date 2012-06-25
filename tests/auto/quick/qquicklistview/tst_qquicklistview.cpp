@@ -419,8 +419,8 @@ void tst_QQuickListView::items(const QUrl &source, bool forceLayout)
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     QTRY_VERIFY(itemCount == 0);
 
-    QTRY_COMPARE(listview->highlightResizeSpeed(), 1000.0);
-    QTRY_COMPARE(listview->highlightMoveSpeed(), 1000.0);
+    QTRY_COMPARE(listview->highlightResizeVelocity(), 1000.0);
+    QTRY_COMPARE(listview->highlightMoveVelocity(), 1000.0);
 
     delete canvas;
     delete testObject;

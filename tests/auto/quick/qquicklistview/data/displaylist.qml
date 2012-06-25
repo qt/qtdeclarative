@@ -44,7 +44,7 @@ Rectangle {
         model: testModel
         delegate: myDelegate
         highlight: myHighlight
-        highlightMoveSpeed: 1000
-        highlightResizeSpeed: 1000
+        highlightMoveVelocity: 1000
+        highlightResizeVelocity: 1000
     }
 }

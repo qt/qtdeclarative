@@ -102,10 +102,8 @@ class Q_AUTOTEST_EXPORT QQuickListView : public QQuickItemView
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickListView)
 
-    // XXX deprecate these two properties (only duration should be necessary)
-    Q_PROPERTY(qreal highlightMoveSpeed READ highlightMoveSpeed WRITE setHighlightMoveSpeed NOTIFY highlightMoveSpeedChanged)
-    Q_PROPERTY(qreal highlightResizeSpeed READ highlightResizeSpeed WRITE setHighlightResizeSpeed NOTIFY highlightResizeSpeedChanged)
-
+    Q_PROPERTY(qreal highlightMoveVelocity READ highlightMoveVelocity WRITE setHighlightMoveVelocity NOTIFY highlightMoveVelocityChanged)
+    Q_PROPERTY(qreal highlightResizeVelocity READ highlightResizeVelocity WRITE setHighlightResizeVelocity NOTIFY highlightResizeVelocityChanged)
     Q_PROPERTY(int highlightResizeDuration READ highlightResizeDuration WRITE setHighlightResizeDuration NOTIFY highlightResizeDurationChanged)
 
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
@@ -136,11 +134,11 @@ public:
 
     virtual void setHighlightFollowsCurrentItem(bool);
 
-    qreal highlightMoveSpeed() const;
-    void setHighlightMoveSpeed(qreal);
+    qreal highlightMoveVelocity() const;
+    void setHighlightMoveVelocity(qreal);
 
-    qreal highlightResizeSpeed() const;
-    void setHighlightResizeSpeed(qreal);
+    qreal highlightResizeVelocity() const;
+    void setHighlightResizeVelocity(qreal);
 
     int highlightResizeDuration() const;
     void setHighlightResizeDuration(int);
@@ -161,8 +159,8 @@ Q_SIGNALS:
     void spacingChanged();
     void orientationChanged();
     void currentSectionChanged();
-    void highlightMoveSpeedChanged();
-    void highlightResizeSpeedChanged();
+    void highlightMoveVelocityChanged();
+    void highlightResizeVelocityChanged();
     void highlightResizeDurationChanged();
     void snapModeChanged();
 

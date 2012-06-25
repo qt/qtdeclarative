@@ -56,7 +56,7 @@ Rectangle {
         height: 320
         keyNavigationWraps: testWrap
         delegate: myDelegate
-        highlightMoveSpeed: 1000
+        highlightMoveVelocity: 1000
         model: testModel
         header: root.showHeader ? headerFooter : null
         footer: root.showFooter ? headerFooter : null
