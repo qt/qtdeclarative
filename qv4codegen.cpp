@@ -16,15 +16,6 @@ using namespace AST;
 namespace {
 QTextStream qout(stdout, QIODevice::WriteOnly);
 
-void edge(IR::BasicBlock *source, IR::BasicBlock *target)
-{
-    if (! source->out.contains(target))
-        source->out.append(target);
-
-    if (! target->in.contains(source))
-        target->in.append(source);
-}
-
 void dfs(IR::BasicBlock *block,
          QSet<IR::BasicBlock *> *V,
          QVector<IR::BasicBlock *> *blocks)
