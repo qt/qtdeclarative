@@ -42,6 +42,9 @@ static inline bool protect(const void *addr, size_t size)
     return mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode) == 0;
 }
 
+static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QString &source,
+                     QQmlJS::Codegen::Mode mode = QQmlJS::Codegen::GlobalCode);
+
 namespace builtins {
 
 using namespace QQmlJS::VM;
@@ -59,6 +62,17 @@ struct Print: FunctionObject
             std::cout << qPrintable(s->toQString());
         }
         std::cout << std::endl;
+    }
+};
+
+struct Eval: FunctionObject
+{
+    Eval(Context *scope): FunctionObject(scope) {}
+
+    virtual void call(Context *ctx)
+    {
+        const QString code = ctx->argument(0).toString(ctx)->toQString();
+        evaluate(ctx, QStringLiteral("eval code"), code, QQmlJS::Codegen::EvalCode);
     }
 };
 
@@ -172,10 +186,12 @@ int evaluateCompiledCode(const QStringList &files)
 
 #endif
 
-void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QString &source)
+static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QString &source,
+                     QQmlJS::Codegen::Mode mode)
 {
     using namespace QQmlJS;
 
+    VM::ExecutionEngine *vm = ctx->engine;
     IR::Module module;
     IR::Function *globalCode = 0;
 
@@ -203,7 +219,7 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
             Program *program = AST::cast<Program *>(parser.rootNode());
 
             Codegen cg;
-            globalCode = cg(program, &module);
+            globalCode = cg(program, &module, mode);
 
             if (useMoth) {
                 Moth::InstructionSelection isel(vm, &module, code);
@@ -223,8 +239,13 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
             return;
     }
 
-    VM::Context *ctx = vm->rootContext;
     ctx->hasUncaughtException = false;
+    if (! ctx->activation.isObject())
+        __qmljs_init_object(&ctx->activation, new QQmlJS::VM::Object());
+
+    foreach (const QString *local, globalCode->locals) {
+        ctx->activation.objectValue->setProperty(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+    }
 
     if (useMoth) {
         Moth::VME vme;
@@ -272,13 +293,16 @@ int main(int argc, char *argv[])
     globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
                               QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
 
+    globalObject->setProperty(ctx, vm.identifier(QStringLiteral("eval")),
+                              QQmlJS::VM::Value::fromObject(new builtins::Eval(ctx)));
+
     foreach (const QString &fn, args) {
         QFile file(fn);
         if (file.open(QFile::ReadOnly)) {
             const QString code = QString::fromUtf8(file.readAll());
             file.close();
 
-            evaluate(&vm, fn, code);
+            evaluate(vm.rootContext, fn, code);
         }
     }
 }
