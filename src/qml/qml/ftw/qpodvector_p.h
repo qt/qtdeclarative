@@ -58,13 +58,13 @@
 
 QT_BEGIN_NAMESPACE
 
-template<class T, int Increment=1024>
-class QPODVector 
+template<class T, int Increment>
+class QPODVector
 {
 public:
     QPODVector()
     : m_count(0), m_capacity(0), m_data(0) {}
-    ~QPODVector() { if (m_data) ::free(m_data); } 
+    ~QPODVector() { if (m_data) ::free(m_data); }
 
     const T &at(int idx) const {
         return m_data[idx];
@@ -109,8 +109,8 @@ public:
         int newSize = m_count + count;
         reserve(newSize);
         int moveCount = m_count - idx;
-        if (moveCount) 
-            ::memmove(m_data + idx + count,  m_data + idx, 
+        if (moveCount)
+            ::memmove(m_data + idx + count,  m_data + idx,
                       moveCount * sizeof(T));
         m_count = newSize;
     }
@@ -118,7 +118,7 @@ public:
     void remove(int idx, int count = 1) {
         int moveCount = m_count - (idx + count);
         if (moveCount)
-            ::memmove(m_data + idx, m_data + idx + count, 
+            ::memmove(m_data + idx, m_data + idx + count,
                       moveCount * sizeof(T));
         m_count -= count;
     }
