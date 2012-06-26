@@ -322,13 +322,13 @@ IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
 {
     if (! base->asTemp()) {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), base);
+        move(_block->TEMP(t), base);
         base = _block->TEMP(t);
     }
 
     if (! index->asTemp()) {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), index);
+        move(_block->TEMP(t), index);
         index = _block->TEMP(t);
     }
 
@@ -431,7 +431,7 @@ IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
     if (base->asMember() || base->asName() || base->asTemp())
         return _block->CALL(base, args);
     const unsigned t = _block->newTemp();
-    _block->MOVE(_block->TEMP(t), base);
+    move(_block->TEMP(t), base);
     return _block->CALL(_block->TEMP(t), args);
 }
 
@@ -452,7 +452,7 @@ void Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffa
 {
     if (! (cond->asTemp() || cond->asBinop())) {
         const unsigned t = _block->newTemp();
-        _block->MOVE(_block->TEMP(t), cond);
+        move(_block->TEMP(t), cond);
         cond = _block->TEMP(t);
     }
     _block->CJUMP(cond, iftrue, iffalse);
@@ -476,7 +476,7 @@ void Codegen::statement(ExpressionNode *ast)
     } else if (_mode == EvalCode) {
         Result e = expression(ast);
         if (*e)
-            _block->MOVE(_block->TEMP(_returnAddress), *e);
+            move(_block->TEMP(_returnAddress), *e);
     } else {
         Result r(nx);
         qSwap(_expr, r);
@@ -489,7 +489,7 @@ void Codegen::statement(ExpressionNode *ast)
                 // there is nothing to do
             } else {
                 unsigned t = _block->newTemp();
-                _block->MOVE(_block->TEMP(t), *r);
+                move(_block->TEMP(t), *r);
             }
         }
     }
@@ -574,13 +574,23 @@ void Codegen::sourceElements(SourceElements *ast)
 
 void Codegen::variableDeclaration(VariableDeclaration *ast)
 {
+    IR::Expr *initializer = 0;
     if (ast->expression) {
         Result expr = expression(ast->expression);
         assert(expr.code);
+        initializer = *expr;
+    }
 
+    if (! initializer)
+        initializer = _block->CONST(IR::UndefinedType, 0);
+
+    if (! _env->parent) {
+        // it's global code.
+        move(_block->NAME(ast->name.toString(), ast->identifierToken.startLine, ast->identifierToken.startColumn), initializer);
+    } else {
         const int index = _env->findMember(ast->name.toString());
         assert(index != -1);
-        move(_block->TEMP(index), *expr);
+        move(_block->TEMP(index), initializer);
     }
 }
 
@@ -1017,7 +1027,7 @@ bool Codegen::visit(FunctionExpression *ast)
 
 bool Codegen::visit(IdentifierExpression *ast)
 {
-    if (! _function->hasDirectEval) {
+    if (! _function->hasDirectEval && _env->parent) {
         int index = _env->findMember(ast->name.toString());
         if (index != -1) {
             _expr.code = _block->TEMP(index);
@@ -1446,8 +1456,12 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     foreach (AST::FunctionDeclaration *f, _env->functions) {
         IR::Function *function = defineFunction(f->name.toString(), f, f->formals,
                                                 f->body ? f->body->elements : 0);
-        _block->MOVE(_block->TEMP(_env->findMember(f->name.toString())),
-                     _block->CLOSURE(function));
+        if (! _env->parent)
+            move(_block->NAME(f->name.toString(), f->identifierToken.startLine, f->identifierToken.startColumn),
+                 _block->CLOSURE(function));
+        else
+            move(_block->TEMP(_env->findMember(f->name.toString())),
+                 _block->CLOSURE(function));
     }
 
     sourceElements(body);
@@ -1474,15 +1488,6 @@ IR::Function *Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_mode, mode);
 
     return function;
-}
-
-int Codegen::indexOfLocal(const QStringRef &string) const
-{
-    for (int i = 0; i < _function->locals.size(); ++i) {
-        if (*_function->locals.at(i) == string)
-            return i;
-    }
-    return -1;
 }
 
 int Codegen::indexOfArgument(const QStringRef &string) const
@@ -1806,7 +1811,7 @@ bool Codegen::visit(SwitchStatement *ast)
 bool Codegen::visit(ThrowStatement *ast)
 {
     Result expr = expression(ast->expression);
-    _block->MOVE(_block->TEMP(_returnAddress), *expr);
+    move(_block->TEMP(_returnAddress), *expr);
     _block->JUMP(_throwBlock);
     return false;
 }

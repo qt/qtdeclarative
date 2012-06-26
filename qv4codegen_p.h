@@ -145,7 +145,6 @@ protected:
     void linearize(IR::Function *function);
     IR::Function *defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals,
                                  AST::SourceElements *body, Mode mode = FunctionCode);
-    int indexOfLocal(const QStringRef &string) const;
     int indexOfArgument(const QStringRef &string) const;
 
     void statement(AST::Statement *ast);

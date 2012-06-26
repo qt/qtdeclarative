@@ -305,7 +305,7 @@ ExecutionEngine::ExecutionEngine()
     //
     // set up the global object
     //
-    VM::Object *glo = newActivationObject(rootContext);
+    VM::Object *glo = newObject(/*rootContext*/);
     __qmljs_init_object(&globalObject, glo);
     __qmljs_init_object(&rootContext->activation, glo);
 

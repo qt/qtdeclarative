@@ -224,15 +224,7 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
     }
 
     VM::Context *ctx = vm->rootContext;
-
-    ctx->varCount = globalCode->locals.size();
-    if (ctx->varCount) {
-        ctx->locals = new VM::Value[ctx->varCount];
-        ctx->vars = new VM::String*[ctx->varCount];
-        std::fill(ctx->locals, ctx->locals + ctx->varCount, VM::Value::undefinedValue());
-        for (unsigned int i = 0; i < ctx->varCount; ++i)
-            ctx->vars[i] = ctx->engine->identifier(*globalCode->locals.at(i));
-    }
+    ctx->hasUncaughtException = false;
 
     if (useMoth) {
         Moth::VME vme;
@@ -250,9 +242,6 @@ void evaluate(QQmlJS::VM::ExecutionEngine *vm, const QString &fileName, const QS
         if (! qgetenv("SHOW_EXIT_VALUE").isNull())
             std::cout << "exit value: " << qPrintable(ctx->result.toString(ctx)->toQString()) << std::endl;
     }
-
-    delete[] ctx->locals;
-    delete[] ctx->vars;
 }
 
 int main(int argc, char *argv[])
@@ -276,17 +265,18 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    QQmlJS::VM::ExecutionEngine vm;
+    QQmlJS::VM::Context *ctx = vm.rootContext;
+
+    QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue;
+    globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
+                              QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
+
     foreach (const QString &fn, args) {
         QFile file(fn);
         if (file.open(QFile::ReadOnly)) {
             const QString code = QString::fromUtf8(file.readAll());
             file.close();
-            QQmlJS::VM::ExecutionEngine vm;
-            QQmlJS::VM::Context *ctx = vm.rootContext;
-
-            QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue;
-            globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
-                                      QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
 
             evaluate(&vm, fn, code);
         }

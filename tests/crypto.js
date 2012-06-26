@@ -69,7 +69,7 @@ function BigInteger(a,b,c) {
 }
 
 // return new, unset BigInteger
-function nbi() { return new BigInteger(null,uu,uu); }
+function nbi() { return new BigInteger(null); }
 
 // am: Compute w_j += (x*this_i), propagate carries,
 // c is initial carry, returns final carry.
@@ -1455,10 +1455,10 @@ function SecureRandom() {}
 
 SecureRandom.prototype.nextBytes = rng_get_bytes;
 // Depends on jsbn.js and rng.js
-var uu
+
 // convert a (hex) string to a bignum object
 function parseBigInt(str,r) {
-  return new BigInteger(str,r,uu);
+  return new BigInteger(str,r);
 }
 
 function linebrk(s,n) {
@@ -1497,7 +1497,7 @@ function pkcs1pad2(s,n) {
   }
   ba[--n] = 2;
   ba[--n] = 0;
-  return new BigInteger(ba,uu,uu);
+  return new BigInteger(ba);
 }
 
 // "empty" RSA key constructor
@@ -1600,7 +1600,7 @@ function RSAGenerate(B,E) {
   var rng = new SecureRandom();
   var qs = B>>1;
   this.e = parseInt(E,16);
-  var ee = new BigInteger(E,16,uu);
+  var ee = new BigInteger(E,16);
   for(;;) {
     for(;;) {
       this.p = new BigInteger(B-qs,1,rng);
