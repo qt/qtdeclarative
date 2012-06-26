@@ -69,7 +69,7 @@ class QImage;
 class QTransform;
 class QQmlContext;
 class QQuickView;
-
+class QObject;
 
 class Q_QUICK_EXPORT DesignerSupport
 {

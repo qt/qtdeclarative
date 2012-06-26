@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qqmlinspectorclient.h"
+#include "qdatastream.h"
 
 void QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
 {
