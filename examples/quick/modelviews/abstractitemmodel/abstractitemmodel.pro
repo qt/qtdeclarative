@@ -1,7 +1,4 @@
-TEMPLATE = app
 TARGET = abstractitemmodel
-DEPENDPATH += .
-INCLUDEPATH += .
 QT += qml quick
 
 HEADERS = model.h

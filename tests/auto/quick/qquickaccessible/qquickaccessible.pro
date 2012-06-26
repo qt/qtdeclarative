@@ -18,7 +18,7 @@ OTHER_FILES += data/statictext.qml
 CONFIG += parallel_test
 
 wince*: {
-    accessneeded.files = $$QT_BUILD_TREE\\plugins\\accessible\\*.dll
+    accessneeded.files = $$QT.widgets.plugins/accessible/*.dll
     accessneeded.path = accessible
     DEPLOYMENT += accessneeded
 }

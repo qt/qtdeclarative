@@ -1,4 +1,4 @@
-load(qt_module)
+load(qt_build_config)
 
 TARGET = qmldbg_qtquick2
 QT       += qml-private quick-private core-private gui-private v8-private

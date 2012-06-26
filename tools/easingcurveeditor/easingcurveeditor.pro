@@ -1,7 +1,3 @@
-TEMPLATE = app
-DEPENDPATH += .
-INCLUDEPATH += .
-
 QT += qml quick widgets
 CONFIG -= app_bundle
 
