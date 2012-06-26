@@ -50,6 +50,9 @@ QQuickNinePatchNode::QQuickNinePatchNode()
     , m_dirtyGeometry(false)
     , m_mirror(false)
 {
+    m_geometry.setIndexDataPattern(QSGGeometry::StaticPattern);
+    m_geometry.setVertexDataPattern(QSGGeometry::StaticPattern);
+
     setOpaqueMaterial(&m_material);
     setMaterial(&m_materialO);
     setGeometry(&m_geometry);
