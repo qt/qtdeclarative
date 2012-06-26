@@ -113,6 +113,7 @@ public:
     virtual void updateSections();
     QQuickItem *getSectionItem(const QString &section);
     void releaseSectionItem(QQuickItem *item);
+    void releaseSectionItems();
     void updateInlineSection(FxListItemSG *);
     void updateCurrentSection();
     void updateStickySections();
@@ -209,6 +210,8 @@ void QQuickViewSection::setCriteria(QQuickViewSection::SectionCriteria criteria)
 void QQuickViewSection::setDelegate(QQmlComponent *delegate)
 {
     if (delegate != m_delegate) {
+        if (m_delegate)
+            m_view->releaseSectionItems();
         m_delegate = delegate;
         emit delegateChanged();
         m_view->updateSections();
@@ -978,6 +981,24 @@ void QQuickListViewPrivate::releaseSectionItem(QQuickItem *item)
         ++i;
     } while (i < sectionCacheSize);
     delete item;
+}
+
+
+void QQuickListViewPrivate::releaseSectionItems()
+{
+    for (int i = 0; i < visibleItems.count(); ++i) {
+        FxListItemSG *listItem = static_cast<FxListItemSG *>(visibleItems.at(i));
+        if (listItem->section()) {
+            qreal pos = listItem->position();
+            releaseSectionItem(listItem->section());
+            listItem->setSection(0);
+            listItem->setPosition(pos);
+        }
+    }
+    for (int i = 0; i < sectionCacheSize; ++i) {
+        delete sectionCache[i];
+        sectionCache[i] = 0;
+    }
 }
 
 void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)

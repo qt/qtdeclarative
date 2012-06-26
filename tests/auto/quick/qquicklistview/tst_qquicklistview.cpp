@@ -146,6 +146,7 @@ private slots:
     void sectionsDragOutsideBounds();
     void sectionsDelegate_headerVisibility();
     void sectionPropertyChange();
+    void sectionDelegateChange();
     void cacheBuffer();
     void positionViewAtIndex();
     void resetModel();
@@ -2426,6 +2427,46 @@ void tst_QQuickListView::sectionPropertyChange()
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QTRY_VERIFY(item);
         QTRY_COMPARE(item->y(), qreal(25. + i*75.));
+    }
+
+    delete canvas;
+}
+
+void tst_QQuickListView::sectionDelegateChange()
+{
+    QQuickView *canvas = createView();
+
+    canvas->setSource(testFileUrl("sectiondelegatechange.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(canvas->rootObject());
+    QVERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+
+    QQUICK_VERIFY_POLISH(listview);
+
+    QVERIFY(findItems<QQuickItem>(contentItem, "section1").count() > 0);
+    QCOMPARE(findItems<QQuickItem>(contentItem, "section2").count(), 0);
+
+    for (int i = 0; i < 3; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "item", i);
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(25. + i*50.));
+    }
+
+    QMetaObject::invokeMethod(canvas->rootObject(), "switchDelegates");
+    QQUICK_VERIFY_POLISH(listview);
+
+    QCOMPARE(findItems<QQuickItem>(contentItem, "section1").count(), 0);
+    QVERIFY(findItems<QQuickItem>(contentItem, "section2").count() > 0);
+
+    for (int i = 0; i < 3; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "item", i);
+        QVERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(50. + i*75.));
     }
 
     delete canvas;
