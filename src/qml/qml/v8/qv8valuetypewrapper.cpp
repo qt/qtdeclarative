@@ -44,6 +44,7 @@
 
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlbinding_p.h>
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -146,6 +147,14 @@ v8::Local<v8::Object> QV8ValueTypeWrapper::newValueType(const QVariant &value, Q
     r->type = type; r->value = value;
     rv->SetExternalResource(r);
     return rv;
+}
+
+QVariant QV8ValueTypeWrapper::toVariant(v8::Handle<v8::Object> obj, int typeHint, bool *succeeded)
+{
+    // NOTE: obj must not be an external resource object (ie, wrapper object)
+    // instead, it is a normal js object which one of the value-type providers
+    // may know how to convert to the given type.
+    return QQml_valueTypeProvider()->createVariantFromJsObject(typeHint, QQmlV8Handle::fromHandle(obj), m_engine, succeeded);
 }
 
 QVariant QV8ValueTypeWrapper::toVariant(v8::Handle<v8::Object> obj)

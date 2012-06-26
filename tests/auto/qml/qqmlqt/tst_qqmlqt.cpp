@@ -48,12 +48,15 @@
 #include <QQmlComponent>
 #include <QDesktopServices>
 #include <QDir>
-#include <QVector3D>
 #include <QCryptographicHash>
 #include <QtQuick/QQuickItem>
 #include <QSignalSpy>
+#include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>
+#include <QQuaternion>
+#include <QMatrix4x4>
+#include <QFont>
 #include "../../shared/util.h"
 
 class tst_qqmlqt : public QQmlDataTest
@@ -69,8 +72,12 @@ private slots:
     void rect();
     void point();
     void size();
-    void vector();
+    void vector2d();
+    void vector3d();
     void vector4d();
+    void quaternion();
+    void matrix4x4();
+    void font();
     void lighter();
     void darker();
     void tint();
@@ -217,12 +224,32 @@ void tst_qqmlqt::size()
     delete object;
 }
 
-void tst_qqmlqt::vector()
+void tst_qqmlqt::vector2d()
+{
+    QQmlComponent component(&engine, testFileUrl("vector2.qml"));
+
+    QString warning1 = component.url().toString() + ":6: Error: Qt.vector2d(): Invalid arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Qt.vector2d(): Invalid arguments";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(qvariant_cast<QVector2D>(object->property("test1")), QVector2D(1, 0.9));
+    QCOMPARE(qvariant_cast<QVector2D>(object->property("test2")), QVector2D(102, -982.1));
+    QCOMPARE(qvariant_cast<QVector2D>(object->property("test3")), QVector2D());
+    QCOMPARE(qvariant_cast<QVector2D>(object->property("test4")), QVector2D());
+
+    delete object;
+}
+
+void tst_qqmlqt::vector3d()
 {
     QQmlComponent component(&engine, testFileUrl("vector.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.vector(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.vector(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Qt.vector3d(): Invalid arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Qt.vector3d(): Invalid arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -253,6 +280,69 @@ void tst_qqmlqt::vector4d()
     QCOMPARE(qvariant_cast<QVector4D>(object->property("test2")), QVector4D(102, -10, -982.1, 10));
     QCOMPARE(qvariant_cast<QVector4D>(object->property("test3")), QVector4D());
     QCOMPARE(qvariant_cast<QVector4D>(object->property("test4")), QVector4D());
+
+    delete object;
+}
+
+void tst_qqmlqt::quaternion()
+{
+    QQmlComponent component(&engine, testFileUrl("quaternion.qml"));
+
+    QString warning1 = component.url().toString() + ":6: Error: Qt.quaternion(): Invalid arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Qt.quaternion(): Invalid arguments";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(qvariant_cast<QQuaternion>(object->property("test1")), QQuaternion(2, 17, 0.9, 0.6));
+    QCOMPARE(qvariant_cast<QQuaternion>(object->property("test2")), QQuaternion(102, -10, -982.1, 10));
+    QCOMPARE(qvariant_cast<QQuaternion>(object->property("test3")), QQuaternion());
+    QCOMPARE(qvariant_cast<QQuaternion>(object->property("test4")), QQuaternion());
+
+    delete object;
+}
+
+void tst_qqmlqt::matrix4x4()
+{
+    QQmlComponent component(&engine, testFileUrl("matrix4x4.qml"));
+
+    QString warning1 = component.url().toString() + ":6: Error: Qt.matrix4x4(): Invalid arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array";
+    QString warning3 = component.url().toString() + ":8: Error: Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning3));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(qvariant_cast<QMatrix4x4>(object->property("test1")), QMatrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
+    QCOMPARE(qvariant_cast<QMatrix4x4>(object->property("test2")), QMatrix4x4(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4));
+    QCOMPARE(qvariant_cast<QMatrix4x4>(object->property("test3")), QMatrix4x4());
+    QCOMPARE(qvariant_cast<QMatrix4x4>(object->property("test4")), QMatrix4x4());
+    QCOMPARE(qvariant_cast<QMatrix4x4>(object->property("test5")), QMatrix4x4());
+
+    delete object;
+}
+
+void tst_qqmlqt::font()
+{
+    QQmlComponent component(&engine, testFileUrl("font.qml"));
+
+    QString warning1 = component.url().toString() + ":6: Error: Qt.font(): Invalid arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Qt.font(): Invalid argument: no valid font subproperties specified";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(qvariant_cast<QFont>(object->property("test1")), QFont("Arial", 22));
+    QCOMPARE(qvariant_cast<QFont>(object->property("test2")), QFont("Arial", 20, QFont::DemiBold, true));
+    QCOMPARE(qvariant_cast<QFont>(object->property("test3")), QFont());
+    QCOMPARE(qvariant_cast<QFont>(object->property("test4")), QFont());
 
     delete object;
 }

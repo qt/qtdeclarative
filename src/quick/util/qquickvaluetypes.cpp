@@ -57,7 +57,7 @@ namespace QQuickValueTypes {
 }
 
 QQuickColorValueType::QQuickColorValueType(QObject *parent)
-    : QQmlValueTypeBase<QColor>(parent)
+    : QQmlValueTypeBase<QColor>(QMetaType::QColor, parent)
 {
 }
 
@@ -109,7 +109,7 @@ void QQuickColorValueType::setA(qreal a)
 
 
 QQuickVector2DValueType::QQuickVector2DValueType(QObject *parent)
-    : QQmlValueTypeBase<QVector2D>(parent)
+    : QQmlValueTypeBase<QVector2D>(QMetaType::QVector2D, parent)
 {
 }
 
@@ -140,7 +140,7 @@ void QQuickVector2DValueType::setY(qreal y)
 
 
 QQuickVector3DValueType::QQuickVector3DValueType(QObject *parent)
-    : QQmlValueTypeBase<QVector3D>(parent)
+    : QQmlValueTypeBase<QVector3D>(QMetaType::QVector3D, parent)
 {
 }
 
@@ -181,7 +181,7 @@ void QQuickVector3DValueType::setZ(qreal z)
 
 
 QQuickVector4DValueType::QQuickVector4DValueType(QObject *parent)
-    : QQmlValueTypeBase<QVector4D>(parent)
+    : QQmlValueTypeBase<QVector4D>(QMetaType::QVector4D, parent)
 {
 }
 
@@ -232,7 +232,7 @@ void QQuickVector4DValueType::setW(qreal w)
 
 
 QQuickQuaternionValueType::QQuickQuaternionValueType(QObject *parent)
-    : QQmlValueTypeBase<QQuaternion>(parent)
+    : QQmlValueTypeBase<QQuaternion>(QMetaType::QQuaternion, parent)
 {
 }
 
@@ -283,7 +283,7 @@ void QQuickQuaternionValueType::setZ(qreal z)
 
 
 QQuickMatrix4x4ValueType::QQuickMatrix4x4ValueType(QObject *parent)
-    : QQmlValueTypeBase<QMatrix4x4>(parent)
+    : QQmlValueTypeBase<QMatrix4x4>(QMetaType::QMatrix4x4, parent)
 {
 }
 
@@ -298,7 +298,7 @@ QString QQuickMatrix4x4ValueType::toString() const
 
 
 QQuickFontValueType::QQuickFontValueType(QObject *parent)
-    : QQmlValueTypeBase<QFont>(parent),
+    : QQmlValueTypeBase<QFont>(QMetaType::QFont, parent),
       pixelSizeSet(false),
       pointSizeSet(false)
 {

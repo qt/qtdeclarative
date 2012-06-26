@@ -146,7 +146,7 @@ property int volume: "four"  // generates an error; the property's object will n
 
 Likewise if a property is assigned a value of the wrong type during run time, the new value will not be assigned, and an error will be generated.
 
-See \l {QML Basic Types} for a list of the types of properties that are supported by default. Additionally, any available \l {QML Object Types}QML object type} may also be used as a property type.
+See \l {QML Basic Types} for a list of the types of properties that are supported by default. Additionally, any available \l {QML Object Types}{QML object type} may also be used as a property type.
 
 
 \section3 Special property types

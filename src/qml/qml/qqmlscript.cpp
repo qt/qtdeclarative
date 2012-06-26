@@ -912,6 +912,14 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         // { "date", strlen("date"), Object::DynamicProperty::Date },
         { "date", strlen("date"), Object::DynamicProperty::DateTime },
         { "rect", strlen("rect"), Object::DynamicProperty::Rect },
+        { "point", strlen("point"), Object::DynamicProperty::Point },
+        { "size", strlen("size"), Object::DynamicProperty::Size },
+        { "font", strlen("font"), Object::DynamicProperty::Font },
+        { "vector2d", strlen("vector2d"), Object::DynamicProperty::Vector2D },
+        { "vector3d", strlen("vector3d"), Object::DynamicProperty::Vector3D },
+        { "vector4d", strlen("vector4d"), Object::DynamicProperty::Vector4D },
+        { "quaternion", strlen("quaternion"), Object::DynamicProperty::Quaternion },
+        { "matrix4x4", strlen("matrix4x4"), Object::DynamicProperty::Matrix4x4 },
         { "variant", strlen("variant"), Object::DynamicProperty::Variant },
         { "var", strlen("var"), Object::DynamicProperty::Var }
     };

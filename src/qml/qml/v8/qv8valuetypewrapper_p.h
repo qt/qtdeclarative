@@ -75,6 +75,7 @@ public:
     v8::Local<v8::Object> newValueType(QObject *, int, QQmlValueType *);
     v8::Local<v8::Object> newValueType(const QVariant &, QQmlValueType *);
 
+    QVariant toVariant(v8::Handle<v8::Object>, int typeHint, bool *succeeded);
     QVariant toVariant(v8::Handle<v8::Object>);
     QVariant toVariant(QV8ObjectResource *);
 

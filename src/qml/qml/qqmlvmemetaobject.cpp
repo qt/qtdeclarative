@@ -101,6 +101,8 @@ public:
     inline const QDate &asQDate();
     inline const QDateTime &asQDateTime();
     inline const QRectF &asQRectF();
+    inline const QPointF &asQPointF();
+    inline const QSizeF &asQSizeF();
     inline const QJSValue &asQJSValue();
 
     inline void setValue(QObject *v, QQmlVMEMetaObject *target, int index);
@@ -114,6 +116,8 @@ public:
     inline void setValue(const QDate &);
     inline void setValue(const QDateTime &);
     inline void setValue(const QRectF &);
+    inline void setValue(const QPointF &);
+    inline void setValue(const QSizeF &);
     inline void setValue(const QJSValue &);
 
     inline void setDataType(int t);
@@ -175,6 +179,12 @@ void QQmlVMEVariant::cleanup()
         type = QVariant::Invalid;
     } else if (type == QMetaType::QRectF) {
         ((QRectF *)dataPtr())->~QRectF();
+        type = QVariant::Invalid;
+    } else if (type == QMetaType::QPointF) {
+        ((QPointF *)dataPtr())->~QPointF();
+        type = QVariant::Invalid;
+    } else if (type == QMetaType::QSizeF) {
+        ((QSizeF *)dataPtr())->~QSizeF();
         type = QVariant::Invalid;
     } else if (type == qMetaTypeId<QVariant>()) {
         ((QVariant *)dataPtr())->~QVariant();
@@ -297,6 +307,22 @@ const QRectF &QQmlVMEVariant::asQRectF()
     return *(QRectF *)(dataPtr());
 }
 
+const QSizeF &QQmlVMEVariant::asQSizeF()
+{
+    if (type != QMetaType::QSizeF)
+        setValue(QSizeF());
+
+    return *(QSizeF *)(dataPtr());
+}
+
+const QPointF &QQmlVMEVariant::asQPointF()
+{
+    if (type != QMetaType::QPointF)
+        setValue(QPointF());
+
+    return *(QPointF *)(dataPtr());
+}
+
 const QJSValue &QQmlVMEVariant::asQJSValue()
 {
     if (type != qMetaTypeId<QJSValue>())
@@ -416,6 +442,28 @@ void QQmlVMEVariant::setValue(const QRectF &v)
         new (dataPtr()) QRectF(v);
     } else {
         *(QRectF *)(dataPtr()) = v;
+    }
+}
+
+void QQmlVMEVariant::setValue(const QPointF &v)
+{
+    if (type != QMetaType::QPointF) {
+        cleanup();
+        type = QMetaType::QPointF;
+        new (dataPtr()) QPointF(v);
+    } else {
+        *(QPointF *)(dataPtr()) = v;
+    }
+}
+
+void QQmlVMEVariant::setValue(const QSizeF &v)
+{
+    if (type != QMetaType::QSizeF) {
+        cleanup();
+        type = QMetaType::QSizeF;
+        new (dataPtr()) QSizeF(v);
+    } else {
+        *(QSizeF *)(dataPtr()) = v;
     }
 }
 
@@ -685,6 +733,12 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         case QVariant::RectF:
                             *reinterpret_cast<QRectF *>(a[0]) = data[id].asQRectF();
                             break;
+                        case QVariant::SizeF:
+                            *reinterpret_cast<QSizeF *>(a[0]) = data[id].asQSizeF();
+                            break;
+                        case QVariant::PointF:
+                            *reinterpret_cast<QPointF *>(a[0]) = data[id].asQPointF();
+                            break;
                         case QMetaType::QObjectStar:
                             *reinterpret_cast<QObject **>(a[0]) = data[id].asQObject();
                             break;
@@ -692,7 +746,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                             break;
                         default:
-                            QQml_valueTypeProvider()->readValueType(data[id].dataType(), data[id].dataPtr(), t, a[0]);
+                            QQml_valueTypeProvider()->readValueType(data[id].dataType(), data[id].dataPtr(), data->dataSize(), t, a[0]);
                             break;
                         }
                         if (t == qMetaTypeId<QQmlListProperty<QObject> >()) {
@@ -739,6 +793,14 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             needActivate = *reinterpret_cast<QRectF *>(a[0]) != data[id].asQRectF();
                             data[id].setValue(*reinterpret_cast<QRectF *>(a[0]));
                             break;
+                        case QVariant::SizeF:
+                            needActivate = *reinterpret_cast<QSizeF *>(a[0]) != data[id].asQSizeF();
+                            data[id].setValue(*reinterpret_cast<QSizeF *>(a[0]));
+                            break;
+                        case QVariant::PointF:
+                            needActivate = *reinterpret_cast<QPointF *>(a[0]) != data[id].asQPointF();
+                            data[id].setValue(*reinterpret_cast<QPointF *>(a[0]));
+                            break;
                         case QMetaType::QObjectStar:
                             needActivate = *reinterpret_cast<QObject **>(a[0]) != data[id].asQObject();
                             data[id].setValue(*reinterpret_cast<QObject **>(a[0]), this, id);
@@ -748,7 +810,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             break;
                         default:
                             data[id].ensureValueType(t);
-                            needActivate = !QQml_valueTypeProvider()->equalValueType(t, a[0], data[id].dataPtr());
+                            needActivate = !QQml_valueTypeProvider()->equalValueType(t, a[0], data[id].dataPtr(), data[id].dataSize());
                             QQml_valueTypeProvider()->writeValueType(t, a[0], data[id].dataPtr(), data[id].dataSize());
                             break;
                         }

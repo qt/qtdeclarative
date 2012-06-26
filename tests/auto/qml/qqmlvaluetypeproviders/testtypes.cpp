@@ -38,43 +38,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include "testtypes.h"
 
-#include <qtest.h>
-#include <qqml.h>
-
-#include <private/qqmlglobal_p.h>
-
-class tst_qqmlglobal : public QObject
+void registerTypes()
 {
-    Q_OBJECT
-public:
-    tst_qqmlglobal() {}
-
-private slots:
-    void initTestCase();
-
-    void colorProviderWarning();
-    void guiProviderWarning();
-};
-
-void tst_qqmlglobal::initTestCase()
-{
+    qmlRegisterType<MyTypeObject>("Test", 1, 0, "MyTypeObject");
 }
-
-void tst_qqmlglobal::colorProviderWarning()
-{
-    const QLatin1String expected("Warning: QQml_colorProvider: no color provider has been set! ");
-    QTest::ignoreMessage(QtWarningMsg, expected.data());
-    QQml_colorProvider();
-}
-
-void tst_qqmlglobal::guiProviderWarning()
-{
-    const QLatin1String expected("Warning: QQml_guiProvider: no GUI provider has been set! ");
-    QTest::ignoreMessage(QtWarningMsg, expected.data());
-    QQml_guiProvider();
-}
-
-QTEST_MAIN(tst_qqmlglobal)
-
-#include "tst_qqmlglobal.moc"

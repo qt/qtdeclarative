@@ -46,6 +46,7 @@
 #include <QtCore/QObject>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qmetaobject_p.h>
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_HEADER
 
@@ -208,7 +209,7 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 
 
 class QQmlValueType;
-
+class QV8Engine;
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider
 {
 public:
@@ -226,10 +227,11 @@ public:
 
     QVariant createVariantFromString(const QString &);
     QVariant createVariantFromString(int, const QString &, bool *);
+    QVariant createVariantFromJsObject(int, QQmlV8Handle, QV8Engine *, bool*);
 
-    bool equalValueType(int, const void *, const void *);
+    bool equalValueType(int, const void *, const void *, size_t);
     bool storeValueType(int, const void *, void *, size_t);
-    bool readValueType(int, const void *, int, void *);
+    bool readValueType(int, const void *, size_t, int, void *);
     bool writeValueType(int, const void *, void *, size_t);
 
 private:
@@ -245,10 +247,11 @@ private:
 
     virtual bool variantFromString(const QString &, QVariant *);
     virtual bool variantFromString(int, const QString &, QVariant *);
+    virtual bool variantFromJsObject(int, QQmlV8Handle, QV8Engine *, QVariant *);
 
-    virtual bool equal(int, const void *, const void *);
+    virtual bool equal(int, const void *, const void *, size_t);
     virtual bool store(int, const void *, void *, size_t);
-    virtual bool read(int, const void *, int, void *);
+    virtual bool read(int, const void *, size_t, int, void *);
     virtual bool write(int, const void *, void *, size_t);
 
     friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);

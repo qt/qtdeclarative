@@ -38,6 +38,7 @@ PRIVATETESTS += \
     qqmlpropertymap \
     qqmlsqldatabase \
     qqmlvaluetypes \
+    qqmlvaluetypeproviders \
     qquickbinding \
     qquickchangeset \
     qquickconnection \

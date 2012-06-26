@@ -69,7 +69,7 @@ class Q_QML_PRIVATE_EXPORT QQmlValueType : public QObject
 {
     Q_OBJECT
 public:
-    QQmlValueType(QObject *parent = 0);
+    QQmlValueType(int userType, QObject *parent = 0);
     virtual void read(QObject *, int) = 0;
     virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags flags) = 0;
     virtual QVariant value() = 0;
@@ -79,6 +79,11 @@ public:
     virtual bool isEqual(const QVariant &value) const = 0;
 
     virtual void onLoad() {}
+
+    inline int userType() const
+    {
+        return m_userType;
+    }
 
 protected:
     inline void readProperty(QObject *obj, int idx, void *p)
@@ -94,6 +99,9 @@ protected:
         void *a[] = { p, 0, &status, &flags };
         QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
     }
+
+private:
+    int m_userType;
 };
 
 template <typename T>
@@ -102,8 +110,8 @@ class QQmlValueTypeBase : public QQmlValueType
 public:
     typedef T ValueType;
 
-    QQmlValueTypeBase(QObject *parent)
-        : QQmlValueType(parent)
+    QQmlValueTypeBase(int userType, QObject *parent)
+        : QQmlValueType(userType, parent)
     {
     }
 

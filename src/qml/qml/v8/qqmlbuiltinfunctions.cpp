@@ -495,13 +495,30 @@ v8::Handle<v8::Value> size(const v8::Arguments &args)
 }
 
 /*!
+\qmlmethod Qt::vector2d(real x, real y)
+Returns a Vector2D with the specified \c x and \c y.
+*/
+v8::Handle<v8::Value> vector2d(const v8::Arguments &args)
+{
+    if (args.Length() != 2)
+        V8THROW_ERROR("Qt.vector2d(): Invalid arguments");
+
+    float xy[3];
+    xy[0] = args[0]->ToNumber()->Value();
+    xy[1] = args[1]->ToNumber()->Value();
+
+    const void *params[] = { xy };
+    return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector2D, 1, params));
+}
+
+/*!
 \qmlmethod Qt::vector3d(real x, real y, real z)
 Returns a Vector3D with the specified \c x, \c y and \c z.
 */
 v8::Handle<v8::Value> vector3d(const v8::Arguments &args)
 {
     if (args.Length() != 3)
-        V8THROW_ERROR("Qt.vector(): Invalid arguments");
+        V8THROW_ERROR("Qt.vector3d(): Invalid arguments");
 
     float xyz[3];
     xyz[0] = args[0]->ToNumber()->Value();
@@ -529,6 +546,89 @@ v8::Handle<v8::Value> vector4d(const v8::Arguments &args)
 
     const void *params[] = { xyzw };
     return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params));
+}
+
+/*!
+\qmlmethod Qt::quaternion(real scalar, real x, real y, real z)
+Returns a Quaternion with the specified \c scalar, \c x, \c y, and \c z.
+*/
+v8::Handle<v8::Value> quaternion(const v8::Arguments &args)
+{
+    if (args.Length() != 4)
+        V8THROW_ERROR("Qt.quaternion(): Invalid arguments");
+
+    double sxyz[4];
+    sxyz[0] = args[0]->ToNumber()->Value();
+    sxyz[1] = args[1]->ToNumber()->Value();
+    sxyz[2] = args[2]->ToNumber()->Value();
+    sxyz[3] = args[3]->ToNumber()->Value();
+
+    const void *params[] = { sxyz };
+    return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QQuaternion, 1, params));
+}
+
+/*!
+\qmlmethod Qt::font(object fontSpecifier)
+Returns a Font with the properties specified in the \c fontSpecifier object
+or the nearest matching font.  The \c fontSpecifier object should contain
+key-value pairs where valid keys are the \l{fontbasictypedocs}{font} type's
+subproperty names, and the values are valid values for each subproperty.
+Invalid keys will be ignored.
+*/
+v8::Handle<v8::Value> font(const v8::Arguments &args)
+{
+    if (args.Length() != 1 || !args[0]->IsObject())
+        V8THROW_ERROR("Qt.font(): Invalid arguments");
+
+    v8::Handle<v8::Object> obj = args[0]->ToObject();
+    bool ok = false;
+    QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV8Handle::fromHandle(obj), V8ENGINE(), &ok);
+    if (!ok)
+        V8THROW_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
+    return V8ENGINE()->fromVariant(v);
+}
+
+/*!
+\qmlmethod Qt::matrix4x4(real m11, real m12, real m13, real m14, real m21, real m22, real m23, real m24, real m31, real m32, real m33, real m34, real m41, real m42, real m43, real m44)
+Returns a Matrix4x4 with the specified values.
+Alternatively, the function may be called with a single argument
+where that argument is a JavaScript array which contains the sixteen
+matrix values.
+*/
+v8::Handle<v8::Value> matrix4x4(const v8::Arguments &args)
+{
+    if (args.Length() == 1 && args[0]->IsObject()) {
+        v8::Handle<v8::Object> obj = args[0]->ToObject();
+        bool ok = false;
+        QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QMatrix4x4, QQmlV8Handle::fromHandle(obj), V8ENGINE(), &ok);
+        if (!ok)
+            V8THROW_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
+        return V8ENGINE()->fromVariant(v);
+    }
+
+    if (args.Length() != 16)
+        V8THROW_ERROR("Qt.matrix4x4(): Invalid arguments");
+
+    float vals[16];
+    vals[0] = args[0]->ToNumber()->Value();
+    vals[1] = args[1]->ToNumber()->Value();
+    vals[2] = args[2]->ToNumber()->Value();
+    vals[3] = args[3]->ToNumber()->Value();
+    vals[4] = args[4]->ToNumber()->Value();
+    vals[5] = args[5]->ToNumber()->Value();
+    vals[6] = args[6]->ToNumber()->Value();
+    vals[7] = args[7]->ToNumber()->Value();
+    vals[8] = args[8]->ToNumber()->Value();
+    vals[9] = args[9]->ToNumber()->Value();
+    vals[10] = args[10]->ToNumber()->Value();
+    vals[11] = args[11]->ToNumber()->Value();
+    vals[12] = args[12]->ToNumber()->Value();
+    vals[13] = args[13]->ToNumber()->Value();
+    vals[14] = args[14]->ToNumber()->Value();
+    vals[15] = args[15]->ToNumber()->Value();
+
+    const void *params[] = { vals };
+    return V8ENGINE()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 1, params));
 }
 
 /*!

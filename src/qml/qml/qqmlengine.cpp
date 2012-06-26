@@ -271,16 +271,26 @@ the \l Qt::LeftButton and \l Qt::RightButton enumeration values as \c Qt.LeftBut
 
 
 \section1 Types
+
 The Qt object also contains helper functions for creating objects of specific
 data types. This is primarily useful when setting the properties of an item
 when the property has one of the following types:
-
 \list
-\li \c color - use \l{Qt::rgba()}{Qt.rgba()}, \l{Qt::hsla()}{Qt.hsla()}, \l{Qt::darker()}{Qt.darker()}, \l{Qt::lighter()}{Qt.lighter()} or \l{Qt::tint()}{Qt.tint()}
 \li \c rect - use \l{Qt::rect()}{Qt.rect()}
 \li \c point - use \l{Qt::point()}{Qt.point()}
 \li \c size - use \l{Qt::size()}{Qt.size()}
+\endlist
+
+If the QtQuick module has been imported, the following helper functions for
+creating objects of specific data types are also available for clients to use:
+\list
+\li \c color - use \l{Qt::rgba()}{Qt.rgba()}, \l{Qt::hsla()}{Qt.hsla()}, \l{Qt::darker()}{Qt.darker()}, \l{Qt::lighter()}{Qt.lighter()} or \l{Qt::tint()}{Qt.tint()}
+\li \c font - use \l{Qt::font()}{Qt.font()}
+\li \c vector2d - use \l{Qt::vector2d()}{Qt.vector2d()}
 \li \c vector3d - use \l{Qt::vector3d()}{Qt.vector3d()}
+\li \c vector4d - use \l{Qt::vector4d()}{Qt.vector4d()}
+\li \c quaternion - use \l{Qt::quaternion()}{Qt.quaternion()}
+\li \c matrix4x4 - use \l{Qt::matrix4x4()}{Qt.matrix4x4()}
 \endlist
 
 There are also string based constructors for these types. See \l{qdeclarativebasictypes.html}{QML Basic Types} for more information.

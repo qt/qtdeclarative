@@ -2806,10 +2806,18 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         { Object::DynamicProperty::String, QMetaType::QString },
         { Object::DynamicProperty::Url, QMetaType::QUrl },
         { Object::DynamicProperty::Color, QMetaType::QColor },
+        { Object::DynamicProperty::Font, QMetaType::QFont },
         { Object::DynamicProperty::Time, QMetaType::QTime },
         { Object::DynamicProperty::Date, QMetaType::QDate },
         { Object::DynamicProperty::DateTime, QMetaType::QDateTime },
         { Object::DynamicProperty::Rect, QMetaType::QRectF },
+        { Object::DynamicProperty::Point, QMetaType::QPointF },
+        { Object::DynamicProperty::Size, QMetaType::QSizeF },
+        { Object::DynamicProperty::Vector2D, QMetaType::QVector2D },
+        { Object::DynamicProperty::Vector3D, QMetaType::QVector3D },
+        { Object::DynamicProperty::Vector4D, QMetaType::QVector4D },
+        { Object::DynamicProperty::Matrix4x4, QMetaType::QMatrix4x4 },
+        { Object::DynamicProperty::Quaternion, QMetaType::QQuaternion }
     };
     static const int builtinTypeCount = sizeof(builtinTypes) / sizeof(TypeData);
 

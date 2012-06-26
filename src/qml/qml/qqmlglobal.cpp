@@ -175,42 +175,58 @@ QVariant QQmlValueTypeProvider::createVariantFromString(int type, const QString 
     return QVariant();
 }
 
-bool QQmlValueTypeProvider::equalValueType(int type, const void *lhs, const void *rhs)
+QVariant QQmlValueTypeProvider::createVariantFromJsObject(int type, QQmlV8Handle obj, QV8Engine *e, bool *ok)
+{
+    QVariant v;
+
+    QQmlValueTypeProvider *p = this;
+    do {
+        if (p->variantFromJsObject(type, obj, e, &v)) {
+            if (ok) *ok = true;
+            return v;
+        }
+    } while ((p = p->next));
+
+    if (ok) *ok = false;
+    return QVariant();
+}
+
+bool QQmlValueTypeProvider::equalValueType(int type, const void *lhs, const void *rhs, size_t rhsSize)
 {
     Q_ASSERT(lhs);
     Q_ASSERT(rhs);
 
     QQmlValueTypeProvider *p = this;
     do {
-        if (p->equal(type, lhs, rhs))
+        if (p->equal(type, lhs, rhs, rhsSize))
             return true;
     } while ((p = p->next));
 
     return false;
 }
 
-bool QQmlValueTypeProvider::storeValueType(int type, const void *src, void *dst, size_t n)
+bool QQmlValueTypeProvider::storeValueType(int type, const void *src, void *dst, size_t dstSize)
 {
     Q_ASSERT(src);
     Q_ASSERT(dst);
 
     QQmlValueTypeProvider *p = this;
     do {
-        if (p->store(type, src, dst, n))
+        if (p->store(type, src, dst, dstSize))
             return true;
     } while ((p = p->next));
 
     return false;
 }
 
-bool QQmlValueTypeProvider::readValueType(int srcType, const void *src, int dstType, void *dst)
+bool QQmlValueTypeProvider::readValueType(int srcType, const void *src, size_t srcSize, int dstType, void *dst)
 {
     Q_ASSERT(src);
     Q_ASSERT(dst);
 
     QQmlValueTypeProvider *p = this;
     do {
-        if (p->read(srcType, src, dstType, dst))
+        if (p->read(srcType, src, srcSize, dstType, dst))
             return true;
     } while ((p = p->next));
 
@@ -240,9 +256,10 @@ bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_
 bool QQmlValueTypeProvider::createStringFrom(int, const void *, QString *) { return false; }
 bool QQmlValueTypeProvider::variantFromString(const QString &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::variantFromString(int, const QString &, QVariant *) { return false; }
-bool QQmlValueTypeProvider::equal(int, const void *, const void *) { return false; }
+bool QQmlValueTypeProvider::variantFromJsObject(int, QQmlV8Handle, QV8Engine *, QVariant *) { return false; }
+bool QQmlValueTypeProvider::equal(int, const void *, const void *, size_t) { return false; }
 bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return false; }
-bool QQmlValueTypeProvider::read(int, const void *, int, void *) { return false; }
+bool QQmlValueTypeProvider::read(int, const void *, size_t, int, void *) { return false; }
 bool QQmlValueTypeProvider::write(int, const void *, void *, size_t) { return false; }
 
 static QQmlValueTypeProvider *valueTypeProvider = 0;
@@ -266,10 +283,6 @@ Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *newPr
 
 Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider(void)
 {
-    if (valueTypeProvider == 0) {
-        qWarning() << "Warning: QQml_valueTypeProvider: no value type provider has been set!";
-    }
-
     static QQmlValueTypeProvider **providerPtr = getValueTypeProvider();
     return *providerPtr;
 }

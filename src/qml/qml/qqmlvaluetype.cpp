@@ -112,14 +112,14 @@ QQmlValueType *QQmlValueTypeFactory::valueType(int t)
     return rv;
 }
 
-QQmlValueType::QQmlValueType(QObject *parent)
-: QObject(parent)
+QQmlValueType::QQmlValueType(int userType, QObject *parent)
+: QObject(parent), m_userType(userType)
 {
 }
 
 
 QQmlPointFValueType::QQmlPointFValueType(QObject *parent)
-    : QQmlValueTypeBase<QPointF>(parent)
+    : QQmlValueTypeBase<QPointF>(QMetaType::QPointF, parent)
 {
 }
 
@@ -150,7 +150,7 @@ void QQmlPointFValueType::setY(qreal y)
 
 
 QQmlPointValueType::QQmlPointValueType(QObject *parent)
-    : QQmlValueTypeBase<QPoint>(parent)
+    : QQmlValueTypeBase<QPoint>(QMetaType::QPoint, parent)
 {
 }
 
@@ -181,7 +181,7 @@ void QQmlPointValueType::setY(int y)
 
 
 QQmlSizeFValueType::QQmlSizeFValueType(QObject *parent)
-    : QQmlValueTypeBase<QSizeF>(parent)
+    : QQmlValueTypeBase<QSizeF>(QMetaType::QSizeF, parent)
 {
 }
 
@@ -212,7 +212,7 @@ void QQmlSizeFValueType::setHeight(qreal h)
 
 
 QQmlSizeValueType::QQmlSizeValueType(QObject *parent)
-    : QQmlValueTypeBase<QSize>(parent)
+    : QQmlValueTypeBase<QSize>(QMetaType::QSize, parent)
 {
 }
 
@@ -243,7 +243,7 @@ void QQmlSizeValueType::setHeight(int h)
 
 
 QQmlRectFValueType::QQmlRectFValueType(QObject *parent)
-    : QQmlValueTypeBase<QRectF>(parent)
+    : QQmlValueTypeBase<QRectF>(QMetaType::QRectF, parent)
 {
 }
 
@@ -294,7 +294,7 @@ void QQmlRectFValueType::setHeight(qreal h)
 
 
 QQmlRectValueType::QQmlRectValueType(QObject *parent)
-    : QQmlValueTypeBase<QRect>(parent)
+    : QQmlValueTypeBase<QRect>(QMetaType::QRect, parent)
 {
 }
 
@@ -345,7 +345,7 @@ void QQmlRectValueType::setHeight(int h)
 
 
 QQmlEasingValueType::QQmlEasingValueType(QObject *parent)
-    : QQmlValueTypeBase<QEasingCurve>(parent)
+    : QQmlValueTypeBase<QEasingCurve>(QMetaType::QEasingCurve, parent)
 {
 }
 

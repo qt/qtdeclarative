@@ -381,7 +381,9 @@ public:
         DynamicProperty();
 
         enum Type { Var, Variant, Int, Bool, Real, String, Url, Color,
-                    Time, Date, DateTime, Rect, Alias, Custom, CustomList };
+                    Font, Time, Date, DateTime, Rect, Point, Size,
+                    Vector2D, Vector3D, Vector4D, Matrix4x4, Quaternion,
+                    Alias, Custom, CustomList };
 
         quint32 isDefaultProperty:1;
         quint32 isReadOnly:1;

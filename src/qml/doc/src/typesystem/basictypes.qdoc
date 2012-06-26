@@ -49,6 +49,10 @@ Basic types can be used to refer to:
 
 \section1 Supported Basic Types
 
+Most basic types are supported by the engine by default and do not require an
+\l {Import Statements}{Import Statement} to be used, unlike QML object types.
+Some basic types which contain multiple property-value pairs (also known as \c{value types})
+do require an import, as they are provided by the QtQuick module.
 The basic types supported in QML are listed below:
 
 \annotatedlist qmlbasictypes
@@ -119,6 +123,8 @@ property is only invoked when the property is reassigned to a different object v
     Item { width: 100; height: 200 }
     \endqml
 
+    This basic type is provided by the QML language.
+
     \sa {QML Basic Types}
 */
 
@@ -136,6 +142,8 @@ property is only invoked when the property is reassigned to a different object v
         clip: false
     }
     \endqml
+
+    This basic type is provided by the QML language.
 
     \sa {QML Basic Types}
 */
@@ -157,6 +165,8 @@ property is only invoked when the property is reassigned to a different object v
     {http://en.wikipedia.org/wiki/IEEE_754} {IEEE floating point}
     format.
 
+    This basic type is provided by the QML language.
+
     \sa {QML Basic Types}
 */
 
@@ -175,6 +185,8 @@ property is only invoked when the property is reassigned to a different object v
         property double number: 32155.2355
     }
     \endqml
+
+    This basic type is provided by the QML language.
 
     \sa {QML Basic Types}
 */
@@ -200,6 +212,8 @@ property is only invoked when the property is reassigned to a different object v
     When integrating with C++, note that any QString value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c string value, and vice-versa.
+
+    This basic type is provided by the QML language.
 
     \sa {QML Basic Types}
 */
@@ -270,6 +284,8 @@ property is only invoked when the property is reassigned to a different object v
     Image { source: encodeURIComponent("/tmp/test#1.png") }
     \endqml
 
+    This basic type is provided by the QML language.
+
     \sa {QML Basic Types}
 */
 
@@ -314,6 +330,8 @@ property is only invoked when the property is reassigned to a different object v
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c color value, and vice-versa.
 
+    This basic type is provided by the QtQuick import.
+
     \sa {QML Basic Types}
 */
 
@@ -340,6 +358,8 @@ property is only invoked when the property is reassigned to a different object v
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c point value. When a \c point value is passed to C++, it
     is automatically converted into a QPointF value.
+
+    This basic type is provided by the QML language.
 
     \sa {QML Basic Types}
 */
@@ -377,6 +397,8 @@ property is only invoked when the property is reassigned to a different object v
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c size value, and vice-versa. When a \c size value is passed to C++, it
     is automatically converted into a QSizeF value.
+
+    This basic type is provided by the QML language.
 
     \sa {QML Basic Types}
 */
@@ -417,6 +439,7 @@ property is only invoked when the property is reassigned to a different object v
     converted into a \c rect value, and vice-versa. When a \c rect value is passed to C++, it
     is automatically converted into a QRectF value.
 
+    This basic type is provided by the QML language.
 
     \sa {QML Basic Types}
 */
@@ -440,6 +463,13 @@ property is only invoked when the property is reassigned to a different object v
     When integrating with C++, note that any QDate value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c date value, and vice-versa.
+
+    Note that the date type has comparison semantics which match
+    those of the JavaScript Date object.  To compare the value
+    of two date properties, you should compare their "toString()"
+    values.
+
+    This basic type is provided by the QML language.
 
     \sa {QML Basic Types}
 */
@@ -468,6 +498,8 @@ property is only invoked when the property is reassigned to a different object v
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c time value, and vice-versa.
 
+    This basic type is provided by the QML language.
+
     \sa {QML Basic Types}
  */
 
@@ -475,6 +507,7 @@ property is only invoked when the property is reassigned to a different object v
     \qmlbasictype font
     \ingroup qmlbasictypes
     \brief a font value with the properties of QFont.
+    \target fontbasictypedocs
 
     The \c font type refers to a font value with the properties of QFont.
 
@@ -497,6 +530,8 @@ property is only invoked when the property is reassigned to a different object v
     When integrating with C++, note that any QFont value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c font value, and vice-versa.
+
+    This basic type is provided by the QtQuick import.
 
     \sa {QML Basic Types}
 */
@@ -572,6 +607,8 @@ property is only invoked when the property is reassigned to a different object v
     lists stored by the \c var type can be manipulated with greater
     flexibility from within QML.
 
+    This basic type is provided by the QML language.
+
     \sa {QML Basic Types}
 */
 
@@ -642,6 +679,8 @@ property is only invoked when the property is reassigned to a different object v
     "preserve" method on the \c var property from within JavaScript.
     For more information regarding the usage of a scarce resource, please
     see \l{Scarce Resources in JavaScript}.
+
+    This basic type is provided by the QML language.
 
     \sa {QML Basic Types}
 */
@@ -758,6 +797,27 @@ property is only invoked when the property is reassigned to a different object v
     extra data such as the object's JavaScript prototype chain is also lost in
     the process.
 
+    This basic type is provided by the QML language.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype vector2d
+    \ingroup qmlbasictypes
+
+    \brief A vector2d type has x and y attributes.
+
+    A \c vector2d type has \c x and \c y attributes, otherwise
+    it is similar to the \c vector3d type.  Please see the
+    documentation about the \c vector3d type for more information.
+
+    To create a \c vector2d value, specify it as a "x,y" string,
+    or define the components individually, or compose it with
+    the Qt.vector2d() function.
+
+    This basic type is provided by the QtQuick import.
+
     \sa {QML Basic Types}
 */
 
@@ -790,6 +850,61 @@ property is only invoked when the property is reassigned to a different object v
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c vector3d value, and vice-versa.
 
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype vector4d
+    \ingroup qmlbasictypes
+
+    \brief A vector4d type has x, y, z and w attributes.
+
+    A \c vector4d type has \c x, \c y, \c z and \c w attributes,
+    otherwise it is similar to the \c vector3d type.  Please see the
+    documentation about the \c vector3d type for more information.
+
+    To create a \c vector4d value, specify it as a "x,y,z,w" string,
+    or define the components individually, or compose it with
+    the Qt.vector4d() function.
+
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype quaternion
+    \ingroup qmlbasictypes
+
+    \brief A quaternion type has scalar, x, y, and z attributes.
+
+    A \c quaternion type has \c scalar, \c x, \c y and \c z attributes,
+    otherwise it is similar to the \c vector3d type.  Please see the
+    documentation about the \c vector3d type for more information.
+
+    To create a \c quaternion value, specify it as a "scalar,x,y,z" string,
+    or define the components individually, or compose it with
+    the Qt.quaternion() function.
+
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype matrix4x4
+    \ingroup qmlbasictypes
+
+    \brief A matrix4x4 type is a 4-row and 4-column matrix
+
+    A \c matrix4x4 type has sixteen values, but these values are
+    largely opaque to QML.  Values of this type can be composed with
+    the Qt.matrix4x4() function.
+
+    This basic type is provided by the QtQuick import.
+
     \sa {QML Basic Types}
 */
 
@@ -814,6 +929,9 @@ property is only invoked when the property is reassigned to a different object v
     When integrating with C++, note that any enumeration value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into an \c enumeration value, and vice-versa.
+
+    This basic type is provided by the QML language.  Some enumeration values
+    are provided by the QtQuick import.
 
     \sa {QML Basic Types}
 */
