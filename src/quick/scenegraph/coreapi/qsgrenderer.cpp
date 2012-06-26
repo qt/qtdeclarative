@@ -149,7 +149,7 @@ QSGRenderer::QSGRenderer(QSGContext *context)
     , m_vertex_buffer_bound(false)
     , m_index_buffer_bound(false)
 {
-    initializeGLFunctions();
+    initializeOpenGLFunctions();
 }
 
 
