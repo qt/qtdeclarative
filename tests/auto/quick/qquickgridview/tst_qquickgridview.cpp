@@ -78,6 +78,7 @@ public:
 
 private slots:
     void init();
+    void cleanupTestCase();
     void items();
     void changed();
     void inserted_basic();
@@ -317,6 +318,15 @@ void tst_QQuickGridView::init()
         delete m_view;
         m_view = 0;
     }
+#endif
+}
+
+void tst_QQuickGridView::cleanupTestCase()
+{
+#ifdef SHARE_VIEWS
+    testForView = QString();
+    delete m_view;
+    m_view = 0;
 #endif
 }
 

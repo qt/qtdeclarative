@@ -74,6 +74,7 @@ public:
 
 private slots:
     void init();
+    void cleanupTestCase();
     // Test both QListModelInterface and QAbstractItemModel model types
     void qListModelInterface_items();
     void qListModelInterface_package_items();
@@ -328,6 +329,15 @@ void tst_QQuickListView::init()
         delete m_view;
         m_view = 0;
     }
+#endif
+}
+
+void tst_QQuickListView::cleanupTestCase()
+{
+#ifdef SHARE_VIEWS
+    testForView = QString();
+    delete m_view;
+    m_view = 0;
 #endif
 }
 
