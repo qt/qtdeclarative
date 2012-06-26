@@ -1,0 +1,86 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\title QtQml Module Release Notes
+\page qtqml-releasenotes.html
+\inqmlmodule QtQuick 2.0
+
+\section1 Qt 5.0
+
+The QtQml C++ module is new in Qt 5. It provides the QML engine and implements
+the QML language supporting infrastructure.
+
+(Prior to Qt 5, this functionality was provided by the QtDeclarative module, which
+has now been replaced by the new QtQml and QtQuick C++ modules.)
+
+\section2 QML Engine
+
+\list
+\li JavaScript engine has changed to V8.
+\li Various parser and compiler optimizations have been implemented, as well as a new bindings optimizer.
+\li New QQmlEngine::trimComponentCache() method safely discards unused data in the engine's component cache to free memory.
+\endlist
+
+\section2 Component and Object creation
+
+\list
+\li Loading/compilation can now be performed in a separate thread. Enable this by loading a \l Loader object asynchronously through its \l{Loader::}{source} property, or by passing the \c Component.Asynchronous parameter to \c Qt.createComponent().
+\li The component returned by \c Qt.createComponent() is no longer parented to the engine.  Be sure to hold a reference, or provide a parent.
+\endlist
+
+\section2 Type System
+
+\list
+\li New \l var property type. This is a general-purpose property type which obsoletes the \l variant type.
+    Properties of the \l var type may hold JavaScript references.
+\li QML properties of type \l var and \l variant can now hold pixmaps. See \l {Scarce Resources in JavaScript} for more information.
+\li Value type improvements:
+    \list
+    \li QColor is now a value type.  The red, green, blue and alpha channels of a \l color property can be accessed via \c r, \c g, \c b and \c a properties.
+    \li Improved support for QVector4D, now constructible in QML via \c Qt.vector4d().
+    \endlist
+\li Support for sequence types QList<int>, QList<qreal>, QList<bool>, QList<QUrl>,
+    QList<QString> and QStringList has been improved. QObjects can define Q_PROPERTYs of
+    these types which can be accessed transparently from JavaScript.
+\endlist
+
+\section2 Modules and Imports
+
+\list
+\li Arbitrary functionality may be provided in a namespace through a Module API.  See qmlRegisterModuleApi() for more information.
+\li JavaScript (.js) files may now import QML modules and other JavaScript files using the ".import" syntax.
+\endlist
+
+\section2 Other
+
+\list
+\li QQmlExpression can now be constructed directly (and more efficiently) from a QQmlScriptString.
+\endlist
+
+*/
+
