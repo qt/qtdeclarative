@@ -225,6 +225,27 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
     \c Component objects can also be created dynamically using
     \l{QML:Qt::createComponent()}{Qt.createComponent()}.
+
+    \section2 Creation Context
+
+    The creation context of a Component corresponds to the context where the Component was declared.
+    This context is used as the parent context (creating a \l{qtqml-documents-scope.html#component-instance-hierarchy}{context hierarchy})
+    when the component is instantiated by an object such as a ListView or a Loader.
+
+    In the following example, \c comp1 is created within the root context of MyItem.qml, and any objects
+    instantiated from this component will have access to the ids and properties within that context,
+    such as \c internalSettings.color. When \c comp1 is used as a ListView delegate in another context
+    (as in main.qml below), it will continue to have access to the properties of its creation context
+    (which would otherwise be private to external users).
+
+    \table
+    \row
+    \li MyItem.qml
+    \li main.qml
+    \row
+    \li \snippet qml/component/MyItem.qml 0
+    \li \snippet qml/component/main.qml 0
+    \endtable
 */
 
 /*!

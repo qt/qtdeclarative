@@ -267,6 +267,31 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 
     Since QtQuick 2.0 Loader can also load non-visual components.
 
+    \section2 Using a Loader within a view delegate
+
+    In some cases you may wish to use a Loader within a view delegate to improve delegate
+    loading performance. This works well in most cases, but there is one important issue to
+    be aware of related to the \l{QtQuick2::Component#creation-context}{creation context} of a Component.
+
+    In the following example, the \c index context property inserted by the ListView into \c delegateComponent's
+    context will be inaccessible to Text, as the Loader will use the creation context of \c myComponent as the parent
+    context when instantiating it, and \c index does not refer to anything within that context chain.
+
+    \snippet qml/loader/creationContext1.qml 0
+
+    In this situation we can either move the component inline,
+
+    \snippet qml/loader/creationContext2.qml 0
+
+    into a separate file,
+
+    \snippet qml/loader/creationContext3.qml 0
+
+    or explicitly set the required information as a property of the Loader (this works because the
+    Loader sets itself as the context object for the component it is loading).
+
+    \snippet qml/loader/creationContext4.qml 0
+
     \sa {dynamic-object-creation}{Dynamic Object Creation}
 */
 
