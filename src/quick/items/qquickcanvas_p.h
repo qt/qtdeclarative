@@ -68,7 +68,6 @@
 #include <qopenglcontext.h>
 #include <QtGui/qopenglframebufferobject.h>
 #include <QtGui/qevent.h>
-#include <QtGui/qinputpanel.h>
 
 QT_BEGIN_NAMESPACE
 
