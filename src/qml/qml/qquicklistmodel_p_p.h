@@ -197,6 +197,7 @@ public:
             List,
             QObject,
             VariantMap,
+            DateTime,
 
             MaxDataType
         };
@@ -260,6 +261,7 @@ private:
     int setQObjectProperty(const ListLayout::Role &role, QObject *o);
     int setVariantMapProperty(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng);
     int setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m);
+    int setDateTimeProperty(const ListLayout::Role &role, const QDateTime &dt);
 
     void setStringPropertyFast(const ListLayout::Role &role, const QString &s);
     void setDoublePropertyFast(const ListLayout::Role &role, double n);
@@ -267,6 +269,7 @@ private:
     void setQObjectPropertyFast(const ListLayout::Role &role, QObject *o);
     void setListPropertyFast(const ListLayout::Role &role, ListModel *m);
     void setVariantMapFast(const ListLayout::Role &role, v8::Handle<v8::Object> o, QV8Engine *eng);
+    void setDateTimePropertyFast(const ListLayout::Role &role, const QDateTime &dt);
 
     void clearProperty(const ListLayout::Role &role);
 
@@ -276,6 +279,7 @@ private:
     QObject *getQObjectProperty(const ListLayout::Role &role);
     QQmlGuard<QObject> *getGuardProperty(const ListLayout::Role &role);
     QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
+    QDateTime *getDateTimeProperty(const ListLayout::Role &role);
 
     inline char *getPropertyMemory(const ListLayout::Role &role);
 

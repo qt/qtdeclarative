@@ -78,7 +78,7 @@ static bool isMemoryUsed(const char *mem)
 static QString roleTypeName(ListLayout::Role::DataType t)
 {
     QString result;
-    const char *roleTypeNames[] = { "String", "Number", "Bool", "List", "QObject", "VariantMap" };
+    const char *roleTypeNames[] = { "String", "Number", "Bool", "List", "QObject", "VariantMap", "DateTime" };
 
     if (t > ListLayout::Role::Invalid && t < ListLayout::Role::MaxDataType)
         result = QString::fromLatin1(roleTypeNames[t]);
@@ -119,8 +119,8 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(v8::Handle<v8::String> key, 
 
 const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::Role::DataType type)
 {
-    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QQmlGuard<QObject>), sizeof(QVariantMap) };
-    const int dataAlignments[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *), sizeof(QVariantMap) };
+    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QQmlGuard<QObject>), sizeof(QVariantMap), sizeof(QDateTime) };
+    const int dataAlignments[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *), sizeof(QVariantMap), sizeof(QDateTime) };
 
     Role *r = new Role;
     r->name = key;
@@ -448,6 +448,10 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QList<int> 
         } else if (propertyValue->IsBoolean()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             roleIndex = e->setBoolProperty(r, propertyValue->BooleanValue());
+        } else if (propertyValue->IsDate()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
+            QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(propertyValue)->NumberValue());
+            roleIndex = e->setDateTimeProperty(r, dt);
         } else if (propertyValue->IsObject()) {
             QV8ObjectResource *r = (QV8ObjectResource *) propertyValue->ToObject()->GetExternalResource();
             if (r && r->resourceType() == QV8ObjectResource::QObjectType) {
@@ -519,6 +523,12 @@ void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             if (r.type == ListLayout::Role::Bool) {
                 e->setBoolPropertyFast(r, propertyValue->BooleanValue());
+            }
+        } else if (propertyValue->IsDate()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
+            if (r.type == ListLayout::Role::DateTime) {
+                QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(propertyValue)->NumberValue());
+                e->setDateTimePropertyFast(r, dt);
             }
         } else if (propertyValue->IsObject()) {
             QV8ObjectResource *r = (QV8ObjectResource *) propertyValue->ToObject()->GetExternalResource();
@@ -651,6 +661,17 @@ QVariantMap *ListElement::getVariantMapProperty(const ListLayout::Role &role)
     return map;
 }
 
+QDateTime *ListElement::getDateTimeProperty(const ListLayout::Role &role)
+{
+    QDateTime *dt = 0;
+
+    char *mem = getPropertyMemory(role);
+    if (isMemoryUsed<QDateTime>(mem))
+        dt = reinterpret_cast<QDateTime *>(mem);
+
+    return dt;
+}
+
 QQmlGuard<QObject> *ListElement::getGuardProperty(const ListLayout::Role &role)
 {
     char *mem = getPropertyMemory(role);
@@ -733,6 +754,14 @@ QVariant ListElement::getProperty(const ListLayout::Role &role, const QQuickList
                 if (isMemoryUsed<QVariantMap>(mem)) {
                     QVariantMap *map = reinterpret_cast<QVariantMap *>(mem);
                     data = *map;
+                }
+            }
+            break;
+        case ListLayout::Role::DateTime:
+            {
+                if (isMemoryUsed<QDateTime>(mem)) {
+                    QDateTime *dt = reinterpret_cast<QDateTime *>(mem);
+                    data = *dt;
                 }
             }
             break;
@@ -881,6 +910,23 @@ int ListElement::setVariantMapProperty(const ListLayout::Role &role, QVariantMap
     return roleIndex;
 }
 
+int ListElement::setDateTimeProperty(const ListLayout::Role &role, const QDateTime &dt)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::DateTime) {
+        char *mem = getPropertyMemory(role);
+        if (isMemoryUsed<QDateTime>(mem)) {
+            QDateTime *dt = reinterpret_cast<QDateTime *>(mem);
+            dt->~QDateTime();
+        }
+        new (mem) QDateTime(dt);
+        roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
 void ListElement::setStringPropertyFast(const ListLayout::Role &role, const QString &s)
 {
     char *mem = getPropertyMemory(role);
@@ -921,6 +967,12 @@ void ListElement::setVariantMapFast(const ListLayout::Role &role, v8::Handle<v8:
     *map = eng->variantMapFromJS(o);
 }
 
+void ListElement::setDateTimePropertyFast(const ListLayout::Role &role, const QDateTime &dt)
+{
+    char *mem = getPropertyMemory(role);
+    new (mem) QDateTime(dt);
+}
+
 void ListElement::clearProperty(const ListLayout::Role &role)
 {
     switch (role.type) {
@@ -938,6 +990,9 @@ void ListElement::clearProperty(const ListLayout::Role &role)
         break;
     case ListLayout::Role::QObject:
         setQObjectProperty(role, 0);
+        break;
+    case ListLayout::Role::DateTime:
+        setDateTimeProperty(role, QDateTime());
         break;
     case ListLayout::Role::VariantMap:
         setVariantMapProperty(role, 0);
@@ -998,6 +1053,7 @@ void ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *tar
             case ListLayout::Role::String:
             case ListLayout::Role::Number:
             case ListLayout::Role::Bool:
+            case ListLayout::Role::DateTime:
                 {
                     QVariant v = src->getProperty(srcRole, 0, 0);
                     target->setVariantProperty(targetRole, v);
@@ -1052,6 +1108,13 @@ void ListElement::destroy(ListLayout *layout)
                             map->~QMap();
                     }
                     break;
+                case ListLayout::Role::DateTime:
+                    {
+                        QDateTime *dt = getDateTimeProperty(r);
+                        if (dt)
+                            dt->~QDateTime();
+                    }
+                    break;
                 default:
                     // other types don't need explicit cleanup.
                     break;
@@ -1087,6 +1150,9 @@ int ListElement::setVariantProperty(const ListLayout::Role &role, const QVariant
                 QVariantMap map = d.toMap();
                 roleIndex = setVariantMapProperty(role, &map);
             }
+            break;
+        case ListLayout::Role::DateTime:
+            roleIndex = setDateTimeProperty(role, d.toDateTime());
             break;
         default:
             break;
@@ -1124,6 +1190,9 @@ int ListElement::setJsProperty(const ListLayout::Role &role, v8::Handle<v8::Valu
         }
     } else if (d->IsBoolean()) {
         roleIndex = setBoolProperty(role, d->BooleanValue());
+    } else if (d->IsDate()) {
+        QDateTime dt = QV8Engine::qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(d)->NumberValue());
+        roleIndex = setDateTimeProperty(role, dt);
     } else if (d->IsObject()) {
         QV8ObjectResource *r = (QV8ObjectResource *) d->ToObject()->GetExternalResource();
         if (role.type == ListLayout::Role::QObject && r && r->resourceType() == QV8ObjectResource::QObjectType) {

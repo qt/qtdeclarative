@@ -125,6 +125,8 @@ private slots:
     void string_to_list_crash();
     void empty_element_warning();
     void empty_element_warning_data();
+    void datetime();
+    void datetime_data();
 };
 
 bool tst_qquicklistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1224,6 +1226,40 @@ void tst_qquicklistmodel::empty_element_warning()
     QVERIFY(obj != 0);
 
     delete obj;
+}
+
+void tst_qquicklistmodel::datetime_data()
+{
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<QDateTime>("expected");
+
+    QDateTime dt;
+    QDateTime dt0(QDate(1900,  1,  2), QTime( 8, 14));
+    QDateTime dt1(QDate(2000, 11, 22), QTime(10, 45));
+
+    QTest::newRow("dt0") << "{append({'date':dt0});get(0).date}" << dt0;
+    QTest::newRow("dt1") << "{append({'date':dt0});get(0).date=dt1;get(0).date}" << dt1;
+    QTest::newRow("dt2") << "{append({'date':dt0});set(0,{'date':dt1});get(0).date}" << dt1;
+    QTest::newRow("dt3") << "{append({'date':dt0});get(0).date=undefined;get(0).date}" << dt;
+}
+
+void tst_qquicklistmodel::datetime()
+{
+    QFETCH(QString, qml);
+    QFETCH(QDateTime, expected);
+
+    QQmlEngine engine;
+    QQuickListModel model;
+    QQmlEngine::setContextForObject(&model,engine.rootContext());
+    QDateTime dt0(QDate(1900,  1,  2), QTime( 8, 14));
+    QDateTime dt1(QDate(2000, 11, 22), QTime(10, 45));
+    engine.rootContext()->setContextProperty("dt0", dt0);
+    engine.rootContext()->setContextProperty("dt1", dt1);
+    engine.rootContext()->setContextObject(&model);
+    QQmlExpression e(engine.rootContext(), &model, qml);
+    QVariant result = e.evaluate();
+    QDateTime dtResult = result.toDateTime();
+    QVERIFY(expected == dtResult);
 }
 
 QTEST_MAIN(tst_qquicklistmodel)
