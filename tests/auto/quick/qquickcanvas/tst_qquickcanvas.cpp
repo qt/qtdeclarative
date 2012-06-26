@@ -51,6 +51,7 @@
 #include "../../shared/util.h"
 #include <QSignalSpy>
 #include <private/qquickcanvas_p.h>
+#include <private/qguiapplication_p.h>
 
 struct TouchEventData {
     QEvent::Type type;
@@ -144,7 +145,8 @@ class TestTouchItem : public QQuickRectangle
     Q_OBJECT
 public:
     TestTouchItem(QQuickItem *parent = 0)
-        : QQuickRectangle(parent), acceptEvents(true), mousePressId(0),
+        : QQuickRectangle(parent), acceptTouchEvents(true), acceptMouseEvents(true),
+          mousePressId(0),
           spinLoopWhenPressed(false), touchEventCount(0)
     {
         border()->setWidth(1);
@@ -153,16 +155,20 @@ public:
     }
 
     void reset() {
-        acceptEvents = true;
+        acceptTouchEvents = acceptMouseEvents = true;
         setEnabled(true);
         setOpacity(1.0);
 
         lastEvent = makeTouchData(QEvent::None, canvas(), 0, QList<QTouchEvent::TouchPoint>());//CHECK_VALID
+
+        lastVelocity = lastVelocityFromMouseMove = QVector2D();
+        lastMousePos = QPointF();
+        lastMouseCapabilityFlags = 0;
     }
 
     static void clearMousePressCounter()
     {
-        mousePressNum = 0;
+        mousePressNum = mouseMoveNum = mouseReleaseNum = 0;
     }
 
     void clearTouchEventCounter()
@@ -170,40 +176,78 @@ public:
         touchEventCount = 0;
     }
 
-    bool acceptEvents;
+    bool acceptTouchEvents;
+    bool acceptMouseEvents;
     TouchEventData lastEvent;
     int mousePressId;
     bool spinLoopWhenPressed;
     int touchEventCount;
+    QVector2D lastVelocity;
+    QVector2D lastVelocityFromMouseMove;
+    QPointF lastMousePos;
+    int lastMouseCapabilityFlags;
 
-protected:
-    virtual void touchEvent(QTouchEvent *event) {
-        if (!acceptEvents) {
+    void touchEvent(QTouchEvent *event) {
+        if (!acceptTouchEvents) {
             event->ignore();
             return;
         }
         ++touchEventCount;
         lastEvent = makeTouchData(event->type(), event->window(), event->touchPointStates(), event->touchPoints());
-        event->accept();
+        if (event->device()->capabilities().testFlag(QTouchDevice::Velocity) && !event->touchPoints().isEmpty()) {
+            lastVelocity = event->touchPoints().first().velocity();
+        } else {
+            lastVelocity = QVector2D();
+        }
         if (spinLoopWhenPressed && event->touchPointStates().testFlag(Qt::TouchPointPressed)) {
             QCoreApplication::processEvents();
         }
     }
 
-    virtual void mousePressEvent(QMouseEvent *) {
+    void mousePressEvent(QMouseEvent *e) {
+        if (!acceptMouseEvents) {
+            e->ignore();
+            return;
+        }
         mousePressId = ++mousePressNum;
+        lastMousePos = e->pos();
+        lastMouseCapabilityFlags = QGuiApplicationPrivate::mouseEventCaps(e);
+    }
+
+    void mouseMoveEvent(QMouseEvent *e) {
+        if (!acceptMouseEvents) {
+            e->ignore();
+            return;
+        }
+        ++mouseMoveNum;
+        lastVelocityFromMouseMove = QGuiApplicationPrivate::mouseEventVelocity(e);
+        lastMouseCapabilityFlags = QGuiApplicationPrivate::mouseEventCaps(e);
+        lastMousePos = e->pos();
+    }
+
+    void mouseReleaseEvent(QMouseEvent *e) {
+        if (!acceptMouseEvents) {
+            e->ignore();
+            return;
+        }
+        ++mouseReleaseNum;
+        lastMousePos = e->pos();
+        lastMouseCapabilityFlags = QGuiApplicationPrivate::mouseEventCaps(e);
     }
 
     bool childMouseEventFilter(QQuickItem *, QEvent *event) {
+        // TODO Is it a bug if a QTouchEvent comes here?
         if (event->type() == QEvent::MouseButtonPress)
             mousePressId = ++mousePressNum;
         return false;
     }
 
-    static int mousePressNum;
+    static int mousePressNum, mouseMoveNum, mouseReleaseNum;
 };
 
 int TestTouchItem::mousePressNum = 0;
+int TestTouchItem::mouseMoveNum = 0;
+int TestTouchItem::mouseReleaseNum = 0;
 
 class ConstantUpdateItem : public QQuickItem
 {
@@ -229,9 +273,13 @@ private slots:
     void initTestCase()
     {
         QQmlDataTest::initTestCase();
-        touchDevice = new QTouchDevice();
+        touchDevice = new QTouchDevice;
         touchDevice->setType(QTouchDevice::TouchScreen);
         QWindowSystemInterface::registerTouchDevice(touchDevice);
+        touchDeviceWithVelocity = new QTouchDevice;
+        touchDeviceWithVelocity->setType(QTouchDevice::TouchScreen);
+        touchDeviceWithVelocity->setCapabilities(QTouchDevice::Position | QTouchDevice::Velocity);
+        QWindowSystemInterface::registerTouchDevice(touchDeviceWithVelocity);
     }
 
 
@@ -244,6 +292,9 @@ private slots:
     void touchEvent_propagation_data();
     void touchEvent_cancel();
     void touchEvent_reentrant();
+    void touchEvent_velocity();
+
+    void mouseFromTouch_basic();
 
     void clearCanvas();
 
@@ -262,6 +313,7 @@ private slots:
     void ownershipRootItem();
 private:
     QTouchDevice *touchDevice;
+    QTouchDevice *touchDeviceWithVelocity;
 };
 
 //If the item calls update inside updatePaintNode, it should schedule another update
@@ -282,6 +334,7 @@ void tst_qquickcanvas::touchEvent_basic()
     canvas->resize(250, 250);
     canvas->setPos(100, 100);
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
     bottomItem->setObjectName("Bottom Item");
@@ -307,7 +360,8 @@ void tst_qquickcanvas::touchEvent_basic()
 
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
-    TouchEventData d = makeTouchData(QEvent::TouchBegin, canvas, Qt::TouchPointPressed, makeTouchPoint(topItem,pos));
+    // At one point this was failing with kwin (KDE window manager) because canvas->setPos(100, 100)
+    // would put the decorated window at that position rather than the canvas itself.
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, canvas, Qt::TouchPointPressed, makeTouchPoint(topItem, pos)));
     topItem->reset();
 
@@ -356,6 +410,10 @@ void tst_qquickcanvas::touchEvent_basic()
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, canvas, Qt::TouchPointPressed, makeTouchPoint(bottomItem, pos)));
     topItem->reset();
     bottomItem->reset();
+    // cleanup: what is pressed must be released
+    // Otherwise you will get an assertion failure:
+    // ASSERT: "itemForTouchPointId.isEmpty()" in file items/qquickcanvas.cpp
+    QTest::touchEvent(canvas, touchDevice).release(0, pos.toPoint(), canvas).release(1, pos.toPoint(), canvas);
 
     // move touch point from top item to bottom, and release
     QTest::touchEvent(canvas, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),canvas);
@@ -395,7 +453,8 @@ void tst_qquickcanvas::touchEvent_propagation()
 {
     TestTouchItem::clearMousePressCounter();
 
-    QFETCH(bool, acceptEvents);
+    QFETCH(bool, acceptTouchEvents);
+    QFETCH(bool, acceptMouseEvents);
     QFETCH(bool, enableItem);
     QFETCH(qreal, itemOpacity);
 
@@ -403,6 +462,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     canvas->resize(250, 250);
     canvas->setPos(100, 100);
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
     bottomItem->setObjectName("Bottom Item");
@@ -424,7 +484,8 @@ void tst_qquickcanvas::touchEvent_propagation()
     QPoint pointInTopItem = topItem->mapToScene(pos).toPoint();  // (110, 110) overlaps with bottom & top items
 
     // disable topItem
-    topItem->acceptEvents = acceptEvents;
+    topItem->acceptTouchEvents = acceptTouchEvents;
+    topItem->acceptMouseEvents = acceptMouseEvents;
     topItem->setEnabled(enableItem);
     topItem->setOpacity(itemOpacity);
 
@@ -450,7 +511,8 @@ void tst_qquickcanvas::touchEvent_propagation()
     middleItem->reset();
 
     // disable middleItem as well
-    middleItem->acceptEvents = acceptEvents;
+    middleItem->acceptTouchEvents = acceptTouchEvents;
+    middleItem->acceptMouseEvents = acceptMouseEvents;
     middleItem->setEnabled(enableItem);
     middleItem->setOpacity(itemOpacity);
 
@@ -467,7 +529,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     bottomItem->reset();
 
     // disable bottom item as well
-    bottomItem->acceptEvents = acceptEvents;
+    bottomItem->acceptTouchEvents = acceptTouchEvents;
     bottomItem->setEnabled(enableItem);
     bottomItem->setOpacity(itemOpacity);
 
@@ -485,7 +547,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     bottomItem->reset();
 
     // disable middle item, touch on top item
-    middleItem->acceptEvents = acceptEvents;
+    middleItem->acceptTouchEvents = acceptTouchEvents;
     middleItem->setEnabled(enableItem);
     middleItem->setOpacity(itemOpacity);
     QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas);
@@ -514,13 +576,14 @@ void tst_qquickcanvas::touchEvent_propagation()
 
 void tst_qquickcanvas::touchEvent_propagation_data()
 {
-    QTest::addColumn<bool>("acceptEvents");
+    QTest::addColumn<bool>("acceptTouchEvents");
+    QTest::addColumn<bool>("acceptMouseEvents");
     QTest::addColumn<bool>("enableItem");
     QTest::addColumn<qreal>("itemOpacity");
 
-    QTest::newRow("disable events") << false << true << 1.0;
-    QTest::newRow("disable item") << true << false << 1.0;
-    QTest::newRow("opacity of 0") << true << true << 0.0;
+    QTest::newRow("disable events") << false << false << true << 1.0;
+    QTest::newRow("disable item") << true << true << false << 1.0;
+    QTest::newRow("opacity of 0") << true << true << true << 0.0;
 }
 
 void tst_qquickcanvas::touchEvent_cancel()
@@ -531,6 +594,7 @@ void tst_qquickcanvas::touchEvent_cancel()
     canvas->resize(250, 250);
     canvas->setPos(100, 100);
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     TestTouchItem *item = new TestTouchItem(canvas->rootItem());
     item->setPos(QPointF(50, 50));
@@ -562,6 +626,7 @@ void tst_qquickcanvas::touchEvent_reentrant()
     canvas->resize(250, 250);
     canvas->setPos(100, 100);
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     TestTouchItem *item = new TestTouchItem(canvas->rootItem());
 
@@ -590,6 +655,126 @@ void tst_qquickcanvas::touchEvent_reentrant()
     delete canvas;
 }
 
+void tst_qquickcanvas::touchEvent_velocity()
+{
+    TestTouchItem::clearMousePressCounter();
+
+    QQuickCanvas *canvas = new QQuickCanvas;
+    canvas->resize(250, 250);
+    canvas->setPos(100, 100);
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+    QTest::qWait(10);
+
+    TestTouchItem *item = new TestTouchItem(canvas->rootItem());
+    item->setPos(QPointF(50, 50));
+    item->setSize(QSizeF(150, 150));
+
+    QList<QWindowSystemInterface::TouchPoint> points;
+    QWindowSystemInterface::TouchPoint tp;
+    tp.id = 1;
+    tp.state = Qt::TouchPointPressed;
+    QPoint pos = canvas->mapToGlobal(item->mapToScene(QPointF(10, 10)).toPoint());
+    tp.area = QRectF(pos, QSizeF(4, 4));
+    points << tp;
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    points[0].state = Qt::TouchPointMoved;
+    points[0].area.adjust(5, 5, 5, 5);
+    QVector2D velocity(1.5, 2.5);
+    points[0].velocity = velocity;
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    QCoreApplication::processEvents();
+    QCOMPARE(item->touchEventCount, 2);
+    QCOMPARE(item->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(item->lastVelocity, velocity);
+
+    // Now have a transformation on the item and check if velocity and position are transformed accordingly.
+    item->setRotation(90); // clockwise
+    QMatrix4x4 transformMatrix;
+    transformMatrix.rotate(-90, 0, 0, 1); // counterclockwise
+    QVector2D transformedVelocity = transformMatrix.mapVector(velocity).toVector2D();
+    points[0].area.adjust(5, 5, 5, 5);
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    QCoreApplication::processEvents();
+    QCOMPARE(item->lastVelocity, transformedVelocity);
+    QPoint itemLocalPos = item->mapFromScene(canvas->mapFromGlobal(points[0].area.center().toPoint())).toPoint();
+    QPoint itemLocalPosFromEvent = item->lastEvent.touchPoints[0].pos().toPoint();
+    QCOMPARE(itemLocalPos, itemLocalPosFromEvent);
+
+    points[0].state = Qt::TouchPointReleased;
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    QCoreApplication::processEvents();
+    delete item;
+    delete canvas;
+}
+
+void tst_qquickcanvas::mouseFromTouch_basic()
+{
+    // Turn off accepting touch events with acceptTouchEvents. This
+    // should result in sending mouse events generated from the touch
+    // with the new event propagation system.
+
+    TestTouchItem::clearMousePressCounter();
+    QQuickCanvas *canvas = new QQuickCanvas;
+    canvas->resize(250, 250);
+    canvas->setPos(100, 100);
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas);
+    QTest::qWait(10);
+
+    TestTouchItem *item = new TestTouchItem(canvas->rootItem());
+    item->setPos(QPointF(50, 50));
+    item->setSize(QSizeF(150, 150));
+    item->acceptTouchEvents = false;
+
+    QList<QWindowSystemInterface::TouchPoint> points;
+    QWindowSystemInterface::TouchPoint tp;
+    tp.id = 1;
+    tp.state = Qt::TouchPointPressed;
+    QPoint pos = canvas->mapToGlobal(item->mapToScene(QPointF(10, 10)).toPoint());
+    tp.area = QRectF(pos, QSizeF(4, 4));
+    points << tp;
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    points[0].state = Qt::TouchPointMoved;
+    points[0].area.adjust(5, 5, 5, 5);
+    QVector2D velocity(1.5, 2.5);
+    points[0].velocity = velocity;
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    points[0].state = Qt::TouchPointReleased;
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    QCoreApplication::processEvents();
+
+    // The item should have received a mouse press, move, and release.
+    QCOMPARE(item->mousePressNum, 1);
+    QCOMPARE(item->mouseMoveNum, 1);
+    QCOMPARE(item->mouseReleaseNum, 1);
+    QCOMPARE(item->lastMousePos.toPoint(), item->mapFromScene(canvas->mapFromGlobal(points[0].area.center().toPoint())).toPoint());
+    QCOMPARE(item->lastVelocityFromMouseMove, velocity);
+    QVERIFY((item->lastMouseCapabilityFlags & QTouchDevice::Velocity) != 0);
+
+    // Now the same with a transformation.
+    item->setRotation(90); // clockwise
+    QMatrix4x4 transformMatrix;
+    transformMatrix.rotate(-90, 0, 0, 1); // counterclockwise
+    QVector2D transformedVelocity = transformMatrix.mapVector(velocity).toVector2D();
+    points[0].state = Qt::TouchPointPressed;
+    points[0].velocity = velocity;
+    points[0].area = QRectF(pos, QSizeF(4, 4));
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    points[0].state = Qt::TouchPointMoved;
+    points[0].area.adjust(5, 5, 5, 5);
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    QCoreApplication::processEvents();
+    QCOMPARE(item->lastMousePos.toPoint(), item->mapFromScene(canvas->mapFromGlobal(points[0].area.center().toPoint())).toPoint());
+    QCOMPARE(item->lastVelocityFromMouseMove, transformedVelocity);
+
+    points[0].state = Qt::TouchPointReleased;
+    QWindowSystemInterface::handleTouchEvent(canvas, touchDeviceWithVelocity, points);
+    QCoreApplication::processEvents();
+    delete item;
+    delete canvas;
+}
+
 void tst_qquickcanvas::clearCanvas()
 {
     QQuickCanvas *canvas = new QQuickCanvas;
@@ -613,6 +798,7 @@ void tst_qquickcanvas::mouseFiltering()
     canvas->resize(250, 250);
     canvas->setPos(100, 100);
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
     bottomItem->setObjectName("Bottom Item");
@@ -820,6 +1006,7 @@ void tst_qquickcanvas::ignoreUnhandledMouseEvents()
     QQuickCanvas* canvas = new QQuickCanvas;
     canvas->resize(100, 100);
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     QQuickItem* item = new QQuickItem;
     item->setSize(QSizeF(100, 100));

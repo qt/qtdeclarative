@@ -51,6 +51,7 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
 #include "qplatformdefs.h"
 
@@ -970,7 +971,7 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     vData.dragMaxBound = q->maxYExtent();
     fixupMode = Normal;
     lastPos = QPointF();
-    pressPos = event->localPos();
+    pressPos = event->windowPos();
     hData.pressPos = hData.move.value();
     vData.pressPos = vData.move.value();
     bool wasFlicking = hData.flicking || vData.flicking;
@@ -1005,7 +1006,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 
     qint64 elapsedSincePress = computeCurrentTime(event) - lastPressTime;
     if (q->yflick()) {
-        qreal dy = event->localPos().y() - pressPos.y();
+        qreal dy = event->windowPos().y() - pressPos.y();
         bool overThreshold = QQuickCanvasPrivate::dragOverThreshold(dy, Qt::YAxis, event);
         if (overThreshold || elapsedSincePress > 200) {
             if (!vMoved)
@@ -1039,7 +1040,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     }
 
     if (q->xflick()) {
-        qreal dx = event->localPos().x() - pressPos.x();
+        qreal dx = event->windowPos().x() - pressPos.x();
         bool overThreshold = QQuickCanvasPrivate::dragOverThreshold(dx, Qt::XAxis, event);
         if (overThreshold || elapsedSincePress > 200) {
             if (!hMoved)
@@ -1096,25 +1097,24 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     if (elapsed <= 0)
         return;
     lastPosTime = currentTimestamp;
-    QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
     if (q->yflick() && !rejectY) {
-        if (extended && extended->capabilities().testFlag(QTouchDevice::Velocity)) {
-            vData.addVelocitySample(extended->velocity().y(), maxVelocity);
+        if (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity) {
+            vData.addVelocitySample(QGuiApplicationPrivate::mouseEventVelocity(event).y(), maxVelocity);
         } else {
-            qreal dy = event->localPos().y() - (lastPos.isNull() ? pressPos.y() : lastPos.y());
+            qreal dy = event->windowPos().y() - (lastPos.isNull() ? pressPos.y() : lastPos.y());
             vData.addVelocitySample(dy/elapsed, maxVelocity);
         }
     }
     if (q->xflick() && !rejectX) {
-        if (extended && extended->capabilities().testFlag(QTouchDevice::Velocity)) {
-            hData.addVelocitySample(extended->velocity().x(), maxVelocity);
+        if (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity) {
+            hData.addVelocitySample(QGuiApplicationPrivate::mouseEventVelocity(event).x(), maxVelocity);
         } else {
-            qreal dx = event->localPos().x() - (lastPos.isNull() ? pressPos.x() : lastPos.x());
+            qreal dx = event->windowPos().x() - (lastPos.isNull() ? pressPos.x() : lastPos.x());
             hData.addVelocitySample(dx/elapsed, maxVelocity);
         }
     }
 
-    lastPos = event->localPos();
+    lastPos = event->windowPos();
 }
 
 void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
@@ -1141,9 +1141,8 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     qreal vVelocity = 0;
     if (elapsed < 100 && vData.velocity != 0.) {
-        QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
-        vVelocity = (extended && extended->capabilities().testFlag(QTouchDevice::Velocity))
-                ? extended->velocity().y() : vData.velocity;
+        vVelocity = (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity)
+                ? QGuiApplicationPrivate::mouseEventVelocity(event).y() : vData.velocity;
     }
     if ((vData.atBeginning && vVelocity > 0.) || (vData.atEnd && vVelocity < 0.)) {
         vVelocity /= 2;
@@ -1157,9 +1156,8 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     qreal hVelocity = 0;
     if (elapsed < 100 && hData.velocity != 0.) {
-        QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
-        hVelocity = (extended && extended->capabilities().testFlag(QTouchDevice::Velocity))
-                ? extended->velocity().x() : hData.velocity;
+        hVelocity = (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity)
+                ? QGuiApplicationPrivate::mouseEventVelocity(event).x() : hData.velocity;
     }
     if ((hData.atBeginning && hVelocity > 0.) || (hData.atEnd && hVelocity < 0.)) {
         hVelocity /= 2;
@@ -1175,7 +1173,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool flickedV = false;
     vVelocity *= flickBoost;
-    if (q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold) {
+    if (q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->windowPos().y() - pressPos.y()) > FlickThreshold) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
         flickedV = flickY(vVelocity);
@@ -1185,7 +1183,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool flickedH = false;
     hVelocity *= flickBoost;
-    if (q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold) {
+    if (q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->windowPos().x() - pressPos.x()) > FlickThreshold) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);
         flickedH = flickX(hVelocity);
@@ -1305,7 +1303,7 @@ void QQuickFlickablePrivate::captureDelayedPress(QMouseEvent *event)
     if (!isOutermostPressDelay())
         return;
     delayedPressTarget = q->canvas()->mouseGrabberItem();
-    delayedPressEvent = new QQuickMouseEventEx(*event);
+    delayedPressEvent = QQuickCanvasPrivate::cloneMouseEvent(event);
     delayedPressEvent->setAccepted(false);
     delayedPressTimer.start(pressDelay, q);
 }
@@ -1974,26 +1972,18 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
     bool grabberDisabled = grabber && !grabber->isEnabled();
     bool stealThisEvent = d->stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || grabberDisabled)) {
-        QQuickMouseEventEx mouseEvent(event->type(), localPos,
-                                event->windowPos(), event->screenPos(),
-                                event->button(), event->buttons(), event->modifiers());
-        QQuickMouseEventEx *eventEx = QQuickMouseEventEx::extended(event);
-        if (eventEx) {
-            mouseEvent.setVelocity(eventEx->velocity());
-            mouseEvent.setCapabilities(eventEx->capabilities());
-        }
-        mouseEvent.setTimestamp(event->timestamp());
-        mouseEvent.setAccepted(false);
+        QScopedPointer<QMouseEvent> mouseEvent(QQuickCanvasPrivate::cloneMouseEvent(event, &localPos));
+        mouseEvent->setAccepted(false);
 
-        switch (mouseEvent.type()) {
+        switch (mouseEvent->type()) {
         case QEvent::MouseMove:
-            d->handleMouseMoveEvent(&mouseEvent);
+            d->handleMouseMoveEvent(mouseEvent.data());
             break;
         case QEvent::MouseButtonPress:
             if (d->pressed) // we are already pressed - this is a delayed replay
                 return false;
 
-            d->handleMousePressEvent(&mouseEvent);
+            d->handleMousePressEvent(mouseEvent.data());
             d->captureDelayedPress(event);
             stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above
             break;
@@ -2013,7 +2003,7 @@ bool QQuickFlickable::sendMouseEvent(QMouseEvent *event)
                 d->pressed = false;
                 return true;
             }
-            d->handleMouseReleaseEvent(&mouseEvent);
+            d->handleMouseReleaseEvent(mouseEvent.data());
             break;
         default:
             break;

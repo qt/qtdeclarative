@@ -4,6 +4,7 @@ Rectangle {
     property variant center
     property real scale
     property int pointCount: 0
+    property bool pinchActive: false
     width: 240; height: 320
     color: "white"
     Rectangle {
@@ -34,6 +35,7 @@ Rectangle {
                 whiteRect.center = pinch.center
                 whiteRect.scale = pinch.scale
                 whiteRect.pointCount = pinch.pointCount;
+                whiteRect.pinchActive = true;
             }
             onPinchUpdated: {
                 whiteRect.center = pinch.center
@@ -44,6 +46,7 @@ Rectangle {
                 whiteRect.center = pinch.center
                 whiteRect.scale = pinch.scale
                 whiteRect.pointCount = pinch.pointCount;
+                whiteRect.pinchActive = false;
             }
          }
      }

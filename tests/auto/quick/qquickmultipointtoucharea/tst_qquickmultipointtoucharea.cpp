@@ -570,30 +570,24 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
 
     //moving one point vertically
     QTest::touchEvent(canvas, device).press(0, p1);
-    QTest::mousePress(canvas, Qt::LeftButton, 0, p1);
 
     p1 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1);
-    QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1);
-    QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1);
-    QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1);
-    QTest::mouseMove(canvas, p1);
 
     QVERIFY(flickable->contentY() < 0);
     QCOMPARE(point11->pressed(), false);
     QCOMPARE(point12->pressed(), false);
 
     QTest::touchEvent(canvas, device).release(0, p1);
-    QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
     QTest::qWait(50);
 
     QTRY_VERIFY(!flickable->isMoving());
@@ -736,32 +730,26 @@ void tst_QQuickMultiPointTouchArea::inFlickable2()
     // Check that we can still move the Flickable
     p1 = QPoint(50,100);
     QTest::touchEvent(canvas, device).press(0, p1);
-    QTest::mousePress(canvas, Qt::LeftButton, 0, p1);
 
     QCOMPARE(point11->pressed(), true);
 
     p1 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1);
-    QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1);
-    QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1);
-    QTest::mouseMove(canvas, p1);
 
     p1 += QPoint(0,15);
     QTest::touchEvent(canvas, device).move(0, p1);
-    QTest::mouseMove(canvas, p1);
 
     QVERIFY(flickable->contentY() < 0);
     QVERIFY(flickable->isMoving());
-    QCOMPARE(point11->pressed(), false);
+    QCOMPARE(point11->pressed(), true);
 
     QTest::touchEvent(canvas, device).release(0, p1);
-    QTest::mouseRelease(canvas,Qt::LeftButton, 0, p1);
     QTest::qWait(50);
 
     QTRY_VERIFY(!flickable->isMoving());

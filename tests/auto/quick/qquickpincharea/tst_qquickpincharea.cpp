@@ -229,31 +229,41 @@ void tst_QQuickPinchArea::scale()
 
     QPoint p1(80, 80);
     QPoint p2(100, 100);
+    {
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(canvas, device);
+        pinchSequence.press(0, p1, canvas).commit();
+        // In order for the stationary point to remember its previous position,
+        // we have to reuse the same pinchSequence object.  Otherwise if we let it
+        // be destroyed and then start a new sequence, point 0 will default to being
+        // stationary at 0, 0, and PinchArea will filter out that touchpoint because
+        // it is outside its bounds.
+        pinchSequence.stationary(0).press(1, p2, canvas).commit();
+        p1 -= QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1,canvas).move(1, p2,canvas).commit();
 
-    QTest::touchEvent(canvas, device).press(0, p1, canvas);
-    QTest::touchEvent(canvas, device).stationary(0).press(1, p2, canvas);
-    p1 -= QPoint(10,10);
-    p2 += QPoint(10,10);
-    QTest::touchEvent(canvas, device).move(0, p1,canvas).move(1, p2,canvas);
+        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QVERIFY(root->property("pinchActive").toBool());
 
-    QCOMPARE(root->property("scale").toReal(), 1.0);
+        p1 -= QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1,canvas).move(1, p2,canvas).commit();
 
-    p1 -= QPoint(10,10);
-    p2 += QPoint(10,10);
-    QTest::touchEvent(canvas, device).move(0, p1,canvas).move(1, p2,canvas);
-
-    QCOMPARE(root->property("scale").toReal(), 1.5);
-    QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
-    QCOMPARE(blackRect->scale(), 1.5);
+        QCOMPARE(root->property("scale").toReal(), 1.5);
+        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(blackRect->scale(), 1.5);
+    }
 
     // scale beyond bound
     p1 -= QPoint(50,50);
     p2 += QPoint(50,50);
-    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
-
-    QCOMPARE(blackRect->scale(), 2.0);
-
-    QTest::touchEvent(canvas, device).release(0, p1, canvas).release(1, p2, canvas);
+    {
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(canvas, device);
+        pinchSequence.move(0, p1, canvas).move(1, p2, canvas).commit();
+        QCOMPARE(blackRect->scale(), 2.0);
+        pinchSequence.release(0, p1, canvas).release(1, p2, canvas).commit();
+    }
+    QVERIFY(!root->property("pinchActive").toBool());
 
     delete canvas;
 }
@@ -282,21 +292,25 @@ void tst_QQuickPinchArea::pan()
 
     QPoint p1(80, 80);
     QPoint p2(100, 100);
+    {
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(canvas, device);
+        pinchSequence.press(0, p1, canvas).commit();
+        // In order for the stationary point to remember its previous position,
+        // we have to reuse the same pinchSequence object.
+        pinchSequence.stationary(0).press(1, p2, canvas).commit();
+        p1 += QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1,canvas).move(1, p2,canvas).commit();
 
-    QTest::touchEvent(canvas, device).press(0, p1, canvas);
-    QTest::touchEvent(canvas, device).stationary(0).press(1, p2, canvas);
-    p1 += QPoint(10,10);
-    p2 += QPoint(10,10);
-    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
+        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QVERIFY(root->property("pinchActive").toBool());
 
-    QCOMPARE(root->property("scale").toReal(), 1.0);
-
-    p1 += QPoint(10,10);
-    p2 += QPoint(10,10);
-    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
+        p1 += QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1,canvas).move(1, p2,canvas).commit();
+    }
 
     QCOMPARE(root->property("center").toPointF(), QPointF(60, 60)); // blackrect is at 50,50
-
     QCOMPARE(blackRect->x(), 60.0);
     QCOMPARE(blackRect->y(), 60.0);
 
@@ -309,6 +323,7 @@ void tst_QQuickPinchArea::pan()
     QCOMPARE(blackRect->y(), 160.0);
 
     QTest::touchEvent(canvas, device).release(0, p1, canvas).release(1, p2, canvas);
+    QVERIFY(!root->property("pinchActive").toBool());
 
     delete canvas;
 }
@@ -341,56 +356,63 @@ void tst_QQuickPinchArea::retouch()
 
     QPoint p1(80, 80);
     QPoint p2(100, 100);
+    {
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(canvas, device);
+        pinchSequence.press(0, p1, canvas).commit();
+        // In order for the stationary point to remember its previous position,
+        // we have to reuse the same pinchSequence object.
+        pinchSequence.stationary(0).press(1, p2, canvas).commit();
+        p1 -= QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1,canvas).move(1, p2,canvas).commit();
 
-    QTest::touchEvent(canvas, device).press(0, p1, canvas);
-    QTest::touchEvent(canvas, device).stationary(0).press(1, p2, canvas);
-    p1 -= QPoint(10,10);
-    p2 += QPoint(10,10);
-    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
+        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QVERIFY(root->property("pinchActive").toBool());
 
-    QCOMPARE(root->property("scale").toReal(), 1.0);
+        p1 -= QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1,canvas).move(1, p2,canvas).commit();
 
-    p1 -= QPoint(10,10);
-    p2 += QPoint(10,10);
-    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
+        QCOMPARE(startedSpy.count(), 1);
 
-    QCOMPARE(startedSpy.count(), 1);
+        QCOMPARE(root->property("scale").toReal(), 1.5);
+        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(blackRect->scale(), 1.5);
 
-    QCOMPARE(root->property("scale").toReal(), 1.5);
-    QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
-    QCOMPARE(blackRect->scale(), 1.5);
+        QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 2);
 
-    QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 2);
+        QCOMPARE(startedSpy.count(), 1);
+        QCOMPARE(finishedSpy.count(), 0);
 
-    QCOMPARE(startedSpy.count(), 1);
-    QCOMPARE(finishedSpy.count(), 0);
+        // Hold down the first finger but release the second one
+        pinchSequence.stationary(0).release(1, p2, canvas).commit();
 
-    QTest::touchEvent(canvas, device).stationary(0).release(1, p2, canvas);
+        QCOMPARE(startedSpy.count(), 1);
+        QCOMPARE(finishedSpy.count(), 0);
 
-    QCOMPARE(startedSpy.count(), 1);
-    QCOMPARE(finishedSpy.count(), 0);
+        QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 1);
 
-    QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 1);
+        // Keep holding down the first finger and re-touch the second one, then move them both
+        pinchSequence.stationary(0).press(1, p2, canvas).commit();
+        p1 -= QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1, canvas).move(1, p2, canvas).commit();
 
-    QTest::touchEvent(canvas, device).stationary(0).press(1, p2, canvas);
-    p1 -= QPoint(10,10);
-    p2 += QPoint(10,10);
-    QTest::touchEvent(canvas, device).move(0, p1, canvas).move(1, p2, canvas);
+        // Lifting and retouching results in onPinchStarted being called again
+        QCOMPARE(startedSpy.count(), 2);
+        QCOMPARE(finishedSpy.count(), 0);
 
-    // Lifting and retouching results in onPinchStarted being called again
-    QCOMPARE(startedSpy.count(), 2);
-    QCOMPARE(finishedSpy.count(), 0);
+        QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 2);
 
-    QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 2);
+        pinchSequence.release(0, p1, canvas).release(1, p2, canvas).commit();
 
-    QTest::touchEvent(canvas, device).release(0, p1, canvas).release(1, p2, canvas);
-
-    QCOMPARE(startedSpy.count(), 2);
-    QCOMPARE(finishedSpy.count(), 1);
+        QVERIFY(!root->property("pinchActive").toBool());
+        QCOMPARE(startedSpy.count(), 2);
+        QCOMPARE(finishedSpy.count(), 1);
+    }
 
     delete canvas;
 }
-
 
 QQuickView *tst_QQuickPinchArea::createView()
 {

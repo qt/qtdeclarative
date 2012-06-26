@@ -110,6 +110,8 @@ public:
     QQmlListProperty<QObject> data();
 
     QQuickItem *activeFocusItem;
+
+    // Keeps track of the item currently receiving mouse events
     QQuickItem *mouseGrabberItem;
 #ifndef QT_NO_DRAGANDDROP
     QQuickDragGrabber dragGrabber;
@@ -119,9 +121,10 @@ public:
 
     // Mouse positions are saved in widget coordinates
     QPointF lastMousePosition;
-    void translateTouchToMouse(QTouchEvent *event);
+    bool translateTouchToMouse(QQuickItem *item, QTouchEvent *event);
     void translateTouchEvent(QTouchEvent *touchEvent);
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
+    static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     bool deliverInitialMousePressEvent(QQuickItem *, QMouseEvent *);
     bool deliverMouseEvent(QMouseEvent *);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *);
@@ -129,7 +132,12 @@ public:
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *);
     bool deliverTouchEvent(QTouchEvent *);
+    bool deliverTouchCancelEvent(QTouchEvent *);
     bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
+    bool deliverMatchingPointsToItem(QQuickItem *item, QTouchEvent *event, QSet<int> *acceptedNewPoints, const QSet<int> &matchingNewPoints, const QList<QTouchEvent::TouchPoint> &matchingPoints);
+    QTouchEvent *touchEventForItemBounds(QQuickItem *target, const QTouchEvent &originalEvent);
+    QTouchEvent *touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints);
+    bool sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event);
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,
                         Qt::KeyboardModifiers modifiers, bool accepted);
     bool clearHover();
@@ -195,6 +203,7 @@ public:
     uint renderTargetId;
     QSize renderTargetSize;
 
+    // Keeps track of which touch point (int) was last accepted by which item
     QHash<int, QQuickItem *> itemForTouchPointId;
 
     mutable QQuickCanvasIncubationController *incubationController;

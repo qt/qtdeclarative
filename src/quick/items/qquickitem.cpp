@@ -2290,6 +2290,11 @@ void QQuickItemPrivate::derefCanvas()
     QQuickCanvasPrivate *c = QQuickCanvasPrivate::get(canvas);
     if (polishScheduled)
         c->itemsToPolish.remove(q);
+    QMutableHashIterator<int, QQuickItem *> itemTouchMapIt(c->itemForTouchPointId);
+    while (itemTouchMapIt.hasNext()) {
+        if (itemTouchMapIt.next().value() == q)
+            itemTouchMapIt.remove();
+    }
     if (c->mouseGrabberItem == q)
         c->mouseGrabberItem = 0;
     if ( hoverEnabled )
@@ -5131,7 +5136,7 @@ void QQuickItem::setKeepMouseGrab(bool keep)
 
     \sa ungrabTouchPoints(), setKeepTouchGrab()
 */
-void QQuickItem::grabTouchPoints(const QList<int> &ids)
+void QQuickItem::grabTouchPoints(const QVector<int> &ids)
 {
     Q_D(QQuickItem);
     if (!d->canvas)

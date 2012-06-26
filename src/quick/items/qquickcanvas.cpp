@@ -72,8 +72,6 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_BOOL_CONFIG_OPTION(qmlTranslateTouchToMouse, QML_TRANSLATE_TOUCH_TO_MOUSE)
-
 void QQuickCanvasPrivate::updateFocusItemTransform()
 {
     Q_Q(QQuickCanvas);
@@ -395,25 +393,39 @@ void QQuickCanvasPrivate::initRootItem()
     rootItem->setHeight(q->height());
 }
 
-static QQuickMouseEventEx touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p)
+static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true)
 {
-    QQuickMouseEventEx me(type, p.pos(), p.scenePos(), p.screenPos(),
-            Qt::LeftButton, Qt::LeftButton, 0);
-    me.setVelocity(p.velocity());
+    // The touch point local position and velocity are not yet transformed.
+    QMouseEvent *me = new QMouseEvent(type, transformNeeded ? item->mapFromScene(p.scenePos()) : p.pos(), p.scenePos(), p.screenPos(),
+                                      Qt::LeftButton, Qt::LeftButton, event->modifiers());
+    me->setAccepted(true);
+    me->setTimestamp(event->timestamp());
+    QVector2D transformedVelocity = p.velocity();
+    if (transformNeeded) {
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        QMatrix4x4 transformMatrix(itemPrivate->canvasToItemTransform());
+        transformedVelocity = transformMatrix.mapVector(p.velocity()).toVector2D();
+    }
+    QGuiApplicationPrivate::setMouseEventCapsAndVelocity(me, event->device()->capabilities(), transformedVelocity);
     return me;
 }
 
-void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
+bool QQuickCanvasPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *event)
 {
-    if (event->type() == QEvent::TouchCancel) {
-        touchMouseId = -1;
-        if (mouseGrabberItem)
-            mouseGrabberItem->ungrabMouse();
-        return;
-    }
+    Q_Q(QQuickCanvas);
+    // For each point, check if it is accepted, if not, try the next point.
+    // Any of the fingers can become the mouse one.
+    // This can happen because a mouse area might not accept an event at some point but another.
     for (int i = 0; i < event->touchPoints().count(); ++i) {
-        QTouchEvent::TouchPoint p = event->touchPoints().at(i);
+        const QTouchEvent::TouchPoint &p = event->touchPoints().at(i);
+        // A new touch point
         if (touchMouseId == -1 && p.state() & Qt::TouchPointPressed) {
+            QPointF pos = item->mapFromScene(p.scenePos());
+
+            // probably redundant, we check bounds in the calling function (matchingNewPoints)
+            if (!item->contains(pos))
+                break;
+
             bool doubleClick = event->timestamp() - touchMousePressTimestamp
                             < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
             touchMousePressTimestamp = event->timestamp();
@@ -421,72 +433,89 @@ void QQuickCanvasPrivate::translateTouchToMouse(QTouchEvent *event)
             // accepted. Cannot defer setting the new value because otherwise if the event
             // handler spins the event loop all subsequent moves and releases get lost.
             touchMouseId = p.id();
-            QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonPress, p);
-            me.setTimestamp(event->timestamp());
-            me.setAccepted(false);
-            me.setCapabilities(event->device()->capabilities());
-            deliverMouseEvent(&me);
-            if (me.isAccepted())
-                event->setAccepted(true);
-            else
+            itemForTouchPointId[touchMouseId] = item;
+            QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item));
+
+            // Send a single press and see if that's accepted
+            if (!mouseGrabberItem)
+                item->grabMouse();
+            item->grabTouchPoints(QVector<int>() << touchMouseId);
+
+            q->sendEvent(item, mousePress.data());
+            event->setAccepted(mousePress->isAccepted());
+            if (!mousePress->isAccepted()) {
                 touchMouseId = -1;
-            if (doubleClick && me.isAccepted()) {
+                if (itemForTouchPointId.value(p.id()) == item)
+                    itemForTouchPointId.remove(p.id());
+
+                if (mouseGrabberItem == item)
+                    item->ungrabMouse();
+            }
+
+            if (doubleClick && mousePress->isAccepted()) {
                 touchMousePressTimestamp = 0;
-                QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonDblClick, p);
-                me.setTimestamp(event->timestamp());
-                me.setAccepted(false);
-                me.setCapabilities(event->device()->capabilities());
-                if (!mouseGrabberItem) {
-                    if (deliverInitialMousePressEvent(rootItem, &me))
-                        event->setAccepted(true);
-                    else
-                        touchMouseId = -1;
+                QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event, item));
+                q->sendEvent(item, mouseDoubleClick.data());
+                event->setAccepted(mouseDoubleClick->isAccepted());
+                if (mouseDoubleClick->isAccepted()) {
+                    return true;
                 } else {
-                    deliverMouseEvent(&me);
-                    if (me.isAccepted())
-                        event->setAccepted(true);
-                    else
-                        touchMouseId = -1;
+                    touchMouseId = -1;
                 }
             }
+            // The event was accepted, we are done.
+            if (mousePress->isAccepted())
+                return true;
+            // The event was not accepted but touchMouseId was set.
             if (touchMouseId != -1)
-                break;
+                return false;
+            // try the next point
+
+        // Touch point was there before and moved
         } else if (p.id() == touchMouseId) {
             if (p.state() & Qt::TouchPointMoved) {
-                QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseMove, p);
-                me.setTimestamp(event->timestamp());
-                me.setCapabilities(event->device()->capabilities());
-                if (!mouseGrabberItem) {
+                if (mouseGrabberItem) {
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, mouseGrabberItem));
+                    q->sendEvent(mouseGrabberItem, me.data());
+                    event->setAccepted(me->isAccepted());
+                    if (me->isAccepted()) {
+                        itemForTouchPointId[p.id()] = mouseGrabberItem; // N.B. the mouseGrabberItem may be different after returning from sendEvent()
+                        return true;
+                    }
+                } else {
+                    // no grabber, check if we care about mouse hover
+                    // FIXME: this should only happen once, not recursively... I'll ignore it just ignore hover now.
+                    // hover for touch???
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event, item));
                     if (lastMousePosition.isNull())
-                        lastMousePosition = me.windowPos();
+                        lastMousePosition = me->windowPos();
                     QPointF last = lastMousePosition;
-                    lastMousePosition = me.windowPos();
+                    lastMousePosition = me->windowPos();
 
-                    bool accepted = me.isAccepted();
-                    bool delivered = deliverHoverEvent(rootItem, me.windowPos(), last, me.modifiers(), accepted);
+                    bool accepted = me->isAccepted();
+                    bool delivered = deliverHoverEvent(rootItem, me->windowPos(), last, me->modifiers(), accepted);
                     if (!delivered) {
                         //take care of any exits
                         accepted = clearHover();
                     }
-                    me.setAccepted(accepted);
+                    me->setAccepted(accepted);
                     break;
                 }
-
-                deliverMouseEvent(&me);
             } else if (p.state() & Qt::TouchPointReleased) {
+                // currently handled point was released
                 touchMouseId = -1;
-                if (!mouseGrabberItem)
-                    return;
-                QQuickMouseEventEx me = touchToMouseEvent(QEvent::MouseButtonRelease, p);
-                me.setTimestamp(event->timestamp());
-                me.setCapabilities(event->device()->capabilities());
-                deliverMouseEvent(&me);
-                if (mouseGrabberItem)
-                    mouseGrabberItem->ungrabMouse();
+                if (mouseGrabberItem) {
+                    QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event, mouseGrabberItem));
+                    q->sendEvent(mouseGrabberItem, me.data());
+                    if (mouseGrabberItem) // might have ungrabbed due to event
+                        mouseGrabberItem->ungrabMouse();
+                    return me->isAccepted();
+                }
             }
             break;
         }
     }
+    return false;
 }
 
 void QQuickCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
@@ -1047,17 +1076,17 @@ bool QQuickCanvas::event(QEvent *e)
 
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
-    case QEvent::TouchEnd:
-    case QEvent::TouchCancel:
-    {
-        QTouchEvent *touch = static_cast<QTouchEvent *>(e);
+    case QEvent::TouchEnd: {
+        QTouchEvent *touch = static_cast<QTouchEvent*>(e);
         d->translateTouchEvent(touch);
-        d->deliverTouchEvent(touch);
-        if (qmlTranslateTouchToMouse())
-            d->translateTouchToMouse(touch);
-
-        return touch->isAccepted();
+        // return in order to avoid the QWindow::event below
+        return d->deliverTouchEvent(touch);
     }
+        break;
+    case QEvent::TouchCancel:
+        // return in order to avoid the QWindow::event below
+        return d->deliverTouchCancelEvent(static_cast<QTouchEvent*>(e));
+        break;
     case QEvent::Leave:
         d->clearHover();
         d->lastMousePosition = QPoint();
@@ -1102,6 +1131,19 @@ void QQuickCanvas::keyReleaseEvent(QKeyEvent *e)
         sendEvent(d->activeFocusItem, e);
 }
 
+QMouseEvent *QQuickCanvasPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos)
+{
+    int caps = QGuiApplicationPrivate::mouseEventCaps(event);
+    QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
+    QMouseEvent *me = new QMouseEvent(event->type(),
+                                      transformedLocalPos ? *transformedLocalPos : event->localPos(),
+                                      event->windowPos(), event->screenPos(),
+                                      event->button(), event->buttons(), event->modifiers());
+    QGuiApplicationPrivate::setMouseEventCapsAndVelocity(me, caps, velocity);
+    me->setTimestamp(event->timestamp());
+    return me;
+}
+
 bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickCanvas);
@@ -1126,16 +1168,14 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
     }
 
     if (itemPrivate->acceptedMouseButtons() & event->button()) {
-        QPointF p = item->mapFromScene(event->windowPos());
-        if (item->contains(p)) {
-            QMouseEvent me(event->type(), p, event->windowPos(), event->screenPos(),
-                           event->button(), event->buttons(), event->modifiers());
-            me.setTimestamp(event->timestamp());
-            me.accept();
+        QPointF localPos = item->mapFromScene(event->windowPos());
+        if (item->contains(localPos)) {
+            QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
+            me->accept();
             item->grabMouse();
-            q->sendEvent(item, &me);
-            event->setAccepted(me.isAccepted());
-            if (me.isAccepted())
+            q->sendEvent(item, me.data());
+            event->setAccepted(me->isAccepted());
+            if (me->isAccepted())
                 return true;
             if (mouseGrabberItem)
                 mouseGrabberItem->ungrabMouse();
@@ -1162,21 +1202,12 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
     }
 
     if (mouseGrabberItem) {
-        QQuickItemPrivate *mgPrivate = QQuickItemPrivate::get(mouseGrabberItem);
-        const QTransform &transform = mgPrivate->canvasToItemTransform();
-        QQuickMouseEventEx me(event->type(), transform.map(event->windowPos()),
-                                event->windowPos(), event->screenPos(),
-                                event->button(), event->buttons(), event->modifiers());
-        QQuickMouseEventEx *eventEx = QQuickMouseEventEx::extended(event);
-        if (eventEx) {
-            me.setVelocity(QMatrix4x4(transform).mapVector(eventEx->velocity()).toVector2D());
-            me.setCapabilities(eventEx->capabilities());
-        }
-        me.setTimestamp(event->timestamp());
-        me.accept();
-        q->sendEvent(mouseGrabberItem, &me);
-        event->setAccepted(me.isAccepted());
-        if (me.isAccepted())
+        QPointF localPos = mouseGrabberItem->mapFromScene(event->windowPos());
+        QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
+        me->accept();
+        q->sendEvent(mouseGrabberItem, me.data());
+        event->setAccepted(me->isAccepted());
+        if (me->isAccepted())
             return true;
     }
 
@@ -1187,8 +1218,6 @@ bool QQuickCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
 void QQuickCanvas::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
-    if (qmlTranslateTouchToMouse())
-        return; // We are using touch events
 #ifdef MOUSE_DEBUG
     qWarning() << "QQuickCanvas::mousePressEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -1200,8 +1229,6 @@ void QQuickCanvas::mousePressEvent(QMouseEvent *event)
 void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
-    if (qmlTranslateTouchToMouse())
-        return; // We are using touch events
 #ifdef MOUSE_DEBUG
     qWarning() << "QQuickCanvas::mouseReleaseEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -1220,9 +1247,6 @@ void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
 void QQuickCanvas::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
-    if (qmlTranslateTouchToMouse())
-        return; // We are using touch events
-
 #ifdef MOUSE_DEBUG
     qWarning() << "QQuickCanvas::mouseDoubleClickEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -1258,8 +1282,6 @@ bool QQuickCanvasPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
 void QQuickCanvas::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
-    if (qmlTranslateTouchToMouse())
-        return; // We are using touch events
 #ifdef MOUSE_DEBUG
     qWarning() << "QQuickCanvas::mouseMoveEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -1402,98 +1424,100 @@ void QQuickCanvas::wheelEvent(QWheelEvent *event)
 }
 #endif // QT_NO_WHEELEVENT
 
+
+bool QQuickCanvasPrivate::deliverTouchCancelEvent(QTouchEvent *event)
+{
+#ifdef TOUCH_DEBUG
+    qWarning("touchCancelEvent");
+#endif
+    Q_Q(QQuickCanvas);
+    // A TouchCancel event will typically not contain any points.
+    // Deliver it to all items that have active touches.
+    QSet<QQuickItem *> cancelDelivered;
+    foreach (QQuickItem *item, itemForTouchPointId) {
+        if (cancelDelivered.contains(item))
+            continue;
+        cancelDelivered.insert(item);
+        q->sendEvent(item, event);
+    }
+    touchMouseId = -1;
+    if (mouseGrabberItem)
+        mouseGrabberItem->ungrabMouse();
+    // The next touch event can only be a TouchBegin so clean up.
+    itemForTouchPointId.clear();
+    return true;
+}
+
+// check what kind of touch we have (begin/update) and
+// call deliverTouchPoints to actually dispatch the points
 bool QQuickCanvasPrivate::deliverTouchEvent(QTouchEvent *event)
 {
 #ifdef TOUCH_DEBUG
     if (event->type() == QEvent::TouchBegin)
-        qWarning("touchBeginEvent");
+        qWarning() << "touchBeginEvent";
     else if (event->type() == QEvent::TouchUpdate)
-        qWarning("touchUpdateEvent");
+        qWarning() << "touchUpdateEvent points";
     else if (event->type() == QEvent::TouchEnd)
         qWarning("touchEndEvent");
-    else if (event->type() == QEvent::TouchCancel)
-        qWarning("touchCancelEvent");
 #endif
 
-    Q_Q(QQuickCanvas);
-
+    // List of all items that received an event before
+    // When we have TouchBegin this is and will stay empty
     QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > updatedPoints;
 
-    if (event->type() == QTouchEvent::TouchBegin) {     // all points are new touch points
-        QSet<int> acceptedNewPoints;
-        deliverTouchPoints(rootItem, event, event->touchPoints(), &acceptedNewPoints, &updatedPoints);
-        if (acceptedNewPoints.count() > 0)
-            event->accept();
-        else
-            event->ignore();
-        return event->isAccepted();
-    }
-
-    if (event->type() == QTouchEvent::TouchCancel) {
-        // A TouchCancel event will typically not contain any points.
-        // Deliver it to all items that have active touches.
-        QSet<QQuickItem *> cancelDelivered;
-        foreach (QQuickItem *item, itemForTouchPointId) {
-            if (cancelDelivered.contains(item))
-                continue;
-            cancelDelivered.insert(item);
-            q->sendEvent(item, event);
-        }
-        // The next touch event can only be a TouchBegin so clean up.
-        itemForTouchPointId.clear();
-        return true;
-    }
-
+    // Figure out who accepted a touch point last and put it in updatedPoints
+    // Add additional item to newPoints
     const QList<QTouchEvent::TouchPoint> &touchPoints = event->touchPoints();
     QList<QTouchEvent::TouchPoint> newPoints;
-    QQuickItem *item = 0;
     for (int i=0; i<touchPoints.count(); i++) {
-        const QTouchEvent::TouchPoint &touchPoint = touchPoints[i];
-        switch (touchPoint.state()) {
-            case Qt::TouchPointPressed:
-                newPoints << touchPoint;
-                break;
-            case Qt::TouchPointMoved:
-            case Qt::TouchPointStationary:
-            case Qt::TouchPointReleased:
-                if (itemForTouchPointId.contains(touchPoint.id())) {
-                    item = itemForTouchPointId[touchPoint.id()];
-                    if (item)
-                        updatedPoints[item].append(touchPoint);
-                }
-                break;
-            default:
-                break;
+        const QTouchEvent::TouchPoint &touchPoint = touchPoints.at(i);
+        if (touchPoint.state() == Qt::TouchPointPressed) {
+            newPoints << touchPoint;
+        } else {
+            // TouchPointStationary is relevant only to items which
+            // are also receiving touch points with some other state.
+            // But we have not yet decided which points go to which item,
+            // so for now we must include all non-new points in updatedPoints.
+            if (itemForTouchPointId.contains(touchPoint.id())) {
+                QQuickItem *item = itemForTouchPointId.value(touchPoint.id());
+                if (item)
+                    updatedPoints[item].append(touchPoint);
+            }
         }
     }
 
+    // Deliver the event, but only if there is at least one new point
+    // or some item accepted a point and should receive an update
     if (newPoints.count() > 0 || updatedPoints.count() > 0) {
         QSet<int> acceptedNewPoints;
-        int prevCount = updatedPoints.count();
-        deliverTouchPoints(rootItem, event, newPoints, &acceptedNewPoints, &updatedPoints);
-        if (acceptedNewPoints.count() > 0 || updatedPoints.count() != prevCount)
-            event->accept();
-        else
-            event->ignore();
+        event->setAccepted(deliverTouchPoints(rootItem, event, newPoints, &acceptedNewPoints, &updatedPoints));
     } else
         event->ignore();
 
+    // Remove released points from itemForTouchPointId
     if (event->touchPointStates() & Qt::TouchPointReleased) {
         for (int i=0; i<touchPoints.count(); i++) {
-            if (touchPoints[i].state() == Qt::TouchPointReleased)
+            if (touchPoints[i].state() == Qt::TouchPointReleased) {
                 itemForTouchPointId.remove(touchPoints[i].id());
+                if (touchPoints[i].id() == touchMouseId)
+                    touchMouseId = -1;
+            }
         }
+    }
+
+    if (event->type() == QEvent::TouchEnd) {
+        Q_ASSERT(itemForTouchPointId.isEmpty());
     }
 
     return event->isAccepted();
 }
 
+// This function recurses and sends the events to the individual items
 bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *event, const QList<QTouchEvent::TouchPoint> &newPoints, QSet<int> *acceptedNewPoints, QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *updatedPoints)
 {
-    Q_Q(QQuickCanvas);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
-    if (itemPrivate->opacity() == 0.0)
+    if (qFuzzyIsNull(itemPrivate->opacity()))
         return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -1504,6 +1528,8 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
         }
     }
 
+    // Check if our children want the event (or parts of it)
+    // This is the only point where touch event delivery recurses!
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
@@ -1513,71 +1539,161 @@ bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
             return true;
     }
 
-    QList<QTouchEvent::TouchPoint> matchingPoints;
+    // None of the children accepted the event, so check the given item itself.
+    // First, construct matchingPoints as a list of TouchPoints which the
+    // given item might be interested in.  Any newly-pressed point which is
+    // inside the item's bounds will be interesting, and also any updated point
+    // which was already accepted by that item when it was first pressed.
+    // (A point which was already accepted is effectively "grabbed" by the item.)
+
+    // set of IDs of "interesting" new points
+    QSet<int> matchingNewPoints;
+    // set of points which this item has previously accepted, for starters
+    QList<QTouchEvent::TouchPoint> matchingPoints = (*updatedPoints)[item];
+    // now add the new points which are inside this item's bounds
     if (newPoints.count() > 0 && acceptedNewPoints->count() < newPoints.count()) {
-        for (int i=0; i<newPoints.count(); i++) {
+        for (int i = 0; i < newPoints.count(); i++) {
             if (acceptedNewPoints->contains(newPoints[i].id()))
                 continue;
             QPointF p = item->mapFromScene(newPoints[i].scenePos());
-            if (item->contains(p))
+            if (item->contains(p)) {
+                matchingNewPoints.insert(newPoints[i].id());
                 matchingPoints << newPoints[i];
-        }
-    }
-
-    if (matchingPoints.count() > 0 || (*updatedPoints)[item].count() > 0) {
-        QList<QTouchEvent::TouchPoint> &eventPoints = (*updatedPoints)[item];
-        eventPoints.append(matchingPoints);
-        transformTouchPoints(eventPoints, itemPrivate->canvasToItemTransform());
-
-        Qt::TouchPointStates eventStates;
-        for (int i=0; i<eventPoints.count(); i++)
-            eventStates |= eventPoints[i].state();
-        // if all points have the same state, set the event type accordingly
-        QEvent::Type eventType;
-        switch (eventStates) {
-            case Qt::TouchPointPressed:
-                eventType = QEvent::TouchBegin;
-                break;
-            case Qt::TouchPointReleased:
-                eventType = QEvent::TouchEnd;
-                break;
-            default:
-                eventType = QEvent::TouchUpdate;
-                break;
-        }
-
-        if (eventStates != Qt::TouchPointStationary) {
-            QTouchEvent touchEvent(eventType);
-            touchEvent.setWindow(event->window());
-            touchEvent.setTarget(item);
-            touchEvent.setDevice(event->device());
-            touchEvent.setModifiers(event->modifiers());
-            touchEvent.setTouchPointStates(eventStates);
-            touchEvent.setTouchPoints(eventPoints);
-            touchEvent.setTimestamp(event->timestamp());
-
-            for (int i = 0; i < matchingPoints.count(); ++i)
-                itemForTouchPointId[matchingPoints[i].id()] = item;
-
-            touchEvent.accept();
-            q->sendEvent(item, &touchEvent);
-
-            if (touchEvent.isAccepted()) {
-                for (int i = 0; i < matchingPoints.count(); ++i)
-                    acceptedNewPoints->insert(matchingPoints[i].id());
-            } else {
-                for (int i = 0; i < matchingPoints.count(); ++i)
-                    if (itemForTouchPointId.value(matchingPoints[i].id()) == item)
-                        itemForTouchPointId.remove(matchingPoints[i].id());
             }
         }
     }
+    // If there are no matching new points, and the existing points are all stationary,
+    // there's no need to send an event to this item.  This is required by a test in
+    // tst_qquickcanvas::touchEvent_basic:
+    // a single stationary press on an item shouldn't cause an event
+    if (matchingNewPoints.isEmpty()) {
+        bool stationaryOnly = true;
+        Q_FOREACH (QTouchEvent::TouchPoint tp, matchingPoints)
+            if (tp.state() != Qt::TouchPointStationary)
+                stationaryOnly = false;
+        if (stationaryOnly)
+            matchingPoints.clear();
+    }
 
+    if (!matchingPoints.isEmpty()) {
+        // Now we know this item might be interested in the event. Copy and send it, but
+        // with only the subset of TouchPoints which are relevant to that item: that's matchingPoints.
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        transformTouchPoints(matchingPoints, itemPrivate->canvasToItemTransform());
+        deliverMatchingPointsToItem(item, event, acceptedNewPoints, matchingNewPoints, matchingPoints);
+    }
+
+    // record the fact that this item has been visited already
     updatedPoints->remove(item);
-    if (acceptedNewPoints->count() == newPoints.count() && updatedPoints->isEmpty())
-        return true;
 
-    return false;
+    // recursion is done only if ALL touch points have been delivered
+    return (acceptedNewPoints->count() == newPoints.count() && updatedPoints->isEmpty());
+}
+
+// touchEventForItemBounds has no means to generate a touch event that contains
+// only the points that are relevant for this item.  Thus the need for
+// matchingPoints to already be that set of interesting points.
+// They are all pre-transformed, too.
+bool QQuickCanvasPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEvent *event, QSet<int> *acceptedNewPoints, const QSet<int> &matchingNewPoints, const QList<QTouchEvent::TouchPoint> &matchingPoints)
+{
+    QScopedPointer<QTouchEvent> touchEvent(touchEventWithPoints(*event, matchingPoints));
+    touchEvent.data()->setTarget(item);
+    bool touchEventAccepted = false;
+
+    // First check whether the parent wants to be a filter,
+    // and if the parent accepts the event we are done.
+    if (sendFilteredTouchEvent(item->parentItem(), item, event)) {
+        event->accept();
+        return true;
+    }
+
+    // Since it can change in sendEvent, update itemForTouchPointId now
+    foreach (int id, matchingNewPoints)
+        itemForTouchPointId[id] = item;
+
+    // Deliver the touch event to the given item
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+    itemPrivate->deliverTouchEvent(touchEvent.data());
+    touchEventAccepted = touchEvent->isAccepted();
+
+    // If the touch event wasn't accepted, synthesize a mouse event and see if the item wants it.
+    if (!touchEventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
+        //  send mouse event
+        event->setAccepted(translateTouchToMouse(item, event));
+        if (event->isAccepted()) {
+            touchEventAccepted = true;
+        }
+    }
+
+    if (touchEventAccepted) {
+        // If the touch was accepted (regardless by whom or in what form),
+        // update acceptedNewPoints.
+        foreach (int id, matchingNewPoints)
+            acceptedNewPoints->insert(id);
+    } else {
+        // But if the event was not accepted then we know this item
+        // will not be interested in further updates for those touchpoint IDs either.
+        foreach (int id, matchingNewPoints)
+            if (itemForTouchPointId[id] == item)
+                itemForTouchPointId.remove(id);
+    }
+
+    return touchEventAccepted;
+}
+
+QTouchEvent *QQuickCanvasPrivate::touchEventForItemBounds(QQuickItem *target, const QTouchEvent &originalEvent)
+{
+    const QList<QTouchEvent::TouchPoint> &touchPoints = originalEvent.touchPoints();
+    QList<QTouchEvent::TouchPoint> pointsInBounds;
+    // if all points are stationary, the list of points should be empty to signal a no-op
+    if (originalEvent.touchPointStates() != Qt::TouchPointStationary) {
+        for (int i = 0; i < touchPoints.count(); ++i) {
+            const QTouchEvent::TouchPoint &tp = touchPoints.at(i);
+            if (tp.state() == Qt::TouchPointPressed) {
+                QPointF p = target->mapFromScene(tp.scenePos());
+                if (target->contains(p))
+                    pointsInBounds.append(tp);
+            } else {
+                pointsInBounds.append(tp);
+            }
+        }
+        transformTouchPoints(pointsInBounds, QQuickItemPrivate::get(target)->canvasToItemTransform());
+    }
+
+    QTouchEvent* touchEvent = touchEventWithPoints(originalEvent, pointsInBounds);
+    touchEvent->setTarget(target);
+    return touchEvent;
+}
+
+QTouchEvent *QQuickCanvasPrivate::touchEventWithPoints(const QTouchEvent &event, const QList<QTouchEvent::TouchPoint> &newPoints)
+{
+    Qt::TouchPointStates eventStates;
+    for (int i=0; i<newPoints.count(); i++)
+        eventStates |= newPoints[i].state();
+    // if all points have the same state, set the event type accordingly
+    QEvent::Type eventType = event.type();
+    switch (eventStates) {
+        case Qt::TouchPointPressed:
+            eventType = QEvent::TouchBegin;
+            break;
+        case Qt::TouchPointReleased:
+            eventType = QEvent::TouchEnd;
+            break;
+        default:
+            eventType = QEvent::TouchUpdate;
+            break;
+    }
+
+    QTouchEvent *touchEvent = new QTouchEvent(eventType);
+    touchEvent->setWindow(event.window());
+    touchEvent->setTarget(event.target());
+    touchEvent->setDevice(event.device());
+    touchEvent->setModifiers(event.modifiers());
+    touchEvent->setTouchPoints(newPoints);
+    touchEvent->setTouchPointStates(eventStates);
+    touchEvent->setTimestamp(event.timestamp());
+    touchEvent->accept();
+    return touchEvent;
 }
 
 #ifndef QT_NO_DRAGANDDROP
@@ -1702,6 +1818,59 @@ bool QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
 }
 #endif // QT_NO_DRAGANDDROP
 
+bool QQuickCanvasPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event)
+{
+    if (!target)
+        return false;
+
+    QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(target);
+    if (targetPrivate->filtersChildMouseEvents) {
+        QScopedPointer<QTouchEvent> targetEvent(touchEventForItemBounds(target, *event));
+        if (!targetEvent->touchPoints().isEmpty()) {
+            QVector<int> touchIds;
+            for (int i = 0; i < event->touchPoints().size(); ++i)
+                touchIds.append(event->touchPoints().at(i).id());
+            if (target->childMouseEventFilter(item, targetEvent.data())) {
+                target->grabTouchPoints(touchIds);
+                if (mouseGrabberItem) {
+                    mouseGrabberItem->ungrabMouse();
+                    touchMouseId = -1;
+                }
+                return true;
+            }
+
+            // Only offer a mouse event to the filter if we have one point
+            if (targetEvent->touchPoints().count() == 1) {
+                QEvent::Type t;
+                const QTouchEvent::TouchPoint &tp = targetEvent->touchPoints().first();
+                switch (tp.state()) {
+                case Qt::TouchPointPressed:
+                    t = QEvent::MouseButtonPress;
+                    break;
+                case Qt::TouchPointReleased:
+                    t = QEvent::MouseButtonRelease;
+                    break;
+                default:
+                    // move or stationary
+                    t = QEvent::MouseMove;
+                    break;
+                }
+
+                // targetEvent is already transformed wrt local position, velocity, etc.
+                QScopedPointer<QMouseEvent> mouseEvent(touchToMouseEvent(t, targetEvent->touchPoints().first(), event, item, false));
+                if (target->childMouseEventFilter(item, mouseEvent.data())) {
+                    itemForTouchPointId[tp.id()] = target;
+                    touchMouseId = tp.id();
+                    target->grabMouse();
+                    return true;
+                }
+            }
+        }
+    }
+
+    return sendFilteredTouchEvent(target->parentItem(), item, event);
+}
+
 bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem *item, QEvent *event)
 {
     if (!target)
@@ -1721,14 +1890,13 @@ bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
 bool QQuickCanvasPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event)
 {
     QStyleHints *styleHints = qApp->styleHints();
-    QQuickMouseEventEx *extended = QQuickMouseEventEx::extended(event);
-    bool dragVelocityLimitAvailable = extended
-        && extended->capabilities().testFlag(QTouchDevice::Velocity)
+    int caps = QGuiApplicationPrivate::mouseEventCaps(event);
+    bool dragVelocityLimitAvailable = (caps & QTouchDevice::Velocity)
         && styleHints->startDragVelocity();
     bool overThreshold = qAbs(d) > styleHints->startDragDistance();
     if (dragVelocityLimitAvailable) {
-        qreal velocity = axis == Qt::XAxis ? extended->velocity().x()
-                                           : extended->velocity().y();
+        QVector2D velocityVec = QGuiApplicationPrivate::mouseEventVelocity(event);
+        qreal velocity = axis == Qt::XAxis ? velocityVec.x() : velocityVec.y();
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
     return overThreshold;
@@ -1768,6 +1936,7 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::MouseMove:
         // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
         if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
+            // accept because qml items by default accept and have to explicitly opt out of accepting
             e->accept();
             QQuickItemPrivate::get(item)->deliverMouseEvent(static_cast<QMouseEvent *>(e));
         }
@@ -1789,12 +1958,10 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
+        d->sendFilteredTouchEvent(item->parentItem(), item, static_cast<QTouchEvent *>(e));
+        break;
     case QEvent::TouchCancel:
-        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
-        if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
-            e->accept();
-            QQuickItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
-        }
+        QQuickItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
         break;
 #ifndef QT_NO_DRAGANDDROP
     case QEvent::DragEnter:

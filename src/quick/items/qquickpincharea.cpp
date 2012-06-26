@@ -247,6 +247,8 @@ QQuickPinchArea::QQuickPinchArea(QQuickItem *parent)
 {
     Q_D(QQuickPinchArea);
     d->init();
+    setAcceptedMouseButtons(Qt::LeftButton);
+    setFiltersChildMouseEvents(true);
 }
 
 QQuickPinchArea::~QQuickPinchArea()
@@ -280,6 +282,20 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
         QQuickItem::event(event);
         return;
     }
+
+    // A common non-trivial starting scenario is the user puts down one finger,
+    // then that finger remains stationary while putting down a second one.
+    // However QQuickCanvas will not send TouchUpdates for TouchPoints which
+    // were not initially accepted; that would be inefficient and noisy.
+    // So even if there is only one touchpoint so far, it's important to accept it
+    // in order to get updates later on (and it's accepted by default anyway).
+    // If the user puts down one finger, we're waiting for the other finger to drop.
+    // Therefore updatePinch() must do the right thing for any combination of
+    // points and states that may occur, and there is no reason to ignore any event.
+    // One consequence though is that if PinchArea is on top of something else,
+    // it's always going to accept the touches, and that means the item underneath
+    // will not get them (unless the PA's parent is doing parent filtering,
+    // as the Flickable does, for example).
 
     switch (event->type()) {
     case QEvent::TouchBegin:
@@ -329,17 +345,27 @@ void QQuickPinchArea::updatePinch()
         setKeepMouseGrab(false);
         return;
     }
+
+    if (d->touchPoints.count() == 1) {
+        setKeepMouseGrab(false);
+    }
+
     QTouchEvent::TouchPoint touchPoint1 = d->touchPoints.at(0);
     QTouchEvent::TouchPoint touchPoint2 = d->touchPoints.at(d->touchPoints. count() >= 2 ? 1 : 0);
+    QRectF bounds = clipRect();
+    // Pinch is not started unless there are exactly two touch points
+    // AND one or more of the points has just now been pressed (wasn't pressed already)
+    // AND both points are inside the bounds.
     if (d->touchPoints.count() == 2
-        && (touchPoint1.state() & Qt::TouchPointPressed || touchPoint2.state() & Qt::TouchPointPressed)) {
+            && (touchPoint1.state() & Qt::TouchPointPressed || touchPoint2.state() & Qt::TouchPointPressed) &&
+            bounds.contains(touchPoint1.pos()) && bounds.contains(touchPoint2.pos())) {
         d->id1 = touchPoint1.id();
         d->sceneStartPoint1 = touchPoint1.scenePos();
         d->sceneStartPoint2 = touchPoint2.scenePos();
         d->pinchActivated = true;
         d->initPinch = true;
     }
-    if (d->pinchActivated && !d->pinchRejected){
+    if (d->pinchActivated && !d->pinchRejected) {
         const int dragThreshold = qApp->styleHints()->startDragDistance();
         QPointF p1 = touchPoint1.scenePos();
         QPointF p2 = touchPoint2.scenePos();
@@ -361,10 +387,10 @@ void QQuickPinchArea::updatePinch()
             angle -= 360;
         if (!d->inPinch || d->initPinch) {
             if (d->touchPoints.count() >= 2
-                    && (qAbs(p1.x()-d->sceneStartPoint1.x()) > dragThreshold
-                    || qAbs(p1.y()-d->sceneStartPoint1.y()) > dragThreshold
-                    || qAbs(p2.x()-d->sceneStartPoint2.x()) > dragThreshold
-                    || qAbs(p2.y()-d->sceneStartPoint2.y()) > dragThreshold)) {
+                    && (qAbs(p1.x()-d->sceneStartPoint1.x()) >= dragThreshold
+                    || qAbs(p1.y()-d->sceneStartPoint1.y()) >= dragThreshold
+                    || qAbs(p2.x()-d->sceneStartPoint2.x()) >= dragThreshold
+                    || qAbs(p2.y()-d->sceneStartPoint2.y()) >= dragThreshold)) {
                 d->initPinch = false;
                 d->sceneStartCenter = sceneCenter;
                 d->sceneLastCenter = sceneCenter;
@@ -461,106 +487,24 @@ void QQuickPinchArea::updatePinch()
     }
 }
 
-void QQuickPinchArea::mousePressEvent(QMouseEvent *event)
-{
-    Q_D(QQuickPinchArea);
-    d->stealMouse = false;
-    if (!d->enabled)
-        QQuickItem::mousePressEvent(event);
-    else {
-        setKeepMouseGrab(false);
-        event->setAccepted(true);
-    }
-}
-
-void QQuickPinchArea::mouseMoveEvent(QMouseEvent *event)
-{
-    Q_D(QQuickPinchArea);
-    if (!d->enabled) {
-        QQuickItem::mouseMoveEvent(event);
-        return;
-    }
-}
-
-void QQuickPinchArea::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickPinchArea);
-    d->stealMouse = false;
-    if (!d->enabled) {
-        QQuickItem::mouseReleaseEvent(event);
-    } else {
-        QQuickCanvas *c = canvas();
-        if (c && c->mouseGrabberItem() == this)
-            ungrabMouse();
-        setKeepMouseGrab(false);
-    }
-}
-
-void QQuickPinchArea::mouseUngrabEvent()
-{
-    setKeepMouseGrab(false);
-}
-
-bool QQuickPinchArea::sendMouseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickPinchArea);
-    QPointF localPos = mapFromScene(event->windowPos());
-
-    QQuickCanvas *c = canvas();
-    QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
-    bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
-                               event->button(), event->buttons(), event->modifiers());
-        mouseEvent.setAccepted(false);
-
-        switch (mouseEvent.type()) {
-        case QEvent::MouseMove:
-            mouseMoveEvent(&mouseEvent);
-            break;
-        case QEvent::MouseButtonPress:
-            mousePressEvent(&mouseEvent);
-            break;
-        case QEvent::MouseButtonRelease:
-            mouseReleaseEvent(&mouseEvent);
-            break;
-        default:
-            break;
-        }
-        grabber = c->mouseGrabberItem();
-        if (grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this)
-            grabMouse();
-
-        return stealThisEvent;
-    }
-    if (event->type() == QEvent::MouseButtonRelease) {
-        d->stealMouse = false;
-        if (c && c->mouseGrabberItem() == this)
-            ungrabMouse();
-        setKeepMouseGrab(false);
-    }
-    return false;
-}
-
 bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickPinchArea);
     if (!d->enabled || !isVisible())
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
-    case QEvent::MouseButtonPress:
-    case QEvent::MouseMove:
-    case QEvent::MouseButtonRelease:
-        return sendMouseEvent(static_cast<QMouseEvent *>(e));
-        break;
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate: {
             QTouchEvent *touch = static_cast<QTouchEvent*>(e);
-            d->touchPoints.clear();
-            for (int i = 0; i < touch->touchPoints().count(); ++i)
-                if (!(touch->touchPoints().at(i).state() & Qt::TouchPointReleased))
-                    d->touchPoints << touch->touchPoints().at(i);
-            updatePinch();
+            if (touch->touchPoints().count() > 1) {
+                touchEvent(touch);
+            } else {
+                d->touchPoints.clear();
+                for (int i = 0; i < touch->touchPoints().count(); ++i)
+                    if (!(touch->touchPoints().at(i).state() & Qt::TouchPointReleased))
+                        d->touchPoints << touch->touchPoints().at(i);
+                updatePinch();
+            }
         }
         return d->inPinch;
     case QEvent::TouchEnd:
