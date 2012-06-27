@@ -142,6 +142,9 @@ See \l {QML Basic Types} for the list of basic types that are supported by the Q
     Strings have a \c length attribute that holds the number of
     characters in the string.
 
+    QML extends the JavaScript String type with a \l {String::arg}{arg()} function
+    to support value substitution.
+
     \sa {QML Basic Types}
 */
 

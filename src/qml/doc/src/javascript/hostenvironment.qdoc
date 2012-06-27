@@ -63,7 +63,7 @@ detailed in the \l{QML Global Object} documentation.
 QML makes the following modifications to native objects:
 
 \list
-\li An arg() function is added to the String prototype.
+\li An \l {String::arg}{arg()} function is added to the \l String prototype.
 \li Locale-aware coversion functions are added to the \l Date and \l Number prototypes.
 \endlist
 
