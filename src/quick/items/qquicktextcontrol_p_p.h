@@ -138,7 +138,6 @@ public:
     QTextCursor cursor;
     QTextCursor selectedWordOnDoubleClick;
     QTextCursor selectedBlockOnTrippleClick;
-    QString highlightedAnchor; // Anchor below cursor
     QString anchorOnMousePress;
     QString linkToCopy;
 
@@ -158,7 +157,6 @@ public:
     bool acceptRichText : 1;
     bool cursorVisible : 1; // used to hide the cursor in the preedit area
     bool hasFocus : 1;
-    bool isEnabled : 1;
     bool hadSelectionOnMousePress : 1;
     bool wordSelectionEnabled : 1;
     bool hasImState : 1;

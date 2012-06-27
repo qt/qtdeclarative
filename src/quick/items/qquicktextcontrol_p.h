@@ -100,7 +100,6 @@ public:
     bool hasImState() const;
     bool cursorVisible() const;
     void setCursorVisible(bool visible);
-    QTextCursor cursorForPosition(const QPointF &pos) const;
     QRectF cursorRect(const QTextCursor &cursor) const;
     QRectF cursorRect() const;
     QRectF selectionRect(const QTextCursor &cursor) const;
@@ -154,7 +153,6 @@ Q_SIGNALS:
     void documentSizeChanged(const QSizeF &);
     void cursorRectangleChanged();
     void linkActivated(const QString &link);
-    void linkHovered(const QString &);
 
 public:
     virtual void processEvent(QEvent *e, const QMatrix &matrix);

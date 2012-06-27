@@ -108,7 +108,6 @@ QQuickTextControlPrivate::QQuickTextControlPrivate()
       acceptRichText(true),
       cursorVisible(false),
       hasFocus(false),
-      isEnabled(true),
       hadSelectionOnMousePress(false),
       wordSelectionEnabled(false),
       hasImState(false),
@@ -737,10 +736,6 @@ void QQuickTextControl::processEvent(QEvent *e, const QMatrix &matrix)
             d->focusEvent(static_cast<QFocusEvent *>(e));
             break;
 
-        case QEvent::EnabledChange:
-            d->isEnabled = e->isAccepted();
-            break;
-
         case QEvent::ShortcutOverride:
             if (d->interactionFlags & Qt::TextEditable) {
                 QKeyEvent* ke = static_cast<QKeyEvent *>(e);
@@ -807,11 +802,6 @@ void QQuickTextControl::timerEvent(QTimerEvent *e)
     Q_D(QQuickTextControl);
     if (e->timerId() == d->cursorBlinkTimer.timerId()) {
         d->cursorOn = !d->cursorOn;
-
-        // ###
-//        if (d->cursor.hasSelection())
-//            d->cursorOn &= (QGuiApplication::style()->styleHint(QStyle::SH_BlinkCursorWhenTextSelected)
-//                            != 0);
 
         d->repaintCursor();
     } else if (e->timerId() == d->trippleClickTimer.timerId()) {
@@ -1058,47 +1048,6 @@ QRectF QQuickTextControl::selectionRect(const QTextCursor &cursor) const
         QTextTable *table = cursor.currentTable();
 
         r = d->doc->documentLayout()->frameBoundingRect(table);
-        /*
-        int firstRow, numRows, firstColumn, numColumns;
-        cursor.selectedTableCells(&firstRow, &numRows, &firstColumn, &numColumns);
-
-        const QTextTableCell firstCell = table->cellAt(firstRow, firstColumn);
-        const QTextTableCell lastCell = table->cellAt(firstRow + numRows - 1, firstColumn + numColumns - 1);
-
-        const QAbstractTextDocumentLayout * const layout = doc->documentLayout();
-
-        QRectF tableSelRect = layout->blockBoundingRect(firstCell.firstCursorPosition().block());
-
-        for (int col = firstColumn; col < firstColumn + numColumns; ++col) {
-            const QTextTableCell cell = table->cellAt(firstRow, col);
-            const qreal y = layout->blockBoundingRect(cell.firstCursorPosition().block()).top();
-
-            tableSelRect.setTop(qMin(tableSelRect.top(), y));
-        }
-
-        for (int row = firstRow; row < firstRow + numRows; ++row) {
-            const QTextTableCell cell = table->cellAt(row, firstColumn);
-            const qreal x = layout->blockBoundingRect(cell.firstCursorPosition().block()).left();
-
-            tableSelRect.setLeft(qMin(tableSelRect.left(), x));
-        }
-
-        for (int col = firstColumn; col < firstColumn + numColumns; ++col) {
-            const QTextTableCell cell = table->cellAt(firstRow + numRows - 1, col);
-            const qreal y = layout->blockBoundingRect(cell.lastCursorPosition().block()).bottom();
-
-            tableSelRect.setBottom(qMax(tableSelRect.bottom(), y));
-        }
-
-        for (int row = firstRow; row < firstRow + numRows; ++row) {
-            const QTextTableCell cell = table->cellAt(row, firstColumn + numColumns - 1);
-            const qreal x = layout->blockBoundingRect(cell.lastCursorPosition().block()).right();
-
-            tableSelRect.setRight(qMax(tableSelRect.right(), x));
-        }
-
-        r = tableSelRect.toRect();
-        */
     } else if (cursor.hasSelection()) {
         const int position = cursor.selectionStart();
         const int anchor = cursor.selectionEnd();
@@ -1222,14 +1171,6 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
 void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mousePos)
 {
     Q_Q(QQuickTextControl);
-
-    if (interactionFlags & Qt::LinksAccessibleByMouse) {
-        QString anchor = q->anchorAt(mousePos);
-        if (anchor != highlightedAnchor) {
-            highlightedAnchor = anchor;
-            emit q->linkHovered(anchor);
-        }
-    }
 
     if ((e->buttons() & Qt::LeftButton)) {
         const bool editable = interactionFlags & Qt::TextEditable;
@@ -1546,17 +1487,6 @@ void QQuickTextControl::setCursorVisible(bool visible)
     d->cursorVisible = visible;
     d->setBlinkingCursorEnabled(d->cursorVisible
             && (d->interactionFlags & (Qt::TextEditable | Qt::TextSelectableByKeyboard)));
-}
-
-QTextCursor QQuickTextControl::cursorForPosition(const QPointF &pos) const
-{
-    Q_D(const QQuickTextControl);
-    int cursorPos = hitTest(pos, Qt::FuzzyHit);
-    if (cursorPos == -1)
-        cursorPos = 0;
-    QTextCursor c(d->doc);
-    c.setPosition(cursorPos);
-    return c;
 }
 
 QRectF QQuickTextControl::cursorRect(const QTextCursor &cursor) const
