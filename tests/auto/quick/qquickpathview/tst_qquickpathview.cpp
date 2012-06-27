@@ -108,6 +108,8 @@ private slots:
     void consecutiveModelChanges();
     void path();
     void pathMoved();
+    void offset_data();
+    void offset();
     void setCurrentIndex();
     void resetModel();
     void propertyChanges();
@@ -267,7 +269,7 @@ void tst_QQuickPathView::pathview3()
     QVERIFY(obj->path() != 0);
     QVERIFY(obj->delegate() != 0);
     QVERIFY(obj->model() != QVariant());
-    QCOMPARE(obj->currentIndex(), 0);
+    QCOMPARE(obj->currentIndex(), 7);
     QCOMPARE(obj->offset(), 1.0);
     QCOMPARE(obj->preferredHighlightBegin(), 0.5);
     QCOMPARE(obj->dragMargin(), 24.);
@@ -801,7 +803,7 @@ void tst_QQuickPathView::dataModel()
     QVERIFY(testItem == 0);
 
     pathview->setCurrentIndex(1);
-    QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
+    QTRY_COMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
     QTest::qWait(100);
 
     model.insertItem(2, "pink", "2");
@@ -836,6 +838,7 @@ void tst_QQuickPathView::dataModel()
     QCOMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
 
     pathview->setCurrentIndex(model.count()-1);
+    QTRY_COMPARE(pathview->offset(), 1.0);
     model.removeItem(model.count()-1);
     QCOMPARE(pathview->currentIndex(), model.count()-1);
 
@@ -880,8 +883,11 @@ void tst_QQuickPathView::pathMoved()
         QCOMPARE(curItem->pos() + offset, QPointF(itemPos.x(), itemPos.y()));
     }
 
+    QCOMPARE(pathview->currentIndex(), 3);
+
     pathview->setOffset(0.0);
     QCOMPARE(firstItem->pos() + offset, start);
+    QCOMPARE(pathview->currentIndex(), 0);
 
     // Change delegate size
     pathview->setOffset(0.1);
@@ -898,6 +904,35 @@ void tst_QQuickPathView::pathMoved()
     QTRY_COMPARE(firstItem->pos() + offset, start);
 
     delete canvas;
+}
+
+void tst_QQuickPathView::offset_data()
+{
+    QTest::addColumn<qreal>("offset");
+    QTest::addColumn<int>("currentIndex");
+
+    QTest::newRow("0.0") << 0.0 << 0;
+    QTest::newRow("1.0") << 7.0 << 1;
+    QTest::newRow("5.0") << 5.0 << 3;
+    QTest::newRow("4.6") << 4.6 << 3;
+    QTest::newRow("4.4") << 4.4 << 4;
+    QTest::newRow("5.4") << 5.4 << 3;
+    QTest::newRow("5.6") << 5.6 << 2;
+}
+
+void tst_QQuickPathView::offset()
+{
+    QFETCH(qreal, offset);
+    QFETCH(int, currentIndex);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("pathview3.qml"));
+    QQuickPathView *view = qobject_cast<QQuickPathView*>(c.create());
+
+    view->setOffset(offset);
+    QCOMPARE(view->currentIndex(), currentIndex);
+
+    delete view;
 }
 
 void tst_QQuickPathView::setCurrentIndex()

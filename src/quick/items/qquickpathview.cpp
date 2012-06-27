@@ -767,6 +767,7 @@ qreal QQuickPathView::offset() const
 void QQuickPathView::setOffset(qreal offset)
 {
     Q_D(QQuickPathView);
+    d->moveReason = QQuickPathViewPrivate::Other;
     d->setOffset(offset);
     d->updateCurrent();
 }
@@ -1562,6 +1563,7 @@ void QQuickPathView::componentComplete()
         d->regenerate();
     }
     d->updateHighlight();
+    d->updateCurrent();
 
     if (d->modelCount)
         emit countChanged();
@@ -1866,7 +1868,7 @@ void QQuickPathViewPrivate::createCurrentItem()
 void QQuickPathViewPrivate::updateCurrent()
 {
     Q_Q(QQuickPathView);
-    if (moveReason != Mouse)
+    if (moveReason == SetIndex)
         return;
     if (!modelCount || !haveHighlightRange || highlightRangeMode != QQuickPathView::StrictlyEnforceRange)
         return;
