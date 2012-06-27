@@ -198,8 +198,10 @@ must be taken to avoid unwanted ownership changes occurring.
 One of the simplest ways to expose C++ functionality to clients in
 QML is by registering a QObject module API.  This allows functionality
 and data to be exposed in a namespace which is accessible from QML.
-See the qmlRegisterModuleApi() documentation for more information
-about registering module APIs.
+See the documentation about
+\l{Defining QML Object Types from C++#Module-API-Type-Registration}
+for information about module APIs, and see the \l{qmlRegisterModuleApi<T>()}
+documentation for details on how to register and use a module API.
 
 A module API is instantiated and owned by the engine as a singleton.
 Thus, it is more performant to implement common functionality in a module

@@ -189,6 +189,45 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     Following registration, QML can \l{qml-c++-coercion}{coerce} objects that
     implement this interface for assignment to appropriately typed properties.
 
+\section2 Module API Type Registration
+
+    Module APIs allow you to expose properties, signals and slots in a namespace
+    without requiring the client to manually instantiate an object instance.
+    QObject module APIs in particular are an efficient and convenient way to
+    provide functionality or global property values to clients.
+
+    Note that module APIs do not have an associated QQmlContext as they are
+    shared across all contexts in an engine.  QObject module API instances
+    are constructed and owned by the QQmlEngine, and will be destroyed when
+    the engine is destroyed.
+
+    A QObject module API can be interacted with in a manner simlar to any
+    other QObject or instantiated element.  That is, Q_PROPERTYs of QObject
+    module APIs may be bound to, and Q_INVOKABLE functions of QObject module
+    APIs may be used in signal handler expressions.  This makes module APIs
+    an ideal way to implement styling or theming, and they can also be used
+    instead of ".pragma library" script imports to store global state or to
+    provide global functionality.
+
+    Once registered, a QObject module API may be used as any other QObject
+    instance exposed to QML.  The following example assumes that a QObject
+    module API was registered into the "MyThemeModule" namespace with version
+    1.0, where that QObject has a QColor "color" Q_PROPERTY:
+
+    \qml
+    import MyThemeModule 1.0 as Theme
+
+    Rectangle {
+        color: Theme.color // binding.
+    }
+    \endqml
+
+    A QJSValue may also be exposed as a module API, however clients should
+    be aware that properties of such a module API cannot be bound to.
+
+    See \l{qmlRegisterModuleApi<T>()} for more information on how implement and
+    register a new module API, and how to use an existing module API.
+
 \section1 Type Revisions and Versions
 
     Type revisions and versions allow new properties or methods to exist in the
