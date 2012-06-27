@@ -144,6 +144,11 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
     you can connect to the statusChanged() signal and monitor for QQuickView::Error.
     The errors are available via QQuickView::errors().
 
+    QQuickView also manages sizing of the view and root object.  By default, the \l resizeMode
+    is SizeViewToRootObject, which will load the component and resize it to the
+    size of the view.  Alternatively the resizeMode may be set to SizeRootObjectToView which
+    will resize the view to the size of the root object.
+
     \sa {Exposing C++ Data to QML}
 */
 
@@ -161,8 +166,6 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
 */
 
 /*!
-  \fn QQuickView::QQuickView(QWindow *parent, Qt::WindowFlags f)
-
   Constructs a QQuickView with the given \a parent and window flags \a f.
   The default value of \a parent is 0, default window flags \a f is Qt::Window.
 
@@ -176,8 +179,6 @@ QQuickView::QQuickView(QWindow *parent, Qt::WindowFlags f)
 }
 
 /*!
-  \fn QQuickView::QQuickView(const QUrl &source, QWidget *parent, Qt::WindowFlags f)
-
   Constructs a QQuickView with the given QML \a source, \a parent and a window flags \a f.
   The default value of \a parent is 0, default window flags \a f is Qt::Window.
 
@@ -192,8 +193,6 @@ QQuickView::QQuickView(const QUrl &source, QWindow *parent, Qt::WindowFlags f)
 }
 
 /*!
-  \fn QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent, Qt::WindowFlags f)
-
   Constructs a QQuickView with the given QML \a engine, \a parent and a window flags \a f.
   The default value of \a parent is 0, default window flags \a f is Qt::Window.
 
@@ -211,6 +210,9 @@ QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent, Qt::WindowFlags f)
     d_func()->init(engine);
 }
 
+/*!
+  Destroys the QQuickView.
+*/
 QQuickView::~QQuickView()
 {
     // Ensure that the component is destroyed before the engine; the engine may
@@ -220,14 +222,16 @@ QQuickView::~QQuickView()
     d->root = 0;
 }
 
-/*! \property QQuickView::source
+/*!
+  \property QQuickView::source
   \brief The URL of the source of the QML component.
 
-  Changing this property causes the QML component to be reloaded.
+  Ensure that the URL provided is full and correct, in particular, use
+  \l QUrl::fromLocalFile() when loading a file from the local filesystem.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
- */
+  Note that setting a source URL will result in the QML component being
+  instantiated, even if the URL is unchanged from the current value.
+*/
 
 /*!
     Sets the source to the \a url, loads the QML component and instantiates it.
@@ -235,8 +239,8 @@ QQuickView::~QQuickView()
     Ensure that the URL provided is full and correct, in particular, use
     \l QUrl::fromLocalFile() when loading a file from the local filesystem.
 
-    Calling this methods multiple times with the same url will result
-    in the QML being reloaded.
+    Calling this method multiple times with the same url will result
+    in the QML component being reinstantiated.
  */
 void QQuickView::setSource(const QUrl& url)
 {
@@ -341,14 +345,16 @@ QList<QQmlError> QQuickView::errors() const
     \brief whether the view should resize the canvas contents
 
     If this property is set to SizeViewToRootObject (the default), the view
-    resizes with the root item in the QML.
+    resizes to the size of the root item in the QML.
 
     If this property is set to SizeRootObjectToView, the view will
-    automatically resize the root item.
+    automatically resize the root item to the size of the view.
 
     Regardless of this property, the sizeHint of the view
     is the initial size of the root item. Note though that
     since QML may load dynamically, that size may change.
+
+    \sa initialSize
 */
 
 void QQuickView::setResizeMode(ResizeMode mode)
@@ -521,7 +527,11 @@ QSize QQuickView::sizeHint() const
 }
 
 /*!
-  Returns the initial size of the root object
+  Returns the initial size of the root object.
+
+  If \l resizeMode is QQuickItem::SizeRootObjectToView the root object will be
+  resized to the size of the view.  initialSize contains the size of the
+  root object before it was resized.
 */
 QSize QQuickView::initialSize() const
 {
