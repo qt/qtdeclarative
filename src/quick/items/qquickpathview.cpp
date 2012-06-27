@@ -1926,7 +1926,7 @@ void QQuickPathViewPrivate::snapToIndex(int index)
 
     if (!duration) {
         tl.set(moveOffset, targetOffset);
-    } else if (moveDirection == Positive || (moveDirection == Shortest && targetOffset - offset > modelCount/2)) {
+    } else if (moveDirection == Positive || (moveDirection == Shortest && targetOffset - offset > modelCount/2.0)) {
         qreal distance = modelCount - targetOffset + offset;
         if (targetOffset > moveOffset) {
             tl.move(moveOffset, 0.0, QEasingCurve(QEasingCurve::InQuad), int(duration * offset / distance));
@@ -1935,7 +1935,7 @@ void QQuickPathViewPrivate::snapToIndex(int index)
         } else {
             tl.move(moveOffset, targetOffset, QEasingCurve(QEasingCurve::InOutQuad), duration);
         }
-    } else if (moveDirection == Negative || targetOffset - offset <= -modelCount/2) {
+    } else if (moveDirection == Negative || targetOffset - offset <= -modelCount/2.0) {
         qreal distance = modelCount - offset + targetOffset;
         if (targetOffset < moveOffset) {
             tl.move(moveOffset, modelCount, QEasingCurve(targetOffset == 0 ? QEasingCurve::InOutQuad : QEasingCurve::InQuad), int(duration * (modelCount-offset) / distance));
