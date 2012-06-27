@@ -95,6 +95,14 @@ access to all of that functionality with a single import statement.
 \li \l{qtquick-qtquicktest.html}{QtQuickTest: QML Unit Testing Framework}
 \endlist
 
+\section1 Release Notes and Porting Guides
+\list
+\li \l{qtqml-releasenotes.html}{QtQml Module Release Notes}
+\li \l{qtquick-releasenotes.html}{QtQuick Module Release Notes}
+\li \l{qtquick-porting-qt5.html}{Porting QML Applications to Qt 5}
+\endlist
+
+
 \section1 Further Information About The QML Language
 
 Please see the documentation for the \l{qtqml-main.html}{Qt QML Module} for

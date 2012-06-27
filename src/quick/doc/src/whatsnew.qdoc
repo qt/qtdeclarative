@@ -35,17 +35,44 @@
 The QtQuick C++ module is new in Qt 5. It provides the visual canvas and scenegraph backend
 as well as the QtQuick QML module for QML application development.
 
-(Prior to Qt 5, the QtQuick QML module was provided by the QtDeclarative C++ module. In Qt 5
-the QtDeclarative module has been replaced by the new QtQml and QtQuick C++ modules.)
+As of Qt 5, the QtQuick module is based on an OpenGL scenegraph. Many of the classes in
+the QtQuick module have been ported from the \c QtDeclarative module from Qt 4.8 to use
+the scenegraph architecture; these classes have been renamed to use a \c QQuick* prefix.
+(See the \l {Porting QML Applications to Qt 5} for porting information.)
 
-As of Qt 5, the QtQuick module is based on an OpenGL scenegraph. The following C++ classes replace
-their \c QDeclarative* equivalents from QtQuick 1:
+The following classes provide the basic functionality for interacting with the QML visual
+canvas from C++:
 
 \list
-\li QQuickView
-\li QQuickCanvas
-\li QQuickItem
-\li QQuickPaintedItem
+\li QQuickItem - the base visual QML type (replaces \c QDeclarativeItem)
+\li QQuickView - a window for rendering a QML scene from a QML file (replaces \c QDeclarativeView)
+\li QQuickCanvas - a base canvas for displaying a QML scene
+\li QQuickPaintedItem - convenience for using the QPainter API with the scenegraph
+\li QQuickImageProvider - fetches custom images for use in QML applications (replaces \c QDeclarativeImageProvider)
+\li QQuickTextureFactory - use with QQuickImageProvider::requestTexture()
+\endlist
+
+Custom rendering can be performed on the scenegraph using the following new classes:
+
+\list
+\li QSGNode
+\li QSGMaterial
+\li QSGBasicGeometryNode
+\li QSGGeometryNode
+\li QSGClipNode
+\li QSGTransformNode
+\li QSGRootNode
+\li QSGOpacityNode
+\li QSGNodeVisitor
+\li QSGFlatColorMaterial
+\li QSGSimpleRectNode
+\li QSGSimpleTextureNode
+\li QSGTexture
+\li QSGDynamicTexture
+\li QSGOpaqueTextureMaterial
+\li QSGTextureMaterial
+\li QSGTextureProvider
+\li QSGVertexColorMaterial
 \endlist
 
 
@@ -190,7 +217,7 @@ The new QtQuick.Particles module provides particle system support for creating a
 
 \section2 QtQuick.XmlListModel
 
-XmlListModel has now moved into its own module, QtQuick.XmlListModel. This module must now be imported to use the XmlListModel and XmlListModelRole types.
+XmlListModel has now moved into its own module, QtQuick.XmlListModel. This module must now be imported to use the XmlListModel and XmlRole types.
 
 
 */

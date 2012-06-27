@@ -36,7 +36,8 @@ The QtQml C++ module is new in Qt 5. It provides the QML engine and implements
 the QML language supporting infrastructure.
 
 (Prior to Qt 5, this functionality was provided by the QtDeclarative module, which
-has now been replaced by the new QtQml and QtQuick C++ modules.)
+has now been replaced by the new QtQml and QtQuick C++ modules. See the
+\l {Porting QML Applications to Qt 5} for more information.)
 
 \section2 QML Engine
 
@@ -49,7 +50,11 @@ has now been replaced by the new QtQml and QtQuick C++ modules.)
 \section2 Component and Object creation
 
 \list
-\li Loading/compilation can now be performed in a separate thread. Enable this by loading a \l Loader object asynchronously through its \l{Loader::}{source} property, or by passing the \c Component.Asynchronous parameter to \c Qt.createComponent().
+\li QML objects can now be created asynchronously to improve application performance.
+    \list
+    \li New QQmlIncubator and QQmlIncubationController C++ classes can be used to create objects asynchronously.
+    \li From QML code, this behavior is enabled by loading a \l Loader object asynchronously through its \l{Loader::}{source} property, or by passing the \c Component.Asynchronous parameter to \c Qt.createComponent().
+    \endlist
 \li The component returned by \c Qt.createComponent() is no longer parented to the engine.  Be sure to hold a reference, or provide a parent.
 \endlist
 
