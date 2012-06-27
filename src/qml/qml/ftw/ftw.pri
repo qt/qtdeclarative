@@ -24,4 +24,6 @@ SOURCES += \
     $$PWD/qqmlthread.cpp \
     $$PWD/qqmltrace.cpp \
 
-contains(QT_CONFIG, clock-gettime):include($$QT_SOURCE_TREE/config.tests/unix/clock-gettime/clock-gettime.pri)
+# mirrors logic in $$QT_SOURCE_TREE/config.tests/unix/clock-gettime/clock-gettime.pri
+# clock_gettime() is implemented in librt on these systems
+contains(QT_CONFIG, clock-gettime):linux-*|hpux-*|solaris-*:LIBS_PRIVATE *= -lrt

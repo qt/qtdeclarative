@@ -48,7 +48,7 @@
 
 #if defined(Q_OS_WIN)
 #  if defined(QT_MAKEDLL) /* create a Qt DLL library */
-#    if defined(QT_BUILD_QUICKPARTICLES_LIB)
+#    if defined(QT_BUILD_PARTICLES_LIB)
 #      define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_EXPORT
 #    else
 #      define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_IMPORT

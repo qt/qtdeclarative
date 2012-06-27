@@ -1,6 +1,12 @@
 TEMPLATE = subdirs
-SUBDIRS +=  qmlscene qmlplugindump qmlmin qmleasing qmlprofiler qmlbundle
+SUBDIRS += \
+    qmlscene \
+    qmlplugindump \
+    qmlmin \
+    qmleasing \
+    qmlprofiler \
+    qmlbundle \
+    qmltestrunner
 !contains(QT_CONFIG, no-widgets):SUBDIRS += easingcurveeditor
-contains(QT_CONFIG, qmltest): SUBDIRS += qmltestrunner
 
 

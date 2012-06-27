@@ -54,7 +54,7 @@ QT_BEGIN_HEADER
 #    if defined(QT_DLL)
 #      undef QT_DLL
 #    endif
-#    if defined(QT_BUILD_QUICK_TEST_LIB)
+#    if defined(QT_BUILD_QMLTEST_LIB)
 #        define Q_QUICK_TEST_EXPORT Q_DECL_EXPORT
 #    else
 #        define Q_QUICK_TEST_EXPORT Q_DECL_IMPORT

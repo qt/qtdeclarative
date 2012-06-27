@@ -40,13 +40,13 @@
 ****************************************************************************/
 
 #include "splineeditor.h"
+#include "segmentproperties.h"
 
 #include <QPainter>
 #include <QMouseEvent>
 #include <QContextMenuEvent>
 #include <QDebug>
 #include <QApplication>
-#include <segmentproperties.h>
 
 const int canvasWidth = 640;
 const int canvasHeight = 320;
