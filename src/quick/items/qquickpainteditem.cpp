@@ -374,6 +374,8 @@ void QQuickPaintedItem::setContentsSize(const QSize &size)
 
     d->contentsSize = size;
     update();
+
+    emit contentsSizeChanged();
 }
 
 /*!
@@ -408,6 +410,8 @@ void QQuickPaintedItem::setContentsScale(qreal scale)
 
     d->contentsScale = scale;
     update();
+
+    emit contentsScaleChanged();
 }
 
 /*!

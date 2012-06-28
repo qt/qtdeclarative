@@ -31,11 +31,6 @@ PRIVATETESTS += \
 # This test requires the xmlpatterns module
 !contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qquickxmllistmodel
 
-# FIXME
-# qquickdroparea is disabled because it depends on changes that
-# have not been merged from qtbase/master to qtbase/api_changes yet:
-    #qquickdroparea \
-
 QUICKTESTS =  \
     qquickaccessible \
     qquickanchors \
@@ -57,6 +52,7 @@ QUICKTESTS =  \
     qquickloader \
     qquickmousearea \
     qquickmultipointtoucharea \
+    qquickpainteditem \
     qquickpathview \
     qquickpincharea \
     qquickpositioners \
