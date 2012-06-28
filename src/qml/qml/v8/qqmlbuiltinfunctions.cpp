@@ -1178,6 +1178,23 @@ v8::Handle<v8::Value> createComponent(const v8::Arguments &args)
     return v8engine->newQObject(c);
 }
 
+/*!
+    \qmlmethod string qsTranslate(string context, string sourceText, string disambiguation, int n)
+
+    Returns a translated version of \a sourceText within the given \a context, optionally based on a
+    \a disambiguation string and value of \a n for strings containing plurals;
+    otherwise returns \a sourceText itself if no appropriate translated string
+    is available.
+
+    If the same \a sourceText is used in different roles within the
+    same translation \a context, an additional identifying string may be passed in
+    for \a disambiguation.
+
+    Example:
+    \snippet qml/qsTranslate.qml 0
+
+    \sa {Localization And Internationalization Support In Qt Quick}
+*/
 v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
 {
     if (args.Length() < 2)
@@ -1185,9 +1202,9 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
     if (!args[0]->IsString())
         V8THROW_ERROR("qsTranslate(): first argument (context) must be a string");
     if (!args[1]->IsString())
-        V8THROW_ERROR("qsTranslate(): second argument (text) must be a string");
+        V8THROW_ERROR("qsTranslate(): second argument (sourceText) must be a string");
     if ((args.Length() > 2) && !args[2]->IsString())
-        V8THROW_ERROR("qsTranslate(): third argument (comment) must be a string");
+        V8THROW_ERROR("qsTranslate(): third argument (disambiguation) must be a string");
 
     QV8Engine *v8engine = V8ENGINE();
     QString context = v8engine->toString(args[0]);
@@ -1213,6 +1230,28 @@ v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args)
     return v8engine->toString(result);
 }
 
+/*!
+    \qmlmethod string QT_TRANSLATE_NOOP(string context, string sourceText, string disambiguation)
+
+    Marks \a sourceText for dynamic translation in the given \a context; i.e, the stored \a sourceText
+    will not be altered.
+
+    If the same \a sourceText is used in different roles within the
+    same translation context, an additional identifying string may be passed in
+    for \a disambiguation.
+
+    Returns the \a sourceText.
+
+    QT_TRANSLATE_NOOP is used in conjunction with the dynamic translation functions
+    qsTr() and qsTranslate(). It identifies a string as requiring
+    translation (so it can be identified by \c lupdate), but leaves the actual
+    translation to the dynamic functions.
+
+    Example:
+    \snippet qml/qtTranslateNoOp.qml 0
+
+    \sa {Localization And Internationalization Support In Qt Quick}
+*/
 v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 2)
@@ -1220,14 +1259,31 @@ v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args)
     return args[1];
 }
 
+/*!
+    \qmlmethod string qsTr(string sourceText, string disambiguation, int n)
+
+    Returns a translated version of \a sourceText, optionally based on a
+    \a disambiguation string and value of \a n for strings containing plurals;
+    otherwise returns \a sourceText itself if no appropriate translated string
+    is available.
+
+    If the same \a sourceText is used in different roles within the
+    same translation context, an additional identifying string may be passed in
+    for \a disambiguation.
+
+    Example:
+    \snippet qml/qsTr.qml 0
+
+    \sa {Localization And Internationalization Support In Qt Quick}
+*/
 v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
 {
     if (args.Length() < 1)
         V8THROW_ERROR("qsTr() requires at least one argument");
     if (!args[0]->IsString())
-        V8THROW_ERROR("qsTr(): first argument (text) must be a string");
+        V8THROW_ERROR("qsTr(): first argument (sourceText) must be a string");
     if ((args.Length() > 1) && !args[1]->IsString())
-        V8THROW_ERROR("qsTr(): second argument (comment) must be a string");
+        V8THROW_ERROR("qsTr(): second argument (disambiguation) must be a string");
     if ((args.Length() > 2) && !args[2]->IsNumber())
         V8THROW_ERROR("qsTr(): third argument (n) must be a number");
 
@@ -1252,6 +1308,28 @@ v8::Handle<v8::Value> qsTr(const v8::Arguments &args)
     return v8engine->toString(result);
 }
 
+/*!
+    \qmlmethod string QT_TR_NOOP(string sourceText, string disambiguation)
+
+    Marks \a sourceText for dynamic translation; i.e, the stored \a sourceText
+    will not be altered.
+
+    If the same \a sourceText is used in different roles within the
+    same translation context, an additional identifying string may be passed in
+    for \a disambiguation.
+
+    Returns the \a sourceText.
+
+    QT_TR_NOOP is used in conjunction with the dynamic translation functions
+    qsTr() and qsTranslate(). It identifies a string as requiring
+    translation (so it can be identified by \c lupdate), but leaves the actual
+    translation to the dynamic functions.
+
+    Example:
+    \snippet qml/qtTrNoOp.qml 0
+
+    \sa {Localization And Internationalization Support In Qt Quick}
+*/
 v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 1)
@@ -1259,6 +1337,36 @@ v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args)
     return args[0];
 }
 
+/*!
+    \qmlmethod string qsTrId(string id, int n)
+
+    Returns a translated string identified by \a id.
+    If no matching string is found, the id itself is returned. This
+    should not happen under normal conditions.
+
+    If \a n >= 0, all occurrences of \c %n in the resulting string
+    are replaced with a decimal representation of \a n. In addition,
+    depending on \a n's value, the translation text may vary.
+
+    Example:
+    \snippet qml/qsTrId.qml 0
+
+    It is possible to supply a source string template like:
+
+    \tt{//% <string>}
+
+    or
+
+    \tt{\\begincomment% <string> \\endcomment}
+
+    Example:
+    \snippet qml/qsTrId.1.qml 0
+
+    Creating binary translation (QM) files suitable for use with this function requires passing
+    the \c -idbased option to the \c lrelease tool.
+
+    \sa QT_TRID_NOOP, {Localization And Internationalization Support In Qt Quick}
+*/
 v8::Handle<v8::Value> qsTrId(const v8::Arguments &args)
 {
     if (args.Length() < 1)
@@ -1276,6 +1384,22 @@ v8::Handle<v8::Value> qsTrId(const v8::Arguments &args)
     return v8engine->toString(qtTrId(v8engine->toString(args[0]).toUtf8().constData(), n));
 }
 
+/*!
+    \qmlmethod string QT_TRID_NOOP(string id)
+
+    Marks \a id for dynamic translation.
+
+    Returns the \a id.
+
+    QT_TRID_NOOP is used in conjunction with the dynamic translation function
+    qsTrId(). It identifies a string as requiring translation (so it can be identified
+    by \c lupdate), but leaves the actual translation to qsTrId().
+
+    Example:
+    \snippet qml/qtTrIdNoOp.qml 0
+
+    \sa qsTrId(), {Localization And Internationalization Support In Qt Quick}
+*/
 v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args)
 {
     if (args.Length() < 1)
