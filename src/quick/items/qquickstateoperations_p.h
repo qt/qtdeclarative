@@ -129,17 +129,6 @@ class Q_AUTOTEST_EXPORT QQuickAnchorSet : public QObject
     Q_PROPERTY(QQmlScriptString bottom READ bottom WRITE setBottom RESET resetBottom)
     Q_PROPERTY(QQmlScriptString verticalCenter READ verticalCenter WRITE setVerticalCenter RESET resetVerticalCenter)
     Q_PROPERTY(QQmlScriptString baseline READ baseline WRITE setBaseline RESET resetBaseline)
-    //Q_PROPERTY(QQuickItem *fill READ fill WRITE setFill RESET resetFill)
-    //Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn)
-
-    /*Q_PROPERTY(qreal margins READ margins WRITE setMargins NOTIFY marginsChanged)
-    Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin NOTIFY leftMarginChanged)
-    Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin NOTIFY rightMarginChanged)
-    Q_PROPERTY(qreal horizontalCenterOffset READ horizontalCenterOffset WRITE setHorizontalCenterOffset NOTIFY horizontalCenterOffsetChanged())
-    Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin NOTIFY topMarginChanged)
-    Q_PROPERTY(qreal bottomMargin READ bottomMargin WRITE setBottomMargin NOTIFY bottomMarginChanged)
-    Q_PROPERTY(qreal verticalCenterOffset READ verticalCenterOffset WRITE setVerticalCenterOffset NOTIFY verticalCenterOffsetChanged())
-    Q_PROPERTY(qreal baselineOffset READ baselineOffset WRITE setBaselineOffset NOTIFY baselineOffsetChanged())*/
 
 public:
     QQuickAnchorSet(QObject *parent=0);
@@ -173,49 +162,7 @@ public:
     void setBaseline(const QQmlScriptString &edge);
     void resetBaseline();
 
-    QQuickItem *fill() const;
-    void setFill(QQuickItem *);
-    void resetFill();
-
-    QQuickItem *centerIn() const;
-    void setCenterIn(QQuickItem *);
-    void resetCenterIn();
-
-    /*qreal leftMargin() const;
-    void setLeftMargin(qreal);
-
-    qreal rightMargin() const;
-    void setRightMargin(qreal);
-
-    qreal horizontalCenterOffset() const;
-    void setHorizontalCenterOffset(qreal);
-
-    qreal topMargin() const;
-    void setTopMargin(qreal);
-
-    qreal bottomMargin() const;
-    void setBottomMargin(qreal);
-
-    qreal margins() const;
-    void setMargins(qreal);
-
-    qreal verticalCenterOffset() const;
-    void setVerticalCenterOffset(qreal);
-
-    qreal baselineOffset() const;
-    void setBaselineOffset(qreal);*/
-
     QQuickAnchors::Anchors usedAnchors() const;
-
-/*Q_SIGNALS:
-    void leftMarginChanged();
-    void rightMarginChanged();
-    void topMarginChanged();
-    void bottomMarginChanged();
-    void marginsChanged();
-    void verticalCenterOffsetChanged();
-    void horizontalCenterOffsetChanged();
-    void baselineOffsetChanged();*/
 
 private:
     friend class QQuickAnchorChanges;

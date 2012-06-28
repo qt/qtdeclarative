@@ -594,17 +594,12 @@ class QQuickAnchorSetPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickAnchorSet)
 public:
     QQuickAnchorSetPrivate()
-      : usedAnchors(0), resetAnchors(0), fill(0),
-        centerIn(0)/*, leftMargin(0), rightMargin(0), topMargin(0), bottomMargin(0),
-        margins(0), vCenterOffset(0), hCenterOffset(0), baselineOffset(0)*/
+      : usedAnchors(0), resetAnchors(0)
     {
     }
 
     QQuickAnchors::Anchors usedAnchors;
     QQuickAnchors::Anchors resetAnchors;
-
-    QQuickItem *fill;
-    QQuickItem *centerIn;
 
     QQmlScriptString leftScript;
     QQmlScriptString rightScript;
@@ -613,15 +608,6 @@ public:
     QQmlScriptString hCenterScript;
     QQmlScriptString vCenterScript;
     QQmlScriptString baselineScript;
-
-    /*qreal leftMargin;
-    qreal rightMargin;
-    qreal topMargin;
-    qreal bottomMargin;
-    qreal margins;
-    qreal vCenterOffset;
-    qreal hCenterOffset;
-    qreal baselineOffset;*/
 };
 
 QQuickAnchorSet::QQuickAnchorSet(QObject *parent)
@@ -786,41 +772,6 @@ void QQuickAnchorSet::resetHorizontalCenter()
     d->usedAnchors &= ~QQuickAnchors::HCenterAnchor;
     d->resetAnchors |= QQuickAnchors::HCenterAnchor;
 }
-
-QQuickItem *QQuickAnchorSet::fill() const
-{
-    Q_D(const QQuickAnchorSet);
-    return d->fill;
-}
-
-void QQuickAnchorSet::setFill(QQuickItem *f)
-{
-    Q_D(QQuickAnchorSet);
-    d->fill = f;
-}
-
-void QQuickAnchorSet::resetFill()
-{
-    setFill(0);
-}
-
-QQuickItem *QQuickAnchorSet::centerIn() const
-{
-    Q_D(const QQuickAnchorSet);
-    return d->centerIn;
-}
-
-void QQuickAnchorSet::setCenterIn(QQuickItem* c)
-{
-    Q_D(QQuickAnchorSet);
-    d->centerIn = c;
-}
-
-void QQuickAnchorSet::resetCenterIn()
-{
-    setCenterIn(0);
-}
-
 
 class QQuickAnchorChangesPrivate : public QQuickStateOperationPrivate
 {
