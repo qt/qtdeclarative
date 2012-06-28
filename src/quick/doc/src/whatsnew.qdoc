@@ -48,7 +48,8 @@ canvas from C++:
 \li QQuickView - a window for rendering a QML scene from a QML file (replaces \c QDeclarativeView)
 \li QQuickCanvas - a base canvas for displaying a QML scene
 \li QQuickPaintedItem - convenience for using the QPainter API with the scenegraph
-\li QQuickImageProvider - fetches custom images for use in QML applications (replaces \c QDeclarativeImageProvider)
+\li QQuickImageProvider - fetches custom images for use in QML applications (replaces \c
+    QDeclarativeImageProvider)
 \li QQuickTextureFactory - use with QQuickImageProvider::requestTexture()
 \endlist
 
@@ -80,31 +81,80 @@ Custom rendering can be performed on the scenegraph using the following new clas
 
 The QtQuick 2.0 QML module is a major update.
 
-Below are the additions and changes in QtQuick 2.0:
+Below are the additions and changes in QtQuick 2.0.
 
-\section2 Graphics and Animations
+\section2 Visual types, Graphical Effects and Sprites
 
 \list
-\li New \l Canvas type for drawing. This provides a HTML5 canvas like API along with some additional features.
+\li New \l Canvas type for drawing. This provides an API similar to that of the HTML5 Canvas API,
+    along with some additional features.
     \list
     \li Supports two render targets: \c Canvas.Image and \c Canvas.FramebufferObject.
     \li Supports background thread rendering.
     \li Supports tiled canvas rendering.
     \li Supports most of the HTML5 context2d APIs.
     \endlist
+\li \l Item:
+    \list
+    \li New \l{Item::}{layer.enabled} property enables an item to be rendered into an offscreen
+        cache for optimization.
+    \li New \l{Item::}{contains()} method returns whether an item contains a specified point.
+    \li New \l{Item::}{anchors.alignWhenCentered} property can force centered anchors to align on a
+        whole pixel.
+    \endlist
 \li \l Image:
     \list
-    \li New \l{Image::}{horizontalAlignment} and \l{Image::}{verticalAlignment} properties.
-    \li New \c Image.Pad enum value for \l{Image::}{fillMode} that does not transform the image, unlike other \l{Image::}{fillMode} enum values.
-    \li Modifying the \l{Image::}{sourceSize} now fits the image to the size, maintaining aspect ratio.
+    \li New \l{Image::}{horizontalAlignment} and \l{Image::}{verticalAlignment} properties to set
+        the image alignment.
+    \li New \c Image.Pad enum value for \l{Image::}{fillMode} that does not transform the image,
+        unlike other \l{Image::}{fillMode} enum values.
+    \li Modifying the \l{Image::}{sourceSize} now fits the image to the size, maintaining aspect
+        ratio.
     \endlist
-\li New SpriteSequence type renders animated sprites and can transition between animations.
-\li New \l Sprite type which represents each animation in a SpriteSequence.
+\li New ShaderEffect and ShaderEffectSource types enable GLSL shader programs to be integrated
+    directly into QML code and applied to QML items and images. (This obsoletes the experimental
+    Qt.labs.shaders module.)
+\li New SpriteSequence type renders animated sprites and can transition between animations. Each
+    animation in a sequence is represented by the new \l Sprite type.
 \li New AnimatedSprite type for drawing single sprite animations.
-\li New PathArc, PathCurve and PathSvg types:
+\endlist
+
+
+\section2 Animations and Transitions
+\list
+\li New AnimationController type enables an animation to be manually driven by a
+    \l{AnimationController::}{progress} value.
+\li New PathAnimation type animates an item along a \l Path.
+\li New PathInterpolator type provides updated attribute values for an item animating along a path.
+    It can be used as an low-level alternative to PathAnimation.
+\li \l Transition:
     \list
-    \li PathArc and PathCurve support the construction of arcs and catmull-rom curves, respectively. PathSvg supports the construction of a path from a SVG string.
+    \li New \l{Transition::}{running} property holds whether a transition is currently running.
+    \li New \l{Transition::}{enabled} property controls whether a transition is enabled.
     \endlist
+\endlist
+
+
+\section2 Paths
+\list
+\li New PathArc type creates an arc-type path.
+\li New PathCurve type creates a catmull-rom curve path.
+\li New PathSvg type creates a path from a SVG string.
+\li Changes common to PathLine, PathQuad and PathCubic:
+    \list
+    \li New \c relativeX and \c relativeY properties define the start and end points of a path
+relative to its start.
+    \endlist
+\li PathCubic only:
+    \list
+    \li New \l{PathCubic::}{relativeControl1X}, \l{PathCubic::}{relativeControl1Y},
+        \l{PathCubic::}{relativeControl2X} and \l{PathCubic::}{relativeControl2Y} properties define the
+        positions of the control points relative to the start of the curve.
+    \endlist
+\li PathQuad only:
+    \list
+    \li New \l{PathQuad::}{relativeControlX} and \l{PathQuad::}{relativeControlY}
+        define the positions of the control points relative to the start of the curve.
     \endlist
 \endlist
 
@@ -112,23 +162,49 @@ Below are the additions and changes in QtQuick 2.0:
 \section2 Text
 
 \list
-\li \l Text:
+\li Changes common to \l Text, TextEdit and TextInput:
     \list
-    \li When \c Text.AutoText format is enabled, the text object will automatically switch to \c Text.StyledText instead of \c Text.RichText.
-    \li New \l{Text::}{onLineLaidOut} handler is called for every line during the layout process to give the option of positioning and/or resizing lines as they are laid out.
-    \li New \l{Text::}{doLayout()} method will trigger the text layout from Javascript.
-    \li \c Text.RightElide is now supported where text spans multiple lines.
-    \li New \l{Text::}{fontSizeMode} property allows text to be fitted to the item size.
-    \li New \l{Text::}{minimumPixelSize} and \l {Text::}{minimumPointSize} properties can be used to specify a lower bound when auto-fitting.
+    \li New \c contentWidth and \c contentHeight properties provide the dimensions of the textual
+        content.
+    \li New \c effectiveHorizontalAlignment property provides the read-only actual horizontal
+        alignment.
     \endlist
-\li TextEdit:
+\li Changes common to both TextEdit and TextInput:
+    \list
+    \li New \c canUndo and \c canRedo properties specify whether undo and redo operations are
+        available.
+    \li New \c getText() method returns the text located between specified start and end indexes.
+        Additionally TextEdit has a \l{TextEdit::}{getFormattedText()} method that returns the formatted
+        text.
+    \li \c openSoftwareInputPanel() and \c closeSoftwareInputPanel() methods have been removed. Use
+        \c Qt.application.inputMethod.show() and \c Qt.application.inputMethod.hide() instead.
+    \endlist
+\li \l Text only:
+    \list
+    \li When \l{Text::}{textFormat} is set to \c Text.AutoText format, the text object will
+        automatically switch to \c Text.StyledText instead of \c Text.RichText.
+    \li \c Text.RightElide is now supported where text spans multiple lines.
+    \li New \l{Text::}{linkColor} property controls the color of linked text.
+    \li New \l{Text::}{onLineLaidOut} handler is called for every line during the layout process to
+        give the option of positioning and/or resizing lines as they are laid out.
+    \li New \l{Text::}{doLayout()} method will trigger the text layout from Javascript.
+    \li New \l{Text::}{fontSizeMode} property allows text to be fitted to the item size.
+    \li New \l{Text::}{minimumPixelSize} and \l {Text::}{minimumPointSize} properties can be used to
+        specify a lower bound when auto-fitting.
+    \endlist
+\li TextEdit only:
     \list
     \li \l{TextEdit::}{textFormat} property now defaults to \c PlainText instead of \c AutoText.
+    \li New \l{TextEdit::}{baseUrl} property specified the base URL used to resolve relative URLs
+        within the text.
     \endlist
-\li TextInput:
+\li TextInput only:
     \list
-    \li New \l{TextInput::}{wrapMode} property.
+    \li New \l{TextInput::}{wrapMode} property sets the text wrapping mode.
     \li New \l{TextInput::}{horizontalAlignment} and \l{TextInput::}{verticalAlignment} properties.
+    \li New \l{TextInput::}{length} property provides the total number of text characters.
+    \li New \l{TextInput::}{persistentSelection} property enables the text selection to persist when
+the window loses focus.
     \li \l{TextInput::}{positionAt()} method now takes a y parameter.
     \endlist
 \endlist
@@ -136,13 +212,23 @@ Below are the additions and changes in QtQuick 2.0:
 \section2 User Input
 
 \list
-\li New MultiPointTouchArea type processes multi-point touches and provides information on touch points including position, pressure and velocity.
+\li New MultiPointTouchArea type processes multi-point touches and provides information on touch
+    points including position, pressure and velocity. Touch point data is provided by the new \l
+    TouchPoint type.
+\li New DropArea type provides more advanced drag and drop functionality.
 \li MouseArea:
     \list
-    \li Wheel events are now supported.
-    \li The \l{MouseArea::}{onClicked}, \l{MouseArea::}{onDoubleClicked} and \l{MouseArea::}{onPressAndHold} signals are now propagated differently to \l{MouseArea::}{onPressed}. These will now be propagated to the highest-stacking-order enabled MouseArea that has a handler for them. You can still ignore these events in the handler to let them pass through; this behavior is triggered with the new property \l{MouseArea::}{propagateComposedEvents}.
-    \li New \l{MouseArea::}{propagateComposedEvents} property sets whether composed events are propagated to other mouse areas.
-    \endlist
+    \li Wheel events are now supported; events are provided through the new WheelEvent type.
+    \li The \l{MouseArea::}{onClicked}, \l{MouseArea::}{onDoubleClicked} and
+        \l{MouseArea::}{onPressAndHold} signals are now propagated differently to
+        \l{MouseArea::}{onPressed}. These will now be propagated to the highest-stacking-order enabled
+        MouseArea that has implemented the relevant handlers. You can still ignore these events in the
+        handler to let them pass through; this behavior is triggered with the new property
+        \l{MouseArea::}{propagateComposedEvents}.
+    \li New \l{MouseArea::}{propagateComposedEvents} property sets whether composed events are
+        propagated to other mouse areas.
+    \li New \l{MouseArea::}{cursorShape} property controls the cursor shape.
+        \endlist
 \endlist
 
 \section2 Specialised Containers
@@ -150,20 +236,36 @@ Below are the additions and changes in QtQuick 2.0:
 \list
 \li Flickable:
     \list
-    \li New \l{Flickable::}{rebound} property specifies the transition to be applied when a flickable snaps back to its bounds.
-    \li New \l{Flickable::}{topMargin}, \l{Flickable::}{bottomMargin}, \l{Flickable::}{leftMargin}, \l{Flickable::}{rightMargin} allow extra margin space to be specified for a flickable. This can be used, for example, to implement the pull-to-refresh functionality for a list.
-    \li New \l{Flickable::}{originX} and \l{Flickable::}{originY} properties provide the top left position of the content item.
-    \li New \l{Flickable::}{dragging}, \l{Flickable::}{draggingHorizontally} and \l{Flickable::}{draggingVertically} properties provide information on whether a flickable is currently being dragged.
+    \li New \l{Flickable::}{rebound} property specifies the transition to be applied when a
+        flickable snaps back to its bounds.
+    \li New \l{Flickable::}{topMargin}, \l{Flickable::}{bottomMargin}, \l{Flickable::}{leftMargin},
+        \l{Flickable::}{rightMargin} allow extra margin space to be specified for a flickable. This can be
+        used, for example, to implement pull-to-refresh functionality for a list.
+    \li New \l{Flickable::}{originX} and \l{Flickable::}{originY} properties provide the top left
+        position of the content item.
+    \li New \l{Flickable::}{dragging}, \l{Flickable::}{draggingHorizontally} and
+        \l{Flickable::}{draggingVertically} properties provide information on whether a flickable is
+        currently being dragged.
+    \li New \l{Flickable::}{flick()} method flicks the view with a specific velocity.
+    \li New \l{Flickable::}{cancelFlick()} method stops any current flicking movement.
     \endlist
 \endlist
 
 \section2 Positioners (Row, Column, Grid, Flow types):
 
 \list
-\li The \c add and \c move transitions can now access a ViewTransition attached property (see the ViewTransition documentation for examples) and can now animate arbitrary item properties (instead of being restricted to animating an item's position).
-\li New \l Positioner type provides \c index, \c isFirstItem and \c isLastItem attached properties for items within positioners.
-\li All \c spacing properties on positioners now use real numbers instead of integers.
-\li Grid:
+\li Changes common to \l Row, \l Column, \l Grid and \l Flow:
+    \list
+    \li The \c add and \c move transitions can access a new ViewTransition attached property (see
+        the ViewTransition documentation for examples) and can now animate arbitrary item properties
+        (instead of being restricted to animating an item's position).
+    \li New \c effectiveLayoutDirection property provides the read-only actual layout direction of a
+        positioner.
+    \li New \l Positioner type provides \c index, \c isFirstItem and \c isLastItem attached
+        properties for items within positioners.
+    \li All \c spacing properties on positioners now use real numbers instead of integers.
+    \endlist
+\li Grid only:
     \list
     \li New \l{Grid::}{rowSpacing} and \l{Grid::}{columnSpacing} properties.
     \endlist
@@ -172,39 +274,74 @@ Below are the additions and changes in QtQuick 2.0:
 \section2 Models and Views
 
 \list
-\li ListView and GridView:
+\li ListModel:
     \list
-    \li New transition support for animating the adding, removing and moving of items in a ListView or GridView. See the ViewTransition documentation for details.
-    \li New \c verticalLayoutDirection property enables items to be laid out from bottom-to-top using the new \c BottomToTop enum value.
-    \li New \c headerItem and \c footerItem properties provide access to the instantiated header and footer items.
+    \li By default, roles can no longer change type during a model's lifetime. The new
+        \l{ListModel::}{dynamicRoles} property can be set to restore the original (less performant)
+        behavior.
+    \endlist
+\li VisualDataModel:
+    \list
+    \li Now has features to filter the items to be displayed in a view. This is supported by the new
+        \l {VisualDataModel::}{groups}, \l {VisualDataModel::}{filterOnGroup}, \l {VisualDataModel::}{items}
+        and \l {VisualDataModel::}{persistedItems} properties.
+    \endlist
+\li Changes common to both ListView and GridView:
+    \list
+    \li New transition support for animating the adding, removing and moving of items in a ListView
+        or GridView. See the ViewTransition documentation for details.
+    \li New \c verticalLayoutDirection property enables items to be laid out from bottom-to-top
+        using the new \c BottomToTop enum value.
+    \li New \c headerItem and \c footerItem properties provide access to the instantiated header and
+        footer items.
     \li The \c cacheBuffer property now has a non-zero default.
     \li Delegates in the cache buffer are now created asynchronously.
-    \li Setting a \c RightToLeft layout now also reverses the \c preferredHighlightBegin and \c preferredHighlightEnd.
+    \li Setting a \c RightToLeft layout now also reverses the \c preferredHighlightBegin and \c
+        preferredHighlightEnd.
     \endlist
 \li ListView only:
     \list
-    \li New \l{ListView::}{section.labelPositioning} property can fix the current section label to the start of the view, and the next section label to the end of the view, so that labels do not scroll while section items are still in view.
+    \li New \l{ListView::}{section.labelPositioning} property can fix the current section label to
+        the start of the view, and the next section label to the end of the view, to prevent labels from
+        scrolling while section items are still in view.
+    \li \c highlightMoveSpeed and \c highlightResizeSpeed have been renamed to
+        \l{ListView::}{highlightMoveVelocity} and \l{ListView::}{highlightResizeVelocity}.
+    \endlist
+\li GridView only:
+    \list
+    \li \l{GridView::}{cellWidth} and \l{GridView::}{cellHeight} now use real numbers instead of
+        integers.
     \endlist
 \li PathView:
     \list
-    \li New \l{PathView::}{currentItem} property.
-    \li New \l{PathView::}{maximumFlickVelocity} property.
+    \li New \l{PathView::}{currentItem} property holds the current item in the view.
+    \li New \l{PathView::}{maximumFlickVelocity} property controls the maximum flick velocity of the
+        view.
+    \li New \l{PathView::}{snapMode} property controls the snap model when flicking between items
     \endlist
 \endlist
 
 \section2 Utility types
 
 \list
+\li New \l Accessible attached property for implementing accessibility features in QML applications.
 \li \l Loader:
     \list
-    \li New \l{Loader::}{asynchronous} property allows components to be instantiated with lower chance of blocking.  If source is used with \e {asynchonous: true} the component will be compiled in a background thread.
-    \li New \l{Loader::}{active} property delays instantiation of a \l Loader object's \l{Loader::}{item}.
-    \li New \l{Loader::}{setSource()} method can load an object with specific initial property values, similar to \l Component::createObject().
-    \li The \c sourceChanged signal is now only emitted when the \l{Loader::}{source} changes and the \c sourceComponentChanged signal is now only emitted when the \l{Loader::}{sourceComponent} changes. (Previously Loader emitted both signals when only one of the properties had changed.)
+    \li New \l{Loader::}{asynchronous} property allows components to be instantiated with lower
+        chance of blocking.  If source is used with \e {asynchonous: true} the component will be compiled in
+        a background thread.
+    \li New \l{Loader::}{active} property can delay instantiation of a \l Loader object's
+        \l{Loader::}{item}.
+    \li New \l{Loader::}{setSource()} method loads an object with specific initial property values,
+        similar to \l Component::createObject().
+    \li The \c sourceChanged signal is now only emitted when the \l{Loader::}{source} changes and
+        the \c sourceComponentChanged signal is now only emitted when the \l{Loader::}{sourceComponent}
+        changes. (Previously \l Loader emitted both signals when only one of these properties had changed.)
     \endlist
 \li \l Binding:
     \list
-    \li This type can now be used as a value source, and will also restore any previously set binding when its \l{Binding::}{when} clause becomes false.
+    \li This type can now be used as a value source, and will also restore any previously set
+        binding when its \l{Binding::}{when} clause becomes false.
     \endlist
 \endlist
 
@@ -213,11 +350,24 @@ Below are the additions and changes in QtQuick 2.0:
 
 \section2 QtQuick.Particles
 
-The new QtQuick.Particles module provides particle system support for creating a variety of 2D particle systems. See the QtQuick.Particles documentation for comprehensive details.
+This new module provides particle system support for creating a variety of 2D particle systems. See
+the \l {QtQuick.Particles} documentation for comprehensive details.
+
+This obsoletes the experimental \c Qt.labs.particles module.
+
+\section2 QtQuick.Window
+
+This new module contains the \l Window type for creating a basic window and the \l Screen type for
+accessing a screen's resolution and other details.
 
 \section2 QtQuick.XmlListModel
 
-XmlListModel has now moved into its own module, QtQuick.XmlListModel. This module must now be imported to use the XmlListModel and XmlRole types.
+This new module contains XmlListModel and associated types, which were previously in the QtQuick
+module. See the \l {QtQuick.XmlListModel} documentation for details.
 
+\section2 QtQuick.LocalStorage
+
+This new module provides access to the SQL Local Storage API that was previously accessible from the
+\l {QML Global Object}. See the \l {QtQuick.LocalStorage} documentation for details.
 
 */

@@ -53,7 +53,12 @@ has now been replaced by the new QtQml and QtQuick C++ modules. See the
 \li QML objects can now be created asynchronously to improve application performance.
     \list
     \li New QQmlIncubator and QQmlIncubationController C++ classes can be used to create objects asynchronously.
-    \li From QML code, this behavior is enabled by loading a \l Loader object asynchronously through its \l{Loader::}{source} property, or by passing the \c Component.Asynchronous parameter to \c Qt.createComponent().
+    \li From QML code, this behavior can enabled by:
+        \list
+        \li Calling the new Component \l{Component::incubateObject} method
+        \li Passing the \c Component.Asynchronous parameter to \c Qt.createComponent()
+        \li Loading a \l Loader object asynchronously using the \l{Loader::}{asynchronous} property
+        \endlist
     \endlist
 \li The component returned by \c Qt.createComponent() is no longer parented to the engine.  Be sure to hold a reference, or provide a parent.
 \endlist
