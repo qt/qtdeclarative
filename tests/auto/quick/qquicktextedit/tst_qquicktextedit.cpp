@@ -62,6 +62,7 @@
 #include "../../shared/util.h"
 #include "../../shared/platforminputcontext.h"
 #include <private/qinputmethod_p.h>
+#include <QtGui/qstylehints.h>
 
 #ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>
@@ -1741,39 +1742,58 @@ void tst_qquicktextedit::mouseSelection_data()
     QTest::addColumn<QString>("selectedText");
     QTest::addColumn<bool>("focus");
     QTest::addColumn<bool>("focusOnPress");
-    QTest::addColumn<bool>("doubleClick");
+    QTest::addColumn<int>("clicks");
 
     // import installed
-    QTest::newRow("on") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << true << true << false;
-    QTest::newRow("off") << testFile("mouseselection_false.qml") << 4 << 9 << QString() << true << true << false;
-    QTest::newRow("default") << testFile("mouseselection_default.qml") << 4 << 9 << QString() << true << true << false;
-    QTest::newRow("off word selection") << testFile("mouseselection_false_words.qml") << 4 << 9 << QString() << true << true << false;
-    QTest::newRow("on word selection (4,9)") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << true << true << false;
+    QTest::newRow("on") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << true << true << 1;
+    QTest::newRow("off") << testFile("mouseselection_false.qml") << 4 << 9 << QString() << true << true << 1;
+    QTest::newRow("default") << testFile("mouseselection_default.qml") << 4 << 9 << QString() << true << true << 1;
+    QTest::newRow("off word selection") << testFile("mouseselection_false_words.qml") << 4 << 9 << QString() << true << true << 1;
+    QTest::newRow("on word selection (4,9)") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << true << true << 1;
 
-    QTest::newRow("on unfocused") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false << false << false;
-    QTest::newRow("on word selection (4,9) unfocused") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false << false << false;
+    QTest::newRow("on unfocused") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false << false << 1;
+    QTest::newRow("on word selection (4,9) unfocused") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false << false << 1;
 
-    QTest::newRow("on focus on press") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false << true << false;
-    QTest::newRow("on word selection (4,9) focus on press") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false << true << false;
+    QTest::newRow("on focus on press") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << false << true << 1;
+    QTest::newRow("on word selection (4,9) focus on press") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << false << true << 1;
 
-    QTest::newRow("on word selection (2,13)") << testFile("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
-    QTest::newRow("on word selection (2,30)") << testFile("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
-    QTest::newRow("on word selection (9,13)") << testFile("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
-    QTest::newRow("on word selection (9,30)") << testFile("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
-    QTest::newRow("on word selection (13,2)") << testFile("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
-    QTest::newRow("on word selection (20,2)") << testFile("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
-    QTest::newRow("on word selection (12,9)") << testFile("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
-    QTest::newRow("on word selection (30,9)") << testFile("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << false;
+    QTest::newRow("on word selection (2,13)") << testFile("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 1;
+    QTest::newRow("on word selection (2,30)") << testFile("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 1;
+    QTest::newRow("on word selection (9,13)") << testFile("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 1;
+    QTest::newRow("on word selection (9,30)") << testFile("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 1;
+    QTest::newRow("on word selection (13,2)") << testFile("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 1;
+    QTest::newRow("on word selection (20,2)") << testFile("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 1;
+    QTest::newRow("on word selection (12,9)") << testFile("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 1;
+    QTest::newRow("on word selection (30,9)") << testFile("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 1;
 
-    QTest::newRow("off double click (4,9)") << testFile("mouseselection_true.qml") << 4 << 9 << "0123456789" << true << true << true;
-    QTest::newRow("off double click (2,13)") << testFile("mouseselection_true.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
-    QTest::newRow("off double click (2,30)") << testFile("mouseselection_true.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
-    QTest::newRow("off double click (9,13)") << testFile("mouseselection_true.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
-    QTest::newRow("off double click (9,30)") << testFile("mouseselection_true.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
-    QTest::newRow("off double click (13,2)") << testFile("mouseselection_true.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
-    QTest::newRow("off double click (20,2)") << testFile("mouseselection_true.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
-    QTest::newRow("off double click (12,9)") << testFile("mouseselection_true.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
-    QTest::newRow("off double click (30,9)") << testFile("mouseselection_true.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << true;
+    QTest::newRow("on double click (4,9)") << testFile("mouseselection_true.qml") << 4 << 9 << "0123456789" << true << true << 2;
+    QTest::newRow("on double click (2,13)") << testFile("mouseselection_true.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 2;
+    QTest::newRow("on double click (2,30)") << testFile("mouseselection_true.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 2;
+    QTest::newRow("on double click (9,13)") << testFile("mouseselection_true.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 2;
+    QTest::newRow("on double click (9,30)") << testFile("mouseselection_true.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 2;
+    QTest::newRow("on double click (13,2)") << testFile("mouseselection_true.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 2;
+    QTest::newRow("on double click (20,2)") << testFile("mouseselection_true.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 2;
+    QTest::newRow("on double click (12,9)") << testFile("mouseselection_true.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 2;
+    QTest::newRow("on double click (30,9)") << testFile("mouseselection_true.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ" << true << true << 2;
+
+    QTest::newRow("on triple click (4,9)") << testFile("mouseselection_true.qml") << 4 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+    QTest::newRow("on triple click (2,13)") << testFile("mouseselection_true.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+    QTest::newRow("on triple click (2,30)") << testFile("mouseselection_true.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+    QTest::newRow("on triple click (9,13)") << testFile("mouseselection_true.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+    QTest::newRow("on triple click (9,30)") << testFile("mouseselection_true.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+    QTest::newRow("on triple click (13,2)") << testFile("mouseselection_true.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+    QTest::newRow("on triple click (20,2)") << testFile("mouseselection_true.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+    QTest::newRow("on triple click (12,9)") << testFile("mouseselection_true.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+    QTest::newRow("on triple click (30,9)") << testFile("mouseselection_true.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n" << true << true << 3;
+
+    QTest::newRow("on triple click (2,40)") << testFile("mouseselection_true.qml") << 2 << 40 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n9876543210\n" << true << true << 3;
+    QTest::newRow("on triple click (2,50)") << testFile("mouseselection_true.qml") << 2 << 50 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n9876543210\n\nZXYWVUTSRQPON MLKJIHGFEDCBA" << true << true << 3;
+    QTest::newRow("on triple click (25,40)") << testFile("mouseselection_true.qml") << 25 << 40 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n9876543210\n" << true << true << 3;
+    QTest::newRow("on triple click (25,50)") << testFile("mouseselection_true.qml") << 25 << 50 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n9876543210\n\nZXYWVUTSRQPON MLKJIHGFEDCBA" << true << true << 3;
+    QTest::newRow("on triple click (40,25)") << testFile("mouseselection_true.qml") << 40 << 25 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n9876543210\n" << true << true << 3;
+    QTest::newRow("on triple click (40,50)") << testFile("mouseselection_true.qml") << 40 << 50 << "9876543210\n\nZXYWVUTSRQPON MLKJIHGFEDCBA" << true << true << 3;
+    QTest::newRow("on triple click (50,25)") << testFile("mouseselection_true.qml") << 50 << 25 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n9876543210\n\nZXYWVUTSRQPON MLKJIHGFEDCBA" << true << true << 3;
+    QTest::newRow("on triple click (50,40)") << testFile("mouseselection_true.qml") << 50 << 40 << "9876543210\n\nZXYWVUTSRQPON MLKJIHGFEDCBA" << true << true << 3;
 }
 
 void tst_qquicktextedit::mouseSelection()
@@ -1784,7 +1804,7 @@ void tst_qquicktextedit::mouseSelection()
     QFETCH(QString, selectedText);
     QFETCH(bool, focus);
     QFETCH(bool, focusOnPress);
-    QFETCH(bool, doubleClick);
+    QFETCH(int, clicks);
 
     QQuickView canvas(QUrl::fromLocalFile(qmlfile));
 
@@ -1803,23 +1823,26 @@ void tst_qquicktextedit::mouseSelection()
     // press-and-drag-and-release from x1 to x2
     QPoint p1 = textEditObject->positionToRectangle(from).center().toPoint();
     QPoint p2 = textEditObject->positionToRectangle(to).center().toPoint();
-    if (doubleClick)
-        QTest::mouseClick(&canvas, Qt::LeftButton, 0, p1);
-    QTest::mousePress(&canvas, Qt::LeftButton, 0, p1);
+    if (clicks == 2)
+        QTest::mouseClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
+    else if (clicks == 3)
+        QTest::mouseDClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
+    QTest::mousePress(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
     QTest::mouseMove(&canvas, p2);
-    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, p2);
-    QTest::qWait(50);
+    QTest::mouseRelease(&canvas, Qt::LeftButton, Qt::NoModifier, p2);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
 
     // Clicking and shift to clicking between the same points should select the same text.
     textEditObject->setCursorPosition(0);
-    if (doubleClick)
-        QTest::mouseDClick(&canvas, Qt::LeftButton, 0, p1);
-    else
+    if (clicks > 1)
+        QTest::mouseDClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
+    if (clicks != 2)
         QTest::mouseClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
     QTest::mouseClick(&canvas, Qt::LeftButton, Qt::ShiftModifier, p2);
-    QTest::qWait(50);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
+
+    // ### This is to prevent double click detection from carrying over to the next test.
+    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval() + 10);
 }
 
 void tst_qquicktextedit::dragMouseSelection()
@@ -1840,7 +1863,7 @@ void tst_qquicktextedit::dragMouseSelection()
     // press-and-drag-and-release from x1 to x2
     int x1 = 10;
     int x2 = 70;
-    int y = textEditObject->height()/2;
+    int y = QFontMetrics(textEditObject->font()).height() / 2;
     QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(x1,y));
     QTest::mouseMove(&canvas, QPoint(x2, y));
     QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(x2,y));
@@ -1859,6 +1882,7 @@ void tst_qquicktextedit::dragMouseSelection()
     QTRY_VERIFY((str2 = textEditObject->selectedText()).length() > 3);
 
     QVERIFY(str1 != str2); // Verify the second press and drag is a new selection and not the first moved.
+
 }
 
 void tst_qquicktextedit::mouseSelectionMode_data()
@@ -1896,9 +1920,6 @@ void tst_qquicktextedit::mouseSelectionMode()
     int y = textEditObject->height()/2;
     QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(x1,y));
     QTest::mouseMove(&canvas, QPoint(x2, y));
-    //QTest::mouseMove(canvas, QPoint(x2,y)); // doesn't work
-//    QMouseEvent mv(QEvent::MouseMove, QPoint(x2,y), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-//    QGuiApplication::sendEvent(&canvas, &mv);
     QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(x2,y));
     QString str = textEditObject->selectedText();
     if (selectWords) {
@@ -3160,6 +3181,8 @@ void tst_qquicktextedit::getText_data()
 
     const QString richBoldText = QStringLiteral("This is some <b>bold</b> text");
     const QString plainBoldText = QStringLiteral("This is some bold text");
+    const QString richBoldTextLB = QStringLiteral("This is some<br/><b>bold</b> text");
+    const QString plainBoldTextLB = QString(QStringLiteral("This is some\nbold text")).replace(QLatin1Char('\n'), QChar(QChar::LineSeparator));
 
     QTest::newRow("all plain text")
             << standard.at(0)
@@ -3200,6 +3223,47 @@ void tst_qquicktextedit::getText_data()
             << richBoldText
             << 14 << 21
             << plainBoldText.mid(14, 7);
+
+    // Line break.
+    QTest::newRow("all plain text (line break)")
+            << standard.at(1)
+            << 0 << standard.at(1).length()
+            << standard.at(1);
+
+    QTest::newRow("plain text sub string (line break)")
+            << standard.at(1)
+            << 0 << 12
+            << standard.at(1).mid(0, 12);
+
+    QTest::newRow("plain text sub string reversed (line break)")
+            << standard.at(1)
+            << 12 << 0
+            << standard.at(1).mid(0, 12);
+
+    QTest::newRow("plain text cropped beginning (line break)")
+            << standard.at(1)
+            << -3 << 4
+            << standard.at(1).mid(0, 4);
+
+    QTest::newRow("plain text cropped end (line break)")
+            << standard.at(1)
+            << 23 << standard.at(1).length() + 8
+            << standard.at(1).mid(23);
+
+    QTest::newRow("plain text cropped beginning and end (line break)")
+            << standard.at(1)
+            << -9 << standard.at(1).length() + 4
+            << standard.at(1);
+
+    QTest::newRow("all rich text (line break)")
+            << richBoldTextLB
+            << 0 << plainBoldTextLB.length()
+            << plainBoldTextLB;
+
+    QTest::newRow("rich text sub string (line break)")
+            << richBoldTextLB
+            << 14 << 21
+            << plainBoldTextLB.mid(14, 7);
 }
 
 void tst_qquicktextedit::getText()

@@ -1005,7 +1005,13 @@ int QQuickTextEdit::selectionEnd() const
 QString QQuickTextEdit::selectedText() const
 {
     Q_D(const QQuickTextEdit);
-    return d->control->textCursor().selectedText();
+#ifndef QT_NO_TEXTHTMLPARSER
+    return d->richText
+            ? d->control->textCursor().selectedText()
+            : d->control->textCursor().selection().toPlainText();
+#else
+    return d->control->textCursor().selection().toPlainText();
+#endif
 }
 
 /*!
@@ -2065,7 +2071,13 @@ QString QQuickTextEdit::getText(int start, int end) const
     QTextCursor cursor(d->document);
     cursor.setPosition(start, QTextCursor::MoveAnchor);
     cursor.setPosition(end, QTextCursor::KeepAnchor);
-    return cursor.selectedText();
+#ifndef QT_NO_TEXTHTMLPARSER
+    return d->richText
+            ? cursor.selectedText()
+            : cursor.selection().toPlainText();
+#else
+    return cursor.selection().toPlainText();
+#endif
 }
 
 /*!
