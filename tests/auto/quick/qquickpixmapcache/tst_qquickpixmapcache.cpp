@@ -46,6 +46,7 @@
 #include <QNetworkReply>
 #include "../../shared/util.h"
 #include "testhttpserver.h"
+#include <QtNetwork/QNetworkConfigurationManager>
 
 #ifndef QT_NO_CONCURRENT
 #include <qtconcurrentrun.h>
@@ -110,10 +111,17 @@ static const bool localfile_optimized = true;
 static const bool localfile_optimized = false;
 #endif
 
-
 void tst_qquickpixmapcache::initTestCase()
 {
     QQmlDataTest::initTestCase();
+
+    // This avoids a race condition/deadlock bug in network config
+    // manager when it is accessed by the HTTP server thread before
+    // anything else. Bug report can be found at:
+    // https://bugreports.qt-project.org/browse/QTBUG-26355
+    QNetworkConfigurationManager cm;
+    cm.updateConfigurations();
+
     server.serveDirectory(testFile("http"));
 }
 
@@ -274,7 +282,7 @@ void tst_qquickpixmapcache::parallel()
         if (i == cancel) {
             QVERIFY(!getters[i]->gotslot);
         } else {
-            if (pending[i]) 
+            if (pending[i])
                 QVERIFY(getters[i]->gotslot);
 
             QVERIFY(pixmap->isReady());
