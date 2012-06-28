@@ -393,7 +393,7 @@ void QQuickTextControlPrivate::setCursorPosition(int pos, QTextCursor::MoveMode 
 void QQuickTextControlPrivate::repaintCursor()
 {
     Q_Q(QQuickTextControl);
-    emit q->updateCursorRequest(cursorRectPlusUnicodeDirectionMarkers(cursor));
+    emit q->updateCursorRequest();
 }
 
 void QQuickTextControlPrivate::repaintOldAndNewSelection(const QTextCursor &oldSelection)
@@ -409,17 +409,17 @@ void QQuickTextControlPrivate::repaintOldAndNewSelection(const QTextCursor &oldS
         QTextCursor differenceSelection(doc);
         differenceSelection.setPosition(oldSelection.position());
         differenceSelection.setPosition(cursor.position(), QTextCursor::KeepAnchor);
-        emit q->updateRequest(q->selectionRect(differenceSelection));
+        emit q->updateRequest();
     } else {
         if (!oldSelection.hasSelection() && !cursor.hasSelection()) {
             if (!oldSelection.isNull())
-                emit q->updateCursorRequest(q->selectionRect(oldSelection) | cursorRectPlusUnicodeDirectionMarkers(oldSelection));
-            emit q->updateCursorRequest(q->selectionRect() | cursorRectPlusUnicodeDirectionMarkers(cursor));
+                emit q->updateCursorRequest();
+            emit q->updateCursorRequest();
 
         } else {
             if (!oldSelection.isNull())
-                emit q->updateRequest(q->selectionRect(oldSelection) | cursorRectPlusUnicodeDirectionMarkers(oldSelection));
-            emit q->updateRequest(q->selectionRect() | cursorRectPlusUnicodeDirectionMarkers(cursor));
+                emit q->updateRequest();
+            emit q->updateRequest();
         }
     }
 }
@@ -478,8 +478,8 @@ void QQuickTextControlPrivate::_q_documentLayoutChanged()
 {
     Q_Q(QQuickTextControl);
     QAbstractTextDocumentLayout *layout = doc->documentLayout();
-    QObject::connect(layout, SIGNAL(update(QRectF)), q, SIGNAL(updateRequest(QRectF)));
-    QObject::connect(layout, SIGNAL(updateBlock(QTextBlock)), q, SLOT(_q_updateBlock(QTextBlock)));
+    QObject::connect(layout, SIGNAL(update(QRectF)), q, SIGNAL(updateRequest()));
+    QObject::connect(layout, SIGNAL(updateBlock(QTextBlock)), q, SIGNAL(updateRequest()));
     QObject::connect(layout, SIGNAL(documentSizeChanged(QSizeF)), q, SIGNAL(documentSizeChanged(QSizeF)));
 
 }
@@ -961,14 +961,6 @@ process:
     updateCurrentCharFormat();
 }
 
-void QQuickTextControlPrivate::_q_updateBlock(const QTextBlock &block)
-{
-    Q_Q(QQuickTextControl);
-    QRectF br = q->blockBoundingRect(block);
-    br.setRight(qreal(INT_MAX)); // the block might have shrunk
-    emit q->updateRequest(br);
-}
-
 QRectF QQuickTextControlPrivate::rectForPosition(int position) const
 {
     Q_Q(const QQuickTextControl);
@@ -1009,82 +1001,6 @@ QRectF QQuickTextControlPrivate::rectForPosition(int position) const
     }
 
     return r;
-}
-
-static inline bool firstFramePosLessThanCursorPos(QTextFrame *frame, int position)
-{
-    return frame->firstPosition() < position;
-}
-
-static inline bool cursorPosLessThanLastFramePos(int position, QTextFrame *frame)
-{
-    return position < frame->lastPosition();
-}
-
-static QRectF boundingRectOfFloatsInSelection(const QTextCursor &cursor)
-{
-    QRectF r;
-    QTextFrame *frame = cursor.currentFrame();
-    const QList<QTextFrame *> children = frame->childFrames();
-
-    const QList<QTextFrame *>::ConstIterator firstFrame = qLowerBound(children.constBegin(), children.constEnd(),
-                                                                      cursor.selectionStart(), firstFramePosLessThanCursorPos);
-    const QList<QTextFrame *>::ConstIterator lastFrame = qUpperBound(children.constBegin(), children.constEnd(),
-                                                                     cursor.selectionEnd(), cursorPosLessThanLastFramePos);
-    for (QList<QTextFrame *>::ConstIterator it = firstFrame; it != lastFrame; ++it) {
-        if ((*it)->frameFormat().position() != QTextFrameFormat::InFlow)
-            r |= frame->document()->documentLayout()->frameBoundingRect(*it);
-    }
-    return r;
-}
-
-QRectF QQuickTextControl::selectionRect(const QTextCursor &cursor) const
-{
-    Q_D(const QQuickTextControl);
-
-    QRectF r = d->rectForPosition(cursor.selectionStart());
-
-    if (cursor.hasComplexSelection() && cursor.currentTable()) {
-        QTextTable *table = cursor.currentTable();
-
-        r = d->doc->documentLayout()->frameBoundingRect(table);
-    } else if (cursor.hasSelection()) {
-        const int position = cursor.selectionStart();
-        const int anchor = cursor.selectionEnd();
-        const QTextBlock posBlock = d->doc->findBlock(position);
-        const QTextBlock anchorBlock = d->doc->findBlock(anchor);
-        if (posBlock == anchorBlock && posBlock.isValid() && posBlock.layout()->lineCount()) {
-            const QTextLine posLine = posBlock.layout()->lineForTextPosition(position - posBlock.position());
-            const QTextLine anchorLine = anchorBlock.layout()->lineForTextPosition(anchor - anchorBlock.position());
-
-            const int firstLine = qMin(posLine.lineNumber(), anchorLine.lineNumber());
-            const int lastLine = qMax(posLine.lineNumber(), anchorLine.lineNumber());
-            const QTextLayout *layout = posBlock.layout();
-            r = QRectF();
-            for (int i = firstLine; i <= lastLine; ++i) {
-                r |= layout->lineAt(i).rect();
-                r |= layout->lineAt(i).naturalTextRect(); // might be bigger in the case of wrap not enabled
-            }
-            r.translate(blockBoundingRect(posBlock).topLeft());
-        } else {
-            QRectF anchorRect = d->rectForPosition(cursor.selectionEnd());
-            r |= anchorRect;
-            r |= boundingRectOfFloatsInSelection(cursor);
-            QRectF frameRect(d->doc->documentLayout()->frameBoundingRect(cursor.currentFrame()));
-            r.setLeft(frameRect.left());
-            r.setRight(frameRect.right());
-        }
-        if (r.isValid())
-            r.adjust(-1, -1, 1, 1);
-    }
-
-    return r;
-}
-
-QRectF QQuickTextControl::selectionRect() const
-{
-    Q_D(const QQuickTextControl);
-    return selectionRect(d->cursor);
 }
 
 void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &pos)
@@ -1452,7 +1368,7 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property) cons
 void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
 {
     Q_Q(QQuickTextControl);
-    emit q->updateRequest(q->selectionRect());
+    emit q->updateRequest();
     hasFocus = e->gotFocus();
     if (e->gotFocus()) {
         setBlinkingCursorEnabled(interactionFlags & (Qt::TextEditable | Qt::TextSelectableByKeyboard));
@@ -1502,14 +1418,6 @@ QRectF QQuickTextControl::cursorRect() const
 {
     Q_D(const QQuickTextControl);
     return cursorRect(d->cursor);
-}
-
-QRectF QQuickTextControlPrivate::cursorRectPlusUnicodeDirectionMarkers(const QTextCursor &cursor) const
-{
-    if (cursor.isNull())
-        return QRectF();
-
-    return rectForPosition(cursor.position()).adjusted(-4, 0, 4, 0);
 }
 
 QString QQuickTextControl::anchorAt(const QPointF &pos) const

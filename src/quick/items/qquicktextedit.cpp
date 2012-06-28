@@ -1733,7 +1733,7 @@ void QQuickTextEditPrivate::init()
     control->setAcceptRichText(false);
     control->setCursorIsFocusIndicator(true);
 
-    qmlobject_connect(control, QQuickTextControl, SIGNAL(updateRequest(QRectF)), q, QQuickTextEdit, SLOT(updateDocument()));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(updateRequest()), q, QQuickTextEdit, SLOT(updateDocument()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(updateCursorRequest()), q, QQuickTextEdit, SLOT(updateCursor()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(selectionChanged()), q, QQuickTextEdit, SIGNAL(selectedTextChanged()));

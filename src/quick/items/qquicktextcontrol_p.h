@@ -148,8 +148,8 @@ Q_SIGNALS:
     void cursorPositionChanged();
 
     // control signals
-    void updateCursorRequest(const QRectF &rect = QRectF());
-    void updateRequest(const QRectF &rect = QRectF());
+    void updateCursorRequest();
+    void updateRequest();
     void documentSizeChanged(const QSizeF &);
     void cursorRectangleChanged();
     void linkActivated(const QString &link);
@@ -175,7 +175,6 @@ private:
     Q_DISABLE_COPY(QQuickTextControl)
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrentCharFormatAndSelection())
     Q_PRIVATE_SLOT(d_func(), void _q_emitCursorPosChanged(const QTextCursor &))
-    Q_PRIVATE_SLOT(d_func(), void _q_updateBlock(const QTextBlock &))
     Q_PRIVATE_SLOT(d_func(), void _q_documentLayoutChanged())
 };
 

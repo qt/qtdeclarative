@@ -108,11 +108,7 @@ public:
 
     void _q_setCursorAfterUndoRedo(int undoPosition, int charsAdded, int charsRemoved);
 
-    QRectF cursorRectPlusUnicodeDirectionMarkers(const QTextCursor &cursor) const;
     QRectF rectForPosition(int position) const;
-    QRectF selectionRect(const QTextCursor &cursor) const;
-    inline QRectF selectionRect() const
-    { return selectionRect(this->cursor); }
 
     void keyPressEvent(QKeyEvent *e);
     void mousePressEvent(QMouseEvent *event, const QPointF &pos);
@@ -163,7 +159,6 @@ public:
     bool cursorRectangleChanged : 1;
 
     void _q_copyLink();
-    void _q_updateBlock(const QTextBlock &);
     void _q_documentLayoutChanged();
 };
 
