@@ -67,8 +67,7 @@ static void addProperty(QMetaObjectBuilder *builder, int propertyId, const QByte
 static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!data)
-        V8THROW_ERROR("Not a valid VisualData object");
+    V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
     return v8::Int32::New(data->index);
 }
@@ -316,8 +315,7 @@ v8::Handle<v8::Value> QQuickVDMCachedModelData::get_property(
         v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!data)
-        V8THROW_ERROR("Not a valid VisualData object");
+    V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
     QQuickVDMCachedModelData *modelData = static_cast<QQuickVDMCachedModelData *>(data);
     const int propertyId = info.Data()->Int32Value();
@@ -337,8 +335,7 @@ void QQuickVDMCachedModelData::set_property(
         v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!data)
-        V8THROW_ERROR_SETTER("Not a valid VisualData object");
+    V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
 
     const int propertyId = info.Data()->Int32Value();
     if (data->index == -1) {
@@ -410,8 +407,7 @@ public:
     static v8::Handle<v8::Value> get_hasModelChildren(v8::Local<v8::String>, const v8::AccessorInfo &info)
     {
         QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-        if (!data)
-            V8THROW_ERROR("Not a valid VisualData object");
+        V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
         const QQuickVisualAdaptorModel *const model = static_cast<QQuickVDMCachedModelData *>(data)->type->model;
         if (data->index >= 0 && *model) {
@@ -682,8 +678,7 @@ public:
     static v8::Handle<v8::Value> get_modelData(v8::Local<v8::String>, const v8::AccessorInfo &info)
     {
         QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-        if (!data)
-            V8THROW_ERROR("Not a valid VisualData object");
+        V8ASSERT_TYPE(data, "Not a valid VisualData object");
 
         return data->engine->fromVariant(static_cast<QQuickVDMListAccessorData *>(data)->cachedData);
     }
@@ -691,8 +686,7 @@ public:
     static void set_modelData(v8::Local<v8::String>, const v8::Handle<v8::Value> &value, const v8::AccessorInfo &info)
     {
         QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-        if (!data)
-            V8THROW_ERROR_SETTER("Not a valid VisualData object");
+        V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
 
         static_cast<QQuickVDMListAccessorData *>(data)->setModelData(
                 data->engine->toVariant(value, QVariant::Invalid));

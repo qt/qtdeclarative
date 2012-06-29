@@ -108,6 +108,17 @@ QT_BEGIN_NAMESPACE
     return; \
 }
 
+#define V8ASSERT_TYPE(condition, string) \
+    if (!(condition)) { \
+        v8::ThrowException(v8::Exception::TypeError(v8::String::New(string))); \
+        return v8::Handle<v8::Value>(); \
+    }
+#define V8ASSERT_TYPE_SETTER(condition, string) \
+    if (!(condition)) { \
+        v8::ThrowException(v8::Exception::TypeError(v8::String::New(string))); \
+        return; \
+    }
+
 #define V8_DEFINE_EXTENSION(dataclass, datafunction) \
     static inline dataclass *datafunction(QV8Engine *engine) \
     { \

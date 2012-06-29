@@ -1628,8 +1628,7 @@ v8::Handle<v8::Value> QQuickVisualDataModelItemMetaType::get_model(
         v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *cacheItem = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!cacheItem)
-        V8THROW_ERROR("Not a valid VisualData object");
+    V8ASSERT_TYPE(cacheItem, "Not a valid VisualData object");
     if (!cacheItem->metaType->model)
         return v8::Undefined();
 
@@ -1647,8 +1646,7 @@ v8::Handle<v8::Value> QQuickVisualDataModelItemMetaType::get_groups(
         v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *cacheItem = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!cacheItem)
-        V8THROW_ERROR("Not a valid VisualData object");
+    V8ASSERT_TYPE(cacheItem, "Not a valid VisualData object");
 
     QStringList groups;
     for (int i = 1; i < cacheItem->metaType->groupCount; ++i) {
@@ -1663,8 +1661,7 @@ void QQuickVisualDataModelItemMetaType::set_groups(
         v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *cacheItem = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!cacheItem)
-        V8THROW_ERROR_SETTER("Not a valid VisualData object");
+    V8ASSERT_TYPE_SETTER(cacheItem, "Not a valid VisualData object");
 
     if (!cacheItem->metaType->model)
         return;
@@ -1680,8 +1677,7 @@ v8::Handle<v8::Value> QQuickVisualDataModelItemMetaType::get_member(
         v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *cacheItem = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!cacheItem)
-        V8THROW_ERROR("Not a valid VisualData object");
+    V8ASSERT_TYPE(cacheItem, "Not a valid VisualData object");
 
     return v8::Boolean::New(cacheItem->groups & (1 << info.Data()->Int32Value()));
 }
@@ -1690,8 +1686,7 @@ void QQuickVisualDataModelItemMetaType::set_member(
         v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *cacheItem = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!cacheItem)
-        V8THROW_ERROR_SETTER("Not a valid VisualData object");
+    V8ASSERT_TYPE_SETTER(cacheItem, "Not a valid VisualData object");
 
     if (!cacheItem->metaType->model)
         return;
@@ -1715,8 +1710,7 @@ v8::Handle<v8::Value> QQuickVisualDataModelItemMetaType::get_index(
         v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QQuickVisualDataModelItem *cacheItem = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    if (!cacheItem)
-        V8THROW_ERROR("Not a valid VisualData object");
+    V8ASSERT_TYPE(cacheItem, "Not a valid VisualData object");
 
     return v8::Integer::New(cacheItem->groupIndex(Compositor::Group(info.Data()->Int32Value())));
 }
@@ -2984,8 +2978,7 @@ public:
     static v8::Handle<v8::Value> get_change(quint32 index, const v8::AccessorInfo &info)
     {
         QQuickVisualDataGroupChangeArray *array = v8_resource_cast<QQuickVisualDataGroupChangeArray>(info.This());
-        if (!array)
-            V8THROW_ERROR("Not a valid change array");
+        V8ASSERT_TYPE(array, "Not a valid change array");
 
         if (index >= array->count())
             return v8::Undefined();
@@ -3004,8 +2997,7 @@ public:
     static v8::Handle<v8::Value> get_length(v8::Local<v8::String>, const v8::AccessorInfo &info)
     {
         QQuickVisualDataGroupChangeArray *array = v8_resource_cast<QQuickVisualDataGroupChangeArray>(info.This());
-        if (!array)
-            V8THROW_ERROR("Not a valid change array");
+        V8ASSERT_TYPE(array, "Not a valid change array");
 
         return v8::Integer::New(array->count());
     }
