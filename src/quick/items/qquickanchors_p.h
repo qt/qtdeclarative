@@ -76,7 +76,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchors : public QObject
     Q_PROPERTY(qreal baselineOffset READ baselineOffset WRITE setBaselineOffset NOTIFY baselineOffsetChanged)
     Q_PROPERTY(QQuickItem *fill READ fill WRITE setFill RESET resetFill NOTIFY fillChanged)
     Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged)
-    Q_PROPERTY(bool mirrored READ mirrored NOTIFY mirroredChanged)
     Q_PROPERTY(bool alignWhenCentered READ alignWhenCentered WRITE setAlignWhenCentered NOTIFY centerAlignedChanged)
 
 public:
@@ -184,7 +183,6 @@ Q_SIGNALS:
     void verticalCenterOffsetChanged();
     void horizontalCenterOffsetChanged();
     void baselineOffsetChanged();
-    void mirroredChanged();
     void centerAlignedChanged();
 
 private:

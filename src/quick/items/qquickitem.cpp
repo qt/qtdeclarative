@@ -1619,7 +1619,6 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
             anchor_d->fillChanged();
             anchor_d->centerInChanged();
             anchor_d->updateHorizontalAnchors();
-            emit _anchors->mirroredChanged();
         }
         mirrorChange();
         if (extra.isAllocated() && extra->layoutDirectionAttached) {
@@ -2851,7 +2850,6 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
   \qmlproperty real QtQuick2::Item::anchors.verticalCenterOffset
   \qmlproperty real QtQuick2::Item::anchors.baselineOffset
 
-  \qmlproperty bool QtQuick2::Item::anchors.mirrored
   \qmlproperty bool QtQuick2::Item::anchors.alignWhenCentered
 
   Anchors provide a way to position an item by specifying its
@@ -2910,8 +2908,6 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
   four directional anchors.
 
   To clear an anchor value, set it to \c undefined.
-
-  \c anchors.mirrored returns true it the layout has been \l {LayoutMirroring}{mirrored}.
 
   \c anchors.alignWhenCentered (default true) forces centered anchors to align to a
   whole pixel, i.e. if the item being centered has an odd width/height the item

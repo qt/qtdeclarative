@@ -181,7 +181,7 @@ void tst_qquickanchors::basicAnchorsRTL()
 
     QQuickItem* rootItem = qobject_cast<QQuickItem*>(view->rootObject());
     foreach (QObject *child, rootItem->children()) {
-        bool mirrored = QQuickItemPrivate::get(qobject_cast<QQuickItem*>(child))->anchors()->property("mirrored").toBool();
+        bool mirrored = QQuickItemPrivate::get(qobject_cast<QQuickItem*>(child))->anchors()->mirrored();
         QCOMPARE(mirrored, false);
     }
 
@@ -189,7 +189,7 @@ void tst_qquickanchors::basicAnchorsRTL()
         mirrorAnchors(qobject_cast<QQuickItem*>(child));
 
     foreach (QObject *child, rootItem->children()) {
-        bool mirrored = QQuickItemPrivate::get(qobject_cast<QQuickItem*>(child))->anchors()->property("mirrored").toBool();
+        bool mirrored = QQuickItemPrivate::get(qobject_cast<QQuickItem*>(child))->anchors()->mirrored();
         QCOMPARE(mirrored, true);
     }
 
