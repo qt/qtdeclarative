@@ -81,7 +81,9 @@ private slots:
     void hvCenterRTL();
     void fill();
     void fillRTL();
+    void margins_data();
     void margins();
+    void marginsRTL_data() { margins_data(); }
     void marginsRTL();
     void stretch();
     void baselineOffset();
@@ -635,9 +637,19 @@ void tst_qquickanchors::hvCenterRTL()
 
     delete view;
 }
+
+void tst_qquickanchors::margins_data()
+{
+    QTest::addColumn<QUrl>("source");
+
+    QTest::newRow("fill") << testFileUrl("margins.qml");
+    QTest::newRow("individual") << testFileUrl("individualMargins.qml");
+}
+
 void tst_qquickanchors::margins()
 {
-    QQuickView *view = new QQuickView(testFileUrl("margins.qml"));
+    QFETCH(QUrl, source);
+    QQuickView *view = new QQuickView(source);
 
     qApp->processEvents();
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("filler"));
@@ -656,22 +668,91 @@ void tst_qquickanchors::margins()
     rectPrivate->anchors()->setMargins(20.0);
 
     QCOMPARE(rectPrivate->anchors()->margins(), 20.0);
-    QEXPECT_FAIL("","QTBUG-24515", Continue);
     QCOMPARE(rectPrivate->anchors()->topMargin(), 0.0);
     QCOMPARE(rectPrivate->anchors()->leftMargin(), 5.0);
     QCOMPARE(rectPrivate->anchors()->bottomMargin(), 20.0);
     QCOMPARE(rectPrivate->anchors()->rightMargin(), 20.0);
     QCOMPARE(rect->x(), 5.0);
-    QCOMPARE(rect->y(), 20.0);
+    QCOMPARE(rect->y(), 0.0);
     QCOMPARE(rect->width(), 200.0 - 5.0 - 20.0);
-    QCOMPARE(rect->height(), 200.0 - 20.0 - 20.0);
+    QCOMPARE(rect->height(), 200.0 - 0.0 - 20.0);
+
+    rectPrivate->anchors()->setRightMargin(0.0);
+    rectPrivate->anchors()->setBottomMargin(0.0);
+    QCOMPARE(rectPrivate->anchors()->margins(), 20.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 5.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 0.0);
+    QCOMPARE(rect->x(), 5.0);
+    QCOMPARE(rect->y(), 0.0);
+    QCOMPARE(rect->width(), 200.0 - 5.0 - 0.0);
+    QCOMPARE(rect->height(), 200.0 - 0.0 - 0.0);
+
+    // Test setting margins doesn't have any effect on individual margins with explicit values.
+    rectPrivate->anchors()->setMargins(50.0);
+    QCOMPARE(rectPrivate->anchors()->margins(), 50.0);
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 5.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 0.0);
+    QCOMPARE(rect->x(), 0.0 + 5.0);
+    QCOMPARE(rect->y(), 0.0 + 0.0);
+    QCOMPARE(rect->width(), 200.0 - 5.0 - 0.0);
+    QCOMPARE(rect->height(), 200.0 - 0.0 - 0.0);
+
+    // Test that individual margins that are reset have the same value as margins.
+    rectPrivate->anchors()->resetLeftMargin();
+    rectPrivate->anchors()->resetBottomMargin();
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 50.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 50.0);
+    QCOMPARE(rect->x(), 0.0 + 50.0);
+    QCOMPARE(rect->y(), 0.0 + 0.0);
+    QCOMPARE(rect->width(), 200.0 - 50.0 - 0.0);
+    QCOMPARE(rect->height(), 200.0 - 0.0 - 50.0);
+
+    rectPrivate->anchors()->setMargins(30.0);
+    QCOMPARE(rectPrivate->anchors()->margins(), 30.0);
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 30.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 0.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 30.0);
+    QCOMPARE(rect->x(), 0.0 + 30.0);
+    QCOMPARE(rect->y(), 0.0 + 0.0);
+    QCOMPARE(rect->width(), 200.0 - 30.0 - 0.0);
+    QCOMPARE(rect->height(), 200.0 - 0.0 - 30.0);
+
+    rectPrivate->anchors()->resetTopMargin();
+    rectPrivate->anchors()->resetRightMargin();
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 30.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 30.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 30.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 30.0);
+    QCOMPARE(rect->x(), 0.0 + 30.0);
+    QCOMPARE(rect->y(), 0.0 + 30.0);
+    QCOMPARE(rect->width(), 200.0 - 30.0 - 30.0);
+    QCOMPARE(rect->height(), 200.0 - 30.0 - 30.0);
+
+    rectPrivate->anchors()->setMargins(25.0);
+    QCOMPARE(rectPrivate->anchors()->margins(), 25.0);
+    QCOMPARE(rectPrivate->anchors()->leftMargin(), 25.0);
+    QCOMPARE(rectPrivate->anchors()->topMargin(), 25.0);
+    QCOMPARE(rectPrivate->anchors()->rightMargin(), 25.0);
+    QCOMPARE(rectPrivate->anchors()->bottomMargin(), 25.0);
+    QCOMPARE(rect->x(), 0.0 + 25.0);
+    QCOMPARE(rect->y(), 0.0 + 25.0);
+    QCOMPARE(rect->width(), 200.0 - 25.0 - 25.0);
+    QCOMPARE(rect->height(), 200.0 - 25.0 - 25.0);
 
     delete view;
 }
 
 void tst_qquickanchors::marginsRTL()
 {
-    QQuickView *view = new QQuickView(testFileUrl("margins.qml"));
+    QFETCH(QUrl, source);
+    QQuickView *view = new QQuickView(source);
 
     QQuickRectangle* rect = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("filler"));
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
@@ -686,9 +767,9 @@ void tst_qquickanchors::marginsRTL()
     rectPrivate->anchors()->setMargins(20.0);
 
     QCOMPARE(rect->x(), 20.0);
-    QCOMPARE(rect->y(), 20.0);
+    QCOMPARE(rect->y(), 0.0);
     QCOMPARE(rect->width(), 200.0 - 5.0 - 20.0);
-    QCOMPARE(rect->height(), 200.0 - 20.0 - 20.0);
+    QCOMPARE(rect->height(), 200.0 - 0.0 - 20.0);
 
     delete view;
 }

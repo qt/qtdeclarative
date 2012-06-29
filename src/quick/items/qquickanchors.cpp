@@ -985,9 +985,24 @@ qreal QQuickAnchors::leftMargin() const
 void QQuickAnchors::setLeftMargin(qreal offset)
 {
     Q_D(QQuickAnchors);
+    d->leftMarginExplicit = true;
     if (d->leftMargin == offset)
         return;
     d->leftMargin = offset;
+    if (d->fill)
+        d->fillChanged();
+    else
+        d->updateHorizontalAnchors();
+    emit leftMarginChanged();
+}
+
+void QQuickAnchors::resetLeftMargin()
+{
+    Q_D(QQuickAnchors);
+    d->leftMarginExplicit = false;
+    if (d->leftMargin == d->margins)
+        return;
+    d->leftMargin = d->margins;
     if (d->fill)
         d->fillChanged();
     else
@@ -1004,9 +1019,24 @@ qreal QQuickAnchors::rightMargin() const
 void QQuickAnchors::setRightMargin(qreal offset)
 {
     Q_D(QQuickAnchors);
+    d->rightMarginExplicit = true;
     if (d->rightMargin == offset)
         return;
     d->rightMargin = offset;
+    if (d->fill)
+        d->fillChanged();
+    else
+        d->updateHorizontalAnchors();
+    emit rightMarginChanged();
+}
+
+void QQuickAnchors::resetRightMargin()
+{
+    Q_D(QQuickAnchors);
+    d->rightMarginExplicit = false;
+    if (d->rightMargin == d->margins)
+        return;
+    d->rightMargin = d->margins;
     if (d->fill)
         d->fillChanged();
     else
@@ -1025,18 +1055,43 @@ void QQuickAnchors::setMargins(qreal offset)
     Q_D(QQuickAnchors);
     if (d->margins == offset)
         return;
-    //###Is it significantly faster to set them directly so we can call fillChanged only once?
-    if (!d->rightMargin || d->rightMargin == d->margins)
-        setRightMargin(offset);
-    if (!d->leftMargin || d->leftMargin == d->margins)
-        setLeftMargin(offset);
-    if (!d->topMargin || d->topMargin == d->margins)
-        setTopMargin(offset);
-    if (!d->bottomMargin || d->bottomMargin == d->margins)
-        setBottomMargin(offset);
     d->margins = offset;
-    emit marginsChanged();
 
+    bool updateHorizontal = false;
+    bool updateVertical = false;
+
+    if (!d->rightMarginExplicit && d->rightMargin != offset) {
+        d->rightMargin = offset;
+        updateHorizontal = true;
+        emit rightMarginChanged();
+    }
+    if (!d->leftMarginExplicit && d->leftMargin != offset) {
+        d->leftMargin = offset;
+        updateHorizontal = true;
+        emit leftMarginChanged();
+    }
+    if (!d->topMarginExplicit && d->topMargin != offset) {
+        d->topMargin = offset;
+        updateVertical = true;
+        emit topMarginChanged();
+    }
+    if (!d->bottomMarginExplicit && d->bottomMargin != offset) {
+        d->bottomMargin = offset;
+        updateVertical = true;
+        emit bottomMarginChanged();
+    }
+
+    if (d->fill) {
+        if (updateHorizontal || updateVertical)
+            d->fillChanged();
+    } else {
+        if (updateHorizontal)
+            d->updateHorizontalAnchors();
+        if (updateVertical)
+            d->updateVerticalAnchors();
+    }
+
+    emit marginsChanged();
 }
 
 qreal QQuickAnchors::horizontalCenterOffset() const
@@ -1067,9 +1122,24 @@ qreal QQuickAnchors::topMargin() const
 void QQuickAnchors::setTopMargin(qreal offset)
 {
     Q_D(QQuickAnchors);
+    d->topMarginExplicit = true;
     if (d->topMargin == offset)
         return;
     d->topMargin = offset;
+    if (d->fill)
+        d->fillChanged();
+    else
+        d->updateVerticalAnchors();
+    emit topMarginChanged();
+}
+
+void QQuickAnchors::resetTopMargin()
+{
+    Q_D(QQuickAnchors);
+    d->topMarginExplicit = false;
+    if (d->topMargin == d->margins)
+        return;
+    d->topMargin = d->margins;
     if (d->fill)
         d->fillChanged();
     else
@@ -1086,9 +1156,24 @@ qreal QQuickAnchors::bottomMargin() const
 void QQuickAnchors::setBottomMargin(qreal offset)
 {
     Q_D(QQuickAnchors);
+    d->bottomMarginExplicit = true;
     if (d->bottomMargin == offset)
         return;
     d->bottomMargin = offset;
+    if (d->fill)
+        d->fillChanged();
+    else
+        d->updateVerticalAnchors();
+    emit bottomMarginChanged();
+}
+
+void QQuickAnchors::resetBottomMargin()
+{
+    Q_D(QQuickAnchors);
+    d->bottomMarginExplicit = false;
+    if (d->bottomMargin == d->margins)
+        return;
+    d->bottomMargin = d->margins;
     if (d->fill)
         d->fillChanged();
     else

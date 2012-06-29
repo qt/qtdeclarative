@@ -2872,6 +2872,8 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
 
   Margins apply to top, bottom, left, right, and fill anchors.
   The \c anchors.margins property can be used to set all of the various margins at once, to the same value.
+  It will not override a specific margin that has been previously set; to clear an explicit margin
+  set it's value to \c undefined.
   Note that margins are anchor-specific and are not applied if an item does not
   use anchors.
 

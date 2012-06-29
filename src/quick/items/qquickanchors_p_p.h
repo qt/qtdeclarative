@@ -92,10 +92,13 @@ class QQuickAnchorsPrivate : public QObjectPrivate, public QQuickItemChangeListe
     Q_DECLARE_PUBLIC(QQuickAnchors)
 public:
     QQuickAnchorsPrivate(QQuickItem *i)
-      : componentComplete(true), updatingMe(false), inDestructor(false), centerAligned(true), updatingHorizontalAnchor(0),
+      : componentComplete(true), updatingMe(false), inDestructor(false), centerAligned(true),
+        leftMarginExplicit(false), rightMarginExplicit(false), topMarginExplicit(false),
+        bottomMarginExplicit(false), updatingHorizontalAnchor(0),
         updatingVerticalAnchor(0), updatingFill(0), updatingCenterIn(0), item(i), usedAnchors(0), fill(0),
         centerIn(0), leftMargin(0), rightMargin(0), topMargin(0), bottomMargin(0),
         margins(0), vCenterOffset(0), hCenterOffset(0), baselineOffset(0)
+
     {
     }
 
@@ -110,6 +113,10 @@ public:
     bool updatingMe:1;
     bool inDestructor:1;
     bool centerAligned:1;
+    bool leftMarginExplicit : 1;
+    bool rightMarginExplicit : 1;
+    bool topMarginExplicit : 1;
+    bool bottomMarginExplicit : 1;
     uint updatingHorizontalAnchor:2;
     uint updatingVerticalAnchor:2;
     uint updatingFill:2;
@@ -164,6 +171,7 @@ public:
     qreal vCenterOffset;
     qreal hCenterOffset;
     qreal baselineOffset;
+
 
     static inline QQuickAnchorsPrivate *get(QQuickAnchors *o) {
         return static_cast<QQuickAnchorsPrivate *>(QObjectPrivate::get(o));
