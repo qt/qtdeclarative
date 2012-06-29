@@ -69,6 +69,7 @@ public:
     QQmlThread();
     virtual ~QQmlThread();
     void shutdown();
+    bool isShutdown() const;
 
     void lock();
     void unlock();

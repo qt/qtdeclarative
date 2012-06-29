@@ -993,11 +993,17 @@ bool QQmlMetaType::isAnyModule(const QString &uri)
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
+    // first, check Types
     for (QQmlMetaTypeData::TypeModules::ConstIterator iter = data->uriToModule.begin();
          iter != data->uriToModule.end(); ++iter) {
         if ((*iter)->module() == uri)
             return true;
     }
+
+    // then, check ModuleApis
+    QQmlMetaTypeData::ModuleApiList *apiList = data->moduleApis.value(uri);
+    if (apiList)
+        return true;
 
     return false;
 }

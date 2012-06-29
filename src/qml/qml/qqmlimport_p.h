@@ -74,6 +74,8 @@ class QQmlTypeLoader;
 class Q_QML_PRIVATE_EXPORT QQmlImports
 {
 public:
+    enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned };
+
     QQmlImports(QQmlTypeLoader *);
     QQmlImports(const QQmlImports &);
     ~QQmlImports();
@@ -92,15 +94,23 @@ public:
                      QQmlType** type_return, QString* url_return,
                      int *version_major, int *version_minor) const;
 
-    bool addImplicitImport(QQmlImportDatabase *importDb,
-                           const QQmlDirComponents &qmldircomponentsnetwork,
-                           QList<QQmlError> *errors);
+    bool addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlError> *errors);
 
-    bool addImport(QQmlImportDatabase *,
-                   const QString& uri, const QString& prefix, int vmaj, int vmin, 
-                   QQmlScript::Import::Type importType,
-                   const QQmlDirComponents &qmldircomponentsnetwork, 
-                   QString *url, QList<QQmlError> *errors);
+    bool addFileImport(QQmlImportDatabase *,
+                       const QString& uri, const QString& prefix, int vmaj, int vmin, bool incomplete,
+                       QList<QQmlError> *errors);
+
+    bool addLibraryImport(QQmlImportDatabase *importDb,
+                          const QString &uri, const QString &prefix, int vmaj, int vmin,
+                          const QString &qmldirIdentifier, const QString &qmldirUrl, bool incomplete, QList<QQmlError> *errors);
+
+    bool updateQmldirContent(QQmlImportDatabase *importDb,
+                             const QString &uri, const QString &prefix,
+                             const QString &qmldirIdentifier, const QString &qmldirUrl, QList<QQmlError> *errors);
+
+    bool locateQmldir(QQmlImportDatabase *,
+                      const QString &uri, int vmaj, int vmin,
+                      QString *qmldirFilePath, QString *url);
 
     void populateCache(QQmlTypeNameCache *cache, QQmlEngine *) const;
 
@@ -113,6 +123,12 @@ public:
 
     QList<ScriptReference> resolvedScripts() const;
 
+    static QString completeQmldirPath(const QString &uri, const QString &base, int vmaj, int vmin,
+                                      QQmlImports::ImportVersion version);
+
+    static bool isLocal(const QString &url);
+    static bool isLocal(const QUrl &url);
+
 private:
     friend class QQmlImportDatabase;
     QQmlImportsPrivate *d;
@@ -122,12 +138,14 @@ class QQmlImportDatabase
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlImportDatabase)
 public:
+    enum PathType { Local, Remote, LocalOrRemote };
+
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
     bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);
 
-    QStringList importPathList() const;
+    QStringList importPathList(PathType type = LocalOrRemote) const;
     void setImportPathList(const QStringList &paths);
     void addImportPath(const QString& dir);
 

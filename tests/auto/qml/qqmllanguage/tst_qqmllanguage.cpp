@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlincubator.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
@@ -146,6 +147,10 @@ private slots:
     void importsRemote();
     void importsInstalled_data();
     void importsInstalled();
+    void importsInstalledRemote_data();
+    void importsInstalledRemote();
+    void importsPath_data();
+    void importsPath();
     void importsOrder_data();
     void importsOrder();
     void importIncorrectCase();
@@ -176,6 +181,8 @@ private slots:
 
 private:
     QQmlEngine engine;
+    QStringList defaultImportPathList;
+
     void testType(const QString& qml, const QString& type, const QString& error, bool partialMatch = false);
 };
 
@@ -1837,6 +1844,9 @@ void tst_qqmllanguage::reservedWords()
 // Check that first child of qml is of given type. Empty type insists on error.
 void tst_qqmllanguage::testType(const QString& qml, const QString& type, const QString& expectederror, bool partialMatch)
 {
+    if (engine.importPathList() == defaultImportPathList)
+        engine.addImportPath(testFile("lib"));
+
     QQmlComponent component(&engine);
     component.setData(qml.toUtf8(), testFileUrl("empty.qml")); // just a file for relative local imports
 
@@ -1858,6 +1868,8 @@ void tst_qqmllanguage::testType(const QString& qml, const QString& type, const Q
         QCOMPARE(QString(object->metaObject()->className()), type);
         delete object;
     }
+
+    engine.setImportPathList(defaultImportPathList);
 }
 
 // QTBUG-17276
@@ -2200,6 +2212,102 @@ void tst_qqmllanguage::importsInstalled()
     testType(qml,type,error);
 }
 
+void tst_qqmllanguage::importsInstalledRemote_data()
+{
+    // Repeat the tests for local installed data
+    importsInstalled_data();
+}
+
+void tst_qqmllanguage::importsInstalledRemote()
+{
+    QFETCH(QString, qml);
+    QFETCH(QString, type);
+    QFETCH(QString, error);
+
+    TestHTTPServer server(14447);
+    server.serveDirectory(dataDirectory());
+
+    QString serverdir = "http://127.0.0.1:14447/lib/";
+    engine.setImportPathList(QStringList(defaultImportPathList) << serverdir);
+
+    testType(qml,type,error);
+
+    engine.setImportPathList(defaultImportPathList);
+}
+
+void tst_qqmllanguage::importsPath_data()
+{
+    QTest::addColumn<QStringList>("importPath");
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<QString>("value");
+
+    QTest::newRow("local takes priority normal")
+        << (QStringList() << testFile("lib") << "http://127.0.0.1:14447/lib2/")
+        << "import testModule 1.0\n"
+           "Test {}"
+        << "foo";
+
+    QTest::newRow("local takes priority reversed")
+        << (QStringList() << "http://127.0.0.1:14447/lib/" << testFile("lib2"))
+        << "import testModule 1.0\n"
+           "Test {}"
+        << "bar";
+
+    QTest::newRow("earlier takes priority 1")
+        << (QStringList() << "http://127.0.0.1:14447/lib/" << "http://127.0.0.1:14447/lib2/")
+        << "import testModule 1.0\n"
+           "Test {}"
+        << "foo";
+
+    QTest::newRow("earlier takes priority 2")
+        << (QStringList() << "http://127.0.0.1:14447/lib2/" << "http://127.0.0.1:14447/lib/")
+        << "import testModule 1.0\n"
+           "Test {}"
+        << "bar";
+
+    QTest::newRow("major version takes priority over unversioned")
+        << (QStringList() << "http://127.0.0.1:14447/lib/" << "http://127.0.0.1:14447/lib3/")
+        << "import testModule 1.0\n"
+           "Test {}"
+        << "baz";
+
+    QTest::newRow("major version takes priority over minor")
+        << (QStringList() << "http://127.0.0.1:14447/lib4/" << "http://127.0.0.1:14447/lib3/")
+        << "import testModule 1.0\n"
+           "Test {}"
+        << "baz";
+
+    QTest::newRow("minor version takes priority over unversioned")
+        << (QStringList() << "http://127.0.0.1:14447/lib/" << "http://127.0.0.1:14447/lib4/")
+        << "import testModule 1.0\n"
+           "Test {}"
+        << "qux";
+}
+
+void tst_qqmllanguage::importsPath()
+{
+    QFETCH(QStringList, importPath);
+    QFETCH(QString, qml);
+    QFETCH(QString, value);
+
+    TestHTTPServer server(14447);
+    server.serveDirectory(dataDirectory());
+
+    engine.setImportPathList(QStringList(defaultImportPathList) << importPath);
+
+    QQmlComponent component(&engine);
+    component.setData(qml.toUtf8(), testFileUrl("empty.qml"));
+
+    QTRY_VERIFY(component.isReady());
+    VERIFY_ERRORS(0);
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("test").toString(), value);
+    delete object;
+
+    engine.setImportPathList(defaultImportPathList);
+}
 
 void tst_qqmllanguage::importsOrder_data()
 {
@@ -2298,6 +2406,9 @@ void tst_qqmllanguage::importsOrder()
 
 void tst_qqmllanguage::importIncorrectCase()
 {
+    if (engine.importPathList() == defaultImportPathList)
+        engine.addImportPath(testFile("lib"));
+
     QQmlComponent component(&engine, testFileUrl("importIncorrectCase.qml"));
 
     QList<QQmlError> errors = component.errors();
@@ -2310,6 +2421,8 @@ void tst_qqmllanguage::importIncorrectCase()
 #endif
 
     QCOMPARE(errors.at(0).description(), expectedError);
+
+    engine.setImportPathList(defaultImportPathList);
 }
 
 void tst_qqmllanguage::importJs_data()
@@ -2375,6 +2488,7 @@ void tst_qqmllanguage::importJs()
     QFETCH(QString, errorFile);
     QFETCH(bool, performTest);
 
+    engine.setImportPathList(QStringList(defaultImportPathList) << testFile("lib"));
 
     QQmlComponent component(&engine, testFileUrl(file));
 
@@ -2394,6 +2508,8 @@ void tst_qqmllanguage::importJs()
         QCOMPARE(object->property("test").toBool(),true);
         delete object;
     }
+
+    engine.setImportPathList(defaultImportPathList);
 }
 
 void tst_qqmllanguage::qmlAttachedPropertiesObjectMethod()
@@ -2576,8 +2692,9 @@ void tst_qqmllanguage::initTestCase()
     QQmlDataTest::initTestCase();
     QVERIFY2(QDir::setCurrent(dataDirectory()), qPrintable("Could not chdir to " + dataDirectory()));
 
+    defaultImportPathList = engine.importPathList();
+
     QQmlMetaType::registerCustomStringConverter(qMetaTypeId<MyCustomVariantType>(), myCustomVariantTypeConverter);
-    engine.addImportPath(testFile("lib"));
 
     registerTypes();
 

@@ -223,6 +223,9 @@ public:
     QQmlEngine *engine() const;
     void initializeEngine(QQmlExtensionInterface *, const char *);
 
+protected:
+    void shutdownThread();
+
 private:
     friend class QQmlDataBlob;
     friend class QQmlDataLoaderThread;
@@ -256,6 +259,60 @@ class QQmlTypeLoader : public QQmlDataLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:
+    class Q_QML_PRIVATE_EXPORT Blob : public QQmlDataBlob
+    {
+    public:
+        Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader);
+        ~Blob();
+
+        QQmlTypeLoader *typeLoader() const { return m_typeLoader; }
+        const QQmlImports &imports() const { return m_imports; }
+
+    protected:
+        bool addImport(const QQmlScript::Import &import, QList<QQmlError> *errors);
+
+        bool fetchQmldir(const QUrl &url, const QQmlScript::Import *import, int priority, QList<QQmlError> *errors);
+        bool updateQmldir(QQmlQmldirData *data, const QQmlScript::Import *import, QList<QQmlError> *errors);
+
+    private:
+        virtual bool qmldirDataAvailable(QQmlQmldirData *, QList<QQmlError> *);
+
+        virtual void scriptImported(QQmlScriptBlob *, const QQmlScript::Location &, const QString &, const QString &) {}
+
+        virtual void dependencyError(QQmlDataBlob *);
+        virtual void dependencyComplete(QQmlDataBlob *);
+
+    protected:
+        QQmlTypeLoader *m_typeLoader;
+        QQmlImports m_imports;
+        QHash<const QQmlScript::Import *, int> m_unresolvedImports;
+        QList<QQmlQmldirData *> m_qmldirs;
+    };
+
+    class QmldirContent
+    {
+    private:
+        friend class QQmlTypeLoader;
+        QmldirContent();
+
+        void setContent(const QString &location, const QString &content);
+        void setError(const QQmlError &);
+
+    public:
+        bool hasError() const;
+        QList<QQmlError> errors(const QString &uri) const;
+
+        QQmlDirComponents components() const;
+        QQmlDirScripts scripts() const;
+        QQmlDirPlugins plugins() const;
+
+        QString pluginLocation() const;
+
+    private:
+        QQmlDirParser m_parser;
+        QString m_location;
+    };
+
     QQmlTypeLoader(QQmlEngine *);
     ~QQmlTypeLoader();
 
@@ -264,6 +321,8 @@ public:
         PreserveParser
     };
     Q_DECLARE_FLAGS(Options, Option)
+
+    QQmlImportDatabase *importDatabase();
 
     QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
     QQmlTypeData *getType(const QByteArray &, const QUrl &url, Options = None);
@@ -277,7 +336,9 @@ public:
 
     QString absoluteFilePath(const QString &path);
     bool directoryExists(const QString &path);
-    const QQmlDirParser *qmlDirParser(const QString &filePath, const QString &uriHint, QString *outUrl);
+
+    const QmldirContent *qmldirContent(const QString &filePath, const QString &uriHint);
+    void setQmldirContent(const QString &filePath, const QString &content);
 
     void clearCache();
     void trimCache();
@@ -305,14 +366,12 @@ private:
         void (T::*mf)(QQmlTypeData *);
     };
 
-    struct DirParser : public QQmlDirParser { QString adjustedUrl; };
-
     typedef QHash<QUrl, QQmlTypeData *> TypeCache;
     typedef QHash<QUrl, QQmlScriptBlob *> ScriptCache;
     typedef QHash<QUrl, QQmlQmldirData *> QmldirCache;
     typedef QStringHash<bool> StringSet;
     typedef QStringHash<StringSet*> ImportDirCache;
-    typedef QStringHash<DirParser*> ImportQmlDirCache;
+    typedef QStringHash<QmldirContent *> ImportQmlDirCache;
     typedef QStringHash<QQmlBundleData *> BundleCache;
     typedef QStringHash<QString> QmldirBundleIdCache;
 
@@ -327,7 +386,7 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlTypeLoader::Options)
 
-class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlDataBlob
+class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 {
 public:
     struct TypeReference
@@ -358,9 +417,6 @@ private:
 public:
     ~QQmlTypeData();
 
-    QQmlTypeLoader *typeLoader() const;
-
-    const QQmlImports &imports() const;
     const QQmlScript::Parser &parser() const;
 
     const QList<TypeReference> &resolvedTypes() const;
@@ -389,15 +445,13 @@ private:
     void resolveTypes();
     void compile();
 
+    virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
+
     QQmlTypeLoader::Options m_options;
 
-    QQmlQmldirData *qmldirForUrl(const QUrl &);
-
     QQmlScript::Parser scriptParser;
-    QQmlImports m_imports;
 
     QList<ScriptReference> m_scripts;
-    QList<QQmlQmldirData *> m_qmldirs;
 
     QSet<QString> m_namespaces;
 
@@ -407,8 +461,8 @@ private:
     QQmlCompiledData *m_compiledData;
 
     QList<TypeDataCallback *> m_callbacks;
-   
-    QQmlTypeLoader *m_typeLoader;
+
+    QQmlScript::Import *m_implicitImport;
 };
 
 // QQmlScriptData instances are created, uninitialized, by the loader in the 
@@ -455,7 +509,7 @@ private:
     QQmlError m_error;
 };
 
-class Q_AUTOTEST_EXPORT QQmlScriptBlob : public QQmlDataBlob
+class Q_AUTOTEST_EXPORT QQmlScriptBlob : public QQmlTypeLoader::Blob
 {
 private:
     friend class QQmlTypeLoader;
@@ -477,9 +531,6 @@ public:
 
     QQmlScript::Object::ScriptBlock::Pragmas pragmas() const;
 
-    QQmlTypeLoader *typeLoader() const;
-    const QQmlImports &imports() const;
-
     QQmlScriptData *scriptData() const;
 
 protected:
@@ -487,31 +538,38 @@ protected:
     virtual void done();
 
 private:
-    QQmlScript::Object::ScriptBlock::Pragmas m_pragmas;
-    QString m_source;
+    virtual void scriptImported(QQmlScriptBlob *blob, const QQmlScript::Location &location, const QString &qualifier, const QString &nameSpace);
 
-    QQmlImports m_imports;
+    QString m_source;
+    QQmlScript::Parser::JavaScriptMetaData m_metadata;
+
     QList<ScriptReference> m_scripts;
     QQmlScriptData *m_scriptData;
-
-    QQmlTypeLoader *m_typeLoader;
 };
 
-class Q_AUTOTEST_EXPORT QQmlQmldirData : public QQmlDataBlob
+class Q_AUTOTEST_EXPORT QQmlQmldirData : public QQmlTypeLoader::Blob
 {
 private:
     friend class QQmlTypeLoader;
 
-    QQmlQmldirData(const QUrl &);
+    QQmlQmldirData(const QUrl &, QQmlTypeLoader *);
 
 public:
-    const QQmlDirComponents &dirComponents() const;
+    const QString &content() const;
+
+    const QQmlScript::Import *import() const;
+    void setImport(const QQmlScript::Import *);
+
+    int priority() const;
+    void setPriority(int);
 
 protected:
     virtual void dataReceived(const Data &);
 
 private:
-    QQmlDirComponents m_components;
+    QString m_content;
+    const QQmlScript::Import *m_import;
+    int m_priority;
 };
 
 QQmlDataBlob::Data::Data()

@@ -149,6 +149,7 @@ private:
 
 typedef QHash<QHashedStringRef,QQmlDirParser::Component> QQmlDirComponents;
 typedef QList<QQmlDirParser::Script> QQmlDirScripts;
+typedef QList<QQmlDirParser::Plugin> QQmlDirPlugins;
 
 QDebug &operator<< (QDebug &, const QQmlDirParser::Component &);
 QDebug &operator<< (QDebug &, const QQmlDirParser::Script &);

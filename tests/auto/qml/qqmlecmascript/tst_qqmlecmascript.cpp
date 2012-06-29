@@ -3784,6 +3784,17 @@ void tst_qqmlecmascript::importScripts_data()
                                << QVariant(QString("Hello"))
                                << QVariant(QString("Hello")));
 
+    QTest::newRow("import module which exports a script which imports a remote module")
+            << testFileUrl("jsimport/testJsRemoteImport.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("importedScriptStringValue")
+                              << QLatin1String("renamedScriptStringValue")
+                              << QLatin1String("reimportedScriptStringValue"))
+            << (QVariantList() << QVariant(QString("Hello"))
+                               << QVariant(QString("Hello"))
+                               << QVariant(QString("Hello")));
+
     QTest::newRow("malformed import statement")
             << testFileUrl("jsimportfail/malformedImport.qml")
             << QString()
@@ -3870,6 +3881,15 @@ void tst_qqmlecmascript::importScripts()
     QFETCH(QStringList, propertyNames);
     QFETCH(QVariantList, propertyValues);
 
+    TestHTTPServer server(8111);
+    QVERIFY(server.isValid());
+    server.serveDirectory(dataDirectory() + "/remote");
+
+    QStringList importPathList = engine.importPathList();
+
+    QString remotePath(QLatin1String("http://127.0.0.1:8111/"));
+    engine.addImportPath(remotePath);
+
     QQmlComponent component(&engine, testfile);
 
     if (!errorMessage.isEmpty())
@@ -3878,6 +3898,8 @@ void tst_qqmlecmascript::importScripts()
     if (warningMessages.size())
         foreach (const QString &warning, warningMessages)
             QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+
+    QTRY_VERIFY(component.isReady());
 
     QObject *object = component.create();
     if (!errorMessage.isEmpty()) {
@@ -3888,6 +3910,8 @@ void tst_qqmlecmascript::importScripts()
             QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
         delete object;
     }
+
+    engine.setImportPathList(importPathList);
 }
 
 void tst_qqmlecmascript::scarceResources_other()

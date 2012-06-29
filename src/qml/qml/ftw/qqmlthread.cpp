@@ -235,6 +235,11 @@ void QQmlThread::shutdown()
     d->QThread::wait();
 }
 
+bool QQmlThread::isShutdown() const
+{
+    return d->m_shutdown;
+}
+
 void QQmlThread::lock()
 {
     d->lock();
