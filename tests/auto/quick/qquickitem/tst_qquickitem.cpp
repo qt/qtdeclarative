@@ -1355,10 +1355,6 @@ void tst_qquickitem::polishOnCompleted()
     TestPolishItem *item = qobject_cast<TestPolishItem*>(view->rootObject());
     QVERIFY(item);
 
-#ifdef Q_OS_MAC
-    QSKIP("QTBUG-21590 view does not reliably receive polish without a running animation");
-#endif
-
     QTRY_VERIFY(item->wasPolished);
 
     delete view;
