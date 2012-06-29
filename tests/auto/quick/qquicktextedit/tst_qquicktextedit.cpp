@@ -1365,7 +1365,7 @@ void tst_qquicktextedit::keySelection()
     QVERIFY(input != 0);
     QTRY_VERIFY(input->hasActiveFocus() == true);
 
-    QSignalSpy spy(input, SIGNAL(selectionChanged()));
+    QSignalSpy spy(input, SIGNAL(selectedTextChanged()));
 
     simulateKey(&canvas, Qt::Key_Right, Qt::ShiftModifier);
     QVERIFY(input->hasActiveFocus() == true);
@@ -3511,7 +3511,7 @@ void tst_qquicktextedit::insert()
     textEdit->setTextFormat(textFormat);
     textEdit->select(selectionStart, selectionEnd);
 
-    QSignalSpy selectionSpy(textEdit, SIGNAL(selectionChanged()));
+    QSignalSpy selectionSpy(textEdit, SIGNAL(selectedTextChanged()));
     QSignalSpy selectionStartSpy(textEdit, SIGNAL(selectionStartChanged()));
     QSignalSpy selectionEndSpy(textEdit, SIGNAL(selectionEndChanged()));
     QSignalSpy textSpy(textEdit, SIGNAL(textChanged()));
@@ -3535,8 +3535,8 @@ void tst_qquicktextedit::insert()
     if (selectionStart > selectionEnd)
         qSwap(selectionStart, selectionEnd);
 
-    QEXPECT_FAIL("into selection", "selectionChanged signal isn't emitted on edits within selection", Continue);
-    QEXPECT_FAIL("into reversed selection", "selectionChanged signal isn't emitted on edits within selection", Continue);
+    QEXPECT_FAIL("into selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
+    QEXPECT_FAIL("into reversed selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
     QCOMPARE(selectionSpy.count() > 0, selectionChanged);
     QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
     QEXPECT_FAIL("into reversed selection", "selectionEndChanged signal not emitted", Continue);
@@ -3756,7 +3756,7 @@ void tst_qquicktextedit::remove()
     textEdit->setTextFormat(textFormat);
     textEdit->select(selectionStart, selectionEnd);
 
-    QSignalSpy selectionSpy(textEdit, SIGNAL(selectionChanged()));
+    QSignalSpy selectionSpy(textEdit, SIGNAL(seletedTextChanged()));
     QSignalSpy selectionStartSpy(textEdit, SIGNAL(selectionStartChanged()));
     QSignalSpy selectionEndSpy(textEdit, SIGNAL(selectionEndChanged()));
     QSignalSpy textSpy(textEdit, SIGNAL(textChanged()));
@@ -3779,8 +3779,8 @@ void tst_qquicktextedit::remove()
     QCOMPARE(textEdit->selectionEnd(), expectedSelectionEnd);
     QCOMPARE(textEdit->cursorPosition(), expectedCursorPosition);
 
-    QEXPECT_FAIL("from selection", "selectionChanged signal isn't emitted on edits within selection", Continue);
-    QEXPECT_FAIL("from reversed selection", "selectionChanged signal isn't emitted on edits within selection", Continue);
+    QEXPECT_FAIL("from selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
+    QEXPECT_FAIL("from reversed selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
     QCOMPARE(selectionSpy.count() > 0, selectionChanged);
     QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
     QEXPECT_FAIL("from reversed selection", "selectionEndChanged signal not emitted", Continue);
