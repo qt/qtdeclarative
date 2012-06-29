@@ -1,13 +1,13 @@
 contains(QT_CONFIG, accessibility) {
 
 TARGET  = qtaccessiblequick
+DESTDIR = $$QT.gui.plugins/accessible
+
 load(qt_plugin)
 include ($$PWD/../shared/qaccessiblebase.pri)
 
 QT += core-private gui-private v8-private qml-private quick-private
-QTDIR_build:DESTDIR = $$QT.gui.plugins/accessible
-
-QTDIR_build:REQUIRES += "contains(QT_CONFIG, accessibility)"
+REQUIRES += "contains(QT_CONFIG, accessibility)"
 
 #DEFINES+=Q_ACCESSIBLE_QUICK_ITEM_ENABLE_DEBUG_DESCRIPTION
 

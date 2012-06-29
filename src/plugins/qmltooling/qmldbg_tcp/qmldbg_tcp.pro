@@ -6,7 +6,6 @@ QT       += qml-private network v8-private core-private
 load(qt_plugin)
 
 DESTDIR = $$QT.qml.plugins/qmltooling
-QTDIR_build:REQUIRES += "contains(QT_CONFIG, qml)"
 
 SOURCES += \
     qtcpserverconnection.cpp \

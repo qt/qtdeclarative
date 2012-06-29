@@ -3,8 +3,7 @@ QT       += qml network
 
 load(qt_plugin)
 
-QTDIR_build:DESTDIR  = $$QT.qml.plugins/qmltooling
-QTDIR_build:REQUIRES += "contains(QT_CONFIG, qml)"
+DESTDIR  = $$QT.qml.plugins/qmltooling
 
 SOURCES += \
     qmlostplugin.cpp \
