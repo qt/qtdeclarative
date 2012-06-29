@@ -54,43 +54,193 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace
+{
+    struct Color4ub
+    {
+        unsigned char r, g, b, a;
+    };
+
+    Color4ub operator *(Color4ub c, float t) { c.a *= t; c.r *= t; c.g *= t; c.b *= t; return c; }
+    Color4ub operator +(Color4ub a, Color4ub b) {  a.a += b.a; a.r += b.r; a.g += b.g; a.b += b.b; return a; }
+
+    inline Color4ub colorToColor4ub(const QColor &c)
+    {
+        Color4ub color = { uchar(c.redF() * c.alphaF() * 255),
+                           uchar(c.greenF() * c.alphaF() * 255),
+                           uchar(c.blueF() * c.alphaF() * 255),
+                           uchar(c.alphaF() * 255)
+                         };
+        return color;
+    }
+
+    // Same layout as QSGGeometry::ColoredPoint2D, but uses Color4ub for convenience.
+    struct Vertex
+    {
+        float x, y;
+        Color4ub color;
+        void set(float nx, float ny, Color4ub ncolor)
+        {
+            x = nx; y = ny; color = ncolor;
+        }
+    };
+
+    struct SmoothVertex : public Vertex
+    {
+        float dx, dy;
+        void set(float nx, float ny, Color4ub ncolor, float ndx, float ndy)
+        {
+            Vertex::set(nx, ny, ncolor);
+            dx = ndx; dy = ndy;
+        }
+    };
+
+    const QSGGeometry::AttributeSet &smoothAttributeSet()
+    {
+        static QSGGeometry::Attribute data[] = {
+            QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
+            QSGGeometry::Attribute::create(1, 4, GL_UNSIGNED_BYTE, false),
+            QSGGeometry::Attribute::create(2, 2, GL_FLOAT, false)
+        };
+        static QSGGeometry::AttributeSet attrs = { 3, sizeof(SmoothVertex), data };
+        return attrs;
+    }
+}
+
+class SmoothColorMaterialShader : public QSGMaterialShader
+{
+public:
+    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
+    virtual char const *const *attributeNames() const;
+
+private:
+    virtual void initialize();
+    virtual const char *vertexShader() const;
+    virtual const char *fragmentShader() const;
+
+    int m_matrixLoc;
+    int m_opacityLoc;
+    int m_pixelSizeLoc;
+};
+
+void SmoothColorMaterialShader::updateState(const RenderState &state, QSGMaterial *, QSGMaterial *oldEffect)
+{
+    if (state.isOpacityDirty())
+        program()->setUniformValue(m_opacityLoc, state.opacity());
+
+    if (state.isMatrixDirty())
+        program()->setUniformValue(m_matrixLoc, state.combinedMatrix());
+
+    if (oldEffect == 0) {
+        // The viewport is constant, so set the pixel size uniform only once.
+        QRect r = state.viewportRect();
+        program()->setUniformValue(m_pixelSizeLoc, 2.0f / r.width(), 2.0f / r.height());
+    }
+}
+
+char const *const *SmoothColorMaterialShader::attributeNames() const
+{
+    static char const *const attributes[] = {
+        "vertex",
+        "vertexColor",
+        "vertexOffset",
+        0
+    };
+    return attributes;
+}
+
+void SmoothColorMaterialShader::initialize()
+{
+    m_matrixLoc = program()->uniformLocation("matrix");
+    m_opacityLoc = program()->uniformLocation("opacity");
+    m_pixelSizeLoc = program()->uniformLocation("pixelSize");
+}
+
+const char *SmoothColorMaterialShader::vertexShader() const
+{
+    return
+            "uniform highp vec2 pixelSize; \n"
+            "uniform highp mat4 matrix; \n"
+            "uniform lowp float opacity; \n"
+            "attribute highp vec4 vertex; \n"
+            "attribute lowp vec4 vertexColor; \n"
+            "attribute highp vec2 vertexOffset; \n"
+            "varying lowp vec4 color; \n"
+            "void main() { \n"
+            "    highp vec4 pos = matrix * vertex; \n"
+            "    gl_Position = pos; \n"
+
+            "    if (vertexOffset.x != 0.) { \n"
+            "        highp vec4 delta = matrix[0] * vertexOffset.x; \n"
+            "        highp vec2 dir = delta.xy * pos.w - pos.xy * delta.w; \n"
+            "        highp vec2 ndir = .5 * pixelSize * normalize(dir / pixelSize);  \n"
+            "        dir -= ndir * delta.w * pos.w; \n"
+            "        highp float scale = min(1., dot(dir, ndir * pos.w * pos.w) / dot(dir, dir)); \n"
+            "        if (scale < 0.) scale = 1.; \n"
+            "        gl_Position += scale * delta; \n"
+            "    } \n"
+
+            "    if (vertexOffset.y != 0.) { \n"
+            "        highp vec4 delta = matrix[1] * vertexOffset.y; \n"
+            "        highp vec2 dir = delta.xy * pos.w - pos.xy * delta.w; \n"
+            "        highp vec2 ndir = .5 * pixelSize * normalize(dir / pixelSize);  \n"
+            "        dir -= ndir * delta.w * pos.w; \n"
+            "        highp float scale = min(1., dot(dir, ndir * pos.w * pos.w) / dot(dir, dir)); \n"
+            "        if (scale < 0.) scale = 1.; \n"
+            "        gl_Position += scale * delta; \n"
+            "    } \n"
+
+            "    color = vertexColor * opacity; \n"
+            "}";
+}
+
+const char *SmoothColorMaterialShader::fragmentShader() const
+{
+    return
+            "varying lowp vec4 color; \n"
+            "void main() { \n"
+            "    gl_FragColor = color; \n"
+            "}";
+}
+
+SmoothColorMaterial::SmoothColorMaterial()
+{
+    setFlag(RequiresFullMatrixExceptTranslate, true);
+    setFlag(Blending, true);
+}
+
+int SmoothColorMaterial::compare(const QSGMaterial *) const
+{
+    return 0;
+}
+
+QSGMaterialType *SmoothColorMaterial::type() const
+{
+    static QSGMaterialType type;
+    return &type;
+}
+
+QSGMaterialShader *SmoothColorMaterial::createShader() const
+{
+    return new SmoothColorMaterialShader;
+}
+
+
 QSGDefaultRectangleNode::QSGDefaultRectangleNode()
-    : m_border(0)
-    , m_radius(0)
+    : m_radius(0)
     , m_pen_width(0)
     , m_aligned(true)
+    , m_antialiasing(false)
     , m_gradient_is_opaque(true)
     , m_dirty_geometry(false)
-    , m_default_geometry(QSGGeometry::defaultAttributes_Point2D(), 4)
+    , m_geometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0)
 {
-    setGeometry(&m_default_geometry);
-    setMaterial(&m_fill_material);
-    m_border_material.setColor(QColor(0, 0, 0));
-
-    m_material_type = TypeFlat;
+    setGeometry(&m_geometry);
+    setMaterial(&m_material);
 
 #ifdef QML_RUNTIME_TESTING
     description = QLatin1String("rectangle");
 #endif
-}
-
-QSGDefaultRectangleNode::~QSGDefaultRectangleNode()
-{
-    if (m_material_type == TypeVertexGradient)
-        delete material();
-    delete m_border;
-}
-
-QSGGeometryNode *QSGDefaultRectangleNode::border()
-{
-    if (!m_border) {
-        m_border = new QSGGeometryNode;
-        m_border->setMaterial(&m_border_material);
-        QSGGeometry *geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 0);
-        m_border->setGeometry(geometry);
-        m_border->setFlag(QSGNode::OwnsGeometry);
-    }
-    return m_border;
 }
 
 void QSGDefaultRectangleNode::setRect(const QRectF &rect)
@@ -103,22 +253,20 @@ void QSGDefaultRectangleNode::setRect(const QRectF &rect)
 
 void QSGDefaultRectangleNode::setColor(const QColor &color)
 {
-    if (color == m_fill_material.color())
+    if (color == m_color)
         return;
-    m_fill_material.setColor(color);
-    if (m_gradient_stops.isEmpty()) {
-        Q_ASSERT(m_material_type == TypeFlat);
-        markDirty(DirtyMaterial);
-    }
+    m_color = color;
+    if (m_gradient_stops.isEmpty())
+        m_dirty_geometry = true;
 }
 
 void QSGDefaultRectangleNode::setPenColor(const QColor &color)
 {
-    if (color == m_border_material.color())
+    if (color == m_border_color)
         return;
-    m_border_material.setColor(color);
-    if (m_border)
-        m_border->markDirty(DirtyMaterial);
+    m_border_color = color;
+    if (m_pen_width > 0)
+        m_dirty_geometry = true;
 }
 
 void QSGDefaultRectangleNode::setPenWidth(qreal width)
@@ -126,10 +274,6 @@ void QSGDefaultRectangleNode::setPenWidth(qreal width)
     if (width == m_pen_width)
         return;
     m_pen_width = width;
-    if (m_pen_width <= 0 && m_border && m_border->parent())
-        removeChildNode(m_border);
-    else if (m_pen_width > 0 && !border()->parent())
-        appendChildNode(m_border);
     m_dirty_geometry = true;
 }
 
@@ -144,30 +288,6 @@ void QSGDefaultRectangleNode::setGradientStops(const QGradientStops &stops)
     m_gradient_is_opaque = true;
     for (int i = 0; i < stops.size(); ++i)
         m_gradient_is_opaque &= stops.at(i).second.alpha() == 0xff;
-
-    if (stops.isEmpty()) {
-        // No gradient specified, use flat color.
-        if (m_material_type != TypeFlat) {
-            delete material();
-
-            setMaterial(&m_fill_material);
-            m_material_type = TypeFlat;
-
-            setGeometry(&m_default_geometry);
-            setFlag(OwnsGeometry, false);
-        }
-    } else {
-        if (m_material_type == TypeFlat) {
-            QSGVertexColorMaterial *material = new QSGVertexColorMaterial;
-            setMaterial(material);
-            m_material_type = TypeVertexGradient;
-            QSGGeometry *g = new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0);
-            setGeometry(g);
-            setFlag(OwnsGeometry);
-        }
-        static_cast<QSGVertexColorMaterial *>(material())->setFlag(QSGMaterial::Blending, !m_gradient_is_opaque);
-    }
-
     m_dirty_geometry = true;
 }
 
@@ -176,6 +296,23 @@ void QSGDefaultRectangleNode::setRadius(qreal radius)
     if (radius == m_radius)
         return;
     m_radius = radius;
+    m_dirty_geometry = true;
+}
+
+void QSGDefaultRectangleNode::setAntialiasing(bool antialiasing)
+{
+    if (antialiasing == m_antialiasing)
+        return;
+    m_antialiasing = antialiasing;
+    if (m_antialiasing) {
+        setMaterial(&m_smoothMaterial);
+        setGeometry(new QSGGeometry(smoothAttributeSet(), 0));
+        setFlag(OwnsGeometry, true);
+    } else {
+        setMaterial(&m_material);
+        setGeometry(&m_geometry);
+        setFlag(OwnsGeometry, false);
+    }
     m_dirty_geometry = true;
 }
 
@@ -195,73 +332,41 @@ void QSGDefaultRectangleNode::update()
     }
 }
 
-struct Color4ub
-{
-    unsigned char r, g, b, a;
-};
-
-Color4ub operator *(Color4ub c, float t) { c.a *= t; c.r *= t; c.g *= t; c.b *= t; return c; }
-Color4ub operator +(Color4ub a, Color4ub b) {  a.a += b.a; a.r += b.r; a.g += b.g; a.b += b.b; return a; }
-
-static inline Color4ub colorToColor4ub(const QColor &c)
-{
-    Color4ub color = { uchar(c.redF() * c.alphaF() * 255),
-                       uchar(c.greenF() * c.alphaF() * 255),
-                       uchar(c.blueF() * c.alphaF() * 255),
-                       uchar(c.alphaF() * 255)
-                     };
-    return color;
-}
-
-struct Vertex
-{
-    QVector2D position;
-};
-
-struct ColorVertex
-{
-    QVector2D position;
-    Color4ub color;
-};
-
 void QSGDefaultRectangleNode::updateGeometry()
 {
-    qreal penWidth = m_aligned ? qreal(qRound(m_pen_width)) : m_pen_width;
+    float penWidth = m_aligned ? float(qRound(m_pen_width)) : float(m_pen_width);
+    float width = float(m_rect.width());
+    float height = float(m_rect.height());
 
-    // fast path for the simple case...
-    if ((penWidth == 0 || m_border_material.color().alpha() == 0)
-            && m_radius == 0
-            && m_material_type == TypeFlat) {
-        QSGGeometry::updateRectGeometry(&m_default_geometry, m_rect);
-        return;
-    }
+    QSGGeometry *g = geometry();
+    g->setDrawingMode(GL_TRIANGLE_STRIP);
+    int vertexStride = g->sizeOfVertex();
 
-    QSGGeometry *fill = geometry();
+    union {
+        Vertex *vertices;
+        SmoothVertex *smoothVertices;
+    };
 
-    // Check that the vertex type matches the material.
-    Q_ASSERT(m_material_type != TypeFlat || fill->sizeOfVertex() == sizeof(Vertex));
-    Q_ASSERT(m_material_type != TypeVertexGradient || fill->sizeOfVertex() == sizeof(ColorVertex));
-
-    QSGGeometry *borderGeometry = 0;
-    if (m_border) {
-        borderGeometry = m_border->geometry();
-        Q_ASSERT(borderGeometry->sizeOfVertex() == sizeof(Vertex));
-    }
-
-    int fillVertexCount = 0;
-
-    // Preallocate arrays for a rectangle with 18 segments per corner and 3 gradient stops.
-    uchar *fillVertices = 0;
-    Vertex *borderVertices = 0;
-
-    Color4ub fillColor = colorToColor4ub(m_fill_material.color());
+    Color4ub fillColor = colorToColor4ub(m_color);
+    Color4ub borderColor = colorToColor4ub(m_border_color);
+    Color4ub transparent = { 0, 0, 0, 0 };
     const QGradientStops &stops = m_gradient_stops;
+
+    int nextGradientStop = 0;
+    float gradientPos = 0.5f * penWidth / height;
+    while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos)
+        ++nextGradientStop;
+    int lastGradientStop = stops.size() - 1;
+    float lastGradientPos = 1.0f - 0.5f * penWidth / height;
+    while (lastGradientStop >= nextGradientStop && stops.at(lastGradientStop).first >= lastGradientPos)
+        --lastGradientStop;
+    int gradientIntersections = (lastGradientStop - nextGradientStop + 1);
 
     if (m_radius > 0) {
         // Rounded corners.
 
         // Radius should never exceeds half of the width or half of the height
-        qreal radius = qMin(qMin(m_rect.width() * qreal(0.5), m_rect.height() * qreal(0.5)), m_radius);
+        float radius = qMin(qMin(width, height) * 0.5f, float(m_radius));
         QRectF innerRect = m_rect;
         innerRect.adjust(radius, radius, -radius, -radius);
         if (m_aligned && (int(penWidth) & 1)) {
@@ -270,120 +375,158 @@ void QSGDefaultRectangleNode::updateGeometry()
             innerRect.moveTop(innerRect.top() + qreal(0.5));
         }
 
-        qreal innerRadius = radius - penWidth * qreal(0.5);
-        qreal outerRadius = radius + penWidth * qreal(0.5);
+        float innerRadius = radius - penWidth * 0.5f;
+        float outerRadius = radius + penWidth * 0.5f;
+        float delta = qMin(width, height) * 0.5f;
 
         // Number of segments per corner, approximately one per 3 pixels.
         int segments = qBound(3, qCeil(outerRadius * (M_PI / 6)), 18);
 
         /*
 
-        --+-__
-          | segment
-          |       _+
-        --+-__  _-   \
-              -+  segment
-        --------+      \        <- gradient line
-                 +-----+
-                 |     |
+        --+--__
+        --+--__--__
+          |    --__--__
+          |  seg   --__--+
+        --+-__  ment  _+  \
+        --+-__--__   -  \  \
+              --__--+ se \  \
+                  +  \  g \  \
+                   \  \  m \  \
+         -----------+--+  e \  \     <- gradient line
+                     \  \  nt\  \
+           fill       +--+----+--+
+                      |  |    |  |
+                         border
+                  inner AA    outer AA (AA = antialiasing)
 
         */
 
-        int nextGradientStop = 0;
-        qreal gradientPos = (radius - innerRadius) / (innerRect.height() + 2 * radius);
-        while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos)
-            ++nextGradientStop;
-        int lastGradientStop = stops.size() - 1;
-        qreal lastGradientPos = (innerRect.height() + radius + innerRadius) / (innerRect.height() + 2 * radius);
-        while (lastGradientStop >= nextGradientStop && stops.at(lastGradientStop).first >= lastGradientPos)
-            --lastGradientStop;
+        int innerVertexCount = (segments + 1) * 4 + gradientIntersections * 2;
+        int outerVertexCount = (segments + 1) * 4;
+        int vertexCount = innerVertexCount;
+        if (m_antialiasing || penWidth)
+            vertexCount += innerVertexCount;
+        if (penWidth)
+            vertexCount += outerVertexCount;
+        if (m_antialiasing && penWidth)
+            vertexCount += outerVertexCount;
 
-        int borderVertexHead = 0;
-        int borderVertexTail = 0;
+        int fillIndexCount = innerVertexCount;
+        int innerAAIndexCount = innerVertexCount * 2 + 2;
+        int borderIndexCount = innerVertexCount * 2 + 2;
+        int outerAAIndexCount = outerVertexCount * 2 + 2;
+        int indexCount = 0;
+        int fillHead = 0;
+        int innerAAHead = 0;
+        int innerAATail = 0;
+        int borderHead = 0;
+        int borderTail = 0;
+        int outerAAHead = 0;
+        int outerAATail = 0;
+        bool hasFill = m_color.rgba() != 0 || !stops.isEmpty();
+        if (hasFill)
+            indexCount += fillIndexCount;
+        if (m_antialiasing) {
+            innerAATail = innerAAHead = indexCount + (innerAAIndexCount >> 1) + 1;
+            indexCount += innerAAIndexCount;
+        }
         if (penWidth) {
-            // The reason I add extra vertices where the gradient lines intersect the border is
-            // to avoid pixel sized gaps between the fill and the border caused by floating point
-            // inaccuracies.
-            borderGeometry->allocate((segments + 1) * 2 * 4 + (lastGradientStop - nextGradientStop + 1) * 4 + 2);
-            borderVertexHead = borderVertexTail = (borderGeometry->vertexCount() >> 1) - 1;
-            borderVertices = (Vertex *)borderGeometry->vertexData();
+            borderTail = borderHead = indexCount + (borderIndexCount >> 1) + 1;
+            indexCount += borderIndexCount;
+        }
+        if (m_antialiasing && penWidth) {
+            outerAATail = outerAAHead = indexCount + (outerAAIndexCount >> 1) + 1;
+            indexCount += outerAAIndexCount;
         }
 
-        fill->allocate((segments + 1) * 4 + (lastGradientStop - nextGradientStop + 1) * 2);
-        fillVertices = (uchar *)fill->vertexData();
+        g->allocate(vertexCount, indexCount);
+        vertices = reinterpret_cast<Vertex *>(g->vertexData());
+        memset(vertices, 0, vertexCount * vertexStride);
+        quint16 *indices = g->indexDataAsUShort();
+        quint16 index = 0;
 
-        qreal py = 0; // previous inner y-coordinate.
-        qreal plx = 0; // previous inner left x-coordinate.
-        qreal prx = 0; // previous inner right x-coordinate.
+        float py = 0; // previous inner y-coordinate.
+        float plx = 0; // previous inner left x-coordinate.
+        float prx = 0; // previous inner right x-coordinate.
 
-        qreal angle = qreal(0.5) * M_PI / qreal(segments);
-        qreal cosStep = qFastCos(angle);
-        qreal sinStep = qFastSin(angle);
+        float angle = 0.5f * float(M_PI) / segments;
+        float cosStep = qFastCos(angle);
+        float sinStep = qFastSin(angle);
 
         for (int part = 0; part < 2; ++part) {
-            qreal c = 1 - part;
-            qreal s = part;
+            float c = 1 - part;
+            float s = part;
             for (int i = 0; i <= segments; ++i) {
-                qreal y, lx, rx;
+                float y, lx, rx;
                 if (innerRadius > 0) {
                     y = (part ? innerRect.bottom() : innerRect.top()) - innerRadius * c; // current inner y-coordinate.
                     lx = innerRect.left() - innerRadius * s; // current inner left x-coordinate.
                     rx = innerRect.right() + innerRadius * s; // current inner right x-coordinate.
-                    gradientPos = ((part ? innerRect.height() : 0) + radius - innerRadius * c) / (innerRect.height() + 2 * radius);
+                    gradientPos = ((part ? innerRect.height() : 0) + radius - innerRadius * c) / height;
                 } else {
                     y = (part ? innerRect.bottom() + innerRadius : innerRect.top() - innerRadius); // current inner y-coordinate.
                     lx = innerRect.left() - innerRadius; // current inner left x-coordinate.
                     rx = innerRect.right() + innerRadius; // current inner right x-coordinate.
-                    gradientPos = ((part ? innerRect.height() + innerRadius : -innerRadius) + radius) / (innerRect.height() + 2 * radius);
+                    gradientPos = ((part ? innerRect.height() + innerRadius : -innerRadius) + radius) / height;
                 }
-                qreal Y = (part ? innerRect.bottom() : innerRect.top()) - outerRadius * c; // current outer y-coordinate.
-                qreal lX = innerRect.left() - outerRadius * s; // current outer left x-coordinate.
-                qreal rX = innerRect.right() + outerRadius * s; // current outer right x-coordinate.
+                float Y = (part ? innerRect.bottom() : innerRect.top()) - outerRadius * c; // current outer y-coordinate.
+                float lX = innerRect.left() - outerRadius * s; // current outer left x-coordinate.
+                float rX = innerRect.right() + outerRadius * s; // current outer right x-coordinate.
 
                 while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
                     // Insert vertices at gradient stops.
-                    qreal gy = (innerRect.top() - radius) + stops.at(nextGradientStop).first * (innerRect.height() + 2 * radius);
-                    Q_ASSERT(fillVertexCount >= 2);
-                    qreal t = (gy - py) / (y - py);
-                    qreal glx = plx * (1 - t) + t * lx;
-                    qreal grx = prx * (1 - t) + t * rx;
-
-                    if (penWidth) {
-                        const Vertex &first = borderVertices[borderVertexHead];
-                        borderVertices[--borderVertexHead].position = QVector2D(glx, gy);
-                        borderVertices[--borderVertexHead] = first;
-
-                        const Vertex &last = borderVertices[borderVertexTail - 2];
-                        borderVertices[borderVertexTail++] = last;
-                        borderVertices[borderVertexTail++].position = QVector2D(grx, gy);
-                    }
-
-                    ColorVertex *vertices = (ColorVertex *)fillVertices;
+                    float gy = (innerRect.top() - radius) + stops.at(nextGradientStop).first * height;
+                    float t = (gy - py) / (y - py);
+                    float glx = plx * (1 - t) + t * lx;
+                    float grx = prx * (1 - t) + t * rx;
 
                     fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
-                    vertices[fillVertexCount].position = QVector2D(grx, gy);
-                    vertices[fillVertexCount].color = fillColor;
-                    ++fillVertexCount;
-                    vertices[fillVertexCount].position = QVector2D(glx, gy);
-                    vertices[fillVertexCount].color = fillColor;
-                    ++fillVertexCount;
 
+                    if (hasFill) {
+                        indices[fillHead++] = index;
+                        indices[fillHead++] = index + 1;
+                    }
+
+                    if (penWidth) {
+                        --borderHead;
+                        indices[borderHead] = indices[borderHead + 2];
+                        indices[--borderHead] = index + 2;
+                        indices[borderTail++] = index + 3;
+                        indices[borderTail] = indices[borderTail - 2];
+                        ++borderTail;
+                    }
+
+                    if (m_antialiasing) {
+                        indices[--innerAAHead] = index + 2;
+                        indices[--innerAAHead] = index;
+                        indices[innerAATail++] = index + 1;
+                        indices[innerAATail++] = index + 3;
+
+                        bool lower = stops.at(nextGradientStop).first > 0.5f;
+                        float dy = lower ? qMin(0.0f, height - gy - delta) : qMax(0.0f, delta - gy);
+                        smoothVertices[index++].set(grx, gy, fillColor, width - grx - delta, dy);
+                        smoothVertices[index++].set(glx, gy, fillColor, delta - glx, dy);
+                        if (penWidth) {
+                            smoothVertices[index++].set(grx, gy, borderColor, 0.49f * penWidth * s, -0.49f * penWidth * c);
+                            smoothVertices[index++].set(glx, gy, borderColor, -0.49f * penWidth * s, -0.49f * penWidth * c);
+                        } else {
+                            dy = lower ? delta : -delta;
+                            smoothVertices[index++].set(grx, gy, transparent, delta, dy);
+                            smoothVertices[index++].set(glx, gy, transparent, -delta, dy);
+                        }
+                    } else {
+                        vertices[index++].set(grx, gy, fillColor);
+                        vertices[index++].set(glx, gy, fillColor);
+                        if (penWidth) {
+                            vertices[index++].set(grx, gy, borderColor);
+                            vertices[index++].set(glx, gy, borderColor);
+                        }
+                    }
                     ++nextGradientStop;
                 }
 
-                if (penWidth) {
-                    borderVertices[--borderVertexHead].position = QVector2D(lx, y);
-                    borderVertices[--borderVertexHead].position = QVector2D(lX, Y);
-                    borderVertices[borderVertexTail++].position = QVector2D(rX, Y);
-                    borderVertices[borderVertexTail++].position = QVector2D(rx, y);
-                }
-
-                if (stops.isEmpty()) {
-                    Q_ASSERT(m_material_type == TypeFlat);
-                    Vertex *vertices = (Vertex *)fillVertices;
-                    vertices[fillVertexCount++].position = QVector2D(rx, y);
-                    vertices[fillVertexCount++].position = QVector2D(lx, y);
-                } else {
+                if (!stops.isEmpty()) {
                     if (nextGradientStop == 0) {
                         fillColor = colorToColor4ub(stops.at(0).second);
                     } else if (nextGradientStop == stops.size()) {
@@ -391,18 +534,61 @@ void QSGDefaultRectangleNode::updateGeometry()
                     } else {
                         const QGradientStop &prev = stops.at(nextGradientStop - 1);
                         const QGradientStop &next = stops.at(nextGradientStop);
-                        qreal t = (gradientPos - prev.first) / (next.first - prev.first);
-                        fillColor = (colorToColor4ub(prev.second) * (1 - t) + colorToColor4ub(next.second) * t);
+                        float t = (gradientPos - prev.first) / (next.first - prev.first);
+                        fillColor = colorToColor4ub(prev.second) * (1 - t) + colorToColor4ub(next.second) * t;
                     }
-
-                    ColorVertex *vertices = (ColorVertex *)fillVertices;
-                    vertices[fillVertexCount].position = QVector2D(rx, y);
-                    vertices[fillVertexCount].color = fillColor;
-                    ++fillVertexCount;
-                    vertices[fillVertexCount].position = QVector2D(lx, y);
-                    vertices[fillVertexCount].color = fillColor;
-                    ++fillVertexCount;
                 }
+
+                if (hasFill) {
+                    indices[fillHead++] = index;
+                    indices[fillHead++] = index + 1;
+                }
+
+                if (penWidth) {
+                    indices[--borderHead] = index + 4;
+                    indices[--borderHead] = index + 2;
+                    indices[borderTail++] = index + 3;
+                    indices[borderTail++] = index + 5;
+                }
+
+                if (m_antialiasing) {
+                    indices[--innerAAHead] = index + 2;
+                    indices[--innerAAHead] = index;
+                    indices[innerAATail++] = index + 1;
+                    indices[innerAATail++] = index + 3;
+
+                    float dy = part ? qMin(0.0f, height - y - delta) : qMax(0.0f, delta - y);
+                    smoothVertices[index++].set(rx, y, fillColor, width - rx - delta, dy);
+                    smoothVertices[index++].set(lx, y, fillColor, delta - lx, dy);
+
+                    dy = part ? delta : -delta;
+                    if (penWidth) {
+                        smoothVertices[index++].set(rx, y, borderColor, 0.49f * penWidth * s, -0.49f * penWidth * c);
+                        smoothVertices[index++].set(lx, y, borderColor, -0.49f * penWidth * s, -0.49f * penWidth * c);
+                        smoothVertices[index++].set(rX, Y, borderColor, -0.49f * penWidth * s, 0.49f * penWidth * c);
+                        smoothVertices[index++].set(lX, Y, borderColor, 0.49f * penWidth * s, 0.49f * penWidth * c);
+                        smoothVertices[index++].set(rX, Y, transparent, delta, dy);
+                        smoothVertices[index++].set(lX, Y, transparent, -delta, dy);
+
+                        indices[--outerAAHead] = index - 2;
+                        indices[--outerAAHead] = index - 4;
+                        indices[outerAATail++] = index - 3;
+                        indices[outerAATail++] = index - 1;
+                    } else {
+                        smoothVertices[index++].set(rx, y, transparent, delta, dy);
+                        smoothVertices[index++].set(lx, y, transparent, -delta, dy);
+                    }
+                } else {
+                    vertices[index++].set(rx, y, fillColor);
+                    vertices[index++].set(lx, y, fillColor);
+                    if (penWidth) {
+                        vertices[index++].set(rx, y, borderColor);
+                        vertices[index++].set(lx, y, borderColor);
+                        vertices[index++].set(rX, Y, borderColor);
+                        vertices[index++].set(lX, Y, borderColor);
+                    }
+                }
+
                 py = y;
                 plx = lx;
                 prx = rx;
@@ -413,25 +599,29 @@ void QSGDefaultRectangleNode::updateGeometry()
                 s = s * cosStep + tmp * sinStep;
             }
         }
+        Q_ASSERT(index == vertexCount);
 
-        if (penWidth) {
-            // Close border.
-            const Vertex &first = borderVertices[borderVertexHead];
-            const Vertex &second = borderVertices[borderVertexHead + 1];
-            borderVertices[borderVertexTail++] = first;
-            borderVertices[borderVertexTail++] = second;
-
-            Q_ASSERT(borderVertexHead == 0 && borderVertexTail == borderGeometry->vertexCount());
+        // Close the triangle strips.
+        if (m_antialiasing) {
+            indices[--innerAAHead] = indices[innerAATail - 1];
+            indices[--innerAAHead] = indices[innerAATail - 2];
+            Q_ASSERT(innerAATail <= indexCount);
         }
-        Q_ASSERT(fillVertexCount == fill->vertexCount());
-
+        if (penWidth) {
+            indices[--borderHead] = indices[borderTail - 1];
+            indices[--borderHead] = indices[borderTail - 2];
+            Q_ASSERT(borderTail <= indexCount);
+        }
+        if (m_antialiasing && penWidth) {
+            indices[--outerAAHead] = indices[outerAATail - 1];
+            indices[--outerAAHead] = indices[outerAATail - 2];
+            Q_ASSERT(outerAATail == indexCount);
+        }
     } else {
-
         // Straight corners.
         QRectF innerRect = m_rect;
         QRectF outerRect = m_rect;
 
-        qreal halfPenWidth = 0;
         if (penWidth) {
             if (m_aligned && (int(penWidth) & 1)) {
                 // Pen width is odd, so add the offset as documented.
@@ -439,61 +629,114 @@ void QSGDefaultRectangleNode::updateGeometry()
                 innerRect.moveTop(innerRect.top() + qreal(0.5));
                 outerRect = innerRect;
             }
-            halfPenWidth = penWidth * qreal(0.5);
-            innerRect.adjust(halfPenWidth, halfPenWidth, -halfPenWidth, -halfPenWidth);
-            outerRect.adjust(-halfPenWidth, -halfPenWidth, halfPenWidth, halfPenWidth);
+            innerRect.adjust(0.5f * penWidth, 0.5f * penWidth, -0.5f * penWidth, -0.5f * penWidth);
+            outerRect.adjust(-0.5f * penWidth, -0.5f * penWidth, 0.5f * penWidth, 0.5f * penWidth);
         }
 
-        int nextGradientStop = 0;
-        qreal gradientPos = halfPenWidth / m_rect.height();
-        while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos)
-            ++nextGradientStop;
-        int lastGradientStop = stops.size() - 1;
-        qreal lastGradientPos = (m_rect.height() - halfPenWidth) / m_rect.height();
-        while (lastGradientStop >= nextGradientStop && stops.at(lastGradientStop).first >= lastGradientPos)
-            --lastGradientStop;
+        float delta = qMin(width, height) * 0.5f;
+        int innerVertexCount = 4 + gradientIntersections * 2;
+        int outerVertexCount = 4;
+        int vertexCount = innerVertexCount;
+        if (m_antialiasing || penWidth)
+            vertexCount += innerVertexCount;
+        if (penWidth)
+            vertexCount += outerVertexCount;
+        if (m_antialiasing && penWidth)
+            vertexCount += outerVertexCount;
 
-        int borderVertexCount = 0;
+        int fillIndexCount = innerVertexCount;
+        int innerAAIndexCount = innerVertexCount * 2 + 2;
+        int borderIndexCount = innerVertexCount * 2 + 2;
+        int outerAAIndexCount = outerVertexCount * 2 + 2;
+        int indexCount = 0;
+        int fillHead = 0;
+        int innerAAHead = 0;
+        int innerAATail = 0;
+        int borderHead = 0;
+        int borderTail = 0;
+        int outerAAHead = 0;
+        int outerAATail = 0;
+        bool hasFill = m_color.rgba() != 0 || !stops.isEmpty();
+        if (hasFill)
+            indexCount += fillIndexCount;
+        if (m_antialiasing) {
+            innerAATail = innerAAHead = indexCount + (innerAAIndexCount >> 1) + 1;
+            indexCount += innerAAIndexCount;
+        }
         if (penWidth) {
-            borderGeometry->allocate((1 + lastGradientStop - nextGradientStop) * 4 + 10);
-            borderVertices = (Vertex *)borderGeometry->vertexData();
+            borderTail = borderHead = indexCount + (borderIndexCount >> 1) + 1;
+            indexCount += borderIndexCount;
         }
-        fill->allocate((3 + lastGradientStop - nextGradientStop) * 2);
-        fillVertices = (uchar *)fill->vertexData();
+        if (m_antialiasing && penWidth) {
+            outerAATail = outerAAHead = indexCount + (outerAAIndexCount >> 1) + 1;
+            indexCount += outerAAIndexCount;
+        }
 
-        QVarLengthArray<qreal, 16> ys(3 + lastGradientStop - nextGradientStop);
-        int yCount = 0;
+        g->allocate(vertexCount, indexCount);
+        vertices = reinterpret_cast<Vertex *>(g->vertexData());
+        memset(vertices, 0, vertexCount * vertexStride);
+        quint16 *indices = g->indexDataAsUShort();
+        quint16 index = 0;
 
-        for (int part = 0; part < 2; ++part) {
-            qreal y = (part ? innerRect.bottom() : innerRect.top());
-            gradientPos = (y - innerRect.top() + halfPenWidth) / m_rect.height();
+        float lx = innerRect.left();
+        float rx = innerRect.right();
+        float lX = outerRect.left();
+        float rX = outerRect.right();
+
+        for (int part = -1; part <= 1; part += 2) {
+            float y = (part == 1 ? innerRect.bottom() : innerRect.top());
+            float Y = (part == 1 ? outerRect.bottom() : outerRect.top());
+            gradientPos = (y - innerRect.top() + 0.5f * penWidth) / height;
 
             while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
                 // Insert vertices at gradient stops.
-                qreal gy = (innerRect.top() - halfPenWidth) + stops.at(nextGradientStop).first * m_rect.height();
-                Q_ASSERT(fillVertexCount >= 2);
-
-                ColorVertex *vertices = (ColorVertex *)fillVertices;
+                float gy = (innerRect.top() - 0.5f * penWidth) + stops.at(nextGradientStop).first * height;
 
                 fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
-                vertices[fillVertexCount].position = QVector2D(innerRect.right(), gy);
-                vertices[fillVertexCount].color = fillColor;
-                ++fillVertexCount;
-                vertices[fillVertexCount].position = QVector2D(innerRect.left(), gy);
-                vertices[fillVertexCount].color = fillColor;
-                ++fillVertexCount;
 
-                ys[yCount++] = gy;
+                if (hasFill) {
+                    indices[fillHead++] = index;
+                    indices[fillHead++] = index + 1;
+                }
 
+                if (penWidth) {
+                    --borderHead;
+                    indices[borderHead] = indices[borderHead + 2];
+                    indices[--borderHead] = index + 2;
+                    indices[borderTail++] = index + 3;
+                    indices[borderTail] = indices[borderTail - 2];
+                    ++borderTail;
+                }
+
+                if (m_antialiasing) {
+                    indices[--innerAAHead] = index + 2;
+                    indices[--innerAAHead] = index;
+                    indices[innerAATail++] = index + 1;
+                    indices[innerAATail++] = index + 3;
+
+                    bool lower = stops.at(nextGradientStop).first > 0.5f;
+                    float dy = lower ? qMin(0.0f, height - gy - delta) : qMax(0.0f, delta - gy);
+                    smoothVertices[index++].set(rx, gy, fillColor, width - rx - delta, dy);
+                    smoothVertices[index++].set(lx, gy, fillColor, delta - lx, dy);
+                    if (penWidth) {
+                        smoothVertices[index++].set(rx, gy, borderColor, 0.49f * penWidth, (lower ? 0.49f : -0.49f) * penWidth);
+                        smoothVertices[index++].set(lx, gy, borderColor, -0.49f * penWidth, (lower ? 0.49f : -0.49f) * penWidth);
+                    } else {
+                        smoothVertices[index++].set(rx, gy, transparent, delta, lower ? delta : -delta);
+                        smoothVertices[index++].set(lx, gy, transparent, -delta, lower ? delta : -delta);
+                    }
+                } else {
+                    vertices[index++].set(rx, gy, fillColor);
+                    vertices[index++].set(lx, gy, fillColor);
+                    if (penWidth) {
+                        vertices[index++].set(rx, gy, borderColor);
+                        vertices[index++].set(lx, gy, borderColor);
+                    }
+                }
                 ++nextGradientStop;
             }
 
-            if (stops.isEmpty()) {
-                Q_ASSERT(m_material_type == TypeFlat);
-                Vertex *vertices = (Vertex *)fillVertices;
-                vertices[fillVertexCount++].position = QVector2D(innerRect.right(), y);
-                vertices[fillVertexCount++].position = QVector2D(innerRect.left(), y);
-            } else {
+            if (!stops.isEmpty()) {
                 if (nextGradientStop == 0) {
                     fillColor = colorToColor4ub(stops.at(0).second);
                 } else if (nextGradientStop == stops.size()) {
@@ -501,43 +744,78 @@ void QSGDefaultRectangleNode::updateGeometry()
                 } else {
                     const QGradientStop &prev = stops.at(nextGradientStop - 1);
                     const QGradientStop &next = stops.at(nextGradientStop);
-                    qreal t = (gradientPos - prev.first) / (next.first - prev.first);
-                    fillColor = (colorToColor4ub(prev.second) * (1 - t) + colorToColor4ub(next.second) * t);
+                    float t = (gradientPos - prev.first) / (next.first - prev.first);
+                    fillColor = colorToColor4ub(prev.second) * (1 - t) + colorToColor4ub(next.second) * t;
                 }
-
-                ColorVertex *vertices = (ColorVertex *)fillVertices;
-                vertices[fillVertexCount].position = QVector2D(innerRect.right(), y);
-                vertices[fillVertexCount].color = fillColor;
-                ++fillVertexCount;
-                vertices[fillVertexCount].position = QVector2D(innerRect.left(), y);
-                vertices[fillVertexCount].color = fillColor;
-                ++fillVertexCount;
             }
 
-            ys[yCount++] = y;
-        }
+            if (hasFill) {
+                indices[fillHead++] = index;
+                indices[fillHead++] = index + 1;
+            }
 
+            if (penWidth) {
+                indices[--borderHead] = index + 4;
+                indices[--borderHead] = index + 2;
+                indices[borderTail++] = index + 3;
+                indices[borderTail++] = index + 5;
+            }
+
+            if (m_antialiasing) {
+                indices[--innerAAHead] = index + 2;
+                indices[--innerAAHead] = index;
+                indices[innerAATail++] = index + 1;
+                indices[innerAATail++] = index + 3;
+
+                float dy = part == 1 ? qMin(0.0f, height - y - delta) : qMax(0.0f, delta - y);
+                smoothVertices[index++].set(rx, y, fillColor, width - rx - delta, dy);
+                smoothVertices[index++].set(lx, y, fillColor, delta - lx, dy);
+
+                if (penWidth) {
+                    smoothVertices[index++].set(rx, y, borderColor, 0.49f * penWidth, 0.49f * penWidth * part);
+                    smoothVertices[index++].set(lx, y, borderColor, -0.49f * penWidth, 0.49f * penWidth * part);
+                    smoothVertices[index++].set(rX, Y, borderColor, -0.49f * penWidth, -0.49f * penWidth * part);
+                    smoothVertices[index++].set(lX, Y, borderColor, 0.49f * penWidth, -0.49f * penWidth * part);
+                    smoothVertices[index++].set(rX, Y, transparent, delta, delta * part);
+                    smoothVertices[index++].set(lX, Y, transparent, -delta, delta * part);
+
+                    indices[--outerAAHead] = index - 2;
+                    indices[--outerAAHead] = index - 4;
+                    indices[outerAATail++] = index - 3;
+                    indices[outerAATail++] = index - 1;
+                } else {
+                    smoothVertices[index++].set(rx, y, transparent, delta, delta * part);
+                    smoothVertices[index++].set(lx, y, transparent, -delta, delta * part);
+                }
+            } else {
+                vertices[index++].set(rx, y, fillColor);
+                vertices[index++].set(lx, y, fillColor);
+                if (penWidth) {
+                    vertices[index++].set(rx, y, borderColor);
+                    vertices[index++].set(lx, y, borderColor);
+                    vertices[index++].set(rX, Y, borderColor);
+                    vertices[index++].set(lX, Y, borderColor);
+                }
+            }
+        }
+        Q_ASSERT(index == vertexCount);
+
+        // Close the triangle strips.
+        if (m_antialiasing) {
+            indices[--innerAAHead] = indices[innerAATail - 1];
+            indices[--innerAAHead] = indices[innerAATail - 2];
+            Q_ASSERT(innerAATail <= indexCount);
+        }
         if (penWidth) {
-            borderVertices[borderVertexCount++].position = QVector2D(outerRect.right(), outerRect.top());
-            borderVertices[borderVertexCount++].position = QVector2D(innerRect.right(), ys[0]);
-            for (int i = 1; i < fillVertexCount / 2; ++i) {
-                borderVertices[borderVertexCount++].position = QVector2D(outerRect.right(), outerRect.bottom());
-                borderVertices[borderVertexCount++].position = QVector2D(innerRect.right(), ys[i]);
-            }
-
-            borderVertices[borderVertexCount++].position = QVector2D(outerRect.left(), outerRect.bottom());
-            borderVertices[borderVertexCount++].position = QVector2D(innerRect.left(), ys[fillVertexCount / 2 - 1]);
-            for (int i = fillVertexCount / 2 - 2; i >= 0; --i) {
-                borderVertices[borderVertexCount++].position = QVector2D(outerRect.left(), outerRect.top());
-                borderVertices[borderVertexCount++].position = QVector2D(innerRect.left(), ys[i]);
-            }
-
-            borderVertices[borderVertexCount++].position = QVector2D(outerRect.right(), outerRect.top());
-            borderVertices[borderVertexCount++].position = QVector2D(innerRect.right(), innerRect.top());
-
-            Q_ASSERT(borderVertexCount == borderGeometry->vertexCount());
+            indices[--borderHead] = indices[borderTail - 1];
+            indices[--borderHead] = indices[borderTail - 2];
+            Q_ASSERT(borderTail <= indexCount);
         }
-        Q_ASSERT(fillVertexCount == fill->vertexCount());
+        if (m_antialiasing && penWidth) {
+            indices[--outerAAHead] = indices[outerAATail - 1];
+            indices[--outerAAHead] = indices[outerAATail - 2];
+            Q_ASSERT(outerAATail == indexCount);
+        }
     }
 
     markDirty(DirtyGeometry);

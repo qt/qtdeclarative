@@ -44,20 +44,35 @@
 #define DEFAULT_PIXMAPNODE_H
 
 #include <private/qsgadaptationlayer_p.h>
-
 #include <QtQuick/qsgtexturematerial.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+class SmoothTextureMaterial : public QSGTextureMaterial
+{
+public:
+    SmoothTextureMaterial();
+
+    void setTexture(QSGTexture *texture);
+
+protected:
+    virtual QSGMaterialType *type() const;
+    virtual QSGMaterialShader *createShader() const;
+};
+
 class QSGDefaultImageNode : public QSGImageNode
 {
 public:
     QSGDefaultImageNode();
     virtual void setTargetRect(const QRectF &rect);
-    virtual void setSourceRect(const QRectF &rect);
+    virtual void setInnerTargetRect(const QRectF &rect);
+    virtual void setInnerSourceRect(const QRectF &rect);
+    virtual void setSubSourceRect(const QRectF &rect);
     virtual void setTexture(QSGTexture *t);
+    virtual void setAntialiasing(bool antialiasing);
+    virtual void setMirror(bool mirror);
     virtual void update();
 
     virtual void setMipmapFiltering(QSGTexture::Filtering filtering);
@@ -71,11 +86,16 @@ private:
     void updateGeometry();
 
     QRectF m_targetRect;
-    QRectF m_sourceRect;
+    QRectF m_innerTargetRect;
+    QRectF m_innerSourceRect;
+    QRectF m_subSourceRect;
 
     QSGOpaqueTextureMaterial m_material;
     QSGTextureMaterial m_materialO;
+    SmoothTextureMaterial m_smoothMaterial;
 
+    uint m_antialiasing : 1;
+    uint m_mirror : 1;
     uint m_dirtyGeometry : 1;
 
     QSGGeometry m_geometry;

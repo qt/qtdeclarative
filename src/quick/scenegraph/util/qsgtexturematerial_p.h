@@ -65,6 +65,20 @@ protected:
     int m_matrix_id;
 };
 
+class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
+{
+public:
+    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
+    virtual void initialize();
+
+    static QSGMaterialType type;
+
+protected:
+    virtual const char *fragmentShader() const;
+
+    int m_opacity_id;
+};
+
 QT_END_NAMESPACE
 
 QT_END_HEADER

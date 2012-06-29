@@ -389,6 +389,7 @@ public:
     bool keepTouch:1;
     bool hoverEnabled:1;
     bool smooth:1;
+    bool antialiasing:1;
     bool focus:1;
     bool activeFocus:1;
     bool notifiedFocus:1;
@@ -431,13 +432,14 @@ public:
         EffectReference         = 0x00008000,
         Visible                 = 0x00010000,
         HideReference           = 0x00020000,
+        Antialiasing             = 0x00040000,
         // When you add an attribute here, don't forget to update
         // dirtyToString()
 
         TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position |
                                   Size | Canvas,
         ComplexTransformUpdateMask     = Transform | Canvas,
-        ContentUpdateMask       = Size | Content | Smooth | Canvas,
+        ContentUpdateMask       = Size | Content | Smooth | Canvas | Antialiasing,
         ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Canvas
     };
 

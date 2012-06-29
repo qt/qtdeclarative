@@ -502,6 +502,7 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     }
 
     rectangle->setRadius(d->radius);
+    rectangle->setAntialiasing(d->antialiasing);
 
     QGradientStops stops;
     if (d->gradient) {

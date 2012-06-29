@@ -1006,7 +1006,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     node->setHorizontalWrapMode(hWrap);
     node->setVerticalWrapMode(vWrap);
     node->setTargetRect(QRectF(0, 0, width(), height()));
-    node->setSourceRect(QRectF(0, 0, 1, 1));
+    node->setInnerTargetRect(QRectF(0, 0, width(), height()));
     node->update();
 
     return node;

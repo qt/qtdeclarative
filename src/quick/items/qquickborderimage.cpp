@@ -41,7 +41,6 @@
 
 #include "qquickborderimage_p.h"
 #include "qquickborderimage_p_p.h"
-#include "qquickninepatchnode_p.h"
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
@@ -565,29 +564,70 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         return 0;
     }
 
-    QQuickNinePatchNode *node = static_cast<QQuickNinePatchNode *>(oldNode);
+    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
 
-    if (!node) {
-        node = new QQuickNinePatchNode();
-    }
+    if (!node)
+        node = d->sceneGraphContext()->createImageNode();
 
     node->setTexture(texture);
 
     // Don't implicitly create the scalegrid in the rendering thread...
+    QRectF innerSourceRect(0, 0, 1, 1);
+    QRectF targetRect(0, 0, width(), height());
+    QRectF innerTargetRect = targetRect;
     if (d->border) {
         const QQuickScaleGrid *border = d->getScaleGrid();
-        node->setInnerRect(QRectF(border->left(),
-                                  border->top(),
-                                  qMax(1, d->pix.width() - border->right() - border->left()),
-                                  qMax(1, d->pix.height() - border->bottom() - border->top())));
-    } else {
-        node->setInnerRect(QRectF(0, 0, d->pix.width(), d->pix.height()));
+        innerSourceRect = QRectF(border->left() / qreal(d->pix.width()),
+                                 border->top() / qreal(d->pix.height()),
+                                 qMax<qreal>(0, d->pix.width() - border->right() - border->left()) / d->pix.width(),
+                                 qMax<qreal>(0, d->pix.height() - border->bottom() - border->top()) / d->pix.height());
+        innerTargetRect = QRectF(border->left(),
+                                 border->top(),
+                                 qMax<qreal>(0, width() - border->right() - border->left()),
+                                 qMax<qreal>(0, height() - border->bottom() - border->top()));
     }
-    node->setRect(QRectF(0, 0, width(), height()));
-    node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-    node->setHorzontalTileMode(d->horizontalTileMode);
-    node->setVerticalTileMode(d->verticalTileMode);
+    qreal hTiles = 1;
+    qreal vTiles = 1;
+    if (innerSourceRect.width() != 0) {
+        switch (d->horizontalTileMode) {
+        case QQuickBorderImage::Repeat:
+            hTiles = innerTargetRect.width() / qreal(innerSourceRect.width() * d->pix.width());
+            break;
+        case QQuickBorderImage::Round:
+            hTiles = qCeil(innerTargetRect.width() / qreal(innerSourceRect.width() * d->pix.width()));
+            break;
+        default:
+            break;
+        }
+    }
+    if (innerSourceRect.height() != 0) {
+        switch (d->verticalTileMode) {
+        case QQuickBorderImage::Repeat:
+            vTiles = innerTargetRect.height() / qreal(innerSourceRect.height() * d->pix.height());
+            break;
+        case QQuickBorderImage::Round:
+            vTiles = qCeil(innerTargetRect.height() / qreal(innerSourceRect.height() * d->pix.height()));
+            break;
+        default:
+            break;
+        }
+    }
+
+    node->setTargetRect(targetRect);
+    node->setInnerSourceRect(innerSourceRect);
+    node->setInnerTargetRect(innerTargetRect);
+    node->setSubSourceRect(QRectF(0, 0, hTiles, vTiles));
     node->setMirror(d->mirror);
+
+    node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
+    if (innerSourceRect == QRectF(0, 0, 1, 1) && (vTiles > 1 || hTiles > 1)) {
+        node->setHorizontalWrapMode(QSGTexture::Repeat);
+        node->setVerticalWrapMode(QSGTexture::Repeat);
+    } else {
+        node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+        node->setVerticalWrapMode(QSGTexture::ClampToEdge);
+    }
+    node->setAntialiasing(d->antialiasing);
     node->update();
 
     return node;

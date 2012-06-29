@@ -2401,26 +2401,53 @@ bool QQuickItem::isComponentComplete() const
 }
 
 QQuickItemPrivate::QQuickItemPrivate()
-: _anchors(0), _stateGroup(0),
-  flags(0), widthValid(false), heightValid(false), baselineOffsetValid(false), componentComplete(true),
-  keepMouse(false), keepTouch(false), hoverEnabled(false), smooth(true), focus(false), activeFocus(false), notifiedFocus(false),
-  notifiedActiveFocus(false), filtersChildMouseEvents(false), explicitVisible(true),
-  effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
-  inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
-  inheritMirrorFromParent(false), inheritMirrorFromItem(false),
-  isAccessible(false), culled(false),
-
-  dirtyAttributes(0), nextDirtyItem(0), prevDirtyItem(0),
-
-  canvas(0), canvasRefCount(0), parentItem(0), sortedChildItems(&childItems),
-
-  subFocusItem(0),
-
-  x(0), y(0), width(0), height(0), implicitWidth(0), implicitHeight(0),
-
-  baselineOffset(0),
-
-  itemNodeInstance(0), groupNode(0), paintNode(0)
+    : _anchors(0)
+    , _stateGroup(0)
+    , flags(0)
+    , widthValid(false)
+    , heightValid(false)
+    , baselineOffsetValid(false)
+    , componentComplete(true)
+    , keepMouse(false)
+    , keepTouch(false)
+    , hoverEnabled(false)
+    , smooth(true)
+    , antialiasing(false)
+    , focus(false)
+    , activeFocus(false)
+    , notifiedFocus(false)
+    , notifiedActiveFocus(false)
+    , filtersChildMouseEvents(false)
+    , explicitVisible(true)
+    , effectiveVisible(true)
+    , explicitEnable(true)
+    , effectiveEnable(true)
+    , polishScheduled(false)
+    , inheritedLayoutMirror(false)
+    , effectiveLayoutMirror(false)
+    , isMirrorImplicit(true)
+    , inheritMirrorFromParent(false)
+    , inheritMirrorFromItem(false)
+    , isAccessible(false)
+    , culled(false)
+    , dirtyAttributes(0)
+    , nextDirtyItem(0)
+    , prevDirtyItem(0)
+    , canvas(0)
+    , canvasRefCount(0)
+    , parentItem(0)
+    , sortedChildItems(&childItems)
+    , subFocusItem(0)
+    , x(0)
+    , y(0)
+    , width(0)
+    , height(0)
+    , implicitWidth(0)
+    , implicitHeight(0)
+    , baselineOffset(0)
+    , itemNodeInstance(0)
+    , groupNode(0)
+    , paintNode(0)
 {
 }
 
@@ -4321,6 +4348,7 @@ QString QQuickItemPrivate::dirtyToString() const
     DIRTY_TO_STRING(EffectReference);
     DIRTY_TO_STRING(Visible);
     DIRTY_TO_STRING(HideReference);
+    DIRTY_TO_STRING(Antialiasing);
 
     return rv;
 }
@@ -4488,10 +4516,10 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 */
 
 /*!
-    Returns true if the item should be drawn with antialiasing and
+    Returns true if the item should be drawn with
     smooth pixmap filtering, false otherwise.
 
-    The default is false.
+    The default is true.
 
     \sa setSmooth()
 */
@@ -4517,6 +4545,47 @@ void QQuickItem::setSmooth(bool smooth)
     d->dirty(QQuickItemPrivate::Smooth);
 
     emit smoothChanged(smooth);
+}
+
+/*!
+    \property QQuickItem::antialiasing
+    \brief Specifies whether the item is antialiased or not
+
+    Primarily used in Rectangle and image based elements to decide if the item should
+    use antialiasing or not. Items with antialiasing enabled require more memory and
+    are potentially slower to render.
+
+    The default is false.
+*/
+
+/*!
+    Returns true if the item should be drawn with antialiasing, false otherwise.
+
+    The default is false.
+
+    \sa setAntialiasing()
+*/
+bool QQuickItem::antialiasing() const
+{
+    Q_D(const QQuickItem);
+    return d->antialiasing;
+}
+
+/*!
+    Sets whether the item should be drawn with antialiasing to \a antialiasing.
+
+    \sa antialiasing()
+*/
+void QQuickItem::setAntialiasing(bool antialiasing)
+{
+    Q_D(QQuickItem);
+    if (d->antialiasing == antialiasing)
+        return;
+
+    d->antialiasing = antialiasing;
+    d->dirty(QQuickItemPrivate::Antialiasing);
+
+    emit antialiasingChanged(antialiasing);
 }
 
 QQuickItem::Flags QQuickItem::flags() const

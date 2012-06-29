@@ -142,6 +142,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQmlListProperty<QQuickTransform> transform READ transform DESIGNABLE false FINAL)
 
     Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
+    Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
 
@@ -258,6 +259,9 @@ public:
     bool smooth() const;
     void setSmooth(bool);
 
+    bool antialiasing() const;
+    void setAntialiasing(bool);
+
     Flags flags() const;
     void setFlag(Flag flag, bool enabled = true);
     void setFlags(Flags flags);
@@ -332,6 +336,7 @@ Q_SIGNALS:
     void parentChanged(QQuickItem *);
     void transformOriginChanged(TransformOrigin);
     void smoothChanged(bool);
+    void antialiasingChanged(bool);
     void clipChanged(bool);
 
     // XXX todo

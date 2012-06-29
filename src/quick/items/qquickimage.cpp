@@ -674,18 +674,15 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
                   sourceRect.width() / d->pix.width(),
                   sourceRect.height() / d->pix.height());
 
-    if (d->mirror) {
-        qreal oldLeft = nsrect.left();
-        nsrect.setLeft(nsrect.right());
-        nsrect.setRight(oldLeft);
-    }
-
     node->setHorizontalWrapMode(hWrap);
     node->setVerticalWrapMode(vWrap);
     node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
 
     node->setTargetRect(targetRect);
-    node->setSourceRect(nsrect);
+    node->setInnerTargetRect(targetRect);
+    node->setSubSourceRect(nsrect);
+    node->setMirror(d->mirror);
+    node->setAntialiasing(d->antialiasing);
     node->update();
 
     return node;

@@ -30,7 +30,6 @@ HEADERS += \
     $$PWD/qquickimage_p_p.h \
     $$PWD/qquickborderimage_p.h \
     $$PWD/qquickborderimage_p_p.h \
-    $$PWD/qquickninepatchnode_p.h \
     $$PWD/qquickscalegrid_p_p.h \
     $$PWD/qquickmousearea_p.h \
     $$PWD/qquickmousearea_p_p.h \
@@ -96,7 +95,6 @@ SOURCES += \
     $$PWD/qquickimagebase.cpp \
     $$PWD/qquickimage.cpp \
     $$PWD/qquickborderimage.cpp \
-    $$PWD/qquickninepatchnode.cpp \
     $$PWD/qquickscalegrid.cpp \
     $$PWD/qquickmousearea.cpp \
     $$PWD/qquickpincharea.cpp \

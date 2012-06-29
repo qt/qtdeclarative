@@ -45,20 +45,30 @@
 
 #include <private/qsgadaptationlayer_p.h>
 
-#include <QtQuick/qsgflatcolormaterial.h>
+#include <QtQuick/qsgvertexcolormaterial.h>
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QSGMaterial;
 class QSGContext;
+
+class SmoothColorMaterial : public QSGMaterial
+{
+public:
+    SmoothColorMaterial();
+
+    int compare(const QSGMaterial *other) const;
+
+protected:
+    virtual QSGMaterialType *type() const;
+    virtual QSGMaterialShader *createShader() const;
+};
 
 class QSGDefaultRectangleNode : public QSGRectangleNode
 {
 public:
     QSGDefaultRectangleNode();
-    ~QSGDefaultRectangleNode();
 
     virtual void setRect(const QRectF &rect);
     virtual void setColor(const QColor &color);
@@ -66,35 +76,30 @@ public:
     virtual void setPenWidth(qreal width);
     virtual void setGradientStops(const QGradientStops &stops);
     virtual void setRadius(qreal radius);
+    virtual void setAntialiasing(bool antialiasing);
     virtual void setAligned(bool aligned);
     virtual void update();
 
 private:
-    enum {
-        TypeFlat,
-        TypeVertexGradient
-    };
-    QSGGeometryNode *border();
-
     void updateGeometry();
     void updateGradientTexture();
 
-    QSGGeometryNode *m_border;
-    QSGFlatColorMaterial m_border_material;
-    QSGFlatColorMaterial m_fill_material;
+    QSGVertexColorMaterial m_material;
+    SmoothColorMaterial m_smoothMaterial;
 
     QRectF m_rect;
     QGradientStops m_gradient_stops;
+    QColor m_color;
+    QColor m_border_color;
     qreal m_radius;
     qreal m_pen_width;
 
     uint m_aligned : 1;
+    uint m_antialiasing : 1;
     uint m_gradient_is_opaque : 1;
     uint m_dirty_geometry : 1;
 
-    uint m_material_type : 2; // Only goes up to 3
-
-    QSGGeometry m_default_geometry;
+    QSGGeometry m_geometry;
 };
 
 QT_END_NAMESPACE

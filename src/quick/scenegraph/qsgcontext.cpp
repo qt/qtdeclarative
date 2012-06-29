@@ -378,7 +378,6 @@ QSurfaceFormat QSGContext::defaultSurfaceFormat() const
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
     format.setStencilBufferSize(8);
-    format.setSamples(16);
     return format;
 }
 

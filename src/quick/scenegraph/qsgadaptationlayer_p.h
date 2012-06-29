@@ -69,7 +69,6 @@ class TextureReference;
 class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldGlyphNode;
 
-// TODO: Rename from XInterface to AbstractX.
 class Q_QUICK_PRIVATE_EXPORT QSGRectangleNode : public QSGGeometryNode
 {
 public:
@@ -79,6 +78,7 @@ public:
     virtual void setPenWidth(qreal width) = 0;
     virtual void setGradientStops(const QGradientStops &stops) = 0;
     virtual void setRadius(qreal radius) = 0;
+    virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing) }
     virtual void setAligned(bool aligned) = 0;
 
     virtual void update() = 0;
@@ -89,9 +89,15 @@ class Q_QUICK_PRIVATE_EXPORT QSGImageNode : public QSGGeometryNode
 {
 public:
     virtual void setTargetRect(const QRectF &rect) = 0;
-    virtual void setSourceRect(const QRectF &rect) = 0;
+    virtual void setInnerTargetRect(const QRectF &rect) = 0;
+    virtual void setInnerSourceRect(const QRectF &rect) = 0;
+    // The sub-source rect's width and height specify the number of times the inner source rect
+    // is repeated inside the inner target rect. The x and y specify which (normalized) location
+    // in the inner source rect maps to the upper-left corner of the inner target rect.
+    virtual void setSubSourceRect(const QRectF &rect) = 0;
     virtual void setTexture(QSGTexture *texture) = 0;
-
+    virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing) }
+    virtual void setMirror(bool mirror) = 0;
     virtual void setMipmapFiltering(QSGTexture::Filtering filtering) = 0;
     virtual void setFiltering(QSGTexture::Filtering filtering) = 0;
     virtual void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) = 0;
