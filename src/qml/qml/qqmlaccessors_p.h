@@ -57,7 +57,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QObject;
-class QMetaObject;
+struct QMetaObject;
 class QQmlNotifier;
 
 // QML "accessor properties" allow V4 and V8 to bypass Qt's meta system to read and, more
