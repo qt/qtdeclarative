@@ -62,6 +62,8 @@
 #include <QtWidgets/QFileDialog>
 #endif
 
+#include <QtCore/QTranslator>
+#include <QtCore/QLibraryInfo>
 
 #ifdef QML_RUNTIME_TESTING
 class RenderStatistics
@@ -165,6 +167,7 @@ struct Options
     bool slowAnimations;
     bool quitImmediately;
     bool resizeViewToRootItem;
+    QString translationFile;
 };
 
 #if defined(QMLSCENE_BUNDLE)
@@ -303,6 +306,12 @@ static void displayFileDialog(Options *options)
 #endif
 }
 
+static void loadTranslationFile(QTranslator &translator, const QString& directory)
+{
+    translator.load(QLatin1String("qml_" )+QLocale::system().name(), directory + QLatin1String("/i18n"));
+    QApplication::installTranslator(&translator);
+}
+
 static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 {
     QDir dir(directory+"/dummydata", "*.qml");
@@ -346,6 +355,7 @@ static void usage()
     qWarning("  --quit .................................... Quit immediately after starting");
     qWarning("  -I <path> ................................. Add <path> to the list of import paths");
     qWarning("  -B <name> <file> .......................... Add a named bundle");
+    qWarning("  -translation <translationfile> ........... set the language to run in");
 
     qWarning(" ");
     exit(1);
@@ -376,6 +386,8 @@ int main(int argc, char ** argv)
                 options.slowAnimations = true;
             else if (lowerArgument == QLatin1String("--quit"))
                 options.quitImmediately = true;
+           else if (lowerArgument == QLatin1String("-translation"))
+                options.translationFile = QLatin1String(argv[++i]);
             else if (lowerArgument == QLatin1String("--resize-to-root"))
                 options.resizeViewToRootItem = true;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
@@ -401,6 +413,27 @@ int main(int argc, char ** argv)
     app.setOrganizationName("Nokia");
     app.setOrganizationDomain("nokia.com");
 
+    QTranslator translator;
+    QTranslator qtTranslator;
+    QString sysLocale = QLocale::system().name();
+    if (translator.load(QLatin1String("qmlscene_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
+        app.installTranslator(&translator);
+        if (qtTranslator.load(QLatin1String("qt_") + sysLocale, QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
+            app.installTranslator(&qtTranslator);
+        } else {
+            app.removeTranslator(&translator);
+        }
+    }
+
+    QTranslator qmlTranslator;
+    if (!options.translationFile.isEmpty()) {
+        if (qmlTranslator.load(options.translationFile)) {
+            app.installTranslator(&qmlTranslator);
+        } else {
+            qWarning() << "Could not load the translation file" << options.translationFile;
+        }
+    }
+
     QUnifiedTimer::instance()->setSlowModeEnabled(options.slowAnimations);
 
     if (options.file.isEmpty())
@@ -416,6 +449,7 @@ int main(int argc, char ** argv)
 
     if (!options.file.isEmpty()) {
         if (!options.versionDetection || checkVersion(options.file)) {
+            QTranslator translator;
             QQuickView qxView;
             engine = qxView.engine();
             for (int i = 0; i < imports.size(); ++i)
@@ -424,6 +458,7 @@ int main(int argc, char ** argv)
                 engine->addNamedBundle(bundles.at(i).first, bundles.at(i).second);
             if (options.file.isLocalFile()) {
                 QFileInfo fi(options.file.toLocalFile());
+                loadTranslationFile(translator, fi.path());
                 loadDummyDataFiles(*engine, fi.path());
             }
             qxView.setSource(options.file);
@@ -466,4 +501,3 @@ int main(int argc, char ** argv)
 
     return exitCode;
 }
-
