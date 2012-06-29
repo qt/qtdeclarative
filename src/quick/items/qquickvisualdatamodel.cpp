@@ -511,17 +511,19 @@ void QQuickVisualDataModel::cancel(int index)
     Compositor::iterator it = d->m_compositor.find(d->m_compositorGroup, index);
     QQuickVisualDataModelItem *cacheItem = it->inCache() ? d->m_cache.at(it.cacheIndex) : 0;
     if (cacheItem) {
-        if (cacheItem->incubationTask) {
+        if (cacheItem->incubationTask && !cacheItem->isObjectReferenced()) {
             d->releaseIncubator(cacheItem->incubationTask);
             cacheItem->incubationTask = 0;
-        }
-        if (cacheItem->object && !cacheItem->isObjectReferenced()) {
-            QObject *object = cacheItem->object;
-            cacheItem->destroyObject();
-            if (QQuickItem *item = qmlobject_cast<QQuickItem *>(object))
-                d->emitDestroyingItem(item);
-            else if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(object))
-                d->emitDestroyingPackage(package);
+
+            if (cacheItem->object) {
+                QObject *object = cacheItem->object;
+                cacheItem->destroyObject();
+                if (QQuickItem *item = qmlobject_cast<QQuickItem *>(object))
+                    d->emitDestroyingItem(item);
+                else if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(object))
+                    d->emitDestroyingPackage(package);
+            }
+
             cacheItem->scriptRef -= 1;
         }
         if (!cacheItem->isReferenced()) {
