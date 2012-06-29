@@ -2204,28 +2204,7 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     emit q->childrenChanged();
 }
 
-void QQuickItemPrivate::InitializationState::clear()
-{
-    focusScope = 0;
-}
-
-void QQuickItemPrivate::InitializationState::clear(QQuickItem *fs)
-{
-    focusScope = fs;
-}
-
-QQuickItem *QQuickItemPrivate::InitializationState::getFocusScope(QQuickItem *item)
-{
-    if (!focusScope) {
-        QQuickItem *fs = item->parentItem();
-        while (fs->parentItem() && !fs->isFocusScope())
-            fs = fs->parentItem();
-        focusScope = fs;
-    }
-    return focusScope;
-}
-
-void QQuickItemPrivate::refCanvas(InitializationState *state, QQuickCanvas *c)
+void QQuickItemPrivate::refCanvas(QQuickCanvas *c)
 {
     // An item needs a canvas if it is referenced by another item which has a canvas.
     // Typically the item is referenced by a parent, but can also be referenced by a
@@ -2251,20 +2230,12 @@ void QQuickItemPrivate::refCanvas(InitializationState *state, QQuickCanvas *c)
     if (polishScheduled)
         QQuickCanvasPrivate::get(canvas)->itemsToPolish.insert(q);
 
-    InitializationState _dummy;
-    InitializationState *childState = state;
-
-    if (q->isFocusScope()) {
-        _dummy.clear(q);
-        childState = &_dummy;
-    }
-
     if (!parentItem)
         QQuickCanvasPrivate::get(canvas)->parentlessItems.insert(q);
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuickItem *child = childItems.at(ii);
-        QQuickItemPrivate::get(child)->refCanvas(childState, c);
+        QQuickItemPrivate::get(child)->refCanvas(c);
     }
 
     dirty(Canvas);

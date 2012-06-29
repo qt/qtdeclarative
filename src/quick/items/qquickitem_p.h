@@ -467,17 +467,7 @@ public:
 
     inline void markSortedChildrenDirty(QQuickItem *child);
 
-    class InitializationState {
-    public:
-        QQuickItem *getFocusScope(QQuickItem *item);
-        void clear();
-        void clear(QQuickItem *focusScope);
-    private:
-        QQuickItem *focusScope;
-    };
-
     void refCanvas(QQuickCanvas *);
-    void refCanvas(InitializationState *, QQuickCanvas *);
     void derefCanvas();
 
     QQuickItem *subFocusItem;
@@ -863,13 +853,6 @@ void QQuickItemPrivate::markSortedChildrenDirty(QQuickItem *child)
 QQuickItem::TransformOrigin QQuickItemPrivate::origin() const
 {
     return extra.isAllocated()?extra->origin:QQuickItem::Center;
-}
-
-inline void QQuickItemPrivate::refCanvas(QQuickCanvas *c)
-{
-    QQuickItemPrivate::InitializationState initState;
-    initState.clear();
-    refCanvas(&initState, c);
 }
 
 QSGTransformNode *QQuickItemPrivate::itemNode()
