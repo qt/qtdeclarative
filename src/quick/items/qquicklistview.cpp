@@ -110,6 +110,7 @@ public:
     virtual bool applyInsertionChange(const QQuickChangeSet::Insert &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView);
     virtual void translateAndTransitionItemsAfter(int afterIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult);
 
+    virtual void updateSectionCriteria();
     virtual void updateSections();
     QQuickItem *getSectionItem(const QString &section);
     void releaseSectionItem(QQuickItem *item);
@@ -194,7 +195,8 @@ void QQuickViewSection::setProperty(const QString &property)
     if (property != m_property) {
         m_property = property;
         emit propertyChanged();
-        m_view->updateSections();
+        // notify view that the contents of the sections must be recalculated
+        m_view->updateSectionCriteria();
     }
 }
 
@@ -203,7 +205,8 @@ void QQuickViewSection::setCriteria(QQuickViewSection::SectionCriteria criteria)
     if (criteria != m_criteria) {
         m_criteria = criteria;
         emit criteriaChanged();
-        m_view->updateSections();
+        // notify view that the contents of the sections must be recalculated
+        m_view->updateSectionCriteria();
     }
 }
 
@@ -214,7 +217,7 @@ void QQuickViewSection::setDelegate(QQmlComponent *delegate)
             m_view->releaseSectionItems();
         m_delegate = delegate;
         emit delegateChanged();
-        m_view->updateSections();
+        m_view->forceLayoutPolish();
     }
 }
 
@@ -231,7 +234,7 @@ void QQuickViewSection::setLabelPositioning(int l)
     if (m_labelPositioning != l) {
         m_labelPositioning = l;
         emit labelPositioningChanged();
-        m_view->updateSections();
+        m_view->forceLayoutPolish();
     }
 }
 
@@ -805,6 +808,9 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
         // move current item if it is not a visible item.
         if (currentIndex >= 0 && currentItem && !fixedCurrent)
             static_cast<FxListItemSG*>(currentItem)->setPosition(positionAt(currentIndex));
+
+        updateCurrentSection();
+        updateStickySections();
     }
 }
 
@@ -1163,10 +1169,6 @@ void QQuickListViewPrivate::updateSections()
     }
 
     lastVisibleSection = QString();
-    updateCurrentSection();
-    updateStickySections();
-    forceLayout = true;
-    q->polish();
 }
 
 void QQuickListViewPrivate::updateCurrentSection()
@@ -1378,8 +1380,7 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
                         listItem->setPosition(listItem->position() + diff, true);
                 }
             }
-            forceLayout = true;
-            q->polish();
+            forceLayoutPolish();
         }
     }
 }
@@ -1993,8 +1994,7 @@ void QQuickListView::setSpacing(qreal spacing)
     Q_D(QQuickListView);
     if (spacing != d->spacing) {
         d->spacing = spacing;
-        d->forceLayout = true;
-        polish();
+        d->forceLayoutPolish();
         emit spacingChanged();
     }
 }
@@ -2199,10 +2199,8 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 QQuickViewSection *QQuickListView::sectionCriteria()
 {
     Q_D(QQuickListView);
-    if (!d->sectionCriteria) {
+    if (!d->sectionCriteria)
         d->sectionCriteria = new QQuickViewSection(this);
-        connect(d->sectionCriteria, SIGNAL(propertyChanged()), this, SLOT(updateSections()));
-    }
     return d->sectionCriteria;
 }
 
@@ -2853,19 +2851,17 @@ void QQuickListView::decrementCurrentIndex()
     }
 }
 
-void QQuickListView::updateSections()
+void QQuickListViewPrivate::updateSectionCriteria()
 {
-    Q_D(QQuickListView);
-    if (isComponentComplete() && d->model) {
+    Q_Q(QQuickListView);
+    if (q->isComponentComplete() && model) {
         QList<QByteArray> roles;
-        if (d->sectionCriteria && !d->sectionCriteria->property().isEmpty())
-            roles << d->sectionCriteria->property().toUtf8();
-        d->model->setWatchedRoles(roles);
-        d->updateSections();
-        if (d->itemCount) {
-            d->forceLayout = true;
-            polish();
-        }
+        if (sectionCriteria && !sectionCriteria->property().isEmpty())
+            roles << sectionCriteria->property().toUtf8();
+        model->setWatchedRoles(roles);
+        updateSections();
+        if (itemCount)
+            forceLayoutPolish();
     }
 }
 

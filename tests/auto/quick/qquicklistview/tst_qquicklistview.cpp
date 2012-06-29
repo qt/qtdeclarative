@@ -2332,17 +2332,31 @@ void tst_QQuickListView::sectionsPositioning()
     QTRY_VERIFY(bottomItem = findVisibleChild(contentItem, "sect_new")); // section footer
     QTRY_COMPARE(bottomItem->y(), 300.);
 
+    // delegate size increase should push section footer down
+    listview->setContentY(70);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_VERIFY(bottomItem = findVisibleChild(contentItem, "sect_3")); // section footer
+    QTRY_COMPARE(bottomItem->y(), 370.);
+    QQuickItem *inlineSection = findVisibleChild(contentItem, "sect_new");
+    item = findItem<QQuickItem>(contentItem, "wrapper", 13);
+    QVERIFY(item);
+    item->setHeight(40.);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_COMPARE(bottomItem->y(), 380.);
+    QCOMPARE(inlineSection->y(), 360.);
+    item->setHeight(20.);
+
     // Turn sticky footer off
     listview->setContentY(20);
-    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart)));
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     QTRY_VERIFY(item = findVisibleChild(contentItem, "sect_new")); // inline label restored
     QCOMPARE(item->y(), 340.);
 
     // Turn sticky header off
     listview->setContentY(30);
-    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels)));
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     QTRY_VERIFY(item = findVisibleChild(contentItem, "sect_aaa")); // inline label restored
     QCOMPARE(item->y(), 0.);
 

@@ -1614,8 +1614,7 @@ void QQuickGridView::setCellWidth(qreal cellWidth)
         d->cellWidth = qMax(qreal(1), cellWidth);
         d->updateViewport();
         emit cellWidthChanged();
-        d->forceLayout = true;
-        polish();
+        d->forceLayoutPolish();
     }
 }
 
@@ -1632,8 +1631,7 @@ void QQuickGridView::setCellHeight(qreal cellHeight)
         d->cellHeight = qMax(qreal(1), cellHeight);
         d->updateViewport();
         emit cellHeightChanged();
-        d->forceLayout = true;
-        polish();
+        d->forceLayoutPolish();
     }
 }
 /*!

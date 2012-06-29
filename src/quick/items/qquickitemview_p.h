@@ -258,7 +258,6 @@ protected:
     virtual qreal maxXExtent() const;
 
 protected slots:
-    virtual void updateSections() {}
     void destroyRemoved();
     void createdItem(int index, QQuickItem *item);
     virtual void initItem(int index, QQuickItem *item);

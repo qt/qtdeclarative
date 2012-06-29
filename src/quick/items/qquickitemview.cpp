@@ -307,7 +307,7 @@ void QQuickItemView::setModel(const QVariant &model)
         connect(d->model, SIGNAL(initItem(int,QQuickItem*)), this, SLOT(initItem(int,QQuickItem*)));
         connect(d->model, SIGNAL(destroyingItem(QQuickItem*)), this, SLOT(destroyingItem(QQuickItem*)));
         if (isComponentComplete()) {
-            updateSections();
+            d->updateSectionCriteria();
             d->refill();
             if ((d->currentIndex >= d->model->count() || d->currentIndex < 0) && !d->currentIndexCleared) {
                 setCurrentIndex(0);
@@ -324,9 +324,8 @@ void QQuickItemView::setModel(const QVariant &model)
             d->updateViewport();
 
             if (d->transitioner && d->transitioner->populateTransition) {
-                d->forceLayout = true;
                 d->transitioner->setPopulateTransitionEnabled(true);
-                polish();
+                d->forceLayoutPolish();
             }
         }
         connect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
@@ -365,7 +364,7 @@ void QQuickItemView::setDelegate(QQmlComponent *delegate)
             d->visibleItems.clear();
             d->releaseItem(d->currentItem);
             d->currentItem = 0;
-            updateSections();
+            d->updateSectionCriteria();
             d->refill();
             d->moveReason = QQuickItemViewPrivate::SetIndex;
             d->updateCurrent(d->currentIndex);
@@ -1135,9 +1134,7 @@ void QQuickItemView::destroyRemoved()
     }
 
     // Correct the positioning of the items
-    d->updateSections();
-    d->forceLayout = true;
-    polish();
+    d->forceLayoutPolish();
 }
 
 void QQuickItemView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
@@ -1155,10 +1152,8 @@ void QQuickItemView::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
         }
         d->moveReason = QQuickItemViewPrivate::Other;
         emit countChanged();
-        if (d->transitioner && d->transitioner->populateTransition) {
-            d->forceLayout = true;
-            polish();
-        }
+        if (d->transitioner && d->transitioner->populateTransition)
+            d->forceLayoutPolish();
     } else {
         if (d->inLayout) {
             d->bufferedChanges.prepare(d->currentIndex, d->itemCount);
@@ -1268,10 +1263,8 @@ void QQuickItemView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
 {
     Q_D(QQuickItemView);
     d->markExtentsDirty();
-    if (isComponentComplete() && d->isValid()) {
-        d->forceLayout = true;
-        polish();
-    }
+    if (isComponentComplete() && d->isValid())
+        d->forceLayoutPolish();
     QQuickFlickable::geometryChanged(newGeometry, oldGeometry);
 }
 
@@ -1384,7 +1377,7 @@ void QQuickItemView::componentComplete()
 
     QQuickFlickable::componentComplete();
 
-    updateSections();
+    d->updateSectionCriteria();
     d->updateHeader();
     d->updateFooter();
     d->updateViewport();
@@ -1779,6 +1772,8 @@ void QQuickItemViewPrivate::layout()
                 visibleItems.at(i)->transitionNextReposition(transitioner, QQuickItemViewTransitioner::PopulateTransition, true);
         }
     }
+
+    updateSections();
     layoutVisibleItems();
 
     int lastIndexInView = findLastIndexInView();

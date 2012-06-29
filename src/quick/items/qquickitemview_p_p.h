@@ -247,6 +247,12 @@ public:
             refill();
     }
 
+    void forceLayoutPolish() {
+        Q_Q(QQuickItemView);
+        forceLayout = true;
+        q->polish();
+    }
+
     QQmlGuard<QQuickVisualModel> model;
     QVariant modelVariant;
     int itemCount;
@@ -350,6 +356,7 @@ protected:
 
     virtual void initializeViewItem(FxViewItem *) {}
     virtual void initializeCurrentItem() {}
+    virtual void updateSectionCriteria() {}
     virtual void updateSections() {}
 
     virtual void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);

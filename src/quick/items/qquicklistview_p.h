@@ -81,6 +81,7 @@ public:
     void setLabelPositioning(int pos);
 
 Q_SIGNALS:
+    void sectionsChanged();
     void propertyChanged();
     void criteriaChanged();
     void delegateChanged();
@@ -169,9 +170,6 @@ protected:
     virtual void keyPressEvent(QKeyEvent *);
     virtual void geometryChanged(const QRectF &newGeometry,const QRectF &oldGeometry);
     virtual void initItem(int index, QQuickItem *item);
-
-protected Q_SLOTS:
-    void updateSections();
 };
 
 class QQuickListViewAttached : public QQuickItemViewAttached
