@@ -95,6 +95,8 @@ private slots:
     void bindingsSpliceCorrectly();
     void nonValueTypeComparison();
     void initializeByWrite();
+    void groupedInterceptors();
+    void groupedInterceptors_data();
 
 private:
     QQmlEngine engine;
@@ -1342,6 +1344,45 @@ void tst_qqmlvaluetypes::initializeByWrite()
     QVERIFY(object != 0);
 
     QCOMPARE(object->property("test").toBool(), true);
+
+    delete object;
+}
+
+void tst_qqmlvaluetypes::groupedInterceptors_data()
+{
+    QTest::addColumn<QString>("qmlfile");
+    QTest::addColumn<QColor>("expectedInitialColor");
+    QTest::addColumn<QColor>("setColor");
+    QTest::addColumn<QColor>("expectedFinalColor");
+
+    QColor c0, c1, c2;
+    c0.setRgbF(0.1f, 0.2f, 0.3f, 0.4f);
+    c1.setRgbF(0.2f, 0.4f, 0.6f, 0.8f);
+    c2.setRgbF(0.8f, 0.6f, 0.4f, 0.2f);
+
+    QTest::newRow("value-interceptor") << QString::fromLatin1("grouped_interceptors_value.qml") << c0 << c1 << c2;
+    QTest::newRow("component-interceptor") << QString::fromLatin1("grouped_interceptors_component.qml") << QColor(128, 0, 255) << QColor(50, 100, 200) << QColor(0, 100, 200);
+    QTest::newRow("ignore-interceptor") << QString::fromLatin1("grouped_interceptors_ignore.qml") << QColor(128, 0, 255) << QColor(50, 100, 200) << QColor(128, 100, 200);
+}
+
+void tst_qqmlvaluetypes::groupedInterceptors()
+{
+    QFETCH(QString, qmlfile);
+    QFETCH(QColor, expectedInitialColor);
+    QFETCH(QColor, setColor);
+    QFETCH(QColor, expectedFinalColor);
+
+    QQmlComponent component(&engine, testFileUrl(qmlfile));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QColor initialColor = object->property("color").value<QColor>();
+    QCOMPARE(initialColor, expectedInitialColor);
+
+    object->setProperty("color", setColor);
+
+    QColor finalColor = object->property("color").value<QColor>();
+    QCOMPARE(finalColor, expectedFinalColor);
 
     delete object;
 }

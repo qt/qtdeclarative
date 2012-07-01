@@ -214,6 +214,66 @@ private:
     QQmlProperty prop;
 };
 
+// This test interceptor deliberately swizzles RGBA -> ABGR
+class MyColorInterceptor : public QObject, public QQmlPropertyValueInterceptor
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlPropertyValueInterceptor)
+public:
+    virtual void setTarget(const QQmlProperty &p) { prop = p; }
+    virtual void write(const QVariant &v)
+    {
+        QColor c = v.value<QColor>();
+
+        int r, g, b, a;
+        c.getRgb(&r, &g, &b, &a);
+        c.setRgb(a, b, g, r);
+
+        QQmlPropertyPrivate::write(prop, c, QQmlPropertyPrivate::BypassInterceptor);
+    }
+
+private:
+    QQmlProperty prop;
+};
+
+class MyFloatSetInterceptor : public QObject, public QQmlPropertyValueInterceptor
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlPropertyValueInterceptor)
+public:
+    virtual void setTarget(const QQmlProperty &p) { prop = p; }
+    virtual void write(const QVariant &)
+    {
+        QQmlPropertyPrivate::write(prop, 0.0f, QQmlPropertyPrivate::BypassInterceptor);
+    }
+
+private:
+    QQmlProperty prop;
+};
+
+class MyFloatIgnoreInterceptor : public QObject, public QQmlPropertyValueInterceptor
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlPropertyValueInterceptor)
+public:
+    virtual void setTarget(const QQmlProperty &) {}
+    virtual void write(const QVariant &) {}
+};
+
+class MyColorObject : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(QColor color READ color WRITE setColor)
+
+public:
+    MyColorObject() {}
+
+    QColor m_color;
+    QColor color() const { return m_color; }
+    void setColor(const QColor &v) { m_color = v; }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

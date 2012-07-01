@@ -1413,6 +1413,8 @@ void QQmlCompiler::genValueTypeProperty(QQmlScript::Object *obj,QQmlScript::Prop
     pop.type = prop->type;
     pop.bindingSkipList = 0;
     output->addInstruction(pop);
+
+    genPropertyAssignment(prop, obj);
 }
 
 void QQmlCompiler::genComponent(QQmlScript::Object *obj)
@@ -2106,17 +2108,21 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
         if (prop->type >= 0 && enginePrivate->valueTypes[prop->type]) {
 
             if (!prop->values.isEmpty()) {
-                if (prop->values.first()->location < prop->value->location) {
-                    COMPILE_EXCEPTION(prop->value, tr( "Property has already been assigned a value"));
-                } else {
-                    COMPILE_EXCEPTION(prop->values.first(), tr( "Property has already been assigned a value"));
+                // Only error if we are assigning values, and not e.g. a property interceptor
+                for (Property *dotProp = prop->value->properties.first(); dotProp; dotProp = prop->value->properties.next(dotProp)) {
+                    if (!dotProp->values.isEmpty()) {
+                        if (prop->values.first()->location < prop->value->location) {
+                            COMPILE_EXCEPTION(prop->value, tr( "Property has already been assigned a value"));
+                        } else {
+                            COMPILE_EXCEPTION(prop->values.first(), tr( "Property has already been assigned a value"));
+                        }
+                    }
                 }
             }
 
             if (!prop->core.isWritable() && !prop->isReadOnlyDeclaration) {
                 COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
             }
-
 
             if (prop->isAlias) {
                 for (Property *vtProp = prop->value->properties.first(); vtProp; vtProp = prop->value->properties.next(vtProp)) {
@@ -2126,7 +2132,26 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
 
             COMPILE_CHECK(buildValueTypeProperty(enginePrivate->valueTypes[prop->type],
                                                  prop->value, obj, ctxt.incr()));
+
+            // When building a value type where sub components are declared, this
+            // code path is followed from buildProperty, even if there is a previous
+            // assignment to the value type as a whole. Therefore we need to look
+            // for (and build) assignments to the entire value type before looking
+            // for any onValue assignments.
+            for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
+                if (v->object) {
+                    COMPILE_EXCEPTION(v->object, tr("Objects cannot be assigned to value types"));
+                }
+                COMPILE_CHECK(buildPropertyLiteralAssignment(prop, obj, v, ctxt));
+            }
+
+            for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
+                Q_ASSERT(v->object);
+                COMPILE_CHECK(buildPropertyOnAssignment(prop, obj, obj, v, ctxt));
+            }
+
             obj->addValueTypeProperty(prop);
+
         } else {
             COMPILE_EXCEPTION(prop, tr("Invalid grouped property access"));
         }

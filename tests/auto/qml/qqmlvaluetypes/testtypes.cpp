@@ -45,4 +45,8 @@ void registerTypes()
     qmlRegisterType<MyTypeObject>("Test", 1, 0, "MyTypeObject");
     qmlRegisterType<MyConstantValueSource>("Test", 1, 0, "MyConstantValueSource");
     qmlRegisterType<MyOffsetValueInterceptor>("Test", 1, 0, "MyOffsetValueInterceptor");
+    qmlRegisterType<MyColorObject>("Test", 1, 0, "MyColorObject");
+    qmlRegisterType<MyColorInterceptor>("Test", 1, 0, "MyColorInterceptor");
+    qmlRegisterType<MyFloatSetInterceptor>("Test", 1, 0, "MyFloatSetInterceptor");
+    qmlRegisterType<MyFloatIgnoreInterceptor>("Test", 1, 0, "MyFloatIgnoreInterceptor");
 }
