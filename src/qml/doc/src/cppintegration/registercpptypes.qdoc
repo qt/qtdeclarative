@@ -225,7 +225,7 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
     A QJSValue may also be exposed as a module API, however clients should
     be aware that properties of such a module API cannot be bound to.
 
-    See \l{qmlRegisterModuleApi<T>()} for more information on how implement and
+    See \l{qmlRegisterModuleApi()} for more information on how implement and
     register a new module API, and how to use an existing module API.
 
 \section1 Type Revisions and Versions

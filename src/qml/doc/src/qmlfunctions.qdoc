@@ -251,7 +251,7 @@
   */
 
 /*!
-   \fn template<typename T> int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QQmlEngine *, QJSEngine *))
+   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QQmlEngine *, QJSEngine *))
    \relates QQmlEngine
 
    This function may be used to register a module API provider \a callback in a particular \a uri
