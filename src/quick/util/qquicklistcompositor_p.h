@@ -222,7 +222,6 @@ public:
     iterator find(Group group, int index) const;
     insert_iterator findInsertPosition(Group group, int index);
 
-    iterator begin(Group group);
     const iterator &end() { return m_end; }
 
     void append(void *list, int index, int count, uint flags, QVector<Insert> *inserts = 0);
@@ -243,8 +242,6 @@ public:
     void clearFlags(iterator from, int count, uint flags, QVector<Remove> *removals = 0) {
         clearFlags(from, count, from.group, flags, removals); }
 
-    void removeList(void *list, QVector<Remove> *removals, bool destroyed);
-
     bool verifyMoveTo(Group fromGroup, int from, Group toGroup, int to, int count, Group group) const;
 
     void move(
@@ -262,12 +259,6 @@ public:
     void listItemsRemoved(void *list, int index, int count, QVector<Remove> *removals);
     void listItemsMoved(void *list, int from, int to, int count, QVector<Remove> *removals, QVector<Insert> *inserts);
     void listItemsChanged(void *list, int index, int count, QVector<Change> *changes);
-    void listChanged(
-            void *list,
-            const QQuickChangeSet &changeSet,
-            QVector<Remove> *removals,
-            QVector<Insert> *inserts,
-            QVector<Change> *changes);
 
     void transition(
             Group from,

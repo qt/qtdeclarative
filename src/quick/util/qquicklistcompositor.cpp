@@ -290,14 +290,6 @@ QQuickListCompositor::insert_iterator QQuickListCompositor::findInsertPosition(G
     return it;
 }
 
-QQuickListCompositor::iterator QQuickListCompositor::begin(Group group)
-{
-    QT_QML_TRACE_LISTCOMPOSITOR(<< group)
-    m_cacheIt = iterator(m_ranges.next, 0, group, m_groupCount);
-    m_cacheIt += 0;
-    return m_cacheIt;
-}
-
 void QQuickListCompositor::append(
         void *list, int index, int count, uint flags, QVector<Insert> *inserts)
 {
@@ -519,32 +511,6 @@ void QQuickListCompositor::clearFlags(
         *from = erase(*from)->previous;
     }
     m_cacheIt = from;
-    QT_QML_VERIFY_LISTCOMPOSITOR
-}
-
-void QQuickListCompositor::removeList(void *list, QVector<Remove> *removes, bool destroyed)
-{
-    QT_QML_TRACE_LISTCOMPOSITOR(<< list << destroyed)
-    for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {
-        if (it->list == list) {
-            const int flags = it->flags & (GroupMask | CacheFlag);
-            if (flags) {
-                removes->append(Remove(it, it->count, flags));
-                m_end.decrementIndexes(it->count, flags);
-            }
-            if (destroyed)
-                it->list = 0;
-            if (it->inCache()) {
-                it->flags = CacheFlag;
-                it.cacheIndex += it->count;
-            } else {
-                *it = erase(*it)->previous;
-            }
-        } else {
-            it.incrementIndexes(it->count);
-        }
-    }
-    m_cacheIt = m_end;
     QT_QML_VERIFY_LISTCOMPOSITOR
 }
 
@@ -1062,21 +1028,6 @@ void QQuickListCompositor::listItemsChanged(
     QVector<QQuickChangeSet::Change> changes;
     changes.append(QQuickChangeSet::Change(index, count));
     listItemsChanged(translatedChanges, list, changes);
-}
-
-void QQuickListCompositor::listChanged(
-        void *list,
-        const QQuickChangeSet &changeSet,
-        QVector<Remove> *translatedRemovals,
-        QVector<Insert> *translatedInsertions,
-        QVector<Change> *translatedChanges)
-{
-    QVector<QQuickChangeSet::Remove> removals = changeSet.removes();
-    QVector<QQuickChangeSet::Insert> insertions = changeSet.inserts();
-    QVector<MovedFlags> movedFlags;
-    listItemsRemoved(translatedRemovals, list, &removals, &insertions, &movedFlags, changeSet.moveCounter());
-    listItemsInserted(translatedInsertions, list, insertions, &movedFlags);
-    listItemsChanged(translatedChanges, list, changeSet.changes());
 }
 
 void QQuickListCompositor::transition(
