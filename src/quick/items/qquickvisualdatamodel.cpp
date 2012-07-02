@@ -955,7 +955,20 @@ QString QQuickVisualDataModelPrivate::stringValue(Compositor::Group group, int i
 {
     Compositor::iterator it = m_compositor.find(group, index);
     if (QQuickVisualAdaptorModel *model = it.list<QQuickVisualAdaptorModel>()) {
-        return model->stringValue(it.modelIndex(), name);
+        QString role = name;
+        int dot = name.indexOf(QLatin1Char('.'));
+        if (dot > 0)
+            role = name.left(dot);
+        QVariant value = model->value(it.modelIndex(), role);
+        while (dot > 0) {
+            QObject *obj = qvariant_cast<QObject*>(value);
+            if (!obj)
+                return QString();
+            int from = dot+1;
+            dot = name.indexOf(QLatin1Char('.'), from);
+            value = obj->property(name.mid(from, dot-from).toUtf8());
+        }
+        return value.toString();
     }
     return QString();
 }

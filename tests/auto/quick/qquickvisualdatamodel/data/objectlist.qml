@@ -14,6 +14,10 @@ ListView {
             Text { objectName: "section"; text: parent.ListView.section }
         }
     }
+
+    function changeSectionProperty() {
+        section.property = "object.subName"
+    }
     section.property: "name"
     section.criteria: ViewSection.FullString
 }

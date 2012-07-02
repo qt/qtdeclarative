@@ -69,8 +69,8 @@ public:
         virtual int count(const QQuickVisualAdaptorModel &) const { return 0; }
         virtual void cleanup(QQuickVisualAdaptorModel &, QQuickVisualDataModel * = 0) const {}
 
-        virtual QString stringValue(const QQuickVisualAdaptorModel &, int, const QString &) const {
-            return QString(); }
+        virtual QVariant value(const QQuickVisualAdaptorModel &, int, const QString &) const {
+            return QVariant(); }
 
         virtual QQuickVisualDataModelItem *createItem(
                 QQuickVisualAdaptorModel &,
@@ -113,8 +113,8 @@ public:
     inline const QListModelInterface *lmi() const { return static_cast<const QListModelInterface *>(object()); }
 
     inline int count() const { return qMax(0, accessors->count(*this)); }
-    inline QString stringValue(int index, const QString &role) const {
-        return accessors->stringValue(*this, index, role); }
+    inline QVariant value(int index, const QString &role) const {
+        return accessors->value(*this, index, role); }
     inline QQuickVisualDataModelItem *createItem(QQuickVisualDataModelItemMetaType *metaType, QQmlEngine *engine, int index) {
         return accessors->createItem(*this, metaType, engine, index); }
     inline bool hasProxyObject() const {

@@ -457,15 +457,15 @@ public:
         const_cast<VDMAbstractItemModelDataType *>(this)->release();
     }
 
-    QString stringValue(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
     {
         QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
         if (it != roleNames.end()) {
-            return model.aim()->index(index, 0, model.rootIndex).data(*it).toString();
+            return model.aim()->index(index, 0, model.rootIndex).data(*it);
         } else if (role == QLatin1String("hasModelChildren")) {
-            return QVariant(model.aim()->hasChildren(model.aim()->index(index, 0, model.rootIndex))).toString();
+            return QVariant(model.aim()->hasChildren(model.aim()->index(index, 0, model.rootIndex)));
         } else {
-            return QString();
+            return QVariant();
         }
     }
 
@@ -596,12 +596,12 @@ public:
         const_cast<VDMListModelInterfaceDataType *>(this)->release();
     }
 
-    QString stringValue(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
     {
         QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
         return it != roleNames.end() && model
-                ? model.lmi()->data(index, *it).toString()
-                : QString();
+                ? model.lmi()->data(index, *it)
+                : QVariant();
     }
 
     QQuickVisualDataModelItem *createItem(
@@ -735,11 +735,11 @@ public:
         return model.list.count();
     }
 
-    QString stringValue(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
     {
         return role == QLatin1String("modelData")
-                ? model.list.at(index).toString()
-                : QString();
+                ? model.list.at(index)
+                : QVariant();
     }
 
     QQuickVisualDataModelItem *createItem(
@@ -819,11 +819,11 @@ public:
         return model.list.count();
     }
 
-    QString stringValue(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
+    QVariant value(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
     {
         if (QObject *object = model.list.at(index).value<QObject *>())
-            return object->property(role.toUtf8()).toString();
-        return QString();
+            return object->property(role.toUtf8());
+        return QVariant();
     }
 
     QQuickVisualDataModelItem *createItem(

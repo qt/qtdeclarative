@@ -151,17 +151,42 @@ public:
 };
 #endif
 
+class DataSubObject : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(QString subName READ subName WRITE setSubName NOTIFY subNameChanged)
+
+public:
+    DataSubObject(QObject *parent=0) : QObject(parent) {}
+
+    QString subName() const { return m_subName; }
+    void setSubName(const QString &name) {
+        if (name != m_subName) {
+            m_subName = name;
+            emit subNameChanged();
+        }
+    }
+
+signals:
+    void subNameChanged();
+
+private:
+    QString m_subName;
+};
+
 class DataObject : public QObject
 {
     Q_OBJECT
 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QString color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(QObject *object READ object)
 
 public:
     DataObject(QObject *parent=0) : QObject(parent) {}
     DataObject(const QString &name, const QString &color, QObject *parent=0)
-        : QObject(parent), m_name(name), m_color(color) { }
+        : QObject(parent), m_name(name), m_color(color), m_object(new DataSubObject(this)) { }
 
 
     QString name() const { return m_name; }
@@ -180,6 +205,11 @@ public:
         }
     }
 
+    QObject *object() const { return m_object; }
+    void setSubName(const QString &sn) {
+        m_object->setSubName(sn);
+    }
+
 signals:
     void nameChanged();
     void colorChanged();
@@ -187,6 +217,7 @@ signals:
 private:
     QString m_name;
     QString m_color;
+    DataSubObject *m_object;
 };
 
 class ItemRequester : public QObject
@@ -533,6 +564,14 @@ void tst_qquickvisualdatamodel::objectListModel()
     dataList[0]->setProperty("name", QLatin1String("Changed"));
     QCOMPARE(name->text(), QString("Changed"));
     QCOMPARE(name->property("modelName").toString(), QString("Changed"));
+
+    // Test resolving nested section property
+    DataObject *obj = static_cast<DataObject*>(dataList[0]);
+    obj->setSubName("SubItem 1");
+
+    QMetaObject::invokeMethod(listview, "changeSectionProperty");
+    section = findItem<QQuickText>(contentItem, "section", 0);
+    QCOMPARE(section->text(), QString("SubItem 1"));
 }
 
 void tst_qquickvisualdatamodel::singleRole()
