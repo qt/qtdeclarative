@@ -971,7 +971,7 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     vData.dragMaxBound = q->maxYExtent();
     fixupMode = Normal;
     lastPos = QPointF();
-    pressPos = event->windowPos();
+    pressPos = event->localPos();
     hData.pressPos = hData.move.value();
     vData.pressPos = vData.move.value();
     bool wasFlicking = hData.flicking || vData.flicking;
@@ -1006,7 +1006,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 
     qint64 elapsedSincePress = computeCurrentTime(event) - lastPressTime;
     if (q->yflick()) {
-        qreal dy = event->windowPos().y() - pressPos.y();
+        qreal dy = event->localPos().y() - pressPos.y();
         bool overThreshold = QQuickCanvasPrivate::dragOverThreshold(dy, Qt::YAxis, event);
         if (overThreshold || elapsedSincePress > 200) {
             if (!vMoved)
@@ -1040,7 +1040,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     }
 
     if (q->xflick()) {
-        qreal dx = event->windowPos().x() - pressPos.x();
+        qreal dx = event->localPos().x() - pressPos.x();
         bool overThreshold = QQuickCanvasPrivate::dragOverThreshold(dx, Qt::XAxis, event);
         if (overThreshold || elapsedSincePress > 200) {
             if (!hMoved)
@@ -1101,7 +1101,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         if (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity) {
             vData.addVelocitySample(QGuiApplicationPrivate::mouseEventVelocity(event).y(), maxVelocity);
         } else {
-            qreal dy = event->windowPos().y() - (lastPos.isNull() ? pressPos.y() : lastPos.y());
+            qreal dy = event->localPos().y() - (lastPos.isNull() ? pressPos.y() : lastPos.y());
             vData.addVelocitySample(dy/elapsed, maxVelocity);
         }
     }
@@ -1109,12 +1109,12 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         if (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity) {
             hData.addVelocitySample(QGuiApplicationPrivate::mouseEventVelocity(event).x(), maxVelocity);
         } else {
-            qreal dx = event->windowPos().x() - (lastPos.isNull() ? pressPos.x() : lastPos.x());
+            qreal dx = event->localPos().x() - (lastPos.isNull() ? pressPos.x() : lastPos.x());
             hData.addVelocitySample(dx/elapsed, maxVelocity);
         }
     }
 
-    lastPos = event->windowPos();
+    lastPos = event->localPos();
 }
 
 void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
@@ -1173,7 +1173,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool flickedV = false;
     vVelocity *= flickBoost;
-    if (q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->windowPos().y() - pressPos.y()) > FlickThreshold) {
+    if (q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
         flickedV = flickY(vVelocity);
@@ -1183,7 +1183,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool flickedH = false;
     hVelocity *= flickBoost;
-    if (q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->windowPos().x() - pressPos.x()) > FlickThreshold) {
+    if (q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);
         flickedH = flickX(hVelocity);
