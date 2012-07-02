@@ -199,6 +199,8 @@ public:
     uint persistentGLContext : 1;
     uint persistentSceneGraph : 1;
 
+    uint lastWheelEventAccepted : 1;
+
     QOpenGLFramebufferObject *renderTarget;
     uint renderTargetId;
     QSize renderTargetSize;

@@ -337,6 +337,7 @@ QQuickCanvasPrivate::QQuickCanvasPrivate()
     , clearBeforeRendering(true)
     , persistentGLContext(false)
     , persistentSceneGraph(false)
+    , lastWheelEventAccepted(false)
     , renderTarget(0)
     , renderTargetId(0)
     , incubationController(0)
@@ -1408,10 +1409,16 @@ void QQuickCanvas::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickCanvas);
 #ifdef MOUSE_DEBUG
-    qWarning() << "QQuickCanvas::wheelEvent()" << event->pos() << event->delta() << event->orientation();
+    qWarning() << "QQuickCanvas::wheelEvent()" << event->pos() << event->pixelDelta() << event->angleDelta();
 #endif
+
+    //if the actual wheel event was accepted, accept the compatability wheel event and return early
+    if (d->lastWheelEventAccepted && event->angleDelta().isNull())
+        return;
+
     event->ignore();
     d->deliverWheelEvent(d->rootItem, event);
+    d->lastWheelEventAccepted = event->isAccepted();
 }
 #endif // QT_NO_WHEELEVENT
 

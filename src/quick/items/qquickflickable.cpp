@@ -1238,13 +1238,18 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
     Q_D(QQuickFlickable);
     if (!d->interactive) {
         QQuickItem::wheelEvent(event);
-    } else if (yflick() && event->orientation() == Qt::Vertical) {
+        return;
+    }
+
+    int yDelta = event->angleDelta().y();
+    int xDelta = event->angleDelta().x();
+    if (yflick() && yDelta != 0) {
         bool valid = false;
-        if (event->delta() > 0 && contentY() > -minYExtent()) {
-            d->vData.velocity = qMax(event->delta()*2 - d->vData.smoothVelocity.value(), qreal(d->maxVelocity/4));
+        if (yDelta > 0 && contentY() > -minYExtent()) {
+            d->vData.velocity = qMax(yDelta*2 - d->vData.smoothVelocity.value(), qreal(d->maxVelocity/4));
             valid = true;
-        } else if (event->delta() < 0 && contentY() < -maxYExtent()) {
-            d->vData.velocity = qMin(event->delta()*2 - d->vData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
+        } else if (yDelta < 0 && contentY() < -maxYExtent()) {
+            d->vData.velocity = qMin(yDelta*2 - d->vData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
             valid = true;
         }
         if (valid) {
@@ -1257,13 +1262,14 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
             }
             event->accept();
         }
-    } else if (xflick() && event->orientation() == Qt::Horizontal) {
+    }
+    if (xflick() && xDelta != 0) {
         bool valid = false;
-        if (event->delta() > 0 && contentX() > -minXExtent()) {
-            d->hData.velocity = qMax(event->delta()*2 - d->hData.smoothVelocity.value(), qreal(d->maxVelocity/4));
+        if (xDelta > 0 && contentX() > -minXExtent()) {
+            d->hData.velocity = qMax(xDelta*2 - d->hData.smoothVelocity.value(), qreal(d->maxVelocity/4));
             valid = true;
-        } else if (event->delta() < 0 && contentX() < -maxXExtent()) {
-            d->hData.velocity = qMin(event->delta()*2 - d->hData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
+        } else if (xDelta < 0 && contentX() < -maxXExtent()) {
+            d->hData.velocity = qMin(xDelta*2 - d->hData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
             valid = true;
         }
         if (valid) {
@@ -1276,9 +1282,10 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
             }
             event->accept();
         }
-    } else {
-        QQuickItem::wheelEvent(event);
     }
+
+    if (!event->isAccepted())
+        QQuickItem::wheelEvent(event);
 }
 
 bool QQuickFlickablePrivate::isOutermostPressDelay() const

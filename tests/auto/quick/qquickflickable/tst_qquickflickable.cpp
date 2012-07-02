@@ -489,7 +489,8 @@ void tst_qquickflickable::wheel()
     QVERIFY(flick != 0);
 
     {
-        QWheelEvent event(QPoint(200, 200), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
+        QPoint pos(200, 200);
+        QWheelEvent event(pos, canvas->mapToGlobal(pos), QPoint(), QPoint(0,-120), -120, Qt::Vertical, Qt::NoButton, Qt::NoModifier);
         event.setAccepted(false);
         QGuiApplication::sendEvent(canvas, &event);
     }
@@ -501,7 +502,9 @@ void tst_qquickflickable::wheel()
     QVERIFY(flick->contentY() == 0);
 
     {
-        QWheelEvent event(QPoint(200, 200), -120, Qt::NoButton, Qt::NoModifier, Qt::Horizontal);
+        QPoint pos(200, 200);
+        QWheelEvent event(pos, canvas->mapToGlobal(pos), QPoint(), QPoint(-120,0), -120, Qt::Horizontal, Qt::NoButton, Qt::NoModifier);
+
         event.setAccepted(false);
         QGuiApplication::sendEvent(canvas, &event);
     }
