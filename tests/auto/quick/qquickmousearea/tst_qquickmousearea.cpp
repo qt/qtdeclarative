@@ -989,7 +989,6 @@ void tst_QQuickMouseArea::hoverVisible()
     QCOMPARE(mouseTracker->hovered(), true);
     QCOMPARE(enteredSpy.count(), 1);
 
-    QEXPECT_FAIL("", "QTBUG-24282", Continue);
     QCOMPARE(QPointF(mouseTracker->mouseX(), mouseTracker->mouseY()), QPointF(11,33));
 
     delete canvas;

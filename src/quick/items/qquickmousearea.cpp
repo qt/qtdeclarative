@@ -47,6 +47,8 @@
 
 #include <private/qqmldata_p.h>
 
+#include <QtGui/private/qguiapplication_p.h>
+
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
@@ -1057,8 +1059,14 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
     Q_D(QQuickMouseArea);
     switch (change) {
     case ItemVisibleHasChanged:
-        if (acceptHoverEvents() && d->hovered != (isVisible() && isUnderMouse()))
+        if (acceptHoverEvents() && d->hovered != (isVisible() && isUnderMouse())) {
+            if (!d->hovered) {
+                QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
+                d->lastScenePos = d->canvas->mapFromGlobal(cursorPos.toPoint());
+                d->lastPos = mapFromScene(d->lastScenePos);
+            }
             setHovered(!d->hovered);
+        }
         break;
     default:
         break;
