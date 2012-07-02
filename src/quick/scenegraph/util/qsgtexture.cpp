@@ -48,7 +48,19 @@
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlglobal_p.h>
 
-#if !defined(QT_NO_DEBUG) && (defined(Q_OS_LINUX) || defined(Q_OS_MAC))
+#if defined(Q_OS_LINUX) && !defined(Q_OS_LINUX_ANDROID)
+#define CAN_BACKTRACE_EXECINFO
+#endif
+
+#if defined(Q_OS_MAC)
+#define CAN_BACKTRACE_EXECINFO
+#endif
+
+#if defined(QT_NO_DEBUG)
+#undef CAN_BACKTRACE_EXECINFO
+#endif
+
+#if defined(CAN_BACKTRACE_EXECINFO)
 #include <execinfo.h>
 #include <QHash>
 #endif
@@ -94,7 +106,7 @@ inline static void qt_debug_print_texture_count()
     qDebug("Number of leaked textures: %i", qt_debug_texture_count);
     qt_debug_texture_count = -1;
 
-#if defined(Q_OS_LINUX) || defined (Q_OS_MAC)
+#if defined(CAN_BACKTRACE_EXECINFO)
     if (qmlDebugLeakBacktrace()) {
         while (!qt_debug_allocated_textures.isEmpty()) {
             QHash<QSGTexture*, SGTextureTraceItem*>::Iterator it = qt_debug_allocated_textures.begin();
@@ -124,7 +136,7 @@ inline static void qt_debug_print_texture_count()
 
 inline static void qt_debug_add_texture(QSGTexture* texture)
 {
-#if defined(Q_OS_LINUX) || defined (Q_OS_MAC)
+#if defined(CAN_BACKTRACE_EXECINFO)
     if (qmlDebugLeakBacktrace()) {
         SGTextureTraceItem* item = new SGTextureTraceItem;
         item->backTraceSize = backtrace(item->backTrace, BACKTRACE_SIZE);
@@ -145,7 +157,7 @@ inline static void qt_debug_add_texture(QSGTexture* texture)
 
 static void qt_debug_remove_texture(QSGTexture* texture)
 {
-#if defined(Q_OS_LINUX) || defined (Q_OS_MAC)
+#if defined(CAN_BACKTRACE_EXECINFO)
     if (qmlDebugLeakBacktrace()) {
         SGTextureTraceItem* item = qt_debug_allocated_textures.value(texture, 0);
         if (item) {
