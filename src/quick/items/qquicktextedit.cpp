@@ -1605,13 +1605,6 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     if (oldNode == 0 || d->documentDirty) {
         d->documentDirty = false;
 
-#if defined(Q_OS_MAC)
-        // Make sure document is relayouted in the paint node on Mac
-        // to avoid crashes due to the font engines created in the
-        // shaping process
-        d->document->markContentsDirty(0, d->document->characterCount());
-#endif
-
         QQuickTextNode *node = 0;
         if (oldNode == 0) {
             node = new QQuickTextNode(QQuickItemPrivate::get(this)->sceneGraphContext(), this);
@@ -1629,13 +1622,6 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                               QColor(), d->selectionColor, d->selectedTextColor, selectionStart(),
                               selectionEnd() - 1);  // selectionEnd() returns first char after
                                                     // selection
-
-#if defined(Q_OS_MAC)
-        // We also need to make sure the document layout is redone when
-        // control is returned to the main thread, as all the font engines
-        // are now owned by the rendering thread
-        d->document->markContentsDirty(0, d->document->characterCount());
-#endif
     }
 
     if (d->cursorComponent == 0 && !isReadOnly()) {
