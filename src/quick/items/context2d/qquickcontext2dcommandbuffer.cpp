@@ -465,8 +465,10 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
                     sr.setTop(srBottom);
 
                     tex->bind();
-                    QOpenGL2PaintEngineEx *engine = dynamic_cast<QOpenGL2PaintEngineEx *>(p->paintEngine());
-                    engine->drawTexture(dr, tex->textureId(), tex->textureSize(), sr);
+                    if (p->paintEngine()->type() == QPaintEngine::OpenGL2) {
+                        QOpenGL2PaintEngineEx *engine = static_cast<QOpenGL2PaintEngineEx *>(p->paintEngine());
+                        engine->drawTexture(dr, tex->textureId(), tex->textureSize(), sr);
+                    }
                 }
             }
             break;

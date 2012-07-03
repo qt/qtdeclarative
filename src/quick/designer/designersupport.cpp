@@ -199,7 +199,9 @@ bool isValidAnchorName(const QString &name)
 
 bool DesignerSupport::isAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
 {
+#ifndef QT_NO_DYNAMIC_CAST
     Q_ASSERT(dynamic_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(fromItem)));
+#endif
     QQuickItemPrivate *fromItemPrivate = static_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(fromItem));
     QQuickAnchors *anchors = fromItemPrivate->anchors();
     return anchors->fill() == toItem
