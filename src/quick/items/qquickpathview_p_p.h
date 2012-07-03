@@ -127,6 +127,7 @@ public:
     void addVelocitySample(qreal v);
     qreal calcVelocity() const;
     qint64 computeCurrentTime(QInputEvent *event);
+    void setDragging(bool d);
 
     QQuickPath *path;
     int currentIndex;
@@ -146,6 +147,7 @@ public:
     bool layoutScheduled : 1;
     bool moving : 1;
     bool flicking : 1;
+    bool dragging : 1;
     bool requestedOnPath : 1;
     bool inRequest : 1;
     QElapsedTimer timer;

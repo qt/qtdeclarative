@@ -1428,6 +1428,13 @@ void tst_QQuickPathView::mouseDrag()
     QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
 
+    QSignalSpy movingSpy(pathview, SIGNAL(movingChanged()));
+    QSignalSpy moveStartedSpy(pathview, SIGNAL(movementStarted()));
+    QSignalSpy moveEndedSpy(pathview, SIGNAL(movementEnded()));
+    QSignalSpy draggingSpy(pathview, SIGNAL(draggingChanged()));
+    QSignalSpy dragStartedSpy(pathview, SIGNAL(dragStarted()));
+    QSignalSpy dragEndedSpy(pathview, SIGNAL(dragEnded()));
+
     int current = pathview->currentIndex();
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(10,100));
@@ -1439,6 +1446,13 @@ void tst_QQuickPathView::mouseDrag()
     }
     // first move beyond threshold does not trigger drag
     QVERIFY(!pathview->isMoving());
+    QVERIFY(!pathview->isDragging());
+    QCOMPARE(movingSpy.count(), 0);
+    QCOMPARE(moveStartedSpy.count(), 0);
+    QCOMPARE(moveEndedSpy.count(), 0);
+    QCOMPARE(draggingSpy.count(), 0);
+    QCOMPARE(dragStartedSpy.count(), 0);
+    QCOMPARE(dragEndedSpy.count(), 0);
 
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(90,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
@@ -1446,10 +1460,24 @@ void tst_QQuickPathView::mouseDrag()
     }
     // next move beyond threshold does trigger drag
     QVERIFY(pathview->isMoving());
+    QVERIFY(pathview->isDragging());
+    QCOMPARE(movingSpy.count(), 1);
+    QCOMPARE(moveStartedSpy.count(), 1);
+    QCOMPARE(moveEndedSpy.count(), 0);
+    QCOMPARE(draggingSpy.count(), 1);
+    QCOMPARE(dragStartedSpy.count(), 1);
+    QCOMPARE(dragEndedSpy.count(), 0);
 
     QVERIFY(pathview->currentIndex() != current);
 
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(40,100));
+    QVERIFY(!pathview->isDragging());
+    QCOMPARE(draggingSpy.count(), 2);
+    QCOMPARE(dragStartedSpy.count(), 1);
+    QCOMPARE(dragEndedSpy.count(), 1);
+    QTRY_COMPARE(movingSpy.count(), 2);
+    QTRY_COMPARE(moveEndedSpy.count(), 1);
+    QCOMPARE(moveStartedSpy.count(), 1);
 
     delete canvas;
 }
@@ -1691,6 +1719,10 @@ void tst_QQuickPathView::cancelDrag()
     QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
 
+    QSignalSpy draggingSpy(pathview, SIGNAL(draggingChanged()));
+    QSignalSpy dragStartedSpy(pathview, SIGNAL(dragStarted()));
+    QSignalSpy dragEndedSpy(pathview, SIGNAL(dragEnded()));
+
     // drag between snap points
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(10,100));
     QTest::qWait(100);
@@ -1699,6 +1731,10 @@ void tst_QQuickPathView::cancelDrag()
 
     QTRY_VERIFY(pathview->offset() != qFloor(pathview->offset()));
     QTRY_VERIFY(pathview->isMoving());
+    QVERIFY(pathview->isDragging());
+    QCOMPARE(draggingSpy.count(), 1);
+    QCOMPARE(dragStartedSpy.count(), 1);
+    QCOMPARE(dragEndedSpy.count(), 0);
 
     // steal mouse grab - cancels PathView dragging
     QQuickItem *item = canvas->rootObject()->findChild<QQuickItem*>("text");
@@ -1707,6 +1743,10 @@ void tst_QQuickPathView::cancelDrag()
     // returns to a snap point.
     QTRY_VERIFY(pathview->offset() == qFloor(pathview->offset()));
     QTRY_VERIFY(!pathview->isMoving());
+    QVERIFY(!pathview->isDragging());
+    QCOMPARE(draggingSpy.count(), 2);
+    QCOMPARE(dragStartedSpy.count(), 1);
+    QCOMPARE(dragEndedSpy.count(), 1);
 
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(40,100));
 

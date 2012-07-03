@@ -79,6 +79,7 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
 
     Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged)
     Q_PROPERTY(bool flicking READ isFlicking NOTIFY flickingChanged)
+    Q_PROPERTY(bool dragging READ isDragging NOTIFY draggingChanged)
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
@@ -137,6 +138,7 @@ public:
 
     bool isMoving() const;
     bool isFlicking() const;
+    bool isDragging() const;
 
     int count() const;
 
@@ -175,6 +177,7 @@ Q_SIGNALS:
     void interactiveChanged();
     void movingChanged();
     void flickingChanged();
+    void draggingChanged();
     void highlightChanged();
     void highlightItemChanged();
     void highlightMoveDurationChanged();
@@ -182,6 +185,8 @@ Q_SIGNALS:
     void movementEnded();
     void flickStarted();
     void flickEnded();
+    void dragStarted();
+    void dragEnded();
     void snapModeChanged();
 
 protected:

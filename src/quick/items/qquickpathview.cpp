@@ -118,7 +118,7 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , offset(0.0), offsetAdj(0.0), mappedRange(1.0)
     , stealMouse(false), ownModel(false), interactive(true), haveHighlightRange(true)
     , autoHighlight(true), highlightUp(false), layoutScheduled(false)
-    , moving(false), flicking(false), requestedOnPath(false), inRequest(false)
+    , moving(false), flicking(false), dragging(false), requestedOnPath(false), inRequest(false)
     , dragMargin(0), deceleration(100), maximumFlickVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
     , firstIndex(-1), pathItems(-1), requestedIndex(-1), requestedZ(0)
@@ -433,6 +433,21 @@ void QQuickPathViewPrivate::regenerate()
     firstIndex = -1;
     updateMappedRange();
     q->refill();
+}
+
+void QQuickPathViewPrivate::setDragging(bool d)
+{
+    Q_Q(QQuickPathView);
+    if (dragging == d)
+        return;
+
+    dragging = d;
+    if (dragging)
+        emit q->dragStarted();
+    else
+        emit q->dragEnded();
+
+    emit q->draggingChanged();
 }
 
 /*!
@@ -1078,6 +1093,18 @@ bool QQuickPathView::isFlicking() const
 }
 
 /*!
+    \qmlproperty bool QtQuick2::PathView::dragging
+
+    This property holds whether the view is currently moving
+    due to the user dragging the view.
+*/
+bool QQuickPathView::isDragging() const
+{
+    Q_D(const QQuickPathView);
+    return d->dragging;
+}
+
+/*!
     \qmlsignal QtQuick2::PathView::onMovementStarted()
 
     This handler is called when the view begins moving due to user
@@ -1106,6 +1133,22 @@ bool QQuickPathView::isFlicking() const
     \qmlsignal QtQuick2::PathView::onFlickEnded()
 
     This handler is called when the view stops moving due to a flick.
+*/
+
+/*!
+    \qmlsignal QtQuick2::PathView::onDragStarted()
+
+    This handler is called when the view starts to be dragged due to user
+    interaction.
+*/
+
+/*!
+    \qmlsignal QtQuick2::PathView::onDragEnded()
+
+    This handler is called when the user stops dragging the view.
+
+    If the velocity of the drag is suffient at the time the
+    touch/mouse button is released then a flick will start.
 */
 
 /*!
@@ -1377,6 +1420,7 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
             emit q->movingChanged();
             emit q->movementStarted();
         }
+        setDragging(true);
     }
     startPc = newPc;
     lastPosTime = currentTimestamp;
@@ -1399,6 +1443,7 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
     Q_Q(QQuickPathView);
     stealMouse = false;
     q->setKeepMouseGrab(false);
+    setDragging(false);
     if (!interactive || !timer.isValid() || !model || !modelCount) {
         timer.invalidate();
         if (!tl.isActive())
@@ -1535,6 +1580,7 @@ void QQuickPathView::mouseUngrabEvent()
         setKeepMouseGrab(false);
         d->timer.invalidate();
         d->fixOffset();
+        d->setDragging(false);
         if (!d->tl.isActive())
             movementEnding();
     }
