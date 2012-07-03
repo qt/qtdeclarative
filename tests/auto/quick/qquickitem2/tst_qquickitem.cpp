@@ -109,13 +109,14 @@ class KeysTestObject : public QObject
     Q_PROPERTY(bool processLast READ processLast NOTIFY processLastChanged)
 
 public:
-    KeysTestObject() : mKey(0), mModifiers(0), mForwardedKey(0), mLast(false) {}
+    KeysTestObject() : mKey(0), mModifiers(0), mForwardedKey(0), mLast(false), mNativeScanCode(0) {}
 
     void reset() {
         mKey = 0;
         mText = QString();
         mModifiers = 0;
         mForwardedKey = 0;
+        mNativeScanCode = 0;
     }
 
     bool processLast() const { return mLast; }
@@ -140,6 +141,11 @@ public slots:
     void forwardedKey(int key) {
         mForwardedKey = key;
     }
+    void specialKey(int key, QString text, quint32 nativeScanCode) {
+        mKey = key;
+        mText = text;
+        mNativeScanCode = nativeScanCode;
+    }
 
 signals:
     void processLastChanged();
@@ -150,6 +156,7 @@ public:
     int mModifiers;
     int mForwardedKey;
     bool mLast;
+    quint32 mNativeScanCode;
 
 private:
 };
@@ -350,6 +357,16 @@ void tst_QQuickItem::keys()
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_Backtab));
     QCOMPARE(testObject->mText, QLatin1String("Backtab"));
     QVERIFY(testObject->mModifiers == Qt::NoModifier);
+    QVERIFY(key.isAccepted());
+
+    testObject->reset();
+
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_VolumeUp, Qt::NoModifier, 1234, 0, 0);
+    QGuiApplication::sendEvent(canvas, &key);
+    QCOMPARE(testObject->mKey, int(Qt::Key_VolumeUp));
+    QCOMPARE(testObject->mForwardedKey, int(Qt::Key_VolumeUp));
+    QVERIFY(testObject->mModifiers == Qt::NoModifier);
+    QVERIFY(testObject->mNativeScanCode == 1234);
     QVERIFY(key.isAccepted());
 
     testObject->reset();

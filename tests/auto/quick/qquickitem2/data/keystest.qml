@@ -14,6 +14,7 @@ Item {
     Keys.onBacktabPressed: keysTestObject.keyPress(event.key, "Backtab", event.modifiers)
     Keys.forwardTo: [ item2 ]
     Keys.enabled: enableKeyHanding
+    Keys.onVolumeUpPressed: keysTestObject.specialKey(event.key, event.text, event.nativeScanCode)
 
     Item {
         id: item2

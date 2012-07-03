@@ -93,6 +93,15 @@ Item {
 */
 
 /*!
+    \qmlproperty quint32 QtQuick2::KeyEvent::nativeScanCode
+
+    This property contains the native scan code of the key that was pressed. It is
+    passed through from QKeyEvent unchanged.
+
+    \sa QKeyEvent::nativeScanCode()
+*/
+
+/*!
     \qmlproperty int QtQuick2::KeyEvent::count
 
     This property holds the number of keys involved in this event. If \l KeyEvent::text

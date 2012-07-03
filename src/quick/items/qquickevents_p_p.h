@@ -70,6 +70,7 @@ class QQuickKeyEvent : public QObject
     Q_PROPERTY(int modifiers READ modifiers)
     Q_PROPERTY(bool isAutoRepeat READ isAutoRepeat)
     Q_PROPERTY(int count READ count)
+    Q_PROPERTY(quint32 nativeScanCode READ nativeScanCode)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
@@ -83,6 +84,7 @@ public:
     int modifiers() const { return event.modifiers(); }
     bool isAutoRepeat() const { return event.isAutoRepeat(); }
     int count() const { return event.count(); }
+    quint32 nativeScanCode() const { return event.nativeScanCode(); }
 
     bool isAccepted() { return event.isAccepted(); }
     void setAccepted(bool accepted) { event.setAccepted(accepted); }
