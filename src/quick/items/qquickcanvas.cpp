@@ -537,10 +537,6 @@ Translates the data in \a touchEvent to this canvas.  This method leaves the ite
 */
 void QQuickCanvasPrivate::translateTouchEvent(QTouchEvent *touchEvent)
 {
-//    Q_Q(QQuickCanvas);
-
-//    touchEvent->setWidget(q); // ### refactor...
-
     QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
     for (int i = 0; i < touchPoints.count(); ++i) {
         QTouchEvent::TouchPoint &touchPoint = touchPoints[i];
@@ -1055,10 +1051,11 @@ QQuickItem *QQuickCanvas::mouseGrabberItem() const
 
 bool QQuickCanvasPrivate::clearHover()
 {
+    Q_Q(QQuickCanvas);
     if (hoverItems.isEmpty())
         return false;
 
-    QPointF pos = QGuiApplicationPrivate::lastCursorPosition;; // ### refactor: q->mapFromGlobal(QCursor::pos());
+    QPointF pos = q->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
 
     bool accepted = false;
     foreach (QQuickItem* item, hoverItems)

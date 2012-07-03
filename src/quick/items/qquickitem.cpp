@@ -5014,7 +5014,7 @@ bool QQuickItem::isUnderMouse() const
         return false;
 
     QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
-    return contains(mapFromScene(cursorPos)); // ### refactor: d->canvas->mapFromGlobal(cursorPos))))
+    return contains(mapFromScene(d->canvas->mapFromGlobal(cursorPos.toPoint())));
 }
 
 bool QQuickItem::acceptHoverEvents() const
