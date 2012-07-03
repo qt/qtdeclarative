@@ -45,6 +45,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtGui/qinputmethod.h>
+#include <qpa/qwindowsysteminterface.h>
 
 class tst_qquickapplication : public QObject
 {
@@ -79,37 +80,27 @@ void tst_qquickapplication::active()
                       "}", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
-    QQuickView view;
-    item->setParentItem(view.rootObject());
+    QQuickCanvas canvas;
+    item->setParentItem(canvas.rootItem());
 
     // not active
     QVERIFY(!item->property("active").toBool());
     QVERIFY(!item->property("active2").toBool());
-    QCOMPARE(item->property("active").toBool(), QGuiApplication::focusWindow() != 0);
 
     // active
-    view.show();
-    view.requestActivateWindow();
-    QTest::qWait(50);
-    QEXPECT_FAIL("", "QTBUG-21573", Abort);
-    QTRY_COMPARE(view.status(), QQuickView::Ready);
-    QCOMPARE(item->property("active").toBool(), QGuiApplication::focusWindow() != 0);
-    QCOMPARE(item->property("active2").toBool(), QGuiApplication::focusWindow() != 0);
-
-#if 0
-    // QGuiApplication has no equivalent of setActiveWindow(0). QTBUG-21573
-    // Is this different to clearing the active state of the window or can it be removed?
-    // On Mac, setActiveWindow(0) on mac does not deactivate the current application,
-    // must switch to a different app or hide the current app to trigger this
-    // on mac, setActiveWindow(0) on mac does not deactivate the current application
-    // (you have to switch to a different app or hide the current app to trigger this)
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowActive(&canvas);
+    QVERIFY(QGuiApplication::focusWindow() == &canvas);
+    QVERIFY(item->property("active").toBool());
+    QVERIFY(item->property("active2").toBool());
 
     // not active again
-    QGuiApplication::setActiveWindow(0);
-    QVERIFY(!item->property("active").toBool());
-    QCOMPARE(item->property("active").toBool(), QGuiApplication::focusWindow() != 0);
-#endif
+    QWindowSystemInterface::handleWindowActivated(0);
 
+    QTRY_VERIFY(QGuiApplication::focusWindow() != &canvas);
+    QVERIFY(!item->property("active").toBool());
+    QVERIFY(!item->property("active2").toBool());
 }
 
 void tst_qquickapplication::layoutDirection()
