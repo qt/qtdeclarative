@@ -120,8 +120,6 @@ public:
 
     QQmlListProperty<QQuickGradientStop> stops();
 
-    const QGradient *gradient() const;
-
 Q_SIGNALS:
     void updated();
 
@@ -130,7 +128,6 @@ private:
 
 private:
     QList<QQuickGradientStop *> m_stops;
-    mutable QGradient *m_gradient;
     friend class QQuickRectangle;
     friend class QQuickGradientStop;
 };
@@ -141,7 +138,7 @@ class Q_AUTOTEST_EXPORT QQuickRectangle : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-    Q_PROPERTY(QQuickGradient *gradient READ gradient WRITE setGradient)
+    Q_PROPERTY(QQuickGradient *gradient READ gradient WRITE setGradient RESET resetGradient)
     Q_PROPERTY(QQuickPen * border READ border CONSTANT)
     Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
 public:
@@ -154,6 +151,7 @@ public:
 
     QQuickGradient *gradient() const;
     void setGradient(QQuickGradient *gradient);
+    void resetGradient();
 
     qreal radius() const;
     void setRadius(qreal radius);

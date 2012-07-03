@@ -240,13 +240,12 @@ void QQuickGradientStop::updateGradient()
     To set the gradient stops, define them as children of the Gradient element.
 */
 QQuickGradient::QQuickGradient(QObject *parent)
-: QObject(parent), m_gradient(0)
+: QObject(parent)
 {
 }
 
 QQuickGradient::~QQuickGradient()
 {
-    delete m_gradient;
 }
 
 QQmlListProperty<QQuickGradientStop> QQuickGradient::stops()
@@ -254,24 +253,8 @@ QQmlListProperty<QQuickGradientStop> QQuickGradient::stops()
     return QQmlListProperty<QQuickGradientStop>(this, m_stops);
 }
 
-const QGradient *QQuickGradient::gradient() const
-{
-    if (!m_gradient && !m_stops.isEmpty()) {
-        m_gradient = new QLinearGradient(0,0,0,1.0);
-        for (int i = 0; i < m_stops.count(); ++i) {
-            const QQuickGradientStop *stop = m_stops.at(i);
-            m_gradient->setCoordinateMode(QGradient::ObjectBoundingMode);
-            m_gradient->setColorAt(stop->position(), stop->color());
-        }
-    }
-
-    return m_gradient;
-}
-
 void QQuickGradient::doUpdate()
 {
-    delete m_gradient;
-    m_gradient = 0;
     emit updated();
 }
 
@@ -424,6 +407,11 @@ void QQuickRectangle::setGradient(QQuickGradient *gradient)
     if (d->gradient)
         QMetaObject::connect(d->gradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
     update();
+}
+
+void QQuickRectangle::resetGradient()
+{
+    setGradient(0);
 }
 
 /*!

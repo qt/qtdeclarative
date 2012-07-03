@@ -60,6 +60,7 @@ QUICKTESTS =  \
     qquickpathview \
     qquickpincharea \
     qquickpositioners \
+    qquickrectangle \
     qquickrepeater \
     qquickshadereffect \
     qquickspritesequence \
