@@ -2385,7 +2385,7 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
     Q_D(QQuickTextInput);
     if (change == ItemActiveFocusHasChanged) {
         bool hasFocus = value.boolValue;
-        setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
+        setCursorVisible(hasFocus);
         if (!hasFocus && (d->m_passwordEchoEditing || d->m_passwordEchoTimer.isActive())) {
             d->updatePasswordEchoEditing(false);//QQuickTextInputPrivate sets it on key events, but doesn't deal with focus events
         }
