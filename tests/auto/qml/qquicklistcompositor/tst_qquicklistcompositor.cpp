@@ -169,6 +169,9 @@ private slots:
     void listItemsMoved();
     void listItemsChanged_data();
     void listItemsChanged();
+    void compositorDebug();
+    void changeDebug();
+    void groupDebug();
 };
 
 void tst_qquicklistcompositor::find_data()
@@ -1656,6 +1659,78 @@ void tst_qquicklistcompositor::listItemsChanged()
     compositor.listItemsChanged(list, index, count, &changes);
 
     QCOMPARE(changes, expectedChanges);
+}
+
+void tst_qquicklistcompositor::compositorDebug()
+{
+    void *a = (void *)0xa0;
+    void *b = (void *)0xb0;
+
+    QQuickListCompositor compositor;
+    compositor.setGroupCount(4);
+    compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
+    compositor.append(a, 0, 2, C::PrependFlag | C::DefaultFlag);
+    compositor.append(a, 2, 3, C::PrependFlag);
+    compositor.append(a, 5, 2, C::AppendFlag | C::PrependFlag | C::DefaultFlag);
+    compositor.append(b, 0, 4, C::DefaultFlag);
+    compositor.append(a, 2, 3, C::DefaultFlag);
+
+    QTest::ignoreMessage(QtDebugMsg,
+            "QQuickListCompositor(00110\n"
+            " 0 0 0 0   Range(0xa0 0 2 00P000000000D0\n"
+            " 0 0 2 0   Range(0xa0 2 3 00P00000000000\n"
+            " 0 0 2 0   Range(0xa0 5 2 0AP000000000D0\n"
+            " 0 0 4 0   Range(0xb0 0 4 000000000000D0\n"
+            " 0 0 8 0   Range(0xa0 2 3 000000000000D0)");
+    qDebug() << compositor;
+
+    compositor.setFlags(C::Default, 5, 2, SelectionFlag);
+
+    QTest::ignoreMessage(QtDebugMsg,
+            "QQuickListCompositor(20110\n"
+            " 0 0 0 0   Range(0xa0 0 2 00P000000000D0\n"
+            " 0 0 2 0   Range(0xa0 2 3 00P00000000000\n"
+            " 0 0 2 0   Range(0xa0 5 2 0AP000000000D0\n"
+            " 0 0 4 0   Range(0xb0 0 1 000000000000D0\n"
+            " 0 0 5 0   Range(0xb0 1 2 000000000010D0\n"
+            " 2 0 7 0   Range(0xb0 3 1 000000000000D0\n"
+            " 2 0 8 0   Range(0xa0 2 3 000000000000D0)");
+    qDebug() << compositor;
+}
+
+void tst_qquicklistcompositor::changeDebug()
+{
+    void *a = (void *)0xa0;
+    void *b = (void *)0xb0;
+
+    QQuickListCompositor compositor;
+    compositor.setGroupCount(4);
+    compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
+    compositor.append(a, 0, 2, C::PrependFlag | C::DefaultFlag);
+    compositor.append(a, 2, 3, C::PrependFlag);
+    compositor.append(a, 5, 2, C::AppendFlag | C::PrependFlag | C::DefaultFlag);
+    compositor.append(b, 0, 1, C::DefaultFlag);
+    compositor.append(b, 1, 2, SelectionFlag | C::DefaultFlag);
+    compositor.append(b, 3, 1, C::DefaultFlag);
+    compositor.append(a, 2, 3, C::DefaultFlag);
+
+
+    QTest::ignoreMessage(QtDebugMsg, "Change(-1 2 000000010D0 2 0 7 0)");
+    qDebug() << QQuickListCompositor::Change(compositor.find(C::Default, 7), 2, SelectionFlag | C::DefaultFlag);
+    QTest::ignoreMessage(QtDebugMsg, "Remove(9 4 000000000D0 10 0)");
+    qDebug() << QQuickListCompositor::Remove(compositor.find(C::Default, 10), 4, C::DefaultFlag, 9);
+    QTest::ignoreMessage(QtDebugMsg, "Insert(9 4 000000000D0 3 0)");
+    qDebug() << QQuickListCompositor::Insert(compositor.find(C::Default, 3), 4, C::DefaultFlag, 9);
+}
+
+void tst_qquicklistcompositor::groupDebug()
+{
+    QTest::ignoreMessage(QtDebugMsg, "Default ");
+    qDebug() << C::Default;
+    QTest::ignoreMessage(QtDebugMsg, "Cache ");
+    qDebug() << C::Cache;
+    QTest::ignoreMessage(QtDebugMsg, "Group3 ");
+    qDebug() << Selection;
 }
 
 QTEST_MAIN(tst_qquicklistcompositor)
