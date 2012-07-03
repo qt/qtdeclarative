@@ -118,7 +118,7 @@ QString QAccessibleQuickView::text(QAccessible::Text text) const
   */
 static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
 {
-    if (item->opacity() == 0.0 || !item->isVisible() || !item->isEnabled())
+    if (!item->isVisible() || !item->isEnabled())
         return 0;
 
     if (item->flags() & QQuickItem::ItemClipsChildrenToShape) {

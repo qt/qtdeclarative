@@ -2818,16 +2818,31 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
     explicit property changes. In such cases it may be better to use the
     \l opacity property instead.)
 
-    Setting this property to \c false automatically causes \l focus to be set
-    to \c false, and this item will longer receive mouse and keyboard events.
-    (In contrast, setting the \l opacity to 0 does not affect the \l focus
-    property and the receiving of key events.)
+    If this property is set to \c false, the item will no longer receive mouse
+    events, but will continue to receive key events and will retain the keyboard
+    \l focus if it has been set. (In contrast, setting the \l enabled property
+    to \c false stops both mouse and keyboard events, and also removes focus
+    from the item.)
 
     \note This property's value is only affected by changes to this property or
     the parent's \c visible property. It does not change, for example, if this
     item moves off-screen, or if the \l opacity changes to 0.
 */
 
+/*!
+    \qmlproperty bool QtQuick2::Item::enabled
+
+    This property holds whether the item receives mouse and keyboard events.
+    By default this is true.
+
+    Setting this property directly affects the \c enabled value of child
+    items. When set to \c false, the \c enabled values of all child items also
+    become \c false. When set to \c true, the \c enabled values of child items
+    are returned to \c true, unless they have explicitly been set to \c false.
+
+    Setting this property to \c false automatically causes \l activeFocus to be
+    set to \c false, and this item will longer receive keyboard events.
+*/
 
 /*!
   \qmlproperty AnchorLine QtQuick2::Item::anchors.top
@@ -4063,11 +4078,10 @@ void QQuickItem::setZ(qreal v)
   \endqml
   \endtable
 
-  If an item's opacity is set to 0, the item will no longer receive mouse
-  events, but will continue to receive key events and will retain the keyboard
-  \l focus if it has been set. (In contrast, setting the \l visible property
-  to \c false stops both mouse and keyboard events, and also removes focus
-  from the item.)
+  Changing an items opacity will not affect delivery of input events.  (In contrast
+  setting \l visible property to \c false stops mouse events, and setting the
+  \l enabled property to \c false stops mouse and keyboard events, and also removes
+  active focus from the item.)
 */
 
 /*!

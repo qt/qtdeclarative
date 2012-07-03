@@ -271,8 +271,6 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     //But specific to MouseArea, so doesn't belong in canvas
     Q_Q(const QQuickMouseArea);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity() == 0.0)
-        return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(sp);

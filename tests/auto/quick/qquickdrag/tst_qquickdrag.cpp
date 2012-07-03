@@ -345,9 +345,9 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.active = true");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
     QCOMPARE(evaluate<bool>(item, "dragActive"), true);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
-    QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(&dropTarget));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(&dropTarget));
+    QCOMPARE(dropTarget.enterEvents, 1); QCOMPARE(dropTarget.leaveEvents, 0);
 
     evaluate<void>(item, "Drag.active = false");
     dropTarget.setOpacity(1.0);

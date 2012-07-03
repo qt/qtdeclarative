@@ -157,7 +157,7 @@ public:
     void reset() {
         acceptTouchEvents = acceptMouseEvents = true;
         setEnabled(true);
-        setOpacity(1.0);
+        setVisible(true);
 
         lastEvent = makeTouchData(QEvent::None, canvas(), 0, QList<QTouchEvent::TouchPoint>());//CHECK_VALID
 
@@ -456,7 +456,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     QFETCH(bool, acceptTouchEvents);
     QFETCH(bool, acceptMouseEvents);
     QFETCH(bool, enableItem);
-    QFETCH(qreal, itemOpacity);
+    QFETCH(bool, showItem);
 
     QQuickCanvas *canvas = new QQuickCanvas;
     canvas->resize(250, 250);
@@ -487,7 +487,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     topItem->acceptTouchEvents = acceptTouchEvents;
     topItem->acceptMouseEvents = acceptMouseEvents;
     topItem->setEnabled(enableItem);
-    topItem->setOpacity(itemOpacity);
+    topItem->setVisible(showItem);
 
     // single touch to top item, should be received by middle item
     QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas);
@@ -514,7 +514,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     middleItem->acceptTouchEvents = acceptTouchEvents;
     middleItem->acceptMouseEvents = acceptMouseEvents;
     middleItem->setEnabled(enableItem);
-    middleItem->setOpacity(itemOpacity);
+    middleItem->setVisible(showItem);
 
     // touch top and middle items, bottom item should get all events
     QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas)
@@ -531,7 +531,7 @@ void tst_qquickcanvas::touchEvent_propagation()
     // disable bottom item as well
     bottomItem->acceptTouchEvents = acceptTouchEvents;
     bottomItem->setEnabled(enableItem);
-    bottomItem->setOpacity(itemOpacity);
+    bottomItem->setVisible(showItem);
 
     // no events should be received
     QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas)
@@ -549,10 +549,10 @@ void tst_qquickcanvas::touchEvent_propagation()
     // disable middle item, touch on top item
     middleItem->acceptTouchEvents = acceptTouchEvents;
     middleItem->setEnabled(enableItem);
-    middleItem->setOpacity(itemOpacity);
+    middleItem->setVisible(showItem);
     QTest::touchEvent(canvas, touchDevice).press(0, pointInTopItem, canvas);
     QTest::qWait(50);
-    if (!enableItem || itemOpacity == 0) {
+    if (!enableItem || !showItem) {
         // middle item is disabled or has 0 opacity, bottom item receives the event
         QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
         QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
@@ -579,11 +579,11 @@ void tst_qquickcanvas::touchEvent_propagation_data()
     QTest::addColumn<bool>("acceptTouchEvents");
     QTest::addColumn<bool>("acceptMouseEvents");
     QTest::addColumn<bool>("enableItem");
-    QTest::addColumn<qreal>("itemOpacity");
+    QTest::addColumn<bool>("showItem");
 
-    QTest::newRow("disable events") << false << false << true << 1.0;
-    QTest::newRow("disable item") << true << true << false << 1.0;
-    QTest::newRow("opacity of 0") << true << true << true << 0.0;
+    QTest::newRow("disable events") << false << false << true << true;
+    QTest::newRow("disable item") << true << true << false << true;
+    QTest::newRow("hide item") << true << true << true << false;
 }
 
 void tst_qquickcanvas::touchEvent_cancel()

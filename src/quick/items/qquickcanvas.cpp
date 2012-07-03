@@ -1146,8 +1146,6 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
     Q_Q(QQuickCanvas);
 
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity() == 0.0)
-        return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(event->windowPos());
@@ -1306,8 +1304,6 @@ bool QQuickCanvasPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
                                          Qt::KeyboardModifiers modifiers, bool &accepted)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity() == 0.0)
-        return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(scenePos);
@@ -1374,8 +1370,6 @@ bool QQuickCanvasPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 {
     Q_Q(QQuickCanvas);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity() == 0.0)
-        return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(event->posF());
@@ -1513,9 +1507,6 @@ bool QQuickCanvasPrivate::deliverTouchEvent(QTouchEvent *event)
 bool QQuickCanvasPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *event, const QList<QTouchEvent::TouchPoint> &newPoints, QSet<int> *acceptedNewPoints, QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *updatedPoints)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-
-    if (qFuzzyIsNull(itemPrivate->opacity()))
-        return false;
 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         for (int i=0; i<newPoints.count(); i++) {
@@ -1770,7 +1761,7 @@ bool QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     Q_Q(QQuickCanvas);
     bool accepted = false;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (itemPrivate->opacity() == 0.0 || !item->isVisible() || !item->isEnabled())
+    if (!item->isVisible() || !item->isEnabled())
         return false;
 
     QPointF p = item->mapFromScene(event->pos());
