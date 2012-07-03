@@ -764,10 +764,12 @@ int main(int argc, char *argv[])
 
     qml.writeStartDocument();
     qml.writeLibraryImport(QLatin1String("QtQuick.tooling"), 1, 1);
-    qml.write("\n"
+    qml.write(QString("\n"
               "// This file describes the plugin-supplied types contained in the library.\n"
               "// It is used for QML tooling purposes only.\n"
-              "\n");
+              "//\n"
+              "// This file was auto-generated with the command '%1'.\n"
+              "\n").arg(args.join(QLatin1String(" "))));
     qml.writeStartObject("Module");
 
     // put the metaobjects into a map so they are always dumped in the same order
