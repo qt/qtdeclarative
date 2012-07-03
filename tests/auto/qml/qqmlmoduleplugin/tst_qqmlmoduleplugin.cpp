@@ -47,8 +47,8 @@
 #include "../../shared/testhttpserver.h"
 #include "../../shared/util.h"
 
-#define SERVER_ADDR "http://127.0.0.1:14450"
-#define SERVER_PORT 14450
+#define SERVER_ADDR "http://127.0.0.1:14456"
+#define SERVER_PORT 14456
 
 
 class tst_qqmlmoduleplugin : public QQmlDataTest
@@ -230,7 +230,7 @@ void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import \"http://127.0.0.1:14450/com/nokia/PureQmlModule\" \nComponentA { width: 300; ComponentB{} }", QUrl());
+    component.setData("import \"" SERVER_ADDR "/com/nokia/PureQmlModule\" \nComponentA { width: 300; ComponentB{} }", QUrl());
 
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
     QObject *object = component.create();

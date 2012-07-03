@@ -14,7 +14,7 @@ Item {
     }
 
     Component.onCompleted: {
-        loader.setSource("http://127.0.0.1:14450/InitialPropertyValuesComponent.qml", {"canary": 6});
+        loader.setSource("http://127.0.0.1:14458/InitialPropertyValuesComponent.qml", {"canary": 6});
         loader.active = true;
     }
 }

@@ -49,7 +49,8 @@
 #include "testhttpserver.h"
 #include "../../shared/util.h"
 
-#define SERVER_PORT 14450
+#define SERVER_PORT 14458
+#define SERVER_ADDR "http://localhost:14458"
 
 class PeriodicIncubationController : public QObject,
     public QQmlIncubationController
@@ -431,7 +432,7 @@ void tst_QQuickLoader::networkRequestUrl()
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"http://127.0.0.1:14450/Rect120x60.qml\"; onLoaded: signalCount += 1 }"), testFileUrl("../dummy.qml"));
+    component.setData(QByteArray("import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"" SERVER_ADDR "/Rect120x60.qml\"; onLoaded: signalCount += 1 }"), testFileUrl("../dummy.qml"));
     if (component.isError())
         qDebug() << component.errors();
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
@@ -457,7 +458,7 @@ void tst_QQuickLoader::networkComponent()
     QQmlComponent component(&engine);
     component.setData(QByteArray(
                 "import QtQuick 2.0\n"
-                "import \"http://127.0.0.1:14450/\" as NW\n"
+                "import \"" SERVER_ADDR "/\" as NW\n"
                 "Item {\n"
                 " Component { id: comp; NW.Rect120x60 {} }\n"
                 " Loader { sourceComponent: comp } }")
@@ -484,10 +485,10 @@ void tst_QQuickLoader::failNetworkRequest()
     QVERIFY(server.isValid());
     server.serveDirectory(dataDirectory());
 
-    QTest::ignoreMessage(QtWarningMsg, "http://127.0.0.1:14450/IDontExist.qml: File not found");
+    QTest::ignoreMessage(QtWarningMsg, SERVER_ADDR "/IDontExist.qml: File not found");
 
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nLoader { property int did_load: 123; source: \"http://127.0.0.1:14450/IDontExist.qml\"; onLoaded: did_load=456 }"), QUrl::fromLocalFile("http://127.0.0.1:14450/dummy.qml"));
+    component.setData(QByteArray("import QtQuick 2.0\nLoader { property int did_load: 123; source: \"" SERVER_ADDR "/IDontExist.qml\"; onLoaded: did_load=456 }"), QUrl(QString(SERVER_ADDR "/dummy.qml")));
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
 
