@@ -45,7 +45,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
-#include <QtGui/qwindowsysteminterface_qpa.h>
+#include <qpa/qwindowsysteminterface.h>
 #include "../../shared/util.h"
 
 class tst_QQuickPinchArea: public QQmlDataTest
