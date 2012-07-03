@@ -147,7 +147,7 @@ private:
     uint m_live : 1;
     uint m_recursive : 1;
     uint m_dirtyTexture : 1;
-    uint m_multisamplingSupportChecked : 1;
+    uint m_multisamplingChecked : 1;
     uint m_multisampling : 1;
     uint m_grab : 1;
 };

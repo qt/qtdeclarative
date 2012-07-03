@@ -140,7 +140,7 @@ QQuickShaderEffectTexture::QQuickShaderEffectTexture(QQuickItem *shaderSource)
     , m_live(true)
     , m_recursive(false)
     , m_dirtyTexture(true)
-    , m_multisamplingSupportChecked(false)
+    , m_multisamplingChecked(false)
     , m_multisampling(false)
     , m_grab(false)
 {
@@ -316,11 +316,15 @@ void QQuickShaderEffectTexture::grab()
     if (!m_fbo || m_fbo->size() != m_size || m_fbo->format().internalTextureFormat() != m_format
         || (!m_fbo->format().mipmap() && m_mipmap))
     {
-        if (!m_multisamplingSupportChecked) {
-            QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
-            m_multisampling = extensions.contains("GL_EXT_framebuffer_multisample")
-                            && extensions.contains("GL_EXT_framebuffer_blit");
-            m_multisamplingSupportChecked = true;
+        if (!m_multisamplingChecked) {
+            if (m_context->glContext()->format().samples() <= 1) {
+                m_multisampling = false;
+            } else {
+                QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
+                m_multisampling = extensions.contains("GL_EXT_framebuffer_multisample")
+                                && extensions.contains("GL_EXT_framebuffer_blit");
+            }
+            m_multisamplingChecked = true;
         }
         if (m_multisampling) {
             // Don't delete the FBO right away in case it is used recursively.
@@ -329,7 +333,7 @@ void QQuickShaderEffectTexture::grab()
             QOpenGLFramebufferObjectFormat format;
 
             format.setInternalTextureFormat(m_format);
-            format.setSamples(8);
+            format.setSamples(m_context->glContext()->format().samples());
             m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
             m_depthStencilBuffer = m_context->depthStencilBufferForFbo(m_secondaryFbo);
         } else {
