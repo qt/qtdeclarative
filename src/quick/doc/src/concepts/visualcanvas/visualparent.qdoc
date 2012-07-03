@@ -26,16 +26,10 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-concepts-interceptors.html
-\title Concepts - Event Interceptors
-\brief Description of the concept of property interception in Qt Quick
+\page qtquick-visualcanvas-visualparent.html
+\title Concepts - Visual Parent in Qt Quick
+\brief Description of the concept of visual parent in Qt Quick
 
-\section1 Animating Property Assignments
-
-\section1 Dynamic Bindings
-
-\section1 Dynamic Signal Connections
-
-\section1 Timer-Based Events
+XXX TODO - Fill with content.
 
 */

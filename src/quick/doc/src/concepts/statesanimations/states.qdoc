@@ -26,8 +26,8 @@
 ****************************************************************************/
 
 /*!
-\group qtquick--states
-\page qtquick-concepts-statesanimations-states.html
+\group qtquick-states
+\page qtquick-statesanimations-states.html
 \title Qt Quick States
 \brief Creating and setting states
 
@@ -117,7 +117,7 @@ The \c bell component will change to the \c RINGING state whenever the
 State changes induce abrupt value changes. The \l Transition element allow
 smoother changes during state changes. In transitions, animations and
 interpolation behaviors are definable. The
-\l{qtquick-concepts-statesanimations-animations.html}
+\l{qtquick-statesanimations-animations.html}
 {Animation and Transitions} article has more information about creating state
 animations.
 
@@ -125,7 +125,7 @@ The \l {declarative/animation/states}{States and Transitions example}
 demonstrates how to declare a basic set of states and apply animated
 transitions between them.
 
-\l{qtquick-qmltypereference-behaviors.html}{Using QML Behaviors with States}
+\l{qtquick-statesanimations-behaviors.html}{Using QML Behaviors with States}
 explains a common problem when using Behaviors to animate state changes.
 
 \section1 State Fast Forwarding

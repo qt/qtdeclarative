@@ -27,7 +27,7 @@
 
 /*!
 \group qtquick-transformations
-\page qtquick-concepts-effects-transformations.html
+\page qtquick-effects-transformations.html
 \title Qt Quick Transformation Types
 \brief Types for applying transformations to visual types
 

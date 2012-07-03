@@ -118,7 +118,6 @@ types, animation classes, and canvas integration) for the QML language.
         \list
         \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
         \li \l{qtqml-javascript-imports.html}{Importing JavaScript Files in QML Documents}
-        \li \l{qtqml-javascript-dynamicobjects.html}{Dynamic QML Object Creation from JavaScript}
         \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
             \list
             \li \l{qtqml-javascript-qmlglobalobject.html}{QML Global Object}

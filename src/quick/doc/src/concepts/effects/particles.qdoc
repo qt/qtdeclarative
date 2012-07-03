@@ -38,12 +38,12 @@
 
   For a simple overview of how the system can be used, see \l{Using the Qt Quick Particle System}.
 
-  For details on the performance characteristics see \l{qtquick-concepts-particles-performance.html}{Qt Quick Particle System Performance}.
+  For details on the performance characteristics see \l{qtquick-particles-performance.html}{Qt Quick Particle System Performance}.
 
 */
 
 /*!
-    \page qtquick-concepts-effects-particles.html
+    \page qtquick-effects-particles.html
     \inqmlmodule QtQuick.Particles 2.0
     \title Using the Qt Quick Particle System
 
@@ -131,7 +131,7 @@
 */
 
 /*!
-    \page qtquick-concepts-particles-performance.html
+    \page qtquick-particles-performance.html
     \inqmlmodule QtQuick 2.0
     \title Particle System Performance Guide
 

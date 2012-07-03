@@ -27,7 +27,7 @@
 
 /*!
 \group qtquick-text
-\page qtquick-concepts-input-text.html
+\page qtquick-input-textinput.html
 \title Qt Quick Text Input Handling and Validators
 \brief Text input and validation
 

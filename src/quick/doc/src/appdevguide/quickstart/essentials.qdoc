@@ -35,4 +35,7 @@
 
 \section1 Defining Custom QML Types For Re-use
 
+See \l{qtquick-appdevguide-components.html}{Defining Resuable Components}
+for more details.
+
 */

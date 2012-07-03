@@ -26,10 +26,19 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-concepts-visual-parent.html
-\title Concepts - Visual Parent in Qt Quick
-\brief Description of the concept of visual parent in Qt Quick
+\page qtquick-visualtypes-topic.html
+\title Important Concepts In Qt Quick - Visual Types
+\brief Overview of visual type concepts
 
-XXX TODO - Fill with content.
+Most user-interfaces include some visual aspect.  While multimodal interfaces
+are extremely interesting and can be very engaging and interactive (using,
+for example, haptic feedback and sounds to notify the user of changes in the
+state of an application), visual objects in a user-interface are able to convey
+a huge amount of information to the user at a glance.
+
+See the \l{qtquick-qmltypereference.html}{Qt Quick QML type reference} for the
+complete list of visual object types provided by Qt Quick.
 
 */
+
+

@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-concepts-positioning-anchors.html
+\page qtquick-positioning-anchors.html
 \title Positioning with Anchors
 \brief placing items with anchor properties
 

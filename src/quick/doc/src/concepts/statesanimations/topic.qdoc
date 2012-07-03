@@ -26,9 +26,13 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-concepts-statesanimations.html
+\page qtquick-statesanimations-topic.html
 \title Concepts - States And Animations
 \brief Description of the concepts of states, transitions and animations in Qt Quick
+
+In any modern user-interface, transitioning between states and animating
+the user-interface is highly beneficial.  These are first-class concepts in
+Qt Quick.
 
 This page describes the concept of states, state transitions, and property
 animations.  It details which concepts are important and why, and how those
@@ -52,7 +56,7 @@ highlighted, expanded, and so forth).
 
 Qt Quick provides a \c{State} element with properties which define its semantics
 and can be used to trigger behavior or animations.  See the documentation about
-\l{qtquick-concepts-statesanimations-states.html}{Qt Quick States} for more
+\l{qtquick-statesanimations-states.html}{Qt Quick States} for more
 information.
 
 \section1 Transitions
@@ -65,7 +69,7 @@ behavior which is triggered when a certain state is entered or left.
 Qt Quick provides the \c{Transition} element which has properties which define
 what will occur when the application changes from one state to another.  See
 the documentation on
-\l{qtquick-concepts-statesanimations-animations.html#transitions-during-state-changes}
+\l{qtquick-statesanimations-animations.html#transitions-during-state-changes}
 {Transitions during State Changes} for more information about transitions.
 
 \section1 Animations
@@ -81,7 +85,7 @@ user can track the change.
 
 These types of animations are supported in Qt Quick through various animation
 and transition elements.  See the documentation on
-\l{qtquick-concepts-statesanimations-animations.html}
+\l{qtquick-statesanimations-animations.html}
 {Animations and Transitions In Qt Quick} for information about these elements
 and how to use them.
 
@@ -94,14 +98,14 @@ change (for example, opacity effects).
 This type of animation is supported in Qt Quick with the \c{Behavior} element
 through the \tt{"Behavior on <Property>"} syntax.  Please see the documentation
 about
-\l{qtquick-concepts-statesanimations-animations.html#default-animation-as-behaviors}
+\l{qtquick-statesanimations-animations.html#default-animation-as-behaviors}
 {default property animation behaviors} for more information about the Behavior
 element and how to use it.
 
 It is important to note, however, that using default property animations
 (using Behavior elements) as well as state-transition animations can sometimes
 results in undefined behavior occurring.  Please see the documentation about
-\l{qtquick-qmltypereference-behaviors.html}
+\l{qtquick-statesanimations-behaviors.html}
 {using Qt Quick Behaviors with States} for more information about this topic.
 
 \section1 Animated Sprites
@@ -109,6 +113,6 @@ results in undefined behavior occurring.  Please see the documentation about
 The concept of animated sprites is separate to the concept of animations as
 used elsewhere on this page.  If you want to create or use an animated image
 or sprite, please see the documentation about
-\l{qtquick-concepts-effects-sprites.html}{sprite animations}.
+\l{qtquick-effects-sprites.html}{sprite animations}.
 
 */

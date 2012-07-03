@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-qmltypereference-behaviors.html
+\page qtquick-statesanimations-behaviors.html
 \title Using Qt Quick Behaviors with States
 \brief animating property changes with behaviors
 

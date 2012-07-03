@@ -27,7 +27,7 @@
 
 /*!
 \group qtquick-transitions-animations
-\page qtquick-concepts-statesanimations-animations.html
+\page qtquick-statesanimations-animations.html
 \title Animation and Transitions In Qt Quick
 \brief the animation system in Qt Quick
 

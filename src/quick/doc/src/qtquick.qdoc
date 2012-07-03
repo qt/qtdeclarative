@@ -42,22 +42,37 @@ a user-interface written in Qt Quick.
 In summary, Qt Quick provides a library of visual types to allow building a
 user-interface, and the C++ API to instantiate and interact with it.
 
+\section1 Important Concepts In Qt Quick
+
+Qt Quick provides everything needed to create a rich application with a fluid
+and dynamic user interface.  It is based around behavior declaration rather
+than imperative programming, and defines a visual canvas with its own
+coordinate system and drawing implementation.  There are many ways to position
+user-interface elements on the screen, and animation and transition effects are
+a first-class concept in Qt Quick.
+
+\list
+\li \l{qtquick-visualcanvas-topic.html}{The Visual Canvas}
+\li \l{qtquick-positioning-topic.html}{Positioning}
+\li \l{qtquick-input-topic.html}{User Input}
+\li \l{qtquick-eventinterceptors-topic.html}{Event Interceptors}
+\li \l{qtquick-statesanimations-topic.html}{States, Transitions And Animations}
+\li \l{qtquick-modelviewsdata-topic.html}{Data - Models, Views and Data Storage}
+\li \l{qtquick-effects-topic.html}{Graphical Effects And Particles}
+\li \l{qtquick-dynamicinstantiation-topic.html}{Dynamic and Lazy Instantiation}
+\endlist
+
+When using the QtQuick module, you will need to know how to write QML
+applications using the QML language. In particular, you should have a grasp
+of the \l{qtquick-quickstart-basics.html}{QML Basics} and
+\l{qtquick-quickstart-essentials.html}{QML Essentials} from the
+\l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}.
+To find out more about using the QML language, see the \l{Qt QML Module Documentation}.
+
+
 \section1 Qt Quick Module Documentation
 
 \list
-
-    \li \l{qtquick-concepts-topic.html}{Important Concepts In Qt Quick}
-        \list
-        \li \l{qtquick-concepts-topic.html#the-visual-canvas}{The Visual Canvas}
-        \li \l{qtquick-concepts-topic.html#positioning}{Positioning}
-        \li \l{qtquick-concepts-topic.html#user-input}{User Input}
-        \li \l{qtquick-concepts-topic.html#event-interceptors}{Event Interceptors}
-        \li \l{qtquick-concepts-statesanimations.html}{States, Transitions And Animations}
-        \li \l{qtquick-concepts-topic.html#data-models-views-and-data-storage}{Data - Models, Views and Data Storage}
-        \li \l{qtquick-concepts-topic.html#graphical-effects-and-particles}{Graphical Effects And Particles}
-        \li \l{qtquick-concepts-topic.html#defining-and-using-modular-components}{Defining And Using Modular Components}
-
-        \endlist
 
     \li \l{qtquick-qmltypereference.html}{QML Types Provided By The Qt Quick Module}
         \list

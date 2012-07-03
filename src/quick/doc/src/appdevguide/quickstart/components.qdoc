@@ -26,9 +26,20 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-concepts-components.html
-\title Concepts - Reusable Components
+\page qtquick-appdevguide-components.html
+\title Defining Reusable Components
 \brief Description of the concept and implementation of reusable UI components in Qt Quick
+
+############### This needs to be cleaned up to be really simple and talk more about
+"why" you want to make reusable components, and have concrete and practical examples on this,
+instead of having so much details on the "how" since that is now covered in the
+Qt QML syntax documentation. ########################
+
+
+############# Also need to rename this page to avoid using "components"? Or be very specific
+and define how this term is used. ############
+
+
 
 One of the key concepts in QML is the ability to define your own QML components that suit
 the purposes of your application. The standard \l{qtquick-qmltypereference.html}

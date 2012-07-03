@@ -26,10 +26,28 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-concepts-visual-coordinates.html
-\title Concepts - Visual Coordinates in Qt Quick
-\brief Description of the concept of visual coordinates in Qt Quick
+\group qtquick-shaders
+\page qtquick-effects-shaders.html
+\title Qt Quick Shader Effects
+\brief For applying OpenGL vertex and fragment shaders to rectangles
 
-XXX TODO - Fill with content.
+\section1 Related Types
+\generatelist{related}
 
+\section1 Shaders
+Describe Shaders and where it could be used in UIs or applications
+Mention OpenGL shader language (GLSL)
+
+\section1 ShaderEffect Element
+Introduce the \l{QtQuick2::ShaderEffect} Element.
+Say what is possible and how to load shaders
+
+\section1 Shader Overview
+Go over shaders in more detail and what shaders actually do.
+
+\section2 Vertex Shader
+Go over vertex shaders
+
+\section2 Fragment Shader
+Go over fragment shaders
 */

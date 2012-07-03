@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-concepts-data-localstorage.html
+\page qtquick-modelviewsdata-localstorage.html
 \title Local Storage
 \brief SQL storage for Qt Quick
 

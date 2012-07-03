@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-concepts-data-modelview.html
+\page qtquick-modelviewsdata-modelview.html
 \title Models and Views in Qt Quick
 \brief how to display and form data in Qt Quick
 
@@ -189,8 +189,8 @@ To visualize data, bind the view's \c model property to a model and the
     elements. In addition, models can be created with Qt C++ and then made
     available to the \l{qtqml-cppclasses-engine.html}{QML engine} for use by
     QML components. For information about creating these models, visit the
-    \l{qtqml-cppintegration-data.html#data-provided-in-a-custom-c++-model}
-    {exposing C++ models} and \l{qtqml-typesystem-topic.html#qml-object-types}
+    \l{qtquick-modelviewsdata-cppmodels.html}{Using C++ Models with QtQuick Views}
+    and \l{qtqml-typesystem-topic.html#qml-object-types}
     {creating QML types} articles.
 
     The use of positioner items to arrange items from a model is covered in
@@ -329,8 +329,8 @@ To visualize data, bind the view's \c model property to a model and the
     datasets to QML.
 
     For information, visit the
-    \l{qtqml-cppintegration-data.html#data-provided-in-a-custom-c++-model}
-    {exposing C++ models} article.
+    \l{qtquick-modelviewsdata-cppmodels.html}{Using C++ Models with QtQuick Views}
+    article.
 
 
 \section1 Repeaters

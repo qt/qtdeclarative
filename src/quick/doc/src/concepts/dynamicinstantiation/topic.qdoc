@@ -1,0 +1,48 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick-dynamicinstantiation-topic.html
+\title Important Concepts In Qt Quick - Dynamic and Lazy Instantiation
+\brief Overview of the dynamic and lazy instantiation concepts
+
+QML provides a number of ways to dynamically create and manage QML objects.
+The \l{Loader}, \l{Repeater}, \l{ListView}, \l{GridView} and \l{PathView} elements
+all support dynamic object management.
+
+Objects can be created and deleted at runtime from JavaScript code. See
+\l{qtqml-javascript-dynamicobjectcreation.html}{Dynamic QML object creation from JavaScript}
+for more details.
+
+Qt Quick also provides the Loader type which may be used in conjuction with a
+Component or a QML document to instantiate objects lazily and on-demand.
+Please see the \l{qtquick-performance.html}{performance guide} for more
+information on using dynamic instantiation and lazy initialization to improve
+application performance.
+
+*/
+

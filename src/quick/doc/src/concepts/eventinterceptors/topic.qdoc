@@ -1,0 +1,69 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick-eventinterceptors-topic.html
+\title Important Concepts In Qt Quick - Event Interceptors
+\brief Overview of event interceptor concepts
+
+In a highly dynamic user-interface, the application developer will often wish
+to intercept some events (such as property assignments) so that the change can
+be animated.  Interceptors are a first-class concept in Qt Quick, and
+application developers can dynamically intercept property assignments and
+signal emissions, and define dynamic bindings.
+
+\section1 Animating Property Assignments
+
+When the location of a visual item changes, it is often suboptimal to simply
+change the location instantaneously.  It may be better to animate the update
+to allow the user's eye to follow the change, thus providing a seamless
+user-experience.  See the documentation on
+\l{qtquick-concepts-interceptors.html#animating-property-assignments}
+{Animating Property Assignments} for more information about property assignment
+interception.
+
+\section1 Dynamic Bindings
+
+Assigning binding expressions to properties is a fundamental concept of QML,
+and Qt Quick extends upon the idea with dynamic bindings where the target of
+the binding can be defined outside of the binding expression itself.  See the
+\l{qtquick-concepts-interceptors.html#dynamic-bindings}{Dynamic Bindings} page
+for more information about this concept.
+
+\section1 Dynamic Signal Connections
+
+Just as bindings can be retargeted dynamically in Qt Quick, so too can signal
+connections.  This allows highly dynamic dispatch to be implemented in a user
+interface where different visual items need to handle different events,
+depending on the situation, at run-time.  See the documentation about
+\l{qtquick-concepts-interceptors.html#dynamic-signal-connections}
+{Dynamic Signal Connections} for in-depth information.
+
+\section1 Timer-Based Events
+
+*/
+
