@@ -70,31 +70,31 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty int QtQuickWindow2::Screen::width
+    \qmlattachedproperty int QtQuick.Window2::Screen::width
     \readonly
 
     This contains the width of the screen in pixels.
 */
 /*!
-    \qmlattachedproperty int QtQuickWindow2::Screen::height
+    \qmlattachedproperty int QtQuick.Window2::Screen::height
     \readonly
 
     This contains the height of the screen in pixels.
 */
 /*!
-    \qmlattachedproperty Qt::ScreenOrientation QtQuickWindow2::Screen::primaryOrientation
+    \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window2::Screen::primaryOrientation
     \readonly
 
     This contains the primary orientation of the screen.
 */
 /*!
-    \qmlattachedproperty Qt::ScreenOrientation QtQuickWindow2::Screen::orientation
+    \qmlattachedproperty Qt::ScreenOrientation QtQuick.Window2::Screen::orientation
     \readonly
 
     This contains the current orientation of the screen.
 */
 /*!
-    \qmlattachedmethod int QtQuickWindow2::Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
+    \qmlattachedmethod int QtQuick.Window2::Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
 
     Returns the rotation angle, in degrees, between the two specified angles.
 */

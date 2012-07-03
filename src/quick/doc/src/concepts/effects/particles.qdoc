@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-  \qmlmodule QtQuick.Particles 2.0
+  \qmlmodule QtQuick.Particles 2
   \title QML Module QtQuick.Particles 2.0
 
   \brief Contains types for particle effects

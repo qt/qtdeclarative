@@ -773,6 +773,20 @@ void QQuickCanvasPrivate::cleanup(QSGNode *n)
 
 
 /*!
+    \qmlmodule QtQuick.Window 2
+    \title QML Module QtQuick.Window 2.0
+    \brief Contains types for window management
+
+    This QML module contains types for creating top-level windows and accessing screen information.
+
+    To use the types in this module, import the module with the following line:
+
+    \code
+    import QtQuick.Window 2.0
+    \endcode
+*/
+
+/*!
     \qmlclass Window QQuickCanvas
     \inqmlmodule QtQuick.Window 2
     \ingroup qtquick-visual
@@ -1043,7 +1057,7 @@ QQuickItem *QQuickCanvas::mouseGrabberItem() const
 
 
 /*!
-    \qmlproperty color QtQuick2.Window::Window::color
+    \qmlproperty color QtQuick.Window2::Window::color
 
     The background color for the window.
 

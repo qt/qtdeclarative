@@ -452,11 +452,36 @@ through the data.
 
 
 /*!
-    \qmlclass LocalStorage QQuickLocalStorage
-    \inqmlmodule QtQuick.LocalStorage 2
-    \since QtQuick 2.0
-
+    \qmlmodule QtQuick.LocalStorage 2
+    \title QML Module QtQuick.LocalStorage 2.0
     \brief Provides a JavaScript module API for accessing a local SQLite database
+
+    This is a module API for reading and writing to SQLite databases.
+
+
+    \section1 Methods
+
+    \list
+    \li object \b{\l{#openDatabaseSync}{openDatabaseSync}}(string name, string version, string description, int estimated_size, jsobject callback(db))
+    \endlist
+
+
+    \section1 Detailed Description
+
+    To use the types in this module, import the module with a namespace and call the
+    relevant functions using the namespace qualifier:
+
+    \code
+    import QtQuick.LocalStorage 2.0 as LS
+    import QtQuick 2.0
+
+    Item {
+        Component.onCompleted: {
+            var db = LS.openDatabaseSync(...)
+        }
+    }
+    \endcode
+
 
 These databases are user-specific and QML-specific, but accessible to all QML applications.
 They are stored in the \c Databases subdirectory
@@ -538,7 +563,28 @@ It returns a results object, with the following properties:
 \endtable
 
 May throw exception with code property SQLException.DATABASE_ERR, SQLException.SYNTAX_ERR, or SQLException.UNKNOWN_ERR.
- */
+
+
+\section1 Method Documentation
+
+\target openDatabaseSync
+\code
+object openDatabaseSync(string name, string version, string description, int estimated_size, jsobject callback(db))
+\endcode
+
+Opens or creates a local storage sql database by the given parameters.
+
+\list
+\li \c name is the database name
+\li \c version is the database version
+\li \c description is the database display name
+\li \c estimated_size is the database's estimated size, in bytes
+\li \c callback is an optional parameter, which is invoked if the database has not yet been created.
+\endlist
+
+Returns the created database object.
+
+*/
 class QQuickLocalStorage : public QObject
 {
     Q_OBJECT
@@ -552,17 +598,6 @@ public:
    Q_INVOKABLE void openDatabaseSync(QQmlV8Function* args);
 };
 
-/*!
- * \qmlmethod object LocalStorage::openDatabaseSync(string name, string version, string description, int estimated_size, jsobject callback(db))
- * \brief Open or create a local storage sql database by given parameters.
- *
- *  \c name is the database name
- *  \c version is the database version
- *  \c description is the database display name
- *  \c estimated_size is the database's estimated size, in bytes
- *  \c callback is an optional parameter, which is invoked if the database has not yet been created.
- * \return the database object
- */
 void QQuickLocalStorage::openDatabaseSync(QQmlV8Function *args)
 {
 #ifndef QT_NO_SETTINGS

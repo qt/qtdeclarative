@@ -69,8 +69,22 @@ typedef QPair<int, int> QQuickXmlListRange;
 #define XMLLISTMODEL_CLEAR_ID 0
 
 /*!
+    \qmlmodule QtQuick.XmlListModel 2
+    \title QML Module QtQuick.XmlListModel 2.0
+    \brief Contains types for creating models from XML data
+
+    This QML module contains types for creating models from XML data.
+
+    To use the types in this module, import the module with the following line:
+
+    \code
+    import QtQuick.XmlListModel 2.0
+    \endcode
+*/
+
+/*!
     \qmlclass XmlRole QQuickXmlListModelRole
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick.XmlListModel 2
     \brief For specifying a role to an XmlListModel
     \ingroup qtquick-models
 
@@ -78,7 +92,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 */
 
 /*!
-    \qmlproperty string QtQuick2::XmlRole::name
+    \qmlproperty string QtQuick.XmlListModel2::XmlRole::name
 
     The name for the role. This name is used to access the model data for this role.
 
@@ -105,7 +119,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 */
 
 /*!
-    \qmlproperty string QtQuick2::XmlRole::query
+    \qmlproperty string QtQuick.XmlListModel2::XmlRole::query
     The relative XPath expression query for this role. The query must be relative; it cannot start
     with a '/'.
 
@@ -122,7 +136,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 */
 
 /*!
-    \qmlproperty bool QtQuick2::XmlRole::isKey
+    \qmlproperty bool QtQuick.XmlListModel2::XmlRole::isKey
     Defines whether this is a key role.
     Key roles are used to to determine whether a set of values should
     be updated or added to the XML list model when XmlListModel::reload()
@@ -595,7 +609,7 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
 
 /*!
     \qmlclass XmlListModel QQuickXmlListModel
-    \inqmlmodule QtQuick 2
+    \inqmlmodule QtQuick.XmlListModel 2
     \brief For specifying a read-only model using XPath expressions
     \ingroup qtquick-models
 
@@ -707,7 +721,7 @@ QQuickXmlListModel::~QQuickXmlListModel()
 }
 
 /*!
-    \qmlproperty list<XmlRole> QtQuick2::XmlListModel::roles
+    \qmlproperty list<XmlRole> QtQuick.XmlListModel2::XmlListModel::roles
 
     The roles to make available for this model.
 */
@@ -740,7 +754,7 @@ QVariant QQuickXmlListModel::data(int index, int role) const
 }
 
 /*!
-    \qmlproperty int QtQuick2::XmlListModel::count
+    \qmlproperty int QtQuick.XmlListModel2::XmlListModel::count
     The number of data entries in the model.
 */
 int QQuickXmlListModel::count() const
@@ -765,7 +779,7 @@ QString QQuickXmlListModel::toString(int role) const
 }
 
 /*!
-    \qmlproperty url QtQuick2::XmlListModel::source
+    \qmlproperty url QtQuick.XmlListModel2::XmlListModel::source
     The location of the XML data source.
 
     If both \c source and \l xml are set, \l xml is used.
@@ -788,7 +802,7 @@ void QQuickXmlListModel::setSource(const QUrl &src)
 }
 
 /*!
-    \qmlproperty string QtQuick2::XmlListModel::xml
+    \qmlproperty string QtQuick.XmlListModel2::XmlListModel::xml
     This property holds the XML data for this model, if set.
 
     The text is assumed to be UTF-8 encoded.
@@ -812,7 +826,7 @@ void QQuickXmlListModel::setXml(const QString &xml)
 }
 
 /*!
-    \qmlproperty string QtQuick2::XmlListModel::query
+    \qmlproperty string QtQuick.XmlListModel2::XmlListModel::query
     An absolute XPath query representing the base query for creating model items
     from this model's XmlRole objects. The query should start with '/' or '//'.
 */
@@ -838,7 +852,7 @@ void QQuickXmlListModel::setQuery(const QString &query)
 }
 
 /*!
-    \qmlproperty string QtQuick2::XmlListModel::namespaceDeclarations
+    \qmlproperty string QtQuick.XmlListModel2::XmlListModel::namespaceDeclarations
     The namespace declarations to be used in the XPath queries.
 
     The namespaces should be declared as in XQuery. For example, if a requested document
@@ -872,7 +886,7 @@ void QQuickXmlListModel::setNamespaceDeclarations(const QString &declarations)
 }
 
 /*!
-    \qmlmethod object QtQuick2::XmlListModel::get(int index)
+    \qmlmethod object QtQuick.XmlListModel2::XmlListModel::get(int index)
 
     Returns the item at \a index in the model.
 
@@ -912,7 +926,7 @@ QQmlV8Handle QQuickXmlListModel::get(int index) const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick2::XmlListModel::status
+    \qmlproperty enumeration QtQuick.XmlListModel2::XmlListModel::status
     Specifies the model loading status, which can be one of the following:
 
     \list
@@ -933,7 +947,7 @@ QQuickXmlListModel::Status QQuickXmlListModel::status() const
 }
 
 /*!
-    \qmlproperty real QtQuick2::XmlListModel::progress
+    \qmlproperty real QtQuick.XmlListModel2::XmlListModel::progress
 
     This indicates the current progress of the downloading of the XML data
     source. This value ranges from 0.0 (no data downloaded) to
@@ -954,7 +968,7 @@ qreal QQuickXmlListModel::progress() const
 }
 
 /*!
-    \qmlmethod void QtQuick2::XmlListModel::errorString()
+    \qmlmethod void QtQuick.XmlListModel2::XmlListModel::errorString()
 
     Returns a string description of the last error that occurred
     if \l status is XmlListModel::Error.
@@ -985,7 +999,7 @@ void QQuickXmlListModel::componentComplete()
 }
 
 /*!
-    \qmlmethod QtQuick2::XmlListModel::reload()
+    \qmlmethod QtQuick.XmlListModel2::XmlListModel::reload()
 
     Reloads the model.
 
