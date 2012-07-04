@@ -142,6 +142,7 @@ public:
     QQuickText::TextFormat format;
     QQuickText::WrapMode wrapMode;
     QQuickText::TextStyle style;
+    QQuickText::RenderType renderType;
     UpdateType updateType;
 
     bool maximumLineCountValid:1;

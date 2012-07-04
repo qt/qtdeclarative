@@ -84,6 +84,7 @@ QQuickTextPrivate::QQuickTextPrivate()
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
     , format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap)
     , style(QQuickText::Normal)
+    , renderType(QQuickText::QtRendering)
     , updateType(UpdatePaintNode)
     , maximumLineCountValid(false), updateOnComponentComplete(true), richText(false)
     , styledText(false), widthExceeded(false), heightExceeded(false), internalWidthUpdate(false)
@@ -300,6 +301,41 @@ qreal QQuickTextPrivate::getImplicitHeight() const
     return implicitHeight;
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Text::renderType
+
+    Override the default rendering type for this component.
+
+    Supported render types are:
+    \list
+    \li Text.QtRendering - the default
+    \li Text.NativeRendering
+    \endlist
+
+    Select Text.NativeRendering if you prefer text to look native on the target platform and do
+    not require advanced features such as transformation of the text. Using such features in
+    combination with the NativeRendering render type will lend poor and sometimes pixelated
+    results.
+*/
+QQuickText::RenderType QQuickText::renderType() const
+{
+    Q_D(const QQuickText);
+    return d->renderType;
+}
+
+void QQuickText::setRenderType(QQuickText::RenderType renderType)
+{
+    Q_D(QQuickText);
+    if (d->renderType == renderType)
+        return;
+
+    d->renderType = renderType;
+    emit renderTypeChanged();
+
+    if (isComponentComplete())
+        d->updateLayout();
+}
+
 void QQuickText::q_imagesLoaded()
 {
     Q_D(QQuickText);
@@ -482,7 +518,7 @@ void QQuickTextPrivate::updateSize()
         QTextOption option;
         option.setAlignment((Qt::Alignment)int(horizontalAlignment | vAlign));
         option.setWrapMode(QTextOption::WrapMode(wrapMode));
-        option.setUseDesignMetrics(true);
+        option.setUseDesignMetrics(renderType != QQuickText::NativeRendering);
         extra->doc->setDefaultTextOption(option);
         qreal naturalWidth = 0;
         if (requireImplicitSize && q->widthValid()) {
@@ -734,14 +770,16 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         return QRectF(0, 0, 0, height);
     }
 
+    bool shouldUseDesignMetrics = renderType != QQuickText::NativeRendering;
+
     layout.setCacheEnabled(true);
     QTextOption textOption = layout.textOption();
     if (textOption.alignment() != q->effectiveHAlign()
             || textOption.wrapMode() != QTextOption::WrapMode(wrapMode)
-            || !textOption.useDesignMetrics()) {
+            || textOption.useDesignMetrics() != shouldUseDesignMetrics) {
         textOption.setAlignment(Qt::Alignment(q->effectiveHAlign()));
         textOption.setWrapMode(QTextOption::WrapMode(wrapMode));
-        textOption.setUseDesignMetrics(true);
+        textOption.setUseDesignMetrics(shouldUseDesignMetrics);
         layout.setTextOption(textOption);
     }
     if (layout.font() != font)
@@ -2219,6 +2257,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         node = static_cast<QQuickTextNode *>(oldNode);
     }
 
+    node->setUseNativeRenderer(d->renderType == NativeRendering);
     node->deleteContent();
     node->setMatrix(QMatrix4x4());
 

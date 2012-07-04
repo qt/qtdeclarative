@@ -335,6 +335,15 @@ QSGDistanceFieldGlyphCache *QSGContext::distanceFieldGlyphCache(const QRawFont &
 }
 
 /*!
+    Factory function for scene graph backends of the Text elements which supports native
+    text rendering. Used in special cases where native look and feel is a main objective.
+*/
+QSGGlyphNode *QSGContext::createNativeGlyphNode()
+{
+    return new QSGDefaultGlyphNode;
+}
+
+/*!
     Factory function for scene graph backends of the Text elements;
  */
 QSGGlyphNode *QSGContext::createGlyphNode()
@@ -342,7 +351,7 @@ QSGGlyphNode *QSGContext::createGlyphNode()
     Q_D(QSGContext);
 
     if (d->distanceFieldDisabled) {
-        return new QSGDefaultGlyphNode;
+        return createNativeGlyphNode();
     } else {
         QSGDistanceFieldGlyphNode *node = new QSGDistanceFieldGlyphNode(this);
         node->setPreferredAntialiasingMode(d->distanceFieldAntialiasing);

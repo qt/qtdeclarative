@@ -63,6 +63,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_ENUMS(WrapMode)
     Q_ENUMS(LineHeightMode)
     Q_ENUMS(FontSizeMode)
+    Q_ENUMS(RenderType)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
@@ -90,6 +91,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(int minimumPixelSize READ minimumPixelSize WRITE setMinimumPixelSize NOTIFY minimumPixelSizeChanged)
     Q_PROPERTY(int minimumPointSize READ minimumPointSize WRITE setMinimumPointSize NOTIFY minimumPointSizeChanged)
     Q_PROPERTY(FontSizeMode fontSizeMode READ fontSizeMode WRITE setFontSizeMode NOTIFY fontSizeModeChanged)
+    Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
 
 public:
     QQuickText(QQuickItem *parent=0);
@@ -121,6 +123,10 @@ public:
                     WrapAtWordBoundaryOrAnywhere = QTextOption::WrapAtWordBoundaryOrAnywhere, // COMPAT
                     Wrap = QTextOption::WrapAtWordBoundaryOrAnywhere
                   };
+
+    enum RenderType { QtRendering,
+                      NativeRendering
+                    };
 
     enum LineHeightMode { ProportionalHeight, FixedHeight };
 
@@ -200,6 +206,9 @@ public:
     QRectF clipRect() const;
     Q_INVOKABLE void doLayout();
 
+    RenderType renderType() const;
+    void setRenderType(RenderType renderType);
+
 Q_SIGNALS:
     void textChanged(const QString &text);
     void linkActivated(const QString &link);
@@ -225,6 +234,7 @@ Q_SIGNALS:
     void effectiveHorizontalAlignmentChanged();
     void lineLaidOut(QQuickTextLine *line);
     void baseUrlChanged();
+    void renderTypeChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event);

@@ -344,6 +344,42 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     emit textFormatChanged(d->format);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::TextEdit::renderType
+
+    Override the default rendering type for this component.
+
+    Supported render types are:
+    \list
+    \li Text.QtRendering - the default
+    \li Text.NativeRendering
+    \endlist
+
+    Select Text.NativeRendering if you prefer text to look native on the target platform and do
+    not require advanced features such as transformation of the text. Using such features in
+    combination with the NativeRendering render type will lend poor and sometimes pixelated
+    results.
+*/
+QQuickTextEdit::RenderType QQuickTextEdit::renderType() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->renderType;
+}
+
+void QQuickTextEdit::setRenderType(QQuickTextEdit::RenderType renderType)
+{
+    Q_D(QQuickTextEdit);
+    if (d->renderType == renderType)
+        return;
+
+    d->renderType = renderType;
+    emit renderTypeChanged();
+    d->updateDefaultTextOption();
+
+    if (isComponentComplete())
+        updateSize();
+}
+
 QFont QQuickTextEdit::font() const
 {
     Q_D(const QQuickTextEdit);
@@ -1631,6 +1667,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             node = static_cast<QQuickTextNode *>(oldNode);
         }
 
+        node->setUseNativeRenderer(d->renderType == NativeRendering);
         node->deleteContent();
         node->setMatrix(QMatrix4x4());
 
@@ -2040,10 +2077,13 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
 
     QTextOption::WrapMode oldWrapMode = opt.wrapMode();
     opt.setWrapMode(QTextOption::WrapMode(wrapMode));
-    opt.setUseDesignMetrics(true);
+
+    bool oldUseDesignMetrics = opt.useDesignMetrics();
+    opt.setUseDesignMetrics(renderType != QQuickTextEdit::NativeRendering);
 
     if (oldWrapMode != opt.wrapMode() || oldAlignment != opt.alignment()
-        || oldTextDirection != opt.textDirection()) {
+        || oldTextDirection != opt.textDirection()
+        || oldUseDesignMetrics != opt.useDesignMetrics()) {
         document->setDefaultTextOption(opt);
     }
 }

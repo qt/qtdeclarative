@@ -59,6 +59,7 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_ENUMS(TextFormat)
     Q_ENUMS(WrapMode)
     Q_ENUMS(SelectionMode)
+    Q_ENUMS(RenderType)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
@@ -95,6 +96,7 @@ class Q_AUTOTEST_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
+    Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
 
 public:
     QQuickTextEdit(QQuickItem *parent=0);
@@ -129,6 +131,10 @@ public:
         SelectCharacters,
         SelectWords
     };
+
+    enum RenderType { QtRendering,
+                      NativeRendering
+                    };
 
     QString text() const;
     void setText(const QString &);
@@ -230,6 +236,9 @@ public:
 
     bool isInputMethodComposing() const;
 
+    RenderType renderType() const;
+    void setRenderType(RenderType renderType);
+
     Q_INVOKABLE QString getText(int start, int end) const;
     Q_INVOKABLE QString getFormattedText(int start, int end) const;
 
@@ -266,6 +275,7 @@ Q_SIGNALS:
     void effectiveHorizontalAlignmentChanged();
     void baseUrlChanged();
     void inputMethodHintsChanged();
+    void renderTypeChanged();
 
 public Q_SLOTS:
     void selectAll();

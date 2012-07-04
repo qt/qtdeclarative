@@ -133,6 +133,42 @@ void QQuickTextInput::setText(const QString &s)
     d->internalSetText(s, -1, false);
 }
 
+
+/*!
+    \qmlproperty enumeration QtQuick2::TextInput::renderType
+
+    Override the default rendering type for this component.
+
+    Supported render types are:
+    \list
+    \li Text.QtRendering - the default
+    \li Text.NativeRendering
+    \endlist
+
+    Select Text.NativeRendering if you prefer text to look native on the target platform and do
+    not require advanced features such as transformation of the text. Using such features in
+    combination with the NativeRendering render type will lend poor and sometimes pixelated
+    results.
+*/
+QQuickTextInput::RenderType QQuickTextInput::renderType() const
+{
+    Q_D(const QQuickTextInput);
+    return d->renderType;
+}
+
+void QQuickTextInput::setRenderType(QQuickTextInput::RenderType renderType)
+{
+    Q_D(QQuickTextInput);
+    if (d->renderType == renderType)
+        return;
+
+    d->renderType = renderType;
+    emit renderTypeChanged();
+
+    if (isComponentComplete())
+        d->updateLayout();
+}
+
 /*!
     \qmlproperty int QtQuick2::TextInput::length
 
@@ -1749,6 +1785,7 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             }
         }
     } else {
+        node->setUseNativeRenderer(d->renderType == QQuickTextInput::NativeRendering);
         node->deleteContent();
         node->setMatrix(QMatrix4x4());
 
@@ -2458,7 +2495,7 @@ void QQuickTextInputPrivate::init()
 
     if (!qmlDisableDistanceField()) {
         QTextOption option = m_textLayout.textOption();
-        option.setUseDesignMetrics(true);
+        option.setUseDesignMetrics(renderType != QQuickTextInput::NativeRendering);
         m_textLayout.setTextOption(option);
     }
 }

@@ -101,6 +101,7 @@ public:
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();
     virtual QSGGlyphNode *createGlyphNode();
+    virtual QSGGlyphNode *createNativeGlyphNode();
     virtual QSGRenderer *createRenderer();
 
     virtual QSGTexture *createTexture(const QImage &image = QImage()) const;

@@ -100,6 +100,9 @@ public:
                             QSGNode *parentNode = 0);
     void addImage(const QRectF &rect, const QImage &image);
 
+    bool useNativeRenderer() const { return m_useNativeRenderer; }
+    void setUseNativeRenderer(bool on) { m_useNativeRenderer = on; }
+
 private:
     void mergeFormats(QTextLayout *textLayout, QVarLengthArray<QTextLayout::FormatRange> *mergedFormats);
 
@@ -107,6 +110,7 @@ private:
     QSGSimpleRectNode *m_cursorNode;
     QList<QSGTexture *> m_textures;
     QQuickItem *m_ownerElement;
+    bool m_useNativeRenderer;
 };
 
 QT_END_NAMESPACE

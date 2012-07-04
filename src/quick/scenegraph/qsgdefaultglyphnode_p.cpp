@@ -44,6 +44,8 @@
 #include <qopenglshaderprogram.h>
 
 #include <QtGui/private/qopengltextureglyphcache_p.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
 #include <private/qfontengine_p.h>
 #include <private/qopenglextensions_p.h>
 
@@ -61,6 +63,10 @@ public:
 
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
     virtual char const *const *attributeNames() const;
+
+    virtual void activate();
+    virtual void deactivate();
+
 private:
     virtual void initialize();
     virtual const char *vertexShader() const;
@@ -90,7 +96,7 @@ const char *QSGTextMaskMaterialData::fragmentShader() const {
         "uniform sampler2D texture;                     \n"
         "uniform lowp vec4 color;                       \n"
         "void main() {                                  \n"
-        "    gl_FragColor = color * texture2D(texture, sampleCoord).a; \n"
+        "    gl_FragColor = vec4(texture2D(texture, sampleCoord).rgb, 1.0); \n"
         "}";
 }
 
@@ -111,6 +117,32 @@ void QSGTextMaskMaterialData::initialize()
     m_textureScale_id = program()->uniformLocation("textureScale");
 }
 
+static inline qreal fontSmoothingGamma()
+{
+    static qreal fontSmoothingGamma = QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FontSmoothingGamma).toReal();
+    return fontSmoothingGamma;
+}
+
+void QSGTextMaskMaterialData::activate()
+{
+    QSGMaterialShader::activate();
+    glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
+
+    // 0.25 was found to be acceptable error margin by experimentation. On Mac, the gamma is 2.0,
+    // but using sRGB looks okay.
+    if (qAbs(fontSmoothingGamma() - 2.2) < 0.25)
+        glEnable(GL_FRAMEBUFFER_SRGB);
+}
+
+void QSGTextMaskMaterialData::deactivate()
+{
+    QSGMaterialShader::deactivate();
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    if (qAbs(fontSmoothingGamma() - 2.2) < 0.25)
+        glDisable(GL_FRAMEBUFFER_SRGB);
+}
+
 void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
     Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
@@ -118,10 +150,17 @@ void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial 
     QSGTextMaskMaterial *oldMaterial = static_cast<QSGTextMaskMaterial *>(oldEffect);
 
     if (oldMaterial == 0 || material->color() != oldMaterial->color() || state.isOpacityDirty()) {
-        QVector4D color(material->color().redF(), material->color().greenF(),
-                        material->color().blueF(), material->color().alphaF());
+        QColor c = material->color();
+        QVector4D color(c.redF(), c.greenF(), c.blueF(), c.alphaF());
         color *= state.opacity();
         program()->setUniformValue(m_color_id, color);
+
+        if (oldMaterial == 0 || material->color() != oldMaterial->color()) {
+            state.context()->functions()->glBlendColor(c.redF(),
+                                                       c.greenF(),
+                                                       c.blueF(),
+                                                       1.0f);
+        }
     }
 
     bool updated = material->ensureUpToDate();
@@ -138,8 +177,8 @@ void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial 
         // Set the mag/min filters to be linear. We only need to do this when the texture
         // has been recreated.
         if (updated) {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
     }
 
@@ -161,7 +200,7 @@ void QSGTextMaskMaterial::init()
 {
     Q_ASSERT(m_font.isValid());
 
-    QFontEngineGlyphCache::Type type = QFontEngineGlyphCache::Raster_A8;
+    QFontEngineGlyphCache::Type type = QFontEngineGlyphCache::Raster_RGBMask;
     setFlag(Blending, true);
 
     QOpenGLContext *ctx = const_cast<QOpenGLContext *>(QOpenGLContext::currentContext());

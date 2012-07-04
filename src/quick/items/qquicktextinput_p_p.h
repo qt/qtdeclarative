@@ -102,6 +102,7 @@ public:
         , vAlign(QQuickTextInput::AlignTop)
         , wrapMode(QQuickTextInput::NoWrap)
         , m_echoMode(QQuickTextInput::Normal)
+        , renderType(QQuickTextInput::QtRendering)
         , updateType(UpdatePaintNode)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
@@ -230,6 +231,7 @@ public:
     QQuickTextInput::VAlignment vAlign;
     QQuickTextInput::WrapMode wrapMode;
     QQuickTextInput::EchoMode m_echoMode;
+    QQuickTextInput::RenderType renderType;
     UpdateType updateType;
     QQuickTextInput::SelectionMode mouseSelectionMode;
     Qt::LayoutDirection m_layoutDirection;

@@ -61,6 +61,7 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_ENUMS(EchoMode)
     Q_ENUMS(SelectionMode)
     Q_ENUMS(CursorPosition)
+    Q_ENUMS(RenderType)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(int length READ length NOTIFY textChanged)
@@ -106,6 +107,7 @@ class Q_AUTOTEST_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
     Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentSizeChanged)
     Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
+    Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
 
 public:
     QQuickTextInput(QQuickItem * parent=0);
@@ -150,12 +152,18 @@ public:
         CursorOnCharacter
     };
 
+    enum RenderType { QtRendering,
+                      NativeRendering
+                    };
 
     //Auxilliary functions needed to control the TextInput from QML
     Q_INVOKABLE void positionAt(QQmlV8Function *args) const;
     Q_INVOKABLE QRectF positionToRectangle(int pos) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
+
+    RenderType renderType() const;
+    void setRenderType(RenderType renderType);
 
     QString text() const;
     void setText(const QString &);
@@ -298,6 +306,7 @@ Q_SIGNALS:
     void effectiveHorizontalAlignmentChanged();
     void contentSizeChanged();
     void inputMethodHintsChanged();
+    void renderTypeChanged();
 
 protected:
     virtual void geometryChanged(const QRectF &newGeometry,

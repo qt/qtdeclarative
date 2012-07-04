@@ -76,6 +76,7 @@ public:
         , lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
+        , renderType(QQuickTextEdit::QtRendering)
         , contentDirection(Qt::LayoutDirectionAuto)
         , mouseSelectionMode(QQuickTextEdit::SelectCharacters), inputMethodHints(Qt::ImhNone)
         , updateType(UpdatePaintNode)
@@ -134,6 +135,7 @@ public:
     QQuickTextEdit::VAlignment vAlign;
     QQuickTextEdit::TextFormat format;
     QQuickTextEdit::WrapMode wrapMode;
+    QQuickTextEdit::RenderType renderType;
     Qt::LayoutDirection contentDirection;
     QQuickTextEdit::SelectionMode mouseSelectionMode;
     Qt::InputMethodHints inputMethodHints;
