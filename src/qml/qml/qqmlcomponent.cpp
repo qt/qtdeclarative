@@ -798,6 +798,8 @@ QObject *QQmlComponent::create(QQmlContext *context)
     This breaking point is sometimes useful when using attached properties to
     communicate information to an instantiated component, as it allows their
     initial values to be configured before property bindings take effect.
+
+    \sa completeCreate()
 */
 QObject *QQmlComponent::beginCreate(QQmlContext *publicContext)
 {
@@ -915,6 +917,8 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
     component.
 
     Complete a component creation begin with QQmlComponent::beginCreate().
+
+    \sa beginCreate()
 */
 void QQmlComponent::completeCreate()
 {
