@@ -971,7 +971,27 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     return a;
 }
 
-void QQmlComponent::create(QQmlIncubator &i, QQmlContext *context,
+/*!
+    Create an object instance from this component using the provided
+    \a incubator.  \a context specifies the context within which to create the object
+    instance.
+
+    If \a context is 0 (the default), it will create the instance in the
+    engine's \l {QQmlEngine::rootContext()}{root context}.
+
+    \a forContext specifies a context that this object creation depends upon.
+    If the \a forContext is being created asynchronously, and the
+    \l QQmlIncubator::IncubationMode is \l QQmlIncubator::AsynchronousIfNested,
+    this object will also be created asynchronously.  If \a forContext is 0
+    (the default), the \a context will be used for this decision.
+
+    The created object and its creation status are available via the
+    \a incubator.
+
+    \sa QQmlIncubator
+*/
+
+void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context,
                                    QQmlContext *forContext)
 {
     Q_D(QQmlComponent);
@@ -998,8 +1018,8 @@ void QQmlComponent::create(QQmlIncubator &i, QQmlContext *context,
         return;
     }
 
-    i.clear();
-    QQmlIncubatorPrivate *p = i.d;
+    incubator.clear();
+    QQmlIncubatorPrivate *p = incubator.d;
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(d->engine);
 
@@ -1007,7 +1027,7 @@ void QQmlComponent::create(QQmlIncubator &i, QQmlContext *context,
     p->compiledData->addref();
     p->vme.init(contextData, d->cc, d->start, d->creationContext);
 
-    enginePriv->incubate(i, forContextData);
+    enginePriv->incubate(incubator, forContextData);
 }
 
 class QV8IncubatorResource : public QV8ObjectResource,
