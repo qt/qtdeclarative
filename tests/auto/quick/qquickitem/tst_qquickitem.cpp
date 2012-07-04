@@ -41,7 +41,6 @@
 
 #include <qtest.h>
 
-#include <qpa/qwindowsysteminterface.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickcanvas.h>
 #include <QtQuick/qquickview.h>

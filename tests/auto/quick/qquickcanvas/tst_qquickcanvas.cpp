@@ -47,7 +47,6 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 #include <QtQuick/private/qquickrectangle_p.h>
-#include <qpa/qwindowsysteminterface.h>
 #include "../../shared/util.h"
 #include <QSignalSpy>
 #include <private/qquickcanvas_p.h>
