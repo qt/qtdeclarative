@@ -50,6 +50,7 @@
 #include <QtQuick/private/qsgtexture_p.h>
 
 #include <private/qrawfont_p.h>
+#include <QtCore/qmath.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -214,8 +215,8 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
          const QTextureGlyphCache::Coord &c = cache->coords.value(glyph);
 
          QPointF glyphPosition = glyphPositions.at(i) + position;
-         int x = qRound(glyphPosition.x()) + c.baseLineX - margin;
-         int y = qRound(glyphPosition.y()) - c.baseLineY - margin;
+         int x = qFloor(glyphPosition.x()) + c.baseLineX - margin;
+         int y = qFloor(glyphPosition.y()) - c.baseLineY - margin;
 
          *boundingRect |= QRectF(x + margin, y + margin, c.w, c.h);
 
