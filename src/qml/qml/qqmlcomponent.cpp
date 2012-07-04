@@ -1104,6 +1104,10 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 
     \sa incubateObject()
 */
+
+/*!
+    \internal
+*/
 void QQmlComponent::createObject(QQmlV8Function *args)
 {
     Q_D(QQmlComponent);
@@ -1220,6 +1224,9 @@ void QQmlComponent::createObject(QQmlV8Function *args)
     \sa createObject()
 */
 
+/*!
+    \internal
+*/
 void QQmlComponent::incubateObject(QQmlV8Function *args)
 {
     Q_D(QQmlComponent);
