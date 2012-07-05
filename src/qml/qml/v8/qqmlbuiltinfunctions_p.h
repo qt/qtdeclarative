@@ -75,6 +75,7 @@ v8::Handle<v8::Value> consoleException(const v8::Arguments &args);
 v8::Handle<v8::Value> isQtObject(const v8::Arguments &args);
 v8::Handle<v8::Value> rgba(const v8::Arguments &args);
 v8::Handle<v8::Value> hsla(const v8::Arguments &args);
+v8::Handle<v8::Value> colorEqual(const v8::Arguments &args);
 v8::Handle<v8::Value> font(const v8::Arguments &args);
 v8::Handle<v8::Value> rect(const v8::Arguments &args);
 v8::Handle<v8::Value> point(const v8::Arguments &args);

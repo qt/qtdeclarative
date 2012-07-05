@@ -605,8 +605,8 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("isQtObject"), V8FUNCTION(isQtObject, this));
     qt->Set(v8::String::New("rgba"), V8FUNCTION(rgba, this));
     qt->Set(v8::String::New("hsla"), V8FUNCTION(hsla, this));
+    qt->Set(v8::String::New("colorEqual"), V8FUNCTION(colorEqual, this));
     qt->Set(v8::String::New("font"), V8FUNCTION(font, this));
-
     qt->Set(v8::String::New("rect"), V8FUNCTION(rect, this));
     qt->Set(v8::String::New("point"), V8FUNCTION(point, this));
     qt->Set(v8::String::New("size"), V8FUNCTION(size, this));

@@ -445,6 +445,45 @@ v8::Handle<v8::Value> hsla(const v8::Arguments &args)
 }
 
 /*!
+\qmlmethod color Qt::colorEqual(color lhs, string rhs)
+
+Returns true if both \c lhs and \c rhs yield equal color values.  Both arguments
+may be either color values or string values.  If a string value is supplied it
+must be convertible to a color, as described for the \l{qmlbasictypecolor}{color}
+basic type.
+*/
+v8::Handle<v8::Value> colorEqual(const v8::Arguments &args)
+{
+    if (args.Length() != 2)
+        V8THROW_ERROR("Qt.colorEqual(): Invalid arguments");
+
+    bool ok = false;
+
+    QVariant lhs = V8ENGINE()->toVariant(args[0], -1);
+    if (lhs.userType() == QVariant::String) {
+        lhs = QQmlStringConverters::colorFromString(lhs.toString(), &ok);
+        if (!ok) {
+            V8THROW_ERROR("Qt.colorEqual(): Invalid color name");
+        }
+    } else if (lhs.userType() != QVariant::Color) {
+        V8THROW_ERROR("Qt.colorEqual(): Invalid arguments");
+    }
+
+    QVariant rhs = V8ENGINE()->toVariant(args[1], -1);
+    if (rhs.userType() == QVariant::String) {
+        rhs = QQmlStringConverters::colorFromString(rhs.toString(), &ok);
+        if (!ok) {
+            V8THROW_ERROR("Qt.colorEqual(): Invalid color name");
+        }
+    } else if (rhs.userType() != QVariant::Color) {
+        V8THROW_ERROR("Qt.colorEqual(): Invalid arguments");
+    }
+
+    bool equal = (lhs == rhs);
+    return V8ENGINE()->fromVariant(equal);
+}
+
+/*!
 \qmlmethod rect Qt::rect(int x, int y, int width, int height)
 
 Returns a \c rect with the top-left corner at \c x, \c y and the specified \c width and \c height.

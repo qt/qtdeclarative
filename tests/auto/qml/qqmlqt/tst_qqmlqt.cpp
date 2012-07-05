@@ -69,6 +69,7 @@ private slots:
     void enums();
     void rgba();
     void hsla();
+    void colorEqual();
     void rect();
     void point();
     void size();
@@ -158,6 +159,89 @@ void tst_qqmlqt::hsla()
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor::fromHslF(1, 1, 1, 1));
     QCOMPARE(qvariant_cast<QColor>(object->property("test6")), QColor::fromHslF(0, 0, 0, 0));
+
+    delete object;
+}
+
+void tst_qqmlqt::colorEqual()
+{
+    QQmlComponent component(&engine, testFileUrl("colorEqual.qml"));
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":6: Error: Qt.colorEqual(): Invalid arguments"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":7: Error: Qt.colorEqual(): Invalid arguments"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":9: Error: Qt.colorEqual(): Invalid color name"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":10: Error: Qt.colorEqual(): Invalid color name"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":12: Error: Qt.colorEqual(): Invalid arguments"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":13: Error: Qt.colorEqual(): Invalid arguments"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":17: Error: Qt.colorEqual(): Invalid arguments"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":18: Error: Qt.colorEqual(): Invalid arguments"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":34: Error: Qt.colorEqual(): Invalid color name"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":35: Error: Qt.colorEqual(): Invalid color name"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test1a").toBool(), false);
+    QCOMPARE(object->property("test1b").toBool(), false);
+    QCOMPARE(object->property("test1c").toBool(), false);
+    QCOMPARE(object->property("test1d").toBool(), false);
+    QCOMPARE(object->property("test1e").toBool(), false);
+    QCOMPARE(object->property("test1f").toBool(), false);
+    QCOMPARE(object->property("test1g").toBool(), false);
+    QCOMPARE(object->property("test1h").toBool(), false);
+
+    QCOMPARE(object->property("test2a").toBool(), true);
+    QCOMPARE(object->property("test2b").toBool(), true);
+    QCOMPARE(object->property("test2c").toBool(), true);
+    QCOMPARE(object->property("test2d").toBool(), true);
+    QCOMPARE(object->property("test2e").toBool(), true);
+    QCOMPARE(object->property("test2f").toBool(), true);
+    QCOMPARE(object->property("test2g").toBool(), true);
+    QCOMPARE(object->property("test2h").toBool(), true);
+    QCOMPARE(object->property("test2i").toBool(), false);
+    QCOMPARE(object->property("test2j").toBool(), false);
+    QCOMPARE(object->property("test2k").toBool(), false);
+    QCOMPARE(object->property("test2l").toBool(), false);
+    QCOMPARE(object->property("test2m").toBool(), false);
+    QCOMPARE(object->property("test2n").toBool(), false);
+
+    QCOMPARE(object->property("test3a").toBool(), true);
+    QCOMPARE(object->property("test3b").toBool(), true);
+    QCOMPARE(object->property("test3c").toBool(), true);
+    QCOMPARE(object->property("test3d").toBool(), true);
+    QCOMPARE(object->property("test3e").toBool(), true);
+    QCOMPARE(object->property("test3f").toBool(), true);
+    QCOMPARE(object->property("test3g").toBool(), false);
+    QCOMPARE(object->property("test3h").toBool(), false);
+    QCOMPARE(object->property("test3i").toBool(), true);
+    QCOMPARE(object->property("test3j").toBool(), true);
+    QCOMPARE(object->property("test3k").toBool(), true);
+    QCOMPARE(object->property("test3l").toBool(), true);
+    QCOMPARE(object->property("test3m").toBool(), true);
+    QCOMPARE(object->property("test3n").toBool(), true);
+
+    QCOMPARE(object->property("test4a").toBool(), true);
+    QCOMPARE(object->property("test4b").toBool(), true);
+    QCOMPARE(object->property("test4c").toBool(), false);
+    QCOMPARE(object->property("test4d").toBool(), false);
+    QCOMPARE(object->property("test4e").toBool(), false);
+    QCOMPARE(object->property("test4f").toBool(), false);
+    QCOMPARE(object->property("test4g").toBool(), false);
+    QCOMPARE(object->property("test4h").toBool(), false);
+    QCOMPARE(object->property("test4i").toBool(), false);
+    QCOMPARE(object->property("test4j").toBool(), false);
+
+    QCOMPARE(object->property("test5a").toBool(), true);
+    QCOMPARE(object->property("test5b").toBool(), true);
+    QCOMPARE(object->property("test5c").toBool(), true);
+    QCOMPARE(object->property("test5d").toBool(), false);
+    QCOMPARE(object->property("test5e").toBool(), false);
+
+    QCOMPARE(object->property("test6a").toBool(), true);
+    QCOMPARE(object->property("test6b").toBool(), true);
+    QCOMPARE(object->property("test6c").toBool(), true);
+    QCOMPARE(object->property("test6d").toBool(), false);
+    QCOMPARE(object->property("test6e").toBool(), false);
 
     delete object;
 }

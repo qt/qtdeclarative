@@ -293,6 +293,7 @@ property is only invoked when the property is reassigned to a different object v
     \qmlbasictype color
     \ingroup qmlbasictypes
     \brief an ARGB color value.
+    \target qmlbasictypecolor
 
     The \c color type refers to an ARGB color value. It can be specified in a number of ways:
 
@@ -325,6 +326,10 @@ property is only invoked when the property is reassigned to a different object v
         Component.onCompleted: console.log(color.r, color.g, color.b, color.a)
     }
     \endqml
+
+    To test color values for equality, use the \l{QML:Qt::colorEqual()}{Qt.colorEqual()}
+    function.  This allows colors to be accurately compared whether they are in property
+    form or in any of the acceptable string specification forms.
 
     When integrating with C++, note that any QColor value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
