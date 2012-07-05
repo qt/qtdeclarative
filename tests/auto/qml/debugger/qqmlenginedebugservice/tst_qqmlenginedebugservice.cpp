@@ -858,7 +858,7 @@ void tst_QQmlEngineDebugService::queryExpressionResult_data()
     QTest::newRow("blueRect.width") << "blueRect.width" << qVariantFromValue(500);
     QTest::newRow("bad expr") << "aeaef" << qVariantFromValue(QString("<undefined>"));
     QTest::newRow("QObject*") << "varObj" << qVariantFromValue(QString("<unnamed object>"));
-    QTest::newRow("list of QObject*") << "varObjList" << qVariantFromValue(QString("<unknown value>"));
+    QTest::newRow("list of QObject*") << "varObjList" << qVariantFromValue(QVariantList() << QVariant(QString("<unnamed object>")));
     QVariantMap map;
     map.insert(QLatin1String("rect"), QVariant(QLatin1String("<unnamed object>")));
     QTest::newRow("varObjMap") << "varObjMap" << qVariantFromValue(map);
@@ -906,7 +906,7 @@ void tst_QQmlEngineDebugService::queryExpressionResultBC_data()
     QTest::newRow("blueRect.width") << "blueRect.width" << qVariantFromValue(500);
     QTest::newRow("bad expr") << "aeaef" << qVariantFromValue(QString("<undefined>"));
     QTest::newRow("QObject*") << "varObj" << qVariantFromValue(QString("<unnamed object>"));
-    QTest::newRow("list of QObject*") << "varObjList" << qVariantFromValue(QString("<unknown value>"));
+    QTest::newRow("list of QObject*") << "varObjList" << qVariantFromValue(QVariantList() << QVariant(QString("<unnamed object>")));
     QVariantMap map;
     map.insert(QLatin1String("rect"), QVariant(QLatin1String("<unnamed object>")));
     QTest::newRow("varObjMap") << "varObjMap" << qVariantFromValue(map);

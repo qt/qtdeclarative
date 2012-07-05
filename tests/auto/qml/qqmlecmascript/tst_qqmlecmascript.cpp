@@ -660,13 +660,13 @@ void tst_qqmlecmascript::arrayExpressions()
 
     MyExpression expr(&context, "[a, b, c, 10]");
     QVariant result = expr.evaluate();
-    QCOMPARE(result.userType(), qMetaTypeId<QList<QObject *> >());
-    QList<QObject *> list = qvariant_cast<QList<QObject *> >(result);
+    QCOMPARE(result.userType(), qMetaTypeId<QVariantList>());
+    QVariantList list = qvariant_cast<QVariantList>(result);
     QCOMPARE(list.count(), 4);
-    QCOMPARE(list.at(0), &obj1);
-    QCOMPARE(list.at(1), &obj2);
-    QCOMPARE(list.at(2), &obj3);
-    QCOMPARE(list.at(3), (QObject *)0);
+    QCOMPARE(list.at(0).value<QObject*>(), &obj1);
+    QCOMPARE(list.at(1).value<QObject*>(), &obj2);
+    QCOMPARE(list.at(2).value<QObject*>(), &obj3);
+    QCOMPARE(list.at(3).value<int>(), 10);
 }
 
 // Tests that modifying a context property will reevaluate expressions
