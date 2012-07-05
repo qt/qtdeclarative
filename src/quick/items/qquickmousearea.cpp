@@ -194,7 +194,7 @@ QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
 
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), hovered(false), longPress(false),
-  moved(false), dragX(true), dragY(true), stealMouse(false), doubleClick(false), preventStealing(false),
+  moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
   propagateComposedEvents(false), pressed(0)
 #ifndef QT_NO_DRAGANDDROP
   , drag(0)
@@ -722,13 +722,6 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
         d->pressAndHoldTimer.start(PressAndHoldDelay, this);
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(event->button(), true));
-
-#ifndef QT_NO_DRAGANDDROP
-        if (d->drag) {
-            d->dragX = drag()->axis() & QQuickDrag::XAxis;
-            d->dragY = drag()->axis() & QQuickDrag::YAxis;
-        }
-#endif
     }
 }
 
@@ -780,7 +773,10 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 
         QPointF dragPos = d->drag->target()->pos();
 
-        if (d->dragX && d->drag->active()) {
+        bool dragX = drag()->axis() & QQuickDrag::XAxis;
+        bool dragY = drag()->axis() & QQuickDrag::YAxis;
+
+        if (dragX && d->drag->active()) {
             qreal x = (curLocalPos.x() - startLocalPos.x()) + startPos.x();
             if (x < drag()->xmin())
                 x = drag()->xmin();
@@ -788,7 +784,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
                 x = drag()->xmax();
             dragPos.setX(x);
         }
-        if (d->dragY && d->drag->active()) {
+        if (dragY && d->drag->active()) {
             qreal y = (curLocalPos.y() - startLocalPos.y()) + startPos.y();
             if (y < drag()->ymin())
                 y = drag()->ymin();
@@ -801,9 +797,9 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
         if (!keepMouseGrab()) {
             bool xDragged = QQuickCanvasPrivate::dragOverThreshold(dx, Qt::XAxis, event);
             bool yDragged = QQuickCanvasPrivate::dragOverThreshold(dy, Qt::YAxis, event);
-            if ((!d->dragY && !yDragged && d->dragX && xDragged)
-                || (!d->dragX && !xDragged && d->dragY && yDragged)
-                || (d->dragX && d->dragY && (xDragged || yDragged))) {
+            if ((!dragY && !yDragged && dragX && xDragged)
+                || (!dragX && !xDragged && dragY && yDragged)
+                || (dragX && dragY && (xDragged || yDragged))) {
                 setKeepMouseGrab(true);
                 d->stealMouse = true;
             }

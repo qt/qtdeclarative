@@ -89,8 +89,6 @@ public:
     bool hovered : 1;
     bool longPress : 1;
     bool moved : 1;
-    bool dragX : 1;
-    bool dragY : 1;
     bool stealMouse : 1;
     bool doubleClick : 1;
     bool preventStealing : 1;

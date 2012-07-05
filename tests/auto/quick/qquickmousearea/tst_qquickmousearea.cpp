@@ -84,6 +84,7 @@ private slots:
     void transformedMouseArea();
     void pressedMultipleButtons_data();
     void pressedMultipleButtons();
+    void changeAxis();
 
 private:
     void acceptedButton_data();
@@ -1299,6 +1300,68 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
 
     QCOMPARE(pressedSpy.count(), 2);
     QCOMPARE(pressedButtonsSpy.count(), changeCount);
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::changeAxis()
+{
+    QQuickView *canvas = createView();
+
+    canvas->setSource(testFileUrl("changeAxis.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QTRY_VERIFY(canvas->rootObject() != 0);
+
+    QQuickMouseArea *mouseRegion = canvas->rootObject()->findChild<QQuickMouseArea*>("mouseregion");
+    QQuickDrag *drag = mouseRegion->drag();
+    QVERIFY(mouseRegion != 0);
+    QVERIFY(drag != 0);
+
+    mouseRegion->setAcceptedButtons(Qt::LeftButton);
+
+    // target
+    QQuickItem *blackRect = canvas->rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(blackRect != 0);
+    QVERIFY(blackRect == drag->target());
+
+    QVERIFY(!drag->active());
+
+    // Start a diagonal drag
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100, 100));
+
+    QVERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 50.0);
+    QCOMPARE(blackRect->y(), 50.0);
+
+    QTest::mouseMove(canvas, QPoint(111, 111));
+    QTest::qWait(50);
+    QTest::mouseMove(canvas, QPoint(122, 122));
+
+    QTRY_VERIFY(drag->active());
+    QCOMPARE(blackRect->x(), 72.0);
+    QCOMPARE(blackRect->y(), 72.0);
+    QCOMPARE(drag->axis(), QQuickDrag::XandYAxis);
+
+    /* When blackRect.x becomes bigger than 75, the drag axis is changed to
+     * Drag.YAxis by the QML code. Verify that this happens, and that the drag
+     * movement is effectively constrained to the Y axis. */
+    QTest::mouseMove(canvas, QPoint(133, 133));
+
+    QTRY_COMPARE(blackRect->x(), 83.0);
+    QTRY_COMPARE(blackRect->y(), 83.0);
+    QTRY_COMPARE(drag->axis(), QQuickDrag::YAxis);
+
+    QTest::mouseMove(canvas, QPoint(144, 144));
+
+    QTRY_COMPARE(blackRect->y(), 94.0);
+    QCOMPARE(blackRect->x(), 83.0);
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(144, 144));
+
+    QTRY_VERIFY(!drag->active());
+    QCOMPARE(blackRect->x(), 83.0);
+    QCOMPARE(blackRect->y(), 94.0);
 
     delete canvas;
 }
