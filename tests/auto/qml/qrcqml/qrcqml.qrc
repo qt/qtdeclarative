@@ -1,7 +1,19 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
+    <file>data/main.qml</file>
+    <file>data/SameDir.qml</file>
     <file>data/SubDir.qml</file>
-    <file alias="main.qml">data/main.qml</file>
-    <file alias="SameDir.qml">data/SameDir.qml</file>
+</qresource>
+<qresource>
+    <!-- unspecified prefix seems to mean '/' -->
+    <file alias="main.qml">data/main2.qml</file>
+    <file alias="SameDir.qml">data/SameDir2.qml</file>
+</qresource>
+<qresource prefix="/search">
+    <file alias="main.qml">data/main3.qml</file>
+    <file alias="SameDir.qml">data/SameDir3.qml</file>
+</qresource>
+<qresource prefix="/search/data">
+    <file alias="SubDir.qml">data/SubDir.qml</file>
 </qresource>
 </RCC>

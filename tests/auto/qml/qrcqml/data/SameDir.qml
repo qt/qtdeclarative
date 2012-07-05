@@ -1,5 +1,5 @@
 import QtQuick 2.0
 
 QtObject {
-    property string tokenProperty: "hello"
+    property string tokenProperty: "foo"
 }

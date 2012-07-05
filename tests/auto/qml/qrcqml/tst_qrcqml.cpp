@@ -55,6 +55,7 @@ public:
     tst_qrcqml();
 
 private slots:
+    void basicLoad_data();
     void basicLoad();
 };
 
@@ -62,16 +63,44 @@ tst_qrcqml::tst_qrcqml()
 {
 }
 
+void tst_qrcqml::basicLoad_data()
+{
+    QTest::addColumn<QString>("url");
+    QTest::addColumn<QString>("token");
+
+    QTest::newRow("simple")
+        << "qrc:/data/main.qml"
+        << "foo";
+
+    QTest::newRow("aliased")
+        << "qrc:/main.qml"
+        << "bar";
+
+    QTest::newRow("prefixed")
+        << "qrc:/search/main.qml"
+        << "baz";
+
+    /* This is not supported:
+    QTest::newRow("without qrc scheme")
+        << ":/data/main.qml"
+        << "hello";
+    */
+}
+
 void tst_qrcqml::basicLoad()
 {
+    QFETCH(QString, url);
+    QFETCH(QString, token);
+
     QQmlEngine e;
-    QQmlComponent c(&e, QUrl("qrc:/main.qml"));
+    QQmlComponent c(&e, QUrl(url));
     QVERIFY(c.isReady());
     QObject* o = c.create();
     QVERIFY(o);
-    QCOMPARE(o->property("tokenProperty").toString(), QLatin1String("hello"));
+    QCOMPARE(o->property("tokenProperty").toString(), token);
     delete o;
 }
+
 QTEST_MAIN(tst_qrcqml)
 
 #include "tst_qrcqml.moc"
