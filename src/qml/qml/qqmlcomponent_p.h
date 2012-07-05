@@ -84,7 +84,8 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
     Q_DECLARE_PUBLIC(QQmlComponent)
         
 public:
-    QQmlComponentPrivate() : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0), profiler(0) {}
+    QQmlComponentPrivate()
+        : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0), profiler(0), depthIncreased(false) {}
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 
@@ -120,6 +121,7 @@ public:
     QQmlEngine *engine;
     QQmlGuardedContextData creationContext;
     QQmlObjectCreatingProfiler *profiler;
+    bool depthIncreased;
 
     void clear();
 

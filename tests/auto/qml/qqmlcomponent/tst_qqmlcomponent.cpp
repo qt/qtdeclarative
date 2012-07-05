@@ -114,6 +114,8 @@ private slots:
     void componentUrlCanonicalization();
     void onDestructionLookup();
     void onDestructionCount();
+    void recursion();
+    void recursionContinuation();
 
 private:
     QQmlEngine engine;
@@ -408,6 +410,34 @@ void tst_qqmlcomponent::onDestructionCount()
     QCOMPARE(engine.outputWarningsToStandardError(), false);
 
     QCOMPARE(warnings.count(), 0);
+}
+
+void tst_qqmlcomponent::recursion()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("recursion.qml"));
+
+    QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component creation is recursing - aborting").data());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+
+    // Sub-object creation does not succeed
+    QCOMPARE(object->property("success").toBool(), false);
+}
+
+void tst_qqmlcomponent::recursionContinuation()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("recursionContinuation.qml"));
+
+    for (int i = 0; i < 10; ++i)
+        QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component creation is recursing - aborting").data());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+
+    // Eventual sub-object creation succeeds
+    QVERIFY(object->property("success").toBool());
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

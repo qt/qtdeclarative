@@ -63,9 +63,14 @@
 
 #include <QStack>
 #include <QStringList>
+#include <QThreadStorage>
 #include <QtCore/qdebug.h>
 #include <qqmlinfo.h>
 #include "qqmlmemoryprofiler_p.h"
+
+namespace {
+    QThreadStorage<int> creationDepth;
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -772,7 +777,8 @@ QObject *QQmlComponent::create(QQmlContext *context)
         context = d->engine->rootContext();
 
     QObject *rv = beginCreate(context);
-    completeCreate();
+    if (rv)
+        completeCreate();
     return rv;
 }
 
@@ -840,6 +846,16 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         return 0;
     }
 
+    // Do not create infinite recursion in object creation
+    static const int maxCreationDepth = 10;
+    if (++creationDepth.localData() >= maxCreationDepth) {
+        qWarning("QQmlComponent: Component creation is recursing - aborting");
+        --creationDepth.localData();
+        return 0;
+    }
+    Q_ASSERT(creationDepth.localData() >= 1);
+    depthIncreased = true;
+
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);
 
     if (enginePriv->inProgressCreations == 0) {
@@ -864,6 +880,10 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         ddata->indestructible = true;
         ddata->explicitIndestructibleSet = true;
         ddata->rootObjectInCreation = false;
+    } else {
+        Q_ASSERT(creationDepth.localData() >= 1);
+        --creationDepth.localData();
+        depthIncreased = false;
     }
 
     if (enginePriv->isDebugging && rv) {
@@ -935,6 +955,12 @@ void QQmlComponentPrivate::completeCreate()
 
         delete profiler;
         profiler = 0;
+    }
+
+    if (depthIncreased) {
+        Q_ASSERT(creationDepth.localData() >= 1);
+        --creationDepth.localData();
+        depthIncreased = false;
     }
 }
 
