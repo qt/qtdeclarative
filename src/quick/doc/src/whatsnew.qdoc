@@ -106,8 +106,8 @@ Below are the additions and changes in QtQuick 2.0.
     \list
     \li New \l{Image::}{horizontalAlignment} and \l{Image::}{verticalAlignment} properties to set
         the image alignment.
-    \li New \c Image.Pad enum value for \l{Image::}{fillMode} that does not transform the image,
-        unlike other \l{Image::}{fillMode} enum values.
+    \li New \c Image.Pad enumeration value for \l{Image::}{fillMode} that does not transform the image,
+        unlike other \l{Image::}{fillMode} enumeration values.
     \li Modifying the \l{Image::}{sourceSize} now fits the image to the size, maintaining aspect
         ratio.
     \endlist
@@ -291,7 +291,7 @@ the window loses focus.
     \li New transition support for animating the adding, removing and moving of items in a ListView
         or GridView. See the ViewTransition documentation for details.
     \li New \c verticalLayoutDirection property enables items to be laid out from bottom-to-top
-        using the new \c BottomToTop enum value.
+        using the new \c BottomToTop enumeration value.
     \li New \c headerItem and \c footerItem properties provide access to the instantiated header and
         footer items.
     \li The \c cacheBuffer property now has a non-zero default.

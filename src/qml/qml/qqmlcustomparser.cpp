@@ -279,7 +279,7 @@ void QQmlCustomParser::error(const QQmlCustomParserNode& node, const QString& de
 }
 
 /*!
-    If \a script is a simple enum expression (eg. Text.AlignLeft),
+    If \a script is a simple enumeration expression (eg. Text.AlignLeft),
     returns the integer equivalent (eg. 1), and sets \a ok to true.
 
     Otherwise sets \a ok to false.

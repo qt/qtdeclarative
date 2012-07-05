@@ -527,7 +527,7 @@ void QQuickDragAttached::start(QQmlV8Function *args)
 }
 
 /*!
-    \qmlattachedmethod enum QtQuick2::Drag::drop()
+    \qmlattachedmethod enumeration QtQuick2::Drag::drop()
 
     Ends a drag sequence by sending a drop event to the target item.
 

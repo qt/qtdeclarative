@@ -376,7 +376,7 @@ QStringList QQuickDropEvent::keys() const
 }
 
 /*!
-    \qmlproperty enum QtQuick2::DragEvent::action
+    \qmlproperty enumeration QtQuick2::DragEvent::action
 
     This property holds the action that the \l source is to perform on an accepted drop.
 
@@ -407,7 +407,7 @@ QStringList QQuickDropEvent::keys() const
 
 /*!
     \qmlmethod void QtQuick2::DragEvent::accept()
-    \qmlmethod void QtQuick2::DragEvent::accept(enum action)
+    \qmlmethod void QtQuick2::DragEvent::accept(enumeration action)
 
     Accepts the drag event.
 

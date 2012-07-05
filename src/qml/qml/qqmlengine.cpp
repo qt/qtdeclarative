@@ -267,7 +267,7 @@ Text {
 \section1 Enums
 
 The Qt object contains the enums available in the \l {Qt Namespace}. For example, you can access
-the \l Qt::LeftButton and \l Qt::RightButton enum values as \c Qt.LeftButton and \c Qt.RightButton.
+the \l Qt::LeftButton and \l Qt::RightButton enumeration values as \c Qt.LeftButton and \c Qt.RightButton.
 
 
 \section1 Types

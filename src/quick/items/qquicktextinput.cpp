@@ -2170,7 +2170,7 @@ void QQuickTextInput::setSelectByMouse(bool on)
 }
 
 /*!
-    \qmlproperty enum QtQuick2::TextInput::mouseSelectionMode
+    \qmlproperty enumeration QtQuick2::TextInput::mouseSelectionMode
 
     Specifies how text should be selected using a mouse.
 

@@ -1618,7 +1618,7 @@ void QQuickPathArc::setUseLargeArc(bool largeArc)
 }
 
 /*!
-    \qmlproperty enum QtQuick2::PathArc::direction
+    \qmlproperty enumeration QtQuick2::PathArc::direction
 
     Defines the direction of the arc. Possible values are
     PathArc.Clockwise (default) and PathArc.Counterclockwise.
