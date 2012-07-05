@@ -90,9 +90,10 @@ types, animation classes, and canvas integration) for the QML language.
 
     \li \l{qtqml-modules-topic.html}{QML Modules}
         \list
-        \li \l{qtqml-modules-topic.html#syntax-of-a-qmldir-file}{Packaging QML and JavaScript Files}
-        \li \l{qtqml-modules-cppplugins.html#creating-a-plugin}{Providing Types and Functionality in a C++ Plugin}
-        \li \l{qtqml-modules-qmldir.html}{Syntax of a qmldir File}
+        \li \l{qtqml-modules-locatedmodules.html}{Located Modules}
+        \li \l{qtqml-modules-installedmodules.html}{Installed Modules}
+        \li \l{qtqml-modules-qmldir.html}{Adding Module Metadata with a qmldir file}
+        \li \l{qtqml-modules-cppplugins.html}{Providing Types and Functionality in a C++ Plugin}
         \endlist
 
     \li \l{qtqml-documents-topic.html}{QML Documents}

@@ -1,0 +1,163 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-modules-installedmodules.html
+\title Installed Modules
+\brief Creating and importing installed modules
+
+Installed modules are modules that are identifiable to the QML engine by a URI in the form of a
+dotted identifier string. This enables such modules to be imported with a unique identifier that
+remains the same no matter where the module is located on the local file system. This contrasts with
+\l{qtqml-modules-locatedmodules.html}{located modules}, which are imported according to their
+location on the file system.
+
+When importing an installed module, an unquoted URI is used, with a mandatory version number:
+
+\snippet qml/imports/installed-module.qml imports
+
+Installed modules must be made available in the \l{qtqml-syntax-imports.html#qml-import-path}{import
+path} in order to be found by the QML engine.
+
+
+\section1 Locally Installed Modules
+
+A directory of QML and/or C++ files can be shared as an installed module if it contains a
+\l{qtqml-modules-qmldir.html}{qmldir file} with the module metadata. Any QML file on the local file
+system can import this directory as a module by using an \l{qtqml-syntax-imports.html}{import}
+statement that refers to the module's URI, enabling the file to use the
+\l{qtqml-typesystem-objecttypes.html}{QML object types} defined within that directory.
+
+The module's \c qmldir file must reside in a directory structure within the
+\l{qtqml-syntax-imports.html#qml-import-path}{import path} that reflects the URI dotted identifier
+string, where each dot (".") in the identifier reflects a sub-level in the directory tree. For
+example, the \c qmldir file of the module \c com.mycompany.mymodule must be located in the sub-path
+\c com/mycompany/mymodule/qmldir somewhere in the
+\l{qtqml-syntax-imports.html#qml-import-path}{import path}.
+
+It is possible to store different versions of a module in subdirectories of its own. For example, a
+version 2.1 of a module could be located under \c com/mycompany/mymodule.2/qmldir or \c
+com/mycompany/mymodule.2.1/qmldir. The engine will automatically load the module which matches best.
+
+
+\section2 An Example
+
+Consider the following QML project directory structure. Under the top level directory \c myapp,
+there are a set of common UI components in a sub-directory named \c mycomponents, and the main
+application code in a sub-directory named \c main, like this:
+
+\code
+myapp
+    |- mycomponents
+        |- CheckBox.qml
+        |- DialogBox.qml
+        |- Slider.qml
+    |- main
+        |- application.qml
+\endcode
+
+To make the \c mycomponents directory available as an installed module, the directory must include a
+\l{qtqml-modules-qmldir.html}{qmldir file} that describes the object types made available by the
+module. For example, to make the \c CheckBox, \c DialogBox and \c Slider types available for version
+1.0 of the module, the \c qmldir file would contain the following:
+
+\code
+CheckBox 1.0 CheckBox.qml
+DialogBox 1.0 DialogBox.qml
+Slider 1.0 Slider.qml
+\endcode
+
+Additionally, the location of the \c qmldir file in the
+\l{qtqml-syntax-imports.html#qml-import-path}{import path} must match the module's dotted identifier
+string. So, say the top level \c myapp directory is located in \c C:\qml\projects, and say the
+module should be identified as "myapp.mycomponents". In this case:
+
+\list
+\li The path \c C:\qml\projects should be added to the
+\l{qtqml-syntax-imports.html#qml-import-path}{import path}
+\li The qmldir file should be located under \c C:\qml\projects\myapp\mycomponents\qmldir
+\endlist
+
+Once this is done, a QML file located anywhere on the local filesystem can import the module by
+referring to its URI and the appropriate version:
+
+\qml
+import myapp.mycomponents 1.0
+
+DialogBox {
+    CheckBox {
+        // ...
+    }
+    Slider {
+        // ...
+    }
+}
+\endqml
+
+
+\section1 Remotely Installed Modules
+
+Installed modules are also accessible as a network resource. In the previous example, if the \c
+C:\qml\projects directory was hosted as \c http://www.some-server.com/qml/projects and this URL was
+added to the QML import path, the module could be imported in exactly the same way.
+
+Note that when a file imports a module over a network, it can only access QML and JavaScript files
+provided by the module; it cannot access any types defined by C++ plugins in the module.
+
+
+\section1 In-application Modules
+
+C++ applications can define installed modules directly within the application using
+qmlRegisterType().
+
+For example, the \l {Tutorial: Extending QML with C++}{Writing QML extensions with C++ tutorial}
+defines a C++ class named \c PieChart and makes this type available to QML by calling
+qmlRegisterType():
+
+\code
+qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
+\endcode
+
+This allows the application's QML files to use the \c PieChart type by importing the declared
+\c Charts module:
+
+\snippet qml/imports/chart.qml import
+
+For \l{QQmlExtensionPlugin}{QML plugins}, the
+module URI is automatically passed to QQmlExtensionPlugin::registerTypes(). This method
+can be reimplemented by the developer to register the necessary types for the module. Below is the
+\c registerTypes() implementation from the \l{qml/cppextensions/plugins}{QML plugins}
+example:
+
+\snippet examples/qml/cppextensions/plugins/plugin.cpp plugin
+
+Once the plugin is built and installed, and includes a \l{Syntax of a qmldir file}{qmldir file},
+the module can be imported from QML, like this:
+
+\snippet qml/imports/timeexample.qml import
+
+*/
+

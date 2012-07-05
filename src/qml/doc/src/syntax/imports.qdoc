@@ -62,7 +62,34 @@ import com.company.module
 \note Import paths are network transparent: applications can import documents from remote paths just as simply as documents from local paths. See the general URL resolution rules for \l{qtqml-documents-networktransparency.html}{Network Transparency} in QML documents.
 
 
-\section2 Namespace Imports
+\section1 Debugging
+
+The \c QML_IMPORT_TRACE environment variable can be useful for debugging
+when there are problems with finding and loading modules. See
+\l{Debugging module imports} for more information.
+
+
+\section1 QML Import Path
+
+When an \l{qtqml-modules-installedmodules.html}{installed module} is imported, the QML engine
+searches the \e{import path} for a matching module.
+
+This import path, as returned by QQmlEngine::importPathList(), defines the default
+locations to be searched by the engine. By default, this list contains:
+
+\list
+\li The directory of the current file
+\li The location specified by QLibraryInfo::ImportsPath
+\li Paths specified by the \c QML_IMPORT_PATH environment variable
+\endlist
+
+Additional import paths can be added through QQmlEngine::addImportPath() or the
+\c QML_IMPORT_PATH environment variable. When running the \l {Prototyping with qmlscene}{qmlscene}
+tool, you can also use the \c -I option to add an import path.
+
+
+
+\section1 Namespaced Imports
 
 
 
@@ -106,9 +133,9 @@ Note that multiple modules can be imported into the same namespace in the same w
 
 
 
-\section2 Relative Directory Imports
+\section1 Relative Directory Imports
 
-\section2 JavaScript File Imports
+\section1 JavaScript File Imports
 
 
 JavaScript files must always be imported with a named import:
@@ -159,8 +186,8 @@ Window {
 \endqml
 
 
-\section2 Version Specification
+\section1 Version Specification
 
-\section2 Import Qualifier
+\section1 Import Qualifier
 
 */
