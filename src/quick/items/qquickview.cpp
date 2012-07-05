@@ -166,47 +166,41 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
 */
 
 /*!
-  Constructs a QQuickView with the given \a parent and window flags \a f.
-  The default value of \a parent is 0, default window flags \a f is Qt::Window.
+  Constructs a QQuickView with the given \a parent.
+  The default value of \a parent is 0.
 
-  \sa Qt::WindowFlags
 */
-QQuickView::QQuickView(QWindow *parent, Qt::WindowFlags f)
+QQuickView::QQuickView(QWindow *parent)
 : QQuickCanvas(*(new QQuickViewPrivate), parent)
 {
-    setWindowFlags(f);
     d_func()->init();
 }
 
 /*!
-  Constructs a QQuickView with the given QML \a source, \a parent and a window flags \a f.
-  The default value of \a parent is 0, default window flags \a f is Qt::Window.
+  Constructs a QQuickView with the given QML \a source and \a parent.
+  The default value of \a parent is 0.
 
-  \sa Qt::WindowFlags
 */
-QQuickView::QQuickView(const QUrl &source, QWindow *parent, Qt::WindowFlags f)
+QQuickView::QQuickView(const QUrl &source, QWindow *parent)
 : QQuickCanvas(*(new QQuickViewPrivate), parent)
 {
-    setWindowFlags(f);
     d_func()->init();
     setSource(source);
 }
 
 /*!
-  Constructs a QQuickView with the given QML \a engine, \a parent and a window flags \a f.
-  The default value of \a parent is 0, default window flags \a f is Qt::Window.
+  Constructs a QQuickView with the given QML \a engine and \a parent.
 
   Note: In this case, the QQuickView does not own the given \a engine object;
   it is the caller's responsibility to destroy the engine. If the \a engine is deleted
   before the view \a status() will return \a QQuickView::Error.
 
-  \sa Status, status(), errors(), Qt::WindowFlags
+  \sa Status, status(), errors()
 */
-QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent, Qt::WindowFlags f)
+QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent)
     : QQuickCanvas(*(new QQuickViewPrivate), parent)
 {
     Q_ASSERT(engine);
-    setWindowFlags(f);
     d_func()->init(engine);
 }
 
