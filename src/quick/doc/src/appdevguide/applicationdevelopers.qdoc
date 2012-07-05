@@ -24,27 +24,18 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-/*!
-\page qtquick-applicationdevelopers.html
-\title QML Application Developer Resources
-\brief Essential documentation for QML application developers
 
-\section1 Overview Of QML and Qt Quick
+/*
+XXX
 
-\section2 What Is QML?
+These sections have been temporarily removed from the
+"QML Application Developer Resources" page as we do not have any content
+for them yet.
 
-QML is a user-interface specification and programming language.
-It allows highly performant, fluidly animated, visually appealing applications
-to be rapidly developed by either developers or designers.  QML offers a
-highly-readable, declarative, JSON-like syntax with support for imperative
-JavaScript expressions combined with dynamic property bindings.
+Once we have written content for these sections, they can be re-integrated.
 
-\section2 What Is Qt Quick?
+See QTBUG-26427 and QTBUG-26428
 
-Qt Quick is the standard library of types and functionality for QML.  It
-includes visual elements, interactive elements, animations, models and views,
-particle effects and shader effects.  A QML application developer can get
-access to all of that functionality with a single import statement.
 
 \section1 Quick Start
 
@@ -78,6 +69,40 @@ access to all of that functionality with a single import statement.
 \li \l{qtquick-usecase-multimedia.html}{Playing Sounds And Video In QML}
 \endlist
 
+*/
+
+/*!
+\page qtquick-applicationdevelopers.html
+\title QML Application Developer Resources
+\brief Essential documentation for QML application developers
+
+\section1 Overview Of QML and Qt Quick
+
+\section2 What Is QML?
+
+QML is a user-interface specification and programming language.
+It allows highly performant, fluidly animated, visually appealing applications
+to be rapidly developed by either developers or designers.  QML offers a
+highly-readable, declarative, JSON-like syntax with support for imperative
+JavaScript expressions combined with dynamic property bindings.
+
+\b {The QML language and engine infrastructure is provided by the Qt QML module.
+See the \l{qtqml-main.html}{Qt QML Module Documentation} for
+in-depth information about using the QML language.}
+
+
+\section2 What Is Qt Quick?
+
+Qt Quick is the standard library of types and functionality for QML.  It
+includes visual elements, interactive elements, animations, models and views,
+particle effects and shader effects.  A QML application developer can get
+access to all of that functionality with a single import statement.
+
+\b {The QtQuick QML library is provided by the Qt Quick module. See the
+documentation for the \l{qtquick-main.html}{Qt Quick Module Documentation} for in-depth
+information about the various QML types and other functionality provided by
+Qt Quick.}
+
 \section1 Important Application Development Topics
 
 \list
@@ -86,7 +111,6 @@ access to all of that functionality with a single import statement.
 \li \l{qtquick-internationalization.html}{Internationalization And Localization}
 \li \l{qtquick-glossary.html}{Glossary Of Terms}
 \endlist
-
 
 \section1 Testing and Debugging
 \list
@@ -101,18 +125,6 @@ access to all of that functionality with a single import statement.
 \li \l{qtquick-releasenotes.html}{QtQuick Module Release Notes}
 \li \l{qtquick-porting-qt5.html}{Porting QML Applications to Qt 5}
 \endlist
-
-
-\section1 Further Information About The QML Language
-
-Please see the documentation for the \l{qtqml-main.html}{Qt QML Module} for
-in-depth information about QML documents and the QML language.
-
-\section1 Further Information About Qt Quick
-
-Please see the documentation for the \l{qtquick-main.html}{Qt Quick Module}
-for in-depth information about the various QML types and other functionality
-provided by Qt Quick.
 
 */
 
