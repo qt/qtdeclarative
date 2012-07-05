@@ -150,7 +150,6 @@ Q_SIGNALS:
     // control signals
     void updateCursorRequest();
     void updateRequest();
-    void documentSizeChanged(const QSizeF &);
     void cursorRectangleChanged();
     void linkActivated(const QString &link);
 
@@ -175,7 +174,6 @@ private:
     Q_DISABLE_COPY(QQuickTextControl)
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrentCharFormatAndSelection())
     Q_PRIVATE_SLOT(d_func(), void _q_emitCursorPosChanged(const QTextCursor &))
-    Q_PRIVATE_SLOT(d_func(), void _q_documentLayoutChanged())
 };
 
 

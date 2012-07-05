@@ -2417,7 +2417,8 @@ void tst_qquicktextedit::canPaste() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QQuickTextControl tc(0);
+    QTextDocument document;
+    QQuickTextControl tc(&document);
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif
@@ -2435,7 +2436,8 @@ void tst_qquicktextedit::canPasteEmpty() {
     QVERIFY(textEdit != 0);
 
     // check initial value - QTBUG-17765
-    QQuickTextControl tc(0);
+    QTextDocument document;
+    QQuickTextControl tc(&document);
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
 
 #endif
@@ -3820,7 +3822,7 @@ void tst_qquicktextedit::remove()
     textEdit->setTextFormat(textFormat);
     textEdit->select(selectionStart, selectionEnd);
 
-    QSignalSpy selectionSpy(textEdit, SIGNAL(seletedTextChanged()));
+    QSignalSpy selectionSpy(textEdit, SIGNAL(selectedTextChanged()));
     QSignalSpy selectionStartSpy(textEdit, SIGNAL(selectionStartChanged()));
     QSignalSpy selectionEndSpy(textEdit, SIGNAL(selectionEndChanged()));
     QSignalSpy textSpy(textEdit, SIGNAL(textChanged()));

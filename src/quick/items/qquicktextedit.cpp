@@ -260,7 +260,9 @@ void QQuickTextEdit::setText(const QString &text)
 
     d->document->clearResources();
     d->richText = d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(text));
-    if (d->richText) {
+    if (!isComponentComplete()) {
+        d->text = text;
+    } else if (d->richText) {
 #ifndef QT_NO_TEXTHTMLPARSER
         d->control->setHtml(text);
 #else
@@ -326,12 +328,14 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     d->richText = format == RichText || (format == AutoText && (wasRich || Qt::mightBeRichText(text())));
 
 #ifndef QT_NO_TEXTHTMLPARSER
-    if (wasRich && !d->richText) {
-        d->control->setPlainText(!d->textCached ? d->control->toHtml() : d->text);
-        updateSize();
-    } else if (!wasRich && d->richText) {
-        d->control->setHtml(!d->textCached ? d->control->toPlainText() : d->text);
-        updateSize();
+    if (isComponentComplete()) {
+        if (wasRich && !d->richText) {
+            d->control->setPlainText(!d->textCached ? d->control->toHtml() : d->text);
+            updateSize();
+        } else if (!wasRich && d->richText) {
+            d->control->setHtml(!d->textCached ? d->control->toPlainText() : d->text);
+            updateSize();
+        }
     }
 #endif
 
@@ -1161,6 +1165,14 @@ void QQuickTextEdit::componentComplete()
     QQuickImplicitSizeItem::componentComplete();
 
     d->document->setBaseUrl(baseUrl(), d->richText);
+#ifndef QT_NO_TEXTHTML_PARSER
+    if (d->richText)
+        d->control->setHtml(d->text);
+    else
+#endif
+    if (!d->text.isEmpty())
+        d->control->setPlainText(d->text);
+
     if (d->dirty) {
         d->determineHorizontalAlignment();
         d->updateDefaultTextOption();

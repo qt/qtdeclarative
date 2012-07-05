@@ -76,10 +76,7 @@ public:
 
     void updateCurrentCharFormat();
 
-    void init(Qt::TextFormat format = Qt::RichText, const QString &text = QString(),
-              QTextDocument *document = 0);
-    void setContent(Qt::TextFormat format = Qt::RichText, const QString &text = QString(),
-                    QTextDocument *document = 0);
+    void setContent(Qt::TextFormat format, const QString &text);
 
     void paste(const QMimeData *source);
 
@@ -159,7 +156,6 @@ public:
     bool cursorRectangleChanged : 1;
 
     void _q_copyLink();
-    void _q_documentLayoutChanged();
 };
 
 QT_END_NAMESPACE

@@ -71,6 +71,8 @@
 #include <qstylehints.h>
 #include <qmetaobject.h>
 
+#include <private/qqmlglobal_p.h>
+
 // ### these should come from QStyleHints
 const int textCursorWidth = 1;
 const bool fullWidthSelection = true;
@@ -279,16 +281,7 @@ void QQuickTextControlPrivate::updateCurrentCharFormat()
     cursorRectangleChanged = true;
 }
 
-void QQuickTextControlPrivate::init(Qt::TextFormat format, const QString &text, QTextDocument *document)
-{
-    Q_Q(QQuickTextControl);
-    setContent(format, text, document);
-
-    doc->setUndoRedoEnabled(interactionFlags & Qt::TextEditable);
-    q->setCursorWidth(-1);
-}
-
-void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &text, QTextDocument *document)
+void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &text)
 {
     Q_Q(QQuickTextControl);
 
@@ -298,33 +291,11 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
     // set char format then.
     const QTextCharFormat charFormatForInsertion = cursor.charFormat();
 
-    bool clearDocument = true;
-    if (!doc) {
-        if (document) {
-            doc = document;
-            clearDocument = false;
-        } else {
-            doc = new QTextDocument(q);
-        }
-        _q_documentLayoutChanged();
-        cursor = QTextCursor(doc);
-
-// ####        doc->documentLayout()->setPaintDevice(viewport);
-
-        QObject::connect(doc, SIGNAL(contentsChanged()), q, SLOT(_q_updateCurrentCharFormatAndSelection()));
-        QObject::connect(doc, SIGNAL(cursorPositionChanged(QTextCursor)), q, SLOT(_q_emitCursorPosChanged(QTextCursor)));
-        QObject::connect(doc, SIGNAL(documentLayoutChanged()), q, SLOT(_q_documentLayoutChanged()));
-    }
-
     bool previousUndoRedoState = doc->isUndoRedoEnabled();
-    if (!document)
-        doc->setUndoRedoEnabled(false);
+    doc->setUndoRedoEnabled(false);
 
-    //Saving the index save some time.
-    static int contentsChangedIndex = QMetaMethod::fromSignal(&QTextDocument::contentsChanged).methodIndex();
-    static int textChangedIndex = QMetaMethod::fromSignal(&QQuickTextControl::textChanged).methodIndex();
     // avoid multiple textChanged() signals being emitted
-    QMetaObject::disconnect(doc, contentsChangedIndex, q, textChangedIndex);
+    qmlobject_disconnect(doc, QTextDocument, SIGNAL(contentsChanged()), q, QQuickTextControl, SIGNAL(textChanged()));
 
     if (!text.isEmpty()) {
         // clear 'our' cursor for insertion to prevent
@@ -354,18 +325,16 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
             doc->setUndoRedoEnabled(false);
         }
         cursor = QTextCursor(doc);
-    } else if (clearDocument) {
+    } else {
         doc->clear();
     }
     cursor.setCharFormat(charFormatForInsertion);
 
-    QMetaObject::connect(doc, contentsChangedIndex, q, textChangedIndex);
+    qmlobject_connect(doc, QTextDocument, SIGNAL(contentsChanged()), q, QQuickTextControl, SIGNAL(textChanged()));
     emit q->textChanged();
-    if (!document)
-        doc->setUndoRedoEnabled(previousUndoRedoState);
+    doc->setUndoRedoEnabled(previousUndoRedoState);
     _q_updateCurrentCharFormatAndSelection();
-    if (!document)
-        doc->setModified(false);
+    doc->setModified(false);
 
     q->updateCursorRectangle(true);
     emit q->cursorPositionChanged();
@@ -472,16 +441,6 @@ void QQuickTextControlPrivate::_q_emitCursorPosChanged(const QTextCursor &someCu
         emit q->cursorPositionChanged();
         cursorRectangleChanged = true;
     }
-}
-
-void QQuickTextControlPrivate::_q_documentLayoutChanged()
-{
-    Q_Q(QQuickTextControl);
-    QAbstractTextDocumentLayout *layout = doc->documentLayout();
-    QObject::connect(layout, SIGNAL(update(QRectF)), q, SIGNAL(updateRequest()));
-    QObject::connect(layout, SIGNAL(updateBlock(QTextBlock)), q, SIGNAL(updateRequest()));
-    QObject::connect(layout, SIGNAL(documentSizeChanged(QSizeF)), q, SIGNAL(documentSizeChanged(QSizeF)));
-
 }
 
 void QQuickTextControlPrivate::setBlinkingCursorEnabled(bool enable)
@@ -611,7 +570,23 @@ QQuickTextControl::QQuickTextControl(QTextDocument *doc, QObject *parent)
     : QObject(*new QQuickTextControlPrivate, parent)
 {
     Q_D(QQuickTextControl);
-    d->init(Qt::PlainText, QString(), doc);
+    Q_ASSERT(doc);
+
+    QAbstractTextDocumentLayout *layout = doc->documentLayout();
+    qmlobject_connect(layout, QAbstractTextDocumentLayout, SIGNAL(update(QRectF)), this, QQuickTextControl, SIGNAL(updateRequest()));
+    qmlobject_connect(layout, QAbstractTextDocumentLayout, SIGNAL(updateBlock(QTextBlock)), this, QQuickTextControl, SIGNAL(updateRequest()));
+    qmlobject_connect(doc, QTextDocument, SIGNAL(contentsChanged()), this, QQuickTextControl, SIGNAL(textChanged()));
+    qmlobject_connect(doc, QTextDocument, SIGNAL(contentsChanged()), this, QQuickTextControl, SLOT(_q_updateCurrentCharFormatAndSelection()));
+    qmlobject_connect(doc, QTextDocument, SIGNAL(cursorPositionChanged(QTextCursor)), this, QQuickTextControl, SLOT(_q_emitCursorPosChanged(QTextCursor)));
+
+    layout->setProperty("cursorWidth", textCursorWidth);
+
+    d->doc = doc;
+    d->cursor = QTextCursor(doc);
+    d->lastCharFormat = d->cursor.charFormat();
+    doc->setPageSize(QSizeF(0, 0));
+    doc->setModified(false);
+    doc->setUndoRedoEnabled(true);
 }
 
 QQuickTextControl::~QQuickTextControl()

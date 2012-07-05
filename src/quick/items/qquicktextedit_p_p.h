@@ -82,7 +82,7 @@ public:
         , documentDirty(true), dirty(false), richText(false), cursorVisible(false), cursorPending(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
-        , textCached(false), inLayout(false)
+        , textCached(true), inLayout(false)
     {
     }
 
