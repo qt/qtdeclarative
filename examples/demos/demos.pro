@@ -1,4 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS =   calculator \
+SUBDIRS =   calqlatr \
             samegame \
             tweetsearch

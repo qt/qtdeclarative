@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(samegame)
+DECLARATIVE_EXAMPLE_MAIN(calqlatr)
