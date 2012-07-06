@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS =   calqlatr \
             samegame \
-            tweetsearch
+            tweetsearch \
+            maroon
