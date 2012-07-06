@@ -1944,7 +1944,7 @@ void tst_QQuickGridView::keyNavigation()
     canvas->rootContext()->setContextProperty("testModel", &model);
     canvas->setSource(testFileUrl("gridview1.qml"));
     canvas->show();
-    qApp->processEvents();
+    QTest::qWaitForWindowActive(canvas);
 
     QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -1954,6 +1954,7 @@ void tst_QQuickGridView::keyNavigation()
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     canvas->requestActivateWindow();
+    QTest::qWaitForWindowActive(canvas);
     QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
     QCOMPARE(gridview->currentIndex(), 0);
 

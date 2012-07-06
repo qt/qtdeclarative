@@ -1171,7 +1171,7 @@ void tst_qquicktextinput::dragMouseSelection()
 
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
+    QTest::qWaitForWindowActive(&canvas);
 
     QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
@@ -1236,7 +1236,7 @@ void tst_qquicktextinput::mouseSelectionMode()
 
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
+    QTest::qWaitForWindowActive(&canvas);
     QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
     QVERIFY(canvas.rootObject() != 0);
@@ -1793,6 +1793,7 @@ void tst_qquicktextinput::validators()
     QQuickView canvas(testFileUrl("validators.qml"));
     canvas.show();
     canvas.requestActivateWindow();
+    QTest::qWaitForWindowActive(&canvas);
 
     QVERIFY(canvas.rootObject() != 0);
 
@@ -2649,7 +2650,7 @@ void tst_qquicktextinput::cursorVisible()
     QCOMPARE(spy.count(), 6);
 
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QTest::qWaitForWindowActive(&view);
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
 
@@ -3783,7 +3784,7 @@ void tst_qquicktextinput::tripleClickSelectsAll()
     QQuickView view(QUrl::fromLocalFile(qmlfile));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QTest::qWaitForWindowActive(&view);
 
     QTRY_COMPARE(&view, qGuiApp->focusWindow());
 

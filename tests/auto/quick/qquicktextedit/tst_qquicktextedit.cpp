@@ -1810,7 +1810,7 @@ void tst_qquicktextedit::mouseSelection()
 
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
+    QTest::qWaitForWindowActive(&canvas);
     QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
     QVERIFY(canvas.rootObject() != 0);
@@ -1957,8 +1957,7 @@ void tst_qquicktextedit::positionAt()
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
-    canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
+    QTest::qWaitForWindowActive(&canvas);
 
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
     QVERIFY(texteditObject != 0);
@@ -2209,7 +2208,7 @@ void tst_qquicktextedit::cursorVisible()
     QCOMPARE(spy.count(), 6);
 
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QTest::qWaitForWindowActive(&view);
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
 
@@ -4169,7 +4168,7 @@ void tst_qquicktextedit::undo()
     textEdit->setParentItem(canvas.rootItem());
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
+    QTest::qWaitForWindowActive(&canvas);
     QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
     QVERIFY(!textEdit->canUndo());

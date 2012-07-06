@@ -1840,7 +1840,7 @@ void tst_QQuickListView::enforceRange_withoutHighlight()
 
     canvas->setSource(testFileUrl("listview-enforcerange-nohighlight.qml"));
     canvas->show();
-    qApp->processEvents();
+    QTest::qWaitForWindowExposed(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2662,7 +2662,7 @@ void tst_QQuickListView::keyNavigation()
     canvas->rootContext()->setContextProperty("testObject", testObject);
     canvas->setSource(testFileUrl("listviewtest.qml"));
     canvas->show();
-    qApp->processEvents();
+    QTest::qWaitForWindowActive(canvas);
 
     QQuickListView *listview = findItem<QQuickListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2673,6 +2673,7 @@ void tst_QQuickListView::keyNavigation()
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     canvas->requestActivateWindow();
+    QTest::qWaitForWindowActive(canvas);
     QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
     QCOMPARE(listview->currentIndex(), 0);
 
@@ -6883,7 +6884,7 @@ void tst_QQuickListView::parentBinding()
 
     canvas->setSource(testFileUrl("parentBinding.qml"));
     canvas->show();
-    qApp->processEvents();
+    QTest::qWaitForWindowExposed(canvas);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(canvas->rootObject());
     QVERIFY(listview != 0);

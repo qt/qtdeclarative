@@ -555,7 +555,7 @@ void tst_qquickflickable::movingAndFlicking()
     canvas->setSource(testFileUrl("flickable03.qml"));
     canvas->show();
     canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
+    QTest::qWaitForWindowActive(canvas);
     QVERIFY(canvas->rootObject() != 0);
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(canvas->rootObject());
