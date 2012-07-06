@@ -52,6 +52,9 @@ QT_BEGIN_NAMESPACE
     The Age affector allows you to alter where the particle is in its lifecycle. Common uses
     are to expire particles prematurely, possibly giving them time to animate out.
 
+    The Age affector is also sometimes known as a 'Kill' affector, because with the default
+    parameters it will immediately expire all particles which it affects.
+
     The Age affector only applies to particles which are still alive.
 */
 /*!

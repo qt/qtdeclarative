@@ -140,7 +140,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
     but you will need to resume it in order for additional particles to be generated
     by the system.
 
-    To kill all the particles in the system, use a Kill affector.
+    To kill all the particles in the system, use an Age affector.
 */
 
 /*!
