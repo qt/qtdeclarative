@@ -65,4 +65,16 @@ are resolved, and thus which values the expression operates on.
 See \l{qtqml-cppclasses-context.html}{Qt QML Module C++ Classes - QQmlContext}
 for in-depth information about QQmlContext.
 
+\section1 The QQmlExpression Class
+
+The QQmlExpression class provides a way for clients to evaluate JavaScript
+expressions from C++, using a particular QML evaluation context.  This allows
+clients to access QML objects by id, for example.  The result of evaluation
+is returned as a QVariant, and the conversion rules are defined by the QML
+engine.
+
+See \l{qtqml-cppclasses-expression.html}
+{Qt QML Module C++ Classes - QQmlExpression} for in depth information about
+QQmlExpression.
+
 */
