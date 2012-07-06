@@ -435,6 +435,11 @@ private:
 
     inline void separate() { m_separator = true; }
 
+    bool separateSelection();
+    void deleteStartOfWord();
+    void deleteEndOfWord();
+    void deleteEndOfLine();
+
     enum ValidatorState {
 #ifndef QT_NO_VALIDATOR
         InvalidInput        = QValidator::Invalid,

@@ -192,6 +192,8 @@ private slots:
     void undo_keypressevents_data();
     void undo_keypressevents();
 
+    void backspaceSurrogatePairs();
+
     void QTBUG_19956();
     void QTBUG_19956_data();
     void QTBUG_19956_regexp();
@@ -236,8 +238,8 @@ Q_DECLARE_METATYPE(KeyList)
 void tst_qquicktextinput::simulateKeys(QWindow *window, const QList<Key> &keys)
 {
     for (int i = 0; i < keys.count(); ++i) {
-        const int key = keys.at(i).first;
-        const int modifiers = key & Qt::KeyboardModifierMask;
+        const int key = keys.at(i).first & ~Qt::KeyboardModifierMask;
+        const int modifiers = keys.at(i).first & Qt::KeyboardModifierMask;
         const QString text = !keys.at(i).second.isNull() ? QString(keys.at(i).second) : QString();
 
         QKeyEvent press(QEvent::KeyPress, Qt::Key(key), Qt::KeyboardModifiers(modifiers), text);
@@ -5138,7 +5140,7 @@ void tst_qquicktextinput::undo_keypressevents_data()
                 << QKeySequence::MoveToStartOfLine
                 // selecting 'AB'
                 << (Qt::Key_Right | Qt::ShiftModifier) << (Qt::Key_Right | Qt::ShiftModifier)
-                << Qt::Key_Delete
+                << Qt::Key_Backspace
                 << QKeySequence::Undo
                 << Qt::Key_Right
                 << (Qt::Key_Right | Qt::ShiftModifier) << (Qt::Key_Right | Qt::ShiftModifier)
@@ -5213,7 +5215,6 @@ void tst_qquicktextinput::undo_keypressevents_data()
              << "ABC";
 
         expectedString << "ABC";
-        // for versions previous to 3.2 we overwrite needed two undo operations
         expectedString << "123";
 
         QTest::newRow("Inserts,moving,selection and overwriting") << keys << expectedString;
@@ -5230,6 +5231,106 @@ void tst_qquicktextinput::undo_keypressevents_data()
         expectedString << QString();
 
         QTest::newRow("Insert,undo,redo") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        keys << "hello world"
+             << (Qt::Key_Backspace | Qt::ControlModifier)
+             << QKeySequence::Undo
+             << QKeySequence::Redo
+             << "hello";
+
+        expectedString
+                << "hello hello"
+                << "hello "
+                << "hello world"
+                << QString();
+
+        QTest::newRow("Insert,delete previous word,undo,redo,insert") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        keys << "hello world"
+             << QKeySequence::SelectPreviousWord
+             << (Qt::Key_Backspace)
+             << QKeySequence::Undo
+             << "hello";
+
+        expectedString
+                << "hello hello"
+                << "hello world"
+                << QString();
+
+        QTest::newRow("Insert,select previous word,remove,undo,insert") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        keys << "hello world"
+             << QKeySequence::DeleteStartOfWord
+             << QKeySequence::Undo
+             << "hello";
+
+        expectedString
+                << "hello worldhello"
+                << "hello world"
+                << QString();
+
+        QTest::newRow("Insert,delete previous word,undo,insert") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        keys << "hello world"
+             << QKeySequence::MoveToPreviousWord
+             << QKeySequence::DeleteEndOfWord
+             << QKeySequence::Undo
+             << "hello";
+
+        expectedString
+                << "hello helloworld"
+                << "hello world"
+                << QString();
+
+        QTest::newRow("Insert,move,delete next word,undo,insert") << keys << expectedString;
+    }
+    if (!QKeySequence(QKeySequence::DeleteEndOfLine).isEmpty()) {   // X11 only.
+        KeyList keys;
+        QStringList expectedString;
+
+        keys << "hello world"
+             << QKeySequence::MoveToStartOfLine
+             << Qt::Key_Right
+             << QKeySequence::DeleteEndOfLine
+             << QKeySequence::Undo
+             << "hello";
+
+        expectedString
+                << "hhelloello world"
+                << "hello world"
+                << QString();
+
+        QTest::newRow("Insert,move,delete end of line,undo,insert") << keys << expectedString;
+    } {
+        KeyList keys;
+        QStringList expectedString;
+
+        keys << "hello world"
+             << QKeySequence::MoveToPreviousWord
+             << (Qt::Key_Left | Qt::ShiftModifier)
+             << (Qt::Key_Left | Qt::ShiftModifier)
+             << QKeySequence::DeleteEndOfWord
+             << QKeySequence::Undo
+             << "hello";
+
+        expectedString
+                << "hellhelloworld"
+                << "hello world"
+                << QString();
+
+        QTest::newRow("Insert,move,select,delete next word,undo,insert") << keys << expectedString;
     }
 }
 
@@ -5258,6 +5359,43 @@ void tst_qquicktextinput::undo_keypressevents()
         textInput->undo();
     }
     QVERIFY(textInput->text().isEmpty());
+}
+
+void tst_qquicktextinput::backspaceSurrogatePairs()
+{
+    // Test backspace, and delete remove both characters in a surrogate pair.
+    static const quint16 textData[] = { 0xd800, 0xdf00, 0xd800, 0xdf01, 0xd800, 0xdf02, 0xd800, 0xdf03, 0xd800, 0xdf04 };
+    const QString text = QString::fromUtf16(textData, lengthOf(textData));
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+    textInput->setText(text);
+    textInput->setCursorPosition(text.length());
+
+    QQuickWindow window;
+    textInput->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivateWindow();
+    QTest::qWaitForWindowShown(&window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
+
+    for (int i = text.length(); i >= 0; i -= 2) {
+        QCOMPARE(textInput->text(), text.mid(0, i));
+        QTest::keyClick(&window, Qt::Key_Backspace, Qt::NoModifier);
+    }
+    QCOMPARE(textInput->text(), QString());
+
+    textInput->setText(text);
+    textInput->setCursorPosition(0);
+
+    for (int i = 0; i < text.length(); i += 2) {
+        QCOMPARE(textInput->text(), text.mid(i));
+        QTest::keyClick(&window, Qt::Key_Delete, Qt::NoModifier);
+    }
+    QCOMPARE(textInput->text(), QString());
 }
 
 void tst_qquicktextinput::QTBUG_19956()

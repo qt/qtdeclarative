@@ -2815,7 +2815,7 @@ void QQuickTextInputPrivate::cancelPreedit()
 void QQuickTextInputPrivate::backspace()
 {
     int priorState = m_undoState;
-    if (hasSelectedText()) {
+    if (separateSelection()) {
         removeSelectedText();
     } else if (m_cursor) {
             --m_cursor;
@@ -2848,7 +2848,7 @@ void QQuickTextInputPrivate::backspace()
 void QQuickTextInputPrivate::del()
 {
     int priorState = m_undoState;
-    if (hasSelectedText()) {
+    if (separateSelection()) {
         removeSelectedText();
     } else {
         int n = m_textLayout.nextCursorPosition(m_cursor) - m_cursor;
@@ -2868,7 +2868,8 @@ void QQuickTextInputPrivate::del()
 void QQuickTextInputPrivate::insert(const QString &newText)
 {
     int priorState = m_undoState;
-    removeSelectedText();
+    if (separateSelection())
+        removeSelectedText();
     internalInsert(newText);
     finishChange(priorState);
 }
@@ -2881,6 +2882,7 @@ void QQuickTextInputPrivate::insert(const QString &newText)
 void QQuickTextInputPrivate::clear()
 {
     int priorState = m_undoState;
+    separateSelection();
     m_selstart = 0;
     m_selend = m_text.length();
     removeSelectedText();
@@ -3031,6 +3033,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     if (isGettingInput) {
         // If any text is being input, remove selected text.
         priorState = m_undoState;
+        separateSelection();
         if (m_echoMode == QQuickTextInput::PasswordEchoOnEdit && !m_passwordEchoEditing) {
             updatePasswordEchoEditing(true);
             m_selstart = 0;
@@ -3303,8 +3306,7 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
         if (delay > 0)
             m_passwordEchoTimer.start(delay, q);
     }
-    if (hasSelectedText())
-        addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
+    Q_ASSERT(!hasSelectedText());   // insert(), processInputMethodEvent() call removeSelectedText() first.
     if (m_maskData) {
         QString ms = maskString(m_cursor, s);
         for (int i = 0; i < (int) ms.length(); ++i) {
@@ -3341,8 +3343,7 @@ void QQuickTextInputPrivate::internalDelete(bool wasBackspace)
 {
     if (m_cursor < (int) m_text.length()) {
         cancelPasswordEchoTimer();
-        if (hasSelectedText())
-            addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
+        Q_ASSERT(!hasSelectedText());   // del(), backspace() call removeSelectedText() first.
         addCommand(Command((CommandType)((m_maskData ? 2 : 0) + (wasBackspace ? Remove : Delete)),
                    m_cursor, m_text.at(m_cursor), -1, -1));
         if (m_maskData) {
@@ -3368,9 +3369,7 @@ void QQuickTextInputPrivate::removeSelectedText()
 {
     if (m_selstart < m_selend && m_selend <= (int) m_text.length()) {
         cancelPasswordEchoTimer();
-        separate();
         int i ;
-        addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
         if (m_selstart <= m_cursor && m_cursor < m_selend) {
             // cursor is within the selection. Split up the commands
             // to be able to restore the correct cursor position
@@ -3393,6 +3392,25 @@ void QQuickTextInputPrivate::removeSelectedText()
             m_cursor -= qMin(m_cursor, m_selend) - m_selstart;
         internalDeselect();
         m_textDirty = true;
+    }
+}
+
+/*!
+    \internal
+
+    Adds the current selection to the undo history.
+
+    Returns true if there is a current selection and false otherwise.
+*/
+
+bool QQuickTextInputPrivate::separateSelection()
+{
+    if (hasSelectedText()) {
+        separate();
+        addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -3797,11 +3815,14 @@ void QQuickTextInputPrivate::internalUndo(int until)
         }
         if (until < 0 && m_undoState) {
             Command& next = m_history[m_undoState-1];
-            if (next.type != cmd.type && next.type < RemoveSelection
-                 && (cmd.type < RemoveSelection || next.type == Separator))
+            if (next.type != cmd.type
+                    && next.type < RemoveSelection
+                    && (cmd.type < RemoveSelection || next.type == Separator)) {
                 break;
+            }
         }
     }
+    separate();
     m_textDirty = true;
 }
 
@@ -3839,9 +3860,12 @@ void QQuickTextInputPrivate::internalRedo()
         }
         if (m_undoState < (int)m_history.size()) {
             Command& next = m_history[m_undoState];
-            if (next.type != cmd.type && cmd.type < RemoveSelection && next.type != Separator
-                 && (next.type < RemoveSelection || cmd.type == Separator))
+            if (next.type != cmd.type
+                    && cmd.type < RemoveSelection
+                    && next.type != Separator
+                    && (next.type < RemoveSelection || cmd.type == Separator)) {
                 break;
+            }
         }
     }
     m_textDirty = true;
@@ -3937,16 +3961,12 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
 void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
 {
     Q_Q(QQuickTextInput);
-    bool inlineCompletionAccepted = false;
 
     if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
         if (hasAcceptableInput(m_text) || fixup()) {
             emit q->accepted();
         }
-        if (inlineCompletionAccepted)
-            event->accept();
-        else
-            event->ignore();
+        event->ignore();
         return;
     }
 
@@ -3996,11 +4016,8 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
         }
     }
     else if (event == QKeySequence::DeleteEndOfLine) {
-        if (!m_readOnly) {
-            setSelection(m_cursor, end());
-            copy();
-            del();
-        }
+        if (!m_readOnly)
+            deleteEndOfLine();
     }
 #endif //QT_NO_CLIPBOARD
     else if (event == QKeySequence::MoveToStartOfLine || event == QKeySequence::MoveToStartOfBlock) {
@@ -4065,16 +4082,12 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
             del();
     }
     else if (event == QKeySequence::DeleteEndOfWord) {
-        if (!m_readOnly) {
-            cursorWordForward(true);
-            del();
-        }
+        if (!m_readOnly)
+            deleteEndOfWord();
     }
     else if (event == QKeySequence::DeleteStartOfWord) {
-        if (!m_readOnly) {
-            cursorWordBackward(true);
-            del();
-        }
+        if (!m_readOnly)
+            deleteStartOfWord();
     }
 #endif // QT_NO_SHORTCUT
     else {
@@ -4082,10 +4095,8 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
         if (event->modifiers() & Qt::ControlModifier) {
             switch (event->key()) {
             case Qt::Key_Backspace:
-                if (!m_readOnly) {
-                    cursorWordBackward(true);
-                    del();
-                }
+                if (!m_readOnly)
+                    deleteStartOfWord();
                 break;
             default:
                 if (!handled)
@@ -4125,6 +4136,58 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
         event->accept();
 }
 
+/*!
+    \internal
+
+    Deletes the portion of the word before the current cursor position.
+*/
+
+void QQuickTextInputPrivate::deleteStartOfWord()
+{
+    int priorState = m_undoState;
+    Command cmd(SetSelection, m_cursor, 0, m_selstart, m_selend);
+    separate();
+    cursorWordBackward(true);
+    addCommand(cmd);
+    removeSelectedText();
+    finishChange(priorState);
+}
+
+/*!
+    \internal
+
+    Deletes the portion of the word after the current cursor position.
+*/
+
+void QQuickTextInputPrivate::deleteEndOfWord()
+{
+    int priorState = m_undoState;
+    Command cmd(SetSelection, m_cursor, 0, m_selstart, m_selend);
+    separate();
+    cursorWordForward(true);
+    // moveCursor (sometimes) calls separate() so we need to add the command after that so the
+    // cursor position and selection are restored in the same undo operation as the remove.
+    addCommand(cmd);
+    removeSelectedText();
+    finishChange(priorState);
+}
+
+/*!
+    \internal
+
+    Deletes all text from the cursor position to the end of the line.
+*/
+
+void QQuickTextInputPrivate::deleteEndOfLine()
+{
+    int priorState = m_undoState;
+    Command cmd(SetSelection, m_cursor, 0, m_selstart, m_selend);
+    separate();
+    setSelection(m_cursor, end());
+    addCommand(cmd);
+    removeSelectedText();
+    finishChange(priorState);
+}
 
 QT_END_NAMESPACE
 
