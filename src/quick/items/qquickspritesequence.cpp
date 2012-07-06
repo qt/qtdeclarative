@@ -253,8 +253,8 @@ struct SpriteVertices {
 */
 /*! \qmlmethod void QtQuick2::SpriteSequence::jumpTo(string sprite)
 
-    This function causes the sprite to jump to the specified state immediately, intermediate
-    states are not played.
+    This function causes the SpriteSequence to jump to the specified sprite immediately, intermediate
+    sprites are not played. The \a sprite argument is the name of the sprite you wish to jump to.
 */
 /*!
     \qmlproperty list<Sprite> QtQuick2::SpriteSequence::sprites
