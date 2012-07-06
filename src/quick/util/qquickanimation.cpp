@@ -175,7 +175,7 @@ void QQuickAbstractAnimationPrivate::commence()
         animationInstance->start();
         if (animationInstance->isStopped()) {
             running = false;
-            emit q->completed();
+            emit q->stopped();
         }
     }
 }
@@ -192,6 +192,31 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
     }
     return prop;
 }
+
+/*!
+    \qmlsignal QtQuick2::Animation::onStarted()
+
+    This signal handler is called when the animation begins.
+
+    It is only triggered for top-level, standalone animations. It will not be
+    triggered for animations in a Behavior or Transition, or animations
+    that are part of an animation group.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Animation::onStopped()
+
+    This signal handler is called when the animation ends.
+
+    The animation may have been stopped manually, or may have run to completion.
+
+    It is only triggered for top-level, standalone animations. It will not be
+    triggered for animations in a Behavior or Transition, or animations
+    that are part of an animation group.
+
+    If \l alwaysRunToEnd is true, onStopped will not be called until the animation
+    has completed its current iteration.
+*/
 
 void QQuickAbstractAnimation::setRunning(bool r)
 {
@@ -231,9 +256,10 @@ void QQuickAbstractAnimation::setRunning(bool r)
                 d->animationInstance->setLoopCount(d->animationInstance->currentLoop() + d->loopCount);
             supressStart = true;    //we want the animation to continue, rather than restart
         }
-        if (!supressStart)
+        if (!supressStart) {
             d->commence();
-        emit started();
+            emit started();
+        }
     } else {
         if (d->paused) {
             d->paused = false; //reset paused state to false when stopped
@@ -246,9 +272,9 @@ void QQuickAbstractAnimation::setRunning(bool r)
                     d->animationInstance->setLoopCount(d->animationInstance->currentLoop()+1);    //finish the current loop
             } else {
                 d->animationInstance->stop();
+                emit stopped();
             }
         }
-        emit completed();
     }
 
     emit runningChanged(d->running);
@@ -608,9 +634,11 @@ void QQuickAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
 {
     Q_Q(QQuickAbstractAnimation);
     q->setRunning(false);
-    if (alwaysRunToEnd && loopCount != 1) {
+    if (alwaysRunToEnd) {
+        emit q->stopped();
         //restore the proper loopCount for the next run
-        animationInstance->setLoopCount(loopCount);
+        if (loopCount != 1)
+            animationInstance->setLoopCount(loopCount);
     }
 }
 

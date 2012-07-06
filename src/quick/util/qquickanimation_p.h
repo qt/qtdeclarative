@@ -106,7 +106,7 @@ public:
 
 Q_SIGNALS:
     void started();
-    void completed();
+    void stopped();
     void runningChanged(bool);
     void pausedChanged(bool);
     void alwaysRunToEndChanged(bool);

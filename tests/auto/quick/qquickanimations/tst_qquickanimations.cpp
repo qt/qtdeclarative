@@ -97,6 +97,7 @@ private slots:
     void dontStart();
     void easingProperties();
     void rotation();
+    void startStopSignals();
     void runningTrueBug();
     void nonTransitionBug();
     void registrationBug();
@@ -1194,6 +1195,59 @@ void tst_qquickanimations::rotation()
 
     QTest::qWait(800);
     QTIMED_COMPARE(rr->rotation() + rr2->rotation() + rr3->rotation() + rr4->rotation(), qreal(370*4));
+}
+
+void tst_qquickanimations::startStopSignals()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("signals.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(root);
+
+    QCOMPARE(root->property("startedCount").toInt(), 1);    //autostart
+    QCOMPARE(root->property("stoppedCount").toInt(), 0);
+
+    QMetaObject::invokeMethod(root, "stop");
+
+    QCOMPARE(root->property("startedCount").toInt(), 1);
+    QCOMPARE(root->property("stoppedCount").toInt(), 1);
+
+    QMetaObject::invokeMethod(root, "start");
+
+    QCOMPARE(root->property("startedCount").toInt(), 2);
+    QCOMPARE(root->property("stoppedCount").toInt(), 1);
+
+    QTest::qWait(100);
+
+    QCOMPARE(root->property("startedCount").toInt(), 2);
+    QCOMPARE(root->property("stoppedCount").toInt(), 1);
+
+    QTest::qWait(100);
+
+    QTRY_COMPARE(root->property("stoppedCount").toInt(), 2);
+    QCOMPARE(root->property("startedCount").toInt(), 2);
+
+    root->setProperty("alwaysRunToEnd", true);
+
+    QMetaObject::invokeMethod(root, "start");
+
+    QCOMPARE(root->property("startedCount").toInt(), 3);
+    QCOMPARE(root->property("stoppedCount").toInt(), 2);
+
+    QTest::qWait(100);
+
+    QCOMPARE(root->property("startedCount").toInt(), 3);
+    QCOMPARE(root->property("stoppedCount").toInt(), 2);
+
+    QMetaObject::invokeMethod(root, "stop");
+
+    QCOMPARE(root->property("startedCount").toInt(), 3);
+    QCOMPARE(root->property("stoppedCount").toInt(), 2);
+
+    QTest::qWait(100);
+
+    QTRY_COMPARE(root->property("stoppedCount").toInt(), 3);
+    QCOMPARE(root->property("startedCount").toInt(), 3);
 }
 
 void tst_qquickanimations::runningTrueBug()
