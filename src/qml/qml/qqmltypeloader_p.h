@@ -437,6 +437,10 @@ public:
     bool isInitialized() const { return hasEngine(); }
     void initialize(QQmlEngine *);
 
+    bool hasError() const { return m_error.isValid(); }
+    void setError(const QQmlError &error) { m_error = error; }
+    QQmlError error() const { return m_error; }
+
 protected:
     virtual void clear(); // From QQmlCleanup
 
@@ -448,6 +452,7 @@ private:
     QByteArray m_programSource;
     v8::Persistent<v8::Script> m_program;
     v8::Persistent<v8::Object> m_value;
+    QQmlError m_error;
 };
 
 class Q_AUTOTEST_EXPORT QQmlScriptBlob : public QQmlDataBlob

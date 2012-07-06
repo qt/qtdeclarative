@@ -1160,9 +1160,16 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
     if (script->m_loaded)
         return qPersistentNew<v8::Object>(script->m_value);
 
+    v8::Persistent<v8::Object> rv;
+
     Q_ASSERT(parentCtxt && parentCtxt->engine);
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
     QV8Engine *v8engine = ep->v8engine();
+
+    if (script->hasError()) {
+        ep->warning(script->error());
+        return rv;
+    }
 
     bool shared = script->pragmas & QQmlScript::Object::ScriptBlock::Shared;
 
@@ -1222,8 +1229,6 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
         Q_ASSERT(try_catch.HasCaught());
     }
 
-    v8::Persistent<v8::Object> rv;
-    
     if (try_catch.HasCaught()) {
         v8::Local<v8::Message> message = try_catch.Message();
         if (!message.IsEmpty()) {

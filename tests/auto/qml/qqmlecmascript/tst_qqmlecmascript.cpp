@@ -3783,6 +3783,83 @@ void tst_qqmlecmascript::importScripts_data()
             << (QVariantList() << QVariant(QString("Hello"))
                                << QVariant(QString("Hello"))
                                << QVariant(QString("Hello")));
+
+    QTest::newRow("malformed import statement")
+            << testFileUrl("jsimportfail/malformedImport.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/malformedImport.js").toString() + QLatin1String(":1: SyntaxError: Unexpected token ."))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("malformed file name")
+            << testFileUrl("jsimportfail/malformedFile.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/malformedFile.js").toString() + QLatin1String(":0:1: Imported file must be a script"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("missing file qualifier")
+            << testFileUrl("jsimportfail/missingFileQualifier.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/missingFileQualifier.js").toString() + QLatin1String(":0:1: File import requires a qualifier"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("malformed file qualifier")
+            << testFileUrl("jsimportfail/malformedFileQualifier.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/malformedFileQualifier.js").toString() + QLatin1String(":0:1: File import requires a qualifier"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("malformed module qualifier 2")
+            << testFileUrl("jsimportfail/malformedFileQualifier.2.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/malformedFileQualifier.2.js").toString() + QLatin1String(":0:1: Invalid import qualifier"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("malformed module uri")
+            << testFileUrl("jsimportfail/malformedModule.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/malformedModule.js").toString() + QLatin1String(":0:1: Invalid module URI"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("missing module version")
+            << testFileUrl("jsimportfail/missingModuleVersion.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/missingModuleVersion.js").toString() + QLatin1String(":0:1: Module import requires a version"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("malformed module version")
+            << testFileUrl("jsimportfail/malformedModuleVersion.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/malformedModuleVersion.js").toString() + QLatin1String(":0:1: Module import requires a version"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("missing module qualifier")
+            << testFileUrl("jsimportfail/missingModuleQualifier.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/missingModuleQualifier.js").toString() + QLatin1String(":0:1: Module import requires a qualifier"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("malformed module qualifier")
+            << testFileUrl("jsimportfail/malformedModuleQualifier.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/malformedModuleQualifier.js").toString() + QLatin1String(":0:1: Module import requires a qualifier"))
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("malformed module qualifier 2")
+            << testFileUrl("jsimportfail/malformedModuleQualifier.2.qml")
+            << QString()
+            << (QStringList() << testFileUrl("jsimportfail/malformedModuleQualifier.2.js").toString() + QLatin1String(":0:1: Invalid import qualifier"))
+            << QStringList()
+            << QVariantList();
 }
 
 void tst_qqmlecmascript::importScripts()

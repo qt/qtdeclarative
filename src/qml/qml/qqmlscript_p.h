@@ -490,7 +490,7 @@ public:
     };
 
     static QQmlScript::Object::ScriptBlock::Pragmas extractPragmas(QString &);
-    static JavaScriptMetaData extractMetaData(QString &);
+    static JavaScriptMetaData extractMetaData(QString &, QQmlError *error);
 
 
 // ### private:

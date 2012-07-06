@@ -1969,8 +1969,17 @@ void QQmlScriptBlob::dataReceived(const Data &data)
 
     m_source = QString::fromUtf8(data.data(), data.size());
 
+    m_scriptData = new QQmlScriptData();
+    m_scriptData->url = finalUrl();
+    m_scriptData->urlString = finalUrlString();
+
+    QQmlError metaDataError;
     QQmlScript::Parser::JavaScriptMetaData metadata =
-        QQmlScript::Parser::extractMetaData(m_source);
+        QQmlScript::Parser::extractMetaData(m_source, &metaDataError);
+    if (metaDataError.isValid()) {
+        metaDataError.setUrl(finalUrl());
+        m_scriptData->setError(metaDataError);
+    }
 
     m_imports.setBaseUrl(finalUrl(), finalUrlString());
 
@@ -2052,9 +2061,7 @@ void QQmlScriptBlob::done()
         return;
 
     QQmlEngine *engine = typeLoader()->engine();
-    m_scriptData = new QQmlScriptData();
-    m_scriptData->url = finalUrl();
-    m_scriptData->urlString = finalUrlString();
+
     m_scriptData->importCache = new QQmlTypeNameCache();
 
     QSet<QString> ns;

@@ -1476,8 +1476,10 @@ static inline bool isUriToken(int token)
     return false;
 }
 
-QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QString &script)
+QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QString &script, QQmlError *error)
 {
+    Q_ASSERT(error);
+
     JavaScriptMetaData rv;
 
     QQmlScript::Object::ScriptBlock::Pragmas &pragmas = rv.pragmas;
@@ -1499,6 +1501,10 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
         int startLine = l.tokenStartLine();
         int startColumn = l.tokenStartColumn();
 
+        QQmlError importError;
+        importError.setLine(startLine);
+        importError.setColumn(startColumn);
+
         token = l.lex();
 
         CHECK_LINE;
@@ -1516,32 +1522,46 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
                 QString file = l.tokenText();
 
-                if (!file.endsWith(js))
+                if (!file.endsWith(js)) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Imported file must be a script"));
+                    *error = importError;
                     return rv;
+                }
+
+                bool invalidImport = false;
 
                 token = l.lex();
 
-                CHECK_TOKEN(T_AS);
-                CHECK_LINE;
+                if ((token != QQmlJSGrammar::T_AS) || (l.tokenStartLine() != startLine)) {
+                    invalidImport = true;
+                } else {
+                    token = l.lex();
 
-                token = l.lex();
+                    if ((token != QQmlJSGrammar::T_IDENTIFIER) || (l.tokenStartLine() != startLine))
+                        invalidImport = true;
+                }
 
-                CHECK_TOKEN(T_IDENTIFIER);
-                CHECK_LINE;
+
+                if (invalidImport) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","File import requires a qualifier"));
+                    *error = importError;
+                    return rv;
+                }
 
                 int endOffset = l.tokenLength() + l.tokenOffset();
 
                 QString importId = script.mid(l.tokenOffset(), l.tokenLength());
 
-                if (!importId.at(0).isUpper())
-                    return rv;
-
                 QQmlScript::LocationSpan location =
                     locationFromLexer(l, startLine, startColumn, startOffset);
 
                 token = l.lex();
-                if (l.tokenStartLine() == startLine)
+
+                if (!importId.at(0).isUpper() || (l.tokenStartLine() == startLine)) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier"));
+                    *error = importError;
                     return rv;
+                }
 
                 replaceWithSpace(script, startOffset, endOffset - startOffset);
 
@@ -1557,8 +1577,11 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
                 QString uri;
 
                 while (true) {
-                    if (!isUriToken(token))
+                    if (!isUriToken(token)) {
+                        importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid module URI"));
+                        *error = importError;
                         return rv;
+                    }
 
                     uri.append(l.tokenText());
 
@@ -1573,34 +1596,50 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
                     CHECK_LINE;
                 }
 
-                CHECK_TOKEN(T_NUMERIC_LITERAL);
+                if (token != QQmlJSGrammar::T_NUMERIC_LITERAL) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Module import requires a version"));
+                    *error = importError;
+                    return rv;
+                }
+
                 int vmaj, vmin;
                 ProcessAST::extractVersion(QStringRef(&script, l.tokenOffset(), l.tokenLength()),
                                            &vmaj, &vmin);
 
-                token = l.lex();
-
-                CHECK_TOKEN(T_AS);
-                CHECK_LINE;
+                bool invalidImport = false;
 
                 token = l.lex();
 
-                CHECK_TOKEN(T_IDENTIFIER);
-                CHECK_LINE;
+                if ((token != QQmlJSGrammar::T_AS) || (l.tokenStartLine() != startLine)) {
+                    invalidImport = true;
+                } else {
+                    token = l.lex();
+
+                    if ((token != QQmlJSGrammar::T_IDENTIFIER) || (l.tokenStartLine() != startLine))
+                        invalidImport = true;
+                }
+
+
+                if (invalidImport) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Module import requires a qualifier"));
+                    *error = importError;
+                    return rv;
+                }
 
                 int endOffset = l.tokenLength() + l.tokenOffset();
 
                 QString importId = script.mid(l.tokenOffset(), l.tokenLength());
 
-                if (!importId.at(0).isUpper())
-                    return rv;
-
                 QQmlScript::LocationSpan location =
                     locationFromLexer(l, startLine, startColumn, startOffset);
 
                 token = l.lex();
-                if (l.tokenStartLine() == startLine)
+
+                if (!importId.at(0).isUpper() || (l.tokenStartLine() == startLine)) {
+                    importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier"));
+                    *error = importError;
                     return rv;
+                }
 
                 replaceWithSpace(script, startOffset, endOffset - startOffset);
 
