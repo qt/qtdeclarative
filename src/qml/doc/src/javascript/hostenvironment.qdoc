@@ -77,7 +77,7 @@ QML implements the following restrictions for JavaScript code:
 \li The value of \c this is undefined in QML in the majority of contexts.
 \endlist
 
-See \l {QML JavaScript Restrictions} for more details on these restrictions.
+See \l {JavaScript Expression Restrictions in QML} for more details on these restrictions.
 
 
 */
