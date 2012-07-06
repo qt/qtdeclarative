@@ -152,12 +152,10 @@ types, animation classes, and canvas integration) for the QML language.
 
     \li \l{qtqml-syntax-objectattributes.html}{QML Object Attributes}
         \list
-        \li \l{qtqml-syntax-objectattributes.html#the-id-assignment}{The \e id Assignment}
-        \li \l{qtqml-syntax-objectattributes.html#property-initialization}{Property Initialization}
-        \li \l{qtqml-syntax-objectattributes.html#custom-properties}{Custom Properties}
-        \li \l{qtqml-syntax-objectattributes.html#signal-handlers}{Signal Handlers}
-        \li \l{qtqml-syntax-objectattributes.html#custom-signals}{Custom Signals}
-        \li \l{qtqml-syntax-objectattributes.html#custom-methods}{Custom Methods}
+        \li \l{qtqml-syntax-objectattributes.html#the-id-attribute}{The \e id Attribute}
+        \li \l{qtqml-syntax-objectattributes.html#property-attributes}{Property Attributes}
+        \li \l{qtqml-syntax-objectattributes.html#signal-attributes}{Signal Attributes}
+        \li \l{qtqml-syntax-objectattributes.html#method-attributes}{Method Attributes}
         \li \l{qtqml-syntax-objectattributes.html#attached-properties-and-attached-signal-handlers}{Attached Properties and Attached Signal Handlers}
         \endlist
 

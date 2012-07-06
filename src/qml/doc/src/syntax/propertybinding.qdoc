@@ -52,25 +52,33 @@ Rectangle {
 
 Whenever the \c height of the parent item changes, the \c height of the blue rectangle will update to be of the same value.
 
-The binding expression can be any valid JavaScript expression. For example, the above code could be modified so that the height of the rectangle is always one-third of the height of its parent:
+Furthermore, a binding can contain any valid JavaScript expression or
+statement, as QML uses a standards compliant JavaScript engine.  Below are
+valid bindings that could be substituted for the \c height binding from the
+above example:
 
-\qml
-Rectangle {
-    width: 200; height: 200
+\code
+height: parent.height / 2
 
-    Rectangle {
-        width: 100; height: parent.height / 3
-        color: "blue"
-    }
+height: Math.min(parent.width, parent.height)
+
+height: parent.height > 100 ? parent.height : parent.height/2
+
+height: {
+    if (parent.height > 100)
+        return parent.height
+    else
+        return parent.height / 2
 }
-\endqml
+
+height: someMethodThatReturnsHeight()
+\endcode
 
 ###TODO have .gif here that demonstrates the changes?
 
 Whenever the value of \c parent.height changes, the QML engine will re-evaluate the above expression and assign the blue rectangle's \c width property with the appropriate updated value.
 
-
-QML uses a standards compliant JavaScript engine, so any valid JavaScript expression or statement can be used in a property binding. Bindings can access object properties, call methods and use built-in JavaScript objects such as \c Date and \c Math. Here is an example with various valid bindings:
+Bindings can access object properties, call methods and use built-in JavaScript objects such as \c Date and \c Math. Here is an example with various valid bindings:
 
 \qml
 Column {
