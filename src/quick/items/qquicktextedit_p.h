@@ -212,9 +212,6 @@ public:
     void setReadOnly(bool);
     bool isReadOnly() const;
 
-    void setTextInteractionFlags(Qt::TextInteractionFlags flags);
-    Qt::TextInteractionFlags textInteractionFlags() const;
-
     QRectF cursorRectangle() const;
 
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;

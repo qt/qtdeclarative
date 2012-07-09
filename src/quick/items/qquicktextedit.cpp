@@ -1241,9 +1241,9 @@ void QQuickTextEdit::setSelectByMouse(bool on)
         d->selectByMouse = on;
         setKeepMouseGrab(on);
         if (on)
-            setTextInteractionFlags(d->control->textInteractionFlags() | Qt::TextSelectableByMouse);
+            d->control->setTextInteractionFlags(d->control->textInteractionFlags() | Qt::TextSelectableByMouse);
         else
-            setTextInteractionFlags(d->control->textInteractionFlags() & ~Qt::TextSelectableByMouse);
+            d->control->setTextInteractionFlags(d->control->textInteractionFlags() & ~Qt::TextSelectableByMouse);
         emit selectByMouseChanged(on);
     }
 }
@@ -1309,26 +1309,6 @@ bool QQuickTextEdit::isReadOnly() const
 {
     Q_D(const QQuickTextEdit);
     return !(d->control->textInteractionFlags() & Qt::TextEditable);
-}
-
-/*!
-    Sets how the text edit should interact with user input to the given
-    \a flags.
-*/
-void QQuickTextEdit::setTextInteractionFlags(Qt::TextInteractionFlags flags)
-{
-    Q_D(QQuickTextEdit);
-    d->control->setTextInteractionFlags(flags);
-}
-
-/*!
-    Returns the flags specifying how the text edit should interact
-    with user input.
-*/
-Qt::TextInteractionFlags QQuickTextEdit::textInteractionFlags() const
-{
-    Q_D(const QQuickTextEdit);
-    return d->control->textInteractionFlags();
 }
 
 /*!

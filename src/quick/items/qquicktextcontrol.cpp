@@ -818,14 +818,6 @@ void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
         && cursorMoveKeyEvent(e))
         goto accept;
 
-    if (interactionFlags & Qt::LinksAccessibleByKeyboard) {
-        if ((e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) && cursor.hasSelection()) {
-            e->accept();
-            activateLinkUnderCursor();
-            return;
-        }
-    }
-
     if (!(interactionFlags & Qt::TextEditable)) {
         e->ignore();
         return;
