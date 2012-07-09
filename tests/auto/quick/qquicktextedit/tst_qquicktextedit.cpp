@@ -68,6 +68,8 @@
 #include <Carbon/Carbon.h>
 #endif
 
+#define SERVER_PORT 42332
+#define SERVER_ADDR "http://localhost:42332"
 
 Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
 Q_DECLARE_METATYPE(Qt::Key)
@@ -138,6 +140,7 @@ private slots:
 
     void cursorDelegate_data();
     void cursorDelegate();
+    void remoteCursorDelegate();
     void cursorVisible();
     void delegateLoading_data();
     void delegateLoading();
@@ -2161,6 +2164,38 @@ void tst_qquicktextedit::cursorDelegate()
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
 }
 
+void tst_qquicktextedit::remoteCursorDelegate()
+{
+    TestHTTPServer server(SERVER_PORT);
+    server.serveDirectory(dataDirectory());
+
+    QQuickView view;
+
+    QQmlComponent component(view.engine(), QUrl(SERVER_ADDR "/RemoteCursor.qml"));
+
+    view.rootContext()->setContextProperty("contextDelegate", &component);
+    view.setSource(testFileUrl("cursorTestRemote.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
+    QVERIFY(textEditObject != 0);
+
+    // Delegate is created on demand, and so won't be available immediately.  Focus in or
+    // setCursorVisible(true) will trigger creation.
+    QTRY_VERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
+    QVERIFY(!textEditObject->isCursorVisible());
+
+    textEditObject->setFocus(true);
+    QVERIFY(textEditObject->isCursorVisible());
+
+    QCOMPARE(component.status(), QQmlComponent::Loading);
+    QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
+
+    // Wait for component to load.
+    QTRY_COMPARE(component.status(), QQmlComponent::Ready);
+    QVERIFY(textEditObject->findChild<QQuickItem*>("cursorInstance"));
+}
+
 void tst_qquicktextedit::cursorVisible()
 {
     QQuickTextEdit edit;
@@ -2270,12 +2305,12 @@ void tst_qquicktextedit::delegateLoading()
     QFETCH(QString, qmlfile);
     QFETCH(QString, error);
 
-    TestHTTPServer server(42332);
+    TestHTTPServer server(SERVER_PORT);
     server.serveDirectory(testFile("httpfail"), TestHTTPServer::Disconnect);
     server.serveDirectory(testFile("httpslow"), TestHTTPServer::Delay);
     server.serveDirectory(testFile("http"));
 
-    QQuickView view(QUrl(QLatin1String("http://localhost:42332/") + qmlfile));
+    QQuickView view(QUrl(QLatin1String(SERVER_ADDR "/") + qmlfile));
     view.show();
     view.requestActivateWindow();
 
@@ -4504,7 +4539,7 @@ void tst_qquicktextedit::embeddedImages()
     QFETCH(QUrl, qmlfile);
     QFETCH(QString, error);
 
-    TestHTTPServer server(42332);
+    TestHTTPServer server(SERVER_PORT);
     server.serveDirectory(testFile("http"));
 
     if (!error.isEmpty())

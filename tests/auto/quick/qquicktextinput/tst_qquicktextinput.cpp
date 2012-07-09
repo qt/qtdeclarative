@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 #include "../../shared/util.h"
+#include "../../shared/testhttpserver.h"
 #include <private/qinputmethod_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>
@@ -61,6 +62,9 @@
 
 #include "qplatformdefs.h"
 #include "../../shared/platforminputcontext.h"
+
+#define SERVER_PORT 14460
+#define SERVER_ADDR "http://localhost:14460"
 
 Q_DECLARE_METATYPE(QQuickTextInput::SelectionMode)
 Q_DECLARE_METATYPE(QQuickTextInput::EchoMode)
@@ -142,6 +146,7 @@ private slots:
     void passwordCharacter();
     void cursorDelegate_data();
     void cursorDelegate();
+    void remoteCursorDelegate();
     void cursorVisible();
     void cursorRectangle_data();
     void cursorRectangle();
@@ -2601,6 +2606,38 @@ void tst_qquicktextinput::cursorDelegate()
     //Test Delegate gets deleted
     textInputObject->setCursorDelegate(0);
     QVERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
+}
+
+void tst_qquicktextinput::remoteCursorDelegate()
+{
+    TestHTTPServer server(SERVER_PORT);
+    server.serveDirectory(dataDirectory());
+
+    QQuickView view;
+
+    QQmlComponent component(view.engine(), QUrl(SERVER_ADDR "/RemoteCursor.qml"));
+
+    view.rootContext()->setContextProperty("contextDelegate", &component);
+    view.setSource(testFileUrl("cursorTestRemote.qml"));
+    view.show();
+    view.requestActivateWindow();
+    QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
+    QVERIFY(textInputObject != 0);
+
+    // Delegate is created on demand, and so won't be available immediately.  Focus in or
+    // setCursorVisible(true) will trigger creation.
+    QTRY_VERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
+    QVERIFY(!textInputObject->isCursorVisible());
+
+    textInputObject->setFocus(true);
+    QVERIFY(textInputObject->isCursorVisible());
+
+    QCOMPARE(component.status(), QQmlComponent::Loading);
+    QVERIFY(!textInputObject->findChild<QQuickItem*>("cursorInstance"));
+
+    // Wait for component to load.
+    QTRY_COMPARE(component.status(), QQmlComponent::Ready);
+    QVERIFY(textInputObject->findChild<QQuickItem*>("cursorInstance"));
 }
 
 void tst_qquicktextinput::cursorVisible()

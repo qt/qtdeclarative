@@ -2,7 +2,10 @@ CONFIG += testcase
 TARGET = tst_qquicktextinput
 macx:CONFIG -= app_bundle
 
-SOURCES += tst_qquicktextinput.cpp
+SOURCES += tst_qquicktextinput.cpp \
+           ../../shared/testhttpserver.cpp
+
+HEADERS += ../../shared/testhttpserver.h
 
 include (../../shared/util.pri)
 
