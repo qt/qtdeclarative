@@ -52,6 +52,7 @@ public:
 private slots:
     void test_properties();
     void test_framerateAdvance();//Separate codepath for QQuickSpriteEngine
+    void test_huge();//Separate codepath for QQuickSpriteEngine
     void test_jumpToCrash();
 };
 
@@ -74,6 +75,26 @@ void tst_qquickspritesequence::test_properties()
     QVERIFY(!sprite->running());
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
+
+    delete window;
+}
+
+void tst_qquickspritesequence::test_huge()
+{
+    /* Merely tests that it doesn't crash, as waiting for it to complete
+       (or even having something to watch) would bloat CI.
+       The large allocations of memory involved and separate codepath does make
+       a doesn't crash test worthwhile.
+    */
+    QQuickView *window = new QQuickView(0);
+
+    window->setSource(testFileUrl("huge.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
+
+    QVERIFY(window->rootObject());
+    QQuickSpriteSequence* sprite = window->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
+    QVERIFY(sprite);
 
     delete window;
 }
