@@ -483,8 +483,8 @@ void QQuickViewPrivate::setRootObject(QObject *obj)
     }
     if (root) {
         initialSize = rootObjectSize();
-        if ((resizeMode == QQuickView::SizeViewToRootObject || !q->width() || !q->height())
-                && initialSize != q->size()) {
+        if ((resizeMode == QQuickView::SizeViewToRootObject || q->width() <= 1 || q->height() <= 1) &&
+            initialSize != q->size()) {
             q->resize(initialSize);
         }
         initResize();
