@@ -1682,9 +1682,16 @@ void QQuickFlickable::setRebound(QQuickTransition *transition)
 
     \snippet qml/flickable.qml document
 
-    In some cases, the the content dimensions can be automatically set
-    using the \l {Item::childrenRect.width}{childrenRect.width}
-    and \l {Item::childrenRect.height}{childrenRect.height} properties.
+    In some cases, the content dimensions can be automatically set
+    based on the \l {Item::childrenRect.width}{childrenRect.width}
+    and \l {Item::childrenRect.height}{childrenRect.height} properties
+    of the \l contentItem. For example, the previous snippet could be rewritten with:
+
+    \qml
+    contentWidth: contentItem.childrenRect.width; contentHeight: contentItem.childrenRect.height
+    \endqml
+
+    Though this assumes that the origin of the childrenRect is 0,0.
 */
 qreal QQuickFlickable::contentWidth() const
 {
