@@ -76,7 +76,8 @@ HEADERS += \
     $$PWD/qquickitemviewtransition_p.h \
     $$PWD/qquickscreen_p.h \
     $$PWD/qquickwindowmodule_p.h \
-    $$PWD/qquickwindowmanager_p.h
+    $$PWD/qquickwindowmanager_p.h \
+    $$PWD/qquickthreadedwindowmanager_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -129,7 +130,8 @@ SOURCES += \
     $$PWD/qquickitemviewtransition.cpp \
     $$PWD/qquickwindowmodule.cpp \
     $$PWD/qquickscreen.cpp \
-    $$PWD/qquickwindowmanager.cpp
+    $$PWD/qquickwindowmanager.cpp \
+    $$PWD/qquickthreadedwindowmanager.cpp
 
 SOURCES += \
     $$PWD/qquickshadereffect.cpp \
