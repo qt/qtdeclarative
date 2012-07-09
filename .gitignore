@@ -179,6 +179,7 @@ config.tests/unix/sse2/sse2
 # ---------------------
 
 debug
+imports/*
 examples/tools/plugandpaint/plugins
 include/*
 include/*/*
