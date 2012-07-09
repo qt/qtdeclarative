@@ -806,7 +806,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         bool truncateHeight = false;
         truncated = false;
         elide = false;
-        int characterCount = 0;
         int unwrappedLineCount = 1;
         int maxLineCount = maximumLineCount();
         height = 0;
@@ -836,7 +835,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
                 truncated = true;
                 truncateHeight = true;
 
-                characterCount = line.textStart() + line.textLength();
                 visibleCount -= 1;
 
                 QTextLine previousLine = layout.lineAt(visibleCount - 1);
@@ -853,7 +851,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             const QTextLine previousLine = line;
             line = layout.createLine();
             if (!line.isValid()) {
-                characterCount = previousLine.textStart() + previousLine.textLength();
                 if (singlelineElide && visibleCount == 1 && previousLine.naturalTextWidth() > lineWidth) {
                     // Elide a single previousLine of  text if its width exceeds the element width.
                     elide = true;
@@ -887,7 +884,6 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
                 if (visibleCount == maxLineCount) {
                     truncated = true;
                     heightExceeded |= wrapped;
-                    characterCount = line.textStart() + line.textLength();
 
                     if (multilineElide) {
                         elide = true;
