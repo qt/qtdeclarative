@@ -12,4 +12,4 @@ include (../shared/util.pri)
 TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private network testlib
-CONFIG += insignificant_test
+linux-*:system(". /etc/lsb-release && [ $DISTRIB_CODENAME = lucid ]"):CONFIG += insignificant_test
