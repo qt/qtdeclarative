@@ -69,8 +69,118 @@ For more information on defining new QML elements, see the \l {Tutorial: Extendi
 {Writing QML extensions with C++} tutorial and the
 \l{Extending QML with C++} reference documentation.
 
+\note If a C++ class which defines a QML type is declared
+inside a namespace, then the namespace name has to be included in all
+references to the class name (that is, in Q_PROPERTY declarations and the
+associated property getter and setter function prototypes, and also in
+Q_INVOKABLE function prototypes) within type declarations in that namespace.
 
+As an example of an incorrect, unqualified type declaration, if you have the
+following:
 
+\code
+// namespacedtype.h
+namespace ExampleNamespace {
+    class ExampleType : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(ExampleType* sibling READ sibling WRITE setSibling)
+
+    public:
+        ExampleType* sibling() const;
+        void setSibling(ExampleType* sib);
+
+        Q_INVOKABLE ExampleType* findSiblingWithName(const QString &name);
+    };
+}
+
+//namespacedtype.cpp
+#include "namespacedtype.h"
+ExampleNamespace::ExampleType* ExampleNamespace::ExampleType::sibling() const
+{
+    return 0;      // dummy implementation
+}
+void ExampleNamespace::ExampleType::setSibling(ExampleNamespace::ExampleType* sib)
+{
+    Q_UNUSED(sib); // dummy implementation
+}
+ExampleNamespace::ExampleType* ExampleNamespace::ExampleType::findSiblingWithName(const QString &name)
+{
+    return 0;      // dummy implementation
+}
+
+void registerTypes()
+{
+    qmlRegisterType<ExampleNamespace::ExampleType>("Example", 1, 0, "ExampleType");
+}
+\endcode
+
+And you attempt to use the type (after calling \c registerTypes()) in QML like so:
+
+\qml
+import QtQuick 2.0
+import Example 1.0
+
+Item {
+    property ExampleType nt: ExampleType { }
+
+    width: 200
+    height: 100
+    Text {
+        anchors.centerIn: parent
+        text: "sibling = " + nt.sibling
+    }
+}
+\endqml
+
+You will receive the warning: \tt{QMetaProperty::read: Unable to handle
+unregistered datatype 'ExampleType*' for property
+'ExampleNamespace::ExampleType::sibling'}, and you will not be able to use the
+"sibling" property in QML.
+
+To ensure that it works properly, whenever \c ExampleType is referred to (as a
+property type, parameter type or return type) in the type declaration, it must
+be fully qualified (with its namespace) in order to be processed correctly by
+the QML metatype system, as shown below:
+
+\code
+// namespacedtype.h
+namespace ExampleNamespace {
+    class ExampleType : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(ExampleNamespace::ExampleType* sibling READ sibling WRITE setSibling)
+
+    public:
+        ExampleNamespace::ExampleType* sibling() const;
+        void setSibling(ExampleNamespace::ExampleType* sib);
+
+        Q_INVOKABLE ExampleNamespace::ExampleType* findSiblingWithName(const QString &name);
+    };
+}
+
+//namespacedtype.cpp
+#include "namespacedtype.h"
+ExampleNamespace::ExampleType* ExampleNamespace::ExampleType::sibling() const
+{
+    return 0;      // dummy implementation
+}
+void ExampleNamespace::ExampleType::setSibling(ExampleNamespace::ExampleType* sib)
+{
+    Q_UNUSED(sib); // dummy implementation
+}
+ExampleNamespace::ExampleType* ExampleNamespace::ExampleType::findSiblingWithName(const QString &name)
+{
+    return 0;      // dummy implementation
+}
+
+void registerTypes()
+{
+    qmlRegisterType<ExampleNamespace::ExampleType>("Example", 1, 0, "ExampleType");
+}
+\endcode
+
+The type will now be able to be used normally from within QML documents.
 
 \section1 Subclassing QQmlParserStatus
 
