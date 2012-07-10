@@ -51,7 +51,6 @@
 #include <QtCore/qcoreapplication.h>
 
 #include <private/qquicksmoothedanimation_p_p.h>
-#include <private/qlistmodelinterface_p.h>
 #include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE

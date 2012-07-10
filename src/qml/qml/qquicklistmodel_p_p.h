@@ -89,7 +89,7 @@ public:
 
     static DynamicRoleModelNode *create(const QVariantMap &obj, QQuickListModel *owner);
 
-    void updateValues(const QVariantMap &object, QList<int> &roles);
+    void updateValues(const QVariantMap &object, QVector<int> &roles);
 
     QVariant getValue(const QString &name)
     {
@@ -162,7 +162,7 @@ public:
     }
 
     void updateValues();
-    void updateValues(const QList<int> &roles);
+    void updateValues(const QVector<int> &roles);
 
     QQuickListModel *m_model;
     int m_elementIndex;
@@ -329,7 +329,7 @@ public:
         return elements.count();
     }
 
-    void set(int elementIndex, v8::Handle<v8::Object> object, QList<int> *roles, QV8Engine *eng);
+    void set(int elementIndex, v8::Handle<v8::Object> object, QVector<int> *roles, QV8Engine *eng);
     void set(int elementIndex, v8::Handle<v8::Object> object, QV8Engine *eng);
 
     int append(v8::Handle<v8::Object> object, QV8Engine *eng);

@@ -85,7 +85,10 @@ class tst_qquicklistmodelworkerscript : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquicklistmodelworkerscript() {}
+    tst_qquicklistmodelworkerscript()
+    {
+        qRegisterMetaType<QVector<int> >();
+    }
 
 private:
     int roleFromName(const QQuickListModel *model, const QString &roleName);
@@ -133,7 +136,7 @@ bool tst_qquicklistmodelworkerscript::compareVariantList(const QVariantList &tes
             return false;
         const QVariantMap &map = testVariant.toMap();
 
-        const QList<int> &roles = model->roles();
+        const QHash<int, QByteArray> roleNames = model->roleNames();
 
         QVariantMap::const_iterator it = map.begin();
         QVariantMap::const_iterator end = map.end();
@@ -142,18 +145,11 @@ bool tst_qquicklistmodelworkerscript::compareVariantList(const QVariantList &tes
             const QString &testKey = it.key();
             const QVariant &testData = it.value();
 
-            int roleIndex = -1;
-            for (int j=0 ; j < roles.count() ; ++j) {
-                if (model->toString(roles[j]).compare(testKey) == 0) {
-                    roleIndex = j;
-                    break;
-                }
-            }
-
+            int roleIndex = roleNames.key(testKey.toUtf8(), -1);
             if (roleIndex == -1)
                 return false;
 
-            const QVariant &modelData = model->data(i, roleIndex);
+            const QVariant &modelData = model->data(model->index(i, 0, QModelIndex()), roleIndex);
 
             if (testData.type() == QVariant::List) {
                 const QVariantList &subList = testData.toList();
@@ -171,12 +167,7 @@ bool tst_qquicklistmodelworkerscript::compareVariantList(const QVariantList &tes
 
 int tst_qquicklistmodelworkerscript::roleFromName(const QQuickListModel *model, const QString &roleName)
 {
-    QList<int> roles = model->roles();
-    for (int i=0; i<roles.count(); i++) {
-        if (model->toString(roles[i]) == roleName)
-            return roles[i];
-    }
-    return -1;
+    return model->roleNames().key(roleName.toUtf8(), -1);
 }
 
 QQuickItem *tst_qquicklistmodelworkerscript::createWorkerTest(QQmlEngine *eng, QQmlComponent *component, QQuickListModel *model)
@@ -497,7 +488,7 @@ void tst_qquicklistmodelworkerscript::get_worker()
     int role = roleFromName(&model, roleName);
     QVERIFY(role >= 0);
 
-    QSignalSpy spy(&model, SIGNAL(itemsChanged(int, int, QList<int>)));
+    QSignalSpy spy(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
 
     // in the worker thread, change the model data and call sync()
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker",
@@ -515,9 +506,9 @@ void tst_qquicklistmodelworkerscript::get_worker()
     QCOMPARE(spy.count(), 1);
 
     QList<QVariant> spyResult = spy.takeFirst();
-    QCOMPARE(spyResult.at(0).toInt(), index);
-    QCOMPARE(spyResult.at(1).toInt(), 1);  // only 1 item is modified at a time
-    QVERIFY(spyResult.at(2).value<QList<int> >().contains(role));
+    QCOMPARE(spyResult.at(0).value<QModelIndex>(), model.index(index, 0, QModelIndex()));
+    QCOMPARE(spyResult.at(1).value<QModelIndex>(), model.index(index, 0, QModelIndex()));  // only 1 item is modified at a time
+    QVERIFY(spyResult.at(2).value<QVector<int> >().contains(role));
 
     delete item;
 }
@@ -621,7 +612,7 @@ void tst_qquicklistmodelworkerscript::property_changes_worker()
     expr.evaluate();
     QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
 
-    QSignalSpy spyItemsChanged(&model, SIGNAL(itemsChanged(int, int, QList<int>)));
+    QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
 
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker",
             Q_ARG(QVariant, QStringList(script_change))));
@@ -630,8 +621,8 @@ void tst_qquicklistmodelworkerscript::property_changes_worker()
     // test itemsChanged() is emitted correctly
     if (itemsChanged) {
         QCOMPARE(spyItemsChanged.count(), 1);
-        QCOMPARE(spyItemsChanged.at(0).at(0).toInt(), listIndex);
-        QCOMPARE(spyItemsChanged.at(0).at(1).toInt(), 1);
+        QCOMPARE(spyItemsChanged.at(0).at(0).value<QModelIndex>(), model.index(listIndex, 0, QModelIndex()));
+        QCOMPARE(spyItemsChanged.at(0).at(1).value<QModelIndex>(), model.index(listIndex, 0, QModelIndex()));
     } else {
         QCOMPARE(spyItemsChanged.count(), 0);
     }
@@ -674,8 +665,8 @@ void tst_qquicklistmodelworkerscript::worker_sync()
     QVERIFY(childModel);
     QVERIFY(childModel->count() == 1);
 
-    QSignalSpy spyModelInserted(&model, SIGNAL(itemsInserted(int,int)));
-    QSignalSpy spyChildInserted(childModel, SIGNAL(itemsInserted(int,int)));
+    QSignalSpy spyModelInserted(&model, SIGNAL(rowsInserted(QModelIndex,int,int)));
+    QSignalSpy spyChildInserted(childModel, SIGNAL(rowsInserted(QModelIndex,int,int)));
 
     QVERIFY(QMetaObject::invokeMethod(item, "addItemViaWorker"));
     waitForWorker(item);
@@ -729,7 +720,7 @@ void tst_qquicklistmodelworkerscript::worker_remove_element()
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
-    QSignalSpy spyModelRemoved(&model, SIGNAL(itemsRemoved(int,int)));
+    QSignalSpy spyModelRemoved(&model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
 
     QVERIFY(model.count() == 0);
     QVERIFY(spyModelRemoved.count() == 0);
@@ -792,7 +783,7 @@ void tst_qquicklistmodelworkerscript::worker_remove_list()
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
-    QSignalSpy spyModelRemoved(&model, SIGNAL(itemsRemoved(int,int)));
+    QSignalSpy spyModelRemoved(&model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
 
     QVERIFY(model.count() == 0);
     QVERIFY(spyModelRemoved.count() == 0);

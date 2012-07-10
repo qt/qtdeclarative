@@ -122,7 +122,7 @@ private:
         int index; // Inserted/Removed/Moved/Changed
         int count; // Inserted/Removed/Moved/Changed
         int to;    // Moved
-        QList<int> roles;
+        QVector<int> roles;
     };
 
     struct Data
@@ -133,7 +133,7 @@ private:
         void insertChange(int uid, int index, int count);
         void removeChange(int uid, int index, int count);
         void moveChange(int uid, int index, int count, int to);
-        void changedChange(int uid, int index, int count, const QList<int> &roles);
+        void changedChange(int uid, int index, int count, const QVector<int> &roles);
     };
     Data data;
 

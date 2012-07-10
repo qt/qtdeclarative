@@ -53,7 +53,6 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickvisualitemmodel_p.h>
 #include <QtQml/private/qquicklistmodel_p.h>
-#include <QtQml/private/qlistmodelinterface_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
@@ -1832,7 +1831,7 @@ void tst_QQuickGridView::currentIndex()
     QCOMPARE(gridview->contentY(), 400.0);
 
     // changing model should reset currentIndex to 0
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 60; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
     ctxt->setContextProperty("testModel", &model);
@@ -1947,7 +1946,7 @@ void tst_QQuickGridView::keyNavigation()
     QFETCH(int, indexUpFrom7);
     QFETCH(int, indexDownFrom7);
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 18; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3577,8 +3576,9 @@ void tst_QQuickGridView::extents()
 
     QQuickView *window = getView();
 
-    QmlListModel model;
+    QaimModel model;
     QQmlContext *ctxt = window->rootContext();
+
     ctxt->setContextProperty("testModel", &model);
     window->setSource(testFileUrl("headerfooter.qml"));
     window->show();
@@ -3940,7 +3940,7 @@ void tst_QQuickGridView::resizeGrid_data()
 
 void tst_QQuickGridView::changeColumnCount()
 {
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -5620,7 +5620,7 @@ void tst_QQuickGridView::multipleTransitions()
     QPointF removeTargets_transitionTo(-100, 300);
     QPointF removeDisplaced_transitionFrom(100, 300);
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < initialCount; i++)
         model.addItem("Original item" + QString::number(i), "");
 
@@ -5795,7 +5795,7 @@ void tst_QQuickGridView::multipleDisplaced()
     // moved from previously set positions, and not those that have moved from their current
     // item positions (which may e.g. still be changing from easing bounces in the last transition)
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Original item" + QString::number(i), "");
 

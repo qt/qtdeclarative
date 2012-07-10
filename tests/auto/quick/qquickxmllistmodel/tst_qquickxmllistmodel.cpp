@@ -56,7 +56,6 @@
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <private/qlistmodelinterface_p.h>
 #include "../../../../src/imports/xmllistmodel/qqmlxmllistmodel_p.h"
 
 typedef QPair<int, int> QQuickXmlListRange;
@@ -106,7 +105,7 @@ private slots:
     void roleCrash();
 
 private:
-    QString errorString(QListModelInterface* model) {
+    QString errorString(QAbstractItemModel *model) {
         QString ret;
         QMetaObject::invokeMethod(model, "errorString", Q_RETURN_ARG(QString, ret));
         return ret;
@@ -196,14 +195,15 @@ QNetworkAccessManager *CustomNetworkAccessManagerFactory::create(QObject *parent
 void tst_qquickxmllistmodel::buildModel()
 {
     QQmlComponent component(&engine, testFileUrl("model.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->count(), 9);
+    QTRY_COMPARE(model->rowCount(), 9);
 
-    QCOMPARE(model->data(3, Qt::UserRole).toString(), QLatin1String("Spot"));
-    QCOMPARE(model->data(3, Qt::UserRole+1).toString(), QLatin1String("Dog"));
-    QCOMPARE(model->data(3, Qt::UserRole+2).toInt(), 9);
-    QCOMPARE(model->data(3, Qt::UserRole+3).toString(), QLatin1String("Medium"));
+    QModelIndex index = model->index(3, 0);
+    QCOMPARE(model->data(index, Qt::UserRole).toString(), QLatin1String("Spot"));
+    QCOMPARE(model->data(index, Qt::UserRole+1).toString(), QLatin1String("Dog"));
+    QCOMPARE(model->data(index, Qt::UserRole+2).toInt(), 9);
+    QCOMPARE(model->data(index, Qt::UserRole+3).toString(), QLatin1String("Medium"));
 
     delete model;
 }
@@ -215,25 +215,20 @@ void tst_qquickxmllistmodel::testTypes()
     QFETCH(QVariant, expectedValue);
 
     QQmlComponent component(&engine, testFileUrl("testtypes.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
     model->setProperty("xml",xml.toUtf8());
     QMetaObject::invokeMethod(model, "reload");
-    QTRY_COMPARE(model->count(), 1);
+    QTRY_COMPARE(model->rowCount(), 1);
 
-    int role = -1;
-    foreach (int i, model->roles()) {
-        if (model->toString(i) == roleName) {
-            role = i;
-            break;
-        }
-    }
+    int role = model->roleNames().key(roleName.toUtf8(), -1);
     QVERIFY(role >= 0);
 
+    QModelIndex index = model->index(0, 0);
     if (expectedValue.toString() == "nan")
-        QVERIFY(qIsNaN(model->data(0, role).toDouble()));
+        QVERIFY(qIsNaN(model->data(index, role).toDouble()));
     else
-        QCOMPARE(model->data(0, role), expectedValue);
+        QCOMPARE(model->data(index, role), expectedValue);
 
     delete model;
 }
@@ -275,11 +270,11 @@ void tst_qquickxmllistmodel::testTypes_data()
 void tst_qquickxmllistmodel::cdata()
 {
     QQmlComponent component(&engine, testFileUrl("recipes.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->count(), 5);
+    QTRY_COMPARE(model->rowCount(), 5);
 
-    QVERIFY(model->data(2, Qt::UserRole+2).toString().startsWith(QLatin1String("<html>")));
+    QVERIFY(model->data(model->index(2, 0), Qt::UserRole+2).toString().startsWith(QLatin1String("<html>")));
 
     delete model;
 }
@@ -287,10 +282,10 @@ void tst_qquickxmllistmodel::cdata()
 void tst_qquickxmllistmodel::attributes()
 {
     QQmlComponent component(&engine, testFileUrl("recipes.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->count(), 5);
-    QCOMPARE(model->data(2, Qt::UserRole).toString(), QLatin1String("Vegetable Soup"));
+    QTRY_COMPARE(model->rowCount(), 5);
+    QCOMPARE(model->data(model->index(2, 0), Qt::UserRole).toString(), QLatin1String("Vegetable Soup"));
 
     delete model;
 }
@@ -298,16 +293,23 @@ void tst_qquickxmllistmodel::attributes()
 void tst_qquickxmllistmodel::roles()
 {
     QQmlComponent component(&engine, testFileUrl("model.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->count(), 9);
+    QTRY_COMPARE(model->rowCount(), 9);
 
-    QList<int> roles = model->roles();
+    QHash<int, QByteArray> roleNames = model->roleNames();
+    QCOMPARE(roleNames.count(), 4);
+    QVERIFY(roleNames.key("name", -1) >= 0);
+    QVERIFY(roleNames.key("type", -1) >= 0);
+    QVERIFY(roleNames.key("age", -1) >= 0);
+    QVERIFY(roleNames.key("size", -1) >= 0);
+
+    QSet<int> roles;
+    roles.insert(roleNames.key("name"));
+    roles.insert(roleNames.key("type"));
+    roles.insert(roleNames.key("age"));
+    roles.insert(roleNames.key("size"));
     QCOMPARE(roles.count(), 4);
-    QCOMPARE(model->toString(roles.at(0)), QLatin1String("name"));
-    QCOMPARE(model->toString(roles.at(1)), QLatin1String("type"));
-    QCOMPARE(model->toString(roles.at(2)), QLatin1String("age"));
-    QCOMPARE(model->toString(roles.at(3)), QLatin1String("size"));
 
     delete model;
 }
@@ -319,18 +321,18 @@ void tst_qquickxmllistmodel::roleErrors()
     QTest::ignoreMessage(QtWarningMsg, (testFileUrl("roleErrors.qml").toString() + ":10:5: QML XmlRole: invalid query: \"age/\"").toUtf8().constData());
 
     //### make sure we receive all expected warning messages.
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->count(), 9);
+    QTRY_COMPARE(model->rowCount(), 9);
 
-
+    QModelIndex index = model->index(3, 0);
     //### should any of these return valid values?
-    QCOMPARE(model->data(3, Qt::UserRole), QVariant());
-    QCOMPARE(model->data(3, Qt::UserRole+1), QVariant());
-    QCOMPARE(model->data(3, Qt::UserRole+2), QVariant());
+    QCOMPARE(model->data(index, Qt::UserRole), QVariant());
+    QCOMPARE(model->data(index, Qt::UserRole+1), QVariant());
+    QCOMPARE(model->data(index, Qt::UserRole+2), QVariant());
 
     QEXPECT_FAIL("", "QTBUG-10797", Continue);
-    QCOMPARE(model->data(3, Qt::UserRole+3), QVariant());
+    QCOMPARE(model->data(index, Qt::UserRole+3), QVariant());
 
     delete model;
 }
@@ -339,12 +341,12 @@ void tst_qquickxmllistmodel::uniqueRoleNames()
 {
     QQmlComponent component(&engine, testFileUrl("unique.qml"));
     QTest::ignoreMessage(QtWarningMsg, (testFileUrl("unique.qml").toString() + ":8:5: QML XmlRole: \"name\" duplicates a previous role name and will be disabled.").toUtf8().constData());
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->count(), 9);
+    QTRY_COMPARE(model->rowCount(), 9);
 
-    QList<int> roles = model->roles();
-    QCOMPARE(roles.count(), 1);
+    QHash<int, QByteArray> roleNames = model->roleNames();
+    QCOMPARE(roleNames.count(), 1);
 
     delete model;
 }
@@ -356,7 +358,7 @@ void tst_qquickxmllistmodel::xml()
     QFETCH(int, count);
 
     QQmlComponent component(&engine, testFileUrl("model.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
 
     QSignalSpy spy(model, SIGNAL(statusChanged(QQuickXmlListModel::Status)));
     QVERIFY(errorString(model).isEmpty());
@@ -369,7 +371,7 @@ void tst_qquickxmllistmodel::xml()
              QQuickXmlListModel::Ready);
     QVERIFY(errorString(model).isEmpty());
     QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
-    QCOMPARE(model->count(), 9);
+    QCOMPARE(model->rowCount(), 9);
 
     // if xml is empty (i.e. clearing) it won't have any effect if a source is set
     if (xml.isEmpty())
@@ -387,7 +389,7 @@ void tst_qquickxmllistmodel::xml()
         QCOMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")),
                  QQuickXmlListModel::Ready);
     QVERIFY(errorString(model).isEmpty());
-    QCOMPARE(model->count(), count);
+    QCOMPARE(model->rowCount(), count);
 
     delete model;
 }
@@ -411,7 +413,7 @@ void tst_qquickxmllistmodel::headers()
     qmlEng.setNetworkAccessManagerFactory(&factory);
 
     QQmlComponent component(&qmlEng, testFileUrl("model.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
     QTRY_COMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")),
                  QQuickXmlListModel::Ready);
@@ -435,7 +437,7 @@ void tst_qquickxmllistmodel::source()
     QFETCH(QQuickXmlListModel::Status, status);
 
     QQmlComponent component(&engine, testFileUrl("model.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QSignalSpy spy(model, SIGNAL(statusChanged(QQuickXmlListModel::Status)));
 
     QVERIFY(errorString(model).isEmpty());
@@ -447,7 +449,7 @@ void tst_qquickxmllistmodel::source()
              QQuickXmlListModel::Ready);
     QVERIFY(errorString(model).isEmpty());
     QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
-    QCOMPARE(model->count(), 9);
+    QCOMPARE(model->rowCount(), 9);
 
     model->setProperty("source",source);
     if (model->property("source").toString().isEmpty())
@@ -474,7 +476,7 @@ void tst_qquickxmllistmodel::source()
     }
 
     QCOMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")), status);
-    QCOMPARE(model->count(), count);
+    QCOMPARE(model->rowCount(), count);
 
     if (status == QQuickXmlListModel::Ready)
         QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
@@ -506,15 +508,16 @@ void tst_qquickxmllistmodel::source_data()
 void tst_qquickxmllistmodel::data()
 {
     QQmlComponent component(&engine, testFileUrl("model.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
 
     for (int i=0; i<9; i++)  {
-        for (int j=0; j<model->roles().count(); j++) {
-            QCOMPARE(model->data(i, j), QVariant());
+        QModelIndex index = model->index(i, 0);
+        for (int j=0; j<model->roleNames().count(); j++) {
+            QCOMPARE(model->data(index, j), QVariant());
         }
     }
-    QTRY_COMPARE(model->count(), 9);
+    QTRY_COMPARE(model->rowCount(), 9);
 
     delete model;
 }
@@ -522,14 +525,14 @@ void tst_qquickxmllistmodel::data()
 void tst_qquickxmllistmodel::get()
 {
     QQmlComponent component(&engine, testFileUrl("get.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
 
     QVERIFY(model != 0);
 
     QVERIFY(QMetaObject::invokeMethod(model, "runPreTest"));
     QCOMPARE(model->property("preTest").toBool(), true);
 
-    QTRY_COMPARE(model->count(), 9);
+    QTRY_COMPARE(model->rowCount(), 9);
 
     QVERIFY(QMetaObject::invokeMethod(model, "runPostTest"));
     QCOMPARE(model->property("postTest").toBool(), true);
@@ -543,12 +546,12 @@ void tst_qquickxmllistmodel::reload()
     // reload() is called.
 
     QQmlComponent component(&engine, testFileUrl("model.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->count(), 9);
+    QTRY_COMPARE(model->rowCount(), 9);
 
-    QSignalSpy spyInsert(model, SIGNAL(itemsInserted(int,int)));
-    QSignalSpy spyRemove(model, SIGNAL(itemsRemoved(int,int)));
+    QSignalSpy spyInsert(model, SIGNAL(rowsInserted(QModelIndex,int,int)));
+    QSignalSpy spyRemove(model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
     QSignalSpy spyCount(model, SIGNAL(countChanged()));
     //reload multiple times to test the xml query aborting
     QMetaObject::invokeMethod(model, "reload");
@@ -556,15 +559,15 @@ void tst_qquickxmllistmodel::reload()
     QCoreApplication::processEvents();
     QMetaObject::invokeMethod(model, "reload");
     QMetaObject::invokeMethod(model, "reload");
-    QTRY_COMPARE(spyCount.count(), 1);
+    QTRY_COMPARE(spyCount.count(), 0);
     QTRY_COMPARE(spyInsert.count(), 1);
     QTRY_COMPARE(spyRemove.count(), 1);
 
-    QCOMPARE(spyInsert[0][0].toInt(), 0);
-    QCOMPARE(spyInsert[0][1].toInt(), 9);
+    QCOMPARE(spyInsert[0][1].toInt(), 0);
+    QCOMPARE(spyInsert[0][2].toInt(), 8);
 
-    QCOMPARE(spyRemove[0][0].toInt(), 0);
-    QCOMPARE(spyRemove[0][1].toInt(), 9);
+    QCOMPARE(spyRemove[0][1].toInt(), 0);
+    QCOMPARE(spyRemove[0][2].toInt(), 8);
 
     delete model;
 }
@@ -583,42 +586,44 @@ void tst_qquickxmllistmodel::useKeys()
     QFETCH(QList<QQuickXmlListRange>, removeRanges);
 
     QQmlComponent component(&engine, testFileUrl("roleKeys.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
 
     model->setProperty("xml",oldXml);
-    QTRY_COMPARE(model->count(), oldCount);
+    QTRY_COMPARE(model->rowCount(), oldCount);
 
-    QSignalSpy spyInsert(model, SIGNAL(itemsInserted(int,int)));
-    QSignalSpy spyRemove(model, SIGNAL(itemsRemoved(int,int)));
+    QSignalSpy spyInsert(model, SIGNAL(rowsInserted(QModelIndex,int,int)));
+    QSignalSpy spyRemove(model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
     QSignalSpy spyCount(model, SIGNAL(countChanged()));
 
     model->setProperty("xml",newXml);
 
     if (oldCount != newData.count()) {
-        QTRY_COMPARE(model->count(), newData.count());
+        QTRY_COMPARE(model->rowCount(), newData.count());
         QCOMPARE(spyCount.count(), 1);
     } else {
         QTRY_VERIFY(spyInsert.count() > 0 || spyRemove.count() > 0);
         QCOMPARE(spyCount.count(), 0);
     }
 
-    QList<int> roles = model->roles();
-    for (int i=0; i<model->count(); i++) {
+    QList<int> roles = model->roleNames().keys();
+    qSort(roles);
+    for (int i=0; i<model->rowCount(); i++) {
+        QModelIndex index = model->index(i, 0);
         for (int j=0; j<roles.count(); j++)
-            QCOMPARE(model->data(i, roles[j]), newData[i][j]);
+            QCOMPARE(model->data(index, roles.at(j)), newData[i][j]);
     }
 
     QCOMPARE(spyInsert.count(), insertRanges.count());
     for (int i=0; i<spyInsert.count(); i++) {
-        QCOMPARE(spyInsert[i][0].toInt(), insertRanges[i].first);
-        QCOMPARE(spyInsert[i][1].toInt(), insertRanges[i].second);
+        QCOMPARE(spyInsert[i][1].toInt(), insertRanges[i].first);
+        QCOMPARE(spyInsert[i][2].toInt(), insertRanges[i].first + insertRanges[i].second - 1);
     }
 
     QCOMPARE(spyRemove.count(), removeRanges.count());
     for (int i=0; i<spyRemove.count(); i++) {
-        QCOMPARE(spyRemove[i][0].toInt(), removeRanges[i].first);
-        QCOMPARE(spyRemove[i][1].toInt(), removeRanges[i].second);
+        QCOMPARE(spyRemove[i][1].toInt(), removeRanges[i].first);
+        QCOMPARE(spyRemove[i][2].toInt(), removeRanges[i].first + removeRanges[i].second - 1);
     }
 
     delete model;
@@ -734,33 +739,35 @@ void tst_qquickxmllistmodel::noKeysValueChanges()
     // since 'sport' is not marked as a key.
 
     QQmlComponent component(&engine, testFileUrl("roleKeys.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
     
     QString xml;
     
     xml = makeItemXmlAndData("name=A,age=25,sport=Football;name=B,age=35,sport=Athletics");
     model->setProperty("xml",xml);
-    QTRY_COMPARE(model->count(), 2);
+    QTRY_COMPARE(model->rowCount(), 2);
 
     model->setProperty("xml","");
 
-    QSignalSpy spyInsert(model, SIGNAL(itemsInserted(int,int)));
-    QSignalSpy spyRemove(model, SIGNAL(itemsRemoved(int,int)));
+    QSignalSpy spyInsert(model, SIGNAL(rowsInserted(QModelIndex,int,int)));
+    QSignalSpy spyRemove(model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
     QSignalSpy spyCount(model, SIGNAL(countChanged()));
 
     xml = makeItemXmlAndData("name=A,age=25,sport=AussieRules;name=B,age=35,sport=Athletics");
     model->setProperty("xml",xml);
 
+    QList<int> roles = model->roleNames().keys();
+    qSort(roles);
     // wait for the new xml data to be set, and verify no signals were emitted
-    QTRY_VERIFY(model->data(0, model->roles()[2]).toString() != QLatin1String("Football"));
-    QCOMPARE(model->data(0, model->roles()[2]).toString(), QLatin1String("AussieRules"));
+    QTRY_VERIFY(model->data(model->index(0, 0), roles.at(2)).toString() != QLatin1String("Football"));
+    QCOMPARE(model->data(model->index(0, 0), roles.at(2)).toString(), QLatin1String("AussieRules"));
 
     QVERIFY(spyInsert.count() == 0);
     QVERIFY(spyRemove.count() == 0);
     QVERIFY(spyCount.count() == 0);
 
-    QCOMPARE(model->count(), 2);
+    QCOMPARE(model->rowCount(), 2);
 
     delete model;
 }
@@ -772,17 +779,17 @@ void tst_qquickxmllistmodel::keysChanged()
     // if no keys are set).
 
     QQmlComponent component(&engine, testFileUrl("roleKeys.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
 
     QString xml = makeItemXmlAndData("name=A,age=25,sport=Football;name=B,age=35,sport=Athletics");
     model->setProperty("xml",xml);
-    QTRY_COMPARE(model->count(), 2);
+    QTRY_COMPARE(model->rowCount(), 2);
 
     model->setProperty("xml","");
 
-    QSignalSpy spyInsert(model, SIGNAL(itemsInserted(int,int)));
-    QSignalSpy spyRemove(model, SIGNAL(itemsRemoved(int,int)));
+    QSignalSpy spyInsert(model, SIGNAL(rowsInserted(QModelIndex,int,int)));
+    QSignalSpy spyRemove(model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
     QSignalSpy spyCount(model, SIGNAL(countChanged()));
 
     QVERIFY(QMetaObject::invokeMethod(model, "disableNameKey"));
@@ -791,12 +798,12 @@ void tst_qquickxmllistmodel::keysChanged()
     QTRY_VERIFY(spyInsert.count() > 0 && spyRemove.count() > 0);
 
     QCOMPARE(spyInsert.count(), 1);
-    QCOMPARE(spyInsert[0][0].toInt(), 0);
-    QCOMPARE(spyInsert[0][1].toInt(), 2);
+    QCOMPARE(spyInsert[0][1].toInt(), 0);
+    QCOMPARE(spyInsert[0][2].toInt(), 1);
 
     QCOMPARE(spyRemove.count(), 1);
-    QCOMPARE(spyRemove[0][0].toInt(), 0);
-    QCOMPARE(spyRemove[0][1].toInt(), 2);
+    QCOMPARE(spyRemove[0][1].toInt(), 0);
+    QCOMPARE(spyRemove[0][2].toInt(), 1);
 
     QCOMPARE(spyCount.count(), 0);
 
@@ -809,11 +816,11 @@ void tst_qquickxmllistmodel::threading()
 
     QQmlComponent component(&engine, testFileUrl("roleKeys.qml"));
 
-    QListModelInterface *m1 = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *m1 = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(m1 != 0); 
-    QListModelInterface *m2 = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *m2 = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(m2 != 0); 
-    QListModelInterface *m3 = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *m3 = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(m3 != 0); 
 
     for (int dataCount=0; dataCount<xmlDataCount; dataCount++) {
@@ -847,20 +854,29 @@ void tst_qquickxmllistmodel::threading()
         m3->setProperty("xml",makeItemXmlAndData(data3));
         QCoreApplication::processEvents();
 
-        QTRY_VERIFY(m1->count() == dataCount && m2->count() == dataCount && m3->count() == dataCount);
+        QTRY_VERIFY(m1->rowCount() == dataCount && m2->rowCount() == dataCount && m3->rowCount() == dataCount);
 
         for (int i=0; i<dataCount; i++) {
-            QCOMPARE(m1->data(i, m1->roles()[0]).toString(), QString("A" + QString::number(i)));
-            QCOMPARE(m1->data(i, m1->roles()[1]).toString(), QString("1" + QString::number(i)));
-            QCOMPARE(m1->data(i, m1->roles()[2]).toString(), QString("Football"));
+            QModelIndex index = m1->index(i, 0);
+            QList<int> roles = m1->roleNames().keys();
+            qSort(roles);
+            QCOMPARE(m1->data(index, roles.at(0)).toString(), QString("A" + QString::number(i)));
+            QCOMPARE(m1->data(index, roles.at(1)).toString(), QString("1" + QString::number(i)));
+            QCOMPARE(m1->data(index, roles.at(2)).toString(), QString("Football"));
 
-            QCOMPARE(m2->data(i, m2->roles()[0]).toString(), QString("B" + QString::number(i)));
-            QCOMPARE(m2->data(i, m2->roles()[1]).toString(), QString("2" + QString::number(i)));
-            QCOMPARE(m2->data(i, m2->roles()[2]).toString(), QString("Athletics"));
+            index = m2->index(i, 0);
+            roles = m2->roleNames().keys();
+            qSort(roles);
+            QCOMPARE(m2->data(index, roles.at(0)).toString(), QString("B" + QString::number(i)));
+            QCOMPARE(m2->data(index, roles.at(1)).toString(), QString("2" + QString::number(i)));
+            QCOMPARE(m2->data(index, roles.at(2)).toString(), QString("Athletics"));
 
-            QCOMPARE(m3->data(i, m3->roles()[0]).toString(), QString("C" + QString::number(i)));
-            QCOMPARE(m3->data(i, m3->roles()[1]).toString(), QString("3" + QString::number(i)));
-            QCOMPARE(m3->data(i, m3->roles()[2]).toString(), QString("Curling"));
+            index = m3->index(i, 0);
+            roles = m3->roleNames().keys();
+            qSort(roles);
+            QCOMPARE(m3->data(index, roles.at(0)).toString(), QString("C" + QString::number(i)));
+            QCOMPARE(m3->data(index, roles.at(1)).toString(), QString("3" + QString::number(i)));
+            QCOMPARE(m3->data(index, roles.at(2)).toString(), QString("Curling"));
         }
     }
 
@@ -881,9 +897,9 @@ void tst_qquickxmllistmodel::threading_data()
 void tst_qquickxmllistmodel::propertyChanges()
 {
     QQmlComponent component(&engine, testFileUrl("propertychanges.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel*>(component.create());
     QVERIFY(model != 0);
-    QTRY_COMPARE(model->count(), 9);
+    QTRY_COMPARE(model->rowCount(), 9);
 
     QObject *role = model->findChild<QObject*>("role");
     QVERIFY(role);
@@ -927,7 +943,7 @@ void tst_qquickxmllistmodel::propertyChanges()
     QCOMPARE(model->property("query").toString(), QString("/Pets"));
     QCOMPARE(model->property("namespaceDeclarations").toString(), QString("declare namespace media=\"http://search.yahoo.com/mrss/\";"));
 
-    QTRY_VERIFY(model->count() == 1);
+    QTRY_VERIFY(model->rowCount() == 1);
 
     QCOMPARE(sourceSpy.count(),1);
     QCOMPARE(xmlSpy.count(),1);
@@ -944,7 +960,7 @@ void tst_qquickxmllistmodel::propertyChanges()
     QCOMPARE(modelQuerySpy.count(),1);
     QCOMPARE(namespaceDeclarationsSpy.count(),1);
 
-    QTRY_VERIFY(model->count() == 1);
+    QTRY_VERIFY(model->rowCount() == 1);
     delete model;
 }
 
@@ -952,7 +968,7 @@ void tst_qquickxmllistmodel::roleCrash()
 {
     // don't crash
     QQmlComponent component(&engine, testFileUrl("roleCrash.qml"));
-    QListModelInterface *model = qobject_cast<QListModelInterface*>(component.create());
+    QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(component.create());
     QVERIFY(model != 0);
     delete model;
 }

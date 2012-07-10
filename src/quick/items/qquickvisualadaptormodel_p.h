@@ -44,7 +44,6 @@
 
 #include <QtCore/qabstractitemmodel.h>
 
-#include "private/qlistmodelinterface_p.h"
 #include "private/qquicklistaccessor_p.h"
 
 #include <private/qqmlguard_p.h>
@@ -83,7 +82,7 @@ public:
                 const QList<QQuickVisualDataModelItem *> &,
                 int,
                 int,
-                const QList<int> &) const { return false; }
+                const QVector<int> &) const { return false; }
         virtual void replaceWatchedRoles(
                 QQuickVisualAdaptorModel &,
                 const QList<QByteArray> &,
@@ -109,9 +108,6 @@ public:
     inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }
     inline const QAbstractItemModel *aim() const { return static_cast<const QAbstractItemModel *>(object()); }
 
-    inline QListModelInterface *lmi() { return static_cast<QListModelInterface *>(object()); }
-    inline const QListModelInterface *lmi() const { return static_cast<const QListModelInterface *>(object()); }
-
     inline int count() const { return qMax(0, accessors->count(*this)); }
     inline QVariant value(int index, const QString &role) const {
         return accessors->value(*this, index, role); }
@@ -124,7 +120,7 @@ public:
             const QList<QQuickVisualDataModelItem *> &items,
             int index,
             int count,
-            const QList<int> &roles) const {
+            const QVector<int> &roles) const {
         return accessors->notify(*this, items, index, count, roles); }
     inline void replaceWatchedRoles(
             const QList<QByteArray> &oldRoles, const QList<QByteArray> &newRoles) {

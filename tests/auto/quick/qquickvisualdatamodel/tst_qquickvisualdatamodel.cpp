@@ -877,7 +877,7 @@ void tst_qquickvisualdatamodel::packagesDestroyed()
 void tst_qquickvisualdatamodel::qaimRowsMoved()
 {
     // Test parameters passed in QAIM::rowsMoved() signal are converted correctly
-    // when translated and emitted as the QListModelInterface::itemsMoved() signal
+    // when translated to (from, to count) semantics.
     QFETCH(int, sourceFirst);
     QFETCH(int, sourceLast);
     QFETCH(int, destinationChild);
@@ -3579,7 +3579,7 @@ void tst_qquickvisualdatamodel::asynchronousInsert()
 
     QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 8; i++)
         model.addItem("Original item" + QString::number(i), "");
 
@@ -3644,7 +3644,7 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
 
     QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 8; i++)
         model.addItem("Original item" + QString::number(i), "");
 
@@ -3722,7 +3722,7 @@ void tst_qquickvisualdatamodel::asynchronousMove()
 
     QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 8; i++)
         model.addItem("Original item" + QString::number(i), "");
 
@@ -3770,7 +3770,7 @@ void tst_qquickvisualdatamodel::asynchronousCancel()
 
     QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 8; i++)
         model.addItem("Original item" + QString::number(i), "");
 

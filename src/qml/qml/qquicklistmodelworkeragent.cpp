@@ -65,23 +65,23 @@ void QQuickListModelWorkerAgent::Data::clearChange(int uid)
 
 void QQuickListModelWorkerAgent::Data::insertChange(int uid, int index, int count)
 {
-    Change c = { uid, Change::Inserted, index, count, 0, QList<int>() };
+    Change c = { uid, Change::Inserted, index, count, 0, QVector<int>() };
     changes << c;
 }
 
 void QQuickListModelWorkerAgent::Data::removeChange(int uid, int index, int count)
 {
-    Change c = { uid, Change::Removed, index, count, 0, QList<int>() };
+    Change c = { uid, Change::Removed, index, count, 0, QVector<int>() };
     changes << c;
 }
 
 void QQuickListModelWorkerAgent::Data::moveChange(int uid, int index, int count, int to)
 {
-    Change c = { uid, Change::Moved, index, count, to, QList<int>() };
+    Change c = { uid, Change::Moved, index, count, to, QVector<int>() };
     changes << c;
 }
 
-void QQuickListModelWorkerAgent::Data::changedChange(int uid, int index, int count, const QList<int> &roles)
+void QQuickListModelWorkerAgent::Data::changedChange(int uid, int index, int count, const QVector<int> &roles)
 {
     Change c = { uid, Change::Changed, index, count, 0, roles };
     changes << c;
@@ -215,16 +215,29 @@ bool QQuickListModelWorkerAgent::event(QEvent *e)
                 if (model) {
                     switch (change.type) {
                     case Change::Inserted:
-                        emit model->itemsInserted(change.index, change.count);
+                        model->beginInsertRows(
+                                    QModelIndex(), change.index, change.index + change.count - 1);
+                        model->endInsertRows();
                         break;
                     case Change::Removed:
-                        emit model->itemsRemoved(change.index, change.count);
+                        model->beginRemoveRows(
+                                    QModelIndex(), change.index, change.index + change.count - 1);
+                        model->endRemoveRows();
                         break;
                     case Change::Moved:
-                        emit model->itemsMoved(change.index, change.to, change.count);
+                        model->beginMoveRows(
+                                    QModelIndex(),
+                                    change.index,
+                                    change.index + change.count - 1,
+                                    QModelIndex(),
+                                    change.to > change.index ? change.to + change.count : change.to);
+                        model->endMoveRows();
                         break;
                     case Change::Changed:
-                        emit model->itemsChanged(change.index, change.count, change.roles);
+                        emit model->dataChanged(
+                                    model->createIndex(change.index, 0),
+                                    model->createIndex(change.index + change.count - 1, 0),
+                                    change.roles);
                         break;
                     }
                 }

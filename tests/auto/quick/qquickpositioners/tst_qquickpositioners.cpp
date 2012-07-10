@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 #include <QtTest/QtTest>
-#include <private/qlistmodelinterface_p.h>
 #include <QtQuick/qquickview.h>
 #include <qqmlengine.h>
 #include <QtQuick/private/qquickrectangle_p.h>

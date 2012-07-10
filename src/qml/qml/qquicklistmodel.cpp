@@ -45,6 +45,7 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
 
+
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlscript_p.h>
 #include <private/qqmlengine_p.h>
@@ -54,8 +55,6 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qstack.h>
 #include <QXmlStreamReader>
-
-Q_DECLARE_METATYPE(QListModelInterface *)
 
 QT_BEGIN_NAMESPACE
 
@@ -408,7 +407,7 @@ ListModel *ListModel::getListProperty(int elementIndex, const ListLayout::Role &
     return e->getListProperty(role);
 }
 
-void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QList<int> *roles, QV8Engine *eng)
+void ListModel::set(int elementIndex, v8::Handle<v8::Object> object, QVector<int> *roles, QV8Engine *eng)
 {
     ListElement *e = elements[elementIndex];
 
@@ -595,7 +594,7 @@ int ListModel::setOrCreateProperty(int elementIndex, const QString &key, const Q
             roleIndex = e->setVariantProperty(*r, data);
 
             if (roleIndex != -1 && e->m_objectCache) {
-                QList<int> roles;
+                QVector<int> roles;
                 roles << roleIndex;
                 e->m_objectCache->updateValues(roles);
             }
@@ -1226,7 +1225,7 @@ void ModelObject::updateValues()
     }
 }
 
-void ModelObject::updateValues(const QList<int> &roles)
+void ModelObject::updateValues(const QVector<int> &roles)
 {
     int roleCount = roles.count();
     for (int i=0 ; i < roleCount ; ++i) {
@@ -1264,7 +1263,7 @@ void ModelNodeMetaObject::propertyWritten(int index)
 
     int roleIndex = m_obj->m_model->m_listModel->setExistingProperty(m_obj->m_elementIndex, propName, v, eng);
     if (roleIndex != -1) {
-        QList<int> roles;
+        QVector<int> roles;
         roles << roleIndex;
         m_obj->m_model->emitItemsChanged(m_obj->m_elementIndex, 1, roles);
     }
@@ -1278,7 +1277,7 @@ DynamicRoleModelNode::DynamicRoleModelNode(QQuickListModel *owner, int uid) : m_
 DynamicRoleModelNode *DynamicRoleModelNode::create(const QVariantMap &obj, QQuickListModel *owner)
 {
     DynamicRoleModelNode *object = new DynamicRoleModelNode(owner, uidCounter.fetchAndAddOrdered(1));
-    QList<int> roles;
+    QVector<int> roles;
     object->updateValues(obj, roles);
     return object;
 }
@@ -1308,7 +1307,7 @@ void DynamicRoleModelNode::sync(DynamicRoleModelNode *src, DynamicRoleModelNode 
     }
 }
 
-void DynamicRoleModelNode::updateValues(const QVariantMap &object, QList<int> &roles)
+void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> &roles)
 {
     const QList<QString> &keys = object.keys();
 
@@ -1410,7 +1409,8 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     int roleIndex = parentModel->m_roles.indexOf(QString::fromLatin1(name(index).constData()));
 
     if (elementIndex != -1 && roleIndex != -1) {
-        QList<int> roles;
+
+        QVector<int> roles;
         roles << roleIndex;
 
         parentModel->emitItemsChanged(elementIndex, 1, roles);
@@ -1515,7 +1515,7 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
 */
 
 QQuickListModel::QQuickListModel(QObject *parent)
-: QListModelInterface(parent)
+: QAbstractListModel(parent)
 {
     m_mainThread = true;
     m_primary = true;
@@ -1530,7 +1530,7 @@ QQuickListModel::QQuickListModel(QObject *parent)
 }
 
 QQuickListModel::QQuickListModel(const QQuickListModel *owner, ListModel *data, QV8Engine *eng, QObject *parent)
-: QListModelInterface(parent)
+: QAbstractListModel(parent)
 {
     m_mainThread = owner->m_mainThread;
     m_primary = false;
@@ -1545,7 +1545,7 @@ QQuickListModel::QQuickListModel(const QQuickListModel *owner, ListModel *data, 
 }
 
 QQuickListModel::QQuickListModel(QQuickListModel *orig, QQuickListModelWorkerAgent *agent)
-: QListModelInterface(agent)
+: QAbstractListModel(agent)
 {
     m_mainThread = false;
     m_primary = true;
@@ -1671,10 +1671,13 @@ void QQuickListModel::sync(QQuickListModel *src, QQuickListModel *target, QHash<
     }
 }
 
-void QQuickListModel::emitItemsChanged(int index, int count, const QList<int> &roles)
+void QQuickListModel::emitItemsChanged(int index, int count, const QVector<int> &roles)
 {
+    if (count <= 0)
+        return;
+
     if (m_mainThread) {
-        emit itemsChanged(index, count, roles);
+        emit dataChanged(createIndex(index, 0), createIndex(index + count - 1, 0), roles);;
     } else {
         int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
         m_agent->data.changedChange(uid, index, count, roles);
@@ -1683,9 +1686,13 @@ void QQuickListModel::emitItemsChanged(int index, int count, const QList<int> &r
 
 void QQuickListModel::emitItemsRemoved(int index, int count)
 {
+    if (count <= 0)
+        return;
+
     if (m_mainThread) {
-        emit itemsRemoved(index, count);
-        emit countChanged();
+            beginRemoveRows(QModelIndex(), index, index + count - 1);
+            endRemoveRows();
+            emit countChanged();
     } else {
         int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
         if (index == 0 && count == this->count())
@@ -1696,8 +1703,12 @@ void QQuickListModel::emitItemsRemoved(int index, int count)
 
 void QQuickListModel::emitItemsInserted(int index, int count)
 {
+    if (count <= 0)
+        return;
+
     if (m_mainThread) {
-        emit itemsInserted(index, count);
+        beginInsertRows(QModelIndex(), index, index + count - 1);
+        endInsertRows();
         emit countChanged();
     } else {
         int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
@@ -1707,8 +1718,12 @@ void QQuickListModel::emitItemsInserted(int index, int count)
 
 void QQuickListModel::emitItemsMoved(int from, int to, int n)
 {
+    if (n <= 0)
+        return;
+
     if (m_mainThread) {
-        emit itemsMoved(from, to, n);
+        beginMoveRows(QModelIndex(), from, from + n - 1, QModelIndex(), to > from ? to + n : to);
+        endMoveRows();
     } else {
         int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
         m_agent->data.moveChange(uid, from, n, to);
@@ -1724,33 +1739,21 @@ QQuickListModelWorkerAgent *QQuickListModel::agent()
     return m_agent;
 }
 
-QList<int> QQuickListModel::roles() const
+QModelIndex QQuickListModel::index(int row, int column, const QModelIndex &parent) const
 {
-    QList<int> rolesArray;
-
-    if (m_dynamicRoles) {
-        for (int i=0 ; i < m_roles.count() ; ++i)
-            rolesArray << i;
-    } else {
-        for (int i=0 ; i < m_listModel->roleCount() ; ++i)
-            rolesArray << i;
-    }
-
-    return rolesArray;
+    return row >= 0 && row < count() && column == 0 && !parent.isValid()
+            ? createIndex(row, column)
+            : QModelIndex();
 }
 
-QString QQuickListModel::toString(int role) const
+int QQuickListModel::rowCount(const QModelIndex &parent) const
 {
-    QString roleName;
+    return !parent.isValid() ? count() : 0;
+}
 
-    if (m_dynamicRoles) {
-        roleName = m_roles[role];
-    } else {
-        const ListLayout::Role &r = m_listModel->getExistingRole(role);
-        roleName = r.name;
-    }
-
-    return roleName;
+QVariant QQuickListModel::data(const QModelIndex &index, int role) const
+{
+    return data(index.row(), role);
 }
 
 QVariant QQuickListModel::data(int index, int role) const
@@ -1766,6 +1769,23 @@ QVariant QQuickListModel::data(int index, int role) const
         v = m_listModel->getProperty(index, role, this, engine());
 
     return v;
+}
+
+QHash<int, QByteArray> QQuickListModel::roleNames() const
+{
+    QHash<int, QByteArray> roleNames;
+
+    if (m_dynamicRoles) {
+        for (int i = 0 ; i < m_roles.count() ; ++i)
+            roleNames.insert(i, m_roles.at(i).toUtf8());
+    } else {
+        for (int i = 0 ; i < m_listModel->roleCount() ; ++i) {
+            const ListLayout::Role &r = m_listModel->getExistingRole(i);
+            roleNames.insert(i, r.name.toUtf8());
+        }
+    }
+
+    return roleNames;
 }
 
 /*!
@@ -2147,7 +2167,7 @@ void QQuickListModel::set(int index, const QQmlV8Handle &handle)
         emitItemsInserted(index, 1);
     } else {
 
-        QList<int> roles;
+        QVector<int> roles;
 
         if (m_dynamicRoles) {
             m_modelObjects[index]->updateValues(engine()->variantMapFromJS(object), roles);
@@ -2187,7 +2207,7 @@ void QQuickListModel::setProperty(int index, const QString& property, const QVar
             m_roles.append(property);
         }
         if (m_modelObjects[index]->setValue(property.toUtf8(), value)) {
-            QList<int> roles;
+            QVector<int> roles;
             roles << roleIndex;
             emitItemsChanged(index, 1, roles);
         }
@@ -2195,7 +2215,7 @@ void QQuickListModel::setProperty(int index, const QString& property, const QVar
         int roleIndex = m_listModel->setOrCreateProperty(index, property, value);
         if (roleIndex != -1) {
 
-            QList<int> roles;
+            QVector<int> roles;
             roles << roleIndex;
 
             emitItemsChanged(index, 1, roles);

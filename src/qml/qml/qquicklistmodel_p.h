@@ -50,7 +50,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QList>
 #include <QtCore/QVariant>
-#include "qlistmodelinterface_p.h"
+#include <QtCore/qabstractitemmodel.h>
 
 #include <private/qv8engine_p.h>
 #include <private/qpodvector_p.h>
@@ -64,7 +64,7 @@ class QQuickListModelWorkerAgent;
 class ListModel;
 class ListLayout;
 
-class Q_QML_PRIVATE_EXPORT QQuickListModel : public QListModelInterface
+class Q_QML_PRIVATE_EXPORT QQuickListModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
@@ -74,10 +74,13 @@ public:
     QQuickListModel(QObject *parent=0);
     ~QQuickListModel();
 
-    virtual QList<int> roles() const;
-    virtual QString toString(int role) const;
-    virtual int count() const;
-    virtual QVariant data(int index, int role) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const;
+    int rowCount(const QModelIndex &parent) const;
+    QVariant data(const QModelIndex &index, int role) const;
+    QHash<int,QByteArray> roleNames() const;
+
+    QVariant data(int index, int role) const;
+    int count() const;
 
     Q_INVOKABLE void clear();
     Q_INVOKABLE void remove(QQmlV8Function *args);
@@ -142,7 +145,7 @@ private:
     static void sync(QQuickListModel *src, QQuickListModel *target, QHash<int, QQuickListModel *> *targetModelHash);
     static QQuickListModel *createWithOwner(QQuickListModel *newOwner);
 
-    void emitItemsChanged(int index, int count, const QList<int> &roles);
+    void emitItemsChanged(int index, int count, const QVector<int> &roles);
     void emitItemsRemoved(int index, int count);
     void emitItemsInserted(int index, int count);
     void emitItemsMoved(int from, int to, int n);

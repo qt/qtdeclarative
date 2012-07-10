@@ -86,7 +86,10 @@ class tst_qquicklistmodel : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquicklistmodel() {}
+    tst_qquicklistmodel()
+    {
+        qRegisterMetaType<QVector<int> >();
+    }
 
 private:
     int roleFromName(const QQuickListModel *model, const QString &roleName);
@@ -146,7 +149,7 @@ bool tst_qquicklistmodel::compareVariantList(const QVariantList &testList, QVari
             return false;
         const QVariantMap &map = testVariant.toMap();
 
-        const QList<int> &roles = model->roles();
+        const QHash<int, QByteArray> roleNames = model->roleNames();
 
         QVariantMap::const_iterator it = map.begin();
         QVariantMap::const_iterator end = map.end();
@@ -155,14 +158,7 @@ bool tst_qquicklistmodel::compareVariantList(const QVariantList &testList, QVari
             const QString &testKey = it.key();
             const QVariant &testData = it.value();
 
-            int roleIndex = -1;
-            for (int j=0 ; j < roles.count() ; ++j) {
-                if (model->toString(roles[j]).compare(testKey) == 0) {
-                    roleIndex = j;
-                    break;
-                }
-            }
-
+            int roleIndex = roleNames.key(testKey.toUtf8(), -1);
             if (roleIndex == -1)
                 return false;
 
@@ -184,12 +180,7 @@ bool tst_qquicklistmodel::compareVariantList(const QVariantList &testList, QVari
 
 int tst_qquicklistmodel::roleFromName(const QQuickListModel *model, const QString &roleName)
 {
-    QList<int> roles = model->roles();
-    for (int i=0; i<roles.count(); i++) {
-        if (model->toString(roles[i]) == roleName)
-            return roles[i];
-    }
-    return -1;
+    return model->roleNames().key(roleName.toUtf8(), -1);
 }
 
 void tst_qquicklistmodel::static_types_data()
@@ -720,11 +711,11 @@ void tst_qquicklistmodel::set()
     RUNEXPR("model.set(0, {test:true})");
 
     QCOMPARE(RUNEXPR("model.get(0).test").toBool(), true); // triggers creation of model cache
-    QCOMPARE(model.data(0, model.roles()[0]), qVariantFromValue(true));
+    QCOMPARE(model.data(0, 0), qVariantFromValue(true));
 
     RUNEXPR("model.set(0, {test:false})");
     QCOMPARE(RUNEXPR("model.get(0).test").toBool(), false); // tests model cache is updated
-    QCOMPARE(model.data(0, model.roles()[0]), qVariantFromValue(false));
+    QCOMPARE(model.data(0, 0), qVariantFromValue(false));
 
     QString warning = QString::fromLatin1("<Unknown File>: Can't create role for unsupported data type");
     if (isValidErrorMessage(warning, dynamicRoles))
@@ -759,7 +750,7 @@ void tst_qquicklistmodel::get()
     RUNEXPR("model.append({roleC: {} })");
     RUNEXPR("model.append({roleD: [ { a:1, b:2 }, { c: 3 } ] })");
 
-    QSignalSpy spy(model, SIGNAL(itemsChanged(int, int, QList<int>)));
+    QSignalSpy spy(model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
     QQmlExpression expr(engine.rootContext(), model, expression);
     expr.evaluate();
     QVERIFY(!expr.hasError());
@@ -777,9 +768,9 @@ void tst_qquicklistmodel::get()
     QCOMPARE(spy.count(), 1);
 
     QList<QVariant> spyResult = spy.takeFirst();
-    QCOMPARE(spyResult.at(0).toInt(), index);
-    QCOMPARE(spyResult.at(1).toInt(), 1);  // only 1 item is modified at a time
-    QCOMPARE(spyResult.at(2).value<QList<int> >(), (QList<int>() << role));
+    QCOMPARE(spyResult.at(0).value<QModelIndex>(), model->index(index, 0, QModelIndex()));
+    QCOMPARE(spyResult.at(1).value<QModelIndex>(), model->index(index, 0, QModelIndex()));  // only 1 item is modified at a time
+    QCOMPARE(spyResult.at(2).value<QVector<int> >(), (QVector<int>() << role));
 
     delete model;
 }
@@ -887,7 +878,7 @@ void tst_qquicklistmodel::get_nested()
         QString extendedExpression = QString("get(%1).%2.%3").arg(outerListIndex).arg(outerListRoleName).arg(expression);
         QQmlExpression expr(engine.rootContext(), model, extendedExpression);
 
-        QSignalSpy spy(childModel, SIGNAL(itemsChanged(int, int, QList<int>)));
+        QSignalSpy spy(childModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
         expr.evaluate();
         QVERIFY(!expr.hasError());
 
@@ -901,9 +892,9 @@ void tst_qquicklistmodel::get_nested()
         QCOMPARE(spy.count(), 1);
 
         QList<QVariant> spyResult = spy.takeFirst();
-        QCOMPARE(spyResult.at(0).toInt(), index);
-        QCOMPARE(spyResult.at(1).toInt(), 1);  // only 1 item is modified at a time
-        QCOMPARE(spyResult.at(2).value<QList<int> >(), (QList<int>() << role));
+        QCOMPARE(spyResult.at(0).value<QModelIndex>(), childModel->index(index, 0, QModelIndex()));
+        QCOMPARE(spyResult.at(1).value<QModelIndex>(), childModel->index(index, 0, QModelIndex()));  // only 1 item is modified at a time
+        QCOMPARE(spyResult.at(2).value<QVector<int> >(), (QVector<int>() << role));
     }
 
     delete model;
@@ -978,7 +969,7 @@ void tst_qquicklistmodel::property_changes()
     QObject *connectionsObject = component.create();
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
 
-    QSignalSpy spyItemsChanged(&model, SIGNAL(itemsChanged(int, int, QList<int>)));
+    QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
 
     expr.setExpression(script_change);
     expr.evaluate();
@@ -990,8 +981,8 @@ void tst_qquicklistmodel::property_changes()
     // test itemsChanged() is emitted correctly
     if (itemsChanged) {
         QCOMPARE(spyItemsChanged.count(), 1);
-        QCOMPARE(spyItemsChanged.at(0).at(0).toInt(), listIndex);
-        QCOMPARE(spyItemsChanged.at(0).at(1).toInt(), 1);
+        QCOMPARE(spyItemsChanged.at(0).at(0).value<QModelIndex>(), model.index(listIndex, 0, QModelIndex()));
+        QCOMPARE(spyItemsChanged.at(0).at(1).value<QModelIndex>(), model.index(listIndex, 0, QModelIndex()));
     } else {
         QCOMPARE(spyItemsChanged.count(), 0);
     }
@@ -1111,13 +1102,13 @@ void tst_qquicklistmodel::clear()
 
     // clearing does not remove the roles
     RUNEXPR("model.append({propertyA: \"value a\", propertyB: \"value b\", propertyC: \"value c\"})");
-    QList<int> roles = model.roles();
+    QHash<int, QByteArray> roleNames = model.roleNames();
     model.clear();
     QCOMPARE(model.count(), 0);
-    QCOMPARE(model.roles(), roles);
-    QCOMPARE(model.toString(roles[0]), QString("propertyA"));
-    QCOMPARE(model.toString(roles[1]), QString("propertyB"));
-    QCOMPARE(model.toString(roles[2]), QString("propertyC"));
+    QCOMPARE(model.roleNames(), roleNames);
+    QCOMPARE(roleNames[0], QByteArray("propertyA"));
+    QCOMPARE(roleNames[1], QByteArray("propertyB"));
+    QCOMPARE(roleNames[2], QByteArray("propertyC"));
 }
 
 void tst_qquicklistmodel::signal_handlers_data()

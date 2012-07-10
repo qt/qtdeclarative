@@ -47,8 +47,7 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qstringlist.h>
-
-#include <private/qlistmodelinterface_p.h>
+#include <QtCore/qabstractitemmodel.h>
 #include <private/qv8engine_p.h>
 
 QT_BEGIN_HEADER
@@ -69,7 +68,7 @@ struct QQuickXmlQueryResult {
     QStringList keyRoleResultsCache;
 };
 
-class QQuickXmlListModel : public QListModelInterface, public QQmlParserStatus
+class QQuickXmlListModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -89,11 +88,12 @@ public:
     QQuickXmlListModel(QObject *parent = 0);
     ~QQuickXmlListModel();
 
-    virtual QHash<int,QVariant> data(int index, const QList<int> &roles = (QList<int>())) const;
-    virtual QVariant data(int index, int role) const;
-    virtual int count() const;
-    virtual QList<int> roles() const;
-    virtual QString toString(int role) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const;
+    int rowCount(const QModelIndex &parent) const;
+    QVariant data(const QModelIndex &index, int role) const;
+    QHash<int, QByteArray> roleNames() const;
+
+    int count() const;
 
     QQmlListProperty<QQuickXmlListModelRole> roleObjects();
 

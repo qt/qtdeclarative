@@ -57,7 +57,7 @@
 #include <QTimer>
 #include <QMutex>
 
-#include <private/qobject_p.h>
+#include <private/qabstractitemmodel_p.h>
 
 Q_DECLARE_METATYPE(QQuickXmlQueryResult)
 
@@ -528,7 +528,7 @@ void QQuickXmlQueryEngine::doSubQueryJob(XmlQueryJob *currentJob, QQuickXmlQuery
     }*/
 }
 
-class QQuickXmlListModelPrivate : public QObjectPrivate
+class QQuickXmlListModelPrivate : public QAbstractItemModelPrivate
 {
     Q_DECLARE_PUBLIC(QQuickXmlListModel)
 public:
@@ -712,7 +712,7 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
 */
 
 QQuickXmlListModel::QQuickXmlListModel(QObject *parent)
-    : QListModelInterface(*(new QQuickXmlListModelPrivate), parent)
+    : QAbstractListModel(*(new QQuickXmlListModelPrivate), parent)
 {
 }
 
@@ -734,23 +734,36 @@ QQmlListProperty<QQuickXmlListModelRole> QQuickXmlListModel::roleObjects()
     return list;
 }
 
-QHash<int,QVariant> QQuickXmlListModel::data(int index, const QList<int> &roles) const
+QModelIndex QQuickXmlListModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_D(const QQuickXmlListModel);
-    QHash<int, QVariant> rv;
-    for (int i = 0; i < roles.size(); ++i) {
-        int role = roles.at(i);
-        int roleIndex = d->roles.indexOf(role);
-        rv.insert(role, roleIndex == -1 ? QVariant() : d->data.value(roleIndex).value(index));
-    }
-    return rv;
+    return !parent.isValid() && column == 0 && row >= 0 && row < d->size
+            ? createIndex(row, column)
+            : QModelIndex();
 }
 
-QVariant QQuickXmlListModel::data(int index, int role) const
+int QQuickXmlListModel::rowCount(const QModelIndex &parent) const
 {
     Q_D(const QQuickXmlListModel);
-    int roleIndex = d->roles.indexOf(role);
-    return (roleIndex == -1) ? QVariant() : d->data.value(roleIndex).value(index);
+    return !parent.isValid() ? d->size : 0;
+}
+
+QVariant QQuickXmlListModel::data(const QModelIndex &index, int role) const
+{
+    Q_D(const QQuickXmlListModel);
+    const int roleIndex = d->roles.indexOf(role);
+    return (roleIndex == -1 || !index.isValid())
+            ? QVariant()
+            : d->data.value(roleIndex).value(index.row());
+}
+
+QHash<int, QByteArray> QQuickXmlListModel::roleNames() const
+{
+    Q_D(const QQuickXmlListModel);
+    QHash<int,QByteArray> roleNames;
+    for (int i = 0; i < d->roles.count(); ++i)
+        roleNames.insert(d->roles.at(i), d->roleNames.at(i).toUtf8());
+    return roleNames;
 }
 
 /*!
@@ -761,21 +774,6 @@ int QQuickXmlListModel::count() const
 {
     Q_D(const QQuickXmlListModel);
     return d->size;
-}
-
-QList<int> QQuickXmlListModel::roles() const
-{
-    Q_D(const QQuickXmlListModel);
-    return d->roles;
-}
-
-QString QQuickXmlListModel::toString(int role) const
-{
-    Q_D(const QQuickXmlListModel);
-    int index = d->roles.indexOf(role);
-    if (index == -1)
-        return QString();
-    return d->roleNames.at(index);
 }
 
 /*!
@@ -1071,11 +1069,11 @@ void QQuickXmlListModel::requestFinished()
         d->errorString = d->reply->errorString();
         d->deleteReply();
 
-        int count = this->count();
-        d->data.clear();
-        d->size = 0;
-        if (count > 0) {
-            emit itemsRemoved(0, count);
+        if (d->size > 0) {
+            beginRemoveRows(QModelIndex(), 0, d->size - 1);
+            d->data.clear();
+            d->size = 0;
+            endRemoveRows();
             emit countChanged();
         }
 
@@ -1157,21 +1155,34 @@ void QQuickXmlListModel::queryCompleted(const QQuickXmlQueryResult &result)
         }
     }
     if (!hasKeys) {
-        if (!(origCount == 0 && d->size == 0)) {
-            emit itemsRemoved(0, origCount);
-            emit itemsInserted(0, d->size);
-            emit countChanged();
+        if (origCount > 0) {
+            beginRemoveRows(QModelIndex(), 0, origCount - 1);
+            endRemoveRows();
         }
-
+        if (d->size > 0) {
+            beginInsertRows(QModelIndex(), 0, d->size - 1);
+            endInsertRows();
+        }
     } else {
-        for (int i=0; i<result.removed.count(); i++)
-            emit itemsRemoved(result.removed[i].first, result.removed[i].second);
-        for (int i=0; i<result.inserted.count(); i++)
-            emit itemsInserted(result.inserted[i].first, result.inserted[i].second);
-
-        if (sizeChanged)
-            emit countChanged();
+        for (int i=0; i<result.removed.count(); i++) {
+            const int index = result.removed[i].first;
+            const int count = result.removed[i].second;
+            if (count > 0) {
+                beginRemoveRows(QModelIndex(), index, index + count - 1);
+                endRemoveRows();
+            }
+        }
+        for (int i=0; i<result.inserted.count(); i++) {
+            const int index = result.inserted[i].first;
+            const int count = result.inserted[i].second;
+            if (count > 0) {
+                beginInsertRows(QModelIndex(), index, index + count - 1);
+                endInsertRows();
+            }
+        }
     }
+    if (sizeChanged)
+        emit countChanged();
 
     emit statusChanged(d->status);
 }

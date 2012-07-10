@@ -45,7 +45,6 @@
 
 #include <private/qqmlglobal_p.h>
 #include <private/qquicklistaccessor_p.h>
-#include <private/qlistmodelinterface_p.h>
 #include <private/qquickchangeset_p.h>
 
 QT_BEGIN_NAMESPACE

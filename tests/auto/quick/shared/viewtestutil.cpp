@@ -141,148 +141,6 @@ QList<int> QQuickViewTestUtil::adjustIndexesForRemoveDisplaced(const QList<int> 
     return result;
 }
 
-
-QQuickViewTestUtil::QmlListModel::QmlListModel(QObject *parent)
-    : QListModelInterface(parent)
-{
-}
-
-QQuickViewTestUtil::QmlListModel::~QmlListModel()
-{
-}
-
-QString QQuickViewTestUtil::QmlListModel::name(int index) const
-{
-    return list.at(index).first;
-}
-
-QString QQuickViewTestUtil::QmlListModel::number(int index) const
-{
-    return list.at(index).second;
-}
-
-int QQuickViewTestUtil::QmlListModel::count() const
-{
-    return list.count();
-}
-
-QList<int> QQuickViewTestUtil::QmlListModel::roles() const
-{
-    return QList<int>() << Name << Number;
-}
-
-QString QQuickViewTestUtil::QmlListModel::toString(int role) const
-{
-    switch (role) {
-    case Name:
-        return "name";
-    case Number:
-        return "number";
-    default:
-        return "";
-    }
-}
-
-QVariant QQuickViewTestUtil::QmlListModel::data(int index, int role) const
-{
-    if (role==0)
-        return list.at(index).first;
-    if (role==1)
-        return list.at(index).second;
-    return QVariant();
-}
-
-QHash<int, QVariant> QQuickViewTestUtil::QmlListModel::data(int index, const QList<int> &roles) const
-{
-    QHash<int,QVariant> returnHash;
-
-    for (int i = 0; i < roles.size(); ++i) {
-        int role = roles.at(i);
-        QVariant info;
-        switch (role) {
-        case Name:
-            info = list.at(index).first;
-            break;
-        case Number:
-            info = list.at(index).second;
-            break;
-        default:
-            break;
-        }
-        returnHash.insert(role, info);
-    }
-    return returnHash;
-}
-
-void QQuickViewTestUtil::QmlListModel::addItem(const QString &name, const QString &number)
-{
-    list.append(QPair<QString,QString>(name, number));
-    emit itemsInserted(list.count()-1, 1);
-}
-
-void QQuickViewTestUtil::QmlListModel::insertItem(int index, const QString &name, const QString &number)
-{
-    list.insert(index, QPair<QString,QString>(name, number));
-    emit itemsInserted(index, 1);
-}
-
-void QQuickViewTestUtil::QmlListModel::insertItems(int index, const QList<QPair<QString, QString> > &items)
-{
-    for (int i=0; i<items.count(); i++)
-        list.insert(index + i, QPair<QString,QString>(items[i].first, items[i].second));
-    emit itemsInserted(index, items.count());
-}
-
-void QQuickViewTestUtil::QmlListModel::removeItem(int index)
-{
-    list.removeAt(index);
-    emit itemsRemoved(index, 1);
-}
-
-void QQuickViewTestUtil::QmlListModel::removeItems(int index, int count)
-{
-    int c = count;
-    while (c--)
-        list.removeAt(index);
-    emit itemsRemoved(index, count);
-}
-
-void QQuickViewTestUtil::QmlListModel::moveItem(int from, int to)
-{
-    list.move(from, to);
-    emit itemsMoved(from, to, 1);
-}
-
-void QQuickViewTestUtil::QmlListModel::moveItems(int from, int to, int count)
-{
-    qquickmodelviewstestutil_move(from, to, count, &list);
-    emit itemsMoved(from, to, count);
-}
-
-void QQuickViewTestUtil::QmlListModel::modifyItem(int index, const QString &name, const QString &number)
-{
-    list[index] = QPair<QString,QString>(name, number);
-    emit itemsChanged(index, 1, roles());
-}
-
-void QQuickViewTestUtil::QmlListModel::clear() {
-    int count = list.count();
-    list.clear();
-    emit itemsRemoved(0, count);
-}
-
-void QQuickViewTestUtil::QmlListModel::matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2) {
-    for (int i=0; i<other.count(); i++) {
-        QVERIFY2(list.contains(other[i]),
-                 QTest::toString(other[i].first + " " + other[i].second + " " + error1));
-    }
-    for (int i=0; i<list.count(); i++) {
-        QVERIFY2(other.contains(list[i]),
-                 QTest::toString(list[i].first + " " + list[i].second + " " + error2));
-    }
-}
-
-
 QQuickViewTestUtil::QaimModel::QaimModel(QObject *parent)
     : QAbstractListModel(parent)
 {
@@ -392,9 +250,11 @@ void QQuickViewTestUtil::QaimModel::modifyItem(int idx, const QString &name, con
 void QQuickViewTestUtil::QaimModel::clear()
 {
     int count = list.count();
-    emit beginRemoveRows(QModelIndex(), 0, count-1);
-    list.clear();
-    emit endRemoveRows();
+    if (count > 0) {
+        beginRemoveRows(QModelIndex(), 0, count-1);
+        list.clear();
+        endRemoveRows();
+    }
 }
 
 void QQuickViewTestUtil::QaimModel::reset()
@@ -472,16 +332,6 @@ bool QQuickViewTestUtil::ListRange::isValid() const
 int QQuickViewTestUtil::ListRange::count() const
 {
     return indexes.count();
-}
-
-QList<QPair<QString,QString> > QQuickViewTestUtil::ListRange::getModelDataValues(const QmlListModel &model)
-{
-    QList<QPair<QString,QString> > data;
-    if (!valid)
-        return data;
-    for (int i=0; i<indexes.count(); i++)
-        data.append(qMakePair(model.name(indexes[i]), model.number(indexes[i])));
-    return data;
 }
 
 QList<QPair<QString,QString> > QQuickViewTestUtil::ListRange::getModelDataValues(const QaimModel &model)

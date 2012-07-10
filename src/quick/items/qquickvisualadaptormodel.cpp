@@ -153,7 +153,7 @@ public:
             const QList<QQuickVisualDataModelItem *> &items,
             int index,
             int count,
-            const QList<int> &roles) const
+            const QVector<int> &roles) const
     {
         bool changed = roles.isEmpty() && !watchedRoles.isEmpty();
         if (!changed && !watchedRoles.isEmpty() && watchedRoleIds.isEmpty()) {
@@ -461,8 +461,8 @@ public:
                                 vdm, SLOT(_q_rowsInserted(QModelIndex,int,int)));
             QObject::disconnect(aim, SIGNAL(rowsRemoved(QModelIndex,int,int)),
                                 vdm, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
-            QObject::disconnect(aim, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-                                vdm, SLOT(_q_dataChanged(QModelIndex,QModelIndex)));
+            QObject::disconnect(aim, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
+                                vdm, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
             QObject::disconnect(aim, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
                                 vdm, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
             QObject::disconnect(aim, SIGNAL(modelReset()),
@@ -539,123 +539,6 @@ public:
         if (propertyRoles.count() == 1) {
             hasModelData = true;
             const int role = names.begin().key();
-            const QByteArray propertyName = QByteArrayLiteral("modelData");
-
-            propertyRoles.append(role);
-            roleNames.insert(propertyName, role);
-            addProperty(&builder, 1, propertyName, propertyType);
-        }
-
-        metaObject = builder.toMetaObject();
-        *static_cast<QMetaObject *>(this) = *metaObject;
-        propertyCache = new QQmlPropertyCache(engine, metaObject);
-    }
-};
-
-//-----------------------------------------------------------------
-// QListModelInterface
-//-----------------------------------------------------------------
-
-class QQuickVDMListModelInterfaceData : public QQuickVDMCachedModelData
-{
-public:
-    QQuickVDMListModelInterfaceData(QQuickVisualDataModelItemMetaType *metaType, VDMModelDelegateDataType *dataType, int index)
-        : QQuickVDMCachedModelData(metaType, dataType, index)
-    {
-    }
-
-    QVariant value(int role) const
-    {
-        return type->model->lmi()->data(index, role);
-    }
-
-    void setValue(int, const QVariant &) {}
-
-    v8::Handle<v8::Value> get()
-    {
-        if (type->constructor.IsEmpty()) {
-            v8::HandleScope handleScope;
-            v8::Context::Scope contextScope(engine->context());
-            type->initializeConstructor(engineData(engine));
-        }
-        v8::Local<v8::Object> data = type->constructor->NewInstance();
-        data->SetExternalResource(this);
-        ++scriptRef;
-        return data;
-    }
-};
-
-class VDMListModelInterfaceDataType : public VDMModelDelegateDataType
-{
-public:
-    VDMListModelInterfaceDataType(QQuickVisualAdaptorModel *model)
-        : VDMModelDelegateDataType(model)
-    {
-    }
-
-    int count(const QQuickVisualAdaptorModel &model) const
-    {
-        return model.lmi()->count();
-    }
-
-    void cleanup(QQuickVisualAdaptorModel &model, QQuickVisualDataModel *vdm) const
-    {
-        QListModelInterface *lmi = model.lmi();
-        if (lmi && vdm) {
-            QObject::disconnect(lmi, SIGNAL(itemsChanged(int,int,QList<int>)),
-                                vdm, SLOT(_q_itemsChanged(int,int,QList<int>)));
-            QObject::disconnect(lmi, SIGNAL(itemsInserted(int,int)),
-                                vdm, SLOT(_q_itemsInserted(int,int)));
-            QObject::disconnect(lmi, SIGNAL(itemsRemoved(int,int)),
-                                vdm, SLOT(_q_itemsRemoved(int,int)));
-            QObject::disconnect(lmi, SIGNAL(itemsMoved(int,int,int)),
-                                vdm, SLOT(_q_itemsMoved(int,int,int)));
-        }
-        const_cast<VDMListModelInterfaceDataType *>(this)->release();
-    }
-
-    QVariant value(const QQuickVisualAdaptorModel &model, int index, const QString &role) const
-    {
-        QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
-        return it != roleNames.end() && model
-                ? model.lmi()->data(index, *it)
-                : QVariant();
-    }
-
-    QQuickVisualDataModelItem *createItem(
-            QQuickVisualAdaptorModel &model,
-            QQuickVisualDataModelItemMetaType *metaType,
-            QQmlEngine *engine,
-            int index) const
-    {
-        VDMListModelInterfaceDataType *dataType = const_cast<VDMListModelInterfaceDataType *>(this);
-        if (!metaObject)
-            dataType->initializeMetaType(model, engine);
-        return new QQuickVDMListModelInterfaceData(metaType, dataType, index);
-    }
-
-    void initializeMetaType(QQuickVisualAdaptorModel &model, QQmlEngine *engine)
-    {
-        QMetaObjectBuilder builder;
-        setModelDataType<QQuickVDMListModelInterfaceData>(&builder, this);
-
-        const QByteArray propertyType = QByteArrayLiteral("QVariant");
-
-        const QListModelInterface * const listModelInterface = model.lmi();
-        const QList<int> roles = listModelInterface->roles();
-        for (int propertyId = 0; propertyId < roles.count(); ++propertyId) {
-            const int role = roles.at(propertyId);
-            const QString roleName = listModelInterface->toString(role);
-            const QByteArray propertyName = roleName.toUtf8();
-
-            propertyRoles.append(role);
-            roleNames.insert(propertyName, role);
-            addProperty(&builder, propertyId, propertyName, propertyType);
-
-        }
-        if (propertyRoles.count() == 1) {
-            hasModelData = true;
-            const int role = roles.first();
             const QByteArray propertyName = QByteArrayLiteral("modelData");
 
             propertyRoles.append(role);
@@ -1015,25 +898,14 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &variant, QQuickVisualDat
                               vdm, QQuickVisualDataModel, SLOT(_q_rowsInserted(QModelIndex,int,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
                               vdm,  QQuickVisualDataModel, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-                              vdm, QQuickVisualDataModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex)));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
+                              vdm, QQuickVisualDataModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
                               vdm, QQuickVisualDataModel, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(modelReset()),
                               vdm, QQuickVisualDataModel, SLOT(_q_modelReset()));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(layoutChanged()),
                               vdm, QQuickVisualDataModel, SLOT(_q_layoutChanged()));
-        } else if (QListModelInterface *model = qobject_cast<QListModelInterface *>(object)) {
-            accessors = new VDMListModelInterfaceDataType(this);
-
-            qmlobject_connect(model, QListModelInterface, SIGNAL(itemsChanged(int,int,QList<int>)),
-                              vdm, QQuickVisualDataModel, SLOT(_q_itemsChanged(int,int,QList<int>)));
-            qmlobject_connect(model, QListModelInterface, SIGNAL(itemsInserted(int,int)),
-                              vdm, QQuickVisualDataModel, SLOT(_q_itemsInserted(int,int)));
-            qmlobject_connect(model, QListModelInterface, SIGNAL(itemsRemoved(int,int)),
-                              vdm, QQuickVisualDataModel, SLOT(_q_itemsRemoved(int,int)));
-            qmlobject_connect(model, QListModelInterface, SIGNAL(itemsMoved(int,int,int)),
-                              vdm, QQuickVisualDataModel, SLOT(_q_itemsMoved(int,int,int)));
         } else {
             accessors = new VDMObjectDelegateDataType;
         }
@@ -1079,7 +951,5 @@ QQuickVisualAdaptorModelEngineData::~QQuickVisualAdaptorModelEngineData()
 }
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QListModelInterface)
 
 #include <qquickvisualadaptormodel.moc>

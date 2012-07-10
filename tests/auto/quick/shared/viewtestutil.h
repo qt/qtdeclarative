@@ -44,7 +44,6 @@
 
 #include <QtQuick/QQuickItem>
 #include <QtQml/QQmlExpression>
-#include <QtQml/private/qlistmodelinterface_p.h>
 #include <QtCore/QAbstractListModel>
 
 QT_FORWARD_DECLARE_CLASS(QQuickView)
@@ -74,46 +73,6 @@ namespace QQuickViewTestUtil
         static ListChange polish() { ListChange c = { Polish, -1, -1, -1, 0.0 }; return c; }
     };
 
-    class QmlListModel : public QListModelInterface
-    {
-        Q_OBJECT
-    public:
-        QmlListModel(QObject *parent = 0);
-        ~QmlListModel();
-
-        enum Roles { Name, Number };
-
-        QString name(int index) const;
-        QString number(int index) const;
-
-        int count() const;
-
-        QList<int> roles() const;
-        QString toString(int role) const;
-
-        QVariant data(int index, int role) const;
-        QHash<int, QVariant> data(int index, const QList<int> &roles) const;
-
-        Q_INVOKABLE void addItem(const QString &name, const QString &number);
-        void insertItem(int index, const QString &name, const QString &number);
-        void insertItems(int index, const QList<QPair<QString, QString> > &items);
-
-        Q_INVOKABLE void removeItem(int index);
-        Q_INVOKABLE void removeItems(int index, int count);
-
-        void moveItem(int from, int to);
-        void moveItems(int from, int to, int count);
-
-        void modifyItem(int index, const QString &name, const QString &number);
-
-        void clear();
-
-        void matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2);
-
-    private:
-        QList<QPair<QString,QString> > list;
-    };
-
     class QaimModel : public QAbstractListModel
     {
         Q_OBJECT
@@ -134,7 +93,7 @@ namespace QQuickViewTestUtil
         void insertItem(int index, const QString &name, const QString &number);
         void insertItems(int index, const QList<QPair<QString, QString> > &items);
 
-        void removeItem(int index);
+        Q_INVOKABLE void removeItem(int index);
         void removeItems(int index, int count);
 
         void moveItem(int from, int to);
@@ -168,7 +127,6 @@ namespace QQuickViewTestUtil
         bool isValid() const;
         int count() const;
 
-        QList<QPair<QString,QString> > getModelDataValues(const QmlListModel &model);
         QList<QPair<QString,QString> > getModelDataValues(const QaimModel &model);
 
         QList<int> indexes;

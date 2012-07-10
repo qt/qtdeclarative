@@ -46,7 +46,6 @@
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlopenmetaobject_p.h>
-#include <private/qlistmodelinterface_p.h>
 #include <private/qquickchangeset_p.h>
 
 #include <QtGui/qevent.h>

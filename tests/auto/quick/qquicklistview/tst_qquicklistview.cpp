@@ -75,39 +75,29 @@ public:
 private slots:
     void init();
     void cleanupTestCase();
-    // Test both QListModelInterface and QAbstractItemModel model types
-    void qListModelInterface_items();
-    void qListModelInterface_package_items();
+    // Test QAbstractItemModel model types
+    void qAbstractItemModel_package_items();
     void qAbstractItemModel_items();
 
-    void qListModelInterface_changed();
-    void qListModelInterface_package_changed();
+    void qAbstractItemModel_package_changed();
     void qAbstractItemModel_changed();
 
-    void qListModelInterface_inserted();
-    void qListModelInterface_inserted_more();
-    void qListModelInterface_inserted_more_data();
-    void qListModelInterface_package_inserted();
+    void qAbstractItemModel_package_inserted();
     void qAbstractItemModel_inserted();
     void qAbstractItemModel_inserted_more();
     void qAbstractItemModel_inserted_more_data();
     void qAbstractItemModel_inserted_more_bottomToTop();
     void qAbstractItemModel_inserted_more_bottomToTop_data();
 
-    void qListModelInterface_removed();
-    void qListModelInterface_removed_more();
-    void qListModelInterface_removed_more_data();
-    void qListModelInterface_package_removed();
+    void qAbstractItemModel_package_removed();
     void qAbstractItemModel_removed();
     void qAbstractItemModel_removed_more();
     void qAbstractItemModel_removed_more_data();
     void qAbstractItemModel_removed_more_bottomToTop();
     void qAbstractItemModel_removed_more_bottomToTop_data();
 
-    void qListModelInterface_moved();
-    void qListModelInterface_moved_data();
-    void qListModelInterface_package_moved();
-    void qListModelInterface_package_moved_data();
+    void qAbstractItemModel_package_moved();
+    void qAbstractItemModel_package_moved_data();
     void qAbstractItemModel_moved();
     void qAbstractItemModel_moved_data();
     void qAbstractItemModel_moved_bottomToTop();
@@ -118,8 +108,7 @@ private slots:
     void multipleChanges_uncondensed() { multipleChanges(false); }
     void multipleChanges_uncondensed_data() { multipleChanges_data(); }
 
-    void qListModelInterface_clear();
-    void qListModelInterface_package_clear();
+    void qAbstractItemModel_package_clear();
     void qAbstractItemModel_clear();
     void qAbstractItemModel_clear_bottomToTop();
 
@@ -137,8 +126,7 @@ private slots:
     void enforceRange();
     void enforceRange_withoutHighlight();
     void spacing();
-    void qListModelInterface_sections();
-    void qListModelInterface_package_sections();
+    void qAbstractItemModel_package_sections();
     void qAbstractItemModel_sections();
     void sectionsPositioning();
     void sectionsDelegate();
@@ -740,7 +728,7 @@ void tst_QQuickListView::insertBeforeVisible()
     QQuickText *name;
     QQuickView *window = getView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1485,7 +1473,7 @@ void tst_QQuickListView::multipleChanges(bool condensed)
 
     QQuickView *window = getView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < startCount; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1733,7 +1721,7 @@ void tst_QQuickListView::swapWithFirstItem()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1764,7 +1752,7 @@ void tst_QQuickListView::enforceRange()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1804,7 +1792,7 @@ void tst_QQuickListView::enforceRange()
     QTRY_COMPARE(listview->currentIndex(), 6);
 
     // change model
-    QmlListModel model2;
+    QaimModel model2;
     for (int i = 0; i < 5; i++)
         model2.addItem("Item" + QString::number(i), "");
 
@@ -1823,7 +1811,7 @@ void tst_QQuickListView::enforceRange_withoutHighlight()
 
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     model.addItem("Item 0", "a");
     model.addItem("Item 1", "b");
     model.addItem("Item 2", "b");
@@ -1865,7 +1853,7 @@ void tst_QQuickListView::spacing()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -2024,7 +2012,7 @@ void tst_QQuickListView::sectionsDelegate()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i/5));
 
@@ -2133,7 +2121,7 @@ void tst_QQuickListView::sectionsDragOutsideBounds()
 
     QQuickView *window = getView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 10; i++)
         model.addItem("Item" + QString::number(i), QString::number(i/5));
 
@@ -2181,7 +2169,7 @@ void tst_QQuickListView::sectionsDelegate_headerVisibility()
 
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i/5));
 
@@ -2212,7 +2200,7 @@ void tst_QQuickListView::sectionsPositioning()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i/5));
 
@@ -2358,7 +2346,7 @@ void tst_QQuickListView::sectionsPositioning()
     window->rootObject()->setProperty("sectionPositioning", QVariant(int(QQuickViewSection::InlineLabels | QQuickViewSection::CurrentLabelAtStart | QQuickViewSection::NextLabelAtEnd)));
     QTRY_VERIFY(findVisibleChild(contentItem, "sect_aaa")); // section header
     QTRY_VERIFY(findVisibleChild(contentItem, "sect_new")); // section footer
-    QmlListModel model1;
+    QaimModel model1;
     ctxt->setContextProperty("testModel", &model1);
     QTRY_VERIFY(!findVisibleChild(contentItem, "sect_aaa")); // section header
     QTRY_VERIFY(!findVisibleChild(contentItem, "sect_new")); // section footer
@@ -2515,7 +2503,8 @@ void tst_QQuickListView::currentIndex_delayedItemCreation_data()
 
 void tst_QQuickListView::currentIndex()
 {
-    QmlListModel initModel;
+    QaimModel initModel;
+
     for (int i = 0; i < 30; i++)
         initModel.addItem("Item" + QString::number(i), QString::number(i));
 
@@ -2545,7 +2534,7 @@ void tst_QQuickListView::currentIndex()
     QCOMPARE(listview->highlightItem()->y(), listview->currentItem()->y());
 
     // changing model should reset currentIndex to 0
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
     ctxt->setContextProperty("testModel", &model);
@@ -2610,7 +2599,7 @@ void tst_QQuickListView::currentIndex()
 
 void tst_QQuickListView::noCurrentIndex()
 {
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
@@ -2656,7 +2645,7 @@ void tst_QQuickListView::keyNavigation()
     QFETCH(QPointF, contentPosAtFirstItem);
     QFETCH(QPointF, contentPosAtLastItem);
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -2863,7 +2852,7 @@ void tst_QQuickListView::cacheBuffer()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 90; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -2964,7 +2953,7 @@ void tst_QQuickListView::positionViewAtIndex()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3390,7 +3379,7 @@ void tst_QQuickListView::QTBUG_11105()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3422,7 +3411,7 @@ void tst_QQuickListView::QTBUG_11105()
     listview->positionViewAtIndex(20, QQuickListView::Beginning);
     QCOMPARE(listview->contentY(), 280.);
 
-    QmlListModel model2;
+    QaimModel model2;
     for (int i = 0; i < 5; i++)
         model2.addItem("Item" + QString::number(i), "");
 
@@ -3467,7 +3456,7 @@ void tst_QQuickListView::header()
     QFETCH(QPointF, firstDelegatePos);
     QFETCH(QPointF, resizeContentPos);
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3639,7 +3628,7 @@ void tst_QQuickListView::header_delayItemCreation()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
 
     window->rootContext()->setContextProperty("setCurrentToZero", QVariant(false));
     window->setSource(testFileUrl("fillModelOnComponentCompleted.qml"));
@@ -3677,7 +3666,7 @@ void tst_QQuickListView::footer()
 
     QQuickView *window = getView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 3; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -3868,8 +3857,9 @@ void tst_QQuickListView::extents()
 
     QQuickView *window = getView();
 
-    QmlListModel model;
+    QaimModel model;
     QQmlContext *ctxt = window->rootContext();
+
     ctxt->setContextProperty("testModel", &model);
     window->setSource(testFileUrl("headerfooter.qml"));
     window->show();
@@ -3995,7 +3985,7 @@ void tst_QQuickListView::resizeView()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -4075,7 +4065,7 @@ void tst_QQuickListView::resizeViewAndRepaint()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -4110,7 +4100,7 @@ void tst_QQuickListView::sizeLessThan1()
 {
     QQuickView *window = createView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -4251,7 +4241,7 @@ void tst_QQuickListView::resizeFirstDelegate()
     QQuickView *window = createView();
 
     // bug only occurs when all items in the model are visible
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 10; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -4462,7 +4452,7 @@ void tst_QQuickListView::indexAt_itemAt()
 
     QQuickView *window = getView();
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -5014,14 +5004,9 @@ void tst_QQuickListView::snapToItem()
     releaseView(window);
 }
 
-void tst_QQuickListView::qListModelInterface_items()
+void tst_QQuickListView::qAbstractItemModel_package_items()
 {
-    items<QmlListModel>(testFileUrl("listviewtest.qml"), false);
-}
-
-void tst_QQuickListView::qListModelInterface_package_items()
-{
-    items<QmlListModel>(testFileUrl("listviewtest-package.qml"), true);
+    items<QaimModel>(testFileUrl("listviewtest-package.qml"), true);
 }
 
 void tst_QQuickListView::qAbstractItemModel_items()
@@ -5029,14 +5014,9 @@ void tst_QQuickListView::qAbstractItemModel_items()
     items<QaimModel>(testFileUrl("listviewtest.qml"), false);
 }
 
-void tst_QQuickListView::qListModelInterface_changed()
+void tst_QQuickListView::qAbstractItemModel_package_changed()
 {
-    changed<QmlListModel>(testFileUrl("listviewtest.qml"), false);
-}
-
-void tst_QQuickListView::qListModelInterface_package_changed()
-{
-    changed<QmlListModel>(testFileUrl("listviewtest-package.qml"), true);
+    changed<QaimModel>(testFileUrl("listviewtest-package.qml"), true);
 }
 
 void tst_QQuickListView::qAbstractItemModel_changed()
@@ -5044,24 +5024,9 @@ void tst_QQuickListView::qAbstractItemModel_changed()
     changed<QaimModel>(testFileUrl("listviewtest.qml"), false);
 }
 
-void tst_QQuickListView::qListModelInterface_inserted()
+void tst_QQuickListView::qAbstractItemModel_package_inserted()
 {
-    inserted<QmlListModel>(testFileUrl("listviewtest.qml"));
-}
-
-void tst_QQuickListView::qListModelInterface_package_inserted()
-{
-    inserted<QmlListModel>(testFileUrl("listviewtest-package.qml"));
-}
-
-void tst_QQuickListView::qListModelInterface_inserted_more()
-{
-    inserted_more<QmlListModel>();
-}
-
-void tst_QQuickListView::qListModelInterface_inserted_more_data()
-{
-    inserted_more_data();
+    inserted<QaimModel>(testFileUrl("listviewtest-package.qml"));
 }
 
 void tst_QQuickListView::qAbstractItemModel_inserted()
@@ -5089,26 +5054,10 @@ void tst_QQuickListView::qAbstractItemModel_inserted_more_bottomToTop_data()
     inserted_more_data();
 }
 
-void tst_QQuickListView::qListModelInterface_removed()
+void tst_QQuickListView::qAbstractItemModel_package_removed()
 {
-    removed<QmlListModel>(testFileUrl("listviewtest.qml"), false);
-    removed<QmlListModel>(testFileUrl("listviewtest.qml"), true);
-}
-
-void tst_QQuickListView::qListModelInterface_removed_more()
-{
-    removed_more<QmlListModel>(testFileUrl("listviewtest.qml"));
-}
-
-void tst_QQuickListView::qListModelInterface_removed_more_data()
-{
-    removed_more_data();
-}
-
-void tst_QQuickListView::qListModelInterface_package_removed()
-{
-    removed<QmlListModel>(testFileUrl("listviewtest-package.qml"), false);
-    removed<QmlListModel>(testFileUrl("listviewtest-package.qml"), true);
+    removed<QaimModel>(testFileUrl("listviewtest-package.qml"), false);
+    removed<QaimModel>(testFileUrl("listviewtest-package.qml"), true);
 }
 
 void tst_QQuickListView::qAbstractItemModel_removed()
@@ -5137,22 +5086,12 @@ void tst_QQuickListView::qAbstractItemModel_removed_more_bottomToTop_data()
     removed_more_data();
 }
 
-void tst_QQuickListView::qListModelInterface_moved()
+void tst_QQuickListView::qAbstractItemModel_package_moved()
 {
-    moved<QmlListModel>(testFileUrl("listviewtest.qml"));
+    moved<QaimModel>(testFileUrl("listviewtest-package.qml"));
 }
 
-void tst_QQuickListView::qListModelInterface_moved_data()
-{
-    moved_data();
-}
-
-void tst_QQuickListView::qListModelInterface_package_moved()
-{
-    moved<QmlListModel>(testFileUrl("listviewtest-package.qml"));
-}
-
-void tst_QQuickListView::qListModelInterface_package_moved_data()
+void tst_QQuickListView::qAbstractItemModel_package_moved_data()
 {
     moved_data();
 }
@@ -5177,14 +5116,9 @@ void tst_QQuickListView::qAbstractItemModel_moved_bottomToTop_data()
     moved_data();
 }
 
-void tst_QQuickListView::qListModelInterface_clear()
+void tst_QQuickListView::qAbstractItemModel_package_clear()
 {
-    clear<QmlListModel>(testFileUrl("listviewtest.qml"));
-}
-
-void tst_QQuickListView::qListModelInterface_package_clear()
-{
-    clear<QmlListModel>(testFileUrl("listviewtest-package.qml"));
+    clear<QaimModel>(testFileUrl("listviewtest-package.qml"));
 }
 
 void tst_QQuickListView::qAbstractItemModel_clear()
@@ -5197,14 +5131,9 @@ void tst_QQuickListView::qAbstractItemModel_clear_bottomToTop()
     clear<QaimModel>(testFileUrl("listviewtest.qml"), QQuickItemView::BottomToTop);
 }
 
-void tst_QQuickListView::qListModelInterface_sections()
+void tst_QQuickListView::qAbstractItemModel_package_sections()
 {
-    sections<QmlListModel>(testFileUrl("listview-sections.qml"));
-}
-
-void tst_QQuickListView::qListModelInterface_package_sections()
-{
-    sections<QmlListModel>(testFileUrl("listview-sections-package.qml"));
+    sections<QaimModel>(testFileUrl("listview-sections-package.qml"));
 }
 
 void tst_QQuickListView::qAbstractItemModel_sections()
@@ -5427,7 +5356,7 @@ void tst_QQuickListView::snapOneItem()
 
 void tst_QQuickListView::unrequestedVisibility()
 {
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
@@ -6558,7 +6487,7 @@ void tst_QQuickListView::multipleTransitions()
     QPointF removeTargets_transitionTo(-100, 300);
     QPointF removeDisplaced_transitionFrom(100, 300);
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < initialCount; i++)
         model.addItem("Original item" + QString::number(i), "");
 
@@ -6724,7 +6653,7 @@ void tst_QQuickListView::multipleDisplaced()
     // moved from previously set positions, and not those that have moved from their current
     // item positions (which may e.g. still be changing from easing bounces in the last transition)
 
-    QmlListModel model;
+    QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Original item" + QString::number(i), "");
 
@@ -6853,7 +6782,7 @@ void tst_QQuickListView::flickBeyondBounds()
 
 void tst_QQuickListView::destroyItemOnCreation()
 {
-    QmlListModel model;
+    QaimModel model;
     QQuickView *window = createView();
     window->rootContext()->setContextProperty("testModel", &model);
 

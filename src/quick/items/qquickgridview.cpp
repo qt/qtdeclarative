@@ -45,7 +45,6 @@
 #include "qquickitemview_p_p.h"
 
 #include <private/qquicksmoothedanimation_p_p.h>
-#include <private/qlistmodelinterface_p.h>
 
 #include <QtGui/qevent.h>
 #include <QtCore/qmath.h>

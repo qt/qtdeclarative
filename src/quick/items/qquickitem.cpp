@@ -64,7 +64,6 @@
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <private/qqmlopenmetaobject_p.h>
 #include <QtQuick/private/qquickstate_p.h>
-#include <private/qlistmodelinterface_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qqmlaccessors_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>

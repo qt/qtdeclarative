@@ -41,7 +41,6 @@
 
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
-#include <private/qlistmodelinterface_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>

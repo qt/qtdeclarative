@@ -1060,7 +1060,7 @@ void QQuickVisualDataModelPrivate::itemsChanged(const QVector<Compositor::Change
         QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.apply(translatedChanges.at(i));
 }
 
-void QQuickVisualDataModel::_q_itemsChanged(int index, int count, const QList<int> &roles)
+void QQuickVisualDataModel::_q_itemsChanged(int index, int count, const QVector<int> &roles)
 {
     Q_D(QQuickVisualDataModel);
     if (count <= 0 || !d->m_complete)
@@ -1454,17 +1454,17 @@ void QQuickVisualDataModel::_q_rowsMoved(
     }
 }
 
-void QQuickVisualDataModel::_q_dataChanged(const QModelIndex &begin, const QModelIndex &end)
+void QQuickVisualDataModel::_q_dataChanged(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles)
 {
     Q_D(QQuickVisualDataModel);
     if (begin.parent() == d->m_adaptorModel.rootIndex)
-        _q_itemsChanged(begin.row(), end.row() - begin.row() + 1, QList<int>());
+        _q_itemsChanged(begin.row(), end.row() - begin.row() + 1, roles);
 }
 
 void QQuickVisualDataModel::_q_layoutChanged()
 {
     Q_D(QQuickVisualDataModel);
-    _q_itemsChanged(0, d->m_count, QList<int>());
+    _q_itemsChanged(0, d->m_count, QVector<int>());
 }
 
 QQuickVisualDataModelAttached *QQuickVisualDataModel::qmlAttachedProperties(QObject *obj)
