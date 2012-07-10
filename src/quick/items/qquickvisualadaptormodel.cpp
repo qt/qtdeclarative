@@ -44,8 +44,41 @@
 
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmlproperty_p.h>
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
+
+class QQuickVisualAdaptorModelEngineData : public QV8Engine::Deletable
+{
+public:
+    enum
+    {
+        Index,
+        ModelData,
+        HasModelChildren,
+        StringCount
+    };
+
+    QQuickVisualAdaptorModelEngineData(QV8Engine *engine);
+    ~QQuickVisualAdaptorModelEngineData();
+
+    v8::Local<v8::String> index() { return strings->Get(Index)->ToString(); }
+    v8::Local<v8::String> modelData() { return strings->Get(ModelData)->ToString(); }
+    v8::Local<v8::String> hasModelChildren() { return strings->Get(HasModelChildren)->ToString(); }
+
+    v8::Persistent<v8::Function> constructorListItem;
+    v8::Persistent<v8::Array> strings;
+};
+
+V8_DEFINE_EXTENSION(QQuickVisualAdaptorModelEngineData, engineData)
+
+static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
+    V8ASSERT_TYPE(data, "Not a valid VisualData object");
+
+    return v8::Int32::New(data->index);
+}
 
 template <typename T, typename M> static void setModelDataType(QMetaObjectBuilder *builder, M *metaType)
 {
@@ -62,22 +95,6 @@ static void addProperty(QMetaObjectBuilder *builder, int propertyId, const QByte
     QMetaPropertyBuilder property = builder->addProperty(
             propertyName, propertyType, propertyId);
     property.setWritable(true);
-}
-
-static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::AccessorInfo &info)
-{
-    QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
-    V8ASSERT_TYPE(data, "Not a valid VisualData object");
-
-    return v8::Int32::New(data->index);
-}
-
-static v8::Local<v8::ObjectTemplate> createConstructor()
-{
-    v8::Local<v8::ObjectTemplate> constructor = v8::ObjectTemplate::New();
-    constructor->SetHasExternalResource(true);
-    constructor->SetAccessor(v8::String::New("index"), get_index);
-    return constructor;
 }
 
 class VDMModelDelegateDataType;
@@ -188,9 +205,11 @@ public:
         dataType->watchedRoles += newRoles;
     }
 
-    void initializeConstructor()
+    void initializeConstructor(QQuickVisualAdaptorModelEngineData *const data)
     {
-        constructor = qPersistentNew(createConstructor());
+        constructor = qPersistentNew(v8::ObjectTemplate::New());
+        constructor->SetHasExternalResource(true);
+        constructor->SetAccessor(data->index(), get_index);
 
         typedef QHash<QByteArray, int>::const_iterator iterator;
         for (iterator it = roleNames.constBegin(), end = roleNames.constEnd(); it != end; ++it) {
@@ -394,10 +413,11 @@ public:
     v8::Handle<v8::Value> get()
     {
         if (type->constructor.IsEmpty()) {
+            QQuickVisualAdaptorModelEngineData * const data = engineData(engine);
             v8::HandleScope handleScope;
             v8::Context::Scope contextScope(engine->context());
-            type->initializeConstructor();
-            type->constructor->SetAccessor(v8::String::New("hasModelChildren"), get_hasModelChildren);
+            type->initializeConstructor(data);
+            type->constructor->SetAccessor(data->hasModelChildren(), get_hasModelChildren);
         }
         v8::Local<v8::Object> data = type->constructor->NewInstance();
         data->SetExternalResource(this);
@@ -556,7 +576,7 @@ public:
         if (type->constructor.IsEmpty()) {
             v8::HandleScope handleScope;
             v8::Context::Scope contextScope(engine->context());
-            type->initializeConstructor();
+            type->initializeConstructor(engineData(engine));
         }
         v8::Local<v8::Object> data = type->constructor->NewInstance();
         data->SetExternalResource(this);
@@ -685,13 +705,21 @@ public:
         return data->engine->fromVariant(static_cast<QQuickVDMListAccessorData *>(data)->cachedData);
     }
 
-    static void set_modelData(v8::Local<v8::String>, const v8::Handle<v8::Value> &value, const v8::AccessorInfo &info)
+    static void set_modelData(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
     {
         QQuickVisualDataModelItem *data = v8_resource_cast<QQuickVisualDataModelItem>(info.This());
         V8ASSERT_TYPE_SETTER(data, "Not a valid VisualData object");
 
         static_cast<QQuickVDMListAccessorData *>(data)->setModelData(
                 data->engine->toVariant(value, QVariant::Invalid));
+    }
+
+    v8::Handle<v8::Value> get()
+    {
+        v8::Local<v8::Object> data = engineData(engine)->constructorListItem->NewInstance();
+        data->SetExternalResource(this);
+        ++scriptRef;
+        return data;
     }
 
     void setValue(const QString &role, const QVariant &value)
@@ -712,6 +740,7 @@ public:
             return false;
         }
     }
+
 
 Q_SIGNALS:
     void modelDataChanged();
@@ -1024,6 +1053,29 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &variant, QQuickVisualDat
 void QQuickVisualAdaptorModel::objectDestroyed(QObject *)
 {
     setModel(QVariant(), 0, 0);
+}
+
+QQuickVisualAdaptorModelEngineData::QQuickVisualAdaptorModelEngineData(QV8Engine *)
+{
+    strings = qPersistentNew(v8::Array::New(StringCount));
+    strings->Set(Index, v8::String::New("index"));
+    strings->Set(ModelData, v8::String::New("modelData"));
+    strings->Set(HasModelChildren, v8::String::New("hasModelChildren"));
+
+    v8::Local<v8::FunctionTemplate> listItem = v8::FunctionTemplate::New();
+    listItem->InstanceTemplate()->SetHasExternalResource(true);
+    listItem->InstanceTemplate()->SetAccessor(index(), get_index);
+    listItem->InstanceTemplate()->SetAccessor(
+            modelData(),
+            QQuickVDMListAccessorData::get_modelData,
+            QQuickVDMListAccessorData::set_modelData);
+    constructorListItem = qPersistentNew(listItem->GetFunction());
+}
+
+QQuickVisualAdaptorModelEngineData::~QQuickVisualAdaptorModelEngineData()
+{
+    qPersistentDispose(constructorListItem);
+    qPersistentDispose(strings);
 }
 
 QT_END_NAMESPACE
