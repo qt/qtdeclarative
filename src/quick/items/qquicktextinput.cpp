@@ -1705,18 +1705,8 @@ void QQuickTextInputPrivate::updateVerticalScroll()
 
     if (!autoScroll || heightUsed <=  height) {
         // text fits in br; use vscroll for alignment
-        switch (vAlign & ~(Qt::AlignAbsolute|Qt::AlignHorizontal_Mask)) {
-        case Qt::AlignBottom:
-            vscroll = heightUsed - height;
-            break;
-        case Qt::AlignVCenter:
-            vscroll = (heightUsed - height) / 2;
-            break;
-        default:
-            // Top
-            vscroll = 0;
-            break;
-        }
+        vscroll = -QQuickTextUtil::alignedY(
+                    heightUsed, height, vAlign & ~(Qt::AlignAbsolute|Qt::AlignHorizontal_Mask));
     } else {
         QTextLine currentLine = m_textLayout.lineForTextPosition(m_cursor + preeditLength);
         QRectF r = currentLine.isValid() ? currentLine.rect() : QRectF();
@@ -2560,18 +2550,8 @@ QRectF QQuickTextInput::boundingRect() const
     int cursorWidth = d->cursorItem ? 0 : 1;
 
     qreal hscroll = d->hscroll;
-    if (!d->autoScroll || d->contentSize.width() < width()) {
-        switch (effectiveHAlign()) {
-        case AlignLeft:
-            break;
-        case AlignRight:
-            hscroll += d->contentSize.width() - width();
-            break;
-        case AlignHCenter:
-            hscroll += (d->contentSize.width() - width()) / 2;
-            break;
-        }
-    }
+    if (!d->autoScroll || d->contentSize.width() < width())
+        hscroll -= QQuickTextUtil::alignedX(d->contentSize.width(), width(), effectiveHAlign());
 
     // Could include font max left/right bearings to either side of rectangle.
     QRectF r(-hscroll, -d->vscroll, d->contentSize.width(), d->contentSize.height());
