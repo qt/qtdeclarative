@@ -32,10 +32,19 @@
 
 A QML object type is a type from which a QML object can be instantiated.
 
-In syntactic terms, a QML object type is one which can be used to declare an object by specifying the \e{type name} followed by a set of curly braces that encompasses the attributes of that object. This differs from \e {basic types}, which cannot be used in the same way. For example, \l Rectangle is a QML object type: it can be used to create \c Rectangle type objects. This cannot be done with primitive types such as \c int and \c bool, which are used to hold simple data types rather than objects.
+In syntactic terms, a QML object type is one which can be used to declare an
+object by specifying the \e{type name} followed by a set of curly braces that
+encompasses the attributes of that object. This differs from \e {basic types},
+which cannot be used in the same way. For example, \l Rectangle is a QML object
+type: it can be used to create \c Rectangle type objects. This cannot be done
+with primitive types such as \c int and \c bool, which are used to hold simple
+data types rather than objects.
 
-Custom QML object types can be defined by creating a .qml file that defines the type, as discussed in \l {qtqml-documents-definetypes.html}{Documents as QML object type definitions}, or by defining a QML type from C++ and registering the type with the QML engine, as discussed in \l{qtqml-registercpptypes.html}
-{Registering C++ Types With The QML Type System}.
+Custom QML object types can be defined by creating a .qml file that defines the
+type, as discussed in \l {qtqml-documents-definetypes.html}
+{Documents as QML object type definitions}, or by defining a QML type from C++
+and registering the type with the QML engine, as discussed in
+\l{qtqml-registercpptypes.html}{Registering C++ Types With The QML Type System}.
 
 
 \section1 Creating Object Types from QML

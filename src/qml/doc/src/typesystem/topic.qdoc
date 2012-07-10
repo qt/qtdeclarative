@@ -30,12 +30,12 @@
 \brief Description of the QML type system
 
 The types which may be used in the definition of an object hierarchy in a QML
-document can come from various sources.
+document can come from various sources.  They may be:
 
 \list
-\li They may be provided natively by the QML language
-\li They may be registered by C++ plugins for QML
-\li They may be provided as QML documents by a plugin developer
+\li provided natively by the QML language
+\li registered via C++ by QML modules
+\li provided as QML documents by QML modules
 \endlist
 
 Furthermore, application developers can provide their own types, either by
@@ -48,20 +48,21 @@ for properties and instances of those types.
 
 \section1 Basic Types
 
-The Qt QML module provides support for various primitive types including
+The QML language has built-in support for various primitive types including
 integers, double-precision floating point numbers, strings, and boolean values.
 Objects may have properties of these types, and values of these types may be
 passed as arguments to methods of objects.
 
-See the \l{qtqml-basictypes.html}{Basic Types} documentation for more
-information about basic types, or the \l{qtqml-documents-properties.html}
+See the \l{qtqml-typesystem-basictypes.html}{Basic Types} documentation for
+more information about basic types, or the \l{qtqml-documents-properties.html}
 {QML Documents - Object Properties} documentation for more information about
 other available property types.
 
 
 \section1 JavaScript types
 
-JavaScript objects and arrays are supported by the QML engine. Any standard JavaScript type can be created and stored using the generic \l var type.
+JavaScript objects and arrays are supported by the QML engine. Any standard
+JavaScript type can be created and stored using the generic \l var type.
 
 For example, the standard \c Date and \c Array types are available, as below:
 
@@ -86,9 +87,15 @@ See \l {Using JavaScript Expressions with QML} for more details.
 
 \section1 QML Object Types
 
-A QML object type is a type from which a QML object can be instantiated.
+A QML object type is a type from which a QML object can be instantiated. QML
+object types are derived from \l QtObject, and are provided by QML modules.
+Applications can import these modules to use the object types they provide.
+The \c QtQuick module provides the most common object types needed to create
+user interfaces in QML.
 
-
-
+Finally, every QML document implicitly defines a QML object type, which can be
+re-used in other QML documents.  See the documentation about
+\l{qtqml-typesystem-objecttypes.html}{object types in the QML type system} for
+in-depth information about object types.
 
 */

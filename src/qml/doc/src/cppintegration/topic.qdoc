@@ -48,9 +48,8 @@ You may want to mix QML and C++ for a number of reasons. For example:
 calling functions in a third-party C++ library)
 \li To access functionality in the QtQml or QtQuick modules (for example, to dynamically generate
 images using QQuickImageProvider)
-\li To write your own QML elements (whether for your applications, or for distribution to others)
+\li To write your own QML object types (whether for your applications, or for distribution to others)
 \endlist
-
 
 There are a number of ways to extend your QML application through C++. For example, you could:
 
@@ -58,10 +57,9 @@ There are a number of ways to extend your QML application through C++. For examp
 \li Load a QML component and manipulate it (or its children) from C++
 \li Embed a C++ object and its properties directly into a QML component (for example, to make a
 particular C++ object callable from QML, or to replace a dummy list model with a real data set)
-\li Define new QML elements (through QObject-based C++ classes) and create them directly from your
+\li Define new QML object types (through QObject-based C++ classes) and create them directly from your
 QML code
 \endlist
-
 
 
 \section1 Exposing C++ Types To QML

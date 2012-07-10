@@ -79,9 +79,9 @@ types, animation classes, and canvas integration) for the QML language.
 
     \li \l{qtqml-typesystem-topic.html}{The QML Type System}
         \list
-        \li \l{qtqml-typesystem-topic.html}{Basic Types}
+        \li \l{qtqml-typesystem-basictypes.html}{Basic Types}
         \li \l{qtqml-typesystem-topic.html#javascript-types}{JavaScript Types}
-        \li \l{qtqml-typesystem-topic.html#qml-object-types}{QML Object Types}
+        \li \l{qtqml-typesystem-objecttypes.html}{QML Object Types}
             \list
             \li \l{qtqml-documents-definetypes.html}{Defining Object Types from QML}
             \li \l{qtqml-cppintegration-registercpptypes.html}{Defining Object Types from C++}

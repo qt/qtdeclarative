@@ -55,12 +55,13 @@
             \l{qtqml-typesystem-topic.html#qml-object-types}{QML Object Type}.
 
             The QML language provides a number of built in
-            (\l{qtqml-basictypes.html}{basic types}), and the QtQuick module
-            provides various \l{qtquick-qmltypereference.html}{Qt Quick types}
-            for building QML applications. Types can also be provided by
-            third-party developers through (\l{qtqml-modules-topic.html}{modules})
-            or by the application developer in the application itself
-            \l{qtqml-documents-definetypes.html}{through QML Documents}.
+            (\l{qtqml-typesystem-basictypes.html}{basic types}), and the
+            QtQuick module provides various \l{qtquick-qmltypereference.html}
+            {Qt Quick types} for building QML applications. Types can also be
+            provided by third-party developers through
+            (\l{qtqml-modules-topic.html}{modules}) or by the application
+            developer in the application itself through
+            \l{qtqml-documents-definetypes.html}{QML Documents}.
 
             See \l{qtqml-typesystem-topic.html}{The QML Type System}
             for more details.

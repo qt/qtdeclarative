@@ -47,7 +47,6 @@ into modules enables:
 A module may contain QML, JavaScript and/or C++ files. To access the types and functionality within
 a module, the module must be imported with an \l{Import Statements}{import} statement.
 
-
 \section1 Located Modules
 
 A located module is one that is imported by a quoted URL string that refers to the
@@ -82,7 +81,6 @@ This is required for a module if it is to be imported by URI or as a network res
 necessary for exporting JavaScript files and object types defined in C++.
 
 See \l{qtqml-modules-qmldir.html}{Adding Module Metadata with a qmldir File} for more information.
-
 
 \section1 Providing Types And Functionality In A C++ Plugin
 
