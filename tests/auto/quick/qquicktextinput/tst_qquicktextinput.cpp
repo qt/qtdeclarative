@@ -1117,23 +1117,21 @@ void tst_qquicktextinput::moveCursorSelectionSequence_data()
             << 15 << 12 << 15
             << 10 << 15
             << 15 << 15;
-//    QTBUG-11365
-//    QTest::newRow(" spacey   <te(xt{^ )>}|rtl")
-//            << standard[4]
-//            << 15 << 12 << 14
-//            << 10 << 15
-//            << 14 << 15;
+    QTest::newRow(" spacey   <te(xt{^ )>}|rtl")
+            << standard[4]
+            << 15 << 12 << 14
+            << 10 << 15
+            << 14 << 15;
     QTest::newRow(" spacey   {<te(x^t} )>|ltr")
             << standard[4]
             << 12 << 15 << 13
             << 10 << 15
             << 10 << 14;
-//    QTBUG-11365
-//    QTest::newRow(" spacey   {<te(xt^} )>|ltr")
-//            << standard[4]
-//            << 12 << 15 << 14
-//            << 10 << 15
-//            << 10 << 14;
+    QTest::newRow(" spacey   {<te(xt^} )>|ltr")
+            << standard[4]
+            << 12 << 15 << 14
+            << 10 << 15
+            << 10 << 14;
 }
 
 void tst_qquicktextinput::moveCursorSelectionSequence()
