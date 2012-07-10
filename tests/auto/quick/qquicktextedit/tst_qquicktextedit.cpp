@@ -134,6 +134,7 @@ private slots:
     void dragMouseSelection();
     void inputMethodHints();
 
+    void positionAt_data();
     void positionAt();
 
     void linkActivated();
@@ -217,6 +218,8 @@ Q_DECLARE_METATYPE(IntList)
 typedef QList<Key> KeyList;
 Q_DECLARE_METATYPE(KeyList)
 
+Q_DECLARE_METATYPE(QQuickTextEdit::HAlignment)
+Q_DECLARE_METATYPE(QQuickTextEdit::VAlignment)
 Q_DECLARE_METATYPE(QQuickTextEdit::TextFormat)
 
 void tst_qquicktextedit::simulateKeys(QWindow *window, const QList<Key> &keys)
@@ -1789,6 +1792,10 @@ void tst_qquicktextedit::mouseSelection_data()
     QTest::newRow("on triple click (40,50)") << testFile("mouseselection_true.qml") << 40 << 50 << "9876543210\n\nZXYWVUTSRQPON MLKJIHGFEDCBA" << true << true << 3;
     QTest::newRow("on triple click (50,25)") << testFile("mouseselection_true.qml") << 50 << 25 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ\n9876543210\n\nZXYWVUTSRQPON MLKJIHGFEDCBA" << true << true << 3;
     QTest::newRow("on triple click (50,40)") << testFile("mouseselection_true.qml") << 50 << 40 << "9876543210\n\nZXYWVUTSRQPON MLKJIHGFEDCBA" << true << true << 3;
+
+    QTest::newRow("on tr align") << testFile("mouseselection_align_tr.qml") << 4 << 9 << "45678" << true << true << 1;
+    QTest::newRow("on center align") << testFile("mouseselection_align_center.qml") << 4 << 9 << "45678" << true << true << 1;
+    QTest::newRow("on bl align") << testFile("mouseselection_align_bl.qml") << 4 << 9 << "45678" << true << true << 1;
 }
 
 void tst_qquicktextedit::mouseSelection()
@@ -1943,8 +1950,26 @@ void tst_qquicktextedit::inputMethodHints()
     QCOMPARE(plainTextEdit.inputMethodHints(), Qt::ImhNone);
 }
 
+void tst_qquicktextedit::positionAt_data()
+{
+    QTest::addColumn<QQuickTextEdit::HAlignment>("horizontalAlignment");
+    QTest::addColumn<QQuickTextEdit::VAlignment>("verticalAlignment");
+
+    QTest::newRow("top-left") << QQuickTextEdit::AlignLeft << QQuickTextEdit::AlignTop;
+    QTest::newRow("bottom-left") << QQuickTextEdit::AlignLeft << QQuickTextEdit::AlignBottom;
+    QTest::newRow("center-left") << QQuickTextEdit::AlignLeft << QQuickTextEdit::AlignVCenter;
+
+    QTest::newRow("top-right") << QQuickTextEdit::AlignRight << QQuickTextEdit::AlignTop;
+    QTest::newRow("top-center") << QQuickTextEdit::AlignHCenter << QQuickTextEdit::AlignTop;
+
+    QTest::newRow("center") << QQuickTextEdit::AlignHCenter << QQuickTextEdit::AlignVCenter;
+}
+
 void tst_qquicktextedit::positionAt()
 {
+    QFETCH(QQuickTextEdit::HAlignment, horizontalAlignment);
+    QFETCH(QQuickTextEdit::VAlignment, verticalAlignment);
+
     QQuickView canvas(testFileUrl("positionAt.qml"));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
@@ -1953,8 +1978,10 @@ void tst_qquicktextedit::positionAt()
 
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
     QVERIFY(texteditObject != 0);
+    texteditObject->setHAlign(horizontalAlignment);
+    texteditObject->setVAlign(verticalAlignment);
 
-    QTextLayout layout(texteditObject->text());
+    QTextLayout layout(texteditObject->text().replace(QLatin1Char('\n'), QChar::LineSeparator));
     layout.setFont(texteditObject->font());
 
     if (!qmlDisableDistanceField()) {
@@ -1965,15 +1992,45 @@ void tst_qquicktextedit::positionAt()
 
     layout.beginLayout();
     QTextLine line = layout.createLine();
+    line.setLineWidth(texteditObject->width());
+    QTextLine secondLine = layout.createLine();
+    secondLine.setLineWidth(texteditObject->width());
     layout.endLayout();
 
-    const int y0 = line.height() / 2;
-    const int y1 = line.height() * 3 / 2;
+    qreal y0;
+    qreal y1;
 
+    switch (verticalAlignment) {
+    case QQuickTextEdit::AlignTop:
+        y0 = line.height() / 2;
+        y1 = line.height() * 3 / 2;
+        break;
+    case QQuickTextEdit::AlignVCenter:
+        y0 = (texteditObject->height() - line.height()) / 2;
+        y1 = (texteditObject->height() + line.height()) / 2;
+        break;
+    case QQuickTextEdit::AlignBottom:
+        y0 = texteditObject->height() - line.height() * 3 / 2;
+        y1 = texteditObject->height() - line.height() / 2;
+        break;
+    }
+
+    qreal xoff;
+    switch (horizontalAlignment) {
+    case QQuickTextEdit::AlignLeft:
+        xoff = 0;
+        break;
+    case QQuickTextEdit::AlignHCenter:
+        xoff = (texteditObject->width() - secondLine.naturalTextWidth()) / 2;
+        break;
+    case QQuickTextEdit::AlignRight:
+        xoff = texteditObject->width() - secondLine.naturalTextWidth();
+        break;
+    }
     int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
 
-    int widthBegin = floor(line.cursorToX(pos - 1));
-    int widthEnd = ceil(line.cursorToX(pos + 1));
+    int widthBegin = floor(xoff + line.cursorToX(pos - 1));
+    int widthEnd = ceil(xoff + line.cursorToX(pos + 1));
 
     QVERIFY(widthBegin <= texteditObject->width() / 2);
     QVERIFY(widthEnd >= texteditObject->width() / 2);

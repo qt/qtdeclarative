@@ -72,7 +72,7 @@ public:
 
     QQuickTextEditPrivate()
         : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
-        , textMargin(0.0), yoff(0), font(sourceFont), cursorComponent(0), cursorItem(0), document(0), control(0)
+        , textMargin(0.0), xoff(0), yoff(0), font(sourceFont), cursorComponent(0), cursorItem(0), document(0), control(0)
         , lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
@@ -109,6 +109,7 @@ public:
     QSizeF contentSize;
 
     qreal textMargin;
+    qreal xoff;
     qreal yoff;
 
     QString text;

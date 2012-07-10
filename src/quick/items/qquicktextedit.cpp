@@ -782,7 +782,7 @@ QRectF QQuickTextEdit::positionToRectangle(int pos) const
     Q_D(const QQuickTextEdit);
     QTextCursor c(d->document);
     c.setPosition(pos);
-    return d->control->cursorRect(c).translated(0, d->yoff);
+    return d->control->cursorRect(c).translated(d->xoff, d->yoff);
 
 }
 
@@ -797,7 +797,10 @@ QRectF QQuickTextEdit::positionToRectangle(int pos) const
 int QQuickTextEdit::positionAt(qreal x, qreal y) const
 {
     Q_D(const QQuickTextEdit);
-    int r = d->document->documentLayout()->hitTest(QPointF(x,y-d->yoff), Qt::FuzzyHit);
+    x -= d->xoff;
+    y -= d->yoff;
+
+    int r = d->document->documentLayout()->hitTest(QPointF(x, y), Qt::FuzzyHit);
     QTextCursor cursor = d->control->textCursor();
     if (r > cursor.position()) {
         // The cursor position includes positions within the preedit text, but only positions in the
@@ -808,7 +811,7 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
                 ? layout->preeditAreaText().length()
                 : 0;
         if (preeditLength > 0
-                && d->document->documentLayout()->blockBoundingRect(cursor.block()).contains(x,y-d->yoff)) {
+                && d->document->documentLayout()->blockBoundingRect(cursor.block()).contains(x, y)) {
             r = r > cursor.position() + preeditLength
                     ? r - preeditLength
                     : cursor.position();
@@ -1324,14 +1327,14 @@ bool QQuickTextEdit::isReadOnly() const
 QRectF QQuickTextEdit::cursorRectangle() const
 {
     Q_D(const QQuickTextEdit);
-    return d->control->cursorRect().translated(0, d->yoff);
+    return d->control->cursorRect().translated(d->xoff, d->yoff);
 }
 
 bool QQuickTextEdit::event(QEvent *event)
 {
     Q_D(QQuickTextEdit);
     if (event->type() == QEvent::ShortcutOverride) {
-        d->control->processEvent(event, QPointF(0, -d->yoff));
+        d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
         return event->isAccepted();
     }
     return QQuickImplicitSizeItem::event(event);
@@ -1344,7 +1347,7 @@ Handles the given key \a event.
 void QQuickTextEdit::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickTextEdit);
-    d->control->processEvent(event, QPointF(0, -d->yoff));
+    d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     if (!event->isAccepted())
         QQuickImplicitSizeItem::keyPressEvent(event);
 }
@@ -1356,7 +1359,7 @@ Handles the given key \a event.
 void QQuickTextEdit::keyReleaseEvent(QKeyEvent *event)
 {
     Q_D(QQuickTextEdit);
-    d->control->processEvent(event, QPointF(0, -d->yoff));
+    d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     if (!event->isAccepted())
         QQuickImplicitSizeItem::keyReleaseEvent(event);
 }
@@ -1508,7 +1511,7 @@ Handles the given mouse \a event.
 void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextEdit);
-    d->control->processEvent(event, QPointF(0, -d->yoff));
+    d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     if (d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
@@ -1527,7 +1530,7 @@ Handles the given mouse \a event.
 void QQuickTextEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextEdit);
-    d->control->processEvent(event, QPointF(0, -d->yoff));
+    d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
 
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mouseReleaseEvent(event);
@@ -1540,7 +1543,7 @@ Handles the given mouse \a event.
 void QQuickTextEdit::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextEdit);
-    d->control->processEvent(event, QPointF(0, -d->yoff));
+    d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mouseDoubleClickEvent(event);
 }
@@ -1552,7 +1555,7 @@ Handles the given mouse \a event.
 void QQuickTextEdit::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextEdit);
-    d->control->processEvent(event, QPointF(0, -d->yoff));
+    d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mouseMoveEvent(event);
 }
@@ -1565,7 +1568,7 @@ void QQuickTextEdit::inputMethodEvent(QInputMethodEvent *event)
 {
     Q_D(QQuickTextEdit);
     const bool wasComposing = isInputMethodComposing();
-    d->control->processEvent(event, QPointF(0, -d->yoff));
+    d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     setCursorVisible(d->control->cursorVisible());
     if (wasComposing != isInputMethodComposing())
         emit inputMethodComposingChanged();
@@ -1577,7 +1580,7 @@ void QQuickTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
     if (change == ItemActiveFocusHasChanged) {
         setCursorVisible(value.boolValue);
         QFocusEvent focusEvent(value.boolValue ? QEvent::FocusIn : QEvent::FocusOut);
-        d->control->processEvent(&focusEvent, QPointF(0, -d->yoff));
+        d->control->processEvent(&focusEvent, QPointF(-d->xoff, -d->yoff));
         if (value.boolValue) {
             q_updateAlignment();
             connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
@@ -1651,9 +1654,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         node->deleteContent();
         node->setMatrix(QMatrix4x4());
 
-        QRectF bounds = boundingRect();
-
-        node->addTextDocument(QPointF(0, bounds.y()), d->document, d->color, QQuickText::Normal, QColor(),
+        node->addTextDocument(QPointF(d->xoff, d->yoff), d->document, d->color, QQuickText::Normal, QColor(),
                               QColor(), d->selectionColor, d->selectedTextColor, selectionStart(),
                               selectionEnd() - 1);  // selectionEnd() returns first char after
                                                     // selection
@@ -1810,7 +1811,6 @@ void QQuickTextEdit::q_textChanged()
 void QQuickTextEdit::moveCursorDelegate()
 {
     Q_D(QQuickTextEdit);
-    d->determineHorizontalAlignment();
     updateInputMethod();
     emit cursorRectangleChanged();
     if (!d->cursorItem)
@@ -1836,7 +1836,12 @@ void QQuickTextEdit::updateSelectionMarkers()
 QRectF QQuickTextEdit::boundingRect() const
 {
     Q_D(const QQuickTextEdit);
-    QRectF r(0, -d->yoff, d->contentSize.width(), d->contentSize.height());
+    QRectF r(
+            QQuickTextUtil::alignedX(d->contentSize.width(), width(), effectiveHAlign()),
+            d->yoff,
+            d->contentSize.width(),
+            d->contentSize.height());
+
     int cursorWidth = 1;
     if (d->cursorItem)
         cursorWidth = 0;
@@ -1844,33 +1849,7 @@ QRectF QQuickTextEdit::boundingRect() const
         cursorWidth += 3;// ### Need a better way of accounting for space between char and cursor
 
     // Could include font max left/right bearings to either side of rectangle.
-
     r.setRight(r.right() + cursorWidth);
-
-    qreal h = height();
-    switch (d->vAlign) {
-    case AlignTop:
-        break;
-    case AlignBottom:
-        r.moveTop(h - r.height());
-        break;
-    case AlignVCenter:
-        r.moveTop((h - r.height()) / 2);
-        break;
-    }
-
-    qreal w = width();
-    switch (d->hAlign) {
-    case AlignLeft:
-    case AlignJustify:
-        break;
-    case AlignRight:
-        r.moveLeft(w - r.width());
-        break;
-    case AlignHCenter:
-        r.moveLeft((w - r.width()) / 2);
-        break;
-    }
 
     return r;
 }
@@ -1935,40 +1914,27 @@ void QQuickTextEdit::updateSize()
         } else {
             d->document->setTextWidth(-1);
         }
-        QFontMetricsF fm(d->font);
-        qreal dy = height();
-        dy -= d->document->size().height();
 
-        qreal nyoff;
-        if (heightValid()) {
-            if (d->vAlign == AlignBottom)
-                nyoff = dy;
-            else if (d->vAlign == AlignVCenter)
-                nyoff = dy/2;
-            else
-                nyoff = 0;
-        } else {
-            nyoff = 0;
-        }
-        if (nyoff != d->yoff)
-            d->yoff = nyoff;
-        setBaselineOffset(fm.ascent() + d->yoff + d->textMargin);
-
-        //### need to comfirm cost of always setting these
+        //### need to confirm cost of always setting these
         qreal newWidth = d->document->idealWidth();
-        if (!widthValid() && d->document->textWidth() != newWidth)
-            d->document->setTextWidth(newWidth); // ### Text does not align if width is not set (QTextDoc bug)
+        if ((!widthValid() || d->wrapMode == NoWrap) && d->document->textWidth() != newWidth)
+            d->document->setTextWidth(newWidth); // ### Text does not align if width is not set or the idealWidth exceeds the textWidth (QTextDoc bug)
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
         qreal iWidth = -1;
         if (!widthValid() && !d->requireImplicitWidth)
             iWidth = newWidth;
 
+        QFontMetricsF fm(d->font);
         qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
 
         if (iWidth > -1)
             setImplicitSize(iWidth, newHeight);
         else
             setImplicitHeight(newHeight);
+
+        d->xoff = QQuickTextUtil::alignedX(d->document->size().width(), width(), effectiveHAlign());
+        d->yoff = QQuickTextUtil::alignedY(d->document->size().height(), height(), d->vAlign);
+        setBaselineOffset(fm.ascent() + d->yoff + d->textMargin);
 
         QSizeF size(newWidth, newHeight);
         if (d->contentSize != size) {
@@ -2006,6 +1972,7 @@ void QQuickTextEdit::q_updateAlignment()
     Q_D(QQuickTextEdit);
     if (d->determineHorizontalAlignment()) {
         d->updateDefaultTextOption();
+        d->xoff = QQuickTextUtil::alignedX(d->document->size().width(), width(), effectiveHAlign());
         moveCursorDelegate();
     }
 }
