@@ -28,31 +28,13 @@
 /*
 XXX
 
-These sections have been temporarily removed from the
-"QML Application Developer Resources" page as we do not have any content
-for them yet.
+The "Features And Use-Case Solutions" section has been temporarily removed
+from the "QML Application Developer Resources" page as we do not have any
+content for them yet.
 
 Once we have written content for these sections, they can be re-integrated.
 
-See QTBUG-26427 and QTBUG-26428
-
-
-\section1 Quick Start
-
-\list
-\li \l{qtquick-quickstart-basics.html}{QML Basics}
-    \list
-    \li \l{qtquick-quickstart-basics.html#creating-a-qml-document}{Creating A QML Document}
-    \li \l{qtquick-quickstart-basics.html#importing-and-using-the-qtquick-module}{Importing And Using The QtQuick Module}
-    \li \l{qtquick-quickstart-basics.html#loading-and-displaying-the-qml-document}{Loading And Displaying The QML Document}
-    \endlist
-\li \l{qtquick-quickstart-essentials.html}{QML Essentials}
-    \list
-    \li \l{qtquick-quickstart-essentials.html#bindings-and-signals}{Bindings And Signals}
-    \li \l{qtquick-quickstart-essentials.html#handling-user-input}{Handling User Input}
-    \li \l{qtquick-quickstart-essentials.html#defining-custom-qml-types-for-re-use}{Defining Custom QML Types For Re-use}
-    \endlist
-\endlist
+See QTBUG-26428
 
 \section1 Features And Use-Case Solutions
 
@@ -102,6 +84,22 @@ access to all of that functionality with a single import statement.
 documentation for the \l{qtquick-main.html}{Qt Quick Module Documentation} for in-depth
 information about the various QML types and other functionality provided by
 Qt Quick.}
+
+\section1 Quick Start
+
+\list
+\li \l{qtquick-quickstart-basics.html}{QML Basics}
+    \list
+    \li \l{qtquick-quickstart-basics.html#creating-a-qml-document}{Creating A QML Document}
+    \li \l{qtquick-quickstart-basics.html#loading-and-displaying-the-qml-document}{Loading And Displaying The QML Document}
+    \endlist
+\li \l{qtquick-quickstart-essentials.html}{QML Essentials}
+    \list
+    \li \l{qtquick-quickstart-essentials.html#handling-user-input}{Handling User Input}
+    \li \l{qtquick-quickstart-essentials.html#property-bindings-and-animations}{Property Bindings And Animations}
+    \li \l{qtquick-quickstart-essentials.html#defining-custom-qml-types-for-re-use}{Defining Custom QML Types For Re-use}
+    \endlist
+\endlist
 
 \section1 Important Application Development Topics
 
