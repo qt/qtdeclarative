@@ -29,8 +29,12 @@ Item {
                 var components = xhr.responseText.split('\n');
                 var i;
                 for (i=0; i<components.length; i++) {
-                    if (components[i].split(";").length == 2) {
-                        componentlist.append({"Name" : components[i].split(";")[0], "url" : components[i].split(";")[1]})
+                    var pair = components[i].split(";")
+                    if (pair.length == 2) {
+                        // Trim any unwanted whitespace
+                        var name = pair[0].replace(/^\s+|\s+$/g, "")
+                        var url = pair[1].replace(/^\s+|\s+$/g, "")
+                        componentlist.append({"Name" : name, "url" : url})
                     }
                 }
             }
