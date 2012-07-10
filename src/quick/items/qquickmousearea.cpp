@@ -193,9 +193,9 @@ QQuickDragAttached *QQuickDrag::qmlAttachedProperties(QObject *obj)
 #endif // QT_NO_DRAGANDDROP
 
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
-: enabled(true), hovered(false), pressed(false), longPress(false),
+: enabled(true), hovered(false), longPress(false),
   moved(false), dragX(true), dragY(true), stealMouse(false), doubleClick(false), preventStealing(false),
-  propagateComposedEvents(false)
+  propagateComposedEvents(false), pressed(0)
 #ifndef QT_NO_DRAGANDDROP
   , drag(0)
 #endif
@@ -693,12 +693,14 @@ void QQuickMouseArea::setPropagateComposedEvents(bool prevent)
 
     \snippet qml/mousearea/mousearea.qml mousebuttons
 
+    \note this property only handles buttons specified in \l acceptedButtons.
+
     \sa acceptedButtons
 */
 Qt::MouseButtons QQuickMouseArea::pressedButtons() const
 {
     Q_D(const QQuickMouseArea);
-    return d->lastButtons;
+    return d->pressed;
 }
 
 void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
@@ -706,9 +708,9 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickMouseArea);
     d->moved = false;
     d->stealMouse = d->preventStealing;
-    if (!d->enabled)
+    if (!d->enabled || !(event->button() & acceptedMouseButtons())) {
         QQuickItem::mousePressEvent(event);
-    else {
+    } else {
         d->longPress = false;
         d->saveEvent(event);
 #ifndef QT_NO_DRAGANDDROP
@@ -719,7 +721,7 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
         d->startScene = event->windowPos();
         d->pressAndHoldTimer.start(PressAndHoldDelay, this);
         setKeepMouseGrab(d->stealMouse);
-        event->setAccepted(setPressed(true));
+        event->setAccepted(setPressed(event->button(), true));
 
 #ifndef QT_NO_DRAGANDDROP
         if (d->drag) {
@@ -827,19 +829,21 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
         QQuickItem::mouseReleaseEvent(event);
     } else {
         d->saveEvent(event);
-        setPressed(false);
+        setPressed(event->button(), false);
+        if (!d->pressed) {
+            // no other buttons are pressed
 #ifndef QT_NO_DRAGANDDROP
-        if (d->drag)
-            d->drag->setActive(false);
+            if (d->drag)
+                d->drag->setActive(false);
 #endif
-        // If we don't accept hover, we need to reset containsMouse.
-        if (!acceptHoverEvents())
-            setHovered(false);
-        QQuickCanvas *c = canvas();
-        if (c && c->mouseGrabberItem() == this)
-            ungrabMouse();
-        setKeepMouseGrab(false);
-
+            // If we don't accept hover, we need to reset containsMouse.
+            if (!acceptHoverEvents())
+                setHovered(false);
+            QQuickCanvas *c = canvas();
+            if (c && c->mouseGrabberItem() == this)
+                ungrabMouse();
+            setKeepMouseGrab(false);
+        }
     }
     d->doubleClick = false;
 }
@@ -924,11 +928,12 @@ void QQuickMouseArea::ungrabMouse()
     if (d->pressed) {
         // if our mouse grab has been removed (probably by Flickable), fix our
         // state
-        d->pressed = false;
+        d->pressed = 0;
         d->stealMouse = false;
         setKeepMouseGrab(false);
         emit canceled();
         emit pressedChanged();
+        emit pressedButtonsChanged();
         if (d->hovered) {
             d->hovered = false;
             emit hoveredChanged();
@@ -975,15 +980,19 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
     }
     if (event->type() == QEvent::MouseButtonRelease) {
         if (d->pressed) {
-            d->pressed = false;
-            d->stealMouse = false;
-            if (c && c->mouseGrabberItem() == this)
-                ungrabMouse();
-            emit canceled();
-            emit pressedChanged();
-            if (d->hovered) {
-                d->hovered = false;
-                emit hoveredChanged();
+            d->pressed &= ~event->button();
+            emit pressedButtonsChanged();
+            if (!d->pressed) {
+                // no other buttons are pressed
+                d->stealMouse = false;
+                if (c && c->mouseGrabberItem() == this)
+                    ungrabMouse();
+                emit canceled();
+                emit pressedChanged();
+                if (d->hovered) {
+                    d->hovered = false;
+                    emit hoveredChanged();
+                }
             }
         }
     }
@@ -1116,7 +1125,7 @@ bool QQuickMouseArea::hovered() const
 
 /*!
     \qmlproperty bool QtQuick2::MouseArea::pressed
-    This property holds whether the mouse area is currently pressed.
+    This property holds whether any of the \l acceptedButtons are currently pressed.
 */
 bool QQuickMouseArea::pressed() const
 {
@@ -1176,31 +1185,39 @@ void QQuickMouseArea::setAcceptedButtons(Qt::MouseButtons buttons)
     }
 }
 
-bool QQuickMouseArea::setPressed(bool p)
+bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p)
 {
     Q_D(QQuickMouseArea);
+
 #ifndef QT_NO_DRAGANDDROP
     bool dragged = d->drag && d->drag->active();
 #else
     bool dragged = false;
 #endif
-    bool isclick = d->pressed == true && p == false && dragged == false && d->hovered == true;
+    bool wasPressed = d->pressed & button;
+    bool isclick = wasPressed && p == false && dragged == false && d->hovered == true;
+    Qt::MouseButtons oldPressed = d->pressed;
 
-    if (d->pressed != p) {
-        d->pressed = p;
+    if (wasPressed != p) {
         QQuickMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, isclick, d->longPress);
-        if (d->pressed) {
+        if (p) {
+            d->pressed |= button;
             if (!d->doubleClick)
                 emit pressed(&me);
             me.setPosition(d->lastPos);
             emit mouseXChanged(&me);
             me.setPosition(d->lastPos);
             emit mouseYChanged(&me);
-            emit pressedChanged();
+            if (!oldPressed)
+                emit pressedChanged();
+            emit pressedButtonsChanged();
         } else {
+            d->pressed &= ~button;
             emit released(&me);
             me.setPosition(d->lastPos);
-            emit pressedChanged();
+            if (!d->pressed)
+                emit pressedChanged();
+            emit pressedButtonsChanged();
             if (isclick && !d->longPress && !d->doubleClick){
                 me.setAccepted(d->isClickConnected());
                 emit clicked(&me);

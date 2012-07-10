@@ -1187,7 +1187,7 @@ bool QQuickCanvasPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
             event->setAccepted(me->isAccepted());
             if (me->isAccepted())
                 return true;
-            if (mouseGrabberItem)
+            if (mouseGrabberItem && !event->buttons())
                 mouseGrabberItem->ungrabMouse();
         }
     }
@@ -1229,7 +1229,7 @@ void QQuickCanvas::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
 #ifdef MOUSE_DEBUG
-    qWarning() << "QQuickCanvas::mousePressEvent()" << event->pos() << event->button() << event->buttons();
+    qWarning() << "QQuickCanvas::mousePressEvent()" << event->localPos() << event->button() << event->buttons();
 #endif
 
     d->deliverMouseEvent(event);
@@ -1240,7 +1240,7 @@ void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
 #ifdef MOUSE_DEBUG
-    qWarning() << "QQuickCanvas::mouseReleaseEvent()" << event->pos() << event->button() << event->buttons();
+    qWarning() << "QQuickCanvas::mouseReleaseEvent()" << event->localPos() << event->button() << event->buttons();
 #endif
 
     if (!d->mouseGrabberItem) {
@@ -1249,7 +1249,7 @@ void QQuickCanvas::mouseReleaseEvent(QMouseEvent *event)
     }
 
     d->deliverMouseEvent(event);
-    if (d->mouseGrabberItem)
+    if (d->mouseGrabberItem && !event->buttons())
         d->mouseGrabberItem->ungrabMouse();
 }
 
@@ -1258,7 +1258,7 @@ void QQuickCanvas::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
 #ifdef MOUSE_DEBUG
-    qWarning() << "QQuickCanvas::mouseDoubleClickEvent()" << event->pos() << event->button() << event->buttons();
+    qWarning() << "QQuickCanvas::mouseDoubleClickEvent()" << event->localPos() << event->button() << event->buttons();
 #endif
 
     if (!d->mouseGrabberItem && (event->buttons() & event->button()) == event->buttons()) {
@@ -1293,7 +1293,7 @@ void QQuickCanvas::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickCanvas);
 #ifdef MOUSE_DEBUG
-    qWarning() << "QQuickCanvas::mouseMoveEvent()" << event->pos() << event->button() << event->buttons();
+    qWarning() << "QQuickCanvas::mouseMoveEvent()" << event->localPos() << event->button() << event->buttons();
 #endif
 
     if (!d->mouseGrabberItem) {
@@ -1423,7 +1423,7 @@ void QQuickCanvas::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickCanvas);
 #ifdef MOUSE_DEBUG
-    qWarning() << "QQuickCanvas::wheelEvent()" << event->pos() << event->pixelDelta() << event->angleDelta();
+    qWarning() << "QQuickCanvas::wheelEvent()" << event->pixelDelta() << event->angleDelta();
 #endif
 
     //if the actual wheel event was accepted, accept the compatability wheel event and return early

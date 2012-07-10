@@ -82,6 +82,8 @@ private slots:
     void onWheel();
     void transformedMouseArea_data();
     void transformedMouseArea();
+    void pressedMultipleButtons_data();
+    void pressedMultipleButtons();
 
 private:
     void acceptedButton_data();
@@ -1171,6 +1173,132 @@ void tst_QQuickMouseArea::transformedMouseArea()
         QTest::qWait(10);
         QCOMPARE(mouseArea->property("pressed").toBool(), false);
     }
+
+    delete canvas;
+}
+
+void tst_QQuickMouseArea::pressedMultipleButtons_data()
+{
+    QTest::addColumn<Qt::MouseButtons>("accepted");
+    QTest::addColumn<QList<Qt::MouseButtons> >("buttons");
+    QTest::addColumn<QList<bool> >("pressed");
+    QTest::addColumn<QList<Qt::MouseButtons> >("pressedButtons");
+    QTest::addColumn<int>("changeCount");
+
+    QList<Qt::MouseButtons> buttons;
+    QList<bool> pressed;
+    QList<Qt::MouseButtons> pressedButtons;
+    buttons << Qt::LeftButton
+            << (Qt::LeftButton | Qt::RightButton)
+            << Qt::LeftButton
+            << 0;
+    pressed << true
+            << true
+            << true
+            << false;
+    pressedButtons << Qt::LeftButton
+            << Qt::LeftButton
+            << Qt::LeftButton
+            << 0;
+    QTest::newRow("Accept Left - Press left, Press Right, Release Right")
+            << Qt::MouseButtons(Qt::LeftButton) << buttons << pressed << pressedButtons << 2;
+
+    buttons.clear();
+    pressed.clear();
+    pressedButtons.clear();
+    buttons << Qt::LeftButton
+            << (Qt::LeftButton | Qt::RightButton)
+            << Qt::RightButton
+            << 0;
+    pressed << true
+            << true
+            << false
+            << false;
+    pressedButtons << Qt::LeftButton
+            << Qt::LeftButton
+            << 0
+            << 0;
+    QTest::newRow("Accept Left - Press left, Press Right, Release Left")
+            << Qt::MouseButtons(Qt::LeftButton) << buttons << pressed << pressedButtons << 2;
+
+    buttons.clear();
+    pressed.clear();
+    pressedButtons.clear();
+    buttons << Qt::LeftButton
+            << (Qt::LeftButton | Qt::RightButton)
+            << Qt::LeftButton
+            << 0;
+    pressed << true
+            << true
+            << true
+            << false;
+    pressedButtons << Qt::LeftButton
+            << (Qt::LeftButton | Qt::RightButton)
+            << Qt::LeftButton
+            << 0;
+    QTest::newRow("Accept Left|Right - Press left, Press Right, Release Right")
+        << (Qt::LeftButton | Qt::RightButton) << buttons << pressed << pressedButtons << 4;
+
+    buttons.clear();
+    pressed.clear();
+    pressedButtons.clear();
+    buttons << Qt::RightButton
+            << (Qt::LeftButton | Qt::RightButton)
+            << Qt::LeftButton
+            << 0;
+    pressed << true
+            << true
+            << false
+            << false;
+    pressedButtons << Qt::RightButton
+            << Qt::RightButton
+            << 0
+            << 0;
+    QTest::newRow("Accept Right - Press Right, Press Left, Release Right")
+            << Qt::MouseButtons(Qt::RightButton) << buttons << pressed << pressedButtons << 2;
+}
+
+void tst_QQuickMouseArea::pressedMultipleButtons()
+{
+    QFETCH(Qt::MouseButtons, accepted);
+    QFETCH(QList<Qt::MouseButtons>, buttons);
+    QFETCH(QList<bool>, pressed);
+    QFETCH(QList<Qt::MouseButtons>, pressedButtons);
+    QFETCH(int, changeCount);
+
+    QQuickView *canvas = createView();
+    canvas->setSource(testFileUrl("simple.qml"));
+    canvas->show();
+    canvas->requestActivateWindow();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QQuickMouseArea *mouseArea = canvas->rootObject()->findChild<QQuickMouseArea *>("mousearea");
+    QVERIFY(mouseArea != 0);
+
+    QSignalSpy pressedSpy(mouseArea, SIGNAL(pressedChanged()));
+    QSignalSpy pressedButtonsSpy(mouseArea, SIGNAL(pressedButtonsChanged()));
+    mouseArea->setAcceptedMouseButtons(accepted);
+
+    QPoint point(10,10);
+
+    int prevButtons = 0;
+    for (int i = 0; i < buttons.count(); ++i) {
+        int btns = buttons.at(i);
+
+        // The windowsysteminterface takes care of sending releases
+        QTest::mousePress(canvas, (Qt::MouseButton)btns, 0, point);
+
+        QCOMPARE(mouseArea->pressed(), pressed.at(i));
+        QCOMPARE(mouseArea->pressedButtons(), pressedButtons.at(i));
+
+        prevButtons = buttons.at(i);
+    }
+
+    QTest::mousePress(canvas, Qt::NoButton, 0, point);
+    QCOMPARE(mouseArea->pressed(), false);
+
+    QCOMPARE(pressedSpy.count(), 2);
+    QCOMPARE(pressedButtonsSpy.count(), changeCount);
 
     delete canvas;
 }

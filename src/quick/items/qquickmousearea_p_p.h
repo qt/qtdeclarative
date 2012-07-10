@@ -87,7 +87,6 @@ public:
 
     bool enabled : 1;
     bool hovered : 1;
-    bool pressed : 1;
     bool longPress : 1;
     bool moved : 1;
     bool dragX : 1;
@@ -96,6 +95,7 @@ public:
     bool doubleClick : 1;
     bool preventStealing : 1;
     bool propagateComposedEvents : 1;
+    Qt::MouseButtons pressed;
 #ifndef QT_NO_DRAGANDDROP
     QQuickDrag *drag;
 #endif

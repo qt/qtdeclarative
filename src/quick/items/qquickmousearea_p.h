@@ -135,7 +135,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(bool containsMouse READ hovered NOTIFY hoveredChanged)
     Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedChanged)
+    Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged)
 #ifndef QT_NO_DRAGANDDROP
@@ -187,6 +187,7 @@ Q_SIGNALS:
     void hoveredChanged();
     void pressedChanged();
     void enabledChanged();
+    void pressedButtonsChanged();
     void acceptedButtonsChanged();
     void hoverEnabledChanged();
 #ifndef QT_NO_CURSOR
@@ -210,7 +211,7 @@ Q_SIGNALS:
 
 protected:
     void setHovered(bool);
-    bool setPressed(bool);
+    bool setPressed(Qt::MouseButton button, bool);
     bool sendMouseEvent(QMouseEvent *event);
 
     virtual void mousePressEvent(QMouseEvent *event);
