@@ -705,8 +705,10 @@ void tst_QQuickLoader::initialPropertyValues()
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != 0);
-    qApp->processEvents();
-    QTest::qWait(50);
+    if (expectedWarnings.isEmpty()) {
+        QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
+        QTRY_VERIFY(loader->item());
+    }
 
     for (int i = 0; i < propertyNames.size(); ++i)
         QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
