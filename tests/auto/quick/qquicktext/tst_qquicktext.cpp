@@ -2450,10 +2450,6 @@ void tst_qquicktext::lineLaidOut()
 
     QVERIFY(!textPrivate->extra.isAllocated());
 
-#if defined(Q_OS_MAC)
-    QVERIFY(myText->lineCount() == textPrivate->linesRects.count());
-#endif
-
     for (int i = 0; i < textPrivate->layout.lineCount(); ++i) {
         QRectF r = textPrivate->layout.lineAt(i).rect();
         QVERIFY(r.width() == i * 15);
@@ -2483,10 +2479,6 @@ void tst_qquicktext::lineLaidOutRelayout()
     QVERIFY(textPrivate != 0);
 
     QVERIFY(!textPrivate->extra.isAllocated());
-
-#if defined(Q_OS_MAC)
-    QVERIFY(myText->lineCount() == textPrivate->linesRects.count());
-#endif
 
     qreal maxH = 0;
     for (int i = 0; i < textPrivate->layout.lineCount(); ++i) {

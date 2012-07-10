@@ -74,11 +74,7 @@ QT_BEGIN_NAMESPACE
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
 QQuickTextPrivate::QQuickTextPrivate()
-    : elideLayout(0), textLine(0)
-#if defined(Q_OS_MAC)
-    , layoutThread(0), paintingThread(0)
-#endif
-    , lineWidth(0)
+    : elideLayout(0), textLine(0), lineWidth(0)
     , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
     , lineCount(1), multilengthEos(-1)
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
@@ -488,9 +484,6 @@ void QQuickTextPrivate::updateSize()
 
     QSizeF size(0, 0);
     QSizeF previousSize = layedOutTextRect.size();
-#if defined(Q_OS_MAC)
-    layoutThread = QThread::currentThread();
-#endif
 
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
@@ -655,42 +648,24 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
 {
     Q_Q(QQuickText);
 
-#if defined(Q_OS_MAC)
-    if (QThread::currentThread() != paintingThread) {
-        if (!line.lineNumber())
-            linesRects.clear();
-#endif
+    if (!textLine)
+        textLine = new QQuickTextLine;
+    textLine->setLine(&line);
+    textLine->setY(height);
+    textLine->setHeight(0);
+    textLine->setLineOffset(lineOffset);
 
-        if (!textLine)
-            textLine = new QQuickTextLine;
-        textLine->setLine(&line);
-        textLine->setY(height);
-        textLine->setHeight(0);
-        textLine->setLineOffset(lineOffset);
+    // use the text item's width by default if it has one and wrap is on
+    if (q->widthValid() && q->wrapMode() != QQuickText::NoWrap)
+        textLine->setWidth(q->width());
+    else
+        textLine->setWidth(INT_MAX);
+    if (lineHeight() != 1.0)
+        textLine->setHeight((lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : line.height() * lineHeight());
 
-        // use the text item's width by default if it has one and wrap is on
-        if (q->widthValid() && q->wrapMode() != QQuickText::NoWrap)
-            textLine->setWidth(q->width());
-        else
-            textLine->setWidth(INT_MAX);
-        if (lineHeight() != 1.0)
-            textLine->setHeight((lineHeightMode() == QQuickText::FixedHeight) ? lineHeight() : line.height() * lineHeight());
+    emit q->lineLaidOut(textLine);
 
-        emit q->lineLaidOut(textLine);
-
-        height += textLine->height();
-
-#if defined(Q_OS_MAC)
-        linesRects << QRectF(textLine->x(), textLine->y(), textLine->width(), textLine->height());
-
-    } else {
-        if (line.lineNumber() < linesRects.count()) {
-            QRectF r = linesRects.at(line.lineNumber());
-            line.setLineWidth(r.width());
-            line.setPosition(r.topLeft());
-        }
-    }
-#endif
+    height += textLine->height();
 }
 
 void QQuickTextPrivate::elideFormats(
@@ -2242,13 +2217,6 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     d->updateType = QQuickTextPrivate::UpdateNone;
 
     const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect.height(), height(), d->vAlign);
-
-    // We need to make sure the layout is done in the current thread
-#if defined(Q_OS_MAC)
-    d->paintingThread = QThread::currentThread();
-    if (d->layoutThread != d->paintingThread)
-        d->updateLayout();
-#endif
 
     QQuickTextNode *node = 0;
     if (!oldNode) {

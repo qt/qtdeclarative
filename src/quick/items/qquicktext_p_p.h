@@ -115,12 +115,6 @@ public:
     QTextLayout *elideLayout;
     QQuickTextLine *textLine;
 
-#if defined(Q_OS_MAC)
-    QList<QRectF> linesRects;
-    QThread *layoutThread;
-    QThread *paintingThread;
-#endif
-
     qreal lineWidth;
 
     QRgb color;
