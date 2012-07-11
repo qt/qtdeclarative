@@ -1,5 +1,4 @@
 CONFIG += testcase
-CONFIG += insignificant_test
 TARGET = tst_qquickpositioners
 SOURCES += tst_qquickpositioners.cpp
 
