@@ -210,6 +210,7 @@ QQuickListCompositor::QQuickListCompositor()
     , m_groupCount(2)
     , m_defaultFlags(PrependFlag | DefaultFlag)
     , m_removeFlags(AppendFlag | PrependFlag | GroupMask)
+    , m_moveId(0)
 {
 }
 
@@ -586,7 +587,7 @@ void QQuickListCompositor::move(
 
     // Remove count items belonging to the move group from the list.
     Range movedFlags;
-    for (int moveId = 0; count > 0;) {
+    for (int moveId = m_moveId; count > 0;) {
         if (fromIt != moveGroup) {
             // Skip ranges not containing items from the move group.
             fromIt.incrementIndexes(fromIt->count);
@@ -604,7 +605,7 @@ void QQuickListCompositor::move(
                 fromIt->flags & ~(PrependFlag | AppendFlag));
         // Remove moved items from the count, the existing range, and a remove notification.
         if (removes)
-            removes->append(Remove(fromIt, difference, fromIt->flags, moveId++));
+            removes->append(Remove(fromIt, difference, fromIt->flags, ++moveId));
         count -= difference;
         fromIt->count -= difference;
 
@@ -702,13 +703,15 @@ void QQuickListCompositor::move(
     for (Range *next, *range = movedFlags.next; range != &movedFlags; range = next) {
         insert.count = range->count;
         insert.flags = range->flags;
-        if (inserts)
+        if (inserts) {
+            insert.moveId = ++m_moveId;
             inserts->append(insert);
+        }
         for (int i = 0; i < m_groupCount; ++i) {
             if (insert.inGroup(i))
                 insert.index[i] += range->count;
         }
-        ++insert.moveId;
+
         next = range->next;
         delete range;
     }
@@ -823,7 +826,7 @@ void QQuickListCompositor::listItemsRemoved(
         void *list,
         QVector<QQuickChangeSet::Remove> *removals,
         QVector<QQuickChangeSet::Insert> *insertions,
-        QVector<MovedFlags> *movedFlags, int moveId)
+        QVector<MovedFlags> *movedFlags)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << *removals)
 
@@ -856,7 +859,7 @@ void QQuickListCompositor::listItemsRemoved(
                     Q_ASSERT(insertion->count == removal->count);
 
                     if (relativeIndex < 0) {
-                        int splitMoveId = ++moveId;
+                        int splitMoveId = ++m_moveId;
                         removal = removals->insert(removal, QQuickChangeSet::Remove(
                                 removal->index, -relativeIndex, splitMoveId));
                         ++removal;
@@ -870,8 +873,8 @@ void QQuickListCompositor::listItemsRemoved(
 
                     if (it->prepend()) {
                         removeFlags |= it->flags & CacheFlag;
-                        translatedRemoval.moveId = ++moveId;
-                        movedFlags->append(MovedFlags(moveId, it->flags & ~AppendFlag));
+                        translatedRemoval.moveId = ++m_moveId;
+                        movedFlags->append(MovedFlags(m_moveId, it->flags & ~AppendFlag));
 
                         if (removeCount < removal->count) {
                             removal = removals->insert(removal, QQuickChangeSet::Remove(
@@ -965,7 +968,7 @@ void QQuickListCompositor::listItemsRemoved(
 
     QVector<QQuickChangeSet::Remove> removals;
     removals.append(QQuickChangeSet::Remove(index, count));
-    listItemsRemoved(translatedRemovals, list, &removals, 0, 0, 0);
+    listItemsRemoved(translatedRemovals, list, &removals, 0, 0);
 }
 
 void QQuickListCompositor::listItemsMoved(
@@ -985,7 +988,7 @@ void QQuickListCompositor::listItemsMoved(
     removals.append(QQuickChangeSet::Remove(from, count, 0));
     insertions.append(QQuickChangeSet::Insert(to, count, 0));
 
-    listItemsRemoved(translatedRemovals, list, &removals, &insertions, &movedFlags, 0);
+    listItemsRemoved(translatedRemovals, list, &removals, &insertions, &movedFlags);
     listItemsInserted(translatedInsertions, list, insertions, &movedFlags);
 }
 

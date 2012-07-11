@@ -273,6 +273,7 @@ private:
     int m_groupCount;
     int m_defaultFlags;
     int m_removeFlags;
+    int m_moveId;
 
     inline Range *insert(Range *before, void *list, int index, int count, uint flags);
     inline Range *erase(Range *range);
@@ -291,8 +292,7 @@ private:
             void *list,
             QVector<QQuickChangeSet::Remove> *removals,
             QVector<QQuickChangeSet::Insert> *insertions = 0,
-            QVector<MovedFlags> *movedFlags = 0,
-            int moveId = 0);
+            QVector<MovedFlags> *movedFlags = 0);
     void listItemsInserted(
             QVector<Insert> *translatedInsertions,
             void *list,

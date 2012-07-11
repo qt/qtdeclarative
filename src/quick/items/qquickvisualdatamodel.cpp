@@ -693,7 +693,7 @@ void QQuickVisualDataModelPrivate::updateFilterGroup()
         m_compositor.transition(previousGroup, m_compositorGroup, &removes, &inserts);
 
         QQuickChangeSet changeSet;
-        changeSet.apply(removes, inserts);
+        changeSet.move(removes, inserts);
         emit q->modelUpdated(changeSet, false);
 
         if (changeSet.difference() != 0)
@@ -1062,7 +1062,7 @@ void QQuickVisualDataModelPrivate::itemsChanged(const QVector<Compositor::Change
     }
 
     for (int i = 1; i < m_groupCount; ++i)
-        QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.apply(translatedChanges.at(i));
+        QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.change(translatedChanges.at(i));
 }
 
 void QQuickVisualDataModel::_q_itemsChanged(int index, int count, const QVector<int> &roles)
@@ -1157,7 +1157,7 @@ void QQuickVisualDataModelPrivate::itemsInserted(const QVector<Compositor::Inser
         return;
 
     for (int i = 1; i < m_groupCount; ++i)
-        QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.apply(translatedInserts.at(i));
+        QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.insert(translatedInserts.at(i));
 }
 
 void QQuickVisualDataModel::_q_itemsInserted(int index, int count)
@@ -1274,7 +1274,7 @@ void QQuickVisualDataModelPrivate::itemsRemoved(const QVector<Compositor::Remove
         return;
 
     for (int i = 1; i < m_groupCount; ++i)
-       QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.apply(translatedRemoves.at(i));
+       QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.remove(translatedRemoves.at(i));
 }
 
 void QQuickVisualDataModel::_q_itemsRemoved(int index, int count)
@@ -1316,7 +1316,7 @@ void QQuickVisualDataModelPrivate::itemsMoved(
         return;
 
     for (int i = 1; i < m_groupCount; ++i) {
-        QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.apply(
+        QQuickVisualDataGroupPrivate::get(m_groups[i])->changeSet.move(
                     translatedRemoves.at(i),
                     translatedInserts.at(i));
     }
@@ -2801,7 +2801,7 @@ void QQuickVisualPartsModel::updateFilterGroup()
         model->m_compositor.transition(previousGroup, m_compositorGroup, &removes, &inserts);
 
         QQuickChangeSet changeSet;
-        changeSet.apply(removes, inserts);
+        changeSet.move(removes, inserts);
         if (!changeSet.isEmpty())
             emit modelUpdated(changeSet, false);
 

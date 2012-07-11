@@ -72,16 +72,18 @@ public:
     struct Change
     {
         Change() : index(0), count(0), moveId(-1) {}
-        Change(int index, int count) : index(index), count(count), moveId(-1) {}
-        Change(int index, int count, int moveId) : index(index), count(count), moveId(moveId) {}
+        Change(int index, int count, int moveId = -1, int offset = 0)
+            : index(index), count(count), moveId(moveId), offset(offset) {}
 
         int index;
         int count;
         int moveId;
+        int offset;
 
         bool isMove() const { return moveId >= 0; }
 
-        MoveKey moveKey(int index) const { return MoveKey(moveId, index - Change::index); }
+        MoveKey moveKey(int index) const {
+            return MoveKey(moveId, index - Change::index + offset); }
 
         int start() const { return index; }
         int end() const { return index + count; }
@@ -91,15 +93,15 @@ public:
     struct Insert : public Change
     {
         Insert() {}
-        Insert(int index, int count) : Change(index, count) {}
-        Insert(int index, int count, int moveId) : Change(index, count, moveId) {}
+        Insert(int index, int count, int moveId = -1, int offset = 0)
+            : Change(index, count, moveId, offset) {}
     };
 
     struct Remove : public Change
     {
         Remove() {}
-        Remove(int index, int count) : Change(index, count) {}
-        Remove(int index, int count, int moveId) : Change(index, count, moveId) {}
+        Remove(int index, int count, int moveId = -1, int offset = 0)
+            : Change(index, count, moveId, offset) {}
     };
 
     QQuickChangeSet();
@@ -110,45 +112,38 @@ public:
 
     const QVector<Remove> &removes() const { return m_removes; }
     const QVector<Insert> &inserts() const { return m_inserts; }
-    const QVector<Change> &changes() const {return  m_changes; }
+    const QVector<Change> &changes() const { return m_changes; }
 
     void insert(int index, int count);
     void remove(int index, int count);
-    void move(int from, int to, int count);
+    void move(int from, int to, int count, int moveId);
     void change(int index, int count);
 
+    void insert(const QVector<Insert> &inserts);
+    void remove(const QVector<Remove> &removes, QVector<Insert> *inserts = 0);
+    void move(const QVector<Remove> &removes, const QVector<Insert> &inserts);
+    void change(const QVector<Change> &changes);
     void apply(const QQuickChangeSet &changeSet);
-    void apply(const QVector<Remove> &removals);
-    void apply(const QVector<Insert> &insertions);
-    void apply(const QVector<Change> &changes);
-    void apply(
-            const QVector<Remove> &removals,
-            const QVector<Insert> &insertions,
-            const QVector<Change> &changes = QVector<Change>());
 
-    bool isEmpty() const { return m_removes.empty() && m_inserts.empty() && m_changes.empty(); }
+    bool isEmpty() const { return m_removes.empty() && m_inserts.empty() && m_changes.isEmpty(); }
 
     void clear()
     {
         m_removes.clear();
         m_inserts.clear();
         m_changes.clear();
-        m_moveCounter = 0;
         m_difference = 0;
     }
 
-    int moveCounter() const { return m_moveCounter; }
     int difference() const { return m_difference; }
 
 private:
-    void applyRemovals(QVector<Remove> &removals, QVector<Insert> &insertions);
-    void applyInsertions(QVector<Insert> &insertions);
-    void applyChanges(QVector<Change> &changes);
+    void remove(QVector<Remove> *removes, QVector<Insert> *inserts);
+    void change(QVector<Change> *changes);
 
     QVector<Remove> m_removes;
     QVector<Insert> m_inserts;
     QVector<Change> m_changes;
-    int m_moveCounter;
     int m_difference;
 };
 
@@ -161,10 +156,10 @@ inline uint qHash(const QQuickChangeSet::MoveKey &key) { return qHash(qMakePair(
 inline bool operator ==(const QQuickChangeSet::MoveKey &l, const QQuickChangeSet::MoveKey &r) {
     return l.moveId == r.moveId && l.offset == r.offset; }
 
-Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet &change);
 Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet::Remove &remove);
 Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet::Insert &insert);
 Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet::Change &change);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQuickChangeSet &change);
 
 QT_END_NAMESPACE
 
