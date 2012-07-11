@@ -1139,7 +1139,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     \inherits Flickable
     \brief For specifying a grid view of items provided by a model
 
-    A GridView displays data from models created from built-in QML elements like ListModel
+    A GridView displays data from models created from built-in QML types like ListModel
     and XmlListModel, or custom model classes defined in C++ that inherit from
     QAbstractListModel.
 
@@ -1163,8 +1163,8 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     for more information about creating reusable components like this.
 
     Another component can display this model data in a GridView, as in the following
-    example, which creates a \c ContactModel component for its model, and a \l Column element
-    (containing \l Image and \l Text elements) for its delegate.
+    example, which creates a \c ContactModel component for its model, and a \l Column
+    (containing \l Image and \l Text items) for its delegate.
 
     \clearfloat
     \snippet qml/gridview/gridview.qml import
@@ -1345,10 +1345,10 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     The index is exposed as an accessible \c index property.  Properties of the
     model are also available depending upon the type of \l {qmlmodels}{Data Model}.
 
-    The number of elements in the delegate has a direct effect on the
+    The number of objects and bindings in the delegate has a direct effect on the
     flicking performance of the view.  If at all possible, place functionality
     that is not needed for the normal display of the delegate in a \l Loader which
-    can load additional elements when needed.
+    can load additional components when needed.
 
     The GridView will layout the items based on the size of the root item
     in the delegate.
@@ -1541,7 +1541,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     Setting this value can make scrolling the list smoother at the expense
     of additional memory usage.  It is not a substitute for creating efficient
-    delegates; the fewer elements in a delegate, the faster a view may be
+    delegates; the fewer objects and bindings in a delegate, the faster a view may be
     scrolled.
 */
 void QQuickGridView::setHighlightMoveDuration(int duration)

@@ -589,7 +589,7 @@ is finished.
     \ingroup qtquick-input
     \ingroup qtquick-containers
 
-    \brief For specifying a surface that can be "flicked"
+    \brief Provides a surface that can be "flicked"
     \inherits Item
 
     The Flickable item places its children on a surface that can be dragged

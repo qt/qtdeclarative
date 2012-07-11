@@ -214,7 +214,7 @@ struct SpriteVertices {
     \brief Draws a sprite animation
 
     SpriteSequence renders and controls a list of animations defined
-    by \l Sprite elements.
+    by \l Sprite types.
 
     For full details, see the \l{Sprite Animation} overview.
 */
@@ -259,7 +259,7 @@ struct SpriteVertices {
 /*!
     \qmlproperty list<Sprite> QtQuick2::SpriteSequence::sprites
 
-    The sprite or sprites to draw. Sprites will be scaled to the size of this element.
+    The sprite or sprites to draw. Sprites will be scaled to the size of this item.
 */
 
 //TODO: Implicitly size element to size of first sprite?

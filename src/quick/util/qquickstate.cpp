@@ -134,7 +134,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
     different scripts.
 
     The following example displays a single \l Rectangle. In the default state, the rectangle
-    is colored black. In the "clicked" state, a PropertyChanges element changes the
+    is colored black. In the "clicked" state, a PropertyChanges object changes the
     rectangle's color to red. Clicking within the MouseArea toggles the rectangle's state
     between the default state and the "clicked" state, thus toggling the color of the
     rectangle between black and red.

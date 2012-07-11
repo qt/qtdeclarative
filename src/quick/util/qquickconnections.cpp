@@ -96,7 +96,7 @@ public:
         \li Connecting to targets not defined in QML
     \endlist
 
-    When any of these are needed, the Connections element can be used instead.
+    When any of these are needed, the Connections type can be used instead.
 
     For example, the above code can be changed to use a Connections object,
     like this:

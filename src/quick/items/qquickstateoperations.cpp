@@ -563,7 +563,7 @@ void QQuickParentChange::rewind()
     \ingroup qtquick-states
     \brief Specifies how to change the anchors of an item in a state
 
-    The AnchorChanges element is used to modify the anchors of an item in a \l State.
+    The AnchorChanges type is used to modify the anchors of an item in a \l State.
 
     AnchorChanges cannot be used to modify the margins on an item. For this, use
     PropertyChanges intead.

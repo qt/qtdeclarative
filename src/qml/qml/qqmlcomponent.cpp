@@ -122,7 +122,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
     \brief The QQmlComponent class encapsulates a QML component definition
 
-    Components are reusable, encapsulated QML elements with well-defined interfaces.
+    Components are reusable, encapsulated QML types with well-defined interfaces.
 
     A QQmlComponent instance can be created from a QML file.
     For example, if there is a \c main.qml file like this:
@@ -196,10 +196,10 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \inqmlmodule QtQuick 2
     \brief Encapsulates a QML component definition
 
-    Components are reusable, encapsulated QML elements with well-defined interfaces.
+    Components are reusable, encapsulated QML types with well-defined interfaces.
 
     Components are often defined by \l {{QML Documents}}{component files} -
-    that is, \c .qml files. The \e Component element essentially allows QML components
+    that is, \c .qml files. The \e Component type essentially allows QML components
     to be defined inline, within a \l {QML Document}{QML document}, rather than as a separate QML file.
     This may be useful for reusing a small component within a QML file, or for defining
     a component that logically belongs with other QML components within a file.
@@ -212,7 +212,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     Notice that while a \l Rectangle by itself would be automatically 
     rendered and displayed, this is not the case for the above rectangle
     because it is defined inside a \c Component. The component encapsulates the
-    QML elements within, as if they were defined in a separate QML
+    QML types within, as if they were defined in a separate QML
     file, and is not loaded until requested (in this case, by the
     two \l Loader objects).
 
@@ -224,7 +224,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     data outside of this item, with the exception of an \e id (which in the above example
     is \e redSquare).
 
-    The \c Component element is commonly used to provide graphical components
+    The \c Component type is commonly used to provide graphical components
     for views. For example, the ListView::delegate property requires a \c Component
     to specify how each list item is to be displayed.
 
@@ -260,8 +260,8 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     execute script code at startup, once the full QML environment has been
     established.
 
-    The \c {Component::onCompleted} attached property can be applied to
-    any element.  The order of running the \c onCompleted scripts is
+    The \c {Component::onCompleted} attached property can be declared on
+    any object.  The order of running the \c onCompleted scripts is
     undefined.
 
     \qml
@@ -281,8 +281,8 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     work done in the onCompleted signal, or other imperative code in your
     application.
 
-    The \c {Component::onDestruction} attached property can be applied to
-    any element.  However, it applies to the destruction of the component as
+    The \c {Component::onDestruction} attached property can be declared on
+    any object.  However, it applies to the destruction of the component as
     a whole, and not the destruction of the specific object.  The order of
     running the \c onDestruction scripts is undefined.
 

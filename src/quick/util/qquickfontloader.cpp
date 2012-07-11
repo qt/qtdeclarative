@@ -151,7 +151,7 @@ QHash<QUrl, QQuickFontObject*> QQuickFontLoaderPrivate::fonts;
     \ingroup qtquick-text-utility
     \brief Allows fonts to be loaded by name or URL
 
-    The FontLoader element is used to load fonts by name or URL.
+    The FontLoader type is used to load fonts by name or URL.
 
     The \l status indicates when the font has been loaded, which is useful
     for fonts loaded from remote sources.

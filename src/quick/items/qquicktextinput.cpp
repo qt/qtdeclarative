@@ -73,7 +73,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
     \inherits Item
     \brief Displays an editable line of text
 
-    The TextInput element displays a single line of editable plain text.
+    The TextInput type displays a single line of editable plain text.
 
     TextInput is used to accept a line of text input. Input constraints
     can be placed on a TextInput item (for example, through a \l validator or \l inputMask),
@@ -683,7 +683,7 @@ void QQuickTextInput::setMaxLength(int ml)
     forward keys to it and you desire it to look active when this happens
     (but without actually giving it active focus).
 
-    It should not be set directly on the element, like in the below QML,
+    It should not be set directly on the item, like in the below QML,
     as the specified value will be overridden an lost on focus changes.
 
     \code
@@ -884,7 +884,7 @@ void QQuickTextInput::setAutoScroll(bool b)
     \ingroup qtquick-text-utility
     \brief Defines a validator for integer values
 
-    This element provides a validator for integer values.
+    The IntValidator type provides a validator for integer values.
 
     If no \l locale is set IntValidator uses the \l {QLocale::setDefault()}{default locale} to
     interpret the number and will accept locale specific digits, group separators, and positive
@@ -947,7 +947,7 @@ void QQuickIntValidator::resetLocaleName()
     \ingroup qtquick-text-utility
     \brief Defines a validator for non-integer numbers
 
-    This element provides a validator for non-integer numbers.
+    The DoubleValidator type provides a validator for non-integer numbers.
 
     Input is accepted if it contains a double that is within the valid range
     and is in the  correct format.
@@ -1040,7 +1040,7 @@ void QQuickDoubleValidator::resetLocaleName()
     \ingroup qtquick-text-utility
     \brief Provides a string validator
 
-    This element provides a validator, which counts as valid any string which
+    The RegExpValidator type provides a validator, which counts as valid any string which
     matches a specified regular expression.
 */
 /*!

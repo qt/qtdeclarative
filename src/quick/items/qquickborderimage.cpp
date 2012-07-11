@@ -56,14 +56,14 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass BorderImage QQuickBorderImage
     \inqmlmodule QtQuick 2
-    \brief For specifying an image that can be used as a border
+    \brief Paints a border based on an image
     \inherits Item
     \ingroup qtquick-visual
 
-    The BorderImage element is used to create borders out of images by scaling or tiling
+    The BorderImage type is used to create borders out of images by scaling or tiling
     parts of each image.
 
-    A BorderImage element breaks a source image, specified using the \l url property,
+    A BorderImage breaks a source image, specified using the \l source property,
     into 9 regions, as shown below:
 
     \image declarative-scalegrid.png
@@ -95,7 +95,7 @@ QT_BEGIN_NAMESPACE
     \image qml-borderimage-normal-image.png
     \endfloat
 
-    An unscaled image is displayed using an Image element. The \l border property is
+    An unscaled image is displayed using an Image. The \l border property is
     used to determine the parts of the image that will lie inside the unscaled corner
     areas and the parts that will be stretched horizontally and vertically.
 
@@ -106,7 +106,7 @@ QT_BEGIN_NAMESPACE
     \image qml-borderimage-scaled.png
     \endfloat
 
-    A BorderImage element is used to display the image, and it is given a size that is
+    A BorderImage is used to display the image, and it is given a size that is
     larger than the original image. Since the \l horizontalTileMode property is set to
     \l{BorderImage::horizontalTileMode}{BorderImage.Stretch}, the parts of image in
     regions 2 and 8 are stretched horizontally. Since the \l verticalTileMode property
@@ -120,12 +120,12 @@ QT_BEGIN_NAMESPACE
     \image qml-borderimage-tiled.png
     \endfloat
 
-    Again, a large BorderImage element is used to display the image. With the
+    Again, a large BorderImage is used to display the image. With the
     \l horizontalTileMode property set to \l{BorderImage::horizontalTileMode}{BorderImage.Repeat},
     the parts of image in regions 2 and 8 are tiled so that they fill the space at the
-    top and bottom of the element. Similarly, the \l verticalTileMode property is set to
+    top and bottom of the item. Similarly, the \l verticalTileMode property is set to
     \l{BorderImage::verticalTileMode}{BorderImage.Repeat}, the parts of image in regions
-    4 and 6 are tiled so that they fill the space at the left and right of the element.
+    4 and 6 are tiled so that they fill the space at the left and right of the item.
 
     \snippet qml/borderimage/borderimage-tiled.qml tiled border image
 

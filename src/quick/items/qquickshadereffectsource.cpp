@@ -461,24 +461,24 @@ QImage QQuickShaderEffectTexture::toImage() const
     \since 5.0
     \inherits Item
     \ingroup qtquick-effects
-    \brief Renders a QML element into a texture and displays it
+    \brief Renders a QtQuick item into a texture and displays it
 
-    The ShaderEffectSource element renders \l sourceItem into a texture and
+    The ShaderEffectSource type renders \l sourceItem into a texture and
     displays it in the scene. \l sourceItem is drawn into the texture as though
-    it was a fully opaque root element. Thus \l sourceItem itself can be
+    it was a fully opaque root item. Thus \l sourceItem itself can be
     invisible, but still appear in the texture.
 
     ShaderEffectSource can be used as:
     \list
     \li a texture source in a \l ShaderEffect.
-       This allows you to apply custom shader effects to any QML element.
-    \li a cache for a complex element.
-       The complex element can be rendered once into the texture, which can
-       then be animated freely without the need to render the complex element
+       This allows you to apply custom shader effects to any QtQuick item.
+    \li a cache for a complex item.
+       The complex item can be rendered once into the texture, which can
+       then be animated freely without the need to render the complex item
        again every frame.
     \li an opacity layer.
-       ShaderEffectSource allows you to apply an opacity to elements as a group
-       rather than each element individually.
+       ShaderEffectSource allows you to apply an opacity to items as a group
+       rather than each item individually.
     \endlist
 
     \table
@@ -513,7 +513,7 @@ QImage QQuickShaderEffectTexture::toImage() const
     \endrow
     \endtable
 
-    The ShaderEffectSource element does not redirect any mouse or keyboard
+    The ShaderEffectSource type does not redirect any mouse or keyboard
     input to \l sourceItem. If you hide the \l sourceItem by setting
     \l{Item::visible}{visible} to false or \l{Item::opacity}{opacity} to zero,
     it will no longer react to input. In cases where the ShaderEffectSource is
@@ -611,7 +611,7 @@ QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
     \qmlproperty enumeration ShaderEffectSource::wrapMode
 
     This property defines the OpenGL wrap modes associated with the texture.
-    Modifying this property makes most sense when the element is used as a
+    Modifying this property makes most sense when the item is used as a
     source texture of a \l ShaderEffect.
 
     \list
@@ -642,7 +642,7 @@ void QQuickShaderEffectSource::setWrapMode(WrapMode mode)
 /*!
     \qmlproperty Item ShaderEffectSource::sourceItem
 
-    This property holds the element to be rendered into the texture.
+    This property holds the item to be rendered into the texture.
     Setting this to null while \l live is true, will release the texture
     resources.
 */
@@ -751,7 +751,7 @@ void QQuickShaderEffectSource::setTextureSize(const QSize &size)
     \qmlproperty enumeration ShaderEffectSource::format
 
     This property defines the internal OpenGL format of the texture.
-    Modifying this property makes most sense when the element is used as a
+    Modifying this property makes most sense when the item is used as a
     source texture of a \l ShaderEffect. Depending on the OpenGL
     implementation, this property might allow you to save some texture memory.
 
@@ -783,7 +783,7 @@ void QQuickShaderEffectSource::setFormat(QQuickShaderEffectSource::Format format
 
     If this property is true, the texture is updated whenever the
     \l sourceItem updates. Otherwise, it will be a frozen image, even if
-    \l sourceItem is assigned a new element. The property is true by default.
+    \l sourceItem is assigned a new item. The property is true by default.
 */
 
 bool QQuickShaderEffectSource::live() const

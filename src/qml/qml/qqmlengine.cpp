@@ -115,11 +115,11 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
   \since 4.7
   \brief A basic QML type
 
-  The QtObject element is a non-visual element which contains only the
+  The QtObject type is a non-visual element which contains only the
   objectName property.
 
   It can be useful to create a QtObject if you need an extremely
-  lightweight element to enclose a set of custom properties:
+  lightweight type to enclose a set of custom properties:
 
   \snippet qml/qtobject.qml 0
 
@@ -883,7 +883,7 @@ QNetworkAccessManager *QQmlEnginePrivate::getNetworkAccessManager() const
 
 /*!
   Returns a common QNetworkAccessManager which can be used by any QML
-  element instantiated by this engine.
+  type instantiated by this engine.
 
   If a QQmlNetworkAccessManagerFactory has been set and a
   QNetworkAccessManager has not yet been created, the

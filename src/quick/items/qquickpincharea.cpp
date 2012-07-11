@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-input-events
     \brief For specifying information about a pinch event
 
-    \b {The PinchEvent element was added in QtQuick 1.1}
+    \b {The PinchEvent type was added in QtQuick 1.1}
 
     The \c center, \c startCenter, \c previousCenter properties provide the center position between the two touch points.
 
@@ -167,7 +167,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \inherits Item
     \brief Enables simple pinch gesture handling
 
-    \b {The PinchArea element was added in QtQuick 1.1}
+    \b {The PinchArea type was added in QtQuick 1.1}
 
     A PinchArea is an invisible item that is typically used in conjunction with
     a visible item in order to provide pinch gesture handling for that item.
@@ -179,7 +179,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     PinchArea can be used in two ways:
 
     \list
-    \li setting a \c pinch.target to provide automatic interaction with an element
+    \li setting a \c pinch.target to provide automatic interaction with an item
     \li using the onPinchStarted, onPinchUpdated and onPinchFinished handlers
     \endlist
 

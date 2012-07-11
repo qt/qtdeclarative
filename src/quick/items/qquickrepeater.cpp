@@ -67,13 +67,13 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
     \ingroup qtquick-models
     \ingroup qtquick-positioning
     \inherits Item
-    \brief Specifies how to repeately create an Item-based component using a model
+    \brief Instantiates a number of Item-based components using a provided model
 
-    The Repeater element is used to create a large number of
-    similar items. Like other view elements, a Repeater has a \l model and a \l delegate:
+    The Repeater type is used to create a large number of
+    similar items. Like other view types, a Repeater has a \l model and a \l delegate:
     for each entry in the model, the delegate is instantiated
     in a context seeded with data from the model. A Repeater item is usually
-    enclosed in a positioner element such as \l Row or \l Column to visually
+    enclosed in a positioner type such as \l Row or \l Column to visually
     position the multiple delegate items created by the Repeater.
 
     The following Repeater creates three instances of a \l Rectangle item within
@@ -107,10 +107,10 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 
     \section2 Considerations when using Repeater
 
-    The Repeater element creates all of its delegate items when the repeater is first
+    The Repeater type creates all of its delegate items when the repeater is first
     created. This can be inefficient if there are a large number of delegate items and
     not all of the items are required to be visible at the same time. If this is the case,
-    consider using other view elements like ListView (which only creates delegate items
+    consider using other view types like ListView (which only creates delegate items
     when they are scrolled into view) or use the \l {Dynamic Object Creation} methods to
     create items as they are required.
 

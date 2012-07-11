@@ -58,7 +58,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
     \ingroup qtquick-input-events
     \brief Describes a touch point in a MultiPointTouchArea
 
-    The TouchPoint element contains information about a touch point, such as the current
+    The TouchPoint type contains information about a touch point, such as the current
     position, pressure, and area.
 */
 
@@ -271,7 +271,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 /*!
     \qmlsignal QtQuick2::MultiPointTouchArea::onCanceled(list<TouchPoint> touchPoints)
 
-    This handler is called when new touch events have been canceled because another element stole the touch event handling.
+    This handler is called when new touch events have been canceled because another item stole the touch event handling.
 
     This signal is for advanced use: it is useful when there is more than one MultiPointTouchArea
     that is handling input, or when there is a MultiPointTouchArea inside a \l Flickable. In the latter

@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
     This can be overridden by setting a specific target item using the
     \l target property.
 
-    Like any other animation element, a ParentAnimation can be applied in a
+    Like any other animation type, a ParentAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.
@@ -432,7 +432,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
     This can be overridden by setting a specific target item using the
     \l target property.
 
-    Like any other animation element, an AnchorAnimation can be applied in a
+    Like any other animation type, an AnchorAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.

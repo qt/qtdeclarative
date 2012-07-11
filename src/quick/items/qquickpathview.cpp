@@ -458,7 +458,7 @@ void QQuickPathViewPrivate::setDragging(bool d)
     \inherits Item
     \brief Lays out model-provided items on a path
 
-    A PathView displays data from models created from built-in QML elements like ListModel
+    A PathView displays data from models created from built-in QML types like ListModel
     and XmlListModel, or custom model classes defined in C++ that inherit from
     QAbstractListModel.
 
@@ -577,7 +577,7 @@ QQuickPathView::~QQuickPathView()
 
     The model provides a set of data that is used to create the items for the view.
     For large or dynamic datasets the model is usually provided by a C++ model object.
-    Models can also be created directly in QML, using the ListModel element.
+    Models can also be created directly in QML, using the ListModel type.
 
     \sa {qmlmodels}{Data Models}
 */
@@ -1158,10 +1158,10 @@ bool QQuickPathView::isDragging() const
     The index is exposed as an accessible \c index property.  Properties of the
     model are also available depending upon the type of \l {qmlmodels}{Data Model}.
 
-    The number of elements in the delegate has a direct effect on the
+    The number of objects and bindings in the delegate has a direct effect on the
     flicking performance of the view when pathItemCount is specified.  If at all possible, place functionality
     that is not needed for the normal display of the delegate in a \l Loader which
-    can load additional elements when needed.
+    can load additional components when needed.
 
     Note that the PathView will layout the items based on the size of the root
     item in the delegate.

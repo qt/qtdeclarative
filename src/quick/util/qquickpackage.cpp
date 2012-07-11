@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     \l{Package::name}{Package.name} attached property.
 
     The example below creates a Package containing two named items;
-    \e list and \e grid.  The third element in the package (the \l Rectangle) is parented to whichever
+    \e list and \e grid.  The third item in the package (the \l Rectangle) is parented to whichever
     delegate it should appear in.  This allows an item to move
     between views.
 

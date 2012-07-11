@@ -345,7 +345,7 @@ void QSmoothedAnimation::init()
     set to a value such as 0.5 units/second.  Animating from 0 to 1.0 with a velocity
     of 0.5 will take 2000 ms to complete.
 
-    Like any other animation element, a SmoothedAnimation can be applied in a
+    Like any other animation type, a SmoothedAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.

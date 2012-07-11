@@ -98,7 +98,7 @@ public:
     }
     \endqml
 
-    The Timer element is synchronized with the animation timer.  Since the animation
+    The Timer type is synchronized with the animation timer.  Since the animation
     timer is usually set to 60fps, the resolution of Timer will be
     at best 16ms.
 

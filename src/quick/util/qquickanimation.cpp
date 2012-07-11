@@ -75,10 +75,10 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-transitions-animations
     \brief Is the base of all QML animations
 
-    The Animation element cannot be used directly in a QML file.  It exists
+    The Animation type cannot be used directly in a QML file.  It exists
     to provide a set of common properties and methods, available across all the
     other animation types that inherit from it.  Attempting to use the Animation
-    element directly will result in an error.
+    type directly will result in an error.
 */
 
 QQuickAbstractAnimation::QQuickAbstractAnimation(QObject *parent)
@@ -125,7 +125,7 @@ QAbstractAnimationJob* QQuickAbstractAnimation::qtAnimation()
     \endcode
 
     Likewise, the \c running property can be read to determine if the animation
-    is running.  In the following example the text element will indicate whether
+    is running.  In the following example the Text item will indicate whether
     or not the animation is running.
 
     \code
@@ -728,7 +728,7 @@ QAbstractAnimationJob* QQuickPauseAnimation::transition(QQuickStateActions &acti
 
     \snippet qml/coloranimation.qml 0
 
-    Like any other animation element, a ColorAnimation can be applied in a
+    Like any other animation type, a ColorAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.
@@ -1250,7 +1250,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
 
     \snippet qml/numberanimation.qml 0
 
-    Like any other animation element, a NumberAnimation can be applied in a
+    Like any other animation type, a NumberAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.
@@ -1356,7 +1356,7 @@ void QQuickNumberAnimation::setTo(qreal t)
     Vector3dAnimation is a specialized PropertyAnimation that defines an
     animation to be applied when a Vector3d value changes.
 
-    Like any other animation element, a Vector3dAnimation can be applied in a
+    Like any other animation type, a Vector3dAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.
@@ -1455,7 +1455,7 @@ void QQuickVector3dAnimation::setTo(QVector3D t)
     the change at the start of the animation using PropertyAction. See the
     PropertyAction documentation for more details.
 
-    Like any other animation element, a RotationAnimation can be applied in a
+    Like any other animation type, a RotationAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.
@@ -1669,7 +1669,7 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
     \inherits Animation
     \brief Allows animations to be run sequentially
 
-    The SequentialAnimation and ParallelAnimation elements allow multiple
+    The SequentialAnimation and ParallelAnimation types allow multiple
     animations to be run together. Animations defined in a SequentialAnimation
     are run one after the other, while animations defined in a ParallelAnimation
     are run at the same time.
@@ -1683,7 +1683,7 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
     so SequentialAnimation can be used to enclose the animations in a \l Transition
     if this is the preferred behavior.
 
-    Like any other animation element, a SequentialAnimation can be applied in a
+    Like any other animation type, a SequentialAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.
@@ -1742,7 +1742,7 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
     \inherits Animation
     \brief Enables animations to be run in parallel
 
-    The SequentialAnimation and ParallelAnimation elements allow multiple
+    The SequentialAnimation and ParallelAnimation types allow multiple
     animations to be run together. Animations defined in a SequentialAnimation
     are run one after the other, while animations defined in a ParallelAnimation
     are run at the same time.
@@ -1752,7 +1752,7 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
 
     \snippet qml/parallelanimation.qml 0
 
-    Like any other animation element, a ParallelAnimation can be applied in a
+    Like any other animation type, a ParallelAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.
@@ -1917,7 +1917,7 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
     different. For more information see the individual property documentation, as well
     as the \l{QML Animation and Transitions} introduction.
 
-    Note that PropertyAnimation inherits the abstract \l Animation element.
+    Note that PropertyAnimation inherits the abstract \l Animation type.
     This includes additional properties and methods for controlling the animation.
 
     \sa {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}

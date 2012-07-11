@@ -96,7 +96,7 @@ TextEdit {
 
     \snippet qml/texteditor.qml 0
 
-    A particular look-and-feel might use smooth scrolling (eg. using SmoothedFollow), might have a visible
+    A particular look-and-feel might use smooth scrolling (eg. using SmoothedAnimation), might have a visible
     scrollbar, or a scrollbar that fades in to show location, etc.
 
     Clipboard support is provided by the cut(), copy(), and paste() functions, and the selection can
@@ -738,7 +738,7 @@ qreal QQuickTextEdit::contentHeight() const
     This property specifies a base URL which is used to resolve relative URLs
     within the text.
 
-    By default is the url of the TextEdit element.
+    The default value is the url of the QML file instantiating the TextEdit item.
 */
 
 QUrl QQuickTextEdit::baseUrl() const

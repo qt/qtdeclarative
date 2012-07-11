@@ -446,7 +446,7 @@ The incubator will remain in the Loading state until either the creation is comp
 occurs.  The statusChanged() callback can be used to be notified of status changes.
 
 Applications should use the Asynchronous incubation mode to create objects that are not needed
-immediately.  For example, the ListView element uses Asynchronous incubation to create objects
+immediately.  For example, the ListView type uses Asynchronous incubation to create objects
 that are slightly off screen while the list is being scrolled.  If, during asynchronous creation,
 the object is needed immediately the QQmlIncubator::forceCompletion() method can be called
 to complete the creation process synchronously.
@@ -454,14 +454,14 @@ to complete the creation process synchronously.
 \li AsynchronousIfNested The creation will occur asynchronously if part of a nested asynchronous
 creation, or synchronously if not.  
 
-In most scenarios where a QML element or component wants the appearance of a synchronous 
+In most scenarios where a QML component wants the appearance of a synchronous
 instantiation, it should use this mode.  
 
-This mode is best explained with an example.  When the ListView element is first created, it needs
+This mode is best explained with an example.  When the ListView type is first created, it needs
 to populate itself with an initial set of delegates to show.  If the ListView was 400 pixels high, 
 and each delegate was 100 pixels high, it would need to create four initial delegate instances.  If
 the ListView used the Asynchronous incubation mode, the ListView would always be created empty and
-then, sometime later, the four initial elements would appear.  
+then, sometime later, the four initial items would appear.
 
 Conversely, if the ListView was to use the Synchronous incubation mode it would behave correctly 
 but it may introduce stutters into the application.  As QML would have to stop and instantiate the 
@@ -473,9 +473,9 @@ delegates are instantiated asynchronously if the ListView itself is already part
 instantiation, and synchronously otherwise.  In the case of a nested asynchronous instantiation, the
 outer asynchronous instantiation will not complete until after all the nested instantiations have also
 completed.  This ensures that by the time the outer asynchronous instantitation completes, inner 
-elements like ListView have already completed loading their initial delegates.
+items like ListView have already completed loading their initial delegates.
 
-It is almost always incorrect to use the Synchronous incubation mode - elements or components that 
+It is almost always incorrect to use the Synchronous incubation mode - elements or components that
 want the appearance of synchronous instantiation, but without the downsides of introducing freezes 
 or stutters into the application, should use the AsynchronousIfNested incubation mode.
 \endlist

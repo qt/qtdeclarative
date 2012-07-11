@@ -277,7 +277,7 @@ QQuickImageProvider::Flags QQuickImageProvider::flags() const
     was "image://myprovider/icons/home", the given \a id would be "icons/home".
 
     The \a requestedSize corresponds to the \l {Image::sourceSize} requested by
-    an Image element. If \a requestedSize is a valid size, the image
+    an Image item. If \a requestedSize is a valid size, the image
     returned should be of that size.
 
     In all cases, \a size must be set to the original size of the image. This
@@ -306,7 +306,7 @@ QImage QQuickImageProvider::requestImage(const QString &id, QSize *size, const Q
     was "image://myprovider/icons/home", the given \a id would be "icons/home".
 
     The \a requestedSize corresponds to the \l {Image::sourceSize} requested by
-    an Image element. If \a requestedSize is a valid size, the image
+    an Image item. If \a requestedSize is a valid size, the image
     returned should be of that size.
 
     In all cases, \a size must be set to the original size of the image. This
@@ -333,7 +333,7 @@ QPixmap QQuickImageProvider::requestPixmap(const QString &id, QSize *size, const
     was "image://myprovider/icons/home", the given \a id would be "icons/home".
 
     The \a requestedSize corresponds to the \l {Image::sourceSize} requested by
-    an Image element. If \a requestedSize is a valid size, the image
+    an Image item. If \a requestedSize is a valid size, the image
     returned should be of that size.
 
     In all cases, \a size must be set to the original size of the image. This

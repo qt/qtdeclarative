@@ -132,7 +132,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     \ingroup qtquick-visual-transforms
     \brief For specifying advanced transformations on Items
 
-    The Transform element is a base type which cannot be instantiated directly.
+    The Transform type is a base type which cannot be instantiated directly.
     The following concrete Transform types are available:
 
     \list
@@ -141,10 +141,10 @@ void QQuickItemPrivate::registerAccessorProperties()
     \li \l Translate
     \endlist
 
-    The Transform elements let you create and control advanced transformations that can be configured
+    The Transform types let you create and control advanced transformations that can be configured
     independently using specialized properties.
 
-    You can assign any number of Transform elements to an \l Item. Each Transform is applied in order,
+    You can assign any number of Transforms to an \l Item. Each Transform is applied in order,
     one at a time.
 */
 
@@ -156,7 +156,7 @@ void QQuickItemPrivate::registerAccessorProperties()
 
     The Translate object provides independent control over position in addition to the Item's x and y properties.
 
-    The following example moves the Y axis of the \l Rectangle elements while still allowing the \l Row element
+    The following example moves the Y axis of the \l Rectangle items while still allowing the \l Row
     to lay the items out as if they had not been transformed:
     \qml
     import QtQuick 2.0
@@ -196,7 +196,7 @@ void QQuickItemPrivate::registerAccessorProperties()
     \ingroup qtquick-visual-transforms
     \brief Provides a way to scale an Item
 
-    The Scale element gives more control over scaling than using \l Item's \l{Item::scale}{scale} property. Specifically,
+    The Scale type gives more control over scaling than using \l Item's \l{Item::scale}{scale} property. Specifically,
     it allows a different scale for the x and y axes, and allows the scale to be relative to an
     arbitrary point.
 
@@ -1468,14 +1468,14 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     \brief Property used to mirror layout behavior
 
     The LayoutMirroring attached property is used to horizontally mirror \l {anchor-layout}{Item anchors},
-    \l{Using QML Positioner and Repeater Items}{positioner} elements (such as \l Row and \l Grid)
+    \l{Using QML Positioner and Repeater Items}{positioner} types (such as \l Row and \l Grid)
     and views (such as \l GridView and horizontal \l ListView). Mirroring is a visual change: left
-    anchors become right anchors, and positioner elements like \l Grid and \l Row reverse the
+    anchors become right anchors, and positioner types like \l Grid and \l Row reverse the
     horizontal layout of child items.
 
     Mirroring is enabled for an item by setting the \l enabled property to true. By default, this
     only affects the item itself; setting the \l childrenInherit property to true propagates the mirroring
-    behavior to all child elements as well. If the \c LayoutMirroring attached property has not been defined
+    behavior to all child items as well. If the \c LayoutMirroring attached property has not been defined
     for an item, mirroring is not enabled.
 
     The following example shows mirroring in action. The \l Row below is specified as being anchored
@@ -1508,8 +1508,8 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 
     This property holds whether the item's layout is mirrored horizontally. Setting this to true
     horizontally reverses \l {anchor-layout}{anchor} settings such that left anchors become right,
-    and right anchors become left. For \l{Using QML Positioner and Repeater Items}{positioner} elements
-    (such as \l Row and \l Grid) and view elements (such as \l {GridView}{GridView} and \l {ListView}{ListView})
+    and right anchors become left. For \l{Using QML Positioner and Repeater Items}{positioner} types
+    (such as \l Row and \l Grid) and view types (such as \l {GridView}{GridView} and \l {ListView}{ListView})
     this also mirrors the horizontal layout direction of the item.
 
     The default value is false.
@@ -1755,7 +1755,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
     \section1 Key Handling
 
-    Key handling is available to all Item-based visual elements via the \l {Keys}{Keys}
+    Key handling is available to all Item-based visual types via the \l {Keys}{Keys}
     attached property.  The \e Keys attached property provides basic handlers such
     as \l {Keys::onPressed}{onPressed} and \l {Keys::onReleased}{onReleased},
     as well as handlers for specific keys, such as
@@ -1936,7 +1936,7 @@ QQuickItem::~QQuickItem()
     The default transform origin is \c Item.Center.
 
     To set an arbitrary transform origin point use the \l Scale or \l Rotation
-    transform elements.
+    transform types.
 */
 
 /*!
@@ -4506,7 +4506,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     \property QQuickItem::smooth
     \brief Specifies whether the item is smoothed or not
 
-    Primarily used in image based elements to decide if the item should use smooth
+    Primarily used in image based items to decide if the item should use smooth
     sampling or not. Smooth sampling is performed using linear interpolation, while
     non-smooth is performed using nearest neighbor.
 
@@ -4752,7 +4752,7 @@ qreal QQuickItem::implicitWidth() const
 
     Defines the natural width or height of the Item if no \l width or \l height is specified.
 
-    The default implicit size for most items is 0x0, however some elements have an inherent
+    The default implicit size for most items is 0x0, however some items have an inherent
     implicit size which cannot be overridden, e.g. Image, Text.
 
     Setting the implicit size is useful for defining components that have a preferred size

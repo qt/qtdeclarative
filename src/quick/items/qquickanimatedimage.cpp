@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     \brief Plays animations stored as a series of images
     \ingroup qtquick-visual
 
-    The AnimatedImage element extends the features of the \l Image element, providing
+    The AnimatedImage type extends the features of the \l Image type, providing
     a way to play animations stored as images containing a series of frames,
     such as those stored in GIF files.
 

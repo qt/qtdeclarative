@@ -525,7 +525,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     \qmlsignal QtQuick2::MouseArea::onCanceled()
 
     This handler is called when mouse events have been canceled, either because an event was not accepted, or
-    because another element stole the mouse event handling.
+    because another item stole the mouse event handling.
 
     This signal is for advanced use: it is useful when there is more than one MouseArea
     that is handling input, or when there is a MouseArea inside a \l Flickable. In the latter
@@ -616,10 +616,10 @@ void QQuickMouseArea::setEnabled(bool a)
     If a MouseArea is placed within an item that filters child mouse
     events, such as Flickable, the mouse
     events may be stolen from the MouseArea if a gesture is recognized
-    by the parent element, e.g. a flick gesture.  If preventStealing is
-    set to true, no element will steal the mouse events.
+    by the parent item, e.g. a flick gesture.  If preventStealing is
+    set to true, no item will steal the mouse events.
 
-    Note that setting preventStealing to true once an element has started
+    Note that setting preventStealing to true once an item has started
     stealing events will have no effect until the next press event.
 
     By default this property is false.

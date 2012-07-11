@@ -1310,7 +1310,7 @@ QQuickText::~QQuickText()
     \li height
     \endlist
 
-    For example, this will move the first 5 lines of a text element by 100 pixels to the right:
+    For example, this will move the first 5 lines of a Text item by 100 pixels to the right:
     \code
     onLineLaidOut: {
         if (line.number < 5) {
@@ -1901,7 +1901,7 @@ void QQuickText::resetMaximumLineCount()
     \li Text.RichText
     \endlist
 
-    If the text format is \c Text.AutoText the text element
+    If the text format is \c Text.AutoText the Text item
     will automatically determine whether the text should be treated as
     styled text.  This determination is made using Qt::mightBeRichText()
     which uses a fast and therefore simple heuristic. It mainly checks
@@ -2050,7 +2050,7 @@ void QQuickText::setElideMode(QQuickText::TextElideMode mode)
     \row \li http://qt-project.org/content/index.html \li /images/logo.png \li http://qt-project.org/images/logo.png
     \endtable
 
-    By default is the url of the Text element.
+    The default value is the url of the QML file instantiating the Text item.
 */
 
 QUrl QQuickText::baseUrl() const

@@ -208,7 +208,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \inherits Item
     \ingroup qtquick-canvas
     \ingroup qtquick-visual
-    \brief For specifying a 2D canvas element which enables drawing via Javascript
+    \brief Provides a 2D canvas item enabling drawing via JavaScript
 
     The Canvas item allows drawing of straight and curved lines, simple and
     complex shapes, graphs, and referenced graphic images.  It can also add
@@ -702,7 +702,7 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     Returns a drawing context or null if no context available.
 
-    The \a contextId parameter names the required context. The Canvas element
+    The \a contextId parameter names the required context. The Canvas item
     will return a context that implements the required drawing mode. After the
     first call to getContext any subsequent call to getContext with the same
     contextId will return the same context object.

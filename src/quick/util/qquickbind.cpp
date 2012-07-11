@@ -111,7 +111,7 @@ public:
 
     The above example will produce a warning whenever we release the mouse, as the value
     of the binding is undefined when the mouse isn't pressed. We can use the Binding
-    element to rewrite the above code and avoid the warning.
+    type to rewrite the above code and avoid the warning.
 
     \qml
     Binding on value {
@@ -120,7 +120,7 @@ public:
     }
     \endqml
 
-    The Binding element will also restore any previously set direct bindings on
+    The Binding type will also restore any previously set direct bindings on
     the property. In that sense, it functions much like a simplified State.
 
     \qml

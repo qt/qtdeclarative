@@ -498,7 +498,7 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
     \ingroup qtquick-positioners
     \brief Provides attached properties that contain details on where an item exists in a positioner
 
-    Positioner is an attached property that is attached to the top-level child item within a
+    An object of type Positioner is attached to the top-level child item within a
     Column, Row, Flow or Grid. It provides properties that allow a child item to determine
     where it exists within the layout of its parent Column, Row, Flow or Grid.
 
@@ -581,7 +581,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \ingroup qtquick-positioners
     \brief Positions its children in a column
 
-    Column is an element that positions its child items along a single column.
+    Column is a type that positions its child items along a single column.
     It can be used as a convenient way to vertically position a series of items without
     using \l {Anchor-based Layout in QML}{anchors}.
 
@@ -605,7 +605,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     Note that items in a Column can use the \l Positioner attached property to access
     more information about its position within the Column.
 
-    For more information on using Column and other related positioner-type elements, see
+    For more information on using Column and other related positioner-types, see
     \l{Item Layouts}.
 
 
@@ -749,7 +749,7 @@ void QQuickColumn::reportConflictingAnchors()
     \ingroup qtquick-positioners
     \brief Positions its children in a row
 
-    Row is an element that positions its child items along a single row.
+    Row is a type that positions its child items along a single row.
     It can be used as a convenient way to horizontally position a series of items without
     using \l {Anchor-based Layout in QML}{anchors}.
 
@@ -773,7 +773,7 @@ void QQuickColumn::reportConflictingAnchors()
     Note that items in a Row can use the \l Positioner attached property to access
     more information about its position within the Row.
 
-    For more information on using Row and other related positioner-type elements, see
+    For more information on using Row and other related positioner-types, see
     \l{Item Layouts}.
 
 
@@ -980,7 +980,7 @@ void QQuickRow::reportConflictingAnchors()
     \ingroup qtquick-positioners
     \brief Positions its children in grid formation
 
-    Grid is an element that positions its child items in grid formation.
+    Grid is a type that positions its child items in grid formation.
 
     A Grid creates a grid of cells that is large enough to hold all of its
     child items, and places these items in the cells from left to right
@@ -1005,7 +1005,7 @@ void QQuickRow::reportConflictingAnchors()
     item within a Grid should not set its \l {Item::x}{x} or \l {Item::y}{y} positions
     or anchor itself with any of the \l {Item::anchors}{anchor} properties.
 
-    For more information on using Grid and other related positioner-type elements, see
+    For more information on using Grid and other related positioner-types, see
     \l{Item Layouts}.
 
 
@@ -1439,7 +1439,7 @@ void QQuickGrid::reportConflictingAnchors()
     item within a Flow should not set its \l {Item::x}{x} or \l {Item::y}{y} positions
     or anchor itself with any of the \l {Item::anchors}{anchor} properties.
 
-    For more information on using Flow and other related positioner-type elements, see
+    For more information on using Flow and other related positioner-types, see
     \l{Item Layouts}.
 
   \sa Column, Row, Grid, Positioner, {qml/positioners}{Positioners example}

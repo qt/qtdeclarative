@@ -195,7 +195,7 @@ void QQuickGradientStop::updateGradient()
     A gradient without any gradient stops is rendered as a solid white fill.
 
     Note that this item is not a visual representation of a gradient. To display a
-    gradient, use a visual element (like \l Rectangle) which supports the use
+    gradient, use a visual item (like \l Rectangle) which supports the use
     of gradients.
 
     \section1 Example Usage
@@ -237,7 +237,7 @@ void QQuickGradientStop::updateGradient()
 
     By default, this property contains an empty list.
 
-    To set the gradient stops, define them as children of the Gradient element.
+    To set the gradient stops, define them as children of the Gradient.
 */
 QQuickGradient::QQuickGradient(QObject *parent)
 : QObject(parent)
@@ -265,20 +265,21 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-visual
-    \brief Describes a filled rectangle with an optional border
+    \brief Paints a filled rectangle with an optional border
 
-    Rectangle items are used to fill areas with solid color or gradients, and are
-    often used to hold other items.
+    Rectangle items are used to fill areas with solid color or gradients, and/or
+    to provide a rectangular border.
 
     \section1 Appearance
 
     Each Rectangle item is painted using either a solid fill color, specified using
-    the \l color property, or a gradient, defined using a Gradient element and set
+    the \l color property, or a gradient, defined using a Gradient type and set
     using the \l gradient property. If both a color and a gradient are specified,
     the gradient is used.
 
     You can add an optional border to a rectangle with its own color and thickness
-    by setting the \l border.color and \l border.width properties.
+    by setting the \l border.color and \l border.width properties.  Set the color
+    to "transparent" to paint a border without a fill color.
 
     You can also create rounded rectangles using the \l radius property. Since this
     introduces curved edges to the corners of a rectangle, it may be appropriate to

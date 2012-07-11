@@ -221,7 +221,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \section2 Receiving signals from loaded objects
 
     Any signals emitted from the loaded object can be received using the
-    \l Connections element. For example, the following \c application.qml
+    \l Connections type. For example, the following \c application.qml
     loads \c MyItem.qml, and is able to receive the \c message signal from
     the loaded item through a \l Connections object:
 

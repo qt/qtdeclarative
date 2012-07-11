@@ -1655,7 +1655,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     \inherits Flickable
     \brief Provides a list view of items provided by a model
 
-    A ListView displays data from models created from built-in QML elements like ListModel
+    A ListView displays data from models created from built-in QML types like ListModel
     and XmlListModel, or custom model classes defined in C++ that inherit from
     QAbstractListModel.
 
@@ -1679,7 +1679,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 
     \image listview-simple.png
 
-    Here, the ListView creates a \c ContactModel component for its model, and a \l Text element
+    Here, the ListView creates a \c ContactModel component for its model, and a \l Text item
     for its delegate. The view will create a new \l Text component for each item in the model. Notice
     the delegate is able to access the model's \c name and \c number data directly.
 
@@ -1854,10 +1854,10 @@ QQuickListView::~QQuickListView()
     The index is exposed as an accessible \c index property.  Properties of the
     model are also available depending upon the type of \l {qmlmodels}{Data Model}.
 
-    The number of elements in the delegate has a direct effect on the
+    The number of objects and bindings in the delegate has a direct effect on the
     flicking performance of the view.  If at all possible, place functionality
     that is not needed for the normal display of the delegate in a \l Loader which
-    can load additional elements when needed.
+    can load additional components when needed.
 
     The ListView will lay out the items based on the size of the root item
     in the delegate.
@@ -2125,7 +2125,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 
     Setting this value can improve the smoothness of scrolling behavior at the expense
     of additional memory usage.  It is not a substitute for creating efficient
-    delegates; the fewer elements in a delegate, the faster a view can be
+    delegates; the fewer objects and bindings in a delegate, the faster a view can be
     scrolled.
 */
 

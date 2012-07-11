@@ -62,7 +62,7 @@ public:
     \ingroup qtquick-visual-utility
     \brief Provides access to the Qt palettes
 
-    The SystemPalette element provides access to the Qt application
+    The SystemPalette type provides access to the Qt application
     palettes. This provides information about the standard colors used
     for application windows, buttons and other features. These colors
     are grouped into three \e {color groups}: \c Active, \c Inactive,

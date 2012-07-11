@@ -589,7 +589,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
        generic displaced transition if specified)
     \endlist
 
-    For the \l Row, \l Column, \l Grid and \l Flow positioner elements, which operate with collections of child
+    For the \l Row, \l Column, \l Grid and \l Flow positioner types, which operate with collections of child
     items rather than data models, the following properties are used instead:
 
     \list
@@ -625,7 +625,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     \li ViewTransition.targetItems - the target items themselves
     \endlist
 
-    (Note that for the \l Row, \l Column, \l Grid and \l Flow positioner elements, the \c move transition only
+    (Note that for the \l Row, \l Column, \l Grid and \l Flow positioner types, the \c move transition only
     provides these two additional details when the transition is triggered by the addition of items
     to a positioner.)
 

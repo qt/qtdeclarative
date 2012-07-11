@@ -539,7 +539,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     \ingroup qtquick-effects
     \brief Applies custom shaders to a rectangle
 
-    The ShaderEffect element applies a custom OpenGL
+    The ShaderEffect type applies a custom OpenGL
     \l{vertexShader}{vertex} and \l{fragmentShader}{fragment} shader to a
     rectangle. It allows you to write effects such as drop shadow, blur,
     colorize and page curl directly in QML.
@@ -795,7 +795,7 @@ void QQuickShaderEffect::setMesh(const QVariant &mesh)
 /*!
     \qmlproperty enumeration QtQuick2::ShaderEffect::cullMode
 
-    This property defines which sides of the element should be visible.
+    This property defines which sides of the item should be visible.
 
     \list
     \li ShaderEffect.NoCulling - Both sides are visible

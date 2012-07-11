@@ -359,7 +359,7 @@ void QQuickSpringAnimationPrivate::updateMode()
 
     \snippet qml/springanimation.qml 0
 
-    Like any other animation element, a SpringAnimation can be applied in a
+    Like any other animation type, a SpringAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
     sources. The \l {QML Animation and Transitions} documentation shows a
     variety of methods for creating animations.

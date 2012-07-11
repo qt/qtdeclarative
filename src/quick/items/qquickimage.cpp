@@ -96,25 +96,25 @@ QQuickImagePrivate::QQuickImagePrivate()
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual
     \inherits Item
-    \brief Displays an image in a declarative user interface
+    \brief Displays an image
 
-    The Image element is used to display images in a declarative user interface.
+    The Image type display an image.
 
     The source of the image is specified as a URL using the \l source property.
     Images can be supplied in any of the standard image formats supported by Qt,
     including bitmap formats such as PNG and JPEG, and vector graphics formats
-    such as SVG. If you need to display animated images, use the \l AnimatedImage
-    element.
+    such as SVG. If you need to display animated images, use \l AnimatedSprite
+    or \l AnimatedImage.
 
     If the \l{Item::width}{width} and \l{Item::height}{height} properties are not
-    specified, the Image element automatically uses the size of the loaded image.
-    By default, specifying the width and height of the element causes the image
+    specified, the Image automatically uses the size of the loaded image.
+    By default, specifying the width and height of the item causes the image
     to be scaled to that size. This behavior can be changed by setting the
     \l fillMode property, allowing the image to be stretched and tiled instead.
 
     \section1 Example Usage
 
-    The following example shows the simplest usage of the Image element.
+    The following example shows the simplest usage of the Image type.
 
     \snippet qml/image.qml document
 
@@ -135,7 +135,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     automatically loaded asynchronously, and the \l progress and \l status properties
     are updated as appropriate.
 
-    Images are cached and shared internally, so if several Image elements have the same \l source,
+    Images are cached and shared internally, so if several Image items have the same \l source,
     only one copy of the image will be loaded.
 
     \b Note: Images are often the greatest user of memory in QML user interfaces.  It is recommended
@@ -265,7 +265,7 @@ void QQuickImagePrivate::setImage(const QImage &image)
 
     \endtable
 
-    Note that \c clip is \c false by default which means that the element might
+    Note that \c clip is \c false by default which means that the item might
     paint outside its bounding rectangle even if the fillMode is set to \c PreserveAspectCrop.
 
     \sa {declarative/imageelements/image}{Image example}
@@ -296,7 +296,7 @@ void QQuickImage::setFillMode(FillMode mode)
     In most cases it is the same as \c width and \c height, but when using a
     \c fillMode \c PreserveAspectFit or \c fillMode \c PreserveAspectCrop
     \c paintedWidth or \c paintedHeight can be smaller or larger than
-    \c width and \c height of the Image element.
+    \c width and \c height of the Image item.
 */
 qreal QQuickImage::paintedWidth() const
 {

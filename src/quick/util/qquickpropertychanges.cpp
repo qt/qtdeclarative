@@ -123,7 +123,7 @@ QT_BEGIN_NAMESPACE
     state to those defined in the new state (as defined by PropertyChanges
     objects). However, it is sometimes desirable to set a property value
     \e immediately during a \l Transition, without animation; in these cases,
-    the PropertyAction element can be used to force an immediate property
+    the PropertyAction type can be used to force an immediate property
     change.
 
     See the PropertyAction documentation for more details.

@@ -125,10 +125,10 @@ QQuickVisualDataModelParts::QQuickVisualDataModelParts(QQuickVisualDataModel *pa
     \ingroup qtquick-models
     \brief Encapsulates a model and delegate
 
-    A VisualDataModel encapsulates a model and the delegate that will
+    The VisualDataModel type encapsulates a model and the delegate that will
     be instantiated for items in the model.
 
-    It is usually not necessary to create VisualDataModel elements.
+    It is usually not necessary to create a VisualDataModel.
     However, it can be useful for manipulating and accessing the \l modelIndex
     when a QAbstractItemModel subclass is used as the
     model. Also, VisualDataModel is used together with \l Package to
@@ -706,7 +706,7 @@ void QQuickVisualDataModelPrivate::updateFilterGroup()
 
     The \a parts property selects a VisualDataModel which creates
     delegates from the part named.  This is used in conjunction with
-    the \l Package element.
+    the \l Package type.
 
     For example, the code below selects a model which creates
     delegates named \e list from a \l Package:
