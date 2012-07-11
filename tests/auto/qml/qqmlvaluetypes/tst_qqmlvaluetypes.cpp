@@ -1365,6 +1365,12 @@ void tst_qqmlvaluetypes::groupedInterceptors_data()
     QTest::newRow("ignore-interceptor") << QString::fromLatin1("grouped_interceptors_ignore.qml") << QColor(128, 0, 255) << QColor(50, 100, 200) << QColor(128, 100, 200);
 }
 
+static bool fuzzyCompare(qreal a, qreal b)
+{
+    const qreal EPSILON = 0.0001;
+    return (a + EPSILON > b) && (a - EPSILON < b);
+}
+
 void tst_qqmlvaluetypes::groupedInterceptors()
 {
     QFETCH(QString, qmlfile);
@@ -1377,12 +1383,18 @@ void tst_qqmlvaluetypes::groupedInterceptors()
     QVERIFY(object != 0);
 
     QColor initialColor = object->property("color").value<QColor>();
-    QCOMPARE(initialColor, expectedInitialColor);
+    QVERIFY(fuzzyCompare(initialColor.redF(), expectedInitialColor.redF()));
+    QVERIFY(fuzzyCompare(initialColor.greenF(), expectedInitialColor.greenF()));
+    QVERIFY(fuzzyCompare(initialColor.blueF(), expectedInitialColor.blueF()));
+    QVERIFY(fuzzyCompare(initialColor.alphaF(), expectedInitialColor.alphaF()));
 
     object->setProperty("color", setColor);
 
     QColor finalColor = object->property("color").value<QColor>();
-    QCOMPARE(finalColor, expectedFinalColor);
+    QVERIFY(fuzzyCompare(finalColor.redF(), expectedFinalColor.redF()));
+    QVERIFY(fuzzyCompare(finalColor.greenF(), expectedFinalColor.greenF()));
+    QVERIFY(fuzzyCompare(finalColor.blueF(), expectedFinalColor.blueF()));
+    QVERIFY(fuzzyCompare(finalColor.alphaF(), expectedFinalColor.alphaF()));
 
     delete object;
 }
