@@ -77,7 +77,7 @@ struct Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectCommon
     void updateShader(QQuickItem *item, Key::ShaderType shaderType);
     void updateMaterial(QQuickShaderEffectNode *node, QQuickShaderEffectMaterial *material,
                         bool updateUniforms, bool updateUniformValues, bool updateTextureProviders);
-    void updateCanvas(QQuickCanvas *canvas);
+    void updateWindow(QQuickWindow *window);
 
     // Called by slots in QQuickShaderEffect:
     void sourceDestroyed(QObject *object);

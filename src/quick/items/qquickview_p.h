@@ -51,7 +51,7 @@
 #include <QtCore/QWeakPointer>
 
 #include <QtQml/qqmlengine.h>
-#include "qquickcanvas_p.h"
+#include "qquickwindow_p.h"
 
 #include "qquickitemchangelistener_p.h"
 
@@ -64,7 +64,7 @@ class QQmlError;
 class QQuickItem;
 class QQmlComponent;
 
-class QQuickViewPrivate : public QQuickCanvasPrivate,
+class QQuickViewPrivate : public QQuickWindowPrivate,
                        public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickView)

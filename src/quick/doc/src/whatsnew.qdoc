@@ -45,8 +45,8 @@ canvas from C++:
 
 \list
 \li QQuickItem - the base visual QML type (replaces \c QDeclarativeItem)
-\li QQuickView - a window for rendering a QML scene from a QML file (replaces \c QDeclarativeView)
-\li QQuickCanvas - a base canvas for displaying a QML scene
+\li QQuickView - a convenience window for rendering a QML scene from a QML file (replaces \c QDeclarativeView)
+\li QQuickWindow - a base window for displaying a QML scene
 \li QQuickPaintedItem - convenience for using the QPainter API with the scenegraph
 \li QQuickImageProvider - fetches custom images for use in QML applications (replaces \c
     QDeclarativeImageProvider)

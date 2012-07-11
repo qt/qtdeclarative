@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickImageProviderPrivate;
 class QSGTexture;
-class QQuickCanvas;
+class QQuickWindow;
 
 class Q_QUICK_EXPORT QQuickTextureFactory : public QObject
 {
@@ -62,7 +62,7 @@ public:
     QQuickTextureFactory();
     virtual ~QQuickTextureFactory();
 
-    virtual QSGTexture *createTexture(QQuickCanvas *canvas) const = 0;
+    virtual QSGTexture *createTexture(QQuickWindow *window) const = 0;
     virtual QSize textureSize() const = 0;
     virtual int textureByteCount() const = 0;
     virtual QImage image() const;

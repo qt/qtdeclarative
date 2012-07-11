@@ -68,7 +68,7 @@ public:
     {
     }
 
-    QSGTexture *createTexture(QQuickCanvas *canvas) const;
+    QSGTexture *createTexture(QQuickWindow *window) const;
     QSize textureSize() const { return im.size(); }
     int textureByteCount() const { return im.byteCount(); }
     QImage image() const { return im; }

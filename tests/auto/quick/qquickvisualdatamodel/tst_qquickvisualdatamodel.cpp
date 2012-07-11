@@ -2646,14 +2646,14 @@ void tst_qquickvisualdatamodel::insert()
     QFETCH(QString, property);
     QFETCH(QStringList, propertyData);
 
-    QQuickCanvas canvas;
+    QQuickWindow window;
 
     QQmlComponent component(&engine);
     component.loadUrl(source);
     QScopedPointer<QObject> object(component.create());
     QQuickListView *listView = qobject_cast<QQuickListView *>(object.data());
     QVERIFY(listView);
-    listView->setParentItem(canvas.rootItem());
+    listView->setParentItem(window.rootItem());
 
     QQuickItem *contentItem = listView->contentItem();
     QVERIFY(contentItem);
@@ -3110,14 +3110,14 @@ void tst_qquickvisualdatamodel::resolve()
     QFETCH(QString, property);
     QFETCH(QStringList, propertyData);
 
-    QQuickCanvas canvas;
+    QQuickWindow window;
 
     QQmlComponent component(&engine);
     component.loadUrl(source);
     QScopedPointer<QObject> object(component.create());
     QQuickListView *listView = qobject_cast<QQuickListView *>(object.data());
     QVERIFY(listView);
-    listView->setParentItem(canvas.rootItem());
+    listView->setParentItem(window.rootItem());
 
     QQuickItem *contentItem = listView->contentItem();
     QVERIFY(contentItem);
@@ -3510,14 +3510,14 @@ void tst_qquickvisualdatamodel::warnings()
     QFETCH(QString, warning);
     QFETCH(int, count);
 
-    QQuickCanvas canvas;
+    QQuickWindow window;
 
     QQmlComponent component(&engine);
     component.loadUrl(source);
     QScopedPointer<QObject> object(component.create());
     QQuickListView *listView = qobject_cast<QQuickListView *>(object.data());
     QVERIFY(listView);
-    listView->setParentItem(canvas.rootItem());
+    listView->setParentItem(window.rootItem());
 
     QQuickItem *contentItem = listView->contentItem();
     QVERIFY(contentItem);

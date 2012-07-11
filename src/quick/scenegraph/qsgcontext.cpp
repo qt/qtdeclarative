@@ -190,7 +190,7 @@ void QSGContext::invalidate()
 }
 
 
-QSGTexture *QSGContext::textureForFactory(QQuickTextureFactory *factory, QQuickCanvas *canvas)
+QSGTexture *QSGContext::textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window)
 {
     Q_D(QSGContext);
     if (!factory)
@@ -202,7 +202,7 @@ QSGTexture *QSGContext::textureForFactory(QQuickTextureFactory *factory, QQuickC
         if (QQuickDefaultTextureFactory *dtf = qobject_cast<QQuickDefaultTextureFactory *>(factory))
             texture = createTexture(dtf->image());
         else
-            texture = factory->createTexture(canvas);
+            texture = factory->createTexture(window);
         d->textures.insert(factory, texture);
         connect(factory, SIGNAL(destroyed(QObject *)), this, SLOT(textureFactoryDestroyed(QObject *)), Qt::DirectConnection);
     }

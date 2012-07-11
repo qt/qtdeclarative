@@ -42,7 +42,7 @@ QUICKTESTS =  \
     qquickanimatedimage \
     qquickanimatedsprite \
     qquickborderimage \
-    qquickcanvas \
+    qquickwindow \
     qquickdrag \
     qquickdroparea \
     qquickflickable \

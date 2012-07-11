@@ -42,7 +42,7 @@
 #include <qtest.h>
 
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/qquickcanvas.h>
+#include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickview.h>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include "private/qquickfocusscope_p.h"
@@ -78,16 +78,16 @@ protected:
     virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; }
 };
 
-class TestCanvas: public QQuickCanvas
+class TestWindow: public QQuickWindow
 {
 public:
-    TestCanvas()
-        : QQuickCanvas()
+    TestWindow()
+        : QQuickWindow()
     {}
 
     virtual bool event(QEvent *event)
     {
-        return QQuickCanvas::event(event);
+        return QQuickWindow::event(event);
     }
 };
 
@@ -133,10 +133,10 @@ public:
 private slots:
     void initTestCase();
 
-    void noCanvas();
+    void noWindow();
     void simpleFocus();
     void scopedFocus();
-    void addedToCanvas();
+    void addedToWindow();
     void changeParent();
     void multipleFocusClears();
     void focusSubItemInNonFocusScope();
@@ -186,8 +186,8 @@ void tst_qquickitem::initTestCase()
     qmlRegisterType<TestPolishItem>("Qt.test", 1, 0, "TestPolishItem");
 }
 
-// Focus still updates when outside a canvas
-void tst_qquickitem::noCanvas()
+// Focus still updates when outside a window
+void tst_qquickitem::noWindow()
 {
     QQuickItem *root = new TestItem;
     QQuickItem *child = new TestItem(root);
@@ -247,13 +247,13 @@ struct FocusState : public QHash<QQuickItem *, FocusData>
 #define FVERIFY() \
     do { \
         if (focusState.activeFocusItem) { \
-            QCOMPARE(canvas.activeFocusItem(), focusState.activeFocusItem); \
-            if (qobject_cast<TestItem *>(canvas.activeFocusItem())) \
-                QCOMPARE(qobject_cast<TestItem *>(canvas.activeFocusItem())->focused, true); \
-            else if (qobject_cast<TestFocusScope *>(canvas.activeFocusItem())) \
-                QCOMPARE(qobject_cast<TestFocusScope *>(canvas.activeFocusItem())->focused, true); \
+            QCOMPARE(window.activeFocusItem(), focusState.activeFocusItem); \
+            if (qobject_cast<TestItem *>(window.activeFocusItem())) \
+                QCOMPARE(qobject_cast<TestItem *>(window.activeFocusItem())->focused, true); \
+            else if (qobject_cast<TestFocusScope *>(window.activeFocusItem())) \
+                QCOMPARE(qobject_cast<TestFocusScope *>(window.activeFocusItem())->focused, true); \
         } else { \
-            QCOMPARE(canvas.activeFocusItem(), canvas.rootItem()); \
+            QCOMPARE(window.activeFocusItem(), window.rootItem()); \
         } \
         for (QHash<QQuickItem *, FocusData>::Iterator iter = focusState.begin(); \
             iter != focusState.end(); \
@@ -266,18 +266,18 @@ struct FocusState : public QHash<QQuickItem *, FocusData>
 // Tests a simple set of top-level scoped items
 void tst_qquickitem::simpleFocus()
 {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
 
 #ifdef Q_OS_MAC
     QSKIP("QTBUG-24094: fails on Mac OS X 10.7");
 #endif
 
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
 
-    QQuickItem *l1c1 = new TestItem(canvas.rootItem());
-    QQuickItem *l1c2 = new TestItem(canvas.rootItem());
-    QQuickItem *l1c3 = new TestItem(canvas.rootItem());
+    QQuickItem *l1c1 = new TestItem(window.rootItem());
+    QQuickItem *l1c2 = new TestItem(window.rootItem());
+    QQuickItem *l1c3 = new TestItem(window.rootItem());
 
     QQuickItem *l2c1 = new TestItem(l1c1);
     QQuickItem *l2c2 = new TestItem(l1c1);
@@ -322,13 +322,13 @@ void tst_qquickitem::simpleFocus()
 // Items with a focus scope
 void tst_qquickitem::scopedFocus()
 {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
 
-    QQuickItem *l1c1 = new TestItem(canvas.rootItem());
-    QQuickItem *l1c2 = new TestItem(canvas.rootItem());
-    QQuickItem *l1c3 = new TestItem(canvas.rootItem());
+    QQuickItem *l1c1 = new TestItem(window.rootItem());
+    QQuickItem *l1c2 = new TestItem(window.rootItem());
+    QQuickItem *l1c3 = new TestItem(window.rootItem());
 
     QQuickItem *l2c1 = new TestItem(l1c1);
     QQuickItem *l2c2 = new TestItem(l1c1);
@@ -398,13 +398,13 @@ void tst_qquickitem::scopedFocus()
     FVERIFY();
 }
 
-// Tests focus corrects itself when a tree is added to a canvas for the first time
-void tst_qquickitem::addedToCanvas()
+// Tests focus corrects itself when a tree is added to a window for the first time
+void tst_qquickitem::addedToWindow()
 {
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
 
     QQuickItem *item = new TestItem;
 
@@ -415,18 +415,18 @@ void tst_qquickitem::addedToCanvas()
     focusState[item].set(true, false);
     FVERIFY();
 
-    item->setParentItem(canvas.rootItem());
+    item->setParentItem(window.rootItem());
     focusState[item].set(true, true);
     focusState.active(item);
     FVERIFY();
     }
 
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
 
-    QQuickItem *item = new TestItem(canvas.rootItem());
+    QQuickItem *item = new TestItem(window.rootItem());
 
     QQuickItem *tree = new TestItem;
     QQuickItem *c1 = new TestItem(tree);
@@ -451,9 +451,9 @@ void tst_qquickitem::addedToCanvas()
     }
 
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
 
     QQuickItem *tree = new TestItem;
     QQuickItem *c1 = new TestItem(tree);
@@ -467,7 +467,7 @@ void tst_qquickitem::addedToCanvas()
     focusState[c2].set(true, false);
     FVERIFY();
 
-    tree->setParentItem(canvas.rootItem());
+    tree->setParentItem(window.rootItem());
     focusState[c1].set(false, false);
     focusState[c2].set(true, true);
     focusState.active(c2);
@@ -475,9 +475,9 @@ void tst_qquickitem::addedToCanvas()
     }
 
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
     QQuickItem *c2 = new TestItem(tree);
@@ -490,7 +490,7 @@ void tst_qquickitem::addedToCanvas()
     focusState[c2].set(true, false);
     FVERIFY();
 
-    tree->setParentItem(canvas.rootItem());
+    tree->setParentItem(window.rootItem());
     focusState[c1].set(false, false);
     focusState[c2].set(true, false);
     FVERIFY();
@@ -503,9 +503,9 @@ void tst_qquickitem::addedToCanvas()
     }
 
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
     QQuickItem *c2 = new TestItem(tree);
@@ -520,7 +520,7 @@ void tst_qquickitem::addedToCanvas()
     focusState[c2].set(true, false);
     FVERIFY();
 
-    tree->setParentItem(canvas.rootItem());
+    tree->setParentItem(window.rootItem());
     focusState[tree].set(true, true);
     focusState[c1].set(false, false);
     focusState[c2].set(true, true);
@@ -529,10 +529,10 @@ void tst_qquickitem::addedToCanvas()
     }
 
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
-    QQuickItem *child = new TestItem(canvas.rootItem());
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QQuickItem *child = new TestItem(window.rootItem());
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
     QQuickItem *c2 = new TestItem(tree);
@@ -550,7 +550,7 @@ void tst_qquickitem::addedToCanvas()
     focusState.active(child);
     FVERIFY();
 
-    tree->setParentItem(canvas.rootItem());
+    tree->setParentItem(window.rootItem());
     focusState[tree].set(false, false);
     focusState[c1].set(false, false);
     focusState[c2].set(true, false);
@@ -569,10 +569,10 @@ void tst_qquickitem::changeParent()
 {
     // Parent to no parent
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
-    QQuickItem *child = new TestItem(canvas.rootItem());
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QQuickItem *child = new TestItem(window.rootItem());
 
     FocusState focusState;
     focusState << child;
@@ -591,11 +591,11 @@ void tst_qquickitem::changeParent()
 
     // Different parent, same focus scope
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
-    QQuickItem *child = new TestItem(canvas.rootItem());
-    QQuickItem *child2 = new TestItem(canvas.rootItem());
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QQuickItem *child = new TestItem(window.rootItem());
+    QQuickItem *child2 = new TestItem(window.rootItem());
 
     FocusState focusState;
     focusState << child << child2;
@@ -612,11 +612,11 @@ void tst_qquickitem::changeParent()
 
     // Different parent, different focus scope
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
-    QQuickItem *child = new TestItem(canvas.rootItem());
-    QQuickItem *child2 = new TestFocusScope(canvas.rootItem());
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QQuickItem *child = new TestItem(window.rootItem());
+    QQuickItem *child2 = new TestFocusScope(window.rootItem());
     QQuickItem *item = new TestItem(child);
 
     FocusState focusState;
@@ -634,11 +634,11 @@ void tst_qquickitem::changeParent()
     FVERIFY();
     }
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
-    QQuickItem *child = new TestItem(canvas.rootItem());
-    QQuickItem *child2 = new TestFocusScope(canvas.rootItem());
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QQuickItem *child = new TestItem(window.rootItem());
+    QQuickItem *child2 = new TestFocusScope(window.rootItem());
     QQuickItem *item = new TestItem(child2);
 
     FocusState focusState;
@@ -656,11 +656,11 @@ void tst_qquickitem::changeParent()
     FVERIFY();
     }
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
-    QQuickItem *child = new TestItem(canvas.rootItem());
-    QQuickItem *child2 = new TestFocusScope(canvas.rootItem());
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QQuickItem *child = new TestItem(window.rootItem());
+    QQuickItem *child2 = new TestFocusScope(window.rootItem());
     QQuickItem *item = new TestItem(child2);
 
     FocusState focusState;
@@ -682,10 +682,10 @@ void tst_qquickitem::changeParent()
     // child has active focus, then its fs parent changes parent to 0, then
     // child is deleted, then its parent changes again to a valid parent
     {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
-    QQuickItem *item = new TestFocusScope(canvas.rootItem());
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QQuickItem *item = new TestFocusScope(window.rootItem());
     QQuickItem *child = new TestItem(item);
     QQuickItem *child2 = new TestItem;
 
@@ -708,7 +708,7 @@ void tst_qquickitem::changeParent()
 
     focusState.remove(child);
     delete child;
-    item->setParentItem(canvas.rootItem());
+    item->setParentItem(window.rootItem());
     focusState[item].set(true, true);
     focusState.active(item);
     FVERIFY();
@@ -754,9 +754,9 @@ void tst_qquickitem::focusSubItemInNonFocusScope()
 
 void tst_qquickitem::parentItemWithFocus()
 {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
     {
     QQuickItem parent;
     QQuickItem child;
@@ -776,7 +776,7 @@ void tst_qquickitem::parentItemWithFocus()
     focusState[&child].set(false, false);
     FVERIFY();
 
-    parent.setParentItem(canvas.rootItem());
+    parent.setParentItem(window.rootItem());
     focusState[&parent].set(true, true);
     focusState[&child].set(false, false);
     focusState.active(&parent);
@@ -809,7 +809,7 @@ void tst_qquickitem::parentItemWithFocus()
     focusState[&grandchild].set(false, false);
     FVERIFY();
 
-    parent.setParentItem(canvas.rootItem());
+    parent.setParentItem(window.rootItem());
     focusState[&parent].set(true, true);
     focusState[&child].set(false, false);
     focusState[&grandchild].set(false, false);
@@ -853,11 +853,11 @@ void tst_qquickitem::parentItemWithFocus()
 
 void tst_qquickitem::reparentFocusedItem()
 {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
 
-    QQuickItem parent(canvas.rootItem());
+    QQuickItem parent(window.rootItem());
     QQuickItem child(&parent);
     QQuickItem sibling(&parent);
     QQuickItem grandchild(&child);
@@ -1022,8 +1022,8 @@ void tst_qquickitem::enabled()
 
 void tst_qquickitem::enabledFocus()
 {
-    QQuickCanvas canvas;
-    ensureFocus(&canvas);
+    QQuickWindow window;
+    ensureFocus(&window);
 
     QQuickFocusScope root;
 
@@ -1034,18 +1034,18 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(root.hasFocus(), true);
     QCOMPARE(root.hasActiveFocus(), false);
 
-    root.setParentItem(canvas.rootItem());
+    root.setParentItem(window.rootItem());
 
     QCOMPARE(root.isEnabled(), false);
     QCOMPARE(root.hasFocus(), true);
     QCOMPARE(root.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), canvas.rootItem());
+    QCOMPARE(window.activeFocusItem(), window.rootItem());
 
     root.setEnabled(true);
     QCOMPARE(root.isEnabled(), true);
     QCOMPARE(root.hasFocus(), true);
     QCOMPARE(root.hasActiveFocus(), true);
-    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+    QCOMPARE(window.activeFocusItem(), static_cast<QQuickItem *>(&root));
 
     QQuickItem child1;
     child1.setParentItem(&root);
@@ -1053,7 +1053,7 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child1.isEnabled(), true);
     QCOMPARE(child1.hasFocus(), false);
     QCOMPARE(child1.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+    QCOMPARE(window.activeFocusItem(), static_cast<QQuickItem *>(&root));
 
     QQuickItem child2;
     child2.setFocus(true);
@@ -1065,7 +1065,7 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child2.isEnabled(), true);
     QCOMPARE(child2.hasFocus(), true);
     QCOMPARE(child2.hasActiveFocus(), true);
-    QCOMPARE(canvas.activeFocusItem(), &child2);
+    QCOMPARE(window.activeFocusItem(), &child2);
 
     child2.setEnabled(false);
 
@@ -1078,7 +1078,7 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child2.isEnabled(), false);
     QCOMPARE(child2.hasFocus(), true);
     QCOMPARE(child2.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+    QCOMPARE(window.activeFocusItem(), static_cast<QQuickItem *>(&root));
 
     child1.setEnabled(false);
     QCOMPARE(child1.isEnabled(), false);
@@ -1092,13 +1092,13 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child2.isEnabled(), false);
     QCOMPARE(child2.hasFocus(), false);
     QCOMPARE(child2.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+    QCOMPARE(window.activeFocusItem(), static_cast<QQuickItem *>(&root));
 
     child1.setEnabled(true);
     QCOMPARE(child1.isEnabled(), true);
     QCOMPARE(child1.hasFocus(), true);
     QCOMPARE(child1.hasActiveFocus(), true);
-    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&child1));
+    QCOMPARE(window.activeFocusItem(), static_cast<QQuickItem *>(&child1));
 
     root.setFocus(false);
     QCOMPARE(root.isEnabled(), true);
@@ -1107,7 +1107,7 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child1.isEnabled(), true);
     QCOMPARE(child1.hasFocus(), true);
     QCOMPARE(child1.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), canvas.rootItem());
+    QCOMPARE(window.activeFocusItem(), window.rootItem());
 
     child2.forceActiveFocus();
     QCOMPARE(root.isEnabled(), true);
@@ -1119,7 +1119,7 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child2.isEnabled(), false);
     QCOMPARE(child2.hasFocus(), true);
     QCOMPARE(child2.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&root));
+    QCOMPARE(window.activeFocusItem(), static_cast<QQuickItem *>(&root));
 
     root.setEnabled(false);
     QCOMPARE(root.isEnabled(), false);
@@ -1131,7 +1131,7 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child2.isEnabled(), false);
     QCOMPARE(child2.hasFocus(), true);
     QCOMPARE(child2.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), canvas.rootItem());
+    QCOMPARE(window.activeFocusItem(), window.rootItem());
 
     child1.forceActiveFocus();
     QCOMPARE(root.isEnabled(), false);
@@ -1143,7 +1143,7 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child2.isEnabled(), false);
     QCOMPARE(child2.hasFocus(), false);
     QCOMPARE(child2.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), canvas.rootItem());
+    QCOMPARE(window.activeFocusItem(), window.rootItem());
 
     root.setEnabled(true);
     QCOMPARE(root.isEnabled(), true);
@@ -1155,83 +1155,83 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(child2.isEnabled(), false);
     QCOMPARE(child2.hasFocus(), false);
     QCOMPARE(child2.hasActiveFocus(), false);
-    QCOMPARE(canvas.activeFocusItem(), static_cast<QQuickItem *>(&child1));
+    QCOMPARE(window.activeFocusItem(), static_cast<QQuickItem *>(&child1));
 }
 
 void tst_qquickitem::mouseGrab()
 {
-    QQuickCanvas *canvas = new QQuickCanvas;
-    canvas->resize(200, 200);
-    canvas->show();
+    QQuickWindow *window = new QQuickWindow;
+    window->resize(200, 200);
+    window->show();
 
     TestItem *child1 = new TestItem;
     child1->setAcceptedMouseButtons(Qt::LeftButton);
     child1->setSize(QSizeF(200, 100));
-    child1->setParentItem(canvas->rootItem());
+    child1->setParentItem(window->rootItem());
 
     TestItem *child2 = new TestItem;
     child2->setAcceptedMouseButtons(Qt::LeftButton);
     child2->setY(51);
     child2->setSize(QSizeF(200, 100));
-    child2->setParentItem(canvas->rootItem());
+    child2->setParentItem(window->rootItem());
 
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(100);
-    QVERIFY(canvas->mouseGrabberItem() == child1);
+    QVERIFY(window->mouseGrabberItem() == child1);
     QTest::qWait(100);
 
     QCOMPARE(child1->pressCount, 1);
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(50);
-    QVERIFY(canvas->mouseGrabberItem() == 0);
+    QVERIFY(window->mouseGrabberItem() == 0);
     QCOMPARE(child1->releaseCount, 1);
 
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(50);
-    QVERIFY(canvas->mouseGrabberItem() == child1);
+    QVERIFY(window->mouseGrabberItem() == child1);
     QCOMPARE(child1->pressCount, 2);
     child1->setEnabled(false);
-    QVERIFY(canvas->mouseGrabberItem() == 0);
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QVERIFY(window->mouseGrabberItem() == 0);
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     child1->setEnabled(true);
 
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(50);
-    QVERIFY(canvas->mouseGrabberItem() == child1);
+    QVERIFY(window->mouseGrabberItem() == child1);
     QCOMPARE(child1->pressCount, 3);
     child1->setVisible(false);
-    QVERIFY(canvas->mouseGrabberItem() == 0);
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QVERIFY(window->mouseGrabberItem() == 0);
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(50,50));
     QCOMPARE(child1->releaseCount, 1);
     child1->setVisible(true);
 
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(50);
-    QVERIFY(canvas->mouseGrabberItem() == child1);
+    QVERIFY(window->mouseGrabberItem() == child1);
     QCOMPARE(child1->pressCount, 4);
     child2->grabMouse();
-    QVERIFY(canvas->mouseGrabberItem() == child2);
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QVERIFY(window->mouseGrabberItem() == child2);
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     QCOMPARE(child2->releaseCount, 1);
 
     child2->grabMouse();
-    QVERIFY(canvas->mouseGrabberItem() == child2);
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QVERIFY(window->mouseGrabberItem() == child2);
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(50);
     QCOMPARE(child1->pressCount, 4);
     QCOMPARE(child2->pressCount, 1);
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(50,50));
     QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     QCOMPARE(child2->releaseCount, 2);
 
     delete child1;
     delete child2;
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickitem::touchEventAcceptIgnore_data()
@@ -1246,13 +1246,13 @@ void tst_qquickitem::touchEventAcceptIgnore()
 {
     QFETCH(bool, itemSupportsTouch);
 
-    TestCanvas *canvas = new TestCanvas;
-    canvas->resize(100, 100);
-    canvas->show();
+    TestWindow *window = new TestWindow;
+    window->resize(100, 100);
+    window->show();
 
     TestItem *item = new TestItem;
     item->setSize(QSizeF(100, 100));
-    item->setParentItem(canvas->rootItem());
+    item->setParentItem(window->rootItem());
     item->acceptIncomingTouchEvents = itemSupportsTouch;
 
     static QTouchDevice* device = 0;
@@ -1278,7 +1278,7 @@ void tst_qquickitem::touchEventAcceptIgnore()
 
         item->touchEventReached = false;
 
-        bool accepted = canvas->event(&event);
+        bool accepted = window->event(&event);
 
         QVERIFY(item->touchEventReached);
         QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
@@ -1298,7 +1298,7 @@ void tst_qquickitem::touchEventAcceptIgnore()
 
         item->touchEventReached = false;
 
-        bool accepted = canvas->event(&event);
+        bool accepted = window->event(&event);
 
         QCOMPARE(item->touchEventReached, itemSupportsTouch);
         QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
@@ -1318,23 +1318,23 @@ void tst_qquickitem::touchEventAcceptIgnore()
 
         item->touchEventReached = false;
 
-        bool accepted = canvas->event(&event);
+        bool accepted = window->event(&event);
 
         QCOMPARE(item->touchEventReached, itemSupportsTouch);
         QCOMPARE(accepted && event.isAccepted(), itemSupportsTouch);
     }
 
     delete item;
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickitem::polishOutsideAnimation()
 {
-    QQuickCanvas *canvas = new QQuickCanvas;
-    canvas->resize(200, 200);
-    canvas->show();
+    QQuickWindow *window = new QQuickWindow;
+    window->resize(200, 200);
+    window->show();
 
-    TestPolishItem *item = new TestPolishItem(canvas->rootItem());
+    TestPolishItem *item = new TestPolishItem(window->rootItem());
     item->setSize(QSizeF(200, 100));
     QTest::qWait(50);
 
@@ -1342,7 +1342,7 @@ void tst_qquickitem::polishOutsideAnimation()
     QTRY_VERIFY(item->wasPolished);
 
     delete item;
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickitem::polishOnCompleted()
@@ -1377,20 +1377,20 @@ void tst_qquickitem::wheelEvent()
 
     const bool shouldReceiveWheelEvents = visible && enabled;
 
-    QQuickCanvas *canvas = new QQuickCanvas;
-    canvas->resize(200, 200);
-    canvas->show();
+    QQuickWindow *window = new QQuickWindow;
+    window->resize(200, 200);
+    window->show();
 
     TestItem *item = new TestItem;
     item->setSize(QSizeF(200, 100));
-    item->setParentItem(canvas->rootItem());
+    item->setParentItem(window->rootItem());
 
     item->setEnabled(enabled);
     item->setVisible(visible);
 
     QWheelEvent event(QPoint(100, 50), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
     event.setAccepted(false);
-    QGuiApplication::sendEvent(canvas, &event);
+    QGuiApplication::sendEvent(window, &event);
 
     if (shouldReceiveWheelEvents) {
         QVERIFY(event.isAccepted());
@@ -1400,7 +1400,7 @@ void tst_qquickitem::wheelEvent()
         QCOMPARE(item->wheelCount, 0);
     }
 
-    delete canvas;
+    delete window;
 }
 
 class HoverItem : public QQuickItem
@@ -1463,13 +1463,13 @@ void tst_qquickitem::hoverEvent()
     QFETCH(bool, enabled);
     QFETCH(bool, acceptHoverEvents);
 
-    QQuickCanvas *canvas = new QQuickCanvas();
-    canvas->resize(200, 200);
-    canvas->show();
+    QQuickWindow *window = new QQuickWindow();
+    window->resize(200, 200);
+    window->show();
 
     HoverItem *item = new HoverItem;
     item->setSize(QSizeF(100, 100));
-    item->setParentItem(canvas->rootItem());
+    item->setParentItem(window->rootItem());
 
     item->setEnabled(enabled);
     item->setVisible(visible);
@@ -1479,14 +1479,14 @@ void tst_qquickitem::hoverEvent()
     const QPoint inside(50, 50);
     const QPoint anotherInside(51, 51);
 
-    sendMouseMove(canvas, outside);
+    sendMouseMove(window, outside);
     item->resetCounters();
 
     // Enter, then move twice inside, then leave.
-    sendMouseMove(canvas, inside);
-    sendMouseMove(canvas, anotherInside);
-    sendMouseMove(canvas, inside);
-    sendMouseMove(canvas, outside);
+    sendMouseMove(window, inside);
+    sendMouseMove(window, anotherInside);
+    sendMouseMove(window, inside);
+    sendMouseMove(window, outside);
 
     const bool shouldReceiveHoverEvents = visible && enabled && acceptHoverEvents;
     if (shouldReceiveHoverEvents) {
@@ -1499,16 +1499,16 @@ void tst_qquickitem::hoverEvent()
         QCOMPARE(item->hoverLeaveCount, 0);
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickitem::hoverEventInParent()
 {
-    QQuickCanvas *canvas = new QQuickCanvas();
-    canvas->resize(200, 200);
-    canvas->show();
+    QQuickWindow *window = new QQuickWindow();
+    window->resize(200, 200);
+    window->show();
 
-    HoverItem *parentItem = new HoverItem(canvas->rootItem());
+    HoverItem *parentItem = new HoverItem(window->rootItem());
     parentItem->setSize(QSizeF(200, 200));
     parentItem->setAcceptHoverEvents(true);
 
@@ -1524,12 +1524,12 @@ void tst_qquickitem::hoverEventInParent()
     const QPoint insideLeft(50, 100);
     const QPoint insideRight(150, 100);
 
-    sendMouseMove(canvas, insideLeft);
+    sendMouseMove(window, insideLeft);
     parentItem->resetCounters();
     leftItem->resetCounters();
     rightItem->resetCounters();
 
-    sendMouseMove(canvas, insideRight);
+    sendMouseMove(window, insideRight);
     QCOMPARE(parentItem->hoverEnterCount, 0);
     QCOMPARE(parentItem->hoverLeaveCount, 0);
     QCOMPARE(leftItem->hoverEnterCount, 0);
@@ -1537,7 +1537,7 @@ void tst_qquickitem::hoverEventInParent()
     QCOMPARE(rightItem->hoverEnterCount, 1);
     QCOMPARE(rightItem->hoverLeaveCount, 0);
 
-    sendMouseMove(canvas, insideLeft);
+    sendMouseMove(window, insideLeft);
     QCOMPARE(parentItem->hoverEnterCount, 0);
     QCOMPARE(parentItem->hoverLeaveCount, 0);
     QCOMPARE(leftItem->hoverEnterCount, 1);
@@ -1545,7 +1545,7 @@ void tst_qquickitem::hoverEventInParent()
     QCOMPARE(rightItem->hoverEnterCount, 1);
     QCOMPARE(rightItem->hoverLeaveCount, 1);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickitem::paintOrder_data()
@@ -1667,58 +1667,58 @@ void tst_qquickitem::acceptedMouseButtons()
     TestItem item;
     QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::NoButton));
 
-    QQuickCanvas canvas;
+    QQuickWindow window;
     item.setSize(QSizeF(200,100));
-    item.setParentItem(canvas.rootItem());
+    item.setParentItem(window.rootItem());
 
-    QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 0);
     QCOMPARE(item.releaseCount, 0);
 
-    QTest::mousePress(&canvas, Qt::RightButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::RightButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 0);
     QCOMPARE(item.releaseCount, 0);
 
-    QTest::mousePress(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::MiddleButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 0);
     QCOMPARE(item.releaseCount, 0);
 
     item.setAcceptedMouseButtons(Qt::LeftButton);
     QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::LeftButton));
 
-    QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
 
-    QTest::mousePress(&canvas, Qt::RightButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::RightButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
 
-    QTest::mousePress(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::MiddleButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
 
     item.setAcceptedMouseButtons(Qt::RightButton | Qt::MiddleButton);
     QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::RightButton | Qt::MiddleButton));
 
-    QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
 
-    QTest::mousePress(&canvas, Qt::RightButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::RightButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 2);
     QCOMPARE(item.releaseCount, 2);
 
-    QTest::mousePress(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&canvas, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::MiddleButton, 0, QPoint(50, 50));
     QCOMPARE(item.pressCount, 3);
     QCOMPARE(item.releaseCount, 3);
 }

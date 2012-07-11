@@ -83,10 +83,10 @@ private:
 
     QQmlEngine engine;
 
-    QQuickCanvas *canvas;
+    QQuickWindow *window;
 };
 
-tst_examples::tst_examples() : canvas(0)
+tst_examples::tst_examples() : window(0)
 {
     // Add files to exclude here
     excludedFiles << "examples/quick/canvas/tiger/tiger.qml"; // QTBUG-26528
@@ -123,7 +123,7 @@ tst_examples::tst_examples() : canvas(0)
 
 tst_examples::~tst_examples()
 {
-    delete canvas;
+    delete window;
 }
 
 void tst_examples::init()
@@ -262,13 +262,13 @@ void tst_examples::sgexamples()
         component.completeCreate();
     QVERIFY(root);
 
-    if (!canvas) {
-        canvas = new QQuickCanvas();
-        canvas->resize(240, 320);
-        canvas->show();
-        QTest::qWaitForWindowShown(canvas);
+    if (!window) {
+        window = new QQuickWindow();
+        window->resize(240, 320);
+        window->show();
+        QTest::qWaitForWindowShown(window);
     }
-    root->setParentItem(canvas->rootItem());
+    root->setParentItem(window->rootItem());
     component.completeCreate();
 
     qApp->processEvents();
@@ -306,13 +306,13 @@ void tst_examples::sgsnippets()
         component.completeCreate();
     QVERIFY(root);
 
-    if (!canvas) {
-        canvas = new QQuickCanvas();
-        canvas->resize(240, 320);
-        canvas->show();
-        QTest::qWaitForWindowShown(canvas);
+    if (!window) {
+        window = new QQuickWindow();
+        window->resize(240, 320);
+        window->show();
+        QTest::qWaitForWindowShown(window);
     }
-    root->setParentItem(canvas->rootItem());
+    root->setParentItem(window->rootItem());
     component.completeCreate();
 
     qApp->processEvents();

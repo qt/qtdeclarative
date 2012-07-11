@@ -93,8 +93,8 @@ the executable using \l{The Qt Resource System}. Using this, an executable can r
 that is compiled into the executable:
 
 \code
-    QQuickView *canvas = new QQuickView;
-    canvas->setUrl(QUrl("qrc:/dial.qml"));
+    QQuickView *view = new QQuickView;
+    view->setUrl(QUrl("qrc:/dial.qml"));
 \endcode
 
 The content itself can then use relative URLs, and so be transparently unaware that the content is

@@ -61,7 +61,7 @@
 #include <qqmlengine.h>
 #include <private/qv8domerrors_p.h>
 #include <QtCore/qnumeric.h>
-#include <private/qquickcanvas_p.h>
+#include <private/qquickwindow_p.h>
 #include <private/qquickwindowmanager_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
@@ -2331,13 +2331,13 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 
         QV8Context2DPixelArrayResource *pix = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
         if (pix && !pix->image.isNull()) {
-            pixmap.take(new QQuickCanvasPixmap(pix->image, r->context->canvas()->canvas()));
+            pixmap.take(new QQuickCanvasPixmap(pix->image, r->context->canvas()->window()));
         } else if (imageItem) {
             pixmap.take(r->context->createPixmap(imageItem->source()));
         } else if (canvas) {
             QImage img = canvas->toImage();
             if (!img.isNull())
-                pixmap.take(new QQuickCanvasPixmap(img, canvas->canvas()));
+                pixmap.take(new QQuickCanvasPixmap(img, canvas->window()));
         } else {
             V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
         }
@@ -3371,8 +3371,8 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_canvas = canvasItem;
     m_renderTarget = canvasItem->renderTarget();
 
-    QQuickCanvas *canvas = canvasItem->canvas();
-    m_windowManager =  QQuickCanvasPrivate::get(canvas)->windowManager;
+    QQuickWindow *window = canvasItem->window();
+    m_windowManager =  QQuickWindowPrivate::get(window)->windowManager;
     m_renderStrategy = canvasItem->renderStrategy();
 
     switch (m_renderTarget) {
@@ -3396,7 +3396,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_texture->setSmooth(canvasItem->smooth());
 
     QThread *renderThread = QThread::currentThread();
-    QThread *sceneGraphThread = canvas->openglContext() ? canvas->openglContext()->thread() : 0;
+    QThread *sceneGraphThread = window->openglContext() ? window->openglContext()->thread() : 0;
 
     if (m_renderStrategy == QQuickCanvasItem::Threaded)
         renderThread = QQuickContext2DRenderThread::instance(qmlEngine(canvasItem));
@@ -3404,8 +3404,8 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         renderThread = sceneGraphThread;
 
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
-         QOpenGLContext *cc = QQuickCanvasPrivate::get(canvas)->context->glContext();
-         m_surface = canvas;
+         QOpenGLContext *cc = QQuickWindowPrivate::get(window)->context->glContext();
+         m_surface = window;
          m_glContext = new QOpenGLContext;
          m_glContext->setFormat(cc->format());
          m_glContext->setShareContext(cc);

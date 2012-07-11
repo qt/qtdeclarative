@@ -62,7 +62,7 @@ public:
         view.show();
         QTest::qWaitForWindowShown(&view);
 
-        return view.grabFrameBuffer();
+        return view.grabWindow();
     }
 
 private slots:

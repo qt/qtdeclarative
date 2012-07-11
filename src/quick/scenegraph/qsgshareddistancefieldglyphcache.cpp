@@ -54,7 +54,7 @@
 
 #include <qpa/qplatformsharedgraphicscache.h>
 
-#include <QtQuick/qquickcanvas.h>
+#include <QtQuick/qquickwindow.h>
 
 // #define QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG
 
@@ -228,12 +228,12 @@ QSGSharedDistanceFieldGlyphCache::QSGSharedDistanceFieldGlyphCache(const QByteAr
             this, SLOT(reportItemsInvalidated(QByteArray,QVector<quint32>)),
             Qt::DirectConnection);
 
-    QQuickCanvas *canvas = static_cast<QQuickCanvas *>(c->surface());
-    Q_ASSERT(canvas != 0);
+    QQuickWindow *window = static_cast<QQuickWindow *>(c->surface());
+    Q_ASSERT(window != 0);
 
-    connect(canvas, SIGNAL(beforeSynchronizing()), this, SLOT(sceneGraphUpdateStarted()),
+    connect(window, SIGNAL(beforeSynchronizing()), this, SLOT(sceneGraphUpdateStarted()),
             Qt::DirectConnection);
-    connect(canvas, SIGNAL(beforeRendering()), this, SLOT(sceneGraphUpdateDone()),
+    connect(window, SIGNAL(beforeRendering()), this, SLOT(sceneGraphUpdateDone()),
             Qt::DirectConnection);
 }
 

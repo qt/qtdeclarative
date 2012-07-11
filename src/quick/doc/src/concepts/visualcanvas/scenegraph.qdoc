@@ -51,7 +51,7 @@ batch rendering to minimize state changes and discarding obscured primitives.
 
 The scene graph is closely tied to QML and can not be used as
 stand-alone. The scene graph is managed and rendered by the
-QQuickCanvas class and custom QML elements will add their graphical
+QQuickWindow class and custom QML elements will add their graphical
 primitives into the scene graph through a call to
 QQuickItem::updatePaintNode().
 
@@ -96,7 +96,7 @@ the rendering, such as the shared root for a subtree of geometry nodes.
 \section1 Rendering
 
 The rendering of the scene graph happens internally in the
-QQuickCanvas class and is described under the \l{Scene Graph and
+QQuickWindow class and is described under the \l{Scene Graph and
 Rendering} section.
 
 How to integrate QPainter based graphics is explained in \l{Custom
@@ -115,7 +115,7 @@ It includes:
 \list
 
 \li Custom textures; specifically the implementation of
-QQuickCanvas::createTextureFromImage and the internal representation
+QQuickWindow::createTextureFromImage and the internal representation
 of the texture used by \l Image and \l BorderImage elements.
 
 \li Custom renderer; the adaptation layer lets the plugin decide how

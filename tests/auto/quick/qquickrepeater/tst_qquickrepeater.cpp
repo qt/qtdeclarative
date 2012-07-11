@@ -110,17 +110,17 @@ tst_QQuickRepeater::tst_QQuickRepeater()
 
 void tst_QQuickRepeater::numberModel()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testData", 5);
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(testFileUrl("intmodel.qml"));
+    window->setSource(testFileUrl("intmodel.qml"));
     qApp->processEvents();
 
-    QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
     QVERIFY(repeater != 0);
     QCOMPARE(repeater->parentItem()->childItems().count(), 5+1);
 
@@ -129,11 +129,11 @@ void tst_QQuickRepeater::numberModel()
         QCOMPARE(repeater->itemAt(i), repeater->parentItem()->childItems().at(i));
     QVERIFY(!repeater->itemAt(repeater->count()));
 
-    QMetaObject::invokeMethod(canvas->rootObject(), "checkProperties");
+    QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
     QVERIFY(testObject->error() == false);
 
     delete testObject;
-    delete canvas;
+    delete window;
 }
 
 class MyObject : public QObject
@@ -150,18 +150,18 @@ public:
 
 void tst_QQuickRepeater::objectList()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
     QObjectList data;
     for (int i=0; i<100; i++)
         data << new MyObject(i);
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testData", QVariant::fromValue(data));
 
-    canvas->setSource(testFileUrl("objlist.qml"));
+    window->setSource(testFileUrl("objlist.qml"));
     qApp->processEvents();
 
-    QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
     QVERIFY(repeater != 0);
     QCOMPARE(repeater->property("errors").toInt(), 0);//If this fails either they are out of order or can't find the object's data
     QCOMPARE(repeater->property("instantiated").toInt(), 100);
@@ -178,7 +178,7 @@ void tst_QQuickRepeater::objectList()
     QCOMPARE(removedSpy.count(), data.count());
 
     qDeleteAll(data);
-    delete canvas;
+    delete window;
 }
 
 /*
@@ -188,7 +188,7 @@ elements to test this.
 */
 void tst_QQuickRepeater::stringList()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QStringList data;
     data << "One";
@@ -196,16 +196,16 @@ void tst_QQuickRepeater::stringList()
     data << "Three";
     data << "Four";
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testData", data);
 
-    canvas->setSource(testFileUrl("repeater1.qml"));
+    window->setSource(testFileUrl("repeater1.qml"));
     qApp->processEvents();
 
-    QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
     QVERIFY(repeater != 0);
 
-    QQuickItem *container = findItem<QQuickItem>(canvas->rootObject(), "container");
+    QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
     QVERIFY(container != 0);
 
     QCOMPARE(container->childItems().count(), data.count() + 3);
@@ -235,24 +235,24 @@ void tst_QQuickRepeater::stringList()
     }
     QVERIFY(saw_repeater);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickRepeater::dataModel_adding()
 {
-    QQuickView *canvas = createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = createView();
+    QQmlContext *ctxt = window->rootContext();
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
     QaimModel testModel;
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(testFileUrl("repeater2.qml"));
+    window->setSource(testFileUrl("repeater2.qml"));
     qApp->processEvents();
 
-    QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
     QVERIFY(repeater != 0);
-    QQuickItem *container = findItem<QQuickItem>(canvas->rootObject(), "container");
+    QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
     QVERIFY(container != 0);
 
     QVERIFY(!repeater->itemAt(0));
@@ -299,13 +299,13 @@ void tst_QQuickRepeater::dataModel_adding()
     delete testObject;
     addedSpy.clear();
     countSpy.clear();
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickRepeater::dataModel_removing()
 {
-    QQuickView *canvas = createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = createView();
+    QQmlContext *ctxt = window->rootContext();
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
@@ -317,12 +317,12 @@ void tst_QQuickRepeater::dataModel_removing()
     testModel.addItem("five", "5");
 
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(testFileUrl("repeater2.qml"));
+    window->setSource(testFileUrl("repeater2.qml"));
     qApp->processEvents();
 
-    QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
     QVERIFY(repeater != 0);
-    QQuickItem *container = findItem<QQuickItem>(canvas->rootObject(), "container");
+    QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
     QVERIFY(container != 0);
     QCOMPARE(container->childItems().count(), repeater->count()+1);
 
@@ -367,13 +367,13 @@ void tst_QQuickRepeater::dataModel_removing()
     removedSpy.clear();
 
     delete testObject;
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickRepeater::dataModel_changes()
 {
-    QQuickView *canvas = createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = createView();
+    QQmlContext *ctxt = window->rootContext();
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
@@ -383,53 +383,53 @@ void tst_QQuickRepeater::dataModel_changes()
     testModel.addItem("three", "3");
 
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(testFileUrl("repeater2.qml"));
+    window->setSource(testFileUrl("repeater2.qml"));
     qApp->processEvents();
 
-    QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
     QVERIFY(repeater != 0);
-    QQuickItem *container = findItem<QQuickItem>(canvas->rootObject(), "container");
+    QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
     QVERIFY(container != 0);
     QCOMPARE(container->childItems().count(), repeater->count()+1);
 
     // Check that model changes are propagated
-    QQuickText *text = findItem<QQuickText>(canvas->rootObject(), "myName", 1);
+    QQuickText *text = findItem<QQuickText>(window->rootObject(), "myName", 1);
     QVERIFY(text);
     QCOMPARE(text->text(), QString("two"));
 
     testModel.modifyItem(1, "Item two", "_2");
-    text = findItem<QQuickText>(canvas->rootObject(), "myName", 1);
+    text = findItem<QQuickText>(window->rootObject(), "myName", 1);
     QVERIFY(text);
     QCOMPARE(text->text(), QString("Item two"));
 
-    text = findItem<QQuickText>(canvas->rootObject(), "myNumber", 1);
+    text = findItem<QQuickText>(window->rootObject(), "myNumber", 1);
     QVERIFY(text);
     QCOMPARE(text->text(), QString("_2"));
 
     delete testObject;
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickRepeater::itemModel()
 {
-    QQuickView *canvas = createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = createView();
+    QQmlContext *ctxt = window->rootContext();
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(testFileUrl("itemlist.qml"));
+    window->setSource(testFileUrl("itemlist.qml"));
     qApp->processEvents();
 
-    QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
     QVERIFY(repeater != 0);
 
-    QQuickItem *container = findItem<QQuickItem>(canvas->rootObject(), "container");
+    QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
     QVERIFY(container != 0);
 
     QCOMPARE(container->childItems().count(), 1);
 
     testObject->setUseModel(true);
-    QMetaObject::invokeMethod(canvas->rootObject(), "checkProperties");
+    QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
     QVERIFY(testObject->error() == false);
 
     QCOMPARE(container->childItems().count(), 4);
@@ -438,7 +438,7 @@ void tst_QQuickRepeater::itemModel()
     QVERIFY(qobject_cast<QObject*>(container->childItems().at(2))->objectName() == "item3");
     QVERIFY(container->childItems().at(3) == repeater);
 
-    QMetaObject::invokeMethod(canvas->rootObject(), "switchModel");
+    QMetaObject::invokeMethod(window->rootObject(), "switchModel");
     QCOMPARE(container->childItems().count(), 3);
     QVERIFY(qobject_cast<QObject*>(container->childItems().at(0))->objectName() == "item4");
     QVERIFY(qobject_cast<QObject*>(container->childItems().at(1))->objectName() == "item5");
@@ -448,24 +448,24 @@ void tst_QQuickRepeater::itemModel()
     QCOMPARE(container->childItems().count(), 1);
 
     delete testObject;
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickRepeater::resetModel()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QStringList dataA;
     for (int i=0; i<10; i++)
         dataA << QString::number(i);
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testData", dataA);
-    canvas->setSource(testFileUrl("repeater1.qml"));
+    window->setSource(testFileUrl("repeater1.qml"));
     qApp->processEvents();
-    QQuickRepeater *repeater = findItem<QQuickRepeater>(canvas->rootObject(), "repeater");
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(window->rootObject(), "repeater");
     QVERIFY(repeater != 0);
-    QQuickItem *container = findItem<QQuickItem>(canvas->rootObject(), "container");
+    QQuickItem *container = findItem<QQuickItem>(window->rootObject(), "container");
     QVERIFY(container != 0);
 
     QCOMPARE(repeater->count(), dataA.count());
@@ -516,7 +516,7 @@ void tst_QQuickRepeater::resetModel()
     removedSpy.clear();
     addedSpy.clear();
 
-    delete canvas;
+    delete window;
 }
 
 // QTBUG-17156
@@ -575,14 +575,14 @@ void tst_QQuickRepeater::properties()
 
 void tst_QQuickRepeater::asynchronous()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
     QQmlIncubationController controller;
-    canvas->engine()->setIncubationController(&controller);
+    window->engine()->setIncubationController(&controller);
 
-    canvas->setSource(testFileUrl("asyncloader.qml"));
+    window->setSource(testFileUrl("asyncloader.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(rootObject);
 
     QQuickItem *container = findItem<QQuickItem>(rootObject, "container");
@@ -626,7 +626,7 @@ void tst_QQuickRepeater::asynchronous()
         QTRY_COMPARE(item->y(), i * 50.0);
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickRepeater::initParent()

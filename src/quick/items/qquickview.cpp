@@ -42,7 +42,7 @@
 #include "qquickview.h"
 #include "qquickview_p.h"
 
-#include "qquickcanvas_p.h"
+#include "qquickwindow_p.h"
 #include "qquickitem_p.h"
 #include "qquickitemchangelistener_p.h"
 
@@ -128,9 +128,9 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
 
     \inmodule QtQuick
 
-    This is a convenience subclass of QQuickCanvas which
+    This is a convenience subclass of QQuickWindow which
     will automatically load and display a QML scene when given the URL of the main source file. Alternatively,
-    you can instantiate your own objects using QQmlComponent and place them in a manually setup QQuickCanvas.
+    you can instantiate your own objects using QQmlComponent and place them in a manually setup QQuickWindow.
 
     Typical usage:
 
@@ -171,7 +171,7 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
 
 */
 QQuickView::QQuickView(QWindow *parent)
-: QQuickCanvas(*(new QQuickViewPrivate), parent)
+: QQuickWindow(*(new QQuickViewPrivate), parent)
 {
     d_func()->init();
 }
@@ -182,7 +182,7 @@ QQuickView::QQuickView(QWindow *parent)
 
 */
 QQuickView::QQuickView(const QUrl &source, QWindow *parent)
-: QQuickCanvas(*(new QQuickViewPrivate), parent)
+: QQuickWindow(*(new QQuickViewPrivate), parent)
 {
     d_func()->init();
     setSource(source);
@@ -198,7 +198,7 @@ QQuickView::QQuickView(const QUrl &source, QWindow *parent)
   \sa Status, status(), errors()
 */
 QQuickView::QQuickView(QQmlEngine* engine, QWindow *parent)
-    : QQuickCanvas(*(new QQuickViewPrivate), parent)
+    : QQuickWindow(*(new QQuickViewPrivate), parent)
 {
     Q_ASSERT(engine);
     d_func()->init(engine);
@@ -336,7 +336,7 @@ QList<QQmlError> QQuickView::errors() const
 
 /*!
     \property QQuickView::resizeMode
-    \brief whether the view should resize the canvas contents
+    \brief whether the view should resize the window contents
 
     If this property is set to SizeViewToRootObject (the default), the view
     resizes to the size of the root item in the QML.
@@ -469,7 +469,7 @@ void QQuickViewPrivate::setRootObject(QObject *obj)
         return;
     if (QQuickItem *sgItem = qobject_cast<QQuickItem *>(obj)) {
         root = sgItem;
-        sgItem->setParentItem(q->QQuickCanvas::rootItem());
+        sgItem->setParentItem(q->QQuickWindow::rootItem());
     } else {
         qWarning() << "QQuickView only supports loading of root objects that derive from QQuickItem." << endl
                    << endl
@@ -553,7 +553,7 @@ void QQuickView::resizeEvent(QResizeEvent *e)
     if (d->resizeMode == SizeRootObjectToView)
         d->updateSize();
 
-    QQuickCanvas::resizeEvent(e);
+    QQuickWindow::resizeEvent(e);
 }
 
 /*! \reimp */
@@ -561,7 +561,7 @@ void QQuickView::keyPressEvent(QKeyEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Key);
 
-    QQuickCanvas::keyPressEvent(e);
+    QQuickWindow::keyPressEvent(e);
 }
 
 /*! \reimp */
@@ -569,7 +569,7 @@ void QQuickView::keyReleaseEvent(QKeyEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Key);
 
-    QQuickCanvas::keyReleaseEvent(e);
+    QQuickWindow::keyReleaseEvent(e);
 }
 
 /*! \reimp */
@@ -577,7 +577,7 @@ void QQuickView::mouseMoveEvent(QMouseEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
 
-    QQuickCanvas::mouseMoveEvent(e);
+    QQuickWindow::mouseMoveEvent(e);
 }
 
 /*! \reimp */
@@ -585,7 +585,7 @@ void QQuickView::mousePressEvent(QMouseEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
 
-    QQuickCanvas::mousePressEvent(e);
+    QQuickWindow::mousePressEvent(e);
 }
 
 /*! \reimp */
@@ -593,7 +593,7 @@ void QQuickView::mouseReleaseEvent(QMouseEvent *e)
 {
     QQmlProfilerService::addEvent(QQmlProfilerService::Mouse);
 
-    QQuickCanvas::mouseReleaseEvent(e);
+    QQuickWindow::mouseReleaseEvent(e);
 }
 
 

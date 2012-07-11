@@ -70,14 +70,14 @@ QRect QAccessibleQuickItem::rect() const
 
 QRect QAccessibleQuickItem::viewRect() const
 {
-    // ### no canvas in some cases.
-    if (!item()->canvas()) {
+    // ### no window in some cases.
+    if (!item()->window()) {
         return QRect();
     }
 
-    QQuickCanvas *canvas = item()->canvas();
-    QPoint screenPos = canvas->mapToGlobal(QPoint(0,0));
-    return QRect(screenPos, canvas->size());
+    QQuickWindow *window = item()->window();
+    QPoint screenPos = window->mapToGlobal(QPoint(0,0));
+    return QRect(screenPos, window->size());
 }
 
 
@@ -91,14 +91,14 @@ QAccessibleInterface *QAccessibleQuickItem::parent() const
 {
     QQuickItem *parent = item()->parentItem();
     if (parent) {
-        QQuickCanvas *canvas = item()->canvas();
+        QQuickWindow *window = item()->window();
         // Jump out to the scene widget if the parent is the root item.
-        // There are two root items, QQuickCanvas::rootItem and
+        // There are two root items, QQuickWindow::rootItem and
         // QQuickView::declarativeRoot. The former is the true root item,
         // but is not a part of the accessibility tree. Check if we hit
         // it here and return an interface for the scene instead.
-        if (canvas && (parent == canvas->rootItem())) {
-            return QAccessible::queryAccessibleInterface(canvas);
+        if (window && (parent == window->contentItem())) {
+            return QAccessible::queryAccessibleInterface(window);
         } else {
             return QAccessible::queryAccessibleInterface(parent);
         }
@@ -154,7 +154,7 @@ QAccessible::State QAccessibleQuickItem::state() const
     if (item()->hasActiveFocus())
         state.focused = true;
 
-    if (!item()->canvas() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
+    if (!item()->window() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
         state.invisible = true;
 
     QAccessible::Role r = role();
@@ -274,9 +274,9 @@ QVariant QAccessibleQuickItemValueInterface::minimumValue() const
 */
 QRect itemScreenRect(QQuickItem *item)
 {
-    // ### no canvas in some cases.
+    // ### no window in some cases.
     // ### Should we really check for 0 opacity?
-    if (!item->canvas() ||!item->isVisible() || qFuzzyIsNull(item->opacity())) {
+    if (!item->window() ||!item->isVisible() || qFuzzyIsNull(item->opacity())) {
         return QRect();
     }
 
@@ -291,7 +291,7 @@ QRect itemScreenRect(QQuickItem *item)
     }
 
     QPointF scenePoint = item->mapToScene(QPointF(0, 0));
-    QPoint screenPos = item->canvas()->mapToGlobal(scenePoint.toPoint());
+    QPoint screenPos = item->window()->mapToGlobal(scenePoint.toPoint());
     return QRect(screenPos, itemSize);
 }
 

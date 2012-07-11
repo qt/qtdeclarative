@@ -41,9 +41,9 @@
 
 #include "qquickitem.h"
 
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 #include <QtQml/qjsengine.h>
-#include "qquickcanvas_p.h"
+#include "qquickwindow_p.h"
 
 #include "qquickevents_p_p.h"
 #include "qquickscreen_p.h"
@@ -1352,12 +1352,12 @@ void QQuickKeysAttached::keyPressed(QKeyEvent *event, bool post)
     }
 
     // first process forwards
-    if (d->item && d->item->canvas()) {
+    if (d->item && d->item->window()) {
         d->inPress = true;
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QQuickItem *i = d->targets.at(ii);
             if (i && i->isVisible()) {
-                d->item->canvas()->sendEvent(i, event);
+                d->item->window()->sendEvent(i, event);
                 if (event->isAccepted()) {
                     d->inPress = false;
                     return;
@@ -1394,12 +1394,12 @@ void QQuickKeysAttached::keyReleased(QKeyEvent *event, bool post)
         return;
     }
 
-    if (d->item && d->item->canvas()) {
+    if (d->item && d->item->window()) {
         d->inRelease = true;
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QQuickItem *i = d->targets.at(ii);
             if (i && i->isVisible()) {
-                d->item->canvas()->sendEvent(i, event);
+                d->item->window()->sendEvent(i, event);
                 if (event->isAccepted()) {
                     d->inRelease = false;
                     return;
@@ -1419,12 +1419,12 @@ void QQuickKeysAttached::keyReleased(QKeyEvent *event, bool post)
 void QQuickKeysAttached::inputMethodEvent(QInputMethodEvent *event, bool post)
 {
     Q_D(QQuickKeysAttached);
-    if (post == m_processPost && d->item && !d->inIM && d->item->canvas()) {
+    if (post == m_processPost && d->item && !d->inIM && d->item->window()) {
         d->inIM = true;
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QQuickItem *i = d->targets.at(ii);
             if (i && i->isVisible() && (i->flags() & QQuickItem::ItemAcceptsInputMethod)) {
-                d->item->canvas()->sendEvent(i, event);
+                d->item->window()->sendEvent(i, event);
                 if (event->isAccepted()) {
                     d->imeItem = i;
                     d->inIM = false;
@@ -1714,7 +1714,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     surface. Using scene graph API directly is always significantly
     faster.
 
-    \sa QQuickCanvas, QQuickPaintedItem
+    \sa QQuickWindow, QQuickPaintedItem
 */
 
 /*!
@@ -1872,12 +1872,12 @@ QQuickItem::~QQuickItem()
 
     Q_D(QQuickItem);
 
-    if (d->canvasRefCount > 1)
-        d->canvasRefCount = 1; // Make sure canvas is set to null in next call to derefCanvas().
+    if (d->windowRefCount > 1)
+        d->windowRefCount = 1; // Make sure window is set to null in next call to derefWindow().
     if (d->parentItem)
         setParentItem(0);
-    else if (d->canvas)
-        d->derefCanvas();
+    else if (d->window)
+        d->derefWindow();
 
     // XXX todo - optimize
     while (!d->childItems.isEmpty())
@@ -1984,9 +1984,9 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             scopeItem = oldParentItem;
             while (!scopeItem->isFocusScope() && scopeItem->parentItem())
                 scopeItem = scopeItem->parentItem();
-            if (d->canvas) {
-                QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem,
-                                                                QQuickCanvasPrivate::DontChangeFocusProperty);
+            if (d->window) {
+                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scopeItem, scopeFocusedItem,
+                                                                QQuickWindowPrivate::DontChangeFocusProperty);
                 if (scopeFocusedItem != this)
                     QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(this, true);
             } else {
@@ -1999,29 +1999,29 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
         if (wasVisible) {
             emit oldParentItem->visibleChildrenChanged();
         }
-    } else if (d->canvas) {
-        QQuickCanvasPrivate::get(d->canvas)->parentlessItems.remove(this);
+    } else if (d->window) {
+        QQuickWindowPrivate::get(d->window)->parentlessItems.remove(this);
     }
 
-    QQuickCanvas *oldParentCanvas = oldParentItem ? QQuickItemPrivate::get(oldParentItem)->canvas : 0;
-    QQuickCanvas *parentCanvas = parentItem ? QQuickItemPrivate::get(parentItem)->canvas : 0;
-    if (oldParentCanvas == parentCanvas) {
-        // Avoid freeing and reallocating resources if the canvas stays the same.
+    QQuickWindow *oldParentWindow = oldParentItem ? QQuickItemPrivate::get(oldParentItem)->window : 0;
+    QQuickWindow *parentWindow = parentItem ? QQuickItemPrivate::get(parentItem)->window : 0;
+    if (oldParentWindow == parentWindow) {
+        // Avoid freeing and reallocating resources if the window stays the same.
         d->parentItem = parentItem;
     } else {
-        if (oldParentCanvas)
-            d->derefCanvas();
+        if (oldParentWindow)
+            d->derefWindow();
         d->parentItem = parentItem;
-        if (parentCanvas)
-            d->refCanvas(parentCanvas);
+        if (parentWindow)
+            d->refWindow(parentWindow);
     }
 
     d->dirty(QQuickItemPrivate::ParentChanged);
 
     if (d->parentItem)
         QQuickItemPrivate::get(d->parentItem)->addChild(this);
-    else if (d->canvas)
-        QQuickCanvasPrivate::get(d->canvas)->parentlessItems.insert(this);
+    else if (d->window)
+        QQuickWindowPrivate::get(d->window)->parentlessItems.insert(this);
 
     d->setEffectiveVisibleRecur(d->calcEffectiveVisible());
     d->setEffectiveEnableRecur(0, d->calcEffectiveEnable());
@@ -2047,9 +2047,9 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
                 QQuickItemPrivate::get(scopeFocusedItem)->focus = false;
                 emit scopeFocusedItem->focusChanged(false);
             } else {
-                if (d->canvas) {
-                    QQuickCanvasPrivate::get(d->canvas)->setFocusInScope(scopeItem, scopeFocusedItem,
-                                                                  QQuickCanvasPrivate::DontChangeFocusProperty);
+                if (d->window) {
+                    QQuickWindowPrivate::get(d->window)->setFocusInScope(scopeItem, scopeFocusedItem,
+                                                                  QQuickWindowPrivate::DontChangeFocusProperty);
                 } else {
                     QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(scopeItem, true);
                 }
@@ -2134,10 +2134,10 @@ QQuickItem *QQuickItem::parentItem() const
     return d->parentItem;
 }
 
-QQuickCanvas *QQuickItem::canvas() const
+QQuickWindow *QQuickItem::window() const
 {
     Q_D(const QQuickItem);
-    return d->canvas;
+    return d->window;
 }
 
 static bool itemZOrder_sort(QQuickItem *lhs, QQuickItem *rhs)
@@ -2203,61 +2203,61 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     emit q->childrenChanged();
 }
 
-void QQuickItemPrivate::refCanvas(QQuickCanvas *c)
+void QQuickItemPrivate::refWindow(QQuickWindow *c)
 {
-    // An item needs a canvas if it is referenced by another item which has a canvas.
+    // An item needs a window if it is referenced by another item which has a window.
     // Typically the item is referenced by a parent, but can also be referenced by a
-    // ShaderEffect or ShaderEffectSource. 'canvasRefCount' counts how many items with
-    // a canvas is referencing this item. When the reference count goes from zero to one,
-    // or one to zero, the canvas of this item is updated and propagated to the children.
-    // As long as the reference count stays above zero, the canvas is unchanged.
-    // refCanvas() increments the reference count.
-    // derefCanvas() decrements the reference count.
+    // ShaderEffect or ShaderEffectSource. 'windowRefCount' counts how many items with
+    // a window is referencing this item. When the reference count goes from zero to one,
+    // or one to zero, the window of this item is updated and propagated to the children.
+    // As long as the reference count stays above zero, the window is unchanged.
+    // refWindow() increments the reference count.
+    // derefWindow() decrements the reference count.
 
     Q_Q(QQuickItem);
-    Q_ASSERT((canvas != 0) == (canvasRefCount > 0));
+    Q_ASSERT((window != 0) == (windowRefCount > 0));
     Q_ASSERT(c);
-    if (++canvasRefCount > 1) {
-        if (c != canvas)
-            qWarning("QQuickItem: Cannot use same item on different canvases at the same time.");
-        return; // Canvas already set.
+    if (++windowRefCount > 1) {
+        if (c != window)
+            qWarning("QQuickItem: Cannot use same item on different windows at the same time.");
+        return; // Window already set.
     }
 
-    Q_ASSERT(canvas == 0);
-    canvas = c;
+    Q_ASSERT(window == 0);
+    window = c;
 
     if (polishScheduled)
-        QQuickCanvasPrivate::get(canvas)->itemsToPolish.insert(q);
+        QQuickWindowPrivate::get(window)->itemsToPolish.insert(q);
 
     if (!parentItem)
-        QQuickCanvasPrivate::get(canvas)->parentlessItems.insert(q);
+        QQuickWindowPrivate::get(window)->parentlessItems.insert(q);
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuickItem *child = childItems.at(ii);
-        QQuickItemPrivate::get(child)->refCanvas(c);
+        QQuickItemPrivate::get(child)->refWindow(c);
     }
 
-    dirty(Canvas);
+    dirty(Window);
 
     if (extra.isAllocated() && extra->screenAttached)
-        extra->screenAttached->canvasChanged(c);
+        extra->screenAttached->windowChanged(c);
     itemChange(QQuickItem::ItemSceneChange, c);
 }
 
-void QQuickItemPrivate::derefCanvas()
+void QQuickItemPrivate::derefWindow()
 {
     Q_Q(QQuickItem);
-    Q_ASSERT((canvas != 0) == (canvasRefCount > 0));
+    Q_ASSERT((window != 0) == (windowRefCount > 0));
 
-    if (!canvas)
+    if (!window)
         return; // This can happen when destroying recursive shader effect sources.
 
-    if (--canvasRefCount > 0)
-        return; // There are still other references, so don't set canvas to null yet.
+    if (--windowRefCount > 0)
+        return; // There are still other references, so don't set window to null yet.
 
     q->releaseResources();
     removeFromDirtyList();
-    QQuickCanvasPrivate *c = QQuickCanvasPrivate::get(canvas);
+    QQuickWindowPrivate *c = QQuickWindowPrivate::get(window);
     if (polishScheduled)
         c->itemsToPolish.remove(q);
     QMutableHashIterator<int, QQuickItem *> itemTouchMapIt(c->itemForTouchPointId);
@@ -2274,7 +2274,7 @@ void QQuickItemPrivate::derefCanvas()
     if (!parentItem)
         c->parentlessItems.remove(q);
 
-    canvas = 0;
+    window = 0;
 
     itemNodeInstance = 0;
 
@@ -2290,33 +2290,33 @@ void QQuickItemPrivate::derefCanvas()
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuickItem *child = childItems.at(ii);
-        QQuickItemPrivate::get(child)->derefCanvas();
+        QQuickItemPrivate::get(child)->derefWindow();
     }
 
-    dirty(Canvas);
+    dirty(Window);
 
     if (extra.isAllocated() && extra->screenAttached)
-        extra->screenAttached->canvasChanged(0);
-    itemChange(QQuickItem::ItemSceneChange, (QQuickCanvas *)0);
+        extra->screenAttached->windowChanged(0);
+    itemChange(QQuickItem::ItemSceneChange, (QQuickWindow *)0);
 }
 
 
 /*!
-Returns a transform that maps points from canvas space into item space.
+Returns a transform that maps points from window space into item space.
 */
-QTransform QQuickItemPrivate::canvasToItemTransform() const
+QTransform QQuickItemPrivate::windowToItemTransform() const
 {
     // XXX todo - optimize
-    return itemToCanvasTransform().inverted();
+    return itemToWindowTransform().inverted();
 }
 
 /*!
-Returns a transform that maps points from item space into canvas space.
+Returns a transform that maps points from item space into window space.
 */
-QTransform QQuickItemPrivate::itemToCanvasTransform() const
+QTransform QQuickItemPrivate::itemToWindowTransform() const
 {
     // XXX todo
-    QTransform rv = parentItem?QQuickItemPrivate::get(parentItem)->itemToCanvasTransform():QTransform();
+    QTransform rv = parentItem?QQuickItemPrivate::get(parentItem)->itemToWindowTransform():QTransform();
     itemToParentTransform(rv);
     return rv;
 }
@@ -2433,8 +2433,8 @@ QQuickItemPrivate::QQuickItemPrivate()
     , dirtyAttributes(0)
     , nextDirtyItem(0)
     , prevDirtyItem(0)
-    , canvas(0)
-    , canvasRefCount(0)
+    , window(0)
+    , windowRefCount(0)
     , parentItem(0)
     , sortedChildItems(&childItems)
     , subFocusItem(0)
@@ -3132,7 +3132,7 @@ QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 /*!
     This function is called when the item's scene graph resources are no longer needed.
     It allows items to free its resources, for instance textures, that are not owned by scene graph
-    nodes. Note that scene graph nodes are managed by QQuickCanvas and should not be deleted by
+    nodes. Note that scene graph nodes are managed by QQuickWindow and should not be deleted by
     this function. Scene graph resources are no longer needed when the parent is set to null and
     the item is not used by any \l ShaderEffect or \l ShaderEffectSource.
 
@@ -3414,7 +3414,7 @@ void QQuickItem::setBaselineOffset(qreal offset)
  * Schedules a call to updatePaintNode() for this item.
  *
  * The call to QQuickItem::updatePaintNode() will always happen if the
- * item is showing in a QQuickCanvas.
+ * item is showing in a QQuickWindow.
  *
  * Only items which specifies QQuickItem::ItemHasContents are allowed
  * to call QQuickItem::update().
@@ -3431,11 +3431,11 @@ void QQuickItem::polish()
     Q_D(QQuickItem);
     if (!d->polishScheduled) {
         d->polishScheduled = true;
-        if (d->canvas) {
-            QQuickCanvasPrivate *p = QQuickCanvasPrivate::get(d->canvas);
+        if (d->window) {
+            QQuickWindowPrivate *p = QQuickWindowPrivate::get(d->window);
             bool maybeupdate = p->itemsToPolish.isEmpty();
             p->itemsToPolish.insert(this);
-            if (maybeupdate) d->canvas->maybeUpdate();
+            if (maybeupdate) d->window->maybeUpdate();
         }
     }
 }
@@ -3500,8 +3500,8 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
     // invalid cases
     if (ok) *ok = true;
 
-    QTransform t = d->itemToCanvasTransform();
-    if (other) t *= QQuickItemPrivate::get(other)->canvasToItemTransform();
+    QTransform t = d->itemToWindowTransform();
+    if (other) t *= QQuickItemPrivate::get(other)->windowToItemTransform();
 
     return t;
 }
@@ -3701,9 +3701,9 @@ void QQuickItem::componentComplete()
     if (d->extra.isAllocated() && d->extra->contents)
         d->extra->contents->complete();
 
-    if (d->canvas && d->dirtyAttributes) {
+    if (d->window && d->dirtyAttributes) {
         d->addToDirtyList();
-        QQuickCanvasPrivate::get(d->canvas)->dirtyItem(this);
+        QQuickWindowPrivate::get(d->window)->dirtyItem(this);
     }
 }
 
@@ -4249,9 +4249,9 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     dirty(Visible);
     if (parentItem) QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
 
-    if (canvas) {
-        QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(canvas);
-        if (canvasPriv->mouseGrabberItem == q)
+    if (window) {
+        QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
+        if (windowPriv->mouseGrabberItem == q)
             q->ungrabMouse();
     }
 
@@ -4297,13 +4297,13 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
 
     effectiveEnable = newEffectiveEnable;
 
-    if (canvas) {
-        QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(canvas);
-        if (canvasPriv->mouseGrabberItem == q)
+    if (window) {
+        QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
+        if (windowPriv->mouseGrabberItem == q)
             q->ungrabMouse();
         if (scope && !effectiveEnable && activeFocus) {
-            canvasPriv->clearFocusInScope(
-                    scope, q,  QQuickCanvasPrivate::DontChangeFocusProperty | QQuickCanvasPrivate::DontChangeSubFocusItem);
+            windowPriv->clearFocusInScope(
+                    scope, q,  QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
         }
     }
 
@@ -4312,9 +4312,9 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
                 (flags & QQuickItem::ItemIsFocusScope) && scope ? q : scope, newEffectiveEnable);
     }
 
-    if (canvas && scope && effectiveEnable && focus) {
-        QQuickCanvasPrivate::get(canvas)->setFocusInScope(
-                scope, q, QQuickCanvasPrivate::DontChangeFocusProperty | QQuickCanvasPrivate::DontChangeSubFocusItem);
+    if (window && scope && effectiveEnable && focus) {
+        QQuickWindowPrivate::get(window)->setFocusInScope(
+                scope, q, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
     }
 
     emit q->enabledChanged();
@@ -4344,7 +4344,7 @@ QString QQuickItemPrivate::dirtyToString() const
     DIRTY_TO_STRING(ChildrenStackingChanged);
     DIRTY_TO_STRING(ParentChanged);
     DIRTY_TO_STRING(Clip);
-    DIRTY_TO_STRING(Canvas);
+    DIRTY_TO_STRING(Window);
     DIRTY_TO_STRING(EffectReference);
     DIRTY_TO_STRING(Visible);
     DIRTY_TO_STRING(HideReference);
@@ -4359,11 +4359,11 @@ void QQuickItemPrivate::dirty(DirtyType type)
     if (type & (TransformOrigin | Transform | BasicTransform | Position | Size))
         transformChanged();
 
-    if (!(dirtyAttributes & type) || (canvas && !prevDirtyItem)) {
+    if (!(dirtyAttributes & type) || (window && !prevDirtyItem)) {
         dirtyAttributes |= type;
-        if (canvas && componentComplete) {
+        if (window && componentComplete) {
             addToDirtyList();
-            QQuickCanvasPrivate::get(canvas)->dirtyItem(q);
+            QQuickWindowPrivate::get(window)->dirtyItem(q);
         }
     }
 }
@@ -4372,11 +4372,11 @@ void QQuickItemPrivate::addToDirtyList()
 {
     Q_Q(QQuickItem);
 
-    Q_ASSERT(canvas);
+    Q_ASSERT(window);
     if (!prevDirtyItem) {
         Q_ASSERT(!nextDirtyItem);
 
-        QQuickCanvasPrivate *p = QQuickCanvasPrivate::get(canvas);
+        QQuickWindowPrivate *p = QQuickWindowPrivate::get(window);
         nextDirtyItem = p->dirtyItemList;
         if (nextDirtyItem) QQuickItemPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
         prevDirtyItem = &p->dirtyItemList;
@@ -4608,8 +4608,8 @@ void QQuickItem::setFlags(Flags flags)
     Q_D(QQuickItem);
 
     if ((flags & ItemIsFocusScope) != (d->flags & ItemIsFocusScope)) {
-        if (flags & ItemIsFocusScope && !d->childItems.isEmpty() && d->canvas) {
-            qWarning("QQuickItem: Cannot set FocusScope once item has children and is in a canvas.");
+        if (flags & ItemIsFocusScope && !d->childItems.isEmpty() && d->window) {
+            qWarning("QQuickItem: Cannot set FocusScope once item has children and is in a window.");
             flags &= ~ItemIsFocusScope;
         } else if (d->flags & ItemIsFocusScope) {
             qWarning("QQuickItem: Cannot unset FocusScope flag.");
@@ -4998,19 +4998,19 @@ void QQuickItem::setFocus(bool focus)
     if (d->focus == focus)
         return;
 
-    if (d->canvas || d->parentItem) {
+    if (d->window || d->parentItem) {
         // Need to find our nearest focus scope
         QQuickItem *scope = parentItem();
         while (scope && !scope->isFocusScope() && scope->parentItem())
             scope = scope->parentItem();
-        if (d->canvas) {
+        if (d->window) {
             if (focus)
-                QQuickCanvasPrivate::get(d->canvas)->setFocusInScope(scope, this);
+                QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this);
             else
-                QQuickCanvasPrivate::get(d->canvas)->clearFocusInScope(scope, this);
+                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scope, this);
         } else {
             // do the focus changes from setFocusInScope/clearFocusInScope that are
-            // unrelated to a canvas
+            // unrelated to a window
             QVarLengthArray<QQuickItem *, 20> changed;
             QQuickItem *oldSubFocusItem = QQuickItemPrivate::get(scope)->subFocusItem;
             if (oldSubFocusItem) {
@@ -5027,7 +5027,7 @@ void QQuickItem::setFocus(bool focus)
             changed << this;
             emit focusChanged(focus);
 
-            QQuickCanvasPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+            QQuickWindowPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
         }
     } else {
         QVarLengthArray<QQuickItem *, 20> changed;
@@ -5042,7 +5042,7 @@ void QQuickItem::setFocus(bool focus)
         changed << this;
         emit focusChanged(focus);
 
-        QQuickCanvasPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+        QQuickWindowPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
     }
 }
 
@@ -5095,11 +5095,11 @@ void QQuickItem::setFiltersChildMouseEvents(bool filter)
 bool QQuickItem::isUnderMouse() const
 {
     Q_D(const QQuickItem);
-    if (!d->canvas)
+    if (!d->window)
         return false;
 
     QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
-    return contains(mapFromScene(d->canvas->mapFromGlobal(cursorPos.toPoint())));
+    return contains(mapFromScene(d->window->mapFromGlobal(cursorPos.toPoint())));
 }
 
 bool QQuickItem::acceptHoverEvents() const
@@ -5117,35 +5117,35 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
 void QQuickItem::grabMouse()
 {
     Q_D(QQuickItem);
-    if (!d->canvas)
+    if (!d->window)
         return;
-    QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(d->canvas);
-    if (canvasPriv->mouseGrabberItem == this)
+    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
+    if (windowPriv->mouseGrabberItem == this)
         return;
 
-    QQuickItem *oldGrabber = canvasPriv->mouseGrabberItem;
-    canvasPriv->mouseGrabberItem = this;
+    QQuickItem *oldGrabber = windowPriv->mouseGrabberItem;
+    windowPriv->mouseGrabberItem = this;
     if (oldGrabber) {
         QEvent ev(QEvent::UngrabMouse);
-        d->canvas->sendEvent(oldGrabber, &ev);
+        d->window->sendEvent(oldGrabber, &ev);
     }
 }
 
 void QQuickItem::ungrabMouse()
 {
     Q_D(QQuickItem);
-    if (!d->canvas)
+    if (!d->window)
         return;
-    QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(d->canvas);
-    if (canvasPriv->mouseGrabberItem != this) {
+    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
+    if (windowPriv->mouseGrabberItem != this) {
         qWarning("QQuickItem::ungrabMouse(): Item is not the mouse grabber.");
         return;
     }
 
-    canvasPriv->mouseGrabberItem = 0;
+    windowPriv->mouseGrabberItem = 0;
 
     QEvent ev(QEvent::UngrabMouse);
-    d->canvas->sendEvent(this, &ev);
+    d->window->sendEvent(this, &ev);
 }
 
 bool QQuickItem::keepMouseGrab() const
@@ -5191,17 +5191,17 @@ void QQuickItem::setKeepMouseGrab(bool keep)
 void QQuickItem::grabTouchPoints(const QVector<int> &ids)
 {
     Q_D(QQuickItem);
-    if (!d->canvas)
+    if (!d->window)
         return;
-    QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(d->canvas);
+    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
 
     QSet<QQuickItem*> ungrab;
     for (int i = 0; i < ids.count(); ++i) {
-        QQuickItem *oldGrabber = canvasPriv->itemForTouchPointId.value(ids.at(i));
+        QQuickItem *oldGrabber = windowPriv->itemForTouchPointId.value(ids.at(i));
         if (oldGrabber == this)
             return;
 
-        canvasPriv->itemForTouchPointId[ids.at(i)] = this;
+        windowPriv->itemForTouchPointId[ids.at(i)] = this;
         if (oldGrabber)
             ungrab.insert(oldGrabber);
     }
@@ -5217,11 +5217,11 @@ void QQuickItem::grabTouchPoints(const QVector<int> &ids)
 void QQuickItem::ungrabTouchPoints()
 {
     Q_D(QQuickItem);
-    if (!d->canvas)
+    if (!d->window)
         return;
-    QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(d->canvas);
+    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
 
-    QMutableHashIterator<int, QQuickItem*> i(canvasPriv->itemForTouchPointId);
+    QMutableHashIterator<int, QQuickItem*> i(windowPriv->itemForTouchPointId);
     while (i.hasNext()) {
         i.next();
         if (i.value() == this)
@@ -5295,22 +5295,22 @@ QPointF QQuickItem::mapToItem(const QQuickItem *item, const QPointF &point) cons
 QPointF QQuickItem::mapToScene(const QPointF &point) const
 {
     Q_D(const QQuickItem);
-    return d->itemToCanvasTransform().map(point);
+    return d->itemToWindowTransform().map(point);
 }
 
 QRectF QQuickItem::mapRectToItem(const QQuickItem *item, const QRectF &rect) const
 {
     Q_D(const QQuickItem);
-    QTransform t = d->itemToCanvasTransform();
+    QTransform t = d->itemToWindowTransform();
     if (item)
-        t *= QQuickItemPrivate::get(item)->canvasToItemTransform();
+        t *= QQuickItemPrivate::get(item)->windowToItemTransform();
     return t.mapRect(rect);
 }
 
 QRectF QQuickItem::mapRectToScene(const QRectF &rect) const
 {
     Q_D(const QQuickItem);
-    return d->itemToCanvasTransform().mapRect(rect);
+    return d->itemToWindowTransform().mapRect(rect);
 }
 
 QPointF QQuickItem::mapFromItem(const QQuickItem *item, const QPointF &point) const
@@ -5322,21 +5322,21 @@ QPointF QQuickItem::mapFromItem(const QQuickItem *item, const QPointF &point) co
 QPointF QQuickItem::mapFromScene(const QPointF &point) const
 {
     Q_D(const QQuickItem);
-    return d->canvasToItemTransform().map(point);
+    return d->windowToItemTransform().map(point);
 }
 
 QRectF QQuickItem::mapRectFromItem(const QQuickItem *item, const QRectF &rect) const
 {
     Q_D(const QQuickItem);
-    QTransform t = item?QQuickItemPrivate::get(item)->itemToCanvasTransform():QTransform();
-    t *= d->canvasToItemTransform();
+    QTransform t = item?QQuickItemPrivate::get(item)->itemToWindowTransform():QTransform();
+    t *= d->windowToItemTransform();
     return t.mapRect(rect);
 }
 
 QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
 {
     Q_D(const QQuickItem);
-    return d->canvasToItemTransform().mapRect(rect);
+    return d->windowToItemTransform().mapRect(rect);
 }
 
 
@@ -5414,9 +5414,9 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
 
   \l {Filter}{Filters} include things like \l {Blur}{blurring}
   the item, or giving it a \l Reflection.  Some
-  filters may not be available on all canvases; if a filter is not
-  available on a certain canvas, it will simply not be applied for
-  that canvas (but the QML will still be considered valid).
+  filters may not be available on all windows; if a filter is not
+  available on a certain window, it will simply not be applied for
+  that window (but the QML will still be considered valid).
 
   \qml
   Item {

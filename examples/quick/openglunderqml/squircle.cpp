@@ -41,7 +41,7 @@
 
 #include "squircle.h"
 
-#include <QtQuick/qquickcanvas.h>
+#include <QtQuick/qquickwindow.h>
 #include <QOpenGLShaderProgram>
 
 Squircle::Squircle()
@@ -52,9 +52,9 @@ Squircle::Squircle()
 
 void Squircle::itemChange(ItemChange change, const ItemChangeData &)
 {
-    // The ItemSceneChange event is sent when we are first attached to a canvas.
+    // The ItemSceneChange event is sent when we are first attached to a window.
     if (change == ItemSceneChange) {
-        QQuickCanvas *c = canvas();
+        QQuickWindow *c = window();
 
         // Connect our the beforeRendering signal to our paint function.
         // Since this call is executed on the rendering thread it must be
@@ -104,7 +104,7 @@ void Squircle::paint()
     m_program->setAttributeArray(0, GL_FLOAT, values, 2);
     m_program->setUniformValue("t", (float) m_t);
 
-    glViewport(0, 0, canvas()->width(), canvas()->height());
+    glViewport(0, 0, window()->width(), window()->height());
 
     glDisable(GL_DEPTH_TEST);
 

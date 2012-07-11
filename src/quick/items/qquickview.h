@@ -42,7 +42,7 @@
 #ifndef QQUICKVIEW_H
 #define QQUICKVIEW_H
 
-#include <QtQuick/qquickcanvas.h>
+#include <QtQuick/qquickwindow.h>
 #include <QtCore/qurl.h>
 #include <QtQml/qqmldebug.h>
 
@@ -56,7 +56,7 @@ class QQmlError;
 class QQuickItem;
 
 class QQuickViewPrivate;
-class Q_QUICK_EXPORT QQuickView : public QQuickCanvas
+class Q_QUICK_EXPORT QQuickView : public QQuickWindow
 {
     Q_OBJECT
     Q_PROPERTY(ResizeMode resizeMode READ resizeMode WRITE setResizeMode)

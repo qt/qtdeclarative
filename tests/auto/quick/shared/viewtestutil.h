@@ -53,7 +53,7 @@ namespace QQuickViewTestUtil
 {
     QQuickView *createView();
 
-    void flick(QQuickView *canvas, const QPoint &from, const QPoint &to, int duration);
+    void flick(QQuickView *window, const QPoint &from, const QPoint &to, int duration);
 
     QList<int> adjustIndexesForAddDisplaced(const QList<int> &indexes, int index, int count);
     QList<int> adjustIndexesForMove(const QList<int> &indexes, int from, int to, int count);

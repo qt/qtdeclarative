@@ -440,7 +440,7 @@ int main(int argc, char ** argv)
                 surfaceFormat.setAlphaBufferSize(8);
                 qxView.setFormat(surfaceFormat);
                 qxView.setClearBeforeRendering(true);
-                qxView.setClearColor(QColor(Qt::transparent));
+                qxView.setColor(QColor(Qt::transparent));
                 qxView.setWindowFlags(Qt::FramelessWindowHint);
             }
 

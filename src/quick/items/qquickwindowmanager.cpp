@@ -53,8 +53,8 @@
 
 #include <QtQml/private/qqmlglobal_p.h>
 
-#include <QtQuick/QQuickCanvas>
-#include <QtQuick/private/qquickcanvas_p.h>
+#include <QtQuick/QQuickWindow>
+#include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -63,9 +63,9 @@ const QEvent::Type QEvent_Sync = QEvent::Type(QEvent::User);
 const QEvent::Type QEvent_DeferredUpdate = QEvent::Type(QEvent::User + 1);
 
 
-#define QQUICK_CANVAS_TIMING
-#ifdef QQUICK_CANVAS_TIMING
-static bool qquick_canvas_timing = !qgetenv("QML_CANVAS_TIMING").isEmpty();
+#define QQUICK_RENDER_TIMING
+#ifdef QQUICK_RENDER_TIMING
+static bool qquick_render_timing = !qgetenv("QML_RENDER_TIMING").isEmpty();
 static QTime threadTimer;
 static int syncTime;
 static int renderTime;
@@ -163,7 +163,7 @@ public:
         , shouldExit(false)
         , hasExited(false)
         , isDeferredUpdatePosted(false)
-        , canvasToGrab(0)
+        , windowToGrab(0)
     {
         sg->moveToThread(this);
 
@@ -177,17 +177,17 @@ public:
 
     void releaseResources() { }
 
-    void show(QQuickCanvas *canvas);
-    void hide(QQuickCanvas *canvas);
+    void show(QQuickWindow *window);
+    void hide(QQuickWindow *window);
 
-    void canvasDestroyed(QQuickCanvas *canvas);
+    void windowDestroyed(QQuickWindow *window);
 
-    void exposureChanged(QQuickCanvas *canvas);
-    QImage grab(QQuickCanvas *canvas);
-    void resize(QQuickCanvas *canvas, const QSize &size);
+    void exposureChanged(QQuickWindow *window);
+    QImage grab(QQuickWindow *window);
+    void resize(QQuickWindow *window, const QSize &size);
     void handleDeferredUpdate();
-    void maybeUpdate(QQuickCanvas *canvas);
-    void update(QQuickCanvas *canvas) { maybeUpdate(canvas); } // identical for this implementation
+    void maybeUpdate(QQuickWindow *window);
+    void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation
     void wakeup();
 
     void startRendering();
@@ -211,9 +211,9 @@ public:
 
     void run();
 
-    QQuickCanvas *masterCanvas() {
-        QQuickCanvas *win = 0;
-        for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
+    QQuickWindow *masterWindow() {
+        QQuickWindow *win = 0;
+        for (QHash<QQuickWindow *, WindowData *>::const_iterator it = m_rendered_windows.constBegin();
             it != m_rendered_windows.constEnd() && !win; ++it) {
             if (it.value()->isVisible)
                 win = it.key();
@@ -224,11 +224,11 @@ public:
 public slots:
     void animationStarted();
     void animationStopped();
-    void canvasVisibilityChanged();
+    void windowVisibilityChanged();
 
 private:
     void handleAddedWindows();
-    void handleAddedWindow(QQuickCanvas *canvas);
+    void handleAddedWindow(QQuickWindow *window);
     void handleRemovedWindows(bool clearGLContext = true);
 
     QSGContext *sg;
@@ -252,10 +252,10 @@ private:
     uint hasExited : 1;
     uint isDeferredUpdatePosted : 1;
 
-    QQuickCanvas *canvasToGrab;
+    QQuickWindow *windowToGrab;
     QImage grabContent;
 
-    struct CanvasData {
+    struct WindowData {
         QSize renderedSize;
         QSize windowSize;
         QSize viewportSize;
@@ -264,18 +264,18 @@ private:
         uint isVisible : 1;
     };
 
-    QHash<QQuickCanvas *, CanvasData *> m_rendered_windows;
+    QHash<QQuickWindow *, WindowData *> m_rendered_windows;
 
-    struct CanvasTracker {
-        QQuickCanvas *canvas;
+    struct WindowTracker {
+        QQuickWindow *window;
         uint isVisible : 1;
         uint toBeRemoved : 1;
     };
 
-    QList<CanvasTracker> m_tracked_windows;
+    QList<WindowTracker> m_tracked_windows;
 
-    QList<QQuickCanvas *> m_removed_windows;
-    QList<QQuickCanvas *> m_added_windows;
+    QList<QQuickWindow *> m_removed_windows;
+    QList<QQuickWindow *> m_added_windows;
 };
 
 
@@ -284,20 +284,20 @@ class QQuickTrivialWindowManager : public QObject, public QQuickWindowManager
 public:
     QQuickTrivialWindowManager();
 
-    void show(QQuickCanvas *canvas);
-    void hide(QQuickCanvas *canvas);
+    void show(QQuickWindow *window);
+    void hide(QQuickWindow *window);
 
-    void canvasDestroyed(QQuickCanvas *canvas);
+    void windowDestroyed(QQuickWindow *window);
 
     void initializeGL();
-    void renderCanvas(QQuickCanvas *canvas);
-    void exposureChanged(QQuickCanvas *canvas);
-    QImage grab(QQuickCanvas *canvas);
-    void resize(QQuickCanvas *canvas, const QSize &size);
+    void renderWindow(QQuickWindow *window);
+    void exposureChanged(QQuickWindow *window);
+    QImage grab(QQuickWindow *window);
+    void resize(QQuickWindow *window, const QSize &size);
     void wakeup();
 
-    void maybeUpdate(QQuickCanvas *canvas);
-    void update(QQuickCanvas *canvas) { maybeUpdate(canvas); } // identical for this implementation.
+    void maybeUpdate(QQuickWindow *window);
+    void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation.
 
     void releaseResources() { }
 
@@ -307,12 +307,12 @@ public:
 
     bool event(QEvent *);
 
-    struct CanvasData {
+    struct WindowData {
         bool updatePending : 1;
         bool grabOnly : 1;
     };
 
-    QHash<QQuickCanvas *, CanvasData> m_windows;
+    QHash<QQuickWindow *, WindowData> m_windows;
 
     QOpenGLContext *gl;
     QSGContext *sg;
@@ -366,7 +366,7 @@ void QQuickRenderThreadSingleContextWindowManager::initialize()
 {
     Q_ASSERT(m_rendered_windows.size());
 
-    QQuickCanvas *win = masterCanvas();
+    QQuickWindow *win = masterWindow();
     if (!win)
         return;
 
@@ -375,7 +375,7 @@ void QQuickRenderThreadSingleContextWindowManager::initialize()
     gl->setFormat(win->requestedFormat());
     gl->create();
     if (!gl->makeCurrent(win))
-        qWarning("QQuickCanvas: makeCurrent() failed...");
+        qWarning("QQuickWindow: makeCurrent() failed...");
 
     Q_ASSERT(!sg->isReady());
     sg->initialize(gl);
@@ -383,42 +383,42 @@ void QQuickRenderThreadSingleContextWindowManager::initialize()
 
 
 /*!
-    This function is called when the canvas is created to register the canvas with
+    This function is called when the window is created to register the window with
     the window manager.
 
     Called on GUI Thread.
  */
 
-void QQuickRenderThreadSingleContextWindowManager::show(QQuickCanvas *canvas)
+void QQuickRenderThreadSingleContextWindowManager::show(QQuickWindow *window)
 {
 #ifdef THREAD_DEBUG
-    printf("GUI: Canvas added to windowing system, %p, %dx%d\n", canvas, canvas->width(), canvas->height());
+    printf("GUI: Window added to windowing system, %p, %dx%d\n", window, window->width(), window->height());
 #endif
 
-    CanvasTracker tracker;
-    tracker.canvas = canvas;
+    WindowTracker tracker;
+    tracker.window = window;
     tracker.isVisible = false;
     tracker.toBeRemoved = false;
     m_tracked_windows << tracker;
 
-    connect(canvas, SIGNAL(widthChanged(int)), this, SLOT(canvasVisibilityChanged()), Qt::DirectConnection);
-    connect(canvas, SIGNAL(heightChanged(int)), this, SLOT(canvasVisibilityChanged()), Qt::DirectConnection);
+    connect(window, SIGNAL(widthChanged(int)), this, SLOT(windowVisibilityChanged()), Qt::DirectConnection);
+    connect(window, SIGNAL(heightChanged(int)), this, SLOT(windowVisibilityChanged()), Qt::DirectConnection);
 
-    canvasVisibilityChanged();
+    windowVisibilityChanged();
 }
 
 
-void QQuickRenderThreadSingleContextWindowManager::handleAddedWindow(QQuickCanvas *canvas)
+void QQuickRenderThreadSingleContextWindowManager::handleAddedWindow(QQuickWindow *window)
 {
 #ifdef THREAD_DEBUG
-    printf("                RenderThread: adding canvas: %p\n", canvas);
+    printf("                RenderThread: adding window: %p\n", window);
 #endif
 
-    CanvasData *data = new CanvasData;
+    WindowData *data = new WindowData;
     data->sizeWasChanged = false;
-    data->windowSize = canvas->size();
-    data->isVisible = canvas->isVisible();
-    m_rendered_windows[canvas] = data;
+    data->windowSize = window->size();
+    data->isVisible = window->isVisible();
+    m_rendered_windows[window] = data;
 
     isExternalUpdatePending = true;
 }
@@ -434,23 +434,23 @@ void QQuickRenderThreadSingleContextWindowManager::handleAddedWindows()
 #endif
 
     while (m_added_windows.size()) {
-        QQuickCanvas *canvas = m_added_windows.takeLast();
-        handleAddedWindow(canvas);
+        QQuickWindow *window = m_added_windows.takeLast();
+        handleAddedWindow(window);
     }
 }
 
 
 /*!
-    Called on the GUI Thread, from the canvas' destructor
+    Called on the GUI Thread, from the window' destructor
  */
 
-void QQuickRenderThreadSingleContextWindowManager::canvasDestroyed(QQuickCanvas *canvas)
+void QQuickRenderThreadSingleContextWindowManager::windowDestroyed(QQuickWindow *window)
 {
 #ifdef THREAD_DEBUG
-    printf("GUI: Canvas destroyed: %p\n", canvas);
+    printf("GUI: Window destroyed: %p\n", window);
 #endif
 
-    hide(canvas);
+    hide(window);
 }
 
 
@@ -458,15 +458,15 @@ void QQuickRenderThreadSingleContextWindowManager::canvasDestroyed(QQuickCanvas 
     Called on GUI Thread
  */
 
-void QQuickRenderThreadSingleContextWindowManager::hide(QQuickCanvas *canvas)
+void QQuickRenderThreadSingleContextWindowManager::hide(QQuickWindow *window)
 {
 #ifdef THREAD_DEBUG
-    printf("GUI: Canvas hidden: %p\n", canvas);
+    printf("GUI: Window hidden: %p\n", window);
 #endif
 
     int position = -1;
     for (int i=0; i<m_tracked_windows.size(); ++i) {
-        if (m_tracked_windows.at(i).canvas == canvas) {
+        if (m_tracked_windows.at(i).window == window) {
             m_tracked_windows[i].toBeRemoved = true;
             position = i;
             break;
@@ -474,14 +474,14 @@ void QQuickRenderThreadSingleContextWindowManager::hide(QQuickCanvas *canvas)
     }
 
     if (position >= 0) {
-        disconnect(canvas, SIGNAL(widthChanged(int)), this, SLOT(canvasVisibilityChanged()));
-        disconnect(canvas, SIGNAL(heightChanged(int)), this, SLOT(canvasVisibilityChanged()));
-        canvasVisibilityChanged();
+        disconnect(window, SIGNAL(widthChanged(int)), this, SLOT(windowVisibilityChanged()));
+        disconnect(window, SIGNAL(heightChanged(int)), this, SLOT(windowVisibilityChanged()));
+        windowVisibilityChanged();
         m_tracked_windows.removeAt(position);
     }
 
 #ifdef THREAD_DEBUG
-    printf("GUI: Canvas removal completed... %p\n", canvas);
+    printf("GUI: Window removal completed... %p\n", window);
 #endif
 }
 
@@ -496,13 +496,13 @@ void QQuickRenderThreadSingleContextWindowManager::handleRemovedWindows(bool cle
 
     bool removedAnything = false;
     while (m_removed_windows.size()) {
-        QQuickCanvas *canvas = m_removed_windows.takeLast();
+        QQuickWindow *window = m_removed_windows.takeLast();
 #ifdef THREAD_DEBUG
-    printf("                RenderThread: removing %p\n", canvas);
+    printf("                RenderThread: removing %p\n", window);
 #endif
 
-        QQuickCanvasPrivate::get(canvas)->cleanupNodesOnShutdown();
-        delete m_rendered_windows.take(canvas);
+        QQuickWindowPrivate::get(window)->cleanupNodesOnShutdown();
+        delete m_rendered_windows.take(window);
         removedAnything = true;
     }
 
@@ -519,26 +519,26 @@ void QQuickRenderThreadSingleContextWindowManager::handleRemovedWindows(bool cle
     Called on GUI Thread
  */
 
-void QQuickRenderThreadSingleContextWindowManager::canvasVisibilityChanged()
+void QQuickRenderThreadSingleContextWindowManager::windowVisibilityChanged()
 {
     bool anyoneShowing = false;
-    QList<QQuickCanvas *> toAdd, toRemove;
+    QList<QQuickWindow *> toAdd, toRemove;
 
     // Not optimal, but also not frequently used...
     for (int i=0; i<m_tracked_windows.size(); ++i) {
-        CanvasTracker &t = const_cast<CanvasTracker &>(m_tracked_windows.at(i));
-        QQuickCanvas *win = t.canvas;
+        WindowTracker &t = const_cast<WindowTracker &>(m_tracked_windows.at(i));
+        QQuickWindow *win = t.window;
 
-        Q_ASSERT(win->isVisible() || QQuickCanvasPrivate::get(win)->renderWithoutShowing || t.toBeRemoved);
-        bool canvasVisible = win->width() > 0 && win->height() > 0;
-        anyoneShowing |= (canvasVisible && !t.toBeRemoved);
+        Q_ASSERT(win->isVisible() || QQuickWindowPrivate::get(win)->renderWithoutShowing || t.toBeRemoved);
+        bool windowVisible = win->width() > 0 && win->height() > 0;
+        anyoneShowing |= (windowVisible && !t.toBeRemoved);
 
-        if ((!canvasVisible && t.isVisible) || t.toBeRemoved) {
+        if ((!windowVisible && t.isVisible) || t.toBeRemoved) {
             toRemove << win;
-        } else if (canvasVisible && !t.isVisible) {
+        } else if (windowVisible && !t.isVisible) {
             toAdd << win;
         }
-        t.isVisible = canvasVisible;
+        t.isVisible = windowVisible;
     }
 
     if (isRunning()) {
@@ -616,39 +616,39 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 #ifdef THREAD_DEBUG
         printf("                RenderThread: Doing locked sync\n");
 #endif
-#ifdef QQUICK_CANVAS_TIMING
-        if (qquick_canvas_timing)
+#ifdef QQUICK_RENDER_TIMING
+        if (qquick_render_timing)
             threadTimer.start();
 #endif
         inSync = true;
-        for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
+        for (QHash<QQuickWindow *, WindowData *>::const_iterator it = m_rendered_windows.constBegin();
              it != m_rendered_windows.constEnd(); ++it) {
-            QQuickCanvas *canvas = it.key();
+            QQuickWindow *window = it.key();
 
 #ifdef THREAD_DEBUG
-            printf("                RenderThread: Syncing canvas: %p\n", canvas);
+            printf("                RenderThread: Syncing window: %p\n", window);
 #endif
 
-            CanvasData *canvasData = it.value();
-            QQuickCanvasPrivate *canvasPrivate = QQuickCanvasPrivate::get(canvas);
+            WindowData *windowData = it.value();
+            QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(window);
 
-            Q_ASSERT(canvasData->windowSize.width() > 0 && canvasData->windowSize.height() > 0);
+            Q_ASSERT(windowData->windowSize.width() > 0 && windowData->windowSize.height() > 0);
 
-            if (!canvasData->isVisible)
-                gl->makeCurrent(masterCanvas());
+            if (!windowData->isVisible)
+                gl->makeCurrent(masterWindow());
             else
-                gl->makeCurrent(canvas);
+                gl->makeCurrent(window);
 
-            if (canvasData->viewportSize != canvasData->windowSize) {
+            if (windowData->viewportSize != windowData->windowSize) {
 #ifdef THREAD_DEBUG
                 printf("                RenderThread: --- window has changed size...\n");
 #endif
-                canvasData->viewportSize = canvasData->windowSize;
-                canvasData->sizeWasChanged = true;
-                glViewport(0, 0, canvasData->viewportSize.width(), canvasData->viewportSize.height());
+                windowData->viewportSize = windowData->windowSize;
+                windowData->sizeWasChanged = true;
+                glViewport(0, 0, windowData->viewportSize.width(), windowData->viewportSize.height());
             }
 
-            canvasPrivate->syncSceneGraph();
+            windowPrivate->syncSceneGraph();
         }
         inSync = false;
 
@@ -659,65 +659,65 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 #ifdef THREAD_DEBUG
         printf("                RenderThread: sync done\n");
 #endif
-#ifdef QQUICK_CANVAS_TIMING
-        if (qquick_canvas_timing)
+#ifdef QQUICK_RENDER_TIMING
+        if (qquick_render_timing)
             syncTime = threadTimer.elapsed();
 #endif
 
-        for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
+        for (QHash<QQuickWindow *, WindowData *>::const_iterator it = m_rendered_windows.constBegin();
              it != m_rendered_windows.constEnd(); ++it) {
-            QQuickCanvas *canvas = it.key();
-            CanvasData *canvasData = it.value();
-            QQuickCanvasPrivate *canvasPrivate = QQuickCanvasPrivate::get(canvas);
+            QQuickWindow *window = it.key();
+            WindowData *windowData = it.value();
+            QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(window);
 
 #ifdef THREAD_DEBUG
-            printf("                RenderThread: Rendering canvas %p\n", canvas);
+            printf("                RenderThread: Rendering window %p\n", window);
 #endif
 
-            Q_ASSERT(canvasData->windowSize.width() > 0 && canvasData->windowSize.height() > 0);
+            Q_ASSERT(windowData->windowSize.width() > 0 && windowData->windowSize.height() > 0);
 
 #ifdef THREAD_DEBUG
             printf("                RenderThread: --- rendering at size %dx%d\n",
-                   canvasData->viewportSize.width(), canvasData->viewportSize.height()
+                   windowData->viewportSize.width(), windowData->viewportSize.height()
                    );
 #endif
 
             // We only need to re-makeCurrent when we have multiple surfaces.
             if (m_rendered_windows.size() > 1)
-                gl->makeCurrent(canvas);
+                gl->makeCurrent(window);
 
-            canvasPrivate->renderSceneGraph(canvasData->viewportSize);
-#ifdef QQUICK_CANVAS_TIMING
-            if (qquick_canvas_timing)
+            windowPrivate->renderSceneGraph(windowData->viewportSize);
+#ifdef QQUICK_RENDER_TIMING
+            if (qquick_render_timing)
                 renderTime = threadTimer.elapsed() - syncTime;
 #endif
 
             // The content of the target buffer is undefined after swap() so grab needs
             // to happen before swap();
-            if (canvas == canvasToGrab) {
+            if (window == windowToGrab) {
 #ifdef THREAD_DEBUG
                 printf("                RenderThread: --- grabbing...\n");
 #endif
-                grabContent = qt_gl_read_framebuffer(canvasData->windowSize, false, false);
-                canvasToGrab = 0;
+                grabContent = qt_gl_read_framebuffer(windowData->windowSize, false, false);
+                windowToGrab = 0;
             }
 
 #ifdef THREAD_DEBUG
             printf("                RenderThread: --- wait for swap...\n");
 #endif
 
-            if (canvasData->isVisible && canvas->isExposed())
-                gl->swapBuffers(canvas);
+            if (windowData->isVisible && window->isExposed())
+                gl->swapBuffers(window);
 
-            canvasPrivate->fireFrameSwapped();
+            windowPrivate->fireFrameSwapped();
 #ifdef THREAD_DEBUG
             printf("                RenderThread: --- swap complete...\n");
 #endif
 
         }
 
-#ifdef QQUICK_CANVAS_TIMING
-            if (qquick_canvas_timing) {
+#ifdef QQUICK_RENDER_TIMING
+            if (qquick_render_timing) {
                 swapTime = threadTimer.elapsed() - renderTime;
                 qDebug() << "- Breakdown of frame time; sync:" << syncTime
                          << "ms render:" << renderTime << "ms swap:" << swapTime
@@ -730,12 +730,12 @@ void QQuickRenderThreadSingleContextWindowManager::run()
         handleRemovedWindows();
 
         // Update sizes...
-        for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
+        for (QHash<QQuickWindow *, WindowData *>::const_iterator it = m_rendered_windows.constBegin();
              it != m_rendered_windows.constEnd(); ++it) {
-            CanvasData *canvasData = it.value();
-            if (canvasData->sizeWasChanged) {
-                canvasData->renderedSize = canvasData->viewportSize;
-                canvasData->sizeWasChanged = false;
+            WindowData *windowData = it.value();
+            if (windowData->sizeWasChanged) {
+                windowData->renderedSize = windowData->viewportSize;
+                windowData->sizeWasChanged = false;
             }
         }
 
@@ -746,7 +746,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
         // but we don't want to lock an extra time.
         wake();
 
-        if (!animationRunning && !isExternalUpdatePending && !shouldExit && !canvasToGrab) {
+        if (!animationRunning && !isExternalUpdatePending && !shouldExit && !windowToGrab) {
 #ifdef THREAD_DEBUG
             printf("                RenderThread: nothing to do, going to sleep...\n");
 #endif
@@ -800,7 +800,7 @@ bool QQuickRenderThreadSingleContextWindowManager::event(QEvent *e)
 
     if (e->type() == QEvent_Sync) {
 
-        // If all canvases have been hidden, ignore the event
+        // If all windows have been hidden, ignore the event
         if (!isRunning())
             return true;
 
@@ -855,9 +855,9 @@ void QQuickRenderThreadSingleContextWindowManager::sync(bool guiAlreadyLocked)
     if (!guiAlreadyLocked)
         lockInGui();
 
-    for (QHash<QQuickCanvas *, CanvasData *>::const_iterator it = m_rendered_windows.constBegin();
+    for (QHash<QQuickWindow *, WindowData *>::const_iterator it = m_rendered_windows.constBegin();
          it != m_rendered_windows.constEnd(); ++it) {
-        QQuickCanvasPrivate::get(it.key())->polishItems();
+        QQuickWindowPrivate::get(it.key())->polishItems();
     }
 
     wake();
@@ -943,42 +943,42 @@ void QQuickRenderThreadSingleContextWindowManager::animationStopped()
 }
 
 
-void QQuickRenderThreadSingleContextWindowManager::exposureChanged(QQuickCanvas *canvas)
+void QQuickRenderThreadSingleContextWindowManager::exposureChanged(QQuickWindow *window)
 {
-    Q_UNUSED(canvas);
+    Q_UNUSED(window);
 #ifdef THREAD_DEBUG
-    printf("GUI: exposure changed: %p\n", canvas);
+    printf("GUI: exposure changed: %p\n", window);
 #endif
 
-    if (canvas->isExposed())
-        maybeUpdate(canvas);
+    if (window->isExposed())
+        maybeUpdate(window);
 
 #ifdef THREAD_DEBUG
-    printf("GUI: exposure changed done: %p\n", canvas);
+    printf("GUI: exposure changed done: %p\n", window);
 #endif
 }
 
 
 
-void QQuickRenderThreadSingleContextWindowManager::resize(QQuickCanvas *canvas, const QSize &size)
+void QQuickRenderThreadSingleContextWindowManager::resize(QQuickWindow *window, const QSize &size)
 {
 #ifdef THREAD_DEBUG
-    printf("GUI: Resize Event: %p = %dx%d\n", canvas, size.width(), size.height());
+    printf("GUI: Resize Event: %p = %dx%d\n", window, size.width(), size.height());
 #endif
 
     // If the rendering thread is not running we do not need to do anything.
-    // Also if the canvas is being resized to an invalid size, it will be removed
-    // by the canvasVisibilityChanged slot as result of width/heightcChanged()
+    // Also if the window is being resized to an invalid size, it will be removed
+    // by the windowVisibilityChanged slot as result of width/heightcChanged()
     if (!isRunning() || size.width() <= 0 || size.height() <= 0)
         return;
 
     lockInGui();
     exhaustSyncEvent();
 
-    CanvasData *canvasData = m_rendered_windows.value(canvas);
-    if (canvasData) {
-        canvasData->windowSize = size;
-        while (isRunning() && canvasData->renderedSize != size && size.width() > 0 && size.height() > 0) {
+    WindowData *windowData = m_rendered_windows.value(window);
+    if (windowData) {
+        windowData->windowSize = size;
+        while (isRunning() && windowData->renderedSize != size && size.width() > 0 && size.height() > 0) {
             if (isRenderBlocked)
                 wake();
             wait();
@@ -987,7 +987,7 @@ void QQuickRenderThreadSingleContextWindowManager::resize(QQuickCanvas *canvas, 
     unlockInGui();
 
 #ifdef THREAD_DEBUG
-    printf("GUI: Resize done: %p\n", canvas);
+    printf("GUI: Resize done: %p\n", window);
 #endif
 }
 
@@ -1066,13 +1066,13 @@ void QQuickRenderThreadSingleContextWindowManager::stopRendering()
 
 
 
-QImage QQuickRenderThreadSingleContextWindowManager::grab(QQuickCanvas *canvas)
+QImage QQuickRenderThreadSingleContextWindowManager::grab(QQuickWindow *window)
 {
     if (!isRunning())
         return QImage();
 
     if (QThread::currentThread() != qApp->thread()) {
-        qWarning("QQuickCanvas::grabFrameBuffer: can only be called from the GUI thread");
+        qWarning("QQuickWindow::grabFrameBuffer: can only be called from the GUI thread");
         return QImage();
     }
 
@@ -1083,8 +1083,8 @@ QImage QQuickRenderThreadSingleContextWindowManager::grab(QQuickCanvas *canvas)
     lockInGui();
     exhaustSyncEvent();
 
-    canvasToGrab = canvas;
-    while (isRunning() && canvasToGrab) {
+    windowToGrab = window;
+    while (isRunning() && windowToGrab) {
         if (isRenderBlocked)
             wake();
         wait();
@@ -1114,10 +1114,10 @@ void QQuickRenderThreadSingleContextWindowManager::handleDeferredUpdate()
     unlockInGui();
 }
 
-void QQuickRenderThreadSingleContextWindowManager::maybeUpdate(QQuickCanvas *)
+void QQuickRenderThreadSingleContextWindowManager::maybeUpdate(QQuickWindow *)
 {
     Q_ASSERT_X(QThread::currentThread() == QCoreApplication::instance()->thread() || inSync,
-               "QQuickCanvas::update",
+               "QQuickWindow::update",
                "Function can only be called from GUI thread or during QQuickItem::updatePaintNode()");
 
     if (inSync) {
@@ -1150,23 +1150,23 @@ QQuickTrivialWindowManager::QQuickTrivialWindowManager()
 }
 
 
-void QQuickTrivialWindowManager::show(QQuickCanvas *canvas)
+void QQuickTrivialWindowManager::show(QQuickWindow *window)
 {
-    CanvasData data;
+    WindowData data;
     data.updatePending = false;
     data.grabOnly = false;
-    m_windows[canvas] = data;
+    m_windows[window] = data;
 
-    maybeUpdate(canvas);
+    maybeUpdate(window);
 }
 
-void QQuickTrivialWindowManager::hide(QQuickCanvas *canvas)
+void QQuickTrivialWindowManager::hide(QQuickWindow *window)
 {
-    if (!m_windows.contains(canvas))
+    if (!m_windows.contains(window))
         return;
 
-    m_windows.remove(canvas);
-    QQuickCanvasPrivate *cd = QQuickCanvasPrivate::get(canvas);
+    m_windows.remove(window);
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->cleanupNodesOnShutdown();
 
     if (m_windows.size() == 0) {
@@ -1176,81 +1176,81 @@ void QQuickTrivialWindowManager::hide(QQuickCanvas *canvas)
     }
 }
 
-void QQuickTrivialWindowManager::canvasDestroyed(QQuickCanvas *canvas)
+void QQuickTrivialWindowManager::windowDestroyed(QQuickWindow *window)
 {
-    hide(canvas);
+    hide(window);
 }
 
-void QQuickTrivialWindowManager::renderCanvas(QQuickCanvas *canvas)
+void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
 {
-    if (!canvas->isExposed() || !m_windows.contains(canvas))
+    if (!window->isExposed() || !m_windows.contains(window))
         return;
 
-    CanvasData &data = const_cast<CanvasData &>(m_windows[canvas]);
+    WindowData &data = const_cast<WindowData &>(m_windows[window]);
 
-    QQuickCanvas *masterCanvas = 0;
-    if (!canvas->isVisible()) {
+    QQuickWindow *masterWindow = 0;
+    if (!window->isVisible()) {
         // Find a "proper surface" to bind...
-        for (QHash<QQuickCanvas *, CanvasData>::const_iterator it = m_windows.constBegin();
-             it != m_windows.constEnd() && !masterCanvas; ++it) {
+        for (QHash<QQuickWindow *, WindowData>::const_iterator it = m_windows.constBegin();
+             it != m_windows.constEnd() && !masterWindow; ++it) {
             if (it.key()->isVisible())
-                masterCanvas = it.key();
+                masterWindow = it.key();
         }
     } else {
-        masterCanvas = canvas;
+        masterWindow = window;
     }
 
-    if (!masterCanvas)
+    if (!masterWindow)
         return;
 
     if (!gl) {
         gl = new QOpenGLContext();
-        gl->setFormat(masterCanvas->requestedFormat());
+        gl->setFormat(masterWindow->requestedFormat());
         gl->create();
-        if (!gl->makeCurrent(masterCanvas))
-            qWarning("QQuickCanvas: makeCurrent() failed...");
+        if (!gl->makeCurrent(masterWindow))
+            qWarning("QQuickWindow: makeCurrent() failed...");
         sg->initialize(gl);
     } else {
-        gl->makeCurrent(masterCanvas);
+        gl->makeCurrent(masterWindow);
     }
 
     bool alsoSwap = data.updatePending;
     data.updatePending = false;
 
-    QQuickCanvasPrivate *cd = QQuickCanvasPrivate::get(canvas);
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
     cd->syncSceneGraph();
-    cd->renderSceneGraph(canvas->size());
+    cd->renderSceneGraph(window->size());
 
     if (data.grabOnly) {
-        grabContent = qt_gl_read_framebuffer(canvas->size(), false, false);
+        grabContent = qt_gl_read_framebuffer(window->size(), false, false);
         data.grabOnly = false;
     }
 
-    if (alsoSwap && canvas->isVisible()) {
-        gl->swapBuffers(canvas);
+    if (alsoSwap && window->isVisible()) {
+        gl->swapBuffers(window);
         cd->fireFrameSwapped();
     }
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)
-        maybeUpdate(canvas);
+        maybeUpdate(window);
 }
 
-void QQuickTrivialWindowManager::exposureChanged(QQuickCanvas *canvas)
+void QQuickTrivialWindowManager::exposureChanged(QQuickWindow *window)
 {
-    if (canvas->isExposed())
-        maybeUpdate(canvas);
+    if (window->isExposed())
+        maybeUpdate(window);
 }
 
-QImage QQuickTrivialWindowManager::grab(QQuickCanvas *canvas)
+QImage QQuickTrivialWindowManager::grab(QQuickWindow *window)
 {
-    if (!m_windows.contains(canvas))
+    if (!m_windows.contains(window))
         return QImage();
 
-    m_windows[canvas].grabOnly = true;
+    m_windows[window].grabOnly = true;
 
-    renderCanvas(canvas);
+    renderWindow(window);
 
     QImage grabbed = grabContent;
     grabContent = QImage();
@@ -1259,18 +1259,18 @@ QImage QQuickTrivialWindowManager::grab(QQuickCanvas *canvas)
 
 
 
-void QQuickTrivialWindowManager::resize(QQuickCanvas *, const QSize &)
+void QQuickTrivialWindowManager::resize(QQuickWindow *, const QSize &)
 {
 }
 
 
 
-void QQuickTrivialWindowManager::maybeUpdate(QQuickCanvas *canvas)
+void QQuickTrivialWindowManager::maybeUpdate(QQuickWindow *window)
 {
-    if (!m_windows.contains(canvas))
+    if (!m_windows.contains(window))
         return;
 
-    m_windows[canvas].updatePending = true;
+    m_windows[window].updatePending = true;
 
     if (!eventPending) {
         QCoreApplication::postEvent(this, new QEvent(QEvent::User));
@@ -1299,11 +1299,11 @@ bool QQuickTrivialWindowManager::event(QEvent *e)
 {
     if (e->type() == QEvent::User) {
         eventPending = false;
-        for (QHash<QQuickCanvas *, CanvasData>::const_iterator it = m_windows.constBegin();
+        for (QHash<QQuickWindow *, WindowData>::const_iterator it = m_windows.constBegin();
              it != m_windows.constEnd(); ++it) {
-            const CanvasData &data = it.value();
+            const WindowData &data = it.value();
             if (data.updatePending)
-                renderCanvas(it.key());
+                renderWindow(it.key());
         }
         return true;
     }

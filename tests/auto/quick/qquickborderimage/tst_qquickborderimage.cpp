@@ -98,8 +98,8 @@ private:
 
 void tst_qquickborderimage::cleanup()
 {
-    QQuickCanvas canvas;
-    canvas.releaseResources();
+    QQuickWindow window;
+    window.releaseResources();
     engine.clearComponentCache();
 }
 
@@ -237,12 +237,12 @@ void tst_qquickborderimage::smooth()
 
 void tst_qquickborderimage::mirror()
 {
-    QQuickView *canvas = new QQuickView;
-    canvas->setSource(testFileUrl("mirror.qml"));
-    QQuickBorderImage *image = qobject_cast<QQuickBorderImage*>(canvas->rootObject());
+    QQuickView *window = new QQuickView;
+    window->setSource(testFileUrl("mirror.qml"));
+    QQuickBorderImage *image = qobject_cast<QQuickBorderImage*>(window->rootObject());
     QVERIFY(image != 0);
 
-    QImage screenshot = canvas->grabFrameBuffer();
+    QImage screenshot = window->grabWindow();
 
     QImage srcPixmap(screenshot);
     QTransform transform;
@@ -250,10 +250,10 @@ void tst_qquickborderimage::mirror()
     srcPixmap = srcPixmap.transformed(transform);
 
     image->setProperty("mirror", true);
-    screenshot = canvas->grabFrameBuffer();
+    screenshot = window->grabWindow();
     QCOMPARE(screenshot, srcPixmap);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickborderimage::tileModes()

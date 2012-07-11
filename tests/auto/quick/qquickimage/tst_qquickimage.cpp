@@ -55,7 +55,7 @@
 #include <QtTest/QSignalSpy>
 #include <QtGui/QPainter>
 #include <QtGui/QImageReader>
-#include <QQuickCanvas>
+#include <QQuickWindow>
 
 #include "../../shared/util.h"
 #include "../../shared/testhttpserver.h"
@@ -113,8 +113,8 @@ tst_qquickimage::tst_qquickimage()
 
 void tst_qquickimage::cleanup()
 {
-    QQuickCanvas canvas;
-    canvas.releaseResources();
+    QQuickWindow window;
+    window.releaseResources();
     engine.clearComponentCache();
 }
 
@@ -259,23 +259,23 @@ void tst_qquickimage::resized()
 
 void tst_qquickimage::preserveAspectRatio()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->show();
 
-    canvas->setSource(testFileUrl("aspectratio.qml"));
-    QQuickImage *image = qobject_cast<QQuickImage*>(canvas->rootObject());
+    window->setSource(testFileUrl("aspectratio.qml"));
+    QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
     QVERIFY(image != 0);
     image->setWidth(80.0);
     QCOMPARE(image->width(), 80.);
     QCOMPARE(image->height(), 80.);
 
-    canvas->setSource(testFileUrl("aspectratio.qml"));
-    image = qobject_cast<QQuickImage*>(canvas->rootObject());
+    window->setSource(testFileUrl("aspectratio.qml"));
+    image = qobject_cast<QQuickImage*>(window->rootObject());
     image->setHeight(60.0);
     QVERIFY(image != 0);
     QCOMPARE(image->height(), 60.);
     QCOMPARE(image->width(), 60.);
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickimage::smooth()
@@ -304,21 +304,21 @@ void tst_qquickimage::mirror()
     qreal height = 250;
 
     foreach (QQuickImage::FillMode fillMode, fillModes) {
-        QQuickView *canvas = new QQuickView;
-        canvas->setSource(testFileUrl("mirror.qml"));
+        QQuickView *window = new QQuickView;
+        window->setSource(testFileUrl("mirror.qml"));
 
-        QQuickImage *obj = canvas->rootObject()->findChild<QQuickImage*>("image");
+        QQuickImage *obj = window->rootObject()->findChild<QQuickImage*>("image");
         QVERIFY(obj != 0);
 
         obj->setFillMode(fillMode);
         obj->setProperty("mirror", true);
-        canvas->show();
-        canvas->requestActivateWindow();
-        QTest::qWaitForWindowShown(canvas);
+        window->show();
+        window->requestActivateWindow();
+        QTest::qWaitForWindowShown(window);
 
-        QImage screenshot = canvas->grabFrameBuffer();
+        QImage screenshot = window->grabWindow();
         screenshots[fillMode] = screenshot;
-        delete canvas;
+        delete window;
     }
 
     foreach (QQuickImage::FillMode fillMode, fillModes) {
@@ -504,7 +504,7 @@ void tst_qquickimage::tiling_QTBUG_6716()
     QQuickImage *tiling = findItem<QQuickImage>(view.rootObject(), "tiling");
 
     QVERIFY(tiling != 0);
-    QImage img = view.grabFrameBuffer();
+    QImage img = view.grabWindow();
     for (int x = 0; x < tiling->width(); ++x) {
         for (int y = 0; y < tiling->height(); ++y) {
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
@@ -638,13 +638,13 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
 
 void tst_qquickimage::sourceSize_QTBUG_16389()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(testFileUrl("qtbug_16389.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("qtbug_16389.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickImage *image = findItem<QQuickImage>(canvas->rootObject(), "iconImage");
-    QQuickItem *handle = findItem<QQuickItem>(canvas->rootObject(), "blueHandle");
+    QQuickImage *image = findItem<QQuickImage>(window->rootObject(), "iconImage");
+    QQuickItem *handle = findItem<QQuickItem>(window->rootObject(), "blueHandle");
 
     QCOMPARE(image->sourceSize().width(), 200);
     QCOMPARE(image->sourceSize().height(), 200);
@@ -658,7 +658,7 @@ void tst_qquickimage::sourceSize_QTBUG_16389()
     QCOMPARE(image->paintedWidth(), 20.0);
     QCOMPARE(image->paintedHeight(), 20.0);
 
-    delete canvas;
+    delete window;
 }
 
 static int numberOfWarnings = 0;
@@ -671,23 +671,23 @@ static void checkWarnings(QtMsgType, const char *msg)
 // QTBUG-15690
 void tst_qquickimage::nullPixmapPaint()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(testFileUrl("nullpixmap.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("nullpixmap.qml"));
+    window->show();
 
-    QQuickImage *image = qobject_cast<QQuickImage*>(canvas->rootObject());
+    QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
     QTRY_VERIFY(image != 0);
     image->setSource(SERVER_ADDR + QString("/no-such-file.png"));
 
     QtMsgHandler previousMsgHandler = qInstallMsgHandler(checkWarnings);
 
     // used to print "QTransform::translate with NaN called"
-    QPixmap pm = QPixmap::fromImage(canvas->grabFrameBuffer());
+    QPixmap pm = QPixmap::fromImage(window->grabWindow());
     qInstallMsgHandler(previousMsgHandler);
     QVERIFY(numberOfWarnings == 0);
     delete image;
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickimage::imageCrash_QTBUG_22125()
@@ -732,16 +732,16 @@ void tst_qquickimage::sourceSize()
     QFETCH(qreal, implicitWidth);
     QFETCH(qreal, implicitHeight);
 
-    QQuickView *canvas = new QQuickView(0);
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = new QQuickView(0);
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("srcWidth", sourceWidth);
     ctxt->setContextProperty("srcHeight", sourceHeight);
 
-    canvas->setSource(testFileUrl("sourceSize.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("sourceSize.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickImage *image = qobject_cast<QQuickImage*>(canvas->rootObject());
+    QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
     QVERIFY(image);
 
     QCOMPARE(image->sourceSize().width(), sourceWidth);
@@ -749,7 +749,7 @@ void tst_qquickimage::sourceSize()
     QCOMPARE(image->implicitWidth(), implicitWidth);
     QCOMPARE(image->implicitHeight(), implicitHeight);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickimage::sourceSizeChanges()

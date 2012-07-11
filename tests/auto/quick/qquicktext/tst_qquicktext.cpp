@@ -228,10 +228,10 @@ tst_qquicktext::tst_qquicktext()
 
 QQuickView *tst_qquicktext::createView(const QString &filename)
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
-    canvas->setSource(QUrl::fromLocalFile(filename));
-    return canvas;
+    window->setSource(QUrl::fromLocalFile(filename));
+    return window;
 }
 
 void tst_qquicktext::text()
@@ -502,9 +502,9 @@ void tst_qquicktext::multilineElide_data()
 void tst_qquicktext::multilineElide()
 {
     QFETCH(QQuickText::TextFormat, format);
-    QQuickView *canvas = createView(testFile("multilineelide.qml"));
+    QQuickView *window = createView(testFile("multilineelide.qml"));
 
-    QQuickText *myText = qobject_cast<QQuickText*>(canvas->rootObject());
+    QQuickText *myText = qobject_cast<QQuickText*>(window->rootObject());
     QVERIFY(myText != 0);
     myText->setTextFormat(format);
 
@@ -547,7 +547,7 @@ void tst_qquicktext::multilineElide()
     myText->setLineHeight(1.1);
     QCOMPARE(myText->lineCount(), 1);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquicktext::implicitElide_data()
@@ -671,27 +671,27 @@ void tst_qquicktext::alignments()
     QFETCH(int, vAlign);
     QFETCH(QString, expectfile);
 
-    QQuickView *canvas = createView(testFile("alignments.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
+    QQuickView *window = createView(testFile("alignments.qml"));
+    window->show();
+    window->requestActivateWindow();
     QTest::qWait(50);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), static_cast<QWidget *>(canvas));
+    QTRY_COMPARE(QGuiApplication::activeWindow(), static_cast<QWidget *>(window));
 
-    QObject *ob = canvas->rootObject();
+    QObject *ob = window->rootObject();
     QVERIFY(ob != 0);
     ob->setProperty("horizontalAlignment",hAlign);
     ob->setProperty("verticalAlignment",vAlign);
     QTRY_COMPARE(ob->property("running").toBool(),false);
-    QImage actual(canvas->width(), canvas->height(), QImage::Format_RGB32);
+    QImage actual(window->width(), window->height(), QImage::Format_RGB32);
     actual.fill(qRgb(255,255,255));
     QPainter p(&actual);
-    canvas->render(&p);
+    window->render(&p);
 
     QImage expect(expectfile);
     if (QGuiApplicationPrivate::graphics_system_name == "raster" || QGuiApplicationPrivate::graphics_system_name == "") {
         QCOMPARE(actual,expect);
     }
-    delete canvas;
+    delete window;
 #endif
 }
 
@@ -734,10 +734,10 @@ void tst_qquicktext::horizontalAlignment()
 
 void tst_qquicktext::horizontalAlignment_RightToLeft()
 {
-    QQuickView *canvas = createView(testFile("horizontalAlignment_RightToLeft.qml"));
-    QQuickText *text = canvas->rootObject()->findChild<QQuickText*>("text");
+    QQuickView *window = createView(testFile("horizontalAlignment_RightToLeft.qml"));
+    QQuickText *text = window->rootObject()->findChild<QQuickText*>("text");
     QVERIFY(text != 0);
-    canvas->show();
+    window->show();
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(text);
     QVERIFY(textPrivate != 0);
@@ -747,19 +747,19 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     // implicit alignment should follow the reading direction of RTL text
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
     QCOMPARE(text->effectiveHAlign(), text->hAlign());
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > window->width()/2);
 
     // explicitly left aligned text
     text->setHAlign(QQuickText::AlignLeft);
     QCOMPARE(text->hAlign(), QQuickText::AlignLeft);
     QCOMPARE(text->effectiveHAlign(), text->hAlign());
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < window->width()/2);
 
     // explicitly right aligned text
     text->setHAlign(QQuickText::AlignRight);
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
     QCOMPARE(text->effectiveHAlign(), text->hAlign());
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > window->width()/2);
 
     // change to rich text
     QString textString = text->text();
@@ -792,13 +792,13 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     text->setHAlign(QQuickText::AlignHCenter);
     QCOMPARE(text->hAlign(), QQuickText::AlignHCenter);
     QCOMPARE(text->effectiveHAlign(), text->hAlign());
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < canvas->width()/2);
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().right() > canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < window->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().right() > window->width()/2);
 
     // reseted alignment should go back to following the text reading direction
     text->resetHAlign();
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > window->width()/2);
 
     // mirror the text item
     QQuickItemPrivate::get(text)->setLayoutMirror(true);
@@ -806,19 +806,19 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     // mirrored implicit alignment should continue to follow the reading direction of the text
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
     QCOMPARE(text->effectiveHAlign(), QQuickText::AlignRight);
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > window->width()/2);
 
     // mirrored explicitly right aligned behaves as left aligned
     text->setHAlign(QQuickText::AlignRight);
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
     QCOMPARE(text->effectiveHAlign(), QQuickText::AlignLeft);
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < window->width()/2);
 
     // mirrored explicitly left aligned behaves as right aligned
     text->setHAlign(QQuickText::AlignLeft);
     QCOMPARE(text->hAlign(), QQuickText::AlignLeft);
     QCOMPARE(text->effectiveHAlign(), QQuickText::AlignRight);
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() > window->width()/2);
 
     // disable mirroring
     QQuickItemPrivate::get(text)->setLayoutMirror(false);
@@ -827,7 +827,7 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     // English text should be implicitly left aligned
     text->setText("Hello world!");
     QCOMPARE(text->hAlign(), QQuickText::AlignLeft);
-    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < canvas->width()/2);
+    QVERIFY(textPrivate->layout.lineAt(0).naturalTextRect().left() < window->width()/2);
 
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QInputMethod::inputDirection()
@@ -837,7 +837,7 @@ void tst_qquicktext::horizontalAlignment_RightToLeft()
     text->setHAlign(QQuickText::AlignRight);
     QCOMPARE(text->hAlign(), QQuickText::AlignRight);
 
-    delete canvas;
+    delete window;
 
     // alignment of Text with no text set to it
     QString componentStr = "import QtQuick 2.0\nText {}";
@@ -873,7 +873,7 @@ void tst_qquicktext::hAlignImplicitWidth()
 
     {
         // Left Align
-        QImage image = view.grabFrameBuffer();
+        QImage image = view.grabWindow();
         int left = numberOfNonWhitePixels(0, image.width() / 3, image);
         int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
         int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
@@ -883,7 +883,7 @@ void tst_qquicktext::hAlignImplicitWidth()
     {
         // HCenter Align
         text->setHAlign(QQuickText::AlignHCenter);
-        QImage image = view.grabFrameBuffer();
+        QImage image = view.grabWindow();
         int left = numberOfNonWhitePixels(0, image.width() / 3, image);
         int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
         int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
@@ -893,7 +893,7 @@ void tst_qquicktext::hAlignImplicitWidth()
     {
         // Right Align
         text->setHAlign(QQuickText::AlignRight);
-        QImage image = view.grabFrameBuffer();
+        QImage image = view.grabWindow();
         int left = numberOfNonWhitePixels(0, image.width() / 3, image);
         int mid = numberOfNonWhitePixels(image.width() / 3, 2 * image.width() / 3, image);
         int right = numberOfNonWhitePixels( 2 * image.width() / 3, image.width(), image);
@@ -1879,9 +1879,9 @@ void tst_qquicktext::embeddedImages()
 
 void tst_qquicktext::lineCount()
 {
-    QQuickView *canvas = createView(testFile("lineCount.qml"));
+    QQuickView *window = createView(testFile("lineCount.qml"));
 
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     QVERIFY(myText->lineCount() > 1);
@@ -1903,14 +1903,14 @@ void tst_qquicktext::lineCount()
     QCOMPARE(myText->truncated(), true);
     QCOMPARE(myText->maximumLineCount(), 2);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquicktext::lineHeight()
 {
-    QQuickView *canvas = createView(testFile("lineHeight.qml"));
+    QQuickView *window = createView(testFile("lineHeight.qml"));
 
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     QVERIFY(myText->lineHeight() == 1);
@@ -1936,7 +1936,7 @@ void tst_qquicktext::lineHeight()
     myText->setLineHeight(10);
     QCOMPARE(myText->height(), myText->lineCount() * 10.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquicktext::implicitSize_data()
@@ -2440,9 +2440,9 @@ void tst_qquicktext::clipRect()
 
 void tst_qquicktext::lineLaidOut()
 {
-    QQuickView *canvas = createView(testFile("lineLayout.qml"));
+    QQuickView *window = createView(testFile("lineLayout.qml"));
 
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
@@ -2461,18 +2461,18 @@ void tst_qquicktext::lineLaidOut()
         }
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquicktext::lineLaidOutRelayout()
 {
-    QQuickView *canvas = createView(testFile("lineLayoutRelayout.qml"));
+    QQuickView *window = createView(testFile("lineLayoutRelayout.qml"));
 
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
 
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
@@ -2493,7 +2493,7 @@ void tst_qquicktext::lineLaidOutRelayout()
         }
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquicktext::imgTagsBaseUrl_data()
@@ -2637,8 +2637,8 @@ void tst_qquicktext::imgTagsMultipleImages()
 
 void tst_qquicktext::imgTagsElide()
 {
-    QQuickView *canvas = createView(testFile("imgTagsElide.qml"));
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickView *window = createView(testFile("imgTagsElide.qml"));
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
@@ -2648,13 +2648,13 @@ void tst_qquicktext::imgTagsElide()
     QTRY_VERIFY(textPrivate->visibleImgTags.count() == 1);
 
     delete myText;
-    delete canvas;
+    delete window;
 }
 
 void tst_qquicktext::imgTagsUpdates()
 {
-    QQuickView *canvas = createView(testFile("imgTagsUpdates.qml"));
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickView *window = createView(testFile("imgTagsUpdates.qml"));
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     QSignalSpy spy(myText, SIGNAL(contentSizeChanged()));
@@ -2675,7 +2675,7 @@ void tst_qquicktext::imgTagsUpdates()
     QVERIFY(spy.count() == 3);
 
     delete myText;
-    delete canvas;
+    delete window;
 }
 
 void tst_qquicktext::imgTagsError()
@@ -2702,10 +2702,10 @@ void tst_qquicktext::fontSizeMode()
 {
     QFETCH(QString, text);
 
-    QScopedPointer<QQuickView> canvas(createView(testFile("fontSizeMode.qml")));
-    canvas->show();
+    QScopedPointer<QQuickView> window(createView(testFile("fontSizeMode.qml")));
+    window->show();
 
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     myText->setText(text);
@@ -2945,10 +2945,10 @@ void tst_qquicktext::fontSizeModeMultiline()
 {
     QFETCH(QString, text);
 
-    QScopedPointer<QQuickView> canvas(createView(testFile("fontSizeMode.qml")));
-    canvas->show();
+    QScopedPointer<QQuickView> window(createView(testFile("fontSizeMode.qml")));
+    window->show();
 
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     myText->setText(text);
@@ -3193,10 +3193,10 @@ void tst_qquicktext::multilengthStrings()
 {
     QFETCH(QString, source);
 
-    QScopedPointer<QQuickView> canvas(createView(source));
-    canvas->show();
+    QScopedPointer<QQuickView> window(createView(source));
+    window->show();
 
-    QQuickText *myText = canvas->rootObject()->findChild<QQuickText*>("myText");
+    QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
     const QString longText = "the quick brown fox jumped over the lazy dog";

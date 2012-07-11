@@ -289,17 +289,17 @@ tst_qquickpositioners::tst_qquickpositioners()
 
 void tst_qquickpositioners::test_horizontal()
 {
-    QQuickView *canvas = createView(testFile("horizontal.qml"));
+    QQuickView *window = createView(testFile("horizontal.qml"));
 
-    canvas->rootObject()->setProperty("testRightToLeft", false);
+    window->rootObject()->setProperty("testRightToLeft", false);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -309,26 +309,26 @@ void tst_qquickpositioners::test_horizontal()
     QCOMPARE(three->x(), 70.0);
     QCOMPARE(three->y(), 0.0);
 
-    QQuickItem *row = canvas->rootObject()->findChild<QQuickItem*>("row");
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QCOMPARE(row->width(), 110.0);
     QCOMPARE(row->height(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_rtl()
 {
-    QQuickView *canvas = createView(testFile("horizontal.qml"));
+    QQuickView *window = createView(testFile("horizontal.qml"));
 
-    canvas->rootObject()->setProperty("testRightToLeft", true);
+    window->rootObject()->setProperty("testRightToLeft", true);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
     QCOMPARE(one->x(), 60.0);
@@ -338,7 +338,7 @@ void tst_qquickpositioners::test_horizontal_rtl()
     QCOMPARE(three->x(), 0.0);
     QCOMPARE(three->y(), 0.0);
 
-    QQuickItem *row = canvas->rootObject()->findChild<QQuickItem*>("row");
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QCOMPARE(row->width(), 110.0);
     QCOMPARE(row->height(), 50.0);
 
@@ -351,22 +351,22 @@ void tst_qquickpositioners::test_horizontal_rtl()
     QCOMPARE(three->x(), 90.0);
     QCOMPARE(three->y(), 0.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_spacing()
 {
-    QQuickView *canvas = createView(testFile("horizontal-spacing.qml"));
+    QQuickView *window = createView(testFile("horizontal-spacing.qml"));
 
-    canvas->rootObject()->setProperty("testRightToLeft", false);
+    window->rootObject()->setProperty("testRightToLeft", false);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -376,26 +376,26 @@ void tst_qquickpositioners::test_horizontal_spacing()
     QCOMPARE(three->x(), 90.0);
     QCOMPARE(three->y(), 0.0);
 
-    QQuickItem *row = canvas->rootObject()->findChild<QQuickItem*>("row");
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QCOMPARE(row->width(), 130.0);
     QCOMPARE(row->height(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
 {
-    QQuickView *canvas = createView(testFile("horizontal-spacing.qml"));
+    QQuickView *window = createView(testFile("horizontal-spacing.qml"));
 
-    canvas->rootObject()->setProperty("testRightToLeft", true);
+    window->rootObject()->setProperty("testRightToLeft", true);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
     QCOMPARE(one->x(), 80.0);
@@ -405,26 +405,26 @@ void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
     QCOMPARE(three->x(), 00.0);
     QCOMPARE(three->y(), 0.0);
 
-    QQuickItem *row = canvas->rootObject()->findChild<QQuickItem*>("row");
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QCOMPARE(row->width(), 130.0);
     QCOMPARE(row->height(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_animated()
 {
-    QQuickView *canvas = createView(testFile("horizontal-animated.qml"), false);
+    QQuickView *window = createView(testFile("horizontal-animated.qml"), false);
 
-    canvas->rootObject()->setProperty("testRightToLeft", false);
+    window->rootObject()->setProperty("testRightToLeft", false);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
     //Note that they animate in
@@ -432,9 +432,9 @@ void tst_qquickpositioners::test_horizontal_animated()
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(three->x(), -100.0);
 
-    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
+    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
 
-    QQuickItem *row = canvas->rootObject()->findChild<QQuickItem*>("row");
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
     QCOMPARE(row->width(), 100.0);
     QCOMPARE(row->height(), 50.0);
@@ -463,22 +463,22 @@ void tst_qquickpositioners::test_horizontal_animated()
     QTRY_COMPARE(two->x(), 50.0);
     QTRY_COMPARE(three->x(), 100.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
 {
-    QQuickView *canvas = createView(testFile("horizontal-animated.qml"), false);
+    QQuickView *window = createView(testFile("horizontal-animated.qml"), false);
 
-    canvas->rootObject()->setProperty("testRightToLeft", true);
+    window->rootObject()->setProperty("testRightToLeft", true);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
     //Note that they animate in
@@ -486,9 +486,9 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(three->x(), -100.0);
 
-    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
+    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
 
-    QQuickItem *row = canvas->rootObject()->findChild<QQuickItem*>("row");
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
     QCOMPARE(row->width(), 100.0);
     QCOMPARE(row->height(), 50.0);
@@ -519,23 +519,23 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
     QTRY_COMPARE(one->x(), 100.0);
     QTRY_COMPARE(two->x(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_horizontal_animated_disabled()
 {
-    QQuickView *canvas = createView(testFile("horizontal-animated-disabled.qml"));
+    QQuickView *window = createView(testFile("horizontal-animated-disabled.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
-    QQuickItem *row = canvas->rootObject()->findChild<QQuickItem*>("row");
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
 
     qApp->processEvents();
@@ -557,7 +557,7 @@ void tst_qquickpositioners::test_horizontal_animated_disabled()
     QTRY_COMPARE(two->x(), 50.0);
     QTRY_COMPARE(three->x(), 100.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::populateTransitions(const QString &positionerObjectName)
@@ -577,8 +577,8 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *canvas = QQuickViewTestUtil::createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = QQuickViewTestUtil::createView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("usePopulateTransition", usePopulateTransition);
     ctxt->setContextProperty("enableAddTransition", true);
     ctxt->setContextProperty("dynamicallyPopulate", dynamicallyPopulate);
@@ -588,16 +588,16 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
     ctxt->setContextProperty("testedPositioner", positionerObjectName);
-    canvas->setSource(testFileUrl("transitions.qml"));
+    window->setSource(testFileUrl("transitions.qml"));
 
-    QQuickItem *positioner = canvas->rootObject()->findChild<QQuickItem*>(positionerObjectName);
+    QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
-    canvas->show();
+    window->show();
     qApp->processEvents();
 
     if (!dynamicallyPopulate && usePopulateTransition) {
-        QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), model.count());
-        QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), 0);
+        QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), model.count());
+        QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), 0);
 
         QList<QPair<QString, QString> > targetData;
         QList<int> targetIndexes;
@@ -607,29 +607,29 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
         }
         QList<QQuickItem *> targetItems = findItems<QQuickItem>(positioner, "wrapper", targetIndexes);
         model_targetItems_transitionFrom.matchAgainst(targetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
-        matchItemsAndIndexes(canvas->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
-        matchIndexLists(canvas->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
-        matchItemLists(canvas->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
+        matchItemsAndIndexes(window->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
+        matchIndexLists(window->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
+        matchItemLists(window->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
 
     } else if (dynamicallyPopulate) {
-        QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), 0);
-        QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), model.count());
+        QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
+        QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), model.count());
     } else {
         QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
-        QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), 0);
-        QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), 0);
+        QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
+        QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), 0);
     }
 
-    checkItemPositions(positioner, &model, canvas->rootObject()->property("incrementalSize").toInt());
+    checkItemPositions(positioner, &model, window->rootObject()->property("incrementalSize").toInt());
 
     // add an item and check this is done with add transition, not populate
-    canvas->rootObject()->setProperty("populateTransitionsDone", 0);
-    canvas->rootObject()->setProperty("addTransitionsDone", 0);
+    window->rootObject()->setProperty("populateTransitionsDone", 0);
+    window->rootObject()->setProperty("addTransitionsDone", 0);
     model.insertItem(0, "new item", "");
-    QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), 1);
-    QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), 0);
+    QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), 1);
+    QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::populateTransitions_data()
@@ -658,19 +658,19 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *canvas = QQuickViewTestUtil::createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = QQuickViewTestUtil::createView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("usePopulateTransition", QVariant(false));
     ctxt->setContextProperty("enableAddTransition", QVariant(true));
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
-    canvas->setSource(testFileUrl("transitions.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("transitions.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickItem *positioner = canvas->rootObject()->findChild<QQuickItem*>(positionerObjectName);
+    QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
     QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
@@ -688,19 +688,19 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     QList<QQuickItem *> targetItems = findItems<QQuickItem>(positioner, "wrapper", targetIndexes);
 
     // check add transition was run for first lot of added items
-    QTRY_COMPARE(canvas->rootObject()->property("populateTransitionsDone").toInt(), 0);
-    QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), initialItemCount);
-    QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), 0);
+    QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
+    QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), initialItemCount);
+    QTRY_COMPARE(window->rootObject()->property("displaceTransitionsDone").toInt(), 0);
     model_targetItems_transitionFrom.matchAgainst(targetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
-    matchItemsAndIndexes(canvas->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
-    matchIndexLists(canvas->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
-    matchItemLists(canvas->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
+    matchItemsAndIndexes(window->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
+    matchIndexLists(window->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
+    matchItemLists(window->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
 
     model_targetItems_transitionFrom.clear();
-    canvas->rootObject()->setProperty("addTransitionsDone", 0);
-    canvas->rootObject()->setProperty("targetTrans_items", QVariantMap());
-    canvas->rootObject()->setProperty("targetTrans_targetIndexes", QVariantList());
-    canvas->rootObject()->setProperty("targetTrans_targetItems", QVariantList());
+    window->rootObject()->setProperty("addTransitionsDone", 0);
+    window->rootObject()->setProperty("targetTrans_items", QVariantMap());
+    window->rootObject()->setProperty("targetTrans_targetIndexes", QVariantList());
+    window->rootObject()->setProperty("targetTrans_targetItems", QVariantList());
 
     // do insertion
     targetData.clear();
@@ -714,28 +714,28 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
 
     targetItems = findItems<QQuickItem>(positioner, "wrapper", targetIndexes);
 
-    QTRY_COMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), targetData.count());
-    QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), expectedDisplacedIndexes.count());
+    QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), targetData.count());
+    QTRY_COMPARE(window->rootObject()->property("displaceTransitionsDone").toInt(), expectedDisplacedIndexes.count());
 
     // check the target and displaced items were animated
     model_targetItems_transitionFrom.matchAgainst(targetData, "wasn't animated from target 'from' pos", "shouldn't have been animated from target 'from' pos");
     model_displacedItems_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with displaced anim", "shouldn't have been animated with displaced anim");
 
     // check attached properties
-    matchItemsAndIndexes(canvas->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
-    matchIndexLists(canvas->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
-    matchItemLists(canvas->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
+    matchItemsAndIndexes(window->rootObject()->property("targetTrans_items").toMap(), model, targetIndexes);
+    matchIndexLists(window->rootObject()->property("targetTrans_targetIndexes").toList(), targetIndexes);
+    matchItemLists(window->rootObject()->property("targetTrans_targetItems").toList(), targetItems);
     if (expectedDisplacedIndexes.isValid()) {
         // adjust expectedDisplacedIndexes to their final values after the move
         QList<int> displacedIndexes = adjustIndexesForAddDisplaced(expectedDisplacedIndexes.indexes, insertionIndex, insertionCount);
-        matchItemsAndIndexes(canvas->rootObject()->property("displacedTrans_items").toMap(), model, displacedIndexes);
-        matchIndexLists(canvas->rootObject()->property("displacedTrans_targetIndexes").toList(), targetIndexes);
-        matchItemLists(canvas->rootObject()->property("displacedTrans_targetItems").toList(), targetItems);
+        matchItemsAndIndexes(window->rootObject()->property("displacedTrans_items").toMap(), model, displacedIndexes);
+        matchIndexLists(window->rootObject()->property("displacedTrans_targetIndexes").toList(), targetIndexes);
+        matchItemLists(window->rootObject()->property("displacedTrans_targetItems").toList(), targetItems);
     }
 
-    checkItemPositions(positioner, &model, canvas->rootObject()->property("incrementalSize").toInt());
+    checkItemPositions(positioner, &model, window->rootObject()->property("incrementalSize").toInt());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::addTransitions_data()
@@ -771,21 +771,21 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *canvas = QQuickViewTestUtil::createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = QQuickViewTestUtil::createView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("usePopulateTransition", QVariant(false));
     ctxt->setContextProperty("enableAddTransition", QVariant(false));
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
-    canvas->setSource(testFileUrl("transitions.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("transitions.qml"));
+    window->show();
     qApp->processEvents();
 
     QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
 
-    QQuickItem *positioner = canvas->rootObject()->findChild<QQuickItem*>(positionerObjectName);
+    QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
     QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
@@ -808,17 +808,17 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
             break;
     }
 
-    QTRY_COMPARE(canvas->rootObject()->property("displaceTransitionsDone").toInt(), expectedDisplacedIndexes.count());
-    QCOMPARE(canvas->rootObject()->property("addTransitionsDone").toInt(), 0);
+    QTRY_COMPARE(window->rootObject()->property("displaceTransitionsDone").toInt(), expectedDisplacedIndexes.count());
+    QCOMPARE(window->rootObject()->property("addTransitionsDone").toInt(), 0);
 
     // check the target and displaced items were animated
     QCOMPARE(model_targetItems_transitionFrom.count(), 0);
     model_displacedItems_transitionVia.matchAgainst(expectedDisplacedValues, "wasn't animated with displaced anim", "shouldn't have been animated with displaced anim");
 
     // check attached properties
-    QCOMPARE(canvas->rootObject()->property("targetTrans_items").toMap().count(), 0);
-    QCOMPARE(canvas->rootObject()->property("targetTrans_targetIndexes").toList().count(), 0);
-    QCOMPARE(canvas->rootObject()->property("targetTrans_targetItems").toList().count(), 0);
+    QCOMPARE(window->rootObject()->property("targetTrans_items").toMap().count(), 0);
+    QCOMPARE(window->rootObject()->property("targetTrans_targetIndexes").toList().count(), 0);
+    QCOMPARE(window->rootObject()->property("targetTrans_targetItems").toList().count(), 0);
     if (expectedDisplacedIndexes.isValid()) {
         // adjust expectedDisplacedIndexes to their final values after the move
         QList<int> displacedIndexes;
@@ -830,21 +830,21 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
             displacedIndexes = adjustIndexesForRemoveDisplaced(expectedDisplacedIndexes.indexes, change.index, change.count);
         else
             QVERIFY(false);
-        matchItemsAndIndexes(canvas->rootObject()->property("displacedTrans_items").toMap(), model, displacedIndexes);
+        matchItemsAndIndexes(window->rootObject()->property("displacedTrans_items").toMap(), model, displacedIndexes);
 
         QVariantList listOfEmptyIntLists;
         for (int i=0; i<displacedIndexes.count(); i++)
             listOfEmptyIntLists << QVariant::fromValue(QList<int>());
-        QCOMPARE(canvas->rootObject()->property("displacedTrans_targetIndexes").toList(), listOfEmptyIntLists);
+        QCOMPARE(window->rootObject()->property("displacedTrans_targetIndexes").toList(), listOfEmptyIntLists);
         QVariantList listOfEmptyObjectLists;
         for (int i=0; i<displacedIndexes.count(); i++)
             listOfEmptyObjectLists.insert(listOfEmptyObjectLists.count(), QVariantList());
-        QCOMPARE(canvas->rootObject()->property("displacedTrans_targetItems").toList(), listOfEmptyObjectLists);
+        QCOMPARE(window->rootObject()->property("displacedTrans_targetItems").toList(), listOfEmptyObjectLists);
     }
 
-    checkItemPositions(positioner, &model, canvas->rootObject()->property("incrementalSize").toInt());
+    checkItemPositions(positioner, &model, window->rootObject()->property("incrementalSize").toInt());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::moveTransitions_data()
@@ -930,15 +930,15 @@ void tst_qquickpositioners::checkItemPositions(QQuickItem *positioner, QaimModel
 
 void tst_qquickpositioners::test_vertical()
 {
-    QQuickView *canvas = createView(testFile("vertical.qml"));
+    QQuickView *window = createView(testFile("vertical.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -948,25 +948,25 @@ void tst_qquickpositioners::test_vertical()
     QCOMPARE(three->x(), 0.0);
     QCOMPARE(three->y(), 60.0);
 
-    QQuickItem *column = canvas->rootObject()->findChild<QQuickItem*>("column");
+    QQuickItem *column = window->rootObject()->findChild<QQuickItem*>("column");
     QVERIFY(column);
     QCOMPARE(column->height(), 80.0);
     QCOMPARE(column->width(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_vertical_spacing()
 {
-    QQuickView *canvas = createView(testFile("vertical-spacing.qml"));
+    QQuickView *window = createView(testFile("vertical-spacing.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -976,33 +976,33 @@ void tst_qquickpositioners::test_vertical_spacing()
     QCOMPARE(three->x(), 0.0);
     QCOMPARE(three->y(), 80.0);
 
-    QQuickItem *column = canvas->rootObject()->findChild<QQuickItem*>("column");
+    QQuickItem *column = window->rootObject()->findChild<QQuickItem*>("column");
     QCOMPARE(column->height(), 100.0);
     QCOMPARE(column->width(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_vertical_animated()
 {
-    QQuickView *canvas = createView(testFile("vertical-animated.qml"), false);
+    QQuickView *window = createView(testFile("vertical-animated.qml"), false);
 
     //Note that they animate in
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
     QCOMPARE(one->y(), -100.0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
     QCOMPARE(two->y(), -100.0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
     QCOMPARE(three->y(), -100.0);
 
-    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
+    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
 
-    QQuickItem *column = canvas->rootObject()->findChild<QQuickItem*>("column");
+    QQuickItem *column = window->rootObject()->findChild<QQuickItem*>("column");
     QVERIFY(column);
     QCOMPARE(column->height(), 100.0);
     QCOMPARE(column->width(), 50.0);
@@ -1030,22 +1030,22 @@ void tst_qquickpositioners::test_vertical_animated()
     QTRY_COMPARE(two->y(), 50.0);
     QTRY_COMPARE(three->y(), 100.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_grid()
 {
-    QQuickView *canvas = createView(testFile("gridtest.qml"));
+    QQuickView *window = createView(testFile("gridtest.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -1059,27 +1059,27 @@ void tst_qquickpositioners::test_grid()
     QCOMPARE(five->x(), 50.0);
     QCOMPARE(five->y(), 50.0);
 
-    QQuickGrid *grid = canvas->rootObject()->findChild<QQuickGrid*>("grid");
+    QQuickGrid *grid = window->rootObject()->findChild<QQuickGrid*>("grid");
     QCOMPARE(grid->flow(), QQuickGrid::LeftToRight);
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 100.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_grid_topToBottom()
 {
-    QQuickView *canvas = createView(testFile("grid-toptobottom.qml"));
+    QQuickView *window = createView(testFile("grid-toptobottom.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -1093,29 +1093,29 @@ void tst_qquickpositioners::test_grid_topToBottom()
     QCOMPARE(five->x(), 50.0);
     QCOMPARE(five->y(), 50.0);
 
-    QQuickGrid *grid = canvas->rootObject()->findChild<QQuickGrid*>("grid");
+    QQuickGrid *grid = window->rootObject()->findChild<QQuickGrid*>("grid");
     QCOMPARE(grid->flow(), QQuickGrid::TopToBottom);
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 120.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_grid_rightToLeft()
 {
-    QQuickView *canvas = createView(testFile("gridtest.qml"));
+    QQuickView *window = createView(testFile("gridtest.qml"));
 
-    canvas->rootObject()->setProperty("testRightToLeft", true);
+    window->rootObject()->setProperty("testRightToLeft", true);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 50.0);
@@ -1129,7 +1129,7 @@ void tst_qquickpositioners::test_grid_rightToLeft()
     QCOMPARE(five->x(), 40.0);
     QCOMPARE(five->y(), 50.0);
 
-    QQuickGrid *grid = canvas->rootObject()->findChild<QQuickGrid*>("grid");
+    QQuickGrid *grid = window->rootObject()->findChild<QQuickGrid*>("grid");
     QCOMPARE(grid->layoutDirection(), Qt::RightToLeft);
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 100.0);
@@ -1147,22 +1147,22 @@ void tst_qquickpositioners::test_grid_rightToLeft()
     QCOMPARE(five->x(), 140.0);
     QCOMPARE(five->y(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_grid_spacing()
 {
-    QQuickView *canvas = createView(testFile("grid-spacing.qml"));
+    QQuickView *window = createView(testFile("grid-spacing.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -1176,26 +1176,26 @@ void tst_qquickpositioners::test_grid_spacing()
     QCOMPARE(five->x(), 54.0);
     QCOMPARE(five->y(), 54.0);
 
-    QQuickItem *grid = canvas->rootObject()->findChild<QQuickItem*>("grid");
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QCOMPARE(grid->width(), 128.0);
     QCOMPARE(grid->height(), 104.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_grid_row_column_spacing()
 {
-    QQuickView *canvas = createView(testFile("grid-row-column-spacing.qml"));
+    QQuickView *window = createView(testFile("grid-row-column-spacing.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -1209,48 +1209,48 @@ void tst_qquickpositioners::test_grid_row_column_spacing()
     QCOMPARE(five->x(), 61.0);
     QCOMPARE(five->y(), 57.0);
 
-    QQuickItem *grid = canvas->rootObject()->findChild<QQuickItem*>("grid");
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QCOMPARE(grid->width(), 142.0);
     QCOMPARE(grid->height(), 107.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_grid_animated()
 {
-    QQuickView *canvas = createView(testFile("grid-animated.qml"), false);
+    QQuickView *window = createView(testFile("grid-animated.qml"), false);
 
-    canvas->rootObject()->setProperty("testRightToLeft", false);
+    window->rootObject()->setProperty("testRightToLeft", false);
 
     //Note that all animate in
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
     QCOMPARE(one->x(), -100.0);
     QCOMPARE(one->y(), -100.0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(two->y(), -100.0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
     QCOMPARE(three->x(), -100.0);
     QCOMPARE(three->y(), -100.0);
 
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
     QCOMPARE(four->x(), -100.0);
     QCOMPARE(four->y(), -100.0);
 
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
-    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
+    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
 
-    QQuickItem *grid = canvas->rootObject()->findChild<QQuickItem*>("grid");
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QVERIFY(grid);
     QCOMPARE(grid->width(), 150.0);
     QCOMPARE(grid->height(), 100.0);
@@ -1298,44 +1298,44 @@ void tst_qquickpositioners::test_grid_animated()
     QTRY_COMPARE(five->x(), 50.0);
     QTRY_COMPARE(five->y(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_grid_animated_rightToLeft()
 {
-    QQuickView *canvas = createView(testFile("grid-animated.qml"), false);
+    QQuickView *window = createView(testFile("grid-animated.qml"), false);
 
-    canvas->rootObject()->setProperty("testRightToLeft", true);
+    window->rootObject()->setProperty("testRightToLeft", true);
 
     //Note that all animate in
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
     QCOMPARE(one->x(), -100.0);
     QCOMPARE(one->y(), -100.0);
 
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(two->y(), -100.0);
 
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
     QCOMPARE(three->x(), -100.0);
     QCOMPARE(three->y(), -100.0);
 
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
     QCOMPARE(four->x(), -100.0);
     QCOMPARE(four->y(), -100.0);
 
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
-    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
+    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
 
-    QQuickItem *grid = canvas->rootObject()->findChild<QQuickItem*>("grid");
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QVERIFY(grid);
     QCOMPARE(grid->width(), 150.0);
     QCOMPARE(grid->height(), 100.0);
@@ -1383,22 +1383,22 @@ void tst_qquickpositioners::test_grid_animated_rightToLeft()
     QTRY_COMPARE(five->x(), 50.0);
     QTRY_COMPARE(five->y(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_grid_zero_columns()
 {
-    QQuickView *canvas = createView(testFile("gridzerocolumns.qml"));
+    QQuickView *window = createView(testFile("gridzerocolumns.qml"));
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -1412,21 +1412,21 @@ void tst_qquickpositioners::test_grid_zero_columns()
     QCOMPARE(five->x(), 0.0);
     QCOMPARE(five->y(), 50.0);
 
-    QQuickItem *grid = canvas->rootObject()->findChild<QQuickItem*>("grid");
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QCOMPARE(grid->width(), 170.0);
     QCOMPARE(grid->height(), 60.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_propertychanges()
 {
-    QQuickView *canvas = createView(testFile("propertychangestest.qml"));
+    QQuickView *window = createView(testFile("propertychangestest.qml"));
 
-    QQuickGrid *grid = qobject_cast<QQuickGrid*>(canvas->rootObject());
+    QQuickGrid *grid = qobject_cast<QQuickGrid*>(window->rootObject());
     QVERIFY(grid != 0);
-    QQuickTransition *rowTransition = canvas->rootObject()->findChild<QQuickTransition*>("rowTransition");
-    QQuickTransition *columnTransition = canvas->rootObject()->findChild<QQuickTransition*>("columnTransition");
+    QQuickTransition *rowTransition = window->rootObject()->findChild<QQuickTransition*>("rowTransition");
+    QQuickTransition *columnTransition = window->rootObject()->findChild<QQuickTransition*>("columnTransition");
 
     QSignalSpy addSpy(grid, SIGNAL(addChanged()));
     QSignalSpy moveSpy(grid, SIGNAL(moveChanged()));
@@ -1475,20 +1475,20 @@ void tst_qquickpositioners::test_propertychanges()
     QCOMPARE(columnsSpy.count(),2);
     QCOMPARE(rowsSpy.count(),2);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_repeater()
 {
-    QQuickView *canvas = createView(testFile("repeatertest.qml"));
+    QQuickView *window = createView(testFile("repeatertest.qml"));
 
-    QQuickRectangle *one = findItem<QQuickRectangle>(canvas->rootItem(), "one");
+    QQuickRectangle *one = findItem<QQuickRectangle>(window->rootItem(), "one");
     QVERIFY(one != 0);
 
-    QQuickRectangle *two = findItem<QQuickRectangle>(canvas->rootItem(), "two");
+    QQuickRectangle *two = findItem<QQuickRectangle>(window->rootItem(), "two");
     QVERIFY(two != 0);
 
-    QQuickRectangle *three = findItem<QQuickRectangle>(canvas->rootItem(), "three");
+    QQuickRectangle *three = findItem<QQuickRectangle>(window->rootItem(), "three");
     QVERIFY(three != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -1498,24 +1498,24 @@ void tst_qquickpositioners::test_repeater()
     QCOMPARE(three->x(), 100.0);
     QCOMPARE(three->y(), 0.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_flow()
 {
-    QQuickView *canvas = createView(testFile("flowtest.qml"));
+    QQuickView *window = createView(testFile("flowtest.qml"));
 
-    canvas->rootObject()->setProperty("testRightToLeft", false);
+    window->rootObject()->setProperty("testRightToLeft", false);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -1529,29 +1529,29 @@ void tst_qquickpositioners::test_flow()
     QCOMPARE(five->x(), 50.0);
     QCOMPARE(five->y(), 70.0);
 
-    QQuickItem *flow = canvas->rootObject()->findChild<QQuickItem*>("flow");
+    QQuickItem *flow = window->rootObject()->findChild<QQuickItem*>("flow");
     QVERIFY(flow);
     QCOMPARE(flow->width(), 90.0);
     QCOMPARE(flow->height(), 120.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_flow_rightToLeft()
 {
-    QQuickView *canvas = createView(testFile("flowtest.qml"));
+    QQuickView *window = createView(testFile("flowtest.qml"));
 
-    canvas->rootObject()->setProperty("testRightToLeft", true);
+    window->rootObject()->setProperty("testRightToLeft", true);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 40.0);
@@ -1565,29 +1565,29 @@ void tst_qquickpositioners::test_flow_rightToLeft()
     QCOMPARE(five->x(), 30.0);
     QCOMPARE(five->y(), 70.0);
 
-    QQuickItem *flow = canvas->rootObject()->findChild<QQuickItem*>("flow");
+    QQuickItem *flow = window->rootObject()->findChild<QQuickItem*>("flow");
     QVERIFY(flow);
     QCOMPARE(flow->width(), 90.0);
     QCOMPARE(flow->height(), 120.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_flow_topToBottom()
 {
-    QQuickView *canvas = createView(testFile("flowtest-toptobottom.qml"));
+    QQuickView *window = createView(testFile("flowtest-toptobottom.qml"));
 
-    canvas->rootObject()->setProperty("testRightToLeft", false);
+    window->rootObject()->setProperty("testRightToLeft", false);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 0.0);
@@ -1601,12 +1601,12 @@ void tst_qquickpositioners::test_flow_topToBottom()
     QCOMPARE(five->x(), 100.0);
     QCOMPARE(five->y(), 50.0);
 
-    QQuickItem *flow = canvas->rootObject()->findChild<QQuickItem*>("flow");
+    QQuickItem *flow = window->rootObject()->findChild<QQuickItem*>("flow");
     QVERIFY(flow);
     QCOMPARE(flow->height(), 90.0);
     QCOMPARE(flow->width(), 150.0);
 
-    canvas->rootObject()->setProperty("testRightToLeft", true);
+    window->rootObject()->setProperty("testRightToLeft", true);
 
     QVERIFY(flow);
     QCOMPARE(flow->height(), 90.0);
@@ -1623,27 +1623,27 @@ void tst_qquickpositioners::test_flow_topToBottom()
     QCOMPARE(five->x(), 40.0);
     QCOMPARE(five->y(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_flow_resize()
 {
-    QQuickView *canvas = createView(testFile("flowtest.qml"));
+    QQuickView *window = createView(testFile("flowtest.qml"));
 
-    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root);
     root->setWidth(125);
     root->setProperty("testRightToLeft", false);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QVERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QTRY_COMPARE(one->x(), 0.0);
@@ -1657,27 +1657,27 @@ void tst_qquickpositioners::test_flow_resize()
     QTRY_COMPARE(five->x(), 50.0);
     QTRY_COMPARE(five->y(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_flow_resize_rightToLeft()
 {
-    QQuickView *canvas = createView(testFile("flowtest.qml"));
+    QQuickView *window = createView(testFile("flowtest.qml"));
 
-    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root);
     root->setWidth(125);
     root->setProperty("testRightToLeft", true);
 
-    QQuickRectangle *one = canvas->rootObject()->findChild<QQuickRectangle*>("one");
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
     QTRY_VERIFY(one != 0);
-    QQuickRectangle *two = canvas->rootObject()->findChild<QQuickRectangle*>("two");
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
     QVERIFY(two != 0);
-    QQuickRectangle *three = canvas->rootObject()->findChild<QQuickRectangle*>("three");
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
     QVERIFY(three != 0);
-    QQuickRectangle *four = canvas->rootObject()->findChild<QQuickRectangle*>("four");
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
     QVERIFY(four != 0);
-    QQuickRectangle *five = canvas->rootObject()->findChild<QQuickRectangle*>("five");
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
     QVERIFY(five != 0);
 
     QCOMPARE(one->x(), 75.0);
@@ -1691,36 +1691,36 @@ void tst_qquickpositioners::test_flow_resize_rightToLeft()
     QCOMPARE(five->x(), 65.0);
     QCOMPARE(five->y(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_flow_implicit_resize()
 {
-    QQuickView *canvas = createView(testFile("flow-testimplicitsize.qml"));
-    QVERIFY(canvas->rootObject() != 0);
+    QQuickView *window = createView(testFile("flow-testimplicitsize.qml"));
+    QVERIFY(window->rootObject() != 0);
 
-    QQuickFlow *flow = canvas->rootObject()->findChild<QQuickFlow*>("flow");
+    QQuickFlow *flow = window->rootObject()->findChild<QQuickFlow*>("flow");
     QVERIFY(flow != 0);
 
     QCOMPARE(flow->width(), 100.0);
     QCOMPARE(flow->height(), 120.0);
 
-    canvas->rootObject()->setProperty("flowLayout", 0);
+    window->rootObject()->setProperty("flowLayout", 0);
     QCOMPARE(flow->flow(), QQuickFlow::LeftToRight);
     QCOMPARE(flow->width(), 220.0);
     QCOMPARE(flow->height(), 50.0);
 
-    canvas->rootObject()->setProperty("flowLayout", 1);
+    window->rootObject()->setProperty("flowLayout", 1);
     QCOMPARE(flow->flow(), QQuickFlow::TopToBottom);
     QCOMPARE(flow->width(), 100.0);
     QCOMPARE(flow->height(), 120.0);
 
-    canvas->rootObject()->setProperty("flowLayout", 2);
+    window->rootObject()->setProperty("flowLayout", 2);
     QCOMPARE(flow->layoutDirection(), Qt::RightToLeft);
     QCOMPARE(flow->width(), 220.0);
     QCOMPARE(flow->height(), 50.0);
 
-    delete canvas;
+    delete window;
 }
 
 QString warningMessage;
@@ -1839,11 +1839,11 @@ void tst_qquickpositioners::test_mirroring()
     objectNames << "one" << "two" << "three" << "four" << "five";
 
     foreach (const QString qmlFile, qmlFiles) {
-        QQuickView *canvasA = createView(testFile(qmlFile));
-        QQuickItem *rootA = qobject_cast<QQuickItem*>(canvasA->rootObject());
+        QQuickView *windowA = createView(testFile(qmlFile));
+        QQuickItem *rootA = qobject_cast<QQuickItem*>(windowA->rootObject());
 
-        QQuickView *canvasB = createView(testFile(qmlFile));
-        QQuickItem *rootB = qobject_cast<QQuickItem*>(canvasB->rootObject());
+        QQuickView *windowB = createView(testFile(qmlFile));
+        QQuickItem *rootB = qobject_cast<QQuickItem*>(windowB->rootObject());
 
         rootA->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
 
@@ -1884,24 +1884,24 @@ void tst_qquickpositioners::test_mirroring()
             QQuickItem *itemB = rootB->findChild<QQuickItem*>(objectName);
             QTRY_COMPARE(itemA->x(), itemB->x());
         }
-        delete canvasA;
-        delete canvasB;
+        delete windowA;
+        delete windowB;
     }
 }
 
 void tst_qquickpositioners::test_allInvisible()
 {
     //QTBUG-19361
-    QQuickView *canvas = createView(testFile("allInvisible.qml"));
+    QQuickView *window = createView(testFile("allInvisible.qml"));
 
-    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root);
 
-    QQuickRow *row = canvas->rootObject()->findChild<QQuickRow*>("row");
+    QQuickRow *row = window->rootObject()->findChild<QQuickRow*>("row");
     QVERIFY(row != 0);
     QVERIFY(row->width() == 0);
     QVERIFY(row->height() == 0);
-    QQuickColumn *column = canvas->rootObject()->findChild<QQuickColumn*>("column");
+    QQuickColumn *column = window->rootObject()->findChild<QQuickColumn*>("column");
     QVERIFY(column != 0);
     QVERIFY(column->width() == 0);
     QVERIFY(column->height() == 0);
@@ -1911,10 +1911,10 @@ void tst_qquickpositioners::test_attachedproperties()
 {
     QFETCH(QString, filename);
 
-    QQuickView *canvas = createView(filename);
-    QVERIFY(canvas->rootObject() != 0);
+    QQuickView *window = createView(filename);
+    QVERIFY(window->rootObject() != 0);
 
-    QQuickRectangle *greenRect = canvas->rootObject()->findChild<QQuickRectangle *>("greenRect");
+    QQuickRectangle *greenRect = window->rootObject()->findChild<QQuickRectangle *>("greenRect");
     QVERIFY(greenRect != 0);
 
     int posIndex = greenRect->property("posIndex").toInt();
@@ -1924,7 +1924,7 @@ void tst_qquickpositioners::test_attachedproperties()
     bool isLast = greenRect->property("isLastItem").toBool();
     QVERIFY(isLast == false);
 
-    QQuickRectangle *yellowRect = canvas->rootObject()->findChild<QQuickRectangle *>("yellowRect");
+    QQuickRectangle *yellowRect = window->rootObject()->findChild<QQuickRectangle *>("yellowRect");
     QVERIFY(yellowRect != 0);
 
     posIndex = yellowRect->property("posIndex").toInt();
@@ -1943,7 +1943,7 @@ void tst_qquickpositioners::test_attachedproperties()
     isLast = yellowRect->property("isLastItem").toBool();
     QVERIFY(isLast == true);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickpositioners::test_attachedproperties_data()
@@ -1958,13 +1958,13 @@ void tst_qquickpositioners::test_attachedproperties_data()
 
 void tst_qquickpositioners::test_attachedproperties_dynamic()
 {
-    QQuickView *canvas = createView(testFile("attachedproperties-dynamic.qml"));
-    QVERIFY(canvas->rootObject() != 0);
+    QQuickView *window = createView(testFile("attachedproperties-dynamic.qml"));
+    QVERIFY(window->rootObject() != 0);
 
-    QQuickRow *row = canvas->rootObject()->findChild<QQuickRow *>("pos");
+    QQuickRow *row = window->rootObject()->findChild<QQuickRow *>("pos");
     QVERIFY(row != 0);
 
-    QQuickRectangle *rect0 = canvas->rootObject()->findChild<QQuickRectangle *>("rect0");
+    QQuickRectangle *rect0 = window->rootObject()->findChild<QQuickRectangle *>("rect0");
     QVERIFY(rect0 != 0);
 
     int posIndex = rect0->property("index").toInt();
@@ -1974,7 +1974,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     bool isLast = rect0->property("lastItem").toBool();
     QVERIFY(isLast == false);
 
-    QQuickRectangle *rect1 = canvas->rootObject()->findChild<QQuickRectangle *>("rect1");
+    QQuickRectangle *rect1 = window->rootObject()->findChild<QQuickRectangle *>("rect1");
     QVERIFY(rect1 != 0);
 
     posIndex = rect1->property("index").toInt();
@@ -1990,7 +1990,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QTRY_VERIFY(rect1->property("firstItem").toBool() == false);
     QTRY_VERIFY(rect1->property("lastItem").toBool() == false);
 
-    QQuickRectangle *rect2 = canvas->rootObject()->findChild<QQuickRectangle *>("rect2");
+    QQuickRectangle *rect2 = window->rootObject()->findChild<QQuickRectangle *>("rect2");
     QVERIFY(rect2 != 0);
 
     posIndex = rect2->property("index").toInt();
@@ -2009,23 +2009,23 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QTRY_VERIFY(rect1->property("firstItem").toBool() == false);
     QTRY_VERIFY(rect1->property("lastItem").toBool() == true);
 
-    delete canvas;
+    delete window;
 }
 
 QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait)
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
     qDebug() << "1";
 
-    canvas->setSource(QUrl::fromLocalFile(filename));
+    window->setSource(QUrl::fromLocalFile(filename));
     qDebug() << "2";
-    canvas->show();
+    window->show();
     qDebug() << "3";
     if (wait)
-        QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
+        QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
     qDebug() << "4";
 
-    return canvas;
+    return window;
 }
 
 void tst_qquickpositioners::matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes)

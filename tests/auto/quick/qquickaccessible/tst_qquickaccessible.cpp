@@ -277,12 +277,12 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QAI app = QAI(QAccessible::queryAccessibleInterface(qApp));
     QCOMPARE(app->childCount(), 0);
 
-    QQuickView *canvas = new QQuickView();
-    canvas->setSource(testFileUrl("statictext.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView();
+    window->setSource(testFileUrl("statictext.qml"));
+    window->show();
     QCOMPARE(app->childCount(), 1);
 
-    QAI iface = QAI(QAccessible::queryAccessibleInterface(canvas));
+    QAI iface = QAI(QAccessible::queryAccessibleInterface(window));
     QVERIFY(iface.data());
     QCOMPARE(iface->childCount(), 1);
 
@@ -318,7 +318,7 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(iface->indexOfChild(text2.data()), -1);
     QCOMPARE(text2->indexOfChild(item.data()), -1);
 
-    delete canvas;
+    delete window;
 }
 
 QAI topLevelChildAt(QAccessibleInterface *iface, int x, int y)
@@ -336,13 +336,13 @@ QAI topLevelChildAt(QAccessibleInterface *iface, int x, int y)
 
 void tst_QQuickAccessible::hitTest()
 {
-    QQuickView *canvas = new QQuickView;
-    canvas->setSource(testFileUrl("hittest.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView;
+    window->setSource(testFileUrl("hittest.qml"));
+    window->show();
 
-    QAI canvasIface = QAI(QAccessible::queryAccessibleInterface(canvas));
-    QVERIFY(canvasIface.data());
-    QAI rootItem = QAI(canvasIface->child(0));
+    QAI windowIface = QAI(QAccessible::queryAccessibleInterface(window));
+    QVERIFY(windowIface.data());
+    QAI rootItem = QAI(windowIface->child(0));
     QRect rootRect = rootItem->rect();
 
     // check the root item from app
@@ -378,21 +378,21 @@ void tst_QQuickAccessible::hitTest()
     QVERIFY(rect201);
 
     QRect rect201Rect = rect201->rect();
-    rootItemIface = QAI(canvasIface->childAt(rect201Rect.x() + 20, rect201Rect.y() + 20));
+    rootItemIface = QAI(windowIface->childAt(rect201Rect.x() + 20, rect201Rect.y() + 20));
     QVERIFY(rootItemIface);
     QCOMPARE(rootItemIface->rect(), rect201Rect);
     QCOMPARE(rootItemIface->text(QAccessible::Name), QLatin1String("rect201"));
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickAccessible::checkableTest()
 {
-    QQuickView *canvas = new QQuickView();
-    canvas->setSource(testFileUrl("checkbuttons.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView();
+    window->setSource(testFileUrl("checkbuttons.qml"));
+    window->show();
 
-    QAI iface = QAI(QAccessible::queryAccessibleInterface(canvas));
+    QAI iface = QAI(QAccessible::queryAccessibleInterface(window));
     QVERIFY(iface.data());
     QAI root = QAI(iface->child(0));
 

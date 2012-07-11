@@ -43,7 +43,7 @@
 
 #include "qquickitem.h"
 #include "qquickitem_p.h"
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 
 #include <QScreen>
 
@@ -108,8 +108,8 @@ QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     if (m_attachee) {
         QQuickItemPrivate::get(m_attachee)->extra.value().screenAttached = this;
 
-        if (m_attachee->canvas()) //It might not be assigned to a canvas yet
-            canvasChanged(m_attachee->canvas());
+        if (m_attachee->window()) //It might not be assigned to a window yet
+            windowChanged(m_attachee->window());
     }
 }
 
@@ -148,7 +148,7 @@ int QQuickScreenAttached::angleBetween(int a, int b)
     return m_screen->angleBetween((Qt::ScreenOrientation)a,(Qt::ScreenOrientation)b);
 }
 
-void QQuickScreenAttached::canvasChanged(QQuickCanvas* c)//Called by QQuickItemPrivate::initCanvas
+void QQuickScreenAttached::windowChanged(QQuickWindow* c)//Called by QQuickItemPrivate::initWindow
 {
     QScreen* screen = c ? c->screen() : 0;
     if (screen != m_screen) {

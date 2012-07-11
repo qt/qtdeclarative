@@ -34,7 +34,7 @@
     A QML document can be loaded with QQmlComponent or QQuickView.
     QQmlComponent loads a QML component as a C++ QObject;
     QQuickView also does this, but additionally loads the QML component
-    directly into a QQuickCanvas which displays visual QML object types
+    directly into a QQuickWindow which displays visual QML object types
     provided by Qt Quick, or object types derived from those.
     It is convenient for loading a displayable
     QML component as a root QWindow.

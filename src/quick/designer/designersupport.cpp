@@ -73,7 +73,7 @@ void DesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
         return;
 
     QQuickItemPrivate::get(referencedItem)->refFromEffectItem(hide);
-    QQuickCanvasPrivate::get(referencedItem->canvas())->updateDirtyNode(referencedItem);
+    QQuickWindowPrivate::get(referencedItem->window())->updateDirtyNode(referencedItem);
 
     Q_ASSERT(QQuickItemPrivate::get(referencedItem)->rootNode());
 
@@ -147,12 +147,12 @@ void DesignerSupport::resetDirty(QQuickItem *referencedItem)
     QQuickItemPrivate::get(referencedItem)->removeFromDirtyList();
 }
 
-QTransform DesignerSupport::canvasTransform(QQuickItem *referencedItem)
+QTransform DesignerSupport::windowTransform(QQuickItem *referencedItem)
 {
     if (referencedItem == 0)
         return QTransform();
 
-    return QQuickItemPrivate::get(referencedItem)->itemToCanvasTransform();
+    return QQuickItemPrivate::get(referencedItem)->itemToWindowTransform();
 }
 
 QTransform DesignerSupport::parentTransform(QQuickItem *referencedItem)
@@ -404,7 +404,7 @@ bool DesignerSupport::isValidHeight(QQuickItem *item)
 
 void DesignerSupport::updateDirtyNode(QQuickItem *item)
 {
-    QQuickCanvasPrivate::get(item->canvas())->updateDirtyNode(item);
+    QQuickWindowPrivate::get(item->window())->updateDirtyNode(item);
 }
 
 QT_END_NAMESPACE

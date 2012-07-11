@@ -88,7 +88,7 @@ class QQuickTransition;
 class QQuickKeyEvent;
 class QQuickAnchors;
 class QQuickItemPrivate;
-class QQuickCanvas;
+class QQuickWindow;
 class QTouchEvent;
 class QSGNode;
 class QSGTransformNode;
@@ -166,7 +166,7 @@ public:
     enum ItemChange {
         ItemChildAddedChange,      // value.item
         ItemChildRemovedChange,    // value.item
-        ItemSceneChange,           // value.canvas
+        ItemSceneChange,           // value.window
         ItemVisibleHasChanged,     // value.boolValue
         ItemParentHasChanged,      // value.item
         ItemOpacityHasChanged,     // value.realValue
@@ -176,12 +176,12 @@ public:
 
     union ItemChangeData {
         ItemChangeData(QQuickItem *v) : item(v) {}
-        ItemChangeData(QQuickCanvas *v) : canvas(v) {}
+        ItemChangeData(QQuickWindow *v) : window(v) {}
         ItemChangeData(qreal v) : realValue(v) {}
         ItemChangeData(bool v) : boolValue(v) {}
 
         QQuickItem *item;
-        QQuickCanvas *canvas;
+        QQuickWindow *window;
         qreal realValue;
         bool boolValue;
     };
@@ -195,7 +195,9 @@ public:
     QQuickItem(QQuickItem *parent = 0);
     virtual ~QQuickItem();
 
-    QQuickCanvas *canvas() const;
+    //canvas() is being removed in favor of window() really soon now
+    QQuickWindow *canvas() const { return window(); }
+    QQuickWindow *window() const;
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
     void stackBefore(const QQuickItem *);
@@ -317,7 +319,7 @@ public:
     struct UpdatePaintNodeData {
        QSGTransformNode *transformNode;
     private:
-       friend class QQuickCanvasPrivate;
+       friend class QQuickWindowPrivate;
        UpdatePaintNodeData();
     };
 
@@ -409,8 +411,8 @@ protected:
     QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = 0);
 
 private:
-    friend class QQuickCanvas;
-    friend class QQuickCanvasPrivate;
+    friend class QQuickWindow;
+    friend class QQuickWindowPrivate;
     friend class QSGRenderer;
     friend class QAccessibleQuickItem;
     friend class QQuickAccessibleAttached;

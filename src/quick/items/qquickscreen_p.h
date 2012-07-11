@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
 
 class QQuickItem;
-class QQuickCanvas;
+class QQuickWindow;
 class QScreen;
 
 class Q_AUTOTEST_EXPORT QQuickScreenAttached : public QObject
@@ -76,7 +76,7 @@ public:
     //Treats int as Qt::ScreenOrientation, due to QTBUG-20639
     Q_INVOKABLE int angleBetween(int a, int b);
 
-    void canvasChanged(QQuickCanvas*);
+    void windowChanged(QQuickWindow*);
 
 Q_SIGNALS:
     void widthChanged();

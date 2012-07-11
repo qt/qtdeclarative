@@ -44,7 +44,7 @@
 #include <QtCore/QTimer>
 #include <QtGui/QPainter>
 #include <QtGui/QStaticText>
-#include <QtQuick/QQuickCanvas>
+#include <QtQuick/QQuickWindow>
 
 namespace QmlJSDebugger {
 namespace QtQuick2 {
@@ -81,7 +81,7 @@ void Highlight::setItem(QQuickItem *item)
         connect(item, SIGNAL(transformOriginChanged(TransformOrigin)),
                 SLOT(adjust()));
     }
-    QQuickCanvas *view = item->canvas();
+    QQuickWindow *view = item->window();
     QQuickItem * rootItem = view->rootItem();
     if (rootItem) {
         connect(rootItem, SIGNAL(xChanged()), SLOT(adjust()));
@@ -110,7 +110,7 @@ void Highlight::adjust()
     setSize(QSizeF(m_item->width(), m_item->height()));
     qreal scaleFactor = 1;
     QPointF originOffset = QPointF(0,0);
-    QQuickCanvas *view = m_item->canvas();
+    QQuickWindow *view = m_item->window();
     if (view->rootItem()) {
         scaleFactor = view->rootItem()->scale();
         originOffset -= view->rootItem()->pos();

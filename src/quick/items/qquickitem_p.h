@@ -59,7 +59,7 @@
 #include "qquickanchors_p_p.h"
 #include "qquickitemchangelistener_p.h"
 
-#include "qquickcanvas_p.h"
+#include "qquickwindow_p.h"
 
 #include <QtQuick/qsgnode.h>
 #include "qquickclipnode_p.h"
@@ -427,7 +427,7 @@ public:
         ParentChanged           = 0x00000800,
 
         Clip                    = 0x00001000,
-        Canvas                  = 0x00002000,
+        Window                  = 0x00002000,
 
         EffectReference         = 0x00008000,
         Visible                 = 0x00010000,
@@ -437,10 +437,10 @@ public:
         // dirtyToString()
 
         TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position |
-                                  Size | Canvas,
-        ComplexTransformUpdateMask     = Transform | Canvas,
-        ContentUpdateMask       = Size | Content | Smooth | Canvas | Antialiasing,
-        ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Canvas
+                                  Size | Window,
+        ComplexTransformUpdateMask     = Transform | Window,
+        ContentUpdateMask       = Size | Content | Smooth | Window | Antialiasing,
+        ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Window
     };
 
     quint32 dirtyAttributes;
@@ -453,8 +453,8 @@ public:
 
     void setCulled(bool);
 
-    QQuickCanvas *canvas;
-    int canvasRefCount;
+    QQuickWindow *window;
+    int windowRefCount;
     inline QSGContext *sceneGraphContext() const;
 
     QQuickItem *parentItem;
@@ -469,14 +469,14 @@ public:
 
     inline void markSortedChildrenDirty(QQuickItem *child);
 
-    void refCanvas(QQuickCanvas *);
-    void derefCanvas();
+    void refWindow(QQuickWindow *);
+    void derefWindow();
 
     QQuickItem *subFocusItem;
     void updateSubFocusItem(QQuickItem *scope, bool focus);
 
-    QTransform canvasToItemTransform() const;
-    QTransform itemToCanvasTransform() const;
+    QTransform windowToItemTransform() const;
+    QTransform itemToWindowTransform() const;
     void itemToParentTransform(QTransform &) const;
 
     qreal x;
@@ -837,8 +837,8 @@ Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const
 
 QSGContext *QQuickItemPrivate::sceneGraphContext() const
 {
-    Q_ASSERT(canvas);
-    return static_cast<QQuickCanvasPrivate *>(QObjectPrivate::get(canvas))->context;
+    Q_ASSERT(window);
+    return static_cast<QQuickWindowPrivate *>(QObjectPrivate::get(window))->context;
 }
 
 void QQuickItemPrivate::markSortedChildrenDirty(QQuickItem *child)

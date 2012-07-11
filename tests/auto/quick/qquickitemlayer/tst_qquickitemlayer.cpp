@@ -61,7 +61,7 @@ public:
         view.show();
         QTest::qWaitForWindowShown(&view);
 
-        return view.grabFrameBuffer();
+        return view.grabWindow();
     }
 
 private slots:
@@ -268,7 +268,7 @@ void tst_QQuickItemLayer::layerVisibility()
 
     QTest::qWaitForWindowActive(&view);
 
-    QImage fb = view.grabFrameBuffer();
+    QImage fb = view.grabWindow();
     uint pixel = fb.pixel(0, 0);
 
     if (!visible || opacity == 0) {
@@ -312,7 +312,7 @@ void tst_QQuickItemLayer::layerZOrder()
 
     QTest::qWaitForWindowShown(&view);
 
-    QImage fb = view.grabFrameBuffer();
+    QImage fb = view.grabWindow();
 
     QCOMPARE(fb.pixel(50, 50), qRgb(0, 0, 0xff));
     QCOMPARE(fb.pixel(150, 150), qRgb(0, 0xff, 00));
@@ -349,7 +349,7 @@ void tst_QQuickItemLayer::changeZOrder()
 
     QTest::qWaitForWindowShown(&view);
 
-    QImage fb = view.grabFrameBuffer();
+    QImage fb = view.grabWindow();
 
     QRgb topLeft = fb.pixel(50, 50);
     QRgb topRight = fb.pixel(150, 50);

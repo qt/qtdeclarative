@@ -160,7 +160,7 @@ a convenient way to port QDeclarativeItem-based classes that use the QPainter AP
 is less performant than using the \c QSG* classes.
 
 When porting from QDeclarativeView to QQuickView, note that QDeclarativeItem inherited from
-QGraphicsView. In contrast, QQuickView inherits from QQuickCanvas and uses the QWindow
+QGraphicsView. In contrast, QQuickView inherits from QQuickWindow and uses the QWindow
 infrastructure introduced in Qt 5; any QGraphicsView-specific functionality is no longer available.
 
 

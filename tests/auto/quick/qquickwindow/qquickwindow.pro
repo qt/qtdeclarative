@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_qquickcanvas
-SOURCES += tst_qquickcanvas.cpp
+TARGET = tst_qquickwindow
+SOURCES += tst_qquickwindow.cpp
 
 include (../../shared/util.pri)
 

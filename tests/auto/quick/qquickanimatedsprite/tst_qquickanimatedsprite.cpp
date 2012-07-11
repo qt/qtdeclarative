@@ -64,14 +64,14 @@ void tst_qquickanimatedsprite::initTestCase()
 
 void tst_qquickanimatedsprite::test_properties()
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
-    canvas->setSource(testFileUrl("basic.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    window->setSource(testFileUrl("basic.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
 
-    QVERIFY(canvas->rootObject());
-    QQuickAnimatedSprite* sprite = canvas->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(window->rootObject());
+    QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
     QVERIFY(sprite);
 
     QVERIFY(sprite->running());
@@ -84,19 +84,19 @@ void tst_qquickanimatedsprite::test_properties()
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickanimatedsprite::test_frameChangedSignal()
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
-    canvas->setSource(testFileUrl("frameChange.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    window->setSource(testFileUrl("frameChange.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
 
-    QVERIFY(canvas->rootObject());
-    QQuickAnimatedSprite* sprite = canvas->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(window->rootObject());
+    QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
     QVERIFY(sprite);
 
     QVERIFY(!sprite->running());
@@ -109,7 +109,7 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
     QTRY_COMPARE(frameChangedSpy.count(), 3*6);
     QTRY_VERIFY(!sprite->running());
 
-    delete canvas;
+    delete window;
 }
 
 QTEST_MAIN(tst_qquickanimatedsprite)

@@ -248,19 +248,19 @@ void tst_qquickfontloader::changeFontSourceViaState()
 #if defined(Q_OS_WIN)
     QSKIP("Windows doesn't support font loading.");
 #endif
-    QQuickView canvas(testFileUrl("qtbug-20268.qml"));
-    canvas.show();
-    canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
+    QQuickView window(testFileUrl("qtbug-20268.qml"));
+    window.show();
+    window.requestActivateWindow();
+    QTest::qWaitForWindowShown(&window);
+    QTRY_COMPARE(&window, qGuiApp->focusWindow());
 
-    QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(qvariant_cast<QObject *>(canvas.rootObject()->property("fontloader")));
+    QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(qvariant_cast<QObject *>(window.rootObject()->property("fontloader")));
     QVERIFY(fontObject != 0);
     QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
-    canvas.rootObject()->setProperty("usename", true);
+    window.rootObject()->setProperty("usename", true);
 
     // This warning should probably not be printed once QTBUG-20268 is fixed
     QString warning = QString(testFileUrl("qtbug-20268.qml").toString()) +
@@ -269,7 +269,7 @@ void tst_qquickfontloader::changeFontSourceViaState()
 
     QEXPECT_FAIL("", "QTBUG-20268", Abort);
     QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
-    QCOMPARE(canvas.rootObject()->property("name").toString(), QString("Tahoma"));
+    QCOMPARE(window.rootObject()->property("name").toString(), QString("Tahoma"));
 }
 
 QTEST_MAIN(tst_qquickfontloader)

@@ -53,19 +53,19 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickCanvasPixmap::QQuickCanvasPixmap(const QImage& image, QQuickCanvas *canvas)
+QQuickCanvasPixmap::QQuickCanvasPixmap(const QImage& image, QQuickWindow *window)
     : m_pixmap(0)
     , m_image(image)
     , m_texture(0)
-    , m_canvas(canvas)
+    , m_window(window)
 {
 
 }
 
-QQuickCanvasPixmap::QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickCanvas *canvas)
+QQuickCanvasPixmap::QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickWindow *window)
     : m_pixmap(pixmap)
     , m_texture(0)
-    , m_canvas(canvas)
+    , m_window(window)
 {
 
 }
@@ -105,9 +105,9 @@ QSGTexture *QQuickCanvasPixmap::texture()
     if (!m_texture) {
         if (m_pixmap) {
             Q_ASSERT(m_pixmap->textureFactory());
-            m_texture = m_pixmap->textureFactory()->createTexture(m_canvas);
+            m_texture = m_pixmap->textureFactory()->createTexture(m_window);
         } else {
-            m_texture = QQuickCanvasPrivate::get(m_canvas)->context->createTexture(m_image);
+            m_texture = QQuickWindowPrivate::get(m_window)->context->createTexture(m_image);
         }
     }
     return m_texture;
@@ -620,14 +620,14 @@ void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickIte
     if (d->available)
         return;
 
-    if (value.canvas == 0)
+    if (value.window== 0)
         return;
 
-    d->canvas = value.canvas;
-    if (d->canvas->openglContext() != 0) // available context == initialized
+    d->window = value.window;
+    if (d->window->openglContext() != 0) // available context == initialized
         sceneGraphInitialized();
     else
-        connect(d->canvas, SIGNAL(sceneGraphInitialized()), SLOT(sceneGraphInitialized()));
+        connect(d->window, SIGNAL(sceneGraphInitialized()), SLOT(sceneGraphInitialized()));
 }
 
 void QQuickCanvasItem::updatePolish()
@@ -881,7 +881,7 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
     if (!d->pixmaps.contains(fullPathUrl)) {
         QQuickPixmap* pix = new QQuickPixmap();
         QQmlRefPointer<QQuickCanvasPixmap> canvasPix;
-        canvasPix.take(new QQuickCanvasPixmap(pix, d->canvas));
+        canvasPix.take(new QQuickCanvasPixmap(pix, d->window));
         d->pixmaps.insert(fullPathUrl, canvasPix);
 
         pix->load(qmlEngine(this)

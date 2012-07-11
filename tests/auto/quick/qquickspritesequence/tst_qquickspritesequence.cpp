@@ -57,14 +57,14 @@ private slots:
 
 void tst_qquickspritesequence::test_properties()
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
-    canvas->setSource(testFileUrl("basic.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    window->setSource(testFileUrl("basic.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
 
-    QVERIFY(canvas->rootObject());
-    QQuickSpriteSequence* sprite = canvas->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
+    QVERIFY(window->rootObject());
+    QQuickSpriteSequence* sprite = window->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
     QVERIFY(sprite);
 
     QVERIFY(sprite->running());
@@ -75,35 +75,35 @@ void tst_qquickspritesequence::test_properties()
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickspritesequence::test_framerateAdvance()
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
-    canvas->setSource(testFileUrl("advance.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    window->setSource(testFileUrl("advance.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
 
-    QVERIFY(canvas->rootObject());
-    QQuickSpriteSequence* sprite = canvas->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
+    QVERIFY(window->rootObject());
+    QQuickSpriteSequence* sprite = window->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
     QVERIFY(sprite);
 
     QTRY_COMPARE(sprite->currentSprite(), QLatin1String("secondState"));
-    delete canvas;
+    delete window;
 }
 
 void tst_qquickspritesequence::test_jumpToCrash()
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
-    canvas->setSource(testFileUrl("crashonstart.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    window->setSource(testFileUrl("crashonstart.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
     //verify: Don't crash
 
-    delete canvas;
+    delete window;
 }
 
 QTEST_MAIN(tst_qquickspritesequence)

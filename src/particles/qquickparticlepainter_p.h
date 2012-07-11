@@ -126,7 +126,7 @@ protected:
     QStringList m_groups;
     QPointF m_systemOffset;
 
-    QQuickCanvas *m_canvas;
+    QQuickWindow *m_window;
 
 private:
     QSet<QPair<int,int> > m_pendingCommits;

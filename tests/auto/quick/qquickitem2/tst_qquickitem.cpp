@@ -273,26 +273,26 @@ void tst_QQuickItem::cleanup()
 
 void tst_QQuickItem::keys()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(240,320));
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
 
     KeysTestObject *testObject = new KeysTestObject;
-    canvas->rootContext()->setContextProperty("keysTestObject", testObject);
+    window->rootContext()->setContextProperty("keysTestObject", testObject);
 
-    canvas->rootContext()->setContextProperty("enableKeyHanding", QVariant(true));
-    canvas->rootContext()->setContextProperty("forwardeeVisible", QVariant(true));
+    window->rootContext()->setContextProperty("enableKeyHanding", QVariant(true));
+    window->rootContext()->setContextProperty("forwardeeVisible", QVariant(true));
 
-    canvas->setSource(testFileUrl("keystest.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    window->setSource(testFileUrl("keystest.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
-    QVERIFY(canvas->rootObject());
-    QCOMPARE(canvas->rootObject()->property("isEnabled").toBool(), true);
+    QVERIFY(window->rootObject());
+    QCOMPARE(window->rootObject()->property("isEnabled").toBool(), true);
 
     QKeyEvent key(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "A", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_A));
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_A));
     QCOMPARE(testObject->mText, QLatin1String("A"));
@@ -302,7 +302,7 @@ void tst_QQuickItem::keys()
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyRelease, Qt::Key_A, Qt::ShiftModifier, "A", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_A));
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_A));
     QCOMPARE(testObject->mText, QLatin1String("A"));
@@ -312,7 +312,7 @@ void tst_QQuickItem::keys()
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_Return));
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_Return));
     QCOMPARE(testObject->mText, QLatin1String("Return"));
@@ -322,7 +322,7 @@ void tst_QQuickItem::keys()
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_0, Qt::NoModifier, "0", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_0));
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_0));
     QCOMPARE(testObject->mText, QLatin1String("0"));
@@ -332,7 +332,7 @@ void tst_QQuickItem::keys()
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_9, Qt::NoModifier, "9", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_9));
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_9));
     QCOMPARE(testObject->mText, QLatin1String("9"));
@@ -342,7 +342,7 @@ void tst_QQuickItem::keys()
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_Tab));
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_Tab));
     QCOMPARE(testObject->mText, QLatin1String("Tab"));
@@ -352,7 +352,7 @@ void tst_QQuickItem::keys()
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Backtab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_Backtab));
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_Backtab));
     QCOMPARE(testObject->mText, QLatin1String("Backtab"));
@@ -362,7 +362,7 @@ void tst_QQuickItem::keys()
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_VolumeUp, Qt::NoModifier, 1234, 0, 0);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_VolumeUp));
     QCOMPARE(testObject->mForwardedKey, int(Qt::Key_VolumeUp));
     QVERIFY(testObject->mModifiers == Qt::NoModifier);
@@ -371,9 +371,9 @@ void tst_QQuickItem::keys()
 
     testObject->reset();
 
-    canvas->rootContext()->setContextProperty("forwardeeVisible", QVariant(false));
+    window->rootContext()->setContextProperty("forwardeeVisible", QVariant(false));
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "A", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_A));
     QCOMPARE(testObject->mForwardedKey, 0);
     QCOMPARE(testObject->mText, QLatin1String("A"));
@@ -382,47 +382,47 @@ void tst_QQuickItem::keys()
 
     testObject->reset();
 
-    canvas->rootContext()->setContextProperty("enableKeyHanding", QVariant(false));
-    QCOMPARE(canvas->rootObject()->property("isEnabled").toBool(), false);
+    window->rootContext()->setContextProperty("enableKeyHanding", QVariant(false));
+    QCOMPARE(window->rootObject()->property("isEnabled").toBool(), false);
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, 0);
     QVERIFY(!key.isAccepted());
 
-    canvas->rootContext()->setContextProperty("enableKeyHanding", QVariant(true));
-    QCOMPARE(canvas->rootObject()->property("isEnabled").toBool(), true);
+    window->rootContext()->setContextProperty("enableKeyHanding", QVariant(true));
+    QCOMPARE(window->rootObject()->property("isEnabled").toBool(), true);
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_Return));
     QVERIFY(key.isAccepted());
 
-    delete canvas;
+    delete window;
     delete testObject;
 }
 
 void tst_QQuickItem::keysProcessingOrder()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(240,320));
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
 
     KeysTestObject *testObject = new KeysTestObject;
-    canvas->rootContext()->setContextProperty("keysTestObject", testObject);
+    window->rootContext()->setContextProperty("keysTestObject", testObject);
 
-    canvas->setSource(testFileUrl("keyspriority.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    window->setSource(testFileUrl("keyspriority.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
-    KeyTestItem *testItem = qobject_cast<KeyTestItem*>(canvas->rootObject());
+    KeyTestItem *testItem = qobject_cast<KeyTestItem*>(window->rootObject());
     QVERIFY(testItem);
 
     QCOMPARE(testItem->property("priorityTest").toInt(), 0);
 
     QKeyEvent key(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "A", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_A));
     QCOMPARE(testObject->mText, QLatin1String("A"));
     QVERIFY(testObject->mModifiers == Qt::NoModifier);
@@ -435,14 +435,14 @@ void tst_QQuickItem::keysProcessingOrder()
     QCOMPARE(testItem->property("priorityTest").toInt(), 1);
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "A", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, 0);
     QVERIFY(key.isAccepted());
 
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_B, Qt::NoModifier, "B", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, int(Qt::Key_B));
     QCOMPARE(testObject->mText, QLatin1String("B"));
     QVERIFY(testObject->mModifiers == Qt::NoModifier);
@@ -451,11 +451,11 @@ void tst_QQuickItem::keysProcessingOrder()
     testObject->reset();
 
     key = QKeyEvent(QEvent::KeyRelease, Qt::Key_B, Qt::NoModifier, "B", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QCOMPARE(testObject->mKey, 0);
     QVERIFY(key.isAccepted());
 
-    delete canvas;
+    delete window;
     delete testObject;
 }
 
@@ -465,19 +465,19 @@ void tst_QQuickItem::keysim()
     QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
     inputMethodPrivate->testContext = &platformInputContext;
 
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(240,320));
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
 
-    canvas->setSource(testFileUrl("keysim.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    window->setSource(testFileUrl("keysim.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
-    QVERIFY(canvas->rootObject());
-    QVERIFY(canvas->rootObject()->hasFocus() && canvas->rootObject()->hasActiveFocus());
+    QVERIFY(window->rootObject());
+    QVERIFY(window->rootObject()->hasFocus() && window->rootObject()->hasActiveFocus());
 
-    QQuickTextInput *input = canvas->rootObject()->findChild<QQuickTextInput*>();
+    QQuickTextInput *input = window->rootObject()->findChild<QQuickTextInput*>();
     QVERIFY(input);
 
     QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>());
@@ -486,7 +486,7 @@ void tst_QQuickItem::keysim()
     QEXPECT_FAIL("", "QTBUG-24280", Continue);
     QCOMPARE(input->text(), QLatin1String("Hello world!"));
 
-    delete canvas;
+    delete window;
 }
 
 QQuickItemPrivate *childPrivate(QQuickItem *rootItem, const char * itemString)
@@ -511,11 +511,11 @@ bool anchorsMirrored(QQuickItem *rootItem, const char * itemString)
 
 void tst_QQuickItem::layoutMirroring()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(testFileUrl("layoutmirroring.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("layoutmirroring.qml"));
+    window->show();
 
-    QQuickItem *rootItem = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *rootItem = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(rootItem);
     QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(rootItem);
     QVERIFY(rootPrivate);
@@ -650,93 +650,93 @@ void tst_QQuickItem::layoutMirroringIllegalParent()
 
 void tst_QQuickItem::keyNavigation()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(240,320));
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
 
-    canvas->setSource(testFileUrl("keynavigationtest.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    window->setSource(testFileUrl("keynavigationtest.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
-    QQuickItem *item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     QVariant result;
-    QVERIFY(QMetaObject::invokeMethod(canvas->rootObject(), "verify",
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "verify",
             Q_RETURN_ARG(QVariant, result)));
     QVERIFY(result.toBool());
 
     // right
     QKeyEvent key(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item2");
+    item = findItem<QQuickItem>(window->rootObject(), "item2");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // down
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item4");
+    item = findItem<QQuickItem>(window->rootObject(), "item4");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // left
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Left, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item3");
+    item = findItem<QQuickItem>(window->rootObject(), "item3");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // up
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Up, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // tab
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item2");
+    item = findItem<QQuickItem>(window->rootObject(), "item2");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // backtab
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Backtab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::keyNavigation_RightToLeft()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(240,320));
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
 
-    canvas->setSource(testFileUrl("keynavigationtest.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    window->setSource(testFileUrl("keynavigationtest.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
-    QQuickItem *rootItem = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *rootItem = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(rootItem);
     QQuickItemPrivate* rootItemPrivate = QQuickItemPrivate::get(rootItem);
 
@@ -746,240 +746,240 @@ void tst_QQuickItem::keyNavigation_RightToLeft()
     rootItemPrivate->resolveLayoutMirror();
 
     QEvent wa(QEvent::WindowActivate);
-    QGuiApplication::sendEvent(canvas, &wa);
+    QGuiApplication::sendEvent(window, &wa);
     QFocusEvent fe(QEvent::FocusIn);
-    QGuiApplication::sendEvent(canvas, &fe);
+    QGuiApplication::sendEvent(window, &fe);
 
-    QQuickItem *item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     QVariant result;
-    QVERIFY(QMetaObject::invokeMethod(canvas->rootObject(), "verify",
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "verify",
             Q_RETURN_ARG(QVariant, result)));
     QVERIFY(result.toBool());
 
     // right
     QKeyEvent key(QEvent::KeyPress, Qt::Key_Left, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item2");
+    item = findItem<QQuickItem>(window->rootObject(), "item2");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // left
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::keyNavigation_skipNotVisible()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(240,320));
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
 
-    canvas->setSource(testFileUrl("keynavigationtest.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    window->setSource(testFileUrl("keynavigationtest.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
-    QQuickItem *item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // Set item 2 to not visible
-    item = findItem<QQuickItem>(canvas->rootObject(), "item2");
+    item = findItem<QQuickItem>(window->rootObject(), "item2");
     QVERIFY(item);
     item->setVisible(false);
     QVERIFY(!item->isVisible());
 
     // right
     QKeyEvent key(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // tab
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item3");
+    item = findItem<QQuickItem>(window->rootObject(), "item3");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // backtab
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Backtab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     //Set item 3 to not visible
-    item = findItem<QQuickItem>(canvas->rootObject(), "item3");
+    item = findItem<QQuickItem>(window->rootObject(), "item3");
     QVERIFY(item);
     item->setVisible(false);
     QVERIFY(!item->isVisible());
 
     // tab
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item4");
+    item = findItem<QQuickItem>(window->rootObject(), "item4");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // backtab
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Backtab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::keyNavigation_implicitSetting()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(240,320));
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
 
-    canvas->setSource(testFileUrl("keynavigationtest_implicit.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    window->setSource(testFileUrl("keynavigationtest_implicit.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
     QEvent wa(QEvent::WindowActivate);
-    QGuiApplication::sendEvent(canvas, &wa);
+    QGuiApplication::sendEvent(window, &wa);
     QFocusEvent fe(QEvent::FocusIn);
-    QGuiApplication::sendEvent(canvas, &fe);
+    QGuiApplication::sendEvent(window, &fe);
 
-    QQuickItem *item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     QVariant result;
-    QVERIFY(QMetaObject::invokeMethod(canvas->rootObject(), "verify",
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "verify",
             Q_RETURN_ARG(QVariant, result)));
     QVERIFY(result.toBool());
 
     // right
     QKeyEvent key(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item2");
+    item = findItem<QQuickItem>(window->rootObject(), "item2");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // back to item1
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Left, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // down
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item3");
+    item = findItem<QQuickItem>(window->rootObject(), "item3");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // move to item4
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item4");
+    item = findItem<QQuickItem>(window->rootObject(), "item4");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // left
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Left, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item3");
+    item = findItem<QQuickItem>(window->rootObject(), "item3");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // back to item4
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item4");
+    item = findItem<QQuickItem>(window->rootObject(), "item4");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // up
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Up, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item2");
+    item = findItem<QQuickItem>(window->rootObject(), "item2");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // back to item4
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item4");
+    item = findItem<QQuickItem>(window->rootObject(), "item4");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // tab
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item1");
+    item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // back to item4
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Backtab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item4");
+    item = findItem<QQuickItem>(window->rootObject(), "item4");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
     // backtab
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Backtab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(canvas, &key);
+    QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(canvas->rootObject(), "item3");
+    item = findItem<QQuickItem>(window->rootObject(), "item3");
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::smooth()
@@ -1046,17 +1046,17 @@ void tst_QQuickItem::mapCoordinates()
     QFETCH(int, x);
     QFETCH(int, y);
 
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(300, 300));
-    canvas->setSource(testFileUrl("mapCoordinates.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(300, 300));
+    window->setSource(testFileUrl("mapCoordinates.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root != 0);
-    QQuickItem *a = findItem<QQuickItem>(canvas->rootObject(), "itemA");
+    QQuickItem *a = findItem<QQuickItem>(window->rootObject(), "itemA");
     QVERIFY(a != 0);
-    QQuickItem *b = findItem<QQuickItem>(canvas->rootObject(), "itemB");
+    QQuickItem *b = findItem<QQuickItem>(window->rootObject(), "itemB");
     QVERIFY(b != 0);
 
     QVariant result;
@@ -1090,7 +1090,7 @@ void tst_QQuickItem::mapCoordinates()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QVERIFY(result.toBool());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::mapCoordinates_data()
@@ -1109,17 +1109,17 @@ void tst_QQuickItem::mapCoordinatesRect()
     QFETCH(int, width);
     QFETCH(int, height);
 
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(300, 300));
-    canvas->setSource(testFileUrl("mapCoordinatesRect.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(300, 300));
+    window->setSource(testFileUrl("mapCoordinatesRect.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root != 0);
-    QQuickItem *a = findItem<QQuickItem>(canvas->rootObject(), "itemA");
+    QQuickItem *a = findItem<QQuickItem>(window->rootObject(), "itemA");
     QVERIFY(a != 0);
-    QQuickItem *b = findItem<QQuickItem>(canvas->rootObject(), "itemB");
+    QQuickItem *b = findItem<QQuickItem>(window->rootObject(), "itemB");
     QVERIFY(b != 0);
 
     QVariant result;
@@ -1153,7 +1153,7 @@ void tst_QQuickItem::mapCoordinatesRect()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
     QVERIFY(result.toBool());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::mapCoordinatesRect_data()
@@ -1224,16 +1224,16 @@ void tst_QQuickItem::resourcesProperty()
 
 void tst_QQuickItem::propertyChanges()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setBaseSize(QSize(300, 300));
-    canvas->setSource(testFileUrl("propertychanges.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(300, 300));
+    window->setSource(testFileUrl("propertychanges.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
-    QQuickItem *item = findItem<QQuickItem>(canvas->rootObject(), "item");
-    QQuickItem *parentItem = findItem<QQuickItem>(canvas->rootObject(), "parentItem");
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item");
+    QQuickItem *parentItem = findItem<QQuickItem>(window->rootObject(), "parentItem");
 
     QVERIFY(item);
     QVERIFY(parentItem);
@@ -1301,17 +1301,17 @@ void tst_QQuickItem::propertyChanges()
     QCOMPARE(item->y(), 10.0);
     QCOMPARE(ySpy.count(), 1);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::childrenRect()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(testFileUrl("childrenRect.qml"));
-    canvas->setBaseSize(QSize(240,320));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("childrenRect.qml"));
+    window->setBaseSize(QSize(240,320));
+    window->show();
 
-    QQuickItem *o = canvas->rootObject();
+    QQuickItem *o = window->rootObject();
     QQuickItem *item = o->findChild<QQuickItem*>("testItem");
     QCOMPARE(item->width(), qreal(0));
     QCOMPARE(item->height(), qreal(0));
@@ -1329,34 +1329,34 @@ void tst_QQuickItem::childrenRect()
     QCOMPARE(item->height(), qreal(0));
 
     delete o;
-    delete canvas;
+    delete window;
 }
 
 // QTBUG-11383
 void tst_QQuickItem::childrenRectBug()
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
     QString warning = testFileUrl("childrenRectBug.qml").toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
-    canvas->setSource(testFileUrl("childrenRectBug.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("childrenRectBug.qml"));
+    window->show();
 
-    QQuickItem *o = canvas->rootObject();
+    QQuickItem *o = window->rootObject();
     QQuickItem *item = o->findChild<QQuickItem*>("theItem");
     QCOMPARE(item->width(), qreal(200));
     QCOMPARE(item->height(), qreal(100));
     QCOMPARE(item->x(), qreal(100));
 
-    delete canvas;
+    delete window;
 }
 
 // QTBUG-11465
 void tst_QQuickItem::childrenRectBug2()
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
     QString warning1 = testFileUrl("childrenRectBug2.qml").toString() + ":7:5: QML Item: Binding loop detected for property \"width\"";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
@@ -1368,10 +1368,10 @@ void tst_QQuickItem::childrenRectBug2()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
-    canvas->setSource(testFileUrl("childrenRectBug2.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("childrenRectBug2.qml"));
+    window->show();
 
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(canvas->rootObject());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(window->rootObject());
     QVERIFY(rect);
     QQuickItem *item = rect->findChild<QQuickItem*>("theItem");
     QCOMPARE(item->width(), qreal(100));
@@ -1384,37 +1384,37 @@ void tst_QQuickItem::childrenRectBug2()
     QCOMPARE(item->height(), qreal(50));
     QCOMPARE(item->x(), qreal(75));
 
-    delete canvas;
+    delete window;
 }
 
 // QTBUG-12722
 void tst_QQuickItem::childrenRectBug3()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(testFileUrl("childrenRectBug3.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("childrenRectBug3.qml"));
+    window->show();
 
     //don't crash on delete
-    delete canvas;
+    delete window;
 }
 
 // QTBUG-13893
 void tst_QQuickItem::transformCrash()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(testFileUrl("transformCrash.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("transformCrash.qml"));
+    window->show();
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::implicitSize()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(testFileUrl("implicitsize.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("implicitsize.qml"));
+    window->show();
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *item = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(item);
     QCOMPARE(item->width(), qreal(80));
     QCOMPARE(item->height(), qreal(60));
@@ -1476,7 +1476,7 @@ void tst_QQuickItem::implicitSize()
     QCOMPARE(item->width(), qreal(150));
     QCOMPARE(item->height(), qreal(80));
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::qtbug_16871()
@@ -1490,11 +1490,11 @@ void tst_QQuickItem::qtbug_16871()
 
 void tst_QQuickItem::visibleChildren()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setSource(testFileUrl("visiblechildren.qml"));
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("visiblechildren.qml"));
+    window->show();
 
-    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root);
 
     QCOMPARE(root->property("test1_1").toBool(), true);
@@ -1544,17 +1544,17 @@ void tst_QQuickItem::visibleChildren()
     QCOMPARE(root->property("test8_4").toBool(), true);
     QCOMPARE(root->property("test8_5").toBool(), true);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::parentLoop()
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *window = new QQuickView(0);
 
     QTest::ignoreMessage(QtWarningMsg, "QQuickItem::setParentItem: Parent is already part of this items subtree.");
-    canvas->setSource(testFileUrl("parentLoop.qml"));
+    window->setSource(testFileUrl("parentLoop.qml"));
 
-    QQuickItem *root = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root);
 
     QQuickItem *item1 = root->findChild<QQuickItem*>("item1");
@@ -1565,7 +1565,7 @@ void tst_QQuickItem::parentLoop()
     QVERIFY(item2);
     QCOMPARE(item2->parentItem(), item1);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickItem::contains_data()
@@ -1636,16 +1636,16 @@ void tst_QQuickItem::contains()
     QFETCH(bool, insideTarget);
     QFETCH(QList<QPoint>, points);
 
-    QQuickView *canvas = new QQuickView(0);
-    canvas->rootContext()->setContextProperty("circleShapeTest", circleTest);
-    canvas->setBaseSize(QSize(400, 400));
-    canvas->setSource(testFileUrl("hollowTestItem.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == canvas);
+    QQuickView *window = new QQuickView(0);
+    window->rootContext()->setContextProperty("circleShapeTest", circleTest);
+    window->setBaseSize(QSize(400, 400));
+    window->setSource(testFileUrl("hollowTestItem.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
 
-    QQuickItem *root = qobject_cast<QQuickItem *>(canvas->rootObject());
+    QQuickItem *root = qobject_cast<QQuickItem *>(window->rootObject());
     QVERIFY(root);
 
     HollowTestItem *hollowItem = root->findChild<HollowTestItem *>("hollowItem");
@@ -1653,22 +1653,22 @@ void tst_QQuickItem::contains()
 
     foreach (const QPoint &point, points) {
         // check mouse hover
-        QTest::mouseMove(canvas, point);
+        QTest::mouseMove(window, point);
         QTest::qWait(10);
         QCOMPARE(hollowItem->isHovered(), insideTarget);
 
         // check mouse press
-        QTest::mousePress(canvas, Qt::LeftButton, 0, point);
+        QTest::mousePress(window, Qt::LeftButton, 0, point);
         QTest::qWait(10);
         QCOMPARE(hollowItem->isPressed(), insideTarget);
 
         // check mouse release
-        QTest::mouseRelease(canvas, Qt::LeftButton, 0, point);
+        QTest::mouseRelease(window, Qt::LeftButton, 0, point);
         QTest::qWait(10);
         QCOMPARE(hollowItem->isPressed(), false);
     }
 
-    delete canvas;
+    delete window;
 }
 
 

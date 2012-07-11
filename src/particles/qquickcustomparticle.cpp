@@ -466,7 +466,7 @@ void QQuickCustomParticle::commit(int gIdx, int pIdx)
 void QQuickCustomParticle::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuickItem::ItemSceneChange)
-        m_common.updateCanvas(value.canvas);
+        m_common.updateWindow(value.window);
     QQuickParticlePainter::itemChange(change, value);
 }
 

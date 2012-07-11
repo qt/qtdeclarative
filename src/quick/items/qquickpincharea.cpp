@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qquickpincharea_p_p.h"
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
@@ -285,7 +285,7 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
 
     // A common non-trivial starting scenario is the user puts down one finger,
     // then that finger remains stationary while putting down a second one.
-    // However QQuickCanvas will not send TouchUpdates for TouchPoints which
+    // However QQuickWindow will not send TouchUpdates for TouchPoints which
     // were not initially accepted; that would be inefficient and noisy.
     // So even if there is only one touchpoint so far, it's important to accept it
     // in order to get updates later on (and it's accepted by default anyway).
@@ -416,7 +416,7 @@ void QQuickPinchArea::updatePinch()
                 if (pe.accepted()) {
                     d->inPinch = true;
                     d->stealMouse = true;
-                    QQuickCanvas *c = canvas();
+                    QQuickWindow *c = window();
                     if (c && c->mouseGrabberItem() != this)
                         grabMouse();
                     setKeepMouseGrab(true);

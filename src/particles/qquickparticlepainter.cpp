@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qquickparticlepainter_p.h"
-#include <QQuickCanvas>
+#include <QQuickWindow>
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 /*!
@@ -67,18 +67,18 @@ QT_BEGIN_NAMESPACE
 */
 QQuickParticlePainter::QQuickParticlePainter(QQuickItem *parent) :
     QQuickItem(parent),
-    m_system(0), m_count(0), m_pleaseReset(true), m_canvas(0)
+    m_system(0), m_count(0), m_pleaseReset(true), m_window(0)
 {
 }
 
 void QQuickParticlePainter::itemChange(ItemChange change, const ItemChangeData &data)
 {
     if (change == QQuickItem::ItemSceneChange) {
-        if (m_canvas)
-            disconnect(m_canvas, SIGNAL(sceneGraphInvalidated()), this, SLOT(sceneGraphInvalidated()));
-        m_canvas = data.canvas;
-        if (m_canvas)
-            connect(m_canvas, SIGNAL(sceneGraphInvalidated()), this, SLOT(sceneGraphInvalidated()), Qt::DirectConnection);
+        if (m_window)
+            disconnect(m_window, SIGNAL(sceneGraphInvalidated()), this, SLOT(sceneGraphInvalidated()));
+        m_window = data.window;
+        if (m_window)
+            connect(m_window, SIGNAL(sceneGraphInvalidated()), this, SLOT(sceneGraphInvalidated()), Qt::DirectConnection);
 
     }
 }

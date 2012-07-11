@@ -101,7 +101,7 @@ void tst_QQuickDropArea::cleanupTestCase()
 
 void tst_QQuickDropArea::containsDrag_internal()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -121,7 +121,7 @@ void tst_QQuickDropArea::containsDrag_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(canvas.rootItem());
+    dropArea->setParentItem(window.rootItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -172,7 +172,7 @@ void tst_QQuickDropArea::containsDrag_internal()
 
 void tst_QQuickDropArea::containsDrag_external()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -187,22 +187,22 @@ void tst_QQuickDropArea::containsDrag_external()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(canvas.rootItem());
+    dropArea->setParentItem(window.rootItem());
 
     QMimeData data;
-    QQuickCanvas alternateCanvas;
+    QQuickWindow alternateWindow;
 
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
 
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
@@ -210,13 +210,13 @@ void tst_QQuickDropArea::containsDrag_external()
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
 
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(150, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(150, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
@@ -224,18 +224,18 @@ void tst_QQuickDropArea::containsDrag_external()
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
 
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(150, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(150, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 1);
 
-    QWindowSystemInterface::handleDrop(&canvas, &data, QPoint(150, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&window, &data, QPoint(150, 50), Qt::CopyAction);
 }
 
 void tst_QQuickDropArea::keys_internal()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -255,7 +255,7 @@ void tst_QQuickDropArea::keys_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(canvas.rootItem());
+    dropArea->setParentItem(window.rootItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -342,7 +342,7 @@ void tst_QQuickDropArea::keys_internal()
 
 void tst_QQuickDropArea::keys_external()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -355,95 +355,95 @@ void tst_QQuickDropArea::keys_external()
             "}", QUrl());
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
-    dropArea->setParentItem(canvas.rootItem());
+    dropArea->setParentItem(window.rootItem());
 
     QMimeData data;
-    QQuickCanvas alternateCanvas;
+    QQuickWindow alternateWindow;
 
     data.setData("text/x-red", "red");
     data.setData("text/x-blue", "blue");
 
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
 
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     evaluate<void>(dropArea, "keys = \"text/x-blue\"");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList() << "text/x-blue");
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList() << "text/x-blue");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     evaluate<void>(dropArea, "keys = \"text/x-red\"");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList() << "text/x-red");
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList() << "text/x-red");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     evaluate<void>(dropArea, "keys = \"text/x-green\"");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList() << "text/x-green");
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList() << "text/x-green");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     evaluate<void>(dropArea, "keys = [\"text/x-red\", \"text/x-green\"]");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList() << "text/x-red" << "text/x-green");
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList() << "text/x-red" << "text/x-green");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     data.removeFormat("text/x-red");
     data.removeFormat("text/x-blue");
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     evaluate<void>(dropArea, "keys = []");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList());
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList());
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList());
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     data.setData("text/x-red", "red");
     data.setData("text/x-blue", "blue");
     QCOMPARE(dropArea->property("keys").toStringList(), QStringList());
     QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList());
     evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
 
-    QWindowSystemInterface::handleDrop(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&window, &data, QPoint(50, 50), Qt::CopyAction);
 }
 
 void tst_QQuickDropArea::source_internal()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -462,7 +462,7 @@ void tst_QQuickDropArea::source_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(canvas.rootItem());
+    dropArea->setParentItem(window.rootItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -504,7 +504,7 @@ void tst_QQuickDropArea::source_internal()
 
 void tst_QQuickDropArea::position_internal()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -527,7 +527,7 @@ void tst_QQuickDropArea::position_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(canvas.rootItem());
+    dropArea->setParentItem(window.rootItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -571,7 +571,7 @@ void tst_QQuickDropArea::position_internal()
 
 void tst_QQuickDropArea::position_external()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -589,11 +589,11 @@ void tst_QQuickDropArea::position_external()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(canvas.rootItem());
+    dropArea->setParentItem(window.rootItem());
 
     QMimeData data;
 
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea, "moveEvents"), 1);
     QCOMPARE(evaluate<qreal>(dropArea, "drag.x"), qreal(50));
@@ -604,7 +604,7 @@ void tst_QQuickDropArea::position_external()
     QCOMPARE(evaluate<qreal>(dropArea, "eventY"), qreal(50));
 
     evaluate<void>(dropArea, "{ enterEvents = 0; moveEvents = 0; eventX = -1; eventY = -1 }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(40, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(40, 50), Qt::CopyAction);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "moveEvents"), 1);
     QCOMPARE(evaluate<qreal>(dropArea, "drag.x"), qreal(40));
@@ -615,7 +615,7 @@ void tst_QQuickDropArea::position_external()
     QCOMPARE(evaluate<qreal>(dropArea, "eventY"), qreal(50));
 
     evaluate<void>(dropArea, "{ enterEvents = 0; moveEvents = 0; eventX = -1; eventY = -1 }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(75, 25), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(75, 25), Qt::CopyAction);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "moveEvents"), 1);
     QCOMPARE(evaluate<qreal>(dropArea, "drag.x"), qreal(75));
@@ -625,12 +625,12 @@ void tst_QQuickDropArea::position_external()
     QCOMPARE(evaluate<qreal>(dropArea, "eventX"), qreal(75));
     QCOMPARE(evaluate<qreal>(dropArea, "eventY"), qreal(25));
 
-    QWindowSystemInterface::handleDrop(&canvas, &data, QPoint(75, 25), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&window, &data, QPoint(75, 25), Qt::CopyAction);
 }
 
 void tst_QQuickDropArea::drop_internal()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -666,7 +666,7 @@ void tst_QQuickDropArea::drop_internal()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea);
-    dropArea->setParentItem(canvas.rootItem());
+    dropArea->setParentItem(window.rootItem());
 
     QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
     QVERIFY(dragItem);
@@ -768,7 +768,7 @@ void tst_QQuickDropArea::drop_internal()
 
 void tst_QQuickDropArea::simultaneousDrags()
 {
-    QQuickCanvas canvas;
+    QQuickWindow window;
     QQmlComponent component(&engine);
     component.setData(
             "import QtQuick 2.0\n"
@@ -805,7 +805,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *dropArea1 = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(dropArea1);
-    dropArea1->setParentItem(canvas.rootItem());
+    dropArea1->setParentItem(window.rootItem());
 
     QQuickItem *dropArea2 = dropArea1->findChild<QQuickItem *>("dropArea2");
     QVERIFY(dropArea2);
@@ -820,7 +820,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     data.setData("text/x-red", "red");
     data.setData("text/x-blue", "blue");
 
-    QQuickCanvas alternateCanvas;
+    QQuickWindow alternateWindow;
 
     // Mixed internal drags.
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
@@ -890,7 +890,7 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -898,7 +898,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -906,7 +906,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -924,7 +924,7 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -935,7 +935,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     // external then internal.
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -969,7 +969,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 0);
 
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 1);
@@ -1065,7 +1065,7 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1075,7 +1075,7 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1085,7 +1085,7 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), true);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1105,7 +1105,7 @@ void tst_QQuickDropArea::simultaneousDrags()
 
     evaluate<void>(dropArea1, "{ enterEvents = 0; exitEvents = 0 }");
     evaluate<void>(dropArea2, "{ enterEvents = 0; exitEvents = 0 }");
-    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrag(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
     QCOMPARE(evaluate<bool>(dropArea1, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea1, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea1, "exitEvents"), 0);
@@ -1113,7 +1113,7 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 1);
 
-    QWindowSystemInterface::handleDrop(&alternateCanvas, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
 }
 
 QTEST_MAIN(tst_QQuickDropArea)

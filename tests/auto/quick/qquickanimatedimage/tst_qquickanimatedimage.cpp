@@ -81,8 +81,8 @@ private slots:
 
 void tst_qquickanimatedimage::cleanup()
 {
-    QQuickCanvas canvas;
-    canvas.releaseResources();
+    QQuickWindow window;
+    window.releaseResources();
 }
 
 void tst_qquickanimatedimage::play()
@@ -149,20 +149,20 @@ void tst_qquickanimatedimage::mirror_running()
 {
     // test where mirror is set to true after animation has started
 
-    QQuickView canvas;
-    canvas.show();
+    QQuickView window;
+    window.show();
 
-    canvas.setSource(testFileUrl("hearts.qml"));
-    QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(canvas.rootObject());
+    window.setSource(testFileUrl("hearts.qml"));
+    QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);
 
     int width = anim->property("width").toInt();
 
     QCOMPARE(anim->currentFrame(), 0);
-    QPixmap frame0 = QPixmap::fromImage(canvas.grabFrameBuffer());
+    QPixmap frame0 = QPixmap::fromImage(window.grabWindow());
 
     anim->setCurrentFrame(1);
-    QPixmap frame1 = QPixmap::fromImage(canvas.grabFrameBuffer());
+    QPixmap frame1 = QPixmap::fromImage(window.grabWindow());
 
     anim->setCurrentFrame(0);
 
@@ -173,11 +173,11 @@ void tst_qquickanimatedimage::mirror_running()
     anim->setProperty("mirror", true);
 
     QCOMPARE(anim->currentFrame(), 1);
-    QPixmap frame1_flipped = QPixmap::fromImage(canvas.grabFrameBuffer());
+    QPixmap frame1_flipped = QPixmap::fromImage(window.grabWindow());
 
     QTRY_VERIFY(spy.count() == 1); spy.clear();
     QCOMPARE(anim->currentFrame(), 0);  // animation only has 2 frames, should cycle back to first
-    QPixmap frame0_flipped = QPixmap::fromImage(canvas.grabFrameBuffer());
+    QPixmap frame0_flipped = QPixmap::fromImage(window.grabWindow());
 
     QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved");
 
@@ -196,15 +196,15 @@ void tst_qquickanimatedimage::mirror_notRunning()
 {
     QFETCH(QUrl, fileUrl);
 
-    QQuickView canvas;
-    canvas.show();
+    QQuickView window;
+    window.show();
 
-    canvas.setSource(fileUrl);
-    QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(canvas.rootObject());
+    window.setSource(fileUrl);
+    QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);
 
     int width = anim->property("width").toInt();
-    QPixmap screenshot = QPixmap::fromImage(canvas.grabFrameBuffer());
+    QPixmap screenshot = QPixmap::fromImage(window.grabWindow());
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
@@ -215,7 +215,7 @@ void tst_qquickanimatedimage::mirror_notRunning()
     bool paused = anim->isPlaying();
 
     anim->setProperty("mirror", true);
-    screenshot = QPixmap::fromImage(canvas.grabFrameBuffer());
+    screenshot = QPixmap::fromImage(window.grabWindow());
 
     QCOMPARE(screenshot, expected);
 

@@ -41,7 +41,7 @@
 
 #include "qquickpathview_p.h"
 #include "qquickpathview_p_p.h"
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlglobal_p.h>
@@ -1516,7 +1516,7 @@ bool QQuickPathView::sendMouseEvent(QMouseEvent *event)
     Q_D(QQuickPathView);
     QPointF localPos = mapFromScene(event->windowPos());
 
-    QQuickCanvas *c = canvas();
+    QQuickWindow *c = window();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = d->stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {

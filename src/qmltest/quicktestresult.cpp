@@ -55,7 +55,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/QUrl>
 #include <QtCore/QDir>
-#include <QtQuick/qquickcanvas.h>
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -589,8 +589,8 @@ void QuickTestResult::stopBenchmark()
 QObject *QuickTestResult::grabImage(QQuickItem *item)
 {
     if (item) {
-        QQuickCanvas *canvas = item->canvas();
-        QImage grabbed = canvas->grabFrameBuffer();
+        QQuickWindow *window = item->window();
+        QImage grabbed = window->grabWindow();
         QRectF rf(item->x(), item->y(), item->width(), item->height());
         rf = rf.intersected(QRectF(0, 0, grabbed.width(), grabbed.height()));
         return new QuickTestImageObject(grabbed.copy(rf.toAlignedRect()));

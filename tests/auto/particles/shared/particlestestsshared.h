@@ -68,17 +68,17 @@ bool myFuzzyGEQ(qreal a, qreal b)
 
 QQuickView* createView(const QUrl &filename, int additionalWait=0)
 {
-    QQuickView *canvas = new QQuickView(0);
+    QQuickView *view = new QQuickView(0);
 
-    canvas->setSource(filename);
-    if (canvas->status() != QQuickView::Ready)
+    view->setSource(filename);
+    if (view->status() != QQuickView::Ready)
         return 0;
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    view->show();
+    QTest::qWaitForWindowShown(view);
     if (additionalWait)
         QTest::qWait(additionalWait);
 
-    return canvas;
+    return view;
 }
 
 void ensureAnimTime(int requiredTime, QAbstractAnimation* anim)//With consistentTiming, who knows how long an animation really takes...

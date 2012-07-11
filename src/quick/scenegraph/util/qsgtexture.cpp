@@ -191,7 +191,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     masks. The scene graph backend provides a default implementation
     of normal color textures. As the implementation of these may be
     hardware specific, they are are constructed via the factory
-    function QQuickCanvas::createTextureFromImage().
+    function QQuickWindow::createTextureFromImage().
 
     The texture is a wrapper around an OpenGL texture, which texture
     id is given by textureId() and which size in pixels is given by

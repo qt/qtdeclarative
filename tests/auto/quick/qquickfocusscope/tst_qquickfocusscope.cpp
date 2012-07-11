@@ -543,7 +543,7 @@ void tst_qquickfocusscope::canvasFocus()
     QTest::qWaitForWindowShown(view);
     QTRY_VERIFY(view == qGuiApp->focusWindow());
 
-    // Now the canvas has focus, active focus given to item1
+    // Now the window has focus, active focus given to item1
     QCOMPARE(rootItem->hasFocus(), true);
     QCOMPARE(rootItem->hasActiveFocus(), true);
     QCOMPARE(scope1->hasFocus(), true);
@@ -584,7 +584,7 @@ void tst_qquickfocusscope::canvasFocus()
     QCOMPARE(item1ActiveFocusSpy.count(), 2);
 
 
-    // canvas does not have focus, so item2 will not get active focus
+    // window does not have focus, so item2 will not get active focus
     item2->forceActiveFocus();
 
     QCOMPARE(rootItem->hasFocus(), false);
@@ -609,7 +609,7 @@ void tst_qquickfocusscope::canvasFocus()
     QCOMPARE(item2FocusSpy.count(), 1);
     QCOMPARE(item2ActiveFocusSpy.count(), 0);
 
-    // give the canvas focus, and item2 will get active focus
+    // give the window focus, and item2 will get active focus
     view->show();
     view->requestActivateWindow();
     QTest::qWaitForWindowShown(view);

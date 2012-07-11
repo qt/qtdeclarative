@@ -42,7 +42,7 @@
 #include "qquickshadereffectsource_p.h"
 
 #include "qquickitem_p.h"
-#include "qquickcanvas_p.h"
+#include "qquickwindow_p.h"
 #include <private/qsgadaptationlayer_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
@@ -568,8 +568,8 @@ QQuickShaderEffectSource::~QQuickShaderEffectSource()
         QQuickItemPrivate *sd = QQuickItemPrivate::get(m_sourceItem);
         sd->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
         sd->derefFromEffectItem(m_hideSource);
-        if (canvas())
-            sd->derefCanvas();
+        if (window())
+            sd->derefWindow();
     }
 }
 
@@ -578,7 +578,7 @@ void QQuickShaderEffectSource::ensureTexture()
     if (m_texture)
         return;
 
-    Q_ASSERT_X(QQuickItemPrivate::get(this)->canvas
+    Q_ASSERT_X(QQuickItemPrivate::get(this)->window
                && QQuickItemPrivate::get(this)->sceneGraphContext()
                && QThread::currentThread() == QQuickItemPrivate::get(this)->sceneGraphContext()->thread(),
                "QQuickShaderEffectSource::ensureTexture",
@@ -593,7 +593,7 @@ QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
 {
     if (!m_provider) {
         // Make sure it gets thread affinity on the rendering thread so deletion works properly..
-        Q_ASSERT_X(QQuickItemPrivate::get(this)->canvas
+        Q_ASSERT_X(QQuickItemPrivate::get(this)->window
                    && QQuickItemPrivate::get(this)->sceneGraphContext()
                    && QThread::currentThread() == QQuickItemPrivate::get(this)->sceneGraphContext()->thread(),
                    "QQuickShaderEffectSource::textureProvider",
@@ -668,19 +668,19 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
         d->derefFromEffectItem(m_hideSource);
         d->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
         disconnect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
-        if (canvas())
-            d->derefCanvas();
+        if (window())
+            d->derefWindow();
     }
     m_sourceItem = item;
 
     if (item) {
         QQuickItemPrivate *d = QQuickItemPrivate::get(item);
-        // 'item' needs a canvas to get a scene graph node. It usually gets one through its
+        // 'item' needs a window to get a scene graph node. It usually gets one through its
         // parent, but if the source item is "inline" rather than a reference -- i.e.
         // "sourceItem: Item { }" instead of "sourceItem: foo" -- it will not get a parent.
-        // In those cases, 'item' should get the canvas from 'this'.
-        if (canvas())
-            d->refCanvas(canvas());
+        // In those cases, 'item' should get the window from 'this'.
+        if (window())
+            d->refWindow(window());
         d->refFromEffectItem(m_hideSource);
         d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
         connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
@@ -1015,10 +1015,10 @@ void QQuickShaderEffectSource::itemChange(ItemChange change, const ItemChangeDat
 {
     if (change == QQuickItem::ItemSceneChange && m_sourceItem) {
         // See comment in QQuickShaderEffectSource::setSourceItem().
-        if (value.canvas)
-            QQuickItemPrivate::get(m_sourceItem)->refCanvas(value.canvas);
+        if (value.window)
+            QQuickItemPrivate::get(m_sourceItem)->refWindow(value.window);
         else
-            QQuickItemPrivate::get(m_sourceItem)->derefCanvas();
+            QQuickItemPrivate::get(m_sourceItem)->derefWindow();
     }
     QQuickItem::itemChange(change, value);
 }

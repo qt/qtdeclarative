@@ -74,24 +74,24 @@ static void qquickmodelviewstestutil_move(int from, int to, int n, T *items)
 
 QQuickView *QQuickViewTestUtil::createView()
 {
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setGeometry(0,0,240,320);
+    QQuickView *window = new QQuickView(0);
+    window->setGeometry(0,0,240,320);
 
-    return canvas;
+    return window;
 }
 
-void QQuickViewTestUtil::flick(QQuickView *canvas, const QPoint &from, const QPoint &to, int duration)
+void QQuickViewTestUtil::flick(QQuickView *window, const QPoint &from, const QPoint &to, int duration)
 {
     const int pointCount = 5;
     QPoint diff = to - from;
 
     // send press, five equally spaced moves, and release.
-    QTest::mousePress(canvas, Qt::LeftButton, 0, from);
+    QTest::mousePress(window, Qt::LeftButton, 0, from);
 
     for (int i = 0; i < pointCount; ++i)
-        QTest::mouseMove(canvas, from + (i+1)*diff/pointCount, duration / pointCount);
+        QTest::mouseMove(window, from + (i+1)*diff/pointCount, duration / pointCount);
 
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
+    QTest::mouseRelease(window, Qt::LeftButton, 0, to);
     QTest::qWait(50);
 }
 

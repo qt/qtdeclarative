@@ -82,7 +82,7 @@ public:
     void deliverEnterEvent();
     void deliverMoveEvent();
     void deliverLeaveEvent();
-    void deliverEvent(QQuickCanvas *canvas, QEvent *event);
+    void deliverEvent(QQuickWindow *window, QEvent *event);
     void start() { start(supportedActions); }
     void start(Qt::DropActions supportedActions);
     void setTarget(QQuickItem *item);
@@ -91,7 +91,7 @@ public:
 
     QQmlGuard<QObject> source;
     QQmlGuard<QObject> target;
-    QQmlGuard<QQuickCanvas> canvas;
+    QQmlGuard<QQuickWindow> window;
     QQuickItem *attachedItem;
     QQuickDragMimeData *mimeData;
     Qt::DropAction proposedAction;
@@ -147,11 +147,11 @@ void QQuickDragAttachedPrivate::itemParentChanged(QQuickItem *, QQuickItem *)
     if (!active || dragRestarted)
         return;
 
-    QQuickCanvas *newCanvas = attachedItem->canvas();
+    QQuickWindow *newWindow = attachedItem->window();
 
-    if (canvas != newCanvas)
+    if (window != newWindow)
         restartDrag();
-    else if (canvas)
+    else if (window)
         updatePosition();
 }
 
@@ -180,18 +180,18 @@ void QQuickDragAttachedPrivate::deliverEnterEvent()
     dragRestarted = false;
     itemMoved = false;
 
-    canvas = attachedItem->canvas();
+    window = attachedItem->window();
 
     mimeData->m_source = source;
     if (!overrideActions)
         mimeData->m_supportedActions = supportedActions;
     mimeData->m_keys = keys;
 
-    if (canvas) {
+    if (window) {
         QPoint scenePos = attachedItem->mapToScene(hotSpot).toPoint();
         QDragEnterEvent event(scenePos, mimeData->m_supportedActions, mimeData, Qt::NoButton, Qt::NoModifier);
         QQuickDropEventEx::setProposedAction(&event, proposedAction);
-        deliverEvent(canvas, &event);
+        deliverEvent(window, &event);
     }
 }
 
@@ -200,11 +200,11 @@ void QQuickDragAttachedPrivate::deliverMoveEvent()
     Q_Q(QQuickDragAttached);
 
     itemMoved = false;
-    if (canvas) {
+    if (window) {
         QPoint scenePos = attachedItem->mapToScene(hotSpot).toPoint();
         QDragMoveEvent event(scenePos, mimeData->m_supportedActions, mimeData, Qt::NoButton, Qt::NoModifier);
         QQuickDropEventEx::setProposedAction(&event, proposedAction);
-        deliverEvent(canvas, &event);
+        deliverEvent(window, &event);
         if (target != dragGrabber.target()) {
             target = dragGrabber.target();
             emit q->targetChanged();
@@ -214,18 +214,18 @@ void QQuickDragAttachedPrivate::deliverMoveEvent()
 
 void QQuickDragAttachedPrivate::deliverLeaveEvent()
 {
-    if (canvas) {
+    if (window) {
         QDragLeaveEvent event;
-        deliverEvent(canvas, &event);
-        canvas = 0;
+        deliverEvent(window, &event);
+        window = 0;
     }
 }
 
-void QQuickDragAttachedPrivate::deliverEvent(QQuickCanvas *canvas, QEvent *event)
+void QQuickDragAttachedPrivate::deliverEvent(QQuickWindow *window, QEvent *event)
 {
     Q_ASSERT(!inEvent);
     inEvent = true;
-    QQuickCanvasPrivate::get(canvas)->deliverDragEvent(&dragGrabber, event);
+    QQuickWindowPrivate::get(window)->deliverDragEvent(&dragGrabber, event);
     inEvent = false;
 }
 
@@ -564,13 +564,13 @@ int QQuickDragAttached::drop()
 
     QObject *target = 0;
 
-    if (d->canvas) {
+    if (d->window) {
         QPoint scenePos = d->attachedItem->mapToScene(d->hotSpot).toPoint();
 
         QDropEvent event(
                 scenePos, d->mimeData->m_supportedActions, d->mimeData, Qt::NoButton, Qt::NoModifier);
         QQuickDropEventEx::setProposedAction(&event, d->proposedAction);
-        d->deliverEvent(d->canvas, &event);
+        d->deliverEvent(d->window, &event);
 
         if (event.isAccepted()) {
             acceptedAction = event.dropAction();

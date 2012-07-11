@@ -47,7 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCanvas;
+class QQuickWindow;
 class QSGContext;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowManager
@@ -55,17 +55,17 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowManager
 public:
     virtual ~QQuickWindowManager();
 
-    virtual void show(QQuickCanvas *canvas) = 0;
-    virtual void hide(QQuickCanvas *canvas) = 0;
+    virtual void show(QQuickWindow *window) = 0;
+    virtual void hide(QQuickWindow *window) = 0;
 
-    virtual void canvasDestroyed(QQuickCanvas *canvas) = 0;
+    virtual void windowDestroyed(QQuickWindow *window) = 0;
 
-    virtual void exposureChanged(QQuickCanvas *canvas) = 0;
-    virtual QImage grab(QQuickCanvas *canvas) = 0;
-    virtual void resize(QQuickCanvas *canvas, const QSize &size) = 0;
+    virtual void exposureChanged(QQuickWindow *window) = 0;
+    virtual QImage grab(QQuickWindow *window) = 0;
+    virtual void resize(QQuickWindow *window, const QSize &size) = 0;
 
-    virtual void update(QQuickCanvas *canvas) = 0;
-    virtual void maybeUpdate(QQuickCanvas *canvas) = 0;
+    virtual void update(QQuickWindow *window) = 0;
+    virtual void maybeUpdate(QQuickWindow *window) = 0;
     virtual void wakeup() = 0;
 
     virtual volatile bool *allowMainThreadProcessing() = 0;

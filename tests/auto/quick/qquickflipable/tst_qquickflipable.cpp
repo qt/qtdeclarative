@@ -126,22 +126,22 @@ void tst_qquickflipable::flipFlipable()
 
 void tst_qquickflipable::QTBUG_9161_crash()
 {
-    QQuickView *canvas = new QQuickView;
-    canvas->setSource(testFileUrl("crash.qml"));
-    QQuickItem *root = canvas->rootObject();
+    QQuickView *window = new QQuickView;
+    window->setSource(testFileUrl("crash.qml"));
+    QQuickItem *root = window->rootObject();
     QVERIFY(root != 0);
-    canvas->show();
-    delete canvas;
+    window->show();
+    delete window;
 }
 
 void tst_qquickflipable::QTBUG_8474_qgv_abort()
 {
-    QQuickView *canvas = new QQuickView;
-    canvas->setSource(testFileUrl("flipable-abort.qml"));
-    QQuickItem *root = canvas->rootObject();
+    QQuickView *window = new QQuickView;
+    window->setSource(testFileUrl("flipable-abort.qml"));
+    QQuickItem *root = window->rootObject();
     QVERIFY(root != 0);
-    canvas->show();
-    delete canvas;
+    window->show();
+    delete window;
 }
 
 QTEST_MAIN(tst_qquickflipable)

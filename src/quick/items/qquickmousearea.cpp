@@ -41,7 +41,7 @@
 
 #include "qquickmousearea_p.h"
 #include "qquickmousearea_p_p.h"
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 #include "qquickevents_p_p.h"
 #include "qquickdrag_p.h"
 
@@ -264,13 +264,13 @@ void QQuickMouseAreaPrivate::propagate(QQuickMouseEvent* event, PropagateType t)
     if (!propagateComposedEvents)
         return;
     QPointF scenePos = q->mapToScene(QPointF(event->x(), event->y()));
-    propagateHelper(event, canvas->rootItem(), scenePos, t);
+    propagateHelper(event, window->rootItem(), scenePos, t);
 }
 
 bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *item,const QPointF &sp, PropagateType sig)
 {
-    //Based off of QQuickCanvas::deliverInitialMousePressEvent
-    //But specific to MouseArea, so doesn't belong in canvas
+    //Based off of QQuickWindow::deliverInitialMousePressEvent
+    //But specific to MouseArea, so doesn't belong in window
     Q_Q(const QQuickMouseArea);
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
@@ -795,8 +795,8 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
         d->drag->target()->setPos(dragPos);
 
         if (!keepMouseGrab()) {
-            bool xDragged = QQuickCanvasPrivate::dragOverThreshold(dx, Qt::XAxis, event);
-            bool yDragged = QQuickCanvasPrivate::dragOverThreshold(dy, Qt::YAxis, event);
+            bool xDragged = QQuickWindowPrivate::dragOverThreshold(dx, Qt::XAxis, event);
+            bool yDragged = QQuickWindowPrivate::dragOverThreshold(dy, Qt::YAxis, event);
             if ((!dragY && !yDragged && dragX && xDragged)
                 || (!dragX && !xDragged && dragY && yDragged)
                 || (dragX && dragY && (xDragged || yDragged))) {
@@ -835,8 +835,8 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
             // If we don't accept hover, we need to reset containsMouse.
             if (!acceptHoverEvents())
                 setHovered(false);
-            QQuickCanvas *c = canvas();
-            if (c && c->mouseGrabberItem() == this)
+            QQuickWindow *w = window();
+            if (w && w->mouseGrabberItem() == this)
                 ungrabMouse();
             setKeepMouseGrab(false);
         }
@@ -947,7 +947,7 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
     Q_D(QQuickMouseArea);
     QPointF localPos = mapFromScene(event->windowPos());
 
-    QQuickCanvas *c = canvas();
+    QQuickWindow *c = window();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = d->stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
@@ -1067,7 +1067,7 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
         if (acceptHoverEvents() && d->hovered != (isVisible() && isUnderMouse())) {
             if (!d->hovered) {
                 QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
-                d->lastScenePos = d->canvas->mapFromGlobal(cursorPos.toPoint());
+                d->lastScenePos = d->window->mapFromGlobal(cursorPos.toPoint());
                 d->lastPos = mapFromScene(d->lastScenePos);
             }
             setHovered(!d->hovered);
@@ -1139,9 +1139,9 @@ void QQuickMouseArea::setHovered(bool h)
 #ifndef QT_NO_CURSOR
         if (d->cursor) {
             if (d->hovered) {
-                canvas()->setCursor(QCursor(*d->cursor));
+                window()->setCursor(QCursor(*d->cursor));
             } else {
-                canvas()->unsetCursor();
+                window()->unsetCursor();
             }
         }
 #endif

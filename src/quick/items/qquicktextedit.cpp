@@ -44,7 +44,7 @@
 #include "qquicktextcontrol_p.h"
 #include "qquicktext_p_p.h"
 #include "qquickevents_p_p.h"
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 #include "qquicktextnode_p.h"
 #include "qquicktextutil_p.h"
 #include <QtQuick/qsgsimplerectnode.h>

@@ -60,8 +60,8 @@ class QQuickPixmap;
 class QQuickCanvasPixmap : public QQmlRefCount
 {
 public:
-    QQuickCanvasPixmap(const QImage& image, QQuickCanvas *canvas);
-    QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickCanvas *canvas);
+    QQuickCanvasPixmap(const QImage& image, QQuickWindow *window);
+    QQuickCanvasPixmap(QQuickPixmap *pixmap, QQuickWindow *window);
     ~QQuickCanvasPixmap();
 
     QSGTexture *texture();
@@ -76,7 +76,7 @@ private:
     QQuickPixmap *m_pixmap;
     QImage m_image;
     QSGTexture *m_texture;
-    QQuickCanvas *m_canvas;
+    QQuickWindow *m_window;
 };
 
 class QQuickCanvasItem : public QQuickItem

@@ -88,7 +88,7 @@ static inline QString imageId(const QUrl &url)
     return url.toString(QUrl::RemoveScheme | QUrl::RemoveAuthority).mid(1);
 }
 
-QSGTexture *QQuickDefaultTextureFactory::createTexture(QQuickCanvas *) const
+QSGTexture *QQuickDefaultTextureFactory::createTexture(QQuickWindow *) const
 {
     QSGPlainTexture *t = new QSGPlainTexture();
     t->setImage(im);

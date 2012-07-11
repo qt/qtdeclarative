@@ -42,7 +42,7 @@
 #include "qquickdroparea_p.h"
 #include "qquickdrag_p.h"
 #include "qquickitem_p.h"
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 
 #include <private/qqmlengine_p.h>
 

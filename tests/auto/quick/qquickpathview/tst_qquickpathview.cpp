@@ -196,7 +196,7 @@ void tst_QQuickPathView::initValues()
 
 void tst_QQuickPathView::items()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     model.addItem("Fred", "12345");
@@ -204,17 +204,17 @@ void tst_QQuickPathView::items()
     model.addItem("Bob", "54321");
     model.addItem("Bill", "4321");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("pathview0.qml"));
+    window->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     QCOMPARE(pathview->count(), model.count());
-    QCOMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QCOMPARE(window->rootObject()->property("count").toInt(), model.count());
     QCOMPARE(pathview->childItems().count(), model.count()+1); // assumes all are visible, including highlight
 
     for (int i = 0; i < model.count(); ++i) {
@@ -236,7 +236,7 @@ void tst_QQuickPathView::items()
     offset.setY(pathview->highlightItem()->height()/2);
     QCOMPARE(pathview->highlightItem()->pos() + offset, start);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::pathview2()
@@ -327,8 +327,8 @@ void tst_QQuickPathView::insertModel()
     QFETCH(qreal, offset);
     QFETCH(int, currentIndex);
 
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     model.addItem("Ben", "12345");
@@ -340,13 +340,13 @@ void tst_QQuickPathView::insertModel()
     model.addItem("Jimmy", "3535");
     model.addItem("Barb", "9039");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("pathview0.qml"));
+    window->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     pathview->setHighlightRangeMode((QQuickPathView::HighlightRangeMode)mode);
@@ -366,7 +366,7 @@ void tst_QQuickPathView::insertModel()
 
     QCOMPARE(pathview->currentIndex(), currentIndex);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::removeModel_data()
@@ -421,8 +421,8 @@ void tst_QQuickPathView::removeModel()
     QFETCH(qreal, offset);
     QFETCH(int, currentIndex);
 
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     model.addItem("Ben", "12345");
@@ -434,13 +434,13 @@ void tst_QQuickPathView::removeModel()
     model.addItem("Jimmy", "3535");
     model.addItem("Barb", "9039");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("pathview0.qml"));
+    window->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     pathview->setHighlightRangeMode((QQuickPathView::HighlightRangeMode)mode);
@@ -456,7 +456,7 @@ void tst_QQuickPathView::removeModel()
 
     QCOMPARE(pathview->currentIndex(), currentIndex);
 
-    delete canvas;
+    delete window;
 }
 
 
@@ -516,8 +516,8 @@ void tst_QQuickPathView::moveModel()
     QFETCH(qreal, offset);
     QFETCH(int, currentIndex);
 
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     model.addItem("Ben", "12345");
@@ -529,13 +529,13 @@ void tst_QQuickPathView::moveModel()
     model.addItem("Jimmy", "3535");
     model.addItem("Barb", "9039");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("pathview0.qml"));
+    window->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     pathview->setHighlightRangeMode((QQuickPathView::HighlightRangeMode)mode);
@@ -551,7 +551,7 @@ void tst_QQuickPathView::moveModel()
 
     QCOMPARE(pathview->currentIndex(), currentIndex);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::consecutiveModelChanges_data()
@@ -617,8 +617,8 @@ void tst_QQuickPathView::consecutiveModelChanges()
     QFETCH(qreal, offset);
     QFETCH(int, currentIndex);
 
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     model.addItem("Ben", "12345");
@@ -630,13 +630,13 @@ void tst_QQuickPathView::consecutiveModelChanges()
     model.addItem("Jimmy", "3535");
     model.addItem("Barb", "9039");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("pathview0.qml"));
+    window->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     pathview->setHighlightRangeMode(mode);
@@ -681,7 +681,7 @@ void tst_QQuickPathView::consecutiveModelChanges()
 
     QCOMPARE(pathview->currentIndex(), currentIndex);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::path()
@@ -733,10 +733,10 @@ void tst_QQuickPathView::path()
 
 void tst_QQuickPathView::dataModel()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
@@ -757,13 +757,13 @@ void tst_QQuickPathView::dataModel()
 
     ctxt->setContextProperty("testData", &model);
 
-    canvas->setSource(testFileUrl("datamodel.qml"));
+    window->setSource(testFileUrl("datamodel.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
 
-    QMetaObject::invokeMethod(canvas->rootObject(), "checkProperties");
+    QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
     QVERIFY(testObject->error() == false);
 
     QQuickItem *item = findItem<QQuickItem>(pathview, "wrapper", 0);
@@ -774,7 +774,7 @@ void tst_QQuickPathView::dataModel()
     model.insertItem(4, "orange", "10");
     QTest::qWait(100);
 
-    QCOMPARE(canvas->rootObject()->property("viewCount").toInt(), model.count());
+    QCOMPARE(window->rootObject()->property("viewCount").toInt(), model.count());
     QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 14);
 
     QVERIFY(pathview->currentIndex() == 0);
@@ -785,14 +785,14 @@ void tst_QQuickPathView::dataModel()
     QCOMPARE(text->text(), model.name(4));
 
     model.removeItem(2);
-    QCOMPARE(canvas->rootObject()->property("viewCount").toInt(), model.count());
+    QCOMPARE(window->rootObject()->property("viewCount").toInt(), model.count());
     text = findItem<QQuickText>(pathview, "myText", 2);
     QVERIFY(text);
     QCOMPARE(text->text(), model.name(2));
     QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 0));
 
     testObject->setPathItemCount(5);
-    QMetaObject::invokeMethod(canvas->rootObject(), "checkProperties");
+    QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
     QVERIFY(testObject->error() == false);
 
     QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
@@ -842,14 +842,14 @@ void tst_QQuickPathView::dataModel()
     model.removeItem(model.count()-1);
     QCOMPARE(pathview->currentIndex(), model.count()-1);
 
-    delete canvas;
+    delete window;
     delete testObject;
 }
 
 void tst_QQuickPathView::pathMoved()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     model.addItem("Ben", "12345");
@@ -857,13 +857,13 @@ void tst_QQuickPathView::pathMoved()
     model.addItem("Bob", "54321");
     model.addItem("Bill", "4321");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("pathview0.qml"));
+    window->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     QQuickRectangle *firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 0);
@@ -892,7 +892,7 @@ void tst_QQuickPathView::pathMoved()
     // Change delegate size
     pathview->setOffset(0.1);
     pathview->setOffset(0.0);
-    canvas->rootObject()->setProperty("delegateWidth", 30);
+    window->rootObject()->setProperty("delegateWidth", 30);
     QCOMPARE(firstItem->width(), 30.0);
     offset.setX(firstItem->width()/2);
     QTRY_COMPARE(firstItem->pos() + offset, start);
@@ -900,10 +900,10 @@ void tst_QQuickPathView::pathMoved()
     // Change delegate scale
     pathview->setOffset(0.1);
     pathview->setOffset(0.0);
-    canvas->rootObject()->setProperty("delegateScale", 1.2);
+    window->rootObject()->setProperty("delegateScale", 1.2);
     QTRY_COMPARE(firstItem->pos() + offset, start);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::offset_data()
@@ -937,8 +937,8 @@ void tst_QQuickPathView::offset()
 
 void tst_QQuickPathView::setCurrentIndex()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     model.addItem("Ben", "12345");
@@ -946,13 +946,13 @@ void tst_QQuickPathView::setCurrentIndex()
     model.addItem("Bob", "54321");
     model.addItem("Bill", "4321");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("pathview0.qml"));
+    window->setSource(testFileUrl("pathview0.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     QQuickRectangle *firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 0);
@@ -964,15 +964,15 @@ void tst_QQuickPathView::setCurrentIndex()
     offset.setX(firstItem->width()/2);
     offset.setY(firstItem->height()/2);
     QCOMPARE(firstItem->pos() + offset, start);
-    QCOMPARE(canvas->rootObject()->property("currentA").toInt(), 0);
-    QCOMPARE(canvas->rootObject()->property("currentB").toInt(), 0);
+    QCOMPARE(window->rootObject()->property("currentA").toInt(), 0);
+    QCOMPARE(window->rootObject()->property("currentB").toInt(), 0);
 
     pathview->setCurrentIndex(2);
 
     firstItem = findItem<QQuickRectangle>(pathview, "wrapper", 2);
     QTRY_COMPARE(firstItem->pos() + offset, start);
-    QCOMPARE(canvas->rootObject()->property("currentA").toInt(), 2);
-    QCOMPARE(canvas->rootObject()->property("currentB").toInt(), 2);
+    QCOMPARE(window->rootObject()->property("currentA").toInt(), 2);
+    QCOMPARE(window->rootObject()->property("currentB").toInt(), 2);
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
@@ -1080,24 +1080,24 @@ void tst_QQuickPathView::setCurrentIndex()
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::resetModel()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QStringList strings;
     strings << "one" << "two" << "three";
     QStringListModel model(strings);
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("displaypath.qml"));
+    window->setSource(testFileUrl("displaypath.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     QCOMPARE(pathview->count(), model.rowCount());
@@ -1120,16 +1120,16 @@ void tst_QQuickPathView::resetModel()
         QCOMPARE(display->text(), strings.at(i));
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::propertyChanges()
 {
-    QQuickView *canvas = createView();
-    QVERIFY(canvas);
-    canvas->setSource(testFileUrl("propertychanges.qml"));
+    QQuickView *window = createView();
+    QVERIFY(window);
+    window->setSource(testFileUrl("propertychanges.qml"));
 
-    QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
+    QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
 
     QSignalSpy snapPositionSpy(pathView, SIGNAL(preferredHighlightBeginChanged()));
@@ -1162,19 +1162,19 @@ void tst_QQuickPathView::propertyChanges()
     pathView->setMaximumFlickVelocity(1000);
     QCOMPARE(maximumFlickVelocitySpy.count(), 1);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::pathChanges()
 {
-    QQuickView *canvas = createView();
-    QVERIFY(canvas);
-    canvas->setSource(testFileUrl("propertychanges.qml"));
+    QQuickView *window = createView();
+    QVERIFY(window);
+    window->setSource(testFileUrl("propertychanges.qml"));
 
-    QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
+    QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
 
-    QQuickPath *path = canvas->rootObject()->findChild<QQuickPath*>("path");
+    QQuickPath *path = window->rootObject()->findChild<QQuickPath*>("path");
     QVERIFY(path);
 
     QSignalSpy startXSpy(path, SIGNAL(startXChanged()));
@@ -1198,7 +1198,7 @@ void tst_QQuickPathView::pathChanges()
     QCOMPARE(startXSpy.count(),1);
     QCOMPARE(startYSpy.count(),1);
 
-    QQuickPath *alternatePath = canvas->rootObject()->findChild<QQuickPath*>("alternatePath");
+    QQuickPath *alternatePath = window->rootObject()->findChild<QQuickPath*>("alternatePath");
     QVERIFY(alternatePath);
 
     QSignalSpy pathSpy(pathView, SIGNAL(pathChanged()));
@@ -1212,7 +1212,7 @@ void tst_QQuickPathView::pathChanges()
     pathView->setPath(alternatePath);
     QCOMPARE(pathSpy.count(),1);
 
-    QQuickPathAttribute *pathAttribute = canvas->rootObject()->findChild<QQuickPathAttribute*>("pathAttribute");
+    QQuickPathAttribute *pathAttribute = window->rootObject()->findChild<QQuickPathAttribute*>("pathAttribute");
     QVERIFY(pathAttribute);
 
     QSignalSpy nameSpy(pathAttribute, SIGNAL(nameChanged()));
@@ -1224,19 +1224,19 @@ void tst_QQuickPathView::pathChanges()
 
     pathAttribute->setName("scale");
     QCOMPARE(nameSpy.count(),1);
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::componentChanges()
 {
-    QQuickView *canvas = createView();
-    QVERIFY(canvas);
-    canvas->setSource(testFileUrl("propertychanges.qml"));
+    QQuickView *window = createView();
+    QVERIFY(window);
+    window->setSource(testFileUrl("propertychanges.qml"));
 
-    QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
+    QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
 
-    QQmlComponent delegateComponent(canvas->engine());
+    QQmlComponent delegateComponent(window->engine());
     delegateComponent.setData("import QtQuick 2.0; Text { text: '<b>Name:</b> ' + name }", QUrl::fromLocalFile(""));
 
     QSignalSpy delegateSpy(pathView, SIGNAL(delegateChanged()));
@@ -1247,19 +1247,19 @@ void tst_QQuickPathView::componentChanges()
 
     pathView->setDelegate(&delegateComponent);
     QCOMPARE(delegateSpy.count(),1);
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::modelChanges()
 {
-    QQuickView *canvas = createView();
-    QVERIFY(canvas);
-    canvas->setSource(testFileUrl("propertychanges.qml"));
+    QQuickView *window = createView();
+    QVERIFY(window);
+    window->setSource(testFileUrl("propertychanges.qml"));
 
-    QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
+    QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
 
-    QQuickListModel *alternateModel = canvas->rootObject()->findChild<QQuickListModel*>("alternateModel");
+    QQuickListModel *alternateModel = window->rootObject()->findChild<QQuickListModel*>("alternateModel");
     QVERIFY(alternateModel);
     QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(pathView, SIGNAL(modelChanged()));
@@ -1274,19 +1274,19 @@ void tst_QQuickPathView::modelChanges()
     pathView->setModel(QVariant());
     QCOMPARE(modelSpy.count(),2);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::pathUpdateOnStartChanged()
 {
-    QQuickView *canvas = createView();
-    QVERIFY(canvas);
-    canvas->setSource(testFileUrl("pathUpdateOnStartChanged.qml"));
+    QQuickView *window = createView();
+    QVERIFY(window);
+    window->setSource(testFileUrl("pathUpdateOnStartChanged.qml"));
 
-    QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
+    QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
 
-    QQuickPath *path = canvas->rootObject()->findChild<QQuickPath*>("path");
+    QQuickPath *path = window->rootObject()->findChild<QQuickPath*>("path");
     QVERIFY(path);
     QCOMPARE(path->startX(), 400.0);
     QCOMPARE(path->startY(), 300.0);
@@ -1296,18 +1296,18 @@ void tst_QQuickPathView::pathUpdateOnStartChanged()
     QCOMPARE(item->x(), path->startX() - item->width() / 2.0);
     QCOMPARE(item->y(), path->startY() - item->height() / 2.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::package()
 {
-    QQuickView *canvas = createView();
-    QVERIFY(canvas);
-    canvas->setSource(testFileUrl("pathview_package.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    QQuickView *window = createView();
+    QVERIFY(window);
+    window->setSource(testFileUrl("pathview_package.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
 
-    QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("photoPathView");
+    QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("photoPathView");
     QVERIFY(pathView);
 
 #ifdef Q_OS_MAC
@@ -1318,28 +1318,28 @@ void tst_QQuickPathView::package()
     QVERIFY(item);
     QVERIFY(item->scale() != 1.0);
 
-    delete canvas;
+    delete window;
 }
 
 //QTBUG-13017
 void tst_QQuickPathView::emptyModel()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QStringListModel model;
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("emptyModel", &model);
 
-    canvas->setSource(testFileUrl("emptymodel.qml"));
+    window->setSource(testFileUrl("emptymodel.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
 
     QCOMPARE(pathview->offset(), qreal(0.0));
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::closed()
@@ -1366,18 +1366,18 @@ void tst_QQuickPathView::closed()
 // QTBUG-14239
 void tst_QQuickPathView::pathUpdate()
 {
-    QQuickView *canvas = createView();
-    QVERIFY(canvas);
-    canvas->setSource(testFileUrl("pathUpdate.qml"));
+    QQuickView *window = createView();
+    QVERIFY(window);
+    window->setSource(testFileUrl("pathUpdate.qml"));
 
-    QQuickPathView *pathView = canvas->rootObject()->findChild<QQuickPathView*>("pathView");
+    QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
 
     QQuickItem *item = findItem<QQuickItem>(pathView, "wrapper", 0);
     QVERIFY(item);
     QCOMPARE(item->x(), 150.0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::visualDataModel()
@@ -1418,14 +1418,14 @@ void tst_QQuickPathView::undefinedPath()
 
 void tst_QQuickPathView::mouseDrag()
 {
-    QQuickView *canvas = createView();
-    canvas->setSource(testFileUrl("dragpath.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("dragpath.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_COMPARE(window, qGuiApp->focusWindow());
 
-    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
 
     QSignalSpy movingSpy(pathview, SIGNAL(movingChanged()));
@@ -1437,12 +1437,12 @@ void tst_QQuickPathView::mouseDrag()
 
     int current = pathview->currentIndex();
 
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(10,100));
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(10,100));
     QTest::qWait(100);
 
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(30,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(canvas, &mv);
+        QGuiApplication::sendEvent(window, &mv);
     }
     // first move beyond threshold does not trigger drag
     QVERIFY(!pathview->isMoving());
@@ -1456,7 +1456,7 @@ void tst_QQuickPathView::mouseDrag()
 
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(90,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QGuiApplication::sendEvent(canvas, &mv);
+        QGuiApplication::sendEvent(window, &mv);
     }
     // next move beyond threshold does trigger drag
     QVERIFY(pathview->isMoving());
@@ -1470,7 +1470,7 @@ void tst_QQuickPathView::mouseDrag()
 
     QVERIFY(pathview->currentIndex() != current);
 
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(40,100));
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(40,100));
     QVERIFY(!pathview->isDragging());
     QCOMPARE(draggingSpy.count(), 2);
     QCOMPARE(dragStartedSpy.count(), 1);
@@ -1479,22 +1479,22 @@ void tst_QQuickPathView::mouseDrag()
     QTRY_COMPARE(moveEndedSpy.count(), 1);
     QCOMPARE(moveStartedSpy.count(), 1);
 
-    delete canvas;
+    delete window;
 }
 
 #ifndef QT_NO_WIDGETS
 void tst_QQuickPathView::treeModel()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QStandardItemModel model;
     initStandardTreeModel(&model);
-    canvas->engine()->rootContext()->setContextProperty("myModel", &model);
+    window->engine()->rootContext()->setContextProperty("myModel", &model);
 
-    canvas->setSource(testFileUrl("treemodel.qml"));
+    window->setSource(testFileUrl("treemodel.qml"));
 
-    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
     QCOMPARE(pathview->count(), 3);
 
@@ -1508,21 +1508,21 @@ void tst_QQuickPathView::treeModel()
     QTRY_VERIFY(item = findItem<QQuickText>(pathview, "wrapper", 0));
     QTRY_COMPARE(item->text(), QLatin1String("Row 2 Child Item"));
 
-    delete canvas;
+    delete window;
 }
 #endif
 
 void tst_QQuickPathView::changePreferredHighlight()
 {
-    QQuickView *canvas = createView();
-    canvas->setGeometry(0,0,400,200);
-    canvas->setSource(testFileUrl("dragpath.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
+    QQuickView *window = createView();
+    window->setGeometry(0,0,400,200);
+    window->setSource(testFileUrl("dragpath.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_COMPARE(window, qGuiApp->focusWindow());
 
-    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
 
     int current = pathview->currentIndex();
@@ -1544,16 +1544,16 @@ void tst_QQuickPathView::changePreferredHighlight()
     QTRY_COMPARE(firstItem->pos() + offset, start);
     QCOMPARE(pathview->currentIndex(), 0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::creationContext()
 {
-    QQuickView canvas;
-    canvas.setGeometry(0,0,240,320);
-    canvas.setSource(testFileUrl("creationContext.qml"));
+    QQuickView window;
+    window.setGeometry(0,0,240,320);
+    window.setSource(testFileUrl("creationContext.qml"));
 
-    QQuickItem *rootItem = qobject_cast<QQuickItem *>(canvas.rootObject());
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(window.rootObject());
     QVERIFY(rootItem);
     QVERIFY(rootItem->property("count").toInt() > 0);
 
@@ -1565,18 +1565,18 @@ void tst_QQuickPathView::creationContext()
 // QTBUG-21320
 void tst_QQuickPathView::currentOffsetOnInsertion()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("pathline.qml"));
+    window->setSource(testFileUrl("pathline.qml"));
     qApp->processEvents();
 
-    QQuickPathView *pathview = findItem<QQuickPathView>(canvas->rootObject(), "view");
+    QQuickPathView *pathview = findItem<QQuickPathView>(window->rootObject(), "view");
     QVERIFY(pathview != 0);
 
     pathview->setPreferredHighlightBegin(0.5);
@@ -1638,19 +1638,19 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     // verify that current item (item 1) is still at offset 0.5
     QCOMPARE(item->pos() + offset, start);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::asynchronous()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
     QQmlIncubationController controller;
-    canvas->engine()->setIncubationController(&controller);
+    window->engine()->setIncubationController(&controller);
 
-    canvas->setSource(testFileUrl("asyncloader.qml"));
+    window->setSource(testFileUrl("asyncloader.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(rootObject);
 
     QQuickPathView *pathview = 0;
@@ -1694,7 +1694,7 @@ void tst_QQuickPathView::asynchronous()
         QCOMPARE(curItem->pos() + offset, itemPos);
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::missingPercent()
@@ -1709,14 +1709,14 @@ void tst_QQuickPathView::missingPercent()
 
 void tst_QQuickPathView::cancelDrag()
 {
-    QQuickView *canvas = createView();
-    canvas->setSource(testFileUrl("dragpath.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("dragpath.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_COMPARE(window, qGuiApp->focusWindow());
 
-    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
 
     QSignalSpy draggingSpy(pathview, SIGNAL(draggingChanged()));
@@ -1724,10 +1724,10 @@ void tst_QQuickPathView::cancelDrag()
     QSignalSpy dragEndedSpy(pathview, SIGNAL(dragEnded()));
 
     // drag between snap points
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(10,100));
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(10,100));
     QTest::qWait(100);
-    QTest::mouseMove(canvas, QPoint(30, 100));
-    QTest::mouseMove(canvas, QPoint(85, 100));
+    QTest::mouseMove(window, QPoint(30, 100));
+    QTest::mouseMove(window, QPoint(85, 100));
 
     QTRY_VERIFY(pathview->offset() != qFloor(pathview->offset()));
     QTRY_VERIFY(pathview->isMoving());
@@ -1737,7 +1737,7 @@ void tst_QQuickPathView::cancelDrag()
     QCOMPARE(dragEndedSpy.count(), 0);
 
     // steal mouse grab - cancels PathView dragging
-    QQuickItem *item = canvas->rootObject()->findChild<QQuickItem*>("text");
+    QQuickItem *item = window->rootObject()->findChild<QQuickItem*>("text");
     item->grabMouse();
 
     // returns to a snap point.
@@ -1748,25 +1748,25 @@ void tst_QQuickPathView::cancelDrag()
     QCOMPARE(dragStartedSpy.count(), 1);
     QCOMPARE(dragEndedSpy.count(), 1);
 
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(40,100));
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(40,100));
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::maximumFlickVelocity()
 {
-    QQuickView *canvas = createView();
-    canvas->setSource(testFileUrl("dragpath.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("dragpath.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_COMPARE(window, qGuiApp->focusWindow());
 
-    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(canvas->rootObject());
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
 
     pathview->setMaximumFlickVelocity(700);
-    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+    flick(window, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
     QTRY_VERIFY(!pathview->isMoving());
@@ -1775,7 +1775,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
 
     pathview->setOffset(0.);
     pathview->setMaximumFlickVelocity(300);
-    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+    flick(window, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
     QTRY_VERIFY(!pathview->isMoving());
@@ -1784,7 +1784,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
 
     pathview->setOffset(0.);
     pathview->setMaximumFlickVelocity(500);
-    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+    flick(window, QPoint(200,10), QPoint(10,10), 180);
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isFlicking());
     QTRY_VERIFY(!pathview->isMoving());
@@ -1795,26 +1795,26 @@ void tst_QQuickPathView::maximumFlickVelocity()
     QVERIFY(dist3 > dist2);
     QVERIFY(dist2 < dist1);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickPathView::snapToItem()
 {
     QFETCH(bool, enforceRange);
 
-    QQuickView *canvas = createView();
-    canvas->setSource(testFileUrl("panels.qml"));
-    QQuickPathView *pathview = canvas->rootObject()->findChild<QQuickPathView*>("view");
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("panels.qml"));
+    QQuickPathView *pathview = window->rootObject()->findChild<QQuickPathView*>("view");
     QVERIFY(pathview != 0);
 
-    canvas->rootObject()->setProperty("enforceRange", enforceRange);
+    window->rootObject()->setProperty("enforceRange", enforceRange);
     QTRY_VERIFY(!pathview->isMoving()); // ensure stable
 
     int currentIndex = pathview->currentIndex();
 
     QSignalSpy snapModeSpy(pathview, SIGNAL(snapModeChanged()));
 
-    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+    flick(window, QPoint(200,10), QPoint(10,10), 180);
 
     QVERIFY(pathview->isMoving());
     QTRY_VERIFY(!pathview->isMoving());
@@ -1839,28 +1839,28 @@ void tst_QQuickPathView::snapOneItem()
 {
     QFETCH(bool, enforceRange);
 
-    QQuickView *canvas = createView();
-    canvas->setSource(testFileUrl("panels.qml"));
-    canvas->show();
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("panels.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_COMPARE(window, qGuiApp->focusWindow());
 
-    QQuickPathView *pathview = canvas->rootObject()->findChild<QQuickPathView*>("view");
+    QQuickPathView *pathview = window->rootObject()->findChild<QQuickPathView*>("view");
     QVERIFY(pathview != 0);
 
-    canvas->rootObject()->setProperty("enforceRange", enforceRange);
+    window->rootObject()->setProperty("enforceRange", enforceRange);
 
     QSignalSpy snapModeSpy(pathview, SIGNAL(snapModeChanged()));
 
-    canvas->rootObject()->setProperty("snapOne", true);
+    window->rootObject()->setProperty("snapOne", true);
     QVERIFY(snapModeSpy.count() == 1);
     QTRY_VERIFY(!pathview->isMoving()); // ensure stable
 
     int currentIndex = pathview->currentIndex();
 
     double startOffset = pathview->offset();
-    flick(canvas, QPoint(200,10), QPoint(10,10), 180);
+    flick(window, QPoint(200,10), QPoint(10,10), 180);
 
     QVERIFY(pathview->isMoving());
     QTRY_VERIFY(!pathview->isMoving());

@@ -65,7 +65,7 @@ class QSGImageNode;
 class QSGGlyphNode;
 class QSGRenderer;
 class QSGDistanceFieldGlyphCache;
-class QQuickCanvas;
+class QQuickWindow;
 class QSGTexture;
 class QSGMaterial;
 class QSGMaterialShader;
@@ -111,7 +111,7 @@ public:
 
     virtual QSurfaceFormat defaultSurfaceFormat() const;
 
-    QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickCanvas *canvas);
+    QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window);
 
     static QSGContext *createDefaultContext();
 

@@ -41,7 +41,7 @@
 
 #include "qquicktextinput_p.h"
 #include "qquicktextinput_p_p.h"
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 #include "qquicktextutil_p.h"
 
 #include <private/qqmlglobal_p.h>

@@ -90,16 +90,16 @@ public:
         ParentChanged           = 0x00000800,
 
         Clip                    = 0x00001000,
-        Canvas                  = 0x00002000,
+        Window                  = 0x00002000,
 
         EffectReference         = 0x00008000,
         Visible                 = 0x00010000,
         HideReference           = 0x00020000,
 
-        TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position | Size | Canvas,
-        ComplexTransformUpdateMask     = Transform | Canvas,
-        ContentUpdateMask       = Size | Content | Smooth | Canvas,
-        ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Canvas
+        TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position | Size | Window,
+        ComplexTransformUpdateMask     = Transform | Window,
+        ContentUpdateMask       = Size | Content | Smooth | Window,
+        ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Window
     };
 
 
@@ -114,7 +114,7 @@ public:
     static bool isDirty(QQuickItem *referencedItem, DirtyType dirtyType);
     static void resetDirty(QQuickItem *referencedItem);
 
-    static QTransform canvasTransform(QQuickItem *referencedItem);
+    static QTransform windowTransform(QQuickItem *referencedItem);
     static QTransform parentTransform(QQuickItem *referencedItem);
 
     static bool isAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem);

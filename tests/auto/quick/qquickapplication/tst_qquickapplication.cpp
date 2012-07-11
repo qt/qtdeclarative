@@ -80,25 +80,25 @@ void tst_qquickapplication::active()
                       "}", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
-    QQuickCanvas canvas;
-    item->setParentItem(canvas.rootItem());
+    QQuickWindow window;
+    item->setParentItem(window.rootItem());
 
     // not active
     QVERIFY(!item->property("active").toBool());
     QVERIFY(!item->property("active2").toBool());
 
     // active
-    canvas.show();
-    canvas.requestActivateWindow();
-    QTest::qWaitForWindowActive(&canvas);
-    QVERIFY(QGuiApplication::focusWindow() == &canvas);
+    window.show();
+    window.requestActivateWindow();
+    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QGuiApplication::focusWindow() == &window);
     QVERIFY(item->property("active").toBool());
     QVERIFY(item->property("active2").toBool());
 
     // not active again
     QWindowSystemInterface::handleWindowActivated(0);
 
-    QTRY_VERIFY(QGuiApplication::focusWindow() != &canvas);
+    QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
     QVERIFY(!item->property("active").toBool());
     QVERIFY(!item->property("active2").toBool());
 }

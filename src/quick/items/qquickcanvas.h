@@ -42,134 +42,15 @@
 #ifndef QQUICKCANVAS_H
 #define QQUICKCANVAS_H
 
-#include <QtQuick/qtquickglobal.h>
-#include <QtCore/qmetatype.h>
-#include <QtGui/qopengl.h>
-#include <QtGui/qwindow.h>
-#include <QtGui/qevent.h>
+#include "qquickwindow.h"
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
-class QSGTexture;
-class QInputMethodEvent;
-class QQuickCanvasPrivate;
-class QOpenGLFramebufferObject;
-class QQmlIncubationController;
-class QInputMethodEvent;
-
-class Q_QUICK_EXPORT QQuickCanvas : public QWindow
-{
-    Q_OBJECT
-    Q_PRIVATE_PROPERTY(QQuickCanvas::d_func(), QQmlListProperty<QObject> data READ data DESIGNABLE false)
-    Q_PROPERTY(QColor color READ clearColor WRITE setClearColor NOTIFY clearColorChanged)
-    Q_CLASSINFO("DefaultProperty", "data")
-    Q_DECLARE_PRIVATE(QQuickCanvas)
-public:
-    enum CreateTextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureHasMipmaps       = 0x0002,
-        TextureOwnsGLTexture    = 0x0004
-    };
-
-    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
-
-    QQuickCanvas(QWindow *parent = 0);
-
-    virtual ~QQuickCanvas();
-
-    QQuickItem *rootItem() const;
-    QQuickItem *activeFocusItem() const;
-    QObject *focusObject() const;
-
-    QQuickItem *mouseGrabberItem() const;
-
-    bool sendEvent(QQuickItem *, QEvent *);
-
-    QImage grabFrameBuffer();
-
-    void setRenderTarget(QOpenGLFramebufferObject *fbo);
-    QOpenGLFramebufferObject *renderTarget() const;
-
-    void setRenderTarget(uint fboId, const QSize &size);
-    uint renderTargetId() const;
-    QSize renderTargetSize() const;
-
-    QQmlIncubationController *incubationController() const;
-
-#ifndef QT_NO_ACCESSIBILITY
-    virtual QAccessibleInterface *accessibleRoot() const;
-#endif
-
-    // Scene graph specific functions
-    QSGTexture *createTextureFromImage(const QImage &image) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption(0)) const;
-
-    void setClearBeforeRendering(bool enabled);
-    bool clearBeforeRendering() const;
-
-    void setClearColor(const QColor &color);
-    QColor clearColor() const;
-
-    void setPersistentOpenGLContext(bool persistent);
-    bool isPersistentOpenGLContext() const;
-
-    void setPersistentSceneGraph(bool persistent);
-    bool isPersistentSceneGraph() const;
-
-    QOpenGLContext *openglContext() const;
-
-Q_SIGNALS:
-    void frameSwapped();
-    void sceneGraphInitialized();
-    void sceneGraphInvalidated();
-    void beforeSynchronizing();
-    void beforeRendering();
-    void afterRendering();
-    void clearColorChanged(const QColor &);
-
-public Q_SLOTS:
-    void update();
-    void releaseResources();
-
-protected:
-    QQuickCanvas(QQuickCanvasPrivate &dd, QWindow *parent = 0);
-
-    virtual void exposeEvent(QExposeEvent *);
-    virtual void resizeEvent(QResizeEvent *);
-
-    virtual void showEvent(QShowEvent *);
-    virtual void hideEvent(QHideEvent *);
-
-    virtual void focusInEvent(QFocusEvent *);
-    virtual void focusOutEvent(QFocusEvent *);
-
-    virtual bool event(QEvent *);
-    virtual void keyPressEvent(QKeyEvent *);
-    virtual void keyReleaseEvent(QKeyEvent *);
-    virtual void mousePressEvent(QMouseEvent *);
-    virtual void mouseReleaseEvent(QMouseEvent *);
-    virtual void mouseDoubleClickEvent(QMouseEvent *);
-    virtual void mouseMoveEvent(QMouseEvent *);
-#ifndef QT_NO_WHEELEVENT
-    virtual void wheelEvent(QWheelEvent *);
-#endif
-
-private Q_SLOTS:
-    void maybeUpdate();
-    void cleanupSceneGraph();
-
-private:
-    friend class QQuickItem;
-    friend class QQuickCanvasRenderLoop;
-    Q_DISABLE_COPY(QQuickCanvas)
-};
+typedef QQuickWindow QQuickCanvas;
 
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(QQuickCanvas *)
 
 QT_END_HEADER
 

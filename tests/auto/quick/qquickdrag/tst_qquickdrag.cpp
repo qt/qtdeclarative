@@ -179,8 +179,8 @@ void tst_QQuickDrag::cleanupTestCase()
 
 void tst_QQuickDrag::active()
 {
-    QQuickCanvas canvas;
-    TestDropTarget dropTarget(canvas.rootItem());
+    QQuickWindow window;
+    TestDropTarget dropTarget(window.rootItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -389,8 +389,8 @@ void tst_QQuickDrag::active()
 
 void tst_QQuickDrag::drop()
 {
-    QQuickCanvas canvas;
-    TestDropTarget outerTarget(canvas.rootItem());
+    QQuickWindow window;
+    TestDropTarget outerTarget(window.rootItem());
     outerTarget.setSize(QSizeF(100, 100));
     outerTarget.acceptAction = Qt::CopyAction;
     TestDropTarget innerTarget(&outerTarget);
@@ -525,8 +525,8 @@ void tst_QQuickDrag::drop()
 
 void tst_QQuickDrag::move()
 {
-    QQuickCanvas canvas;
-    TestDropTarget outerTarget(canvas.rootItem());
+    QQuickWindow window;
+    TestDropTarget outerTarget(window.rootItem());
     outerTarget.setSize(QSizeF(100, 100));
     TestDropTarget leftTarget(&outerTarget);
     leftTarget.setPos(QPointF(0, 35));
@@ -679,12 +679,12 @@ void tst_QQuickDrag::move()
 
 void tst_QQuickDrag::parentChange()
 {
-    QQuickCanvas canvas1;
-    TestDropTarget dropTarget1(canvas1.rootItem());
+    QQuickWindow window1;
+    TestDropTarget dropTarget1(window1.rootItem());
     dropTarget1.setSize(QSizeF(100, 100));
 
-    QQuickCanvas canvas2;
-    TestDropTarget dropTarget2(canvas2.rootItem());
+    QQuickWindow window2;
+    TestDropTarget dropTarget2(window2.rootItem());
     dropTarget2.setSize(QSizeF(100, 100));
 
     QQmlComponent component(&engine);
@@ -704,12 +704,12 @@ void tst_QQuickDrag::parentChange()
     QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
 
     // Verify setting a parent item for an item with an active drag sends an enter event.
-    item->setParentItem(canvas1.rootItem());
+    item->setParentItem(window1.rootItem());
     QCOMPARE(dropTarget1.enterEvents, 0);
     QCoreApplication::processEvents();
     QCOMPARE(dropTarget1.enterEvents, 1);
 
-    // Changing the parent within the same canvas should send a move event.
+    // Changing the parent within the same window should send a move event.
     item->setParentItem(&dropTarget1);
     QCOMPARE(dropTarget1.enterEvents, 1);
     QCOMPARE(dropTarget1.moveEvents, 0);
@@ -717,9 +717,9 @@ void tst_QQuickDrag::parentChange()
     QCOMPARE(dropTarget1.enterEvents, 1);
     QCOMPARE(dropTarget1.moveEvents, 1);
 
-    // Changing the parent to an item in another canvas sends a leave event in the old canvas
-    // and an enter on the new canvas.
-    item->setParentItem(canvas2.rootItem());
+    // Changing the parent to an item in another window sends a leave event in the old window
+    // and an enter on the new window.
+    item->setParentItem(window2.rootItem());
     QCOMPARE(dropTarget1.enterEvents, 1);
     QCOMPARE(dropTarget1.moveEvents, 1);
     QCOMPARE(dropTarget1.leaveEvents, 0);
@@ -746,13 +746,13 @@ void tst_QQuickDrag::parentChange()
 
     // Go around again and verify no events if active is false.
     evaluate<void>(item, "Drag.active = false");
-    item->setParentItem(canvas1.rootItem());
+    item->setParentItem(window1.rootItem());
     QCoreApplication::processEvents();
 
     item->setParentItem(&dropTarget1);
     QCoreApplication::processEvents();
 
-    item->setParentItem(canvas2.rootItem());
+    item->setParentItem(window2.rootItem());
     QCoreApplication::processEvents();
 
     item->setParentItem(0);
@@ -766,8 +766,8 @@ void tst_QQuickDrag::parentChange()
 
 void tst_QQuickDrag::hotSpot()
 {
-    QQuickCanvas canvas;
-    TestDropTarget dropTarget(canvas.rootItem());
+    QQuickWindow window;
+    TestDropTarget dropTarget(window.rootItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -830,8 +830,8 @@ void tst_QQuickDrag::hotSpot()
 
 void tst_QQuickDrag::supportedActions()
 {
-    QQuickCanvas canvas;
-    TestDropTarget dropTarget(canvas.rootItem());
+    QQuickWindow window;
+    TestDropTarget dropTarget(window.rootItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -888,8 +888,8 @@ void tst_QQuickDrag::supportedActions()
 
 void tst_QQuickDrag::proposedAction()
 {
-    QQuickCanvas canvas;
-    TestDropTarget dropTarget(canvas.rootItem());
+    QQuickWindow window;
+    TestDropTarget dropTarget(window.rootItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -957,9 +957,9 @@ void tst_QQuickDrag::keys()
     QCOMPARE(item->property("keys").toStringList(), QStringList() << "red" << "blue");
 
     // Test changing the keys restarts a drag.
-    QQuickCanvas canvas;
-    item->setParentItem(canvas.rootItem());
-    TestDropTarget dropTarget(canvas.rootItem());
+    QQuickWindow window;
+    item->setParentItem(window.rootItem());
+    TestDropTarget dropTarget(window.rootItem());
     dropTarget.setSize(QSizeF(100, 100));
 
     evaluate<void>(item, "Drag.start()");
@@ -1005,9 +1005,9 @@ void tst_QQuickDrag::source()
     QCOMPARE(evaluate<QObject *>(item, "source"), static_cast<QObject *>(item));
 
     // Test changing the source restarts a drag.
-    QQuickCanvas canvas;
-    item->setParentItem(canvas.rootItem());
-    TestDropTarget dropTarget(canvas.rootItem());
+    QQuickWindow window;
+    item->setParentItem(window.rootItem());
+    TestDropTarget dropTarget(window.rootItem());
     dropTarget.setSize(QSizeF(100, 100));
 
     evaluate<void>(item, "Drag.start()");
@@ -1182,8 +1182,8 @@ void tst_QQuickDrag::recursion()
     if (!warning.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, warning.constData());
 
-    QQuickCanvas canvas;
-    RecursingDropTarget dropTarget(script, type, canvas.rootItem());
+    QQuickWindow window;
+    RecursingDropTarget dropTarget(script, type, window.rootItem());
     dropTarget.setSize(QSizeF(100, 100));
     QQmlComponent component(&engine);
     component.setData(
@@ -1195,7 +1195,7 @@ void tst_QQuickDrag::recursion()
     QScopedPointer<QObject> object(component.create());
     QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(item);
-    item->setParentItem(canvas.rootItem());
+    item->setParentItem(window.rootItem());
 
     dropTarget.setItem(item);
 

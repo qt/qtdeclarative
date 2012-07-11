@@ -71,7 +71,7 @@ Item {
         id: label
         color: "black"
         wrapMode: Text.WordWrap
-        text: "The background here is a squircle rendered with raw OpenGL using the 'beforeRender()' signal in QQuickCanvas. This text label and its border is rendered using QML"
+        text: "The background here is a squircle rendered with raw OpenGL using the 'beforeRender()' signal in QQuickWindow. This text label and its border is rendered using QML"
         anchors.right: parent.right
         anchors.left: parent.left
         anchors.bottom: parent.bottom

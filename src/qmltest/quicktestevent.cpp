@@ -43,7 +43,7 @@
 #include <QtTest/qtestkeyboard.h>
 #include <QtQml/qqml.h>
 #include <QtQuick/qquickitem.h>
-#include <QtQuick/qquickcanvas.h>
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -259,7 +259,7 @@ QWindow *QuickTestEvent::eventWindow()
 {
     QQuickItem *sgitem = qobject_cast<QQuickItem *>(parent());
     if (sgitem)
-        return sgitem->canvas();
+        return sgitem->window();
     return 0;
 }
 

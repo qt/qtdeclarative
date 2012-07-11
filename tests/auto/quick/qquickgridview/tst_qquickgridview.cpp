@@ -332,7 +332,7 @@ void tst_QQuickGridView::cleanupTestCase()
 
 void tst_QQuickGridView::items()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     model.addItem("Fred", "12345");
@@ -343,20 +343,20 @@ void tst_QQuickGridView::items()
     model.addItem("Ben", "04321");
     model.addItem("Jim", "0780");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    window->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
     QTRY_COMPARE(gridview->count(), model.count());
-    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
     QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     for (int i = 0; i < model.count(); ++i) {
@@ -375,12 +375,12 @@ void tst_QQuickGridView::items()
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     QTRY_VERIFY(itemCount == 0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::changed()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     model.addItem("Fred", "12345");
@@ -391,13 +391,13 @@ void tst_QQuickGridView::changed()
     model.addItem("Ben", "04321");
     model.addItem("Jim", "0780");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    window->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
-    QQuickFlickable *gridview = findItem<QQuickFlickable>(canvas->rootObject(), "grid");
+    QQuickFlickable *gridview = findItem<QQuickFlickable>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -411,24 +411,24 @@ void tst_QQuickGridView::changed()
     QTRY_VERIFY(number != 0);
     QTRY_COMPARE(number->text(), model.number(1));
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::inserted_basic()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     model.addItem("Fred", "12345");
     model.addItem("John", "2345");
     model.addItem("Bob", "54321");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -436,7 +436,7 @@ void tst_QQuickGridView::inserted_basic()
 
     model.insertItem(1, "Will", "9876");
 
-    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
     QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     QQuickText *name = findItem<QQuickText>(contentItem, "textName", 1);
@@ -447,7 +447,7 @@ void tst_QQuickGridView::inserted_basic()
     QTRY_COMPARE(number->text(), model.number(1));
 
     // Checks that onAdd is called
-    int added = canvas->rootObject()->property("added").toInt();
+    int added = window->rootObject()->property("added").toInt();
     QTRY_COMPARE(added, 1);
 
     // Confirm items positioned correctly
@@ -487,7 +487,7 @@ void tst_QQuickGridView::inserted_basic()
 
     QTRY_VERIFY(gridview->contentY() == 120);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
@@ -505,17 +505,17 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQuickView *canvas = getView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
     ctxt->setContextProperty("testRightToLeft", horizLayout == Qt::RightToLeft);
     ctxt->setContextProperty("testBottomToTop", verticalLayout == QQuickGridView::BottomToTop);
-    canvas->setSource(testFileUrl("layouts.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("layouts.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -564,7 +564,7 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
         QCOMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::inserted_defaultLayout_data()
@@ -692,19 +692,19 @@ void tst_QQuickGridView::insertBeforeVisible()
     QFETCH(int, cacheBuffer);
 
     QQuickText *name;
-    QQuickView *canvas = getView();
+    QQuickView *window = getView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("gridview1.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -748,7 +748,7 @@ void tst_QQuickGridView::insertBeforeVisible()
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::insertBeforeVisible_data()
@@ -776,25 +776,25 @@ void tst_QQuickGridView::insertBeforeVisible_data()
 
 void tst_QQuickGridView::removed_basic()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     model.removeItem(1);
-    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
 
     QQuickText *name = findItem<QQuickText>(contentItem, "textName", 1);
     QTRY_VERIFY(name != 0);
@@ -805,7 +805,7 @@ void tst_QQuickGridView::removed_basic()
 
 
     // Checks that onRemove is called
-    QString removed = canvas->rootObject()->property("removed").toString();
+    QString removed = window->rootObject()->property("removed").toString();
     QTRY_COMPARE(removed, QString("Item1"));
 
     // Confirm items positioned correctly
@@ -819,7 +819,7 @@ void tst_QQuickGridView::removed_basic()
 
     // Remove first item (which is the current item);
     model.removeItem(0);
-    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
 
     name = findItem<QQuickText>(contentItem, "textName", 0);
     QTRY_VERIFY(name != 0);
@@ -840,7 +840,7 @@ void tst_QQuickGridView::removed_basic()
 
     // Remove items not visible
     model.removeItem(25);
-    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
 
     // Confirm items positioned correctly
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -859,7 +859,7 @@ void tst_QQuickGridView::removed_basic()
     QTRY_COMPARE(gridview->contentY(), 120.0);
 
     model.removeItem(1);
-    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
 
     // Confirm items positioned correctly
     for (int i = 6; i < 18; ++i) {
@@ -872,7 +872,7 @@ void tst_QQuickGridView::removed_basic()
     // Remove currentIndex
     QQuickItem *oldCurrent = gridview->currentItem();
     model.removeItem(9);
-    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
 
     QTRY_COMPARE(gridview->currentIndex(), 9);
     QTRY_VERIFY(gridview->currentItem() != oldCurrent);
@@ -912,7 +912,7 @@ void tst_QQuickGridView::removed_basic()
     QTRY_COMPARE(gridview->currentIndex(), 7);
     QTRY_VERIFY(gridview->currentItem() == oldCurrent);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
@@ -928,22 +928,22 @@ void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
     QFETCH(QString, firstVisible);
     QFETCH(QString, firstVisible_ttb);
 
-    QQuickView *canvas = getView();
+    QQuickView *window = getView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
     ctxt->setContextProperty("testRightToLeft", horizLayout == Qt::RightToLeft);
     ctxt->setContextProperty("testBottomToTop", verticalLayout == QQuickGridView::BottomToTop);
-    canvas->setSource(testFileUrl("layouts.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("layouts.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -988,7 +988,7 @@ void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::removed_defaultLayout_data()
@@ -1149,17 +1149,17 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
     QFETCH(bool, doAdd);
     QFETCH(qreal, newTopContentY);
 
-    QQuickView *canvas = getView();
-    canvas->show();
+    QQuickView *window = getView();
+    window->show();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -1212,7 +1212,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
         QTRY_VERIFY(item->y() == (i/3)*60 + newTopContentY);
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::addOrRemoveBeforeVisible_data()
@@ -1226,18 +1226,18 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible_data()
 
 void tst_QQuickGridView::clear()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
-    canvas->show();
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QVERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
@@ -1257,7 +1257,7 @@ void tst_QQuickGridView::clear()
     QVERIFY(gridview->currentItem() != 0);
     QVERIFY(gridview->currentIndex() == 0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
@@ -1273,22 +1273,22 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
     QFETCH(int, count_ttb);
     QFETCH(qreal, rowOffsetAfterMove);
 
-    QQuickView *canvas = getView();
+    QQuickView *window = getView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
     ctxt->setContextProperty("testRightToLeft", horizLayout == Qt::RightToLeft);
     ctxt->setContextProperty("testBottomToTop", verticalLayout == QQuickGridView::BottomToTop);
-    canvas->setSource(testFileUrl("layouts.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("layouts.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -1338,7 +1338,7 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
             QTRY_COMPARE(gridview->currentIndex(), i);
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::moved_defaultLayout_data()
@@ -1532,18 +1532,18 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
     QFETCH(int, newCount);
     QFETCH(int, newCurrentIndex);
 
-    QQuickView *canvas = getView();
+    QQuickView *window = getView();
 
     QaimModel model;
     for (int i = 0; i < startCount; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
-    canvas->show();
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
@@ -1598,7 +1598,7 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
         QTRY_COMPARE(number->text(), model.number(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::multipleChanges_data()
@@ -1777,18 +1777,18 @@ void tst_QQuickGridView::multipleChanges_data()
 void tst_QQuickGridView::swapWithFirstItem()
 {
     // QTBUG_9697
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
-    canvas->show();
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     // ensure content position is stable
@@ -1796,7 +1796,7 @@ void tst_QQuickGridView::swapWithFirstItem()
     model.moveItem(10, 0);
     QTRY_VERIFY(gridview->contentY() == 0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::currentIndex()
@@ -1805,19 +1805,19 @@ void tst_QQuickGridView::currentIndex()
     for (int i = 0; i < 60; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setGeometry(0,0,240,320);
-    canvas->show();
+    QQuickView *window = new QQuickView(0);
+    window->setGeometry(0,0,240,320);
+    window->show();
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
     QString filename(testFile("gridview-initCurrent.qml"));
-    canvas->setSource(QUrl::fromLocalFile(filename));
+    window->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QVERIFY(gridview != 0);
     QTRY_VERIFY(!QQuickItemPrivate::get(gridview)->polishScheduled);
 
@@ -1836,22 +1836,22 @@ void tst_QQuickGridView::currentIndex()
     QTRY_VERIFY(gridview->verticalVelocity() != 0.0);
 
     // footer should become visible if it is out of view, and then current index moves to the first row
-    canvas->rootObject()->setProperty("showFooter", true);
+    window->rootObject()->setProperty("showFooter", true);
     QTRY_VERIFY(gridview->footerItem());
     gridview->setCurrentIndex(model.count()-3);
     QTRY_VERIFY(gridview->footerItem()->y() > gridview->contentY() + gridview->height());
     gridview->setCurrentIndex(model.count()-2);
     QTRY_COMPARE(gridview->contentY() + gridview->height(), (60.0 * model.count()/3) + gridview->footerItem()->height());
-    canvas->rootObject()->setProperty("showFooter", false);
+    window->rootObject()->setProperty("showFooter", false);
 
     // header should become visible if it is out of view, and then current index moves to the last row
-    canvas->rootObject()->setProperty("showHeader", true);
+    window->rootObject()->setProperty("showHeader", true);
     QTRY_VERIFY(gridview->headerItem());
     gridview->setCurrentIndex(3);
     QTRY_VERIFY(gridview->headerItem()->y() + gridview->headerItem()->height() < gridview->contentY());
     gridview->setCurrentIndex(1);
     QTRY_COMPARE(gridview->contentY(), -gridview->headerItem()->height());
-    canvas->rootObject()->setProperty("showHeader", false);
+    window->rootObject()->setProperty("showHeader", false);
 
     // turn off auto highlight
     gridview->setHighlightFollowsCurrentItem(false);
@@ -1867,7 +1867,7 @@ void tst_QQuickGridView::currentIndex()
     // insert item before currentIndex
     gridview->setCurrentIndex(28);
     model.insertItem(0, "Foo", "1111");
-    QTRY_COMPARE(canvas->rootObject()->property("current").toInt(), 29);
+    QTRY_COMPARE(window->rootObject()->property("current").toInt(), 29);
 
     // check removing highlight by setting currentIndex to -1;
     gridview->setCurrentIndex(-1);
@@ -1882,7 +1882,7 @@ void tst_QQuickGridView::currentIndex()
     gridview->setContentY(200);
     QTRY_VERIFY(!delegateVisible(gridview->currentItem()));
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::noCurrentIndex()
@@ -1891,18 +1891,18 @@ void tst_QQuickGridView::noCurrentIndex()
     for (int i = 0; i < 60; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setGeometry(0,0,240,320);
+    QQuickView *window = new QQuickView(0);
+    window->setGeometry(0,0,240,320);
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
     QString filename(testFile("gridview-noCurrent.qml"));
-    canvas->setSource(QUrl::fromLocalFile(filename));
-    canvas->show();
+    window->setSource(QUrl::fromLocalFile(filename));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QVERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
@@ -1919,7 +1919,7 @@ void tst_QQuickGridView::noCurrentIndex()
     QVERIFY(gridview->currentItem());
     QVERIFY(gridview->highlightItem());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::keyNavigation()
@@ -1940,28 +1940,28 @@ void tst_QQuickGridView::keyNavigation()
     for (int i = 0; i < 18; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQuickView *canvas = getView();
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
-    canvas->show();
-    QTest::qWaitForWindowActive(canvas);
+    QQuickView *window = getView();
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
+    window->show();
+    QTest::qWaitForWindowActive(window);
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
     gridview->setVerticalLayoutDirection(verticalLayoutDirection);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
-    canvas->requestActivateWindow();
-    QTest::qWaitForWindowActive(canvas);
-    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
+    window->requestActivateWindow();
+    QTest::qWaitForWindowActive(window);
+    QTRY_VERIFY(qGuiApp->focusWindow() == window);
     QCOMPARE(gridview->currentIndex(), 0);
 
-    QTest::keyClick(canvas, forwardsKey);
+    QTest::keyClick(window, forwardsKey);
     QCOMPARE(gridview->currentIndex(), 1);
 
-    QTest::keyClick(canvas, backwardsKey);
+    QTest::keyClick(window, backwardsKey);
     QCOMPARE(gridview->currentIndex(), 0);
 
     gridview->setCurrentIndex(7);
@@ -1981,87 +1981,87 @@ void tst_QQuickGridView::keyNavigation()
     QCOMPARE(gridview->currentIndex(), indexDownFrom7);
 
     gridview->setCurrentIndex(7);
-    QTest::keyClick(canvas, Qt::Key_Right);
+    QTest::keyClick(window, Qt::Key_Right);
     QCOMPARE(gridview->currentIndex(), indexRightOf7);
-    QTest::keyClick(canvas, Qt::Key_Left);
+    QTest::keyClick(window, Qt::Key_Left);
     QCOMPARE(gridview->currentIndex(), 7);
-    QTest::keyClick(canvas, Qt::Key_Left);
+    QTest::keyClick(window, Qt::Key_Left);
     QCOMPARE(gridview->currentIndex(), indexLeftOf7);
-    QTest::keyClick(canvas, Qt::Key_Right);
+    QTest::keyClick(window, Qt::Key_Right);
     QCOMPARE(gridview->currentIndex(), 7);
-    QTest::keyClick(canvas, Qt::Key_Up);
+    QTest::keyClick(window, Qt::Key_Up);
     QCOMPARE(gridview->currentIndex(), indexUpFrom7);
-    QTest::keyClick(canvas, Qt::Key_Down);
+    QTest::keyClick(window, Qt::Key_Down);
     QCOMPARE(gridview->currentIndex(), 7);
-    QTest::keyClick(canvas, Qt::Key_Down);
+    QTest::keyClick(window, Qt::Key_Down);
     QCOMPARE(gridview->currentIndex(), indexDownFrom7);
 
     // hold down a key to go forwards
     gridview->setCurrentIndex(0);
     for (int i=0; i<model.count()-1; i++) {
 //        QTest::qWait(500);
-        QTest::simulateEvent(canvas, true, forwardsKey, Qt::NoModifier, "", true);
+        QTest::simulateEvent(window, true, forwardsKey, Qt::NoModifier, "", true);
         QTRY_COMPARE(gridview->currentIndex(), i+1);
     }
-    QTest::keyRelease(canvas, forwardsKey);
+    QTest::keyRelease(window, forwardsKey);
     QTRY_COMPARE(gridview->currentIndex(), model.count()-1);
     QTRY_COMPARE(gridview->contentX(), contentPosAtLastItem.x());
     QTRY_COMPARE(gridview->contentY(), contentPosAtLastItem.y());
 
     // hold down a key to go backwards
     for (int i=model.count()-1; i > 0; i--) {
-        QTest::simulateEvent(canvas, true, backwardsKey, Qt::NoModifier, "", true);
+        QTest::simulateEvent(window, true, backwardsKey, Qt::NoModifier, "", true);
         QTRY_COMPARE(gridview->currentIndex(), i-1);
     }
-    QTest::keyRelease(canvas, backwardsKey);
+    QTest::keyRelease(window, backwardsKey);
     QTRY_COMPARE(gridview->currentIndex(), 0);
     QTRY_COMPARE(gridview->contentX(), contentPosAtFirstItem.x());
     QTRY_COMPARE(gridview->contentY(), contentPosAtFirstItem.y());
 
     // no wrap
     QVERIFY(!gridview->isWrapEnabled());
-    QTest::keyClick(canvas, forwardsKey);
+    QTest::keyClick(window, forwardsKey);
     QCOMPARE(gridview->currentIndex(), 1);
-    QTest::keyClick(canvas, backwardsKey);
+    QTest::keyClick(window, backwardsKey);
     QCOMPARE(gridview->currentIndex(), 0);
 
-    QTest::keyClick(canvas, backwardsKey);
+    QTest::keyClick(window, backwardsKey);
     QCOMPARE(gridview->currentIndex(), 0);
 
     // with wrap
     gridview->setWrapEnabled(true);
     QVERIFY(gridview->isWrapEnabled());
 
-    QTest::keyClick(canvas, backwardsKey);
+    QTest::keyClick(window, backwardsKey);
     QCOMPARE(gridview->currentIndex(), model.count()-1);
     QTRY_COMPARE(gridview->contentX(), contentPosAtLastItem.x());
     QTRY_COMPARE(gridview->contentY(), contentPosAtLastItem.y());
 
-    QTest::keyClick(canvas, forwardsKey);
+    QTest::keyClick(window, forwardsKey);
     QCOMPARE(gridview->currentIndex(), 0);
     QTRY_COMPARE(gridview->contentX(), contentPosAtFirstItem.x());
     QTRY_COMPARE(gridview->contentY(), contentPosAtFirstItem.y());
 
     // Test key press still accepted when position wraps to same index.
-    canvas->rootObject()->setProperty("lastKey", 0);
+    window->rootObject()->setProperty("lastKey", 0);
     model.removeItems(1, model.count() - 1);
 
-    QTest::keyClick(canvas, backwardsKey);
-    QCOMPARE(canvas->rootObject()->property("lastKey").toInt(), 0);
+    QTest::keyClick(window, backwardsKey);
+    QCOMPARE(window->rootObject()->property("lastKey").toInt(), 0);
 
-    QTest::keyClick(canvas, forwardsKey);
-    QCOMPARE(canvas->rootObject()->property("lastKey").toInt(), 0);
+    QTest::keyClick(window, forwardsKey);
+    QCOMPARE(window->rootObject()->property("lastKey").toInt(), 0);
 
     // Test key press not accepted at limits when wrap is disabled.
     gridview->setWrapEnabled(false);
 
-    QTest::keyClick(canvas, backwardsKey);
-    QCOMPARE(canvas->rootObject()->property("lastKey").toInt(), int(backwardsKey));
+    QTest::keyClick(window, backwardsKey);
+    QCOMPARE(window->rootObject()->property("lastKey").toInt(), int(backwardsKey));
 
-    QTest::keyClick(canvas, forwardsKey);
-    QCOMPARE(canvas->rootObject()->property("lastKey").toInt(), int(forwardsKey));
+    QTest::keyClick(window, forwardsKey);
+    QCOMPARE(window->rootObject()->property("lastKey").toInt(), int(forwardsKey));
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::keyNavigation_data()
@@ -2137,22 +2137,22 @@ void tst_QQuickGridView::keyNavigation_data()
 
 void tst_QQuickGridView::changeFlow()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
     ctxt->setContextProperty("testBottomToTop", QVariant(false));
 
-    canvas->setSource(testFileUrl("layouts.qml"));
+    window->setSource(testFileUrl("layouts.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -2230,7 +2230,7 @@ void tst_QQuickGridView::changeFlow()
         QTRY_COMPARE(number->text(), model.number(i));
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::defaultValues()
@@ -2285,11 +2285,11 @@ void tst_QQuickGridView::properties()
 
 void tst_QQuickGridView::propertyChanges()
 {
-    QQuickView *canvas = createView();
-    QTRY_VERIFY(canvas);
-    canvas->setSource(testFileUrl("propertychangestest.qml"));
+    QQuickView *window = createView();
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("propertychangestest.qml"));
 
-    QQuickGridView *gridView = canvas->rootObject()->findChild<QQuickGridView*>("gridView");
+    QQuickGridView *gridView = window->rootObject()->findChild<QQuickGridView*>("gridView");
     QTRY_VERIFY(gridView);
 
     QSignalSpy keyNavigationWrapsSpy(gridView, SIGNAL(keyNavigationWrapsChanged()));
@@ -2353,22 +2353,22 @@ void tst_QQuickGridView::propertyChanges()
     gridView->setFlow(QQuickGridView::FlowTopToBottom);
     QTRY_COMPARE(flowSpy.count(),3);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::componentChanges()
 {
-    QQuickView *canvas = createView();
-    QTRY_VERIFY(canvas);
-    canvas->setSource(testFileUrl("propertychangestest.qml"));
+    QQuickView *window = createView();
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("propertychangestest.qml"));
 
-    QQuickGridView *gridView = canvas->rootObject()->findChild<QQuickGridView*>("gridView");
+    QQuickGridView *gridView = window->rootObject()->findChild<QQuickGridView*>("gridView");
     QTRY_VERIFY(gridView);
 
-    QQmlComponent component(canvas->engine());
+    QQmlComponent component(window->engine());
     component.setData("import QtQuick 2.0; Rectangle { color: \"blue\"; }", QUrl::fromLocalFile(""));
 
-    QQmlComponent delegateComponent(canvas->engine());
+    QQmlComponent delegateComponent(window->engine());
     delegateComponent.setData("import QtQuick 2.0; Text { text: '<b>Name:</b> ' + name }", QUrl::fromLocalFile(""));
 
     QSignalSpy highlightSpy(gridView, SIGNAL(highlightChanged()));
@@ -2410,19 +2410,19 @@ void tst_QQuickGridView::componentChanges()
     QTRY_COMPARE(headerItemSpy.count(),1);
     QTRY_COMPARE(footerItemSpy.count(),1);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::modelChanges()
 {
-    QQuickView *canvas = createView();
-    QTRY_VERIFY(canvas);
-    canvas->setSource(testFileUrl("propertychangestest.qml"));
+    QQuickView *window = createView();
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("propertychangestest.qml"));
 
-    QQuickGridView *gridView = canvas->rootObject()->findChild<QQuickGridView*>("gridView");
+    QQuickGridView *gridView = window->rootObject()->findChild<QQuickGridView*>("gridView");
     QTRY_VERIFY(gridView);
 
-    QQuickListModel *alternateModel = canvas->rootObject()->findChild<QQuickListModel*>("alternateModel");
+    QQuickListModel *alternateModel = window->rootObject()->findChild<QQuickListModel*>("alternateModel");
     QTRY_VERIFY(alternateModel);
     QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(gridView, SIGNAL(modelChanged()));
@@ -2436,28 +2436,28 @@ void tst_QQuickGridView::modelChanges()
 
     gridView->setModel(QVariant());
     QTRY_COMPARE(modelSpy.count(),2);
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::positionViewAtIndex()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
     ctxt->setContextProperty("testBottomToTop", QVariant(false));
 
-    canvas->setSource(testFileUrl("layouts.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("layouts.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -2618,7 +2618,7 @@ void tst_QQuickGridView::positionViewAtIndex()
     QTRY_COMPARE(gridview->contentX(), 0.);
 
     gridview->setContentX(80);
-    canvas->rootObject()->setProperty("showHeader", true);
+    window->rootObject()->setProperty("showHeader", true);
     gridview->positionViewAtBeginning();
     QTRY_COMPARE(gridview->contentX(), -30.);
 
@@ -2627,7 +2627,7 @@ void tst_QQuickGridView::positionViewAtIndex()
     QTRY_COMPARE(gridview->contentX(), 400.);   // 8*80 - 240   (8 columns)
 
     gridview->setContentX(80);
-    canvas->rootObject()->setProperty("showFooter", true);
+    window->rootObject()->setProperty("showFooter", true);
     gridview->positionViewAtEnd();
     QTRY_COMPARE(gridview->contentX(), 430.);
 
@@ -2639,22 +2639,22 @@ void tst_QQuickGridView::positionViewAtIndex()
     QVERIFY(gridview->highlightItem());
     QCOMPARE(gridview->highlightItem()->x(), 80.);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::snapping()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     gridview->setHeight(220);
@@ -2675,20 +2675,20 @@ void tst_QQuickGridView::snapping()
     gridview->positionViewAtIndex(15, QQuickGridView::End);
     QCOMPARE(gridview->contentY(), 120.);
 
-    delete canvas;
+    delete window;
 
 }
 
 void tst_QQuickGridView::mirroring()
 {
-    QQuickView *canvasA = createView();
-    canvasA->setSource(testFileUrl("mirroring.qml"));
-    QQuickGridView *gridviewA = findItem<QQuickGridView>(canvasA->rootObject(), "view");
+    QQuickView *windowA = createView();
+    windowA->setSource(testFileUrl("mirroring.qml"));
+    QQuickGridView *gridviewA = findItem<QQuickGridView>(windowA->rootObject(), "view");
     QTRY_VERIFY(gridviewA != 0);
 
-    QQuickView *canvasB = createView();
-    canvasB->setSource(testFileUrl("mirroring.qml"));
-    QQuickGridView *gridviewB = findItem<QQuickGridView>(canvasB->rootObject(), "view");
+    QQuickView *windowB = createView();
+    windowB->setSource(testFileUrl("mirroring.qml"));
+    QQuickGridView *gridviewB = findItem<QQuickGridView>(windowB->rootObject(), "view");
     QTRY_VERIFY(gridviewA != 0);
     qApp->processEvents();
 
@@ -2736,28 +2736,28 @@ void tst_QQuickGridView::mirroring()
     foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QQuickItem>(gridviewA, objectName)->x(), findItem<QQuickItem>(gridviewB, objectName)->x());
 
-    delete canvasA;
-    delete canvasB;
+    delete windowA;
+    delete windowB;
 }
 
 void tst_QQuickGridView::positionViewAtIndex_rightToLeft()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
     ctxt->setContextProperty("testRightToLeft", QVariant(true));
     ctxt->setContextProperty("testBottomToTop", QVariant(false));
 
-    canvas->setSource(testFileUrl("layouts.qml"));
+    window->setSource(testFileUrl("layouts.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -2870,25 +2870,25 @@ void tst_QQuickGridView::positionViewAtIndex_rightToLeft()
     gridview->positionViewAtIndex(20, QQuickGridView::Contain);
     QTRY_COMPARE(gridview->contentX(), -560.);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::resetModel()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QStringList strings;
     strings << "one" << "two" << "three";
     QStringListModel model(strings);
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("displaygrid.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("displaygrid.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -2914,28 +2914,28 @@ void tst_QQuickGridView::resetModel()
         QTRY_COMPARE(display->text(), strings.at(i));
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::enforceRange()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(testFileUrl("gridview-enforcerange.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("gridview-enforcerange.qml"));
+    window->show();
     qApp->processEvents();
-    QVERIFY(canvas->rootObject() != 0);
+    QVERIFY(window->rootObject() != 0);
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QTRY_COMPARE(gridview->preferredHighlightBegin(), 100.0);
@@ -2972,27 +2972,27 @@ void tst_QQuickGridView::enforceRange()
     ctxt->setContextProperty("testModel", &model2);
     QCOMPARE(gridview->count(), 5);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::enforceRange_rightToLeft()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testRightToLeft", QVariant(true));
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
 
-    canvas->setSource(testFileUrl("gridview-enforcerange.qml"));
+    window->setSource(testFileUrl("gridview-enforcerange.qml"));
     qApp->processEvents();
-    QVERIFY(canvas->rootObject() != 0);
+    QVERIFY(window->rootObject() != 0);
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QCOMPARE(gridview->preferredHighlightBegin(), 100.0);
@@ -3030,34 +3030,34 @@ void tst_QQuickGridView::enforceRange_rightToLeft()
     ctxt->setContextProperty("testModel", &model2);
     QCOMPARE(gridview->count(), 5);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::QTBUG_8456()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
-    canvas->setSource(testFileUrl("setindex.qml"));
+    window->setSource(testFileUrl("setindex.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QTRY_COMPARE(gridview->currentIndex(), 0);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::manualHighlight()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QString filename(testFile("manual-highlight.qml"));
-    canvas->setSource(QUrl::fromLocalFile(filename));
+    window->setSource(QUrl::fromLocalFile(filename));
 
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -3091,7 +3091,7 @@ void tst_QQuickGridView::manualHighlight()
     QTRY_COMPARE(gridview->highlightItem()->y() - 5, gridview->currentItem()->y());
     QTRY_COMPARE(gridview->highlightItem()->x() - 5, gridview->currentItem()->x());
 
-    delete canvas;
+    delete window;
 }
 
 
@@ -3106,19 +3106,19 @@ void tst_QQuickGridView::footer()
     QFETCH(QPointF, firstDelegatePos);
     QFETCH(QPointF, resizeContentPos);
 
-    QQuickView *canvas = getView();
-    canvas->show();
+    QQuickView *window = getView();
+    window->show();
 
     QaimModel model;
     for (int i = 0; i < 7; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("footer.qml"));
+    window->setSource(testFileUrl("footer.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
@@ -3178,17 +3178,17 @@ void tst_QQuickGridView::footer()
     QTRY_COMPARE(footer->pos(), posWhenNoItems);
 
     // if header is toggled, it shouldn't affect the footer position
-    canvas->rootObject()->setProperty("showHeader", true);
+    window->rootObject()->setProperty("showHeader", true);
     QVERIFY(findItem<QQuickItem>(contentItem, "header") != 0);
     QTRY_COMPARE(footer->pos(), posWhenNoItems);
-    canvas->rootObject()->setProperty("showHeader", false);
+    window->rootObject()->setProperty("showHeader", false);
 
     // add 30 items
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
     QSignalSpy footerItemSpy(gridview, SIGNAL(footerItemChanged()));
-    QMetaObject::invokeMethod(canvas->rootObject(), "changeFooter");
+    QMetaObject::invokeMethod(window->rootObject(), "changeFooter");
 
     QCOMPARE(footerItemSpy.count(), 1);
 
@@ -3214,7 +3214,7 @@ void tst_QQuickGridView::footer()
     footer->setWidth(40);
     QTRY_COMPARE(QPointF(gridview->contentX(), gridview->contentY()), resizeContentPos);
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::footer_data()
@@ -3310,11 +3310,11 @@ void tst_QQuickGridView::footer_data()
 
 void tst_QQuickGridView::initialZValues()
 {
-    QQuickView *canvas = createView();
-    canvas->setSource(testFileUrl("initialZValues.qml"));
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("initialZValues.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -3325,7 +3325,7 @@ void tst_QQuickGridView::initialZValues()
     QVERIFY(gridview->footerItem());
     QTRY_COMPARE(gridview->footerItem()->z(), gridview->property("initialZ").toReal());
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::header()
@@ -3344,15 +3344,15 @@ void tst_QQuickGridView::header()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQuickView *canvas = getView();
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->rootContext()->setContextProperty("initialViewWidth", 240);
-    canvas->rootContext()->setContextProperty("initialViewHeight", 320);
-    canvas->setSource(testFileUrl("header.qml"));
-    canvas->show();
+    QQuickView *window = getView();
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->rootContext()->setContextProperty("initialViewWidth", 240);
+    window->rootContext()->setContextProperty("initialViewHeight", 320);
+    window->setSource(testFileUrl("header.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
@@ -3392,7 +3392,7 @@ void tst_QQuickGridView::header()
         model.addItem("Item" + QString::number(i), "");
 
     QSignalSpy headerItemSpy(gridview, SIGNAL(headerItemChanged()));
-    QMetaObject::invokeMethod(canvas->rootObject(), "changeHeader");
+    QMetaObject::invokeMethod(window->rootObject(), "changeHeader");
 
     QCOMPARE(headerItemSpy.count(), 1);
 
@@ -3416,20 +3416,20 @@ void tst_QQuickGridView::header()
     header->setWidth(40);
     QTRY_COMPARE(QPointF(gridview->contentX(), gridview->contentY()), resizeContentPos);
 
-    releaseView(canvas);
+    releaseView(window);
 
 
     // QTBUG-21207 header should become visible if view resizes from initial empty size
 
-    canvas = getView();
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->rootContext()->setContextProperty("initialViewWidth", 240);
-    canvas->rootContext()->setContextProperty("initialViewHeight", 320);
-    canvas->setSource(testFileUrl("header.qml"));
-    canvas->show();
+    window = getView();
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->rootContext()->setContextProperty("initialViewWidth", 240);
+    window->rootContext()->setContextProperty("initialViewHeight", 320);
+    window->setSource(testFileUrl("header.qml"));
+    window->show();
     qApp->processEvents();
 
-    gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
@@ -3441,7 +3441,7 @@ void tst_QQuickGridView::header()
     QTRY_COMPARE(gridview->headerItem()->pos(), initialHeaderPos);
     QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::header_data()
@@ -3564,16 +3564,16 @@ void tst_QQuickGridView::extents()
     QFETCH(QPointF, origin_empty);
     QFETCH(QPointF, origin_nonEmpty);
 
-    QQuickView *canvas = getView();
+    QQuickView *window = getView();
 
     QmlListModel model;
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("headerfooter.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("headerfooter.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(window->rootObject());
     QTRY_VERIFY(gridview != 0);
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
@@ -3604,7 +3604,7 @@ void tst_QQuickGridView::extents()
     QCOMPARE(gridview->originX(), origin_nonEmpty.x());
     QCOMPARE(gridview->originY(), origin_nonEmpty.y());
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::extents_data()
@@ -3677,18 +3677,18 @@ void tst_QQuickGridView::resetModel_headerFooter()
 {
     // Resetting a model shouldn't crash in views with header/footer
 
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 6; i++)
         model.addItem("Item" + QString::number(i), "");
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("headerfooter.qml"));
+    window->setSource(testFileUrl("headerfooter.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(window->rootObject());
     QTRY_VERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -3712,28 +3712,28 @@ void tst_QQuickGridView::resetModel_headerFooter()
     QVERIFY(footer);
     QCOMPARE(footer->y(), 60.*2);
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::resizeViewAndRepaint()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("initialWidth", 240);
     ctxt->setContextProperty("initialHeight", 100);
 
-    canvas->setSource(testFileUrl("resizeview.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("resizeview.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -3783,7 +3783,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
         QCOMPARE(delegateVisible(item), i < 6); // inside view visible, outside not visible
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::resizeGrid()
@@ -3798,25 +3798,25 @@ void tst_QQuickGridView::resizeGrid()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQuickView *canvas = getView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testTopToBottom", flow == QQuickGridView::FlowTopToBottom);
     ctxt->setContextProperty("testRightToLeft", layoutDirection == Qt::RightToLeft);
     ctxt->setContextProperty("testBottomToTop", verticalLayoutDirection == QQuickGridView::BottomToTop);
-    canvas->setSource(testFileUrl("resizegrid.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("resizegrid.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
     // set the width to slightly larger than 3 items across, to test
     // items are aligned correctly in right-to-left
-    canvas->rootObject()->setWidth(260);
-    canvas->rootObject()->setHeight(320);
+    window->rootObject()->setWidth(260);
+    window->rootObject()->setHeight(320);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     QCOMPARE(gridview->contentX(), initialContentPos.x());
@@ -3839,8 +3839,8 @@ void tst_QQuickGridView::resizeGrid()
     }
 
     // change from 3x5 grid to 4x7
-    canvas->rootObject()->setWidth(canvas->rootObject()->width() + 80);
-    canvas->rootObject()->setHeight(canvas->rootObject()->height() + 60*2);
+    window->rootObject()->setWidth(window->rootObject()->width() + 80);
+    window->rootObject()->setHeight(window->rootObject()->height() + 60*2);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     // other than in LeftToRight+RightToLeft layout, the first item should not move
@@ -3870,7 +3870,7 @@ void tst_QQuickGridView::resizeGrid()
         QCOMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::resizeGrid_data()
@@ -3933,16 +3933,16 @@ void tst_QQuickGridView::changeColumnCount()
     for (int i = 0; i < 40; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQuickView *canvas = createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = createView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("initialWidth", 100);
     ctxt->setContextProperty("initialHeight", 320);
-    canvas->setSource(testFileUrl("resizeview.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("resizeview.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
@@ -3982,7 +3982,7 @@ void tst_QQuickGridView::changeColumnCount()
         QCOMPARE(item->y(), qreal(i*60));
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::indexAt_itemAt_data()
@@ -4004,7 +4004,7 @@ void tst_QQuickGridView::indexAt_itemAt()
     QFETCH(qreal, y);
     QFETCH(int, index);
 
-    QQuickView *canvas = getView();
+    QQuickView *window = getView();
 
     QaimModel model;
     model.addItem("Fred", "12345");
@@ -4015,11 +4015,11 @@ void tst_QQuickGridView::indexAt_itemAt()
     model.addItem("Ben", "04321");
     model.addItem("Jim", "0780");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -4035,7 +4035,7 @@ void tst_QQuickGridView::indexAt_itemAt()
     QCOMPARE(gridview->indexAt(x, y), index);
     QVERIFY(gridview->itemAt(x, y) == item);
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::onAdd()
@@ -4046,22 +4046,22 @@ void tst_QQuickGridView::onAdd()
     const int delegateWidth = 50;
     const int delegateHeight = 100;
     QaimModel model;
-    QQuickView *canvas = getView();
-    canvas->setGeometry(0,0,5 * delegateWidth, 5 * delegateHeight); // just ensure all items fit
+    QQuickView *window = getView();
+    window->setGeometry(0,0,5 * delegateWidth, 5 * delegateHeight); // just ensure all items fit
 
     // these initial items should not trigger GridView.onAdd
     for (int i=0; i<initialItemCount; i++)
         model.addItem("dummy value", "dummy value");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateWidth", delegateWidth);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(testFileUrl("attachedSignals.qml"));
+    window->setSource(testFileUrl("attachedSignals.qml"));
 
-    QObject *object = canvas->rootObject();
-    object->setProperty("width", canvas->width());
-    object->setProperty("height", canvas->height());
+    QObject *object = window->rootObject();
+    object->setProperty("width", window->width());
+    object->setProperty("height", window->height());
     qApp->processEvents();
 
     QList<QPair<QString, QString> > items;
@@ -4069,7 +4069,7 @@ void tst_QQuickGridView::onAdd()
         items << qMakePair(QString("value %1").arg(i), QString::number(i));
     model.addItems(items);
 
-    QTRY_COMPARE(model.count(), qobject_cast<QQuickGridView*>(canvas->rootObject())->count());
+    QTRY_COMPARE(model.count(), qobject_cast<QQuickGridView*>(window->rootObject())->count());
     qApp->processEvents();
 
     QVariantList result = object->property("addedDelegates").toList();
@@ -4077,7 +4077,7 @@ void tst_QQuickGridView::onAdd()
     for (int i=0; i<items.count(); i++)
         QCOMPARE(result[i].toString(), items[i].first);
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::onAdd_data()
@@ -4110,19 +4110,19 @@ void tst_QQuickGridView::onRemove()
     for (int i=0; i<initialItemCount; i++)
         model.addItem(QString("value %1").arg(i), "dummy value");
 
-    QQuickView *canvas = getView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateWidth", delegateWidth);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
-    canvas->setSource(testFileUrl("attachedSignals.qml"));
-    QObject *object = canvas->rootObject();
+    window->setSource(testFileUrl("attachedSignals.qml"));
+    QObject *object = window->rootObject();
 
     model.removeItems(indexToRemove, removeCount);
-    QTRY_COMPARE(model.count(), qobject_cast<QQuickGridView*>(canvas->rootObject())->count());
+    QTRY_COMPARE(model.count(), qobject_cast<QQuickGridView*>(window->rootObject())->count());
     QCOMPARE(object->property("removedDelegateCount"), QVariant(removeCount));
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::onRemove_data()
@@ -4150,13 +4150,13 @@ void tst_QQuickGridView::onRemove_data()
 
 void tst_QQuickGridView::columnCount()
 {
-    QQuickView canvas;
-    canvas.setSource(testFileUrl("gridview4.qml"));
-    canvas.show();
-    canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
+    QQuickView window;
+    window.setSource(testFileUrl("gridview4.qml"));
+    window.show();
+    window.requestActivateWindow();
+    QTest::qWaitForWindowShown(&window);
 
-    QQuickGridView *view = qobject_cast<QQuickGridView*>(canvas.rootObject());
+    QQuickGridView *view = qobject_cast<QQuickGridView*>(window.rootObject());
 
     QCOMPARE(view->cellWidth(), qreal(405)/qreal(9));
     QCOMPARE(view->cellHeight(), qreal(100));
@@ -4170,21 +4170,21 @@ void tst_QQuickGridView::columnCount()
 void tst_QQuickGridView::margins()
 {
     {
-        QQuickView *canvas = createView();
+        QQuickView *window = createView();
 
         QaimModel model;
         for (int i = 0; i < 40; i++)
             model.addItem("Item" + QString::number(i), "");
 
-        QQmlContext *ctxt = canvas->rootContext();
+        QQmlContext *ctxt = window->rootContext();
         ctxt->setContextProperty("testModel", &model);
         ctxt->setContextProperty("testRightToLeft", QVariant(false));
 
-        canvas->setSource(testFileUrl("margins.qml"));
-        canvas->show();
+        window->setSource(testFileUrl("margins.qml"));
+        window->show();
         qApp->processEvents();
 
-        QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+        QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
         QTRY_VERIFY(gridview != 0);
         QQuickItem *contentItem = gridview->contentItem();
         QTRY_VERIFY(contentItem != 0);
@@ -4229,25 +4229,25 @@ void tst_QQuickGridView::margins()
         QCOMPARE(gridview->originX(), 0.);
         QTRY_COMPARE(gridview->contentX(), pos-10);
 
-        delete canvas;
+        delete window;
     }
     {
         //RTL
-        QQuickView *canvas = createView();
-        canvas->show();
+        QQuickView *window = createView();
+        window->show();
 
         QaimModel model;
         for (int i = 0; i < 40; i++)
             model.addItem("Item" + QString::number(i), "");
 
-        QQmlContext *ctxt = canvas->rootContext();
+        QQmlContext *ctxt = window->rootContext();
         ctxt->setContextProperty("testModel", &model);
         ctxt->setContextProperty("testRightToLeft", QVariant(true));
 
-        canvas->setSource(testFileUrl("margins.qml"));
+        window->setSource(testFileUrl("margins.qml"));
         qApp->processEvents();
 
-        QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+        QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
         QTRY_VERIFY(gridview != 0);
 
         QQuickItem *contentItem = gridview->contentItem();
@@ -4294,18 +4294,18 @@ void tst_QQuickGridView::margins()
         QCOMPARE(gridview->originX(), -900.);
         QTRY_COMPARE(gridview->contentX(), pos+10);
 
-        delete canvas;
+        delete window;
     }
 }
 
 void tst_QQuickGridView::creationContext()
 {
-    QQuickView canvas;
-    canvas.setGeometry(0,0,240,320);
-    canvas.setSource(testFileUrl("creationContext.qml"));
+    QQuickView window;
+    window.setGeometry(0,0,240,320);
+    window.setSource(testFileUrl("creationContext.qml"));
     qApp->processEvents();
 
-    QQuickItem *rootItem = qobject_cast<QQuickItem *>(canvas.rootObject());
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(window.rootObject());
     QVERIFY(rootItem);
     QVERIFY(rootItem->property("count").toInt() > 0);
 
@@ -4359,13 +4359,13 @@ void tst_QQuickGridView::snapToRow()
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
 
-    QQuickView *canvas = getView();
+    QQuickView *window = getView();
 
-    canvas->setSource(testFileUrl("snapToRow.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("snapToRow.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     gridview->setFlow(flow);
@@ -4377,7 +4377,7 @@ void tst_QQuickGridView::snapToRow()
     QTRY_VERIFY(contentItem != 0);
 
     // confirm that a flick hits an item boundary
-    flick(canvas, flickStart, flickEnd, 180);
+    flick(window, flickStart, flickEnd, 180);
     QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(qreal(fmod(gridview->contentY(),80.0)), snapAlignment);
@@ -4386,7 +4386,7 @@ void tst_QQuickGridView::snapToRow()
 
     // flick to end
     do {
-        flick(canvas, flickStart, flickEnd, 180);
+        flick(window, flickStart, flickEnd, 180);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYEnd()
@@ -4399,7 +4399,7 @@ void tst_QQuickGridView::snapToRow()
 
     // flick to start
     do {
-        flick(canvas, flickEnd, flickStart, 180);
+        flick(window, flickEnd, flickStart, 180);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYBeginning()
@@ -4410,7 +4410,7 @@ void tst_QQuickGridView::snapToRow()
     else
         QCOMPARE(gridview->contentX(), startExtent);
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::snapOneRow_data()
@@ -4454,13 +4454,13 @@ void tst_QQuickGridView::snapOneRow()
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
 
-    QQuickView *canvas = getView();
+    QQuickView *window = getView();
 
-    canvas->setSource(testFileUrl("snapOneRow.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("snapOneRow.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
 
     gridview->setFlow(flow);
@@ -4474,7 +4474,7 @@ void tst_QQuickGridView::snapOneRow()
     QSignalSpy currentIndexSpy(gridview, SIGNAL(currentIndexChanged()));
 
     // confirm that a flick hits next row boundary
-    flick(canvas, flickStart, flickEnd, 180);
+    flick(window, flickStart, flickEnd, 180);
     QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), snapAlignment);
@@ -4488,7 +4488,7 @@ void tst_QQuickGridView::snapOneRow()
 
     // flick to end
     do {
-        flick(canvas, flickStart, flickEnd, 180);
+        flick(window, flickStart, flickEnd, 180);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYEnd()
@@ -4506,7 +4506,7 @@ void tst_QQuickGridView::snapOneRow()
 
     // flick to start
     do {
-        flick(canvas, flickEnd, flickStart, 180);
+        flick(window, flickEnd, flickStart, 180);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYBeginning()
@@ -4522,26 +4522,26 @@ void tst_QQuickGridView::snapOneRow()
         QCOMPARE(currentIndexSpy.count(), 6);
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 
 void tst_QQuickGridView::unaligned()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
 
     QaimModel model;
     for (int i = 0; i < 10; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    canvas->setSource(testFileUrl("unaligned.qml"));
+    window->setSource(testFileUrl("unaligned.qml"));
     qApp->processEvents();
 
-    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(canvas->rootObject());
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(window->rootObject());
     QVERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -4583,7 +4583,7 @@ void tst_QQuickGridView::unaligned()
         QCOMPARE(item->y(), qreal(i/9)*gridview->cellHeight());
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::populateTransitions()
@@ -4603,18 +4603,18 @@ void tst_QQuickGridView::populateTransitions()
             model.addItem("item" + QString::number(i), "");
     }
 
-    QQuickView *canvas = getView();
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->rootContext()->setContextProperty("usePopulateTransition", usePopulateTransition);
-    canvas->rootContext()->setContextProperty("dynamicallyPopulate", dynamicallyPopulate);
-    canvas->rootContext()->setContextProperty("transitionFrom", transitionFrom);
-    canvas->rootContext()->setContextProperty("transitionVia", transitionVia);
-    canvas->rootContext()->setContextProperty("model_transitionFrom", &model_transitionFrom);
-    canvas->rootContext()->setContextProperty("model_transitionVia", &model_transitionVia);
-    canvas->setSource(testFileUrl("populateTransitions.qml"));
-    canvas->show();
+    QQuickView *window = getView();
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->rootContext()->setContextProperty("usePopulateTransition", usePopulateTransition);
+    window->rootContext()->setContextProperty("dynamicallyPopulate", dynamicallyPopulate);
+    window->rootContext()->setContextProperty("transitionFrom", transitionFrom);
+    window->rootContext()->setContextProperty("transitionVia", transitionVia);
+    window->rootContext()->setContextProperty("model_transitionFrom", &model_transitionFrom);
+    window->rootContext()->setContextProperty("model_transitionVia", &model_transitionVia);
+    window->setSource(testFileUrl("populateTransitions.qml"));
+    window->show();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QVERIFY(gridview);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem);
@@ -4652,7 +4652,7 @@ void tst_QQuickGridView::populateTransitions()
     QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 0);
 
     // clear the model
-    canvas->rootContext()->setContextProperty("testModel", QVariant());
+    window->rootContext()->setContextProperty("testModel", QVariant());
     QTRY_COMPARE(gridview->count(), 0);
     QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
     gridview->setProperty("countPopulateTransitions", 0);
@@ -4662,7 +4662,7 @@ void tst_QQuickGridView::populateTransitions()
     model.clear();
     for (int i = 0; i < 30; i++)
         model.addItem("item" + QString::number(i), "");
-    canvas->rootContext()->setContextProperty("testModel", &model);
+    window->rootContext()->setContextProperty("testModel", &model);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 18 : 0);
@@ -4697,7 +4697,7 @@ void tst_QQuickGridView::populateTransitions()
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::populateTransitions_data()
@@ -4737,17 +4737,17 @@ void tst_QQuickGridView::addTransitions()
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *canvas = getView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
-    canvas->setSource(testFileUrl("addTransitions.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("addTransitions.qml"));
+    window->show();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
@@ -4832,7 +4832,7 @@ void tst_QQuickGridView::addTransitions()
         QCOMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::addTransitions_data()
@@ -4941,17 +4941,17 @@ void tst_QQuickGridView::moveTransitions()
     QaimModel model_targetItems_transitionVia;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *canvas = getView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_targetItems_transitionVia", &model_targetItems_transitionVia);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionVia", targetItems_transitionVia);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
-    canvas->setSource(testFileUrl("moveTransitions.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("moveTransitions.qml"));
+    window->show();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
@@ -5029,7 +5029,7 @@ void tst_QQuickGridView::moveTransitions()
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::moveTransitions_data()
@@ -5185,17 +5185,17 @@ void tst_QQuickGridView::removeTransitions()
     QaimModel model_targetItems_transitionTo;
     QaimModel model_displacedItems_transitionVia;
 
-    QQuickView *canvas = getView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_targetItems_transitionTo", &model_targetItems_transitionTo);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
     ctxt->setContextProperty("targetItems_transitionTo", targetItems_transitionTo);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
-    canvas->setSource(testFileUrl("removeTransitions.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("removeTransitions.qml"));
+    window->show();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
@@ -5282,7 +5282,7 @@ void tst_QQuickGridView::removeTransitions()
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::removeTransitions_data()
@@ -5389,8 +5389,8 @@ void tst_QQuickGridView::displacedTransitions()
     QPointF moveDisplaced_transitionVia(50, -100);
     QPointF removeDisplaced_transitionVia(150, 100);
 
-    QQuickView *canvas = getView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_displaced_transitionVia", &model_displaced_transitionVia);
     ctxt->setContextProperty("model_addDisplaced_transitionVia", &model_addDisplaced_transitionVia);
@@ -5408,11 +5408,11 @@ void tst_QQuickGridView::displacedTransitions()
     ctxt->setContextProperty("moveDisplacedEnabled", moveDisplacedEnabled);
     ctxt->setContextProperty("useRemoveDisplaced", useRemoveDisplaced);
     ctxt->setContextProperty("removeDisplacedEnabled", removeDisplacedEnabled);
-    canvas->setSource(testFileUrl("displacedTransitions.qml"));
-    canvas->show();
+    window->setSource(testFileUrl("displacedTransitions.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
@@ -5500,7 +5500,7 @@ void tst_QQuickGridView::displacedTransitions()
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::displacedTransitions_data()
@@ -5613,8 +5613,8 @@ void tst_QQuickGridView::multipleTransitions()
     for (int i = 0; i < initialCount; i++)
         model.addItem("Original item" + QString::number(i), "");
 
-    QQuickView *canvas = getView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = getView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("addTargets_transitionFrom", addTargets_transitionFrom);
     ctxt->setContextProperty("addDisplaced_transitionFrom", addDisplaced_transitionFrom);
@@ -5626,11 +5626,11 @@ void tst_QQuickGridView::multipleTransitions()
     ctxt->setContextProperty("enableMoveTransitions", enableMoveTransitions);
     ctxt->setContextProperty("enableRemoveTransitions", enableRemoveTransitions);
     ctxt->setContextProperty("rippleAddDisplaced", rippleAddDisplaced);
-    canvas->setSource(testFileUrl("multipleTransitions.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    window->setSource(testFileUrl("multipleTransitions.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
@@ -5641,7 +5641,7 @@ void tst_QQuickGridView::multipleTransitions()
         QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
     }
 
-    int timeBetweenActions = canvas->rootObject()->property("timeBetweenActions").toInt();
+    int timeBetweenActions = window->rootObject()->property("timeBetweenActions").toInt();
 
     for (int i=0; i<changes.count(); i++) {
         switch (changes[i].type) {
@@ -5717,7 +5717,7 @@ void tst_QQuickGridView::multipleTransitions()
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    releaseView(canvas);
+    releaseView(window);
 }
 
 void tst_QQuickGridView::multipleTransitions_data()
@@ -5788,21 +5788,21 @@ void tst_QQuickGridView::multipleDisplaced()
     for (int i = 0; i < 30; i++)
         model.addItem("Original item" + QString::number(i), "");
 
-    QQuickView *canvas = createView();
-    QQmlContext *ctxt = canvas->rootContext();
+    QQuickView *window = createView();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("multipleDisplaced.qml"));
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
+    window->setSource(testFileUrl("multipleDisplaced.qml"));
+    window->show();
+    QTest::qWaitForWindowShown(window);
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     model.moveItems(12, 8, 1);
-    QTest::qWait(canvas->rootObject()->property("duration").toInt() / 2);
+    QTest::qWait(window->rootObject()->property("duration").toInt() / 2);
     model.moveItems(8, 3, 1);
     QTRY_VERIFY(gridview->property("displaceTransitionsDone").toBool());
 
@@ -5824,23 +5824,23 @@ void tst_QQuickGridView::multipleDisplaced()
         QTRY_COMPARE(name->text(), model.name(i));
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::cacheBuffer()
 {
-    QQuickView *canvas = createView();
+    QQuickView *window = createView();
 
     QaimModel model;
     for (int i = 0; i < 90; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    canvas->rootContext()->setContextProperty("testModel", &model);
-    canvas->setSource(testFileUrl("gridview1.qml"));
-    canvas->show();
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl("gridview1.qml"));
+    window->show();
     qApp->processEvents();
 
-    QQuickGridView *gridview = findItem<QQuickGridView>(canvas->rootObject(), "grid");
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QVERIFY(gridview != 0);
 
     QQuickItem *contentItem = gridview->contentItem();
@@ -5857,9 +5857,9 @@ void tst_QQuickGridView::cacheBuffer()
     }
 
     QQmlIncubationController controller;
-    canvas->engine()->setIncubationController(&controller);
+    window->engine()->setIncubationController(&controller);
 
-    canvas->rootObject()->setProperty("cacheBuffer", 200);
+    window->rootObject()->setProperty("cacheBuffer", 200);
     QTRY_VERIFY(gridview->cacheBuffer() == 200);
 
     // items will be created one at a time
@@ -5917,19 +5917,19 @@ void tst_QQuickGridView::cacheBuffer()
         controller.incubateWhile(&b);
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::asynchronous()
 {
-    QQuickView *canvas = createView();
-    canvas->show();
+    QQuickView *window = createView();
+    window->show();
     QQmlIncubationController controller;
-    canvas->engine()->setIncubationController(&controller);
+    window->engine()->setIncubationController(&controller);
 
-    canvas->setSource(testFileUrl("asyncloader.qml"));
+    window->setSource(testFileUrl("asyncloader.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(rootObject);
 
     QQuickGridView *gridview = 0;
@@ -5964,7 +5964,7 @@ void tst_QQuickGridView::asynchronous()
         QVERIFY(item->y() == (i/3)*100);
     }
 
-    delete canvas;
+    delete window;
 }
 
 void tst_QQuickGridView::unrequestedVisibility()
@@ -5973,23 +5973,23 @@ void tst_QQuickGridView::unrequestedVisibility()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
 
-    QQuickView *canvas = new QQuickView(0);
-    canvas->setGeometry(0,0,240,320);
+    QQuickView *window = new QQuickView(0);
+    window->setGeometry(0,0,240,320);
 
-    QQmlContext *ctxt = canvas->rootContext();
+    QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testWrap", QVariant(false));
 
-    canvas->setSource(testFileUrl("unrequestedItems.qml"));
+    window->setSource(testFileUrl("unrequestedItems.qml"));
 
-    canvas->show();
+    window->show();
 
     qApp->processEvents();
 
-    QQuickGridView *leftview = findItem<QQuickGridView>(canvas->rootObject(), "leftGrid");
+    QQuickGridView *leftview = findItem<QQuickGridView>(window->rootObject(), "leftGrid");
     QTRY_VERIFY(leftview != 0);
 
-    QQuickGridView *rightview = findItem<QQuickGridView>(canvas->rootObject(), "rightGrid");
+    QQuickGridView *rightview = findItem<QQuickGridView>(window->rootObject(), "rightGrid");
     QTRY_VERIFY(rightview != 0);
 
     QQuickItem *leftContent = leftview->contentItem();
@@ -6136,7 +6136,7 @@ void tst_QQuickGridView::unrequestedVisibility()
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
     QCOMPARE(delegateVisible(item), false);
 
-    delete canvas;
+    delete window;
 }
 
 

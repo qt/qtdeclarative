@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCANVAS_P_H
-#define QQUICKCANVAS_P_H
+#ifndef QQUICKWINDOW_P_H
+#define QQUICKWINDOW_P_H
 
 //
 //  W A R N I N G
@@ -54,7 +54,7 @@
 //
 
 #include "qquickitem.h"
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 #include <private/qqmlguard_p.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
@@ -86,23 +86,23 @@ public Q_SLOTS:
 };
 
 class QQuickItemPrivate;
-class QQuickCanvasPrivate;
+class QQuickWindowPrivate;
 
 class QTouchEvent;
-class QQuickCanvasRenderLoop;
-class QQuickCanvasIncubationController;
+class QQuickWindowRenderLoop;
+class QQuickWindowIncubationController;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickCanvasPrivate : public QWindowPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate : public QWindowPrivate
 {
 public:
-    Q_DECLARE_PUBLIC(QQuickCanvas)
+    Q_DECLARE_PUBLIC(QQuickWindow)
 
-    static inline QQuickCanvasPrivate *get(QQuickCanvas *c) { return c->d_func(); }
+    static inline QQuickWindowPrivate *get(QQuickWindow *c) { return c->d_func(); }
 
-    QQuickCanvasPrivate();
-    virtual ~QQuickCanvasPrivate();
+    QQuickWindowPrivate();
+    virtual ~QQuickWindowPrivate();
 
-    void init(QQuickCanvas *);
+    void init(QQuickWindow *);
     void initRootItem();//Currently only used if items added in QML
 
     QQuickRootItem *rootItem;
@@ -208,7 +208,7 @@ public:
     // Keeps track of which touch point (int) was last accepted by which item
     QHash<int, QQuickItem *> itemForTouchPointId;
 
-    mutable QQuickCanvasIncubationController *incubationController;
+    mutable QQuickWindowIncubationController *incubationController;
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event);
 
@@ -217,8 +217,8 @@ private:
 };
 
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickCanvasPrivate::FocusOptions)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickWindowPrivate::FocusOptions)
 
 QT_END_NAMESPACE
 
-#endif // QQUICKCANVAS_P_H
+#endif // QQUICKWINDOW_P_H

@@ -47,7 +47,7 @@
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
-#include <QtQuick/qquickcanvas.h>
+#include <QtQuick/qquickwindow.h>
 #include <QtQml/qqmlinfo.h>
 #include <QFile>
 #include <cmath>
@@ -367,7 +367,7 @@ QSGGeometryNode* QQuickSpriteSequence::buildNode()
     if (image.isNull())
         return 0;
     m_sheetSize = QSizeF(image.size());
-    m_material->texture = canvas()->createTextureFromImage(image);
+    m_material->texture = window()->createTextureFromImage(image);
     m_material->texture->setFiltering(QSGTexture::Linear);
     m_spriteEngine->start(0);
     m_material->animT = 0;

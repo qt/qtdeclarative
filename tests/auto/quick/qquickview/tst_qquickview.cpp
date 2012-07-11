@@ -71,120 +71,120 @@ void tst_QQuickView::resizemodeitem()
     QWindow window;
     window.setGeometry(0, 0, 400, 400);
 
-    QQuickView *canvas = new QQuickView(&window);
-    QVERIFY(canvas);
-    canvas->setResizeMode(QQuickView::SizeRootObjectToView);
-    QCOMPARE(QSize(0,0), canvas->initialSize());
-    canvas->setSource(testFileUrl("resizemodeitem.qml"));
-    QQuickItem* item = qobject_cast<QQuickItem*>(canvas->rootObject());
+    QQuickView *view = new QQuickView(&window);
+    QVERIFY(view);
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
+    QCOMPARE(QSize(0,0), view->initialSize());
+    view->setSource(testFileUrl("resizemodeitem.qml"));
+    QQuickItem* item = qobject_cast<QQuickItem*>(view->rootObject());
     QVERIFY(item);
     window.show();
 
-    canvas->show();
+    view->show();
 
     // initial size from root object
     QCOMPARE(item->width(), 200.0);
     QCOMPARE(item->height(), 200.0);
-    QCOMPARE(canvas->size(), QSize(200, 200));
-    QCOMPARE(canvas->size(), canvas->sizeHint());
-    QCOMPARE(canvas->size(), canvas->initialSize());
+    QCOMPARE(view->size(), QSize(200, 200));
+    QCOMPARE(view->size(), view->sizeHint());
+    QCOMPARE(view->size(), view->initialSize());
 
     // size update from view
-    canvas->resize(QSize(80,100));
+    view->resize(QSize(80,100));
 
     QTRY_COMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
-    QCOMPARE(canvas->size(), QSize(80, 100));
-    QCOMPARE(canvas->size(), canvas->sizeHint());
+    QCOMPARE(view->size(), QSize(80, 100));
+    QCOMPARE(view->size(), view->sizeHint());
 
-    canvas->setResizeMode(QQuickView::SizeViewToRootObject);
+    view->setResizeMode(QQuickView::SizeViewToRootObject);
 
     // size update from view disabled
-    canvas->resize(QSize(60,80));
+    view->resize(QSize(60,80));
     QCOMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
     QTest::qWait(50);
-    QCOMPARE(canvas->size(), QSize(60, 80));
+    QCOMPARE(view->size(), QSize(60, 80));
 
     // size update from root object
     item->setWidth(250);
     item->setHeight(350);
     QCOMPARE(item->width(), 250.0);
     QCOMPARE(item->height(), 350.0);
-    QTRY_COMPARE(canvas->size(), QSize(250, 350));
-    QCOMPARE(canvas->size(), QSize(250, 350));
-    QCOMPARE(canvas->size(), canvas->sizeHint());
+    QTRY_COMPARE(view->size(), QSize(250, 350));
+    QCOMPARE(view->size(), QSize(250, 350));
+    QCOMPARE(view->size(), view->sizeHint());
 
-    // reset canvas
+    // reset window
     window.hide();
-    delete canvas;
-    canvas = new QQuickView(&window);
-    QVERIFY(canvas);
-    canvas->setResizeMode(QQuickView::SizeViewToRootObject);
-    canvas->setSource(testFileUrl("resizemodeitem.qml"));
-    item = qobject_cast<QQuickItem*>(canvas->rootObject());
+    delete view;
+    view = new QQuickView(&window);
+    QVERIFY(view);
+    view->setResizeMode(QQuickView::SizeViewToRootObject);
+    view->setSource(testFileUrl("resizemodeitem.qml"));
+    item = qobject_cast<QQuickItem*>(view->rootObject());
     QVERIFY(item);
     window.show();
 
-    canvas->show();
+    view->show();
 
     // initial size for root object
     QCOMPARE(item->width(), 200.0);
     QCOMPARE(item->height(), 200.0);
-    QCOMPARE(canvas->size(), canvas->sizeHint());
-    QCOMPARE(canvas->size(), canvas->initialSize());
+    QCOMPARE(view->size(), view->sizeHint());
+    QCOMPARE(view->size(), view->initialSize());
 
     // size update from root object
     item->setWidth(80);
     item->setHeight(100);
     QCOMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
-    QTRY_COMPARE(canvas->size(), QSize(80, 100));
-    QCOMPARE(canvas->size(), QSize(80, 100));
-    QCOMPARE(canvas->size(), canvas->sizeHint());
+    QTRY_COMPARE(view->size(), QSize(80, 100));
+    QCOMPARE(view->size(), QSize(80, 100));
+    QCOMPARE(view->size(), view->sizeHint());
 
     // size update from root object disabled
-    canvas->setResizeMode(QQuickView::SizeRootObjectToView);
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
     item->setWidth(60);
     item->setHeight(80);
-    QCOMPARE(canvas->width(), 80);
-    QCOMPARE(canvas->height(), 100);
-    QCOMPARE(QSize(item->width(), item->height()), canvas->sizeHint());
+    QCOMPARE(view->width(), 80);
+    QCOMPARE(view->height(), 100);
+    QCOMPARE(QSize(item->width(), item->height()), view->sizeHint());
 
     // size update from view
-    canvas->resize(QSize(200,300));
+    view->resize(QSize(200,300));
     QTest::qWait(50);
     QCOMPARE(item->width(), 200.0);
     QCOMPARE(item->height(), 300.0);
-    QCOMPARE(canvas->size(), QSize(200, 300));
-    QCOMPARE(canvas->size(), canvas->sizeHint());
+    QCOMPARE(view->size(), QSize(200, 300));
+    QCOMPARE(view->size(), view->sizeHint());
 
     window.hide();
-    delete canvas;
+    delete view;
 
     // if we set a specific size for the view then it should keep that size
     // for SizeRootObjectToView mode.
-    canvas = new QQuickView(&window);
-    canvas->resize(300, 300);
-    canvas->setResizeMode(QQuickView::SizeRootObjectToView);
-    QCOMPARE(QSize(0,0), canvas->initialSize());
-    canvas->setSource(testFileUrl("resizemodeitem.qml"));
-    canvas->resize(300, 300);
-    item = qobject_cast<QQuickItem*>(canvas->rootObject());
+    view = new QQuickView(&window);
+    view->resize(300, 300);
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
+    QCOMPARE(QSize(0,0), view->initialSize());
+    view->setSource(testFileUrl("resizemodeitem.qml"));
+    view->resize(300, 300);
+    item = qobject_cast<QQuickItem*>(view->rootObject());
     QVERIFY(item);
     window.show();
 
-    canvas->show();
+    view->show();
     QTest::qWait(50);
 
     // initial size from root object
     QCOMPARE(item->width(), 300.0);
     QCOMPARE(item->height(), 300.0);
-    QCOMPARE(canvas->size(), QSize(300, 300));
-    QCOMPARE(canvas->size(), canvas->sizeHint());
-    QCOMPARE(canvas->initialSize(), QSize(200, 200)); // initial object size
+    QCOMPARE(view->size(), QSize(300, 300));
+    QCOMPARE(view->size(), view->sizeHint());
+    QCOMPARE(view->initialSize(), QSize(200, 200)); // initial object size
 
-    delete canvas;
+    delete view;
 }
 
 static void silentErrorsMsgHandler(QtMsgType, const char *)
@@ -193,14 +193,14 @@ static void silentErrorsMsgHandler(QtMsgType, const char *)
 
 void tst_QQuickView::errors()
 {
-    QQuickView *canvas = new QQuickView;
-    QVERIFY(canvas);
+    QQuickView *view = new QQuickView;
+    QVERIFY(view);
     QtMsgHandler old = qInstallMsgHandler(silentErrorsMsgHandler);
-    canvas->setSource(testFileUrl("error1.qml"));
+    view->setSource(testFileUrl("error1.qml"));
     qInstallMsgHandler(old);
-    QVERIFY(canvas->status() == QQuickView::Error);
-    QVERIFY(canvas->errors().count() == 1);
-    delete canvas;
+    QVERIFY(view->status() == QQuickView::Error);
+    QVERIFY(view->errors().count() == 1);
+    delete view;
 }
 
 void tst_QQuickView::engine()
@@ -208,36 +208,36 @@ void tst_QQuickView::engine()
     QQmlEngine *engine = new QQmlEngine;
     QVERIFY(!engine->incubationController());
 
-    QQuickView *canvas = new QQuickView(engine, 0);
-    QVERIFY(canvas);
-    QVERIFY(engine->incubationController() == canvas->incubationController());
+    QQuickView *view = new QQuickView(engine, 0);
+    QVERIFY(view);
+    QVERIFY(engine->incubationController() == view->incubationController());
 
-    QQuickView *canvas2 = new QQuickView(engine, 0);
-    QVERIFY(canvas);
-    QVERIFY(engine->incubationController() == canvas->incubationController());
-    delete canvas;
+    QQuickView *view2 = new QQuickView(engine, 0);
+    QVERIFY(view);
+    QVERIFY(engine->incubationController() == view->incubationController());
+    delete view;
     QVERIFY(!engine->incubationController());
 
-    engine->setIncubationController(canvas2->incubationController());
-    QVERIFY(engine->incubationController() == canvas2->incubationController());
-    delete canvas2;
+    engine->setIncubationController(view2->incubationController());
+    QVERIFY(engine->incubationController() == view2->incubationController());
+    delete view2;
     QVERIFY(!engine->incubationController());
 
-    QQuickView *canvas3 = new QQuickView;
-    QQuickView *canvas4 = new QQuickView(canvas3->engine(), 0);
+    QQuickView *view3 = new QQuickView;
+    QQuickView *view4 = new QQuickView(view3->engine(), 0);
 
-    QVERIFY(canvas3->engine());
-    QVERIFY(canvas4->engine());
-    QCOMPARE(canvas3->engine(), canvas4->engine());
-    delete canvas3;
-    QVERIFY(!canvas4->engine());
+    QVERIFY(view3->engine());
+    QVERIFY(view4->engine());
+    QCOMPARE(view3->engine(), view4->engine());
+    delete view3;
+    QVERIFY(!view4->engine());
     QTest::ignoreMessage(QtWarningMsg, "QQuickView: invalid qml engine. ");
-    canvas4->setSource(QUrl());
+    view4->setSource(QUrl());
 
-    QCOMPARE(canvas4->status(), QQuickView::Error);
-    QVERIFY(!canvas4->errors().isEmpty());
-    QCOMPARE(canvas4->errors().back().description(), QLatin1String("QQuickView: invalid qml engine."));
-    delete canvas4;
+    QCOMPARE(view4->status(), QQuickView::Error);
+    QVERIFY(!view4->errors().isEmpty());
+    QCOMPARE(view4->errors().back().description(), QLatin1String("QQuickView: invalid qml engine."));
+    delete view4;
 }
 
 QTEST_MAIN(tst_QQuickView)

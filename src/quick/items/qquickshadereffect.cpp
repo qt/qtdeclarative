@@ -47,7 +47,7 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/qsgtextureprovider.h>
-#include "qquickcanvas.h"
+#include "qquickwindow.h"
 
 #include "qquickimage_p.h"
 #include "qquickshadereffectsource_p.h"
@@ -224,8 +224,8 @@ void QQuickShaderEffectCommon::disconnectPropertySignals(QQuickItem *item, Key::
         if (d.specialType == UniformData::Sampler) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
             if (source) {
-                if (item->canvas())
-                    QQuickItemPrivate::get(source)->derefCanvas();
+                if (item->window())
+                    QQuickItemPrivate::get(source)->derefWindow();
                 QObject::disconnect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
             }
         }
@@ -257,8 +257,8 @@ void QQuickShaderEffectCommon::connectPropertySignals(QQuickItem *item, Key::Sha
         if (d.specialType == UniformData::Sampler) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
             if (source) {
-                if (item->canvas())
-                    QQuickItemPrivate::get(source)->refCanvas(item->canvas());
+                if (item->window())
+                    QQuickItemPrivate::get(source)->refWindow(item->window());
                 QObject::connect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
             }
         }
@@ -454,17 +454,17 @@ void QQuickShaderEffectCommon::updateMaterial(QQuickShaderEffectNode *node,
     }
 }
 
-void QQuickShaderEffectCommon::updateCanvas(QQuickCanvas *canvas)
+void QQuickShaderEffectCommon::updateWindow(QQuickWindow *window)
 {
     // See comment in QQuickShaderEffectCommon::propertyChanged().
-    if (canvas) {
+    if (window) {
         for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType) {
             for (int i = 0; i < uniformData[shaderType].size(); ++i) {
                 const UniformData &d = uniformData[shaderType].at(i);
                 if (d.specialType == UniformData::Sampler) {
                     QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                     if (source)
-                        QQuickItemPrivate::get(source)->refCanvas(canvas);
+                        QQuickItemPrivate::get(source)->refWindow(window);
                 }
             }
         }
@@ -475,7 +475,7 @@ void QQuickShaderEffectCommon::updateCanvas(QQuickCanvas *canvas)
                 if (d.specialType == UniformData::Sampler) {
                     QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                     if (source)
-                        QQuickItemPrivate::get(source)->derefCanvas();
+                        QQuickItemPrivate::get(source)->derefWindow();
                 }
             }
         }
@@ -505,8 +505,8 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     if (d.specialType == UniformData::Sampler) {
         QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
         if (source) {
-            if (item->canvas())
-                QQuickItemPrivate::get(source)->derefCanvas();
+            if (item->window())
+                QQuickItemPrivate::get(source)->derefWindow();
             QObject::disconnect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
         }
 
@@ -514,12 +514,12 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
 
         source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
         if (source) {
-            // 'source' needs a canvas to get a scene graph node. It usually gets one through its
+            // 'source' needs a window to get a scene graph node. It usually gets one through its
             // parent, but if the source item is "inline" rather than a reference -- i.e.
             // "property variant source: Image { }" instead of "property variant source: foo" -- it
-            // will not get a parent. In those cases, 'source' should get the canvas from 'item'.
-            if (item->canvas())
-                QQuickItemPrivate::get(source)->refCanvas(item->canvas());
+            // will not get a parent. In those cases, 'source' should get the window from 'item'.
+            if (item->window())
+                QQuickItemPrivate::get(source)->refWindow(item->window());
             QObject::connect(source, SIGNAL(destroyed(QObject*)), item, SLOT(sourceDestroyed(QObject*)));
         }
         if (textureProviderChanged)
@@ -1009,7 +1009,7 @@ void QQuickShaderEffect::componentComplete()
 void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuickItem::ItemSceneChange)
-        m_common.updateCanvas(value.canvas);
+        m_common.updateWindow(value.window);
     QQuickItem::itemChange(change, value);
 }
 
