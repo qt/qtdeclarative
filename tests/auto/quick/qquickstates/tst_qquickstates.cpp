@@ -702,8 +702,9 @@ void tst_qquickstates::anchorChanges()
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
-    QCOMPARE(aChanges->anchors()->left().script(), QLatin1String("undefined"));
-    QCOMPARE(aChanges->anchors()->right().script(), QLatin1String("container.right"));
+    QCOMPARE(aChanges->anchors()->left().isUndefinedLiteral(), true);
+    QVERIFY(!aChanges->anchors()->left().isEmpty());
+    QVERIFY(!aChanges->anchors()->right().isEmpty());
 
     rectPrivate->setState("right");
     QCOMPARE(innerRect->x(), qreal(150));
@@ -765,8 +766,8 @@ void tst_qquickstates::anchorChanges3()
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
-    QCOMPARE(aChanges->anchors()->top().script(), QLatin1String("container.top"));
-    QCOMPARE(aChanges->anchors()->bottom().script(), QLatin1String("bottomGuideline.bottom"));
+    QVERIFY(!aChanges->anchors()->top().isEmpty());
+    QVERIFY(!aChanges->anchors()->bottom().isEmpty());
 
     rectPrivate->setState("reanchored");
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
@@ -818,8 +819,8 @@ void tst_qquickstates::anchorChanges4()
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
-    QCOMPARE(aChanges->anchors()->horizontalCenter().script(), QLatin1String("bottomGuideline.horizontalCenter"));
-    QCOMPARE(aChanges->anchors()->verticalCenter().script(), QLatin1String("leftGuideline.verticalCenter"));
+    QVERIFY(!aChanges->anchors()->horizontalCenter().isEmpty());
+    QVERIFY(!aChanges->anchors()->verticalCenter().isEmpty());
 
     QQuickItemPrivate::get(rect)->setState("reanchored");
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));
@@ -856,7 +857,7 @@ void tst_qquickstates::anchorChanges5()
     QQuickAnchorChanges *aChanges = qobject_cast<QQuickAnchorChanges*>(state->operationAt(0));
     QVERIFY(aChanges != 0);
 
-    QCOMPARE(aChanges->anchors()->baseline().script(), QLatin1String("leftGuideline.baseline"));
+    QVERIFY(!aChanges->anchors()->baseline().isEmpty());
 
     QQuickItemPrivate::get(rect)->setState("reanchored");
     QCOMPARE(aChanges->object(), qobject_cast<QQuickItem*>(innerRect));

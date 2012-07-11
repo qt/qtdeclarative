@@ -73,12 +73,28 @@ expr.evaluate();
 \sa QQmlExpression
 */
 
+const QQmlScriptStringPrivate* QQmlScriptStringPrivate::get(const QQmlScriptString &script)
+{
+    return script.d.constData();
+}
+
 /*!
 Constructs an empty instance.
 */
 QQmlScriptString::QQmlScriptString()
 :  d(new QQmlScriptStringPrivate)
 {
+}
+
+/*!
+    \internal
+*/
+QQmlScriptString::QQmlScriptString(const QString &script, QQmlContext *context, QObject *scope)
+:  d(new QQmlScriptStringPrivate)
+{
+    d->script = script;
+    d->context = context;
+    d->scope = scope;
 }
 
 /*!
@@ -106,51 +122,62 @@ QQmlScriptString &QQmlScriptString::operator=(const QQmlScriptString &other)
 }
 
 /*!
-Returns the context for the script.
+Returns whether the QQmlScriptString is empty.
 */
-QQmlContext *QQmlScriptString::context() const
+bool QQmlScriptString::isEmpty() const
 {
-    return d->context;
+    return d->script.isEmpty();
 }
 
 /*!
-Sets the \a context for the script.
+Returns whether the content of the QQmlScriptString is the \c undefined literal.
 */
-void QQmlScriptString::setContext(QQmlContext *context)
+bool QQmlScriptString::isUndefinedLiteral() const
 {
-    d->context = context;
+    return d->script == QStringLiteral("undefined");
 }
 
 /*!
-Returns the scope object for the script.
+Returns whether the content of the QQmlScriptString is the \c null literal.
 */
-QObject *QQmlScriptString::scopeObject() const
+bool QQmlScriptString::isNullLiteral() const
 {
-    return d->scope;
+    return d->script == QStringLiteral("null");
 }
 
 /*!
-Sets the scope \a object for the script.
+If the content of the QQmlScriptString is a string literal, returns that string.
+Otherwise returns a null QString.
 */
-void QQmlScriptString::setScopeObject(QObject *object)
+QString QQmlScriptString::stringLiteral() const
 {
-    d->scope = object;
+    if (d->isStringLiteral)
+        return d->script.mid(1, d->script.length()-2);
+    return QString();
 }
 
 /*!
-Returns the script text.
+If the content of the QQmlScriptString is a number literal, returns that number and
+sets \a ok to true. Otherwise returns 0.0 and sets \a ok to false.
 */
-QString QQmlScriptString::script() const
+qreal QQmlScriptString::numberLiteral(bool *ok) const
 {
-    return d->script;
+    if (ok)
+        *ok = d->isNumberLiteral;
+    return d->isNumberLiteral ? d->numberValue : 0.;
 }
 
 /*!
-Sets the \a script text.
+If the content of the QQmlScriptString is a boolean literal, returns the boolean value and
+sets \a ok to true. Otherwise returns false and sets \a ok to false.
 */
-void QQmlScriptString::setScript(const QString &script)
+bool QQmlScriptString::booleanLiteral(bool *ok) const
 {
-    d->script = script;
+    bool isTrue = d->script == QStringLiteral("true");
+    bool isFalse = !isTrue && d->script == QStringLiteral("false");
+    if (ok)
+        *ok = isTrue || isFalse;
+    return isTrue ? true : false;
 }
 
 QT_END_NAMESPACE

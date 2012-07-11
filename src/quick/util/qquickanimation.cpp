@@ -951,7 +951,7 @@ void QQuickScriptActionPrivate::execute()
 
     QQmlScriptString scriptStr = hasRunScriptScript ? runScriptScript : script;
 
-    if (!scriptStr.script().isEmpty()) {
+    if (!scriptStr.isEmpty()) {
         QQmlExpression expr(scriptStr);
         expr.evaluate();
         if (expr.hasError())

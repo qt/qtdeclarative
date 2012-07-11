@@ -332,6 +332,9 @@ union QQmlInstruction
         int bindingId;
         ushort line;
         ushort column;
+        double numberValue;
+        bool isStringLiteral;
+        bool isNumberLiteral;
     }; 
     struct instr_storeScript {
         QML_INSTR_HEADER

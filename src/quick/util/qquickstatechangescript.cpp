@@ -130,7 +130,7 @@ void QQuickStateChangeScript::setName(const QString &n)
 void QQuickStateChangeScript::execute(Reason)
 {
     Q_D(QQuickStateChangeScript);
-    if (!d->script.script().isEmpty()) {
+    if (!d->script.isEmpty()) {
         QQmlExpression expr(d->script);
         expr.evaluate();
         if (expr.hasError())

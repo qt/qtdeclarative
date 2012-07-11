@@ -88,14 +88,14 @@ void tst_qqmlexpression::scriptString()
     QVERIFY(testObj != 0);
 
     QQmlScriptString script = testObj->scriptString();
-    QCOMPARE(script.script(), QLatin1String("value1 + value2"));
+    QVERIFY(!script.isEmpty());
 
     QQmlExpression expression(script);
     QVariant value = expression.evaluate();
     QCOMPARE(value.toInt(), 15);
 
     QQmlScriptString scriptError = testObj->scriptStringError();
-    QCOMPARE(scriptError.script(), QLatin1String("value3 * 5"));
+    QVERIFY(!scriptError.isEmpty());
 
     //verify that the expression has the correct error location information
     QQmlExpression expressionError(scriptError);

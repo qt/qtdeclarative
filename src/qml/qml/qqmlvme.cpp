@@ -772,13 +772,13 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
         QML_BEGIN_INSTR(StoreScriptString)
             QObject *target = objects.top();
             QObject *scope = objects.at(objects.count() - 1 - instr.scope);
-            QQmlScriptString ss;
-            ss.setContext(CTXT->asQQmlContext());
-            ss.setScopeObject(scope);
-            ss.setScript(PRIMITIVES.at(instr.value));
+            QQmlScriptString ss(PRIMITIVES.at(instr.value), CTXT->asQQmlContext(), scope);
             ss.d.data()->bindingId = instr.bindingId;
             ss.d.data()->lineNumber = instr.line;
             ss.d.data()->columnNumber = instr.column;
+            ss.d.data()->isStringLiteral = instr.isStringLiteral;
+            ss.d.data()->isNumberLiteral = instr.isNumberLiteral;
+            ss.d.data()->numberValue = instr.numberValue;
 
             void *a[] = { &ss, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 

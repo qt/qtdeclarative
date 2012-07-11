@@ -57,6 +57,7 @@
 #include "qqmlpropertyvaluesource.h"
 #include "qqmlexpression.h"
 #include "qqmlproperty.h"
+#include "qqmlscriptstring.h"
 #include "qqmlproperty_p.h"
 
 #include <QtCore/QObject>
@@ -79,6 +80,7 @@ public:
     Q_DECLARE_FLAGS(EvaluateFlags, EvaluateFlag)
 
     QQmlBinding(const QString &, QObject *, QQmlContext *);
+    QQmlBinding(const QQmlScriptString &, QObject *, QQmlContext *);
     QQmlBinding(const QString &, QObject *, QQmlContextData *);
     QQmlBinding(const QString &, bool isRewritten, QObject *, QQmlContextData *, 
                 const QString &url, int lineNumber, int columnNumber);

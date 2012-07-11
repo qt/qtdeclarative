@@ -64,20 +64,22 @@ public:
 
     QQmlScriptString &operator=(const QQmlScriptString &);
 
-    QQmlContext *context() const;
-    void setContext(QQmlContext *);
+    bool isEmpty() const;
 
-    QObject *scopeObject() const;
-    void setScopeObject(QObject *);
-
-    QString script() const;
-    void setScript(const QString &);
+    bool isUndefinedLiteral() const;
+    bool isNullLiteral() const;
+    QString stringLiteral() const;
+    qreal numberLiteral(bool *ok) const;
+    bool booleanLiteral(bool *ok) const;
 
 private:
+    QQmlScriptString(const QString &script, QQmlContext *context, QObject *scope);
     QSharedDataPointer<QQmlScriptStringPrivate> d;
 
+    friend class QQmlScriptStringPrivate;
     friend class QQmlVME;
     friend class QQmlExpression;
+    friend class QQmlBinding;
 };
 
 QT_END_NAMESPACE

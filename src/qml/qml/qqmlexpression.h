@@ -65,7 +65,7 @@ class Q_QML_EXPORT QQmlExpression : public QObject
 public:
     QQmlExpression();
     QQmlExpression(QQmlContext *, QObject *, const QString &, QObject * = 0);
-    explicit QQmlExpression(const QQmlScriptString &, QObject * = 0);
+    explicit QQmlExpression(const QQmlScriptString &, QQmlContext * = 0, QObject * = 0, QObject * = 0);
     virtual ~QQmlExpression();
 
     QQmlEngine *engine() const;

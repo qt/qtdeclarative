@@ -202,38 +202,38 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt,
     Create a QQmlExpression object that is a child of \a parent.
 
     The \a script provides the expression to be evaluated, the context to evaluate it in,
-    and the scope object to evaluate it with.
-
-    This constructor is functionally equivalent to the following, but in most cases
-    is more efficient.
-    \code
-    QQmlExpression expression(script.context(), script.scopeObject(), script.script(), parent);
-    \endcode
+    and the scope object to evaluate it with. If provided, \a ctxt and \a scope will override
+    the context and scope object provided by \a script.
 
     \sa QQmlScriptString
 */
-QQmlExpression::QQmlExpression(const QQmlScriptString &script, QObject *parent)
+QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt, QObject *scope, QObject *parent)
 : QObject(*new QQmlExpressionPrivate, parent)
 {
     Q_D(QQmlExpression);
+    if (ctxt && !ctxt->isValid())
+        return;
 
-    if (!script.context()->isValid())
+    const QQmlScriptStringPrivate *scriptPrivate = script.d.data();
+    if (!ctxt && (!scriptPrivate->context || !scriptPrivate->context->isValid()))
         return;
 
     bool defaultConstruction = true;
+    QQmlContextData *evalCtxtData = QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context);
+    QObject *scopeObject = scope ? scope : scriptPrivate->scope;
 
-    int id = script.d.data()->bindingId;
+    int id = scriptPrivate->bindingId;
     if (id >= 0) {
-        QQmlContextData *ctxtdata = QQmlContextData::get(script.context());
-        QQmlEnginePrivate *engine = QQmlEnginePrivate::get(script.context()->engine());
+        QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
+        QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
         if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
             QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
             Q_ASSERT(typeData);
 
             if (QQmlCompiledData *cdata = typeData->compiledData()) {
                 defaultConstruction = false;
-                d->init(ctxtdata, cdata->primitives.at(id), true, script.scopeObject(),
-                        cdata->name, script.d.data()->lineNumber, script.d.data()->columnNumber);
+                d->init(evalCtxtData, cdata->primitives.at(id), true, scopeObject,
+                        cdata->name, scriptPrivate->lineNumber, scriptPrivate->columnNumber);
             }
 
             typeData->release();
@@ -241,7 +241,7 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QObject *parent)
     }
 
     if (defaultConstruction)
-        d->init(QQmlContextData::get(script.context()), script.script(), script.scopeObject());
+        d->init(evalCtxtData, scriptPrivate->script, scopeObject);
 }
 
 /*!

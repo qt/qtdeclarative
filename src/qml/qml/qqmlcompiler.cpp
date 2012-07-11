@@ -1265,6 +1265,9 @@ void QQmlCompiler::genObjectBody(QQmlScript::Object *obj)
         ss.bindingId = rewriteBinding(prop->values.first()->value, QString()); // XXX
         ss.line = prop->location.start.line;
         ss.column = prop->location.start.column;
+        ss.isStringLiteral = prop->values.first()->value.isString();
+        ss.isNumberLiteral = prop->values.first()->value.isNumber();
+        ss.numberValue = prop->values.first()->value.asNumber();
         output->addInstruction(ss);
     }
 

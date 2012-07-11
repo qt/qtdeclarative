@@ -50,6 +50,7 @@
 #include <private/qqmltrace_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlrewrite_p.h>
+#include <private/qqmlscriptstring_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
@@ -112,6 +113,53 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
 
     m_expression = str.toUtf8();
     v8function = evalFunction(context(), obj, code, QString(), 0);
+}
+
+QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
+: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
+{
+    if (ctxt && !ctxt->isValid())
+        return;
+
+    const QQmlScriptStringPrivate *scriptPrivate = script.d.data();
+    if (!ctxt && (!scriptPrivate->context || !scriptPrivate->context->isValid()))
+        return;
+
+    bool needRewrite = true;
+    QString code;
+
+    int id = scriptPrivate->bindingId;
+    if (id >= 0) {
+        QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
+        QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
+        if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
+            QQmlTypeData *typeData = engine->typeLoader.getType(ctxtdata->url);
+            Q_ASSERT(typeData);
+
+            if (QQmlCompiledData *cdata = typeData->compiledData()) {
+                needRewrite = false;
+                code = cdata->primitives.at(id);
+                m_url = cdata->name;
+            }
+
+            typeData->release();
+        }
+    }
+
+    if (needRewrite) {
+        QQmlRewrite::RewriteBinding rewriteBinding;
+        code = rewriteBinding(scriptPrivate->script);
+    }
+
+    setNotifyOnValueChanged(true);
+    QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
+    setScopeObject(obj ? obj : scriptPrivate->scope);
+
+    m_expression = scriptPrivate->script.toUtf8();
+    m_lineNumber = scriptPrivate->lineNumber;
+    m_columnNumber = scriptPrivate->columnNumber;
+
+    v8function = evalFunction(context(), scopeObject(), code, QString(), m_lineNumber);
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)

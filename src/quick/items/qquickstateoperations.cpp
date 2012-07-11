@@ -356,13 +356,12 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->xString.isValid()) {
         bool ok = false;
-        QString script = d->xString.value.script();
-        qreal x = script.toFloat(&ok);
+        qreal x = d->xString.value.numberLiteral(&ok);
         if (ok) {
             QQuickAction xa(d->target, QLatin1String("x"), x);
             actions << xa;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlBinding *newBinding = new QQmlBinding(d->xString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("x"));
             newBinding->setTarget(property);
             QQuickAction xa;
@@ -376,13 +375,12 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->yString.isValid()) {
         bool ok = false;
-        QString script = d->yString.value.script();
-        qreal y = script.toFloat(&ok);
+        qreal y = d->yString.value.numberLiteral(&ok);
         if (ok) {
             QQuickAction ya(d->target, QLatin1String("y"), y);
             actions << ya;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlBinding *newBinding = new QQmlBinding(d->yString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("y"));
             newBinding->setTarget(property);
             QQuickAction ya;
@@ -396,13 +394,12 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->scaleString.isValid()) {
         bool ok = false;
-        QString script = d->scaleString.value.script();
-        qreal scale = script.toFloat(&ok);
+        qreal scale = d->scaleString.value.numberLiteral(&ok);
         if (ok) {
             QQuickAction sa(d->target, QLatin1String("scale"), scale);
             actions << sa;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlBinding *newBinding = new QQmlBinding(d->scaleString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("scale"));
             newBinding->setTarget(property);
             QQuickAction sa;
@@ -416,13 +413,12 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->rotationString.isValid()) {
         bool ok = false;
-        QString script = d->rotationString.value.script();
-        qreal rotation = script.toFloat(&ok);
+        qreal rotation = d->rotationString.value.numberLiteral(&ok);
         if (ok) {
             QQuickAction ra(d->target, QLatin1String("rotation"), rotation);
             actions << ra;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlBinding *newBinding = new QQmlBinding(d->rotationString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("rotation"));
             newBinding->setTarget(property);
             QQuickAction ra;
@@ -436,13 +432,12 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->widthString.isValid()) {
         bool ok = false;
-        QString script = d->widthString.value.script();
-        qreal width = script.toFloat(&ok);
+        qreal width = d->widthString.value.numberLiteral(&ok);
         if (ok) {
             QQuickAction wa(d->target, QLatin1String("width"), width);
             actions << wa;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlBinding *newBinding = new QQmlBinding(d->widthString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("width"));
             newBinding->setTarget(property);
             QQuickAction wa;
@@ -456,13 +451,12 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->heightString.isValid()) {
         bool ok = false;
-        QString script = d->heightString.value.script();
-        qreal height = script.toFloat(&ok);
+        qreal height = d->heightString.value.numberLiteral(&ok);
         if (ok) {
             QQuickAction ha(d->target, QLatin1String("height"), height);
             actions << ha;
         } else {
-            QQmlBinding *newBinding = new QQmlBinding(script, d->target, qmlContext(this));
+            QQmlBinding *newBinding = new QQmlBinding(d->heightString.value, d->target, qmlContext(this));
             QQmlProperty property(d->target, QLatin1String("height"));
             newBinding->setTarget(property);
             QQuickAction ha;
@@ -632,7 +626,7 @@ void QQuickAnchorSet::setTop(const QQmlScriptString &edge)
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::TopAnchor;
     d->topScript = edge;
-    if (edge.script() == QLatin1String("undefined"))
+    if (edge.isUndefinedLiteral())
         resetTop();
 }
 
@@ -654,7 +648,7 @@ void QQuickAnchorSet::setBottom(const QQmlScriptString &edge)
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::BottomAnchor;
     d->bottomScript = edge;
-    if (edge.script() == QLatin1String("undefined"))
+    if (edge.isUndefinedLiteral())
         resetBottom();
 }
 
@@ -676,7 +670,7 @@ void QQuickAnchorSet::setVerticalCenter(const QQmlScriptString &edge)
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::VCenterAnchor;
     d->vCenterScript = edge;
-    if (edge.script() == QLatin1String("undefined"))
+    if (edge.isUndefinedLiteral())
         resetVerticalCenter();
 }
 
@@ -698,7 +692,7 @@ void QQuickAnchorSet::setBaseline(const QQmlScriptString &edge)
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::BaselineAnchor;
     d->baselineScript = edge;
-    if (edge.script() == QLatin1String("undefined"))
+    if (edge.isUndefinedLiteral())
         resetBaseline();
 }
 
@@ -720,7 +714,7 @@ void QQuickAnchorSet::setLeft(const QQmlScriptString &edge)
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::LeftAnchor;
     d->leftScript = edge;
-    if (edge.script() == QLatin1String("undefined"))
+    if (edge.isUndefinedLiteral())
         resetLeft();
 }
 
@@ -742,7 +736,7 @@ void QQuickAnchorSet::setRight(const QQmlScriptString &edge)
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::RightAnchor;
     d->rightScript = edge;
-    if (edge.script() == QLatin1String("undefined"))
+    if (edge.isUndefinedLiteral())
         resetRight();
 }
 
@@ -764,7 +758,7 @@ void QQuickAnchorSet::setHorizontalCenter(const QQmlScriptString &edge)
     Q_D(QQuickAnchorSet);
     d->usedAnchors |= QQuickAnchors::HCenterAnchor;
     d->hCenterScript = edge;
-    if (edge.script() == QLatin1String("undefined"))
+    if (edge.isUndefinedLiteral())
         resetHorizontalCenter();
 }
 
@@ -880,31 +874,31 @@ QQuickAnchorChanges::ActionList QQuickAnchorChanges::actions()
     d->baselineProp = QQmlProperty(d->target, QLatin1String("anchors.baseline"));
 
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::LeftAnchor) {
-        d->leftBinding = new QQmlBinding(d->anchorSet->d_func()->leftScript.script(), d->target, qmlContext(this));
+        d->leftBinding = new QQmlBinding(d->anchorSet->d_func()->leftScript, d->target, qmlContext(this));
         d->leftBinding->setTarget(d->leftProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::RightAnchor) {
-        d->rightBinding = new QQmlBinding(d->anchorSet->d_func()->rightScript.script(), d->target, qmlContext(this));
+        d->rightBinding = new QQmlBinding(d->anchorSet->d_func()->rightScript, d->target, qmlContext(this));
         d->rightBinding->setTarget(d->rightProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::HCenterAnchor) {
-        d->hCenterBinding = new QQmlBinding(d->anchorSet->d_func()->hCenterScript.script(), d->target, qmlContext(this));
+        d->hCenterBinding = new QQmlBinding(d->anchorSet->d_func()->hCenterScript, d->target, qmlContext(this));
         d->hCenterBinding->setTarget(d->hCenterProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::TopAnchor) {
-        d->topBinding = new QQmlBinding(d->anchorSet->d_func()->topScript.script(), d->target, qmlContext(this));
+        d->topBinding = new QQmlBinding(d->anchorSet->d_func()->topScript, d->target, qmlContext(this));
         d->topBinding->setTarget(d->topProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::BottomAnchor) {
-        d->bottomBinding = new QQmlBinding(d->anchorSet->d_func()->bottomScript.script(), d->target, qmlContext(this));
+        d->bottomBinding = new QQmlBinding(d->anchorSet->d_func()->bottomScript, d->target, qmlContext(this));
         d->bottomBinding->setTarget(d->bottomProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::VCenterAnchor) {
-        d->vCenterBinding = new QQmlBinding(d->anchorSet->d_func()->vCenterScript.script(), d->target, qmlContext(this));
+        d->vCenterBinding = new QQmlBinding(d->anchorSet->d_func()->vCenterScript, d->target, qmlContext(this));
         d->vCenterBinding->setTarget(d->vCenterProp);
     }
     if (d->anchorSet->d_func()->usedAnchors & QQuickAnchors::BaselineAnchor) {
-        d->baselineBinding = new QQmlBinding(d->anchorSet->d_func()->baselineScript.script(), d->target, qmlContext(this));
+        d->baselineBinding = new QQmlBinding(d->anchorSet->d_func()->baselineScript, d->target, qmlContext(this));
         d->baselineBinding->setTarget(d->baselineProp);
     }
 

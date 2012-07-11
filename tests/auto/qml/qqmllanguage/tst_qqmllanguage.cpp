@@ -52,6 +52,7 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qqmlscriptstring_p.h>
 
 #include "testtypes.h"
 #include "testhttpserver.h"
@@ -1693,14 +1694,23 @@ void tst_qqmllanguage::scriptString()
 
         MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
         QVERIFY(object != 0);
-        QCOMPARE(object->scriptProperty().script(), QString("foo + bar"));
-        QCOMPARE(object->scriptProperty().scopeObject(), qobject_cast<QObject*>(object));
-        QCOMPARE(object->scriptProperty().context(), qmlContext(object));
+        QVERIFY(!object->scriptProperty().isEmpty());
+        QCOMPARE(object->scriptProperty().stringLiteral(), QString());
+        bool ok;
+        QCOMPARE(object->scriptProperty().numberLiteral(&ok), qreal(0.));
+        QCOMPARE(ok, false);
+
+        const QQmlScriptStringPrivate *scriptPrivate = QQmlScriptStringPrivate::get(object->scriptProperty());
+        QVERIFY(scriptPrivate != 0);
+        QCOMPARE(scriptPrivate->script, QString("foo + bar"));
+        QCOMPARE(scriptPrivate->scope, qobject_cast<QObject*>(object));
+        QCOMPARE(scriptPrivate->context, qmlContext(object));
 
         QVERIFY(object->grouped() != 0);
-        QCOMPARE(object->grouped()->script().script(), QString("console.log(1921)"));
-        QCOMPARE(object->grouped()->script().scopeObject(), qobject_cast<QObject*>(object));
-        QCOMPARE(object->grouped()->script().context(), qmlContext(object));
+        const QQmlScriptStringPrivate *groupedPrivate = QQmlScriptStringPrivate::get(object->grouped()->script());
+        QCOMPARE(groupedPrivate->script, QString("console.log(1921)"));
+        QCOMPARE(groupedPrivate->scope, qobject_cast<QObject*>(object));
+        QCOMPARE(groupedPrivate->context, qmlContext(object));
     }
 
     {
@@ -1709,7 +1719,7 @@ void tst_qqmllanguage::scriptString()
 
         MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
         QVERIFY(object != 0);
-        QCOMPARE(object->scriptProperty().script(), QString("\"hello\\n\\\"world\\\"\""));
+        QCOMPARE(object->scriptProperty().stringLiteral(), QString("hello\\n\\\"world\\\""));
     }
 
     {
@@ -1718,7 +1728,10 @@ void tst_qqmllanguage::scriptString()
 
         MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
         QVERIFY(object != 0);
-        QCOMPARE(object->scriptProperty().script(), QString("12.345"));
+        bool ok;
+        QCOMPARE(object->scriptProperty().numberLiteral(&ok), qreal(12.345));
+        QCOMPARE(ok, true);
+
     }
 
     {
@@ -1727,7 +1740,27 @@ void tst_qqmllanguage::scriptString()
 
         MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
         QVERIFY(object != 0);
-        QCOMPARE(object->scriptProperty().script(), QString("true"));
+        bool ok;
+        QCOMPARE(object->scriptProperty().booleanLiteral(&ok), true);
+        QCOMPARE(ok, true);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptString5.qml"));
+        VERIFY_ERRORS(0);
+
+        MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->scriptProperty().isNullLiteral(), true);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptString6.qml"));
+        VERIFY_ERRORS(0);
+
+        MyTypeObject *object = qobject_cast<MyTypeObject*>(component.create());
+        QVERIFY(object != 0);
+        QCOMPARE(object->scriptProperty().isUndefinedLiteral(), true);
     }
 }
 

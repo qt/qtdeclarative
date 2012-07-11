@@ -42,14 +42,19 @@
 #ifndef QQMLSCRIPTSTRING_P_H
 #define QQMLSCRIPTSTRING_P_H
 
+#include "qqmlscriptstring.h"
 #include <QtQml/qqmlcontext.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlScriptStringPrivate : public QSharedData
+class Q_AUTOTEST_EXPORT QQmlScriptStringPrivate : public QSharedData
 {
 public:
-    QQmlScriptStringPrivate() : context(0), scope(0), bindingId(-1), lineNumber(-1), columnNumber(-1) {}
+    QQmlScriptStringPrivate() : context(0), scope(0), bindingId(-1), lineNumber(-1), columnNumber(-1),
+        numberValue(0), isStringLiteral(false), isNumberLiteral(false) {}
+
+    //for testing
+    static const QQmlScriptStringPrivate* get(const QQmlScriptString &script);
 
     QQmlContext *context;
     QObject *scope;
@@ -57,6 +62,9 @@ public:
     int bindingId;
     int lineNumber;
     int columnNumber;
+    double numberValue;
+    bool isStringLiteral;
+    bool isNumberLiteral;
 };
 
 QT_END_NAMESPACE
