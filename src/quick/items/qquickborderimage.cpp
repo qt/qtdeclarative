@@ -293,34 +293,42 @@ void QQuickBorderImage::setSource(const QUrl &url)
 void QQuickBorderImage::load()
 {
     Q_D(QQuickBorderImage);
-    if (d->progress != 0.0) {
-        d->progress = 0.0;
-        emit progressChanged(d->progress);
-    }
 
     if (d->url.isEmpty()) {
         d->pix.clear(this);
         d->status = Null;
         setImplicitSize(0, 0);
         emit statusChanged(d->status);
+        if (d->progress != 0.0) {
+            d->progress = 0.0;
+            emit progressChanged(d->progress);
+        }
+        if (sourceSize() != d->oldSourceSize) {
+            d->oldSourceSize = sourceSize();
+            emit sourceSizeChanged();
+        }
         update();
         return;
     } else {
-        d->status = Loading;
         if (d->url.path().endsWith(QLatin1String("sci"))) {
             QString lf = QQmlFile::urlToLocalFileOrQrc(d->url);
             if (!lf.isEmpty()) {
                 QFile file(lf);
                 file.open(QIODevice::ReadOnly);
                 setGridScaledImage(QQuickGridScaledImage(&file));
+                return;
             } else {
+                if (d->progress != 0.0) {
+                    d->progress = 0.0;
+                    emit progressChanged(d->progress);
+                }
+                d->status = Loading;
                 QNetworkRequest req(d->url);
                 d->sciReply = qmlEngine(this)->networkAccessManager()->get(req);
                 qmlobject_connect(d->sciReply, QNetworkReply, SIGNAL(finished()),
                                   this, QQuickBorderImage, SLOT(sciRequestFinished()))
             }
         } else {
-
             QQuickPixmap::Options options;
             if (d->async)
                 options |= QQuickPixmap::Asynchronous;
@@ -330,23 +338,15 @@ void QQuickBorderImage::load()
             d->pix.load(qmlEngine(this), d->url, options);
 
             if (d->pix.isLoading()) {
+                if (d->progress != 0.0) {
+                    d->progress = 0.0;
+                    emit progressChanged(d->progress);
+                }
+                d->status = Loading;
                 d->pix.connectFinished(this, SLOT(requestFinished()));
                 d->pix.connectDownloadProgress(this, SLOT(requestProgress(qint64,qint64)));
             } else {
-                QSize impsize = d->pix.implicitSize();
-                setImplicitSize(impsize.width(), impsize.height());
-
-                if (d->pix.isReady()) {
-                    d->status = Ready;
-                } else {
-                    d->status = Error;
-                    qmlInfo(this) << d->pix.error();
-                }
-
-                d->progress = 1.0;
-                emit statusChanged(d->status);
-                emit progressChanged(d->progress);
-                update();
+                requestFinished();
                 return;
             }
         }
@@ -462,6 +462,14 @@ void QQuickBorderImage::setGridScaledImage(const QQuickGridScaledImage& sci)
         d->pix.load(qmlEngine(this), d->sciurl, options);
 
         if (d->pix.isLoading()) {
+            if (d->progress != 0.0) {
+                d->progress = 0.0;
+                emit progressChanged(d->progress);
+            }
+            if (d->status != Loading) {
+                d->status = Loading;
+                emit statusChanged(d->status);
+            }
             static int thisRequestProgress = -1;
             static int thisRequestFinished = -1;
             if (thisRequestProgress == -1) {
@@ -475,22 +483,7 @@ void QQuickBorderImage::setGridScaledImage(const QQuickGridScaledImage& sci)
             d->pix.connectDownloadProgress(this, thisRequestProgress);
 
         } else {
-
-            QSize impsize = d->pix.implicitSize();
-            setImplicitSize(impsize.width(), impsize.height());
-
-            if (d->pix.isReady()) {
-                d->status = Ready;
-            } else {
-                d->status = Error;
-                qmlInfo(this) << d->pix.error();
-            }
-
-            d->progress = 1.0;
-            emit statusChanged(d->status);
-            emit progressChanged(1.0);
-            update();
-
+            requestFinished();
         }
     }
 }
@@ -503,18 +496,25 @@ void QQuickBorderImage::requestFinished()
     if (d->pix.isError()) {
         d->status = Error;
         qmlInfo(this) << d->pix.error();
+        if (d->progress != 0) {
+            d->progress = 0;
+            emit progressChanged(d->progress);
+        }
     } else {
         d->status = Ready;
+        if (d->progress != 1.0) {
+            d->progress = 1.0;
+            emit progressChanged(d->progress);
+        }
     }
 
     setImplicitSize(impsize.width(), impsize.height());
-
-    if (d->sourcesize.width() != d->pix.width() || d->sourcesize.height() != d->pix.height())
-        emit sourceSizeChanged();
-
-    d->progress = 1.0;
     emit statusChanged(d->status);
-    emit progressChanged(1.0);
+    if (sourceSize() != d->oldSourceSize) {
+        d->oldSourceSize = sourceSize();
+        emit sourceSizeChanged();
+    }
+
     update();
 }
 

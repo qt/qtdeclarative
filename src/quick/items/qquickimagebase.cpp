@@ -187,27 +187,37 @@ void QQuickImageBase::load()
 
     if (d->url.isEmpty()) {
         d->pix.clear(this);
-        d->status = Null;
-        d->progress = 0.0;
+        if (d->progress != 0.0) {
+            d->progress = 0.0;
+            emit progressChanged(d->progress);
+        }
         pixmapChange();
-        emit progressChanged(d->progress);
+        d->status = Null;
         emit statusChanged(d->status);
+
+        if (sourceSize() != d->oldSourceSize) {
+            d->oldSourceSize = sourceSize();
+            emit sourceSizeChanged();
+        }
         update();
+
     } else {
         QQuickPixmap::Options options;
         if (d->async)
             options |= QQuickPixmap::Asynchronous;
         if (d->cache)
             options |= QQuickPixmap::Cache;
-        d->pix.clear(this);
-        pixmapChange();
         d->pix.load(qmlEngine(this), d->url, d->sourcesize, options);
 
         if (d->pix.isLoading()) {
-            d->progress = 0.0;
-            d->status = Loading;
-            emit progressChanged(d->progress);
-            emit statusChanged(d->status);
+            if (d->progress != 0.0) {
+                d->progress = 0.0;
+                emit progressChanged(d->progress);
+            }
+            if (d->status != Loading) {
+                d->status = Loading;
+                emit statusChanged(d->status);
+            }
 
             static int thisRequestProgress = -1;
             static int thisRequestFinished = -1;
@@ -231,28 +241,27 @@ void QQuickImageBase::requestFinished()
 {
     Q_D(QQuickImageBase);
 
-    QQuickImageBase::Status oldStatus = d->status;
-    qreal oldProgress = d->progress;
-
     if (d->pix.isError()) {
-        d->status = Error;
         qmlInfo(this) << d->pix.error();
+        d->pix.clear(this);
+        d->status = Error;
+        if (d->progress != 0.0) {
+            d->progress = 0.0;
+            emit progressChanged(d->progress);
+        }
     } else {
         d->status = Ready;
+        if (d->progress != 1.0) {
+            d->progress = 1.0;
+            emit progressChanged(d->progress);
+        }
     }
-
-    d->progress = 1.0;
-
     pixmapChange();
-
-    if (d->sourcesize.width() != d->pix.width() || d->sourcesize.height() != d->pix.height())
+    emit statusChanged(d->status);
+    if (sourceSize() != d->oldSourceSize) {
+        d->oldSourceSize = sourceSize();
         emit sourceSizeChanged();
-
-    if (d->status != oldStatus)
-        emit statusChanged(d->status);
-    if (d->progress != oldProgress)
-        emit progressChanged(d->progress);
-
+    }
     update();
 }
 

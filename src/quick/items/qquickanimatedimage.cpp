@@ -131,6 +131,8 @@ QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
 QQuickAnimatedImage::~QQuickAnimatedImage()
 {
     Q_D(QQuickAnimatedImage);
+    if (d->reply)
+        d->reply->deleteLater();
     delete d->_movie;
 }
 
@@ -233,12 +235,14 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
     if (url == d->url)
         return;
 
-    delete d->_movie;
-    d->_movie = 0;
-
     if (d->reply) {
         d->reply->deleteLater();
         d->reply = 0;
+    }
+
+    if (d->_movie) {
+        delete d->_movie;
+        d->_movie = 0;
     }
 
     d->url = url;
@@ -252,64 +256,43 @@ void QQuickAnimatedImage::load()
 {
     Q_D(QQuickAnimatedImage);
 
-    QQuickImageBase::Status oldStatus = d->status;
-    qreal oldProgress = d->progress;
-
     if (d->url.isEmpty()) {
-        delete d->_movie;
-        d->setImage(QImage());
-        d->progress = 0;
-        d->status = Null;
-        if (d->status != oldStatus)
-            emit statusChanged(d->status);
-        if (d->progress != oldProgress)
+        if (d->progress != 0) {
+            d->progress = 0;
             emit progressChanged(d->progress);
+        }
+
+        d->setImage(QImage());
+        d->status = Null;
+        emit statusChanged(d->status);
+
+        if (sourceSize() != d->oldSourceSize) {
+            d->oldSourceSize = sourceSize();
+            emit sourceSizeChanged();
+        }
     } else {
         QString lf = QQmlFile::urlToLocalFileOrQrc(d->url);
         if (!lf.isEmpty()) {
-            //### should be unified with movieRequestFinished
             d->_movie = new QMovie(lf);
-            if (!d->_movie->isValid()){
-                qmlInfo(this) << "Error Reading Animated Image File " << d->url.toString();
-                delete d->_movie;
-                d->_movie = 0;
-                d->status = Error;
-                if (d->status != oldStatus)
-                    emit statusChanged(d->status);
-                return;
-            }
-            connect(d->_movie, SIGNAL(stateChanged(QMovie::MovieState)),
-                    this, SLOT(playingStatusChanged()));
-            connect(d->_movie, SIGNAL(frameChanged(int)),
-                    this, SLOT(movieUpdate()));
-            d->_movie->setCacheMode(QMovie::CacheAll);
-            if (d->playing)
-                d->_movie->start();
-            else
-                d->_movie->jumpToFrame(0);
-            if (d->paused)
-                d->_movie->setPaused(true);
-            d->setImage(d->_movie->currentPixmap().toImage());
-            d->status = Ready;
-            d->progress = 1.0;
-            if (d->status != oldStatus)
+            movieRequestFinished();
+        } else {
+            if (d->status != Loading) {
+                d->status = Loading;
                 emit statusChanged(d->status);
-            if (d->progress != oldProgress)
+            }
+            if (d->progress != 0) {
+                d->progress = 0;
                 emit progressChanged(d->progress);
-            return;
-        }
+            }
+            QNetworkRequest req(d->url);
+            req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
 
-        d->status = Loading;
-        d->progress = 0;
-        emit statusChanged(d->status);
-        emit progressChanged(d->progress);
-        QNetworkRequest req(d->url);
-        req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
-        d->reply = qmlEngine(this)->networkAccessManager()->get(req);
-        QObject::connect(d->reply, SIGNAL(finished()),
-                         this, SLOT(movieRequestFinished()));
-        QObject::connect(d->reply, SIGNAL(downloadProgress(qint64,qint64)),
-                         this, SLOT(requestProgress(qint64,qint64)));
+            d->reply = qmlEngine(this)->networkAccessManager()->get(req);
+            QObject::connect(d->reply, SIGNAL(finished()),
+                            this, SLOT(movieRequestFinished()));
+            QObject::connect(d->reply, SIGNAL(downloadProgress(qint64,qint64)),
+                            this, SLOT(requestProgress(qint64,qint64)));
+        }
     }
 }
 
@@ -319,58 +302,85 @@ void QQuickAnimatedImage::movieRequestFinished()
 {
     Q_D(QQuickAnimatedImage);
 
-    d->redirectCount++;
-    if (d->redirectCount < ANIMATEDIMAGE_MAXIMUM_REDIRECT_RECURSION) {
-        QVariant redirect = d->reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-        if (redirect.isValid()) {
-            QUrl url = d->reply->url().resolved(redirect.toUrl());
-            d->reply->deleteLater();
-            d->reply = 0;
-            setSource(url);
-            return;
+    if (d->reply) {
+        d->redirectCount++;
+        if (d->redirectCount < ANIMATEDIMAGE_MAXIMUM_REDIRECT_RECURSION) {
+            QVariant redirect = d->reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+            if (redirect.isValid()) {
+                QUrl url = d->reply->url().resolved(redirect.toUrl());
+                d->reply->deleteLater();
+                setSource(url);
+                return;
+            }
         }
-    }
-    d->redirectCount=0;
 
-    d->_movie = new QMovie(d->reply);
-    if (!d->_movie->isValid()){
-#ifndef QT_NO_DEBUG_STREAM
-        qmlInfo(this) << "Error Reading Animated Image File " << d->url;
-#endif
+        d->redirectCount=0;
+        d->_movie = new QMovie(d->reply);
+    }
+
+    if (!d->_movie->isValid()) {
+        qmlInfo(this) << "Error Reading Animated Image File " << d->url.toString();
         delete d->_movie;
         d->_movie = 0;
+        d->setImage(QImage());
+        if (d->progress != 0) {
+            d->progress = 0;
+            emit progressChanged(d->progress);
+        }
         d->status = Error;
         emit statusChanged(d->status);
+
+        if (sourceSize() != d->oldSourceSize) {
+            d->oldSourceSize = sourceSize();
+            emit sourceSizeChanged();
+        }
         return;
     }
+
     connect(d->_movie, SIGNAL(stateChanged(QMovie::MovieState)),
             this, SLOT(playingStatusChanged()));
     connect(d->_movie, SIGNAL(frameChanged(int)),
             this, SLOT(movieUpdate()));
     d->_movie->setCacheMode(QMovie::CacheAll);
+
+    d->status = Ready;
+    emit statusChanged(d->status);
+
+    if (d->progress != 1.0) {
+        d->progress = 1.0;
+        emit progressChanged(d->progress);
+    }
     if (d->playing)
         d->_movie->start();
+
+    if (d->paused)
+        d->_movie->setPaused(true);
     if (d->paused || !d->playing) {
         d->_movie->jumpToFrame(d->preset_currentframe);
         d->preset_currentframe = 0;
     }
-    if (d->paused)
-        d->_movie->setPaused(true);
     d->setImage(d->_movie->currentPixmap().toImage());
-    d->status = Ready;
-    emit statusChanged(d->status);
+
+    if (sourceSize() != d->oldSourceSize) {
+        d->oldSourceSize = sourceSize();
+        emit sourceSizeChanged();
+    }
 }
 
 void QQuickAnimatedImage::movieUpdate()
 {
     Q_D(QQuickAnimatedImage);
-    d->setImage(d->_movie->currentPixmap().toImage());
-    emit frameChanged();
+
+    if (d->_movie) {
+        d->setImage(d->_movie->currentPixmap().toImage());
+        emit frameChanged();
+    }
 }
 
 void QQuickAnimatedImage::playingStatusChanged()
 {
     Q_D(QQuickAnimatedImage);
+
     if ((d->_movie->state() != QMovie::NotRunning) != d->playing) {
         d->playing = (d->_movie->state() != QMovie::NotRunning);
         emit playingChanged();
@@ -381,16 +391,19 @@ void QQuickAnimatedImage::playingStatusChanged()
     }
 }
 
+QSize QQuickAnimatedImage::sourceSize()
+{
+    Q_D(QQuickAnimatedImage);
+    if (!d->_movie)
+        return QSize(0, 0);
+    return QSize(d->_movie->currentPixmap().size());
+}
+
 void QQuickAnimatedImage::componentComplete()
 {
     Q_D(QQuickAnimatedImage);
     QQuickItem::componentComplete(); // NOT QQuickImage
-    if (d->url.isValid())
-        load();
-    if (!d->reply) {
-        setCurrentFrame(d->preset_currentframe);
-        d->preset_currentframe = 0;
-    }
+    load();
 }
 
 QT_END_NAMESPACE

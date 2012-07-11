@@ -80,8 +80,9 @@ public:
 
     int frameCount() const;
 
-    // Extends QQuickImage's src property*/
+    // Extends QQuickImage's src property
     virtual void setSource(const QUrl&);
+    virtual QSize sourceSize();
 
 Q_SIGNALS:
     void playingChanged();

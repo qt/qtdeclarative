@@ -80,6 +80,7 @@ public:
     QUrl url;
     qreal progress;
     QSize sourcesize;
+    QSize oldSourceSize;
     bool async : 1;
     bool cache : 1;
     bool mirror: 1;
