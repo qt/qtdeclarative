@@ -1871,11 +1871,12 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
             visibleAffected = true;
         if (!visibleAffected && needsRefillForAddedOrRemovedIndex(removals[i].index))
             visibleAffected = true;
-        if (prevFirstVisibleIndex >= 0 && removals[i].index < prevFirstVisibleIndex) {
-            if (removals[i].index + removals[i].count < prevFirstVisibleIndex)
+        const int correctedFirstVisibleIndex = prevFirstVisibleIndex - removalResult.countChangeBeforeVisible;
+        if (correctedFirstVisibleIndex >= 0 && removals[i].index < correctedFirstVisibleIndex) {
+            if (removals[i].index + removals[i].count < correctedFirstVisibleIndex)
                 removalResult.countChangeBeforeVisible += removals[i].count;
             else
-                removalResult.countChangeBeforeVisible += (prevFirstVisibleIndex - removals[i].index);
+                removalResult.countChangeBeforeVisible += (correctedFirstVisibleIndex  - removals[i].index);
         }
     }
     if (runDelayedRemoveTransition) {
