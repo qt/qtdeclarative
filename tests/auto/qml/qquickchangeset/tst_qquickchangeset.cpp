@@ -56,6 +56,9 @@ private slots:
     void insertConsecutive_data();
     void insertConsecutive();
 
+    void copy();
+    void debug();
+
     // These create random sequences and verify a list with the reordered changes applied is the
     // same as one with the unordered changes applied.
 private:
@@ -178,6 +181,7 @@ public:
         }
         return true;
     }
+
 };
 
 bool operator ==(const tst_qquickchangeset::Signal &left, const tst_qquickchangeset::Signal &right)
@@ -188,6 +192,13 @@ bool operator ==(const tst_qquickchangeset::Signal &left, const tst_qquickchange
             && left.moveId == right.moveId
             && (left.moveId == -1 || left.offset == right.offset);
 }
+
+QT_BEGIN_NAMESPACE
+bool operator ==(const QQuickChangeSet::Change &left, const QQuickChangeSet::Change &right)
+{
+    return left.index == right.index && left.count == right.count && left.moveId == right.moveId;
+}
+QT_END_NAMESPACE
 
 QDebug operator <<(QDebug debug, const tst_qquickchangeset::Signal &signal)
 {
@@ -1410,6 +1421,56 @@ void tst_qquickchangeset::insertConsecutive()
 
     VERIFY_EXPECTED_OUTPUT
     QCOMPARE(changes, output);
+}
+
+void tst_qquickchangeset::copy()
+{
+    QQuickChangeSet changeSet;
+    changeSet.remove(0, 12);
+    changeSet.remove(5, 4);
+    changeSet.insert(3, 9);
+    changeSet.insert(15, 2);
+    changeSet.change(24, 8);
+    changeSet.move(3, 5, 9, 0);
+
+    QQuickChangeSet copy(changeSet);
+
+    QQuickChangeSet assign;
+    assign = changeSet;
+
+    copy.move(4, 2, 5, 1);
+    assign.move(4, 2, 5, 1);
+    changeSet.move(4, 2, 5, 1);
+
+    QCOMPARE(copy.removes(), changeSet.removes());
+    QCOMPARE(copy.inserts(), changeSet.inserts());
+    QCOMPARE(copy.changes(), changeSet.changes());
+    QCOMPARE(copy.difference(), changeSet.difference());
+
+    QCOMPARE(assign.removes(), changeSet.removes());
+    QCOMPARE(assign.inserts(), changeSet.inserts());
+    QCOMPARE(assign.changes(), changeSet.changes());
+    QCOMPARE(assign.difference(), changeSet.difference());
+}
+
+void tst_qquickchangeset::debug()
+{
+    QQuickChangeSet changeSet;
+    changeSet.remove(0, 12);
+    changeSet.remove(5, 4);
+    changeSet.insert(3, 9);
+    changeSet.insert(15, 2);
+    changeSet.change(24, 8);
+
+    QTest::ignoreMessage(QtDebugMsg, "QQuickChangeSet(Remove(0,12) Remove(5,4) Insert(3,9) Insert(15,2) Change(24,8) )");
+    qDebug() << changeSet;
+
+    changeSet.clear();
+
+    QTest::ignoreMessage(QtDebugMsg, "QQuickChangeSet(Remove(12,4,0,0) Insert(5,4,0,0) )");
+
+    changeSet.move(12, 5, 4, 0);
+    qDebug() << changeSet;
 }
 
 void tst_qquickchangeset::random_data()
