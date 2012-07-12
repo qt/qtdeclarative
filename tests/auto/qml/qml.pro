@@ -35,6 +35,7 @@ PRIVATETESTS += \
     qqmlinstruction \
     qqmllanguage \
     qqmlproperty \
+    qqmlpropertycache \
     qqmlpropertymap \
     qqmlsqldatabase \
     qqmlvaluetypes \
