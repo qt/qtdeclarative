@@ -72,6 +72,8 @@ private slots:
     void implicitQmldir_data();
     void importsNested();
     void importsNested_data();
+    void importLocalModule();
+    void importLocalModule_data();
 
 private:
     QString m_importsDirectory;
@@ -393,6 +395,55 @@ void tst_qqmlmoduleplugin::importsNested()
         VERIFY_ERRORS(errorFile.toLatin1().constData());
         QVERIFY(!obj);
     }
+}
+
+void tst_qqmlmoduleplugin::importLocalModule()
+{
+    QFETCH(QString, qml);
+    QFETCH(int, majorVersion);
+    QFETCH(int, minorVersion);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(qml.toUtf8(), testFileUrl("empty.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("majorVersion").value<int>(), majorVersion);
+    QCOMPARE(object->property("minorVersion").value<int>(), minorVersion);
+}
+
+void tst_qqmlmoduleplugin::importLocalModule_data()
+{
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<int>("majorVersion");
+    QTest::addColumn<int>("minorVersion");
+
+    QTest::newRow("default version")
+        << "import \"localModule\"\n"
+           "TestComponent {}"
+        << 2 << 0;
+
+    QTest::newRow("specific version")
+        << "import \"localModule\" 1.1\n"
+           "TestComponent {}"
+        << 1 << 1;
+
+    QTest::newRow("lesser version")
+        << "import \"localModule\" 1.0\n"
+           "TestComponent {}"
+        << 1 << 0;
+
+    // Note: this does not match the behaviour of installed modules, which fail for this case:
+    QTest::newRow("nonexistent version")
+        << "import \"localModule\" 1.3\n"
+           "TestComponent {}"
+        << 1 << 1;
+
+    QTest::newRow("high version")
+        << "import \"localModule\" 2.0\n"
+           "TestComponent {}"
+        << 2 << 0;
 }
 
 QTEST_MAIN(tst_qqmlmoduleplugin)

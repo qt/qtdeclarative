@@ -508,41 +508,43 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         }
     }
 
-    bool typeWasDeclaredInQmldir = false;
-    if (!qmlDirComponents.isEmpty()) {
-        QQmlDirComponents::ConstIterator it = qmlDirComponents.find(type);
-        if (it != qmlDirComponents.end()) {
-            typeWasDeclaredInQmldir = true;
-            // first found is last inserted - process in reverse
-            QQmlDirComponents::ConstIterator begin = it;
-            while (++it != qmlDirComponents.end() && it.key() == type) {}
-            do {
-                --it;
-                const QQmlDirParser::Component &c = *it;
+    QQmlDirComponents::ConstIterator it = qmlDirComponents.find(type), end = qmlDirComponents.end();
+    if (it != end) {
+        QString componentUrl;
+        QQmlDirComponents::ConstIterator candidate = end;
+        for ( ; it != end && it.key() == type; ++it) {
+            const QQmlDirParser::Component &c = *it;
 
-                // importing version -1 means import ALL versions
-                if ((majversion == -1) || (c.majorVersion == majversion &&
-                                           minversion >= c.minorVersion)) {
-
-                    QString candidate = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
+            // importing version -1 means import ALL versions
+            if ((majversion == -1) ||
+                (c.majorVersion == majversion && c.minorVersion <= minversion)) {
+                // Is this better than the previous candidate?
+                if ((candidate == end) ||
+                    (c.majorVersion > candidate->majorVersion) ||
+                    ((c.majorVersion == candidate->majorVersion) && (c.minorVersion > candidate->minorVersion))) {
+                    componentUrl = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
                     if (c.internal && base) {
-                        if (resolveLocalUrl(*base, c.fileName) != candidate)
+                        if (resolveLocalUrl(*base, c.fileName) != componentUrl)
                             continue; // failed attempt to access an internal type
                     }
-                    if (base && *base == candidate) {
+                    if (base && (*base == componentUrl)) {
                         if (typeRecursionDetected)
                             *typeRecursionDetected = true;
                         continue; // no recursion
                     }
-                    if (url_return)
-                        *url_return = candidate;
-                    return true;
-                }
-            } while (it != begin);
-        }
-    }
 
-    if (!typeWasDeclaredInQmldir && !isLibrary) {
+                    // This is our best candidate so far
+                    candidate = it;
+                }
+            }
+        }
+
+        if (candidate != end) {
+            if (url_return)
+                *url_return = componentUrl;
+            return true;
+        }
+    } else if (!isLibrary) {
         QString qmlUrl = url + QString::fromRawData(type.constData(), type.length()) + dotqml_string;
 
         bool exists = false;
@@ -554,7 +556,7 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         }
 
         if (exists) {
-            if (base && *base == qmlUrl) { // no recursion
+            if (base && (*base == qmlUrl)) { // no recursion
                 if (typeRecursionDetected)
                     *typeRecursionDetected = true;
             } else {
