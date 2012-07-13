@@ -583,9 +583,7 @@ void tst_qquicktextedit::alignments()
     QQuickView canvas(testFileUrl("alignments.qml"));
 
     canvas.show();
-    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
     QObject *ob = canvas.rootObject();
     QVERIFY(ob != 0);
@@ -727,18 +725,18 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QVERIFY(textEdit->positionToRectangle(0).x() < canvas.width()/2);
 
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
+    QTest::qWaitForWindowActive(&canvas);
+    QVERIFY(textEdit->hasActiveFocus());
 
     textEdit->setText(QString());
-    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
+    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(textEdit, &ev); }
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
-    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
+    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(textEdit, &ev); }
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignLeft);
 
     // Clear pre-edit text.  TextEdit should maybe do this itself on setText, but that may be
     // redundant as an actual input method may take care of it.
-    { QInputMethodEvent ev; QGuiApplication::sendEvent(qGuiApp->focusObject(), &ev); }
+    { QInputMethodEvent ev; QGuiApplication::sendEvent(textEdit, &ev); }
 
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from qApp->inputMethod()->inputDirection
@@ -814,7 +812,6 @@ void tst_qquicktextedit::hAlignVisual()
 {
     QQuickView view(testFileUrl("hAlignVisual.qml"));
     view.show();
-    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
@@ -1086,9 +1083,7 @@ void tst_qquicktextedit::persistentSelection()
     QQuickView canvas(testFileUrl("persistentSelection.qml"));
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
-    canvas.requestActivateWindow();
+    QTest::qWaitForWindowActive(&canvas);
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
     QVERIFY(edit);
@@ -1157,8 +1152,7 @@ void tst_qquicktextedit::focusOnPress()
     textEditObject->setParentItem(canvas.rootItem());
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
+    QTest::qWaitForWindowActive(&canvas);
 
     QCOMPARE(textEditObject->hasFocus(), false);
     QCOMPARE(textEditObject->hasActiveFocus(), false);
@@ -1358,16 +1352,14 @@ void tst_qquicktextedit::keySelection()
     QQuickView canvas(testFileUrl("navigation.qml"));
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
-    canvas.requestActivateWindow();
+    QTest::qWaitForWindowActive(&canvas);
 
     QVERIFY(canvas.rootObject() != 0);
 
     QQuickTextEdit *input = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(canvas.rootObject()->property("myInput")));
 
     QVERIFY(input != 0);
-    QTRY_VERIFY(input->hasActiveFocus() == true);
+    QVERIFY(input->hasActiveFocus());
 
     QSignalSpy spy(input, SIGNAL(selectedTextChanged()));
 
@@ -1814,7 +1806,6 @@ void tst_qquicktextedit::mouseSelection()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowActive(&canvas);
-    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
 
     QVERIFY(canvas.rootObject() != 0);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
@@ -1856,8 +1847,7 @@ void tst_qquicktextedit::dragMouseSelection()
 
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
+    QTest::qWaitForWindowActive(&canvas);
 
     QVERIFY(canvas.rootObject() != 0);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
@@ -1910,8 +1900,7 @@ void tst_qquicktextedit::mouseSelectionMode()
 
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(&canvas, qGuiApp->focusWindow());
+    QTest::qWaitForWindowActive(&canvas);
 
     QVERIFY(canvas.rootObject() != 0);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
@@ -1997,7 +1986,7 @@ void tst_qquicktextedit::positionAt()
     texteditObject->setCursorPosition(0);
 
     QInputMethodEvent inputEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-    QGuiApplication::sendEvent(qGuiApp->focusObject(), &inputEvent);
+    QGuiApplication::sendEvent(texteditObject, &inputEvent);
 
     // Check all points within the preedit text return the same position.
     QCOMPARE(texteditObject->positionAt(0, y0), 0);
@@ -2017,7 +2006,7 @@ void tst_qquicktextedit::linkActivated()
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
+    QTest::qWaitForWindowActive(&canvas);
 
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(canvas.rootObject());
     QVERIFY(texteditObject != 0);
@@ -2205,8 +2194,8 @@ void tst_qquicktextedit::cursorVisible()
     QQuickView view(testFileUrl("cursorVisible.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
-    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+    QTest::qWaitForWindowActive(&view);
+    QCOMPARE(&view, qGuiApp->focusWindow());
 
     QCOMPARE(edit.isCursorVisible(), false);
 
@@ -2237,7 +2226,7 @@ void tst_qquicktextedit::cursorVisible()
     QWindow alternateView;
     alternateView.show();
     alternateView.requestActivateWindow();
-    QTest::qWaitForWindowShown(&alternateView);
+    QTest::qWaitForWindowActive(&alternateView);
 
     QCOMPARE(edit.isCursorVisible(), false);
     QCOMPARE(spy.count(), 6);
@@ -2518,8 +2507,7 @@ void tst_qquicktextedit::textInput()
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
-    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+    QTest::qWaitForWindowActive(&view);
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
     QVERIFY(edit->hasActiveFocus() == true);
@@ -2528,7 +2516,7 @@ void tst_qquicktextedit::textInput()
     QSignalSpy spy(edit, SIGNAL(textChanged()));
     QInputMethodEvent event;
     event.setCommitString( "Hello world!", 0, 0);
-    QGuiApplication::sendEvent(qGuiApp->focusObject(), &event);
+    QGuiApplication::sendEvent(edit, &event);
     QCOMPARE(edit->text(), QString("Hello world!"));
     QCOMPARE(spy.count(), 1);
 
@@ -2538,7 +2526,7 @@ void tst_qquicktextedit::textInput()
     QCOMPARE(editPrivate->text, QString("Hello world!"));
 
     QInputMethodQueryEvent queryEvent(Qt::ImEnabled);
-    QGuiApplication::sendEvent(qGuiApp->focusObject(), &queryEvent);
+    QGuiApplication::sendEvent(edit, &queryEvent);
     QCOMPARE(queryEvent.value(Qt::ImEnabled).toBool(), true);
 
     edit->setReadOnly(true);
@@ -2555,8 +2543,7 @@ void tst_qquicktextedit::inputMethodUpdate()
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
-    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+    QTest::qWaitForWindowActive(&view);
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
     QVERIFY(edit->hasActiveFocus() == true);
@@ -2646,8 +2633,7 @@ void tst_qquicktextedit::openInputPanel()
     QQuickView view(testFileUrl("openInputPanel.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
-    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+    QTest::qWaitForWindowActive(&view);
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
@@ -2655,7 +2641,6 @@ void tst_qquicktextedit::openInputPanel()
     // check default values
     QVERIFY(edit->focusOnPress());
     QVERIFY(!edit->hasActiveFocus());
-    qDebug() << &edit << qApp->focusObject();
     QVERIFY(qApp->focusObject() != edit);
 
     QCOMPARE(qApp->inputMethod()->isVisible(), false);
@@ -2987,9 +2972,8 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QTest::qWaitForWindowActive(&view);
 
-    QTRY_COMPARE(&view, qGuiApp->focusWindow());
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
 
@@ -3001,16 +2985,17 @@ void tst_qquicktextedit::preeditCursorRectangle()
 
     QRectF currentRect;
 
+    QCOMPARE(QGuiApplication::focusObject(), static_cast<QObject *>(edit));
     QInputMethodQueryEvent query(Qt::ImCursorRectangle);
-    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
+    QCoreApplication::sendEvent(edit, &query);
     QRectF previousRect = query.value(Qt::ImCursorRectangle).toRectF();
 
     // Verify that the micro focus rect is positioned the same for position 0 as
     // it would be if there was no preedit text.
     QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>()
             << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0, preeditText.length(), QVariant()));
-    QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
-    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
+    QCoreApplication::sendEvent(edit, &imEvent);
+    QCoreApplication::sendEvent(edit, &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(edit->cursorRectangle(), currentRect);
     QCOMPARE(cursor->pos(), currentRect.topLeft());
@@ -3023,8 +3008,8 @@ void tst_qquicktextedit::preeditCursorRectangle()
     for (int i = 1; i <= 5; ++i) {
         QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>()
                 << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, i, preeditText.length(), QVariant()));
-        QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent);
-        QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
+        QCoreApplication::sendEvent(edit, &imEvent);
+        QCoreApplication::sendEvent(edit, &query);
         currentRect = query.value(Qt::ImCursorRectangle).toRectF();
         QCOMPARE(edit->cursorRectangle(), currentRect);
         QCOMPARE(cursor->pos(), currentRect.topLeft());
@@ -3040,8 +3025,8 @@ void tst_qquicktextedit::preeditCursorRectangle()
     panelSpy.clear();
     {   QInputMethodEvent imEvent("wwwww", QList<QInputMethodEvent::Attribute>()
                 << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 5, 1, QVariant()));
-        QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent); }
-    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
+        QCoreApplication::sendEvent(edit, &imEvent); }
+    QCoreApplication::sendEvent(edit, &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(edit->cursorRectangle(), currentRect);
     QCOMPARE(cursor->pos(), currentRect.topLeft());
@@ -3053,8 +3038,8 @@ void tst_qquicktextedit::preeditCursorRectangle()
     editSpy.clear();
     panelSpy.clear();
     {   QInputMethodEvent imEvent(preeditText, QList<QInputMethodEvent::Attribute>());
-        QCoreApplication::sendEvent(qGuiApp->focusObject(), &imEvent); }
-    QCoreApplication::sendEvent(qGuiApp->focusObject(), &query);
+        QCoreApplication::sendEvent(edit, &imEvent); }
+    QCoreApplication::sendEvent(edit, &query);
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(edit->cursorRectangle(), currentRect);
     QCOMPARE(cursor->pos(), currentRect.topLeft());
@@ -3070,10 +3055,12 @@ void tst_qquicktextedit::inputMethodComposing()
     QQuickView view(testFileUrl("inputContext.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
-    QTRY_COMPARE(&view, qGuiApp->focusWindow());
+    QTest::qWaitForWindowActive(&view);
+
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
+    QCOMPARE(QGuiApplication::focusObject(), static_cast<QObject *>(edit));
+
     QSignalSpy spy(edit, SIGNAL(inputMethodComposingChanged()));
     edit->setCursorPosition(12);
 
@@ -3183,10 +3170,10 @@ void tst_qquicktextedit::cursorRectangleSize()
     textEdit->setFocus(true);
     canvas->show();
     canvas->requestActivateWindow();
-    QTest::qWaitForWindowShown(canvas);
+    QTest::qWaitForWindowActive(canvas);
 
     QInputMethodQueryEvent event(Qt::ImCursorRectangle);
-    qApp->sendEvent(qApp->focusObject(), &event);
+    qApp->sendEvent(textEdit, &event);
     QRectF cursorRectFromQuery = event.value(Qt::ImCursorRectangle).toRectF();
 
     QRectF cursorRectFromItem = textEdit->cursorRectangle();
@@ -4041,8 +4028,9 @@ void tst_qquicktextedit::keySequence()
     textEdit->setParentItem(canvas.rootItem());
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
+    QTest::qWaitForWindowActive(&canvas);
+
+    QVERIFY(textEdit->hasActiveFocus());
 
     simulateKey(&canvas, layoutDirection);
 
@@ -4204,8 +4192,8 @@ void tst_qquicktextedit::undo()
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowActive(&canvas);
-    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
 
+    QVERIFY(textEdit->hasActiveFocus());
     QVERIFY(!textEdit->canUndo());
 
     QSignalSpy spy(textEdit, SIGNAL(canUndoChanged()));
@@ -4289,8 +4277,8 @@ void tst_qquicktextedit::redo()
     textEdit->setParentItem(canvas.rootItem());
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
+    QTest::qWaitForWindowActive(&canvas);
+    QVERIFY(textEdit->hasActiveFocus());
 
     QVERIFY(!textEdit->canUndo());
     QVERIFY(!textEdit->canRedo());
@@ -4482,8 +4470,8 @@ void tst_qquicktextedit::undo_keypressevents()
     textEdit->setParentItem(canvas.rootItem());
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QGuiApplication::focusWindow(), &canvas);
+    QTest::qWaitForWindowActive(&canvas);
+    QVERIFY(textEdit->hasActiveFocus());
 
     simulateKeys(&canvas, keys);
 
@@ -4571,7 +4559,7 @@ void tst_qquicktextedit::emptytags_QTBUG_22058()
 
     canvas.show();
     canvas.requestActivateWindow();
-    QTest::qWaitForWindowShown(&canvas);
+    QTest::qWaitForWindowActive(&canvas);
     QQuickTextEdit *input = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(canvas.rootObject()->property("inputField")));
     QVERIFY(input->hasActiveFocus());
 
