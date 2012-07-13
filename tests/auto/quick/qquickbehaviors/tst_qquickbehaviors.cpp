@@ -80,6 +80,7 @@ private slots:
     void sameValue();
     void delayedRegistration();
     void startOnCompleted();
+    void multipleChangesToValueType();
 };
 
 void tst_qquickbehaviors::simpleBehavior()
@@ -466,6 +467,32 @@ void tst_qquickbehaviors::startOnCompleted()
     QTRY_COMPARE(innerRect->property("x").toInt(), int(100));
 
     delete rect;
+}
+
+//QTBUG-25139
+void tst_qquickbehaviors::multipleChangesToValueType()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, testFileUrl("multipleChangesToValueType.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle *>(c.create()));
+    QVERIFY(rect != 0);
+
+    QQuickText *text = rect->findChild<QQuickText *>();
+    QVERIFY(text != 0);
+
+    QFont value;
+    value.setPointSize(24);
+    QCOMPARE(text->property("font").value<QFont>(), value);
+
+    QVERIFY(QMetaObject::invokeMethod(rect.data(), "updateFontProperties"));
+
+    value.setItalic(true);
+    value.setWeight(QFont::Bold);
+    QCOMPARE(text->property("font").value<QFont>(), value);
+
+    value.setPointSize(48);
+    QTRY_COMPARE(text->property("font").value<QFont>(), value);
 }
 
 QTEST_MAIN(tst_qquickbehaviors)

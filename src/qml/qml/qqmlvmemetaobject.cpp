@@ -665,13 +665,21 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     valueType->setValue(newValue);
                     QVariant newComponentValue = valueProp.read(valueType);
 
-                    valueProp.write(valueType, prevComponentValue);
-                    valueType->write(object, id, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+                    // Don't apply the interceptor if the intercepted value has not changed
+                    bool updated = false;
+                    if (newComponentValue != prevComponentValue) {
+                        valueProp.write(valueType, prevComponentValue);
+                        valueType->write(object, id, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
 
-                    vi->write(newComponentValue);
+                        vi->write(newComponentValue);
+                        updated = true;
+                    }
 
-                    if (!ep) delete valueType;
-                    return -1;
+                    if (!ep)
+                        delete valueType;
+
+                    if (updated)
+                        return -1;
                 } else {
                     vi->write(QVariant(type, a[0]));
                     return -1;
