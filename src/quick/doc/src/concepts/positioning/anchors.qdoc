@@ -111,6 +111,90 @@ In this case, a margin of 5 pixels is reserved to the left of \e rect2, producin
 If an anchor margin is specified for an edge but the item is not anchored to any item on that
 edge, the margin is not applied.
 
+\section1 Changing Anchors
+
+Qt Quick provides the AnchorChanges type for specifying the anchors in a state.
+
+\qml
+State {
+    name: "anchorRight"
+    AnchorChanges {
+        target: rect2
+        anchors.right: parent.right
+        anchors.left: undefined  //remove the left anchor
+    }
+}
+\endqml
+
+AnchorChanges can be animated using the AnchorAnimation type.
+
+\qml
+Transition {
+    AnchorAnimation {}  //animates any AnchorChanges in the corresponding state change
+}
+\endqml
+
+Anchors can also be changed imperatively within JavaScript. However, these changes should be
+carefully ordered, or they may produce unexpected outcomes. The following example illustrates the issue:
+
+\table
+\row
+\li
+    \badcode
+    Rectangle {
+        width: 50
+        anchors.left: parent.left
+
+        function reanchorToRight() {
+            anchors.right = parent.right
+            anchors.left = undefined
+        }
+    }
+    \endcode
+\li
+    \image anchor_ordering_bad.png
+\endtable
+
+
+When \c reanchorToRight is called, the function first sets the right anchor. At that point, both left
+and right anchors are set, and the item will be stretched horizontally to fill its parent. When the left
+anchor is unset, the new width will remain. Thus when updating anchors within JavaScript,  you should
+first unset any anchors that are no longer required, and only then set any new anchors that are required,
+as shown below:
+
+\table
+\row
+\li
+    \qml
+    Rectangle {
+        width: 50
+        anchors.left: parent.left
+
+        function reanchorToRight() {
+            anchors.left = undefined
+            anchors.right = parent.right
+        }
+    }
+    \endqml
+\li
+    \image anchor_ordering.png
+\endtable
+
+Because the evaluation order of bindings is not defined, it is not recommended to change anchors via
+conditional bindings, as this can lead to the ordering issue described above. In the following example
+the Rectangle will eventually grow to the full width of its parent, because both left and right anchors
+will be simultaneously set during binding update.
+
+\badcode
+Rectangle {
+    width: 50; height: 50
+    anchors.left: state == "right" ? undefined : parent.left;
+    anchors.right: state == "right" ? parent.right : undefined;
+}
+\endcode
+
+This should be rewritten to use AnchorChanges instead, as AnchorChanges will automatically handle
+ordering issues internally.
 
 \section1 Restrictions
 
