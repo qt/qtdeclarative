@@ -409,6 +409,7 @@ public:
 
         QHashedStringRef name;
         QQmlPool::List<DynamicProperty::Type> parameterTypes;
+        QQmlPool::List<QHashedStringRef> parameterTypeNames;
         QQmlPool::List<QHashedStringRef> parameterNames;
 
         // Used by Object::DynamicSignalList

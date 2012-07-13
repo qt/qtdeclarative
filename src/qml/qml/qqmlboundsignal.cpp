@@ -186,7 +186,7 @@ class QQmlBoundSignalParameters : public QObject
 {
 Q_OBJECT
 public:
-    QQmlBoundSignalParameters(const QMetaMethod &, QQmlAbstractBoundSignal*);
+    QQmlBoundSignalParameters(const QMetaMethod &, QQmlAbstractBoundSignal*, QQmlEngine*);
     ~QQmlBoundSignalParameters();
 
     void setValues(void **);
@@ -344,7 +344,7 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
         QList<QByteArray> names = QQmlPropertyCache::signalParameterNames(*s->m_scope, s->m_index);
         if (!names.isEmpty()) {
             QMetaMethod signal = QMetaObjectPrivate::signal(s->m_scope->metaObject(), s->m_index);
-            s->m_params = new QQmlBoundSignalParameters(signal, s);
+            s->m_params = new QQmlBoundSignalParameters(signal, s, s->m_expression->engine());
         }
 
         s->setParamsValid(true);
@@ -364,7 +364,8 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
 }
 
 QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method, 
-                                                     QQmlAbstractBoundSignal *owner)
+                                                     QQmlAbstractBoundSignal *owner,
+                                                     QQmlEngine *engine)
 : types(0), values(0)
 {
     MetaObject *mo = new MetaObject(this);
@@ -389,7 +390,7 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
             name = "__qt_anonymous_param_" + QByteArray::number(ii);
 
         int t = QMetaType::type(type.constData());
-        if (QQmlMetaType::isQObject(t)) {
+        if (QQmlEnginePrivate::get(engine)->isQObject(t)) {
             types[ii] = QMetaType::QObjectStar;
             QMetaPropertyBuilder prop = mob.addProperty(name, "QObject*");
             prop.setWritable(false);

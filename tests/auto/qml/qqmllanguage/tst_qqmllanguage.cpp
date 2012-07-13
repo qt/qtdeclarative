@@ -171,6 +171,7 @@ private slots:
     void propertyInit();
     void remoteLoadCrash();
     void signalWithDefaultArg();
+    void signalParameterTypes();
 
     // regression tests for crashes
     void crash1();
@@ -355,6 +356,7 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("signal.3") << "signal.3.qml" << "signal.3.errors.txt" << false;
     QTest::newRow("signal.4") << "signal.4.qml" << "signal.4.errors.txt" << false;
     QTest::newRow("signal.5") << "signal.5.qml" << "signal.5.errors.txt" << false;
+    QTest::newRow("signal.6") << "signal.6.qml" << "signal.6.errors.txt" << false;
 
     QTest::newRow("method.1") << "method.1.qml" << "method.1.errors.txt" << false;
 
@@ -2921,6 +2923,28 @@ void tst_qqmllanguage::signalWithDefaultArg()
     QCOMPARE(object->property("signalArg").toInt(), 22);
 
     delete object;
+}
+
+void tst_qqmllanguage::signalParameterTypes()
+{
+    // bound signal handlers
+    {
+    QQmlComponent component(&engine, testFileUrl("signalParameterTypes.1.qml"));
+    QObject *obj = component.create();
+    QVERIFY(obj != 0);
+    QVERIFY(obj->property("success").toBool());
+    delete obj;
+    }
+
+    // dynamic signal connections
+    {
+    QQmlComponent component(&engine, testFileUrl("signalParameterTypes.2.qml"));
+    QObject *obj = component.create();
+    QVERIFY(obj != 0);
+    QEXPECT_FAIL("", "Dynamic connections don't enforce type safety - QTBUG-26662", Abort);
+    QVERIFY(obj->property("success").toBool());
+    delete obj;
+    }
 }
 
 // QTBUG-20639

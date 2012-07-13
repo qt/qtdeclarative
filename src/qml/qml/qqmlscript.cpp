@@ -937,12 +937,22 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
 
         if (paramLength) {
             signal->parameterTypes = _parser->_pool.NewRawList<Object::DynamicProperty::Type>(paramLength);
+            signal->parameterTypeNames = _parser->_pool.NewRawList<QHashedStringRef>(paramLength);
             signal->parameterNames = _parser->_pool.NewRawList<QHashedStringRef>(paramLength);
         }
 
         int index = 0;
         while (p) {
             const QStringRef &memberType = p->type;
+
+            if (memberType.isEmpty()) {
+                QQmlError error;
+                error.setDescription(QCoreApplication::translate("QQmlParser","Expected parameter type"));
+                error.setLine(node->typeToken.startLine);
+                error.setColumn(node->typeToken.startColumn);
+                _parser->_errors << error;
+                return false;
+            }
 
             const TypeNameToType *type = 0;
             for(int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
@@ -955,15 +965,26 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             }
 
             if (!type) {
-                QQmlError error;
-                error.setDescription(QCoreApplication::translate("QQmlParser","Expected parameter type"));
-                error.setLine(node->typeToken.startLine);
-                error.setColumn(node->typeToken.startColumn);
-                _parser->_errors << error;
-                return false;
+                if (memberType.at(0).isUpper()) {
+                    // Must be a QML object type.
+                    // Lazily determine type during compilation.
+                    signal->parameterTypes[index] = Object::DynamicProperty::Custom;
+                    signal->parameterTypeNames[index] = QHashedStringRef(p->type);
+                } else {
+                    QQmlError error;
+                    QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
+                    errStr.append(memberType.toString());
+                    error.setDescription(errStr);
+                    error.setLine(node->typeToken.startLine);
+                    error.setColumn(node->typeToken.startColumn);
+                    _parser->_errors << error;
+                    return false;
+                }
+            } else {
+                // the parameter is a known basic type
+                signal->parameterTypes[index] = type->type;
             }
-            
-            signal->parameterTypes[index] = type->type;
+
             signal->parameterNames[index] = QHashedStringRef(p->name);
             p = p->next;
             index++;

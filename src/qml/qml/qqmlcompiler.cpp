@@ -2978,9 +2978,33 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
             paramTypes[0] = paramCount;
 
             for (int i = 0; i < paramCount; ++i) {
-                Q_ASSERT(s->parameterTypes.at(i) < builtinTypeCount);
-                paramTypes[i + 1] = builtinTypes[s->parameterTypes.at(i)].metaType;
-                names.append(s->parameterNames.at(i).toString().toUtf8());
+                if (s->parameterTypes.at(i) < builtinTypeCount) {
+                    // built-in type
+                    paramTypes[i + 1] = builtinTypes[s->parameterTypes.at(i)].metaType;
+                    names.append(s->parameterNames.at(i).toString().toUtf8());
+                } else {
+                    // lazily resolved type
+                    Q_ASSERT(s->parameterTypes.at(i) == Object::DynamicProperty::Custom);
+                    QQmlType *qmltype = 0;
+                    QString url;
+                    if (!unit->imports().resolveType(s->parameterTypeNames.at(i).toString(), &qmltype, &url, 0, 0, 0))
+                        COMPILE_EXCEPTION(s, tr("Invalid signal parameter type: %1").arg(s->parameterTypeNames.at(i).toString()));
+
+                    if (!qmltype) {
+                        QQmlTypeData *tdata = enginePrivate->typeLoader.getType(QUrl(url));
+                        Q_ASSERT(tdata);
+                        Q_ASSERT(tdata->isComplete());
+
+                        QQmlCompiledData *data = tdata->compiledData();
+
+                        paramTypes[i + 1] = data->metaTypeId;
+
+                        tdata->release();
+                    } else {
+                        paramTypes[i + 1] = qmltype->typeId();
+                    }
+                    names.append(s->parameterNames.at(i).toString().toUtf8());
+                }
             }
         }
 
