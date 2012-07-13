@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -40,35 +40,83 @@
 
 import QtQuick 2.0
 
-Item {
-    id: scrollBar
-    // The properties that define the scrollbar's state.
-    // position and pageSize are in the range 0.0 - 1.0.  They are relative to the
-    // height of the page, i.e. a pageSize of 0.5 means that you can see 50%
-    // of the height of the view.
-    // orientation can be either 'Vertical' or 'Horizontal'
-    property real position
-    property real pageSize
-    property string orientation : "Vertical"
-    property alias bgColor: background.color
-    property alias fgColor: thumb.color
+Rectangle {
+  id:root
+  color:"transparent"
+  width:300
+  height:45
+  property var _monthNames : [ "JAN", "FEB", "MAR", "APR", "MAY", "JUN","JUL", "AUG", "SEP", "OCT", "NOV", "DEC" ];
+  property var date:new Date()
 
-    // A light, semi-transparent background
+  onDateChanged: {
+    month.text = root._monthNames[root.date.getMonth()]
+    day.text = date.getDate();
+    year.text = date.getFullYear();
+  }
+  Row {
+    spacing:20
+    anchors.fill:parent
+
     Rectangle {
-        id: background
-        radius: orientation == 'Vertical' ? (width/2 - 1) : (height/2 - 1)
-        color: "white"; opacity: 0.3
-        anchors.fill: parent
+      height:root.height
+      width:root.width/3 - 20
+      color:"#272822"
+      radius:5
+
+      TextInput {
+        id:month
+        anchors.centerIn:parent
+        color:"#ecc089"
+        font.pointSize:25
+        font.bold:true
+        text:root._monthNames[root.date.getMonth()]
+        onAccepted : {
+          for (var i = 0; i < 12; i++) {
+             if (text === root._monthNames[i]) {
+                root.date.setMonth(i);
+                root.date = root.date;
+                return;
+             }
+          }
+          root.date = root.date;
+        }
+      }
     }
-    // Size the bar to the required size, depending upon the orientation.
+
     Rectangle {
-        id: thumb
-        opacity: 0.7
-        color: "black"
-        radius: orientation == 'Vertical' ? (width/2 - 1) : (height/2 - 1)
-        x: orientation == 'Vertical' ? 1 : (scrollBar.position * (scrollBar.width-2) + 1)
-        y: orientation == 'Vertical' ? (scrollBar.position * (scrollBar.height-2) + 1) : 1
-        width: orientation == 'Vertical' ? (parent.width-2) : (scrollBar.pageSize * (scrollBar.width-2))
-        height: orientation == 'Vertical' ? (scrollBar.pageSize * (scrollBar.height-2)) : (parent.height-2)
+      height:root.height
+      width:root.width/3 - 20
+      color:"#272822"
+      radius:5
+
+      TextInput {
+        id:day
+        anchors.centerIn:parent
+        color:"#ecc089"
+        font.pointSize:25
+        font.bold:true
+        text:root.date.getDate()
+        validator:IntValidator {bottom:1; top:31}
+        onAccepted: { root.date.setDate(text); root.date = root.date;}
+      }
     }
+
+    Rectangle {
+      height:root.height
+      width:root.width/3 - 20
+      color:"#272822"
+      radius:5
+
+      TextInput {
+        id:year
+        anchors.centerIn:parent
+        color:"#ecc089"
+        font.pointSize:25
+        font.bold:true
+        text:root.date.getFullYear()
+        validator:IntValidator {bottom:1995; top:(new Date()).getFullYear()}
+        onAccepted:{ root.date.setFullYear(text); root.date = root.date;}
+      }
+    }
+  }
 }

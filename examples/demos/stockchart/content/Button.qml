@@ -38,23 +38,22 @@
 **
 ****************************************************************************/
 
-#include <QtQml/QQmlExtensionPlugin>
-#include <QtQml/qqml.h>
-#include <QtGui/QGuiApplication>
-#include "model.h"
+import QtQuick 2.0
 
-class QStockChartExampleQmlPlugin : public QQmlExtensionPlugin
-{
-    Q_OBJECT
-public:
-    void registerTypes(const char *uri)
-    {
-        Q_ASSERT(uri == QLatin1String("com.nokia.StockChartExample"));
-        qmlRegisterType<StockModel>(uri, 1, 0, "StockModel");
-        qmlRegisterType<StockPrice>(uri, 1, 0, "StockPrice");
+Rectangle {
+  id:button
+  property bool buttonEnabled:true
+  radius:5
+  width:25
+  height:25
+  color:buttonEnabled ? "steelblue" : "gray"
+  MouseArea {
+    anchors.fill:parent
+    onClicked: {
+      if (buttonEnabled)
+       buttonEnabled = false;
+      else
+       buttonEnabled = true;
     }
-};
-
-#include "plugin.moc"
-
-Q_EXPORT_PLUGIN2(qmlstockchartexampleplugin, QStockChartExampleQmlPlugin);
+  }
+}

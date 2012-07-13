@@ -39,49 +39,63 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import "./content"
 
-Item {
-    id: container
+ListView {
+  id:root
+  width:320
+  height:480
+  snapMode:ListView.SnapOneItem
+  focus:false
+  orientation : ListView.Horizontal
+  boundsBehavior : Flickable.StopAtBounds
+  currentIndex : 1
 
-    signal clicked
+  StockModel {
+    id:stock
+    stockId:listView.currentStockId
+    stockName: listView.currentStockName
+    startDate: settings.startDate
+    endDate:settings.endDate
+    onStockIdChanged: updateStock()
+    onStartDateChanged: updateStock()
+    onEndDateChanged: updateStock()
+    onDataReady: {
+        root.currentIndex = 1
+        stockView.update()
+    }
+  }
 
-    property string text
-    width: buttonText.width + 28
-    height: buttonText.height + 14
+  model: VisualItemModel {
+    StockListView {
+      id:listView
+      width:root.width
+      height:root.height
+    }
 
-    BorderImage {
-        id: buttonImage
-        source: "images/toolbutton.sci"
-        width: container.width - 10
-        height: container.height
+    StockView {
+      id:stockView
+      width:root.width
+      height:root.height
+      stocklist : listView
+      settings : settings
+      stock: stock
+
+      onListViewClicked:root.currentIndex = 0
+      onSettingsClicked:root.currentIndex = 2
     }
-    BorderImage {
-        id: pressed
-        opacity: 0
-        source: "images/toolbutton.sci"
-        width: container.width - 10
-        height: container.height
+
+    StockSettings {
+      id:settings
+      width:root.width
+      height:root.height
+      onDrawHighPriceChanged: stockView.update()
+      onDrawLowPriceChanged: stockView.update()
+      onDrawOpenPriceChanged: stockView.update()
+      onDrawClosePriceChanged: stockView.update()
+      onDrawVolumeChanged: stockView.update()
+      onDrawKLineChanged: stockView.update()
+      onChartTypeChanged: stockView.update()
     }
-    MouseArea {
-        id: mouseRegion
-        anchors.fill: buttonImage
-        onClicked: { container.clicked(); }
-    }
-    Text {
-        id: buttonText
-        color: "white"
-        anchors.centerIn: buttonImage
-        font.bold: true
-        font.pointSize: 15
-        text: container.text
-        style: Text.Raised
-        styleColor: "black"
-    }
-    states: [
-        State {
-            name: "Pressed"
-            when: mouseRegion.pressed == true
-            PropertyChanges { target: pressed; opacity: 1 }
-        }
-    ]
+  }
 }

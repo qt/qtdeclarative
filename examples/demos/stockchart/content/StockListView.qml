@@ -40,31 +40,48 @@
 
 import QtQuick 2.0
 
-Item {
-    id: titleBar
-    property string title: ""
+Rectangle {
+  id:root
+  width:320
+  height:480
+  color:"#423A2F"
 
-    BorderImage { source: "images/titlebar.sci"; width: parent.width; height: parent.height + 14; y: -7 }
+  property string currentStockId:""
+  property string currentStockName:""
 
-    Image {
-        id: quitButton
-        anchors.left: parent.left//; anchors.leftMargin: 0
-        anchors.verticalCenter: parent.verticalCenter
-        source: "images/quit.png"
-        MouseArea {
-            anchors.fill: parent
-            onClicked: Qt.quit()
+  ListView {
+    id:view
+    anchors.fill:parent
+    keyNavigationWraps:true
+    focus:true
+    snapMode: ListView.SnapToItem
+    model:StockListModel{}
+
+    onCurrentIndexChanged: {
+        root.currentStockId = model.get(currentIndex).stockId
+        root.currentStockName = model.get(currentIndex).name
+        console.log("current stock:" + root.currentStockId + " - " + root.currentStockName)
+    }
+
+    delegate:Rectangle {
+       height:30
+       width:parent.width
+       color:"transparent"
+       MouseArea {
+         anchors.fill: parent
+         onClicked:view.currentIndex = index
+       }
+
+       Text {
+         anchors.verticalCenter : parent.top
+         anchors.verticalCenterOffset : 15
+         color:index == view.currentIndex ? "#ECC089" : "#A58963"
+         font.pointSize:12
+         font.bold:true
+         text:"         " + stockId + " - " + name
         }
     }
 
-    Text {
-        id: categoryText
-        anchors {
-            left: quitButton.right; right: parent.right; //leftMargin: 10; rightMargin: 10
-            verticalCenter: parent.verticalCenter
-        }
-        elide: Text.ElideLeft
-        text: title
-        font.bold: true; font.pointSize: 20; color: "White"; style: Text.Raised; styleColor: "Black"
-    }
+    highlight:Image {height:30; width:parent.width; source:"images/stock-selected.png"}
+  }
 }
