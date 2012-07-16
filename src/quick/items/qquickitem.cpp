@@ -4530,7 +4530,7 @@ bool QQuickItem::smooth() const
 }
 
 /*!
-    Sets whether the item should be drawn with antialiasing and
+    Sets whether the item should be drawn with
     smooth pixmap filtering to \a smooth.
 
     \sa smooth()

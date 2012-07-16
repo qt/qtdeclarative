@@ -283,7 +283,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
 
     You can also create rounded rectangles using the \l radius property. Since this
     introduces curved edges to the corners of a rectangle, it may be appropriate to
-    set the \l smooth property to improve its appearance.
+    set the \l antialiasing property to improve its appearance.
 
     \section1 Example Usage
 
@@ -299,7 +299,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
     \clearfloat
     \section1 Performance
 
-    Using the \l smooth property improves the appearance of a rounded rectangle at
+    Using the \l antialiasing property improves the appearance of a rounded rectangle at
     the cost of rendering performance. You should consider unsetting this property
     for rectangles in motion, and only set it when they are stationary.
 
@@ -521,21 +521,6 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     return rectangle;
 }
-/*!
-    \qmlproperty bool QtQuick2::Rectangle::smooth
-
-    Set this property if you want the item to be smoothly scaled or
-    transformed.  Smooth filtering gives better visual quality, but is slower.  If
-    the item is displayed at its natural size, this property has no visual or
-    performance effect.
-
-    \note Generally scaling artifacts are only visible if the item is stationary on
-    the screen.  A common pattern when animating an item is to disable smooth
-    filtering at the beginning of the animation and reenable it at the conclusion.
-
-    \image rect-smooth.png
-    On this image, smooth is turned off for the top half and on for the bottom half.
-*/
 
 QRectF QQuickRectangle::boundingRect() const
 {
