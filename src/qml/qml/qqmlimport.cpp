@@ -917,7 +917,7 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoader::QmldirConte
                 (cit2->minorVersion == cit->minorVersion)) {
                 // This entry clashes with a predecessor
                 QQmlError error;
-                error.setDescription(QQmlImportDatabase::tr("\"%1\" version %2.%3 is already defined in module \"%4\"")
+                error.setDescription(QQmlImportDatabase::tr("\"%1\" version %2.%3 is defined more than once in module \"%4\"")
                                      .arg(cit->typeName).arg(cit->majorVersion).arg(cit->minorVersion).arg(uri));
                 errors->prepend(error);
                 return false;
@@ -941,7 +941,7 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoader::QmldirConte
                 (sit2->minorVersion == sit->minorVersion)) {
                 // This entry clashes with a predecessor
                 QQmlError error;
-                error.setDescription(QQmlImportDatabase::tr("\"%1\" version %2.%3 is already defined in module \"%4\"")
+                error.setDescription(QQmlImportDatabase::tr("\"%1\" version %2.%3 is defined more than once in module \"%4\"")
                                      .arg(sit->nameSpace).arg(sit->majorVersion).arg(sit->minorVersion).arg(uri));
                 errors->prepend(error);
                 return false;

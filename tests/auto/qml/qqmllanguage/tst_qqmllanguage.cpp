@@ -2196,12 +2196,12 @@ void tst_qqmllanguage::importsInstalled_data()
         << "import com.nokia.installedtest1 1.0\n"
            "Test {}"
         << ""
-        << "\"Test\" version 1.0 is already defined in module \"com.nokia.installedtest1\"";
+        << "\"Test\" version 1.0 is defined more than once in module \"com.nokia.installedtest1\"";
     QTest::newRow("installed import version JS clash")
         << "import com.nokia.installedtest2 1.0\n"
            "Test {}"
         << ""
-        << "\"Test\" version 1.0 is already defined in module \"com.nokia.installedtest2\"";
+        << "\"Test\" version 1.0 is defined more than once in module \"com.nokia.installedtest2\"";
 }
 
 void tst_qqmllanguage::importsInstalled()
