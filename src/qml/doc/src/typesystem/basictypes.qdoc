@@ -699,6 +699,8 @@ property is only invoked when the property is reassigned to a different object v
     }
     \endqml
 
+    \section1 Change Notification Semantics
+
     It is important to note that changes in regular properties of JavaScript
     objects assigned to a var property will \b{not} trigger updates of bindings
     that access them.  The example below will display "The car has 4 wheels" as
@@ -723,6 +725,48 @@ property is only invoked when the property is reassigned to a different object v
     then the text would be updated to say "The car has 6 wheels", since the
     car property itself would be changed, which causes a change notification
     to be emitted.
+
+    \section1 Property Value Initialization Semantics
+
+    The QML syntax defines that curly braces on the right-hand-side of a
+    property value initialization assignment denote a binding assignment.
+    This can be confusing when initializing a \c var property, as empty curly
+    braces in JavaScript can denote either an expression block or an empty
+    object declaration.  If you wish to initialize a \c var property to an
+    empty object value, you should wrap the curly braces in parentheses.
+
+    For example:
+    \qml
+    Item {
+        property var first:  {}   // nothing = undefined
+        property var second: {{}} // empty expression block = undefined
+        property var third:  ({}) // empty object
+    }
+    \endqml
+
+    In the previous example, the \c first property is bound to an empty
+    expression, whose result is undefined.  The \c second property is bound to
+    an expression which contains a single, empty expression block ("{}"), which
+    similarly has an undefined result.  The \c third property is bound to an
+    expression which is evaluated as an empty object declaration, and thus the
+    property will be initialized with that empty object value.
+
+    Similarly, a colon in JavaScript can be either an object property value
+    assignment, or a code label.  Thus, initializing a var property with an
+    object declaration can also require parentheses:
+
+    \qml
+    Item {
+        property var first: { example: 'true' }    // example is interpreted as a label
+        property var second: ({ example: 'true' }) // example is interpreted as a property
+        property var third: { 'example': 'true' }  // example is interpreted as a property
+        Component.onCompleted: {
+            console.log(first.example) // prints 'undefined', as "first" was assigned a string
+            console.log(second.example) // prints 'true'
+            console.log(third.example) // prints 'true'
+        }
+    }
+    \endqml
 
     \section1 Using Scarce Resources with the var Type
 
