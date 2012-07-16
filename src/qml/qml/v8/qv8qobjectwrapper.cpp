@@ -1552,15 +1552,28 @@ static v8::Handle<v8::Value> CallMethod(QObject *object, int index, int returnTy
 {
     if (argCount > 0) {
 
+        // Special handling is required for value types.
+        // We need to save the current value in a temporary,
+        // and reapply it after converting all arguments.
+        // This avoids the "overwriting copy-value-type-value"
+        // problem during Q_INVOKABLE function invocation.
+        QQmlValueType *valueTypeObject = qobject_cast<QQmlValueType*>(object);
+        QVariant valueTypeValue;
+        if (valueTypeObject)
+            valueTypeValue = valueTypeObject->value();
+
+        // Convert all arguments.
         QVarLengthArray<CallArgument, 9> args(argCount + 1);
         args[0].initAsType(returnType);
-
         for (int ii = 0; ii < argCount; ++ii)
             args[ii + 1].fromValue(argTypes[ii], engine, callArgs[ii]);
-
         QVarLengthArray<void *, 9> argData(args.count());
         for (int ii = 0; ii < args.count(); ++ii)
             argData[ii] = args[ii].dataPtr();
+
+        // Reinstate saved value type object value if required.
+        if (valueTypeObject)
+            valueTypeObject->setValue(valueTypeValue);
 
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, index, argData.data());
 
@@ -1664,6 +1677,11 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
         case QMetaType::QStringList:
         case QMetaType::QVariantList:
             return 5;
+        case QMetaType::QVector4D:
+        case QMetaType::QMatrix4x4:
+            return 6;
+        case QMetaType::QVector3D:
+            return 7;
         default:
             return 10;
         }
@@ -1699,6 +1717,10 @@ static int MatchScore(v8::Handle<v8::Value> actual, int conversionType)
                 return 0;
             else
                 return 10;
+        } else if (r && r->resourceType() == QV8ObjectResource::ValueTypeType) {
+            if (r->engine->toVariant(actual, -1).userType() == conversionType)
+                return 0;
+            return 10;
         } else if (conversionType == QMetaType::QJsonObject) {
             return 5;
         } else {
@@ -1831,6 +1853,16 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QQmlPropertyD
     int bestParameterScore = INT_MAX;
     int bestMatchScore = INT_MAX;
 
+    // Special handling is required for value types.
+    // We need to save the current value in a temporary,
+    // and reapply it after converting all arguments.
+    // This avoids the "overwriting copy-value-type-value"
+    // problem during Q_INVOKABLE function invocation.
+    QQmlValueType *valueTypeObject = qobject_cast<QQmlValueType*>(object);
+    QVariant valueTypeValue;
+    if (valueTypeObject)
+        valueTypeValue = valueTypeObject->value();
+
     QQmlPropertyData dummy;
     const QQmlPropertyData *attempt = &data;
 
@@ -1871,6 +1903,8 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QQmlPropertyD
     } while((attempt = RelatedMethod(object, attempt, dummy)) != 0);
 
     if (best) {
+        if (valueTypeObject)
+            valueTypeObject->setValue(valueTypeValue);
         return CallPrecise(object, *best, engine, callArgs);
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");

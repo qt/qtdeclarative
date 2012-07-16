@@ -235,6 +235,9 @@ bool QV8ValueTypeWrapper::isEqual(QV8ObjectResource *r, const QVariant& value)
     } else {
         Q_ASSERT(resource->objectType == QV8ValueTypeResource::Copy);
         QV8ValueTypeCopyResource *copy = static_cast<QV8ValueTypeCopyResource *>(resource);
+        resource->type->setValue(copy->value);
+        if (resource->type->isEqual(value))
+            return true;
         return (value == copy->value);
     }
 }
@@ -260,11 +263,8 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::ToString(const v8::Arguments &args)
         } else {
             Q_ASSERT(resource->objectType == QV8ValueTypeResource::Copy);
             QV8ValueTypeCopyResource *copy = static_cast<QV8ValueTypeCopyResource *>(resource);
-            QString result = copy->value.toString();
-            if (result.isEmpty() && !copy->value.canConvert(QVariant::String)) {
-                result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(copy->value.typeName()));
-            }
-            return resource->engine->toString(result);
+            resource->type->setValue(copy->value);
+            return resource->engine->toString(resource->type->toString());
         }
     } else {
         return v8::Undefined();
@@ -316,6 +316,11 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
 
     if (!result)
         return v8::Handle<v8::Value>();
+
+    if (result->isFunction()) {
+        // calling a Q_INVOKABLE function of a value type
+        return r->engine->qobjectWrapper()->getProperty(r->type, propertystring, QV8QObjectWrapper::IgnoreRevision);
+    }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
     if (result->propType == metatype) { \

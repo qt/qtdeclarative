@@ -95,11 +95,24 @@ public:
     QQuickVector2DValueType(QObject *parent = 0);
 
     virtual QString toString() const;
+    virtual bool isEqual(const QVariant &other) const;
 
     qreal x() const;
     qreal y() const;
     void setX(qreal);
     void setY(qreal);
+
+    Q_INVOKABLE qreal dotProduct(const QVector2D &vec) const;
+    Q_INVOKABLE QVector2D times(const QVector2D &vec) const;
+    Q_INVOKABLE QVector2D times(qreal scalar) const;
+    Q_INVOKABLE QVector2D plus(const QVector2D &vec) const;
+    Q_INVOKABLE QVector2D minus(const QVector2D &vec) const;
+    Q_INVOKABLE QVector2D normalized() const;
+    Q_INVOKABLE qreal length() const;
+    Q_INVOKABLE QVector3D toVector3d() const;
+    Q_INVOKABLE QVector4D toVector4d() const;
+    Q_INVOKABLE bool fuzzyEquals(const QVector2D &vec, qreal epsilon) const;
+    Q_INVOKABLE bool fuzzyEquals(const QVector2D &vec) const;
 };
 
 class Q_AUTOTEST_EXPORT QQuickVector3DValueType : public QQmlValueTypeBase<QVector3D>
@@ -112,6 +125,7 @@ public:
     QQuickVector3DValueType(QObject *parent = 0);
 
     virtual QString toString() const;
+    virtual bool isEqual(const QVariant &other) const;
 
     qreal x() const;
     qreal y() const;
@@ -119,6 +133,20 @@ public:
     void setX(qreal);
     void setY(qreal);
     void setZ(qreal);
+
+    Q_INVOKABLE QVector3D crossProduct(const QVector3D &vec) const;
+    Q_INVOKABLE qreal dotProduct(const QVector3D &vec) const;
+    Q_INVOKABLE QVector3D times(const QMatrix4x4 &m) const;
+    Q_INVOKABLE QVector3D times(const QVector3D &vec) const;
+    Q_INVOKABLE QVector3D times(qreal scalar) const;
+    Q_INVOKABLE QVector3D plus(const QVector3D &vec) const;
+    Q_INVOKABLE QVector3D minus(const QVector3D &vec) const;
+    Q_INVOKABLE QVector3D normalized() const;
+    Q_INVOKABLE qreal length() const;
+    Q_INVOKABLE QVector2D toVector2d() const;
+    Q_INVOKABLE QVector4D toVector4d() const;
+    Q_INVOKABLE bool fuzzyEquals(const QVector3D &vec, qreal epsilon) const;
+    Q_INVOKABLE bool fuzzyEquals(const QVector3D &vec) const;
 };
 
 class Q_AUTOTEST_EXPORT QQuickVector4DValueType : public QQmlValueTypeBase<QVector4D>
@@ -132,6 +160,7 @@ public:
     QQuickVector4DValueType(QObject *parent = 0);
 
     virtual QString toString() const;
+    virtual bool isEqual(const QVariant &other) const;
 
     qreal x() const;
     qreal y() const;
@@ -141,6 +170,19 @@ public:
     void setY(qreal);
     void setZ(qreal);
     void setW(qreal);
+
+    Q_INVOKABLE qreal dotProduct(const QVector4D &vec) const;
+    Q_INVOKABLE QVector4D times(const QVector4D &vec) const;
+    Q_INVOKABLE QVector4D times(const QMatrix4x4 &m) const;
+    Q_INVOKABLE QVector4D times(qreal scalar) const;
+    Q_INVOKABLE QVector4D plus(const QVector4D &vec) const;
+    Q_INVOKABLE QVector4D minus(const QVector4D &vec) const;
+    Q_INVOKABLE QVector4D normalized() const;
+    Q_INVOKABLE qreal length() const;
+    Q_INVOKABLE QVector2D toVector2d() const;
+    Q_INVOKABLE QVector3D toVector3d() const;
+    Q_INVOKABLE bool fuzzyEquals(const QVector4D &vec, qreal epsilon) const;
+    Q_INVOKABLE bool fuzzyEquals(const QVector4D &vec) const;
 };
 
 class Q_AUTOTEST_EXPORT QQuickQuaternionValueType : public QQmlValueTypeBase<QQuaternion>
@@ -188,6 +230,7 @@ public:
     QQuickMatrix4x4ValueType(QObject *parent = 0);
 
     virtual QString toString() const;
+    virtual bool isEqual(const QVariant &other) const;
 
     qreal m11() const { return v(0, 0); }
     qreal m12() const { return v(0, 1); }
@@ -222,6 +265,23 @@ public:
     void setM42(qreal value) { v(3, 1) = value; }
     void setM43(qreal value) { v(3, 2) = value; }
     void setM44(qreal value) { v(3, 3) = value; }
+
+    Q_INVOKABLE QMatrix4x4 times(const QMatrix4x4 &m) const;
+    Q_INVOKABLE QVector4D times(const QVector4D &vec) const;
+    Q_INVOKABLE QVector3D times(const QVector3D &vec) const;
+    Q_INVOKABLE QMatrix4x4 times(qreal factor) const;
+    Q_INVOKABLE QMatrix4x4 plus(const QMatrix4x4 &m) const;
+    Q_INVOKABLE QMatrix4x4 minus(const QMatrix4x4 &m) const;
+
+    Q_INVOKABLE QVector4D row(int n) const;
+    Q_INVOKABLE QVector4D column(int m) const;
+
+    Q_INVOKABLE qreal determinant() const;
+    Q_INVOKABLE QMatrix4x4 inverted() const;
+    Q_INVOKABLE QMatrix4x4 transposed() const;
+
+    Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m, qreal epsilon) const;
+    Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m) const;
 };
 
 class Q_AUTOTEST_EXPORT QQuickFontValueType : public QQmlValueTypeBase<QFont>

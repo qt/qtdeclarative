@@ -303,8 +303,6 @@ void tst_qqmlvaluetypes::variant()
     }
 
     {
-    QString w1 = testFileUrl("variant_write.1.qml").toString() + QLatin1String(":9: TypeError: Object QVector2D(8, 2) has no method 'plus'");
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w1));
     QQmlComponent component(&engine, testFileUrl("variant_write.1.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -502,6 +500,14 @@ void tst_qqmlvaluetypes::vector2d()
 
         delete object;
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("vector2d_invokables.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QVERIFY(object->property("success").toBool());
+        delete object;
+    }
 }
 
 void tst_qqmlvaluetypes::vector3d()
@@ -547,6 +553,14 @@ void tst_qqmlvaluetypes::vector3d()
 
         delete object;
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("vector3d_invokables.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QVERIFY(object->property("success").toBool());
+        delete object;
+    }
 }
 
 void tst_qqmlvaluetypes::vector4d()
@@ -590,6 +604,14 @@ void tst_qqmlvaluetypes::vector4d()
         QCOMPARE(object->property("equalsRect").toBool(), false);
         QCOMPARE(object->property("equalsSelf").toBool(), true);
 
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("vector4d_invokables.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QVERIFY(object->property("success").toBool());
         delete object;
     }
 }
@@ -699,6 +721,14 @@ void tst_qqmlvaluetypes::matrix4x4()
         QCOMPARE(object->property("equalsRect").toBool(), false);
         QCOMPARE(object->property("equalsSelf").toBool(), true);
 
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("matrix4x4_invokables.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QCOMPARE(object->property("success").toBool(), true);
         delete object;
     }
 }

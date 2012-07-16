@@ -203,8 +203,8 @@ public:
             int index = s.indexOf(QLatin1Char(','));
 
             bool xGood, yGood;
-            qreal xCoord = s.left(index).toDouble(&xGood);
-            qreal yCoord = s.mid(index+1).toDouble(&yGood);
+            float xCoord = s.left(index).toFloat(&xGood);
+            float yCoord = s.mid(index+1).toFloat(&yGood);
 
             if (xGood && yGood) {
                 if (ok) *ok = true;
@@ -223,9 +223,9 @@ public:
             int index2 = s.indexOf(QLatin1Char(','), index+1);
 
             bool xGood, yGood, zGood;
-            qreal xCoord = s.left(index).toDouble(&xGood);
-            qreal yCoord = s.mid(index+1, index2-index-1).toDouble(&yGood);
-            qreal zCoord = s.mid(index2+1).toDouble(&zGood);
+            float xCoord = s.left(index).toFloat(&xGood);
+            float yCoord = s.mid(index+1, index2-index-1).toFloat(&yGood);
+            float zCoord = s.mid(index2+1).toFloat(&zGood);
 
             if (xGood && yGood && zGood) {
                 if (ok) *ok = true;
@@ -245,10 +245,10 @@ public:
             int index3 = s.indexOf(QLatin1Char(','), index2+1);
 
             bool xGood, yGood, zGood, wGood;
-            qreal xCoord = s.left(index).toDouble(&xGood);
-            qreal yCoord = s.mid(index+1, index2-index-1).toDouble(&yGood);
-            qreal zCoord = s.mid(index2+1, index3-index2-1).toDouble(&zGood);
-            qreal wCoord = s.mid(index3+1).toDouble(&wGood);
+            float xCoord = s.left(index).toFloat(&xGood);
+            float yCoord = s.mid(index+1, index2-index-1).toFloat(&yGood);
+            float zCoord = s.mid(index2+1, index3-index2-1).toFloat(&zGood);
+            float wCoord = s.mid(index3+1).toFloat(&wGood);
 
             if (xGood && yGood && zGood && wGood) {
                 if (ok) *ok = true;
@@ -582,7 +582,7 @@ public:
             break;
         case QMetaType::QQuaternion:
             if (argc == 1) {
-                const double *sxyz = reinterpret_cast<const double*>(argv[0]);
+                const qreal *sxyz = reinterpret_cast<const qreal*>(argv[0]);
                 QQuaternion q(sxyz[0], sxyz[1], sxyz[2], sxyz[3]);
                 *v = QVariant(q);
                 return true;
@@ -590,7 +590,7 @@ public:
             break;
         case QMetaType::QMatrix4x4:
             if (argc == 1) {
-                const float *vals = reinterpret_cast<const float*>(argv[0]);
+                const qreal *vals = reinterpret_cast<const qreal*>(argv[0]);
                 QMatrix4x4 m(vals[0], vals[1], vals[2], vals[3],
                              vals[4], vals[5], vals[6], vals[7],
                              vals[8], vals[9], vals[10], vals[11],

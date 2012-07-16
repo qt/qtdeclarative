@@ -542,7 +542,7 @@ v8::Handle<v8::Value> vector2d(const v8::Arguments &args)
     if (args.Length() != 2)
         V8THROW_ERROR("Qt.vector2d(): Invalid arguments");
 
-    float xy[3];
+    float xy[3]; // qvector2d uses float internally
     xy[0] = args[0]->ToNumber()->Value();
     xy[1] = args[1]->ToNumber()->Value();
 
@@ -559,7 +559,7 @@ v8::Handle<v8::Value> vector3d(const v8::Arguments &args)
     if (args.Length() != 3)
         V8THROW_ERROR("Qt.vector3d(): Invalid arguments");
 
-    float xyz[3];
+    float xyz[3]; // qvector3d uses float internally
     xyz[0] = args[0]->ToNumber()->Value();
     xyz[1] = args[1]->ToNumber()->Value();
     xyz[2] = args[2]->ToNumber()->Value();
@@ -577,7 +577,7 @@ v8::Handle<v8::Value> vector4d(const v8::Arguments &args)
     if (args.Length() != 4)
         V8THROW_ERROR("Qt.vector4d(): Invalid arguments");
 
-    float xyzw[4];
+    float xyzw[4]; // qvector4d uses float internally
     xyzw[0] = args[0]->ToNumber()->Value();
     xyzw[1] = args[1]->ToNumber()->Value();
     xyzw[2] = args[2]->ToNumber()->Value();
@@ -596,7 +596,7 @@ v8::Handle<v8::Value> quaternion(const v8::Arguments &args)
     if (args.Length() != 4)
         V8THROW_ERROR("Qt.quaternion(): Invalid arguments");
 
-    double sxyz[4];
+    qreal sxyz[4]; // qquaternion uses qreal internally
     sxyz[0] = args[0]->ToNumber()->Value();
     sxyz[1] = args[1]->ToNumber()->Value();
     sxyz[2] = args[2]->ToNumber()->Value();
@@ -648,7 +648,7 @@ v8::Handle<v8::Value> matrix4x4(const v8::Arguments &args)
     if (args.Length() != 16)
         V8THROW_ERROR("Qt.matrix4x4(): Invalid arguments");
 
-    float vals[16];
+    qreal vals[16]; // qmatrix4x4 uses qreal internally
     vals[0] = args[0]->ToNumber()->Value();
     vals[1] = args[1]->ToNumber()->Value();
     vals[2] = args[2]->ToNumber()->Value();

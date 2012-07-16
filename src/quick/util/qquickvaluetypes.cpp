@@ -118,6 +118,15 @@ QString QQuickVector2DValueType::toString() const
     return QString(QLatin1String("QVector2D(%1, %2)")).arg(v.x()).arg(v.y());
 }
 
+bool QQuickVector2DValueType::isEqual(const QVariant &other) const
+{
+    if (other.userType() != QMetaType::QVector2D)
+        return false;
+
+    QVector2D otherVector = other.value<QVector2D>();
+    return (v == otherVector);
+}
+
 qreal QQuickVector2DValueType::x() const
 {
     return v.x();
@@ -138,6 +147,66 @@ void QQuickVector2DValueType::setY(qreal y)
     v.setY(y);
 }
 
+qreal QQuickVector2DValueType::dotProduct(const QVector2D &vec) const
+{
+    return QVector2D::dotProduct(v, vec);
+}
+
+QVector2D QQuickVector2DValueType::times(const QVector2D &vec) const
+{
+    return v * vec;
+}
+
+QVector2D QQuickVector2DValueType::times(qreal scalar) const
+{
+    return v * scalar;
+}
+
+QVector2D QQuickVector2DValueType::plus(const QVector2D &vec) const
+{
+    return v + vec;
+}
+
+QVector2D QQuickVector2DValueType::minus(const QVector2D &vec) const
+{
+    return v - vec;
+}
+
+QVector2D QQuickVector2DValueType::normalized() const
+{
+    return v.normalized();
+}
+
+qreal QQuickVector2DValueType::length() const
+{
+    return v.length();
+}
+
+QVector3D QQuickVector2DValueType::toVector3d() const
+{
+    return v.toVector3D();
+}
+
+QVector4D QQuickVector2DValueType::toVector4d() const
+{
+    return v.toVector4D();
+}
+
+bool QQuickVector2DValueType::fuzzyEquals(const QVector2D &vec, qreal epsilon) const
+{
+    qreal absEps = qAbs(epsilon);
+    if (qAbs(v.x() - vec.x()) > absEps)
+        return false;
+    if (qAbs(v.y() - vec.y()) > absEps)
+        return false;
+    return true;
+}
+
+bool QQuickVector2DValueType::fuzzyEquals(const QVector2D &vec) const
+{
+    return qFuzzyCompare(v, vec);
+}
+
 
 QQuickVector3DValueType::QQuickVector3DValueType(QObject *parent)
     : QQmlValueTypeBase<QVector3D>(QMetaType::QVector3D, parent)
@@ -147,6 +216,15 @@ QQuickVector3DValueType::QQuickVector3DValueType(QObject *parent)
 QString QQuickVector3DValueType::toString() const
 {
     return QString(QLatin1String("QVector3D(%1, %2, %3)")).arg(v.x()).arg(v.y()).arg(v.z());
+}
+
+bool QQuickVector3DValueType::isEqual(const QVariant &other) const
+{
+    if (other.userType() != QMetaType::QVector3D)
+        return false;
+
+    QVector3D otherVector = other.value<QVector3D>();
+    return (v == otherVector);
 }
 
 qreal QQuickVector3DValueType::x() const
@@ -179,6 +257,78 @@ void QQuickVector3DValueType::setZ(qreal z)
     v.setZ(z);
 }
 
+QVector3D QQuickVector3DValueType::crossProduct(const QVector3D &vec) const
+{
+    return QVector3D::crossProduct(v, vec);
+}
+
+qreal QQuickVector3DValueType::dotProduct(const QVector3D &vec) const
+{
+    return QVector3D::dotProduct(v, vec);
+}
+
+QVector3D QQuickVector3DValueType::times(const QMatrix4x4 &m) const
+{
+    return v * m;
+}
+
+QVector3D QQuickVector3DValueType::times(const QVector3D &vec) const
+{
+    return v * vec;
+}
+
+QVector3D QQuickVector3DValueType::times(qreal scalar) const
+{
+    return v * scalar;
+}
+
+QVector3D QQuickVector3DValueType::plus(const QVector3D &vec) const
+{
+    return v + vec;
+}
+
+QVector3D QQuickVector3DValueType::minus(const QVector3D &vec) const
+{
+    return v - vec;
+}
+
+QVector3D QQuickVector3DValueType::normalized() const
+{
+    return v.normalized();
+}
+
+qreal QQuickVector3DValueType::length() const
+{
+    return v.length();
+}
+
+QVector2D QQuickVector3DValueType::toVector2d() const
+{
+    return v.toVector2D();
+}
+
+QVector4D QQuickVector3DValueType::toVector4d() const
+{
+    return v.toVector4D();
+}
+
+bool QQuickVector3DValueType::fuzzyEquals(const QVector3D &vec, qreal epsilon) const
+{
+    qreal absEps = qAbs(epsilon);
+    if (qAbs(v.x() - vec.x()) > absEps)
+        return false;
+    if (qAbs(v.y() - vec.y()) > absEps)
+        return false;
+    if (qAbs(v.z() - vec.z()) > absEps)
+        return false;
+    return true;
+}
+
+bool QQuickVector3DValueType::fuzzyEquals(const QVector3D &vec) const
+{
+    return qFuzzyCompare(v, vec);
+}
+
 
 QQuickVector4DValueType::QQuickVector4DValueType(QObject *parent)
     : QQmlValueTypeBase<QVector4D>(QMetaType::QVector4D, parent)
@@ -188,6 +338,15 @@ QQuickVector4DValueType::QQuickVector4DValueType(QObject *parent)
 QString QQuickVector4DValueType::toString() const
 {
     return QString(QLatin1String("QVector4D(%1, %2, %3, %4)")).arg(v.x()).arg(v.y()).arg(v.z()).arg(v.w());
+}
+
+bool QQuickVector4DValueType::isEqual(const QVariant &other) const
+{
+    if (other.userType() != QMetaType::QVector4D)
+        return false;
+
+    QVector4D otherVector = other.value<QVector4D>();
+    return (v == otherVector);
 }
 
 qreal QQuickVector4DValueType::x() const
@@ -230,6 +389,74 @@ void QQuickVector4DValueType::setW(qreal w)
     v.setW(w);
 }
 
+qreal QQuickVector4DValueType::dotProduct(const QVector4D &vec) const
+{
+    return QVector4D::dotProduct(v, vec);
+}
+
+QVector4D QQuickVector4DValueType::times(const QVector4D &vec) const
+{
+    return v * vec;
+}
+
+QVector4D QQuickVector4DValueType::times(const QMatrix4x4 &m) const
+{
+    return v * m;
+}
+
+QVector4D QQuickVector4DValueType::times(qreal scalar) const
+{
+    return v * scalar;
+}
+
+QVector4D QQuickVector4DValueType::plus(const QVector4D &vec) const
+{
+    return v + vec;
+}
+
+QVector4D QQuickVector4DValueType::minus(const QVector4D &vec) const
+{
+    return v - vec;
+}
+
+QVector4D QQuickVector4DValueType::normalized() const
+{
+    return v.normalized();
+}
+
+qreal QQuickVector4DValueType::length() const
+{
+    return v.length();
+}
+
+QVector2D QQuickVector4DValueType::toVector2d() const
+{
+    return v.toVector2D();
+}
+
+QVector3D QQuickVector4DValueType::toVector3d() const
+{
+    return v.toVector3D();
+}
+
+bool QQuickVector4DValueType::fuzzyEquals(const QVector4D &vec, qreal epsilon) const
+{
+    qreal absEps = qAbs(epsilon);
+    if (qAbs(v.x() - vec.x()) > absEps)
+        return false;
+    if (qAbs(v.y() - vec.y()) > absEps)
+        return false;
+    if (qAbs(v.z() - vec.z()) > absEps)
+        return false;
+    if (qAbs(v.w() - vec.w()) > absEps)
+        return false;
+    return true;
+}
+
+bool QQuickVector4DValueType::fuzzyEquals(const QVector4D &vec) const
+{
+    return qFuzzyCompare(v, vec);
+}
 
 QQuickQuaternionValueType::QQuickQuaternionValueType(QObject *parent)
     : QQmlValueTypeBase<QQuaternion>(QMetaType::QQuaternion, parent)
@@ -287,6 +514,79 @@ QQuickMatrix4x4ValueType::QQuickMatrix4x4ValueType(QObject *parent)
 {
 }
 
+QMatrix4x4 QQuickMatrix4x4ValueType::times(const QMatrix4x4 &m) const
+{
+    return v * m;
+}
+
+QVector4D QQuickMatrix4x4ValueType::times(const QVector4D &vec) const
+{
+    return v * vec;
+}
+
+QVector3D QQuickMatrix4x4ValueType::times(const QVector3D &vec) const
+{
+    return v * vec;
+}
+
+QMatrix4x4 QQuickMatrix4x4ValueType::times(qreal factor) const
+{
+    return v * factor;
+}
+
+QMatrix4x4 QQuickMatrix4x4ValueType::plus(const QMatrix4x4 &m) const
+{
+    return v + m;
+}
+
+QMatrix4x4 QQuickMatrix4x4ValueType::minus(const QMatrix4x4 &m) const
+{
+    return v - m;
+}
+
+QVector4D QQuickMatrix4x4ValueType::row(int n) const
+{
+    return v.row(n);
+}
+
+QVector4D QQuickMatrix4x4ValueType::column(int m) const
+{
+    return v.column(m);
+}
+
+qreal QQuickMatrix4x4ValueType::determinant() const
+{
+    return v.determinant();
+}
+
+QMatrix4x4 QQuickMatrix4x4ValueType::inverted() const
+{
+    return v.inverted();
+}
+
+QMatrix4x4 QQuickMatrix4x4ValueType::transposed() const
+{
+    return v.transposed();
+}
+
+bool QQuickMatrix4x4ValueType::fuzzyEquals(const QMatrix4x4 &m, qreal epsilon) const
+{
+    qreal absEps = qAbs(epsilon);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (qAbs(v(i,j) - m(i,j)) > absEps) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool QQuickMatrix4x4ValueType::fuzzyEquals(const QMatrix4x4 &m) const
+{
+    return qFuzzyCompare(v, m);
+}
+
 QString QQuickMatrix4x4ValueType::toString() const
 {
     return QString(QLatin1String("QMatrix4x4(%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12, %13, %14, %15, %16)"))
@@ -296,6 +596,15 @@ QString QQuickMatrix4x4ValueType::toString() const
             .arg(v(3, 0)).arg(v(3, 1)).arg(v(3, 2)).arg(v(3, 3));
 }
 
+bool QQuickMatrix4x4ValueType::isEqual(const QVariant &other) const
+{
+    if (other.userType() != qMetaTypeId<QMatrix4x4>())
+        return false;
+
+    QMatrix4x4 otherMatrix = other.value<QMatrix4x4>();
+    return (v == otherMatrix);
+
+}
 
 QQuickFontValueType::QQuickFontValueType(QObject *parent)
     : QQmlValueTypeBase<QFont>(QMetaType::QFont, parent),

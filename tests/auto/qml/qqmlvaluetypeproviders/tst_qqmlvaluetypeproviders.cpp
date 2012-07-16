@@ -70,6 +70,7 @@ private slots:
     void comparisonSemantics();
     void cppIntegration();
     void jsObjectConversion();
+    void invokableFunctions();
 };
 
 void tst_qqmlvaluetypeproviders::initTestCase()
@@ -165,6 +166,19 @@ void tst_qqmlvaluetypeproviders::jsObjectConversion()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QVERIFY(object->property("qtquickTypeSuccess").toBool());
+    delete object;
+}
+
+void tst_qqmlvaluetypeproviders::invokableFunctions()
+{
+    QQmlEngine e;
+    QQmlComponent component(&e, testFileUrl("invokableFunctions.qml"));
+    QVERIFY(!component.isError());
+    QVERIFY(component.errors().isEmpty());
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("complete").toBool());
+    QVERIFY(object->property("success").toBool());
     delete object;
 }
 

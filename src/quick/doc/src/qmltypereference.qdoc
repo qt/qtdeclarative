@@ -418,6 +418,115 @@ Data Storage
     or define the components individually, or compose it with
     the Qt.vector2d() function.
 
+    The vector2d type has the following idempotent functions which can be
+    invoked in QML:
+    \table
+        \header
+        \li Function Signature
+        \li Description
+        \li Example
+
+        \row
+        \li real dotProduct(vector2d other)
+        \li Returns the scalar real result of the dot product of \c this vector2d with the \c other vector2d
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = Qt.vector2d(3,4);
+var c = a.dotProduct(b);
+console.log(c); // 11
+            \endcode
+
+        \row
+        \li vector2d times(vector2d other)
+        \li Returns the vector2d result of multiplying \c this vector2d with the \c other vector2d
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = Qt.vector2d(3,4);
+var c = a.times(b);
+console.log(c.toString()); // QVector2D(3, 8)
+            \endcode
+
+        \row
+        \li vector2d times(real factor)
+        \li Returns the vector2d result of multiplying \c this vector2d with the scalar \c factor
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = 4.48;
+var c = a.times(b);
+console.log(c.toString()); // QVector2D(4.48, 8.96)
+            \endcode
+
+        \row
+        \li vector2d plus(vector2d other)
+        \li Returns the vector2d result of the addition of \c this vector2d with the \c other vector2d
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = Qt.vector2d(3,4);
+var c = a.plus(b);
+console.log(c.toString()); // QVector2D(4, 6)
+            \endcode
+
+        \row
+        \li vector2d minus(vector2d other)
+        \li Returns the vector2d result of the subtraction of \c other vector2d from \c this vector2d
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = Qt.vector2d(3,4);
+var c = a.minus(b);
+console.log(c.toString()); // QVector2D(-2, -2)
+            \endcode
+
+        \row
+        \li vector2d normalized()
+        \li Returns the normalized form of \c this vector
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = a.normalized();
+console.log(b.toString()); // QVector2D(0.447214, 0.894427)
+            \endcode
+
+        \row
+        \li real length()
+        \li Returns the scalar real value of the length of \c this vector2d
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = a.length();
+console.log(b.toString()); // 2.23606797749979
+            \endcode
+
+        \row
+        \li vector3d toVector3d()
+        \li Returns the vector3d result of converting \c this vector2d to a vector3d
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = a.toVector3d();
+console.log(b.toString()); // QVector3D(1, 2, 0)
+            \endcode
+
+        \row
+        \li vector4d toVector4d()
+        \li Returns the vector4d result of converting \c this vector2d to a vector4d
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = a.toVector4d();
+console.log(b.toString()); // QVector4D(1, 2, 0, 0)
+            \endcode
+
+        \row
+        \li bool fuzzyEquals(vector2d other, real epsilon)
+        \li Returns true if \c this vector2d is approximately equal to the \c other vector2d.
+            The approximation will be true if each attribute of \c this is within \c epsilon
+            of \c other.  Note that \c epsilon is an optional argument, the default \c epsilon
+            is 0.00001.
+        \li \code
+var a = Qt.vector2d(1,2);
+var b = Qt.vector2d(1.0001, 1.9998);
+var c = a.fuzzyEquals(b);        // default epsilon
+var d = a.fuzzyEquals(b, 0.005); // supplied epsilon
+console.log(c + " " + d); // false true
+            \endcode
+\endtable
+
     This basic type is provided by the QtQuick import.
 
     \sa {QML Basic Types}
@@ -448,9 +557,142 @@ Data Storage
     Rotation { angle: 60; axis.x: 0; axis.y: 1; axis.z: 0 }
     \endqml
 
+    Each attribute of a vector3d value is stored internally as a
+    single-precision floating point number (\c float).
+
     When integrating with C++, note that any QVector3D value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c vector3d value, and vice-versa.
+
+    The vector3d type has the following idempotent functions which can be
+    invoked in QML:
+    \table
+        \header
+        \li Function Signature
+        \li Description
+        \li Example
+
+        \row
+        \li vector3d crossProduct(vector3d other)
+        \li Returns the vector3d result of the cross product of \c this vector3d with the \c other vector3d
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = Qt.vector3d(4,5,6);
+var c = a.crossProduct(b);
+console.log(c.toString()); // QVector3D(-3, 6, -3)
+            \endcode
+
+        \row
+        \li real dotProduct(vector3d other)
+        \li Returns the scalar real result of the dot product of \c this vector3d with the \c other vector3d
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = Qt.vector3d(4,5,6);
+var c = a.dotProduct(b);
+console.log(c); // 32
+            \endcode
+
+        \row
+        \li vector3d times(matrix4x4 matrix)
+        \li Returns the vector3d result of transforming \c this vector3d with
+            the 4x4 \c matrix with the matrix applied post-vector
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = Qt.matrix4x4(4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19);
+var c = a.times(b);
+console.log(c.toString()); // QVector3D(0.774194, 0.849462, 0.924731)
+            \endcode
+
+        \row
+        \li vector3d times(vector3d other)
+        \li Returns the vector3d result of multiplying \c this vector3d with the \c other vector3d
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = Qt.vector3d(4,5,6);
+var c = a.times(b);
+console.log(c.toString()); // QVector3D(4, 10, 18)
+            \endcode
+
+        \row
+        \li vector3d times(real factor)
+        \li Returns the vector3d result of multiplying \c this vector3d with the scalar \c factor
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = 4.48;
+var c = a.times(b);
+console.log(c.toString()); // QVector3D(4.48, 8.96, 13.44)
+            \endcode
+
+        \row
+        \li vector3d plus(vector3d other)
+        \li Returns the vector3d result of the addition of \c this vector3d with the \c other vector3d
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = Qt.vector3d(4,5,6);
+var c = a.plus(b);
+console.log(c.toString()); // QVector3D(5, 7, 9)
+            \endcode
+
+        \row
+        \li vector3d minus(vector3d other)
+        \li Returns the vector3d result of the subtraction of \c other vector3d from \c this vector3d
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = Qt.vector3d(4,5,6);
+var c = a.minus(b);
+console.log(c.toString()); // QVector3D(-3, -3, -3)
+            \endcode
+
+        \row
+        \li vector3d normalized()
+        \li Returns the normalized form of \c this vector
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = a.normalized();
+console.log(b.toString()); // QVector3D(0.267261, 0.534522, 0.801784)
+            \endcode
+
+        \row
+        \li real length()
+        \li Returns the scalar real value of the length of \c this vector3d
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = a.length();
+console.log(b.toString()); // 3.7416573867739413
+            \endcode
+
+        \row
+        \li vector2d toVector2d()
+        \li Returns the vector2d result of converting \c this vector3d to a vector2d
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = a.toVector2d();
+console.log(b.toString()); // QVector2D(1, 2)
+            \endcode
+
+        \row
+        \li vector4d toVector4d()
+        \li Returns the vector4d result of converting \c this vector3d to a vector4d
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = a.toVector4d();
+console.log(b.toString()); // QVector4D(1, 2, 3, 0)
+            \endcode
+
+        \row
+        \li bool fuzzyEquals(vector3d other, real epsilon)
+        \li Returns true if \c this vector3d is approximately equal to the \c other vector3d.
+            The approximation will be true if each attribute of \c this is within \c epsilon
+            of \c other.  Note that \c epsilon is an optional argument, the default \c epsilon
+            is 0.00001.
+        \li \code
+var a = Qt.vector3d(1,2,3);
+var b = Qt.vector3d(1.0001, 1.9998, 2.0001);
+var c = a.fuzzyEquals(b);        // default epsilon
+var d = a.fuzzyEquals(b, 0.005); // supplied epsilon
+console.log(c + " " + d); // false true
+            \endcode
+\endtable
 
     This basic type is provided by the QtQuick import.
 
@@ -471,6 +713,126 @@ Data Storage
     or define the components individually, or compose it with
     the Qt.vector4d() function.
 
+    The vector4d type has the following idempotent functions which can be
+    invoked in QML:
+    \table
+        \header
+        \li Function Signature
+        \li Description
+        \li Example
+
+        \row
+        \li real dotProduct(vector4d other)
+        \li Returns the scalar real result of the dot product of \c this vector4d with the \c other vector4d
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = Qt.vector4d(5,6,7,8);
+var c = a.dotProduct(b);
+console.log(c); // 70
+            \endcode
+
+        \row
+        \li vector4d times(matrix4x4 matrix)
+        \li Returns the vector4d result of transforming \c this vector4d with
+            the 4x4 \c matrix with the matrix applied post-vector
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = Qt.matrix4x4(4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19);
+var c = a.times(b);
+console.log(c.toString()); // QVector4D(120, 130, 140, 150)
+            \endcode
+
+        \row
+        \li vector4d times(vector4d other)
+        \li Returns the vector4d result of multiplying \c this vector4d with the \c other vector4d
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = Qt.vector4d(5,6,7,8);
+var c = a.times(b);
+console.log(c.toString()); // QVector4D(5, 12, 21, 32)
+            \endcode
+
+        \row
+        \li vector4d times(real factor)
+        \li Returns the vector4d result of multiplying \c this vector4d with the scalar \c factor
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = 4.48;
+var c = a.times(b);
+console.log(c.toString()); // QVector3D(4.48, 8.96, 13.44, 17.92)
+            \endcode
+
+        \row
+        \li vector4d plus(vector4d other)
+        \li Returns the vector4d result of the addition of \c this vector4d with the \c other vector4d
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = Qt.vector4d(5,6,7,8);
+var c = a.plus(b);
+console.log(c.toString()); // QVector4D(6, 8, 10, 12)
+            \endcode
+
+        \row
+        \li vector4d minus(vector4d other)
+        \li Returns the vector4d result of the subtraction of \c other vector4d from \c this vector4d
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = Qt.vector4d(5,6,7,8);
+var c = a.minus(b);
+console.log(c.toString()); // QVector4D(-4, -4, -4, -4)
+            \endcode
+
+        \row
+        \li vector4d normalized()
+        \li Returns the normalized form of \c this vector
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = a.normalized();
+console.log(b.toString()); // QVector4D(0.182574, 0.365148, 0.547723, 0.730297)
+            \endcode
+
+        \row
+        \li real length()
+        \li Returns the scalar real value of the length of \c this vector3d
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = a.length();
+console.log(b.toString()); // 5.477225575051661
+            \endcode
+
+        \row
+        \li vector2d toVector2d()
+        \li Returns the vector2d result of converting \c this vector4d to a vector2d
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = a.toVector2d();
+console.log(b.toString()); // QVector2D(1, 2)
+            \endcode
+
+        \row
+        \li vector3d toVector3d()
+        \li Returns the vector3d result of converting \c this vector4d to a vector3d
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = a.toVector3d();
+console.log(b.toString()); // QVector3D(1, 2, 3)
+            \endcode
+
+        \row
+        \li bool fuzzyEquals(vector4d other, real epsilon)
+        \li Returns true if \c this vector4d is approximately equal to the \c other vector4d.
+            The approximation will be true if each attribute of \c this is within \c epsilon
+            of \c other.  Note that \c epsilon is an optional argument, the default \c epsilon
+            is 0.00001.
+        \li \code
+var a = Qt.vector4d(1,2,3,4);
+var b = Qt.vector4d(1.0001, 1.9998, 2.0001, 3.9999);
+var c = a.fuzzyEquals(b);        // default epsilon
+var d = a.fuzzyEquals(b, 0.005); // supplied epsilon
+console.log(c + " " + d); // false true
+            \endcode
+\endtable
+
     This basic type is provided by the QtQuick import.
 
     \sa {QML Basic Types}
@@ -482,9 +844,7 @@ Data Storage
 
     \brief A quaternion type has scalar, x, y, and z attributes.
 
-    A \c quaternion type has \c scalar, \c x, \c y and \c z attributes,
-    otherwise it is similar to the \c vector3d type.  Please see the
-    documentation about the \c vector3d type for more information.
+    A \c quaternion type has \c scalar, \c x, \c y and \c z attributes.
 
     To create a \c quaternion value, specify it as a "scalar,x,y,z" string,
     or define the components individually, or compose it with
@@ -501,9 +861,148 @@ Data Storage
 
     \brief A matrix4x4 type is a 4-row and 4-column matrix
 
-    A \c matrix4x4 type has sixteen values, but these values are
-    largely opaque to QML.  Values of this type can be composed with
-    the Qt.matrix4x4() function.
+    A \c matrix4x4 type has sixteen values, each accessible via the properties
+    \c m11 through \c m44 in QML (in row/column order).  Values of this type
+    can be composed with the Qt.matrix4x4() function.  Each attribute in a
+    matrix4x4 is stored as a real (single-precision on ARM, double-precision
+    on x86).
+
+    The matrix4x4 type has the following idempotent functions which can be
+    invoked in QML:
+    \table
+        \header
+        \li Function Signature
+        \li Description
+        \li Example
+
+        \row
+        \li matrix4x4 times(matrix4x4 other)
+        \li Returns the matrix4x4 result of multiplying \c this matrix4x4 with
+            the \c other matrix4x4
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = Qt.matrix4x4(4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19);
+var c = a.times(b);
+console.log(c.toString()); // QMatrix4x4(120, 130, 140, 150, 280, 306, 332, 358, 440, 482, 524, 566, 600, 658, 716, 774)
+            \endcode
+
+        \row
+        \li vector4d times(vector4d vector)
+        \li Returns the vector4d result of transforming the \c vector
+            according to \c this matrix4x4 with the matrix applied
+            pre-vector
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = Qt.vector4d(5,6,7,8);
+var c = a.times(b);
+console.log(c.toString()); // QVector4D(70, 174, 278, 382)
+            \endcode
+
+        \row
+        \li vector3d times(vector3d vector)
+        \li Returns the vector3d result of transforming the \c vector
+            according to \c this matrix4x4 with the matrix applied
+            pre-vector
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = Qt.vector3d(5,6,7);
+var c = a.times(b);
+console.log(c.toString()); // QVector3D(0.155556, 0.437037, 0.718518)
+            \endcode
+
+        \row
+        \li matrix4x4 times(real factor)
+        \li Returns the matrix4x4 result of multiplying \c this matrix4x4 with the scalar \c factor
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = 4.48;
+var c = a.times(b);
+console.log(c.toString()); // QMatrix4x4(4.48, 8.96, 13.44, 17.92, 22.4, 26.88, 31.36, 35.84, 40.32, 44.8, 49.28, 53.76, 58.24, 62.72, 67.2, 71.68)
+            \endcode
+
+        \row
+        \li matrix4x4 plus(matrix4x4 other)
+        \li Returns the matrix4x4 result of the addition of \c this matrix4x4 with the \c other matrix4x4
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = Qt.matrix4x4(5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20);
+var c = a.plus(b);
+console.log(c.toString()); // QMatrix4x4(6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36)
+            \endcode
+
+        \row
+        \li matrix4x4 minus(matrix4x4 other)
+        \li Returns the matrix4x4 result of the subtraction of \c other matrix4x4 from \c this matrix4x4
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = Qt.matrix4x4(5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20);
+var c = a.minus(b);
+console.log(c.toString()); // QMatrix4x4(-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4)
+            \endcode
+
+        \row
+        \li vector4d row(int which)
+        \li Returns the vector4d row of \c this specified by \c which.
+            Note: the \c which is 0-based access into the matrix.
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = Qt.vector4d(a.m21, a.m22, a.m23, a.m24);
+var c = a.row(2); // zero based access!  so not equal to b
+console.log(b.toString() + " " + c.toString()); // QVector4D(5, 6, 7, 8) QVector4D(9, 10, 11, 12)
+            \endcode
+
+        \row
+        \li vector4d column(int which)
+        \li Returns the vector4d column of \c this specified by \c which.
+            Note: the \c which is 0-based access into the matrix.
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = Qt.vector4d(a.m12, a.m22, a.m32, a.m42);
+var c = a.column(2); // zero based access!  so not equal to b
+console.log(b.toString() + " " + c.toString()); // QVector4D(2, 6, 10, 14) QVector4D(3, 7, 11, 15)
+            \endcode
+
+        \row
+        \li real determinant()
+        \li Returns the determinant of \c this matrix4x4
+        \li \code
+var a = Qt.matrix4x4(1,0,0,0,0,2,0,0,0,0,3,0,100,200,300,1);
+var b = a.determinant();
+console.log(b); // 6
+            \endcode
+
+        \row
+        \li matrix4x4 inverted()
+        \li Returns the inverse of \c this matrix4x4 if it exists, else the identity matrix.
+        \li \code
+var a = Qt.matrix4x4(1,0,0,0,0,2,0,0,0,0,3,0,100,200,300,1);
+var b = a.inverted();
+console.log(b.toString()); // QMatrix4x4(1, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.333333, 0, -100, -100, -100, 1)
+            \endcode
+
+        \row
+        \li matrix4x4 transposed()
+        \li Returns the transpose of \c this matrix4x4
+        \li \code
+var a = Qt.matrix4x4(1,0,0,0,0,2,0,0,0,0,3,0,100,200,300,1);
+var b = a.transposed();
+console.log(b.toString()); // QMatrix4x4(1, 0, 0, 100, 0, 2, 0, 200, 0, 0, 3, 300, 0, 0, 0, 1)
+            \endcode
+
+        \row
+        \li bool fuzzyEquals(matrix4x4 other, real epsilon)
+        \li Returns true if \c this matrix4x4 is approximately equal to the \c other matrix4x4.
+            The approximation will be true if each attribute of \c this is within \c epsilon
+            of the respective attribute of \c other.  Note that \c epsilon is an optional
+            argument, the default \c epsilon is 0.00001.
+        \li \code
+var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+var b = Qt.matrix4x4(1.0001,2.0001,3.0002,4.0003,5.0001,6.0002,7.0002,8.0004,9.0001,10.0003,11.0003,12.0004,13.0001,14.0002,15.0003,16.0004);
+var c = a.fuzzyEquals(b);        // default epsilon
+var d = a.fuzzyEquals(b, 0.005); // supplied epsilon
+console.log(c + " " + d); // false true
+            \endcode
+\endtable
 
     This basic type is provided by the QtQuick import.
 
