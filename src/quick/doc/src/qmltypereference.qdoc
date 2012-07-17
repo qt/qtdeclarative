@@ -177,16 +177,7 @@ Visual object transformations
 \li \l {Translate} - Assigns item translation behaviors
 \endlist
 
-\section1 Interceptors
-
-\list
-\li \l {Connections} - Explicitly connects signals and signal handlers
-\li \l {Binding} - Binds any value to any property
-\li \l {Timer} - Provides timed triggers
-\li \l {Behavior} - Triggers animations when a property value is set
-\endlist
-
-\section1 Model/View Types and Data Storage and Access
+\section1 Model/View Types And Data Storage And Access
 
 Models And Model Data
 \list
@@ -223,6 +214,16 @@ Data Storage
 \li The \l{QtQuick.Particles 2} module provides a set of Particle System types for QtQuick 2
 \endlist
 
+\section1 Convenience Types
+
+\list
+\li \l {Loader} - Eases on-demand loading of items or components
+\li \l {Connections} - Explicitly connects signals and signal handlers
+\li \l {Binding} - Binds any value to any property
+\li \l {Timer} - Provides timed triggers
+\li \l {WorkerScript} - Enables the use of threads in a Qt Quick application
+\endlist
+
 \section1 Canvas (similar to HTML5 canvas)
 
 \list
@@ -232,19 +233,6 @@ Data Storage
 \li \l {CanvasPixelArray} - Allows specification of a pixel array for use in a Canvas
 \li \l {CanvasImageData} - Allows specification of image data for use in a Canvas
 \li \l {TextMetrics} - Provides text and font measurement data for use in a Canvas
-\endlist
-
-\section1 Dynamic Instantiation Enablers
-
-\list
-\li \l {QML::Component} - Provides a type-instance factory allowing dynamic instantiation
-\li \l {Loader} - Controls the loading of items or components
-\endlist
-
-\section1 Threading
-
-\list
-\li \l {WorkerScript} - Enables the use of threads in a Qt Quick application
 \endlist
 
 */

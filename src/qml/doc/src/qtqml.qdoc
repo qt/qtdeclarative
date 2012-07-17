@@ -75,6 +75,8 @@ types, animation classes, and canvas integration) for the QML language.
         \li \l{qtqml-cppclasses-engine.html}{QQmlEngine}
         \li \l{qtqml-cppclasses-context.html}{QQmlContext}
         \li \l{qtqml-cppclasses-component.html}{QQmlComponent}
+        \li \l{qtqml-cppclasses-expression.html}{QQmlExpression}
+        \li \l{qtqml-cppclasses-valuesource.html}{QQmlPropertyValueSource}
         \endlist
 
     \li \l{qtqml-typesystem-topic.html}{The QML Type System}
@@ -86,6 +88,7 @@ types, animation classes, and canvas integration) for the QML language.
             \li \l{qtqml-documents-definetypes.html}{Defining Object Types from QML}
             \li \l{qtqml-cppintegration-registercpptypes.html}{Defining Object Types from C++}
             \endlist
+        \li \l{qtqml-typesystem-topic.html#property-modifier-types}{Property Modifier Types}
         \endlist
 
     \li \l{qtqml-modules-topic.html}{QML Modules}

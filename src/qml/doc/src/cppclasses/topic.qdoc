@@ -77,4 +77,14 @@ See \l{qtqml-cppclasses-expression.html}
 {Qt QML Module C++ Classes - QQmlExpression} for in depth information about
 QQmlExpression.
 
+\section1 The QQmlPropertyValueSource Class
+
+The QQmlPropertyValueSource class is an abstract class which may be inherited
+to provide unique \l{qtqml-typesystem-topic.html#property-modifier-types}
+{property value sources}.
+
+See \l{qtqml-cppclasses-valuesource.html}
+{Qt QML Module C++ Classes - QQmlPropertyValueSource} for in depth information
+about QQmlPropertyValueSource.
+
 */

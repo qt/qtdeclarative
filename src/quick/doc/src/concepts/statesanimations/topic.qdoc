@@ -89,22 +89,28 @@ and transition elements.  See the documentation on
 {Animations and Transitions In Qt Quick} for information about these elements
 and how to use them.
 
-Animations are not only related to states and transitions between states; for
+
+\section1 Animating Property Assignments
+
+Animations are not only related to states and transitions between states.  For
 example, an animation might be triggered by other events, which are not
-associated with a distinct state.  It is often beneficial to always animate
-changes to certain properties of visual items, regardless of the cause of the
-change (for example, opacity effects).
+associated with a distinct state.
 
-This type of animation is supported in Qt Quick with the \c{Behavior} element
-through the \tt{"Behavior on <Property>"} syntax.  Please see the documentation
-about
+It is often beneficial to always animate changes to certain properties of
+visual items, regardless of the cause of the change (for example, opacity
+effects).  Qt Quick provides the \l Behavior type which allows the client to
+specify animation behavior for changes to properties.  The \l Behavior type
+is an example of a QML object
+\l{qtqml-typesystem-topic.html#property-modifier-types}{property modifier}.
+
+Please see the documentation about
 \l{qtquick-statesanimations-animations.html#default-animation-as-behaviors}
-{default property animation behaviors} for more information about the Behavior
-element and how to use it.
+{default property animations} for more information about using the \l Behavior
+element to provide default property change animations.
 
-It is important to note, however, that using default property animations
-(using Behavior elements) as well as state-transition animations can sometimes
-results in undefined behavior occurring.  Please see the documentation about
+It is important to note, that using default property animations (via the
+\l Behavior type) in combination with state-transition animations can sometimes
+result in undefined behavior occurring.  Please see the documentation about
 \l{qtquick-statesanimations-behaviors.html}
 {using Qt Quick Behaviors with States} for more information about this topic.
 
