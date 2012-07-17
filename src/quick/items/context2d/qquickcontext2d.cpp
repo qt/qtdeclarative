@@ -2284,7 +2284,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D::drawImage(variant image, real sx, real sy, real sw, sh, real dx, real dy, real dw, dh)
   This is an overloaded function.
-  Draws the given item as \a image from source point (\a sx, \a sy) and source width \sw, source height \sh
+  Draws the given item as \a image from source point (\a sx, \a sy) and source width \a sw, source height \a sh
   onto the canvas at point (\a dx, \a dy) and with width \a dw, height \a dh.
 
 

@@ -292,7 +292,7 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
     The animation would only be applied when changing from the default state to
     the "brighter" state (i.e. when the mouse is pressed, but not on release).
 
-    Multiple \c to and \from values can be set by using a comma-separated string.
+    Multiple \c to and \c from values can be set by using a comma-separated string.
 
     \sa reversible
 */

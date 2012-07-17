@@ -595,6 +595,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     \l blending is enabled, source-over blending is used. However, additive
     blending can be achieved by outputting zero in the alpha channel.
 
+    \table
     \row
     \li \image declarative-shadereffectitem.png
     \li \qml
@@ -628,7 +629,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
             }
         }
         \endqml
-    \endrow
+    \endtable
 
     By default, the ShaderEffect consists of four vertices, one for each
     corner. For non-linear vertex transformations, like page curl, you can

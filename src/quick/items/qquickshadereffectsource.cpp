@@ -510,7 +510,6 @@ QImage QQuickShaderEffectTexture::toImage() const
             }
         }
         \endqml
-    \endrow
     \endtable
 
     The ShaderEffectSource type does not redirect any mouse or keyboard

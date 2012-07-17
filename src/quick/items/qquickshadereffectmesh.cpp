@@ -168,6 +168,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
     For non-linear vertex transformations, you probably want to set the
     resolution higher.
 
+    \table
     \row
     \li \image declarative-gridmesh.png
     \li \qml
@@ -199,7 +200,7 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
                 }"
         }
         \endqml
-    \endrow
+    \endtable
 */
 
 void QQuickGridMesh::setResolution(const QSize &res)
