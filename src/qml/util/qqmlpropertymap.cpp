@@ -56,9 +56,13 @@ public:
     QQmlPropertyMapMetaObject(QQmlPropertyMap *obj, QQmlPropertyMapPrivate *objPriv);
 
 protected:
+    virtual QVariant propertyWriteValue(int, const QVariant &);
     virtual void propertyWritten(int index);
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
     virtual int createProperty(const char *, const char *);
+
+    const QString &propertyName(int index);
+
 private:
     QQmlPropertyMap *map;
     QQmlPropertyMapPrivate *priv;
@@ -70,8 +74,12 @@ class QQmlPropertyMapPrivate : public QObjectPrivate
 public:
     QQmlPropertyMapMetaObject *mo;
     QStringList keys;
+
+    QVariant updateValue(const QString &key, const QVariant &input);
     void emitChanged(const QString &key, const QVariant &value);
     bool validKeyName(const QString& name);
+
+    const QString &propertyName(int index) const;
 };
 
 bool QQmlPropertyMapPrivate::validKeyName(const QString& name)
@@ -84,10 +92,22 @@ bool QQmlPropertyMapPrivate::validKeyName(const QString& name)
          && name != QLatin1String("deleteLater");
 }
 
+QVariant QQmlPropertyMapPrivate::updateValue(const QString &key, const QVariant &input)
+{
+    Q_Q(QQmlPropertyMap);
+    return q->updateValue(key, input);
+}
+
 void QQmlPropertyMapPrivate::emitChanged(const QString &key, const QVariant &value)
 {
     Q_Q(QQmlPropertyMap);
     emit q->valueChanged(key, value);
+}
+
+const QString &QQmlPropertyMapPrivate::propertyName(int index) const
+{
+    Q_ASSERT(index < keys.size());
+    return keys[index];
 }
 
 QQmlPropertyMapMetaObject::QQmlPropertyMapMetaObject(QQmlPropertyMap *obj, QQmlPropertyMapPrivate *objPriv) : QQmlOpenMetaObject(obj)
@@ -96,9 +116,14 @@ QQmlPropertyMapMetaObject::QQmlPropertyMapMetaObject(QQmlPropertyMap *obj, QQmlP
     priv = objPriv;
 }
 
+QVariant QQmlPropertyMapMetaObject::propertyWriteValue(int index, const QVariant &input)
+{
+    return priv->updateValue(priv->propertyName(index), input);
+}
+
 void QQmlPropertyMapMetaObject::propertyWritten(int index)
 {
-    priv->emitChanged(QString::fromUtf8(name(index)), operator[](index));
+    priv->emitChanged(priv->propertyName(index), operator[](index));
 }
 
 void QQmlPropertyMapMetaObject::propertyCreated(int, QMetaPropertyBuilder &b)
@@ -295,6 +320,18 @@ QVariant &QQmlPropertyMap::operator[](const QString &key)
 QVariant QQmlPropertyMap::operator[](const QString &key) const
 {
     return value(key);
+}
+
+/*!
+    Returns the new value to be stored for the key \a key.  This function is provided
+    to intercept updates to a property from QML, where the value provided from QML is \a input.
+
+    Override this function to manipulate the property value as it is updated.  Note that
+    this function is only invoked when the value is updated from QML.
+*/
+QVariant QQmlPropertyMap::updateValue(const QString &key, const QVariant &input)
+{
+    return input;
 }
 
 /*!

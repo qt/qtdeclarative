@@ -145,23 +145,19 @@ public:
     QQmlOpenMetaObjectPrivate(QQmlOpenMetaObject *_q)
         : q(_q), parent(0), type(0), cacheProperties(false) {}
 
-    inline QVariant &getData(int idx) {
+    inline QPair<QVariant, bool> &getDataRef(int idx) {
         while (data.count() <= idx)
             data << QPair<QVariant, bool>(QVariant(), false);
-        QPair<QVariant, bool> &prop = data[idx];
+        return data[idx];
+    }
+
+    inline QVariant &getData(int idx) {
+        QPair<QVariant, bool> &prop = getDataRef(idx);
         if (!prop.second) {
             prop.first = q->initialValue(idx);
             prop.second = true;
         }
         return prop.first;
-    }
-
-    inline void writeData(int idx, const QVariant &value) {
-        while (data.count() <= idx)
-            data << QPair<QVariant, bool>(QVariant(), false);
-        QPair<QVariant, bool> &prop = data[idx];
-        prop.first = value;
-        prop.second = true;
     }
 
     inline bool hasData(int idx) const {
@@ -235,7 +231,9 @@ int QQmlOpenMetaObject::metaCall(QMetaObject::Call c, int id, void **a)
         } else if (c == QMetaObject::WriteProperty) {
             if (propId <= d->data.count() || d->data[propId].first != *reinterpret_cast<QVariant *>(a[0]))  {
                 propertyWrite(propId);
-                d->writeData(propId, *reinterpret_cast<QVariant *>(a[0]));
+                QPair<QVariant, bool> &prop = d->getDataRef(propId);
+                prop.first = propertyWriteValue(propId, *reinterpret_cast<QVariant *>(a[0]));
+                prop.second = true;
                 propertyWritten(propId);
                 activate(d->object, d->type->d->signalOffset + propId, 0);
             }
@@ -261,7 +259,9 @@ QVariant QQmlOpenMetaObject::value(int id) const
 
 void QQmlOpenMetaObject::setValue(int id, const QVariant &value)
 {
-    d->writeData(id, value);
+    QPair<QVariant, bool> &prop = d->getDataRef(id);
+    prop.first = propertyWriteValue(id, value);
+    prop.second = true;
     activate(d->object, id + d->type->d->signalOffset, 0);
 }
 
@@ -352,6 +352,11 @@ void QQmlOpenMetaObject::propertyRead(int)
 
 void QQmlOpenMetaObject::propertyWrite(int)
 {
+}
+
+QVariant QQmlOpenMetaObject::propertyWriteValue(int, const QVariant &value)
+{
+    return value;
 }
 
 void QQmlOpenMetaObject::propertyWritten(int)

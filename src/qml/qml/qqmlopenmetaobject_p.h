@@ -113,6 +113,7 @@ protected:
 
     virtual void propertyRead(int);
     virtual void propertyWrite(int);
+    virtual QVariant propertyWriteValue(int, const QVariant &);
     virtual void propertyWritten(int);
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
 

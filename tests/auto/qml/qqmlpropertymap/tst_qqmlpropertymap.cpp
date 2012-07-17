@@ -45,6 +45,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QSignalSpy>
+#include <QDebug>
 
 class tst_QQmlPropertyMap : public QObject
 {
@@ -59,6 +60,7 @@ private slots:
     void clear();
     void changed();
     void count();
+    void controlledWrite();
 
     void crashBug();
     void QTBUG_17868();
@@ -203,6 +205,48 @@ void tst_QQmlPropertyMap::count()
     map.clear(QLatin1String("key3"));
     QCOMPARE(map.count(), 3);
     QCOMPARE(map.size(), map.count());
+}
+
+class MyPropertyMap : public QQmlPropertyMap
+{
+    Q_OBJECT
+protected:
+    virtual QVariant updateValue(const QString &key, const QVariant &src)
+    {
+        if (key == QLatin1String("key1")) {
+            // 'key1' must be all uppercase
+            const QString original(src.toString());
+            return QVariant(original.toUpper());
+        }
+
+        return src;
+    }
+};
+
+void tst_QQmlPropertyMap::controlledWrite()
+{
+    MyPropertyMap map;
+    QCOMPARE(map.isEmpty(), true);
+
+    //make changes in QML
+    QQmlEngine engine;
+    QQmlContext *ctxt = engine.rootContext();
+    ctxt->setContextProperty(QLatin1String("testdata"), &map);
+
+    const char *qmlSource =
+        "import QtQuick 2.0\n"
+        "Item { Component.onCompleted: { testdata.key1 = 'Hello World'; testdata.key2 = 'Goodbye' } }";
+
+    QQmlComponent component(&engine);
+    component.setData(qmlSource, QUrl::fromLocalFile(""));
+    QVERIFY(component.isReady());
+
+    QObject *obj = component.create();
+    QVERIFY(obj);
+    delete obj;
+
+    QCOMPARE(map.value(QLatin1String("key1")), QVariant("HELLO WORLD"));
+    QCOMPARE(map.value(QLatin1String("key2")), QVariant("Goodbye"));
 }
 
 void tst_QQmlPropertyMap::crashBug()

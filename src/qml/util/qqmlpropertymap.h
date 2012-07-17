@@ -79,6 +79,9 @@ public:
 Q_SIGNALS:
     void valueChanged(const QString &key, const QVariant &value);
 
+protected:
+    virtual QVariant updateValue(const QString &key, const QVariant &input);
+
 private:
     Q_DECLARE_PRIVATE(QQmlPropertyMap)
     Q_DISABLE_COPY(QQmlPropertyMap)
