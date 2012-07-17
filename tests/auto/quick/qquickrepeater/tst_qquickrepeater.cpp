@@ -74,6 +74,7 @@ private slots:
     void itemModel();
     void resetModel();
     void modelChanged();
+    void modelReset();
     void properties();
     void asynchronous();
     void initParent();
@@ -541,6 +542,84 @@ void tst_QQuickRepeater::modelChanged()
     QCOMPARE(repeater->property("itemsFound").toList().count(), 10);
 
     delete rootObject;
+}
+
+void tst_QQuickRepeater::modelReset()
+{
+    QaimModel model;
+
+    QQmlEngine engine;
+    QQmlContext *ctxt = engine.rootContext();
+    ctxt->setContextProperty("testData", &model);
+
+    QQmlComponent component(&engine, testFileUrl("repeater2.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(object.data());
+    QVERIFY(rootItem);
+
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(rootItem, "repeater");
+    QVERIFY(repeater != 0);
+    QQuickItem *container = findItem<QQuickItem>(rootItem, "container");
+    QVERIFY(container != 0);
+
+    QCOMPARE(repeater->count(), 0);
+
+    QSignalSpy countSpy(repeater, SIGNAL(countChanged()));
+    QSignalSpy addedSpy(repeater, SIGNAL(itemAdded(int,QQuickItem*)));
+    QSignalSpy removedSpy(repeater, SIGNAL(itemRemoved(int,QQuickItem*)));
+
+
+    QList<QPair<QString, QString> > items = QList<QPair<QString, QString> >()
+            << qMakePair(QString::fromLatin1("one"), QString::fromLatin1("1"))
+            << qMakePair(QString::fromLatin1("two"), QString::fromLatin1("2"))
+            << qMakePair(QString::fromLatin1("three"), QString::fromLatin1("3"));
+
+    model.resetItems(items);
+
+    QCOMPARE(countSpy.count(), 1);
+    QCOMPARE(removedSpy.count(), 0);
+    QCOMPARE(addedSpy.count(), items.count());
+    for (int i = 0; i< items.count(); i++) {
+        QCOMPARE(addedSpy.at(i).at(0).toInt(), i);
+        QCOMPARE(addedSpy.at(i).at(1).value<QQuickItem*>(), repeater->itemAt(i));
+    }
+
+    countSpy.clear();
+    addedSpy.clear();
+
+    model.reset();
+    QCOMPARE(countSpy.count(), 0);
+    QCOMPARE(removedSpy.count(), 3);
+    QCOMPARE(addedSpy.count(), 3);
+    for (int i = 0; i< items.count(); i++) {
+        QCOMPARE(addedSpy.at(i).at(0).toInt(), i);
+        QCOMPARE(addedSpy.at(i).at(1).value<QQuickItem*>(), repeater->itemAt(i));
+    }
+
+    addedSpy.clear();
+    removedSpy.clear();
+
+    items.append(qMakePair(QString::fromLatin1("four"), QString::fromLatin1("4")));
+    items.append(qMakePair(QString::fromLatin1("five"), QString::fromLatin1("5")));
+
+    model.resetItems(items);
+    QCOMPARE(countSpy.count(), 1);
+    QCOMPARE(removedSpy.count(), 3);
+    QCOMPARE(addedSpy.count(), 5);
+    for (int i = 0; i< items.count(); i++) {
+        QCOMPARE(addedSpy.at(i).at(0).toInt(), i);
+        QCOMPARE(addedSpy.at(i).at(1).value<QQuickItem*>(), repeater->itemAt(i));
+    }
+
+    countSpy.clear();
+    addedSpy.clear();
+    removedSpy.clear();
+
+    items.clear();
+    model.resetItems(items);
+    QCOMPARE(countSpy.count(), 1);
+    QCOMPARE(removedSpy.count(), 5);
+    QCOMPARE(addedSpy.count(), 0);
 }
 
 void tst_QQuickRepeater::properties()

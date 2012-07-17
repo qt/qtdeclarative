@@ -403,6 +403,13 @@ void QQuickViewTestUtil::QaimModel::reset()
     emit endResetModel();
 }
 
+void QQuickViewTestUtil::QaimModel::resetItems(const QList<QPair<QString, QString> > &items)
+{
+    beginResetModel();
+    list = items;
+    endResetModel();
+}
+
 void QQuickViewTestUtil::QaimModel::matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2) {
     for (int i=0; i<other.count(); i++) {
         QVERIFY2(list.contains(other[i]),

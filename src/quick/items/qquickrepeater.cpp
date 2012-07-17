@@ -427,7 +427,9 @@ void QQuickRepeater::modelUpdated(const QQuickChangeSet &changeSet, bool reset)
 
     if (reset) {
         regenerate();
-        emit countChanged();
+        if (changeSet.difference() != 0)
+            emit countChanged();
+        return;
     }
 
     int difference = 0;

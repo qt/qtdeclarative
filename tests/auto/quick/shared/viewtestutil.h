@@ -144,6 +144,7 @@ namespace QQuickViewTestUtil
 
         void clear();
         void reset();
+        void resetItems(const QList<QPair<QString, QString> > &items);
 
         void matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2);
 
