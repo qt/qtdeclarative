@@ -108,12 +108,12 @@ void QQuickPen::setColor(const QColor &c)
     emit penChanged();
 }
 
-bool QQuickPen::aligned() const
+bool QQuickPen::pixelAligned() const
 {
     return m_aligned;
 }
 
-void QQuickPen::setAligned(bool aligned)
+void QQuickPen::setPixelAligned(bool aligned)
 {
     if (aligned == m_aligned)
         return;
@@ -318,7 +318,7 @@ void QQuickRectangle::doUpdate()
     qreal penMargin = 0;
     qreal penOffset = 0;
     if (d->pen && d->pen->isValid()) {
-        if (d->pen->aligned()) {
+        if (d->pen->pixelAligned()) {
             const int pw = qRound(d->pen->width());
             penMargin = qreal(0.5) * pw;
             penOffset = (pw & 1) * qreal(0.5);
@@ -497,7 +497,7 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     if (d->pen && d->pen->isValid()) {
         rectangle->setPenColor(d->pen->color());
         rectangle->setPenWidth(d->pen->width());
-        rectangle->setAligned(d->pen->aligned());
+        rectangle->setAligned(d->pen->pixelAligned());
     } else {
         rectangle->setPenWidth(0);
     }

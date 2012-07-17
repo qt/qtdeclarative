@@ -58,7 +58,7 @@ class Q_AUTOTEST_EXPORT QQuickPen : public QObject
 
     Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY penChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY penChanged)
-    Q_PROPERTY(bool aligned READ aligned WRITE setAligned NOTIFY penChanged)
+    Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY penChanged)
 public:
     QQuickPen(QObject *parent=0);
 
@@ -68,8 +68,8 @@ public:
     QColor color() const;
     void setColor(const QColor &c);
 
-    bool aligned() const;
-    void setAligned(bool aligned);
+    bool pixelAligned() const;
+    void setPixelAligned(bool aligned);
 
     bool isValid() const;
 
