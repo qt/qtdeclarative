@@ -214,9 +214,12 @@ void QV8Bindings::Binding::expressionChanged(QQmlJavaScriptExpression *e)
     This->update(QQmlPropertyPrivate::DontRemoveBinding);
 }
 
-void QV8Bindings::Binding::destroy(QQmlAbstractBinding *_This)
+void QV8Bindings::Binding::destroy(QQmlAbstractBinding *_This, QQmlAbstractBinding::DestroyMode mode)
 {
     QV8Bindings::Binding *This = static_cast<QV8Bindings::Binding *>(_This);
+
+    if (mode == QQmlAbstractBinding::DisconnectBinding)
+        This->clearGuards();
 
     This->setEnabledFlag(false);
     This->setDestroyedFlag(true);

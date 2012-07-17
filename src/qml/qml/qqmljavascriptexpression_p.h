@@ -141,6 +141,7 @@ public:
     inline bool hasDelayedError() const;
     QQmlError error(QQmlEngine *) const;
     void clearError();
+    void clearGuards();
     QQmlDelayedError *delayedError();
 
     static void exceptionToError(v8::Handle<v8::Message>, QQmlError &);
@@ -185,8 +186,6 @@ private:
     //    activeGuards:flag2  - useSharedContext
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
     QForwardFieldList<Guard, &Guard::next> activeGuards;
-
-    void clearGuards();
 };
 
 QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression *e)

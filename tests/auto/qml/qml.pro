@@ -19,6 +19,7 @@ PUBLICTESTS += \
     qqmllocale \
     qqmlmetaobject \
     qqmlmoduleplugin \
+    qqmlnotifier \
     qqmlqt \
     qqmltranslation \
     qqmlxmlhttprequest \

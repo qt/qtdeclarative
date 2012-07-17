@@ -44,6 +44,8 @@
 
 #include "qqmldata_p.h"
 #include "qqmlguard_p.h"
+#include <QtCore/qmetaobject.h>
+#include <private/qmetaobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -187,6 +189,11 @@ void QQmlNotifierEndpoint::connect(QQmlNotifier *notifier)
 
 void QQmlNotifierEndpoint::disconnect()
 {
+    if (sourceSignal != -1) {
+        QObject * const obj = senderAsObject();
+        QObjectPrivate * const priv = QObjectPrivate::get(obj);
+        priv->disconnectNotify(QMetaObjectPrivate::signal(obj->metaObject(), sourceSignal));
+    }
     if (next) next->prev = prev;
     if (prev) *prev = next;
     if (isNotifying()) *((intptr_t *)(senderPtr & ~0x1)) = 0;

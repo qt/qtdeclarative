@@ -118,6 +118,8 @@ void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine
     QQmlPropertyPrivate::flushSignal(source, sourceSignal);
     QQmlData *ddata = QQmlData::get(source, true);
     ddata->addNotify(sourceSignal, this);
+    QObjectPrivate * const priv = QObjectPrivate::get(source);
+    priv->connectNotify(QMetaObjectPrivate::signal(source->metaObject(), sourceSignal));
 }
 
 QT_END_NAMESPACE

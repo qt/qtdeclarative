@@ -382,9 +382,12 @@ void QV4Bindings::Binding::update(QQmlAbstractBinding *_This, QQmlPropertyPrivat
     This->parent->run(This, flags);
 }
 
-void QV4Bindings::Binding::destroy(QQmlAbstractBinding *_This)
+void QV4Bindings::Binding::destroy(QQmlAbstractBinding *_This, QQmlAbstractBinding::DestroyMode mode)
 {
     QV4Bindings::Binding *This = static_cast<QV4Bindings::Binding *>(_This);
+
+    if (mode == QQmlAbstractBinding::DisconnectBinding)
+        This->disconnect();
 
     This->setEnabledFlag(false);
     This->removeFromObject();
@@ -417,8 +420,30 @@ void QV4Bindings::Binding::retargetBinding(QQmlAbstractBinding *_This, QObject *
     This->target.value().targetProperty = i;
 }
 
+void QV4Bindings::Binding::disconnect()
+{
+    // We iterate over the signal table to find all subscriptions associated with this binding.
+    // This is slow, but disconnect() is not called in the common case, only in special cases
+    // like when the binding is overwritten.
+    QV4Program * const program = parent->program;
+    for (quint16 subIndex = 0; subIndex < program->subscriptions; subIndex++) {
+        QV4Program::BindingReferenceList * const list = program->signalTable(subIndex);
+        for (quint32 bindingIndex = 0; bindingIndex < list->count; ++bindingIndex) {
+            QV4Program::BindingReference * const bindingRef = list->bindings + bindingIndex;
+            Binding * const binding = parent->bindings + bindingRef->binding;
+            if (binding == this) {
+                Subscription * const sub = parent->subscriptions + subIndex;
+                if (sub->active) {
+                    sub->active = false;
+                    sub->disconnect();
+                }
+            }
+        }
+    }
+}
+
 QV4Bindings::Subscription::Subscription()
-: bindings(0), method(-1)
+    : bindings(0), method(-1), active(false)
 {
     setCallback(QQmlNotifierEndpoint::QV4BindingsSubscription);
 }
@@ -526,22 +551,18 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
     }
 }
 
-
-void QV4Bindings::unsubscribe(int subIndex)
+void QV4Bindings::subscribeId(QQmlContextData *p, int idIndex, int subIndex)
 {
     Subscription *sub = (subscriptions + subIndex);
     sub->disconnect();
-}
-
-void QV4Bindings::subscribeId(QQmlContextData *p, int idIndex, int subIndex)
-{
-    unsubscribe(subIndex);
 
     if (p->idValues[idIndex]) {
-        Subscription *sub = (subscriptions + subIndex);
         sub->bindings = this;
         sub->method = subIndex;
         sub->connect(&p->idValues[idIndex].bindings);
+        sub->active = true;
+    } else {
+        sub->active = false;
     }
 }
 
@@ -552,10 +573,13 @@ void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex, QQmlEngin
         return;
     sub->bindings = this;
     sub->method = subIndex;
-    if (o)
+    if (o) {
         sub->connect(o, notifyIndex, e);
-    else
+        sub->active = true;
+    } else {
         sub->disconnect();
+        sub->active = false;
+    }
 }
 
 static bool testCompareVariants(const QVariant &qtscriptRaw, const QVariant &v4)
@@ -942,14 +966,6 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         } else {
             INVALIDATION_CHECK(invalidated, object, instr->fetchAndSubscribe.property.coreIndex);
 
-            int subIdx = instr->fetchAndSubscribe.subscription;
-            Subscription *sub = 0;
-            if (subIdx != -1) {
-                sub = (subscriptions + subIdx);
-                sub->bindings = this;
-                sub->method = subIdx;
-            }
-
             const Register::Type valueType = (Register::Type)instr->fetchAndSubscribe.valueType;
             reg.init(valueType);
             if (instr->fetchAndSubscribe.valueType >= FirstCleanupType)
@@ -967,9 +983,22 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
             if (accessors->notifier) {
                 QQmlNotifier *notifier = 0;
                 accessors->notifier(object, instr->fetchAndSubscribe.property.accessorData, &notifier);
-                if (notifier) sub->connect(notifier);
-            } else if (instr->fetchAndSubscribe.property.notifyIndex != -1) {
-                sub->connect(object, instr->fetchAndSubscribe.property.notifyIndex, context->engine);
+                if (notifier) {
+                    int subIdx = instr->fetchAndSubscribe.subscription;
+                    Subscription *sub = 0;
+                    if (subIdx != -1) {
+                        sub = (subscriptions + subIdx);
+                        sub->bindings = this;
+                        sub->method = subIdx;
+                    }
+                    sub->connect(notifier);
+                }
+            } else {
+                const int notifyIndex = instr->fetchAndSubscribe.property.notifyIndex;
+                if (notifyIndex != -1) {
+                    const int subIdx = instr->fetchAndSubscribe.subscription;
+                    subscribe(object, notifyIndex, subIdx, context->engine);
+                }
             }
         }
     }

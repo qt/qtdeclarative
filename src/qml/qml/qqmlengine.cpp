@@ -483,6 +483,11 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
         // Mark this object as in the process of deletion to
         // prevent it resolving in bindings
         QQmlData::markAsDeleted(o);
+
+        // Disconnect the notifiers now - during object destruction this would be too late, since
+        // the disconnect call wouldn't be able to call disconnectNotify(), as it isn't possible to
+        // get the metaobject anymore.
+        d->disconnectNotifiers();
     }
 }
 
@@ -1330,6 +1335,21 @@ bool QQmlData::signalHasEndpoint(int index)
     return notifyList && (notifyList->connectionMask & (1ULL << quint64(index % 64)));
 }
 
+void QQmlData::disconnectNotifiers()
+{
+    if (notifyList) {
+        while (notifyList->todo)
+            notifyList->todo->disconnect();
+        for (int ii = 0; ii < notifyList->notifiesSize; ++ii) {
+            while (QQmlNotifierEndpoint *ep = notifyList->notifies[ii])
+                ep->disconnect();
+        }
+        free(notifyList->notifies);
+        free(notifyList);
+        notifyList = 0;
+    }
+}
+
 QHash<int, QObject *> *QQmlData::attachedProperties() const
 {
     if (!extendedData) extendedData = new QQmlDataExtended;
@@ -1410,17 +1430,7 @@ void QQmlData::destroyed(QObject *object)
         guard->objectDestroyed(object);
     }
 
-    if (notifyList) {
-        while (notifyList->todo)
-            notifyList->todo->disconnect();
-        for (int ii = 0; ii < notifyList->notifiesSize; ++ii) {
-            while (QQmlNotifierEndpoint *ep = notifyList->notifies[ii])
-                ep->disconnect();
-        }
-        free(notifyList->notifies);
-        free(notifyList);
-        notifyList = 0;
-    }
+    disconnectNotifiers();
 
     if (extendedData)
         delete extendedData;

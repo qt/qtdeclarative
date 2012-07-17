@@ -84,12 +84,14 @@ public:
             : QQmlAbstractBinding(V4), target(0), scope(0), instruction(0), executedBlocks(0), parent(0) {}
 
         // Inherited from QQmlAbstractBinding
-        static void destroy(QQmlAbstractBinding *);
+        static void destroy(QQmlAbstractBinding *, QQmlAbstractBinding::DestroyMode mode);
         static int propertyIndex(const QQmlAbstractBinding *);
         static QObject *object(const QQmlAbstractBinding *);
         static void setEnabled(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
         static void update(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
         static void retargetBinding(QQmlAbstractBinding *, QObject *, int);
+
+        void disconnect();
 
         struct Retarget {
             QObject *target;
@@ -121,7 +123,10 @@ private:
     public:
         inline Subscription();
         QV4Bindings *bindings;
-        int method;
+        int method:31;
+
+        // Subscriptions are not shared between bindings (anymore), so this can be a simple bool flag
+        bool active:1;
     };
     friend void QV4BindingsSubscription_callback(QQmlNotifierEndpoint *e, void **);
 
@@ -144,7 +149,6 @@ private:
              );
 
 
-    inline void unsubscribe(int subIndex);
     inline void subscribeId(QQmlContextData *p, int idIndex, int subIndex);
     inline void subscribe(QObject *o, int notifyIndex, int subIndex, QQmlEngine *);
 

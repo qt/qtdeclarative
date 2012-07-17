@@ -94,7 +94,7 @@ public:
         static void expressionChanged(QQmlJavaScriptExpression *);
 
         // "Inherited" from QQmlAbstractBinding
-        static void destroy(QQmlAbstractBinding *);
+        static void destroy(QQmlAbstractBinding *, QQmlAbstractBinding::DestroyMode mode);
         static int propertyIndex(const QQmlAbstractBinding *);
         static QObject *object(const QQmlAbstractBinding *);
         static void setEnabled(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
