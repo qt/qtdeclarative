@@ -99,7 +99,7 @@ types, animation classes, and canvas integration) for the QML language.
     \li \l{qtqml-documents-topic.html}{QML Documents}
         \list
         \li \l{qtqml-documents-structure.html}{Structure of a QML Document}
-        \li \l{qtqml-syntax-basics.html}{Syntax of the QML Language}
+        \li \l{qtqml-main.html#syntax-of-the-qml-language}{Syntax of the QML Language}
         \li \l{qtqml-documents-definetypes.html}{Defining Object Types through QML Documents}
             \list
             \li \l{qtqml-documents-definetypes.html#defining-an-object-type-with-a-qml-file}{Defining an Object Type with a QML File}
