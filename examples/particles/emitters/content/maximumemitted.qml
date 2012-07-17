@@ -47,35 +47,36 @@ Rectangle {
     height: 540
     ParticleSystem {
         id: sys
-        onEmptyChanged: if (empty) sys.pause();
-    }
-
-    ImageParticle {
-        system: sys
-        id: cp
-        source: "../../images/particle.png"
-        colorVariation: 0.4
-        color: "#000000FF"
-    }
-
-    Emitter {
-        //burst on click
-        id: bursty
-        system: sys
-        enabled: ma.pressed
-        x: ma.mouseX
-        y: ma.mouseY
-        emitRate: 16000
-        maximumEmitted: 4000
-        acceleration: AngleDirection {angleVariation: 360; magnitude: 360; }
-        size: 8
-        endSize: 16
-        sizeVariation: 4
-    }
-
-    MouseArea {
         anchors.fill: parent
-        onPressed: sys.resume()
-        id: ma
+        onEmptyChanged: if (empty) sys.pause();
+
+        ImageParticle {
+            system: sys
+            id: cp
+            source: "../../images/particle.png"
+            colorVariation: 0.4
+            color: "#000000FF"
+        }
+
+        Emitter {
+            //burst on click
+            id: bursty
+            system: sys
+            enabled: ma.pressed
+            x: ma.mouseX
+            y: ma.mouseY
+            emitRate: 16000
+            maximumEmitted: 4000
+            acceleration: AngleDirection {angleVariation: 360; magnitude: 360; }
+            size: 8
+            endSize: 16
+            sizeVariation: 4
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onPressed: sys.resume()
+            id: ma
+        }
     }
 }

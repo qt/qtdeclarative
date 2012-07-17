@@ -49,127 +49,128 @@ Rectangle {
 
     ParticleSystem {
         id: particles
-    }
-
-    ImageParticle {
-        id: smoke
-        system: particles
         anchors.fill: parent
-        groups: ["A", "B"]
-        source: "../../images/particle.png"
-        colorVariation: 0
-        color: "#00111111"
-    }
-    ImageParticle {
-        id: flame
-        anchors.fill: parent
-        system: particles
-        groups: ["C", "D"]
-        source: "../../images/particle.png"
-        colorVariation: 0.1
-        color: "#00ff400f"
-    }
 
-    Emitter {
-        id: fire
-        system: particles
-        group: "C"
+        ImageParticle {
+            id: smoke
+            system: particles
+            anchors.fill: parent
+            groups: ["A", "B"]
+            source: "../../images/particle.png"
+            colorVariation: 0
+            color: "#00111111"
+        }
+        ImageParticle {
+            id: flame
+            anchors.fill: parent
+            system: particles
+            groups: ["C", "D"]
+            source: "../../images/particle.png"
+            colorVariation: 0.1
+            color: "#00ff400f"
+        }
 
-        y: parent.height
-        width: parent.width
+        Emitter {
+            id: fire
+            system: particles
+            group: "C"
 
-        emitRate: 350
-        lifeSpan: 3500
+            y: parent.height
+            width: parent.width
 
-        acceleration: PointDirection { y: -17; xVariation: 3 }
-        velocity: PointDirection {xVariation: 3}
+            emitRate: 350
+            lifeSpan: 3500
 
-        size: 24
-        sizeVariation: 8
-        endSize: 4
-    }
+            acceleration: PointDirection { y: -17; xVariation: 3 }
+            velocity: PointDirection {xVariation: 3}
 
-    TrailEmitter {
-        id: fireSmoke
-        group: "B"
-        system: particles
-        follow: "C"
-        width: root.width
-        height: root.height - 68
+            size: 24
+            sizeVariation: 8
+            endSize: 4
+        }
 
-        emitRatePerParticle: 1
-        lifeSpan: 2000
+        TrailEmitter {
+            id: fireSmoke
+            group: "B"
+            system: particles
+            follow: "C"
+            width: root.width
+            height: root.height - 68
 
-        velocity: PointDirection {y:-17*6; yVariation: -17; xVariation: 3}
-        acceleration: PointDirection {xVariation: 3}
+            emitRatePerParticle: 1
+            lifeSpan: 2000
 
-        size: 36
-        sizeVariation: 8
-        endSize: 16
-    }
+            velocity: PointDirection {y:-17*6; yVariation: -17; xVariation: 3}
+            acceleration: PointDirection {xVariation: 3}
 
-    TrailEmitter {
-        id: fireballFlame
-        anchors.fill: parent
-        system: particles
-        group: "D"
-        follow: "E"
+            size: 36
+            sizeVariation: 8
+            endSize: 16
+        }
 
-        emitRatePerParticle: 120
-        lifeSpan: 180
-        emitWidth: TrailEmitter.ParticleSize
-        emitHeight: TrailEmitter.ParticleSize
-        emitShape: EllipseShape{}
+        TrailEmitter {
+            id: fireballFlame
+            anchors.fill: parent
+            system: particles
+            group: "D"
+            follow: "E"
 
-        size: 16
-        sizeVariation: 4
-        endSize: 4
-    }
-    
-    TrailEmitter {
-        id: fireballSmoke
-        anchors.fill: parent
-        system: particles
-        group: "A"
-        follow: "E"
+            emitRatePerParticle: 120
+            lifeSpan: 180
+            emitWidth: TrailEmitter.ParticleSize
+            emitHeight: TrailEmitter.ParticleSize
+            emitShape: EllipseShape{}
 
-        emitRatePerParticle: 128
-        lifeSpan: 2400
-        emitWidth: TrailEmitter.ParticleSize
-        emitHeight: TrailEmitter.ParticleSize
-        emitShape: EllipseShape{}
+            size: 16
+            sizeVariation: 4
+            endSize: 4
+        }
 
-        velocity: PointDirection {yVariation: 16; xVariation: 16}
-        acceleration: PointDirection {y: -16}
+        TrailEmitter {
+            id: fireballSmoke
+            anchors.fill: parent
+            system: particles
+            group: "A"
+            follow: "E"
 
-        size: 24
-        sizeVariation: 8
-        endSize: 8
-    }
+            emitRatePerParticle: 128
+            lifeSpan: 2400
+            emitWidth: TrailEmitter.ParticleSize
+            emitHeight: TrailEmitter.ParticleSize
+            emitShape: EllipseShape{}
 
-    Emitter {
-        id: balls
-        system: particles
-        group: "E"
+            velocity: PointDirection {yVariation: 16; xVariation: 16}
+            acceleration: PointDirection {y: -16}
 
-        y: parent.height
-        width: parent.width
+            size: 24
+            sizeVariation: 8
+            endSize: 8
+        }
 
-        emitRate: 2
-        lifeSpan: 7000
+        Emitter {
+            id: balls
+            system: particles
+            group: "E"
 
-        velocity: PointDirection {y:-17*4*2; xVariation: 6*6}
-        acceleration: PointDirection {y: 17*2; xVariation: 6*6}
+            y: parent.height
+            width: parent.width
 
-        size: 8
-        sizeVariation: 4
-    }
+            emitRate: 2
+            lifeSpan: 7000
 
-    Turbulence { //A bit of turbulence makes the smoke look better
-        anchors.fill: parent
-        groups: ["A","B"]
-        strength: 32
-        system: particles
+            velocity: PointDirection {y:-17*4*2; xVariation: 6*6}
+            acceleration: PointDirection {y: 17*2; xVariation: 6*6}
+
+            size: 8
+            sizeVariation: 4
+        }
+
+        Turbulence { //A bit of turbulence makes the smoke look better
+            anchors.fill: parent
+            groups: ["A","B"]
+            strength: 32
+            system: particles
+        }
     }
 }
 

@@ -56,42 +56,37 @@ Item {
 
         ParticleSystem {
             id: particles
-        }
-
-        ImageParticle {
-            id: bubble
             anchors.fill: parent
-            system: particles
-            source: "content/gfx/catch.png"
-            opacity: 0.25
-            smooth: true
+
+            ImageParticle {
+                id: bubble
+                anchors.fill: parent
+                source: "content/gfx/catch.png"
+                opacity: 0.25
+                smooth: true
+            }
+
+            Wander {
+                xVariance: 25;
+                pace: 25;
+            }
+
+            Emitter {
+                width: parent.width
+                height: 150
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 3
+                startTime: 15000
+
+                emitRate: 2
+                lifeSpan: 15000
+
+                acceleration: PointDirection{ y: -6; xVariation: 2; yVariation: 2 }
+
+                size: 24
+                sizeVariation: 16
+            }
         }
-        Wander {
-            system: particles
-            anchors.fill: parent
-            xVariance: 25;
-            pace: 25;
-        }
-
-        Emitter {
-            id: fire
-            system: particles
-
-            width: parent.width
-            height: 150
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 3
-            startTime: 15000
-
-            emitRate: 2
-            lifeSpan: 15000
-
-            acceleration: PointDirection{ y: -6; xVariation: 2; yVariation: 2 }
-
-            size: 24
-            sizeVariation: 16
-        }
-
     }
 
     Column {

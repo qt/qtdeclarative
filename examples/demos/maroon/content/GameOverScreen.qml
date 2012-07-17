@@ -55,49 +55,43 @@ Item {
     }
 
     ParticleSystem {
-        id: particles
-    }
-
-    ImageParticle {
-        id: cloud
         anchors.fill: parent
-        system: particles
-        source: "gfx/cloud.png"
-        alphaVariation: 0.25
-        opacity: 0.25
-        smooth: true
+        ImageParticle {
+            id: cloud
+            source: "gfx/cloud.png"
+            alphaVariation: 0.25
+            opacity: 0.25
+            smooth: true
+        }
+
+        Wander {
+            xVariance: 100;
+            pace: 1;
+        }
+
+        Emitter {
+            id: cloudLeft
+            width: 160
+            height: 160
+            anchors.right: parent.left
+            emitRate: 0.5
+            lifeSpan: 12000
+            velocity: PointDirection{ x: 64; xVariation: 2; yVariation: 2 }
+            size: 160
+        }
+
+        Emitter {
+            id: cloudRight
+            width: 160
+            height: 160
+            anchors.left: parent.right
+            emitRate: 0.5
+            lifeSpan: 12000
+            velocity: PointDirection{ x: -64; xVariation: 2; yVariation: 2 }
+            size: 160
+        }
     }
 
-    Wander {
-        system: particles
-        anchors.fill: parent
-        xVariance: 100;
-        pace: 1;
-    }
-
-    Emitter {
-        id: cloudLeft
-        system: particles
-        width: 160
-        height: 160
-        anchors.right: parent.left
-        emitRate: 0.5
-        lifeSpan: 12000
-        velocity: PointDirection{ x: 64; xVariation: 2; yVariation: 2 }
-        size: 160
-    }
-
-    Emitter {
-        id: cloudRight
-        system: particles
-        width: 160
-        height: 160
-        anchors.left: parent.right
-        emitRate: 0.5
-        lifeSpan: 12000
-        velocity: PointDirection{ x: -64; xVariation: 2; yVariation: 2 }
-        size: 160
-    }
 
     Text {
         visible: gameCanvas != undefined
