@@ -319,6 +319,8 @@ the window loses focus.
     \li New \l{PathView::}{maximumFlickVelocity} property controls the maximum flick velocity of the
         view.
     \li New \l{PathView::}{snapMode} property controls the snap model when flicking between items
+    \li If the model is changed after the component is completed, the offset and currentIndex are
+        reset to 0.
     \endlist
 \endlist
 

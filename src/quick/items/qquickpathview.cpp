@@ -250,6 +250,7 @@ void QQuickPathViewPrivate::clear()
         releaseItem(p);
     }
     items.clear();
+    tl.clear();
 }
 
 void QQuickPathViewPrivate::updateMappedRange()
@@ -579,6 +580,8 @@ QQuickPathView::~QQuickPathView()
     For large or dynamic datasets the model is usually provided by a C++ model object.
     Models can also be created directly in QML, using the ListModel type.
 
+    \note changing the model will reset the offset and currentIndex to 0.
+
     \sa {qmlmodels}{Data Models}
 */
 QVariant QQuickPathView::model() const
@@ -600,11 +603,7 @@ void QQuickPathView::setModel(const QVariant &model)
                              this, QQuickPathView, SLOT(createdItem(int,QQuickItem*)));
         qmlobject_disconnect(d->model, QQuickVisualModel, SIGNAL(initItem(int,QQuickItem*)),
                              this, QQuickPathView, SLOT(initItem(int,QQuickItem*)));
-        for (int i=0; i<d->items.count(); i++){
-            QQuickItem *p = d->items[i];
-            d->releaseItem(p);
-        }
-        d->items.clear();
+        d->clear();
     }
 
     d->modelVariant = model;
@@ -626,6 +625,7 @@ void QQuickPathView::setModel(const QVariant &model)
         if (QQuickVisualDataModel *dataModel = qobject_cast<QQuickVisualDataModel*>(d->model))
             dataModel->setModel(model);
     }
+    int oldModelCount = d->modelCount;
     d->modelCount = 0;
     if (d->model) {
         qmlobject_connect(d->model, QQuickVisualModel, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
@@ -635,17 +635,20 @@ void QQuickPathView::setModel(const QVariant &model)
         qmlobject_connect(d->model, QQuickVisualModel, SIGNAL(initItem(int,QQuickItem*)),
                           this, QQuickPathView, SLOT(initItem(int,QQuickItem*)));
         d->modelCount = d->model->count();
-        if (d->model->count())
-            d->offset = qmlMod(d->offset, qreal(d->model->count()));
-        if (d->offset < 0)
-            d->offset = d->model->count() + d->offset;
-}
+    }
+    if (isComponentComplete()) {
+        if (d->currentIndex != 0) {
+            d->currentIndex = 0;
+            emit currentIndexChanged();
+        }
+        if (d->offset != 0.0) {
+            d->offset = 0;
+            emit offsetChanged();
+        }
+    }
     d->regenerate();
-    if (d->currentIndex < d->modelCount)
-        setOffset(qmlMod(d->modelCount - d->currentIndex, d->modelCount));
-    else
-        d->fixOffset();
-    emit countChanged();
+    if (d->modelCount != oldModelCount)
+        emit countChanged();
     emit modelChanged();
 }
 
@@ -705,6 +708,14 @@ int QQuickPathView::currentIndex() const
 void QQuickPathView::setCurrentIndex(int idx)
 {
     Q_D(QQuickPathView);
+    if (!isComponentComplete()) {
+        if (idx != d->currentIndex) {
+            d->currentIndex = idx;
+            emit currentIndexChanged();
+        }
+        return;
+    }
+
     idx = d->modelCount
         ? ((idx % d->modelCount) + d->modelCount) % d->modelCount
         : 0;
@@ -1600,14 +1611,14 @@ void QQuickPathView::componentComplete()
 
     QQuickItem::componentComplete();
 
-    d->createHighlight();
-    // It is possible that a refill has already happended to to Path
-    // bindings being handled in the componentComplete().  If so
-    // don't do it again.
-    if (d->items.count() == 0 && d->model) {
+    if (d->model) {
         d->modelCount = d->model->count();
-        d->regenerate();
+        if (d->modelCount && d->currentIndex != 0) // an initial value has been provided for currentIndex
+            d->offset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
     }
+
+    d->createHighlight();
+    d->regenerate();
     d->updateHighlight();
     d->updateCurrent();
 
@@ -1920,16 +1931,19 @@ void QQuickPathViewPrivate::updateCurrent()
         return;
 
     int idx = calcCurrentIndex();
-    if (model && idx != currentIndex) {
+    if (model && (idx != currentIndex || !currentItem)) {
         if (currentItem) {
             if (QQuickPathViewAttached *att = attached(currentItem))
                 att->setIsCurrentItem(false);
             releaseItem(currentItem);
         }
+        int oldCurrentIndex = currentIndex;
         currentIndex = idx;
         currentItem = 0;
         createCurrentItem();
-        emit q->currentIndexChanged();
+        if (oldCurrentIndex != currentIndex)
+            emit q->currentIndexChanged();
+        emit q->currentItemChanged();
     }
 }
 

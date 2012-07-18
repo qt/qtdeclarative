@@ -52,6 +52,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQml/private/qquicklistmodel_p.h>
 #include <QtQml/private/qqmlvaluetype_p.h>
+#include <QtGui/qstandarditemmodel.h>
 #include <QStringListModel>
 #include <QFile>
 
@@ -64,8 +65,6 @@ using namespace QQuickVisualTestUtil;
 
 Q_DECLARE_METATYPE(QQuickPathView::HighlightRangeMode)
 
-#ifndef QT_NO_WIDGETS
-#include <QStandardItemModel>
 static void initStandardTreeModel(QStandardItemModel *model)
 {
     QStandardItem *item;
@@ -83,8 +82,6 @@ static void initStandardTreeModel(QStandardItemModel *model)
     item->setIcon(QIcon());
     model->insertRow(2, item);
 }
-#endif
-
 
 class tst_QQuickPathView : public QQmlDataTest
 {
@@ -98,6 +95,7 @@ private slots:
     void dataModel();
     void pathview2();
     void pathview3();
+    void initialCurrentIndex();
     void insertModel_data();
     void insertModel();
     void removeModel_data();
@@ -124,9 +122,7 @@ private slots:
     void visualDataModel();
     void undefinedPath();
     void mouseDrag();
-#ifndef QT_NO_WIDGETS
     void treeModel();
-#endif
     void changePreferredHighlight();
     void missingPercent();
     void creationContext();
@@ -271,6 +267,26 @@ void tst_QQuickPathView::pathview3()
     QVERIFY(obj->model() != QVariant());
     QCOMPARE(obj->currentIndex(), 7);
     QCOMPARE(obj->offset(), 1.0);
+    QCOMPARE(obj->preferredHighlightBegin(), 0.5);
+    QCOMPARE(obj->dragMargin(), 24.);
+    QCOMPARE(obj->count(), 8);
+    QCOMPARE(obj->pathItemCount(), 4);
+
+    delete obj;
+}
+
+void tst_QQuickPathView::initialCurrentIndex()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("initialCurrentIndex.qml"));
+    QQuickPathView *obj = qobject_cast<QQuickPathView*>(c.create());
+
+    QVERIFY(obj != 0);
+    QVERIFY(obj->path() != 0);
+    QVERIFY(obj->delegate() != 0);
+    QVERIFY(obj->model() != QVariant());
+    QCOMPARE(obj->currentIndex(), 3);
+    QCOMPARE(obj->offset(), 5.0);
     QCOMPARE(obj->preferredHighlightBegin(), 0.5);
     QCOMPARE(obj->dragMargin(), 24.);
     QCOMPARE(obj->count(), 8);
@@ -1258,21 +1274,29 @@ void tst_QQuickPathView::modelChanges()
 
     QQuickPathView *pathView = window->rootObject()->findChild<QQuickPathView*>("pathView");
     QVERIFY(pathView);
+    pathView->setCurrentIndex(3);
+    QTRY_COMPARE(pathView->offset(), 6.0);
 
     QQuickListModel *alternateModel = window->rootObject()->findChild<QQuickListModel*>("alternateModel");
     QVERIFY(alternateModel);
     QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(pathView, SIGNAL(modelChanged()));
+    QSignalSpy currentIndexSpy(pathView, SIGNAL(currentIndexChanged()));
 
+    QCOMPARE(pathView->currentIndex(), 3);
     pathView->setModel(modelVariant);
     QCOMPARE(pathView->model(), modelVariant);
     QCOMPARE(modelSpy.count(),1);
+    QCOMPARE(pathView->currentIndex(), 0);
+    QCOMPARE(currentIndexSpy.count(), 1);
 
     pathView->setModel(modelVariant);
     QCOMPARE(modelSpy.count(),1);
 
     pathView->setModel(QVariant());
     QCOMPARE(modelSpy.count(),2);
+    QCOMPARE(pathView->currentIndex(), 0);
+    QCOMPARE(currentIndexSpy.count(), 1);
 
     delete window;
 }
@@ -1483,7 +1507,6 @@ void tst_QQuickPathView::mouseDrag()
     delete window;
 }
 
-#ifndef QT_NO_WIDGETS
 void tst_QQuickPathView::treeModel()
 {
     QQuickView *window = createView();
@@ -1511,7 +1534,6 @@ void tst_QQuickPathView::treeModel()
 
     delete window;
 }
-#endif
 
 void tst_QQuickPathView::changePreferredHighlight()
 {
@@ -1826,6 +1848,8 @@ void tst_QQuickPathView::snapToItem()
         QVERIFY(pathview->currentIndex() != currentIndex);
     else
         QVERIFY(pathview->currentIndex() == currentIndex);
+
+    delete window;
 }
 
 void tst_QQuickPathView::snapToItem_data()
@@ -1873,6 +1897,8 @@ void tst_QQuickPathView::snapOneItem()
         QVERIFY(pathview->currentIndex() == currentIndex+1);
     else
         QVERIFY(pathview->currentIndex() == currentIndex);
+
+    delete window;
 }
 
 void tst_QQuickPathView::snapOneItem_data()
