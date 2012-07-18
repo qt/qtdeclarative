@@ -55,6 +55,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtQml/qqmllist.h>
+#include <private/qtqmlglobal_p.h>
 #include <private/qv8_p.h>
 #include <private/qhashedstring_p.h>
 
@@ -63,7 +64,7 @@ QT_BEGIN_NAMESPACE
 class QV8Engine;
 class QV8ObjectResource;
 class QQmlValueType;
-class QV8ValueTypeWrapper 
+class Q_QML_PRIVATE_EXPORT QV8ValueTypeWrapper
 {
 public:
     QV8ValueTypeWrapper();
