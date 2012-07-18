@@ -239,7 +239,7 @@ property is only invoked when the property is reassigned to a different object v
     converted into a \c url value, and vice-versa.
 
 
-    \section1 Using the url type
+    \section1 Using the url Type
 
     When a relative URL is written to a \c url type property, it is converted
     into a URL object, so \bold {matching the URL value against the input string
@@ -619,7 +619,7 @@ property is only invoked when the property is reassigned to a different object v
     converted into a \c list value, and vice-versa.
 
 
-    \section1 Using the list type
+    \section1 Using the list Type
 
     For example, the \l Item type has a \l {Item::}{states} list-type property that
     can be assigned to and used as follows:

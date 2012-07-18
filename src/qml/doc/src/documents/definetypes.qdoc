@@ -70,7 +70,7 @@ The \c SquareButton type encapsulates the tree of QML objects declared in \c Squ
 
 \note the letter case of the file name is significant on some (notably UNIX) filesystems. It is recommended the file name case matches the case of the desired QML type name exactly - for example, \c Box.qml and not \c BoX.qml - regardless of the platform to which the QML type will be deployed.
 
-\section2 Importing types defined outside the current directory
+\section2 Importing Types Defined Outside the Current Directory
 
 If \c SquareButton.qml was not in the same directory as \c myapplication.qml,
 the \c SquareButton type would need to be specifically made available through an \e import statement in \c myapplication.qml. It could be imported from a relative path on the file system, or as an installed module; see \l {QML Modules}{module} for more details.

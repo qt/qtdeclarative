@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtqml-cppintegration-data.html
-\title Exposing Data From C++ To QML
+\title Exposing Data from C++ to QML
 \brief Description of how to expose data from C++ to QML
 
 
@@ -87,7 +87,7 @@ on using Qt properties with QML.
 
 
 
-\section1 Supported data types
+\section1 Supported Data Types
 
 Any C++ data that is used from QML - whether as custom properties, or parameters for signals or
 functions - must be of a type that is recognizable by QML.
@@ -263,7 +263,7 @@ a QColor-type property or to call a C++ function that requires a QColor paramete
 
 
 
-\section1 Data Returned From Instance Method Invocation
+\section1 Data Returned from Instance Method Invocation
 
 A registered C++ type may have functions flagged with the
 Q_INVOKABLE flag defined.  Those functions of an instance of

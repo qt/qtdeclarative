@@ -36,7 +36,7 @@ QML source code is generally loaded by the engine through QML \e documents, whic
 standalone documents of QML code. These can be used to define \l {QML Object Types}{QML object types} that can then be reused throughout an application.
 
 
-\section1 Import statements
+\section1 Import Statements
 
 A QML document may have one or more imports at the top of the file.
 An import can be any one of:
@@ -71,7 +71,7 @@ Please see the \l{qtqml-syntax-imports.html}{QML Syntax - Import Statements}
 documentation for in-depth information about QML imports.
 
 
-\section1 Object declarations
+\section1 Object Declarations
 
 Syntactically, a block of QML code defines a tree of QML objects to be created. Objects are
 defined using \e {object declarations} that describe the type of object to be created as well
@@ -117,7 +117,7 @@ Rectangle { width: 200; height: 200; color: "red" }
 Obviously, the \l Rectangle object declared in this example is very simple indeed, as it defines nothing more than a few property values. To create more useful objects, an object declaration may define many other types of attributes: these are discussed in the \l{qtqml-syntax-object-declaration.html}{Object Declarations} documentation. Additionally, an object declaration may define child objects, as discussed below.
 
 
-\section2 Child objects
+\section2 Child Objects
 
 Any object declaration can define child objects through nested object declarations. In this way, \b {any object declaration implicitly declares an object tree that may contain any number of child objects}.
 

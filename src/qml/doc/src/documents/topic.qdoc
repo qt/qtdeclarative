@@ -42,7 +42,7 @@ The ability to define re-usable QML object types in documents is an important
 enabler to allow clients to write modular, highly readable and maintainable
 code.
 
-\section1 Structure Of A QML Document
+\section1 Structure of a QML Document
 
 A QML document consists of two sections: the imports section, and the object
 declaration section.  The imports section in a document contains import

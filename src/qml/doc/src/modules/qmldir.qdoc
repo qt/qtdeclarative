@@ -41,7 +41,7 @@ directory within the module according to the named identifier for the module; se
 Modules} documentation for more information.
 
 
-\section1 Writing a qmldir file
+\section1 Writing a qmldir File
 
 A \c qmldir file contains one or more lines of the following commands:
 
@@ -98,7 +98,7 @@ internal MyPrivateType MyPrivateType.qml
 MyScript 1.0 MyScript.js
             \endcode
 
-            See \l{qtqml-javascript-imports.html}{Importing JavaScript Files In QML Documents} for
+            See \l{qtqml-javascript-imports.html}{Importing JavaScript Files in QML Documents} for
             more information.
 
     \row
@@ -206,7 +206,7 @@ See \l{Located Modules} and \l{Installed Modules} for more example \c qmldir fil
 \l{examples/qml/cppextensions/plugins} for an example that uses C++ plugins.
 
 
-\section1 Writing a qmltypes file
+\section1 Writing a qmltypes File
 
 QML modules may refer to one or more type information files in their
 \c qmldir file. These usually have the \c .qmltypes

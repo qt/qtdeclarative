@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtqml-javascript-topic.html
-\title Integrating QML And JavaScript
+\title Integrating QML and JavaScript
 \brief Description of how to use JavaScript in QML applications
 
 The QML language uses a JSON-like syntax and allows various expressions and
@@ -48,7 +48,7 @@ can include properties from other objects. These
 are JavaScript expressions.
 
 See the documentation page titled
-\l{qtqml-javascript-expressions.html}{JavaScript Expressions In QML Documents}
+\l{qtqml-javascript-expressions.html}{JavaScript Expressions in QML Documents}
 for more information about using JavaScript expressions in QML.
 
 \section1 JavaScript Imports
@@ -56,7 +56,7 @@ for more information about using JavaScript expressions in QML.
 A QML document may import JavaScript files.  This allows an application
 developer to provide application logic in modular, self-contained files.
 See the documentation page titled
-\l{qtqml-javascript-imports.html}{Importing JavaScript Files In QML Documents}
+\l{qtqml-javascript-imports.html}{Importing JavaScript Files in QML Documents}
 for more information on how to import JavaScript files and how to use the
 functionality they provide.
 

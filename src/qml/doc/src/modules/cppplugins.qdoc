@@ -27,10 +27,10 @@
 
 /*!
 \page qtqml-modules-cppplugins.html
-\title Creating C++ Plugins For QML
+\title Creating C++ Plugins for QML
 \brief Description of how to write C++ plugins for QML
 
-\section1 Creating A Plugin
+\section1 Creating a Plugin
 
     The \l{QQmlEngine}{QML engine} load C++ plugins for QML.
     Such plugins are usually provided in a QML extension module, and can

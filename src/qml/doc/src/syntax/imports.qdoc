@@ -29,7 +29,7 @@
 \title Import Statements
 \brief Description of import statements in QML
 
-\section1 Syntax Of An Import Statement
+\section1 Syntax of an Import Statement
 
 
 The \c import statement is used to provide the QML engine with access to the modules that define the types that are referred to from within the QML file.

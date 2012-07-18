@@ -27,7 +27,7 @@
 
 /*!
 \page qtqml-javascript-dynamicobjectcreation.html
-\title Dynamic QML object creation from JavaScript
+\title Dynamic QML Object Creation from JavaScript
 \brief instantiating and managing QML objects from JavaScript
 
 QML supports the dynamic creation of objects from within JavaScript.  This is

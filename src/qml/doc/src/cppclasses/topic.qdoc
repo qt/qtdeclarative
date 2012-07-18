@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtqml-cppclasses-topic.html
-\title C++ Classes Provided By The Qt QML Module
+\title C++ Classes Provided by the Qt QML Module
 \brief Overview of the C++ classes provided by the Qt QML module
 
 The Qt QML module provides C++ classes which implement the QML framework.

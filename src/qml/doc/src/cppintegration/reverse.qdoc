@@ -26,16 +26,16 @@
 ****************************************************************************/
 /*!
 \page qtqml-cppintegration-reverse.html
-\title Interacting With QML Objects From C++
+\title Interacting with QML Objects from C++
 \brief Description of how to interact with QML objects from C++
 
-\section1 QML Objects, QObject And QMetaObject
+\section1 QML Objects, QObject and QMetaObject
 
 QML object types are, internally, QObject-derived types.  Each type has an
 associated QMetaObject, and all functions, properties and signals of an
 instance of a QML object type can be accessed through the QMetaObject.
 
-\section1 Accessing QML Objects From C++
+\section1 Accessing QML Objects from C++
 
 Once you have a pointer to a QML object in C++, you can access its properties,
 invoke its functions, and connect to its signals.  To get such a pointer, a
@@ -89,7 +89,7 @@ below for further details.
 
 
 
-\section2 Object Name And findChild
+\section2 Object Name and findChild
 
 NOTE: this is only applicable to QML object types provided by the Qt Quick
 module.
@@ -121,7 +121,7 @@ to, for example, swap a QML view component for another view, if the new componen
 required \c objectName. It is better for the C++ implementation to know as little as possible about
 the QML user interface implementation and the composition of the QML object tree.
 
-\section2 Passed As Arguments
+\section2 Passed as Arguments
 
 Any QML object may be passed as an argument to a Q_INVOKABLE C++ function
 if that function has a pointer to a QObject as a parameter.  The object
@@ -192,7 +192,7 @@ QML supports the calling of overloaded C++ functions. If there are multiple C++ 
 same name but different arguments, the correct function will be called according to the number and
 the types of arguments that are provided.
 
-\section1 Signals And Slots
+\section1 Signals and Slots
 
 All QML signals are automatically available to C++, and can be connected to using QObject::connect()
 like any ordinary Qt C++ signal. In return, any C++ signal can be received by a QML object using

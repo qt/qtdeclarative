@@ -111,7 +111,7 @@ While syntactically bindings can be of arbitrary complexity, if a binding starts
 
 
 \keyword qml-javascript-assignment
-\section1 Creating property bindings from JavaScript
+\section1 Creating Property Bindings from JavaScript
 
 Once a property has been bound to an expression, the property is set to be automatically updated as necessary. However, be aware that if the property is later assigned a static value from a JavaScript statement, this will remove the binding.
 
@@ -150,7 +150,7 @@ Rectangle {
 Now when the space key is pressed, a new binding of \c width*3 is assigned, instead of simply removing the initial binding.
 
 
-\section2 Using \c this with property binding
+\section2 Using \c this with Property Binding
 
 When creating a property binding from JavaScript, QML allows the use of the \c
 this keyword to refer to the object to which the property binding will be

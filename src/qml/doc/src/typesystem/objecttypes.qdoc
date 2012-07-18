@@ -44,7 +44,7 @@ Custom QML object types can be defined by creating a .qml file that defines the
 type, as discussed in \l {qtqml-documents-definetypes.html}
 {Documents as QML object type definitions}, or by defining a QML type from C++
 and registering the type with the QML engine, as discussed in
-\l{qtqml-registercpptypes.html}{Registering C++ Types With The QML Type System}.
+\l{qtqml-registercpptypes.html}{Registering C++ Types with the QML Type System}.
 
 
 \section1 Creating Object Types from QML

@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtqml-javascript-imports.html
-\title Importing JavaScript Files In QML Documents
+\title Importing JavaScript Files in QML Documents
 \brief Description of how to import and use JavaScript files in QML documents
 
 Both relative and absolute JavaScript URLs can be imported in QML documents.
@@ -47,7 +47,7 @@ The functions defined in an imported JavaScript file are available to objects
 defined in the importing QML document, via the \c{"Qualifier.functionName()"}
 syntax.
 
-\section1 Importing One JavaScript File From Another
+\section1 Importing a JavaScript File from Another
 
 In QtQuick 2.0, support has been added to allow JavaScript files to import
 other JavaScript files and also QML type namespaces using a variation of the
@@ -155,7 +155,7 @@ As they are shared, .pragma library files cannot access QML component instance
 objects or properties directly, although QML values can be passed as function
 parameters.
 
-\section1 Including One JavaScript File From Another
+\section1 Including a JavaScript File from Another
 
 When a JavaScript file is imported, it must be imported with a qualifier.  The
 functions in that file are then accessible from the importing script via the

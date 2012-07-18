@@ -35,7 +35,7 @@ object type is created with the set of attributes that have been defined for
 that object type.  There are several different kinds of attributes which
 can be specified, which are described below.
 
-\section1 Attributes in object declarations
+\section1 Attributes in Object Declarations
 
 An \l{qtqml-syntax-basics.html#object-declarations}{object declaration} in a
 QML document defines a new type.  It also declares an object hierarchy that
@@ -54,7 +54,7 @@ The set of QML object-type attribute types is as follows:
 
 These attributes are discussed in detail below.
 
-\section2 The \e id attribute
+\section2 The \e id Attribute
 
 Every QML object type has exactly one \e id attribute. This attribute is
 provided by the language itself, and cannot be redefined or overridden by any
@@ -96,14 +96,14 @@ to it; for example, it is not possible to access \c myTextInput.id in the above
 example.
 
 
-\section2 Property attributes
+\section2 Property Attributes
 
 A property is an attribute of an object that can be assigned a static value
 or bound to a dynamic expression. A property's value can be read by other
 objects. Generally it can also be modified by another object, unless a
 particular QML type has explicitly disallowed this for a specific property.
 
-\section3 Defining property attributes
+\section3 Defining Property Attributes
 
 A property may be defined for a type in C++ by registering a
 Q_PROPERTY of a class which is then registered with the QML type system.
@@ -122,7 +122,7 @@ Property names must begin with a lower case letter and can only contain
 letters, numbers and underscores. \l {JavaScript Reserved Words}
 {JavaScript reserved words} are not valid property names.  The \c default
 keyword is optional, and modifies the semantics of the property being declared.
-See the upcoming section on \l {Default properties}{default properties} for
+See the upcoming section on \l {Default Properties}{default properties} for
 more information about the \c default property modifier.
 
 Declaring a custom property implicitly creates a value-change
@@ -144,7 +144,7 @@ Rectangle {
 }
 \endqml
 
-\section4 Valid types in custom property definitions
+\section4 Valid Types in Custom Property Definitions
 
 The following types can be used as custom property types:
 
@@ -203,7 +203,7 @@ which was then imported by the client), then a property of type
 \c ColorfulButton would also be valid.
 
 
-\section3 Values of property attributes
+\section3 Values of Property Attributes
 
 The value of a property of an object instance may specified in an
 object declaration in two separate ways:
@@ -214,7 +214,7 @@ object declaration in two separate ways:
 
 The value in either case may be either a binding expression or a static value.
 
-\section4 Value assignment on initialization
+\section4 Value Assignment on Initialization
 
 The syntax for assigning a value to a property on initialization is:
 
@@ -241,7 +241,7 @@ Rectangle {
 }
 \endqml
 
-\section4 Imperative value assignment
+\section4 Imperative Value Assignment
 
 An imperative value assignment is where a property value (either static value
 or binding expression) is assigned to a property from imperative JavaScript
@@ -265,7 +265,7 @@ Rectangle {
 }
 \endqml
 
-\section4 Valid property values
+\section4 Valid Property Values
 
 As previously noted, there are two kinds of values which may be assigned to a
 property: static values, and binding expression values.
@@ -323,7 +323,7 @@ about \l{qtqml-syntax-propertybinding.html}{property binding} for more
 information on the topic.
 
 
-\section3 Type safety
+\section3 Type Safety
 
 Properties are type safe. A property can only be assigned a value that matches
 the property type.
@@ -349,9 +349,9 @@ See \l {QML Basic Types} for a list of the types of properties that are
 supported by default.  Additionally, any available \l {QML Object Types}
 {QML object type} may also be used as a property type.
 
-\section3 Special property types
+\section3 Special Property Types
 
-\section4 Object list property attributes
+\section4 Object List Property Attributes
 
 A \l list type property can be assigned a list of QML object-type values.
 The syntax for defining an object list value is a comma-separated list
@@ -452,7 +452,7 @@ the Qt Quick module is imported.  See the documentation about
 \l{QML Basic Types} for more information.
 
 
-\section3 Property aliases
+\section3 Property Aliases
 
 Property aliases are properties which hold a reference to another property.
 Unlike an ordinary property definition, which allocates a new, unique storage
@@ -507,7 +507,7 @@ the displayed text at all, as property bindings are not bi-directional: the
 the other way around.
 
 
-\section4 Considerations for property aliases
+\section4 Considerations for Property Aliases
 
 Aliases are only activated once a component has been fully initialized. An
 error is generated when an uninitialized alias is referenced. Likewise,
@@ -532,7 +532,7 @@ Internally, however, the red can correctly set its \c color
 property and refer to the actual defined property rather than the alias.
 
 
-\section3 Default properties
+\section3 Default Properties
 
 An object definition can have a single \e default property. A default property
 is the property to which a value is assigned if an object is declared within
@@ -587,7 +587,7 @@ default property to automatically reassign children of the TabWidget as
 children of an inner ListView.
 
 
-\section2 Signal attributes
+\section2 Signal Attributes
 
 A signal is a notification from an object that some event has occurred: for
 example, a property has changed, an animation has started or stopped, or
@@ -622,7 +622,7 @@ Item {
 }
 \endqml
 
-\section3 Defining signal attributes
+\section3 Defining Signal Attributes
 
 A signal may be defined for a type in C++ by registering a Q_SIGNAL of a class
 which is then registered with the QML type system.  Alternatively, a custom
@@ -660,7 +660,7 @@ To emit a signal, invoke it as a method. Any relevant
 is emitted, and handlers can use the defined signal argument names to access
 the respective arguments.
 
-\section3 Property change signals
+\section3 Property Change Signals
 
 QML types also provide built-in \e {property change signals} that are emitted
 whenever a property value changes, as previously described in the section on
@@ -669,7 +669,7 @@ whenever a property value changes, as previously described in the section on
 information about why these signals are useful, and how to use them.
 
 
-\section2 Signal handler attributes
+\section2 Signal Handler Attributes
 
 Signal handlers are a special sort of \l{Method attributes}{method attribute},
 where the method implementation is invoked by the QML engine whenever the
@@ -715,7 +715,7 @@ SquareButton {
 See the \l {Signal and Handler Event System} for more details on use of
 signals.
 
-\section3 Property change signal handlers
+\section3 Property Change Signal Handlers
 
 Signal handlers for property change signal take the syntax form
 \e on<Property>Changed where \e <Property> is the name of the property,
@@ -736,14 +736,14 @@ TextInput {
 \endqml
 
 
-\section2 Method attributes
+\section2 Method Attributes
 
 A method of an object type is a function which may be called to perform some
 processing or trigger further events.  A method can be connected to a signal so
 that it is automatically invoked whenever the signal is emitted.  See
 \l {Signal and Handler Event System} for more details.
 
-\section3 Defining method attributes
+\section3 Defining Method Attributes
 
 A method may be defined for a type in C++ by tagging a function of a class
 which is then registered with the QML type system with Q_INVOKABLE or by
@@ -813,7 +813,7 @@ Item {
 \endqml
 
 
-\section2 Attached properties and attached signal handlers
+\section2 Attached Properties and Attached Signal Handlers
 
 \e {Attached properties} and \e {attached signal handlers} are mechanisms that
 enable objects to be annotated with extra properties or signal handlers that
@@ -878,7 +878,7 @@ Since the name of the \e {attaching type} is \c Component and that type has a
 \c Component.isCompleted.
 
 
-\section3 A note about accessing attached properties and signal handlers
+\section3 A Note About Accessing Attached Properties and Signal Handlers
 
 A common error is to assume that attached properties and signal handlers are
 directly accessible from the children of the object to which these attributes

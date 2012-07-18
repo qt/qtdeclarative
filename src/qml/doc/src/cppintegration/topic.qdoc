@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtqml-cppintegration-topic.html
-\title Integrating QML And C++
+\title Integrating QML and C++
 \brief Description of how to integrate QML and C++ code
 
 QML was designed to allow tight integration with C++ code.  This allows hybrid
@@ -62,13 +62,13 @@ QML code
 \endlist
 
 
-\section1 Exposing C++ Types To QML
+\section1 Exposing C++ Types to QML
 
 QML types may be implemented in C++ and then exposed to the QML type system via
 plugins or type registration.  This is covered in more detail elsewhere in the
 documentation; see the documentation regarding
 \l{qtqml-cppintegration-registercpptypes.html}
-{Registering C++ Types With The QML Type System} for more information on that
+{Registering C++ Types with the QML Type System} for more information on that
 topic.
 
 For more information on the specifics of how to define C++ types for use in QML
@@ -76,23 +76,23 @@ For more information on the specifics of how to define C++ types for use in QML
 about defining \l{qtqml-modules-cppplugins.html#creating-a-plugin}
 {C++ types for use in QML}.
 
-\section1 Exposing C++ Data To QML
+\section1 Exposing C++ Data to QML
 
 Data from C++ may be exposed to QML via context properties, instance
 properties, or by returning data from Q_INVOKABLE methods.  For more
 information about each of these approaches, and the ownership semantics
 applicable to each, see the documentation on \l{qtqml-cppintegration-data.html}
-{Exposing C++ Data To QML}.
+{Exposing C++ Data to QML}.
 
-\section1 Exposing C++ Functions To QML
+\section1 Exposing C++ Functions to QML
 
 Functions from C++ may be exposed to QML via signals and slots, by tagging a
 function declaration with the Q_INVOKABLE macro, or by registering the C++ type
 as a module API and installing that module API into a particular namespace.
 For more information about these approaches, see the documentation on
-\l{qtqml-cppintegration-functions.html}{Exposing C++ Functionality To QML}.
+\l{qtqml-cppintegration-functions.html}{Exposing C++ Functionality to QML}.
 
-\section1 Interacting With Objects Defined In QML From C++
+\section1 Interacting with Objects Defined in QML from C++
 
 Most properties of an object defined in QML may be accessed via
 QQmlProperty::read() or QObject::property().  If the property is a list
@@ -104,6 +104,6 @@ handlers.
 
 For more information about accessing QML objects from C++, see the
 documentation on \l{qtqml-cppintegration-reverse.html}
-{Interacting With Objects Defined In QML From C++}.
+{Interacting with Objects Defined in QML from C++}.
 
 */

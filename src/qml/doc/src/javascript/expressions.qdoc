@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtqml-javascript-expressions.html
-\title JavaScript Expressions In QML Documents
+\title JavaScript Expressions in QML Documents
 \brief Description of where JavaScript expressions are valid in QML documents
 
 
@@ -71,7 +71,7 @@ logic.  There are four ways that JavaScript can be used in a QML document:
   \li \l{QML Object Attributes#custom-methods}{custom methods} can be defined
       in QML files as JavaScript functions
   \li JavaScript files providing functions and variables can be
-      \l{Importing JavaScript Files In QML Documents}{imported} in a QML
+      \l{Importing JavaScript Files in QML Documents}{imported} in a QML
       document
 \endlist
 
@@ -507,7 +507,7 @@ required, during evaluation of a JavaScript expression.
 
 \snippet qml/integrating-javascript/scarceresources/avatarExample.cpp 4
 
-\section2 Example Five: Explicit Destruction And JavaScript References
+\section2 Example Five: Explicit Destruction and JavaScript References
 
 One thing to be aware of when using "var" type properties is that they
 hold references to JavaScript objects.  As such, if multiple references

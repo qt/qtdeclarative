@@ -59,7 +59,7 @@ more information about basic types, or the \l{qtqml-documents-properties.html}
 other available property types.
 
 
-\section1 JavaScript types
+\section1 JavaScript Types
 
 JavaScript objects and arrays are supported by the QML engine. Any standard
 JavaScript type can be created and stored using the generic \l var type.
