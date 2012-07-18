@@ -251,6 +251,29 @@
   */
 
 /*!
+    \fn Object *qmlAttachedPropertiesObject(const QObject *attachee, bool create = true)
+    \relates QQmlEngine
+
+    The form of this template function is:
+
+    \code
+    template<typename T> QObject *qmlAttachedPropertiesObject(const QObject *attachee, bool create = true)
+    \endcode
+
+    This returns the attached object instance that has been attached to the specified
+    \a attachee by the attaching type \e T.
+
+    If \a create is true and type \e T is a valid attaching type, this creates and returns a new
+    attached object instance.
+
+    Returns 0 if type \e T is not a valid attaching type, or if \a create is false and no
+    attachment object instance has previously been created for \a attachee.
+
+    \sa {Providing Attached Objects for Data Annotations}
+
+*/
+
+/*!
    \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QQmlEngine *, QJSEngine *))
    \relates QQmlEngine
 

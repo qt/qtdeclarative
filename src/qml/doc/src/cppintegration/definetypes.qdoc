@@ -459,6 +459,16 @@ Additionally, the C++ implementation may access the attached object instance
 that has been attached to any object by calling the
 qmlAttachedPropertiesObject() function.
 
+For example:
+
+\code
+Message *msg = someMessageInstance();
+MessageBoardAttachedType *attached =
+        qobject_cast<MessageBoardAttachedType*>(qmlAttachedPropertiesObject<MessageBoard>(msg));
+
+qDebug() << "Value of MessageBoard.expired:" << attached->expired();
+\endcode
+
 
 \section2 Property Value Sources
 
