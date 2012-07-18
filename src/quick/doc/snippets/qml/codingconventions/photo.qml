@@ -57,11 +57,11 @@ Rectangle {
     color: "gray"                                           // object properties
     x: 20; y: 20; height: 150                               // try to group related properties together
     width: {                                                // large bindings
-        if(photoImage.width > 200){
-	    photoImage.width;
-	}else{
-	    200;
-	}
+        if (photoImage.width > 200) {
+            photoImage.width;
+        } else {
+            200;
+        }
     }
 
     Rectangle {                                             // child objects

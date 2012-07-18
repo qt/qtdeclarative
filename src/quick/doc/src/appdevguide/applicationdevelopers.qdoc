@@ -28,7 +28,7 @@
 /*
 XXX
 
-The "Features And Use-Case Solutions" section has been temporarily removed
+The "Features and Use-Case Solutions" section has been temporarily removed
 from the "QML Application Developer Resources" page as we do not have any
 content for them yet.
 
@@ -36,19 +36,19 @@ Once we have written content for these sections, they can be re-integrated.
 
 See QTBUG-26428
 
-\section1 Features And Use-Case Solutions
+\section1 Features and Use-Case Solutions
 
 \list
-\li \l{qtquick-usecase-visual.html}{Placing Visual Content And Images In The Window}
-\li \l{qtquick-usecase-userinput.html}{Responding To User Input}
+\li \l{qtquick-usecase-visual.html}{Placing Visual Content and Images in the Window}
+\li \l{qtquick-usecase-userinput.html}{Responding to User Input}
 \li \l{qtquick-usecase-animations.html}{Animating UI Elements}
-\li \l{qtquick-usecase-text.html}{Formatting And Displaying Text}
+\li \l{qtquick-usecase-text.html}{Formatting and Displaying Text}
 \li \l{qtquick-usecase-layouts.html}{Complex Layouts}
-\li \l{qtquick-usecase-styling.html}{Style And Theme: Look And Feel}
-\li \l{qtquick-usecase-integratingjs.html}{Integrating With JavaScript}
-\li \l{qtquick-usecase-integratingcpp.html}{Integrating With C++}
-\li \l{qtquick-usecase-modules.html}{Creating Modules For QML}
-\li \l{qtquick-usecase-multimedia.html}{Playing Sounds And Video In QML}
+\li \l{qtquick-usecase-styling.html}{Style and Theme: Look and Feel}
+\li \l{qtquick-usecase-integratingjs.html}{Integrating with JavaScript}
+\li \l{qtquick-usecase-integratingcpp.html}{Integrating with C++}
+\li \l{qtquick-usecase-modules.html}{Creating Modules for QML}
+\li \l{qtquick-usecase-multimedia.html}{Playing Sounds and Video in QML}
 \endlist
 
 */
@@ -58,9 +58,9 @@ See QTBUG-26428
 \title QML Application Developer Resources
 \brief Essential documentation for QML application developers
 
-\section1 Overview Of QML and Qt Quick
+\section1 Overview of QML and Qt Quick
 
-\section2 What Is QML?
+\section2 What is QML?
 
 QML is a user-interface specification and programming language.
 It allows highly performant, fluidly animated, visually appealing applications
@@ -73,7 +73,7 @@ See the \l{qtqml-main.html}{Qt QML Module Documentation} for
 in-depth information about using the QML language.}
 
 
-\section2 What Is Qt Quick?
+\section2 What is Qt Quick?
 
 Qt Quick is the standard library of types and functionality for QML.  It
 includes visual elements, interactive elements, animations, models and views,
@@ -90,24 +90,24 @@ Qt Quick.}
 \list
 \li \l{qtquick-quickstart-basics.html}{QML Basics}
     \list
-    \li \l{qtquick-quickstart-basics.html#creating-a-qml-document}{Creating A QML Document}
-    \li \l{qtquick-quickstart-basics.html#loading-and-displaying-the-qml-document}{Loading And Displaying The QML Document}
+    \li \l{qtquick-quickstart-basics.html#creating-a-qml-document}{Creating a QML Document}
+    \li \l{qtquick-quickstart-basics.html#loading-and-displaying-the-qml-document}{Loading and Displaying the QML Document}
     \endlist
 \li \l{qtquick-quickstart-essentials.html}{QML Essentials}
     \list
     \li \l{qtquick-quickstart-essentials.html#handling-user-input}{Handling User Input}
-    \li \l{qtquick-quickstart-essentials.html#property-bindings-and-animations}{Property Bindings And Animations}
-    \li \l{qtquick-quickstart-essentials.html#defining-custom-qml-types-for-re-use}{Defining Custom QML Types For Re-use}
+    \li \l{qtquick-quickstart-essentials.html#property-bindings-and-animations}{Property Bindings and Animations}
+    \li \l{qtquick-quickstart-essentials.html#defining-custom-qml-types-for-re-use}{Defining Custom QML Types for Re-use}
     \endlist
 \endlist
 
 \section1 Important Application Development Topics
 
 \list
-\li \l{qml-intro.html}{Introduction To QML Application Development}
-\li \l{qtquick-performance.html}{Performance Considerations And Suggestions}
-\li \l{qtquick-internationalization.html}{Internationalization And Localization}
-\li \l{qtquick-glossary.html}{Glossary Of Terms}
+\li \l{qml-intro.html}{Introduction to QML Application Development}
+\li \l{qtquick-performance.html}{Performance Considerations and Suggestions}
+\li \l{qtquick-internationalization.html}{Internationalization and Localization}
+\li \l{qtquick-glossary.html}{Glossary of Terms}
 \endlist
 
 \section1 Testing and Debugging

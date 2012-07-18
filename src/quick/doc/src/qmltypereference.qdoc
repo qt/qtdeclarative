@@ -27,7 +27,7 @@
 
 /*!
 \page qtquick-qmltypereference.html
-\title QML Types Provided By Qt Quick
+\title QML Types Provided by Qt Quick
 \brief Description of the QML types provided by the Qt Quick module
 
 This page contains links to documentation for every QML type provided by the
@@ -112,7 +112,7 @@ User input events
 \li \l {LayoutMirroring} - Attached property used to mirror layout behavior
 \endlist
 
-\section1 States, Transitions And Animations
+\section1 States, Transitions and Animations
 
 States
 \list
@@ -186,7 +186,7 @@ Visual object transformations
 \li \l {Behavior} - Triggers animations when a property value is set
 \endlist
 
-\section1 Model/View Types And Data Storage And Access
+\section1 Model/View Types and Data Storage and Access
 
 Models And Model Data
 \list
@@ -214,7 +214,7 @@ Data Storage
 \li \l {LocalStorage} - Module API providing simplified SQL access
 \endlist
 
-\section1 Particles And Graphical Effects
+\section1 Particles and Graphical Effects
 
 \list
 \li \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects

@@ -29,7 +29,7 @@
 \title Qt QML Module
 \brief The Qt QML module defines and implements the QML language
 
-\section1 Overview Of The Qt QML Module
+\section1 Overview of the Qt QML Module
 
 The Qt QML module provides a framework for developing applications.  It defines
 and implements the QML language, and provides API which allows clients to
@@ -40,7 +40,7 @@ Application developers who are interested in writing applications using QML
 should start by reading the \l{qtquick-applicationdevelopers.html}
 {QML Application Developer Resources}.
 
-\section2 What Is QML
+\section2 What is QML?
 
 QML is a user-interface specification and programming language.  It was
 designed specifically to enable and ease the development of modern,
@@ -49,7 +49,7 @@ touch-driven, fluidly animated and visually-appealling applications.
 One of the core goals of QML is to allow closer interaction between designers
 and programmers during the development of an application.
 
-\section2 What Does The Qt QML Module Provide
+\section2 What Does the Qt QML Module Provide?
 
 The Qt QML module provides the definition and an implementation of the QML
 language.  It uses a JavaScript engine to provide JavaScript integration, and
@@ -58,7 +58,7 @@ object instantiation and manipulation along with strong typing, which can be
 integrated with a visual canvas and an animation framework to enable the
 development of highly-appealling interactive applications.
 
-\section2 What Does The Qt QML Module Not Provide
+\section2 What Does the Qt QML Module Not Provide?
 
 It does not provide a visual canvas, visual items, or an animation framework.
 These are provided instead by the \l{QtQuick} module.
@@ -70,7 +70,7 @@ types, animation classes, and canvas integration) for the QML language.
 \section1 Qt QML Module Documentation
 
 \list
-    \li \l{qtqml-cppclasses-topic.html}{C++ Classes Provided By The Qt QML Module}
+    \li \l{qtqml-cppclasses-topic.html}{C++ Classes Provided by the Qt QML Module}
         \list
         \li \l{qtqml-cppclasses-engine.html}{QQmlEngine}
         \li \l{qtqml-cppclasses-context.html}{QQmlContext}

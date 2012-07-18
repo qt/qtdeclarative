@@ -44,6 +44,6 @@ import QtQuick 2.0
 Item {
     id: component
     width: 40; height: 50
-    property real __area: width * height * 0.5    //not meant for outside use
+    property real __area: width * height * 0.5    // not meant for outside use
 }
 //! [0]

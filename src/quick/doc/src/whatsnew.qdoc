@@ -32,7 +32,7 @@
 
 \section1 Qt 5.0 - QtQuick C++ Module
 
-The QtQuick C++ module is new in Qt 5. It provides the visual canvas and scenegraph backend
+The QtQuick C++ module is new in Qt 5. It provides the visual canvas and scenegraph back-end
 as well as the QtQuick QML module for QML application development.
 
 As of Qt 5, the QtQuick module is based on an OpenGL scenegraph. Many of the classes in

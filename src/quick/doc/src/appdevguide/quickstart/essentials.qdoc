@@ -153,7 +153,7 @@ Rectangle {
 
 The value being displayed will vary from 0 to 150 periodically.
 
-\section1 Defining Custom QML Types For Re-use
+\section1 Defining Custom QML Types for Re-use
 
 One of the most important concepts in QML is that of type re-use.  An
 application will probably have multiple visual elements which are all similar

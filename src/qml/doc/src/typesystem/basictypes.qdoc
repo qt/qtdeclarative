@@ -534,7 +534,7 @@ property is only invoked when the property is reassigned to a different object v
     \list
     \li \l enumeration \c font.weight
     \li \l bool \c font.overline
-    \li \l bool \c font.sstrikeout
+    \li \l bool \c font.strikeout
     \li \l enumeration \c font.capitalization
     \li \l real \c font.letterSpacing
     \li \l real \c font.wordSpacing
