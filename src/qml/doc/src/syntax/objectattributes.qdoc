@@ -228,7 +228,7 @@ definition becomes:
 
 \code
     [default] property <propertyType> <propertyName> : <value>
-\code
+\endcode
 
 An example of property value initialization follows:
 
@@ -263,6 +263,7 @@ Rectangle {
         rect.color = "red"
     }
 }
+\endqml
 
 \section4 Valid property values
 
