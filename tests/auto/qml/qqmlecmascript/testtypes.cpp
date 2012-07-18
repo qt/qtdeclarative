@@ -190,6 +190,46 @@ void MyWorkerObject::doIt()
     new MyWorkerObjectThread(this);
 }
 
+class MyStringClass : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE QStringList strings(QStringList stringList) const
+    {
+        return stringList;
+    }
+    Q_INVOKABLE QList<int> integers(QVariant v) const
+    {
+        QList<int> intList;
+        QList<QVariant> vList = v.toList();
+        for (int i=0 ; i < vList.size() ; ++i) {
+            int iv = vList[i].toInt();
+            intList.append(iv);
+        }
+        return intList;
+    }
+    Q_INVOKABLE QList<qreal> reals(QVariant v) const
+    {
+        QList<qreal> realList;
+        QList<QVariant> vList = v.toList();
+        for (int i=0 ; i < vList.size() ; ++i) {
+            qreal fv = vList[i].toReal();
+            realList.append(fv);
+        }
+        return realList;
+    }
+    Q_INVOKABLE QList<bool> bools(QVariant v) const
+    {
+        QList<bool> boolList;
+        QList<QVariant> vList = v.toList();
+        for (int i=0 ; i < vList.size() ; ++i) {
+            bool bv = vList[i].toBool();
+            boolList.append(bv);
+        }
+        return boolList;
+    }
+};
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
@@ -253,6 +293,8 @@ void registerTypes()
 
     qmlRegisterType<FallbackBindingsTypeObject>("Qt.test.fallbackBindingsObject", 1, 0, "FallbackBindingsType");
     qmlRegisterType<FallbackBindingsTypeDerived>("Qt.test.fallbackBindingsDerived", 1, 0, "FallbackBindingsType");
+
+    qmlRegisterType<MyStringClass>("Qt.test", 1, 0, "MyStringClass");
 }
 
 #include "testtypes.moc"

@@ -186,6 +186,8 @@ private slots:
     void sequenceConversionBindings();
     void sequenceConversionCopy();
     void assignSequenceTypes();
+    void sequenceSort_data();
+    void sequenceSort();
     void qtbug_22464();
     void qtbug_21580();
     void singleV8BindingDestroyedDuringEvaluation();
@@ -7119,6 +7121,48 @@ void tst_qqmlecmascript::fallbackBindings()
     QVERIFY(object != 0);
 
     QCOMPARE(object->property("success").toBool(), true);
+}
+
+void tst_qqmlecmascript::sequenceSort_data()
+{
+    QTest::addColumn<QString>("function");
+    QTest::addColumn<bool>("useComparer");
+
+    QTest::newRow("qtbug_25269") << "test_qtbug_25269" << false;
+
+    const char *types[] = { "alphabet", "numbers", "reals" };
+    const char *sort[] = { "insertionSort", "quickSort" };
+
+    for (size_t t=0 ; t < sizeof(types)/sizeof(types[0]) ; ++t) {
+        for (size_t s=0 ; s < sizeof(sort)/sizeof(sort[0]) ; ++s) {
+            for (int c=0 ; c < 2 ; ++c) {
+                QString testName = QLatin1String(types[t]) + QLatin1String("_") + QLatin1String(sort[s]);
+                QString fnName = QLatin1String("test_") + testName;
+                bool useComparer = c != 0;
+                testName += useComparer ? QLatin1String("[custom]") : QLatin1String("[default]");
+                QTest::newRow(testName.toAscii().constData()) << fnName << useComparer;
+            }
+        }
+    }
+}
+
+void tst_qqmlecmascript::sequenceSort()
+{
+    QFETCH(QString, function);
+    QFETCH(bool, useComparer);
+
+    QQmlComponent component(&engine, testFileUrl("sequenceSort.qml"));
+
+    QObject *object = component.create();
+    if (object == 0)
+        qDebug() << component.errorString();
+    QVERIFY(object != 0);
+
+    QVariant q;
+    QMetaObject::invokeMethod(object, function.toAscii().constData(), Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, useComparer));
+    QVERIFY(q.toBool() == true);
+
+    delete object;
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

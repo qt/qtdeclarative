@@ -1772,7 +1772,7 @@ void tst_QQmlDebugJS::getScripts()
 
     QList<QVariant> scripts = value.value("body").toList();
 
-    QCOMPARE(scripts.count(), 2);
+    QCOMPARE(scripts.count(), 3);
 }
 
 void tst_QQmlDebugJS::getSource()

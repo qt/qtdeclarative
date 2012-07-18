@@ -88,6 +88,7 @@ public:
     virtual v8::Handle<v8::Boolean> indexedDeleter(quint32 index) = 0;
     virtual v8::Handle<v8::Array> indexedEnumerator() = 0;
     virtual v8::Handle<v8::Value> toString() = 0;
+    virtual void sort(v8::Handle<v8::Function> comparer) = 0;
 
     ObjectType objectType;
     QByteArray typeName;
@@ -473,6 +474,25 @@ static QString convertUrlToString(QV8Engine *, const QUrl &v)
                     QQmlPropertyPrivate::DontRemoveBinding; \
                 void *a[] = { &c, 0, &status, &flags }; \
                 QMetaObject::metacall(object, QMetaObject::WriteProperty, propertyIndex, a); \
+            } \
+            class CompareFunctor \
+            { \
+            public: \
+                CompareFunctor(QV8Engine *engine, v8::Handle<v8::Function> f) : jsFn(f), eng(engine) {} \
+                bool operator()(SequenceElementType e0, SequenceElementType e1) \
+                { \
+                    v8::Handle<v8::Value> argv[2] = { eng->fromVariant(e0), eng->fromVariant(e1) }; \
+                    v8::Handle<v8::Value> compareValue = jsFn->Call(eng->global(), 2, argv); \
+                    return compareValue->NumberValue() < 0; \
+                } \
+            private: \
+                v8::Handle<v8::Function> jsFn; \
+                QV8Engine *eng; \
+            }; \
+            void sort(v8::Handle<v8::Function> jsCompareFunction) \
+            { \
+                CompareFunctor cf(engine, jsCompareFunction); \
+                qSort(c.begin(), c.end(), cf); \
             } \
         private: \
             QQmlGuard<QObject> object; \

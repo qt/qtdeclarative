@@ -755,7 +755,7 @@ public:
     Q_INVOKABLE void method_overload(const QJsonArray &a) { invoke(26); m_actuals << QVariant::fromValue(a); }
     Q_INVOKABLE void method_overload(const QJsonValue &a) { invoke(27); m_actuals << QVariant::fromValue(a); }
 
-    Q_INVOKABLE void method_unknown(MyInvokableObject *o) { invoke(28); }
+    Q_INVOKABLE void method_unknown(MyInvokableObject *) { invoke(28); }
 
 private:
     friend class MyInvokableBaseObject;
