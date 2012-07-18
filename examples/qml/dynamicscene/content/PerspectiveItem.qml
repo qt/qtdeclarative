@@ -52,7 +52,6 @@ Image {
     source: image
     opacity: onLand ? 1 : 0.25
     scale: Math.max((y + height - 250) * 0.01, 0.3)
-    smooth: true
 
     onCreatedChanged: {
         if (created && !onLand)

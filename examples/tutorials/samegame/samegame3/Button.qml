@@ -49,7 +49,7 @@ Rectangle {
 
     width: buttonLabel.width + 20; height: buttonLabel.height + 5
     border { width: 1; color: Qt.darker(activePalette.button) }
-    smooth: true
+    antialiasing: true
     radius: 8
 
     // color the button with a gradient

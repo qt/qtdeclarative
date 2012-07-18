@@ -70,7 +70,6 @@ Rectangle {
                 text: "menu:    " 
                 color: "lightblue"
                 font {weight: Font.Light; italic: true}
-                smooth: true
             }
             
             //row displays its children in a vertical row
@@ -86,7 +85,6 @@ Rectangle {
                     scale: menuListView.currentIndex == 0? 1.25: 1
                     labelSize: menuListView.currentIndex == 0? 16:12
                     radius: 1
-                    smooth:true
                     //on a button click, change the list's currently selected item to FileMenu
                     onButtonClick: menuListView.currentIndex = 0
                     gradient: Gradient{
@@ -102,7 +100,6 @@ Rectangle {
                     label: "Edit"
                     radius: 1
                     labelSize: menuListView.currentIndex == 1? 16:12
-                    smooth:true
                     //on a button click, change the list's currently selected item to EditMenu
                     onButtonClick: menuListView.currentIndex = 1    
                     gradient: Gradient{

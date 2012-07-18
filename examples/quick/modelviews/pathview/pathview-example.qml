@@ -65,12 +65,10 @@ Rectangle {
                 id: myIcon
                 y: 20; anchors.horizontalCenter: parent.horizontalCenter
                 source: icon
-                smooth: true
             }
             Text {
                 anchors { top: myIcon.bottom; horizontalCenter: parent.horizontalCenter }
                 text: name
-                smooth: true
             }
 
             MouseArea {

@@ -56,7 +56,6 @@ Rectangle {
             color: "white"
             text: "Hello world!"
             font.pixelSize: 32
-            smooth: true
 
 //! [letterspacing]
             SequentialAnimation on font.letterSpacing {

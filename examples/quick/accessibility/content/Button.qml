@@ -66,13 +66,14 @@ Rectangle {
     border.width: 2
     border.color: "black";
     radius: 10
+    antialiasing: true
 
     Text {
         id: buttonText
         text: parent.description
         anchors.centerIn: parent
         font.pixelSize: parent.height * .5
-        style: Text.Sunken; color: "white"; styleColor: "black"; smooth: true
+        style: Text.Sunken; color: "white"; styleColor: "black"
     }
 
     MouseArea {

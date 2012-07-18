@@ -200,6 +200,7 @@ Item {
         Rectangle {
             id: container
             border.width: 2
+            antialiasing: true
             property real myRand: Math.random();//'depth'
             z: Math.floor(myRand * 100)
             scale: (myRand + 1.0)/2;
@@ -221,7 +222,8 @@ Item {
             Image {
                 id: img
                 anchors.centerIn: parent
-                smooth: true; source: "http://" + Script.getImagePath(content); cache: true
+                antialiasing: true;
+                source: "http://" + Script.getImagePath(content); cache: true
                 fillMode: Image.PreserveAspectFit; 
                 width: parent.width-4; height: parent.height-4
                 onStatusChanged: if (img.status == Image.Ready) {

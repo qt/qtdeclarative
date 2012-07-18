@@ -55,7 +55,6 @@ Item {
         source: "../../images/finalfrontier.png"
         transformOrigin: Item.Center
         anchors.centerIn: parent
-        smooth: true
         NumberAnimation on rotation {
             from: 0
             to: 360
@@ -137,7 +136,6 @@ Item {
     Image {
         id: rocketShip
         source: "../../images/rocket.png"
-        smooth: true
         anchors.centerIn: holder
         rotation: (circle.percent+0.25) * 360
         z: 2

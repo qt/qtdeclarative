@@ -67,7 +67,7 @@ Rectangle {
 
         radius: 8
         opacity: 0.7
-        smooth: true
+        antialiasing: true
         gradient: Gradient {
             GradientStop { position: 0.0; color: "gray" }
             GradientStop { position: 1.0; color: "white" }
@@ -77,7 +77,7 @@ Rectangle {
             id: slider
             x: 1; y: 1; width: 30; height: 14
             radius: 6
-            smooth: true
+            antialiasing: true
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "#424242" }
                 GradientStop { position: 1.0; color: "black" }

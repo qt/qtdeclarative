@@ -49,7 +49,7 @@ Rectangle {
     height: text.height + 10; width: text.width + 20
     border.width: 1
     radius: 4
-    smooth: true
+    antialiasing: true
 
     gradient: Gradient {
         GradientStop {

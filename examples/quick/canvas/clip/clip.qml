@@ -64,7 +64,7 @@ Item {
       property real py:yCtrl.value
       property real alpha:alphaCtrl.value
       property string imagefile:"../contents/qt-logo.png"
-      smooth:true
+      antialiasing: true
       Component.onCompleted:loadImage(canvas.imagefile);
 
     onAlphaChanged:requestPaint();

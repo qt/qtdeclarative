@@ -42,7 +42,6 @@ import QtQuick 2.0
 Image {
     source: "quit.png"
     scale: quitMouse.pressed ? 0.8 : 1.0
-    smooth: quitMouse.pressed
     MouseArea {
         id: quitMouse
         anchors.fill: parent

@@ -55,7 +55,7 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.margins: 10
         width: buttonText.width + 10; height: buttonText.height + 10
         border.width: mouseArea.pressed ? 2 : 1
-        radius : 5; smooth: true
+        radius : 5; antialiasing: true
 
         Text { id: buttonText; anchors.centerIn: parent; text: "Request data.xml" }
 

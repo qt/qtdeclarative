@@ -54,7 +54,7 @@ Item {
         id:canvas
         width:320
         height:280
-        smooth:true
+        antialiasing: true
 
         property string strokeStyle:"green"
         property string fillStyle:"yellow"

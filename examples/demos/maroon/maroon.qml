@@ -63,7 +63,6 @@ Item {
                 anchors.fill: parent
                 source: "content/gfx/catch.png"
                 opacity: 0.25
-                smooth: true
             }
 
             Wander {

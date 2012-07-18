@@ -73,11 +73,11 @@ FocusScope {
                 Rectangle {
                     id: content
                     color: "transparent"
-                    smooth: true
+                    antialiasing: true
                     anchors.fill: parent; anchors.margins: 20; radius: 10
 
-                    Rectangle { color: "#91AA9D"; anchors.fill: parent; anchors.margins: 3; radius: 8; smooth: true }
-                    Image { source: "images/qt-logo.png"; anchors.centerIn: parent; smooth: true }
+                    Rectangle { color: "#91AA9D"; anchors.fill: parent; anchors.margins: 3; radius: 8; antialiasing: true }
+                    Image { source: "images/qt-logo.png"; anchors.centerIn: parent }
                 }
 
                 MouseArea {

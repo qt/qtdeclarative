@@ -199,7 +199,6 @@ void QQuickImagePrivate::setImage(const QImage &image)
     \qml
     Image {
         width: 130; height: 100
-        smooth: true
         source: "qtlogo.png"
     }
     \endqml
@@ -211,7 +210,6 @@ void QQuickImagePrivate::setImage(const QImage &image)
     Image {
         width: 130; height: 100
         fillMode: Image.PreserveAspectFit
-        smooth: true
         source: "qtlogo.png"
     }
     \endqml
@@ -223,7 +221,6 @@ void QQuickImagePrivate::setImage(const QImage &image)
     Image {
         width: 130; height: 100
         fillMode: Image.PreserveAspectCrop
-        smooth: true
         source: "qtlogo.png"
         clip: true
     }
@@ -247,7 +244,6 @@ void QQuickImagePrivate::setImage(const QImage &image)
     Image {
         width: 120; height: 120
         fillMode: Image.TileVertically
-        smooth: true
         source: "qtlogo.png"
     }
     \endqml
@@ -259,7 +255,6 @@ void QQuickImagePrivate::setImage(const QImage &image)
     Image {
         width: 120; height: 120
         fillMode: Image.TileHorizontally
-        smooth: true
         source: "qtlogo.png"
     }
     \endqml
@@ -360,14 +355,12 @@ qreal QQuickImage::paintedHeight() const
 /*!
     \qmlproperty bool QtQuick2::Image::smooth
 
-    Set this property if you want the image to be smoothly filtered when scaled or
-    transformed.  Smooth filtering gives better visual quality, but is slower.  If
-    the image is displayed at its natural size, this property has no visual or
-    performance effect.
+    This property holds whether the image is smoothly filtered when scaled or
+    transformed.  Smooth filtering gives better visual quality, but it may be slower
+    on some hardware.  If the image is displayed at its natural size, this property has
+    no visual or performance effect.
 
-    \note Generally scaling artifacts are only visible if the image is stationary on
-    the screen.  A common pattern when animating an image is to disable smooth
-    filtering at the beginning of the animation and reenable it at the conclusion.
+    By default, this property is set to true.
 */
 
 /*!

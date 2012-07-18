@@ -82,7 +82,6 @@ Rectangle {
     ShaderEffectSource {
         id: theSource
         sourceItem: theItem
-        smooth: true
     }
     //! [source]
 
@@ -125,13 +124,11 @@ Rectangle {
                         width: 160
                         height: 140
                         source: "content/qt-logo.png"
-                        smooth: true
                     }
                     Image {
                         width: 160
                         height: 140
                         source: "content/face-smile.png"
-                        smooth: true
                     }
                 }
             }
@@ -170,13 +167,11 @@ Rectangle {
             height: 160
             property variant source: theSource
             property variant shadow: ShaderEffectSource {
-                smooth: true
                 sourceItem: ShaderEffect {
                     width: theItem.width
                     height: theItem.height
                     property variant delta: Qt.size(0.0, 1.0 / height)
                     property variant source: ShaderEffectSource {
-                        smooth: true
                         sourceItem: ShaderEffect {
                             width: theItem.width
                             height: theItem.height

@@ -1000,8 +1000,8 @@ QAbstractAnimationJob* QQuickScriptAction::transition(QQuickStateActions &action
     It is useful for setting non-animated property values during an animation.
 
     For example, here is a SequentialAnimation that sets the image's
-    \l {Image::}{smooth} property to \c true, animates the width of the image,
-    then sets \l {Image::}{smooth} back to \c false:
+    \l {Item::}{opacity} property to \c .5, animates the width of the image,
+    then sets \l {Item::}{opacity} back to \c 1:
 
     \snippet qml/propertyaction.qml standalone
 

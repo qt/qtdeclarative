@@ -61,7 +61,6 @@ Item {
             source: "gfx/cloud.png"
             alphaVariation: 0.25
             opacity: 0.25
-            smooth: true
         }
 
         Wander {

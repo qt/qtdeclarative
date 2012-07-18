@@ -55,6 +55,7 @@ Rectangle {
     Rectangle{
         id: dirBox
         radius: 10
+        antialiasing: true
         anchors.centerIn:parent
         height: parent.height -15; width: parent.width -30
         
@@ -63,6 +64,7 @@ Rectangle {
             height:parent.height*0.1
             width: parent.width
             radius:3
+            antialiasing: true
             z:1
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "#8C8F8C" }
@@ -117,7 +119,7 @@ Rectangle {
                     width:parent.width; height:parent.height
                     anchors.centerIn: parent
                     radius: 10
-                    smooth: true
+                    antialiasing: true
                     scale: GridView.view.currentIndex == index ?  1 : 0.5
                     opacity: GridView.view.currentIndex == index ?  1 : 0
                     Text{
@@ -128,7 +130,6 @@ Rectangle {
                         color: "#696167"
                         font.weight: Font.DemiBold
                         font.pointSize: 12
-                        smooth:true
                         elide: Text.ElideMiddle
                         horizontalAlignment: Text.AlignHCenter
                     }

@@ -90,7 +90,6 @@ Item {
             Image {
                 id: image
                 source: modelData.icon
-                smooth: true
                 scale: 0.8
             }
 

@@ -63,8 +63,7 @@ Item {
       property real scaleX : scaleXCtrl.value
       property real scaleY : scaleYCtrl.value
       property real rotate : rotateCtrl.value
-      smooth:true
-
+      antialiasing: true
 
       Behavior on scaleX { SpringAnimation { spring: 2; damping: 0.2; loops:Animation.Infinite } }
       Behavior on scaleY { SpringAnimation { spring: 2; damping: 0.2; loops:Animation.Infinite} }

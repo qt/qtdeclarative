@@ -59,7 +59,7 @@ Item {
         id:canvas
         width:320
         height:250
-        smooth:true
+        antialiasing: true
 
         property string strokeStyle:"blue"
         property string fillStyle:"steelblue"

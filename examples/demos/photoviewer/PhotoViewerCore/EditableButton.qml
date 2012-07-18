@@ -51,14 +51,14 @@ Item {
 
     BorderImage {
         anchors { fill: container; leftMargin: -6; topMargin: -6; rightMargin: -8; bottomMargin: -8 }
-        source: 'images/box-shadow.png'; smooth: true
+        source: 'images/box-shadow.png';
         border.left: 10; border.top: 10; border.right: 10; border.bottom: 10
     }
 
-    Image { anchors.fill: parent; source: "images/cardboard.png"; smooth: true }
+    Image { anchors.fill: parent; source: "images/cardboard.png"; antialiasing: true }
 
     TextInput {
-        id: textInput; text: label; font.pixelSize: 15; anchors.centerIn: parent; smooth: true
+        id: textInput; text: label; font.pixelSize: 15; anchors.centerIn: parent
         Keys.onReturnPressed: {
             container.label = textInput.text
             container.focus = true
@@ -75,7 +75,7 @@ Item {
 
     Rectangle {
         anchors.fill: container; border.color: "steelblue"; border.width: 4
-        color: "transparent"; visible: textInput.focus; smooth: true
+        color: "transparent"; visible: textInput.focus; antialiasing: true
     }
 
     MouseArea {

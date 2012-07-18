@@ -43,7 +43,7 @@ import QtQuick 2.0
 //! [mywidget]
 Rectangle {
     id: widget
-    color: "lightsteelblue"; width: 175; height: 25; radius: 10; smooth: true
+    color: "lightsteelblue"; width: 175; height: 25; radius: 10; antialiasing: true
     Text { id: label; anchors.centerIn: parent}
     focus: true
     Keys.onPressed: {

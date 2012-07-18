@@ -58,7 +58,6 @@ Rectangle {
 
     Image {
         id: moon
-        smooth: true
         anchors.centerIn: parent
         scale: moonArea.pressed ? 1.1 : 1.0
         opacity: moonArea.containsMouse ? 1.0 : 0.7
@@ -86,7 +85,6 @@ Rectangle {
             verticalCenterOffset: 30
             horizontalCenterOffset: 80
         }
-        smooth: true
         scale: rightCloudArea.pressed ? 1.1 : 1.0
         opacity: rightCloudArea.containsMouse ? 1.0 : 0.7
         source: Qt.resolvedUrl("images/cloud_2.png")
@@ -113,7 +111,6 @@ Rectangle {
             verticalCenterOffset: 40
             horizontalCenterOffset: -80
         }
-        smooth: true
         scale: leftCloudArea.pressed ? 1.1 : 1.0
         opacity: leftCloudArea.containsMouse ? 1.0 : 0.7
         source: Qt.resolvedUrl("images/cloud_1.png")

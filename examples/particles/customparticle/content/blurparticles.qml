@@ -87,13 +87,11 @@ Rectangle {
         //! [vertex]
         property variant source: theSource
         property variant blurred: ShaderEffectSource {
-        smooth: true
         sourceItem: ShaderEffect {
             width: theItem.width
             height: theItem.height
             property variant delta: Qt.size(0.0, 1.0 / height)
             property variant source: ShaderEffectSource {
-                smooth: true
                 sourceItem: ShaderEffect {
                     width: theItem.width
                     height: theItem.height

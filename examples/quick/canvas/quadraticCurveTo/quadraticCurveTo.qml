@@ -63,7 +63,7 @@ Item {
       property real scaleX : scaleXCtrl.value
       property real scaleY : scaleYCtrl.value
       property real rotate : rotateCtrl.value
-      smooth:true
+      antialiasing: true
 
       onLineWidthChanged:requestPaint();
       onFillChanged:requestPaint();

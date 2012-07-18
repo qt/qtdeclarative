@@ -88,7 +88,6 @@ Item {
         Image {
             x: 92.5; y: 27
             source: "hour.png"
-            smooth: true
             transform: Rotation {
                 id: hourRotation
                 origin.x: 7.5; origin.y: 73;
@@ -102,7 +101,6 @@ Item {
         Image {
             x: 93.5; y: 17
             source: "minute.png"
-            smooth: true
             transform: Rotation {
                 id: minuteRotation
                 origin.x: 6.5; origin.y: 83;
@@ -116,7 +114,6 @@ Item {
         Image {
             x: 97.5; y: 20
             source: "second.png"
-            smooth: true
             transform: Rotation {
                 id: secondRotation
                 origin.x: 2.5; origin.y: 80;

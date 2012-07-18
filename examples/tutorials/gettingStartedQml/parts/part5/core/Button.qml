@@ -63,7 +63,7 @@ Rectangle {
     property real labelSize: 14
     //set appearance properties
     radius:6
-    smooth: true
+    antialiasing: true
     border.width: 2
     border.color: borderColor
     width: buttonWidth; height: buttonHeight

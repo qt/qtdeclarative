@@ -48,10 +48,10 @@ Item {
         id: content
         anchors.centerIn: parent; width: container.width - 40; height: container.height - 10
         color: "transparent"
-        smooth: true
+        antialiasing: true
         radius: 10
 
-        Rectangle { anchors.fill: parent; anchors.margins: 3; color: "#91AA9D"; smooth: true; radius: 8 }
+        Rectangle { anchors.fill: parent; anchors.margins: 3; color: "#91AA9D"; antialiasing: true; radius: 8 }
     }
 
     Text {

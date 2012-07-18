@@ -59,7 +59,7 @@ FocusScope {
     //! [properties]
         width: 145; height: 60
         color: "blue"
-        smooth: true; radius: 9
+        antialiasing: true; radius: 9
         property alias text: label.text
     //! [properties]
         border {color: "#B9C5D0"; width: 1}

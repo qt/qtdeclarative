@@ -48,7 +48,7 @@ Rectangle {
     signal clicked
 
     width: label.width + 20; height: label.height + 6
-    smooth: true
+    antialiasing: true
     radius: 10
 
     gradient: Gradient {

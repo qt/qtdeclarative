@@ -47,7 +47,7 @@ Rectangle {
     width: 100; height: 30
     border.width: 1 
     radius: 5
-    smooth: true
+    antialiasing: true
 
     gradient: Gradient {
         GradientStop { position: 0.0; color: "darkGray" }

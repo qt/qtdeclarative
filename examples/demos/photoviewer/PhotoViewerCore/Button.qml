@@ -52,18 +52,18 @@ Item {
 
     BorderImage {
         anchors { fill: container; leftMargin: -6; topMargin: -6; rightMargin: -8; bottomMargin: -8 }
-        source: 'images/box-shadow.png'; smooth: true
+        source: 'images/box-shadow.png'
         border.left: 10; border.top: 10; border.right: 10; border.bottom: 10
     }
 
-    Image { anchors.fill: parent; source: "images/cardboard.png"; smooth: true }
+    Image { anchors.fill: parent; source: "images/cardboard.png"; antialiasing: true }
 
     Rectangle {
         anchors.fill: container; color: container.tint; visible: container.tint != ""
-        opacity: 0.25; smooth: true
+        opacity: 0.25
     }
 
-    Text { id: labelText; font.pixelSize: 15; anchors.centerIn: parent; smooth: true }
+    Text { id: labelText; font.pixelSize: 15; anchors.centerIn: parent }
 
     MouseArea {
         anchors { fill: parent; leftMargin: -20; topMargin: -20; rightMargin: -20; bottomMargin: -20 }

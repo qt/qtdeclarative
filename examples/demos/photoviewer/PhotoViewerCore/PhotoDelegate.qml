@@ -64,7 +64,7 @@ Package {
                     fill: originalImage.status == Image.Ready ? border : placeHolder
                     leftMargin: -6; topMargin: -6; rightMargin: -8; bottomMargin: -8
                 }
-                source: 'images/box-shadow.png'; smooth: true
+                source: 'images/box-shadow.png'
                 border.left: 10; border.top: 10; border.right: 10; border.bottom: 10
             }
             Rectangle {
@@ -74,25 +74,26 @@ Package {
                 property int h: Script.getHeight(content)
                 property double s: Script.calculateScale(w, h, photoWrapper.width)
 
-                color: 'white'; anchors.centerIn: parent; smooth: true
+                color: 'white'; anchors.centerIn: parent; antialiasing: true
                 width:  w * s; height: h * s; visible: originalImage.status != Image.Ready
                 Rectangle {
-                    color: "#878787"; smooth: true
+                    color: "#878787"; antialiasing: true
                     anchors { fill: parent; topMargin: 3; bottomMargin: 3; leftMargin: 3; rightMargin: 3 }
                 }
             }
             Rectangle {
-                id: border; color: 'white'; anchors.centerIn: parent; smooth: true
+                id: border; color: 'white'; anchors.centerIn: parent; antialiasing: true
                 width: originalImage.paintedWidth + 6; height: originalImage.paintedHeight + 6
                 visible: !placeHolder.visible
             }
             BusyIndicator { anchors.centerIn: parent; on: originalImage.status != Image.Ready }
             Image {
-                id: originalImage; smooth: true; source: "http://" + Script.getImagePath(content); cache: false
+                id: originalImage; antialiasing: true;
+                source: "http://" + Script.getImagePath(content); cache: false
                 fillMode: Image.PreserveAspectFit; width: photoWrapper.width; height: photoWrapper.height
             }
             Image {
-                id: hqImage; smooth: true; source: ""; visible: false; cache: false
+                id: hqImage; antialiasing: true; source: ""; visible: false; cache: false
                 fillMode: Image.PreserveAspectFit; width: photoWrapper.width; height: photoWrapper.height
             }
             Binding {

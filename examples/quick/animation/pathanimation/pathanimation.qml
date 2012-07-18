@@ -48,7 +48,7 @@ Rectangle {
     Canvas {
         id: canvas
         anchors.fill: parent
-        smooth: true
+        antialiasing: true
 
         onPaint: {
             var context = canvas.getContext("2d")
@@ -97,7 +97,7 @@ Rectangle {
         x: 25; y: 25
         width: 50; height: 50
         border.width: 1
-        smooth: true
+        antialiasing: true
 
         Text {
             anchors.centerIn: parent

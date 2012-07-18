@@ -68,6 +68,7 @@ import "../../../modelviews/listview/content"
                 color: "ivory"
                 border.color: "orange"
                 radius: 5
+                antialiasing: true
             }
             Image {
                 anchors.fill:parent

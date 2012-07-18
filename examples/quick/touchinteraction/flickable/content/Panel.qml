@@ -91,13 +91,11 @@ Component {
                         x: 8 + -width * 0.6 / 2; y: -20
                         source: "note-yellow.png"
                         scale: 0.6; transformOrigin: Item.TopLeft
-                        smooth: true
                     }
 
                     TextEdit {
                         id: myText
                         x: -104; y: 36; width: 215; height: 200
-                        smooth: true
                         font.pixelSize: 24
                         readOnly: false
                         rotation: -8

@@ -39,7 +39,6 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "content"
 
 Rectangle {
     id: window
@@ -104,20 +103,20 @@ Rectangle {
 
             Rectangle {
                 id: slot1; color: "#121212"; x: 30; height: 46; width: 46
-                border.color: "#343434"; border.width: 1; radius: 12
+                border.color: "#343434"; border.width: 1; radius: 12; antialiasing: true
                 anchors.verticalCenter: parent.verticalCenter
             }
 
             Rectangle {
                 id: slot2; color: "#121212"; x: window.width - 76; height: 46; width: 46
-                border.color: "#343434"; border.width: 1; radius: 12
+                border.color: "#343434"; border.width: 1; radius: 12; antialiasing: true
                 anchors.verticalCenter: parent.verticalCenter
             }
 
             Rectangle {
                 id: rect; x: 30; color: "#454545"
                 border.color: "White"; border.width: 2
-                height: 46; width: 46; radius: 12
+                height: 46; width: 46; radius: 12; antialiasing: true
                 anchors.verticalCenter: parent.verticalCenter
 
                 MouseArea {

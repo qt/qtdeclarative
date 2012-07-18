@@ -60,7 +60,7 @@ Rectangle {
 
     //set appearance properties
     radius:10
-    smooth: true
+    antialiasing: true
     border{color: "white"; width: 3}
     width: buttonWidth; height: buttonHeight
     

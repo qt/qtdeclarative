@@ -48,7 +48,7 @@ Item {
         id: rect
         width: 150; height: 100; anchors.centerIn: parent
         color: "red"
-        smooth: true
+        antialiasing: true
 
         states: State { 
             name: "rotated"

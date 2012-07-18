@@ -74,9 +74,9 @@ Row {
 
         //![standalone]
         SequentialAnimation {
-            PropertyAction { target: img; property: "smooth"; value: "true" }
+            PropertyAction { target: img; property: "opacity"; value: .5 }
             NumberAnimation { target: img; property: "width"; to: 300; duration: 1000 }
-            PropertyAction { target: img; property: "smooth"; value: "false" }
+            PropertyAction { target: img; property: "opacity"; value: 1 }
         }
         //![standalone]
     }

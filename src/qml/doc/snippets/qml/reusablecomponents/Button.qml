@@ -48,7 +48,7 @@ Rectangle {
 //! [properties]
     width: 145; height: 60
     color: "blue"
-    smooth: true; radius: 9
+    antialiasing: true; radius: 9
     property alias text: label.text
 //! [properties]
 //! [object alias]

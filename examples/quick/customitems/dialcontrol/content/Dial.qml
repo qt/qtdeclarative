@@ -63,7 +63,7 @@ Item {
     Image {
         id: needle
         x: 98; y: 33
-        smooth: true
+        antialiasing: true
         source: "needle.png"
         transform: Rotation {
             id: needleRotation

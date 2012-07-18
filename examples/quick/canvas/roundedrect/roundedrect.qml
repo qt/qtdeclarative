@@ -53,7 +53,7 @@ Item {
         id:canvas
         width:320
         height:280
-        smooth:true
+        antialiasing: true
 
         property int radius: rCtrl.value
         property int rectx: rxCtrl.value

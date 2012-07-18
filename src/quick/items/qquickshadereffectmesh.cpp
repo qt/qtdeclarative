@@ -185,7 +185,6 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector
             property variant source: Image {
                 source: "qt-logo.png"
                 sourceSize { width: 200; height: 200 }
-                smooth: true
             }
             vertexShader: "
                 uniform highp mat4 qt_Matrix;

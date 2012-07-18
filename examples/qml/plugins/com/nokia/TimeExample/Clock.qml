@@ -54,7 +54,6 @@ Rectangle {
     Image {
         x: 92.5; y: 27
         source: "hour.png"
-        smooth: true
         transform: Rotation {
             id: hourRotation
             origin.x: 7.5; origin.y: 73;
@@ -68,7 +67,6 @@ Rectangle {
     Image {
         x: 93.5; y: 17
         source: "minute.png"
-        smooth: true
         transform: Rotation {
             id: minuteRotation
             origin.x: 6.5; origin.y: 83;

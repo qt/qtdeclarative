@@ -531,8 +531,9 @@ QImage QQuickShaderEffectTexture::toImage() const
     which is the case for most embedded graphics chips, edges rendered
     inside a ShaderEffectSource will not be antialiased. One way to remedy
     this is to double the size of the effect source and render it with
-    \c {smooth: true}. This will be equivalent to 4x multisampling, at
-    the cost of lower performance and higher memory use.
+    \c {smooth: true} (this is the default value of smooth).
+    This will be equivalent to 4x multisampling, at the cost of lower performance
+    and higher memory use.
 
     \warning In most cases, using a ShaderEffectSource will decrease
     performance, and in all cases, it will increase video memory usage.

@@ -140,11 +140,7 @@ QT_BEGIN_NAMESPACE
     The \l{declarative/imageelements/borderimage}{BorderImage example} shows how a BorderImage
     can be used to simulate a shadow effect on a rectangular item.
 
-    \section1 Quality and Performance
-
-    By default, any scaled regions of the image are rendered without smoothing to improve
-    rendering speed. Setting the \l smooth property improves rendering quality of scaled
-    regions, but may slow down rendering.
+    \section1 Image Loading
 
     The source image may not be loaded instantaneously, depending on its original location.
     Loading progress can be monitored with the \l progress property.
@@ -205,16 +201,12 @@ QQuickBorderImage::~QQuickBorderImage()
 /*!
     \qmlproperty bool QtQuick2::BorderImage::smooth
 
-    Set this property if you want the image to be smoothly filtered when scaled or
-    transformed.  Smooth filtering gives better visual quality, but is slower.  If
-    the image is displayed at its natural size, this property has no visual or
-    performance effect.
+    This property holds whether the image is smoothly filtered when scaled or
+    transformed.  Smooth filtering gives better visual quality, but it may be slower
+    on some hardware.  If the image is displayed at its natural size, this property
+    has no visual or performance effect.
 
-    By default, this property is set to false.
-
-    \note Generally scaling artifacts are only visible if the image is stationary on
-    the screen.  A common pattern when animating an image is to disable smooth
-    filtering at the beginning of the animation and enable it at the conclusion.
+    By default, this property is set to true.
 */
 
 /*!
