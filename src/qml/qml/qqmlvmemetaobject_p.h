@@ -141,13 +141,15 @@ class QQmlVMEMetaObject;
 class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
 {
 public:
-    inline QQmlVMEVariantQObjectPtr();
+    inline QQmlVMEVariantQObjectPtr(bool isVar);
     inline ~QQmlVMEVariantQObjectPtr();
+
     inline void objectDestroyed(QObject *);
     inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
 
     QQmlVMEMetaObject *m_target;
-    int m_index;
+    unsigned m_isVar : 1;
+    int m_index : 31;
 };
 
 class QV8QObjectWrapper;
@@ -237,6 +239,10 @@ public:
     static void list_clear(QQmlListProperty<QObject> *);
 
     void activate(QObject *, int, void **);
+
+    QList<QQmlVMEVariantQObjectPtr *> varObjectGuards;
+
+    QQmlVMEVariantQObjectPtr *getQObjectGuardForProperty(int) const;
 
     friend class QV8GCCallback;
     friend class QV8QObjectWrapper;

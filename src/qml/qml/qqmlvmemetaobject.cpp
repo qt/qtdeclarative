@@ -57,8 +57,8 @@ Q_DECLARE_METATYPE(QJSValue);
 
 QT_BEGIN_NAMESPACE
 
-QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
-    : QQmlGuard<QObject>(0), m_target(0), m_index(-1)
+QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr(bool isVar)
+    : QQmlGuard<QObject>(0), m_target(0), m_isVar(isVar), m_index(-1)
 {
 }
 
@@ -66,10 +66,16 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 {
 }
 
-void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
+void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *o)
 {
-    if (m_target && m_index >= 0)
+    if (m_target && m_index >= 0) {
+        if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.IsEmpty()) {
+            // Set the var property to NULL
+            m_target->varProperties->Set(m_index - m_target->firstVarPropertyIndex, v8::Null());
+        }
+
         m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
+    }
 }
 
 void QQmlVMEVariantQObjectPtr::setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index)
@@ -336,7 +342,7 @@ void QQmlVMEVariant::setValue(QObject *v, QQmlVMEMetaObject *target, int index)
     if (type != QMetaType::QObjectStar) {
         cleanup();
         type = QMetaType::QObjectStar;
-        new (dataPtr()) QQmlVMEVariantQObjectPtr;
+        new (dataPtr()) QQmlVMEVariantQObjectPtr(false);
     }
     reinterpret_cast<QQmlVMEVariantQObjectPtr*>(dataPtr())->setGuardedValue(v, target, index);
 }
@@ -602,6 +608,8 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
 
     if (metaData->varPropertyCount)
         qPersistentDispose(varProperties); // if not weak, will not have been cleaned up by the callback.
+
+    qDeleteAll(varObjectGuards);
 }
 
 int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
@@ -1036,13 +1044,28 @@ void QQmlVMEMetaObject::writeVarProperty(int id, v8::Handle<v8::Value> value)
         }
     }
 
-    // And, if the new value is a scarce resource, we need to ensure that it does not get
-    // automatically released by the engine until no other references to it exist.
+    QObject *valueObject = 0;
+    QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
+
     if (value->IsObject()) {
-        QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(value));
-        if (r) {
+        // And, if the new value is a scarce resource, we need to ensure that it does not get
+        // automatically released by the engine until no other references to it exist.
+        if (QV8VariantResource *r = v8_resource_cast<QV8VariantResource>(v8::Handle<v8::Object>::Cast(value))) {
             r->addVmePropertyReference();
+        } else if (QV8QObjectResource *r = v8_resource_cast<QV8QObjectResource>(v8::Handle<v8::Object>::Cast(value))) {
+            // We need to track this QObject to signal its deletion
+            valueObject = r->object;
+
+            // Do we already have a QObject guard for this property?
+            if (valueObject && !guard) {
+                guard = new QQmlVMEVariantQObjectPtr(true);
+                varObjectGuards.append(guard);
+            }
         }
+    }
+
+    if (guard) {
+        guard->setGuardedValue(valueObject, this, id);
     }
 
     // Write the value and emit change signal as appropriate.
@@ -1365,6 +1388,18 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::getForSignal(QObject *o, int coreIndex)
         vme = static_cast<QQmlVMEMetaObject *>(vme->parent.asT1());
     }
     return vme;
+}
+
+QQmlVMEVariantQObjectPtr *QQmlVMEMetaObject::getQObjectGuardForProperty(int index) const
+{
+    QList<QQmlVMEVariantQObjectPtr *>::ConstIterator it = varObjectGuards.constBegin(), end = varObjectGuards.constEnd();
+    for ( ; it != end; ++it) {
+        if ((*it)->m_index == index) {
+            return *it;
+        }
+    }
+
+    return 0;
 }
 
 QT_END_NAMESPACE

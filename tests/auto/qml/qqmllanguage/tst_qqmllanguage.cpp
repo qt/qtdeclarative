@@ -179,6 +179,9 @@ private slots:
     void literals_data();
     void literals();
 
+    void objectDeletionNotify_data();
+    void objectDeletionNotify();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -2984,6 +2987,37 @@ void tst_qqmllanguage::literals()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QCOMPARE(object->property(property.toLatin1()), value);
+    delete object;
+}
+
+void tst_qqmllanguage::objectDeletionNotify_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QTest::newRow("property QtObject") << "objectDeletionNotify.1.qml";
+    QTest::newRow("property variant") << "objectDeletionNotify.2.qml";
+    QTest::newRow("property var") << "objectDeletionNotify.3.qml";
+    QTest::newRow("property var guard removed") << "objectDeletionNotify.4.qml";
+}
+
+void tst_qqmllanguage::objectDeletionNotify()
+{
+    QFETCH(QString, file);
+
+    QQmlComponent component(&engine, testFile(file));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("success").toBool(), true);
+
+    QMetaObject::invokeMethod(object, "destroyObject");
+
+    // Process the deletion event
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(object->property("success").toBool(), true);
+
     delete object;
 }
 
