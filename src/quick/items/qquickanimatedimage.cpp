@@ -148,7 +148,7 @@ bool QQuickAnimatedImage::isPaused() const
 {
     Q_D(const QQuickAnimatedImage);
     if (!d->_movie)
-        return false;
+        return d->paused;
     return d->_movie->state()==QMovie::Paused;
 }
 
@@ -157,10 +157,12 @@ void QQuickAnimatedImage::setPaused(bool pause)
     Q_D(QQuickAnimatedImage);
     if (pause == d->paused)
         return;
-    d->paused = pause;
-    if (!d->_movie)
-        return;
-    d->_movie->setPaused(pause);
+    if (!d->_movie) {
+        d->paused = pause;
+        emit pausedChanged();
+    } else {
+        d->_movie->setPaused(pause);
+    }
 }
 
 /*!
@@ -169,13 +171,23 @@ void QQuickAnimatedImage::setPaused(bool pause)
 
   By default, this property is true, meaning that the animation
   will start playing immediately.
+
+  \b Note: this property is affected by changes to the actual playing
+  state of AnimatedImage. If non-animated images are used, \a playing
+  will need to be manually set to \a true in order to animate
+  following images.
+  \qml
+  AnimatedImage {
+      onStatusChanged: playing = (status == AnimatedImage.Ready)
+  }
+  \endqml
 */
 
 bool QQuickAnimatedImage::isPlaying() const
 {
     Q_D(const QQuickAnimatedImage);
     if (!d->_movie)
-        return false;
+        return d->playing;
     return d->_movie->state()!=QMovie::NotRunning;
 }
 
@@ -184,9 +196,11 @@ void QQuickAnimatedImage::setPlaying(bool play)
     Q_D(QQuickAnimatedImage);
     if (play == d->playing)
         return;
-    d->playing = play;
-    if (!d->_movie)
+    if (!d->_movie) {
+        d->playing = play;
+        emit playingChanged();
         return;
+    }
     if (play)
         d->_movie->start();
     else
@@ -240,6 +254,7 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
         d->reply = 0;
     }
 
+    d->oldPlaying = isPlaying();
     if (d->_movie) {
         delete d->_movie;
         d->_movie = 0;
@@ -270,6 +285,8 @@ void QQuickAnimatedImage::load()
             d->oldSourceSize = sourceSize();
             emit sourceSizeChanged();
         }
+        if (isPlaying() != d->oldPlaying)
+            emit playingChanged();
     } else {
         QString lf = QQmlFile::urlToLocalFileOrQrc(d->url);
         if (!lf.isEmpty()) {
@@ -334,6 +351,8 @@ void QQuickAnimatedImage::movieRequestFinished()
             d->oldSourceSize = sourceSize();
             emit sourceSizeChanged();
         }
+        if (isPlaying() != d->oldPlaying)
+            emit playingChanged();
         return;
     }
 
@@ -350,10 +369,12 @@ void QQuickAnimatedImage::movieRequestFinished()
         d->progress = 1.0;
         emit progressChanged(d->progress);
     }
-    if (d->playing)
-        d->_movie->start();
 
-    if (d->paused)
+    bool pausedAtStart = d->paused;
+    if (d->playing) {
+        d->_movie->start();
+    }
+    if (pausedAtStart)
         d->_movie->setPaused(true);
     if (d->paused || !d->playing) {
         d->_movie->jumpToFrame(d->preset_currentframe);
@@ -361,6 +382,8 @@ void QQuickAnimatedImage::movieRequestFinished()
     }
     d->setImage(d->_movie->currentPixmap().toImage());
 
+    if (isPlaying() != d->oldPlaying)
+        emit playingChanged();
     if (sourceSize() != d->oldSourceSize) {
         d->oldSourceSize = sourceSize();
         emit sourceSizeChanged();
@@ -386,7 +409,7 @@ void QQuickAnimatedImage::playingStatusChanged()
         emit playingChanged();
     }
     if ((d->_movie->state() == QMovie::Paused) != d->paused) {
-        d->playing = (d->_movie->state() == QMovie::Paused);
+        d->paused = (d->_movie->state() == QMovie::Paused);
         emit pausedChanged();
     }
 }
@@ -401,7 +424,6 @@ QSize QQuickAnimatedImage::sourceSize()
 
 void QQuickAnimatedImage::componentComplete()
 {
-    Q_D(QQuickAnimatedImage);
     QQuickItem::componentComplete(); // NOT QQuickImage
     load();
 }

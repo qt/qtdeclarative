@@ -78,6 +78,7 @@ public:
     QMovie *_movie;
     QNetworkReply *reply;
     int redirectCount;
+    bool oldPlaying;
 };
 
 QT_END_NAMESPACE

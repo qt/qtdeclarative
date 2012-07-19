@@ -77,6 +77,7 @@ private slots:
     void invalidSource();
     void qtbug_16520();
     void progressAndStatusChanges();
+    void playingAndPausedChanges();
 };
 
 void tst_qquickanimatedimage::cleanup()
@@ -115,7 +116,7 @@ void tst_qquickanimatedimage::stopped()
     QQmlComponent component(&engine, testFileUrl("stickmanstopped.qml"));
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(component.create());
     QVERIFY(anim);
-    QVERIFY(!anim->isPlaying());
+    QTRY_VERIFY(!anim->isPlaying());
     QCOMPARE(anim->currentFrame(), 0);
 
     delete anim;
@@ -303,11 +304,11 @@ void tst_qquickanimatedimage::invalidSource()
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(component.create());
     QVERIFY(anim);
 
-    QVERIFY(!anim->isPlaying());
+    QVERIFY(anim->isPlaying());
     QVERIFY(!anim->isPaused());
     QCOMPARE(anim->currentFrame(), 0);
     QCOMPARE(anim->frameCount(), 0);
-    QTRY_VERIFY(anim->status() == 3);
+    QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Error);
 
     delete anim;
 }
@@ -459,6 +460,73 @@ void tst_qquickanimatedimage::progressAndStatusChanges()
     delete obj;
 }
 
+void tst_qquickanimatedimage::playingAndPausedChanges()
+{
+    QQmlEngine engine;
+    QString componentStr = "import QtQuick 2.0\nAnimatedImage { source: srcImage }";
+    QQmlContext *ctxt = engine.rootContext();
+    ctxt->setContextProperty("srcImage", QUrl(""));
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickAnimatedImage *obj = qobject_cast<QQuickAnimatedImage*>(component.create());
+    QVERIFY(obj != 0);
+    QVERIFY(obj->status() == QQuickAnimatedImage::Null);
+    QTRY_VERIFY(obj->isPlaying());
+    QTRY_VERIFY(!obj->isPaused());
+    QSignalSpy playingSpy(obj, SIGNAL(playingChanged()));
+    QSignalSpy pausedSpy(obj, SIGNAL(pausedChanged()));
+
+    // initial state
+    obj->setProperty("playing", true);
+    obj->setProperty("paused", false);
+    QTRY_VERIFY(obj->isPlaying());
+    QTRY_VERIFY(!obj->isPaused());
+    QTRY_COMPARE(playingSpy.count(), 0);
+    QTRY_COMPARE(pausedSpy.count(), 0);
+
+    obj->setProperty("playing", false);
+    obj->setProperty("paused", true);
+    QTRY_VERIFY(!obj->isPlaying());
+    QTRY_VERIFY(obj->isPaused());
+    QTRY_COMPARE(playingSpy.count(), 1);
+    QTRY_COMPARE(pausedSpy.count(), 1);
+
+    obj->setProperty("playing", true);
+    obj->setProperty("paused", false);
+    QTRY_VERIFY(obj->isPlaying());
+    QTRY_VERIFY(!obj->isPaused());
+    QTRY_COMPARE(playingSpy.count(), 2);
+    QTRY_COMPARE(pausedSpy.count(), 2);
+
+    ctxt->setContextProperty("srcImage", testFileUrl("stickman.gif"));
+    QTRY_VERIFY(obj->isPlaying());
+    QTRY_VERIFY(!obj->isPaused());
+    QTRY_COMPARE(playingSpy.count(), 2);
+    QTRY_COMPARE(pausedSpy.count(), 2);
+
+    obj->setProperty("paused", true);
+    QTRY_VERIFY(obj->isPlaying());
+    QTRY_VERIFY(obj->isPaused());
+    QTRY_COMPARE(playingSpy.count(), 2);
+    QTRY_COMPARE(pausedSpy.count(), 3);
+
+    obj->setProperty("playing", false);
+    QTRY_VERIFY(!obj->isPlaying());
+    QTRY_VERIFY(!obj->isPaused());
+    QTRY_COMPARE(playingSpy.count(), 3);
+    QTRY_COMPARE(pausedSpy.count(), 4);
+
+    obj->setProperty("playing", true);
+
+    // Cannot animate this image, playing will be false
+    ctxt->setContextProperty("srcImage", testFileUrl("green.png"));
+    QTRY_VERIFY(!obj->isPlaying());
+    QTRY_VERIFY(!obj->isPaused());
+    QTRY_COMPARE(playingSpy.count(), 5);
+    QTRY_COMPARE(pausedSpy.count(), 4);
+
+    delete obj;
+}
 QTEST_MAIN(tst_qquickanimatedimage)
 
 #include "tst_qquickanimatedimage.moc"
