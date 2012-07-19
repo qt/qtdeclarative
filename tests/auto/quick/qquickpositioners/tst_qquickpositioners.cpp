@@ -432,7 +432,7 @@ void tst_qquickpositioners::test_horizontal_animated()
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(three->x(), -100.0);
 
-    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
@@ -486,7 +486,7 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(three->x(), -100.0);
 
-    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QVERIFY(row);
@@ -1000,7 +1000,7 @@ void tst_qquickpositioners::test_vertical_animated()
     QVERIFY(three != 0);
     QCOMPARE(three->y(), -100.0);
 
-    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *column = window->rootObject()->findChild<QQuickItem*>("column");
     QVERIFY(column);
@@ -1248,7 +1248,7 @@ void tst_qquickpositioners::test_grid_animated()
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
-    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QVERIFY(grid);
@@ -1333,7 +1333,7 @@ void tst_qquickpositioners::test_grid_animated_rightToLeft()
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
 
-    QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
+    QVERIFY(QTest::qWaitForWindowExposed(window)); //It may not relayout until the next frame, so it needs to be drawn
 
     QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
     QVERIFY(grid);
@@ -2022,7 +2022,7 @@ QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait
     window->show();
     qDebug() << "3";
     if (wait)
-        QTest::qWaitForWindowShown(window); //It may not relayout until the next frame, so it needs to be drawn
+        QTest::qWaitForWindowExposed(window); //It may not relayout until the next frame, so it needs to be drawn
     qDebug() << "4";
 
     return window;

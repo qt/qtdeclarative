@@ -285,8 +285,8 @@ void tst_QQuickItem::keys()
     window->setSource(testFileUrl("keystest.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     QVERIFY(window->rootObject());
     QCOMPARE(window->rootObject()->property("isEnabled").toBool(), true);
@@ -413,8 +413,8 @@ void tst_QQuickItem::keysProcessingOrder()
     window->setSource(testFileUrl("keyspriority.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     KeyTestItem *testItem = qobject_cast<KeyTestItem*>(window->rootObject());
     QVERIFY(testItem);
@@ -471,8 +471,8 @@ void tst_QQuickItem::keysim()
     window->setSource(testFileUrl("keysim.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     QVERIFY(window->rootObject());
     QVERIFY(window->rootObject()->hasFocus() && window->rootObject()->hasActiveFocus());
@@ -656,8 +656,8 @@ void tst_QQuickItem::keyNavigation()
     window->setSource(testFileUrl("keynavigationtest.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
@@ -733,8 +733,8 @@ void tst_QQuickItem::keyNavigation_RightToLeft()
     window->setSource(testFileUrl("keynavigationtest.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     QQuickItem *rootItem = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(rootItem);
@@ -788,8 +788,8 @@ void tst_QQuickItem::keyNavigation_skipNotVisible()
     window->setSource(testFileUrl("keynavigationtest.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
     QVERIFY(item);
@@ -863,8 +863,8 @@ void tst_QQuickItem::keyNavigation_implicitSetting()
     window->setSource(testFileUrl("keynavigationtest_implicit.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     QEvent wa(QEvent::WindowActivate);
     QGuiApplication::sendEvent(window, &wa);
@@ -1229,8 +1229,8 @@ void tst_QQuickItem::propertyChanges()
     window->setSource(testFileUrl("propertychanges.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item");
     QQuickItem *parentItem = findItem<QQuickItem>(window->rootObject(), "parentItem");
@@ -1642,8 +1642,8 @@ void tst_QQuickItem::contains()
     window->setSource(testFileUrl("hollowTestItem.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
 
     QQuickItem *root = qobject_cast<QQuickItem *>(window->rootObject());
     QVERIFY(root);

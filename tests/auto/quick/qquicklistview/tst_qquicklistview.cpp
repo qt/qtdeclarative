@@ -587,8 +587,7 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -753,8 +752,7 @@ void tst_QQuickListView::insertBeforeVisible()
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -844,8 +842,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
 
     window->setSource(source);
     window->show();
-    qApp->processEvents();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1030,8 +1027,7 @@ void tst_QQuickListView::removed_more(const QUrl &source, QQuickItemView::Vertic
 
     window->setSource(source);
     window->show();
-    qApp->processEvents();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1271,8 +1267,7 @@ void tst_QQuickListView::moved(const QUrl &source, QQuickItemView::VerticalLayou
 
     window->setSource(source);
     window->show();
-    qApp->processEvents();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -1502,8 +1497,7 @@ void tst_QQuickListView::multipleChanges(bool condensed)
 
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    qApp->processEvents();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5614,7 +5608,7 @@ void tst_QQuickListView::populateTransitions()
     window->rootContext()->setContextProperty("model_transitionVia", &model_transitionVia);
     window->setSource(testFileUrl("populateTransitions.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QVERIFY(listview);
@@ -5747,7 +5741,7 @@ void tst_QQuickListView::addTransitions()
     ctxt->setContextProperty("testObject", testObject);
     window->setSource(testFileUrl("addTransitions.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -5942,7 +5936,7 @@ void tst_QQuickListView::moveTransitions()
     ctxt->setContextProperty("testObject", testObject);
     window->setSource(testFileUrl("moveTransitions.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -6145,7 +6139,7 @@ void tst_QQuickListView::removeTransitions()
     ctxt->setContextProperty("testObject", testObject);
     window->setSource(testFileUrl("removeTransitions.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -6575,7 +6569,7 @@ void tst_QQuickListView::multipleTransitions()
     ctxt->setContextProperty("rippleAddDisplaced", rippleAddDisplaced);
     window->setSource(testFileUrl("multipleTransitions.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -6730,7 +6724,7 @@ void tst_QQuickListView::multipleDisplaced()
     ctxt->setContextProperty("testObject", new TestObject(window));
     window->setSource(testFileUrl("multipleDisplaced.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);

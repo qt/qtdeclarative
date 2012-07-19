@@ -68,7 +68,7 @@ void tst_qquickanimatedsprite::test_properties()
 
     window->setSource(testFileUrl("basic.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
@@ -93,7 +93,8 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
 
     window->setSource(testFileUrl("frameChange.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    window->requestActivateWindow();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");

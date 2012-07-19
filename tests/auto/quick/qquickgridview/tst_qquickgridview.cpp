@@ -5628,7 +5628,7 @@ void tst_QQuickGridView::multipleTransitions()
     ctxt->setContextProperty("rippleAddDisplaced", rippleAddDisplaced);
     window->setSource(testFileUrl("multipleTransitions.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -5793,7 +5793,7 @@ void tst_QQuickGridView::multipleDisplaced()
     ctxt->setContextProperty("testModel", &model);
     window->setSource(testFileUrl("multipleDisplaced.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);

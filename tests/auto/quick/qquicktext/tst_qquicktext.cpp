@@ -1858,7 +1858,7 @@ void tst_qquicktext::embeddedImages()
     QQuickView *view = new QQuickView(qmlfile);
     view->show();
     view->requestActivateWindow();
-    QTest::qWaitForWindowShown(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QQuickText *textObject = qobject_cast<QQuickText*>(view->rootObject());
 
     QVERIFY(textObject != 0);
@@ -2470,7 +2470,7 @@ void tst_qquicktext::lineLaidOutRelayout()
 
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
@@ -3575,7 +3575,7 @@ void tst_qquicktext::htmlLists()
 
     view->show();
     view->requestActivateWindow();
-    QTest::qWaitForWindowShown(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
 
     QCOMPARE(textPrivate->extra->doc->lineCount(), nbLines);
 

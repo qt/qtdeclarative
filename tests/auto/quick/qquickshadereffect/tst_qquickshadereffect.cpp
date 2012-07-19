@@ -284,7 +284,7 @@ void tst_qquickshadereffect::deleteSourceItem()
     QQuickView *view = new QQuickView(0);
     view->setSource(QUrl::fromLocalFile(testFile("deleteSourceItem.qml")));
     view->show();
-    QTest::qWaitForWindowShown(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view));
     QVERIFY(view);
     QObject *obj = view->rootObject();
     QVERIFY(obj);
@@ -299,7 +299,7 @@ void tst_qquickshadereffect::deleteShaderEffectSource()
     QQuickView *view = new QQuickView(0);
     view->setSource(QUrl::fromLocalFile(testFile("deleteShaderEffectSource.qml")));
     view->show();
-    QTest::qWaitForWindowShown(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view));
     QVERIFY(view);
     QObject *obj = view->rootObject();
     QVERIFY(obj);

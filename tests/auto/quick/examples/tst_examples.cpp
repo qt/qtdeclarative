@@ -266,7 +266,7 @@ void tst_examples::sgexamples()
         window = new QQuickWindow();
         window->resize(240, 320);
         window->show();
-        QTest::qWaitForWindowShown(window);
+        QVERIFY(QTest::qWaitForWindowExposed(window));
     }
     root->setParentItem(window->rootItem());
     component.completeCreate();
@@ -310,7 +310,7 @@ void tst_examples::sgsnippets()
         window = new QQuickWindow();
         window->resize(240, 320);
         window->show();
-        QTest::qWaitForWindowShown(window);
+        QVERIFY(QTest::qWaitForWindowExposed(window));
     }
     root->setParentItem(window->rootItem());
     component.completeCreate();

@@ -333,7 +333,7 @@ void tst_qquickwindow::touchEvent_basic()
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     TestTouchItem *bottomItem = new TestTouchItem(window->rootItem());
     bottomItem->setObjectName("Bottom Item");
@@ -461,7 +461,7 @@ void tst_qquickwindow::touchEvent_propagation()
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     TestTouchItem *bottomItem = new TestTouchItem(window->rootItem());
     bottomItem->setObjectName("Bottom Item");
@@ -593,7 +593,7 @@ void tst_qquickwindow::touchEvent_cancel()
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     TestTouchItem *item = new TestTouchItem(window->rootItem());
     item->setPos(QPointF(50, 50));
@@ -625,7 +625,7 @@ void tst_qquickwindow::touchEvent_reentrant()
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     TestTouchItem *item = new TestTouchItem(window->rootItem());
 
@@ -662,7 +662,7 @@ void tst_qquickwindow::touchEvent_velocity()
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QTest::qWait(10);
 
     TestTouchItem *item = new TestTouchItem(window->rootItem());
@@ -718,7 +718,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QTest::qWait(10);
 
     TestTouchItem *item = new TestTouchItem(window->rootItem());
@@ -797,7 +797,7 @@ void tst_qquickwindow::mouseFiltering()
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     TestTouchItem *bottomItem = new TestTouchItem(window->rootItem());
     bottomItem->setObjectName("Bottom Item");
@@ -856,7 +856,7 @@ void tst_qquickwindow::clearColor()
     window->setPos(100, 100);
     window->setColor(Qt::blue);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QCOMPARE(window->color(), QColor(Qt::blue));
     delete window;
 }
@@ -938,7 +938,7 @@ void tst_qquickwindow::headless()
     QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
 
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->isVisible());
 
     QSignalSpy initialized(window, SIGNAL(sceneGraphInitialized()));
@@ -963,7 +963,7 @@ void tst_qquickwindow::headless()
 
     // Show and verify that we are back and running
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QTRY_COMPARE(initialized.size(), 1);
     QVERIFY(window->openglContext() != 0);
@@ -1005,7 +1005,7 @@ void tst_qquickwindow::ignoreUnhandledMouseEvents()
     QQuickWindow* window = new QQuickWindow;
     window->resize(100, 100);
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickItem* item = new QQuickItem;
     item->setSize(QSizeF(100, 100));
@@ -1050,7 +1050,8 @@ void tst_qquickwindow::ownershipRootItem()
 
     QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
-    QTest::qWaitForWindowShown(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     RootItemAccessor* accessor = window->findChild<RootItemAccessor*>("accessor");
     QVERIFY(accessor);

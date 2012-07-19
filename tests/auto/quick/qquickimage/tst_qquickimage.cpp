@@ -314,7 +314,7 @@ void tst_qquickimage::mirror()
         obj->setProperty("mirror", true);
         window->show();
         window->requestActivateWindow();
-        QTest::qWaitForWindowShown(window);
+        QVERIFY(QTest::qWaitForWindowActive(window));
 
         QImage screenshot = window->grabWindow();
         screenshots[fillMode] = screenshot;

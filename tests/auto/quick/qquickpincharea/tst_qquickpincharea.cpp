@@ -213,7 +213,7 @@ void tst_QQuickPinchArea::scale()
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(window->rootObject() != 0);
     qApp->processEvents();
 
@@ -276,7 +276,7 @@ void tst_QQuickPinchArea::pan()
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(window->rootObject() != 0);
     qApp->processEvents();
 
@@ -337,7 +337,7 @@ void tst_QQuickPinchArea::retouch()
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(window->rootObject() != 0);
     qApp->processEvents();
 
@@ -451,7 +451,7 @@ void tst_QQuickPinchArea::transformedPinchArea()
     view->setSource(testFileUrl("transformedPinchArea.qml"));
     view->show();
     view->requestActivateWindow();
-    QTest::qWaitForWindowShown(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QVERIFY(view->rootObject() != 0);
     qApp->processEvents();
 

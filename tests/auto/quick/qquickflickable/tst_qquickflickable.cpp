@@ -717,7 +717,7 @@ void tst_qquickflickable::movingAndDragging()
     window->setSource(testFileUrl("flickable03.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
@@ -887,7 +887,7 @@ void tst_qquickflickable::flickOnRelease()
     window->setSource(testFileUrl("flickable03.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
@@ -925,7 +925,7 @@ void tst_qquickflickable::pressWhileFlicking()
     window->setSource(testFileUrl("flickable03.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
@@ -1141,7 +1141,7 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
     view->setSource(testFileUrl("transformedFlickable.qml"));
     view->show();
     view->requestActivateWindow();
-    QTest::qWaitForWindowShown(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view));
     QVERIFY(view->rootObject() != 0);
 
     QQuickFlickable *flickable = view->rootObject()->findChild<QQuickFlickable*>("flickable");

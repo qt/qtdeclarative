@@ -193,7 +193,7 @@ void tst_TouchMouse::simpleTouchEvent()
     window->setSource(testFileUrl("singleitem.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->rootObject() != 0);
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
@@ -348,7 +348,7 @@ void tst_TouchMouse::mouse()
     QVERIFY(eventItem1);
     EventItem *eventItem2 = window->rootObject()->findChild<EventItem*>("eventItem2");
     QVERIFY(eventItem2);
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     // bottom item likes mouse, top likes touch
     eventItem1->setAcceptedMouseButtons(Qt::LeftButton);
@@ -385,7 +385,7 @@ void tst_TouchMouse::touchOverMouse()
     eventItem1->setAcceptedMouseButtons(Qt::LeftButton);
     eventItem2->acceptTouch = true;
 
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QCOMPARE(eventItem1->eventList.size(), 0);
     QPoint p1 = QPoint(20, 20);
@@ -427,7 +427,7 @@ void tst_TouchMouse::mouseOverTouch()
     eventItem2->setAcceptedMouseButtons(Qt::LeftButton);
     eventItem2->acceptMouse = true;
 
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QPoint p1 = QPoint(20, 20);
     QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 10);

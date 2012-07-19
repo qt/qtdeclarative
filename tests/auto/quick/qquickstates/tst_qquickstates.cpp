@@ -1010,7 +1010,7 @@ void tst_qquickstates::anchorRewindBug()
     view->show();
     view->requestActivateWindow();
 
-    QTest::qWaitForWindowShown(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
 
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(view->rootObject());
     QVERIFY(rect != 0);

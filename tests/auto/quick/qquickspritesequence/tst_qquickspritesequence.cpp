@@ -62,7 +62,7 @@ void tst_qquickspritesequence::test_properties()
 
     window->setSource(testFileUrl("basic.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QVERIFY(window->rootObject());
     QQuickSpriteSequence* sprite = window->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
@@ -90,7 +90,7 @@ void tst_qquickspritesequence::test_huge()
 
     window->setSource(testFileUrl("huge.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QVERIFY(window->rootObject());
     QQuickSpriteSequence* sprite = window->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
@@ -105,7 +105,7 @@ void tst_qquickspritesequence::test_framerateAdvance()
 
     window->setSource(testFileUrl("advance.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QVERIFY(window->rootObject());
     QQuickSpriteSequence* sprite = window->rootObject()->findChild<QQuickSpriteSequence*>("sprite");
@@ -121,7 +121,7 @@ void tst_qquickspritesequence::test_jumpToCrash()
 
     window->setSource(testFileUrl("crashonstart.qml"));
     window->show();
-    QTest::qWaitForWindowShown(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     //verify: Don't crash
 
     delete window;
