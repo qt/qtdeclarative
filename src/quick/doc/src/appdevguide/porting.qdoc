@@ -73,6 +73,20 @@ for examples.
 Graphics View framework backend used in QtQuick 1.
 \endlist
 
+\section 2 Behavioral Changes
+
+There are many behavioral changes caused in the transition and you should thoroughly test your applications after
+porting. These changes will not necessarily lead to run-time errors, but may break certain assumptions in your code.
+Here is a list of some more prominent changes:
+
+\list
+\li The input handling details of \l{Item::}{opacity} and \l{Item::}{visible} have changed. An opacity of zero no
+longer affects input handling, where previously it stopped mouse input. A visibility of false no longer affects
+keyboard input, but still stops mouse input. The new \l{Item::}{enabled} property stops mouse and keyboard input, but does not affect how or whether
+the item is rendered. A workaround for applying the old behavior in most cases is to bind enabled to (visible &&
+opacity > 0.0).
+\endlist
+
 \section2 Changes to experimental Qt.labs modules
 
 \list

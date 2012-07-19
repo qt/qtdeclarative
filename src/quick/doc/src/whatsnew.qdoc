@@ -101,6 +101,7 @@ Below are the additions and changes in QtQuick 2.0.
     \li New \l{Item::}{contains()} method returns whether an item contains a specified point.
     \li New \l{Item::}{anchors.alignWhenCentered} property can force centered anchors to align on a
         whole pixel.
+    \li New \l{Item::}{enabled} property is available, which stops input event delivery and removes active focus.
     \endlist
 \li \l Image:
     \list
