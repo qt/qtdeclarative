@@ -162,7 +162,7 @@ When the \l Text object refers to its \l {Item::parent}{parent} value in the abo
 
 (Additionally, notice that the \l Text object has been declared without assigning it to a property of the \l Rectangle, unlike the earlier example which assigned a \l Gradient object to the rectangle's \c gradient property. This is because the \l {Item::children}{children} property of \l Item has been set as the type's \l {qtqml-syntax-objectattributes.html#default-properties}{default property} to enable this more convenient syntax.)
 
-See the \l{qtquick-concepts-visual.html#items-and-visual-parenting}{Visual Parent} documentation for more information on the concept of visual parenting with the \l Item type.
+See the \l{qtquick-visualcanvas-visualparent.html}{visual parent} documentation for more information on the concept of visual parenting with the \l Item type.
 
 
 \section1 Comments

@@ -82,7 +82,7 @@ Item {
 }
 \endqml
 
-See \l {Using JavaScript Expressions with QML} for more details.
+See \l {qtqml-javascript-expressions.html}{JavaScript Expressions in QML Documents} for more details.
 
 
 \section1 QML Object Types
