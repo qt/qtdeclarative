@@ -88,7 +88,7 @@ const char *QSGDistanceFieldTextMaterialShader::vertexShader() const {
 const char *QSGDistanceFieldTextMaterialShader::fragmentShader() const {
     return
         "varying highp vec2 sampleCoord;                                             \n"
-        "uniform sampler2D texture;                                                  \n"
+        "uniform mediump sampler2D texture;                                          \n"
         "uniform lowp vec4 color;                                                    \n"
         "uniform mediump float alphaMin;                                             \n"
         "uniform mediump float alphaMax;                                             \n"
