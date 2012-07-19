@@ -125,7 +125,7 @@ char const *const *SmoothTextureMaterialShader::attributeNames() const
         "vertex",
         "multiTexCoord",
         "vertexOffset",
-        "texCoord",
+        "texCoordOffset",
         0
     };
     return attributes;
