@@ -28,4 +28,40 @@
 \page qtquick-usecase-layouts.html
 \title Use Case - Layouts In QML
 \brief Example of how to create layouts for visual elements in a QML application
+
+There are several ways to position items in QML, including simple property bindings.
+
+\section1 Manual Positioning
+
+Items can be placed at specific x,y coordinates on the screen by setting their x,y properties. This will setup their
+position relative to the top left corner of their parent, for more detail see \c {Visual Canvas}.
+
+Combined with using bindings instead of constant valudes for these properties, relative positioning is also easily
+accomplished by setting the x and y coordinates to the appropriate bindings.
+
+\snippet qml/usecases/layouts.qml direct
+
+\section1 Anchors
+
+The \c Item type provides the abilitiy to anchor to other Item types. There are six anchor lines for each item: left,
+right, vertical center, top, bottom and horizontal center. The three vertical anchor lines can be anchored to any of
+the three vertical anchor lines of another item, and the three horizontal anchor lines can be anchored to the
+horizontal anchor lines of another item.
+
+For full details, see the documentation of the \l{Item::anchors}{anchors property}.
+
+\snippet qml/usecases/layouts.qml anchors
+
+\section1 Positioners
+
+For the common case of wanting to position a set of elements in a regular pattern, QtQuick provides some Positioner
+types. Items placed in a positioner are automatically positioned in some way, for example a Row positions items to be
+horizontally adjacent (forming a row).
+
+For full details see the documentation for \l{qtquick-qmltypereference.html#positioning}{the positioner types}.
+
+\snippet qml/usecases/layouts.qml positioners
+
+\image qml-uses-layouts.png
+
 */

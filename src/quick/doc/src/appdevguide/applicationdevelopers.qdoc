@@ -28,34 +28,6 @@
 /*
 XXX
 
-The "Features and Use-Case Solutions" section has been temporarily removed
-from the "QML Application Developer Resources" page as we do not have any
-content for them yet.
-
-Once we have written content for these sections, they can be re-integrated.
-
-See QTBUG-26428
-
-\section1 Features and Use-Case Solutions
-
-\list
-\li \l{qtquick-usecase-visual.html}{Placing Visual Content and Images in the Window}
-\li \l{qtquick-usecase-userinput.html}{Responding to User Input}
-\li \l{qtquick-usecase-animations.html}{Animating UI Elements}
-\li \l{qtquick-usecase-text.html}{Formatting and Displaying Text}
-\li \l{qtquick-usecase-layouts.html}{Complex Layouts}
-\li \l{qtquick-usecase-styling.html}{Style and Theme: Look and Feel}
-\li \l{qtquick-usecase-integratingjs.html}{Integrating with JavaScript}
-\li \l{qtquick-usecase-integratingcpp.html}{Integrating with C++}
-\li \l{qtquick-usecase-modules.html}{Creating Modules for QML}
-\li \l{qtquick-usecase-multimedia.html}{Playing Sounds and Video in QML}
-\endlist
-
-*/
-
-/*
-XXX
-
 The "QML Intro" section has been temporarily removed, as it includes mostly
 outdated information.  However, it has some pertinent information, so we
 should review it and extract the useful documentation at some point, for
@@ -82,6 +54,22 @@ interfaces to any back-end C++ libraries.
 This page links to all the information you need to start developing
 applications with QML and QtQuick.
 
+\section2 Other QML modules
+
+Qt Quick only provides basic visual types, much of Qt's functionality is exposed to QML
+through other modules. If you require the functionality of those modules, you should browse
+their QML documentation. Qt Essentials modules exposing QML types include:
+
+\list
+\li \c Qt3D for 3D graphics rendering.
+\li \c QtSensors for using device sensors such as accelerometers.
+\li \c QtMultimedia for playing and managing multimedia content and cameras.
+\li \c QtLocation for using GPS and mapping data.
+\li \c QtSystems for reading system info and interacting with services.
+\li \c QtWebkit for rendering web content.
+\li \c QtPim for interacting with contact and calendar information.
+\endlist
+
 \section1 Quick Start
 
 \list
@@ -98,6 +86,19 @@ applications with QML and QtQuick.
     \li \l{qtquick-quickstart-essentials.html#defining-custom-qml-types-for-re-use}{Defining Custom QML Types for Re-use}
     \endlist
 \endlist
+
+\section1 Features And Use-Case Solutions
+
+\list
+\li \l{qtquick-usecase-visual.html}{Visual Elements in QML}
+\li \l{qtquick-usecase-userinput.html}{Responding to User Input in QML}
+\li \l{qtquick-usecase-animations.html}{Animations in QML}
+\li \l{qtquick-usecase-text.html}{Displaying Text in QML}
+\li \l{qtquick-usecase-layouts.html}{Layouts in QML}
+\li \l{qtquick-usecase-styling.html}{Style and Theme Support}
+\li \l{qtquick-usecase-integratingjs.html}{Integrating JavaScript in QML}
+\endlist
+
 
 \section1 In-Depth Documentation
 
