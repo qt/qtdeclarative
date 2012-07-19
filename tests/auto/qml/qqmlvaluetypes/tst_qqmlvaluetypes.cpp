@@ -290,6 +290,7 @@ void tst_qqmlvaluetypes::sizef()
 
 void tst_qqmlvaluetypes::variant()
 {
+    {
     QQmlComponent component(&engine, testFileUrl("variant_read.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
@@ -299,6 +300,27 @@ void tst_qqmlvaluetypes::variant()
     QCOMPARE(object->property("copy"), QVariant(QSizeF(0.1, 100923.2)));
 
     delete object;
+    }
+
+    {
+    QString w1 = testFileUrl("variant_write.1.qml").toString() + QLatin1String(":9: TypeError: Object QVector2D(8, 2) has no method 'plus'");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w1));
+    QQmlComponent component(&engine, testFileUrl("variant_write.1.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("complete").toBool());
+    QVERIFY(object->property("success").toBool());
+    delete object;
+    }
+
+    {
+    QQmlComponent component(&engine, testFileUrl("variant_write.2.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("complete").toBool());
+    QVERIFY(object->property("success").toBool());
+    delete object;
+    }
 }
 
 void tst_qqmlvaluetypes::sizereadonly()

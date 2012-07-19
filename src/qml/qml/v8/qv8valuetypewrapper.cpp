@@ -149,6 +149,39 @@ v8::Local<v8::Object> QV8ValueTypeWrapper::newValueType(const QVariant &value, Q
     return rv;
 }
 
+static bool readReferenceValue(QV8ValueTypeReferenceResource *reference)
+{
+    // A reference resource may be either a "true" reference (eg, to a QVector3D property)
+    // or a "variant" reference (eg, to a QVariant property which happens to contain a value-type).
+    QMetaProperty writebackProperty = reference->object->metaObject()->property(reference->property);
+    if (writebackProperty.userType() == QMetaType::QVariant) {
+        // variant-containing-value-type reference
+        QVariant variantReferenceValue;
+        reference->type->readVariantValue(reference->object, reference->property, &variantReferenceValue);
+        int variantReferenceType = variantReferenceValue.userType();
+        if (variantReferenceType != reference->type->userType()) {
+            // This is a stale VariantReference.  That is, the variant has been
+            // overwritten with a different type in the meantime.
+            // We need to modify this reference to the updated value type, if
+            // possible, or return false if it is not a value type.
+            QQmlEngine *e = reference->engine->engine();
+            if (QQmlValueTypeFactory::isValueType(variantReferenceType) && e) {
+                reference->type = QQmlEnginePrivate::get(e)->valueTypes[variantReferenceType];
+                if (!reference->type) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        reference->type->setValue(variantReferenceValue);
+    } else {
+        // value-type reference
+        reference->type->read(reference->object, reference->property);
+    }
+    return true;
+}
+
 QVariant QV8ValueTypeWrapper::toVariant(v8::Handle<v8::Object> obj, int typeHint, bool *succeeded)
 {
     // NOTE: obj must not be an external resource object (ie, wrapper object)
@@ -172,8 +205,7 @@ QVariant QV8ValueTypeWrapper::toVariant(QV8ObjectResource *r)
     if (resource->objectType == QV8ValueTypeResource::Reference) {
         QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(resource);
 
-        if (reference->object) {
-            reference->type->read(reference->object, reference->property);
+        if (reference->object && readReferenceValue(reference)) {
             return reference->type->value();
         } else {
             return QVariant();
@@ -195,8 +227,7 @@ bool QV8ValueTypeWrapper::isEqual(QV8ObjectResource *r, const QVariant& value)
 
     if (resource->objectType == QV8ValueTypeResource::Reference) {
         QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(resource);
-        if (reference->object) {
-            reference->type->read(reference->object, reference->property);
+        if (reference->object && readReferenceValue(reference)) {
             return reference->type->isEqual(value);
         } else {
             return false;
@@ -221,8 +252,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::ToString(const v8::Arguments &args)
     if (resource) {
         if (resource->objectType == QV8ValueTypeResource::Reference) {
             QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(resource);
-            if (reference->object) {
-                reference->type->read(reference->object, reference->property);
+            if (reference->object && readReferenceValue(reference)) {
                 return resource->engine->toString(resource->type->toString());
             } else {
                 return v8::Undefined();
@@ -258,6 +288,21 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
         }
     }
 
+    // Note: readReferenceValue() can change the reference->type.
+    if (r->objectType == QV8ValueTypeResource::Reference) {
+        QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(r);
+
+        if (!reference->object || !readReferenceValue(reference))
+            return v8::Handle<v8::Value>();
+
+    } else {
+        Q_ASSERT(r->objectType == QV8ValueTypeResource::Copy);
+
+        QV8ValueTypeCopyResource *copy = static_cast<QV8ValueTypeCopyResource *>(r);
+
+        r->type->setValue(copy->value);
+    }
+
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     {
@@ -271,21 +316,6 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
 
     if (!result)
         return v8::Handle<v8::Value>();
-
-    if (r->objectType == QV8ValueTypeResource::Reference) {
-        QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(r);
-
-        if (!reference->object)
-            return v8::Handle<v8::Value>();
-
-        r->type->read(reference->object, reference->property);
-    } else {
-        Q_ASSERT(r->objectType == QV8ValueTypeResource::Copy);
-
-        QV8ValueTypeCopyResource *copy = static_cast<QV8ValueTypeCopyResource *>(r);
-
-        r->type->setValue(copy->value);
-    }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
     if (result->propType == metatype) { \
@@ -316,18 +346,17 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
     if (!r) return value;
 
     QByteArray propName = r->engine->toString(property).toUtf8();
-    int index = r->type->metaObject()->indexOfProperty(propName.constData());
-    if (index == -1)
-        return value;
-
     if (r->objectType == QV8ValueTypeResource::Reference) {
         QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(r);
+        QMetaProperty writebackProperty = reference->object->metaObject()->property(reference->property);
 
-        if (!reference->object || 
-            !reference->object->metaObject()->property(reference->property).isWritable())
+        if (!reference->object || !writebackProperty.isWritable() || !readReferenceValue(reference))
             return value;
 
-        r->type->read(reference->object, reference->property);
+        // we lookup the index after readReferenceValue() since it can change the reference->type.
+        int index = r->type->metaObject()->indexOfProperty(propName.constData());
+        if (index == -1)
+            return value;
         QMetaProperty p = r->type->metaObject()->property(index);
 
         QQmlBinding *newBinding = 0;
@@ -381,13 +410,22 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
 
             p.write(reference->type, v);
 
-            reference->type->write(reference->object, reference->property, 0);
+            if (writebackProperty.userType() == QMetaType::QVariant) {
+                QVariant variantReferenceValue = r->type->value();
+                reference->type->writeVariantValue(reference->object, reference->property, 0, &variantReferenceValue);
+            } else {
+                reference->type->write(reference->object, reference->property, 0);
+            }
         }
 
     } else {
         Q_ASSERT(r->objectType == QV8ValueTypeResource::Copy);
 
         QV8ValueTypeCopyResource *copy = static_cast<QV8ValueTypeCopyResource *>(r);
+
+        int index = r->type->metaObject()->indexOfProperty(propName.constData());
+        if (index == -1)
+            return value;
 
         QVariant v = r->engine->toVariant(value, -1);
 

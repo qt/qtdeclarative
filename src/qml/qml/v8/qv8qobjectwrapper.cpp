@@ -440,6 +440,12 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.isQVariant()) {
         QVariant v;
         ReadFunction(object, property, &v, notifier);
+        if (QQmlValueTypeFactory::isValueType(v.userType()) && engine->engine()) {
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine->engine());
+            QQmlValueType *valueType = ep->valueTypes[v.userType()];
+            if (valueType)
+                return engine->newValueType(object, property.coreIndex, valueType); // VariantReference value-type.
+        }
         return engine->fromVariant(v);
     } else if (QQmlValueTypeFactory::isValueType((uint)property.propType)
                && engine->engine()) {

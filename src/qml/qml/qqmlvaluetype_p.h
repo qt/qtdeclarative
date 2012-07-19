@@ -71,7 +71,9 @@ class Q_QML_PRIVATE_EXPORT QQmlValueType : public QObject
 public:
     QQmlValueType(int userType, QObject *parent = 0);
     virtual void read(QObject *, int) = 0;
+    virtual void readVariantValue(QObject *, int, QVariant *) = 0;
     virtual void write(QObject *, int, QQmlPropertyPrivate::WriteFlags flags) = 0;
+    virtual void writeVariantValue(QObject *, int, QQmlPropertyPrivate::WriteFlags, QVariant *) = 0;
     virtual QVariant value() = 0;
     virtual void setValue(const QVariant &) = 0;
 
@@ -120,14 +122,25 @@ public:
         readProperty(obj, idx, &v);
     }
 
+    virtual void readVariantValue(QObject *obj, int idx, QVariant *into)
+    {
+        // important: must not change the userType of the variant
+        readProperty(obj, idx, into);
+    }
+
     virtual void write(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags)
     {
         writeProperty(obj, idx, flags, &v);
     }
 
+    virtual void writeVariantValue(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags, QVariant *from)
+    {
+        writeProperty(obj, idx, flags, from);
+    }
+
     virtual QVariant value()
     {
-        return QVariant(v);
+        return QVariant::fromValue(v);
     }
 
     virtual void setValue(const QVariant &value)
@@ -138,7 +151,7 @@ public:
 
     virtual bool isEqual(const QVariant &other) const
     {
-        return QVariant(v) == other;
+        return QVariant::fromValue(v) == other;
     }
 
 protected:
