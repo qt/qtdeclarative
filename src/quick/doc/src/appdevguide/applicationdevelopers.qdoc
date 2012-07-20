@@ -96,7 +96,8 @@ Qt Quick.}
 \li \l{qtquick-quickstart-essentials.html}{QML Essentials}
     \list
     \li \l{qtquick-quickstart-essentials.html#handling-user-input}{Handling User Input}
-    \li \l{qtquick-quickstart-essentials.html#property-bindings-and-animations}{Property Bindings and Animations}
+    \li \l{qtquick-quickstart-essentials.html#property-bindings}{Property Bindings}
+    \li \l{qtquick-quickstart-essentials.html#animations}{Animations}
     \li \l{qtquick-quickstart-essentials.html#defining-custom-qml-types-for-re-use}{Defining Custom QML Types for Re-use}
     \endlist
 \endlist

@@ -70,13 +70,12 @@ types, animation classes, and canvas integration) for the QML language.
 \section1 Qt QML Module Documentation
 
 \list
-    \li \l{qtqml-cppclasses-topic.html}{C++ Classes Provided by the Qt QML Module}
+    \li \l{qtqml-cppclasses-topic.html}{Important C++ Classes}
         \list
-        \li \l{qtqml-cppclasses-engine.html}{QQmlEngine}
-        \li \l{qtqml-cppclasses-context.html}{QQmlContext}
-        \li \l{qtqml-cppclasses-component.html}{QQmlComponent}
-        \li \l{qtqml-cppclasses-expression.html}{QQmlExpression}
-        \li \l{qtqml-cppclasses-valuesource.html}{QQmlPropertyValueSource}
+        \li \l{QQmlEngine}
+        \li \l{QQmlContext}
+        \li \l{QQmlComponent}
+        \li \l{QQmlExpression}
         \endlist
 
     \li \l{qtqml-typesystem-topic.html}{The QML Type System}
