@@ -865,7 +865,7 @@ ListView {
     model: ListModel {
         id: listModel
         Component.onCompleted: {
-            for (var i=0; i<10; i++)
+            for (var i = 0; i < 10; i++)
                 listModel.append({"Name": "Item " + i})
         }
     }

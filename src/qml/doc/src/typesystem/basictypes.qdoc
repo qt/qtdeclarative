@@ -637,7 +637,7 @@ property is only invoked when the property is reassigned to a different object v
 
         Component.onCompleted: {
             console.log("Name of first state:", states[0].name)
-            for (var i=0; i<states.length; i++)
+            for (var i = 0; i < states.length; i++)
                 console.log("state", i, states[i].name)
         }
     }
@@ -850,7 +850,7 @@ property is only invoked when the property is reassigned to a different object v
         property variant attributes: { 'color': 'red', 'width': 100 }
 
         Component.onCompleted: {
-            for (var i=0; i<items.length; i++)
+            for (var i = 0; i < items.length; i++)
                 console.log(items[i])
 
             for (var prop in attributes)
