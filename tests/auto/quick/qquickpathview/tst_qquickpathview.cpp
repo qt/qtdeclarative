@@ -64,6 +64,7 @@ using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
 Q_DECLARE_METATYPE(QQuickPathView::HighlightRangeMode)
+Q_DECLARE_METATYPE(QQuickPathView::PositionMode)
 
 static void initStandardTreeModel(QStandardItemModel *model)
 {
@@ -134,6 +135,10 @@ private slots:
     void snapToItem_data();
     void snapOneItem();
     void snapOneItem_data();
+    void positionViewAtIndex();
+    void positionViewAtIndex_data();
+    void indexAt_itemAt();
+    void indexAt_itemAt_data();
 };
 
 class TestObject : public QObject
@@ -1909,6 +1914,112 @@ void tst_QQuickPathView::snapOneItem_data()
     QTest::newRow("enforce range") << true;
 }
 
+void tst_QQuickPathView::positionViewAtIndex()
+{
+    QFETCH(bool, enforceRange);
+    QFETCH(int, pathItemCount);
+    QFETCH(qreal, initOffset);
+    QFETCH(int, index);
+    QFETCH(QQuickPathView::PositionMode, mode);
+    QFETCH(qreal, offset);
+
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("pathview3.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_COMPARE(window, qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview != 0);
+
+    window->rootObject()->setProperty("enforceRange", enforceRange);
+    if (pathItemCount == -1)
+        pathview->resetPathItemCount();
+    else
+        pathview->setPathItemCount(pathItemCount);
+    pathview->setOffset(initOffset);
+
+    pathview->positionViewAtIndex(index, mode);
+
+    QCOMPARE(pathview->offset(), offset);
+
+    delete window;
+}
+
+void tst_QQuickPathView::positionViewAtIndex_data()
+{
+    QTest::addColumn<bool>("enforceRange");
+    QTest::addColumn<int>("pathItemCount");
+    QTest::addColumn<qreal>("initOffset");
+    QTest::addColumn<int>("index");
+    QTest::addColumn<QQuickPathView::PositionMode>("mode");
+    QTest::addColumn<qreal>("offset");
+
+    QTest::newRow("no range, all items, Beginning") << false << -1 << 0.0 << 3 << QQuickPathView::Beginning << 5.0;
+    QTest::newRow("no range, all items, Center") << false << -1 << 0.0 << 3 << QQuickPathView::Center << 1.0;
+    QTest::newRow("no range, all items, End") << false << -1 << 0.0 << 3 << QQuickPathView::End << 5.0;
+    QTest::newRow("no range, 5 items, Beginning") << false << 5 << 0.0 << 3 << QQuickPathView::Beginning << 5.0;
+    QTest::newRow("no range, 5 items, Center") << false << 5 << 0.0 << 3 << QQuickPathView::Center << 7.5;
+    QTest::newRow("no range, 5 items, End") << false << 5 << 0.0 << 3 << QQuickPathView::End << 2.0;
+    QTest::newRow("no range, 5 items, Contain") << false << 5 << 0.0 << 3 << QQuickPathView::Contain << 0.0;
+    QTest::newRow("no range, 5 items, init offset 4.0, Contain") << false << 5 << 4.0 << 3 << QQuickPathView::Contain << 5.0;
+    QTest::newRow("no range, 5 items, init offset 3.0, Contain") << false << 5 << 3.0 << 3 << QQuickPathView::Contain << 2.0;
+
+    QTest::newRow("strict range, all items, Beginning") << true << -1 << 0.0 << 3 << QQuickPathView::Beginning << 1.0;
+    QTest::newRow("strict range, all items, Center") << true << -1 << 0.0 << 3 << QQuickPathView::Center << 5.0;
+    QTest::newRow("strict range, all items, End") << true << -1 << 0.0 << 3 << QQuickPathView::End << 0.0;
+    QTest::newRow("strict range, all items, Contain") << true << -1 << 0.0 << 3 << QQuickPathView::Contain << 0.0;
+    QTest::newRow("strict range, all items, init offset 1.0, Contain") << true << -1 << 1.0 << 3 << QQuickPathView::Contain << 1.0;
+    QTest::newRow("strict range, all items, SnapPosition") << true << -1 << 0.0 << 3 << QQuickPathView::SnapPosition << 5.0;
+    QTest::newRow("strict range, 5 items, Beginning") << true << 5 << 0.0 << 3 << QQuickPathView::Beginning << 3.0;
+    QTest::newRow("strict range, 5 items, Center") << true << 5 << 0.0 << 3 << QQuickPathView::Center << 5.0;
+    QTest::newRow("strict range, 5 items, End") << true << 5 << 0.0 << 3 << QQuickPathView::End << 7.0;
+    QTest::newRow("strict range, 5 items, Contain") << true << 5 << 0.0 << 3 << QQuickPathView::Contain << 7.0;
+    QTest::newRow("strict range, 5 items, init offset 1.0, Contain") << true << 5 << 1.0 << 3 << QQuickPathView::Contain << 7.0;
+    QTest::newRow("strict range, 5 items, init offset 2.0, Contain") << true << 5 << 2.0 << 3 << QQuickPathView::Contain << 3.0;
+    QTest::newRow("strict range, 5 items, SnapPosition") << true << 5 << 0.0 << 3 << QQuickPathView::SnapPosition << 5.0;
+}
+
+void tst_QQuickPathView::indexAt_itemAt()
+{
+    QFETCH(qreal, x);
+    QFETCH(qreal, y);
+    QFETCH(int, index);
+
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("pathview3.qml"));
+    window->show();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowShown(window);
+    QTRY_COMPARE(window, qGuiApp->focusWindow());
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview != 0);
+
+    QQuickItem *item = 0;
+    if (index >= 0) {
+        item = findItem<QQuickItem>(pathview, "wrapper", index);
+        QVERIFY(item);
+    }
+    QCOMPARE(pathview->indexAt(x,y), index);
+    QVERIFY(pathview->itemAt(x,y) == item);
+
+    delete window;
+}
+
+void tst_QQuickPathView::indexAt_itemAt_data()
+{
+    QTest::addColumn<qreal>("x");
+    QTest::addColumn<qreal>("y");
+    QTest::addColumn<int>("index");
+
+    QTest::newRow("Item 0 - 585, 95") << 585. << 95. << 0;
+    QTest::newRow("Item 0 - 660, 165") << 660. << 165. << 0;
+    QTest::newRow("No Item a - 580, 95") << 580. << 95. << -1;
+    QTest::newRow("No Item b - 585, 85") << 585. << 85. << -1;
+    QTest::newRow("Item 7 - 360, 200") << 360. << 200. << 7;
+}
 
 QTEST_MAIN(tst_QQuickPathView)
 

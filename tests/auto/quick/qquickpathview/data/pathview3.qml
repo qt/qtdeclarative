@@ -2,8 +2,10 @@ import QtQuick 2.0
 
 PathView {
     id: photoPathView
-    y: 100; width: 800; height: 330; pathItemCount: 4; offset: 1
+    property bool enforceRange: true
+    width: 800; height: 330; pathItemCount: 4; offset: 1
     dragMargin: 24
+    highlightRangeMode: enforceRange ? PathView.StrictlyEnforceRange : PathView.NoHighlightRange
     preferredHighlightBegin: 0.50
     preferredHighlightEnd: 0.50
 
@@ -48,7 +50,10 @@ PathView {
         id: photoDelegate
         Rectangle {
             id: wrapper
+            objectName: "wrapper"
             width: 85; height: 85; color: lColor
+
+            Text { text: index }
 
             transform: Rotation {
                 id: itemRotation; origin.x: wrapper.width/2; origin.y: wrapper.height/2
@@ -56,4 +61,6 @@ PathView {
             }
         }
     }
+
+    Text { text: "Offset: " + photoPathView.offset }
 }

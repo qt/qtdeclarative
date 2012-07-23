@@ -83,11 +83,12 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
-    Q_PROPERTY(int pathItemCount READ pathItemCount WRITE setPathItemCount NOTIFY pathItemCountChanged)
+    Q_PROPERTY(int pathItemCount READ pathItemCount WRITE setPathItemCount RESET resetPathItemCount NOTIFY pathItemCountChanged)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
     Q_ENUMS(HighlightRangeMode)
     Q_ENUMS(SnapMode)
+    Q_ENUMS(PositionMode)
 
 public:
     QQuickPathView(QQuickItem *parent=0);
@@ -147,10 +148,16 @@ public:
 
     int pathItemCount() const;
     void setPathItemCount(int);
+    void resetPathItemCount();
 
     enum SnapMode { NoSnap, SnapToItem, SnapOneItem };
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
+
+    enum PositionMode { Beginning, Center, End, Contain=4, SnapPosition }; // 3 == Visible in other views
+    Q_INVOKABLE void positionViewAtIndex(int index, int mode);
+    Q_INVOKABLE int indexAt(qreal x, qreal y) const;
+    Q_INVOKABLE QQuickItem *itemAt(qreal x, qreal y) const;
 
     static QQuickPathViewAttached *qmlAttachedProperties(QObject *);
 

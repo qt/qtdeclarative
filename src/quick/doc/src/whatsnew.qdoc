@@ -321,6 +321,10 @@ the window loses focus.
     \li New \l{PathView::}{snapMode} property controls the snap model when flicking between items
     \li If the model is changed after the component is completed, the offset and currentIndex are
         reset to 0.
+    \li New \l{PathView::}{positionViewAtIndex()} function allows the view to be moved to display
+        the specified index.
+    \li New \l{PathView::}{indexAt()} and \l{PathView::}{itemAt()} functions return the index or
+        item at a specified point in the view.
     \endlist
 \endlist
 
