@@ -57,6 +57,8 @@ public:
 private slots:
     void basicLoad_data();
     void basicLoad();
+    void qrcImport_data();
+    void qrcImport();
 };
 
 tst_qrcqml::tst_qrcqml()
@@ -96,6 +98,35 @@ void tst_qrcqml::basicLoad()
     QQmlComponent c(&e, QUrl(url));
     QVERIFY(c.isReady());
     QObject* o = c.create();
+    QVERIFY(o);
+    QCOMPARE(o->property("tokenProperty").toString(), token);
+    delete o;
+}
+
+void tst_qrcqml::qrcImport_data()
+{
+    QTest::addColumn<QString>("importPath");
+    QTest::addColumn<QString>("token");
+
+    QTest::newRow("qrc path")
+        << ":/imports"
+        << "foo";
+
+    QTest::newRow("qrc url")
+        << "qrc:/imports"
+        << "foo";
+}
+
+void tst_qrcqml::qrcImport()
+{
+    QFETCH(QString, importPath);
+    QFETCH(QString, token);
+
+    QQmlEngine e;
+    e.addImportPath(importPath);
+    QQmlComponent c(&e, QUrl("qrc:///importtest.qml"));
+    QVERIFY(c.isReady());
+    QObject *o = c.create();
     QVERIFY(o);
     QCOMPARE(o->property("tokenProperty").toString(), token);
     delete o;

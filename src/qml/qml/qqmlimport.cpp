@@ -1536,6 +1536,11 @@ void QQmlImportDatabase::addImportPath(const QString& path)
 
     if (url.scheme() == QLatin1String("file")) {
         cPath = QQmlFile::urlToLocalFileOrQrc(url);
+    } else if (path.startsWith(QLatin1Char(':'))) {
+        // qrc directory, e.g. :/foo
+        // need to convert to a qrc url, e.g. qrc:/foo
+        cPath = QStringLiteral("qrc") + path;
+        cPath.replace(Backslash, Slash);
     } else if (url.isRelative() ||
                (url.scheme().length() == 1 && QFile::exists(path)) ) {  // windows path
         QDir dir = QDir(path);

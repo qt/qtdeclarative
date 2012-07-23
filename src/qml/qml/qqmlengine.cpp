@@ -1610,7 +1610,13 @@ void QQmlEnginePrivate::dereferenceScarceResources()
 /*!
   Adds \a path as a directory where the engine searches for
   installed modules in a URL-based directory structure.
-  The \a path may be a local filesystem directory or a URL.
+
+  The \a path may be a local filesystem directory, a
+  \l {The Qt Resource System}{Qt Resource} path (\c {:/imports}), a
+  \l {The Qt Resource System}{Qt Resource} url (\c {qrc:/imports}) or a URL.
+
+  The \a path will be converted into canonical form before it
+  is added to the import path list.
 
   The newly added \a path will be first in the importPathList().
 

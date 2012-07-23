@@ -1633,6 +1633,11 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
         // qrc resource
         QFileInfo fileInfo(path);
         return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
+    } else if (path.count() > 3 && path.at(3) == QLatin1Char(':') &&
+               path.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
+        // qrc resource url
+        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
+        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
     }
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
     QStringRef dirPath(&path, 0, lastSlash);
