@@ -2,7 +2,7 @@ load(qt_build_config)
 
 TARGET = QtQuickParticles
 
-CONFIG += dll warn_on
+CONFIG += dll warn_on internal_module
 
 QT = core-private gui-private qml-private quick-private
 
