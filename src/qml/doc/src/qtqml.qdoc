@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
@@ -85,7 +85,7 @@ types, animation classes, and canvas integration) for the QML language.
         \li \l{qtqml-typesystem-objecttypes.html}{QML Object Types}
             \list
             \li \l{qtqml-documents-definetypes.html}{Defining Object Types from QML}
-            \li \l{qtqml-cppintegration-registercpptypes.html}{Defining Object Types from C++}
+            \li \l{qtqml-cppintegration-definetypes.html}{Defining Object Types from C++}
             \endlist
         \li \l{qtqml-typesystem-topic.html#property-modifier-types}{Property Modifier Types}
         \endlist
@@ -130,10 +130,11 @@ types, animation classes, and canvas integration) for the QML language.
 
     \li \l{qtqml-cppintegration-topic.html}{Integrating QML and C++}
         \list
-        \li \l{qtqml-cppintegration-registercpptypes.html}{Defining QML Object Types from C++}
-        \li \l{qtqml-cppintegration-data.html}{Exposing C++ Data to QML}
-        \li \l{qtqml-cppintegration-functions.html}{Exposing C++ Functionality to QML}
-        \li \l{qtqml-cppintegration-reverse.html}{Interacting with Objects defined in QML from C++}
+        \li \l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Classes to QML}
+        \li \l{qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}
+        \li \l{qtqml-cppintegration-contextproperties.html}{Embedding C++ Objects into QML with Context Properties}
+        \li \l{qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++}
+        \li \l{qtqml-cppintegration-data.html}{Data Type Conversion Between QML and C++}
         \endlist
 
 \endlist
