@@ -8,9 +8,6 @@ QT += testlib testlib-private qml quick  gui qml-private v8-private core-private
 
 load(qt_module_config)
 
-# private dependencies
-QT += quick
-
 # Install qmltestcase.prf into the Qt mkspecs so that "CONFIG += qmltestcase"
 # can be used in customer applications to build against QtQuickTest.
 feature.path = $$[QT_INSTALL_DATA]/mkspecs/features
