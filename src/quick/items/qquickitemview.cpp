@@ -309,18 +309,8 @@ void QQuickItemView::setModel(const QVariant &model)
         if (isComponentComplete()) {
             d->updateSectionCriteria();
             d->refill();
-            if ((d->currentIndex >= d->model->count() || d->currentIndex < 0) && !d->currentIndexCleared) {
-                setCurrentIndex(0);
-            } else {
-                d->moveReason = QQuickItemViewPrivate::SetIndex;
-                d->updateCurrent(d->currentIndex);
-                if (d->highlight && d->currentItem) {
-                    if (d->autoHighlight)
-                        d->resetHighlightPosition();
-                    d->updateTrackedItem();
-                }
-                d->moveReason = QQuickItemViewPrivate::Other;
-            }
+            d->currentIndex = -1;
+            setCurrentIndex(0);
             d->updateViewport();
 
             if (d->transitioner && d->transitioner->populateTransition) {
@@ -328,6 +318,7 @@ void QQuickItemView::setModel(const QVariant &model)
                 d->forceLayoutPolish();
             }
         }
+
         connect(d->model, SIGNAL(modelUpdated(QQuickChangeSet,bool)),
                 this, SLOT(modelUpdated(QQuickChangeSet,bool)));
         emit countChanged();

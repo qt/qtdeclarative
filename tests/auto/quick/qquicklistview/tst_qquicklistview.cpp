@@ -2515,15 +2515,15 @@ void tst_QQuickListView::currentIndex_delayedItemCreation_data()
 
 void tst_QQuickListView::currentIndex()
 {
-    QmlListModel model;
+    QmlListModel initModel;
     for (int i = 0; i < 30; i++)
-        model.addItem("Item" + QString::number(i), QString::number(i));
+        initModel.addItem("Item" + QString::number(i), QString::number(i));
 
     QQuickView *window = new QQuickView(0);
     window->setGeometry(0,0,240,320);
 
     QQmlContext *ctxt = window->rootContext();
-    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testModel", &initModel);
     ctxt->setContextProperty("testWrap", QVariant(false));
 
     QString filename(testFile("listview-initCurrent.qml"));
@@ -2537,17 +2537,27 @@ void tst_QQuickListView::currentIndex()
     QTRY_VERIFY(contentItem != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
-    // current item should be 20th item at startup
-    // and current item should be in view
+    // currentIndex is initialized to 20
+    // currentItem should be in view
     QCOMPARE(listview->currentIndex(), 20);
     QCOMPARE(listview->contentY(), 100.0);
     QCOMPARE(listview->currentItem(), findItem<QQuickItem>(contentItem, "wrapper", 20));
     QCOMPARE(listview->highlightItem()->y(), listview->currentItem()->y());
 
-    listview->setCurrentIndex(0);
+    // changing model should reset currentIndex to 0
+    QmlListModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), QString::number(i));
+    ctxt->setContextProperty("testModel", &model);
+
     QCOMPARE(listview->currentIndex(), 0);
+    QCOMPARE(listview->currentItem(), findItem<QQuickItem>(contentItem, "wrapper", 0));
+
     // confirm that the velocity is updated
+    listview->setCurrentIndex(20);
     QTRY_VERIFY(listview->verticalVelocity() != 0.0);
+    listview->setCurrentIndex(0);
+    QTRY_VERIFY(listview->verticalVelocity() == 0.0);
 
     // footer should become visible if it is out of view, and then current index is set to count-1
     window->rootObject()->setProperty("showFooter", true);

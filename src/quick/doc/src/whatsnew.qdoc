@@ -299,6 +299,7 @@ the window loses focus.
     \li Delegates in the cache buffer are now created asynchronously.
     \li Setting a \c RightToLeft layout now also reverses the \c preferredHighlightBegin and \c
         preferredHighlightEnd.
+    \li If the model is changed after the component is completed, currentIndex is reset to 0.
     \endlist
 \li ListView only:
     \list

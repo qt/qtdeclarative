@@ -1801,16 +1801,16 @@ void tst_QQuickGridView::swapWithFirstItem()
 
 void tst_QQuickGridView::currentIndex()
 {
-    QaimModel model;
+    QaimModel initModel;
     for (int i = 0; i < 60; i++)
-        model.addItem("Item" + QString::number(i), QString::number(i));
+        initModel.addItem("Item" + QString::number(i), QString::number(i));
 
     QQuickView *window = new QQuickView(0);
     window->setGeometry(0,0,240,320);
     window->show();
 
     QQmlContext *ctxt = window->rootContext();
-    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testModel", &initModel);
 
     QString filename(testFile("gridview-initCurrent.qml"));
     window->setSource(QUrl::fromLocalFile(filename));
@@ -1824,16 +1824,27 @@ void tst_QQuickGridView::currentIndex()
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != 0);
 
-    // current item should be third item
+    // currentIndex is initialized to 35
+    // currentItem should be in view
     QCOMPARE(gridview->currentIndex(), 35);
     QCOMPARE(gridview->currentItem(), findItem<QQuickItem>(contentItem, "wrapper", 35));
     QCOMPARE(gridview->currentItem()->y(), gridview->highlightItem()->y());
     QCOMPARE(gridview->contentY(), 400.0);
 
-    gridview->setCurrentIndex(0);
+    // changing model should reset currentIndex to 0
+    QmlListModel model;
+    for (int i = 0; i < 60; i++)
+        model.addItem("Item" + QString::number(i), QString::number(i));
+    ctxt->setContextProperty("testModel", &model);
+
     QCOMPARE(gridview->currentIndex(), 0);
+    QCOMPARE(gridview->currentItem(), findItem<QQuickItem>(contentItem, "wrapper", 0));
+
     // confirm that the velocity is updated
+    gridview->setCurrentIndex(35);
     QTRY_VERIFY(gridview->verticalVelocity() != 0.0);
+    gridview->setCurrentIndex(0);
+    QTRY_VERIFY(gridview->verticalVelocity() == 0.0);
 
     // footer should become visible if it is out of view, and then current index moves to the first row
     window->rootObject()->setProperty("showFooter", true);
