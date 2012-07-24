@@ -379,12 +379,14 @@ QQmlBoundSignalParameters::QQmlBoundSignalParameters(const QMetaMethod &method,
     types = new int[paramTypes.count()];
     for (int ii = 0; ii < paramTypes.count(); ++ii) {
         const QByteArray &type = paramTypes.at(ii);
-        const QByteArray &name = paramNames.at(ii);
-
-        if (name.isEmpty() || type.isEmpty()) {
+        if (type.isEmpty()) {
             types[ii] = 0;
             continue;
         }
+
+        QByteArray name = paramNames.at(ii);
+        if (name.isEmpty())
+            name = "__qt_anonymous_param_" + QByteArray::number(ii);
 
         int t = QMetaType::type(type.constData());
         if (QQmlMetaType::isQObject(t)) {

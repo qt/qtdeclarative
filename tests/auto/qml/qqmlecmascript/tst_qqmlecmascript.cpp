@@ -509,7 +509,6 @@ void tst_qqmlecmascript::signalAssignment()
         QVERIFY(object != 0);
         QCOMPARE(object->string(), QString());
         emit object->unnamedArgumentSignal(19, 10.25, "Hello world!");
-        QEXPECT_FAIL("", "QTBUG-24481", Continue);
         QCOMPARE(object->string(), QString("pass 19 Hello world!"));
         delete object;
     }
