@@ -126,6 +126,9 @@ private slots:
     void dragMouseSelection();
     void mouseSelectionMode_data();
     void mouseSelectionMode();
+    void mouseSelectionMode_accessors();
+    void selectByMouse();
+    void renderType();
     void tripleClickSelectsAll();
 
     void horizontalAlignment_data();
@@ -468,6 +471,57 @@ void tst_qquicktextinput::font()
 
 void tst_qquicktextinput::color()
 {
+    //test initial color
+    {
+        QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello World\" }";
+        QQmlComponent texteditComponent(&engine);
+        texteditComponent.setData(componentStr.toLatin1(), QUrl());
+        QScopedPointer<QObject> object(texteditComponent.create());
+        QQuickTextInput *textInputObject = qobject_cast<QQuickTextInput*>(object.data());
+
+        QVERIFY(textInputObject);
+        QCOMPARE(textInputObject->color(), QColor("black"));
+        QCOMPARE(textInputObject->selectionColor(), QColor::fromRgba(0xFF000080));
+        QCOMPARE(textInputObject->selectedTextColor(), QColor("white"));
+
+        QSignalSpy colorSpy(textInputObject, SIGNAL(colorChanged()));
+        QSignalSpy selectionColorSpy(textInputObject, SIGNAL(selectionColorChanged()));
+        QSignalSpy selectedTextColorSpy(textInputObject, SIGNAL(selectedTextColorChanged()));
+
+        textInputObject->setColor(QColor("white"));
+        QCOMPARE(textInputObject->color(), QColor("white"));
+        QCOMPARE(colorSpy.count(), 1);
+
+        textInputObject->setSelectionColor(QColor("black"));
+        QCOMPARE(textInputObject->selectionColor(), QColor("black"));
+        QCOMPARE(selectionColorSpy.count(), 1);
+
+        textInputObject->setSelectedTextColor(QColor("blue"));
+        QCOMPARE(textInputObject->selectedTextColor(), QColor("blue"));
+        QCOMPARE(selectedTextColorSpy.count(), 1);
+
+        textInputObject->setColor(QColor("white"));
+        QCOMPARE(colorSpy.count(), 1);
+
+        textInputObject->setSelectionColor(QColor("black"));
+        QCOMPARE(selectionColorSpy.count(), 1);
+
+        textInputObject->setSelectedTextColor(QColor("blue"));
+        QCOMPARE(selectedTextColorSpy.count(), 1);
+
+        textInputObject->setColor(QColor("black"));
+        QCOMPARE(textInputObject->color(), QColor("black"));
+        QCOMPARE(colorSpy.count(), 2);
+
+        textInputObject->setSelectionColor(QColor("blue"));
+        QCOMPARE(textInputObject->selectionColor(), QColor("blue"));
+        QCOMPARE(selectionColorSpy.count(), 2);
+
+        textInputObject->setSelectedTextColor(QColor("white"));
+        QCOMPARE(textInputObject->selectedTextColor(), QColor("white"));
+        QCOMPARE(selectedTextColorSpy.count(), 2);
+    }
+
     //test color
     for (int i = 0; i < colorStrings.size(); i++)
     {
@@ -556,6 +610,29 @@ void tst_qquicktextinput::wrap()
         QVERIFY(textObject->height() < oldHeight);
 
         delete textObject;
+    }
+
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\n TextInput {}", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QQuickTextInput *input = qobject_cast<QQuickTextInput *>(object.data());
+        QVERIFY(input);
+
+        QSignalSpy spy(input, SIGNAL(wrapModeChanged()));
+
+        QCOMPARE(input->wrapMode(), QQuickTextInput::NoWrap);
+
+        input->setWrapMode(QQuickTextInput::Wrap);
+        QCOMPARE(input->wrapMode(), QQuickTextInput::Wrap);
+        QCOMPARE(spy.count(), 1);
+
+        input->setWrapMode(QQuickTextInput::Wrap);
+        QCOMPARE(spy.count(), 1);
+
+        input->setWrapMode(QQuickTextInput::NoWrap);
+        QCOMPARE(input->wrapMode(), QQuickTextInput::NoWrap);
+        QCOMPARE(spy.count(), 2);
     }
 }
 
@@ -1260,6 +1337,80 @@ void tst_qquicktextinput::mouseSelectionMode()
         QTRY_VERIFY(textInputObject->selectedText().length() > 3);
         QVERIFY(textInputObject->selectedText() != text);
     }
+}
+
+void tst_qquicktextinput::mouseSelectionMode_accessors()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextInput {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(object.data());
+    QVERIFY(input);
+
+    QSignalSpy spy(input, SIGNAL(mouseSelectionModeChanged(SelectionMode)));
+
+    QCOMPARE(input->mouseSelectionMode(), QQuickTextInput::SelectCharacters);
+
+    input->setMouseSelectionMode(QQuickTextInput::SelectWords);
+    QCOMPARE(input->mouseSelectionMode(), QQuickTextInput::SelectWords);
+    QCOMPARE(spy.count(), 1);
+
+    input->setMouseSelectionMode(QQuickTextInput::SelectWords);
+    QCOMPARE(spy.count(), 1);
+
+    input->setMouseSelectionMode(QQuickTextInput::SelectCharacters);
+    QCOMPARE(input->mouseSelectionMode(), QQuickTextInput::SelectCharacters);
+    QCOMPARE(spy.count(), 2);
+}
+
+void tst_qquicktextinput::selectByMouse()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextInput {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(object.data());
+    QVERIFY(input);
+
+    QSignalSpy spy(input, SIGNAL(selectByMouseChanged(bool)));
+
+    QCOMPARE(input->selectByMouse(), false);
+
+    input->setSelectByMouse(true);
+    QCOMPARE(input->selectByMouse(), true);
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.at(0).at(0).toBool(), true);
+
+    input->setSelectByMouse(true);
+    QCOMPARE(spy.count(), 1);
+
+    input->setSelectByMouse(false);
+    QCOMPARE(input->selectByMouse(), false);
+    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.at(1).at(0).toBool(), false);
+}
+
+void tst_qquicktextinput::renderType()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextInput {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextInput *input = qobject_cast<QQuickTextInput *>(object.data());
+    QVERIFY(input);
+
+    QSignalSpy spy(input, SIGNAL(renderTypeChanged()));
+
+    QCOMPARE(input->renderType(), QQuickTextInput::QtRendering);
+
+    input->setRenderType(QQuickTextInput::NativeRendering);
+    QCOMPARE(input->renderType(), QQuickTextInput::NativeRendering);
+    QCOMPARE(spy.count(), 1);
+
+    input->setRenderType(QQuickTextInput::NativeRendering);
+    QCOMPARE(spy.count(), 1);
+
+    input->setRenderType(QQuickTextInput::QtRendering);
+    QCOMPARE(input->renderType(), QQuickTextInput::QtRendering);
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextinput::horizontalAlignment_data()

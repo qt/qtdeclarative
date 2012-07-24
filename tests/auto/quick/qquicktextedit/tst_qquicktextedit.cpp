@@ -132,6 +132,9 @@ private slots:
     void mouseSelectionMode_data();
     void mouseSelectionMode();
     void dragMouseSelection();
+    void mouseSelectionMode_accessors();
+    void selectByMouse();
+    void renderType();
     void inputMethodHints();
 
     void positionAt_data();
@@ -532,6 +535,28 @@ void tst_qquicktextedit::wrap()
         QVERIFY(textEditObject != 0);
         QCOMPARE(textEditObject->width(), 300.);
     }
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\n TextEdit {}", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+        QVERIFY(edit);
+
+        QSignalSpy spy(edit, SIGNAL(wrapModeChanged()));
+
+        QCOMPARE(edit->wrapMode(), QQuickTextEdit::NoWrap);
+
+        edit->setWrapMode(QQuickTextEdit::Wrap);
+        QCOMPARE(edit->wrapMode(), QQuickTextEdit::Wrap);
+        QCOMPARE(spy.count(), 1);
+
+        edit->setWrapMode(QQuickTextEdit::Wrap);
+        QCOMPARE(spy.count(), 1);
+
+        edit->setWrapMode(QQuickTextEdit::NoWrap);
+        QCOMPARE(edit->wrapMode(), QQuickTextEdit::NoWrap);
+        QCOMPARE(spy.count(), 2);
+    }
 
 }
 
@@ -552,6 +577,28 @@ void tst_qquicktextedit::textFormat()
 
         QVERIFY(textObject != 0);
         QVERIFY(textObject->textFormat() == QQuickTextEdit::PlainText);
+    }
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\n TextEdit {}", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+        QVERIFY(edit);
+
+        QSignalSpy spy(edit, SIGNAL(textFormatChanged(TextFormat)));
+
+        QCOMPARE(edit->textFormat(), QQuickTextEdit::PlainText);
+
+        edit->setTextFormat(QQuickTextEdit::RichText);
+        QCOMPARE(edit->textFormat(), QQuickTextEdit::RichText);
+        QCOMPARE(spy.count(), 1);
+
+        edit->setTextFormat(QQuickTextEdit::RichText);
+        QCOMPARE(spy.count(), 1);
+
+        edit->setTextFormat(QQuickTextEdit::PlainText);
+        QCOMPARE(edit->textFormat(), QQuickTextEdit::PlainText);
+        QCOMPARE(spy.count(), 2);
     }
 }
 
@@ -1013,13 +1060,49 @@ void tst_qquicktextedit::color()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QQuickTextEditPrivate *textEditPrivate = static_cast<QQuickTextEditPrivate*>(QQuickItemPrivate::get(textEditObject));
-
         QVERIFY(textEditObject);
-        QVERIFY(textEditPrivate);
-        QVERIFY(textEditPrivate->control);
-        QCOMPARE(textEditPrivate->color, QColor("black"));
+        QCOMPARE(textEditObject->color(), QColor("black"));
+        QCOMPARE(textEditObject->selectionColor(), QColor::fromRgba(0xFF000080));
+        QCOMPARE(textEditObject->selectedTextColor(), QColor("white"));
+
+        QSignalSpy colorSpy(textEditObject, SIGNAL(colorChanged(QColor)));
+        QSignalSpy selectionColorSpy(textEditObject, SIGNAL(selectionColorChanged(QColor)));
+        QSignalSpy selectedTextColorSpy(textEditObject, SIGNAL(selectedTextColorChanged(QColor)));
+
+        textEditObject->setColor(QColor("white"));
+        QCOMPARE(textEditObject->color(), QColor("white"));
+        QCOMPARE(colorSpy.count(), 1);
+
+        textEditObject->setSelectionColor(QColor("black"));
+        QCOMPARE(textEditObject->selectionColor(), QColor("black"));
+        QCOMPARE(selectionColorSpy.count(), 1);
+
+        textEditObject->setSelectedTextColor(QColor("blue"));
+        QCOMPARE(textEditObject->selectedTextColor(), QColor("blue"));
+        QCOMPARE(selectedTextColorSpy.count(), 1);
+
+        textEditObject->setColor(QColor("white"));
+        QCOMPARE(colorSpy.count(), 1);
+
+        textEditObject->setSelectionColor(QColor("black"));
+        QCOMPARE(selectionColorSpy.count(), 1);
+
+        textEditObject->setSelectedTextColor(QColor("blue"));
+        QCOMPARE(selectedTextColorSpy.count(), 1);
+
+        textEditObject->setColor(QColor("black"));
+        QCOMPARE(textEditObject->color(), QColor("black"));
+        QCOMPARE(colorSpy.count(), 2);
+
+        textEditObject->setSelectionColor(QColor("blue"));
+        QCOMPARE(textEditObject->selectionColor(), QColor("blue"));
+        QCOMPARE(selectionColorSpy.count(), 2);
+
+        textEditObject->setSelectedTextColor(QColor("white"));
+        QCOMPARE(textEditObject->selectedTextColor(), QColor("white"));
+        QCOMPARE(selectedTextColorSpy.count(), 2);
     }
+
     //test normal
     for (int i = 0; i < colorStrings.size(); i++)
     {
@@ -1927,6 +2010,80 @@ void tst_qquicktextedit::mouseSelectionMode()
         QTRY_VERIFY(textEditObject->selectedText().length() > 3);
         QVERIFY(str != text);
     }
+}
+
+void tst_qquicktextedit::mouseSelectionMode_accessors()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextEdit {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+    QVERIFY(edit);
+
+    QSignalSpy spy(edit, SIGNAL(mouseSelectionModeChanged(SelectionMode)));
+
+    QCOMPARE(edit->mouseSelectionMode(), QQuickTextEdit::SelectCharacters);
+
+    edit->setMouseSelectionMode(QQuickTextEdit::SelectWords);
+    QCOMPARE(edit->mouseSelectionMode(), QQuickTextEdit::SelectWords);
+    QCOMPARE(spy.count(), 1);
+
+    edit->setMouseSelectionMode(QQuickTextEdit::SelectWords);
+    QCOMPARE(spy.count(), 1);
+
+    edit->setMouseSelectionMode(QQuickTextEdit::SelectCharacters);
+    QCOMPARE(edit->mouseSelectionMode(), QQuickTextEdit::SelectCharacters);
+    QCOMPARE(spy.count(), 2);
+}
+
+void tst_qquicktextedit::selectByMouse()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextEdit {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+    QVERIFY(edit);
+
+    QSignalSpy spy(edit, SIGNAL(selectByMouseChanged(bool)));
+
+    QCOMPARE(edit->selectByMouse(), false);
+
+    edit->setSelectByMouse(true);
+    QCOMPARE(edit->selectByMouse(), true);
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.at(0).at(0).toBool(), true);
+
+    edit->setSelectByMouse(true);
+    QCOMPARE(spy.count(), 1);
+
+    edit->setSelectByMouse(false);
+    QCOMPARE(edit->selectByMouse(), false);
+    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.at(1).at(0).toBool(), false);
+}
+
+void tst_qquicktextedit::renderType()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n TextEdit {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
+    QVERIFY(edit);
+
+    QSignalSpy spy(edit, SIGNAL(renderTypeChanged()));
+
+    QCOMPARE(edit->renderType(), QQuickTextEdit::QtRendering);
+
+    edit->setRenderType(QQuickTextEdit::NativeRendering);
+    QCOMPARE(edit->renderType(), QQuickTextEdit::NativeRendering);
+    QCOMPARE(spy.count(), 1);
+
+    edit->setRenderType(QQuickTextEdit::NativeRendering);
+    QCOMPARE(spy.count(), 1);
+
+    edit->setRenderType(QQuickTextEdit::QtRendering);
+    QCOMPARE(edit->renderType(), QQuickTextEdit::QtRendering);
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktextedit::inputMethodHints()

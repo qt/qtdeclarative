@@ -102,6 +102,7 @@ private slots:
     void style();
     void color();
     void smooth();
+    void renderType();
 
     // QQuickFontValueType
     void weight();
@@ -437,6 +438,29 @@ void tst_qquicktext::wrap()
 
         delete textObject;
     }
+
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\n Text {}", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+        QVERIFY(textObject);
+
+        QSignalSpy spy(textObject, SIGNAL(wrapModeChanged()));
+
+        QCOMPARE(textObject->wrapMode(), QQuickText::NoWrap);
+
+        textObject->setWrapMode(QQuickText::Wrap);
+        QCOMPARE(textObject->wrapMode(), QQuickText::Wrap);
+        QCOMPARE(spy.count(), 1);
+
+        textObject->setWrapMode(QQuickText::Wrap);
+        QCOMPARE(spy.count(), 1);
+
+        textObject->setWrapMode(QQuickText::NoWrap);
+        QCOMPARE(textObject->wrapMode(), QQuickText::NoWrap);
+        QCOMPARE(spy.count(), 2);
+    }
 }
 
 void tst_qquicktext::elide()
@@ -639,6 +663,29 @@ void tst_qquicktext::textFormat()
         QVERIFY(textObject->textFormat() == QQuickText::PlainText);
 
         delete textObject;
+    }
+
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\n Text {}", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QQuickText *text = qobject_cast<QQuickText *>(object.data());
+        QVERIFY(text);
+
+        QSignalSpy spy(text, SIGNAL(textFormatChanged(TextFormat)));
+
+        QCOMPARE(text->textFormat(), QQuickText::AutoText);
+
+        text->setTextFormat(QQuickText::StyledText);
+        QCOMPARE(text->textFormat(), QQuickText::StyledText);
+        QCOMPARE(spy.count(), 1);
+
+        text->setTextFormat(QQuickText::StyledText);
+        QCOMPARE(spy.count(), 1);
+
+        text->setTextFormat(QQuickText::AutoText);
+        QCOMPARE(text->textFormat(), QQuickText::AutoText);
+        QCOMPARE(spy.count(), 2);
     }
 }
 
@@ -1077,6 +1124,31 @@ void tst_qquicktext::color()
         QCOMPARE(textObject->color(), QColor("black"));
         QCOMPARE(textObject->linkColor(), QColor("blue"));
 
+        QSignalSpy colorSpy(textObject, SIGNAL(colorChanged()));
+        QSignalSpy linkColorSpy(textObject, SIGNAL(linkColorChanged()));
+
+        textObject->setColor(QColor("white"));
+        QCOMPARE(textObject->color(), QColor("white"));
+        QCOMPARE(colorSpy.count(), 1);
+
+        textObject->setLinkColor(QColor("black"));
+        QCOMPARE(textObject->linkColor(), QColor("black"));
+        QCOMPARE(linkColorSpy.count(), 1);
+
+        textObject->setColor(QColor("white"));
+        QCOMPARE(colorSpy.count(), 1);
+
+        textObject->setLinkColor(QColor("black"));
+        QCOMPARE(linkColorSpy.count(), 1);
+
+        textObject->setColor(QColor("black"));
+        QCOMPARE(textObject->color(), QColor("black"));
+        QCOMPARE(colorSpy.count(), 2);
+
+        textObject->setLinkColor(QColor("blue"));
+        QCOMPARE(textObject->linkColor(), QColor("blue"));
+        QCOMPARE(linkColorSpy.count(), 2);
+
         delete textObject;
     }
 
@@ -1237,6 +1309,30 @@ void tst_qquicktext::smooth()
             delete textObject;
         }
     }
+}
+
+void tst_qquicktext::renderType()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n Text {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickText *text = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(text);
+
+    QSignalSpy spy(text, SIGNAL(renderTypeChanged()));
+
+    QCOMPARE(text->renderType(), QQuickText::QtRendering);
+
+    text->setRenderType(QQuickText::NativeRendering);
+    QCOMPARE(text->renderType(), QQuickText::NativeRendering);
+    QCOMPARE(spy.count(), 1);
+
+    text->setRenderType(QQuickText::NativeRendering);
+    QCOMPARE(spy.count(), 1);
+
+    text->setRenderType(QQuickText::QtRendering);
+    QCOMPARE(text->renderType(), QQuickText::QtRendering);
+    QCOMPARE(spy.count(), 2);
 }
 
 void tst_qquicktext::weight()
@@ -1436,9 +1532,6 @@ void tst_qquicktext::wordSpacing()
         delete textObject;
     }
 }
-
-
-
 
 class EventSender : public QQuickItem
 {
