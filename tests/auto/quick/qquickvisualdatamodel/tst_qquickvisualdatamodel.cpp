@@ -699,6 +699,35 @@ void tst_qquickvisualdatamodel::modelProperties()
     {
         QQuickView view;
 
+        DataObject object("Item 1", "red");
+
+        QQmlContext *ctxt = view.rootContext();
+        ctxt->setContextProperty("myModel", &object);
+
+        view.setSource(testFileUrl("modelproperties.qml"));
+
+        QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
+        QVERIFY(listview != 0);
+
+        QQuickItem *contentItem = listview->contentItem();
+        QVERIFY(contentItem != 0);
+
+        QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", 0);
+        QVERIFY(delegate);
+        QCOMPARE(delegate->property("test1").toString(),QString("Item 1"));
+        QCOMPARE(delegate->property("test2").toString(),QString("Item 1"));
+        QVERIFY(qobject_cast<DataObject*>(delegate->property("test3").value<QObject*>()) != 0);
+        QVERIFY(qobject_cast<DataObject*>(delegate->property("test4").value<QObject*>()) != 0);
+        QCOMPARE(delegate->property("test5").toString(),QString("Item 1"));
+        QCOMPARE(delegate->property("test9").toString(),QString("Item 1"));
+        QVERIFY(delegate->property("test6").value<QObject*>() != 0);
+        QCOMPARE(delegate->property("test7").toInt(), 0);
+        QCOMPARE(delegate->property("test8").toInt(), 0);
+    }
+
+    {
+        QQuickView view;
+
         QStandardItemModel model;
         initStandardTreeModel(&model);
 
