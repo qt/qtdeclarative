@@ -87,7 +87,7 @@ has now been replaced by the new QtQml and QtQuick C++ modules. See the
 \section2 Modules and Imports
 
 \list
-\li Arbitrary functionality may be provided in a namespace through a Module API.  See qmlRegisterModuleApi() for more information.
+\li Arbitrary functionality may be provided in a namespace through a singleton type.  See qmlRegisterSingletonType() for more information.
 \li JavaScript (.js) files may now import QML modules and other JavaScript files using the ".import" syntax.
 \endlist
 

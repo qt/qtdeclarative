@@ -433,33 +433,33 @@ QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
 
 Q_QML_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor);
 
-inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor,
+inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                 QJSValue (*callback)(QQmlEngine *, QJSEngine *))
 {
-    QQmlPrivate::RegisterModuleApi api = {
+    QQmlPrivate::RegisterSingletonType api = {
         0,
 
-        uri, versionMajor, versionMinor,
+        uri, versionMajor, versionMinor, typeName,
 
         callback, 0, 0
     };
 
-    return QQmlPrivate::qmlregister(QQmlPrivate::ModuleApiRegistration, &api);
+    return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
 template <typename T>
-inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor,
+inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                 QObject *(*callback)(QQmlEngine *, QJSEngine *))
 {
-    QQmlPrivate::RegisterModuleApi api = {
+    QQmlPrivate::RegisterSingletonType api = {
         1,
 
-        uri, versionMajor, versionMinor,
+        uri, versionMajor, versionMinor, typeName,
 
         0, callback, &T::staticMetaObject
     };
 
-    return QQmlPrivate::qmlregister(QQmlPrivate::ModuleApiRegistration, &api);
+    return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
 QT_END_NAMESPACE

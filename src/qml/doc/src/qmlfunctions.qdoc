@@ -205,25 +205,25 @@
 */
 
 /*!
-   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QJSValue (*callback)(QQmlEngine *, QJSEngine *))
+   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, QJSValue (*callback)(QQmlEngine *, QJSEngine *))
    \relates QQmlEngine
 
-   This function may be used to register a module API provider \a callback in a particular \a uri
-   with a version specified in \a versionMajor and \a versionMinor.
+   This function may be used to register a singleton type provider \a callback in a particular \a uri
+   and \a typeName with a version specified in \a versionMajor and \a versionMinor.
 
-   Installing a module API into a uri allows developers to provide arbitrary functionality
-   (methods and properties) in a namespace that doesn't necessarily contain elements.
+   Installing a singleton type allows developers to provide arbitrary functionality
+   (methods and properties) to a client without requiring individual instances of the type to
+   be instantiated by the client.
 
-   A module API may be either a QObject or a QJSValue.  Only one module API provider
-   may be registered into any given namespace (combination of \a uri, \a versionMajor and \a versionMinor).
-   This function should be used to register a module API provider function which returns a QJSValue as a module API.
+   A singleton type may be either a QObject or a QJSValue.
+   This function should be used to register a singleton type provider function which returns a QJSValue as a singleton type.
 
-   \b{NOTE:} QJSValue module API properties will \b{not} trigger binding re-evaluation if changed.
+   \b{NOTE:} QJSValue singleton type properties will \b{not} trigger binding re-evaluation if changed.
 
    Usage:
    \code
-   // first, define the module API provider function (callback).
-   static QJSValue *example_qjsvalue_module_api_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
+   // first, define the singleton type provider function (callback).
+   static QJSValue *example_qjsvalue_singletontype_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
 
@@ -233,19 +233,19 @@
        return example;
    }
 
-   // second, register the module API provider with QML by calling this function in an initialization function.
+   // second, register the singleton type provider with QML by calling this function in an initialization function.
    ...
-   qmlRegisterModuleApi("Qt.example.qjsvalueApi", 1, 0, example_qjsvalue_module_api_provider);
+   qmlRegisterSingletonType("Qt.example.qjsvalueApi", 1, 0, "MyApi", example_qjsvalue_singletontype_provider);
    ...
    \endcode
 
-   In order to use the registered module API in QML, you must import the module API.
+   In order to use the registered singleton type in QML, you must import the singleton type.
    \qml
    import QtQuick 2.0
    import Qt.example.qjsvalueApi 1.0 as ExampleApi
    Item {
        id: root
-       property int someValue: ExampleApi.someProperty
+       property int someValue: ExampleApi.MyApi.someProperty
    }
    \endqml
   */
@@ -274,44 +274,44 @@
 */
 
 /*!
-   \fn int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor, QObject *(*callback)(QQmlEngine *, QJSEngine *))
+   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, QObject *(*callback)(QQmlEngine *, QJSEngine *))
    \relates QQmlEngine
 
-   This function may be used to register a module API provider \a callback in a particular \a uri
-   with a version specified in \a versionMajor and \a versionMinor.
+   This function may be used to register a singleton type provider \a callback in a particular \a uri
+   and \a typeName with a version specified in \a versionMajor and \a versionMinor.
 
-   Installing a module API into a uri allows developers to provide arbitrary functionality
-   (methods and properties) in a namespace that doesn't necessarily contain elements.
+   Installing a singleton type into a uri allows developers to provide arbitrary functionality
+   (methods and properties) to clients without requiring individual instances ot the type to be
+   instantiated by the client.
 
-   A module API may be either a QObject or a QJSValue.  Only one module API provider
-   may be registered into any given namespace (combination of \a uri, \a versionMajor and \a versionMinor).
-   This function should be used to register a module API provider function which returns a QObject
-   of the given type T as a module API.
+   A singleton type may be either a QObject or a QJSValue.
+   This function should be used to register a singleton type provider function which returns a QObject
+   of the given type T as a singleton type.
 
-   A QObject module API must be imported with a qualifier, and that qualifier may be used as
-   the target in a \l Connections element or otherwise used as any other element id would.
-   One exception to this is that a QObject module API property may not be aliased (because the
-   module API qualifier does not identify an object within the same component as any other item).
+   A QObject singleton type may be referenced via the type name with which it was registered, and this
+   typename may be used as the target in a \l Connections element or otherwise used as any other element id would.
+   One exception to this is that a QObject singleton type property may not be aliased (because the
+   singleton type name does not identify an object within the same component as any other item).
 
-   \b{NOTE:} A QObject module API instance returned from a module API provider is owned by the QML
-   engine.  For this reason, the module API provider function should \b{not} be implemented as a
+   \b{NOTE:} A QObject singleton type instance returned from a singleton type provider is owned by the QML
+   engine.  For this reason, the singleton type provider function should \b{not} be implemented as a
    singleton factory.
 
    Usage:
    \code
    // first, define your QObject which provides the functionality.
-   class ModuleApiExample : public QObject
+   class SingletonTypeExample : public QObject
    {
        Q_OBJECT
        Q_PROPERTY (int someProperty READ someProperty WRITE setSomeProperty NOTIFY somePropertyChanged)
 
    public:
-       ModuleApiExample(QObject* parent = 0)
+       SingletonTypeExample(QObject* parent = 0)
            : QObject(parent), m_someProperty(0)
        {
        }
 
-       ~ModuleApiExample() {}
+       ~SingletonTypeExample() {}
 
        Q_INVOKABLE int doSomething() { setSomeProperty(5); return m_someProperty; }
 
@@ -325,45 +325,45 @@
        int m_someProperty;
    };
 
-   // second, define the module API provider function (callback).
-   static QObject *example_qobject_module_api_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
+   // second, define the singleton type provider function (callback).
+   static QObject *example_qobject_singletontype_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
        Q_UNUSED(scriptEngine)
 
-       ModuleApiExample *example = new ModuleApiExample();
+       SingletonTypeExample *example = new SingletonTypeExample();
        return example;
    }
 
-   // third, register the module API provider with QML by calling this function in an initialization function.
+   // third, register the singleton type provider with QML by calling this function in an initialization function.
    ...
-   qmlRegisterModuleApi<ModuleApiExample>("Qt.example.qobjectApi", 1, 0, example_qobject_module_api_provider);
+   qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qobjectSingleton", 1, 0, "MyApi", example_qobject_singletontype_provider);
    ...
    \endcode
 
-   In order to use the registered module API in QML, you must import the module API.
+   In order to use the registered singleton type in QML, you must import the singleton type.
    \qml
    import QtQuick 2.0
-   import Qt.example.qobjectApi 1.0 as ExampleApi
+   import Qt.example.qobjectSingleton 1.0
    Item {
        id: root
-       property int someValue: ExampleApi.someProperty
+       property int someValue: MyApi.someProperty
 
        Component.onCompleted: {
-           someValue = ExampleApi.doSomething()
+           someValue = MyApi.doSomething()
        }
    }
    \endqml
 
-   Since Module APIs do not have an associated QQmlContext object, then within the functions of a QObject-derived
-   type that is registered as a module API implementation the QML context and engine information is not available.
+   Since singleton types do not have an associated QQmlContext object, then within the functions of a QObject-derived
+   type that is registered as a singleton type implementation the QML context and engine information is not available.
    The QQmlEngine::contextForObject() function returns NULL when supplied with a pointer to an QObject that
-   implements a module API.
+   implements a singleton type.
 
    Extending the above example:
 
    \code
-   class ModuleApiExample : public QObject
+   class SingletonTypeExample : public QObject
    {
        ...
 

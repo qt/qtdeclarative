@@ -3,7 +3,7 @@
 function test() {
     var r="transaction_not_finished";
 
-    var db = Sql.openDatabaseSync("QmlTestDB-changeversion", "", "Test database from Qt autotests", 1000000,
+    var db = Sql.LocalStorage.openDatabaseSync("QmlTestDB-changeversion", "", "Test database from Qt autotests", 1000000,
             function(db) {
                 db.changeVersion("","1.0")
                 db.transaction(function(tx){
@@ -17,7 +17,7 @@ function test() {
     });
 
 
-    db = Sql.openDatabaseSync("QmlTestDB-changeversion", "", "Test database from Qt autotests", 1000000);
+    db = Sql.LocalStorage.openDatabaseSync("QmlTestDB-changeversion", "", "Test database from Qt autotests", 1000000);
 
     if (db.version == "1.0")
         db.changeVersion("1.0","2.0",function(tx)
@@ -37,7 +37,7 @@ function test() {
     else
         return "db.version should be 1.0, but is " + db.version;
 
-    var db = Sql.openDatabaseSync("QmlTestDB-changeversion", "2.0", "Test database from Qt autotests", 1000000);
+    var db = Sql.LocalStorage.openDatabaseSync("QmlTestDB-changeversion", "2.0", "Test database from Qt autotests", 1000000);
 
     db.transaction(function(tx){
         var rs = tx.executeSql('SELECT * FROM Utterance');

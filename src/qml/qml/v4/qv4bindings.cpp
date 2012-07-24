@@ -949,15 +949,15 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         reg.cleanupString();
 
         if (r.isValid() && r.importNamespace) {
-            QQmlMetaType::ModuleApiInstance *moduleApi = context->imports->moduleApi(r.importNamespace);
-            if (moduleApi) {
-                if (moduleApi->qobjectCallback) {
-                    moduleApi->qobjectApi = moduleApi->qobjectCallback(context->engine, context->engine);
-                    moduleApi->qobjectCallback = 0;
-                    moduleApi->scriptCallback = 0;
+            QQmlMetaType::SingletonInstance *singletonType = context->imports->singletonType(r.importNamespace);
+            if (singletonType) {
+                if (singletonType->qobjectCallback) {
+                    singletonType->qobjectApi = singletonType->qobjectCallback(context->engine, context->engine);
+                    singletonType->qobjectCallback = 0;
+                    singletonType->scriptCallback = 0;
                 }
-                if (moduleApi->qobjectApi)
-                    reg.setQObject(moduleApi->qobjectApi);
+                if (singletonType->qobjectApi)
+                    reg.setQObject(singletonType->qobjectApi);
             }
         }
     }

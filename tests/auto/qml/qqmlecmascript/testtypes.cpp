@@ -135,6 +135,33 @@ static QJSValue readonly_script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
     return v;
 }
 
+static QObject *testImportOrder_api(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    testImportOrderApi *o = new testImportOrderApi(37);
+    return o;
+}
+
+static QObject *testImportOrder_api1(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    testImportOrderApi *o = new testImportOrderApi(1);
+    return o;
+}
+
+static QObject *testImportOrder_api2(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    testImportOrderApi *o = new testImportOrderApi(2);
+    return o;
+}
+
 static QObject *qobject_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
@@ -266,14 +293,14 @@ void registerTypes()
 
     qRegisterMetaType<MyQmlObject::MyType>("MyQmlObject::MyType");
 
-    qmlRegisterModuleApi("Qt.test",1,0,script_api);                             // register (script) module API for an existing uri which contains elements
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test",1,0,qobject_api);            // register (qobject) for an existing uri for which another module API was previously regd.  Should replace!
-    qmlRegisterModuleApi("Qt.test.scriptApi",1,0,script_api);                   // register (script) module API for a uri which doesn't contain elements
-    qmlRegisterModuleApi("Qt.test.scriptApi",2,0,readonly_script_api);          // register (script) module API for a uri which doesn't contain elements - will be made read-only
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",1,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",1,3,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, minor version set
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",2,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, major version set
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApiParented",1,0,qobject_api_engine_parent); // register (parented qobject) module API for a uri which doesn't contain elements
+    qmlRegisterSingletonType("Qt.test",1,0,"Script",script_api);                             // register (script) singleton Type for an existing uri which contains elements
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test",1,0,"QObject",qobject_api);            // register (qobject) for an existing uri for which another singleton Type was previously regd.  Should replace!
+    qmlRegisterSingletonType("Qt.test.scriptApi",1,0,"Script",script_api);                   // register (script) singleton Type for a uri which doesn't contain elements
+    qmlRegisterSingletonType("Qt.test.scriptApi",2,0,"Script",readonly_script_api);          // register (script) singleton Type for a uri which doesn't contain elements - will be made read-only
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApi",1,0,"QObject",qobject_api); // register (qobject) singleton Type for a uri which doesn't contain elements
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApi",1,3,"QObject",qobject_api); // register (qobject) singleton Type for a uri which doesn't contain elements, minor version set
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApi",2,0,"QObject",qobject_api); // register (qobject) singleton Type for a uri which doesn't contain elements, major version set
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApiParented",1,0,"QObject",qobject_api_engine_parent); // register (parented qobject) singleton Type for a uri which doesn't contain elements
 
     qRegisterMetaType<MyQmlObject::MyEnum2>("MyEnum2");
     qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
@@ -288,13 +315,18 @@ void registerTypes()
 
     qmlRegisterType<MyUnregisteredEnumTypeObject>("Qt.test", 1, 0, "MyUnregisteredEnumTypeObject");
 
-    qmlRegisterModuleApi<FallbackBindingsObject>("Qt.test.fallbackBindingsObject", 1, 0, fallback_bindings_object);
-    qmlRegisterModuleApi<FallbackBindingsObject>("Qt.test.fallbackBindingsDerived", 1, 0, fallback_bindings_derived);
+    qmlRegisterSingletonType<FallbackBindingsObject>("Qt.test.fallbackBindingsObject", 1, 0, "Fallback", fallback_bindings_object);
+    qmlRegisterSingletonType<FallbackBindingsObject>("Qt.test.fallbackBindingsDerived", 1, 0, "Fallback", fallback_bindings_derived);
 
     qmlRegisterType<FallbackBindingsTypeObject>("Qt.test.fallbackBindingsObject", 1, 0, "FallbackBindingsType");
     qmlRegisterType<FallbackBindingsTypeDerived>("Qt.test.fallbackBindingsDerived", 1, 0, "FallbackBindingsType");
 
     qmlRegisterType<MyStringClass>("Qt.test", 1, 0, "MyStringClass");
+
+    qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi",1,0,"Data",testImportOrder_api);
+    qmlRegisterSingletonType<testImportOrderApi>("NamespaceAndType",1,0,"NamespaceAndType",testImportOrder_api);
+    qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi1",1,0,"Data",testImportOrder_api1);
+    qmlRegisterSingletonType<testImportOrderApi>("Qt.test.importOrderApi2",1,0,"Data",testImportOrder_api2);
 }
 
 #include "testtypes.moc"

@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import Qt.test 1.0 as ModuleApi
+import Qt.test 1.0 as SingletonType
 
 Item {
     id: testOwnership
@@ -14,13 +14,13 @@ Item {
             return; // failed to create component.
         }
         o.varprop = true;                // causes initialization of varProperties.
-        ModuleApi.trackObject(o);        // stores QObject ptr
-        if (ModuleApi.trackedObject() == null) return;        // is still valid, should have a valid v8object.
+        SingletonType.QObject.trackObject(o);        // stores QObject ptr
+        if (SingletonType.QObject.trackedObject() == null) return;        // is still valid, should have a valid v8object.
         o = new Date();                  // causes object to be gc-able.
         gc();  // collect object's v8object + varProperties, queues deleteLater.
-        if (ModuleApi.trackedObject() != null) return;        // v8object was previously collected.
-        ModuleApi.setTrackedObjectProperty("varprop");        // deferences varProperties of object.
-        test = !(ModuleApi.trackedObjectProperty("varprop")); // deferences varProperties of object.
+        if (SingletonType.QObject.trackedObject() != null) return;        // v8object was previously collected.
+        SingletonType.QObject.setTrackedObjectProperty("varprop");        // deferences varProperties of object.
+        test = !(SingletonType.QObject.trackedObjectProperty("varprop")); // deferences varProperties of object.
         // if we didn't crash, success.
     }
 }

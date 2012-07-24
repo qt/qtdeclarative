@@ -126,7 +126,7 @@ functions which each allow different use-cases to be fulfilled.
 \li qmlRegisterExtendedType
 \li qmlRegisterInterface
 \li qmlRegisterCustomType
-\li qmlRegisterModuleApi
+\li qmlRegisterSingletonType
 \endlist
 
 For more information on this topic, see the documentation regarding

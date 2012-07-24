@@ -454,9 +454,9 @@ through the data.
 /*!
     \qmlmodule QtQuick.LocalStorage 2
     \title QML Module QtQuick.LocalStorage 2.0
-    \brief Provides a JavaScript module API for accessing a local SQLite database
+    \brief Provides a JavaScript object singleton type for accessing a local SQLite database
 
-    This is a module API for reading and writing to SQLite databases.
+    This is a singleton type for reading and writing to SQLite databases.
 
 
     \section1 Methods
@@ -699,7 +699,7 @@ public:
     void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == "QtQuick.LocalStorage");
-        qmlRegisterModuleApi<QQuickLocalStorage>(uri, 2, 0, module_api_factory);
+        qmlRegisterSingletonType<QQuickLocalStorage>(uri, 2, 0, "LocalStorage", module_api_factory);
     }
 };
 

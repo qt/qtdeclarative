@@ -74,7 +74,7 @@ For example:
 \endcode
 
 In particular, this may be useful in order to access functionality provided
-via a module API; see qmlRegisterModuleApi() for more information.
+via a singleton type; see qmlRegisterSingletonType() for more information.
 
 Due to the ability of a JavaScript file to import another script or QML module
 in this fashion in QtQuick 2.0, some extra semantics are defined:

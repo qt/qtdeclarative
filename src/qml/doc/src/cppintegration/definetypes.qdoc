@@ -146,7 +146,7 @@ type name.
 instantiable but should be identifiable as a type to the QML type system. This
 is useful if a type's enums or attached properties should be accessible from QML
 but the type itself should not be instantiable.
-\li qmlRegisterModuleApi() registers a singleton instance that can be imported
+\li qmlRegisterSingletonType() registers a singleton type that can be imported
 from QML, as discussed below.
 \endlist
 
@@ -154,29 +154,30 @@ Note that all C++ types registered with the QML type system must be
 QObject-derived, even if they are non-instantiable.
 
 
-\section3 Registering Singleton Objects with a Module API
+\section3 Registering Singleton Objects with a Singleton Type
 
-A Module API enables properties, signals and methods to be exposed in
+A singleton type enables properties, signals and methods to be exposed in
 a namespace without requiring the client to manually instantiate an
-object instance. QObject module APIs in particular are an efficient and
+object instance. QObject singleton types in particular are an efficient and
 convenient way to provide functionality or global property values.
 
-Note that module APIs do not have an associated QQmlContext as they are
-shared across all contexts in an engine.  QObject module API instances
+Note that singleton types do not have an associated QQmlContext as they are
+shared across all contexts in an engine.  QObject singleton type instances
 are constructed and owned by the QQmlEngine, and will be destroyed when
 the engine is destroyed.
 
-A QObject module API can be interacted with in a manner simlar to any
-other QObject or instantiated element.  That is, Q_PROPERTYs of QObject
-module APIs may be bound to, and Q_INVOKABLE functions of QObject module
-APIs may be used in signal handler expressions.  This makes module APIs
-an ideal way to implement styling or theming, and they can also be used
-instead of ".pragma library" script imports to store global state or to
-provide global functionality.
+A QObject singleton type can be interacted with in a manner simlar to any
+other QObject or instantiated element, except that only one (engine constructed
+and owned) instance will exist, and it must be referenced by type name rather
+than id.  Q_PROPERTYs of QObject singleton types may be bound to, and Q_INVOKABLE
+functions of QObject module APIs may be used in signal handler expressions.
+This makes singleton types an ideal way to implement styling or theming, and
+they can also be used instead of ".pragma library" script imports to store global
+state or to provide global functionality.
 
-Once registered, a QObject module API may be imported and used like any
+Once registered, a QObject singleton type may be imported and used like any
 other QObject instance exposed to QML.  The following example assumes that
-a QObject module API was registered into the "MyThemeModule" namespace
+a QObject singleton type was registered into the "MyThemeModule" namespace
 with version 1.0, where that QObject has a QColor "color" Q_PROPERTY:
 
 \qml
@@ -187,11 +188,11 @@ Rectangle {
 }
 \endqml
 
-A QJSValue may also be exposed as a module API, however clients should
-be aware that properties of such a module API cannot be bound to.
+A QJSValue may also be exposed as a singleton type, however clients should
+be aware that properties of such a singleton type cannot be bound to.
 
-See \l{qmlRegisterModuleApi()} for more information on how implement and
-register a new module API, and how to use an existing module API.
+See \l{qmlRegisterSingletonType()} for more information on how implement and
+register a new singleton type, and how to use an existing singleton type.
 
 
 \section2 Type Revisions and Versions

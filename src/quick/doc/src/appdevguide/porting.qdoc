@@ -66,8 +66,8 @@ Qt.inputMethod.hide() to show and hide the virtual keyboard.
 \li XmlListModel has moved into its own module, QtQuick.XmlListModel. Any code that uses the
 XmlListModel and XmlRole types must import \e {QtQuick.XmlListModel} instead.
 \li The local storage API that enables SQL support has been moved from the \l {QML Global Object}
-into a \c QtQuick.LocalStorage module API. Any code that requires the local storage API must import
-\e {QtQuick.LocalStorage} with a namespaced import instead. See the \l \l{QtQuick.LocalStorage 2}{QtQuick.LocalStorage} documentation
+into a \c QtQuick.LocalStorage singleton type. Any code that requires the local storage API must import
+\e {QtQuick.LocalStorage} instead. See the \l \l{QtQuick.LocalStorage 2}{QtQuick.LocalStorage} documentation
 for examples.
 \li The \c LayoutItem type has been removed from the \c QtQuick module as it was specific to the
 Graphics View framework backend used in QtQuick 1.

@@ -334,7 +334,7 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         /*
           Existing module object lookup methods include:
               1. string -> module object (search via importCache->query(name))
-              2. QQmlMetaType::ModuleApi -> module object (via QQmlEnginePrivate::moduleApiInstance() cache)
+              2. QQmlMetaType::SingletonType -> module object (via QQmlEnginePrivate::singletonTypeInstance() cache)
           We currently use 1, which is not ideal for performance
         */
         _subscribeName << *e->id;

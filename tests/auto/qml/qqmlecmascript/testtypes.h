@@ -1129,6 +1129,21 @@ private:
     QObject *m_trackedObject;
 };
 
+class testImportOrderApi : public QObject
+{
+    Q_OBJECT
+
+public:
+    testImportOrderApi(int value, QObject *parent = 0) : QObject(parent), m_value(value) {}
+
+    Q_PROPERTY(int value READ value)
+
+    int value() const { return m_value; }
+
+private:
+    int m_value;
+};
+
 class CircularReferenceObject : public QObject,
                                 public QV8GCCallback::Node
 {

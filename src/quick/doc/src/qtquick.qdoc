@@ -102,7 +102,7 @@ To find out more about using the QML language, see the \l{Qt QML Module Document
 
 More information about the Qt Quick module is contained within the class and
 function documentation of the \l{qtquick-apireference.html}
-{Qt Quick Module API Reference}.  The QML types provided by the Qt Quick module
+{Qt Quick Singleton Type Reference}.  The QML types provided by the Qt Quick module
 are listed in the \l{qtquick-qmltypereference.html}
 {Qt Quick Module QML Type Reference} page.
 

@@ -6,10 +6,10 @@ Item {
     property var varCanary: 12
 
     Component.onCompleted: {
-        QObjectApi.qobjectTestWritableProperty = 42;
+        QObjectApi.QObject.qobjectTestWritableProperty = 42;
     }
 
     Component.onDestruction: {
-        QObjectApi.qobjectTestWritableProperty = 43;
+        QObjectApi.QObject.qobjectTestWritableProperty = 43;
     }
 }

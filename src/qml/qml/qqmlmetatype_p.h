@@ -117,8 +117,8 @@ public:
     static void setQQuickAnchorLineCompareFunction(CompareFunction);
     static bool QQuickAnchorLineCompare(const void *p1, const void *p2);
 
-    struct ModuleApiInstance {
-        ModuleApiInstance()
+    struct SingletonInstance {
+        SingletonInstance()
             : scriptCallback(0), qobjectCallback(0), qobjectApi(0), instanceMetaObject(0) {}
 
         QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
@@ -128,17 +128,18 @@ public:
         QJSValue scriptApi;
 
     };
-    struct ModuleApi {
-        inline ModuleApi();
-        inline bool operator==(const ModuleApi &) const;
+    struct SingletonType {
+        inline SingletonType();
+        inline bool operator==(const SingletonType &) const;
         int major;
         int minor;
+        QString typeName;
         QObject *(*qobject)(QQmlEngine *, QJSEngine *);
         const QMetaObject *instanceMetaObject;
         QJSValue (*script)(QQmlEngine *, QJSEngine *);
     };
-    static ModuleApi moduleApi(const QString &, int, int);
-    static QHash<QString, QList<ModuleApi> > moduleApis();
+    static SingletonType singletonType(const QString &, int, int);
+    static QHash<QString, QList<SingletonType> > singletonTypes();
 
     static bool namespaceContainsRegistrations(const QString &);
 
@@ -232,7 +233,11 @@ public:
     QQmlType *type(const QHashedV8String &, int);
 
 private:
+    QQmlType *typeNoLock(const QString &name, int minor);
+
     friend int registerType(const QQmlPrivate::RegisterType &);
+    friend struct QQmlMetaTypeData;
+
     QQmlTypeModule();
     ~QQmlTypeModule();
     QQmlTypeModulePrivate *d;
@@ -257,7 +262,7 @@ private:
     int m_minor;
 };
 
-QQmlMetaType::ModuleApi::ModuleApi()
+QQmlMetaType::SingletonType::SingletonType()
 {
     major = 0;
     minor = 0;
@@ -266,12 +271,12 @@ QQmlMetaType::ModuleApi::ModuleApi()
     script = 0;
 }
 
-bool QQmlMetaType::ModuleApi::operator==(const ModuleApi &other) const
+bool QQmlMetaType::SingletonType::operator==(const SingletonType &other) const
 {
     return major == other.major && minor == other.minor && script == other.script && qobject == other.qobject;
 }
 
-inline uint qHash(const QQmlMetaType::ModuleApi &import)
+inline uint qHash(const QQmlMetaType::SingletonType &import)
 {
     return import.major ^ import.minor ^ quintptr(import.script) ^ quintptr(import.qobject);
 }

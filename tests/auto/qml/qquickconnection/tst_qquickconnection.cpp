@@ -62,7 +62,7 @@ private slots:
     void unknownSignals();
     void errors_data();
     void errors();
-    void moduleApiTarget();
+    void singletonTypeTarget();
 
 private:
     QQmlEngine engine;
@@ -225,14 +225,14 @@ void tst_qquickconnection::errors()
 }
 
 
-class MyTestModuleApi : public QObject
+class MyTestSingletonType : public QObject
 {
 Q_OBJECT
 Q_PROPERTY(int intProp READ intProp WRITE setIntProp NOTIFY intPropChanged)
 
 public:
-    MyTestModuleApi(QObject *parent = 0) : QObject(parent), m_intProp(0), m_changeCount(0) {}
-    ~MyTestModuleApi() {}
+    MyTestSingletonType(QObject *parent = 0) : QObject(parent), m_intProp(0), m_changeCount(0) {}
+    ~MyTestSingletonType() {}
 
     Q_INVOKABLE int otherMethod(int val) { return val + 4; }
 
@@ -256,15 +256,15 @@ static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
    Q_UNUSED(engine)
    Q_UNUSED(scriptEngine)
-   MyTestModuleApi *api = new MyTestModuleApi();
+   MyTestSingletonType *api = new MyTestSingletonType();
    return api;
 }
 
 // QTBUG-20937
-void tst_qquickconnection::moduleApiTarget()
+void tst_qquickconnection::singletonTypeTarget()
 {
-    qmlRegisterModuleApi<MyTestModuleApi>("MyTestModuleApi", 1, 0, module_api_factory);
-    QQmlComponent component(&engine, testFileUrl("moduleapi-target.qml"));
+    qmlRegisterSingletonType<MyTestSingletonType>("MyTestSingletonType", 1, 0, "Api", module_api_factory);
+    QQmlComponent component(&engine, testFileUrl("singletontype-target.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -279,7 +279,7 @@ void tst_qquickconnection::moduleApiTarget()
     QCOMPARE(object->property("moduleIntPropChangedCount").toInt(), 2);
     QCOMPARE(object->property("moduleOtherSignalCount").toInt(), 0);
 
-    // the module API emits otherSignal every 3 times the int property changes.
+    // the singleton Type emits otherSignal every 3 times the int property changes.
     QMetaObject::invokeMethod(object, "setModuleIntProp");
     QCOMPARE(object->property("moduleIntPropChangedCount").toInt(), 3);
     QCOMPARE(object->property("moduleOtherSignalCount").toInt(), 1);

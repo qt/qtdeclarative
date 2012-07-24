@@ -177,15 +177,16 @@ QByteArray convertToId(const QMetaObject *mo)
     return className;
 }
 
-/* All exported module APIs are collected into this list */
-class ModuleApi {
+/* All exported singleton Types are collected into this list */
+class SingletonType {
 public:
     QString uri;
     int majorVersion;
     int minorVersion;
     QByteArray objectId;
+    QString typeName;
 };
-QList<ModuleApi> moduleApis;
+QList<SingletonType> singletonTypes;
 
 QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const QList<QQmlType *> &skip = QList<QQmlType *>())
 {
@@ -260,30 +261,31 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
             qWarning() << "Could not create" << tyName;
     }
 
-    // extract exported module api
-    QHashIterator<QString, QList<QQmlMetaType::ModuleApi> > moduleApiIt(QQmlMetaType::moduleApis());
-    while (moduleApiIt.hasNext()) {
-        moduleApiIt.next();
-        foreach (const QQmlMetaType::ModuleApi &api, moduleApiIt.value()) {
-            ModuleApi moduleApi;
-            moduleApi.uri = moduleApiIt.key();
-            moduleApi.majorVersion = api.major;
-            moduleApi.minorVersion = api.minor;
+    // extract exported singleton type
+    QHashIterator<QString, QList<QQmlMetaType::SingletonType> > singletonTypeIt(QQmlMetaType::singletonTypes());
+    while (singletonTypeIt.hasNext()) {
+        singletonTypeIt.next();
+        foreach (const QQmlMetaType::SingletonType &api, singletonTypeIt.value()) {
+            SingletonType singletonType;
+            singletonType.uri = singletonTypeIt.key();
+            singletonType.majorVersion = api.major;
+            singletonType.minorVersion = api.minor;
+            singletonType.typeName = api.typeName;
 
             if (api.qobject) {
                 if (QObject *object = (*api.qobject)(engine, engine)) {
                     collectReachableMetaObjects(object, &metas);
-                    moduleApi.objectId = convertToId(object->metaObject()->className());
+                    singletonType.objectId = convertToId(object->metaObject()->className());
                     delete object;
                 }
             } else if (api.script) {
-                qWarning() << "Can't dump the module api in " << moduleApi.uri << ". QJSValue based module API is not supported.";
+                qWarning() << "Can't dump the singleton type in " << singletonType.uri << ". QJSValue based singleton Type is not supported.";
 //                QJSValue value = (*api.script)(engine, engine);
 //                IdToObjectHash jsObjects;
 //                collectReachableJSObjects(value, &jsObjects, &metas);
             }
 
-            moduleApis += moduleApi;
+            singletonTypes += singletonType;
         }
     }
 
@@ -416,15 +418,16 @@ public:
         qml->writeEndObject();
     }
 
-    void dump(const ModuleApi &api)
+    void dump(const SingletonType &api)
     {
-        qml->writeStartObject(QLatin1String("ModuleApi"));
+        qml->writeStartObject(QLatin1String("SingletonType"));
         if (api.uri != relocatableModuleUri)
             qml->writeScriptBinding(QLatin1String("uri"), enquote(api.uri));
         qml->writeScriptBinding(QLatin1String("version"), QString("%1.%2").arg(
                                     QString::number(api.majorVersion),
                                     QString::number(api.minorVersion)));
         qml->writeScriptBinding(QLatin1String("name"), enquote(api.objectId));
+        qml->writeScriptBinding(QLatin1String("typeName"), enquote(api.typeName));
         qml->writeEndObject();
     }
 
@@ -789,8 +792,8 @@ int main(int argc, char *argv[])
     if (pluginImportUri.isEmpty())
         dumper.writeEasingCurve();
 
-    // write out module api elements
-    foreach (const ModuleApi &api, moduleApis) {
+    // write out singleton type elements
+    foreach (const SingletonType &api, singletonTypes) {
         dumper.dump(api);
     }
 

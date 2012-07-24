@@ -944,10 +944,10 @@ component doesn't already exist in the component set for your platform.  Otherwi
 will be forcing the QML engine to generate and store type-data for a type which is
 essentially a duplicate of another pre-existing and potentially already loaded component.
 
-\section3 Use module APIs instead of pragma library scripts
+\section3 Use singleton types instead of pragma library scripts
 
 If you are using a pragma library script to store application-wide instance data,
-consider using a QObject module API instead.  This should result in better performance,
+consider using a QObject singleton type instead.  This should result in better performance,
 and will result in less JavaScript heap memory being used.
 
 \section2 Memory Allocation in a QML Application

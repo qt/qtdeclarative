@@ -150,8 +150,13 @@ private slots:
     void signalWithJSValueInVariant_twoEngines();
     void signalWithQJSValue_data();
     void signalWithQJSValue();
-    void moduleApi_data();
-    void moduleApi();
+    void singletonType_data();
+    void singletonType();
+    void singletonTypeImportOrder();
+    void singletonTypeResolution();
+    void singletonTypeConflicts1();
+    void singletonTypeConflicts2();
+    void singletonTypeConflicts3();
     void importScripts_data();
     void importScripts();
     void scarceResources();
@@ -1632,15 +1637,15 @@ void tst_qqmlecmascript::objectHasOwnProperty()
     QCOMPARE(child->property("enumTypeHasOwnProperty").toBool(), true);
     QCOMPARE(child->property("typenameHasOwnProperty").toBool(), true);
     QCOMPARE(child->property("typenameHasOwnProperty2").toBool(), true);
-    QCOMPARE(child->property("moduleApiTypeHasOwnProperty").toBool(), true);
-    QCOMPARE(child->property("moduleApiPropertyTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("singletonTypeTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("singletonTypePropertyTypeHasOwnProperty").toBool(), true);
 
     QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
     QMetaObject::invokeMethod(child, "testHasOwnPropertyFailureOne");
     QCOMPARE(child->property("enumNonValueHasOwnProperty").toBool(), false);
     QTest::ignoreMessage(QtWarningMsg, warning2.toLatin1().constData());
     QMetaObject::invokeMethod(child, "testHasOwnPropertyFailureTwo");
-    QCOMPARE(child->property("moduleApiNonPropertyHasOwnProperty").toBool(), false);
+    QCOMPARE(child->property("singletonTypeNonPropertyHasOwnProperty").toBool(), false);
     QTest::ignoreMessage(QtWarningMsg, warning3.toLatin1().constData());
     QMetaObject::invokeMethod(child, "testHasOwnPropertyFailureThree");
     QCOMPARE(child->property("listAtInvalidHasOwnProperty").toBool(), false);
@@ -3527,7 +3532,7 @@ void tst_qqmlecmascript::signalWithQJSValue()
     QVERIFY(object->qjsvalue().strictlyEquals(value));
 }
 
-void tst_qqmlecmascript::moduleApi_data()
+void tst_qqmlecmascript::singletonType_data()
 {
     QTest::addColumn<QUrl>("testfile");
     QTest::addColumn<QString>("errorMessage");
@@ -3539,20 +3544,42 @@ void tst_qqmlecmascript::moduleApi_data()
     QTest::addColumn<QStringList>("readBackProperties");
     QTest::addColumn<QVariantList>("readBackExpectedValues");
 
+    QTest::newRow("qobject, register + read + method [no qualifier]")
+            << testFileUrl("singletontype/qobjectSingletonTypeNoQualifier.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "qobjectPropertyTest" << "qobjectMethodTest")
+            << (QVariantList() << 20 << 1)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("script, register + read [no qualifier]")
+            << testFileUrl("singletontype/scriptSingletonTypeNoQualifier.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "scriptTest")
+            << (QVariantList() << 13)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
     QTest::newRow("qobject, register + read + method")
-            << testFileUrl("moduleapi/qobjectModuleApi.qml")
+            << testFileUrl("singletontype/qobjectSingletonType.qml")
             << QString()
             << QStringList()
             << (QStringList() << "existingUriTest" << "qobjectTest" << "qobjectMethodTest"
                    << "qobjectMinorVersionTest" << "qobjectMajorVersionTest" << "qobjectParentedTest")
-            << (QVariantList() << 20 << 20 << 1 << 20 << 20 << 26)
+            << (QVariantList() << 20 << 20 << 2 << 20 << 20 << 26)
             << QStringList()
             << QVariantList()
             << QStringList()
             << QVariantList();
 
     QTest::newRow("script, register + read")
-            << testFileUrl("moduleapi/scriptModuleApi.qml")
+            << testFileUrl("singletontype/scriptSingletonType.qml")
             << QString()
             << QStringList()
             << (QStringList() << "scriptTest")
@@ -3563,7 +3590,7 @@ void tst_qqmlecmascript::moduleApi_data()
             << QVariantList();
 
     QTest::newRow("qobject, caching + read")
-            << testFileUrl("moduleapi/qobjectModuleApiCaching.qml")
+            << testFileUrl("singletontype/qobjectSingletonTypeCaching.qml")
             << QString()
             << QStringList()
             << (QStringList() << "existingUriTest" << "qobjectParentedTest")
@@ -3574,7 +3601,7 @@ void tst_qqmlecmascript::moduleApi_data()
             << QVariantList();
 
     QTest::newRow("script, caching + read")
-            << testFileUrl("moduleapi/scriptModuleApiCaching.qml")
+            << testFileUrl("singletontype/scriptSingletonTypeCaching.qml")
             << QString()
             << QStringList()
             << (QStringList() << "scriptTest")
@@ -3585,9 +3612,9 @@ void tst_qqmlecmascript::moduleApi_data()
             << QVariantList();
 
     QTest::newRow("qobject, writing + readonly constraints")
-            << testFileUrl("moduleapi/qobjectModuleApiWriting.qml")
+            << testFileUrl("singletontype/qobjectSingletonTypeWriting.qml")
             << QString()
-            << (QStringList() << QString(testFileUrl("moduleapi/qobjectModuleApiWriting.qml").toString() + QLatin1String(":15: Error: Cannot assign to read-only property \"qobjectTestProperty\"")))
+            << (QStringList() << QString(testFileUrl("singletontype/qobjectSingletonTypeWriting.qml").toString() + QLatin1String(":15: Error: Cannot assign to read-only property \"qobjectTestProperty\"")))
             << (QStringList() << "readOnlyProperty" << "writableProperty" << "writableFinalProperty")
             << (QVariantList() << 20 << 50 << 10)
             << (QStringList() << "firstProperty" << "secondProperty")
@@ -3596,9 +3623,9 @@ void tst_qqmlecmascript::moduleApi_data()
             << (QVariantList() << 20 << 30 << 30);
 
     QTest::newRow("script, writing + readonly constraints")
-            << testFileUrl("moduleapi/scriptModuleApiWriting.qml")
+            << testFileUrl("singletontype/scriptSingletonTypeWriting.qml")
             << QString()
-            << (QStringList() << QString(testFileUrl("moduleapi/scriptModuleApiWriting.qml").toString() + QLatin1String(":21: Error: Cannot assign to read-only property \"scriptTestProperty\"")))
+            << (QStringList() << QString(testFileUrl("singletontype/scriptSingletonTypeWriting.qml").toString() + QLatin1String(":21: Error: Cannot assign to read-only property \"scriptTestProperty\"")))
             << (QStringList() << "readBack" << "unchanged")
             << (QVariantList() << 13 << 42)
             << (QStringList() << "firstProperty" << "secondProperty")
@@ -3606,8 +3633,8 @@ void tst_qqmlecmascript::moduleApi_data()
             << (QStringList() << "readBack" << "unchanged")
             << (QVariantList() << 30 << 42);
 
-    QTest::newRow("qobject module API enum values in JS")
-            << testFileUrl("moduleapi/qobjectModuleApiEnums.qml")
+    QTest::newRow("qobject singleton Type enum values in JS")
+            << testFileUrl("singletontype/qobjectSingletonTypeEnums.qml")
             << QString()
             << QStringList()
             << (QStringList() << "enumValue" << "enumMethod")
@@ -3618,7 +3645,7 @@ void tst_qqmlecmascript::moduleApi_data()
             << QVariantList();
 
     QTest::newRow("qobject, invalid major version fail")
-            << testFileUrl("moduleapi/moduleApiMajorVersionFail.qml")
+            << testFileUrl("singletontype/singletonTypeMajorVersionFail.qml")
             << QString("QQmlComponent: Component is not ready")
             << QStringList()
             << QStringList()
@@ -3629,7 +3656,7 @@ void tst_qqmlecmascript::moduleApi_data()
             << QVariantList();
 
     QTest::newRow("qobject, invalid minor version fail")
-            << testFileUrl("moduleapi/moduleApiMinorVersionFail.qml")
+            << testFileUrl("singletontype/singletonTypeMinorVersionFail.qml")
             << QString("QQmlComponent: Component is not ready")
             << QStringList()
             << QStringList()
@@ -3640,7 +3667,7 @@ void tst_qqmlecmascript::moduleApi_data()
             << QVariantList();
 }
 
-void tst_qqmlecmascript::moduleApi()
+void tst_qqmlecmascript::singletonType()
 {
     QFETCH(QUrl, testfile);
     QFETCH(QString, errorMessage);
@@ -3674,6 +3701,90 @@ void tst_qqmlecmascript::moduleApi()
             QCOMPARE(object->property(readBackProperties.at(i).toLatin1().constData()), readBackExpectedValues.at(i));
         delete object;
     }
+}
+
+void tst_qqmlecmascript::singletonTypeImportOrder()
+{
+    QQmlComponent component(&engine, testFileUrl("singletontype/singletonTypeImportOrder.qml"));
+    QObject *object = component.create();
+    QVERIFY(object);
+    QVERIFY(object->property("v") == 1);
+    delete object;
+}
+
+void tst_qqmlecmascript::singletonTypeResolution()
+{
+    QQmlComponent component(&engine, testFileUrl("singletontype/singletonTypeResolution.qml"));
+    QObject *object = component.create();
+    QVERIFY(object);
+    QVERIFY(object->property("success") == true);
+    delete object;
+}
+
+void tst_qqmlecmascript::singletonTypeConflicts1()
+{
+    const char *warning = "Cannot register singleton type TypeName in uri Test.Conflict1 1.5 (a conflicting singleton type already exists)";
+    QTest::ignoreMessage(QtWarningMsg, warning);
+
+    int i0 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 1, 5, "TypeName", 0);
+    QVERIFY(i0 != -1);
+
+    int i1 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 2, 0, "TypeName", 0);
+    QVERIFY(i1 != -1);
+
+    int i2 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 1, 5, "TypeName", 0);
+    QVERIFY(i2 == -1);
+
+    int i3 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 1, 2, "TypeName", 0);
+    QVERIFY(i3 != -1);
+
+    int i4 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 1, 8, "TypeName", 0);
+    QVERIFY(i4 != -1);
+}
+
+void tst_qqmlecmascript::singletonTypeConflicts2()
+{
+    int i0 = qmlRegisterType<MyQmlObject>("Test.Conflict2", 1, 5, "TypeName");
+    QVERIFY(i0 != -1);
+
+    int i2 = qmlRegisterType<MyQmlObject>("Test.Conflict2", 1, 8, "TypeName");
+    QVERIFY(i2 != -1);
+
+    int i3 = qmlRegisterType<MyQmlObject>("Test.Conflict2", 2, 0, "TypeName");
+    QVERIFY(i3 != -1);
+
+    int i4 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict2", 1, 0, "TypeName", 0);
+    QVERIFY(i4 != -1);
+
+    const char *warning2 = "Cannot register singleton type TypeName in uri Test.Conflict2 1.9 (a conflicting type already exists)";
+    QTest::ignoreMessage(QtWarningMsg, warning2);
+
+    int i5 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict2", 1, 9, "TypeName", 0);
+    QVERIFY(i5 == -1);
+}
+
+void tst_qqmlecmascript::singletonTypeConflicts3()
+{
+    int i0 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict3", 1, 0, "TypeName", 0);
+    QVERIFY(i0 != -1);
+
+    int i1 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict3", 1, 5, "TypeName", 0);
+    QVERIFY(i1 != -1);
+
+    int i2 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict3", 1, 8, "TypeName", 0);
+    QVERIFY(i2 != -1);
+
+    int i3 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict3", 2, 0, "TypeName", 0);
+    QVERIFY(i3 != -1);
+
+    const char *warning = "Cannot register type TypeName in uri Test.Conflict3 1.0 (a conflicting singleton type already exists)";
+    QTest::ignoreMessage(QtWarningMsg, warning);
+
+    int i4 = qmlRegisterType<MyQmlObject>("Test.Conflict3", 1, 0, "TypeName");
+    QVERIFY(i4 == -1);
+
+    int i5 = qmlRegisterType<MyQmlObject>("Test.Conflict3", 1, 3, "TypeName");
+    QVERIFY(i5 != -1);
 }
 
 void tst_qqmlecmascript::importScripts_data()
@@ -3767,8 +3878,8 @@ void tst_qqmlecmascript::importScripts_data()
             << (QStringList() << QLatin1String("testValue"))
             << (QVariantList() << QVariant(18));
 
-    QTest::newRow("import module api into js import")
-            << testFileUrl("jsimport/testImportModuleApi.qml")
+    QTest::newRow("import singleton type into js import")
+            << testFileUrl("jsimport/testImportSingletonType.qml")
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
@@ -7106,8 +7217,8 @@ void tst_qqmlecmascript::fallbackBindings_data()
 
     QTest::newRow("Property without fallback") << "fallbackBindings.1.qml";
     QTest::newRow("Property fallback") << "fallbackBindings.2.qml";
-    QTest::newRow("ModuleAPI without fallback") << "fallbackBindings.3.qml";
-    QTest::newRow("ModuleAPI fallback") << "fallbackBindings.4.qml";
+    QTest::newRow("SingletonType without fallback") << "fallbackBindings.3.qml";
+    QTest::newRow("SingletonType fallback") << "fallbackBindings.4.qml";
     QTest::newRow("Attached without fallback") << "fallbackBindings.5.qml";
     QTest::newRow("Attached fallback") << "fallbackBindings.6.qml";
 }

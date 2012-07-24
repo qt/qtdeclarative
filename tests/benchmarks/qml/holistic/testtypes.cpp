@@ -82,13 +82,13 @@ void registerTypes()
     qmlRegisterType<ScarceResourceProvider>("Qt.test", 1,0, "MyScarceResourceProvider");
     qmlRegisterType<ArbitraryVariantProvider>("Qt.test", 1,0, "MyArbitraryVariantProvider");
 
-    qmlRegisterModuleApi("Qt.test",1,0,script_api);             // register (script) module API for an existing uri which contains elements
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test",1,0,qobject_api);            // register (qobject) for an existing uri for which another module API was previously regd.  Should replace!
-    qmlRegisterModuleApi("Qt.test.scriptApi",1,0,script_api);   // register (script) module API for a uri which doesn't contain elements
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",1,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",1,3,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, minor version set
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApi",2,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, major version set
-    qmlRegisterModuleApi<testQObjectApi>("Qt.test.qobjectApiParented",1,0,qobject_api_engine_parent); // register (parented qobject) module API for a uri which doesn't contain elements
+    qmlRegisterSingletonType("Qt.test",1,0,script_api);             // register (script) singleton Type for an existing uri which contains elements
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test",1,0,qobject_api);            // register (qobject) for an existing uri for which another singleton Type was previously regd.  Should replace!
+    qmlRegisterSingletonType("Qt.test.scriptApi",1,0,script_api);   // register (script) singleton Type for a uri which doesn't contain elements
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApi",1,0,qobject_api); // register (qobject) singleton Type for a uri which doesn't contain elements
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApi",1,3,qobject_api); // register (qobject) singleton Type for a uri which doesn't contain elements, minor version set
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApi",2,0,qobject_api); // register (qobject) singleton Type for a uri which doesn't contain elements, major version set
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApiParented",1,0,qobject_api_engine_parent); // register (parented qobject) singleton Type for a uri which doesn't contain elements
 }
 
 //#include "testtypes.moc"

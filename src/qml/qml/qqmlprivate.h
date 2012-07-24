@@ -237,12 +237,13 @@ namespace QQmlPrivate
         AutoParentFunction function;
     };
 
-    struct RegisterModuleApi {
+    struct RegisterSingletonType {
         int version;
 
         const char *uri;
         int versionMajor;
         int versionMinor;
+        const char *typeName;
 
         QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
         QObject *(*qobjectApi)(QQmlEngine *, QJSEngine *);
@@ -253,7 +254,7 @@ namespace QQmlPrivate
         TypeRegistration       = 0, 
         InterfaceRegistration  = 1,
         AutoParentRegistration = 2,
-        ModuleApiRegistration  = 3
+        SingletonRegistration  = 3
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);

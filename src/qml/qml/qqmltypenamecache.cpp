@@ -71,6 +71,21 @@ void QQmlTypeNameCache::add(const QHashedString &name, int importedScriptIndex, 
     m_namedImports.insert(name, import);
 }
 
+void QQmlTypeNameCache::addSingletonType(const QHashedString &name, QQmlMetaType::SingletonInstance *apiInstance, const QHashedString &nameSpace)
+{
+    Import import;
+    import.singletonType = apiInstance;
+
+    if (nameSpace.length() != 0) {
+        Import *i = m_namedImports.value(nameSpace);
+        Q_ASSERT(i != 0);
+        m_namespacedImports[i].insert(name, import);
+    } else {
+        if (!m_namedImports.contains(name))
+            m_namedImports.insert(name, import);
+    }
+}
+
 QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name)
 {
     Result result = query(m_namedImports, name);
@@ -108,19 +123,22 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedV8String &name, 
     Q_ASSERT(i->scriptIndex == -1);
 
     QMap<const Import *, QStringHash<Import> >::const_iterator it = m_namespacedImports.find(i);
-    if (it != m_namespacedImports.constEnd())
-        return query(*it, name);
+    if (it != m_namespacedImports.constEnd()) {
+        Result r = query(*it, name);
+        if (r.isValid())
+            return r;
+    }
 
     return typeSearch(i->modules, name);
 }
 
-QQmlMetaType::ModuleApiInstance *QQmlTypeNameCache::moduleApi(const void *importNamespace)
+QQmlMetaType::SingletonInstance *QQmlTypeNameCache::singletonType(const void *importNamespace)
 {
     Q_ASSERT(importNamespace);
     const Import *i = static_cast<const Import *>(importNamespace);
     Q_ASSERT(i->scriptIndex == -1);
 
-    return i->moduleApi;
+    return i->singletonType;
 }
 
 QT_END_NAMESPACE

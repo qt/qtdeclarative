@@ -6,9 +6,9 @@ Rectangle {
     color: "red"
 
     function flipOwnership() {
-        ModApi.trackObject(base);
-        ModApi.trackedObject(); // flip the ownership.
-        if (!ModApi.trackedObjectHasJsOwnership())
+        ModApi.QObject.trackObject(base);
+        ModApi.QObject.trackedObject(); // flip the ownership.
+        if (!ModApi.QObject.trackedObjectHasJsOwnership())
             derived.testConditionsMet = false;
         else
             derived.testConditionsMet = true;

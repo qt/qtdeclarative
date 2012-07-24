@@ -5,5 +5,5 @@ Item {
     id: sec
 
     property int a: 10
-    Component.onDestruction: ModApi.setSpecificProperty(sec, "a", 20);
+    Component.onDestruction: ModApi.QObject.setSpecificProperty(sec, "a", 20);
 }

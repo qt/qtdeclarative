@@ -37,8 +37,8 @@ Item {
         property bool enumTypeHasOwnProperty
         property bool typenameHasOwnProperty
         property bool typenameHasOwnProperty2
-        property bool moduleApiTypeHasOwnProperty
-        property bool moduleApiPropertyTypeHasOwnProperty
+        property bool singletonTypeTypeHasOwnProperty
+        property bool singletonTypePropertyTypeHasOwnProperty
         function testHasOwnPropertySuccess() {
             valueTypeHasOwnProperty = !typeObj.pointProperty.hasOwnProperty("nonexistentpropertyname");
             valueTypeHasOwnProperty2 = typeObj.pointProperty.hasOwnProperty("x"); // should be true
@@ -50,8 +50,8 @@ Item {
             enumTypeHasOwnProperty = !MyTypeObject.EnumVal1.hasOwnProperty("nonexistentpropertyname");
             typenameHasOwnProperty = !MyTypeObject.hasOwnProperty("nonexistentpropertyname");
             typenameHasOwnProperty2 = MyTypeObject.hasOwnProperty("EnumVal1"); // should be true.
-            moduleApiTypeHasOwnProperty = !QtTestQObjectApi.hasOwnProperty("nonexistentpropertyname");
-            moduleApiPropertyTypeHasOwnProperty = !QtTestQObjectApi.qobjectTestProperty.hasOwnProperty("nonexistentpropertyname");
+            singletonTypeTypeHasOwnProperty = !QtTestQObjectApi.QObject.hasOwnProperty("nonexistentpropertyname");
+            singletonTypePropertyTypeHasOwnProperty = !QtTestQObjectApi.QObject.qobjectTestProperty.hasOwnProperty("nonexistentpropertyname");
         }
 
         property bool enumNonValueHasOwnProperty
@@ -59,9 +59,9 @@ Item {
             enumNonValueHasOwnProperty = !MyTypeObject.NonexistentEnumVal.hasOwnProperty("nonexistentpropertyname");
         }
 
-        property bool moduleApiNonPropertyHasOwnProperty
+        property bool singletonTypeNonPropertyHasOwnProperty
         function testHasOwnPropertyFailureTwo() {
-            moduleApiNonPropertyHasOwnProperty = !QtTestQObjectApi.someNonexistentProperty.hasOwnProperty("nonexistentpropertyname");
+            singletonTypeNonPropertyHasOwnProperty = !QtTestQObjectApi.QObject.someNonexistentProperty.hasOwnProperty("nonexistentpropertyname");
         }
 
         property bool listAtInvalidHasOwnProperty

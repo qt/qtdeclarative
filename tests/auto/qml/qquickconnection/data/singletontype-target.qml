@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import MyTestModuleApi 1.0 as MyTestModuleApi
+import MyTestSingletonType 1.0 as MyTestSingletonType
 
 Item {
     id: rootObject
@@ -10,12 +10,12 @@ Item {
     property int moduleOtherSignalCount: 0
 
     function setModuleIntProp() {
-        MyTestModuleApi.intProp = newIntPropValue;
+        MyTestSingletonType.Api.intProp = newIntPropValue;
         newIntPropValue = newIntPropValue + 1;
     }
 
     Connections {
-        target: MyTestModuleApi
+        target: MyTestSingletonType.Api
         onIntPropChanged: moduleIntPropChangedCount = moduleIntPropChangedCount + 1;
         onOtherSignal: moduleOtherSignalCount = moduleOtherSignalCount + 1;
     }

@@ -94,14 +94,35 @@ struct QQmlMetaTypeData
     typedef QHash<VersionedUri, QQmlTypeModule *> TypeModules;
     TypeModules uriToModule;
 
-    struct ModuleApiList {
-        ModuleApiList() : sorted(true) {}
-        QList<QQmlMetaType::ModuleApi> moduleApis;
+    struct SingletonTypeList {
+        SingletonTypeList() : sorted(true) {}
+        QList<QQmlMetaType::SingletonType> singletonTypes;
         bool sorted;
     };
-    typedef QStringHash<ModuleApiList> ModuleApis;
-    ModuleApis moduleApis;
-    int moduleApiCount;
+    typedef QStringHash<SingletonTypeList> SingletonTypes;
+    SingletonTypes singletonTypes;
+    int singletonTypeCount;
+
+    bool singletonTypeExists(const QString &uri, const QString &typeName, int major, int minor)
+    {
+        QQmlMetaTypeData::SingletonTypeList *apiList = singletonTypes.value(uri);
+        if (apiList) {
+            for (int i=0 ; i < apiList->singletonTypes.size() ; ++i) {
+                const QQmlMetaType::SingletonType &import = apiList->singletonTypes.at(i);
+                if (import.major == major && import.minor == minor && typeName == import.typeName)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool typeExists(const QString &uri, const QString &typeName, int major, int minor)
+    {
+        QQmlMetaTypeData::VersionedUri versionedUri(uri, major);
+        QQmlTypeModule *module = uriToModule.value(versionedUri);
+        return module && module->typeNoLock(typeName, minor) != 0;
+    }
 
     QBitArray objects;
     QBitArray interfaces;
@@ -141,7 +162,7 @@ static uint qHash(const QQmlMetaTypeData::VersionedUri &v)
 }
 
 QQmlMetaTypeData::QQmlMetaTypeData()
-: moduleApiCount(0)
+: singletonTypeCount(0)
 {
 }
 
@@ -779,6 +800,20 @@ void QQmlTypeModulePrivate::add(QQmlType *type)
     list.append(type);
 }
 
+QQmlType *QQmlTypeModule::typeNoLock(const QString &name, int minor)
+{
+    // Expected that the caller has already handled locking metaTypeDataLock
+
+    QList<QQmlType *> *types = d->typeHash.value(name);
+    if (!types) return 0;
+
+    for (int ii = 0; ii < types->count(); ++ii)
+        if (types->at(ii)->minorVersion() <= minor)
+            return types->at(ii);
+
+    return 0;
+}
+
 QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
 {
     QReadLocker lock(metaTypeDataLock());
@@ -911,6 +946,11 @@ int registerType(const QQmlPrivate::RegisterType &type)
     if (type.uri && type.elementName) {
         QString nameSpace = moduleFromUtf8(type.uri);
 
+        if (data->singletonTypeExists(nameSpace, type.elementName, type.versionMajor, type.versionMinor)) {
+            qWarning("Cannot register type %s in uri %s %d.%d (a conflicting singleton type already exists)", qPrintable(type.elementName), qPrintable(nameSpace), type.versionMajor, type.versionMinor);
+            return -1;
+        }
+
         if (!data->typeRegistrationNamespace.isEmpty()) {
             // We can only install types into the registered namespace
             if (nameSpace != data->typeRegistrationNamespace) {
@@ -966,28 +1006,38 @@ int registerType(const QQmlPrivate::RegisterType &type)
     return index;
 }
 
-int registerModuleApi(const QQmlPrivate::RegisterModuleApi &api)
+int registerSingletonType(const QQmlPrivate::RegisterSingletonType &api)
 {
     QWriteLocker lock(metaTypeDataLock());
 
     QQmlMetaTypeData *data = metaTypeData();
     QString uri = QString::fromUtf8(api.uri);
-    QQmlMetaType::ModuleApi import;
+    QQmlMetaType::SingletonType import;
     import.major = api.versionMajor;
     import.minor = api.versionMinor;
     import.script = api.scriptApi;
     import.qobject = api.qobjectApi;
+    Q_ASSERT(api.typeName);
+    import.typeName = QString::fromUtf8(api.typeName);
     import.instanceMetaObject = (api.qobjectApi && api.version >= 1) ? api.instanceMetaObject : 0; // BC with version 0.
 
-    int index = data->moduleApiCount++;
+    if (data->singletonTypeExists(uri, import.typeName, import.major, import.minor)) {
+        qWarning("Cannot register singleton type %s in uri %s %d.%d (a conflicting singleton type already exists)", qPrintable(import.typeName), qPrintable(uri), import.major, import.minor);
+        return -1;
+    } else if (data->typeExists(uri, import.typeName, import.major, import.minor)) {
+        qWarning("Cannot register singleton type %s in uri %s %d.%d (a conflicting type already exists)", qPrintable(import.typeName), qPrintable(uri), import.major, import.minor);
+        return -1;
+    }
 
-    QQmlMetaTypeData::ModuleApiList *apiList = data->moduleApis.value(uri);
+    int index = data->singletonTypeCount++;
+
+    QQmlMetaTypeData::SingletonTypeList *apiList = data->singletonTypes.value(uri);
     if (!apiList) {
-        QQmlMetaTypeData::ModuleApiList apis;
-        apis.moduleApis << import;
-        data->moduleApis.insert(uri, apis);
+        QQmlMetaTypeData::SingletonTypeList apis;
+        apis.singletonTypes << import;
+        data->singletonTypes.insert(uri, apis);
     } else {
-        apiList->moduleApis << import;
+        apiList->singletonTypes << import;
         apiList->sorted = false;
     }
 
@@ -1007,8 +1057,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         return registerInterface(*reinterpret_cast<RegisterInterface *>(data));
     } else if (type == AutoParentRegistration) {
         return registerAutoParentFunction(*reinterpret_cast<RegisterAutoParent *>(data));
-    } else if (type == ModuleApiRegistration) {
-        return registerModuleApi(*reinterpret_cast<RegisterModuleApi *>(data));
+    } else if (type == SingletonRegistration) {
+        return registerSingletonType(*reinterpret_cast<RegisterSingletonType *>(data));
     }
     return -1;
 }
@@ -1068,8 +1118,8 @@ bool QQmlMetaType::isAnyModule(const QString &uri)
             return true;
     }
 
-    // then, check ModuleApis
-    QQmlMetaTypeData::ModuleApiList *apiList = data->moduleApis.value(uri);
+    // then, check SingletonTypes
+    QQmlMetaTypeData::SingletonTypeList *apiList = data->singletonTypes.value(uri);
     if (apiList)
         return true;
 
@@ -1096,10 +1146,10 @@ bool QQmlMetaType::isModule(const QString &module, int versionMajor, int version
     if (tm && tm->minimumMinorVersion() <= versionMinor && tm->maximumMinorVersion() >= versionMinor)
         return true;
 
-    // then, check ModuleApis
-    QQmlMetaTypeData::ModuleApiList *apiList = data->moduleApis.value(module);
+    // then, check SingletonTypes
+    QQmlMetaTypeData::SingletonTypeList *apiList = data->singletonTypes.value(module);
     if (apiList) {
-        foreach (const QQmlMetaType::ModuleApi &mApi, apiList->moduleApis) {
+        foreach (const QQmlMetaType::SingletonType &mApi, apiList->singletonTypes) {
             if (mApi.major == versionMajor && mApi.minor == versionMinor) // XXX is this correct?
                 return true;
         }
@@ -1122,46 +1172,46 @@ QList<QQmlPrivate::AutoParentFunction> QQmlMetaType::parentFunctions()
     return data->parentFunctions;
 }
 
-static bool operator<(const QQmlMetaType::ModuleApi &lhs, const QQmlMetaType::ModuleApi &rhs)
+static bool operator<(const QQmlMetaType::SingletonType &lhs, const QQmlMetaType::SingletonType &rhs)
 {
     return lhs.major < rhs.major || (lhs.major == rhs.major && lhs.minor < rhs.minor);
 }
 
-QQmlMetaType::ModuleApi
-QQmlMetaType::moduleApi(const QString &uri, int versionMajor, int versionMinor)
+QQmlMetaType::SingletonType
+QQmlMetaType::singletonType(const QString &uri, int versionMajor, int versionMinor)
 {
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QQmlMetaTypeData::ModuleApiList *apiList = data->moduleApis.value(uri);
+    QQmlMetaTypeData::SingletonTypeList *apiList = data->singletonTypes.value(uri);
     if (!apiList)
-        return ModuleApi();
+        return SingletonType();
 
     if (apiList->sorted == false) {
-        qSort(apiList->moduleApis.begin(), apiList->moduleApis.end());
+        qSort(apiList->singletonTypes.begin(), apiList->singletonTypes.end());
         apiList->sorted = true;
     }
 
-    for (int ii = apiList->moduleApis.count() - 1; ii >= 0; --ii) {
-        const ModuleApi &import = apiList->moduleApis.at(ii);
+    for (int ii = apiList->singletonTypes.count() - 1; ii >= 0; --ii) {
+        const SingletonType &import = apiList->singletonTypes.at(ii);
         if (import.major == versionMajor && import.minor <= versionMinor)
             return import;
     }
 
-    return ModuleApi();
+    return SingletonType();
 }
 
-QHash<QString, QList<QQmlMetaType::ModuleApi> > QQmlMetaType::moduleApis()
+QHash<QString, QList<QQmlMetaType::SingletonType> > QQmlMetaType::singletonTypes()
 {
     QReadLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QHash<QString, QList<ModuleApi> > moduleApis;
-    QStringHash<QQmlMetaTypeData::ModuleApiList>::ConstIterator it = data->moduleApis.begin();
-    for (; it != data->moduleApis.end(); ++it)
-        moduleApis[it.key()] = it.value().moduleApis;
+    QHash<QString, QList<SingletonType> > singletonTypes;
+    QStringHash<QQmlMetaTypeData::SingletonTypeList>::ConstIterator it = data->singletonTypes.begin();
+    for (; it != data->singletonTypes.end(); ++it)
+        singletonTypes[it.key()] = it.value().singletonTypes;
 
-    return moduleApis;
+    return singletonTypes;
 }
 
 QObject *QQmlMetaType::toQObject(const QVariant &v, bool *ok)

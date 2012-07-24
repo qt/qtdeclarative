@@ -8,9 +8,9 @@ Rectangle {
     property bool testConditionsMet: false
 
     onXChanged: {
-        ModApi.trackObject(base);
-        ModApi.trackedObject(); // flip the ownership.
-        if (!ModApi.trackedObjectHasJsOwnership())
+        ModApi.QObject.trackObject(base);
+        ModApi.QObject.trackedObject(); // flip the ownership.
+        if (!ModApi.QObject.trackedObjectHasJsOwnership())
             testConditionsMet = false;
         else
             testConditionsMet = true;

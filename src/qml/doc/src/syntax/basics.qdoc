@@ -43,18 +43,16 @@ An import can be any one of:
 
 \list
 \li a versioned namespace into which types have been registered (e.g., by a plugin)
-\li a versioned namespace which provides a module API
 \li a relative directory which contains type-definitions as QML documents
 \li a JavaScript file
 \endlist
 
-Module API imports and JavaScript file imports must be qualified when
-imported, so that the properties and methods they provide can be accessed.
+JavaScript file imports must be qualified when imported, so that the properties and methods they provide can be accessed.
 
 The generic form of the various imports are as follows:
 \list
 \li \tt{import Namespace VersionMajor.VersionMinor}
-\li \tt{import Namespace VersionMajor.VersionMinor as ModuleApiIdentifier}
+\li \tt{import Namespace VersionMajor.VersionMinor as SingletonTypeIdentifier}
 \li \tt{import "directory"}
 \li \tt{import "file.js" as ScriptIdentifier}
 \endlist

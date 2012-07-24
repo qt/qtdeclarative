@@ -16,13 +16,13 @@ Item {
         if (testProp == null) success = false;            // should not have triggered delete notify / zeroed testProp value
         if (testProp.variantCanary != 5) success = false; // should not have deleted vmemo of object referenced by testProp
         if (testProp.varCanary != 12) success = false;    // should not have collected vmemo vmeProperties
-        if (QObjectApi.qobjectTestWritableProperty != 42) success = false; // should not have been set to 43.
+        if (QObjectApi.QObject.qobjectTestWritableProperty != 42) success = false; // should not have been set to 43.
     }
 
     // then we manually delete the item being referenced
     function manuallyDelete() {
-        QObjectApi.deleteQObject(testProp);
-        if (QObjectApi.qobjectTestWritableProperty != 43) success = false; // should have been set to 43.
+        QObjectApi.QObject.deleteQObject(testProp);
+        if (QObjectApi.QObject.qobjectTestWritableProperty != 43) success = false; // should have been set to 43.
     }
 
     // after a gc (and deferred deletion process) the object should be gone

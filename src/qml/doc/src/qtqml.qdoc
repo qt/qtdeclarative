@@ -175,7 +175,7 @@ types, animation classes, and canvas integration) for the QML language.
 
 More information about the Qt QML module is contained within the class and
 function documentation of the \l{QtQml}
-{Qt QML Module API Reference}.  The QML types provided by the Qt QML module
+{Qt QML Singleton Type Reference}.  The QML types provided by the Qt QML module
 are listed in the \l{qtqml-typereference-topic.html}
 {Qt QML Module QML Type Reference} page.
 

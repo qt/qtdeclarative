@@ -61,8 +61,8 @@ required functionality is provided by such a class, it can be exposed to QML in 
 registered as an instantiable QML type}, so that it can be instantiated and used like any ordinary
 \l{qtqml-typesystem-objecttypes.html}{QML object type} from QML code
 \li The class can be registered as a
-\l{qtqml-cppintegration-definetypes.html#registering-singleton-objects-with-a-module-api}
-{Module API} so that a single instance of the class may be imported from QML code, allowing the
+\l{qtqml-cppintegration-definetypes.html#registering-singleton-objects-with-a-singleton-type}
+{Singleton Type} so that a single instance of the class may be imported from QML code, allowing the
 instance's properties, methods and signals to be accessed from QML
 \li An instance of the class can be \l{qtqml-cppintegration-contextproperties.html}{embedded into
 QML code} as a \e {context property} or \e {context object}, allowing the instance's properties,
@@ -100,7 +100,7 @@ more information.
 QML types can be defined in C++ and then registered with the \l{qtqml-typesystem-topic.html}{QML
 type system}. This allows a C++ class to be instantiated as a \l {QML object type}, enabling custom
 object types to be implemented in C++ and integrated into existing QML code. A C++ class may be also
-registered for other purposes: for example, it could be registered as a \e {Module API} to enable a
+registered for other purposes: for example, it could be registered as a \e {Singleton Type} to enable a
 single class instance to be imported by QML code, or it could be registered to enable the
 enumeration values of a non-instantiable class to be accessible from QML.
 

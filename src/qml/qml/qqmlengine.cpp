@@ -463,7 +463,7 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
         (*iter)->release();
     for(QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::Iterator iter = typePropertyCache.begin(); iter != typePropertyCache.end(); ++iter)
         (*iter)->release();
-    for(QHash<QQmlMetaType::ModuleApi, QQmlMetaType::ModuleApiInstance *>::Iterator iter = moduleApiInstances.begin(); iter != moduleApiInstances.end(); ++iter) {
+    for (QHash<QQmlMetaType::SingletonType, QQmlMetaType::SingletonInstance *>::Iterator iter = singletonTypeInstances.begin(); iter != singletonTypeInstances.end(); ++iter) {
         delete (*iter)->qobjectApi;
         delete *iter;
     }
@@ -735,23 +735,23 @@ QQmlEngine::~QQmlEngine()
     }
 
     // Emit onDestruction signals for the root context before
-    // we destroy the contexts, engine, Module APIs etc. that
+    // we destroy the contexts, engine, Singleton Types etc. that
     // may be required to handle the destruction signal.
     QQmlContextData::get(rootContext())->emitDestruction();
 
-    // if we are the parent of any of the qobject module api instances,
+    // if we are the parent of any of the qobject singleton type instances,
     // we need to remove them from our internal list, in order to prevent
     // a segfault in engine private dtor.
-    QList<QQmlMetaType::ModuleApi> keys = d->moduleApiInstances.keys();
+    QList<QQmlMetaType::SingletonType> keys = d->singletonTypeInstances.keys();
     QObject *currQObjectApi = 0;
-    QQmlMetaType::ModuleApiInstance *currInstance = 0;
-    foreach (const QQmlMetaType::ModuleApi &key, keys) {
-        currInstance = d->moduleApiInstances.value(key);
+    QQmlMetaType::SingletonInstance *currInstance = 0;
+    foreach (const QQmlMetaType::SingletonType &key, keys) {
+        currInstance = d->singletonTypeInstances.value(key);
         currQObjectApi = currInstance->qobjectApi;
         if (this->children().contains(currQObjectApi)) {
             delete currQObjectApi;
             delete currInstance;
-            d->moduleApiInstances.remove(key);
+            d->singletonTypeInstances.remove(key);
         }
     }
 
@@ -1881,18 +1881,18 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersi
     return raw;
 }
 
-QQmlMetaType::ModuleApiInstance *
-QQmlEnginePrivate::moduleApiInstance(const QQmlMetaType::ModuleApi &module)
+QQmlMetaType::SingletonInstance *
+QQmlEnginePrivate::singletonTypeInstance(const QQmlMetaType::SingletonType &module)
 {
     Locker locker(this);
 
-    QQmlMetaType::ModuleApiInstance *a = moduleApiInstances.value(module);
+    QQmlMetaType::SingletonInstance *a = singletonTypeInstances.value(module);
     if (!a) {
-        a = new QQmlMetaType::ModuleApiInstance;
+        a = new QQmlMetaType::SingletonInstance;
         a->scriptCallback = module.script;
         a->qobjectCallback = module.qobject;
         a->instanceMetaObject = module.instanceMetaObject;
-        moduleApiInstances.insert(module, a);
+        singletonTypeInstances.insert(module, a);
     }
 
     return a;

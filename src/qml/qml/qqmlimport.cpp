@@ -299,6 +299,15 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache, QQmlEngine *engine) co
         QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion);
         if (module)
             cache->m_anonymousImports.append(QQmlTypeModuleVersion(module, import->minversion));
+
+        QQmlMetaType::SingletonType singletonType = QQmlMetaType::singletonType(import->uri, import->majversion,
+                                                                    import->minversion);
+        if (singletonType.script || singletonType.qobject) {
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+            QQmlMetaType::SingletonInstance *apiInstance = ep->singletonTypeInstance(singletonType);
+
+            cache->addSingletonType(singletonType.typeName, apiInstance);
+        }
     }
 
     for (QQmlImportNamespace *ns = d->qualifiedSets.first(); ns; ns = d->qualifiedSets.next(ns)) {
@@ -313,12 +322,14 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache, QQmlEngine *engine) co
                 typeimport.modules.append(QQmlTypeModuleVersion(module, import->minversion));
             }
 
-            QQmlMetaType::ModuleApi moduleApi = QQmlMetaType::moduleApi(import->uri, import->majversion,
+            QQmlMetaType::SingletonType singletonType = QQmlMetaType::singletonType(import->uri, import->majversion,
                                                                         import->minversion);
-            if (moduleApi.script || moduleApi.qobject) {
-                QQmlTypeNameCache::Import &import = cache->m_namedImports[set.prefix];
+            if (singletonType.script || singletonType.qobject) {
                 QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-                import.moduleApi = ep->moduleApiInstance(moduleApi);
+                QQmlMetaType::SingletonInstance *apiInstance = ep->singletonTypeInstance(singletonType);
+
+                cache->add(set.prefix);
+                cache->addSingletonType(singletonType.typeName, apiInstance, set.prefix);
             }
         }
     }

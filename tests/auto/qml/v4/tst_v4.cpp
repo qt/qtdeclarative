@@ -82,7 +82,7 @@ private slots:
     void mathCeil();
     void mathMax();
     void mathMin();
-    void moduleApi();
+    void singletonType();
 
     void conversions_data();
     void conversions();
@@ -607,13 +607,13 @@ void tst_v4::mathMin()
     delete o;
 }
 
-class V4ModuleApi : public QObject
+class V4SingletonType : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int ip READ ip WRITE setIp NOTIFY ipChanged FINAL)
 public:
-    V4ModuleApi() : m_ip(12) {}
-    ~V4ModuleApi() {}
+    V4SingletonType() : m_ip(12) {}
+    ~V4SingletonType() {}
 
     Q_INVOKABLE int random() { static int prng = 3; prng++; m_ip++; emit ipChanged(); return prng; }
 
@@ -629,14 +629,14 @@ private:
 
 static QObject *v4_module_api_factory(QQmlEngine*, QJSEngine*)
 {
-    return new V4ModuleApi;
+    return new V4SingletonType;
 }
 
-void tst_v4::moduleApi()
+void tst_v4::singletonType()
 {
-    // register module api, providing typeinfo via template
-    qmlRegisterModuleApi<V4ModuleApi>("Qt.test", 1, 0, v4_module_api_factory);
-    QQmlComponent component(&engine, testFileUrl("moduleApi.qml"));
+    // register singleton type, providing typeinfo via template
+    qmlRegisterSingletonType<V4SingletonType>("Qt.test", 1, 0, "V4", v4_module_api_factory);
+    QQmlComponent component(&engine, testFileUrl("singletonType.qml"));
     QObject *o = component.create();
     QVERIFY(o != 0);
     QCOMPARE(o->property("testProp").toInt(), 12);
