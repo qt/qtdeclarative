@@ -2,4 +2,5 @@ TEMPLATE = subdirs
 SUBDIRS =   calqlatr \
             samegame \
             tweetsearch \
-            maroon
+            maroon \
+            stocqt
