@@ -171,9 +171,6 @@ struct Options
 };
 
 #if defined(QMLSCENE_BUNDLE)
-#ifndef QT_QFILEINFO_METATYPE_DEFINED
-Q_DECLARE_METATYPE(QFileInfo);
-#endif
 QFileInfoList findQmlFiles(const QString &dirName)
 {
     QDir dir(dirName);
