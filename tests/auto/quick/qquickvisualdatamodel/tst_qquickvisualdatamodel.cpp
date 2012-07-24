@@ -796,7 +796,7 @@ void tst_qquickvisualdatamodel::itemsDestroyed()
         view.setSource(source);
 
         view.show();
-        QTest::qWaitForWindowShown(&view);
+        QVERIFY(QTest::qWaitForWindowExposed(&view));
 
         QVERIFY(delegate = findItem<QQuickItem>(view.rootItem(), "delegate", 1));
     }

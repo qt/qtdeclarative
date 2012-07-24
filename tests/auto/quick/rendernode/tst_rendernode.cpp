@@ -60,7 +60,7 @@ public:
         view.setSource(testFileUrl(fileName));
 
         view.show();
-        QTest::qWaitForWindowShown(&view);
+        QTest::qWaitForWindowExposed(&view);
 
         return view.grabWindow();
     }

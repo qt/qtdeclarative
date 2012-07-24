@@ -586,7 +586,7 @@ void tst_qquicktextedit::alignments()
     QQuickView window(testFileUrl("alignments.qml"));
 
     window.show();
-    QTest::qWaitForWindowShown(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QObject *ob = window.rootObject();
     QVERIFY(ob != 0);
@@ -815,7 +815,7 @@ void tst_qquicktextedit::hAlignVisual()
 {
     QQuickView view(testFileUrl("hAlignVisual.qml"));
     view.show();
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
     QVERIFY(text != 0);

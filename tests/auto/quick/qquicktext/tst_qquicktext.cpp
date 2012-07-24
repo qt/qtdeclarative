@@ -866,7 +866,7 @@ void tst_qquicktext::hAlignImplicitWidth()
     QQuickView view(testFileUrl("hAlignImplicitWidth.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
     QVERIFY(text != 0);
@@ -1270,7 +1270,7 @@ void tst_qquicktext::underline()
     QQuickView view(testFileUrl("underline.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(textObject != 0);
     QCOMPARE(textObject->font().overline(), false);
@@ -1283,7 +1283,7 @@ void tst_qquicktext::overline()
     QQuickView view(testFileUrl("overline.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(textObject != 0);
     QCOMPARE(textObject->font().overline(), true);
@@ -1296,7 +1296,7 @@ void tst_qquicktext::strikeout()
     QQuickView view(testFileUrl("strikeout.qml"));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickText *textObject = view.rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(textObject != 0);
     QCOMPARE(textObject->font().overline(), false);

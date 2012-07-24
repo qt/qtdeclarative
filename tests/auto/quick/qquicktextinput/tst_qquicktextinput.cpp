@@ -1282,7 +1282,7 @@ void tst_qquicktextinput::horizontalAlignment()
     QQuickView window(testFileUrl("horizontalAlignment.qml"));
 
     window.show();
-    QTest::qWaitForWindowShown(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QObject *ob = window.rootObject();
     QVERIFY(ob != 0);

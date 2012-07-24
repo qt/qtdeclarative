@@ -566,8 +566,8 @@ void tst_qquickfocusscope::canvasFocus()
     //    view->hide(); // seemingly doesn't remove focus, so have an another view steal it.
     alternateView.show();
     alternateView.requestActivateWindow();
-    QTest::qWaitForWindowShown(&alternateView);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &alternateView);
+    QVERIFY(QTest::qWaitForWindowActive(&alternateView));
+    QVERIFY(QGuiApplication::focusWindow() == &alternateView);
 
     QCOMPARE(rootItem->hasFocus(), false);
     QCOMPARE(rootItem->hasActiveFocus(), false);

@@ -499,7 +499,7 @@ void tst_qquickimage::tiling_QTBUG_6716()
     QQuickView view(testFileUrl(source));
     view.show();
     view.requestActivateWindow();
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickImage *tiling = findItem<QQuickImage>(view.rootObject(), "tiling");
 

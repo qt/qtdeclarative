@@ -59,7 +59,7 @@ public:
         view.setSource(testFileUrl(fileName));
 
         view.show();
-        QTest::qWaitForWindowShown(&view);
+        QTest::qWaitForWindowExposed(&view);
 
         return view.grabWindow();
     }
@@ -310,7 +310,7 @@ void tst_QQuickItemLayer::layerZOrder()
 
     view.show();
 
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage fb = view.grabWindow();
 
@@ -347,7 +347,7 @@ void tst_QQuickItemLayer::changeZOrder()
 
     view.show();
 
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage fb = view.grabWindow();
 

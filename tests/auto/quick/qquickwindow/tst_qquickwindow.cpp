@@ -869,7 +869,7 @@ void tst_qquickwindow::grab()
     window.resize(250, 250);
     window.show();
 
-    QTest::qWaitForWindowShown(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QImage content = window.grabWindow();
     QCOMPARE(content.width(), window.width());

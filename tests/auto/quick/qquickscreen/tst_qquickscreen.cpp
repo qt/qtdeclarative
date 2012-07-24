@@ -58,7 +58,7 @@ void tst_qquickscreen::basicProperties()
     QQuickView view;
     view.setSource(testFileUrl("screen.qml"));
     view.show();
-    QTest::qWaitForWindowShown(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QQuickItem* root = view.rootObject();
     QVERIFY(root);

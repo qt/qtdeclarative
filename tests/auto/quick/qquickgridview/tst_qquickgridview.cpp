@@ -4165,7 +4165,7 @@ void tst_QQuickGridView::columnCount()
     window.setSource(testFileUrl("gridview4.qml"));
     window.show();
     window.requestActivateWindow();
-    QTest::qWaitForWindowShown(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickGridView *view = qobject_cast<QQuickGridView*>(window.rootObject());
 

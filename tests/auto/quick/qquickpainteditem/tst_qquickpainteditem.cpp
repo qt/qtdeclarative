@@ -104,7 +104,7 @@ void tst_QQuickPaintedItem::initTestCase()
 {
     window.resize(320, 240);
     window.show();
-    QTest::qWaitForWindowShown(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 }
 
 void tst_QQuickPaintedItem::update()

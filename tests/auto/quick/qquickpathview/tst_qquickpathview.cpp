@@ -1927,8 +1927,8 @@ void tst_QQuickPathView::positionViewAtIndex()
     window->setSource(testFileUrl("pathview3.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_COMPARE(window, qGuiApp->focusWindow());
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QCOMPARE(window, qGuiApp->focusWindow());
 
     QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
@@ -1991,8 +1991,8 @@ void tst_QQuickPathView::indexAt_itemAt()
     window->setSource(testFileUrl("pathview3.qml"));
     window->show();
     window->requestActivateWindow();
-    QTest::qWaitForWindowShown(window);
-    QTRY_COMPARE(window, qGuiApp->focusWindow());
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QCOMPARE(window, qGuiApp->focusWindow());
 
     QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
     QVERIFY(pathview != 0);
