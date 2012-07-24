@@ -74,6 +74,7 @@ private slots:
     void layoutMirroring();
     void layoutMirroringIllegalParent();
     void smooth();
+    void antialiasing();
     void clip();
     void mapCoordinates();
     void mapCoordinates_data();
@@ -97,6 +98,7 @@ private slots:
     void parentLoop();
     void contains_data();
     void contains();
+    void childAt();
 
 private:
     QQmlEngine engine;
@@ -1011,6 +1013,35 @@ void tst_QQuickItem::smooth()
     delete item;
 }
 
+void tst_QQuickItem::antialiasing()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; Item { antialiasing: false; }", QUrl::fromLocalFile(""));
+    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
+    QSignalSpy spy(item, SIGNAL(antialiasingChanged(bool)));
+
+    QVERIFY(item);
+    QVERIFY(!item->antialiasing());
+
+    item->setAntialiasing(true);
+    QVERIFY(item->antialiasing());
+    QCOMPARE(spy.count(),1);
+    QList<QVariant> arguments = spy.first();
+    QVERIFY(arguments.count() == 1);
+    QVERIFY(arguments.at(0).toBool() == true);
+
+    item->setAntialiasing(true);
+    QCOMPARE(spy.count(),1);
+
+    item->setAntialiasing(false);
+    QVERIFY(!item->antialiasing());
+    QCOMPARE(spy.count(),2);
+    item->setAntialiasing(false);
+    QCOMPARE(spy.count(),2);
+
+    delete item;
+}
+
 void tst_QQuickItem::clip()
 {
     QQmlComponent component(&engine);
@@ -1669,6 +1700,43 @@ void tst_QQuickItem::contains()
     }
 
     delete window;
+}
+
+void tst_QQuickItem::childAt()
+{
+    QQuickItem parent;
+
+    QQuickItem child1;
+    child1.setX(0);
+    child1.setY(0);
+    child1.setWidth(100);
+    child1.setHeight(100);
+    child1.setParentItem(&parent);
+
+    QQuickItem child2;
+    child2.setX(50);
+    child2.setY(50);
+    child2.setWidth(100);
+    child2.setHeight(100);
+    child2.setParentItem(&parent);
+
+    QQuickItem child3;
+    child3.setX(0);
+    child3.setY(200);
+    child3.setWidth(50);
+    child3.setHeight(50);
+    child3.setParentItem(&parent);
+
+    QCOMPARE(parent.childAt(0, 0), &child1);
+    QCOMPARE(parent.childAt(0, 100), &child1);
+    QCOMPARE(parent.childAt(25, 25), &child1);
+    QCOMPARE(parent.childAt(25, 75), &child1);
+    QCOMPARE(parent.childAt(75, 25), &child1);
+    QCOMPARE(parent.childAt(75, 75), &child2);
+    QCOMPARE(parent.childAt(150, 150), &child2);
+    QCOMPARE(parent.childAt(25, 200), &child3);
+    QCOMPARE(parent.childAt(0, 150), static_cast<QQuickItem *>(0));
+    QCOMPARE(parent.childAt(300, 300), static_cast<QQuickItem *>(0));
 }
 
 
