@@ -326,6 +326,9 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     : rootItem(0)
     , activeFocusItem(0)
     , mouseGrabberItem(0)
+#ifndef QT_NO_CURSOR
+    , cursorItem(0)
+#endif
     , touchMouseId(-1)
     , touchMousePressTimestamp(0)
     , renderWithoutShowing(false)
@@ -1301,6 +1304,10 @@ void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
     qWarning() << "QQuickWindow::mouseMoveEvent()" << event->localPos() << event->button() << event->buttons();
 #endif
 
+#ifndef QT_NO_CURSOR
+    d->updateCursor(event->windowPos());
+#endif
+
     if (!d->mouseGrabberItem) {
         if (d->lastMousePosition.isNull())
             d->lastMousePosition = event->windowPos();
@@ -1831,6 +1838,49 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     return accepted;
 }
 #endif // QT_NO_DRAGANDDROP
+
+#ifndef QT_NO_CURSOR
+void QQuickWindowPrivate::updateCursor(const QPointF &scenePos)
+{
+    Q_Q(QQuickWindow);
+
+    QQuickItem *oldCursorItem = cursorItem;
+    cursorItem = findCursorItem(rootItem, scenePos);
+
+    if (cursorItem != oldCursorItem) {
+        if (cursorItem)
+            q->setCursor(cursorItem->cursor());
+        else
+            q->unsetCursor();
+    }
+}
+
+QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF &scenePos)
+{
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+    if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
+        QPointF p = item->mapFromScene(scenePos);
+        if (!item->contains(p))
+            return 0;
+    }
+
+    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        QQuickItem *child = children.at(ii);
+        if (!child->isVisible() || !child->isEnabled())
+            continue;
+        if (QQuickItem *cursorItem = findCursorItem(child, scenePos))
+            return cursorItem;
+    }
+
+    if (itemPrivate->hasCursor) {
+        QPointF p = item->mapFromScene(scenePos);
+        if (item->contains(p))
+            return item;
+    }
+    return 0;
+}
+#endif
 
 bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem *item, QTouchEvent *event)
 {

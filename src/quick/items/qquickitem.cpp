@@ -68,6 +68,10 @@
 #include <private/qqmlaccessors_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
+#ifndef QT_NO_CURSOR
+# include <QtGui/qcursor.h>
+#endif
+
 #include <float.h>
 
 // XXX todo Check that elements that create items handle memory correctly after visual ownership change
@@ -2266,6 +2270,10 @@ void QQuickItemPrivate::derefWindow()
     }
     if (c->mouseGrabberItem == q)
         c->mouseGrabberItem = 0;
+#ifndef QT_NO_CURSOR
+    if (c->cursorItem == q)
+        c->cursorItem = 0;
+#endif
     if ( hoverEnabled )
         c->hoverItems.removeAll(q);
     if (itemNodeInstance)
@@ -2429,6 +2437,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , inheritMirrorFromItem(false)
     , isAccessible(false)
     , culled(false)
+    , hasCursor(false)
     , dirtyAttributes(0)
     , nextDirtyItem(0)
     , prevDirtyItem(0)
@@ -5112,6 +5121,88 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
     Q_D(QQuickItem);
     d->hoverEnabled = enabled;
 }
+
+#ifndef QT_NO_CURSOR
+
+
+/*!
+    Returns the cursor shape for this item.
+
+    The mouse cursor will assume this shape when it is over this
+    item, unless an override cursor is set.
+    See the \l{Qt::CursorShape}{list of predefined cursor objects} for a
+    range of useful shapes.
+
+    If no cursor shape has been set this returns a cursor with the Qt::ArrowCursor shape, however
+    another cursor shape may be displayed if an overlapping item has a valid cursor.
+
+    \sa setCursor(), unsetCursor()
+*/
+
+QCursor QQuickItem::cursor() const
+{
+    Q_D(const QQuickItem);
+    return d->extra.isAllocated()
+            ? d->extra->cursor
+            : QCursor();
+}
+
+/*!
+    Sets the \a cursor shape for this item.
+
+    \sa cursor(), unsetCursor()
+*/
+
+void QQuickItem::setCursor(const QCursor &cursor)
+{
+    Q_D(QQuickItem);
+
+    Qt::CursorShape oldShape = d->extra.isAllocated() ? d->extra->cursor.shape() : Qt::ArrowCursor;
+
+    if (oldShape != cursor.shape() || oldShape >= Qt::LastCursor || cursor.shape() >= Qt::LastCursor) {
+        d->extra.value().cursor = cursor;
+        if (d->window) {
+            QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(d->window);
+            if (windowPrivate->cursorItem == this)
+                d->window->setCursor(cursor);
+        }
+    }
+
+    if (!d->hasCursor) {
+        d->hasCursor = true;
+        if (d->window) {
+            QPointF pos = d->window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
+            if (contains(mapFromScene(pos)))
+                QQuickWindowPrivate::get(d->window)->updateCursor(pos);
+        }
+    }
+}
+
+/*!
+    Clears the cursor shape for this item.
+
+    \sa cursor(), setCursor()
+*/
+
+void QQuickItem::unsetCursor()
+{
+    Q_D(QQuickItem);
+    if (!d->hasCursor)
+        return;
+    d->hasCursor = false;
+    if (d->extra.isAllocated())
+        d->extra->cursor = QCursor();
+
+    if (d->window) {
+        QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(d->window);
+        if (windowPrivate->cursorItem == this) {
+            QPointF pos = d->window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
+            windowPrivate->updateCursor(pos);
+        }
+    }
+}
+
+#endif
 
 void QQuickItem::grabMouse()
 {

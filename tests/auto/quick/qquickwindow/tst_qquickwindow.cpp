@@ -310,6 +310,11 @@ private slots:
     void ignoreUnhandledMouseEvents();
 
     void ownershipRootItem();
+
+#ifndef QT_NO_CURSOR
+    void cursor();
+#endif
+
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -1061,6 +1066,144 @@ void tst_qquickwindow::ownershipRootItem()
     QCoreApplication::processEvents();
     QVERIFY(!accessor->isRootItemDestroyed());
 }
+
+#ifndef QT_NO_CURSOR
+void tst_qquickwindow::cursor()
+{
+    QQuickWindow window;
+    window.resize(320, 240);
+
+    QQuickItem parentItem;
+    parentItem.setPos(QPointF(0, 0));
+    parentItem.setSize(QSizeF(180, 180));
+    parentItem.setParentItem(window.rootItem());
+
+    QQuickItem childItem;
+    childItem.setPos(QPointF(60, 90));
+    childItem.setSize(QSizeF(120, 120));
+    childItem.setParentItem(&parentItem);
+
+    QQuickItem clippingItem;
+    clippingItem.setPos(QPointF(120, 120));
+    clippingItem.setSize(QSizeF(180, 180));
+    clippingItem.setClip(true);
+    clippingItem.setParentItem(window.rootItem());
+
+    QQuickItem clippedItem;
+    clippedItem.setPos(QPointF(-30, -30));
+    clippedItem.setSize(QSizeF(120, 120));
+    clippedItem.setParentItem(&clippingItem);
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    // Position the cursor over the parent and child item and the clipped section of clippedItem.
+    QTest::mouseMove(&window, QPoint(100, 100));
+
+    // No items cursors, window cursor is the default arrow.
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+
+    // The section of clippedItem under the cursor is clipped, and so doesn't affect the window cursor.
+    clippedItem.setCursor(Qt::ForbiddenCursor);
+    QCOMPARE(clippedItem.cursor().shape(), Qt::ForbiddenCursor);
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+
+    // parentItem is under the cursor, so the window cursor is changed.
+    parentItem.setCursor(Qt::IBeamCursor);
+    QCOMPARE(parentItem.cursor().shape(), Qt::IBeamCursor);
+    QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
+
+    // childItem is under the cursor and is in front of its parent, so the window cursor is changed.
+    childItem.setCursor(Qt::WaitCursor);
+    QCOMPARE(childItem.cursor().shape(), Qt::WaitCursor);
+    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+
+    childItem.setCursor(Qt::PointingHandCursor);
+    QCOMPARE(childItem.cursor().shape(), Qt::PointingHandCursor);
+    QCOMPARE(window.cursor().shape(), Qt::PointingHandCursor);
+
+    // childItem is the current cursor item, so this has no effect on the window cursor.
+    parentItem.unsetCursor();
+    QCOMPARE(parentItem.cursor().shape(), Qt::ArrowCursor);
+    QCOMPARE(window.cursor().shape(), Qt::PointingHandCursor);
+
+    parentItem.setCursor(Qt::IBeamCursor);
+    QCOMPARE(parentItem.cursor().shape(), Qt::IBeamCursor);
+    QCOMPARE(window.cursor().shape(), Qt::PointingHandCursor);
+
+    // With the childItem cursor cleared, parentItem is now foremost.
+    childItem.unsetCursor();
+    QCOMPARE(childItem.cursor().shape(), Qt::ArrowCursor);
+    QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
+
+    // Setting the childItem cursor to the default still takes precedence over parentItem.
+    childItem.setCursor(Qt::ArrowCursor);
+    QCOMPARE(childItem.cursor().shape(), Qt::ArrowCursor);
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+
+    childItem.setCursor(Qt::WaitCursor);
+    QCOMPARE(childItem.cursor().shape(), Qt::WaitCursor);
+    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+
+    // Move the cursor so it is over just parentItem.
+    QTest::mouseMove(&window, QPoint(20, 20));
+    QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
+
+    // Move the cursor so that is over all items, clippedItem wins because its a child of
+    // clippingItem which is in from of parentItem in painting order.
+    QTest::mouseMove(&window, QPoint(125, 125));
+    QCOMPARE(window.cursor().shape(), Qt::ForbiddenCursor);
+
+    // Over clippingItem only, so no cursor.
+    QTest::mouseMove(&window, QPoint(200, 280));
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+
+    // Over no item, so no cursor.
+    QTest::mouseMove(&window, QPoint(10, 280));
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+
+    // back to the start.
+    QTest::mouseMove(&window, QPoint(100, 100));
+    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+
+    // Try with the mouse pressed.
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100, 100));
+    QTest::mouseMove(&window, QPoint(20, 20));
+    QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
+    QTest::mouseMove(&window, QPoint(125, 125));
+    QCOMPARE(window.cursor().shape(), Qt::ForbiddenCursor);
+    QTest::mouseMove(&window, QPoint(200, 280));
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+    QTest::mouseMove(&window, QPoint(10, 280));
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+    QTest::mouseMove(&window, QPoint(100, 100));
+    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 100));
+
+    // Remove the cursor item from the scene. Theoretically this should make parentItem the
+    // cursorItem, but given the situation will correct itself after the next mouse move it's
+    // probably better left as is to avoid unnecessary work during tear down.
+    childItem.setParentItem(0);
+    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+
+    parentItem.setCursor(Qt::SizeAllCursor);
+    QCOMPARE(parentItem.cursor().shape(), Qt::SizeAllCursor);
+    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+
+    // Changing the cursor of an un-parented item doesn't affect the window's cursor.
+    childItem.setCursor(Qt::ClosedHandCursor);
+    QCOMPARE(childItem.cursor().shape(), Qt::ClosedHandCursor);
+    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+
+    childItem.unsetCursor();
+    QCOMPARE(childItem.cursor().shape(), Qt::ArrowCursor);
+    QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
+
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 101));
+    QCOMPARE(window.cursor().shape(), Qt::SizeAllCursor);
+}
+#endif
+
 QTEST_MAIN(tst_qquickwindow)
 
 #include "tst_qquickwindow.moc"

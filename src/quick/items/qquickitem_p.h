@@ -342,6 +342,9 @@ public:
         QQuickLayoutMirroringAttached* layoutDirectionAttached;
         QQuickItemKeyFilter *keyHandler;
         mutable QQuickItemLayer *layer;
+#ifndef QT_NO_CURSOR
+        QCursor cursor;
+#endif
         QPointF userTransformOriginPoint;
 
         int effectRefCount;
@@ -408,7 +411,8 @@ public:
     bool inheritMirrorFromItem:1;
     bool isAccessible:1;
     bool culled:1;
-    // bool dummy:2
+    bool hasCursor:1;
+    // bool dummy:1
     // Bit 32
 
     enum DirtyType {

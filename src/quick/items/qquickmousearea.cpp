@@ -1136,15 +1136,6 @@ void QQuickMouseArea::setHovered(bool h)
         d->hovered = h;
         emit hoveredChanged();
         d->hovered ? emit entered() : emit exited();
-#ifndef QT_NO_CURSOR
-        if (d->cursor) {
-            if (d->hovered) {
-                window()->setCursor(QCursor(*d->cursor));
-            } else {
-                window()->unsetCursor();
-            }
-        }
-#endif
     }
 }
 
@@ -1274,19 +1265,19 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p)
 #ifndef QT_NO_CURSOR
 Qt::CursorShape QQuickMouseArea::cursorShape() const
 {
-    Q_D(const QQuickMouseArea);
-    if (d->cursor)
-        return d->cursor->shape();
-    return Qt::ArrowCursor;
+    return cursor().shape();
 }
 
 void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
 {
-    Q_D(QQuickMouseArea);
-    setHoverEnabled(true);
-    delete d->cursor;
-    d->cursor = new QCursor(shape);
+    if (cursor().shape() == shape)
+        return;
+
+    setCursor(shape);
+
+    emit cursorShapeChanged();
 }
+
 #endif
 
 /*!

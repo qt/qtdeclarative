@@ -85,6 +85,9 @@ private slots:
     void pressedMultipleButtons_data();
     void pressedMultipleButtons();
     void changeAxis();
+#ifndef QT_NO_CURSOR
+    void cursorShape();
+#endif
 
 private:
     void acceptedButton_data();
@@ -1365,6 +1368,36 @@ void tst_QQuickMouseArea::changeAxis()
 
     delete view;
 }
+
+#ifndef QT_NO_CURSOR
+void tst_QQuickMouseArea::cursorShape()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\n MouseArea {}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickMouseArea *mouseArea = qobject_cast<QQuickMouseArea *>(object.data());
+    QVERIFY(mouseArea);
+
+    QSignalSpy spy(mouseArea, SIGNAL(cursorShapeChanged()));
+
+    QCOMPARE(mouseArea->cursorShape(), Qt::ArrowCursor);
+    QCOMPARE(mouseArea->cursor().shape(), Qt::ArrowCursor);
+
+    mouseArea->setCursorShape(Qt::IBeamCursor);
+    QCOMPARE(mouseArea->cursorShape(), Qt::IBeamCursor);
+    QCOMPARE(mouseArea->cursor().shape(), Qt::IBeamCursor);
+    QCOMPARE(spy.count(), 1);
+
+    mouseArea->setCursorShape(Qt::IBeamCursor);
+    QCOMPARE(spy.count(), 1);
+
+    mouseArea->setCursorShape(Qt::WaitCursor);
+    QCOMPARE(mouseArea->cursorShape(), Qt::WaitCursor);
+    QCOMPARE(mouseArea->cursor().shape(), Qt::WaitCursor);
+    QCOMPARE(spy.count(), 2);
+}
+#endif
 
 QTEST_MAIN(tst_QQuickMouseArea)
 

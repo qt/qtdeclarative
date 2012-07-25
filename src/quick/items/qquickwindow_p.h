@@ -113,6 +113,9 @@ public:
 
     // Keeps track of the item currently receiving mouse events
     QQuickItem *mouseGrabberItem;
+#ifndef QT_NO_CURSOR
+    QQuickItem *cursorItem;
+#endif
 #ifndef QT_NO_DRAGANDDROP
     QQuickDragGrabber dragGrabber;
 #endif
@@ -144,6 +147,10 @@ public:
 #ifndef QT_NO_DRAGANDDROP
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);
     bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *);
+#endif
+#ifndef QT_NO_CURSOR
+    void updateCursor(const QPointF &scenePos);
+    QQuickItem *findCursorItem(QQuickItem *item, const QPointF &scenePos);
 #endif
 
     QList<QQuickItem*> hoverItems;

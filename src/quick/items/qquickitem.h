@@ -80,6 +80,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickTransform)
 };
 
+class QCursor;
 class QQuickItemLayer;
 class QQmlV8Function;
 class QQuickState;
@@ -281,6 +282,12 @@ public:
     void setAcceptedMouseButtons(Qt::MouseButtons buttons);
     bool acceptHoverEvents() const;
     void setAcceptHoverEvents(bool enabled);
+
+#ifndef QT_NO_CURSOR
+    QCursor cursor() const;
+    void setCursor(const QCursor &cursor);
+    void unsetCursor();
+#endif
 
     bool isUnderMouse() const;
     void grabMouse();
