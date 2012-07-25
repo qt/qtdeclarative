@@ -30,6 +30,53 @@
 \title Concepts - Visual Parent in Qt Quick
 \brief Description of the concept of visual parent in Qt Quick
 
-XXX TODO - Fill with content.
+\section1 Visual Parent
+The concept of visual parent in Qt Quick is separate but related to the concept of the QObject parent hierarchy. In QtQuick, the
+default property of Item is \l Item::data which can take any QObject derived type.
 
+Any object that is assigned to an item's data property becomes a child of the item within its QObject hierarchy, for
+memory management purposes. Additionally, if an object added to the data property is of the Item type, it is also
+assigned to the \l Item::children property and becomes a child of the item within the visual scene hierarchy.
+
+Most Qt Quick hierarchy crawling algorithms, especially the rendering algorithms, only
+consider the visual parent hierarchy.
+
+Visual parent comes up most often in the following three circumstances:
+
+\section2 Item Coordinates
+As item coordinates are relative to the visual parent, they can be affected by changes to the visual hierarchy. See
+the \l{Visual Coordinates}{qtquick-visualcanvas-visualcoordinates.html} concept page for more detail.
+
+\section2 Stacking Order
+
+Qt Quick items use a recursive drawing algorithm for determining which items are drawn on top in case of collisions.
+In general items are drawn on top of their parent items, in the order they were created (or specified in the QML file).
+So in the following example, the blue rectangle will be drawn on top of the green rectangle:
+
+\snippet qml/visualparent.qml 0
+\image visual-parent-example.png
+
+Because the algorithm recurses through the visual item hierarchy, any children of the green rectangle will also be drawn beneath
+the blue rectangle and beneath any of the blue rectangle's children.
+
+Stacking order can be influenced with the \Item::z property. Z values below 0 will stack below the parent, and if z
+values are assigned then siblings will stack in z-order (with creation order used to break ties). Z values only affect
+stacking compared to siblings and the parent item. If you have an item who is obscured by a subtree rooted above its
+parent item, no z value on that item will increase its stacking order to stack above that subtree. To stack that item
+above the other subtree you'll have to alter z values farther up in the hierarchy, or re-arrange the visual item
+hierarchy.
+
+\snippet qml/visualparent2.qml 0
+\image visual-parent-example2.png
+
+In the above example, the red rectangle has a high z value, but is still stacked below the blue rectangle. This is
+because it is a child of the green rectangle, and the green rectangle is a sibling of the blue rectangle. The z value
+of the green rectangle is lower than that of the blue rectangle, so the green rectangle and all children will be
+stacked beneath the blue rectangle.
+
+\section2 Canvas Ownership
+
+The definition of what is rendered in a Qt Quick scene is the visual item tree rooted at QQuickWindow::contentItem.
+Therefore to add an Item to a specific Qt Quick scene for rendering it needs to become a visual hierarchy child of an
+Item already in the visual item hierarchy, such as QQuickWindow::contentItem.
 */
