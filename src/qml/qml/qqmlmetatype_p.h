@@ -69,6 +69,7 @@ class QQmlTypePrivate;
 class QQmlTypeModule;
 class QHashedString;
 class QHashedStringRef;
+class QReadWriteLock;
 
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
@@ -138,6 +139,15 @@ public:
     };
     static ModuleApi moduleApi(const QString &, int, int);
     static QHash<QString, QList<ModuleApi> > moduleApis();
+
+    static bool namespaceContainsRegistrations(const QString &);
+
+    static void protectNamespace(const QString &);
+
+    static void setTypeRegistrationNamespace(const QString &);
+    static QStringList typeRegistrationFailures();
+
+    static QReadWriteLock *typeRegistrationLock();
 
 private:
     static CompareFunction anchorLineCompareFunction;

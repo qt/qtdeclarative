@@ -1,3 +1,4 @@
 1:12:unexpected token
-1:-1:expected '.'
+1:-1:invalid qmldir directive contains too many tokens
 2:17:unexpected token
+2:-1:invalid qmldir directive contains too many tokens

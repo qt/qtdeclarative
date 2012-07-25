@@ -642,7 +642,13 @@ void tst_qquickanimations::resume()
     QVERIFY(!animation.isPaused());
     QCOMPARE(spy.count(), 2);
 
-    qmlRegisterType<QQuickPropertyAnimation>("QtQuick",2,0,"PropertyAnimation"); //make sure QQuickPropertyAnimation has correct qml type name
+    // Load QtQuick to ensure that QQuickPropertyAnimation is registered as PropertyAnimation
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\nQtObject {}\n", QUrl());
+    }
+
     QByteArray message = "<Unknown File>: QML PropertyAnimation: setPaused() cannot be used when animation isn't running.";
     QTest::ignoreMessage(QtWarningMsg, message);
     animation.pause();

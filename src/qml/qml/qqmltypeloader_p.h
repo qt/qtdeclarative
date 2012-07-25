@@ -302,6 +302,8 @@ public:
         bool hasError() const;
         QList<QQmlError> errors(const QString &uri) const;
 
+        QString typeNamespace() const;
+
         QQmlDirComponents components() const;
         QQmlDirScripts scripts() const;
         QQmlDirPlugins plugins() const;

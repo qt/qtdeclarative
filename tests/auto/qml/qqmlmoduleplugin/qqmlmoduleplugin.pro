@@ -1,6 +1,21 @@
 QT = core
 TEMPLATE = subdirs
-SUBDIRS = plugin plugin.2 plugin.2.1 pluginWrongCase pluginWithQmlFile pluginMixed pluginVersion nestedPlugin
+SUBDIRS =\
+    plugin\
+    plugin.2\
+    plugin.2.1\
+    pluginWrongCase\
+    pluginWithQmlFile\
+    pluginMixed\
+    pluginVersion\
+    nestedPlugin\
+    strictModule\
+    invalidStrictModule\
+    nonstrictModule\
+    preemptiveModule\
+    preemptedStrictModule\
+    invalidNamespaceModule
+
 tst_qqmlmoduleplugin_pro.depends += plugin
 SUBDIRS += tst_qqmlmoduleplugin.pro
 

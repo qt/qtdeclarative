@@ -99,11 +99,13 @@ bool QQmlDirParser::parse(const QString &source)
     _scripts.clear();
 
     int lineNumber = 0;
+    bool firstLine = true;
 
     const QChar *ch = source.constData();
     while (!ch->isNull()) {
         ++lineNumber;
 
+        bool invalidLine = false;
         const QChar *lineStart = ch;
 
         scanSpace(ch);
@@ -129,6 +131,7 @@ bool QQmlDirParser::parse(const QString &source)
             } else {
                 reportError(lineNumber, start-lineStart, QLatin1String("unexpected token"));
                 scanToEnd(ch);
+                invalidLine = true;
                 break;
             }
             scanSpace(ch);
@@ -137,8 +140,31 @@ bool QQmlDirParser::parse(const QString &source)
         if (!ch->isNull())
             ++ch;
 
-        if (sectionCount == 0) {
+        if (invalidLine) {
+            reportError(lineNumber, -1,
+                        QString::fromUtf8("invalid qmldir directive contains too many tokens"));
+            continue;
+        } else if (sectionCount == 0) {
             continue; // no sections, no party.
+
+        } else if (sections[0] == QLatin1String("module")) {
+            if (sectionCount != 2) {
+                reportError(lineNumber, -1,
+                            QString::fromUtf8("module directive requires one argument, but %1 were provided").arg(sectionCount - 1));
+                continue;
+            }
+            if (!_typeNamespace.isEmpty()) {
+                reportError(lineNumber, -1,
+                            QString::fromUtf8("only one module directive may be defined in a qmldir file"));
+                continue;
+            }
+            if (!firstLine) {
+                reportError(lineNumber, -1,
+                            QString::fromUtf8("module directive must be the first directive in a qmldir file"));
+                continue;
+            }
+
+            _typeNamespace = sections[1];
 
         } else if (sections[0] == QLatin1String("plugin")) {
             if (sectionCount < 2) {
@@ -209,6 +235,8 @@ bool QQmlDirParser::parse(const QString &source)
             reportError(lineNumber, -1, 
                         QString::fromUtf8("a component declaration requires two or three arguments, but %1 were provided").arg(sectionCount));
         }
+
+        firstLine = false;
     }
 
     return hasError();
@@ -239,14 +267,26 @@ void QQmlDirParser::setError(const QQmlError &e)
 
 QList<QQmlError> QQmlDirParser::errors(const QString &uri) const
 {
+    QUrl url(uri);
     QList<QQmlError> errors = _errors;
     for (int i = 0; i < errors.size(); ++i) {
         QQmlError &e = errors[i];
         QString description = e.description();
         description.replace(QLatin1String("$$URI$$"), uri);
         e.setDescription(description);
+        e.setUrl(url);
     }
     return errors;
+}
+
+QString QQmlDirParser::typeNamespace() const
+{
+    return _typeNamespace;
+}
+
+void QQmlDirParser::setTypeNamespace(const QString &s)
+{
+    _typeNamespace = s;
 }
 
 QList<QQmlDirParser::Plugin> QQmlDirParser::plugins() const

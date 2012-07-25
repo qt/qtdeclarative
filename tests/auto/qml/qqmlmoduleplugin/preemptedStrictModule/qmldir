@@ -1,0 +1,2 @@
+module com.nokia.PreemptedStrictModule
+plugin preemptedStrictModule

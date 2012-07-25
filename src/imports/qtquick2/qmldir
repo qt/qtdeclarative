@@ -1,1 +1,2 @@
+module QtQuick
 plugin qtquick2plugin

@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlError;
 class QQmlEngine;
-class QQmlDirParser
+class Q_AUTOTEST_EXPORT QQmlDirParser
 {
     Q_DISABLE_COPY(QQmlDirParser)
 
@@ -75,6 +75,9 @@ public:
     bool hasError() const;
     void setError(const QQmlError &);
     QList<QQmlError> errors(const QString &uri) const;
+
+    QString typeNamespace() const;
+    void setTypeNamespace(const QString &s);
 
     struct Plugin
     {
@@ -139,6 +142,7 @@ private:
 
 private:
     QList<QQmlError> _errors;
+    QString _typeNamespace;
     QHash<QHashedStringRef,Component> _components; // multi hash
     QList<Script> _scripts;
     QList<Plugin> _plugins;

@@ -143,7 +143,7 @@ public:
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
-    bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);
+    bool importPlugin(const QString &filePath, const QString &uri, const QString &importNamespace, QList<QQmlError> *errors);
 
     QStringList importPathList(PathType type = LocalOrRemote) const;
     void setImportPathList(const QStringList &paths);

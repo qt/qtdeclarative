@@ -1046,7 +1046,7 @@ void tst_qquickwindow::ignoreUnhandledMouseEvents()
 
 void tst_qquickwindow::ownershipRootItem()
 {
-    qmlRegisterType<RootItemAccessor>("QtQuick", 2, 0, "RootItemAccessor");
+    qmlRegisterType<RootItemAccessor>("Test", 1, 0, "RootItemAccessor");
 
     QQmlEngine engine;
     QQmlComponent component(&engine);

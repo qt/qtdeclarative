@@ -1381,6 +1381,11 @@ QList<QQmlError> QQmlTypeLoader::QmldirContent::errors(const QString &uri) const
     return m_parser.errors(uri);
 }
 
+QString QQmlTypeLoader::QmldirContent::typeNamespace() const
+{
+    return m_parser.typeNamespace();
+}
+
 void QQmlTypeLoader::QmldirContent::setContent(const QString &location, const QString &content)
 {
     m_location = location;

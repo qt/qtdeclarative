@@ -108,6 +108,11 @@ struct QQmlMetaTypeData
     QBitArray lists;
 
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
+
+    QSet<QString> protectedNamespaces;
+
+    QString typeRegistrationNamespace;
+    QStringList typeRegistrationFailures;
 };
 
 class QQmlTypeModulePrivate
@@ -128,7 +133,7 @@ public:
 };
 
 Q_GLOBAL_STATIC(QQmlMetaTypeData, metaTypeData)
-Q_GLOBAL_STATIC(QReadWriteLock, metaTypeDataLock)
+Q_GLOBAL_STATIC_WITH_ARGS(QReadWriteLock, metaTypeDataLock, (QReadWriteLock::Recursive))
 
 static uint qHash(const QQmlMetaTypeData::VersionedUri &v)
 {
@@ -193,7 +198,7 @@ public:
 
 // Avoid multiple fromUtf8(), copies and hashing of the module name.
 // This is only called when metaTypeDataLock is locked.
-static QHashedString moduletoUtf8(const char *module)
+static QHashedString moduleFromUtf8(const char *module)
 {
     if (!module)
         return QHashedString();
@@ -241,7 +246,7 @@ QQmlType::QQmlType(int index, const QQmlPrivate::RegisterInterface &interface)
 QQmlType::QQmlType(int index, const QQmlPrivate::RegisterType &type)
 : d(new QQmlTypePrivate)
 {
-    d->m_module = moduletoUtf8(type.uri);
+    d->m_module = moduleFromUtf8(type.uri);
     d->m_elementName = QString::fromUtf8(type.elementName);
 
     d->m_version_maj = type.versionMajor;
@@ -902,6 +907,29 @@ int registerType(const QQmlPrivate::RegisterType &type)
 
     QWriteLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
+
+    if (type.uri && type.elementName) {
+        QString nameSpace = moduleFromUtf8(type.uri);
+
+        if (!data->typeRegistrationNamespace.isEmpty()) {
+            // We can only install types into the registered namespace
+            if (nameSpace != data->typeRegistrationNamespace) {
+                QString failure(QCoreApplication::translate("qmlRegisterType",
+                                                            "Cannot install element '%1' into unregistered namespace '%2'"));
+                data->typeRegistrationFailures.append(failure.arg(QString::fromUtf8(type.elementName)).arg(nameSpace));
+                return -1;
+            }
+        } else if (data->typeRegistrationNamespace != nameSpace) {
+            // Is the target namespace protected against further registrations?
+            if (data->protectedNamespaces.contains(nameSpace)) {
+                QString failure(QCoreApplication::translate("qmlRegisterType",
+                                                            "Cannot install element '%1' into protected namespace '%2'"));
+                data->typeRegistrationFailures.append(failure.arg(QString::fromUtf8(type.elementName)).arg(nameSpace));
+                return -1;
+            }
+        }
+    }
+
     int index = data->types.count();
 
     QQmlType *dtype = new QQmlType(index, type);
@@ -983,6 +1011,46 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         return registerModuleApi(*reinterpret_cast<RegisterModuleApi *>(data));
     }
     return -1;
+}
+
+bool QQmlMetaType::namespaceContainsRegistrations(const QString &uri)
+{
+    QQmlMetaTypeData *data = metaTypeData();
+
+    // Has any type previously been installed to this namespace?
+    QHashedString nameSpace(uri);
+    foreach (const QQmlType *type, data->types)
+        if (type->module() == nameSpace)
+            return true;
+
+    return false;
+}
+
+void QQmlMetaType::protectNamespace(const QString &uri)
+{
+    QQmlMetaTypeData *data = metaTypeData();
+
+    data->protectedNamespaces.insert(uri);
+}
+
+void QQmlMetaType::setTypeRegistrationNamespace(const QString &uri)
+{
+    QQmlMetaTypeData *data = metaTypeData();
+
+    data->typeRegistrationNamespace = uri;
+    data->typeRegistrationFailures.clear();
+}
+
+QStringList QQmlMetaType::typeRegistrationFailures()
+{
+    QQmlMetaTypeData *data = metaTypeData();
+
+    return data->typeRegistrationFailures;
+}
+
+QReadWriteLock *QQmlMetaType::typeRegistrationLock()
+{
+    return metaTypeDataLock();
 }
 
 /*

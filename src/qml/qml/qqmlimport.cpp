@@ -47,6 +47,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qpluginloader.h>
 #include <QtCore/qlibraryinfo.h>
+#include <QtCore/qreadwritelock.h>
 #include <QtQml/qqmlextensioninterface.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltypenamecache_p.h>
@@ -734,7 +735,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
             QString resolvedFilePath = database->resolvePlugin(typeLoader, qmldirPath,
                                                                plugin.path, plugin.name);
             if (!resolvedFilePath.isEmpty()) {
-                if (!database->importPlugin(resolvedFilePath, uri, errors)) {
+                if (!database->importPlugin(resolvedFilePath, uri, qmldir->typeNamespace(), errors)) {
                     if (errors) {
                         // XXX TODO: should we leave the import plugin error alone?
                         // Here, we pop it off the top and coalesce it into this error's message.
@@ -1590,7 +1591,7 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
 /*!
     \internal
 */
-bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors)
+bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &uri, const QString &typeNamespace, QList<QQmlError> *errors)
 {
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImportDatabase::importPlugin: " << uri << " from " << filePath;
@@ -1635,9 +1636,53 @@ bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &ur
             const char *moduleId = bytes.constData();
             if (!typesRegistered) {
 
-                // XXX thread this code should probably be protected with a mutex.
                 qmlEnginePluginsWithRegisteredTypes()->insert(absoluteFilePath, uri);
-                iface->registerTypes(moduleId);
+
+                QStringList registrationFailures;
+
+                {
+                    QWriteLocker lock(QQmlMetaType::typeRegistrationLock());
+
+                    if (!typeNamespace.isEmpty()) {
+                        // This is a 'strict' module
+                        if (typeNamespace != uri) {
+                            // The namespace for type registrations must match the URI for locating the module
+                            QQmlError error;
+                            error.setDescription(tr("Module namespace '%1' does not match import URI '%2'").arg(typeNamespace).arg(uri));
+                            errors->prepend(error);
+                            return false;
+                        }
+
+                        if (QQmlMetaType::namespaceContainsRegistrations(typeNamespace)) {
+                            // Other modules have already installed to this namespace
+                            QQmlError error;
+                            error.setDescription(tr("Namespace '%1' has already been used for type registration").arg(typeNamespace));
+                            errors->prepend(error);
+                            return false;
+                        } else {
+                            QQmlMetaType::protectNamespace(typeNamespace);
+                        }
+                    } else {
+                        // This is not a stict module - provide a warning
+                        qWarning().nospace() << qPrintable(tr("Module '%1' does not contain a module directive - it cannot be protected from external registrations.").arg(uri));
+                    }
+
+                    QQmlMetaType::setTypeRegistrationNamespace(typeNamespace);
+
+                    iface->registerTypes(moduleId);
+
+                    registrationFailures = QQmlMetaType::typeRegistrationFailures();
+                    QQmlMetaType::setTypeRegistrationNamespace(QString());
+                }
+
+                if (!registrationFailures.isEmpty()) {
+                    foreach (const QString &failure, registrationFailures) {
+                        QQmlError error;
+                        error.setDescription(failure);
+                        errors->prepend(error);
+                    }
+                    return false;
+                }
             }
             if (!engineInitialized) {
                 // things on the engine (eg. adding new global objects) have to be done for every 

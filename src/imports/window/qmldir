@@ -1,1 +1,2 @@
+module QtQuick.Window
 plugin windowplugin
