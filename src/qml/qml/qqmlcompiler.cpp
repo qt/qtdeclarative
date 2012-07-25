@@ -2933,6 +2933,30 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     int effectivePropertyIndex = cache->propertyIndexCacheStart;
     int effectiveMethodIndex = cache->methodIndexCacheStart;
 
+    // For property change signal override detection.
+    // We prepopulate a set of signal names which already exist in the object,
+    // and throw an error if there is a signal/method defined as an override.
+    QSet<QString> seenSignals;
+    seenSignals << QStringLiteral("destroyed") << QStringLiteral("parentChanged") << QStringLiteral("objectNameChanged");
+    QQmlPropertyCache *parentCache = cache;
+    while ((parentCache = parentCache->parent())) {
+        if (int pSigCount = parentCache->signalCount()) {
+            int pSigOffset = parentCache->signalOffset();
+            for (int i = 0; i < pSigCount; ++i) {
+                QQmlPropertyData *currPSig = parentCache->signal(pSigOffset+i);
+                if (!currPSig) continue;
+                // XXX TODO: find a better way to get signal name from the property data :-/
+                for (QQmlPropertyCache::StringCache::ConstIterator iter = parentCache->stringCache.begin();
+                        iter != parentCache->stringCache.end(); ++iter) {
+                    if (currPSig == iter.value()) {
+                        seenSignals.insert(iter.key());
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     // First set up notify signals for properties - first normal, then var, then alias
     enum { NSS_Normal = 0, NSS_Var = 1, NSS_Alias = 2 };
     for (int ii = NSS_Normal; ii <= NSS_Alias; ++ii) { // 0 == normal, 1 == var, 2 == alias
@@ -2952,14 +2976,15 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
             quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
                             QQmlPropertyData::IsVMESignal;
 
+            QString changedSigName = p->name.toString() + QLatin1String("Changed");
+            seenSignals.insert(changedSigName);
+
             if (p->nameIndex != -1) {
                 QHashedCStringRef changedSignalName(cStringData + p->nameIndex,
                                                     p->name.length() + 7 /* strlen("Changed") */);
                 cache->appendSignal(changedSignalName, flags, effectiveMethodIndex++);
             } else {
-                QString changedSignalName = p->name.toString() + QLatin1String("Changed");
-
-                cache->appendSignal(changedSignalName, flags, effectiveMethodIndex++);
+                cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
             }
         }
     }
@@ -3012,13 +3037,19 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         if (paramCount)
             flags |= QQmlPropertyData::HasArguments;
 
+        QString signalName = s->name.toString();
+        if (seenSignals.contains(signalName)) {
+            const QQmlScript::Object::DynamicSignal &currSig = *s;
+            COMPILE_EXCEPTION(&currSig, tr("Duplicate signal name: invalid override of property change signal or superclass signal"));
+        }
+        seenSignals.insert(signalName);
+
         if (s->nameIndex != -1) {
             QHashedCStringRef name(cStringData + s->nameIndex, s->name.length(), s->name.hash());
             cache->appendSignal(name, flags, effectiveMethodIndex++,
                                 paramCount?paramTypes.constData():0, names);
         } else {
-            QString name = s->name.toString();
-            cache->appendSignal(name, flags, effectiveMethodIndex++,
+            cache->appendSignal(signalName, flags, effectiveMethodIndex++,
                                 paramCount?paramTypes.constData():0, names);
         }
     }
@@ -3033,12 +3064,19 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
         if (paramCount)
             flags |= QQmlPropertyData::HasArguments;
 
+        QString slotName = s->name.toString();
+        if (seenSignals.contains(slotName)) {
+            const QQmlScript::Object::DynamicSlot &currSlot = *s;
+            COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name: invalid override of property change signal or superclass signal"));
+        }
+        // Note: we don't append slotName to the seenSignals list, since we don't
+        // protect against overriding change signals or methods with properties.
+
         if (s->nameIndex != -1) {
             QHashedCStringRef name(cStringData + s->nameIndex, s->name.length(), s->name.hash());
             cache->appendMethod(name, flags, effectiveMethodIndex++, s->parameterNames);
         } else {
-            QString name = s->name.toString();
-            cache->appendMethod(name, flags, effectiveMethodIndex++, s->parameterNames);
+            cache->appendMethod(slotName, flags, effectiveMethodIndex++, s->parameterNames);
         }
     }
 

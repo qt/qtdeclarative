@@ -105,6 +105,8 @@ private slots:
     void idProperty();
     void autoNotifyConnection();
     void assignSignal();
+    void overrideSignal_data();
+    void overrideSignal();
     void dynamicProperties();
     void dynamicPropertiesNested();
     void listProperties();
@@ -1155,6 +1157,37 @@ void tst_qqmllanguage::assignSignal()
     emit object->basicSignal();
     QTest::ignoreMessage(QtWarningMsg, "MyQmlObject::basicSlotWithArgs(9)");
     emit object->basicParameterizedSignal(9);
+}
+
+
+void tst_qqmllanguage::overrideSignal_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("errorFile");
+
+    QTest::newRow("override signal with signal") << "overrideSignal.1.qml" << "overrideSignal.1.errors.txt";
+    QTest::newRow("override signal with method") << "overrideSignal.2.qml" << "overrideSignal.2.errors.txt";
+    QTest::newRow("override signal with property") << "overrideSignal.3.qml" << "";
+    QTest::newRow("override signal of alias property with signal") << "overrideSignal.4.qml" << "overrideSignal.4.errors.txt";
+    QTest::newRow("override signal of superclass with signal") << "overrideSignal.5.qml" << "overrideSignal.5.errors.txt";
+    QTest::newRow("override builtin signal with signal") << "overrideSignal.6.qml" << "overrideSignal.6.errors.txt";
+}
+
+void tst_qqmllanguage::overrideSignal()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, errorFile);
+
+    QQmlComponent component(&engine, testFileUrl(file));
+    if (errorFile.isEmpty()) {
+        VERIFY_ERRORS(0);
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QVERIFY(object->property("success").toBool());
+        delete object;
+    } else {
+        VERIFY_ERRORS(errorFile.toLatin1().constData());
+    }
 }
 
 // Tests the creation and assignment of dynamic properties
