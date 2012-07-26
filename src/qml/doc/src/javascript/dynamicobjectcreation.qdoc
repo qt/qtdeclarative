@@ -64,7 +64,8 @@ Once you have a \l Component, you can call its \l {Component::createObject()}
 can take one or two arguments:
 \list
 \li The first is the parent for the new object.  The parent can be a graphical
-    object (QtQuick item) or non-graphical object (QtQml QtObject or C++
+    object (QtQuick item) or non-graphical object
+    (\l{qtqml-typereference-topic.html}{QtQml} \l QtObject or C++
     QObject).  Only graphical objects with graphical parent objects will be
     rendered to the QtQuick visual canvas.  If you wish to set the parent later
     you can safely pass \c null to this function.

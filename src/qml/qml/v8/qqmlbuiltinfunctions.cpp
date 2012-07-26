@@ -449,7 +449,7 @@ v8::Handle<v8::Value> hsla(const v8::Arguments &args)
 
 Returns true if both \c lhs and \c rhs yield equal color values.  Both arguments
 may be either color values or string values.  If a string value is supplied it
-must be convertible to a color, as described for the \l{qmlbasictypecolor}{color}
+must be convertible to a color, as described for the \l{colorbasictypedocs}{color}
 basic type.
 */
 v8::Handle<v8::Value> colorEqual(const v8::Arguments &args)

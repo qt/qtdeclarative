@@ -31,12 +31,41 @@
 \brief Description of the QML types provided by the Qt Quick module
 
 This page contains links to documentation for every QML type provided by the
-Qt Quick module, organized according to category and purpose.  All of the types
-are based on the basic \l{Item} type, which itself derives from \l{QML::QtObject}.
-Basic QML types such as \l{QML::QtObject} and \l{QML::Component} are also available 
-when you import QtQuick.
+\c QtQuick QML module, organized according to category and purpose.
 
-\section1 Visual Types
+\section1 Importing QtQuick
+
+The types provided by the QtQuick module are only available in a QML document
+if that document imports the \c QtQuick namespace.
+
+The current version of the QtQuick module is version 2.0, and thus it may be
+imported via the following statement:
+
+\qml
+import QtQuick 2.0
+\endqml
+
+See the \l{qtquick-main.html}{Qt Quick} module documentation for more
+information about the concepts which are central to \c QtQuick.
+
+\section1 Basic Types
+
+There are a number of basic types that are
+\l{qtqml-typesystem-basictypes.html#basic-types-provided-by-the-qml-language}
+{supported by default in the QML language}.
+
+In addition, the QtQuick module provides the following basic types:
+\annotatedlist qtquickbasictypes
+
+\section1 Object Types
+
+All of the object types provided by QtQuick are based on the \l{Item} type,
+which itself derives from \l{QML::QtObject}.  QML object types provided by
+the \l{qtqml-typereference-topic.html#object-types}{QtQml module}
+(such as \l{QML::QtObject} and \l{QML::Component}) are also available when
+you import QtQuick.
+
+\section2 Visual Types
 
 \list
 \li \l {Item} - Basic visual object type inherited by visual object types (visual items)
@@ -77,7 +106,7 @@ Visual Item Transformations
 \endlist
 
 
-\section1 User Input
+\section2 User Input
 
 \list
 \li \l {MouseArea} - Sets up an area for mouse interaction
@@ -111,7 +140,7 @@ User Input Events
 \li \l {DragEvent} -Provides information about a drag event
 \endlist
 
-\section1 Positioning
+\section2 Positioning
 
 \list
 \li \l {Positioner} - Attached property which provides information about where an Item has been positioned
@@ -122,7 +151,7 @@ User Input Events
 \li \l {LayoutMirroring} - Attached property used to mirror layout behavior
 \endlist
 
-\section1 States, Transitions and Animations
+\section2 States, Transitions and Animations
 
 States
 \list
@@ -179,7 +208,7 @@ Animation paths
 \li \l {PathPercent} - Modifies the item distribution along a \l {Path}
 \endlist
 
-\section1 Model/View Types And Data Storage And Access
+\section2 Model/View Types And Data Storage And Access
 
 Models And Model Data
 \list
@@ -205,7 +234,7 @@ Data Storage
 \li \l {LocalStorage} - Module API providing simplified SQL access
 \endlist
 
-\section1 Graphical Effects
+\section2 Graphical Effects
 
 \list
 \li \l {Flipable} - Provides a surface that produces "flipping" effects
@@ -215,7 +244,7 @@ Data Storage
 \li The \l{QtQuick.Particles 2} module provides a set of Particle System types for QtQuick 2
 \endlist
 
-\section1 Convenience Types
+\section2 Convenience Types
 
 \list
 \li \l {Connections} - Explicitly connects signals and signal handlers
@@ -224,7 +253,7 @@ Data Storage
 \li \l {WorkerScript} - Enables the use of threads in a Qt Quick application
 \endlist
 
-\section1 Canvas (similar to HTML5 canvas)
+\section2 Canvas (similar to HTML5 canvas)
 
 \list
 \li \l {Canvas} - Provides a 2D canvas type similar to the HTML5 canvas
@@ -235,4 +264,248 @@ Data Storage
 \li \l {TextMetrics} - Provides text and font measurement data for use in a Canvas
 \endlist
 
+*/
+
+/*!
+    \qmlbasictype color
+    \ingroup qtquickbasictypes
+    \brief an ARGB color value.
+    \target colorbasictypedocs
+
+    The \c color type refers to an ARGB color value. It can be specified in a number of ways:
+
+    \list
+    \li By a \l{http://www.w3.org/TR/SVG/types.html#ColorKeywords}{SVG color name}, such as
+        "red", "green" or "lightsteelblue".
+    \li By a hexadecimal triplet or quad in the form \c "#RRGGBB" and \c "#AARRGGBB"
+        respectively. For example, the color red corresponds to a triplet of \c "#FF0000"
+        and a slightly transparent blue to a quad of \c "#800000FF".
+    \li Using the \l{QML:Qt::rgba()}{Qt.rgba()}, \l{QML:Qt::hsla()}{Qt.hsla()},
+        \l{QML:Qt::darker()}{Qt.darker()}, \l{QML:Qt::lighter()}{Qt.lighter()} or
+        \l{QML:Qt::tint()}{Qt.tint()} functions.
+    \endlist
+
+    Example:
+
+    \div{float-right}
+    \inlineimage declarative-colors.png
+    \enddiv
+    \snippet qml/colors.qml colors
+
+    Additionally, a color type has \c r, \c g, \c b and \c a properties that refer to the
+    red, green, blue and alpha values of the color, respectively:
+
+    \qml
+    Text {
+        color: "red"
+
+        // prints "1 0 0 1"
+        Component.onCompleted: console.log(color.r, color.g, color.b, color.a)
+    }
+    \endqml
+
+    To test color values for equality, use the \l{QML:Qt::colorEqual()}{Qt.colorEqual()}
+    function.  This allows colors to be accurately compared whether they are in property
+    form or in any of the acceptable string specification forms.
+
+    When integrating with C++, note that any QColor value
+    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+    converted into a \c color value, and vice-versa.
+
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype font
+    \ingroup qtquickbasictypes
+    \brief a font value with the properties of QFont.
+    \target fontbasictypedocs
+
+    The \c font type refers to a font value with the properties of QFont.
+
+    The most commonly used properties are:
+
+    \list
+    \li \l string \c font.family
+    \li \l bool \c font.bold
+    \li \l bool \c font.italic
+    \li \l bool \c font.underline
+    \li \l real \c font.pointSize
+    \li \l int \c font.pixelSize
+    \endlist
+
+    If both \c pointSize and a \c pixelSize are specified, \c pixelSize will be used.
+
+    The following properties are also available:
+
+    \list
+    \li \l enumeration \c font.weight
+    \li \l bool \c font.overline
+    \li \l bool \c font.strikeout
+    \li \l enumeration \c font.capitalization
+    \li \l real \c font.letterSpacing
+    \li \l real \c font.wordSpacing
+    \endlist
+
+    Example:
+    \qml
+    Text { font.family: "Helvetica"; font.pointSize: 13; font.bold: true }
+    \endqml
+
+    When integrating with C++, note that any QFont value
+    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+    converted into a \c font value, and vice-versa.
+
+    This basic type is provided by the QtQuick import.
+
+    Font weighting is classified on a scale from 0 to 99, where a weight of 0 is ultralight,
+    and 99 is extremely black. The following values are supported:
+
+    \table
+    \row
+        \li \c Font.Light
+        \li 25
+    \row
+        \li \c Font.Normal
+        \li 50
+    \row
+        \li \c Font.DemiBold
+        \li 63
+    \row
+        \li \c Font.Bold
+        \li 75
+    \row
+        \li \c Font.Black
+        \li 87
+    \endtable
+
+    Capitalization supports the following values:
+
+    \table
+    \row
+        \li \c Font.MixedCase
+        \li No capitalization change is applied.
+    \row
+        \li \c Font.AllUppercase
+        \li Alters the text to be rendered in all uppercase type.
+    \row
+        \li \c Font.AllLowercase
+        \li Alters the text to be rendered in all lowercase type.
+    \row
+        \li \c Font.SmallCaps
+        \li Alters the text to be rendered in small-caps type.
+    \row
+        \li \c Font.Capitalize
+        \li Alters the text to be rendered with the first character of each word as an uppercase character.
+    \endtable
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype vector2d
+    \ingroup qtquickbasictypes
+
+    \brief A vector2d type has x and y attributes.
+
+    A \c vector2d type has \c x and \c y attributes, otherwise
+    it is similar to the \c vector3d type.  Please see the
+    documentation about the \c vector3d type for more information.
+
+    To create a \c vector2d value, specify it as a "x,y" string,
+    or define the components individually, or compose it with
+    the Qt.vector2d() function.
+
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype vector3d
+    \ingroup qtquickbasictypes
+    \brief a value with x, y, and z attributes.
+
+    The \c vector3d type refers to a value with \c x, \c y, and \c z attributes.
+
+    To create a \c vector3d value, specify it as a "x,y,z" string:
+
+    \qml
+    Rotation { angle: 60; axis: "0,1,0" }
+    \endqml
+
+    or with the \l{QML:Qt::vector3d()}{Qt.vector3d()} function:
+
+    \qml
+    Rotation { angle: 60; axis: Qt.vector3d(0, 1, 0) }
+    \endqml
+
+    or as separate \c x, \c y, and \c z components:
+
+    \qml
+    Rotation { angle: 60; axis.x: 0; axis.y: 1; axis.z: 0 }
+    \endqml
+
+    When integrating with C++, note that any QVector3D value
+    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+    converted into a \c vector3d value, and vice-versa.
+
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype vector4d
+    \ingroup qtquickbasictypes
+
+    \brief A vector4d type has x, y, z and w attributes.
+
+    A \c vector4d type has \c x, \c y, \c z and \c w attributes,
+    otherwise it is similar to the \c vector3d type.  Please see the
+    documentation about the \c vector3d type for more information.
+
+    To create a \c vector4d value, specify it as a "x,y,z,w" string,
+    or define the components individually, or compose it with
+    the Qt.vector4d() function.
+
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype quaternion
+    \ingroup qtquickbasictypes
+
+    \brief A quaternion type has scalar, x, y, and z attributes.
+
+    A \c quaternion type has \c scalar, \c x, \c y and \c z attributes,
+    otherwise it is similar to the \c vector3d type.  Please see the
+    documentation about the \c vector3d type for more information.
+
+    To create a \c quaternion value, specify it as a "scalar,x,y,z" string,
+    or define the components individually, or compose it with
+    the Qt.quaternion() function.
+
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
+*/
+
+/*!
+    \qmlbasictype matrix4x4
+    \ingroup qtquickbasictypes
+
+    \brief A matrix4x4 type is a 4-row and 4-column matrix
+
+    A \c matrix4x4 type has sixteen values, but these values are
+    largely opaque to QML.  Values of this type can be composed with
+    the Qt.matrix4x4() function.
+
+    This basic type is provided by the QtQuick import.
+
+    \sa {QML Basic Types}
 */

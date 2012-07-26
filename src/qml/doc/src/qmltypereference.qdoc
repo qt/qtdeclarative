@@ -26,25 +26,26 @@
 ****************************************************************************/
 /*!
 \page qtqml-typereference-topic.html
-\title QML Types Provided By The Qt QML Module
-\brief List of QML types provided by the Qt QML module
+\title QML Types Provided By The QtQml Module
+\brief List of QML types provided by the QtQml module
 
-The Qt QML module provides the definition and implementation of the QML
-language, and it also provides some elementary QML types which provide the
-basis for further extensions to the QML language.
+The \c QtQml module provides the definition and implementation of various
+convenience types which can be used with the QML language, including some
+elementary QML types which can provide the basis for further extensions to the
+QML language.
 
-The Qt QML module also provides the \c QtObject and \c Component types which
-may be used in QML documents, by default.  These types are non-visual and
-provide building-blocks for extensions to QML.
+The \c QtQml module provides the \c QtObject and \c Component object types
+which may be used in QML documents.  These types are non-visual and provide
+building-blocks for extensions to QML.
 
-\section1 The QtQml Import
+\section1 Importing QtQml
 
-The types provided by the Qt QML module are only available in a QML document
-if that document imports the QtQml namespace (or if the document imports the
+The types provided by the \c QtQml module are only available in a QML document
+if that document imports the \c QtQml namespace (or if the document imports the
 \c QtQuick namespace, as noted below).
 
-The current version of the import provided by the Qt QML module is version 2.0,
-and thus it may be imported via the following statement:
+The current version of the \c QtQml module is version 2.0, and thus it may be
+imported via the following statement:
 
 \qml
 import QtQml 2.0
@@ -64,7 +65,19 @@ See the \l{QtQuick}{Qt Quick} module documentation for more information about th
 The documentation for the types below applies equally to the types of the same
 name provided by the \l{QtQuick}{Qt Quick} module, as they are in fact identical.
 
-\section1 QtObject
+\section1 Basic Types
+
+The following \l{qtqml-typesystem-basictypes.html}{QML basic types} are
+provided:
+
+\annotatedlist qtqmlbasictypes
+
+\section1 Object Types
+
+The following \l{qtqml-typesystem-objecttypes.html}{QML object types} are
+provided:
+
+\section2 QtObject
 
 The \c QtObject type provides a basic instantiable object which can be used in
 QML applications.  It is non-visual, but may have properties, methods, signals
@@ -89,7 +102,7 @@ the default change signal which exists for one of its properties:
     }
 \endcode
 
-\section1 Component
+\section2 Component
 
 The \c Component type provides a basic re-usable component which allows
 instances of another type to be instantiated on-demand.  It may be given an
@@ -142,3 +155,172 @@ run-time:
 \endcode
 
 */
+
+/*!
+\qmlbasictype date
+\ingroup qtqmlbasictypes
+\ingroup qtquickbasictypes
+\brief a date value.
+
+The \c date type refers to a date value.
+
+To create a \c date value, specify it as a "YYYY-MM-DD" string:
+
+\qml
+MyDatePicker { minDate: "2000-01-01"; maxDate: "2020-12-31" }
+\endqml
+
+To read a date value returned from a C++ extension class, use
+\l{QML:Qt::formatDate()}{Qt.formatDate()} and \l{QML:Qt::formatDateTime()}{Qt.formatDateTime()}.
+
+When integrating with C++, note that any QDate value
+\l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+converted into a \c date value, and vice-versa.
+
+Note that the date type has comparison semantics which match
+those of the JavaScript Date object.  To compare the value
+of two date properties, you should compare their "toString()"
+values.
+
+This basic type is provided by the QML language.
+
+\sa {QML Basic Types}
+*/
+
+/*!
+\qmlbasictype time
+\ingroup qtqmlbasictypes
+\ingroup qtquickbasictypes
+\brief a time value.
+
+The \c time type refers to a time value.
+
+To create a \c time value, specified as "hh:mm:ss":
+
+\qml
+MyTimePicker { time: "14:22:15" }
+\endqml
+
+To read a time value returned from a C++ extension class, use
+\l{QML:Qt::formatTime()}{Qt.formatTime()} and \l{QML:Qt::formatDateTime()}{Qt.formatDateTime()}.
+
+Note that when converting historical times to and from javascript that QDateTime and the JS Date object
+have different methods of calculating historical daylight savings time application. This can lead to variations of one hour
+when converting to historical local time.
+
+When integrating with C++, note that any QTime value
+\l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+converted into a \c time value, and vice-versa.
+
+This basic type is provided by the QML language.
+
+\sa {QML Basic Types}
+*/
+
+/*!
+\qmlbasictype point
+\ingroup qtqmlbasictypes
+\ingroup qtquickbasictypes
+\brief a value with x and y attributes.
+
+The \c point type refers to a value with \c x and \c y attributes.
+
+To create a \c point value, specify it as a "x,y" string:
+
+\qml
+CustomObject { myPointProperty: "0,20" }
+\endqml
+
+Or use the \l{QML:Qt::point()}{Qt.point()} function:
+
+\qml
+CustomObject { myPointProperty: Qt.point(0, 20) }
+\endqml
+
+When integrating with C++, note that any QPoint or QPointF value
+\l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+converted into a \c point value. When a \c point value is passed to C++, it
+is automatically converted into a QPointF value.
+
+\sa{QML Basic Types}
+*/
+
+/*!
+\qmlbasictype size
+\ingroup qtqmlbasictypes
+\ingroup qtquickbasictypes
+\brief a value with width and height attributes
+
+The \c size type refers to a value with has \c width and \c height attributes.
+
+For example, to read the \c width and \c height values of the
+\l {Image::sourceSize} size-type property:
+
+\qml
+Column {
+    Image { id: image; source: "logo.png" }
+    Text { text: image.sourceSize.width + "," + image.sourceSize.height }
+}
+\endqml
+
+To create a \c size value, specify it as a "width x height" string:
+
+\qml
+Image { sourceSize: "150x50" }
+\endqml
+
+Or use the \l{QML:Qt::size()}{Qt.size()} function:
+
+\qml
+Image { sourceSize: Qt.size(150, 50) }
+\endqml
+
+When integrating with C++, note that any QSize or QSizeF value
+\l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+converted into a \c size value, and vice-versa. When a \c size value is passed to C++, it
+is automatically converted into a QSizeF value.
+
+\sa{QML Basic Types}
+*/
+
+/*!
+\qmlbasictype rect
+\ingroup qtqmlbasictypes
+\ingroup qtquickbasictypes
+\brief a value with x, y, width and height attributes.
+
+The \c rect type refers to a value with \c x, \c y, \c width and \c height attributes.
+
+For example, to read the \c width and \c height values of the \l Item
+\l {Item::}{childrenRect} rect-type type property:
+
+\qml
+Rectangle {
+    width: childrenRect.width
+    height: childrenRect.height
+
+    Rectangle { width: 100; height: 100 }
+}
+\endqml
+
+To create a \c rect value, specify it as a "x, y, width x height" string:
+
+\qml
+CustomObject { myRectProperty: "50,50,100x100" }
+\endqml
+
+Or use the \l{QML:Qt::rect()}{Qt.rect()} function:
+
+\qml
+CustomObject { myRectProperty: Qt.rect(50, 50, 100, 100) }
+\endqml
+
+When integrating with C++, note that any QRect or QRectF value
+\l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+converted into a \c rect value, and vice-versa. When a \c rect value is passed to C++, it
+is automatically converted into a QRectF value.
+
+\sa{QML Basic Types}
+*/
+
+

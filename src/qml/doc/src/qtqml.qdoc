@@ -107,14 +107,19 @@ types, animation classes, and canvas integration) for the QML language.
             \li \l{qtqml-documents-definetypes.html#defining-an-object-type-with-a-qml-file}{Defining an Object Type with a QML File}
             \li \l{qtqml-documents-definetypes.html#accessible-attributes-of-custom-types}{Accessible Attributes of Custom Types}
             \endlist
-            \li \l{qtqml-documents-networktransparency.html}{Resource Loading and Network Transparency}
-            \li \l{qtqml-documents-scope.html}{Scope and Naming Resolution}
+        \li \l{qtqml-documents-networktransparency.html}{Resource Loading and Network Transparency}
+        \li \l{qtqml-documents-scope.html}{Scope and Naming Resolution}
         \endlist
 
-    \li \l{qtqml-typereference-topic.html}{QML Types Provided by the Qt QML Module}
+    \li \l{qtqml-typereference-topic.html}{QML Types Provided by the QtQml Module}
         \list
-        \li \l{qtqml-typereference-topic.html#qtobject}{QtObject}
-        \li \l{qtqml-typereference-topic.html#component}{Component}
+        \li \l{qtqml-typereference-topic.html#importing-qtqml}{Importing QtQml}
+        \li \l{qtqml-typereference-topic.html#basic-types}{Basic Types}
+        \li \l{qtqml-typereference-topic.html#object-types}{Object Types}
+            \list
+            \li \l{qtqml-typereference-topic.html#qtobject}{QtObject}
+            \li \l{qtqml-typereference-topic.html#component}{Component}
+            \endlist
         \endlist
 
     \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
