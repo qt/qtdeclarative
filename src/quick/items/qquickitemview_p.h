@@ -199,7 +199,7 @@ public:
     int highlightMoveDuration() const;
     virtual void setHighlightMoveDuration(int);
 
-    enum PositionMode { Beginning, Center, End, Visible, Contain };
+    enum PositionMode { Beginning, Center, End, Visible, Contain, SnapPosition };
 
     Q_INVOKABLE void positionViewAtIndex(int index, int mode);
     Q_INVOKABLE int indexAt(qreal x, qreal y) const;

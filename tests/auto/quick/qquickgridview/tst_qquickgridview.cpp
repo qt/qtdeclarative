@@ -62,6 +62,7 @@
 Q_DECLARE_METATYPE(QQuickGridView::Flow)
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QQuickItemView::VerticalLayoutDirection)
+Q_DECLARE_METATYPE(QQuickItemView::PositionMode)
 Q_DECLARE_METATYPE(Qt::Key)
 
 using namespace QQuickViewTestUtil;
@@ -108,8 +109,9 @@ private slots:
     void propertyChanges();
     void componentChanges();
     void modelChanges();
+    void positionViewAtBeginningEnd();
     void positionViewAtIndex();
-    void positionViewAtIndex_rightToLeft();
+    void positionViewAtIndex_data();
     void mirroring();
     void snapping();
     void resetModel();
@@ -2449,7 +2451,7 @@ void tst_QQuickGridView::modelChanges()
     delete window;
 }
 
-void tst_QQuickGridView::positionViewAtIndex()
+void tst_QQuickGridView::positionViewAtBeginningEnd()
 {
     QQuickView *window = createView();
 
@@ -2473,157 +2475,33 @@ void tst_QQuickGridView::positionViewAtIndex()
     QTRY_VERIFY(contentItem != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
-    // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), (i%3)*80.);
-        QTRY_COMPARE(item->y(), (i/3)*60.);
-    }
-
-    // Position on a currently visible item
-    gridview->positionViewAtIndex(4, QQuickGridView::Beginning);
-    QTRY_COMPARE(gridview->indexAt(120, 90), 4);
-    QTRY_COMPARE(gridview->contentY(), 60.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 3; i < model.count() && i < itemCount-3-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), (i%3)*80.);
-        QTRY_COMPARE(item->y(), (i/3)*60.);
-    }
-
-    // Position on an item beyond the visible items
-    gridview->positionViewAtIndex(21, QQuickGridView::Beginning);
-    QTRY_COMPARE(gridview->indexAt(40, 450), 21);
-    QTRY_COMPARE(gridview->contentY(), 420.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 22; i < model.count() && i < itemCount-22-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), (i%3)*80.);
-        QTRY_COMPARE(item->y(), (i/3)*60.);
-    }
-
-    // Position on an item that would leave empty space if positioned at the top
-    gridview->positionViewAtIndex(31, QQuickGridView::Beginning);
-    QTRY_COMPARE(gridview->indexAt(120, 630), 31);
-    QTRY_COMPARE(gridview->contentY(), 520.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 24; i < model.count() && i < itemCount-24-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), (i%3)*80.);
-        QTRY_COMPARE(item->y(), (i/3)*60.);
-    }
-
-    // Position at the beginning again
-    gridview->positionViewAtIndex(0, QQuickGridView::Beginning);
-    QTRY_COMPARE(gridview->indexAt(0, 0), 0);
-    QTRY_COMPARE(gridview->indexAt(40, 30), 0);
-    QTRY_COMPARE(gridview->indexAt(80, 60), 4);
+    // positionViewAtBeginning
+    gridview->setContentY(150);
+    gridview->positionViewAtBeginning();
     QTRY_COMPARE(gridview->contentY(), 0.);
 
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), (i%3)*80.);
-        QTRY_COMPARE(item->y(), (i/3)*60.);
-    }
+    gridview->setContentY(80);
+    window->rootObject()->setProperty("showHeader", true);
+    gridview->positionViewAtBeginning();
+    QTRY_COMPARE(gridview->contentY(), -30.);
 
-    // Position at End
-    gridview->positionViewAtIndex(30, QQuickGridView::End);
-    QTRY_COMPARE(gridview->contentY(), 340.);
+    // positionViewAtEnd
+    gridview->setContentY(150);
+    gridview->positionViewAtEnd();
+    QTRY_COMPARE(gridview->contentY(), 520.);   // 14*60 - 320   (14 rows)
 
-    // Position in Center
-    gridview->positionViewAtIndex(15, QQuickGridView::Center);
-    QTRY_COMPARE(gridview->contentY(), 170.);
-
-    // Ensure at least partially visible
-    gridview->positionViewAtIndex(15, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentY(), 170.);
-
-    gridview->setContentY(302);
-    gridview->positionViewAtIndex(15, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentY(), 302.);
-
-    gridview->setContentY(360);
-    gridview->positionViewAtIndex(15, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentY(), 300.);
-
-    gridview->setContentY(60);
-    gridview->positionViewAtIndex(20, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentY(), 60.);
-
-    gridview->setContentY(20);
-    gridview->positionViewAtIndex(20, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentY(), 100.);
-
-    // Ensure completely visible
-    gridview->setContentY(120);
-    gridview->positionViewAtIndex(20, QQuickGridView::Contain);
-    QTRY_COMPARE(gridview->contentY(), 120.);
-
-    gridview->setContentY(302);
-    gridview->positionViewAtIndex(15, QQuickGridView::Contain);
-    QTRY_COMPARE(gridview->contentY(), 300.);
-
-    gridview->setContentY(60);
-    gridview->positionViewAtIndex(20, QQuickGridView::Contain);
-    QTRY_COMPARE(gridview->contentY(), 100.);
+    gridview->setContentY(80);
+    window->rootObject()->setProperty("showFooter", true);
+    gridview->positionViewAtEnd();
+    QTRY_COMPARE(gridview->contentY(), 550.);
 
     // Test for Top To Bottom layout
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), (i/5)*80.);
-        QTRY_COMPARE(item->y(), (i%5)*60.);
-    }
-
-    // Position at End
-    gridview->positionViewAtIndex(30, QQuickGridView::End);
-    QTRY_COMPARE(gridview->contentX(), 320.);
-    QTRY_COMPARE(gridview->contentY(), 0.);
-
-    // Position in Center
-    gridview->positionViewAtIndex(15, QQuickGridView::Center);
-    QTRY_COMPARE(gridview->contentX(), 160.);
-
-    // Ensure at least partially visible
-    gridview->positionViewAtIndex(15, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentX(), 160.);
-
-    gridview->setContentX(170);
-    gridview->positionViewAtIndex(25, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentX(), 170.);
-
-    gridview->positionViewAtIndex(30, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentX(), 320.);
-
-    gridview->setContentX(170);
-    gridview->positionViewAtIndex(25, QQuickGridView::Contain);
-    QTRY_COMPARE(gridview->contentX(), 240.);
+    window->rootObject()->setProperty("showHeader", false);
+    window->rootObject()->setProperty("showFooter", false);
 
     // positionViewAtBeginning
+    gridview->setContentX(150);
     gridview->positionViewAtBeginning();
     QTRY_COMPARE(gridview->contentX(), 0.);
 
@@ -2650,6 +2528,132 @@ void tst_QQuickGridView::positionViewAtIndex()
     QCOMPARE(gridview->highlightItem()->x(), 80.);
 
     delete window;
+}
+
+void tst_QQuickGridView::positionViewAtIndex()
+{
+    QFETCH(bool, enforceRange);
+    QFETCH(bool, topToBottom);
+    QFETCH(bool, rightToLeft);
+    QFETCH(qreal, initContentPos);
+    QFETCH(int, index);
+    QFETCH(QQuickGridView::PositionMode, mode);
+    QFETCH(qreal, contentPos);
+
+    QQuickView *window = getView();
+
+    QaimModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testRightToLeft", QVariant(rightToLeft));
+    ctxt->setContextProperty("testTopToBottom", QVariant(topToBottom));
+    ctxt->setContextProperty("testBottomToTop", QVariant(false));
+
+    window->setSource(testFileUrl("layouts.qml"));
+    window->show();
+    qApp->processEvents();
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QQuickItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    window->rootObject()->setProperty("enforceRange", enforceRange);
+    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+
+    if (topToBottom)
+        gridview->setContentX(initContentPos);
+    else
+        gridview->setContentY(initContentPos);
+
+    gridview->positionViewAtIndex(index, mode);
+    if (topToBottom)
+        QTRY_COMPARE(gridview->contentX(), contentPos);
+    else
+        QTRY_COMPARE(gridview->contentY(), contentPos);
+
+    // Confirm items positioned correctly
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = index; i < model.count() && i < itemCount-index-1; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        if (topToBottom) {
+            if (rightToLeft) {
+                QTRY_COMPARE(item->x(), qreal(-(i/5)*80-item->width()));
+                QTRY_COMPARE(item->y(), qreal((i%5)*60));
+            } else {
+                QTRY_COMPARE(item->x(), (i/5)*80.);
+                QTRY_COMPARE(item->y(), (i%5)*60.);
+            }
+        } else {
+            QTRY_COMPARE(item->x(), (i%3)*80.);
+            QTRY_COMPARE(item->y(), (i/3)*60.);
+        }
+    }
+
+    releaseView(window);
+}
+
+void tst_QQuickGridView::positionViewAtIndex_data()
+{
+    QTest::addColumn<bool>("enforceRange");
+    QTest::addColumn<bool>("topToBottom");
+    QTest::addColumn<bool>("rightToLeft");
+    QTest::addColumn<qreal>("initContentPos");
+    QTest::addColumn<int>("index");
+    QTest::addColumn<QQuickGridView::PositionMode>("mode");
+    QTest::addColumn<qreal>("contentPos");
+
+    QTest::newRow("no range, 4 at Beginning") << false << false << false << 0. << 4 << QQuickGridView::Beginning << 60.;
+    QTest::newRow("no range, 4 at End") << false << false << false << 0. << 4 << QQuickGridView::End << 0.;
+    QTest::newRow("no range, 21 at Beginning") << false << false << false << 0. << 21 << QQuickGridView::Beginning << 420.;
+    // Position on an item that would leave empty space if positioned at the top
+    QTest::newRow("no range, 31 at Beginning") << false << false << false << 0. << 31 << QQuickGridView::Beginning << 520.;
+    QTest::newRow("no range, 30 at End") << false << false << false << 0. << 30 << QQuickGridView::End << 340.;
+    QTest::newRow("no range, 15 at Center") << false << false << false << 0. << 15 << QQuickGridView::Center << 170.;
+    // Ensure at least partially visible
+    QTest::newRow("no range, 15 visible => Visible") << false << false << false << 302. << 15 << QQuickGridView::Visible << 302.;
+    QTest::newRow("no range, 15 after visible => Visible") << false << false << false << 360. << 15 << QQuickGridView::Visible << 300.;
+    QTest::newRow("no range, 20 visible => Visible") << false << false << false << 60. << 20 << QQuickGridView::Visible << 60.;
+    QTest::newRow("no range, 20 before visible => Visible") << false << false << false << 20. << 20 << QQuickGridView::Visible << 100.;
+    // Ensure completely visible
+    QTest::newRow("no range, 20 visible => Contain") << false << false << false << 120. << 20 << QQuickGridView::Contain << 120.;
+    QTest::newRow("no range, 15 partially visible => Contain") << false << false << false << 302. << 15 << QQuickGridView::Contain << 300.;
+    QTest::newRow("no range, 20 partially visible => Contain") << false << false << false << 60. << 20 << QQuickGridView::Contain << 100.;
+
+    QTest::newRow("strict range, 4 at End") << true << false << false << 0. << 4 << QQuickGridView::End << -120.;
+    QTest::newRow("strict range, 38 at Beginning") << true << false << false << 0. << 38 << QQuickGridView::Beginning << 660.;
+    QTest::newRow("strict range, 15 at Center") << true << false << false << 0. << 15 << QQuickGridView::Center << 180.;
+    QTest::newRow("strict range, 4 at SnapPosition") << true << false << false << 0. << 4 << QQuickGridView::SnapPosition << -60.;
+    QTest::newRow("strict range, 10 at SnapPosition") << true << false << false << 0. << 10 << QQuickGridView::SnapPosition << 60.;
+    QTest::newRow("strict range, 38 at SnapPosition") << true << false << false << 0. << 38 << QQuickGridView::SnapPosition << 600.;
+
+    // TopToBottom
+    QTest::newRow("no range, ttb, 30 at End") << false << true << false << 0. << 30 << QQuickGridView::End << 320.;
+    QTest::newRow("no range, ttb, 15 at Center") << false << true << false << 0. << 15 << QQuickGridView::Center << 160.;
+    QTest::newRow("no range, ttb, 15 visible => Visible") << false << true << false << 160. << 15 << QQuickGridView::Visible << 160.;
+    QTest::newRow("no range, ttb, 25 partially visible => Visible") << false << true << false << 170. << 25 << QQuickGridView::Visible << 170.;
+    QTest::newRow("no range, ttb, 30 before visible => Visible") << false << true << false << 170. << 30 << QQuickGridView::Visible << 320.;
+    QTest::newRow("no range, ttb, 25 partially visible => Contain") << false << true << false << 170. << 25 << QQuickGridView::Contain << 240.;
+
+    // RightToLeft
+    QTest::newRow("no range, rtl, ttb, 6 at Beginning") << false << true << true << 0. << 6 << QQuickGridView::Beginning << -320.;
+    QTest::newRow("no range, rtl, ttb, 21 at Beginning") << false << true << true << 0. << 21 << QQuickGridView::Beginning << -560.;
+    // Position on an item that would leave empty space if positioned at the top
+    QTest::newRow("no range, rtl, ttb, 31 at Beginning") << false << true << true << 0. << 31 << QQuickGridView::Beginning << -640.;
+    QTest::newRow("no range, rtl, ttb, 0 at Beginning") << false << true << true << -400. << 0 << QQuickGridView::Beginning << -240.;
+    QTest::newRow("no range, rtl, ttb, 30 at End") << false << true << true << 0. << 30 << QQuickGridView::End << -560.;
+    QTest::newRow("no range, rtl, ttb, 15 at Center") << false << true << true << 0. << 15 << QQuickGridView::Center << -400.;
+    QTest::newRow("no range, rtl, ttb, 15 visible => Visible") << false << true << true << -555. << 15 << QQuickGridView::Visible << -555.;
+    QTest::newRow("no range, rtl, ttb, 15 not visible => Visible") << false << true << true << -239. << 15 << QQuickGridView::Visible << -320.;
+    QTest::newRow("no range, rtl, ttb, 15 partially visible => Visible") << false << true << true << -300. << 15 << QQuickGridView::Visible << -300.;
+    QTest::newRow("no range, rtl, ttb, 20 visible => Contain") << false << true << true << -400. << 20 << QQuickGridView::Contain << -400.;
+    QTest::newRow("no range, rtl, ttb, 15 partially visible => Contain") << false << true << true << -315. << 15 << QQuickGridView::Contain << -320.;
 }
 
 void tst_QQuickGridView::snapping()
@@ -2748,139 +2752,6 @@ void tst_QQuickGridView::mirroring()
 
     delete windowA;
     delete windowB;
-}
-
-void tst_QQuickGridView::positionViewAtIndex_rightToLeft()
-{
-    QQuickView *window = createView();
-
-    QaimModel model;
-    for (int i = 0; i < 40; i++)
-        model.addItem("Item" + QString::number(i), "");
-
-    QQmlContext *ctxt = window->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-    ctxt->setContextProperty("testTopToBottom", QVariant(true));
-    ctxt->setContextProperty("testRightToLeft", QVariant(true));
-    ctxt->setContextProperty("testBottomToTop", QVariant(false));
-
-    window->setSource(testFileUrl("layouts.qml"));
-    qApp->processEvents();
-
-    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
-    QTRY_VERIFY(gridview != 0);
-
-    QQuickItem *contentItem = gridview->contentItem();
-    QTRY_VERIFY(contentItem != 0);
-
-    // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), qreal(-(i/5)*80-item->width()));
-        QTRY_COMPARE(item->y(), qreal((i%5)*60));
-    }
-
-    // Position on a currently visible item
-    gridview->positionViewAtIndex(6, QQuickGridView::Beginning);
-    QTRY_COMPARE(gridview->contentX(), -320.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 3; i < model.count() && i < itemCount-3-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), qreal(-(i/5)*80-item->width()));
-        QTRY_COMPARE(item->y(), qreal((i%5)*60));
-    }
-
-    // Position on an item beyond the visible items
-    gridview->positionViewAtIndex(21, QQuickGridView::Beginning);
-    QTRY_COMPARE(gridview->contentX(), -560.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 22; i < model.count() && i < itemCount-22-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), qreal(-(i/5)*80-item->width()));
-        QTRY_COMPARE(item->y(), qreal((i%5)*60));
-    }
-
-    // Position on an item that would leave empty space if positioned at the top
-    gridview->positionViewAtIndex(31, QQuickGridView::Beginning);
-    QTRY_COMPARE(gridview->contentX(), -640.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 24; i < model.count() && i < itemCount-24-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), qreal(-(i/5)*80-item->width()));
-        QTRY_COMPARE(item->y(), qreal((i%5)*60));
-    }
-
-    // Position at the beginning again
-    gridview->positionViewAtIndex(0, QQuickGridView::Beginning);
-    QTRY_COMPARE(gridview->contentX(), -240.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), qreal(-(i/5)*80-item->width()));
-        QTRY_COMPARE(item->y(), qreal((i%5)*60));
-    }
-
-    // Position at End
-    gridview->positionViewAtIndex(30, QQuickGridView::End);
-    QTRY_COMPARE(gridview->contentX(), -560.);
-
-    // Position in Center
-    gridview->positionViewAtIndex(15, QQuickGridView::Center);
-    QTRY_COMPARE(gridview->contentX(), -400.);
-
-    // Ensure at least partially visible
-    gridview->positionViewAtIndex(15, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentX(), -400.);
-
-    gridview->setContentX(-555.);
-    gridview->positionViewAtIndex(15, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentX(), -555.);
-
-    gridview->setContentX(-239);
-    gridview->positionViewAtIndex(15, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentX(), -320.);
-
-    gridview->setContentX(-239);
-    gridview->positionViewAtIndex(20, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentX(), -400.);
-
-    gridview->setContentX(-640);
-    gridview->positionViewAtIndex(20, QQuickGridView::Visible);
-    QTRY_COMPARE(gridview->contentX(), -560.);
-
-    // Ensure completely visible
-    gridview->setContentX(-400);
-    gridview->positionViewAtIndex(20, QQuickGridView::Contain);
-    QTRY_COMPARE(gridview->contentX(), -400.);
-
-    gridview->setContentX(-315);
-    gridview->positionViewAtIndex(15, QQuickGridView::Contain);
-    QTRY_COMPARE(gridview->contentX(), -320.);
-
-    gridview->setContentX(-640);
-    gridview->positionViewAtIndex(20, QQuickGridView::Contain);
-    QTRY_COMPARE(gridview->contentX(), -560.);
-
-    delete window;
 }
 
 void tst_QQuickGridView::resetModel()

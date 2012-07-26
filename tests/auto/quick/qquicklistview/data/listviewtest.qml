@@ -9,6 +9,7 @@ Rectangle {
     property int count: list.count
     property bool showHeader: false
     property bool showFooter: false
+    property bool enforceRange: false
     property real hr: list.visibleArea.heightRatio
     function heightRatio() {
         return list.visibleArea.heightRatio
@@ -126,6 +127,9 @@ Rectangle {
         highlight: testObject.invalidHighlight ? invalidHl : myHighlight
         highlightMoveVelocity: 1000
         highlightResizeVelocity: 1000
+        preferredHighlightBegin: enforceRange ? 120 : 0
+        preferredHighlightEnd: enforceRange ? 120 : 0
+        highlightRangeMode: enforceRange ? ListView.StrictlyEnforceRange : ListView.NoHighlightRange
         cacheBuffer: testObject.cacheBuffer
         header: root.showHeader ? headerFooter : null
         footer: root.showFooter ? headerFooter : null

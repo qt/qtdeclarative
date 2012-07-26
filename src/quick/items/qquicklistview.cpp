@@ -3031,6 +3031,9 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
     bring the item into view.
     \li ListView.Contain - ensure the entire item is visible.  If the item is larger than
     the view the item is positioned at the top (or left for horizontal orientation) of the view.
+    \li ListView.SnapPosition - position the item at \l preferredHighlightBegin.  This mode
+    is only valid if \l highlightRangeMode is StrictlyEnforceRange or snapping is enabled
+    via \l snapMode.
     \endlist
 
     If positioning the view at \a index would cause empty space to be displayed at

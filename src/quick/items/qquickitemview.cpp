@@ -613,6 +613,10 @@ void QQuickItemView::setHighlightRangeMode(HighlightRangeMode mode)
         return;
     d->highlightRange = mode;
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
+    if (isComponentComplete()) {
+        d->updateViewport();
+        d->fixupPosition();
+    }
     emit highlightRangeModeChanged();
 }
 
@@ -631,6 +635,10 @@ void QQuickItemView::setPreferredHighlightBegin(qreal start)
         return;
     d->highlightRangeStart = start;
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
+    if (isComponentComplete()) {
+        d->updateViewport();
+        d->fixupPosition();
+    }
     emit preferredHighlightBeginChanged();
 }
 
@@ -641,6 +649,10 @@ void QQuickItemView::resetPreferredHighlightBegin()
     if (d->highlightRangeStart == 0)
         return;
     d->highlightRangeStart = 0;
+    if (isComponentComplete()) {
+        d->updateViewport();
+        d->fixupPosition();
+    }
     emit preferredHighlightBeginChanged();
 }
 
@@ -658,6 +670,10 @@ void QQuickItemView::setPreferredHighlightEnd(qreal end)
         return;
     d->highlightRangeEnd = end;
     d->haveHighlightRange = d->highlightRange != NoHighlightRange && d->highlightRangeStart <= d->highlightRangeEnd;
+    if (isComponentComplete()) {
+        d->updateViewport();
+        d->fixupPosition();
+    }
     emit preferredHighlightEndChanged();
 }
 
@@ -668,6 +684,10 @@ void QQuickItemView::resetPreferredHighlightEnd()
     if (d->highlightRangeEnd == 0)
         return;
     d->highlightRangeEnd = 0;
+    if (isComponentComplete()) {
+        d->updateViewport();
+        d->fixupPosition();
+    }
     emit preferredHighlightEndChanged();
 }
 
@@ -819,7 +839,7 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
     Q_Q(QQuickItemView);
     if (!isValid())
         return;
-    if (mode < QQuickItemView::Beginning || mode > QQuickItemView::Contain)
+    if (mode < QQuickItemView::Beginning || mode > QQuickItemView::SnapPosition)
         return;
 
     applyPendingChanges();
@@ -871,6 +891,10 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
                 pos = itemPos - size() + item->size();
             if (itemPos < pos)
                 pos = itemPos;
+            break;
+        case QQuickItemView::SnapPosition:
+            pos = itemPos - highlightRangeStart;
+            break;
         }
         pos = qMin(pos, maxExtent);
         qreal minExtent;

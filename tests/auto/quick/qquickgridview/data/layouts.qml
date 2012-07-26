@@ -7,6 +7,7 @@ Rectangle {
 
     property bool showHeader: false
     property bool showFooter: false
+    property bool enforceRange: false
 
     Component {
         id: myDelegate
@@ -42,7 +43,7 @@ Rectangle {
 
     Component {
         id: headerFooter
-        Rectangle { width: 30; height: 320; color: "blue" }
+        Rectangle { width: 30; height: 30; color: "blue" }
     }
 
     GridView {
@@ -55,6 +56,9 @@ Rectangle {
         flow: (testTopToBottom == false) ? GridView.LeftToRight : GridView.TopToBottom
         layoutDirection: (testRightToLeft == true) ? Qt.RightToLeft : Qt.LeftToRight
         verticalLayoutDirection: (testBottomToTop == true) ? GridView.BottomToTop : GridView.TopToBottom
+        highlightRangeMode: enforceRange ? GridView.StrictlyEnforceRange : GridView.NoHighlightRange
+        preferredHighlightBegin: enforceRange ? 120 : 0
+        preferredHighlightEnd: enforceRange ? 120 : 0
         model: testModel
         delegate: myDelegate
         header: root.showHeader ? headerFooter : null

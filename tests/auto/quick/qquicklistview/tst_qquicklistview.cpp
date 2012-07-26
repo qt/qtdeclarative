@@ -58,6 +58,7 @@
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QQuickItemView::VerticalLayoutDirection)
+Q_DECLARE_METATYPE(QQuickItemView::PositionMode)
 Q_DECLARE_METATYPE(QQuickListView::Orientation)
 Q_DECLARE_METATYPE(Qt::Key)
 
@@ -136,7 +137,9 @@ private slots:
     void sectionPropertyChange();
     void sectionDelegateChange();
     void cacheBuffer();
+    void positionViewAtBeginningEnd();
     void positionViewAtIndex();
+    void positionViewAtIndex_data();
     void resetModel();
     void propertyChanges();
     void componentChanges();
@@ -2949,7 +2952,7 @@ void tst_QQuickListView::cacheBuffer()
     delete testObject;
 }
 
-void tst_QQuickListView::positionViewAtIndex()
+void tst_QQuickListView::positionViewAtBeginningEnd()
 {
     QQuickView *window = createView();
 
@@ -2972,120 +2975,7 @@ void tst_QQuickListView::positionViewAtIndex()
     QTRY_VERIFY(contentItem != 0);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
-    // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(), i*20.);
-    }
-
-    // Position on a currently visible item
-    listview->positionViewAtIndex(3, QQuickListView::Beginning);
-    QTRY_COMPARE(listview->contentY(), 60.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 3; i < model.count() && i < itemCount-3-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(), i*20.);
-    }
-
-    // Position on an item beyond the visible items
-    listview->positionViewAtIndex(22, QQuickListView::Beginning);
-    QTRY_COMPARE(listview->contentY(), 440.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 22; i < model.count() && i < itemCount-22-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(), i*20.);
-    }
-
-    // Position on an item that would leave empty space if positioned at the top
-    listview->positionViewAtIndex(28, QQuickListView::Beginning);
-    QTRY_COMPARE(listview->contentY(), 480.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 24; i < model.count() && i < itemCount-24-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(), i*20.);
-    }
-
-    // Position at the beginning again
-    listview->positionViewAtIndex(0, QQuickListView::Beginning);
-    QTRY_COMPARE(listview->contentY(), 0.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount-1; ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(), i*20.);
-    }
-
-    // Position at End using last index
-    listview->positionViewAtIndex(model.count()-1, QQuickListView::End);
-    QTRY_COMPARE(listview->contentY(), 480.);
-
-    // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    for (int i = 24; i < model.count(); ++i) {
-        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(), i*20.);
-    }
-
-    // Position at End
-    listview->positionViewAtIndex(20, QQuickListView::End);
-    QTRY_COMPARE(listview->contentY(), 100.);
-
-    // Position in Center
-    listview->positionViewAtIndex(15, QQuickListView::Center);
-    QTRY_COMPARE(listview->contentY(), 150.);
-
-    // Ensure at least partially visible
-    listview->positionViewAtIndex(15, QQuickListView::Visible);
-    QTRY_COMPARE(listview->contentY(), 150.);
-
-    listview->setContentY(302);
-    listview->positionViewAtIndex(15, QQuickListView::Visible);
-    QTRY_COMPARE(listview->contentY(), 302.);
-
-    listview->setContentY(320);
-    listview->positionViewAtIndex(15, QQuickListView::Visible);
-    QTRY_COMPARE(listview->contentY(), 300.);
-
-    listview->setContentY(85);
-    listview->positionViewAtIndex(20, QQuickListView::Visible);
-    QTRY_COMPARE(listview->contentY(), 85.);
-
-    listview->setContentY(75);
-    listview->positionViewAtIndex(20, QQuickListView::Visible);
-    QTRY_COMPARE(listview->contentY(), 100.);
-
-    // Ensure completely visible
-    listview->setContentY(120);
-    listview->positionViewAtIndex(20, QQuickListView::Contain);
-    QTRY_COMPARE(listview->contentY(), 120.);
-
-    listview->setContentY(302);
-    listview->positionViewAtIndex(15, QQuickListView::Contain);
-    QTRY_COMPARE(listview->contentY(), 300.);
-
-    listview->setContentY(85);
-    listview->positionViewAtIndex(20, QQuickListView::Contain);
-    QTRY_COMPARE(listview->contentY(), 100.);
+    listview->setContentY(100);
 
     // positionAtBeginnging
     listview->positionViewAtBeginning();
@@ -3115,6 +3005,94 @@ void tst_QQuickListView::positionViewAtIndex()
 
     delete window;
     delete testObject;
+}
+
+void tst_QQuickListView::positionViewAtIndex()
+{
+    QFETCH(bool, enforceRange);
+    QFETCH(qreal, initContentY);
+    QFETCH(int, index);
+    QFETCH(QQuickListView::PositionMode, mode);
+    QFETCH(qreal, contentY);
+
+    QQuickView *window = getView();
+
+    QaimModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", testObject);
+    window->show();
+    window->setSource(testFileUrl("listviewtest.qml"));
+    qApp->processEvents();
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    window->rootObject()->setProperty("enforceRange", enforceRange);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    listview->setContentY(initContentY);
+
+    listview->positionViewAtIndex(index, mode);
+    QTRY_COMPARE(listview->contentY(), contentY);
+
+    // Confirm items positioned correctly
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    for (int i = index; i < model.count() && i < itemCount-index-1; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        if (!item) qWarning() << "Item" << i << "not found";
+        QTRY_VERIFY(item);
+        QTRY_COMPARE(item->y(), i*20.);
+    }
+
+    releaseView(window);
+}
+
+void tst_QQuickListView::positionViewAtIndex_data()
+{
+    QTest::addColumn<bool>("enforceRange");
+    QTest::addColumn<qreal>("initContentY");
+    QTest::addColumn<int>("index");
+    QTest::addColumn<QQuickListView::PositionMode>("mode");
+    QTest::addColumn<qreal>("contentY");
+
+    QTest::newRow("no range, 3 at Beginning") << false << 0. << 3 << QQuickListView::Beginning << 60.;
+    QTest::newRow("no range, 3 at End") << false << 0. << 3 << QQuickListView::End << 0.;
+    QTest::newRow("no range, 22 at Beginning") << false << 0. << 22 << QQuickListView::Beginning << 440.;
+    // Position on an item that would leave empty space if positioned at the top
+    QTest::newRow("no range, 28 at Beginning") << false << 0. << 28 << QQuickListView::Beginning << 480.;
+    // Position at End using last index
+    QTest::newRow("no range, last at End") << false << 0. << 39 << QQuickListView::End << 480.;
+    // Position at End
+    QTest::newRow("no range, 20 at End") << false << 0. << 20 << QQuickListView::End << 100.;
+    // Position in Center
+    QTest::newRow("no range, 15 at Center") << false << 0. << 15 << QQuickListView::Center << 150.;
+    // Ensure at least partially visible
+    QTest::newRow("no range, 15 visible => Visible") << false << 150. << 15 << QQuickListView::Visible << 150.;
+    QTest::newRow("no range, 15 partially visible => Visible") << false << 302. << 15 << QQuickListView::Visible << 302.;
+    QTest::newRow("no range, 15 before visible => Visible") << false << 320. << 15 << QQuickListView::Visible << 300.;
+    QTest::newRow("no range, 20 visible => Visible") << false << 85. << 20 << QQuickListView::Visible << 85.;
+    QTest::newRow("no range, 20 before visible => Visible") << false << 75. << 20 << QQuickListView::Visible << 100.;
+    QTest::newRow("no range, 20 after visible => Visible") << false << 480. << 20 << QQuickListView::Visible << 400.;
+    // Ensure completely visible
+    QTest::newRow("no range, 20 visible => Contain") << false << 120. << 20 << QQuickListView::Contain << 120.;
+    QTest::newRow("no range, 15 partially visible => Contain") << false << 302. << 15 << QQuickListView::Contain << 300.;
+    QTest::newRow("no range, 20 partially visible => Contain") << false << 85. << 20 << QQuickListView::Contain << 100.;
+
+    QTest::newRow("strict range, 3 at End") << true << 0. << 3 << QQuickListView::End << -120.;
+    QTest::newRow("strict range, 38 at Beginning") << true << 0. << 38 << QQuickListView::Beginning << 660.;
+    QTest::newRow("strict range, 15 at Center") << true << 0. << 15 << QQuickListView::Center << 140.;
+    QTest::newRow("strict range, 3 at SnapPosition") << true << 0. << 3 << QQuickListView::SnapPosition << -60.;
+    QTest::newRow("strict range, 10 at SnapPosition") << true << 0. << 10 << QQuickListView::SnapPosition << 80.;
+    QTest::newRow("strict range, 38 at SnapPosition") << true << 0. << 38 << QQuickListView::SnapPosition << 640.;
 }
 
 void tst_QQuickListView::resetModel()

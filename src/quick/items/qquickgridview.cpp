@@ -2490,6 +2490,9 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     bring the item into view.
     \li GridView.Contain - ensure the entire item is visible.  If the item is larger than
     the view the item is positioned at the top (or left for \c GridView.TopToBottom flow) of the view.
+    \li GridView.SnapPosition - position the item at \l preferredHighlightBegin.  This mode
+    is only valid if \l highlightRangeMode is StrictlyEnforceRange or snapping is enabled
+    via \l snapMode.
     \endlist
 
     If positioning the view at the index would cause empty space to be displayed at
