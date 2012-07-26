@@ -129,15 +129,8 @@ static qreal toDouble(const QChar *&str)
         if (neg)
             val = -val;
     } else {
-#if defined(Q_WS_QWS) && !defined(Q_OS_VXWORKS)
-        if(sizeof(qreal) == sizeof(float))
-            val = strtof(temp, 0);
-        else
-#endif
-        {
-            bool ok = false;
-            val = qstrtod(temp, 0, &ok);
-        }
+        bool ok = false;
+        val = qstrtod(temp, 0, &ok);
     }
     return val;
 
