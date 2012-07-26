@@ -5277,11 +5277,6 @@ void tst_QQuickListView::snapOneItem()
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
 
-#ifdef Q_OS_MAC
-    // This test seems to be unreliable - different test data fails on different runs
-    QSKIP("QTBUG-24338");
-#endif
-
     QQuickView *window = getView();
 
     window->setSource(testFileUrl("snapOneItem.qml"));
