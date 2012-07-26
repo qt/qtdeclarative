@@ -71,8 +71,13 @@ has now been replaced by the new QtQml and QtQuick C++ modules. See the
 \li QML properties of type \l var and \l variant can now hold pixmaps. See \l {Scarce Resources in JavaScript} for more information.
 \li Value type improvements:
     \list
-    \li QColor is now a value type.  The red, green, blue and alpha channels of a \l color property can be accessed via \c r, \c g, \c b and \c a properties.
-    \li Improved support for QVector4D, now constructible in QML via \c Qt.vector4d().
+    \li QML now supports defining properties of value type basic types within QML documents.  Supported types include
+        QSizeF, QPointF and QRectF as \c size, \c point and \c rect respectively.
+    \li QColor is now a value type provided by the QtQuick module.  The red, green, blue and alpha channels
+        of a \l color property can be accessed via \c r, \c g, \c b and \c a properties.
+    \li Factory functions for various value types have been added to the \c Qt object exposed to QML.
+        Some of those functions require the QtQuick module to be imported in order to return valid values.
+        See the QtQuick 2.0 release notes for more information about these functions.
     \endlist
 \li Support for sequence types QList<int>, QList<qreal>, QList<bool>, QList<QUrl>,
     QList<QString> and QStringList has been improved. QObjects can define Q_PROPERTYs of
