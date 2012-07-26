@@ -83,7 +83,7 @@ class QQmlOpenMetaObjectPrivate;
 class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObject : public QAbstractDynamicMetaObject
 {
 public:
-    QQmlOpenMetaObject(QObject *, bool = true);
+    QQmlOpenMetaObject(QObject *, const QMetaObject * = 0, bool = true);
     QQmlOpenMetaObject(QObject *, QQmlOpenMetaObjectType *, bool = true);
     ~QQmlOpenMetaObject();
 

@@ -64,6 +64,7 @@ private slots:
 
     void crashBug();
     void QTBUG_17868();
+    void metaObjectAccessibility();
 };
 
 void tst_QQmlPropertyMap::insert()
@@ -278,6 +279,48 @@ void tst_QQmlPropertyMap::QTBUG_17868()
     QVERIFY(!obj->property("error").toBool());
     delete obj;
 
+}
+
+class MyEnhancedPropertyMap : public QQmlPropertyMap
+{
+    Q_OBJECT
+public:
+    MyEnhancedPropertyMap() : QQmlPropertyMap(this) {}
+
+signals:
+    void testSignal();
+
+public slots:
+    void testSlot() {}
+};
+
+namespace
+{
+    QStringList messages;
+    void msgHandler(QtMsgType, const char *msg)
+    {
+        messages << QLatin1String(msg);
+    }
+}
+
+void tst_QQmlPropertyMap::metaObjectAccessibility()
+{
+    messages.clear();
+    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+
+    QQmlEngine engine;
+
+    MyEnhancedPropertyMap map;
+
+    // Verify that signals and slots of QQmlPropertyMap-derived classes are accessible
+    QObject::connect(&map, SIGNAL(testSignal()), &engine, SIGNAL(quit()));
+    QObject::connect(&engine, SIGNAL(quit()), &map, SLOT(testSlot()));
+
+    QCOMPARE(map.metaObject()->className(), "MyEnhancedPropertyMap");
+
+    qInstallMsgHandler(old);
+
+    QCOMPARE(messages.count(), 0);
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)

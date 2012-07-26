@@ -175,13 +175,13 @@ public:
     bool cacheProperties;
 };
 
-QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, bool automatic)
+QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, const QMetaObject *base, bool automatic)
 : d(new QQmlOpenMetaObjectPrivate(this))
 {
     d->autoCreate = automatic;
     d->object = obj;
 
-    d->type = new QQmlOpenMetaObjectType(obj->metaObject(), 0);
+    d->type = new QQmlOpenMetaObjectType(base ? base : obj->metaObject(), 0);
     d->type->d->referers.insert(this);
 
     QObjectPrivate *op = QObjectPrivate::get(obj);

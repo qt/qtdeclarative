@@ -82,7 +82,18 @@ Q_SIGNALS:
 protected:
     virtual QVariant updateValue(const QString &key, const QVariant &input);
 
+    template<class DerivedType>
+    QQmlPropertyMap(DerivedType *derived, QObject *parent = 0)
+        : QObject(*allocatePrivate(), parent)
+    {
+        Q_UNUSED(derived)
+        init(&DerivedType::staticMetaObject);
+    }
+
 private:
+    void init(const QMetaObject *staticMetaObject);
+    static QObjectPrivate *allocatePrivate();
+
     Q_DECLARE_PRIVATE(QQmlPropertyMap)
     Q_DISABLE_COPY(QQmlPropertyMap)
 };

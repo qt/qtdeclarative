@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 class QQmlPropertyMapMetaObject : public QQmlOpenMetaObject
 {
 public:
-    QQmlPropertyMapMetaObject(QQmlPropertyMap *obj, QQmlPropertyMapPrivate *objPriv);
+    QQmlPropertyMapMetaObject(QQmlPropertyMap *obj, QQmlPropertyMapPrivate *objPriv, const QMetaObject *staticMetaObject);
 
 protected:
     virtual QVariant propertyWriteValue(int, const QVariant &);
@@ -110,7 +110,8 @@ const QString &QQmlPropertyMapPrivate::propertyName(int index) const
     return keys[index];
 }
 
-QQmlPropertyMapMetaObject::QQmlPropertyMapMetaObject(QQmlPropertyMap *obj, QQmlPropertyMapPrivate *objPriv) : QQmlOpenMetaObject(obj)
+QQmlPropertyMapMetaObject::QQmlPropertyMapMetaObject(QQmlPropertyMap *obj, QQmlPropertyMapPrivate *objPriv, const QMetaObject *staticMetaObject)
+    : QQmlOpenMetaObject(obj, staticMetaObject)
 {
     map = obj;
     priv = objPriv;
@@ -176,16 +177,20 @@ int QQmlPropertyMapMetaObject::createProperty(const char *name, const char *valu
 
     \note It is not possible to remove keys from the map; once a key has been added, you can only
     modify or clear its associated value.
+
+    \note When deriving a class from QQmlPropertyMap, use the
+    \l {QQmlPropertyMap::QQmlPropertyMap(DerivedType *derived, QObject *parent)}
+    {protected two-argument constructor}
+    which ensures that the class is correctly registered with the Qt \l {Meta-Object System}.
 */
 
 /*!
     Constructs a bindable map with parent object \a parent.
 */
 QQmlPropertyMap::QQmlPropertyMap(QObject *parent)
-: QObject(*(new QQmlPropertyMapPrivate), parent)
+: QObject(*allocatePrivate(), parent)
 {
-    Q_D(QQmlPropertyMap);
-    d->mo = new QQmlPropertyMapMetaObject(this, d);
+    init(metaObject());
 }
 
 /*!
@@ -331,7 +336,21 @@ QVariant QQmlPropertyMap::operator[](const QString &key) const
 */
 QVariant QQmlPropertyMap::updateValue(const QString &key, const QVariant &input)
 {
+    Q_UNUSED(key)
     return input;
+}
+
+/*! \internal */
+void QQmlPropertyMap::init(const QMetaObject *staticMetaObject)
+{
+    Q_D(QQmlPropertyMap);
+    d->mo = new QQmlPropertyMapMetaObject(this, d, staticMetaObject);
+}
+
+/*! \internal */
+QObjectPrivate *QQmlPropertyMap::allocatePrivate()
+{
+    return new QQmlPropertyMapPrivate;
 }
 
 /*!
@@ -341,6 +360,17 @@ QVariant QQmlPropertyMap::updateValue(const QString &key, const QVariant &input)
 
     \note valueChanged() is \b NOT emitted when changes are made by calling insert()
     or clear() - it is only emitted when a value is updated from QML.
+*/
+
+/*!
+    \fn QQmlPropertyMap::QQmlPropertyMap(DerivedType *derived, QObject *parent)
+
+    Constructs a bindable map with parent object \a parent.  Use this constructor
+    in classes derived from QQmlPropertyMap.
+
+    The type of \a derived is used to register the property map with the \l {Meta-Object System},
+    which is necessary to ensure that properties of the derived class are accessible.
+    This type must be derived from QQmlPropertyMap.
 */
 
 QT_END_NAMESPACE
