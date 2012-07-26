@@ -48,6 +48,10 @@
 #include <QDebug>
 #include "../../shared/util.h"
 
+#if defined (Q_OS_WIN)
+#include <qt_windows.h>
+#endif
+
 // From qquickfolderlistmodel.h
 const int FileNameRole = Qt::UserRole+1;
 const int FilePathRole = Qt::UserRole+2;
@@ -69,6 +73,9 @@ private slots:
     void basicProperties();
     void resetFiltering();
     void refresh();
+#if defined (Q_OS_WIN)
+    void changeDrive();
+#endif
 
 private:
     void checkNoErrors(const QQmlComponent& component);
@@ -173,6 +180,51 @@ void tst_qquickfolderlistmodel::refresh()
     QTRY_COMPARE(removeStart, 0);
     QTRY_COMPARE(removeEnd, count-1); // wait for refresh
 }
+
+#if defined (Q_OS_WIN)
+void tst_qquickfolderlistmodel::changeDrive()
+{
+    class DriveMapper
+    {
+    public:
+        DriveMapper(const QString &dataDir)
+        {
+            size_t stringLen = dataDir.length();
+            targetPath = new wchar_t[stringLen+1];
+            dataDir.toWCharArray(targetPath);
+            targetPath[stringLen] = 0;
+
+            DefineDosDevice(DDD_NO_BROADCAST_SYSTEM, L"X:", targetPath);
+        }
+
+        ~DriveMapper()
+        {
+            DefineDosDevice(DDD_EXACT_MATCH_ON_REMOVE | DDD_NO_BROADCAST_SYSTEM | DDD_REMOVE_DEFINITION, L"X:", targetPath);
+            delete [] targetPath;
+        }
+
+    private:
+        wchar_t *targetPath;
+    };
+
+    QString dataDir = testFile(0);
+    DriveMapper dm(dataDir);
+    QQmlComponent component(&engine, testFileUrl("basic.qml"));
+
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != 0);
+
+    QSignalSpy folderChangeSpy(flm, SIGNAL(folderChanged()));
+
+    flm->setProperty("folder",QUrl::fromLocalFile(dataDir));
+    QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(dataDir));
+    QTRY_VERIFY(folderChangeSpy.count() == 1);
+
+    flm->setProperty("folder",QUrl::fromLocalFile("X:/resetfiltering/"));
+    QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile("X:/resetfiltering/"));
+    QTRY_VERIFY(folderChangeSpy.count() == 2);
+}
+#endif
 
 QTEST_MAIN(tst_qquickfolderlistmodel)
 

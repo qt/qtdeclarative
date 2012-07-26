@@ -83,6 +83,8 @@ public:
     void _q_directoryChanged(const QString &directory, const QList<FileProperty> &list);
     void _q_directoryUpdated(const QString &directory, const QList<FileProperty> &list, int fromIndex, int toIndex);
     void _q_sortFinished(const QList<FileProperty> &list);
+
+    static QString resolvePath(const QUrl &path);
 };
 
 
@@ -195,6 +197,15 @@ void QQuickFolderListModelPrivate::_q_sortFinished(const QList<FileProperty> &li
     q->endInsertRows();
 }
 
+QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
+{
+    QString localPath = QQmlFile::urlToLocalFileOrQrc(path);
+    QUrl localUrl = QUrl(localPath);
+    QString fullPath = localUrl.path();
+    if (localUrl.scheme().length())
+      fullPath = localUrl.scheme() + ":" + fullPath;
+    return QDir::cleanPath(fullPath);
+}
 
 /*!
     \qmltype FolderListModel
@@ -370,8 +381,7 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
     if (folder == d->currentDir)
         return;
 
-    QString localPath = QQmlFile::urlToLocalFileOrQrc(folder);
-    QString resolvedPath = QDir::cleanPath(QUrl(localPath).path());
+    QString resolvedPath = QQuickFolderListModelPrivate::resolvePath(folder);
 
     beginResetModel();
 
@@ -413,8 +423,7 @@ void QQuickFolderListModel::setRootFolder(const QUrl &path)
     if (path.isEmpty())
         return;
 
-    QString localPath = QQmlFile::urlToLocalFileOrQrc(path);
-    QString resolvedPath = QDir::cleanPath(QUrl(localPath).path());
+    QString resolvedPath = QQuickFolderListModelPrivate::resolvePath(path);
 
     QFileInfo info(resolvedPath);
     if (!info.exists() || !info.isDir())
