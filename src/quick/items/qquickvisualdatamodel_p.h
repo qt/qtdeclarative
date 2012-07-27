@@ -192,7 +192,7 @@ class QQuickVisualDataModelAttachedMetaObject;
 class QQuickVisualDataModelAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickVisualDataModel *model READ model NOTIFY modelChanged)
+    Q_PROPERTY(QQuickVisualDataModel *model READ model CONSTANT)
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
     Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged)
 public:
@@ -214,7 +214,6 @@ public:
     void emitUnresolvedChanged() { emit unresolvedChanged(); }
 
 Q_SIGNALS:
-    void modelChanged();
     void groupsChanged();
     void unresolvedChanged();
 
@@ -223,7 +222,6 @@ public:
     int m_previousGroups;
     int m_currentIndex[QQuickListCompositor::MaximumGroupCount];
     int m_previousIndex[QQuickListCompositor::MaximumGroupCount];
-    bool m_modelChanged;
 
     friend class QQuickVisualDataModelAttachedMetaObject;
 };

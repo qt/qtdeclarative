@@ -1883,7 +1883,6 @@ int QQuickVisualDataModelAttachedMetaObject::metaCall(QObject *object, QMetaObje
 QQuickVisualDataModelAttached::QQuickVisualDataModelAttached(QObject *parent)
     : m_cacheItem(0)
     , m_previousGroups(0)
-    , m_modelChanged(false)
 {
     QQml_setParent_noEvent(this, parent);
 }
@@ -1892,7 +1891,6 @@ QQuickVisualDataModelAttached::QQuickVisualDataModelAttached(
         QQuickVisualDataModelItem *cacheItem, QObject *parent)
     : m_cacheItem(cacheItem)
     , m_previousGroups(cacheItem->groups)
-    , m_modelChanged(false)
 {
     QQml_setParent_noEvent(this, parent);
     if (QVDMIncubationTask *incubationTask = m_cacheItem->incubationTask) {
@@ -2008,11 +2006,6 @@ bool QQuickVisualDataModelAttached::isUnresolved() const
 
 void QQuickVisualDataModelAttached::emitChanges()
 {
-    if (m_modelChanged) {
-        m_modelChanged = false;
-        emit modelChanged();
-    }
-
     const int groupChanges = m_previousGroups ^ m_cacheItem->groups;
     m_previousGroups = m_cacheItem->groups;
 
