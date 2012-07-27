@@ -82,18 +82,129 @@ static void initStandardTreeModel(QStandardItemModel *model)
     model->insertRow(2, item);
 }
 
-class SingleRoleModel : public QAbstractListModel
+class SingleRoleModel : public QAbstractItemModel
 {
     Q_OBJECT
     Q_PROPERTY(QStringList values READ getList WRITE setList)
 public:
-    SingleRoleModel(const QByteArray &role = "name", QObject *parent = 0)
-        : QAbstractListModel(parent)
-    {
+    struct Branch;
+    struct Node {
+        Node(const QString &display = QString()) : branch(0), display(display) {}
+        Branch *branch;
+        QString display;
+    };
+
+    struct Branch {
+        Branch(Branch *parent = 0) : parent(parent) {}
+        ~Branch() { foreach (const Node &child, children) delete child.branch; }
+        int indexOf(Branch *branch) const {
+            for (int i = 0; i < children.count(); ++i) {
+                if (children.at(i).branch == branch)
+                    return i;
+            }
+            return -1;
+        }
+        Branch *parent;
+        QVector<Node> children;
+
+    };
+
+    SingleRoleModel(const QStringList &list = QStringList(), const QByteArray &role = "name", QObject *parent = 0)
+        : QAbstractItemModel(parent) {
         QHash<int, QByteArray> roles;
         roles.insert(Qt::DisplayRole , role);
         setRoleNames(roles);
-        list << "one" << "two" << "three" << "four";
+        foreach (const QString &string, list)
+            trunk.children.append(Node(string));
+    }
+    ~SingleRoleModel() {}
+
+    Branch *branchForIndex(const QModelIndex &index) const {
+        return index.isValid()
+                ? static_cast<Branch *>(index.internalPointer())->children.at(index.row()).branch
+                : const_cast<Branch *>(&trunk);
+    }
+
+    Branch *createBranchForIndex(const QModelIndex &index) const {
+        if (index.isValid()) {
+            Branch * const parentBranch = static_cast<Branch *>(index.internalPointer());
+            Node &node = parentBranch->children[index.row()];
+            if (!node.branch)
+                node.branch = new Branch(parentBranch);
+            return node.branch;
+        } else {
+            return const_cast<Branch *>(&trunk);
+        }
+    }
+
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const {
+        if (row < 0 || column != 0)
+            return QModelIndex();
+        Branch * const branch = branchForIndex(parent);
+        return branch && row < branch->children.count()
+                ? createIndex(row, column, branch)
+                : QModelIndex();
+    }
+
+    QModelIndex parent(const QModelIndex &child) const {
+        Branch * const branch = static_cast<Branch *>(child.internalPointer());
+        return branch->parent
+                ? createIndex(branch->parent->indexOf(branch), 0, branch->parent)
+                : QModelIndex();
+    }
+
+    int rowCount(const QModelIndex &parent) const {
+        Branch * const branch = branchForIndex(parent);
+        return branch ? branch->children.count() : 0;
+    }
+
+    int columnCount(const QModelIndex &parent) const {
+        Branch * const branch = branchForIndex(parent);
+        return branch ? 1 : 0;
+    }
+
+    QVariant data(const QModelIndex &index, int role) const {
+        return index.isValid() && role == Qt::DisplayRole
+                ? static_cast<Branch *>(index.internalPointer())->children.at(index.row()).display
+                : QVariant();
+    }
+
+    void insert(const QModelIndex &parent, int index, const QStringList &data) {
+        beginInsertRows(parent, index, index + data.count() - 1);
+        Branch * const branch = createBranchForIndex(parent);
+        for (int i = 0; i < data.count(); ++i)
+            branch->children.insert(index + i, Node(data.at(i)));
+        endInsertRows();
+    }
+
+    void remove(const QModelIndex &parent, int index, int count) {
+        beginRemoveRows(parent, index, index + count - 1);
+        Branch * const branch = branchForIndex(parent);
+        for (int i = 0; i < count; ++i) {
+            delete branch->children.at(index).branch;
+            branch->children.remove(index);
+        }
+        endRemoveRows();
+    }
+
+    void move(const QModelIndex &fromParent, int from, const QModelIndex &toParent, int to, int count) {
+        beginMoveRows(fromParent, from, from + count - 1, toParent, to);
+        Branch * const fromBranch = branchForIndex(fromParent);
+        Branch * const toBranch = createBranchForIndex(toParent);
+
+        if (fromBranch == toBranch) {
+            qquickmodelviewstestutil_move(from, to, count, &fromBranch->children);
+        } else {
+            for (int i = 0; i < count; ++i) {
+                Node node = fromBranch->children.at(from);
+                fromBranch->children.remove(from);
+                if (node.branch)
+                    node.branch->parent = toBranch;
+                toBranch->children.insert(to + i, node);
+
+            }
+        }
+        endMoveRows();
     }
 
     void emitMove(int sourceFirst, int sourceLast, int destinationChild) {
@@ -101,26 +212,38 @@ public:
         emit endMoveRows();
     }
 
-    QStringList list;
+    QStringList getList() const {
+        QStringList list;
+        foreach (const Node &node, trunk.children)
+            list.append(node.display);
+        return list;
+    }
 
-    QStringList getList() const { return list; }
-    void setList(const QStringList &l) { list = l; }
+    void setList(const QStringList &l) {
+        if (trunk.children.count() > 0) {
+            beginRemoveRows(QModelIndex(), 0, trunk.children.count() - 1);
+            foreach (const Node &child, trunk.children) delete child.branch;
+            trunk.children.clear();
+            endRemoveRows();
+        }
+        if (l.count() > 0) {
+            beginInsertRows(QModelIndex(), 0, l.count() -1);
+            foreach (const QString &string, l)
+                trunk.children.append(Node(string));
+            endInsertRows();
+        }
+    }
+
+    QString at(int index) const { return trunk.children.at(index).display; }
 
 public slots:
     void set(int idx, QString string) {
-        list[idx] = string;
-        emit dataChanged(index(idx,0), index(idx,0));
+        trunk.children[idx].display = string;
+        emit dataChanged(createIndex(idx, 0, &trunk), createIndex(idx, 0, &trunk));
     }
 
-protected:
-    int rowCount(const QModelIndex & /* parent */ = QModelIndex()) const {
-        return list.count();
-    }
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const {
-        if (role == Qt::DisplayRole)
-            return list.at(index.row());
-        return QVariant();
-    }
+private:
+    Branch trunk;
 };
 
 class StandardItem : public QObject, public QStandardItem
@@ -284,6 +407,7 @@ private slots:
     void packagesDestroyed();
     void qaimRowsMoved();
     void qaimRowsMoved_data();
+    void subtreeRowsMoved();
     void remove_data();
     void remove();
     void move_data();
@@ -564,10 +688,11 @@ void tst_qquickvisualdatamodel::objectListModel()
 
 void tst_qquickvisualdatamodel::singleRole()
 {
+    QStringList list = QStringList() << "one" << "two" << "three" << "four";
     {
         QQuickView view;
 
-        SingleRoleModel model;
+        SingleRoleModel model(list);
 
         QQmlContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
@@ -589,7 +714,7 @@ void tst_qquickvisualdatamodel::singleRole()
     {
         QQuickView view;
 
-        SingleRoleModel model;
+        SingleRoleModel model(list);
 
         QQmlContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
@@ -611,7 +736,7 @@ void tst_qquickvisualdatamodel::singleRole()
     {
         QQuickView view;
 
-        SingleRoleModel model("modelData");
+        SingleRoleModel model(list, "modelData");
 
         QQmlContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
@@ -637,7 +762,7 @@ void tst_qquickvisualdatamodel::modelProperties()
     {
         QQuickView view;
 
-        SingleRoleModel model;
+        SingleRoleModel model(QStringList() << "one" << "two" << "three" << "four");
 
         QQmlContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
@@ -835,10 +960,10 @@ void tst_qquickvisualdatamodel::itemsDestroyed()
 
 void tst_qquickvisualdatamodel::packagesDestroyed()
 {
-    SingleRoleModel model;
-    model.list.clear();
+    QStringList list;
     for (int i=0; i<30; i++)
-        model.list << (QLatin1String("item ") + i);
+        list << (QLatin1String("item ") + i);
+    SingleRoleModel model(list);
 
     QQuickView view;
     view.rootContext()->setContextProperty("testModel", &model);
@@ -917,10 +1042,10 @@ void tst_qquickvisualdatamodel::qaimRowsMoved()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
 
-    SingleRoleModel model;
-    model.list.clear();
+    QStringList list;
     for (int i=0; i<30; i++)
-        model.list << (QLatin1String("item ") + i);
+        list << (QLatin1String("item ") + i);
+    SingleRoleModel model(list);
     engine.rootContext()->setContextProperty("myModel", &model);
 
     QQuickVisualDataModel *obj = qobject_cast<QQuickVisualDataModel*>(c.create());
@@ -974,6 +1099,102 @@ void tst_qquickvisualdatamodel::qaimRowsMoved_data()
         << 10 << 1 << 5;
 }
 
+void tst_qquickvisualdatamodel::subtreeRowsMoved()
+{
+    SingleRoleModel model(QStringList() << "one" << "two" << "three" << "four");
+    model.insert(model.index(0, 0), 0, QStringList() << "a" << "b" << "c" << "d" << "e");
+    model.insert(model.index(2, 0), 0, QStringList() << "A" << "B" << "C");
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty("myModel", &model);
+
+    QQmlComponent component(&engine, testFileUrl("visualdatamodel.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QQuickVisualDataModel *vdm = qobject_cast<QQuickVisualDataModel*>(object.data());
+    QVERIFY(vdm);
+
+    QSignalSpy spy(vdm, SIGNAL(modelUpdated(QQuickChangeSet,bool)));
+    QQuickChangeSet changeSet;
+
+    QCOMPARE(vdm->count(), 4);
+
+    // Move items from the current root index to a sub tree.
+    model.move(QModelIndex(), 1, model.index(0, 0), 3, 2);
+    QCOMPARE(vdm->count(), 2);
+    QCOMPARE(spy.count(), 1);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().at(0).index, 1);
+    QCOMPARE(changeSet.removes().at(0).count, 2);
+    QCOMPARE(changeSet.inserts().count(), 0);
+
+    // Move items from a sub tree to the current root index.
+    model.move(model.index(0, 0), 4, QModelIndex(), 2, 1);
+    QCOMPARE(vdm->count(), 3);
+    QCOMPARE(spy.count(), 2);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.removes().count(), 0);
+    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.inserts().at(0).index, 2);
+    QCOMPARE(changeSet.inserts().at(0).count, 1);
+
+    vdm->setRootIndex(QVariant::fromValue(model.index(2, 0)));
+    QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(2, 0));
+    QCOMPARE(vdm->count(), 3);
+    QCOMPARE(spy.count(), 4);
+    changeSet = spy.at(2).at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().at(0).index, 0);
+    QCOMPARE(changeSet.removes().at(0).count, 3);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.inserts().at(0).index, 0);
+    QCOMPARE(changeSet.inserts().at(0).count, 3);
+
+    // Move the current root index without changing its parent.
+    model.move(QModelIndex(), 2, QModelIndex(), 0, 1);
+    QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(0, 0));
+    QCOMPARE(vdm->count(), 3);
+    QCOMPARE(spy.count(), 4);
+
+    // Move the current root index, changing its parent.
+    model.move(QModelIndex(), 0, model.index(1, 0), 0, 1);
+    QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(0, 0, model.index(0, 0)));
+    QCOMPARE(vdm->count(), 3);
+    QCOMPARE(spy.count(), 4);
+
+    model.insert(model.index(0, 0), 0, QStringList() << "new1" << "new2");
+    QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(2, 0, model.index(0, 0)));
+    QCOMPARE(vdm->count(), 3);
+    QCOMPARE(spy.count(), 4);
+
+    model.remove(model.index(0, 0), 1, 1);
+    QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(1, 0, model.index(0, 0)));
+    QCOMPARE(vdm->count(), 3);
+    QCOMPARE(spy.count(), 4);
+
+    model.remove(model.index(0, 0), 1, 1);
+    QCOMPARE(vdm->rootIndex().value<QModelIndex>(), QModelIndex());
+    QCOMPARE(vdm->count(), 0);
+    QCOMPARE(spy.count(), 5);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().at(0).index, 0);
+    QCOMPARE(changeSet.removes().at(0).count, 3);
+    QCOMPARE(changeSet.inserts().count(), 0);
+
+    vdm->setRootIndex(QVariant::fromValue(QModelIndex()));
+    QCOMPARE(vdm->rootIndex().value<QModelIndex>(), QModelIndex());
+    QCOMPARE(vdm->count(), 2);
+    QCOMPARE(spy.count(), 6);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.removes().count(), 0);
+    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.inserts().at(0).index, 0);
+    QCOMPARE(changeSet.inserts().at(0).count, 2);
+}
+
 void tst_qquickvisualdatamodel::remove_data()
 {
     QTest::addColumn<QUrl>("source");
@@ -991,8 +1212,7 @@ void tst_qquickvisualdatamodel::remove()
 {
     QQuickView view;
 
-    SingleRoleModel model;
-    model.list = QStringList()
+    SingleRoleModel model(QStringList()
             << "one"
             << "two"
             << "three"
@@ -1004,7 +1224,7 @@ void tst_qquickvisualdatamodel::remove()
             << "nine"
             << "ten"
             << "eleven"
-            << "twelve";
+            << "twelve");
 
     QQmlContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
@@ -1029,7 +1249,7 @@ void tst_qquickvisualdatamodel::remove()
         for (int i = 0; i < lengthOf(mIndex); ++i) {
             QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
             QVERIFY(delegate);
-            QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
+            QCOMPARE(delegate->property("test1").toString(), model.at(mIndex[i]));
             QCOMPARE(delegate->property("test2").toInt(), mIndex[i]);
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
@@ -1043,7 +1263,7 @@ void tst_qquickvisualdatamodel::remove()
         for (int i = 0; i < lengthOf(mIndex); ++i) {
             QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
             QVERIFY(delegate);
-            QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
+            QCOMPARE(delegate->property("test1").toString(), model.at(mIndex[i]));
             QCOMPARE(delegate->property("test2").toInt(), mIndex[i]);
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
@@ -1057,7 +1277,7 @@ void tst_qquickvisualdatamodel::remove()
         for (int i = 0; i < lengthOf(mIndex); ++i) {
             QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
             QVERIFY(delegate);
-            QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
+            QCOMPARE(delegate->property("test1").toString(), model.at(mIndex[i]));
             QCOMPARE(delegate->property("test2").toInt(), mIndex[i]);
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
@@ -1101,8 +1321,7 @@ void tst_qquickvisualdatamodel::move()
 {
     QQuickView view;
 
-    SingleRoleModel model;
-    model.list = QStringList()
+    SingleRoleModel model(QStringList()
             << "one"
             << "two"
             << "three"
@@ -1114,7 +1333,7 @@ void tst_qquickvisualdatamodel::move()
             << "nine"
             << "ten"
             << "eleven"
-            << "twelve";
+            << "twelve");
 
     QQmlContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
@@ -1139,7 +1358,7 @@ void tst_qquickvisualdatamodel::move()
         for (int i = 0; i < lengthOf(mIndex); ++i) {
             QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
             QVERIFY(delegate);
-            QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
+            QCOMPARE(delegate->property("test1").toString(), model.at(mIndex[i]));
             QCOMPARE(delegate->property("test2").toInt(), mIndex[i]);
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
@@ -1153,7 +1372,7 @@ void tst_qquickvisualdatamodel::move()
         for (int i = 0; i < lengthOf(mIndex); ++i) {
             QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
             QVERIFY(delegate);
-            QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
+            QCOMPARE(delegate->property("test1").toString(), model.at(mIndex[i]));
             QCOMPARE(delegate->property("test2").toInt(), mIndex[i]);
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
@@ -1167,7 +1386,7 @@ void tst_qquickvisualdatamodel::move()
         for (int i = 0; i < lengthOf(mIndex); ++i) {
             QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
             QVERIFY(delegate);
-            QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
+            QCOMPARE(delegate->property("test1").toString(), model.at(mIndex[i]));
             QCOMPARE(delegate->property("test2").toInt(), mIndex[i]);
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
@@ -1181,7 +1400,7 @@ void tst_qquickvisualdatamodel::move()
         for (int i = 0; i < lengthOf(mIndex); ++i) {
             QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
             QVERIFY(delegate);
-            QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
+            QCOMPARE(delegate->property("test1").toString(), model.at(mIndex[i]));
             QCOMPARE(delegate->property("test2").toInt(), mIndex[i]);
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
@@ -1195,7 +1414,7 @@ void tst_qquickvisualdatamodel::move()
         for (int i = 0; i < lengthOf(mIndex); ++i) {
             QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
             QVERIFY(delegate);
-            QCOMPARE(delegate->property("test1").toString(), model.list.at(mIndex[i]));
+            QCOMPARE(delegate->property("test1").toString(), model.at(mIndex[i]));
             QCOMPARE(delegate->property("test2").toInt(), mIndex[i]);
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
@@ -1264,7 +1483,7 @@ template <int N> void tst_qquickvisualdatamodel::groups_verify(
     for (int i = 0; i < N; ++i) {
         QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", mIndex[i]);
         QVERIFY(delegate);
-        QCOMPARE(evaluate<QString>(delegate, "test1"), model.list.at(mIndex[i]));
+        QCOMPARE(evaluate<QString>(delegate, "test1"), model.at(mIndex[i]));
         QCOMPARE(evaluate<int>(delegate, "test2") , mIndex[i]);
         QCOMPARE(evaluate<int>(delegate, "test3") , iIndex[i]);
         QCOMPARE(evaluate<bool>(delegate, "test4"), true);
@@ -1291,8 +1510,7 @@ void tst_qquickvisualdatamodel::groups()
 
     QQuickView view;
 
-    SingleRoleModel model;
-    model.list = QStringList()
+    SingleRoleModel model(QStringList()
             << "one"
             << "two"
             << "three"
@@ -1304,7 +1522,7 @@ void tst_qquickvisualdatamodel::groups()
             << "nine"
             << "ten"
             << "eleven"
-            << "twelve";
+            << "twelve");
 
     QQmlContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
@@ -1558,8 +1776,8 @@ template <int N> void tst_qquickvisualdatamodel::get_verify(
 {
     failed = true;
     for (int i = 0; i < N; ++i) {
-        QCOMPARE(evaluate<QString>(visualModel, QString("items.get(%1).model.name").arg(i)), model.list.at(mIndex[i]));
-        QCOMPARE(evaluate<QString>(visualModel, QString("items.get(%1).model.modelData").arg(i)), model.list.at(mIndex[i]));
+        QCOMPARE(evaluate<QString>(visualModel, QString("items.get(%1).model.name").arg(i)), model.at(mIndex[i]));
+        QCOMPARE(evaluate<QString>(visualModel, QString("items.get(%1).model.modelData").arg(i)), model.at(mIndex[i]));
         QCOMPARE(evaluate<int>(visualModel, QString("items.get(%1).model.index").arg(i)), mIndex[i]);
         QCOMPARE(evaluate<int>(visualModel, QString("items.get(%1).itemsIndex").arg(i)), iIndex[i]);
         QCOMPARE(evaluate<bool>(visualModel, QString("items.get(%1).inItems").arg(i)), true);
@@ -1572,8 +1790,8 @@ template <int N> void tst_qquickvisualdatamodel::get_verify(
         QCOMPARE(evaluate<bool>(visualModel, QString("contains(items.get(%1).groups, \"selected\")").arg(i)), sMember[i]);
 
         if (vMember[i]) {
-            QCOMPARE(evaluate<QString>(visibleItems, QString("get(%1).model.name").arg(vIndex[i])), model.list.at(mIndex[i]));
-            QCOMPARE(evaluate<QString>(visibleItems, QString("get(%1).model.modelData").arg(vIndex[i])), model.list.at(mIndex[i]));
+            QCOMPARE(evaluate<QString>(visibleItems, QString("get(%1).model.name").arg(vIndex[i])), model.at(mIndex[i]));
+            QCOMPARE(evaluate<QString>(visibleItems, QString("get(%1).model.modelData").arg(vIndex[i])), model.at(mIndex[i]));
             QCOMPARE(evaluate<int>(visibleItems, QString("get(%1).model.index").arg(vIndex[i])), mIndex[i]);
             QCOMPARE(evaluate<int>(visibleItems, QString("get(%1).itemsIndex").arg(vIndex[i])), iIndex[i]);
             QCOMPARE(evaluate<bool>(visibleItems, QString("get(%1).inItems").arg(vIndex[i])), true);
@@ -1587,8 +1805,8 @@ template <int N> void tst_qquickvisualdatamodel::get_verify(
             QCOMPARE(evaluate<bool>(visibleItems, QString("contains(get(%1).groups, \"selected\")").arg(vIndex[i])), sMember[i]);
         }
         if (sMember[i]) {
-            QCOMPARE(evaluate<QString>(selectedItems, QString("get(%1).model.name").arg(sIndex[i])), model.list.at(mIndex[i]));
-            QCOMPARE(evaluate<QString>(selectedItems, QString("get(%1).model.modelData").arg(sIndex[i])), model.list.at(mIndex[i]));
+            QCOMPARE(evaluate<QString>(selectedItems, QString("get(%1).model.name").arg(sIndex[i])), model.at(mIndex[i]));
+            QCOMPARE(evaluate<QString>(selectedItems, QString("get(%1).model.modelData").arg(sIndex[i])), model.at(mIndex[i]));
             QCOMPARE(evaluate<int>(selectedItems, QString("get(%1).model.index").arg(sIndex[i])), mIndex[i]);
             QCOMPARE(evaluate<int>(selectedItems, QString("get(%1).itemsIndex").arg(sIndex[i])), iIndex[i]);
             QCOMPARE(evaluate<bool>(selectedItems, QString("get(%1).inItems").arg(sIndex[i])), true);
@@ -1612,8 +1830,7 @@ void tst_qquickvisualdatamodel::get()
 {
     QQuickView view;
 
-    SingleRoleModel model;
-    model.list = QStringList()
+    SingleRoleModel model(QStringList()
             << "one"
             << "two"
             << "three"
@@ -1625,7 +1842,7 @@ void tst_qquickvisualdatamodel::get()
             << "nine"
             << "ten"
             << "eleven"
-            << "twelve";
+            << "twelve");
 
     QQmlContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
@@ -1901,8 +2118,7 @@ void tst_qquickvisualdatamodel::create()
 {
     QQuickView view;
 
-    SingleRoleModel model;
-    model.list = QStringList()
+    SingleRoleModel model(QStringList()
             << "one"
             << "two"
             << "three"
@@ -1922,7 +2138,7 @@ void tst_qquickvisualdatamodel::create()
             << "seventeen"
             << "eighteen"
             << "nineteen"
-            << "twenty";
+            << "twenty");
 
     QQmlContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);

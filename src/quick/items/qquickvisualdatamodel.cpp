@@ -391,7 +391,7 @@ void QQuickVisualDataModel::setDelegate(QQmlComponent *delegate)
 QVariant QQuickVisualDataModel::rootIndex() const
 {
     Q_D(const QQuickVisualDataModel);
-    return QVariant::fromValue(d->m_adaptorModel.rootIndex);
+    return QVariant::fromValue(QModelIndex(d->m_adaptorModel.rootIndex));
 }
 
 void QQuickVisualDataModel::setRootIndex(const QVariant &root)
@@ -399,9 +399,12 @@ void QQuickVisualDataModel::setRootIndex(const QVariant &root)
     Q_D(QQuickVisualDataModel);
 
     QModelIndex modelIndex = qvariant_cast<QModelIndex>(root);
-    if (d->m_adaptorModel.rootIndex != modelIndex) {
+    const bool changed = d->m_adaptorModel.rootIndex != modelIndex;
+    if (changed || !d->m_adaptorModel.isValid()) {
         const int oldCount = d->m_count;
         d->m_adaptorModel.rootIndex = modelIndex;
+        if (!d->m_adaptorModel.isValid() && d->m_adaptorModel.aim())  // The previous root index was invalidated, so we need to reconnect the model.
+            d->m_adaptorModel.setModel(d->m_adaptorModel.list.list(), this, d->m_context->engine());
         if (d->m_adaptorModel.canFetchMore())
             d->m_adaptorModel.fetchMore();
         if (d->m_complete) {
@@ -411,7 +414,8 @@ void QQuickVisualDataModel::setRootIndex(const QVariant &root)
             if (newCount)
                 _q_itemsInserted(0, newCount);
         }
-        emit rootIndexChanged();
+        if (changed)
+            emit rootIndexChanged();
     }
 }
 
@@ -1431,6 +1435,26 @@ void QQuickVisualDataModel::_q_rowsInserted(const QModelIndex &parent, int begin
     Q_D(QQuickVisualDataModel);
     if (parent == d->m_adaptorModel.rootIndex)
         _q_itemsInserted(begin, end - begin + 1);
+}
+
+void QQuickVisualDataModel::_q_rowsAboutToBeRemoved(const QModelIndex &parent, int begin, int end)
+{
+    Q_D(QQuickVisualDataModel);
+    if (!d->m_adaptorModel.rootIndex.isValid())
+        return;
+    const QModelIndex index = d->m_adaptorModel.rootIndex;
+    if (index.parent() == parent && index.row() >= begin && index.row() <= end) {
+        const int oldCount = d->m_count;
+        d->m_count = 0;
+        d->m_adaptorModel.invalidateModel(this);
+
+        if (d->m_complete && oldCount > 0) {
+            QVector<Compositor::Remove> removes;
+            d->m_compositor.listItemsRemoved(&d->m_adaptorModel, 0, oldCount, &removes);
+            d->itemsRemoved(removes);
+            d->emitChanges();
+        }
+    }
 }
 
 void QQuickVisualDataModel::_q_rowsRemoved(const QModelIndex &parent, int begin, int end)

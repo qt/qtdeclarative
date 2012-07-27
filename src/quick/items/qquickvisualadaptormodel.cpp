@@ -459,6 +459,8 @@ public:
         if (aim && vdm) {
             QObject::disconnect(aim, SIGNAL(rowsInserted(QModelIndex,int,int)),
                                 vdm, SLOT(_q_rowsInserted(QModelIndex,int,int)));
+            QObject::disconnect(aim, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
+                                vdm, SLOT(_q_rowsAboutToBeRemoved(QModelIndex,int,int)));
             QObject::disconnect(aim, SIGNAL(rowsRemoved(QModelIndex,int,int)),
                                 vdm, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
             QObject::disconnect(aim, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
@@ -898,6 +900,8 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &variant, QQuickVisualDat
                               vdm, QQuickVisualDataModel, SLOT(_q_rowsInserted(QModelIndex,int,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
                               vdm,  QQuickVisualDataModel, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
+            qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
+                              vdm,  QQuickVisualDataModel, SLOT(_q_rowsAboutToBeRemoved(QModelIndex,int,int)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
                               vdm, QQuickVisualDataModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
             qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
@@ -920,6 +924,19 @@ void QQuickVisualAdaptorModel::setModel(const QVariant &variant, QQuickVisualDat
         setObject(0);
         accessors = &qt_vdm_null_accessors;
     }
+}
+
+void QQuickVisualAdaptorModel::invalidateModel(QQuickVisualDataModel *vdm)
+{
+    accessors->cleanup(*this, vdm);
+    accessors = &qt_vdm_null_accessors;
+    // Don't clear the model object as we still need the guard to clear the list variant if the
+    // object is destroyed.
+}
+
+bool QQuickVisualAdaptorModel::isValid() const
+{
+    return accessors != &qt_vdm_null_accessors;
 }
 
 void QQuickVisualAdaptorModel::objectDestroyed(QObject *)

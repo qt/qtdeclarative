@@ -45,33 +45,6 @@
 
 #include <QtTest/QTest>
 
-template<typename T>
-static void qquickmodelviewstestutil_move(int from, int to, int n, T *items)
-{
-    if (from > to) {
-        // Only move forwards - flip if backwards moving
-        int tfrom = from;
-        int tto = to;
-        from = tto;
-        to = tto+n;
-        n = tfrom-tto;
-    }
-
-    T replaced;
-    int i=0;
-    typename T::ConstIterator it=items->begin(); it += from+n;
-    for (; i<to-from; ++i,++it)
-        replaced.append(*it);
-    i=0;
-    it=items->begin(); it += from;
-    for (; i<n; ++i,++it)
-        replaced.append(*it);
-    typename T::ConstIterator f=replaced.begin();
-    typename T::Iterator t=items->begin(); t += from;
-    for (; f != replaced.end(); ++f, ++t)
-        *t = *f;
-}
-
 QQuickView *QQuickViewTestUtil::createView()
 {
     QQuickView *window = new QQuickView(0);

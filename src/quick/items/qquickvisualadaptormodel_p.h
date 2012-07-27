@@ -96,7 +96,7 @@ public:
     };
 
     const Accessors *accessors;
-    QModelIndex rootIndex;
+    QPersistentModelIndex rootIndex;
     QQuickListAccessor list;
 
     QQuickVisualAdaptorModel();
@@ -104,6 +104,9 @@ public:
 
     inline QVariant model() const { return list.list(); }
     void setModel(const QVariant &variant, QQuickVisualDataModel *vdm, QQmlEngine *engine);
+    void invalidateModel(QQuickVisualDataModel *vdm);
+
+    bool isValid() const;
 
     inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }
     inline const QAbstractItemModel *aim() const { return static_cast<const QAbstractItemModel *>(object()); }

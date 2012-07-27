@@ -13,7 +13,9 @@ ListView {
             VisualDataGroup { id: selectedItems; objectName: "selectedItems"; name: "selected" }
         ]
 
-        model: SingleRoleModel {}
+        model: SingleRoleModel {
+            values: [ "one", "two", "three", "four" ]
+        }
 
         delegate: Item {
             id: delegate

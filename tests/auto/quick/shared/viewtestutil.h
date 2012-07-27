@@ -132,11 +132,39 @@ namespace QQuickViewTestUtil
         QList<int> indexes;
         bool valid;
     };
+
+    template<typename T>
+    static void qquickmodelviewstestutil_move(int from, int to, int n, T *items)
+    {
+        if (from > to) {
+            // Only move forwards - flip if backwards moving
+            int tfrom = from;
+            int tto = to;
+            from = tto;
+            to = tto+n;
+            n = tfrom-tto;
+        }
+
+        T replaced;
+        int i=0;
+        typename T::ConstIterator it=items->begin(); it += from+n;
+        for (; i<to-from; ++i,++it)
+            replaced.append(*it);
+        i=0;
+        it=items->begin(); it += from;
+        for (; i<n; ++i,++it)
+            replaced.append(*it);
+        typename T::ConstIterator f=replaced.begin();
+        typename T::Iterator t=items->begin(); t += from;
+        for (; f != replaced.end(); ++f, ++t)
+            *t = *f;
+    }
 }
 
 Q_DECLARE_METATYPE(QQuickViewTestUtil::QaimModel*)
 Q_DECLARE_METATYPE(QQuickViewTestUtil::ListChange)
 Q_DECLARE_METATYPE(QList<QQuickViewTestUtil::ListChange>)
 Q_DECLARE_METATYPE(QQuickViewTestUtil::ListRange)
+
 
 #endif // QQUICKVIEWTESTUTIL_H
