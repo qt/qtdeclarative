@@ -1014,9 +1014,9 @@ property is only invoked when the property is reassigned to a different object v
 /*!
     \qmlbasictype enumeration
     \ingroup qmlbasictypes
-    \brief a set of named values.
+    \brief a named enumeration value.
 
-    The \c enumeration type refers to a set of named values.
+    The \c enumeration type refers to a named enumeration value.
 
     Each named value can be referred to as \c {<Type>.<value>}. For
     example, the \l Text type has an \c AlignRight enumeration value:
@@ -1029,12 +1029,40 @@ property is only invoked when the property is reassigned to a different object v
     specified as a string, e.g. "AlignRight". This form is not
     recommended for new code.)
 
-    When integrating with C++, note that any enumeration value
+    When integrating with C++, note that any \c enum value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into an \c enumeration value, and vice-versa.
 
     This basic type is provided by the QML language.  Some enumeration values
     are provided by the QtQuick import.
+
+    \section1 Using the enumeration type in QML
+
+    The \c enumeration type is a representation of a C++ \c enum type. It is
+    not possible to refer to the \c enumeration type in QML itself; instead, the
+    \l int or \l var types can be used when referring to \c enumeration values
+    from QML code.
+
+    For example:
+
+    \qml
+    import QtQuick 2.0
+
+    Item {
+        // refer to Text.AlignRight using an int type
+        property int enumValue: textItem.horizontalAlignment
+
+        signal valueEmitted(int someValue)
+
+        Text {
+            id: textItem
+            horizontalAlignment: Text.AlignRight
+        }
+
+        // emit valueEmitted() signal, which expects an int, with Text.AlignRight
+        Component.onCompleted: valueEmitted(Text.AlignRight)
+    }
+    \endqml
 
     \sa {QML Basic Types}
 */
