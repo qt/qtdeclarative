@@ -285,7 +285,7 @@ class MyEnhancedPropertyMap : public QQmlPropertyMap
 {
     Q_OBJECT
 public:
-    MyEnhancedPropertyMap() : QQmlPropertyMap(this) {}
+    MyEnhancedPropertyMap() : QQmlPropertyMap(this, 0) {}
 
 signals:
     void testSignal();

@@ -59,7 +59,7 @@ class Q_QML_EXPORT QQmlPropertyMap : public QObject
 {
     Q_OBJECT
 public:
-    QQmlPropertyMap(QObject *parent = 0);
+    explicit QQmlPropertyMap(QObject *parent = 0);
     virtual ~QQmlPropertyMap();
 
     QVariant value(const QString &key) const;
@@ -83,7 +83,7 @@ protected:
     virtual QVariant updateValue(const QString &key, const QVariant &input);
 
     template<class DerivedType>
-    QQmlPropertyMap(DerivedType *derived, QObject *parent = 0)
+    QQmlPropertyMap(DerivedType *derived, QObject *parent)
         : QObject(*allocatePrivate(), parent)
     {
         Q_UNUSED(derived)
