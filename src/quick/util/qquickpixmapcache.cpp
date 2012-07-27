@@ -902,7 +902,10 @@ void QQuickPixmapData::release()
         }
 
         if (pixmapStatus == QQuickPixmap::Ready) {
-            pixmapStore()->unreferencePixmap(this);
+            if (inCache)
+                pixmapStore()->unreferencePixmap(this);
+            else
+                delete this;
         } else {
             removeFromCache();
             delete this;
@@ -1163,7 +1166,12 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
     QQuickPixmapKey key = { &url, &requestSize };
     QQuickPixmapStore *store = pixmapStore();
 
-    QHash<QQuickPixmapKey, QQuickPixmapData *>::Iterator iter = store->m_cache.find(key);
+    QHash<QQuickPixmapKey, QQuickPixmapData *>::Iterator iter = store->m_cache.end();
+
+    // If Cache is disabled, the pixmap will always be loaded, even if there is an existing
+    // cached version.
+    if (options & QQuickPixmap::Cache)
+        iter = store->m_cache.find(key);
 
     if (iter == store->m_cache.end()) {
         if (url.scheme() == QLatin1String("image")) {

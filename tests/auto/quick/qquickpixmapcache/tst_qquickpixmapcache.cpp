@@ -74,6 +74,7 @@ private slots:
     void networkCrash();
 #endif
     void lockingCrash();
+    void uncached();
 #if PIXMAP_DATA_LEAK_TEST
     void dataLeak();
 #endif
@@ -352,10 +353,14 @@ public:
     virtual QPixmap requestPixmap(const QString &d, QSize *, const QSize &) {
         Q_UNUSED(d)
         QPixmap pix(800, 600);
-        pix.fill(Qt::red);
+        pix.fill(fillColor);
         return pix;
     }
+
+    static QRgb fillColor;
 };
+
+QRgb MyPixmapProvider::fillColor = qRgb(255, 0, 0);
 
 // QTBUG-13345
 void tst_qquickpixmapcache::shrinkcache()
@@ -414,6 +419,56 @@ void tst_qquickpixmapcache::lockingCrash()
         p->clear();
         QVERIFY(p->isNull());
         delete p;
+    }
+}
+
+void tst_qquickpixmapcache::uncached()
+{
+    QQmlEngine engine;
+    engine.addImageProvider(QLatin1String("mypixmaps"), new MyPixmapProvider);
+
+    QUrl url("image://mypixmaps/mypix");
+    {
+        QQuickPixmap p;
+        p.load(&engine, url, 0);
+        QImage img = p.image();
+        QCOMPARE(img.pixel(0,0), qRgb(255, 0, 0));
+    }
+
+    // uncached, so we will get a different colored image
+    MyPixmapProvider::fillColor = qRgb(0, 255, 0);
+    {
+        QQuickPixmap p;
+        p.load(&engine, url, 0);
+        QImage img = p.image();
+        QCOMPARE(img.pixel(0,0), qRgb(0, 255, 0));
+    }
+
+    // Load the image with cache enabled
+    MyPixmapProvider::fillColor = qRgb(0, 0, 255);
+    {
+        QQuickPixmap p;
+        p.load(&engine, url, QQuickPixmap::Cache);
+        QImage img = p.image();
+        QCOMPARE(img.pixel(0,0), qRgb(0, 0, 255));
+    }
+
+    // We should not get the cached version if we request uncached
+    MyPixmapProvider::fillColor = qRgb(255, 0, 255);
+    {
+        QQuickPixmap p;
+        p.load(&engine, url, 0);
+        QImage img = p.image();
+        QCOMPARE(img.pixel(0,0), qRgb(255, 0, 255));
+    }
+
+    // If we again load the image with cache enabled, we should get the previously cached version
+    MyPixmapProvider::fillColor = qRgb(0, 255, 255);
+    {
+        QQuickPixmap p;
+        p.load(&engine, url, QQuickPixmap::Cache);
+        QImage img = p.image();
+        QCOMPARE(img.pixel(0,0), qRgb(0, 0, 255));
     }
 }
 
