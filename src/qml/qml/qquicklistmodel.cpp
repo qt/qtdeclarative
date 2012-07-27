@@ -1423,7 +1423,8 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
 }
 
 /*!
-    \qmlclass ListModel QQuickListModel
+    \qmltype ListModel
+    \instantiates QQuickListModel
     \inqmlmodule QtQuick 2
     \brief Defines a free-form list data source
     \ingroup qtquick-models
@@ -2521,7 +2522,8 @@ bool QQuickListModelParser::definesEmptyList(const QString &s)
 
 
 /*!
-    \qmlclass ListElement QQuickListElement
+    \qmltype ListElement
+    \instantiates QQuickListElement
     \inqmlmodule QtQuick 2
     \brief Defines a data item in a ListModel
     \ingroup qtquick-models

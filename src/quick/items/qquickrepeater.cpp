@@ -61,7 +61,8 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 }
 
 /*!
-    \qmlclass Repeater QQuickRepeater
+    \qmltype Repeater
+    \instantiates QQuickRepeater
     \inqmlmodule QtQuick 2
     \ingroup qtquick-models
     \ingroup qtquick-positioning

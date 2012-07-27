@@ -108,7 +108,8 @@ public:
 };
 
 /*!
-    \qmlclass Drag QQuickDrag
+    \qmltype Drag
+    \instantiates QQuickDrag
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input
     \brief For specifying drag and drop events for moved Items

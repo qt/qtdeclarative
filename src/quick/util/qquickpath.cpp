@@ -53,7 +53,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass PathElement QQuickPathElement
+    \qmltype PathElement
+    \instantiates QQuickPathElement
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief PathElement is the base path type
@@ -65,7 +66,8 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlclass Path QQuickPath
+    \qmltype Path
+    \instantiates QQuickPath
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Defines a path for use by \l PathView
@@ -803,7 +805,8 @@ bool QQuickCurve::hasRelativeY()
 /****************************************************************************/
 
 /*!
-    \qmlclass PathAttribute QQuickPathAttribute
+    \qmltype PathAttribute
+    \instantiates QQuickPathAttribute
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Specifies how to set an attribute at a given position in a Path
@@ -919,7 +922,8 @@ void QQuickPathAttribute::setValue(qreal value)
 /****************************************************************************/
 
 /*!
-    \qmlclass PathLine QQuickPathLine
+    \qmltype PathLine
+    \instantiates QQuickPathLine
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Defines a straight line
@@ -977,7 +981,8 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
 /****************************************************************************/
 
 /*!
-    \qmlclass PathQuad QQuickPathQuad
+    \qmltype PathQuad
+    \instantiates QQuickPathQuad
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Defines a quadratic Bezier curve with a control point
@@ -1128,7 +1133,8 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
 /****************************************************************************/
 
 /*!
-    \qmlclass PathCubic QQuickPathCubic
+    \qmltype PathCubic
+    \instantiates QQuickPathCubic
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Defines a cubic Bezier curve with two control points
@@ -1351,7 +1357,8 @@ void QQuickPathCubic::addToPath(QPainterPath &path, const QQuickPathData &data)
 /****************************************************************************/
 
 /*!
-    \qmlclass PathCurve QQuickPathCurve
+    \qmltype PathCurve
+    \instantiates QQuickPathCurve
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Defines a point on a Catmull-Rom curve
@@ -1496,7 +1503,8 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
 /****************************************************************************/
 
 /*!
-    \qmlclass PathArc QQuickPathArc
+    \qmltype PathArc
+    \instantiates QQuickPathArc
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Defines an arc with the given radius
@@ -1666,7 +1674,8 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 /****************************************************************************/
 
 /*!
-    \qmlclass PathSvg QQuickPathSvg
+    \qmltype PathSvg
+    \instantiates QQuickPathSvg
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Defines a path using an SVG path data string
@@ -1718,7 +1727,8 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
 /****************************************************************************/
 
 /*!
-    \qmlclass PathPercent QQuickPathPercent
+    \qmltype PathPercent
+    \instantiates QQuickPathPercent
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Manipulates the way a path is interpreted

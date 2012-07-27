@@ -44,7 +44,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass KeyEvent QQuickKeyEvent
+    \qmltype KeyEvent
+    \instantiates QQuickKeyEvent
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input-events
 
@@ -148,7 +149,8 @@ Item {
 
 
 /*!
-    \qmlclass MouseEvent QQuickMouseEvent
+    \qmltype MouseEvent
+    \instantiates QQuickMouseEvent
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input-events
 
@@ -246,7 +248,8 @@ Item {
 
 
 /*!
-    \qmlclass WheelEvent QQuickWheelEvent
+    \qmltype WheelEvent
+    \instantiates QQuickWheelEvent
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input-events
     \brief Provides information about a mouse wheel event

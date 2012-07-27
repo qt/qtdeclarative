@@ -764,7 +764,8 @@ QV8LocaleDataDeletable::~QV8LocaleDataDeletable()
 V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
 
 /*!
-    \qmlclass Locale QQmlLocale
+    \qmltype Locale
+    \instantiates QQmlLocale
     \inqmlmodule QtQuick 2
     \brief Provides locale specific properties and formatted data
 

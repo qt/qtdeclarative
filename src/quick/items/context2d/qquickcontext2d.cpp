@@ -72,7 +72,8 @@
 
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass Context2D QQuickContext2D
+    \qmltype Context2D
+    \instantiates QQuickContext2D
     \inqmlmodule QtQuick 2
     \ingroup qtquick-canvas
     \since QtQuick 2.0
@@ -2203,7 +2204,7 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
     return args.This();
 }
 /*!
-  \qmlclass TextMetrics
+  \qmltype TextMetrics
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
     \ingroup qtquick-canvas
@@ -2406,7 +2407,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 
 // pixel manipulation
 /*!
-    \qmlclass CanvasImageData
+    \qmltype CanvasImageData
     \inqmlmodule QtQuick 2
     \ingroup qtquick-canvas
     \brief Contains image pixel data in RGBA order
@@ -2459,7 +2460,7 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::Acce
 }
 
 /*!
-    \qmlclass CanvasPixelArray
+    \qmltype CanvasPixelArray
     \inqmlmodule QtQuick 2
     \ingroup qtquick-canvas
     \brief Provides ordered and indexed access to the components of each pixel in image data
@@ -2698,7 +2699,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
 }
 
 /*!
-    \qmlclass CanvasGradient
+    \qmltype CanvasGradient
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
     \ingroup qtquick-canvas

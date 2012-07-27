@@ -190,7 +190,8 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 */
 
 /*!
-    \qmlclass Component QQmlComponent
+    \qmltype Component
+    \instantiates QQmlComponent
     \ingroup qml-utility-elements
     \since 4.7
     \inqmlmodule QtQuick 2

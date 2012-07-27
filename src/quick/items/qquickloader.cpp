@@ -158,7 +158,8 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 }
 
 /*!
-    \qmlclass Loader QQuickLoader
+    \qmltype Loader
+    \instantiates QQuickLoader
     \inqmlmodule QtQuick 2
     \ingroup qtquick-dynamic
     \inherits Item

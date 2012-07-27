@@ -43,7 +43,8 @@
 #include "qquickparticleemitter_p.h"
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass Age QQuickAgeAffector
+    \qmltype Age
+    \instantiates QQuickAgeAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
     \brief For altering particle ages

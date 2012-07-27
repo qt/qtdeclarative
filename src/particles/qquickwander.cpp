@@ -43,7 +43,8 @@
 #include "qquickparticlesystem_p.h"//for ParticlesVertices
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass Wander QQuickWanderAffector
+    \qmltype Wander
+    \instantiates QQuickWanderAffector
     \inqmlmodule QtQuick.Particles 2
     \ingroup qtquick-particles
     \inherits Affector

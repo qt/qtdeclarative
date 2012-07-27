@@ -88,7 +88,8 @@ public:
 };
 
 /*!
-    \qmlclass Flipable QQuickFlipable
+    \qmltype Flipable
+    \instantiates QQuickFlipable
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-input

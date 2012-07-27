@@ -584,7 +584,8 @@ is finished.
 */
 
 /*!
-    \qmlclass Flickable QQuickFlickable
+    \qmltype Flickable
+    \instantiates QQuickFlickable
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input
     \ingroup qtquick-containers

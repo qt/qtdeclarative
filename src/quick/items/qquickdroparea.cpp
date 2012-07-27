@@ -91,7 +91,8 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
 }
 
 /*!
-    \qmlclass DropArea QQuickDropArea
+    \qmltype DropArea
+    \instantiates QQuickDropArea
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input
     \brief For specifying drag and drop handling in an area
@@ -327,7 +328,8 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 }
 
 /*!
-    \qmlclass DragEvent QQuickDragEvent
+    \qmltype DragEvent
+    \instantiates QQuickDragEvent
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input-events
     \brief Provides information about a drag event

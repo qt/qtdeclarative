@@ -44,7 +44,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass FocusScope QQuickFocusScope
+    \qmltype FocusScope
+    \instantiates QQuickFocusScope
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input
 

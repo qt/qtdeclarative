@@ -53,7 +53,8 @@ QT_BEGIN_NAMESPACE
 DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
 /*!
-    \qmlclass TouchPoint QQuickTouchPoint
+    \qmltype TouchPoint
+    \instantiates QQuickTouchPoint
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input-events
     \brief Describes a touch point in a MultiPointTouchArea
@@ -222,7 +223,8 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 }
 
 /*!
-    \qmlclass MultiPointTouchArea QQuickMultiPointTouchArea
+    \qmltype MultiPointTouchArea
+    \instantiates QQuickMultiPointTouchArea
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-input

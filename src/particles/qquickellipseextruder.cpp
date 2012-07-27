@@ -49,7 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass EllipseShape QQuickEllipseExtruder
+    \qmltype EllipseShape
+    \instantiates QQuickEllipseExtruder
     \inqmlmodule QtQuick.Particles 2
     \ingroup qtquick-particles
     \inherits Shape

@@ -48,7 +48,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass GroupGoal QQuickGroupGoalAffector
+    \qmltype GroupGoal
+    \instantiates QQuickGroupGoalAffector
     \inqmlmodule QtQuick.Particles 2
     \ingroup qtquick-particles
     \inherits Affector

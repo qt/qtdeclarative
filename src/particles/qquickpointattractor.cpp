@@ -44,7 +44,8 @@
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass Attractor QQuickAttractorAffector
+    \qmltype Attractor
+    \instantiates QQuickAttractorAffector
     \inqmlmodule QtQuick.Particles 2
     \ingroup qtquick-particles
     \inherits Affector

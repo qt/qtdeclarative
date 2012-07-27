@@ -66,7 +66,8 @@ QT_BEGIN_NAMESPACE
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 /*!
-    \qmlclass TextInput QQuickTextInput
+    \qmltype TextInput
+    \instantiates QQuickTextInput
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual
     \ingroup qtquick-input
@@ -879,7 +880,8 @@ void QQuickTextInput::setAutoScroll(bool b)
 #ifndef QT_NO_VALIDATOR
 
 /*!
-    \qmlclass IntValidator QIntValidator
+    \qmltype IntValidator
+    \instantiates QIntValidator
     \inqmlmodule QtQuick 2
     \ingroup qtquick-text-utility
     \brief Defines a validator for integer values
@@ -942,7 +944,8 @@ void QQuickIntValidator::resetLocaleName()
 */
 
 /*!
-    \qmlclass DoubleValidator QDoubleValidator
+    \qmltype DoubleValidator
+    \instantiates QDoubleValidator
     \inqmlmodule QtQuick 2
     \ingroup qtquick-text-utility
     \brief Defines a validator for non-integer numbers
@@ -1035,7 +1038,8 @@ void QQuickDoubleValidator::resetLocaleName()
 */
 
 /*!
-    \qmlclass RegExpValidator QRegExpValidator
+    \qmltype RegExpValidator
+    \instantiates QRegExpValidator
     \inqmlmodule QtQuick 2
     \ingroup qtquick-text-utility
     \brief Provides a string validator

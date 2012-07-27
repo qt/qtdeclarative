@@ -457,7 +457,8 @@ QImage QQuickShaderEffectTexture::toImage() const
 }
 
 /*!
-    \qmlclass ShaderEffectSource QQuickShaderEffectSource
+    \qmltype ShaderEffectSource
+    \instantiates QQuickShaderEffectSource
     \since 5.0
     \inherits Item
     \ingroup qtquick-effects

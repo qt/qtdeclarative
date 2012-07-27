@@ -44,7 +44,8 @@
 QT_BEGIN_NAMESPACE
 const qreal CONV = 0.017453292520444443;
 /*!
-    \qmlclass Gravity QQuickGravityAffector
+    \qmltype Gravity
+    \instantiates QQuickGravityAffector
     \inqmlmodule QtQuick.Particles 2
     \ingroup qtquick-particles
     \inherits Affector

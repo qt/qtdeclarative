@@ -73,7 +73,8 @@ public:
 };
 
 /*!
-    \qmlclass Timer QQuickTimer
+    \qmltype Timer
+    \instantiates QQuickTimer
     \inqmlmodule QtQuick 2
     \ingroup qtquick-interceptors
     \brief Triggers a handler at a specified interval

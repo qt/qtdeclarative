@@ -71,7 +71,8 @@ public:
 };
 
 /*!
-    \qmlclass Connections QQuickConnections
+    \qmltype Connections
+    \instantiates QQuickConnections
     \inqmlmodule QtQuick 2
     \ingroup qtquick-interceptors
     \brief Describes generalized connections to signals

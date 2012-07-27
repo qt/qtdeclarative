@@ -208,7 +208,8 @@ struct AnimatedSpriteVertices {
 };
 
 /*!
-    \qmlclass AnimatedSprite QQuickAnimatedSprite
+    \qmltype AnimatedSprite
+    \instantiates QQuickAnimatedSprite
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-visual

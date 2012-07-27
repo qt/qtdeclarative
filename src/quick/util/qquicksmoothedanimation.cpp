@@ -307,7 +307,8 @@ void QSmoothedAnimation::init()
 }
 
 /*!
-    \qmlclass SmoothedAnimation QQuickSmoothedAnimation
+    \qmltype SmoothedAnimation
+    \instantiates QQuickSmoothedAnimation
     \inqmlmodule QtQuick 2
     \ingroup qtquick-transitions-animations
     \inherits NumberAnimation

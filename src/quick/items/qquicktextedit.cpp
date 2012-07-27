@@ -65,7 +65,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass TextEdit QQuickTextEdit
+    \qmltype TextEdit
+    \instantiates QQuickTextEdit
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual
     \ingroup qtquick-input

@@ -45,7 +45,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass RectangleShape QQuickRectangleExtruder
+    \qmltype RectangleShape
+    \instantiates QQuickRectangleExtruder
     \inqmlmodule QtQuick.Particles 2
     \brief For specifying an area for affectors and emitter
     \ingroup qtquick-particles

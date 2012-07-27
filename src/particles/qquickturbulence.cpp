@@ -47,7 +47,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass Turbulence QQuickTurbulenceAffector
+    \qmltype Turbulence
+    \instantiates QQuickTurbulenceAffector
     \inqmlmodule QtQuick.Particles 2
     \ingroup qtquick-particles
     \inherits Affector

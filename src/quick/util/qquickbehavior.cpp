@@ -73,7 +73,8 @@ public:
 };
 
 /*!
-    \qmlclass Behavior QQuickBehavior
+    \qmltype Behavior
+    \instantiates QQuickBehavior
     \inqmlmodule QtQuick 2
     \ingroup qtquick-transitions-animations
     \ingroup qtquick-interceptors

@@ -42,7 +42,8 @@
 #include "qquickparticlegroup_p.h"
 
 /*!
-    \qmlclass ParticleGroup QQuickParticleGroup
+    \qmltype ParticleGroup
+    \instantiates QQuickParticleGroup
     \inqmlmodule QtQuick.Particles 2
     \brief For setting attributes on a logical particle group
     \ingroup qtquick-particles

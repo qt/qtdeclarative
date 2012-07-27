@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlclass Number
+    \qmltype Number
     \inqmlmodule QtQuick 2
     \brief The Number object provides represents a number value
 

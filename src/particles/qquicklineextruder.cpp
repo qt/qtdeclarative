@@ -43,7 +43,8 @@
 #include <cmath>
 
 /*!
-    \qmlclass LineShape QQuickLineExtruder
+    \qmltype LineShape
+    \instantiates QQuickLineExtruder
     \inqmlmodule QtQuick.Particles 2
     \inherits Shape
     \brief Represents a line for affectors and emitters

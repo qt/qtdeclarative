@@ -54,7 +54,8 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-    \qmlclass BorderImage QQuickBorderImage
+    \qmltype BorderImage
+    \instantiates QQuickBorderImage
     \inqmlmodule QtQuick 2
     \brief Paints a border based on an image
     \inherits Item

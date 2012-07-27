@@ -493,7 +493,8 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
 }
 
 /*!
-    \qmlclass Positioner QQuickPositionerAttached
+    \qmltype Positioner
+    \instantiates QQuickPositionerAttached
     \inqmlmodule QtQuick 2
     \ingroup qtquick-positioners
     \brief Provides attached properties that contain details on where an item exists in a positioner
@@ -575,7 +576,8 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 }
 
 /*!
-    \qmlclass Column QQuickColumn
+    \qmltype Column
+    \instantiates QQuickColumn
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-positioners
@@ -743,7 +745,8 @@ void QQuickColumn::reportConflictingAnchors()
     }
 }
 /*!
-    \qmlclass Row QQuickRow
+    \qmltype Row
+    \instantiates QQuickRow
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-positioners
@@ -974,7 +977,8 @@ void QQuickRow::reportConflictingAnchors()
 }
 
 /*!
-    \qmlclass Grid QQuickGrid
+    \qmltype Grid
+    \instantiates QQuickGrid
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-positioners
@@ -1415,7 +1419,8 @@ void QQuickGrid::reportConflictingAnchors()
 }
 
 /*!
-    \qmlclass Flow QQuickFlow
+    \qmltype Flow
+    \instantiates QQuickFlow
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-positioners

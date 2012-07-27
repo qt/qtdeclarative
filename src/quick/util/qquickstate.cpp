@@ -120,7 +120,8 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
 }
 
 /*!
-    \qmlclass State QQuickState
+    \qmltype State
+    \instantiates QQuickState
     \inqmlmodule QtQuick 2
     \ingroup qtquick-states
     \brief Defines configurations of objects and properties

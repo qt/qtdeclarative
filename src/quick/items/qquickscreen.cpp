@@ -50,7 +50,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass Screen QQuickScreenAttached
+    \qmltype Screen
+    \instantiates QQuickScreenAttached
     \inqmlmodule QtQuick.Window 2
     \ingroup qtquick-visual-utility
     \brief The Screen attached object provides information about the Screen an Item is displayed on.

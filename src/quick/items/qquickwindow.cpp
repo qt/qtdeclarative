@@ -790,7 +790,8 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 */
 
 /*!
-    \qmlclass Window QQuickWindow
+    \qmltype Window
+    \instantiates QQuickWindow
     \inqmlmodule QtQuick.Window 2
     \ingroup qtquick-visual
     \brief Creates a new top-level window

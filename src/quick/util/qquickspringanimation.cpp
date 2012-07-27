@@ -340,7 +340,8 @@ void QQuickSpringAnimationPrivate::updateMode()
 }
 
 /*!
-    \qmlclass SpringAnimation QQuickSpringAnimation
+    \qmltype SpringAnimation
+    \instantiates QQuickSpringAnimation
     \inqmlmodule QtQuick 2
     \ingroup qtquick-transitions-animations
     \inherits NumberAnimation

@@ -47,7 +47,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass Package QQuickPackage
+    \qmltype Package
+    \instantiates QQuickPackage
     \inqmlmodule QtQuick 2
     \ingroup qtquick-views
     \brief Specifies a collection of named items

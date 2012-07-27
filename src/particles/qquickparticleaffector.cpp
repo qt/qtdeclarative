@@ -45,7 +45,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass Affector QQuickParticleAffector
+    \qmltype Affector
+    \instantiates QQuickParticleAffector
     \inqmlmodule QtQuick.Particles 2
     \brief Applies alterations to the attributes of logical particles at any
     point in their lifetime

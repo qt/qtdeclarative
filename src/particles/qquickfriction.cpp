@@ -42,7 +42,8 @@
 #include "qquickfriction_p.h"
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass Friction QQuickFrictionAffector
+    \qmltype Friction
+    \instantiates QQuickFrictionAffector
     \inqmlmodule QtQuick.Particles 2
     \ingroup qtquick-particles
     \inherits Affector

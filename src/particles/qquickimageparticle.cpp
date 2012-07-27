@@ -584,7 +584,8 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 }
 
 /*!
-    \qmlclass ImageParticle QQuickImageParticle
+    \qmltype ImageParticle
+    \instantiates QQuickImageParticle
     \inqmlmodule QtQuick.Particles 2
     \inherits ParticlePainter
     \brief For visualizing logical particles using an image

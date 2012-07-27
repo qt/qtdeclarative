@@ -109,7 +109,8 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 }
 
 /*!
-  \qmlclass QtObject QObject
+  \qmltype QtObject
+    \instantiates QObject
   \inqmlmodule QtQuick 2
   \ingroup qml-utility-elements
   \since 4.7
@@ -241,7 +242,8 @@ QQmlImageProviderBase::~QQmlImageProviderBase()
 
 
 /*!
-\qmlclass Qt QQmlEnginePrivate
+\qmltype Qt
+    \instantiates QQmlEnginePrivate
   \ingroup qml-utility-elements
 \brief The QML global Qt object provides useful enums and functions from Qt.
 

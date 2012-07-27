@@ -46,7 +46,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass TrailEmitter QQuickTrailEmitter
+    \qmltype TrailEmitter
+    \instantiates QQuickTrailEmitter
     \inqmlmodule QtQuick.Particles 2
     \inherits QQuickParticleEmitter
     \brief Emits logical particles from other logical particles

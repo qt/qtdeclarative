@@ -130,7 +130,8 @@ void QQuickItemPrivate::registerAccessorProperties()
 }
 
 /*!
-    \qmlclass Transform QQuickTransform
+    \qmltype Transform
+    \instantiates QQuickTransform
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual-transforms
     \brief For specifying advanced transformations on Items
@@ -152,7 +153,8 @@ void QQuickItemPrivate::registerAccessorProperties()
 */
 
 /*!
-    \qmlclass Translate QQuickTranslate
+    \qmltype Translate
+    \instantiates QQuickTranslate
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual-transforms
     \brief Provides a way to move an Item without changing its x or y properties
@@ -194,7 +196,8 @@ void QQuickItemPrivate::registerAccessorProperties()
 */
 
 /*!
-    \qmlclass Scale QQuickScale
+    \qmltype Scale
+    \instantiates QQuickScale
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual-transforms
     \brief Provides a way to scale an Item
@@ -236,7 +239,8 @@ void QQuickItemPrivate::registerAccessorProperties()
 */
 
 /*!
-    \qmlclass Rotation QQuickRotation
+    \qmltype Rotation
+    \instantiates QQuickRotation
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual-transforms
     \brief Provides a way to rotate an Item
@@ -504,7 +508,8 @@ void QQuickItemKeyFilter::componentComplete()
     if (m_next) m_next->componentComplete();
 }
 /*!
-    \qmlclass KeyNavigation QQuickKeyNavigationAttached
+    \qmltype KeyNavigation
+    \instantiates QQuickKeyNavigationAttached
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input
     \brief Supports key navigation by arrow keys
@@ -918,7 +923,8 @@ bool QQuickKeysAttached::isConnected(const char *signalName)
 }
 
 /*!
-    \qmlclass Keys QQuickKeysAttached
+    \qmltype Keys
+    \instantiates QQuickKeysAttached
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input
     \brief Provides key handling to Items
@@ -1464,7 +1470,8 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 }
 
 /*!
-    \qmlclass LayoutMirroring QQuickLayoutMirroringAttached
+    \qmltype LayoutMirroring
+    \instantiates QQuickLayoutMirroringAttached
     \inqmlmodule QtQuick 2
     \ingroup qtquick-positioners
     \ingroup qml-utility-elements
@@ -1721,7 +1728,8 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 */
 
 /*!
-    \qmlclass Item QQuickItem
+    \qmltype Item
+    \instantiates QQuickItem
     \inherits QtObject
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual

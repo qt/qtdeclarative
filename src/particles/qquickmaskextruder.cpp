@@ -46,7 +46,8 @@
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass MaskShape QQuickMaskExtruder
+    \qmltype MaskShape
+    \instantiates QQuickMaskExtruder
     \inqmlmodule QtQuick.Particles 2
     \inherits Shape
     \brief For representing an image as a shape to affectors and emitters

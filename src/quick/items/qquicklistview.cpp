@@ -1648,7 +1648,8 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 //----------------------------------------------------------------------------
 
 /*!
-    \qmlclass ListView QQuickListView
+    \qmltype ListView
+    \instantiates QQuickListView
     \inqmlmodule QtQuick 2
     \ingroup qtquick-views
     \inherits Flickable

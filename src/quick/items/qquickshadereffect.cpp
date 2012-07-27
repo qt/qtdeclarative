@@ -533,7 +533,8 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
 
 
 /*!
-    \qmlclass ShaderEffect QQuickShaderEffect
+    \qmltype ShaderEffect
+    \instantiates QQuickShaderEffect
     \inqmlmodule QtQuick 2
     \inherits Item
     \ingroup qtquick-effects

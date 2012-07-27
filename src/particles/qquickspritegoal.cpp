@@ -48,7 +48,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass SpriteGoal QQuickSpriteGoalAffector
+    \qmltype SpriteGoal
+    \instantiates QQuickSpriteGoalAffector
     \inqmlmodule QtQuick.Particles 2
     \ingroup qtquick-images-sprites
     \inherits Affector

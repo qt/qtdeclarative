@@ -43,7 +43,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass CumulativeDirection QQuickCumulativeDirection
+    \qmltype CumulativeDirection
+    \instantiates QQuickCumulativeDirection
     \inqmlmodule QtQuick.Particles 2
     \inherits Direction
     \brief For specifying a direction made of other directions

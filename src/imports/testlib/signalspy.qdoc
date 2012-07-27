@@ -40,7 +40,8 @@
 ****************************************************************************/
 
 /*!
-    \qmlclass SignalSpy SignalSpy
+    \qmltype SignalSpy
+    \instantiates SignalSpy
     \brief Enables introspection of signal emission
     \ingroup qtquick-utility
     \since 4.8

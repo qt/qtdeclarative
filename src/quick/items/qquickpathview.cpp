@@ -451,7 +451,8 @@ void QQuickPathViewPrivate::setDragging(bool d)
 }
 
 /*!
-    \qmlclass PathView QQuickPathView
+    \qmltype PathView
+    \instantiates QQuickPathView
     \inqmlmodule QtQuick 2
     \ingroup qtquick-paths
     \ingroup qtquick-views

@@ -1218,7 +1218,8 @@ void QQuickTextPrivate::ensureDoc()
 }
 
 /*!
-    \qmlclass Text QQuickText
+    \qmltype Text
+    \instantiates QQuickText
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual
     \inherits Item

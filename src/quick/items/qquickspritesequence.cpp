@@ -207,7 +207,8 @@ struct SpriteVertices {
 };
 
 /*!
-    \qmlclass SpriteSequence QQuickSpriteSequence
+    \qmltype SpriteSequence
+    \instantiates QQuickSpriteSequence
     \inqmlmodule QtQuick 2
     \ingroup qtquick-visual-utility
     \inherits Item

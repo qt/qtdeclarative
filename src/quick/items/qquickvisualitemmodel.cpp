@@ -116,7 +116,8 @@ public:
 
 
 /*!
-    \qmlclass VisualItemModel QQuickVisualItemModel
+    \qmltype VisualItemModel
+    \instantiates QQuickVisualItemModel
     \inqmlmodule QtQuick 2
     \ingroup qtquick-models
     \brief Defines items to be used added to a view

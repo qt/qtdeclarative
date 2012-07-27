@@ -44,7 +44,8 @@
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass ParticlePainter QQuickParticlePainter
+    \qmltype ParticlePainter
+    \instantiates QQuickParticlePainter
     \inqmlmodule QtQuick.Particles 2
     \inherits ParticlePainter
     \brief For specifying how to paint particles

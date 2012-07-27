@@ -92,7 +92,8 @@ void QQuickAnimationControllerPrivate::animationCurrentTimeChanged(QAbstractAnim
 }
 
 /*!
-    \qmlclass AnimationController QQuickAnimationController
+    \qmltype AnimationController
+    \instantiates QQuickAnimationController
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-control
     \brief Enables manual control of animations
