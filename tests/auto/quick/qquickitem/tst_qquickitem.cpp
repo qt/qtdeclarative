@@ -47,6 +47,7 @@
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include "private/qquickfocusscope_p.h"
 #include "private/qquickitem_p.h"
+#include <QtGui/QWindowSystemInterface>
 #include <QDebug>
 #include <QTimer>
 #include "../../shared/util.h"

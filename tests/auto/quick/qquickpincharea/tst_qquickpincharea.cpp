@@ -42,6 +42,7 @@
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
 #include <QtGui/QStyleHints>
+#include <QtGui/QWindowSystemInterface>
 #include <private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/qquickview.h>

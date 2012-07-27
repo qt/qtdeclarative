@@ -50,6 +50,7 @@
 #include <QtQuick/private/qquickmultipointtoucharea_p.h>
 #include <QtQuick/private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtGui/QWindowSystemInterface>
 
 #include <private/qquickwindow_p.h>
 

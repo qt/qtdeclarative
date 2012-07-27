@@ -49,6 +49,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include "../../shared/util.h"
 #include <QSignalSpy>
+#include <QtGui/QWindowSystemInterface>
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
 
