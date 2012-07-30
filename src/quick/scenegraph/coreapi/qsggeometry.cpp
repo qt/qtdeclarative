@@ -284,7 +284,7 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
     setIndexDataPattern() functions. Whether this hint is respected or
     not is implementation specific.
 
-    \sa QSGGeometryNode
+    \sa QSGGeometryNode, {Custom Geometry Example}
 
  */
 

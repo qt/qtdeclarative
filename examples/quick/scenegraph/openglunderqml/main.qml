@@ -39,8 +39,9 @@
 **
 ****************************************************************************/
 
+//! [1]
 import QtQuick 2.0
-import OpenGLUnderQML 2.0
+import OpenGLUnderQML 1.0
 
 Item {
 
@@ -48,8 +49,6 @@ Item {
     height: 480
 
     Squircle {
-        width: 320
-        height: 320
         SequentialAnimation on t {
             NumberAnimation { to: 1; duration: 2500; easing.type: Easing.InQuad }
             NumberAnimation { to: 0; duration: 2500; easing.type: Easing.OutQuad }
@@ -57,9 +56,9 @@ Item {
             running: true
         }
     }
-
+//! [1] //! [2]
     Rectangle {
-        color: Qt.rgba(1, 1, 1, 0.8);
+        color: Qt.rgba(1, 1, 1, 0.7)
         radius: 10
         border.width: 1
         border.color: "white"
@@ -77,5 +76,5 @@ Item {
         anchors.bottom: parent.bottom
         anchors.margins: 20
     }
-
 }
+//! [2]

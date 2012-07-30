@@ -45,16 +45,17 @@
 
 #include "squircle.h"
 
+//! [1]
 int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<Squircle>("OpenGLUnderQML", 2, 0, "Squircle");
+    qmlRegisterType<Squircle>("OpenGLUnderQML", 1, 0, "Squircle");
 
     QQuickView view;
     view.setSource(QUrl("main.qml"));
     view.show();
 
     return app.exec();
-
 }
+//! [1]

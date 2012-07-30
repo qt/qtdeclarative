@@ -42,31 +42,53 @@
 #include "squircle.h"
 
 #include <QtQuick/qquickwindow.h>
-#include <QOpenGLShaderProgram>
+#include <QtGui/QOpenGLShaderProgram>
+#include <QtGui/QOpenGLContext>
 
+//! [7]
 Squircle::Squircle()
     : m_program(0)
 {
-    setFlag(ItemHasContents);
 }
+//! [7]
 
+//! [8]
+void Squircle::setT(qreal t)
+{
+    if (t == m_t)
+        return;
+    m_t = t;
+    emit tChanged();
+    if (canvas())
+        canvas()->update();
+}
+//! [8]
+
+
+//! [1]
 void Squircle::itemChange(ItemChange change, const ItemChangeData &)
 {
     // The ItemSceneChange event is sent when we are first attached to a window.
     if (change == ItemSceneChange) {
         QQuickWindow *c = window();
+        if (!c)
+            return;
+//! [1]
 
-        // Connect our the beforeRendering signal to our paint function.
+        // Connect the beforeRendering signal to our paint function.
         // Since this call is executed on the rendering thread it must be
         // a Qt::DirectConnection
+//! [2]
         connect(c, SIGNAL(beforeRendering()), this, SLOT(paint()), Qt::DirectConnection);
+//! [2]
 
         // If we allow QML to do the clearing, they would clear what we paint
         // and nothing would show.
+//! [3]
         c->setClearBeforeRendering(false);
     }
 }
-
+//! [3] //! [4]
 void Squircle::paint()
 {
     if (!m_program) {
@@ -83,14 +105,18 @@ void Squircle::paint()
                                            "varying highp vec2 coords;"
                                            "void main() {"
                                            "    lowp float i = 1. - (pow(coords.x, 4.) + pow(coords.y, 4.));"
-                                           "    i = smoothstep(t - 0.3, t + 0.3, i);"
-                                           "    gl_FragColor = vec4(coords / 2. + .5, i, i);"
+                                           "    i = smoothstep(t - 0.8, t + 0.8, i);"
+                                           "    i = floor(i * 20.) / 20.;"
+                                           "    gl_FragColor = vec4(coords * .5 + .5, i, i);"
                                            "}");
 
         m_program->bindAttributeLocation("vertices", 0);
         m_program->link();
-    }
 
+        connect(canvas()->openglContext(), SIGNAL(aboutToBeDestroyed()),
+                this, SLOT(cleanup()), Qt::DirectConnection);
+    }
+//! [4] //! [5]
     m_program->bind();
 
     m_program->enableAttributeArray(0);
@@ -119,5 +145,16 @@ void Squircle::paint()
     m_program->disableAttributeArray(0);
     m_program->release();
 }
+//! [5]
+
+//! [6]
+void Squircle::cleanup()
+{
+    if (m_program) {
+        delete m_program;
+        m_program = 0;
+    }
+}
+//! [6]
 
 

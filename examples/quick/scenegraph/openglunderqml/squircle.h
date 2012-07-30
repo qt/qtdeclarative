@@ -45,6 +45,7 @@
 #include <QtQuick/QQuickItem>
 #include <QtGui/QOpenGLShaderProgram>
 
+//! [1]
 class Squircle : public QQuickItem
 {
     Q_OBJECT
@@ -55,22 +56,23 @@ public:
     Squircle();
 
     qreal t() const { return m_t; }
-    void setT(qreal t) { m_t = t; emit tChanged(); update(); }
-
-    void itemChange(ItemChange change, const ItemChangeData &);
+    void setT(qreal t);
 
 signals:
     void tChanged();
 
+protected:
+    void itemChange(ItemChange change, const ItemChangeData &);
+
 public slots:
     void paint();
+    void cleanup();
 
 private:
     QOpenGLShaderProgram *m_program;
 
     qreal m_t;
-    bool m_render_under;
-    bool m_render_over;
 };
+//! [1]
 
 #endif // SQUIRCLE_H

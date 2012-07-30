@@ -887,6 +887,8 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     may result in the entire scene graph and its OpenGL context being deleted. The
     sceneGraphInvalidated() signal will be emitted when this happens.
 
+    \sa {OpenGL Under QML Example}
+
 */
 QQuickWindow::QQuickWindow(QWindow *parent)
     : QWindow(*(new QQuickWindowPrivate), parent)

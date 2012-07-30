@@ -140,6 +140,8 @@
     renderer internally uses to identify this shader. For this reason,
     the unique QSGSimpleMaterialShader implemenation must be
     instantiated with a unique C++ type.
+
+    \sa {Simple Material Example}
  */
 
 /*!

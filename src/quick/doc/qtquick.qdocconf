@@ -84,14 +84,15 @@ codeindent              = 1
 
 headerdirs  += ..
 
-sourcedirs  += ..
+sourcedirs  += .. ../../../examples/quick/doc
 
 exampledirs += ../../../ \
-               ../../../examples \
+               ../../../examples/ \
                ../ \
                snippets
 
-imagedirs   += images
+
+imagedirs   += images ../../../examples/quick/doc/images
 
 #add qml sources because of dependencies
 headerdirs += ../../qml

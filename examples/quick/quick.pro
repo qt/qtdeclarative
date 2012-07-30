@@ -9,6 +9,7 @@ SUBDIRS = accessibility \
             mousearea \
             positioners \
             righttoleft \
+            scenegraph \
             shadereffects \
             text \
             threading \
