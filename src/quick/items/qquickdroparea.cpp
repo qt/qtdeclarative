@@ -329,7 +329,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 
 /*!
     \qmltype DragEvent
-    \instantiates QQuickDragEvent
+    \instantiates QQuickDropEvent
     \inqmlmodule QtQuick 2
     \ingroup qtquick-input-events
     \brief Provides information about a drag event

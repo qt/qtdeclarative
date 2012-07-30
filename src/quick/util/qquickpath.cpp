@@ -1358,7 +1358,7 @@ void QQuickPathCubic::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathCurve
-    \instantiates QQuickPathCurve
+    \instantiates QQuickPathCatmullRomCurve
     \inqmlmodule QtQuick 2
     \ingroup qtquick-animation-paths
     \brief Defines a point on a Catmull-Rom curve
