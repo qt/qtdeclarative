@@ -515,7 +515,7 @@ aliasing an aliasing property will also result in an error.
 
 \snippet qml/properties.qml alias complete
 
-When importing a \l{QML Object Types}QML object type} with a property alias in
+When importing a \l{QML Object Types}{QML object type} with a property alias in
 the root object, however, the property appear as a regular Qt property and
 consequently can be used in alias references.
 
@@ -585,6 +585,33 @@ Default properties can be useful for reassigning the children of an item. See
 the  \l{declarative/ui-components/tabwidget}{TabWidget example}, which uses a
 default property to automatically reassign children of the TabWidget as
 children of an inner ListView.
+
+
+\section3 Read-Only Properties
+
+An object declaration may define a read-only property using the \c readonly
+keyword, with the following syntax:
+
+\code
+    readonly property <propertyType> <propertyName> : <initialValue>
+\endcode
+
+Read-only properties must be assigned a value on initialization. After a
+read-only property is initialized, it no longer possible to give it a value,
+whether from imperative code or otherwise.
+
+For example, the code in the \c Component.onCompleted block below is invalid:
+
+\qml
+Item {
+    readonly property int someNumber: 10
+
+    Component.onCompleted: someNumber = 20  // doesn't work, causes an error
+}
+\endqml
+
+\note A read-only property cannot also be a \l{Default Properties}{default} or
+\l {Property Aliases}{alias} property.
 
 
 \section2 Signal Attributes
