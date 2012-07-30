@@ -198,6 +198,8 @@ void tst_qquickflickable::boundsBehavior()
     QCOMPARE(spy.count(),3);
     flickable->setBoundsBehavior(QQuickFlickable::StopAtBounds);
     QCOMPARE(spy.count(),3);
+
+    delete flickable;
 }
 
 void tst_qquickflickable::rebound()
@@ -317,6 +319,8 @@ void tst_qquickflickable::maximumFlickVelocity()
     QCOMPARE(spy.count(),1);
     flickable->setMaximumFlickVelocity(2.0);
     QCOMPARE(spy.count(),1);
+
+    delete flickable;
 }
 
 void tst_qquickflickable::flickDeceleration()
@@ -334,6 +338,8 @@ void tst_qquickflickable::flickDeceleration()
     QCOMPARE(spy.count(),1);
     flickable->setFlickDeceleration(2.0);
     QCOMPARE(spy.count(),1);
+
+    delete flickable;
 }
 
 void tst_qquickflickable::pressDelay()
@@ -351,6 +357,8 @@ void tst_qquickflickable::pressDelay()
     QCOMPARE(spy.count(),1);
     flickable->setPressDelay(200);
     QCOMPARE(spy.count(),1);
+
+    delete flickable;
 }
 
 // QTBUG-17361
@@ -406,12 +414,15 @@ void tst_qquickflickable::flickableDirection()
     flickable->setFlickableDirection(QQuickFlickable::HorizontalFlick);
     QCOMPARE(flickable->flickableDirection(), QQuickFlickable::HorizontalFlick);
     QCOMPARE(spy.count(),3);
+
+    delete flickable;
 }
 
 // QtQuick 1.1
 void tst_qquickflickable::resizeContent()
 {
     QQmlEngine engine;
+    engine.rootContext()->setContextProperty("setRebound", false);
     QQmlComponent c(&engine, testFileUrl("resize.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
     QQuickFlickable *obj = findItem<QQuickFlickable>(root, "flick");
@@ -998,6 +1009,8 @@ void tst_qquickflickable::disabled()
     QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(50, 10));
 
     QTRY_VERIFY(window->rootObject()->property("clicked").toBool() == true);
+
+    delete window;
 }
 
 void tst_qquickflickable::flickVelocity()
@@ -1133,6 +1146,8 @@ void tst_qquickflickable::cancelOnMouseGrab()
     QTRY_VERIFY(!flickable->isDragging());
 
     QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(50, 10));
+
+    delete window;
 }
 
 void tst_qquickflickable::clickAndDragWhenTransformed()
