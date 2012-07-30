@@ -56,10 +56,9 @@ class PeriodicIncubationController : public QObject,
     public QQmlIncubationController
 {
 public:
-    PeriodicIncubationController() {
-        incubated = false;
-        startTimer(16);
-    }
+    PeriodicIncubationController() : incubated(false) {}
+
+    void start() { startTimer(20); }
 
     bool incubated;
 
@@ -901,10 +900,11 @@ void tst_QQuickLoader::asynchronous()
     QFETCH(QUrl, qmlFile);
     QFETCH(QStringList, expectedWarnings);
 
-    if (!engine.incubationController())
-        engine.setIncubationController(new PeriodicIncubationController);
-    PeriodicIncubationController *controller = static_cast<PeriodicIncubationController*>(engine.incubationController());
-    controller->incubated = false;
+    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QQmlIncubationController *previous = engine.incubationController();
+    engine.setIncubationController(controller);
+    delete previous;
+
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
@@ -923,6 +923,8 @@ void tst_QQuickLoader::asynchronous()
 
     if (expectedWarnings.isEmpty()) {
         QCOMPARE(loader->status(), QQuickLoader::Loading);
+
+        controller->start();
         QVERIFY(!controller->incubated); // asynchronous compilation means not immediately compiled/incubating.
         QTRY_VERIFY(controller->incubated); // but should start incubating once compilation is complete.
         QTRY_VERIFY(loader->item());
@@ -938,8 +940,11 @@ void tst_QQuickLoader::asynchronous()
 
 void tst_QQuickLoader::asynchronous_clear()
 {
-    if (!engine.incubationController())
-        engine.setIncubationController(new PeriodicIncubationController);
+    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QQmlIncubationController *previous = engine.incubationController();
+    engine.setIncubationController(controller);
+    delete previous;
+
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
@@ -952,6 +957,7 @@ void tst_QQuickLoader::asynchronous_clear()
     QMetaObject::invokeMethod(root, "loadComponent");
     QVERIFY(!loader->item());
 
+    controller->start();
     QCOMPARE(loader->status(), QQuickLoader::Loading);
     QTRY_COMPARE(engine.incubationController()->incubatingObjectCount(), 1);
 
@@ -983,10 +989,11 @@ void tst_QQuickLoader::asynchronous_clear()
 
 void tst_QQuickLoader::simultaneousSyncAsync()
 {
-    if (!engine.incubationController())
-        engine.setIncubationController(new PeriodicIncubationController);
-    PeriodicIncubationController *controller = static_cast<PeriodicIncubationController*>(engine.incubationController());
-    controller->incubated = false;
+    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QQmlIncubationController *previous = engine.incubationController();
+    engine.setIncubationController(controller);
+    delete previous;
+
     QQmlComponent component(&engine, testFileUrl("simultaneous.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
@@ -1002,6 +1009,7 @@ void tst_QQuickLoader::simultaneousSyncAsync()
     QVERIFY(!asyncLoader->item());
     QVERIFY(syncLoader->item());
 
+    controller->start();
     QCOMPARE(asyncLoader->status(), QQuickLoader::Loading);
     QVERIFY(!controller->incubated); // asynchronous compilation means not immediately compiled/incubating.
     QTRY_VERIFY(controller->incubated); // but should start incubating once compilation is complete.
