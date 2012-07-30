@@ -204,10 +204,6 @@ void tst_qquickflickable::boundsBehavior()
 
 void tst_qquickflickable::rebound()
 {
-#ifdef Q_OS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
-#endif
-
     QQuickView *window = new QQuickView;
     window->setSource(testFileUrl("rebound.qml"));
     window->show();
@@ -254,6 +250,12 @@ void tst_qquickflickable::rebound()
     movementEndedSpy.clear();
     window->rootObject()->setProperty("transitionsStarted", 0);
     window->rootObject()->setProperty("transitionsFinished", 0);
+
+#ifdef Q_OS_MAC
+    QSKIP("QTBUG-26696 - sometimes fails on Mac");
+    delete window;
+    return;
+#endif
 
     // flick and trigger the transition multiple times
     // (moving signals are emitted as soon as the first transition starts)
@@ -553,10 +555,6 @@ void tst_qquickflickable::movingAndFlicking_data()
 
 void tst_qquickflickable::movingAndFlicking()
 {
-#ifdef Q_OS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
-#endif
-
     QFETCH(bool, verticalEnabled);
     QFETCH(bool, horizontalEnabled);
     QFETCH(QPoint, flickToWithoutSnapBack);
@@ -752,7 +750,7 @@ void tst_qquickflickable::movingAndDragging()
     QTest::mouseMove(window, moveFrom + moveByWithoutSnapBack*2);
     QTest::mouseMove(window, moveFrom + moveByWithoutSnapBack*3);
 
-    QVERIFY(flickable->isMoving());
+    QTRY_VERIFY(flickable->isMoving());
     QCOMPARE(flickable->isMovingHorizontally(), horizontalEnabled);
     QCOMPARE(flickable->isMovingVertically(), verticalEnabled);
     QVERIFY(flickable->isDragging());
@@ -891,9 +889,6 @@ void tst_qquickflickable::movingAndDragging()
 
 void tst_qquickflickable::flickOnRelease()
 {
-#ifdef Q_OS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
-#endif
     QQuickView *window = new QQuickView;
     window->setSource(testFileUrl("flickable03.qml"));
     window->show();
@@ -920,6 +915,9 @@ void tst_qquickflickable::flickOnRelease()
     // wait for any motion to end
     QTRY_VERIFY(flickable->isMoving() == false);
 
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("", "QTBUG-26094 stopping on a full pixel doesn't work on OS X", Continue);
+#endif
     // Stop on a full pixel after user interaction
     QCOMPARE(flickable->contentY(), (qreal)qRound(flickable->contentY()));
 
@@ -928,10 +926,6 @@ void tst_qquickflickable::flickOnRelease()
 
 void tst_qquickflickable::pressWhileFlicking()
 {
-#ifdef Q_OS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
-#endif
-
     QQuickView *window = new QQuickView;
     window->setSource(testFileUrl("flickable03.qml"));
     window->show();
@@ -1015,10 +1009,6 @@ void tst_qquickflickable::disabled()
 
 void tst_qquickflickable::flickVelocity()
 {
-#ifdef Q_OS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
-#endif
-
     QQuickView *window = new QQuickView;
     window->setSource(testFileUrl("flickable03.qml"));
     window->show();
@@ -1037,6 +1027,12 @@ void tst_qquickflickable::flickVelocity()
     flick(window, QPoint(20,10), QPoint(20, 140), 200);
     QVERIFY(flickable->verticalVelocity() < 0.0);
     QTRY_VERIFY(flickable->verticalVelocity() == 0.0);
+
+#ifdef Q_OS_MAC
+    QSKIP("boost doesn't work on OS X");
+    delete window;
+    return;
+#endif
 
     // Flick multiple times and verify that flick acceleration is applied.
     QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(flickable);
