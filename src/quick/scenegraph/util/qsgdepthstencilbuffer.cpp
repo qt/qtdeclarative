@@ -75,6 +75,16 @@ void QSGDepthStencilBuffer::detach()
                                           GL_RENDERBUFFER, 0);
 }
 
+// ###TODO Remove once using Khronos OpenGL headers
+#if defined(QT_OPENGL_ES_2)
+#ifndef GL_DEPTH24_STENCIL8_OES
+#define GL_DEPTH24_STENCIL8_OES 0x88F0
+#endif
+
+#ifndef GL_DEPTH_COMPONENT24_OES
+#define GL_DEPTH_COMPONENT24_OES 0x81A6
+#endif
+#endif
 
 QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *context, const Format &format)
     : QSGDepthStencilBuffer(context, format)
@@ -88,10 +98,19 @@ QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *conte
         m_functions.glGenRenderbuffers(1, &m_depthBuffer);
         m_functions.glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
         if (format.samples && m_functions.hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)) {
+#if defined(QT_OPENGL_ES_2)
+            m_functions.glRenderbufferStorageMultisample(GL_RENDERBUFFER, format.samples,
+                GL_DEPTH24_STENCIL8_OES, width, height);
+#else
             m_functions.glRenderbufferStorageMultisample(GL_RENDERBUFFER, format.samples,
                 GL_DEPTH24_STENCIL8, width, height);
+#endif
         } else {
+#if defined(QT_OPENGL_ES_2)
+            m_functions.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, width, height);
+#else
             m_functions.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+#endif
         }
         m_stencilBuffer = m_depthBuffer;
     }
@@ -100,7 +119,7 @@ QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *conte
         m_functions.glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
 #ifdef QT_OPENGL_ES
         const GLenum internalFormat = m_functions.hasOpenGLExtension(QOpenGLExtensions::Depth24)
-                ? GL_DEPTH_COMPONENT24 : GL_DEPTH_COMPONENT16;
+                ? GL_DEPTH_COMPONENT24_OES : GL_DEPTH_COMPONENT16;
 #else
         const GLenum internalFormat = GL_DEPTH_COMPONENT;
 #endif

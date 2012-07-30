@@ -128,10 +128,12 @@ void QSGTextMaskMaterialData::activate()
     QSGMaterialShader::activate();
     glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
 
+#if !defined(QT_OPENGL_ES_2)
     // 0.25 was found to be acceptable error margin by experimentation. On Mac, the gamma is 2.0,
     // but using sRGB looks okay.
     if (qAbs(fontSmoothingGamma() - 2.2) < 0.25)
         glEnable(GL_FRAMEBUFFER_SRGB);
+#endif
 }
 
 void QSGTextMaskMaterialData::deactivate()
@@ -139,8 +141,10 @@ void QSGTextMaskMaterialData::deactivate()
     QSGMaterialShader::deactivate();
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+#if !defined(QT_OPENGL_ES_2)
     if (qAbs(fontSmoothingGamma() - 2.2) < 0.25)
         glDisable(GL_FRAMEBUFFER_SRGB);
+#endif
 }
 
 void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
