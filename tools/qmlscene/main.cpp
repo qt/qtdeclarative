@@ -308,7 +308,7 @@ static void displayFileDialog(Options *options)
 static void loadTranslationFile(QTranslator &translator, const QString& directory)
 {
     translator.load(QLatin1String("qml_" )+QLocale::system().name(), directory + QLatin1String("/i18n"));
-    QApplication::installTranslator(&translator);
+    QCoreApplication::installTranslator(&translator);
 }
 
 static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
