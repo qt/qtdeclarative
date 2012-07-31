@@ -2618,6 +2618,9 @@ void tst_qquicktextedit::copyAndPaste() {
     QVERIFY(textEdit->canPaste());
     textEdit->setReadOnly(true);
     QVERIFY(!textEdit->canPaste());
+    textEdit->paste();
+    QCOMPARE(textEdit->text(), QString("Hello world!Hello world!"));
+    QCOMPARE(textEdit->text().length(), 24);
     textEdit->setReadOnly(false);
     QVERIFY(textEdit->canPaste());
 
@@ -2627,10 +2630,20 @@ void tst_qquicktextedit::copyAndPaste() {
     QQuickTextEditPrivate *editPrivate = static_cast<QQuickTextEditPrivate*>(pri);
     QCOMPARE(textEdit->text(), editPrivate->text);
 
+    // cut: no selection
+    textEdit->cut();
+    QCOMPARE(textEdit->text(), QString("Hello world!Hello world!"));
+
     // select word
     textEdit->setCursorPosition(0);
     textEdit->selectWord();
     QCOMPARE(textEdit->selectedText(), QString("Hello"));
+
+    // cut: read only.
+    textEdit->setReadOnly(true);
+    textEdit->cut();
+    QCOMPARE(textEdit->text(), QString("Hello world!Hello world!"));
+    textEdit->setReadOnly(false);
 
     // select all and cut
     textEdit->selectAll();
@@ -2639,6 +2652,18 @@ void tst_qquicktextedit::copyAndPaste() {
     textEdit->paste();
     QCOMPARE(textEdit->text(), QString("Hello world!Hello world!"));
     QCOMPARE(textEdit->text().length(), 24);
+
+    // Copy first word.
+    textEdit->setCursorPosition(0);
+    textEdit->selectWord();
+    textEdit->copy();
+    // copy: no selection, previous copy retained;
+    textEdit->setCursorPosition(0);
+    QCOMPARE(textEdit->selectedText(), QString());
+    textEdit->copy();
+    textEdit->setText(QString());
+    textEdit->paste();
+    QCOMPARE(textEdit->text(), QString("Hello"));
 #endif
 }
 
@@ -2679,6 +2704,7 @@ void tst_qquicktextedit::canPasteEmpty() {
 
 #endif
 }
+
 
 void tst_qquicktextedit::readOnly()
 {
@@ -4667,6 +4693,50 @@ void tst_qquicktextedit::undo_keypressevents_data()
 
         QTest::newRow("Inserts,moving,selection and overwriting") << keys << expectedString;
     }
+
+
+#ifndef QT_NO_CLIPBOARD
+
+    bool canCopyPaste = true;
+#ifdef Q_OS_MAC
+
+    {
+        PasteboardRef pasteboard;
+        OSStatus status = PasteboardCreate(0, &pasteboard);
+        canCopyPaste = status == noErr;
+    }
+#endif
+
+    if (canCopyPaste) {
+        KeyList keys;
+        keys    << "123"
+                << QKeySequence(QKeySequence::SelectStartOfLine)
+                << QKeySequence(QKeySequence::Cut)
+                << "ABC"
+                << QKeySequence(QKeySequence::Paste);
+        QStringList expectedString = QStringList()
+                << "ABC123"
+                << "ABC"
+                << ""
+                << "123";
+        QTest::newRow("Cut,paste") << keys << expectedString;
+    }
+    if (canCopyPaste) {
+        KeyList keys;
+        keys    << "123"
+                << QKeySequence(QKeySequence::SelectStartOfLine)
+                << QKeySequence(QKeySequence::Copy)
+                << "ABC"
+                << QKeySequence(QKeySequence::Paste);
+        QStringList expectedString = QStringList()
+                << "ABC123"
+                << "ABC"
+                << "A"
+                << "123";
+        QTest::newRow("Copy,paste") << keys << expectedString;
+    }
+
+#endif
 }
 
 void tst_qquicktextedit::undo_keypressevents()

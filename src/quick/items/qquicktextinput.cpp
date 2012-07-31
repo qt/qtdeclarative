@@ -1899,8 +1899,10 @@ bool QQuickTextInput::isRightToLeft(int start, int end)
 void QQuickTextInput::cut()
 {
     Q_D(QQuickTextInput);
-    d->copy();
-    d->del();
+    if (!d->m_readOnly) {
+        d->copy();
+        d->del();
+    }
 }
 
 /*!
