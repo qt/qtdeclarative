@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ParticlePainter
     \instantiates QQuickParticlePainter
     \inqmlmodule QtQuick.Particles 2
-    \inherits ParticlePainter
+    \inherits Item
     \brief For specifying how to paint particles
     \ingroup qtquick-particles
 

@@ -122,11 +122,12 @@ QT_BEGIN_NAMESPACE
 
     In the special case where an Affector has no possible effect (e.g. Affector {}), affected
     will be emitted for all particles being considered if you connect to it. This allows you to
-    execute arbitrary code in response to particles (see \l affectParticles if you want to execute
-    code which affects the particles themselves) . As this executes JS scritps per particle, it is
-    not recommended to use this signal with a high-volume particle system.
+    execute arbitrary code in response to particles (use the \l {QtQuick.Particles2::Affector::affectParticles}
+    {affectParticles} signal handler if you want to execute code which affects the particles
+    themselves). As this executes JavaScript code per particle, it is not recommended to use this
+    signal with a high-volume particle system.
 
-    x,y is the particles current position.
+    x,y is the particle's current position.
 */
 QQuickParticleAffector::QQuickParticleAffector(QQuickItem *parent) :
     QQuickItem(parent), m_needsReset(false), m_ignoresTime(false), m_onceOff(false), m_enabled(true)

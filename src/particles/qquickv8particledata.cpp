@@ -256,12 +256,12 @@ QT_BEGIN_NAMESPACE
     Values are from 0.0 to 1.0.
 */
 /*!
-    \qmlmethod real QtQuick.Particles2::Particle::lifeLeft
+    \qmlproperty real QtQuick.Particles2::Particle::lifeLeft
     The time in seconds that the particle has left to live at
     the current point in time.
 */
 /*!
-    \qmlmethod real QtQuick.Particles2::Particle::currentSize
+    \qmlproperty real QtQuick.Particles2::Particle::currentSize
     The currentSize of the particle, interpolating between startSize and endSize based on the currentTime.
 */
 

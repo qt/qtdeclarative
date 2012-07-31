@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     dt is the time since the last time it was affected. Use dt to normalize
     trajectory manipulations to real time.
 
-    Note that JS is slower to execute, so it is not recommended to use this in
+    Note that JavaScript is slower to execute, so it is not recommended to use this in
     high-volume particle systems.
 */
 

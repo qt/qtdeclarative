@@ -191,10 +191,10 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick.Particles2::Emitter::onEmitParticles(Array particles)
 
-    This handler is called when particles are emitted. particles is a javascript
+    This handler is called when particles are emitted. particles is a JavaScript
     array of Particle objects. You can modify particle attributes directly within the handler.
 
-    Note that JS is slower to execute, so it is not recommended to use this in
+    Note that JavaScript is slower to execute, so it is not recommended to use this in
     high-volume particle systems.
 */
 
