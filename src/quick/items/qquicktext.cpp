@@ -361,8 +361,11 @@ void QQuickTextPrivate::updateLayout()
                 bool fontSizeModified = false;
                 QQuickStyledText::parse(text, layout, imgTags, q->baseUrl(), qmlContext(q), !maximumLineCountValid, &fontSizeModified);
                 formatModifiesFontSize = fontSizeModified;
+                multilengthEos = -1;
             } else {
                 layout.clearAdditionalFormats();
+                if (elideLayout)
+                    elideLayout->clearAdditionalFormats();
                 QString tmp = text;
                 multilengthEos = tmp.indexOf(QLatin1Char('\x9c'));
                 if (multilengthEos != -1) {
