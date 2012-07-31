@@ -53,37 +53,34 @@ See QTBUG-26428
 
 */
 
+/*
+XXX
+
+The "QML Intro" section has been temporarily removed, as it includes mostly
+outdated information.  However, it has some pertinent information, so we
+should review it and extract the useful documentation at some point, for
+inclusion somewhere in the documentation.  In particular, the documentation
+related to using QtCreator for QML development seems useful.
+
+\li \l{qml-intro.html}{Introduction to QML Application Development}
+*/
+
 /*!
 \page qtquick-applicationdevelopers.html
 \title QML Application Developer Resources
 \brief Essential documentation for QML application developers
 
-\section1 Overview of QML and Qt Quick
+QML is a declarative language that allows user interfaces to be described in
+terms of their visual components and how they interact and relate with one
+another.  It is a highly readable language that was designed to enable
+components to be interconnected in a dynamic manner, and it allows components
+to be easily reused and customized within a user interface.  Using the
+\c QtQuick module, designers and developers can easily build fluid animated
+user interfaces in QML, and have the option of connecting these user
+interfaces to any back-end C++ libraries.
 
-\section2 What is QML?
-
-QML is a user-interface specification and programming language.
-It allows highly performant, fluidly animated, visually appealing applications
-to be rapidly developed by either developers or designers.  QML offers a
-highly-readable, declarative, JSON-like syntax with support for imperative
-JavaScript expressions combined with dynamic property bindings.
-
-\b {The QML language and engine infrastructure is provided by the Qt QML module.
-See the \l{qtqml-main.html}{Qt QML Module Documentation} for
-in-depth information about using the QML language.}
-
-
-\section2 What is Qt Quick?
-
-Qt Quick is the standard library of types and functionality for QML.  It
-includes visual elements, interactive elements, animations, models and views,
-particle effects and shader effects.  A QML application developer can get
-access to all of that functionality with a single import statement.
-
-\b {The QtQuick QML library is provided by the Qt Quick module. See the
-documentation for the \l{qtquick-main.html}{Qt Quick Module Documentation} for in-depth
-information about the various QML types and other functionality provided by
-Qt Quick.}
+This page links to all the information you need to start developing
+applications with QML and QtQuick.
 
 \section1 Quick Start
 
@@ -102,23 +99,48 @@ Qt Quick.}
     \endlist
 \endlist
 
-\section1 Important Application Development Topics
+\section1 In-Depth Documentation
+
+\section2 What is QML?
+
+QML is a user interface specification and programming language.
+It allows developers and designers alike to create highly performant, fluidly
+animated and visually appealing applications.  QML offers a highly readable,
+declarative, JSON-like syntax with support for imperative JavaScript
+expressions combined with dynamic property bindings.
+
+The QML language and engine infrastructure is provided by the Qt QML module.
+For in-depth information about the QML language, please see the
+\l{qtqml-main.html}{Qt QML Module Documentation}.
+
+\section2 What is Qt Quick?
+
+Qt Quick is the standard library of types and functionality for QML.  It
+includes visual elements, interactive elements, animations, models and views,
+particle effects and shader effects.  A QML application developer can get
+access to all of that functionality with a single import statement.
+
+The QtQuick QML library is provided by the Qt Quick module.
+For in-depth information about the various QML types and other functionality
+provided by Qt Quick, please see the \l{qtquick-main.html}
+{Qt Quick Module Documentation}.
+
+\section1 Advanced Application Development Topics
 
 \list
-\li \l{qml-intro.html}{Introduction to QML Application Development}
 \li \l{qtquick-performance.html}{Performance Considerations and Suggestions}
 \li \l{qtquick-internationalization.html}{Internationalization and Localization}
+\li Testing and Debugging
+    \list
+    \li \l{qtquick-qmlscene.html}{Prototyping with qmlscene}
+    \li \l{qtquick-debugging.html}{Debugging QML Applications}
+    \li \l{qtquick-qtquicktest.html}{QtQuickTest: QML Unit Testing Framework}
+    \endlist
 \li \l{qtquick-glossary.html}{Glossary of Terms}
 \endlist
 
-\section1 Testing and Debugging
-\list
-\li \l{qtquick-qmlscene.html}{Prototyping with qmlscene}
-\li \l{qtquick-debugging.html}{Debugging QML Applications}
-\li \l{qtquick-qtquicktest.html}{QtQuickTest: QML Unit Testing Framework}
-\endlist
-
 \section1 Release Notes and Porting Guides
+
 \list
 \li \l{qtqml-releasenotes.html}{QtQml Module Release Notes}
 \li \l{qtquick-releasenotes.html}{QtQuick Module Release Notes}
