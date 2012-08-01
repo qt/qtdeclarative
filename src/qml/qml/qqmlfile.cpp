@@ -51,6 +51,8 @@
 \class QQmlFile
 \brief The QQmlFile class gives access to local and remote files.
 
+\internal
+
 Supports file://, qrc:/, bundle:// uris and whatever QNetworkAccessManager supports.
 */
 
