@@ -774,21 +774,6 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     q->maybeUpdate();
 }
 
-
-/*!
-    \qmlmodule QtQuick.Window 2
-    \title QML Module QtQuick.Window 2.0
-    \brief Contains types for window management
-
-    This QML module contains types for creating top-level windows and accessing screen information.
-
-    To use the types in this module, import the module with the following line:
-
-    \code
-    import QtQuick.Window 2.0
-    \endcode
-*/
-
 /*!
     \qmltype Window
     \instantiates QQuickWindow
