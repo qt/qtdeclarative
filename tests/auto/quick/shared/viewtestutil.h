@@ -107,6 +107,8 @@ namespace QQuickViewTestUtil
 
         void matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2);
 
+        using QAbstractListModel::dataChanged;
+
     private:
         QList<QPair<QString,QString> > list;
     };

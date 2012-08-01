@@ -408,6 +408,7 @@ private slots:
     void qaimRowsMoved();
     void qaimRowsMoved_data();
     void subtreeRowsMoved();
+    void watchedRoles();
     void remove_data();
     void remove();
     void move_data();
@@ -1193,6 +1194,95 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     QCOMPARE(changeSet.inserts().count(), 1);
     QCOMPARE(changeSet.inserts().at(0).index, 0);
     QCOMPARE(changeSet.inserts().at(0).count, 2);
+}
+
+void tst_qquickvisualdatamodel::watchedRoles()
+{
+    QaimModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty("myModel", &model);
+
+    QQmlComponent component(&engine, testFileUrl("visualdatamodel.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QQuickVisualDataModel *vdm = qobject_cast<QQuickVisualDataModel*>(object.data());
+    QVERIFY(vdm);
+
+    // VisualDataModel doesn't initialize model data until the first item is requested.
+    QQuickItem *item = vdm->item(0);
+    QVERIFY(item);
+    vdm->release(item);
+
+    QSignalSpy spy(vdm, SIGNAL(modelUpdated(QQuickChangeSet,bool)));
+    QQuickChangeSet changeSet;
+
+    QCOMPARE(vdm->count(), 30);
+
+    emit model.dataChanged(model.index(0), model.index(4));
+    QCOMPARE(spy.count(), 0);
+
+    emit model.dataChanged(model.index(0), model.index(4), QVector<int>() << QaimModel::Name);
+    QCOMPARE(spy.count(), 0);
+
+    emit model.dataChanged(model.index(0), model.index(4), QVector<int>() << QaimModel::Number);
+    QCOMPARE(spy.count(), 0);
+
+    vdm->setWatchedRoles(QList<QByteArray>() << "name" << "dummy");
+
+    emit model.dataChanged(model.index(0), model.index(4));
+    QCOMPARE(spy.count(), 1);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.changes().at(0).index, 0);
+    QCOMPARE(changeSet.changes().at(0).count, 5);
+
+    emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
+    QCOMPARE(spy.count(), 2);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.changes().at(0).index, 1);
+    QCOMPARE(changeSet.changes().at(0).count, 6);
+
+    emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
+    QCOMPARE(spy.count(), 2);
+
+    vdm->setWatchedRoles(QList<QByteArray>() << "number" << "dummy");
+
+    emit model.dataChanged(model.index(0), model.index(4));
+    QCOMPARE(spy.count(), 3);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.changes().at(0).index, 0);
+    QCOMPARE(changeSet.changes().at(0).count, 5);
+
+    emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
+    QCOMPARE(spy.count(), 3);
+
+    emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
+    QCOMPARE(spy.count(), 4);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.changes().at(0).index, 8);
+    QCOMPARE(changeSet.changes().at(0).count, 1);
+
+    vdm->setWatchedRoles(QList<QByteArray>() << "number" << "name");
+
+    emit model.dataChanged(model.index(0), model.index(4));
+    QCOMPARE(spy.count(), 5);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.changes().at(0).index, 0);
+    QCOMPARE(changeSet.changes().at(0).count, 5);
+
+    emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
+    QCOMPARE(spy.count(), 6);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.changes().at(0).index, 1);
+    QCOMPARE(changeSet.changes().at(0).count, 6);
+
+    emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
+    QCOMPARE(spy.count(), 7);
+    changeSet = spy.last().at(0).value<QQuickChangeSet>();
+    QCOMPARE(changeSet.changes().at(0).index, 8);
+    QCOMPARE(changeSet.changes().at(0).count, 1);
 }
 
 void tst_qquickvisualdatamodel::remove_data()
