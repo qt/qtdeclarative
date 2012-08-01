@@ -78,7 +78,7 @@ must import that module in their QML documents.
 \section1 Property Change Behavior for Basic Types
 
 Some basic types have properties: for example, the \l font type has
-\c pixelSize, \c family and \c bold properties. Unlike properties of
+\c pixelSize, \c family and \c b properties. Unlike properties of
 \l{qtqml-typesystem-topic.html#qml-object-types}{object types}, properties of
 basic types do not provide their own property change signals. It is only possible
 to create a property change signal handler for the basic type property itself:
@@ -113,7 +113,7 @@ Text {
     // changing any of the font attributes, or reassigning the property
     // to a different font value, will invoke the onFontChanged handler
     Keys.onDigit1Pressed: font.pixelSize += 1
-    Keys.onDigit2Pressed: font.bold = !font.bold
+    Keys.onDigit2Pressed: font.b = !font.b
     Keys.onDigit3Pressed: font = otherText.font
 }
 \endqml
@@ -259,7 +259,7 @@ property is only invoked when the property is reassigned to a different object v
     \section1 Using the url Type
 
     When a relative URL is written to a \c url type property, it is converted
-    into a URL object, so \bold {matching the URL value against the input string
+    into a URL object, so \b {matching the URL value against the input string
     value will fail}. Instead, convert the string to a URL using Qt.resolvedUrl()
     for means of comparison, and use \c toString() to get the contents of the URL:
 

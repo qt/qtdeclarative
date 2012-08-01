@@ -91,7 +91,7 @@ information.
 
 Once an object instance is created, the value of its \e id attribute cannot
 be changed.  While it may look like an ordinary property, the \c id attribute
-is \bold{not} an ordinary \c property attribute, and special semantics apply
+is \b{not} an ordinary \c property attribute, and special semantics apply
 to it; for example, it is not possible to access \c myTextInput.id in the above
 example.
 
@@ -423,12 +423,12 @@ while the second uses group notation:
 Text {
     //dot notation
     font.pixelSize: 12
-    font.bold: true
+    font.b: true
 }
 
 Text {
     //group notation
-    font { pixelSize: 12; bold: true }
+    font { pixelSize: 12; b: true }
 }
 \endcode
 

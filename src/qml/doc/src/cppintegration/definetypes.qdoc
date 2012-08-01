@@ -66,7 +66,7 @@ exposed to QML but the type itself should not be instantiable.
 
 \section2 Registering an Instantiable Object Type
 
-\bold{Any QObject-derived C++ class can be registered as the definition of a
+\b{Any QObject-derived C++ class can be registered as the definition of a
 \l{qtqml-typesystem-objecttypes.html}{QML object type}}. Once a
 class is registered with the QML type system, the class can be declared and
 instantiated like any other object type from QML code. Once created, a

@@ -1731,7 +1731,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     \table
     \header
         \li {2, 1}
-            \bold ListViews with Qt.Vertical orientation
+            \b ListViews with Qt.Vertical orientation
     \row
         \li Top to bottom
             \image listview-layout-toptobottom.png
@@ -1739,7 +1739,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             \image listview-layout-bottomtotop.png
     \header
         \li {2, 1}
-            \bold ListViews with Qt.Horizontal orientation
+            \b ListViews with Qt.Horizontal orientation
     \row
         \li Left to right
             \image listview-layout-lefttoright.png

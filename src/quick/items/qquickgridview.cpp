@@ -1233,27 +1233,27 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     \table
     \header
         \li {4, 1}
-            \bold GridViews with GridView.LeftToRight flow
+            \b GridViews with GridView.LeftToRight flow
     \row
-        \li \bold (H) Left to right \bold (V) Top to bottom
+        \li \b (H) Left to right \b (V) Top to bottom
             \image gridview-layout-lefttoright-ltr-ttb.png
-        \li \bold (H) Right to left \bold (V) Top to bottom
+        \li \b (H) Right to left \b (V) Top to bottom
             \image gridview-layout-lefttoright-rtl-ttb.png
-        \li \bold (H) Left to right \bold (V) Bottom to top
+        \li \b (H) Left to right \b (V) Bottom to top
             \image gridview-layout-lefttoright-ltr-btt.png
-        \li \bold (H) Right to left \bold (V) Bottom to top
+        \li \b (H) Right to left \b (V) Bottom to top
             \image gridview-layout-lefttoright-rtl-btt.png
     \header
         \li {4, 1}
-            \bold GridViews with GridView.TopToBottom flow
+            \b GridViews with GridView.TopToBottom flow
     \row
-        \li \bold (H) Left to right \bold (V) Top to bottom
+        \li \b (H) Left to right \b (V) Top to bottom
             \image gridview-layout-toptobottom-ltr-ttb.png
-        \li \bold (H) Right to left \bold (V) Top to bottom
+        \li \b (H) Right to left \b (V) Top to bottom
             \image gridview-layout-toptobottom-rtl-ttb.png
-        \li \bold (H) Left to right \bold (V) Bottom to top
+        \li \b (H) Left to right \b (V) Bottom to top
             \image gridview-layout-toptobottom-ltr-btt.png
-        \li \bold (H) Right to left \bold (V) Bottom to top
+        \li \b (H) Right to left \b (V) Bottom to top
             \image gridview-layout-toptobottom-rtl-btt.png
     \endtable
 

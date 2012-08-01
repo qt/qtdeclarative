@@ -125,7 +125,7 @@ Text {
 }
 \endqml
 
-For maximum interopability with QML, \bold {any property that is writable should
+For maximum interopability with QML, \b {any property that is writable should
 have an associated NOTIFY signal} that is emitted whenever the property value
 has changed. This allows the property to be used with \l{Property
 Binding}{property binding}, which is an essential feature of QML that enables
