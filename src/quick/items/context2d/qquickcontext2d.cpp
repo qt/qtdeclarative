@@ -2424,7 +2424,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
      \sa QtQuick2::Context2D::putImageData
   */
 /*!
-  \qmlproperty QtQuick2::CanvasImageData::width
+  \qmlproperty int QtQuick2::CanvasImageData::width
   Holds the actual width dimension of the data in the ImageData object, in device pixels.
  */
 v8::Handle<v8::Value> ctx2d_imageData_width(v8::Local<v8::String>, const v8::AccessorInfo &args)
@@ -2436,7 +2436,7 @@ v8::Handle<v8::Value> ctx2d_imageData_width(v8::Local<v8::String>, const v8::Acc
 }
 
 /*!
-  \qmlproperty QtQuick2::CanvasImageData::height
+  \qmlproperty int QtQuick2::CanvasImageData::height
   Holds the actual height dimension of the data in the ImageData object, in device pixels.
   */
 v8::Handle<v8::Value> ctx2d_imageData_height(v8::Local<v8::String>, const v8::AccessorInfo &args)
@@ -2449,7 +2449,7 @@ v8::Handle<v8::Value> ctx2d_imageData_height(v8::Local<v8::String>, const v8::Ac
 }
 
 /*!
-  \qmlproperty QtQuick2::CanvasImageData::data
+  \qmlproperty object QtQuick2::CanvasImageData::data
   Holds the one-dimensional array containing the data in RGBA order, as integers in the range 0 to 255.
  */
 v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::AccessorInfo &args)
@@ -2470,7 +2470,7 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::Acce
   */
 
 /*!
-  \qmlproperty QtQuick2::CanvasPixelArray::length
+  \qmlproperty int QtQuick2::CanvasPixelArray::length
   The CanvasPixelArray object represents h×w×4 integers which w and h comes from CanvasImageData.
   The length attribute of a CanvasPixelArray object must return this h×w×4 number value.
   This property is read only.
