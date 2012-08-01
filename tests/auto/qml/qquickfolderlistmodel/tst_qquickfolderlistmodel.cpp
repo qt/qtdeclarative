@@ -184,6 +184,7 @@ void tst_qquickfolderlistmodel::refresh()
 #if defined (Q_OS_WIN)
 void tst_qquickfolderlistmodel::changeDrive()
 {
+    QSKIP("QTBUG-26728");
     class DriveMapper
     {
     public:
