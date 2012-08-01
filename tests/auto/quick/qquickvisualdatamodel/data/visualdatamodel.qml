@@ -8,5 +8,5 @@ VisualDataModel {
         rootIndex = parentModelIndex();
     }
     model: myModel
-    delegate: Item {}
+    delegate: Item { property bool modelChildren: hasModelChildren }
 }

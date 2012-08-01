@@ -409,6 +409,7 @@ private slots:
     void qaimRowsMoved_data();
     void subtreeRowsMoved();
     void watchedRoles();
+    void hasModelChildren();
     void remove_data();
     void remove();
     void move_data();
@@ -1215,6 +1216,7 @@ void tst_qquickvisualdatamodel::watchedRoles()
     QQuickItem *item = vdm->item(0);
     QVERIFY(item);
     vdm->release(item);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
 
     QSignalSpy spy(vdm, SIGNAL(modelUpdated(QQuickChangeSet,bool)));
     QQuickChangeSet changeSet;
@@ -1283,6 +1285,57 @@ void tst_qquickvisualdatamodel::watchedRoles()
     changeSet = spy.last().at(0).value<QQuickChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 8);
     QCOMPARE(changeSet.changes().at(0).count, 1);
+}
+
+void tst_qquickvisualdatamodel::hasModelChildren()
+{
+    SingleRoleModel model(QStringList() << "one" << "two" << "three" << "four");
+    model.insert(model.index(0, 0), 0, QStringList() << "a" << "b" << "c" << "d" << "e");
+    model.insert(model.index(2, 0), 0, QStringList() << "A" << "B" << "C");
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty("myModel", &model);
+
+    QQmlComponent component(&engine, testFileUrl("visualdatamodel.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QQuickVisualDataModel *vdm = qobject_cast<QQuickVisualDataModel*>(object.data());
+    QVERIFY(vdm);
+
+    QCOMPARE(vdm->count(), 4);
+
+    QQuickItem *item = 0;
+
+    item = vdm->item(0);
+    QVERIFY(item);
+    QCOMPARE(item->property("modelChildren").toBool(), true);
+    vdm->release(item);
+
+    item = vdm->item(1);
+    QVERIFY(item);
+    QCOMPARE(item->property("modelChildren").toBool(), false);
+    vdm->release(item);
+
+    item = vdm->item(2);
+    QVERIFY(item);
+    QCOMPARE(item->property("modelChildren").toBool(), true);
+    vdm->release(item);
+
+    item = vdm->item(3);
+    QVERIFY(item);
+    QCOMPARE(item->property("modelChildren").toBool(), false);
+    vdm->release(item);
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
+
+    QCOMPARE(vdm->stringValue(0, QLatin1String("hasModelChildren")), QVariant(true).toString());
+    QCOMPARE(vdm->stringValue(1, QLatin1String("hasModelChildren")), QVariant(false).toString());
+    QCOMPARE(vdm->stringValue(2, QLatin1String("hasModelChildren")), QVariant(true).toString());
+    QCOMPARE(vdm->stringValue(3, QLatin1String("hasModelChildren")), QVariant(false).toString());
+
+    QCOMPARE(evaluate<bool>(vdm, "items.get(0).model.hasModelChildren"), true);
+    QCOMPARE(evaluate<bool>(vdm, "items.get(1).model.hasModelChildren"), false);
+    QCOMPARE(evaluate<bool>(vdm, "items.get(2).model.hasModelChildren"), true);
+    QCOMPARE(evaluate<bool>(vdm, "items.get(3).model.hasModelChildren"), false);
 }
 
 void tst_qquickvisualdatamodel::remove_data()
