@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\group qtquick-states
+\ingroup qtquick-states
 \page qtquick-statesanimations-states.html
 \title Qt Quick States
 \brief Creating and setting states

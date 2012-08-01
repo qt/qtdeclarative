@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\group qtquick-transitions-animations
+\ingroup qtquick-transitions-animations
 \page qtquick-statesanimations-animations.html
 \title Animation and Transitions In Qt Quick
 \brief the animation system in Qt Quick
@@ -254,7 +254,7 @@ Rectangle {
 */
 
 /*!
-\group qtquick-animation-properties
+\ingroup qtquick-animation-properties
 \title Qt Quick Property Animation
 \brief Animate property changes
 
@@ -262,7 +262,7 @@ Rectangle {
 */
 
 /*!
-\group qtquick-animation-control
+\ingroup qtquick-animation-control
 \title Qt Quick Animation Controls
 \brief Control animation sequences
 
@@ -270,7 +270,7 @@ Rectangle {
 */
 
 /*!
-\group qtquick-animation-modifiers
+\ingroup qtquick-animation-modifiers
 \title Qt Quick Animation Modifiers
 \brief Modify animation sequences
 

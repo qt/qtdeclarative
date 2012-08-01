@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\group qtquick-text
+\ingroup qtquick-text
 \page qtquick-input-textinput.html
 \title Qt Quick Text Input Handling and Validators
 \brief Text input and validation
@@ -63,7 +63,7 @@ Note that QML parses JavaScript regular expressions, while Qt's
 */
 
 /*!
-\group qtquick-text-validator
+\ingroup qtquick-text-validator
 \title Qt Quick Text Validators
 \brief Types that validate text input
 
