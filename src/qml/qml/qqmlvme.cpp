@@ -203,7 +203,7 @@ inline bool fastHasBinding(QObject *o, int index)
 {
     QQmlData *ddata = static_cast<QQmlData *>(QObjectPrivate::get(o)->declarativeData);
 
-    index &= 0xFFFFFF; // To handle value types
+    index &= 0x0000FFFF; // To handle value types
 
     return ddata && (ddata->bindingBitsSize > index) && 
            (ddata->bindingBits[index / 32] & (1 << (index % 32)));
@@ -211,9 +211,8 @@ inline bool fastHasBinding(QObject *o, int index)
 
 static void removeBindingOnProperty(QObject *o, int index)
 {
-    int coreIndex = index & 0xFFFFFF;
-    int valueTypeIndex = index & 0xFF000000;
-    if (!valueTypeIndex) valueTypeIndex = -1;
+    int coreIndex = index & 0x0000FFFF;
+    int valueTypeIndex = (index & 0xFFFF0000 ? index >> 16 : -1);
 
     QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, coreIndex, valueTypeIndex, 0);
     if (binding) binding->destroy();
@@ -842,29 +841,29 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *scope = 
                 objects.at(objects.count() - 1 - instr.context);
 
-            int property = instr.property;
-            if (instr.isRoot && BINDINGSKIPLIST.testBit(property & 0xFFFF))
+            int propertyIdx = (instr.property & 0x0000FFFF);
+
+            if (instr.isRoot && BINDINGSKIPLIST.testBit(propertyIdx))
                 QML_NEXT_INSTR(StoreV4Binding);
 
             QQmlAbstractBinding *binding = 
-                CTXT->v4bindings->configBinding(instr.value, instr.fallbackValue, target, scope, property,
-                                                instr.line, instr.column);
+                CTXT->v4bindings->configBinding(instr.value, instr.fallbackValue, target, scope, instr.property,
+                                                instr.propType, instr.line, instr.column);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
 
             if (instr.isAlias) {
-                int valueTypeIndex = (property & 0x00FF0000) ? (property >> 24) : -1;
                 QQmlAbstractBinding *old =
                     QQmlPropertyPrivate::setBindingNoEnable(target,
-                                                            property & 0xFFFF,
-                                                            valueTypeIndex,
+                                                            propertyIdx,
+                                                            instr.propType ? (instr.property >> 16) : -1,
                                                             binding);
                 if (old) { old->destroy(); }
             } else {
-                Q_ASSERT(binding->propertyIndex() == (property & 0xFF00FFFF));
+                Q_ASSERT(binding->propertyIndex() == instr.property);
                 Q_ASSERT(binding->object() == target);
 
-                CLEAN_PROPERTY(target, property & 0xFF00FFFF);
+                CLEAN_PROPERTY(target, instr.property);
 
                 binding->addToObject();
             }
@@ -1054,7 +1053,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
                 }
             }
 
-            QQmlValueType *valueHandler = ep->valueTypes[instr.type];
+            QQmlValueType *valueHandler = QQmlValueTypeFactory::valueType(instr.type);
+            Q_ASSERT(valueHandler);
             valueHandler->read(target, instr.property);
             objects.push(valueHandler);
         QML_END_INSTR(FetchValueType)

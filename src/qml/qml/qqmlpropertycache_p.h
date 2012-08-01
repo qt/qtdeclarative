@@ -165,7 +165,7 @@ public:
     inline int getValueTypeCoreIndex() const;
 
     // Returns the "encoded" index for use with bindings.  Encoding is:
-    //     coreIndex | (valueTypeCoreIndex << 24)
+    //     coreIndex | (valueTypeCoreIndex << 16)
     inline int encodedIndex() const;
 
     union {
@@ -189,10 +189,10 @@ public:
                 struct { // When IsValueTypeVirtual
                     quint16 valueTypeFlags; // flags of the access property on the value type proxy
                                             // object
-                    quint8 valueTypePropType; // The QVariant::Type of access property on the value
-                                              // type proxy object
-                    quint8 valueTypeCoreIndex; // The prop index of the access property on the value
+                    quint16 valueTypePropType; // The QVariant::Type of access property on the value
                                                // type proxy object
+                    quint16 valueTypeCoreIndex; // The prop index of the access property on the value
+                                                // type proxy object
                 };
 
                 struct { // When !IsValueTypeVirtual
@@ -433,7 +433,7 @@ int QQmlPropertyRawData::getValueTypeCoreIndex() const
 
 int QQmlPropertyRawData::encodedIndex() const
 {
-    return isValueTypeVirtual()?(coreIndex | (valueTypeCoreIndex << 24)):coreIndex;
+    return isValueTypeVirtual()?(coreIndex | (valueTypeCoreIndex << 16)):coreIndex;
 }
 
 QQmlPropertyData *

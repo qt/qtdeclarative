@@ -90,6 +90,7 @@ struct QQmlVMEMetaData
     struct AliasData {
         int contextIdx;
         int propertyIdx;
+        int propType;
         int flags;
         int notifySignal;
 
@@ -97,19 +98,19 @@ struct QQmlVMEMetaData
             return propertyIdx == -1;
         }
         bool isPropertyAlias() const {
-            return !isObjectAlias() && !(propertyIdx & 0xFF000000);
+            return !isObjectAlias() && !(propertyIdx & 0xFFFF0000);
         }
         bool isValueTypeAlias() const {
-            return !isObjectAlias() && (propertyIdx & 0xFF000000);
+            return !isObjectAlias() && (propertyIdx & 0xFFFF0000);
         }
         int propertyIndex() const {
             return propertyIdx & 0x0000FFFF;
         }
         int valueTypeIndex() const {
-            return (propertyIdx & 0x00FF0000) >> 16;
+            return (propertyIdx & 0xFFFF0000) >> 16;
         }
         int valueType() const {
-            return ((unsigned int)propertyIdx) >> 24;
+            return (propertyIdx & 0xFFFF0000) ? propType : 0;
         }
     };
     

@@ -164,9 +164,8 @@ static bool readReferenceValue(QV8ValueTypeReferenceResource *reference)
             // overwritten with a different type in the meantime.
             // We need to modify this reference to the updated value type, if
             // possible, or return false if it is not a value type.
-            QQmlEngine *e = reference->engine->engine();
-            if (QQmlValueTypeFactory::isValueType(variantReferenceType) && e) {
-                reference->type = QQmlEnginePrivate::get(e)->valueTypes[variantReferenceType];
+            if (QQmlValueTypeFactory::isValueType(variantReferenceType)) {
+                reference->type = QQmlValueTypeFactory::valueType(variantReferenceType);
                 if (!reference->type) {
                     return false;
                 }

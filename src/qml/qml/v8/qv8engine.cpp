@@ -397,11 +397,8 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
                 break;
         }
 
-        if (m_engine) {
-            if (QQmlValueType *vt = QQmlEnginePrivate::get(m_engine)->valueTypes[type])
-                return m_valueTypeWrapper.newValueType(variant, vt);
-        }
-
+        if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
+            return m_valueTypeWrapper.newValueType(variant, vt);
     } else {
         if (type == qMetaTypeId<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
@@ -435,6 +432,9 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
         v8::Handle<v8::Value> retn = m_sequenceWrapper.fromVariant(variant, &succeeded);
         if (succeeded)
             return retn;
+
+        if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
+            return m_valueTypeWrapper.newValueType(variant, vt);
     }
 
     // XXX TODO: To be compatible, we still need to handle:

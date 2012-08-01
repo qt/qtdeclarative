@@ -440,20 +440,17 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.isQVariant()) {
         QVariant v;
         ReadFunction(object, property, &v, notifier);
-        if (QQmlValueTypeFactory::isValueType(v.userType()) && engine->engine()) {
-            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine->engine());
-            QQmlValueType *valueType = ep->valueTypes[v.userType()];
-            if (valueType)
+
+        if (QQmlValueTypeFactory::isValueType(v.userType())) {
+            if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(v.userType()))
                 return engine->newValueType(object, property.coreIndex, valueType); // VariantReference value-type.
         }
+
         return engine->fromVariant(v);
-    } else if (QQmlValueTypeFactory::isValueType((uint)property.propType)
-               && engine->engine()) {
+    } else if (QQmlValueTypeFactory::isValueType(property.propType)) {
         Q_ASSERT(notifier == 0);
 
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine->engine());
-        QQmlValueType *valueType = ep->valueTypes[property.propType];
-        if (valueType)
+        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property.propType))
             return engine->newValueType(object, property.coreIndex, valueType);
     } else {
         Q_ASSERT(notifier == 0);

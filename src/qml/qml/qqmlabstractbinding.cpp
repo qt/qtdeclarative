@@ -92,10 +92,10 @@ void QQmlAbstractBinding::addToObject()
 
     QQmlData *data = QQmlData::get(obj, true);
 
-    if (index & 0xFF000000) {
+    if (index & 0xFFFF0000) {
         // Value type
 
-        int coreIndex = index & 0xFFFFFF;
+        int coreIndex = index & 0x0000FFFF;
 
         // Find the value type proxy (if there is one)
         QQmlValueTypeProxyBinding *proxy = 0;
@@ -141,11 +141,11 @@ void QQmlAbstractBinding::removeFromObject()
         QQmlData *data = QQmlData::get(obj, false);
         Q_ASSERT(data);
 
-        if (index & 0xFF000000) {
+        if (index & 0xFFFF0000) {
 
             // Find the value type binding
             QQmlAbstractBinding *vtbinding = data->bindings;
-            while (vtbinding->propertyIndex() != (index & 0xFFFFFF)) {
+            while (vtbinding->propertyIndex() != (index & 0x0000FFFF)) {
                 vtbinding = vtbinding->nextBinding();
                 Q_ASSERT(vtbinding);
             }

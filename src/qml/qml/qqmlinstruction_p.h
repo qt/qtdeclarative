@@ -238,7 +238,8 @@ union QQmlInstruction
     };
     struct instr_assignV4Binding {
         QML_INSTR_HEADER
-        unsigned int property;
+        int property;   // ((value type sub-property index << 16) | property index)
+        int propType;
         int value;
         int fallbackValue;
         short context;

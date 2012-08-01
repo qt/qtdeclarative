@@ -200,8 +200,6 @@ public:
         return uniqueId++;
     }
 
-    QQmlValueTypeFactory valueTypes;
-
     // Unfortunate workaround to avoid a circular dependency between 
     // qqmlengine_p.h and qqmlincubator_p.h
     struct Incubator {

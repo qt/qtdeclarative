@@ -72,8 +72,8 @@ public:
     virtual ~QV4Bindings();
 
     QQmlAbstractBinding *configBinding(int index, int fallbackIndex, QObject *target,
-                                               QObject *scope, int property,
-                                               int line, int column);
+                                       QObject *scope, int property, int propType,
+                                       int line, int column);
 
 #ifdef QML_THREADED_INTERPRETER
     static void **getDecodeInstrTable();
@@ -81,7 +81,7 @@ public:
 
     struct Binding : public QQmlAbstractBinding, public QQmlDelayedError {
         Binding() : QQmlAbstractBinding(V4), index(-1), fallbackIndex(-1), enabled(false),
-                    updating(0), property(0), scope(0), target(0), executedBlocks(0), parent(0) {}
+                    updating(0), property(0), propType(0), scope(0), target(0), executedBlocks(0), parent(0) {}
 
         // Inherited from QQmlAbstractBinding
         static void destroy(QQmlAbstractBinding *);
@@ -101,9 +101,11 @@ public:
         bool enabled:1;
         bool updating:1;
 
-        // Encoding of property is coreIndex | (propType << 16) | (valueTypeIndex << 24)
+        // Encoding of property is: coreIndex | (valueTypeIndex << 16)
         // propType and valueTypeIndex are only set if the property is a value type property
         int property;
+        quint16 propType;
+
         QObject *scope;
         int line;
         int column;

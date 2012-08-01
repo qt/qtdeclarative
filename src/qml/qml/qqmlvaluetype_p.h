@@ -161,30 +161,10 @@ protected:
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeFactory
 {
 public:
-    QQmlValueTypeFactory();
-    ~QQmlValueTypeFactory();
     static bool isValueType(int);
-    static QQmlValueType *valueType(int);
+    static QQmlValueType *valueType(int idx);
 
     static void registerValueTypes(const char *uri, int versionMajor, int versionMinor);
-
-    QQmlValueType *operator[](int idx) const {
-        if (idx >= (int)QVariant::UserType)
-            return 0;
-
-        QQmlValueType *rv = valueTypes[idx];
-        if (!rv) {
-            // Table update is not thread-safe, but the potential for leaks is
-            // so small that the cost of protection is unwarranted
-            if ((rv = valueType(idx))) {
-                valueTypes[idx] = rv;
-            }
-        }
-        return rv;
-    }
-
-private:
-    mutable QQmlValueType *valueTypes[QVariant::UserType];
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlPointFValueType : public QQmlValueTypeBase<QPointF>

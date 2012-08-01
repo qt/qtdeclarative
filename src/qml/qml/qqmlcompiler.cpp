@@ -2108,8 +2108,8 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
     Q_ASSERT(prop->index != -1);
 
     if (QQmlValueTypeFactory::isValueType(prop->type)) {
-        if (prop->type >= 0 && enginePrivate->valueTypes[prop->type]) {
-
+        QQmlValueType *valueType = QQmlValueTypeFactory::valueType(prop->type);
+        if (prop->type >= 0 && valueType) {
             if (!prop->values.isEmpty()) {
                 // Only error if we are assigning values, and not e.g. a property interceptor
                 for (Property *dotProp = prop->value->properties.first(); dotProp; dotProp = prop->value->properties.next(dotProp)) {
@@ -2133,8 +2133,7 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
                 }
             }
 
-            COMPILE_CHECK(buildValueTypeProperty(enginePrivate->valueTypes[prop->type],
-                                                 prop->value, obj, ctxt.incr()));
+            COMPILE_CHECK(buildValueTypeProperty(valueType, prop->value, obj, ctxt.incr()));
 
             // When building a value type where sub components are declared, this
             // code path is followed from buildProperty, even if there is a previous
@@ -2154,11 +2153,9 @@ bool QQmlCompiler::buildGroupedProperty(QQmlScript::Property *prop,
             }
 
             obj->addValueTypeProperty(prop);
-
         } else {
             COMPILE_EXCEPTION(prop, tr("Invalid grouped property access"));
         }
-
     } else {
         // Load the nested property's meta type
         prop->value->metatype = enginePrivate->propertyCacheForType(prop->type);
@@ -3243,6 +3240,7 @@ bool QQmlCompiler::buildDynamicMetaAliases(QQmlScript::Object *obj)
             COMPILE_EXCEPTION(p->defaultValue, tr("Invalid alias reference. Unable to find id \"%1\"").arg(alias.at(0)));
 
         int propIdx = -1;
+        int propType = 0;
         int notifySignal = -1;
         int flags = 0;
         int type = 0;
@@ -3254,7 +3252,7 @@ bool QQmlCompiler::buildDynamicMetaAliases(QQmlScript::Object *obj)
         if (alias.count() == 2 || alias.count() == 3) {
             QQmlPropertyData *property = this->property(idObject, alias.at(1));
 
-            if (!property || property->coreIndex > 0xFFFF)
+            if (!property || property->coreIndex > 0x0000FFFF)
                 COMPILE_EXCEPTION(p->defaultValue, tr("Invalid alias location"));
 
             propIdx = property->coreIndex;
@@ -3265,16 +3263,17 @@ bool QQmlCompiler::buildDynamicMetaAliases(QQmlScript::Object *obj)
             notifySignal = property->notifyIndex;
 
             if (alias.count() == 3) {
-                QQmlValueType *valueType = enginePrivate->valueTypes[type]; // XXX threadsafe?
+                QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
                 if (!valueType)
                     COMPILE_EXCEPTION(p->defaultValue, tr("Invalid alias location"));
 
-                propIdx |= ((unsigned int)type) << 24;
+                propType = type;
+
                 int valueTypeIndex =
                     valueType->metaObject()->indexOfProperty(alias.at(2).toUtf8().constData());
                 if (valueTypeIndex == -1)
                     COMPILE_EXCEPTION(p->defaultValue, tr("Invalid alias location"));
-                Q_ASSERT(valueTypeIndex <= 0xFF);
+                Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
                 propIdx |= (valueTypeIndex << 16);
                 if (valueType->metaObject()->property(valueTypeIndex).isEnumType())
@@ -3309,7 +3308,7 @@ bool QQmlCompiler::buildDynamicMetaAliases(QQmlScript::Object *obj)
             propertyFlags |= QQmlPropertyData::IsQObjectDerived;
         }
 
-        QQmlVMEMetaData::AliasData aliasData = { idObject->idIndex, propIdx, flags, notifySignal };
+        QQmlVMEMetaData::AliasData aliasData = { idObject->idIndex, propIdx, propType, flags, notifySignal };
 
         typedef QQmlVMEMetaData VMD;
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
@@ -3498,12 +3497,12 @@ void QQmlCompiler::genBindingAssignment(QQmlScript::Value *binding,
         store.owner = js.bindingContext.owner;
         store.isAlias = prop->isAlias;
         if (valueTypeProperty) {
-            store.property = (valueTypeProperty->index & 0xFFFF) |
-                             ((valueTypeProperty->type & 0xFF)) << 16 |
-                             ((prop->index & 0xFF) << 24);
+            store.property = ((prop->index << 16) | valueTypeProperty->index);
+            store.propType = valueTypeProperty->type;
             store.isRoot = (compileState->root == valueTypeProperty->parent);
         } else {
             store.property = prop->index;
+            store.propType = 0;
             store.isRoot = (compileState->root == obj);
         }
         store.line = binding->location.start.line;
@@ -3592,9 +3591,9 @@ QQmlPropertyData
 QQmlCompiler::genValueTypeData(QQmlScript::Property *valueTypeProp, 
                                        QQmlScript::Property *prop)
 {
-    typedef QQmlPropertyPrivate QDPP;
-    return QDPP::saveValueType(prop->core, enginePrivate->valueTypes[prop->type]->metaObject(),
-                               valueTypeProp->index, engine);
+    QQmlValueType *vt = QQmlValueTypeFactory::valueType(prop->type);
+    Q_ASSERT(vt);
+    return QQmlPropertyPrivate::saveValueType(prop->core, vt->metaObject(), valueTypeProp->index, engine);
 }
 
 bool QQmlCompiler::completeComponentBuild()

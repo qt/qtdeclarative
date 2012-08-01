@@ -627,10 +627,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
             if (type != QVariant::Invalid) {
                 if (valueIndex != -1) {
-                    QQmlEnginePrivate *ep = ctxt?QQmlEnginePrivate::get(ctxt->engine):0;
-                    QQmlValueType *valueType = 0;
-                    if (ep) valueType = ep->valueTypes[type];
-                    else valueType = QQmlValueTypeFactory::valueType(type);
+                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
                     Q_ASSERT(valueType);
 
                     //
@@ -682,9 +679,6 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         vi->write(newComponentValue);
                         updated = true;
                     }
-
-                    if (!ep)
-                        delete valueType;
 
                     if (updated)
                         return -1;
@@ -880,9 +874,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 
                 if (d->isValueTypeAlias()) {
                     // Value type property
-                    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(ctxt->engine);
-
-                    QQmlValueType *valueType = ep->valueTypes[d->valueType()];
+                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(d->valueType());
                     Q_ASSERT(valueType);
 
                     valueType->read(target, d->propertyIndex());

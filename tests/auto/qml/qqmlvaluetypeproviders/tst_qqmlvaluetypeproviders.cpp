@@ -42,7 +42,9 @@
 #include <qtest.h>
 #include <QQmlEngine>
 #include <QQmlComponent>
+#include <QQmlContext>
 #include <QDebug>
+#include <private/qqmlglobal_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include "../../shared/util.h"
 #include "testtypes.h"
@@ -71,6 +73,7 @@ private slots:
     void cppIntegration();
     void jsObjectConversion();
     void invokableFunctions();
+    void userType();
 };
 
 void tst_qqmlvaluetypeproviders::initTestCase()
@@ -180,6 +183,121 @@ void tst_qqmlvaluetypeproviders::invokableFunctions()
     QVERIFY(object->property("complete").toBool());
     QVERIFY(object->property("success").toBool());
     delete object;
+}
+
+namespace {
+
+// A value-type class to export to QML
+class TestValue
+{
+public:
+    TestValue() : m_p1(0), m_p2(0.0) {}
+    TestValue(int p1, double p2) : m_p1(p1), m_p2(p2) {}
+    TestValue(const TestValue &other) : m_p1(other.m_p1), m_p2(other.m_p2) {}
+    ~TestValue() {}
+
+    TestValue &operator=(const TestValue &other) { m_p1 = other.m_p1; m_p2 = other.m_p2; return *this; }
+
+    int property1() const { return m_p1; }
+    void setProperty1(int p1) { m_p1 = p1; }
+
+    double property2() const { return m_p2; }
+    void setProperty2(double p2) { m_p2 = p2; }
+
+    bool operator==(const TestValue &other) const { return (m_p1 == other.m_p1) && (m_p2 == other.m_p2); }
+    bool operator!=(const TestValue &other) const { return !operator==(other); }
+
+private:
+    int m_p1;
+    double m_p2;
+};
+
+}
+
+Q_DECLARE_METATYPE(TestValue);
+
+namespace {
+
+class TestValueType : public QQmlValueTypeBase<TestValue>
+{
+    Q_OBJECT
+    Q_PROPERTY(int property1 READ property1 WRITE setProperty1)
+    Q_PROPERTY(double property2 READ property2 WRITE setProperty2)
+public:
+    TestValueType(QObject *parent = 0) : QQmlValueTypeBase<TestValue>(qMetaTypeId<TestValue>(), parent) {}
+
+    virtual QString toString() const { return QString::number(property1()) + QLatin1Char(',') + QString::number(property2()); }
+    virtual bool isEqual(const QVariant &other) const { return (other.userType() == qMetaTypeId<TestValue>()) && (v == other.value<TestValue>()); }
+
+    int property1() const { return v.property1(); }
+    void setProperty1(int p1) { v.setProperty1(p1); }
+
+    double property2() const { return v.property2(); }
+    void setProperty2(double p2) { v.setProperty2(p2); }
+};
+
+class TestValueTypeProvider : public QQmlValueTypeProvider
+{
+public:
+    bool create(int type, QQmlValueType *&v)
+    {
+        if (type == qMetaTypeId<TestValue>()) {
+            v = new TestValueType;
+            return true;
+        }
+
+        return false;
+    }
+
+};
+
+TestValueTypeProvider *getValueTypeProvider()
+{
+    static TestValueTypeProvider valueTypeProvider;
+    return &valueTypeProvider;
+}
+
+bool initializeProviders()
+{
+    QQml_addValueTypeProvider(getValueTypeProvider());
+    return true;
+}
+
+const bool initialized = initializeProviders();
+
+class TestValueExporter : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(TestValue testValue READ testValue WRITE setTestValue)
+public:
+    TestValue testValue() const { return m_testValue; }
+    void setTestValue(const TestValue &v) { m_testValue = v; }
+
+    Q_INVOKABLE TestValue getTestValue() const { return TestValue(333, 666.999); }
+
+private:
+    TestValue m_testValue;
+};
+
+}
+
+void tst_qqmlvaluetypeproviders::userType()
+{
+    Q_ASSERT(initialized);
+    Q_ASSERT(qMetaTypeId<TestValue>() >= QMetaType::User);
+
+    qRegisterMetaType<TestValue>();
+    qmlRegisterType<TestValueExporter>("Test", 1, 0, "TestValueExporter");
+
+    TestValueExporter exporter;
+
+    QQmlEngine e;
+    e.rootContext()->setContextProperty("testValueExporter", &exporter);
+
+    QQmlComponent component(&e, testFileUrl("userType.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != 0);
+    QCOMPARE(obj->property("success").toBool(), true);
 }
 
 QTEST_MAIN(tst_qqmlvaluetypeproviders)

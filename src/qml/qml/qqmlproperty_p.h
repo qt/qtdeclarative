@@ -104,7 +104,7 @@ public:
     static QQmlMetaObject rawMetaObjectForType(QQmlEnginePrivate *, int);
     static bool writeEnumProperty(const QMetaProperty &prop, int idx, QObject *object, 
                                   const QVariant &value, int flags);
-    static bool writeValueProperty(QObject *, QQmlEngine *,
+    static bool writeValueProperty(QObject *,
                                    const QQmlPropertyData &,
                                    const QVariant &, QQmlContextData *, 
                                    WriteFlags flags = 0);

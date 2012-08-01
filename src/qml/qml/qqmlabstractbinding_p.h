@@ -87,8 +87,9 @@ public:
 
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.
-    // Encoding is:  coreIndex | (valueTypeIndex << 24)
+    // Encoding is:  coreIndex | (valueTypeIndex << 16)
     int propertyIndex() const { return vtable()->propertyIndex(this); }
+
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
     QObject *object() const { return vtable()->object(this); }

@@ -47,21 +47,40 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlValueTypeFactory::QQmlValueTypeFactory()
+namespace {
+
+struct QQmlValueTypeFactoryImpl
+{
+    QQmlValueTypeFactoryImpl();
+    ~QQmlValueTypeFactoryImpl();
+
+    bool isValueType(int idx);
+
+    QQmlValueType *createValueType(int);
+    QQmlValueType *valueType(int);
+
+    QQmlValueType *valueTypes[QVariant::UserType];
+    QHash<int, QQmlValueType *> userTypes;
+    QMutex mutex;
+};
+
+QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
     for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
         valueTypes[ii] = 0;
 }
 
-QQmlValueTypeFactory::~QQmlValueTypeFactory()
+QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
 {
-    for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
-        delete valueTypes[ii];
+    qDeleteAll(valueTypes, valueTypes + QVariant::UserType);
+    qDeleteAll(userTypes);
 }
 
-bool QQmlValueTypeFactory::isValueType(int idx)
+bool QQmlValueTypeFactoryImpl::isValueType(int idx)
 {
-    if ((uint)idx < QVariant::UserType
+    if (idx >= QVariant::UserType) {
+        return (valueType(idx) != 0);
+    } else if (idx >= 0
             && idx != QVariant::StringList
             && idx != QMetaType::QObjectStar
             && idx != QMetaType::QWidgetStar
@@ -69,15 +88,11 @@ bool QQmlValueTypeFactory::isValueType(int idx)
             && idx != QMetaType::QVariant) {
         return true;
     }
+
     return false;
 }
 
-void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor, int versionMinor)
-{
-    qmlRegisterValueTypeEnums<QQmlEasingValueType>(uri, versionMajor, versionMinor, "Easing");
-}
-
-QQmlValueType *QQmlValueTypeFactory::valueType(int t)
+QQmlValueType *QQmlValueTypeFactoryImpl::createValueType(int t)
 {
     QQmlValueType *rv = 0;
 
@@ -112,11 +127,59 @@ QQmlValueType *QQmlValueTypeFactory::valueType(int t)
     return rv;
 }
 
+QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
+{
+    if (idx >= (int)QVariant::UserType) {
+        // Protect the hash with a mutex
+        mutex.lock();
+
+        QHash<int, QQmlValueType *>::iterator it = userTypes.find(idx);
+        if (it == userTypes.end()) {
+            it = userTypes.insert(idx, createValueType(idx));
+        }
+
+        mutex.unlock();
+        return *it;
+    }
+
+    QQmlValueType *rv = valueTypes[idx];
+    if (!rv) {
+        // No need for mutex protection - the most we can lose is a valueType instance
+
+        // TODO: Investigate the performance/memory characteristics of
+        // removing the preallocated array
+        if ((rv = createValueType(idx))) {
+            valueTypes[idx] = rv;
+        }
+    }
+
+    return rv;
+}
+
+}
+
+Q_GLOBAL_STATIC(QQmlValueTypeFactoryImpl, factoryImpl);
+
+bool QQmlValueTypeFactory::isValueType(int idx)
+{
+    return factoryImpl()->isValueType(idx);
+}
+
+QQmlValueType *QQmlValueTypeFactory::valueType(int idx)
+{
+    return factoryImpl()->valueType(idx);
+}
+
+void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor, int versionMinor)
+{
+    qmlRegisterValueTypeEnums<QQmlEasingValueType>(uri, versionMajor, versionMinor, "Easing");
+}
+
+
 QQmlValueType::QQmlValueType(int userType, QObject *parent)
 : QObject(parent), m_userType(userType)
 {
 }
-
 
 QQmlPointFValueType::QQmlPointFValueType(QObject *parent)
     : QQmlValueTypeBase<QPointF>(QMetaType::QPointF, parent)

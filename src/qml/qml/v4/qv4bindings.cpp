@@ -298,15 +298,17 @@ QV4Bindings::~QV4Bindings()
     delete [] subscriptions; subscriptions = 0;
 }
 
-QQmlAbstractBinding *QV4Bindings::configBinding(int index, int fallbackIndex, QObject *target,
-                                                        QObject *scope, int property,
-                                                        int line, int column)
+QQmlAbstractBinding *QV4Bindings::configBinding(int index, int fallbackIndex, QObject *target, QObject *scope,
+                                                int property, int propType, int line, int column)
 {
+    Q_ASSERT(propType <= std::numeric_limits<quint16>::max());
+
     Binding *rv = bindings + index;
 
     rv->index = index;
     rv->fallbackIndex = fallbackIndex;
     rv->property = property;
+    rv->propType = propType;
     rv->target = target;
     rv->scope = scope;
     rv->line = line;
@@ -352,8 +354,7 @@ int QV4Bindings::Binding::propertyIndex(const QQmlAbstractBinding *_This)
     const QV4Bindings::Binding *This = static_cast<const QV4Bindings::Binding *>(_This);
 
     if (This->target.hasValue()) return This->target.constValue()->targetProperty;
-    //mask out the type information set for value types
-    else return This->property & 0xFF00FFFF;
+    else return This->property;
 }
 
 QObject *QV4Bindings::Binding::object(const QQmlAbstractBinding *_This)
@@ -421,15 +422,13 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
 
     if (binding->updating) {
         QString name;
-        if (binding->property & 0xFFFF0000) {
-            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
-
-            QQmlValueType *vt = ep->valueTypes[(binding->property >> 16) & 0xFF];
+        if (binding->propType) {
+            QQmlValueType *vt = QQmlValueTypeFactory::valueType(binding->propType);
             Q_ASSERT(vt);
 
-            name = QLatin1String(binding->target->metaObject()->property(binding->property & 0xFFFF).name());
+            name = QLatin1String(binding->target->metaObject()->property(binding->property & 0x0000FFFF).name());
             name.append(QLatin1Char('.'));
-            name.append(QLatin1String(vt->metaObject()->property(binding->property >> 24).name()));
+            name.append(QLatin1String(vt->metaObject()->property(binding->property >> 16).name()));
         } else {
             name = QLatin1String(binding->target->metaObject()->property(binding->property).name());
         }
@@ -441,18 +440,16 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
     bool *inv = (binding->fallbackIndex != -1) ? &invalidated : 0;
 
     binding->updating = true;
-    if (binding->property & 0xFFFF0000) {
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
-
-        QQmlValueType *vt = ep->valueTypes[(binding->property >> 16) & 0xFF];
+    if (binding->propType) {
+        QQmlValueType *vt = QQmlValueTypeFactory::valueType(binding->propType);
         Q_ASSERT(vt);
-        vt->read(*binding->target, binding->property & 0xFFFF);
+        vt->read(*binding->target, binding->property & 0x0000FFFF);
 
         QObject *target = vt;
         run(binding->index, binding->executedBlocks, context, binding, binding->scope, target, flags, inv);
 
         if (!invalidated) {
-            vt->write(*binding->target, binding->property & 0xFFFF, flags);
+            vt->write(*binding->target, binding->property & 0x0000FFFF, flags);
         }
     } else {
         QQmlData *data = QQmlData::get(*binding->target);
@@ -1525,7 +1522,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
 
             QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
             QV8Engine *v8engine = ep->v8engine();
-            QQmlValueType *vt = ep->valueTypes[QMetaType::QColor];
+            QQmlValueType *vt = QQmlValueTypeFactory::valueType(QMetaType::QColor);
             v8::HandleScope handle_scope;
             v8::Context::Scope scope(v8engine->context());
             new (output.getjsvalueptr()) QJSValue(v8engine->scriptValueFromInternal(
@@ -1583,7 +1580,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
             }
 
             QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
-            QQmlValueType *vt = ep->valueTypes[QMetaType::QColor];
+            QQmlValueType *vt = QQmlValueTypeFactory::valueType(QMetaType::QColor);
             new (output.gethandleptr()) v8::Handle<v8::Value>(ep->v8engine()->valueTypeWrapper()->newValueType(tmp, vt));
             V8HANDLE_REGISTER(instr->unaryop.output);
         }
