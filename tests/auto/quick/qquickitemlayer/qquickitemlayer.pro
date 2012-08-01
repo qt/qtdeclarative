@@ -26,3 +26,4 @@ OTHER_FILES += \
     data/SamplerNameChange.qml \
     data/ItemEffect.qml \
     data/RectangleEffect.qml
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

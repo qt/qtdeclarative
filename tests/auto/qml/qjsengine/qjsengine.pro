@@ -6,3 +6,4 @@ macx:CONFIG -= app_bundle
 SOURCES += tst_qjsengine.cpp
 
 TESTDATA = script/*
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

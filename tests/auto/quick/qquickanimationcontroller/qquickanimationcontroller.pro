@@ -7,3 +7,4 @@ CONFIG += parallel_test
 SOURCES += tst_qquickanimationcontroller.cpp
 
 TESTDATA = data/*
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

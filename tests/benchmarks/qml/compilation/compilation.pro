@@ -9,3 +9,4 @@ CONFIG += release
 SOURCES += tst_compilation.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

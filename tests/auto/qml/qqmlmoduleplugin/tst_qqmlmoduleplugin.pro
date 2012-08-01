@@ -11,3 +11,4 @@ include (../../shared/util.pri)
 TESTDATA = data/* imports/* $$OUT_PWD/imports/*
 
 QT += core-private gui-private qml-private network testlib
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

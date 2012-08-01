@@ -12,3 +12,4 @@ include(../shared/debugutil.pri)
 TESTDATA = data/*
 
 OTHER_FILES += data/test.qml
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

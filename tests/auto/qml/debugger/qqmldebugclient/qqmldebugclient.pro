@@ -15,3 +15,4 @@ DEFINES += QT_QML_DEBUG_NO_WARNING
 CONFIG += qml_debug
 
 QT += qml-private testlib gui-private
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

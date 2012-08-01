@@ -10,3 +10,4 @@ IMPORT_FILES = \
         qmldir
 
 include (../../../shared/imports.pri)
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

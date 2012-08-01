@@ -11,3 +11,4 @@ TESTDATA = data/*
 
 CONFIG += parallel_test
 QT += testlib
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

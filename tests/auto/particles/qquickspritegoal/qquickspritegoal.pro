@@ -8,3 +8,4 @@ TESTDATA = data/*
 
 QT += core-private gui-private v8-private qml-private testlib quick-private quickparticles-private
 
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

@@ -7,3 +7,4 @@ SOURCES += tst_qrcqml.cpp
 RESOURCES = qrcqml.qrc
 
 CONFIG += parallel_test
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

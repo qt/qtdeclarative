@@ -9,3 +9,4 @@ include(../shared/debugutil.pri)
 
 CONFIG += parallel_test
 QT += qml network testlib gui-private
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

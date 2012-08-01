@@ -19,3 +19,4 @@ TESTDATA = data/*
 QT += core-private gui-private v8-private qml-private network testlib
 !contains(QT_CONFIG, no-widgets): QT += widgets
 
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

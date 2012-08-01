@@ -6,3 +6,4 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_pointers.cpp
 
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

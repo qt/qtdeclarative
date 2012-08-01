@@ -15,3 +15,4 @@ OTHER_FILES += \
     data/AnimationsWhileHidden.qml \
     data/Headless.qml
 
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

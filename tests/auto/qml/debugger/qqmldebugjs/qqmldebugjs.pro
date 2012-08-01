@@ -21,3 +21,4 @@ OTHER_FILES += data/test.qml data/test.js \
     data/stepAction.qml \
     data/breakpointRelocation.qml \
     data/createComponent.qml
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

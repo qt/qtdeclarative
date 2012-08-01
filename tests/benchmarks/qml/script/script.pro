@@ -9,3 +9,4 @@ SOURCES += tst_script.cpp
 QT += core-private gui-private v8-private qml-private quick-private testlib
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
