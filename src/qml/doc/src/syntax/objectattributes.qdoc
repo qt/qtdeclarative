@@ -146,18 +146,26 @@ Rectangle {
 
 \section4 Valid Types in Custom Property Definitions
 
-The following types can be used as custom property types:
+Any of the \l {QML Basic Types} aside from the \l enumeration type can be used
+as custom property types. For example, these are all valid property declarations:
 
-\list
-\li \l bool
-\li \l int
-\li \l real, \l double
-\li \l string
-\li \l var
-\endlist
+\qml
+Item {
+    property int someNumber
+    property string someString
+    property url someUrl
+}
+\endqml
 
-The \l var type is a generic placeholder type that can hold any type of value,
-including lists and objects:
+(Enumeration values are simply whole number values and can be referred to with
+the \l int type instead.)
+
+Some basic types are provided by the \c QtQuick module and thus cannot be used
+as property types unless the module is imported. See the \l {QML Basic Types}
+documentation for more details.
+
+Note the \l var basic type is a generic placeholder type that can hold any
+type of value, including lists and objects:
 
 \code
 property var someNumber: 1.5
@@ -166,28 +174,6 @@ property var someBool: true
 property var someList: [1, 2, "three", "four"]
 property var someObject: Rectangle { width: 100; height: 100; color: "red" }
 \endcode
-
-For convenience, the following types can also be used as custom property types.
-Using these types specifically instead of the \l var type provides type safety
-and may also assist with application optimization:
-
-\list
-\li \l color
-\li \l font
-\li \l date
-\li \l url
-\li \l rect
-\li \l point
-\li \l size
-\li \l vector2d
-\li \l vector3d
-\li \l vector4d
-\li \l quaternion
-\li \l matrix4x4
-\endlist
-
-\note Some of the above types are only available if the Qt Quick module has
-been imported by the application.
 
 Additionally, any \l{QML Object Types}{QML object type} can be used as a
 property type. For example:
