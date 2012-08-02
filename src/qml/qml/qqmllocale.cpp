@@ -811,7 +811,30 @@ V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
 
     QtQuick Locale's data is based on Common Locale Data Repository v1.8.1.
 
-    The double-to-string and string-to-double conversion functions are
+
+    \target FormatType
+    \section2 Locale String Format Types
+
+    The monthName(), standaloneMonthName(), dayName() and standaloneDayName()
+    can use the following enumeration values to specify the formatting of
+    the string representation for a Date object.
+
+    \list
+    \li Locale.LongFormat The long version of day and month names; for
+    example, returning "January" as a month name.
+    \li Locale.ShortFormat The short version of day and month names; for
+    example, returning "Jan" as a month name.
+    \li Locale.NarrowFormat A special version of day and month names for
+    use when space is limited; for example, returning "J" as a month
+    name. Note that the narrow format might contain the same text for
+    different months and days or it can even be an empty string if the
+    locale doesn't support narrow names, so you should avoid using it
+    for date formatting. Also, for the system locale this format is
+    the same as ShortFormat.
+    \endlist
+
+
+    Additionally the double-to-string and string-to-double conversion functions are
     covered by the following licenses:
 
     \legalese
@@ -885,27 +908,6 @@ v8::Handle<v8::Value> QQmlLocale::localeCompare(const v8::Arguments &args)
 
     return v8::Integer::New(QString::localeAwareCompare(thisString, thatString));
 }
-
-/*!
-    \enum QtQuick2::Locale::FormatType
-
-    This enumeration describes the types of format that can be used when
-    converting Date objects to strings.
-
-    \value LongFormat The long version of day and month names; for
-    example, returning "January" as a month name.
-
-    \value ShortFormat The short version of day and month names; for
-    example, returning "Jan" as a month name.
-
-    \value NarrowFormat A special version of day and month names for
-    use when space is limited; for example, returning "J" as a month
-    name. Note that the narrow format might contain the same text for
-    different months and days or it can even be an empty string if the
-    locale doesn't support narrow names, so you should avoid using it
-    for date formatting. Also, for the system locale this format is
-    the same as ShortFormat.
-*/
 
 /*!
     \qmlproperty string QtQuick2::Locale::name
@@ -990,7 +992,7 @@ v8::Handle<v8::Value> QQmlLocale::localeCompare(const v8::Arguments &args)
     \qmlmethod string QtQuick2::Locale::monthName(month, type)
 
     Returns the localized name of \a month (0-11), in the optional
-    \l FortmatType specified by \a type.
+    \l FormatType specified by \a type.
 
     \note the QLocale C++ API expects a range of (1-12), however Locale.monthName()
     expects 0-11 as per the JS Date object.
