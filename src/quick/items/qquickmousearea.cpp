@@ -1141,21 +1141,21 @@ void QQuickMouseArea::setHovered(bool h)
 }
 
 /*!
-    \qmlproperty QtQuick2::Qt::MouseButtons MouseArea::acceptedButtons
+    \qmlproperty Qt::MouseButtons MouseArea::acceptedButtons
     This property holds the mouse buttons that the mouse area reacts to.
 
-    The available buttons are:
-    \list
-    \li Qt.LeftButton
-    \li Qt.RightButton
-    \li Qt.MiddleButton
-    \endlist
-
-    To accept more than one button the flags can be combined with the
-    "|" (or) operator:
+    To specify that the MouseArea will react to multiple buttons,
+    Qt::MouseButtons flag values are combined using the "|" (or) operator:
 
     \code
     MouseArea { acceptedButtons: Qt.LeftButton | Qt.RightButton }
+    \endcode
+
+    To indicate that all possible mouse buttons are to be accepted,
+    the special value 'Qt.AllButtons' may be used:
+
+    \code
+    MouseArea { acceptedButtons: Qt.AllButtons }
     \endcode
 
     The default value is \c Qt.LeftButton.
