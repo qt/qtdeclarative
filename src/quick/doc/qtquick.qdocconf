@@ -6,7 +6,7 @@ description             = Qt Quick Reference Documentation
 url                     = http://qt-project.org/doc/qt-5.0/qtquick
 version                 = 5.0.0
 
-depends += qtqcore qtxmlpatterns qtqml
+depends += qtcore qtxmlpatterns qtqml
 
 sourceencoding          = UTF-8
 outputencoding          = UTF-8
