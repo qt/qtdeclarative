@@ -1159,6 +1159,10 @@ void tst_qqmlxmlhttprequest::cdata()
 
 void tst_qqmlxmlhttprequest::stateChangeCallingContext()
 {
+#ifdef Q_OS_WIN
+    QSKIP("QTBUG-26738");
+#endif
+
     // ensure that we don't crash by attempting to evaluate
     // without a valid calling context.
 
