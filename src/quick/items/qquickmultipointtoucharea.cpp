@@ -233,7 +233,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 
     A MultiPointTouchArea is an invisible item that is used to track multiple touch points.
 
-    The \l enabled property is used to enable and disable touch handling. When disabled,
+    The \l Item::enabled property is used to enable and disable touch handling. When disabled,
     the touch area becomes transparent to mouse/touch events.
 
     MultiPointTouchArea can be used in two ways:

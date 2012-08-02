@@ -125,7 +125,7 @@ The \l {declarative/animation/states}{States and Transitions example}
 demonstrates how to declare a basic set of states and apply animated
 transitions between them.
 
-\l{qtquick-statesanimations-behaviors.html}{Using QML Behaviors with States}
+\l{qtquick-statesanimations-behaviors.html}{Using Qt Quick Behaviors with States}
 explains a common problem when using Behaviors to animate state changes.
 
 \section1 State Fast Forwarding

@@ -415,7 +415,7 @@ void QQuickCanvasItem::setCanvasSize(const QSizeF & size)
 
     By default the tileSize is the same as the canvasSize.
 
-    \sa QtQuick2::Canvas::canvaasSize, QtQuick2::Canvas::canvasWindow
+    \sa QtQuick2::Canvas::canvasSize, QtQuick2::Canvas::canvasWindow
 */
 QSize QQuickCanvasItem::tileSize() const
 {
@@ -873,8 +873,8 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
     The loaded image can be unloaded by the \a QtQuick2::Canvas::unloadImage method.
 
     Note: Only loaded images can be painted on the Canvas item.
-  \sa QtQuick2::Canvas::unloadImage, QtQuick2::Canvas::imageLoaded, QtQuick2::Canvas::isImageLoaded,
-      QtQuick2::Context2D::createImageData, QtQuick2::Context2D::drawImage
+  \sa QtQuick2::Canvas::unloadImage, QtQuick2::Canvas::onImageLoaded, QtQuick2::Canvas::isImageLoaded,
+      QtQuick2::Context2D::createImageData(), QtQuick2::Context2D::drawImage
 */
 void QQuickCanvasItem::loadImage(const QUrl& url)
 {
@@ -900,8 +900,8 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
   Once an image is unloaded it cannot be painted by the canvas context
   unless it is loaded again.
 
-  \sa QtQuick2::Canvas::loadImage, QtQuick2::Canvas::imageLoaded, QtQuick2::Canvas::isImageLoaded,
-      QtQuick2::Context2D::createImageData, QtQuick2::Context2D::drawImage
+  \sa QtQuick2::Canvas::loadImage, QtQuick2::Canvas::onImageLoaded, QtQuick2::Canvas::isImageLoaded,
+      QtQuick2::Context2D::createImageData(), QtQuick2::Context2D::drawImage
 */
 void QQuickCanvasItem::unloadImage(const QUrl& url)
 {

@@ -814,7 +814,7 @@ bool QQuickCurve::hasRelativeY()
     The PathAttribute object allows attributes consisting of a name and
     a value to be specified for various points along a path.  The
     attributes are exposed to the delegate as
-    \l{qdeclarativeintroduction.html#attached-properties} {Attached Properties}.
+    \l{Attached Properties and Attached Signal Handlers} {Attached Properties}.
     The value of an attribute at any particular point along the path is interpolated
     from the PathAttributes bounding that point.
 
@@ -845,7 +845,7 @@ bool QQuickCurve::hasRelativeY()
 
     Note that using an existing Item property name such as "opacity" as an
     attribute is allowed.  This is because path attributes add a new
-    \l{qdeclarativeintroduction.html#attached-properties} {Attached Property}
+    \l{Attached Properties and Attached Signal Handlers} {Attached Property}
     which in no way clashes with existing properties.
 */
 
@@ -886,7 +886,7 @@ void QQuickPathAttribute::setName(const QString &name)
    \endqml
 
    In our delegate, we can then bind the \e rotation property to the
-   \l{qdeclarativeintroduction.html#attached-properties} {Attached Property}
+   \l{Attached Properties and Attached Signal Handlers} {Attached Property}
    \e PathView.itemRotation created for this attribute.
 
    \qml

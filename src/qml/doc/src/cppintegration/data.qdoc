@@ -346,8 +346,8 @@ within the same class, or that the enumeration value is one of those declared
 in the \l {Qt}{Qt Namespace}.
 
 Additionally, if a C++ signal with an enum parameter should be connectable to a
-QML function using the \l{QML Signal and Handler Event System#Connecting Signals
-to Methods and Signals}{connect()} function, the enum type must be registered
+QML function using the \l{qtqml-syntax-signals.html#connecting-signals-to-methods-and-signals}
+{connect()} function, the enum type must be registered
 using qRegisterMetaType().
 
 For QML signals, enum values may be passed as signal parameters using the \c int

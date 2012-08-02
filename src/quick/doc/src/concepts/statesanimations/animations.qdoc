@@ -28,7 +28,7 @@
 /*!
 \ingroup qtquick-transitions-animations
 \page qtquick-statesanimations-animations.html
-\title Animation and Transitions In Qt Quick
+\title Animation and Transitions in Qt Quick
 \brief the animation system in Qt Quick
 
 \section1 Animation and Transitions Elements
@@ -94,7 +94,7 @@ information about the different animation properties.
 \keyword qml-transition-animations
 \section2 Transitions during State Changes
 
-\l{State}{States} are property configurations where a property may have different values to reflect different states. State changes introduce
+\l{State}{Qt Quick States} are property configurations where a property may have different values to reflect different states. State changes introduce
 abrupt property changes; animations smooth transitions to produce visually
 appealing state changes.
 

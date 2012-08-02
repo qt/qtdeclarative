@@ -124,8 +124,8 @@ public:
     default states, the NumberAnimation animates the angle between
     its old and new values.
 
-    See \l {States} for details on state changes and the default
-    state, and \l {QML Animation and Transitions} for more information on how
+    See \l {Qt Quick States} for details on state changes and the default
+    state, and \l {Animation and Transitions in Qt Quick} for more information on how
     animations work within transitions.
 
     \sa {declarative/ui-components/flipable}{Flipable example}

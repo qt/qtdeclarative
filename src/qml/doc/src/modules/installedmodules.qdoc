@@ -154,7 +154,7 @@ example:
 
 \snippet examples/qml/cppextensions/plugins/plugin.cpp plugin
 
-Once the plugin is built and installed, and includes a \l{Syntax of a qmldir file}{qmldir file},
+Once the plugin is built and installed, and includes a \l{Adding Module Metadata with a qmldir file}{qmldir file},
 the module can be imported from QML, like this:
 
 \snippet qml/imports/timeexample.qml import

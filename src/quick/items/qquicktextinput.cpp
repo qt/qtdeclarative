@@ -1928,6 +1928,8 @@ void QQuickTextInput::paste()
 #endif // QT_NO_CLIPBOARD
 
 /*!
+    \qmlmethod QtQuick2::TextInput::undo()
+
     Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
     current selection, and updates the selection start to the current cursor
     position.
@@ -1943,6 +1945,8 @@ void QQuickTextInput::undo()
 }
 
 /*!
+    \qmlmethod QtQuick2::TextInput::redo()
+
     Redoes the last operation if redo is \l {canRedo}{available}.
 */
 

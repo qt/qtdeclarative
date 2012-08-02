@@ -119,7 +119,7 @@ public:
    }
    \endqml
 
-   \sa {qmlstate}{States}, {QML Animation and Transitions}{Transitions}, {QtQml}
+   \sa {Qt Quick States}{Qt Quick States}, {Animation and Transitions in Qt Quick}{Transitions}, {QtQml}
 */
 
 QQuickStateGroup::QQuickStateGroup(QObject *parent)
@@ -158,7 +158,7 @@ QList<QQuickState *> QQuickStateGroup::states() const
   }
   \endqml
 
-  \sa {qmlstate}{States}
+  \sa {Qt Quick States}{Qt Quick States}
 */
 QQmlListProperty<QQuickState> QQuickStateGroup::statesProperty()
 {
@@ -219,7 +219,7 @@ void QQuickStateGroupPrivate::clear_states(QQmlListProperty<QQuickState> *list)
   }
   \endqml
 
-  \sa {QML Animation and Transitions}{Transitions}
+  \sa {Animation and Transitions in Qt Quick}{Transitions}
 */
 QQmlListProperty<QQuickTransition> QQuickStateGroup::transitionsProperty()
 {
@@ -276,7 +276,7 @@ void QQuickStateGroupPrivate::clear_transitions(QQmlListProperty<QQuickTransitio
   set), \c state will be a blank string. Likewise, you can return a
   state group to its base state by setting its current state to \c ''.
 
-  \sa {qmlstates}{States}
+  \sa {Qt Quick States}{Qt Quick States}
 */
 QString QQuickStateGroup::state() const
 {

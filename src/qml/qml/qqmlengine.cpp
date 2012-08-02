@@ -198,6 +198,7 @@ void QQmlEnginePrivate::defineQtQuick2Module()
     \class QQmlImageProviderBase
     \brief The QQmlImageProviderBase class is used to register image providers in the QML engine.
     \mainclass
+    \inmodule QtQml
 
     Image providers must be registered with the QML engine.  The only information the QML
     engine knows about image providers is the type of image data they provide.  To use an
@@ -295,7 +296,7 @@ creating objects of specific data types are also available for clients to use:
 \li \c matrix4x4 - use \l{Qt::matrix4x4()}{Qt.matrix4x4()}
 \endlist
 
-There are also string based constructors for these types. See \l{qdeclarativebasictypes.html}{QML Basic Types} for more information.
+There are also string based constructors for these types. See \l{qtqml-typesystem-basictypes.html}{QML Basic Types} for more information.
 
 \section1 Date/Time Formatters
 

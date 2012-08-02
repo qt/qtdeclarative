@@ -1512,7 +1512,7 @@ QQuickListModelParser::ListInstruction *QQuickListModelParser::ListModelData::in
     handler. You must call sync() or else the changes made to the list from the external
     thread will not be reflected in the list model in the main thread.
 
-    \sa {qmlmodels}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, QtQml
+    \sa {qml-data-models}{Data Models}, {declarative/threading/threadedlistmodel}{Threaded ListModel example}, QtQml
 */
 
 QQuickListModel::QQuickListModel(QObject *parent)

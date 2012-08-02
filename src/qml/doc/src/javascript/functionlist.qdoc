@@ -31,7 +31,7 @@
 
     This reference contains a list of objects, functions and
     properties supported by the \l{QQmlEngine}{QML engine}. For a detailed
-    description, see the \l{External: ECMA-262} specification.
+    description, see the \l{ECMA-262} specification.
 
     \section1 The Global Object
 

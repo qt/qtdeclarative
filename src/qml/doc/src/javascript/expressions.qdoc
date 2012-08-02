@@ -58,17 +58,17 @@ QML \l{QML Object Types}{object types} defined in \l{QML Documents}
 logic.  There are four ways that JavaScript can be used in a QML document:
 
 \list
-  \li \l{QML Object Attributes#property-initialization}{properties} can be
+  \li \l{Property Attributes}{properties} can be
       assigned \l{Property Binding}{bindings} which are defined with
       JavaScript expressions, and which are automatically evaluated by the
       \l{QQmlEngine}{QML engine} when any properties accessed in the binding
       change, in order to ensure always-up-to-date property values.  Binding
       expressions can also perform function evaluation as an explicit side
       effect
-  \li \l{QML Object Attributes#signal-handlers}{signal handlers} can be defined
+  \li \l{Signal Attributes}{signal handlers} can be defined
       which are automatically evaluated when the object emits the associated
       signal
-  \li \l{QML Object Attributes#custom-methods}{custom methods} can be defined
+  \li \l{Method Attributes}{custom methods} can be defined
       in QML files as JavaScript functions
   \li JavaScript files providing functions and variables can be
       \l{Importing JavaScript Files in QML Documents}{imported} in a QML
@@ -244,9 +244,8 @@ Non-trivial program logic is best separated into external JavaScript files.
 These files can be imported into QML files using an \c import statement, in
 the same way that \l {QML Modules}{modules} are imported.
 
-For example, the \c {factorial()} method in the above example for
-\l{JavaScript Expressions in Custom Methods} could be moved into an external
-file named \c factorial.js, and accessed like this:
+For example, the \c {factorial()} method in the above example could be moved
+into an external file named \c factorial.js, and accessed like this:
 
 \qml
 import "factorial.js" as MathFunctions
@@ -260,7 +259,7 @@ Item {
 \endqml
 
 For more information about loading external JavaScript files into QML, read
-the section about \l{Importing JavaScript into QML}.
+the section about \l{Importing JavaScript Files in QML Documents}.
 
 
 
@@ -286,7 +285,7 @@ as an argument.  For example, the following code connects the MouseArea
 The \c jsFunction() will now be called whenever MouseArea's \c clicked signal
 is emitted.
 
-See \l{QML Signal and Handler Event System#Connecting Signals to Methods and Signals}
+See \l{qtqml-syntax-signals.html}
 {Connecting Signals to Methods and Signals} for more information.
 
 
@@ -300,7 +299,7 @@ component instance) startup.  While it is tempting to just include the startup
 script as \e {global code} in an external script file, this can have severe
 limitations as the QML environment may not have been fully established.  For
 example, some objects might not have been created or some
-\l {Property Binding}s may not have been run.  \l {QML JavaScript Restrictions}
+\l {Property Binding}s may not have been run.  \l {JavaScript Expression Restrictions in QML}
 covers the exact limitations of global script code.
 
 Every QML object has an \e attached \l Component property that references the
@@ -378,7 +377,7 @@ that includes the file and line number of the offending code.
 During startup, if a QML file includes an external JavaScript file with "global"
 code, it is executed in a scope that contains only the external file itself and
 the global object.  That is, it will not have access to the QML objects and
-properties it \l {QML Scope}{normally would}.
+properties it \l {Scope and Naming Resolution}{normally would}.
 
 Global code that only accesses script local variable is permitted.  This is an
 example of valid global code.

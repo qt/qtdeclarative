@@ -128,7 +128,7 @@ loaded as a QQmlComponent instance rather than placed into a view:
     }
 \endcode
 
-See \l{qtqml-cppintegration-data.html}{Exposing C++ Data to QML} for more information about using
+See \l{qtqml-cppintegration-data.html}{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML} for more information about using
 QQmlEngine, QQmlContext and QQmlComponent, as well
 as details on including QML files through \l{The Qt Resource System}{Qt's Resource system}.
 

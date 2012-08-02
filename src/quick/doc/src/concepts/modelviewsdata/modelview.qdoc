@@ -187,7 +187,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     QML provides several types of data models among the built-in set of QML
     elements. In addition, models can be created with Qt C++ and then made
-    available to the \l{qtqml-cppclasses-engine.html}{QML engine} for use by
+    available to the \l{QQmlEngine}{QMLEngine} for use by
     QML components. For information about creating these models, visit the
     \l{qtquick-modelviewsdata-cppmodels.html}{Using C++ Models with QtQuick Views}
     and \l{qtqml-typesystem-topic.html#qml-object-types}
@@ -358,7 +358,7 @@ rectangles for the Grid item to position in a 5 by 5 arrangement.
 The number of items created by a Repeater is held by its \l{Repeater::}{count}
 property. It is not possible to set this property to determine the number of
 items to be created. Instead, as in the above example, we use an integer as
-the model. This is explained in the \l{QML Data Models#An Integer}{QML Data Models}
+the model. This is explained in the \l{qtquick-modelviewsdata-modelview.html#integers-as-models}{QML Data Models}
 document.
 
 It is also possible to use a delegate as the template for the items created

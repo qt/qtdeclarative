@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
 
     PropertyChanges is used to define the property values or bindings in a
     \l State. This enables an item's property values to be changed when it
-    \l {States}{changes between states}.
+    \l {Qt Quick States}{changes between states}.
 
     To create a PropertyChanges object, specify the \l target item whose
     properties are to be modified, and define the new property values or
@@ -119,7 +119,7 @@ QT_BEGIN_NAMESPACE
 
     \section2 Immediate property changes in transitions
 
-    When \l{QML Animation and Transitions}{Transitions} are used to animate
+    When \l{Animation and Transitions in Qt Quick}{Transitions} are used to animate
     state changes, they animate properties from their values in the current
     state to those defined in the new state (as defined by PropertyChanges
     objects). However, it is sometimes desirable to set a property value
@@ -129,7 +129,7 @@ QT_BEGIN_NAMESPACE
 
     See the PropertyAction documentation for more details.
 
-    \sa {declarative/animation/states}{states example}, {qmlstate}{States}, QtQml
+    \sa {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States}, QtQml
 */
 
 /*!

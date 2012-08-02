@@ -53,11 +53,8 @@ integers, double-precision floating point numbers, strings, and boolean values.
 Objects may have properties of these types, and values of these types may be
 passed as arguments to methods of objects.
 
-See the \l{qtqml-typesystem-basictypes.html}{Basic Types} documentation for
-more information about basic types, or the \l{qtqml-documents-properties.html}
-{QML Documents - Object Properties} documentation for more information about
-other available property types.
-
+See the \l{qtqml-typesystem-basictypes.html}{QML Basic Types} documentation for
+more information about basic types.
 
 \section1 JavaScript Types
 

@@ -100,13 +100,13 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
     A DropArea is an invisible item which receives events when other items are
     dragged over it.
 
-    The Drag attached property can be used to notify the DropArea when an Item is
+    The \l Drag attached property can be used to notify the DropArea when an Item is
     dragged over it.
 
     The \l keys property can be used to filter drag events which don't include
     a matching key.
 
-    The \l dropItem property is communicated to the source of a drag event as
+    The \l source property is communicated to the source of a drag event as
     the recipient of a drop on the drag target.
 
     The \l delegate property provides a means to specify a component to be

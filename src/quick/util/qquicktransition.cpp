@@ -94,7 +94,7 @@ QT_BEGIN_NAMESPACE
     \l Behavior, the Transition animation overrides the \l Behavior for that
     state change.
 
-    \sa {QML Animation and Transitions}, {declarative/animation/states}{states example}, {qmlstates}{States}, {QtQml}
+    \sa {Animation and Transitions in Qt Quick}, {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States}, {QtQml}
 */
 
 //ParallelAnimationWrapper allows us to do a "callback" when the animation finishes, rather than connecting

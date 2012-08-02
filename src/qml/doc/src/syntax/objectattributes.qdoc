@@ -415,7 +415,7 @@ In some cases properties contain a logical group of sub-property attributes.
 These sub-property attributes can be assigned to using either the dot notation
 or group notation.
 
-For example, the \l Text type has a \l{Text::font}{font} group property. Below,
+For example, the \l Text type has a \l{Text::font.family}{font} group property. Below,
 the first \l Text object initializes its \c font values using dot notation,
 while the second uses group notation:
 
@@ -605,7 +605,7 @@ Item {
 A signal is a notification from an object that some event has occurred: for
 example, a property has changed, an animation has started or stopped, or
 when an image has been downloaded. The \l MouseArea type, for example, has
-a \l {MouseArea::clicked}{clicked} signal that is emitted when the user clicks
+a \l {MouseArea::onClicked}{clicked} signal that is emitted when the user clicks
 within the mouse area.
 
 An object can be notified through a \l{Signal handler attributes}
@@ -666,7 +666,7 @@ Item {
 If the signal has no parameters, the "()" brackets are optional. If parameters
 are used, the parameter types must be declared, as for the \c string and \c var
 arguments for the \c actionPerformed signal above. The allowed parameter types
-are the same as those listed under \l {custom property types} on this page.
+are the same as those listed under \l {Defining Property Attributes} on this page.
 
 To emit a signal, invoke it as a method. Any relevant
 \l{Signal handler attributes}{signal handlers} will be invoked when the signal
@@ -842,7 +842,7 @@ prefixing the properties and respective signal handlers with the name of the
 attaching type.
 
 For example, the \l ListView type has an attached property
-\l ListView.isCurrentItem that is available to each delegate object in a
+\l {ListView::isCurrentItem}{ListView.isCurrentItem} that is available to each delegate object in a
 ListView. This can be used by each individual delegate object to determine
 whether it is the currently selected item in the view:
 

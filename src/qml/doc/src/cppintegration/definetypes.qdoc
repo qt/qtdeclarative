@@ -395,7 +395,7 @@ board context, they could be implemented as \e attached attributes on a
 terms of the concepts described earlier, the parties involved here are:
 
 \list
-\li An instance of an anonymous \l{attached object type}, which provides a
+\li An instance of an anonymous \e{attached object type}, which provides a
     \c published signal and an expired property. This type is implemented by
     \c MessageBoardAttachedType below
 \li A \c Message object, which will be the \e attachee
@@ -614,7 +614,7 @@ MessageBoard {
 \endqml
 
 (Incidentally, the \l Item::children property is its default property, which
-enables visual children to be conveniently declared for any \l Item-based
+enables visual children to be conveniently declared for any \l {Item}-based
 type without explicitly assigning them to this property.)
 
 A default property is optional. A derived class inherits its base class's

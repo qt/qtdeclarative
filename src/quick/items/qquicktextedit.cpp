@@ -1484,6 +1484,8 @@ void QQuickTextEdit::paste()
 
 
 /*!
+    \qmlmethod QtQuick2::QQuickTextEdit::undo()
+
     Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
     current selection, and updates the selection start to the current cursor
     position.
@@ -1496,6 +1498,8 @@ void QQuickTextEdit::undo()
 }
 
 /*!
+    \qmlmethod QtQuick2::QQuickTextEdit::redo()
+
     Redoes the last operation if redo is \l {canRedo}{available}.
 */
 

@@ -50,7 +50,7 @@
     \li Register types with qmlRegisterType()
     \li Export the class using the Q_EXPORT_PLUGIN2() macro
     \li Write a project file for the plugin
-    \li Create a \l{Syntax of a qmldir file}{qmldir file} to describe the plugin
+    \li Create a \l{Adding Module Metadata with a qmldir file}{qmldir file} to describe the plugin
     \endlist
 
     QML extension plugins are for either application-specific or library-like
@@ -83,7 +83,7 @@
     The \c TimeModel class receives a \c{1.0} version of this plugin library, as
     a QML type called \c Time. The Q_ASSERT() macro can ensure the module is
     imported correctly by any QML components that use this plugin. The
-    \l{Defining QML Object Types from C++} article has more information about registering C++
+    \l{Defining QML Types from C++} article has more information about registering C++
     types into the runtime.
 
     For this example, the TimeExample source directory is in
@@ -104,7 +104,7 @@
     ...
     \endcode
 
-    Finally, a \l{Syntax of a qmldir file}{qmldir file} is required in the \c
+    Finally, a \l{Adding Module Metadata with a qmldir file}{qmldir file} is required in the \c
     com/nokia/TimeExample directory to specify the plugin. This directory
     includes a \c Clock.qml file that should be bundled with the plugin, so it
     needs to be specified in the \c qmldir file:
@@ -125,7 +125,7 @@
     \list
     \li \l {Tutorial: Extending QML with C++} - contains a chapter
     on creating QML plugins.
-    \li \l{Defining QML Object Types from C++} - information about registering C++ types into
+    \li \l{Defining QML Types from C++} - information about registering C++ types into
     the runtime.
     \li \l{How to Create Qt Plugins} - information about Qt plugins
     \endlist

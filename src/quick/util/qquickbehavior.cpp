@@ -93,12 +93,12 @@ public:
     multiple animations within a Behavior, use ParallelAnimation or
     SequentialAnimation.
 
-    If a \l{States}{state change} has a \l Transition that matches the same property as a
+    If a \l{Qt Quick States}{state change} has a \l Transition that matches the same property as a
     Behavior, the \l Transition animation overrides the Behavior for that
     state change. For general advice on using Behaviors to animate state changes, see
-    \l{Using QML Behaviors with States}.
+    \l{Using Qt Quick Behaviors with States}.
 
-    \sa {QML Animation and Transitions}, {declarative/animation/behaviors}{Behavior example}, QtQml
+    \sa {Animation and Transitions in Qt Quick}, {declarative/animation/behaviors}{Behavior example}, QtQml
 */
 
 

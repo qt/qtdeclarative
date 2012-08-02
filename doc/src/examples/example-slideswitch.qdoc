@@ -97,7 +97,7 @@ We define the two states of the switch:
 \li In the \e off state the knob is on the left (\c x position is 1) and the \c on property is \c false.
 \endlist
 
-For more information on states see \l{States}.
+For more information on states see \l{Qt Quick States}.
 
 \section2 Functions
 
@@ -114,7 +114,7 @@ states (\e on and \e off).
 This second function is called when the knob is released and we want to make sure that the knob does not end up between states
 (neither \e on nor \e off). If it is the case call the \c toggle() function otherwise we do nothing.
 
-For more information on scripts see \l{JavaScript Expressions in QML}.
+For more information on scripts see \l{Using JavaScript Expressions in QML}.
 
 \section2 Transition
 \snippet examples/tutorials/ui-components/slideswitch/content/Switch.qml 7
@@ -122,7 +122,7 @@ For more information on scripts see \l{JavaScript Expressions in QML}.
 At this point, when the switch toggles between the two states the knob will instantly change its \c x position between 1 and 78.
 In order for the the knob to move smoothly we add a transition that will animate the \c x property with an easing curve for a duration of 200ms.
 
-For more information on transitions see \l{QML Animation and Transitions}.
+For more information on transitions see \l{Animation and Transitions in Qt Quick}.
 
 \section1 Usage
 The switch can be used in a QML file, like this:

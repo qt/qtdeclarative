@@ -926,7 +926,7 @@ QQuickWindow::~QQuickWindow()
     functions can be used to prevent this from happening, if handling the cleanup is
     not feasible in the application, at the cost of higher memory usage.
 
-    \sa sceneGraphInvalidated(), setPersistentOpenGLContext(), setPersistentSceneGraph().
+    \sa sceneGraphInvalidated(), setPersistentOpenGLContext(), setPersistentSceneGraph()
  */
 
 void QQuickWindow::releaseResources()
@@ -2495,7 +2495,7 @@ QImage QQuickWindow::grabWindow()
 /*!
     Returns an incubation controller that splices incubation between frames
     for this window. QQuickView automatically installs this controller for you,
-    otherwise you will need to install it yourself using \l{QQmlEngine::setIncubationController}
+    otherwise you will need to install it yourself using \l{QQmlEngine::setIncubationController()}.
 
     The controller is owned by the window and will be destroyed when the window
     is deleted.

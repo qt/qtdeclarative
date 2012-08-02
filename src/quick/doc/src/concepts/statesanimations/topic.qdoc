@@ -27,7 +27,7 @@
 
 /*!
 \page qtquick-statesanimations-topic.html
-\title Concepts - States And Animations
+\title Import Concepts in Qt Quick - States, Transitions and Animations
 \brief Description of the concepts of states, transitions and animations in Qt Quick
 
 In any modern user-interface, transitioning between states and animating

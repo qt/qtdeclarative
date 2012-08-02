@@ -201,7 +201,7 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
     \class QSGGeometry
 
     \brief The QSGGeometry class provides low-level
-    storage for graphics primitives in the \l{QML Scene Graph}.
+    storage for graphics primitives in the \l{Qt Quick Scene Graph}.
 
     \inmodule QtQuick
 

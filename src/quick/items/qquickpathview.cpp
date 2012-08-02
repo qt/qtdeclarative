@@ -497,7 +497,7 @@ void QQuickPathViewPrivate::setDragging(bool d)
     }
     \endqml
 
-    The path view itself is a focus scope (see \l{qmlfocus#Acquiring Focus and Focus Scopes}{the focus documentation page} for more details).
+    The path view itself is a focus scope (see \l{Keyboard Focus in Qt Quick} for more details).
 
     Delegates are instantiated as needed and may be destroyed at any time.
     State should \e never be stored in a delegate.
@@ -582,7 +582,7 @@ QQuickPathView::~QQuickPathView()
 
     \note changing the model will reset the offset and currentIndex to 0.
 
-    \sa {qmlmodels}{Data Models}
+    \sa {qml-data-models}{Data Models}
 */
 QVariant QQuickPathView::model() const
 {
@@ -1167,7 +1167,7 @@ bool QQuickPathView::isDragging() const
 
     The delegate provides a template defining each item instantiated by the view.
     The index is exposed as an accessible \c index property.  Properties of the
-    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+    model are also available depending upon the type of \l {qml-data-models}{Data Model}.
 
     The number of objects and bindings in the delegate has a direct effect on the
     flicking performance of the view when pathItemCount is specified.  If at all possible, place functionality

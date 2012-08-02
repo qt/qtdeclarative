@@ -818,7 +818,7 @@ static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<
      The default value is  '#000000'.
      \sa QtQuick2::Context2D::createLinearGradient
      \sa QtQuick2::Context2D::createRadialGradient
-     \sa QtQuick2::Context2D::createPattern
+     \sa QtQuick2::Context2D::createPattern()
      \sa QtQuick2::Context2D::strokeStyle
  */
 static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Local<v8::String>, const v8::AccessorInfo &info)
@@ -923,7 +923,7 @@ static void ctx2d_fillRule_set(v8::Local<v8::String>, v8::Local<v8::Value> value
 
      \sa QtQuick2::Context2D::createLinearGradient
      \sa QtQuick2::Context2D::createRadialGradient
-     \sa QtQuick2::Context2D::createPattern
+     \sa QtQuick2::Context2D::createPattern()
      \sa QtQuick2::Context2D::fillStyle
  */
 v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Local<v8::String>, const v8::AccessorInfo &info)
@@ -992,8 +992,8 @@ static void ctx2d_strokeStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> va
 
     \sa QtQuick2::Context2D::CanvasGradient::addColorStop
     \sa QtQuick2::Context2D::createRadialGradient
-    \sa QtQuick2::Context2D::ctx2d_createConicalGradient
-    \sa QtQuick2::Context2D::createPattern
+    \sa QtQuick2::Context2D::ctx2d_createConicalGradient()
+    \sa QtQuick2::Context2D::createPattern()
     \sa QtQuick2::Context2D::fillStyle
     \sa QtQuick2::Context2D::strokeStyle
   */
@@ -1038,8 +1038,8 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
 
     \sa QtQuick2::Context2D::CanvasGradient::addColorStop
     \sa QtQuick2::Context2D::createLinearGradient
-    \sa QtQuick2::Context2D::ctx2d_createConicalGradient
-    \sa QtQuick2::Context2D::createPattern
+    \sa QtQuick2::Context2D::ctx2d_createConicalGradient()
+    \sa QtQuick2::Context2D::createPattern()
     \sa QtQuick2::Context2D::fillStyle
     \sa QtQuick2::Context2D::strokeStyle
   */
@@ -1093,8 +1093,8 @@ static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &arg
 
     \sa QtQuick2::Context2D::CanvasGradient::addColorStop
     \sa QtQuick2::Context2D::createLinearGradient
-    \sa QtQuick2::Context2D::ctx2d_createRadialGradient
-    \sa QtQuick2::Context2D::createPattern
+    \sa QtQuick2::Context2D::ctx2d_createRadialGradient()
+    \sa QtQuick2::Context2D::createPattern()
     \sa QtQuick2::Context2D::fillStyle
     \sa QtQuick2::Context2D::strokeStyle
   */
@@ -2256,7 +2256,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
   \sa QtQuick2::Image
   \sa QtQuick2::Canvas::loadImage
   \sa QtQuick2::Canvas::isImageLoaded
-  \sa QtQuick2::Canvas::imageLoaded
+  \sa QtQuick2::Canvas::onImageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
@@ -2276,7 +2276,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
   \sa QtQuick2::Image
   \sa QtQuick2::Canvas::loadImage
   \sa QtQuick2::Canvas::isImageLoaded
-  \sa QtQuick2::Canvas::imageLoaded
+  \sa QtQuick2::Canvas::onImageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
@@ -2297,7 +2297,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
   \sa QtQuick2::Image
   \sa QtQuick2::Canvas::loadImage
   \sa QtQuick2::Canvas::isImageLoaded
-  \sa QtQuick2::Canvas::imageLoaded
+  \sa QtQuick2::Canvas::onImageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
 */
@@ -2419,7 +2419,7 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
      \sa QtQuick2::CanvasImageData::width
      \sa QtQuick2::CanvasImageData::height
      \sa QtQuick2::CanvasImageData::data
-     \sa QtQuick2::Context2D::createImageData
+     \sa QtQuick2::Context2D::createImageData()
      \sa QtQuick2::Context2D::getImageData
      \sa QtQuick2::Context2D::putImageData
   */

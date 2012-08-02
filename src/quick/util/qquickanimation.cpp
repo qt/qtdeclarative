@@ -663,7 +663,7 @@ void QQuickAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
     }
     \endcode
 
-    \sa {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
 */
 QQuickPauseAnimation::QQuickPauseAnimation(QObject *parent)
 : QQuickAbstractAnimation(*(new QQuickPauseAnimationPrivate), parent)
@@ -733,7 +733,7 @@ QAbstractAnimationJob* QQuickPauseAnimation::transition(QQuickStateActions &acti
 
     Like any other animation type, a ColorAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
     For convenience, when a ColorAnimation is used in a \l Transition, it will
@@ -742,7 +742,7 @@ QAbstractAnimationJob* QQuickPauseAnimation::transition(QQuickStateActions &acti
     \l{PropertyAnimation::}{properties} are explicitly set for the animation,
     then those are used instead.
 
-    \sa {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
 */
 QQuickColorAnimation::QQuickColorAnimation(QObject *parent)
 : QQuickPropertyAnimation(parent)
@@ -781,7 +781,7 @@ QQuickColorAnimation::~QQuickColorAnimation()
     \l Transition, or the current value of the property at the moment the
     \l Behavior is triggered.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 QColor QQuickColorAnimation::from() const
 {
@@ -804,7 +804,7 @@ void QQuickColorAnimation::setFrom(const QColor &f)
     \l Transition, or the value of the property change that triggered the
     \l Behavior.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 QColor QQuickColorAnimation::to() const
 {
@@ -1025,7 +1025,7 @@ QAbstractAnimationJob* QQuickScriptAction::transition(QQuickStateActions &action
     PropertyAction object) so that the rotation animation begins with the
     correct transform origin.
 
-    \sa {QML Animation and Transitions}, QtQml
+    \sa {Animation and Transitions in Qt Quick}, QtQml
 */
 QQuickPropertyAction::QQuickPropertyAction(QObject *parent)
 : QQuickAbstractAnimation(*(new QQuickPropertyActionPrivate), parent)
@@ -1258,14 +1258,14 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
 
     Like any other animation type, a NumberAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
     Note that NumberAnimation may not animate smoothly if there are irregular
     changes in the number value that it is tracking. If this is the case, use
     SmoothedAnimation instead.
 
-    \sa {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
 */
 QQuickNumberAnimation::QQuickNumberAnimation(QObject *parent)
 : QQuickPropertyAnimation(parent)
@@ -1314,7 +1314,7 @@ void QQuickNumberAnimation::init()
     \l Transition, or the current value of the property at the moment the
     \l Behavior is triggered.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 
 qreal QQuickNumberAnimation::from() const
@@ -1337,7 +1337,7 @@ void QQuickNumberAnimation::setFrom(qreal f)
     \l Transition, or the value of the property change that triggered the
     \l Behavior.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 qreal QQuickNumberAnimation::to() const
 {
@@ -1365,10 +1365,10 @@ void QQuickNumberAnimation::setTo(qreal t)
 
     Like any other animation type, a Vector3dAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
 */
 QQuickVector3dAnimation::QQuickVector3dAnimation(QObject *parent)
 : QQuickPropertyAnimation(parent)
@@ -1392,7 +1392,7 @@ QQuickVector3dAnimation::~QQuickVector3dAnimation()
     \l Transition, or the current value of the property at the moment the
     \l Behavior is triggered.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 QVector3D QQuickVector3dAnimation::from() const
 {
@@ -1414,7 +1414,7 @@ void QQuickVector3dAnimation::setFrom(QVector3D f)
     \l Transition, or the value of the property change that triggered the
     \l Behavior.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 QVector3D QQuickVector3dAnimation::to() const
 {
@@ -1465,10 +1465,10 @@ void QQuickVector3dAnimation::setTo(QVector3D t)
 
     Like any other animation type, a RotationAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
 */
 QVariant _q_interpolateShortestRotation(qreal &f, qreal &t, qreal progress)
 {
@@ -1544,7 +1544,7 @@ QQuickRotationAnimation::~QQuickRotationAnimation()
     \l Transition, or the current value of the property at the moment the
     \l Behavior is triggered.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 qreal QQuickRotationAnimation::from() const
 {
@@ -1566,7 +1566,7 @@ void QQuickRotationAnimation::setFrom(qreal f)
     \l Transition, or the value of the property change that triggered the
     \l Behavior.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 qreal QQuickRotationAnimation::to() const
 {
@@ -1694,14 +1694,14 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
 
     Like any other animation type, a SequentialAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
     \note Once an animation has been grouped into a SequentialAnimation or
     ParallelAnimation, it cannot be individually started and stopped; the
     SequentialAnimation or ParallelAnimation must be started and stopped as a group.
 
-    \sa ParallelAnimation, {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}
+    \sa ParallelAnimation, {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
 */
 
 QQuickSequentialAnimation::QQuickSequentialAnimation(QObject *parent) :
@@ -1764,14 +1764,14 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
 
     Like any other animation type, a ParallelAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
     \note Once an animation has been grouped into a SequentialAnimation or
     ParallelAnimation, it cannot be individually started and stopped; the
     SequentialAnimation or ParallelAnimation must be started and stopped as a group.
 
-    \sa SequentialAnimation, {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}
+    \sa SequentialAnimation, {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
 */
 QQuickParallelAnimation::QQuickParallelAnimation(QObject *parent) :
     QQuickAnimationGroup(parent)
@@ -1926,12 +1926,12 @@ void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
 
     Depending on how the animation is used, the set of properties normally used will be
     different. For more information see the individual property documentation, as well
-    as the \l{QML Animation and Transitions} introduction.
+    as the \l{Animation and Transitions in Qt Quick} introduction.
 
     Note that PropertyAnimation inherits the abstract \l Animation type.
     This includes additional properties and methods for controlling the animation.
 
-    \sa {QML Animation and Transitions}, {qml/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {qml/animation/basics}{Animation basics example}
 */
 
 QQuickPropertyAnimation::QQuickPropertyAnimation(QObject *parent)
@@ -1983,7 +1983,7 @@ void QQuickPropertyAnimation::setDuration(int duration)
     \l Transition, or the current value of the property at the moment the
     \l Behavior is triggered.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 QVariant QQuickPropertyAnimation::from() const
 {
@@ -2010,7 +2010,7 @@ void QQuickPropertyAnimation::setFrom(const QVariant &f)
     \l Transition, or the value of the property change that triggered the
     \l Behavior.
 
-    \sa {QML Animation and Transitions}
+    \sa {Animation and Transitions in Qt Quick}
 */
 QVariant QQuickPropertyAnimation::to() const
 {
@@ -2386,7 +2386,7 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
 
     As seen in the above example, properties is specified as a comma-separated string of property names to animate.
 
-    \sa exclude, {QML Animation and Transitions}
+    \sa exclude, {Animation and Transitions in Qt Quick}
 */
 QQmlListProperty<QObject> QQuickPropertyAnimation::targets()
 {

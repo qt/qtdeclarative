@@ -45,7 +45,7 @@ imported via the following statement:
 import QtQuick 2.0
 \endqml
 
-See the \l{qtquick-main.html}{Qt Quick} module documentation for more
+See the \l{qtquick-main.html}{QtQuick} module documentation for more
 information about the concepts which are central to \c QtQuick.
 
 \section1 Basic Types
@@ -231,7 +231,7 @@ Views
 
 Data Storage
 \list
-\li \l {LocalStorage} - Module API providing simplified SQL access
+\li \l {QtQuick.LocalStorage 2} - Module API providing simplified SQL access
 \endlist
 
 \section2 Graphical Effects

@@ -1478,7 +1478,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     \brief Property used to mirror layout behavior
 
     The LayoutMirroring attached property is used to horizontally mirror \l {anchor-layout}{Item anchors},
-    \l{Using QML Positioner and Repeater Items}{positioner} types (such as \l Row and \l Grid)
+    \l{Item Layouts}{positioner} types (such as \l Row and \l Grid)
     and views (such as \l GridView and horizontal \l ListView). Mirroring is a visual change: left
     anchors become right anchors, and positioner types like \l Grid and \l Row reverse the
     horizontal layout of child items.
@@ -1509,7 +1509,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     mirroring is not the desired behavior, or if the child item already implements mirroring in
     some custom way.
 
-    See \l {QML Right-to-left User Interfaces} for further details on using \c LayoutMirroring and
+    See \l {Right-to-left User Interfaces} for further details on using \c LayoutMirroring and
     other related features to implement right-to-left support for an application.
 */
 
@@ -1518,7 +1518,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 
     This property holds whether the item's layout is mirrored horizontally. Setting this to true
     horizontally reverses \l {anchor-layout}{anchor} settings such that left anchors become right,
-    and right anchors become left. For \l{Using QML Positioner and Repeater Items}{positioner} types
+    and right anchors become left. For \l{Item Layouts}{positioner} types
     (such as \l Row and \l Grid) and view types (such as \l {GridView}{GridView} and \l {ListView}{ListView})
     this also mirrors the horizontal layout direction of the item.
 
@@ -1771,7 +1771,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     as \l {Keys::onPressed}{onPressed} and \l {Keys::onReleased}{onReleased},
     as well as handlers for specific keys, such as
     \l {Keys::onCancelPressed}{onCancelPressed}.  The example below
-    assigns \l {qmlfocus}{focus} to the item and handles
+    assigns \l {Keyboard Focus in Qt Quick}{focus} to the item and handles
     the Left key via the general \e onPressed handler and the Select key via the
     onSelectPressed handler:
 
@@ -5484,7 +5484,7 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
   }
   \endqml
 
-  \sa {qmlstate}{States}
+  \sa {Qt Quick States}{Qt Quick States}
 */
 /*!
   \qmlproperty list<Transition> QtQuick2::Item::transitions
@@ -5504,7 +5504,7 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
   }
   \endqml
 
-  \sa {QML Animation and Transitions}{Transitions}
+  \sa {Animation and Transitions in Qt Quick}{Transitions}
 */
 /*
   \qmlproperty list<Filter> QtQuick2::Item::filter
@@ -5574,7 +5574,7 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
   set), \c state will be a blank string. Likewise, you can return an
   item to its base state by setting its current state to \c ''.
 
-  \sa {qmlstates}{States}
+  \sa {Qt Quick States}{Qt Quick States}
 */
 
 /*!
@@ -5623,7 +5623,7 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
   }
   \endqml
 
-  \sa focus, {qmlfocus}{Keyboard Focus}
+  \sa focus, {Keyboard Focus in Qt Quick}{Keyboard Focus}
 */
 
 /*!
@@ -5655,7 +5655,7 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
   }
   \endqml
 
-  \sa activeFocus, {qmlfocus}{Keyboard Focus}
+  \sa activeFocus, {Keyboard Focus in Qt Quick}{Keyboard Focus}
 */
 
 
@@ -6045,9 +6045,9 @@ void QQuickItemLayer::deactivateEffect()
     Holds the effect that is applied to this layer.
 
     The effect is typically a \l ShaderEffect component, although any \l Item component can be
-    assigned. The effect should have a source texture property with a name matching \l samplerName.
+    assigned. The effect should have a source texture property with a name matching \l layer.samplerName.
 
-    \sa samplerName
+    \sa layer.samplerName
  */
 
 void QQuickItemLayer::setEffect(QQmlComponent *component)
@@ -6135,10 +6135,10 @@ void QQuickItemLayer::setFormat(QQuickShaderEffectSource::Format f)
 /*!
     \qmlproperty enumeration QtQuick2::Item::layer.sourceRect
 
-    This property defines which rectangular area of the \l sourceItem to
-    render into the texture. The source rectangle can be larger than
-    \l sourceItem itself. If the rectangle is null, which is the default,
-    the whole \l sourceItem is rendered to texture.
+    This property defines the rectangular area of the item that should be
+    rendered into the texture. The source rectangle can be larger than
+    the item itself. If the rectangle is null, which is the default,
+    then the whole item is rendered to the texture.
  */
 
 void QQuickItemLayer::setSourceRect(const QRectF &sourceRect)
@@ -6235,10 +6235,10 @@ void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
 
     Holds the name of the effect's source texture property.
 
-    samplerName needs to match the name of the effect's source texture property
+    This value must match the name of the effect's source texture property
     so that the Item can pass the layer's offscreen surface to the effect correctly.
 
-    \sa effect, ShaderEffect
+    \sa layer.effect, ShaderEffect
  */
 
 void QQuickItemLayer::setName(const QByteArray &name) {

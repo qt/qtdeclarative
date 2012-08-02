@@ -211,7 +211,7 @@ arrays. See the \l {list}{list type documentation} for details.
 
 Adding a \c property to an item automatically adds a \e {value changed}
 signal handler to the item. To connect to this signal, use a
-\l{qtqml-syntax-objectattributes.html#signal-handlers}{signal handler}
+\l{Signal Attributes}{signal handler}
 named with the \c on<Property>Changed syntax, using upper case for the first letter of the
 property name.
 
@@ -431,7 +431,7 @@ performAction signal above; the allowed parameter types are the same as those li
 {Adding Properties} section on this page.
 
 Adding a signal to an item automatically adds a
-\l{qtqml-syntax-objectattributes.html#signal-handlers}{signal handler} as well.
+\l{Signal Attributes}{signal handler} as well.
 The signal hander is named \c on<SignalName>, with the first letter of the signal being upper
 cased. The above example item would now have the following signal handlers:
 
@@ -467,7 +467,7 @@ Signal objects have a \c connect() method that can be used to a connect a signal
 another signal. When a signal is connected to a method, the method is automatically invoked
 whenever the signal is emitted. (In Qt terminology, the method is a \e slot that is connected
 to the \e signal; all methods defined in QML are created as Qt slots.) This enables a signal
-to be received by a method instead of a \l{qtqml-syntax-objectattributes.html#signal-handlers}
+to be received by a method instead of a \l{Signal Attributes}
 {signal handler}.
 
 For example, the \c application.qml above could be rewritten as:

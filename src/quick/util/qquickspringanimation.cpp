@@ -362,10 +362,10 @@ void QQuickSpringAnimationPrivate::updateMode()
 
     Like any other animation type, a SpringAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa SmoothedAnimation, {QML Animation and Transitions}, {declarative/animation/basics}{Animation basics example}, {declarative/toys/clocks}{Clocks example}
+    \sa SmoothedAnimation, {Animation and Transitions in Qt Quick}, {declarative/animation/basics}{Animation basics example}, {declarative/toys/clocks}{Clocks example}
 */
 
 QQuickSpringAnimation::QQuickSpringAnimation(QObject *parent)

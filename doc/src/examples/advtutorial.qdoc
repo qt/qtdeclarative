@@ -42,7 +42,7 @@ included in the declarative \c examples directory, which looks like this:
 \image declarative-samegame.png
 
 We will cover concepts for producing a fully functioning application, including
-JavaScript integration, using QML  \l{State}{States} and \l{Behavior}{Behaviors} to
+JavaScript integration, using QML  \l{State}{Qt Quick States} and \l{Behavior}{Behaviors} to
 manage components and enhance your interface, and storing persistent application data.
 
 An understanding of JavaScript is helpful to understand parts of this tutorial, but if you don't
@@ -190,7 +190,7 @@ and moves the new block to its position on the game canvas. This involves severa
 
 Now we need to call the JavaScript code in \c samegame.js from our QML files.
 To do this, we add this line to \c samegame.qml which imports
-the JavaScript file as a \l{Modules#QML Modules}{module}:
+the JavaScript file as a \l{QML Modules}{module}:
 
 \snippet examples/tutorials/samegame/samegame2/samegame.qml 2
 
@@ -345,7 +345,7 @@ element in \c BoomBlock.qml:
 
 Note the \c{opacity: 0} which means the block is transparent when it is first created. We could set the opacity
 in \c samegame.js when we create and destroy the blocks,
-but instead we'll use \l{States}{states}, since this is useful for the next animation we're going to add.
+but instead we'll use \l{Qt Quick States}{states}, since this is useful for the next animation we're going to add.
 Initially, we add these States to the root element of \c{BoomBlock.qml}:
 \code
     property bool dying: false
@@ -428,7 +428,7 @@ Here is the \c saveHighScore() function in \c samegame.js:
 
 First we call \c sendHighScore() (explained in the section below) if it is possible to send the high scores to an online database.
 
-Then, we use the \l{Offline Storage API} to maintain a persistent SQL database unique to this application. We create an offline storage database for the high scores using \c openDatabaseSync() and prepare the data and SQL query that we want to use to save it. The offline storage API uses SQL queries for data manipulation and retrieval, and in the \c db.transaction() call we use three SQL queries to initialize the database (if necessary), and then add to and retrieve high scores. To use the returned data, we turn it into a string with one line per row returned, and show a dialog containing that string.
+Then, we use the \l{QtQuick.LocalStorage 2}{Local Storage API} to maintain a persistent SQL database unique to this application. We create an offline storage database for the high scores using \c openDatabaseSync() and prepare the data and SQL query that we want to use to save it. The offline storage API uses SQL queries for data manipulation and retrieval, and in the \c db.transaction() call we use three SQL queries to initialize the database (if necessary), and then add to and retrieve high scores. To use the returned data, we turn it into a string with one line per row returned, and show a dialog containing that string.
 
 This is one way of storing and displaying high scores locally, but certainly not the only way. A more complex alternative would be to create a high score dialog component, and pass it the results for processing and display (instead of reusing the \c Dialog). This would allow a more themeable dialog that could better present the high scores. If your QML is the UI for a C++ application, you could also have passed the score to a C++ function to store it locally in a variety of ways, including a simple format without SQL or in another SQL database.
 
@@ -459,12 +459,12 @@ makes it very easy to fetch and display XML based data such as RSS in a QML appl
 By following this tutorial you've seen how you can write a fully functional application in QML:
 
 \list
-\li Build your application with \l {{QML Elements}}{QML elements}
-\li Add application logic \l{JavaScript Expressions in QML}{with JavaScript code}
-\li Add animations with \l {Behavior}{Behaviors} and \l{States}{states}
-\li Store persistent application data using, for example, the \l{Offline Storage API} or \l XMLHttpRequest
+\li Build your application with \l {QML Types provided by the QtQuick Module}{QML elements}
+\li Add application logic \l{Using JavaScript Expressions in QML}{with JavaScript code}
+\li Add animations with \l {Behavior}{Behaviors} and \l{Qt Quick States}{states}
+\li Store persistent application data using, for example, \l{QtQuick.LocalStorage 2}{QtQuick.LocalStorage} or \l XMLHttpRequest
 \endlist
 
 There is so much more to learn about QML that we haven't been able to cover in this tutorial. Check out all the
-examples and the \l {Qt Quick}{documentation} to see all the things you can do with QML!
+examples and the \l {QtQuick}{documentation} to see all the things you can do with QML!
 */

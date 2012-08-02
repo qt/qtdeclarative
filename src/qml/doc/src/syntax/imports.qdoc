@@ -153,7 +153,7 @@ The qualifier ("MyScript" in the above example) must be unique within the QML do
 Unlike ordinary modules, multiple scripts cannot be imported into the same namespace.
 
 Javascript files can be provided by modules, by adding Namespace definitions to the
-\l{Syntax of a qmldir file}{qmldir file} for the module.  For example:
+\l{Adding Module Metadata with a qmldir file}{qmldir file} for the module.  For example:
 
 \code
 SystemFunctions 1.0 SystemFunctions.js

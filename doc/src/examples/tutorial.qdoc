@@ -104,7 +104,7 @@ The \c font.pointSize and \c font.bold properties are related to fonts and use t
 
 \section2 Viewing the example
 
-To view what you have created, run the \l{QML Viewer} tool (located in the \c bin directory) with your filename as the first argument.
+To view what you have created, run the \l{Protoyping with qmlscene}{qmlscene} tool (located in the \c bin directory) with your filename as the first argument.
 For example, to run the provided completed Tutorial 1 example from the install location, you would type:
 
 \code
@@ -182,7 +182,7 @@ We create the color picker by putting 6 cells with different colors in a grid.
 \snippet examples/tutorials/helloworld/tutorial2.qml 1
 
 When the \e clicked signal of our cell is triggered, we want to set the color of the text to the \e cellColor passed as a parameter.
-We can react to any signal of our component through a property of the name \e 'onSignalName' (see \l{Signal Handlers}).
+We can react to any signal of our component through a property of the name \e 'onSignalName' (see \l{Signal Attributes}).
 */
 
 /*!
@@ -228,5 +228,5 @@ This is equivalent to writing the two transitions separately.
 The \l ParallelAnimation element makes sure that the two types of animations (number and color) start at the same time.
 We could also run them one after the other by using \l SequentialAnimation instead.
 
-For more details on states and transitions, see \l {States} and the \l{declarative/animation/states}{states and transitions example}.
+For more details on states and transitions, see \l {Qt Quick States} and the \l{declarative/animation/states}{states and transitions example}.
 */

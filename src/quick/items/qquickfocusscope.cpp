@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
     Focus scopes assist in keyboard focus handling when building reusable QML
     components.  All the details are covered in the
-    \l {qmlfocus}{keyboard focus documentation}.
+    \l {Keyboard Focus in Qt Quick}{keyboard focus documentation}.
 
     \sa {declarative/keyinteraction/focus}{Keyboard focus example}
 */

@@ -1691,13 +1691,13 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 
     The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
     and \c focus is set to \c true to enable keyboard navigation for the list view.
-    The list view itself is a focus scope (see \l{qmlfocus#Acquiring Focus and Focus Scopes}{the focus documentation page} for more details).
+    The list view itself is a focus scope (see \l{Keyboard Focus in Qt Quick} for more details).
 
     Delegates are instantiated as needed and may be destroyed at any time.
     State should \e never be stored in a delegate.
 
     ListView attaches a number of properties to the root item of the delegate, for example
-    \c {ListView.isCurrentItem}.  In the following example, the root delegate item can access
+    \c {ListView:isCurrentItem}.  In the following example, the root delegate item can access
     this attached property directly as \c ListView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.ListView.isCurrentItem.
 
@@ -1844,7 +1844,7 @@ QQuickListView::~QQuickListView()
     or \l VisualItemModel, or provided by C++ model classes. If a C++ model class is
     used, it must be a subclass of \l QAbstractItemModel or a simple list.
 
-    \sa {qmlmodels}{Data Models}
+    \sa {qml-data-models}{Data Models}
 */
 
 /*!
@@ -1852,7 +1852,7 @@ QQuickListView::~QQuickListView()
 
     The delegate provides a template defining each item instantiated by the view.
     The index is exposed as an accessible \c index property.  Properties of the
-    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+    model are also available depending upon the type of \l {qml-data-models}{Data Model}.
 
     The number of objects and bindings in the delegate has a direct effect on the
     flicking performance of the view.  If at all possible, place functionality
@@ -2350,7 +2350,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     An instance of the header component is created for each view.  The
     header is positioned at the beginning of the view, before any items.
 
-    \sa footer, headertem
+    \sa footer, headerItem
 */
 
 /*!
@@ -2384,7 +2384,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     \list
     \li The view is first created
     \li The view's \l model changes
-    \li The view's \l model is \l {QAbstractItemModel::reset}{reset}, if the model is a QAbstractItemModel subclass
+    \li The view's \l model is \l {QAbstractItemModel::reset()}{reset}, if the model is a QAbstractItemModel subclass
     \endlist
 
     For example, here is a view that specifies such a transition:

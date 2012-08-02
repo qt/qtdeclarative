@@ -95,7 +95,7 @@ Column {
 
 \image documents-definetypes-attributes.png
 
-The attributes that are accessible to objects of the custom QML type include any \l{Custom properties}{custom properties}, \l{Custom methods}{methods} and \l{Custom signals}{signals} that have additionally been defined for an object. For example, suppose the \l Rectangle in \c SquareButton.qml had been defined as follows, with additional properties, methods and signals:
+The attributes that are accessible to objects of the custom QML type include any \l{Defining Property Attributes}{custom properties}, \l{Defining Method Attributes}{methods} and \l{Defining Signal Attributes}{signals} that have additionally been defined for an object. For example, suppose the \l Rectangle in \c SquareButton.qml had been defined as follows, with additional properties, methods and signals:
 
 \qml
 // SquareButton.qml

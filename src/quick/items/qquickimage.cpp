@@ -403,7 +403,7 @@ qreal QQuickImage::paintedHeight() const
 
     If both the sourceSize.width and sourceSize.height are set the image will be scaled
     down to fit within the specified size, maintaining the image's aspect ratio.  The actual
-    size of the image after scaling is available via \l implicitWidth and \l implicitHeight.
+    size of the image after scaling is available via \l Item::implicitWidth and \l Item::implicitHeight.
 
     If the source is an intrinsically scalable image (eg. SVG), this property
     determines the size of the loaded image regardless of intrinsic size.

@@ -80,11 +80,11 @@ To find out more about using the QML language, see the \l{Qt QML Module Document
         \li \l{qtquick-qmltypereference.html#object-types}{Object Types}
             \list
             \li \l{qtquick-qmltypereference.html#visual-types}{Visual Types}
-            \li \l{qtquick-qmltypereference.html#user-input-types}{User Input Types}
+            \li \l{qtquick-qmltypereference.html#user-input}{User Input}
             \li \l{qtquick-qmltypereference.html#positioning}{Positioning}
             \li \l{qtquick-qmltypereference.html#states-transitions-and-animations}{States, Transitions And Animations}
             \li \l{qtquick-qmltypereference.html#model-view-types-and-data-storage-and-access}{Model/View Types And Data Storage And Access}
-            \li \l{qtquick-qmltypereference.html#particles-and-graphical-effects}{Particles And Graphical Effects}
+            \li \l{qtquick-qmltypereference.html#graphical-effects}{Graphical Effects}
             \li \l{qtquick-qmltypereference.html#convenience-types}{Convenience Types}
             \li \l{qtquick-qmltypereference.html#canvas-similar-to-html5-canvas}{Canvas (similar to HTML5 Canvas)}
             \endlist

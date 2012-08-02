@@ -144,14 +144,14 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
 
     Notice the default state is referred to using an empty string ("").
 
-    States are commonly used together with \l{QML Animation and Transitions}{Transitions} to provide
+    States are commonly used together with \l{Animation and Transitions in Qt Quick}{Transitions} to provide
     animations when state changes occur.
 
     \note Setting the state of an object from within another state of the same object is
     not allowed.
 
-    \sa {declarative/animation/states}{states example}, {qmlstates}{States},
-    {QML Animation and Transitions}{Transitions}, QtQml
+    \sa {declarative/animation/states}{states example}, {Qt Quick States}{Qt Quick States},
+    {Animation and Transitions in Qt Quick}{Transitions}, QtQml
 */
 QQuickState::QQuickState(QObject *parent)
 : QObject(*(new QQuickStatePrivate), parent)

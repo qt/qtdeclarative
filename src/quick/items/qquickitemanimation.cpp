@@ -88,10 +88,10 @@ QT_BEGIN_NAMESPACE
 
     Like any other animation type, a ParentAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa {QML Animation and Transitions}, {declarative/animation/basics}{Animation basics example}
+    \sa {Animation and Transitions in Qt Quick}, {declarative/animation/basics}{Animation basics example}
 */
 QQuickParentAnimation::QQuickParentAnimation(QObject *parent)
     : QQuickAnimationGroup(*(new QQuickParentAnimationPrivate), parent)
@@ -436,10 +436,10 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
     Like any other animation type, an AnchorAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
-    sources. The \l {QML Animation and Transitions} documentation shows a
+    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
     variety of methods for creating animations.
 
-    \sa {QML Animation and Transitions}, AnchorChanges
+    \sa {Animation and Transitions in Qt Quick}, AnchorChanges
 */
 QQuickAnchorAnimation::QQuickAnchorAnimation(QObject *parent)
 : QQuickAbstractAnimation(*(new QQuickAnchorAnimationPrivate), parent)
@@ -583,7 +583,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     In the above case, the path start will be the item's current position, and the
     path end will be the item's target position in the target state.
 
-    \sa {QML Animation and Transitions}, PathInterpolator
+    \sa {Animation and Transitions in Qt Quick}, PathInterpolator
 */
 QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
 : QQuickAbstractAnimation(*(new QQuickPathAnimationPrivate), parent)

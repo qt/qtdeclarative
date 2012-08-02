@@ -743,7 +743,7 @@ void QQuickShaderEffect::setBlending(bool enable)
     \qmlproperty variant QtQuick2::ShaderEffect::mesh
 
     This property defines the mesh used to draw the ShaderEffect. It can hold
-    any mesh object deriving from \l QQuickShaderEffectMesh, such as \l GridMesh.
+    any \l GridMesh object.
     If a size value is assigned to this property, the ShaderEffect implicitly
     uses a \l GridMesh with the value as
     \l{GridMesh::resolution}{mesh resolution}. By default, this property is

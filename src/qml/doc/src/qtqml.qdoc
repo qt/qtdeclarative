@@ -174,7 +174,7 @@ types, animation classes, and canvas integration) for the QML language.
 \section1 Reference Documentation
 
 More information about the Qt QML module is contained within the class and
-function documentation of the \l{qtqml-apireference.html}
+function documentation of the \l{QtQml}
 {Qt QML Module API Reference}.  The QML types provided by the Qt QML module
 are listed in the \l{qtqml-typereference-topic.html}
 {Qt QML Module QML Type Reference} page.
@@ -189,7 +189,7 @@ application developers will use in their applications.
 Quick Links:
 \list
 \li \l{qtqml-typereference-topic.html}{Qt QML Module QML Type Reference}
-\li \l{qtqml-module.html}{Qt QML Module C++ API Reference}
+\li \l{QtQml}{Qt QML Module C++ API Reference}
 \li \l{qtquick-main.html}{Qt Quick Module Documentation}
 \li \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
 \li \l{qtqml-releasenotes.html}{QtQml Release Notes}

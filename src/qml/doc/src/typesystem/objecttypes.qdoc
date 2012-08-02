@@ -47,10 +47,10 @@ and registering the type with the QML engine, as discussed in
 \l{qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 
 
-\section1 Creating Object Types from QML
+\section1 Defining Object Types from QML
 
 
-\section2 Creating Object Types from QML Documents
+\section2 Defining Object Types through QML Documents
 
 Plugin writers and application developers may provide types defined as QML
 documents.  A QML document, when visible to the QML import system, defines a
@@ -70,7 +70,7 @@ See \l {Defining Object Types through QML Documents} for more information.
 
 
 
-\section2 Creating Anonymous Types with Component
+\section2 Defining Anonymous Types with Component
 
 Another method of creating object types from within QML is to use the \l Component type.
 This allows a type to be defined inline within a QML document, instead of using a separate
@@ -114,9 +114,9 @@ different component scopes.
 See \l{qtqml-documents-scope.html}{Scope and Naming Resolution} for more details.
 
 
-\section1 Creating Object Types from C++
+\section1 Defining Object Types from C++
 
-Plugin writers and application developers may register types defined in C++
+C++ plugin writers and application developers may register types defined in C++
 through API provided by the Qt QML module.  There are various registration
 functions which each allow different use-cases to be fulfilled.
 

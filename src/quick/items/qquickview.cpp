@@ -149,7 +149,7 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
     size of the view.  Alternatively the resizeMode may be set to SizeRootObjectToView which
     will resize the view to the size of the root object.
 
-    \sa {Exposing C++ Data to QML}
+    \sa {qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
 */
 
 
@@ -348,7 +348,7 @@ QList<QQmlError> QQuickView::errors() const
     is the initial size of the root item. Note though that
     since QML may load dynamically, that size may change.
 
-    \sa initialSize
+    \sa initialSize()
 */
 
 void QQuickView::setResizeMode(ResizeMode mode)

@@ -87,8 +87,8 @@ compile-time safety. In this case the base object of \c MyItem.qml is an
 \snippet qml/qtbinding/loading/main.cpp cast
 
 You can also connect to any signals or call methods defined in the component
-using QMetaObject::invokeMethod() and QObject::connect(). See \l {Exchanging
-data between QML and C++} below for further details.
+using QMetaObject::invokeMethod() and QObject::connect(). See \l {Invoking QML Methods}
+and \l {Connecting to QML Signals} below for further details.
 
 
 \section1 Accessing Loaded QML Objects by Object Name
@@ -159,7 +159,7 @@ System}{meta-object system} and the QML engine is not made aware of the
 property change. This means property bindings to \c buttonText would not be
 updated, and any \c onButtonTextChanged handlers would not be called.
 
-\section2 Methods
+\section2 Invoking QML Methods
 
 All QML methods are exposed to the meta-object system and can be called from C++
 using QMetaObject::invokeMethod(). Method parameters and return values passed
@@ -179,12 +179,12 @@ must be specified as QVariant types, as this is the generic data type used for
 QML method parameters and return values.
 
 
-\section2 Signals And Slots
+\section2 Connecting to QML Signals
 
 All QML signals are automatically available to C++, and can be connected to
 using QObject::connect() like any ordinary Qt C++ signal. In return, any C++
 signal can be received by a QML object using
-\l {Signal Handlers}{signal handlers}.
+\l {qtqml-syntax-signals.html}{signal handlers}.
 
 Here is a QML component with a signal named \c qmlSignal that is emitted with
 a string-type parameter. This signal is connected to a C++ object's slot using

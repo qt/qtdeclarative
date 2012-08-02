@@ -235,7 +235,7 @@ to \c /tmp/imports/My/Module/qmldir to register it.
 
 While the qmldump tool covers most cases, it does not work if:
 \list
-\li The plugin uses a \l{QQmlCustomParser}. The component that uses
+\li The plugin uses a \c{QQmlCustomParser}. The component that uses
    the custom parser will not get its members documented.
 \li The plugin can not be loaded. In particular if you cross-compiled
    the plugin for a different architecture, qmldump will not be able to

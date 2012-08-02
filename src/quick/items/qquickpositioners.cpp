@@ -504,8 +504,8 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
     where it exists within the layout of its parent Column, Row, Flow or Grid.
 
     For example, below is a \l Grid with 16 child rectangles, as created through a \l Repeater.
-    Each \l Rectangle displays its index in the Grid using \l Positioner.index, and the first
-    item is colored differently by taking \l Positioner.isFirstItem into account:
+    Each \l Rectangle displays its index in the Grid using \l {Positioner::index}{Positioner.index}, and the first
+    item is colored differently by taking \l {Positioner::isFirstItem}{Positioner.isFirstItem} into account:
 
     \code
     Grid {
@@ -585,7 +585,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     Column is a type that positions its child items along a single column.
     It can be used as a convenient way to vertically position a series of items without
-    using \l {Anchor-based Layout in QML}{anchors}.
+    using \l {Positioning with Anchors}{anchors}.
 
     Below is a Column that contains three rectangles of various sizes:
 
@@ -650,7 +650,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \list
     \li Items that are created or reparented as a child of the positioner after the
         positioner has been created
-    \li Child items that change their \l visible property from false to true, and thus
+    \li Child items that change their \l Item::visible property from false to true, and thus
        are now visible
     \endlist
 
@@ -754,7 +754,7 @@ void QQuickColumn::reportConflictingAnchors()
 
     Row is a type that positions its child items along a single row.
     It can be used as a convenient way to horizontally position a series of items without
-    using \l {Anchor-based Layout in QML}{anchors}.
+    using \l {Positioning with Anchors}{anchors}.
 
     Below is a Row that contains three rectangles of various sizes:
 
@@ -804,7 +804,7 @@ void QQuickColumn::reportConflictingAnchors()
     \list
     \li Items that are created or reparented as a child of the positioner after the
         positioner has been created
-    \li Child items that change their \l visible property from false to true, and thus
+    \li Child items that change their \l Item::visible property from false to true, and thus
        are now visible
     \endlist
 
@@ -1037,7 +1037,7 @@ void QQuickRow::reportConflictingAnchors()
     \list
     \li Items that are created or reparented as a child of the positioner after the
         positioner has been created
-    \li Child items that change their \l visible property from false to true, and thus
+    \li Child items that change their \l Item::visible property from false to true, and thus
        are now visible
     \endlist
 
@@ -1471,7 +1471,7 @@ void QQuickGrid::reportConflictingAnchors()
     \list
     \li Items that are created or reparented as a child of the positioner after the
         positioner has been created
-    \li Child items that change their \l visible property from false to true, and thus
+    \li Child items that change their \l Item::visible property from false to true, and thus
        are now visible
     \endlist
 

@@ -1186,7 +1186,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 
     The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
     and \c focus is set to \c true to enable keyboard navigation for the grid view.
-    The grid view itself is a focus scope (see \l{qmlfocus#Acquiring Focus and Focus Scopes}{the focus documentation page} for more details).
+    The grid view itself is a focus scope (see \l{Keyboard Focus in Qt Quick} for more details).
 
     Delegates are instantiated as needed and may be destroyed at any time.
     State should \e never be stored in a delegate.
@@ -1335,7 +1335,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     or \l VisualItemModel, or provided by C++ model classes. If a C++ model class is
     used, it must be a subclass of \l QAbstractItemModel or a simple list.
 
-  \sa {qmlmodels}{Data Models}
+  \sa {qml-data-models}{Data Models}
 */
 
 /*!
@@ -1343,7 +1343,7 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     The delegate provides a template defining each item instantiated by the view.
     The index is exposed as an accessible \c index property.  Properties of the
-    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+    model are also available depending upon the type of \l {qml-data-models}{Data Model}.
 
     The number of objects and bindings in the delegate has a direct effect on the
     flicking performance of the view.  If at all possible, place functionality
@@ -1716,7 +1716,7 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     \list
     \li The view is first created
     \li The view's \l model changes
-    \li The view's \l model is \l {QAbstractItemModel::reset}{reset}, if the model is a QAbstractItemModel subclass
+    \li The view's \l model is \l {QAbstractItemModel::reset()}{reset}, if the model is a QAbstractItemModel subclass
     \endlist
 
     For example, here is a view that specifies such a transition:

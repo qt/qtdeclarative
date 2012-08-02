@@ -244,7 +244,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 
     Loader is a focus scope. Its \l {Item::}{focus} property must be set to
     \c true for any of its children to get the \e {active focus}. (See
-    \l{qmlfocus#Acquiring Focus and Focus Scopes}{the focus documentation page}
+    \l{Keyboard Focus in Qt Quick}
     for more details.) Any key events received in the loaded item should likely
     also be \l {KeyEvent::}{accepted} so they are not propagated to the Loader.
 
@@ -314,7 +314,7 @@ QQuickLoader::~QQuickLoader()
 /*!
     \qmlproperty bool QtQuick2::Loader::active
     This property is \c true if the Loader is currently active.
-    The default value for the \l active property is \c true.
+    The default value for this property is \c true.
 
     If the Loader is inactive, changing the \l source or \l sourceComponent
     will not cause the item to be instantiated until the Loader is made active.

@@ -286,7 +286,7 @@ int QQuickRectanglePrivate::doUpdateSlotIdx = -1;
 
     You can also create rounded rectangles using the \l radius property. Since this
     introduces curved edges to the corners of a rectangle, it may be appropriate to
-    set the \l antialiasing property to improve its appearance.
+    set the \l Item::antialiasing property to improve its appearance.
 
     \section1 Example Usage
 

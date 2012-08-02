@@ -114,7 +114,7 @@ When placed into a \c .qml file and loaded by the QML engine, the above code cre
 Rectangle { width: 200; height: 200; color: "red" }
 \endqml
 
-Obviously, the \l Rectangle object declared in this example is very simple indeed, as it defines nothing more than a few property values. To create more useful objects, an object declaration may define many other types of attributes: these are discussed in the \l{qtqml-syntax-object-declaration.html}{Object Declarations} documentation. Additionally, an object declaration may define child objects, as discussed below.
+Obviously, the \l Rectangle object declared in this example is very simple indeed, as it defines nothing more than a few property values. To create more useful objects, an object declaration may define many other types of attributes: these are discussed in the \l{qtqml-syntax-objectattributes.html}{QML Object Attributes} documentation. Additionally, an object declaration may define child objects, as discussed below.
 
 
 \section2 Child Objects

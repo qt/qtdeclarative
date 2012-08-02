@@ -85,7 +85,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 
     \image repeater-simple.png
 
-    A Repeater's \l model can be any of the supported \l {qmlmodels}{data models}.
+    A Repeater's \l model can be any of the supported \l {qml-data-models}{data models}.
     Additionally, like delegates for other views, a Repeater delegate can access
     its index within the repeater, as well as the model data relevant to the
     delegate. See the \l delegate property documentation for details.
@@ -159,7 +159,7 @@ QQuickRepeater::~QQuickRepeater()
 
     The model providing data for the repeater.
 
-    This property can be set to any of the supported \l {qmlmodels}{data models}:
+    This property can be set to any of the supported \l {qml-data-models}{data models}:
 
     \list
     \li A number that indicates the number of delegates to be created by the repeater
@@ -170,7 +170,7 @@ QQuickRepeater::~QQuickRepeater()
 
     The type of model affects the properties that are exposed to the \l delegate.
 
-    \sa {qmlmodels}{Data Models}
+    \sa {qml-data-models}{Data Models}
 */
 QVariant QQuickRepeater::model() const
 {

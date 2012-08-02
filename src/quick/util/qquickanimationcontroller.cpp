@@ -243,7 +243,7 @@ void QQuickAnimationController::componentFinalized()
 
     The animation controller's progress value will be automatically updated while the animation is running.
 
-    \sa completeToEnd(), progress()
+    \sa completeToEnd(), progress
 */
 void QQuickAnimationController::completeToBeginning()
 {
@@ -272,7 +272,7 @@ void QQuickAnimationController::completeToBeginning()
 
     The animation controller's progress value will be automatically updated while the animation is running.
 
-    \sa completeToBeginning(), progress()
+    \sa completeToBeginning(), progress
 */
 void QQuickAnimationController::completeToEnd()
 {

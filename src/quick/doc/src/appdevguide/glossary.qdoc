@@ -159,7 +159,7 @@
         \li Signal
         \li A signal is a notification from a QML object. When an object emits
             a signal, other objects can receive and process this signal through
-            a \l{qtqml-syntax-objectattributes.html#signal-handlers}{signal handler}.
+            a \l{Signal Attributes}{signal handler}.
 
             Most properties of QML objects
             have a change signal, and also an associated change signal handler

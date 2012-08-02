@@ -292,7 +292,7 @@ void QQuickVisualDataModel::componentComplete()
     Models can also be created directly in QML, using a \l{ListModel} or
     \l{XmlListModel}.
 
-    \sa {qmlmodels}{Data Models}
+    \sa {qml-data-models}{Data Models}
 */
 QVariant QQuickVisualDataModel::model() const
 {
@@ -326,7 +326,7 @@ void QQuickVisualDataModel::setModel(const QVariant &model)
 
     The delegate provides a template defining each item instantiated by a view.
     The index is exposed as an accessible \c index property.  Properties of the
-    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+    model are also available depending upon the type of \l {qml-data-models}{Data Model}.
 */
 QQmlComponent *QQuickVisualDataModel::delegate() const
 {
