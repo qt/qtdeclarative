@@ -2466,7 +2466,13 @@ bool QQuickTextInput::isInputMethodComposing() const
 void QQuickTextInputPrivate::init()
 {
     Q_Q(QQuickTextInput);
-    q->setAcceptedMouseButtons(Qt::LeftButton);
+#ifndef QT_NO_CLIPBOARD
+    if (QGuiApplication::clipboard()->supportsSelection())
+        q->setAcceptedMouseButtons(Qt::LeftButton | Qt::MiddleButton);
+    else
+#endif
+        q->setAcceptedMouseButtons(Qt::LeftButton);
+
     q->setFlag(QQuickItem::ItemAcceptsInputMethod);
     q->setFlag(QQuickItem::ItemHasContents);
 #ifndef QT_NO_CLIPBOARD

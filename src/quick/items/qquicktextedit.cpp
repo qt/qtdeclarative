@@ -1748,7 +1748,13 @@ void QQuickTextEditPrivate::init()
 {
     Q_Q(QQuickTextEdit);
 
-    q->setAcceptedMouseButtons(Qt::LeftButton);
+#ifndef QT_NO_CLIPBOARD
+    if (QGuiApplication::clipboard()->supportsSelection())
+        q->setAcceptedMouseButtons(Qt::LeftButton | Qt::MiddleButton);
+    else
+#endif
+        q->setAcceptedMouseButtons(Qt::LeftButton);
+
     q->setFlag(QQuickItem::ItemAcceptsInputMethod);
     q->setFlag(QQuickItem::ItemHasContents);
 

@@ -153,6 +153,7 @@ private slots:
     void copyAndPaste();
     void canPaste();
     void canPasteEmpty();
+    void middleClickPaste();
     void textInput();
     void inputMethodUpdate();
     void openInputPanel();
@@ -2705,6 +2706,58 @@ void tst_qquicktextedit::canPasteEmpty() {
 #endif
 }
 
+
+void tst_qquicktextedit::middleClickPaste()
+{
+#ifndef QT_NO_CLIPBOARD
+
+#ifdef Q_OS_MAC
+    {
+        PasteboardRef pasteboard;
+        OSStatus status = PasteboardCreate(0, &pasteboard);
+        if (status == noErr)
+            CFRelease(pasteboard);
+        else
+            QSKIP("This machine doesn't support the clipboard");
+    }
+#endif
+
+    QQuickView window(testFileUrl("mouseselection_true.qml"));
+
+    window.show();
+    window.requestActivateWindow();
+    QTest::qWaitForWindowActive(&window);
+
+    QVERIFY(window.rootObject() != 0);
+    QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(textEditObject != 0);
+
+    textEditObject->setFocus(true);
+
+    QString originalText = textEditObject->text();
+    QString selectedText = "234567";
+
+    // press-and-drag-and-release from x1 to x2
+    const QPoint p1 = textEditObject->positionToRectangle(2).center().toPoint();
+    const QPoint p2 = textEditObject->positionToRectangle(8).center().toPoint();
+    const QPoint p3 = textEditObject->positionToRectangle(1).center().toPoint();
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTest::mouseMove(&window, p2);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p2);
+    QTRY_COMPARE(textEditObject->selectedText(), selectedText);
+
+    // Middle click pastes the selected text, assuming the platform supports it.
+    QTest::mouseClick(&window, Qt::MiddleButton, Qt::NoModifier, p3);
+
+    // ### This is to prevent double click detection from carrying over to the next test.
+    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval() + 10);
+
+    if (QGuiApplication::clipboard()->supportsSelection())
+        QCOMPARE(textEditObject->text().mid(1, selectedText.length()), selectedText);
+    else
+        QCOMPARE(textEditObject->text(), originalText);
+#endif
+}
 
 void tst_qquicktextedit::readOnly()
 {

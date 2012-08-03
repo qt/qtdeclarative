@@ -974,7 +974,7 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
 {
     Q_Q(QQuickTextControl);
 
-    mousePressed = (interactionFlags & Qt::TextSelectableByMouse);
+    mousePressed = (interactionFlags & Qt::TextSelectableByMouse) && (e->button() & Qt::LeftButton);
     mousePressPos = pos.toPoint();
 
     if (sendMouseEventToInputContext(e, pos))
@@ -989,7 +989,9 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
             cursor.clearSelection();
         }
     }
-    if (!(e->button() & Qt::LeftButton)) {
+    if (e->button() & Qt::MiddleButton) {
+        return;
+    } else  if (!(e->button() & Qt::LeftButton)) {
         e->ignore();
         return;
     } else if (!(interactionFlags & (Qt::TextSelectableByMouse | Qt::TextEditable))) {
