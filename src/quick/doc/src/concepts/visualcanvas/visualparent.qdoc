@@ -32,16 +32,32 @@
 
 \section1 Visual Parent
 The concept of visual parent in Qt Quick is separate but related to the concept of the QObject parent hierarchy. In QtQuick, the
-default property of Item is \l Item::data which can take any QObject derived type.
+default property of Item is \l Item::data which can be any QObject derived type.
 
 Any object that is assigned to an item's data property becomes a child of the item within its QObject hierarchy, for
 memory management purposes. Additionally, if an object added to the data property is of the Item type, it is also
 assigned to the \l Item::children property and becomes a child of the item within the visual scene hierarchy.
+(Most Qt Quick hierarchy crawling algorithms, especially the rendering algorithms, only consider the visual parent
+hierarchy.)
 
-Most Qt Quick hierarchy crawling algorithms, especially the rendering algorithms, only
-consider the visual parent hierarchy.
+When an item becomes the child of another item:
 
-Visual parent comes up most often in the following three circumstances:
+\list
+\li The child's \l{Item::parent}{parent} refers to its parent item
+\li The parent's \l{Item::children}{children} and \l{Item::childrenRect}{childrenRect} properties takes that
+    child into account
+\endlist
+
+An item's visual parent can be changed at any time by setting its \l {Item::}{parent} property.
+
+Declaring an item as a child of another does not automatically mean that the child item will be appropriately
+positioned or sized to fit within its parent. Some QML types may have in-built behaviors that affect the positioning
+of child items — for example, a \l Row object automatically re-positions its children into a horizontal formation —
+but these are behaviors enforced by the types' own specific implementations. Additionally, a parent item will not
+automatically clip its children to visually contain them within the parent's visual bounds, unless its \l{Item::}{clip}
+property is set to true.
+
+The visual parent of an item may come under consideration in the following circumstances:
 
 \section2 Item Coordinates
 As item coordinates are relative to the visual parent, they can be affected by changes to the visual hierarchy. See
