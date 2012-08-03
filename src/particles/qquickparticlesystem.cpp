@@ -157,7 +157,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 */
 
 /*!
-    \qmlmethod QtQuick.Particles2::ParticleSystem::pause
+    \qmlmethod QtQuick.Particles2::ParticleSystem::pause()
 
     Pauses the simulation if it is running.
 
@@ -165,7 +165,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 */
 
 /*!
-    \qmlmethod QtQuick.Particles2::ParticleSystem::resume
+    \qmlmethod QtQuick.Particles2::ParticleSystem::resume()
 
     Resumes the simulation if it is paused.
 
@@ -173,7 +173,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 */
 
 /*!
-    \qmlmethod QtQuick.Particles2::ParticleSystem::start
+    \qmlmethod QtQuick.Particles2::ParticleSystem::start()
 
     Starts the simulation if it has not already running.
 
@@ -181,7 +181,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 */
 
 /*!
-    \qmlmethod QtQuick.Particles2::ParticleSystem::stop
+    \qmlmethod QtQuick.Particles2::ParticleSystem::stop()
 
     Stops the simulation if it is running.
 
@@ -189,14 +189,14 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 */
 
 /*!
-    \qmlmethod QtQuick.Particles2::ParticleSystem::restart
+    \qmlmethod QtQuick.Particles2::ParticleSystem::restart()
 
     Stops the simulation if it is running, and then starts it.
 
     \sa stop, restart, running
 */
 /*!
-    \qmlmethod QtQuick.Particles2::ParticleSystem::reset
+    \qmlmethod QtQuick.Particles2::ParticleSystem::reset()
 
     Discards all currently existing particles.
 

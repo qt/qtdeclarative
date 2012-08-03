@@ -47,7 +47,7 @@
     \inqmlmodule QtQuick.Particles 2.0
     \title Using the Qt Quick Particle System
 
-    Documentation for all Particle System elements can be found on the \l{QML Module QtQuick.Particles 2}{QtQuick.Particles} module page.
+    Documentation for all Particle System elements can be found on the \l{QtQuick.Particles 2}{QtQuick.Particles} module page.
 
   Note that to use elements from the particles module, you will need to import the types with the following line:
   \code
