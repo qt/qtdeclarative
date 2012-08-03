@@ -841,6 +841,13 @@ access the properties and signals of the attaching type. These are accessed by
 prefixing the properties and respective signal handlers with the name of the
 attaching type.
 
+References to attached properties and handlers take the following syntax form:
+
+\code
+<AttachingType>.<propertyName>
+<AttachingType>.on<SignalName>
+\endcode
+
 For example, the \l ListView type has an attached property
 \l {ListView::isCurrentItem}{ListView.isCurrentItem} that is available to each delegate object in a
 ListView. This can be used by each individual delegate object to determine
