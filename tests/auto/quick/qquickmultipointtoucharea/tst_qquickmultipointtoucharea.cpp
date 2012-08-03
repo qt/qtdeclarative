@@ -43,7 +43,7 @@
 #include <QtTest/QSignalSpy>
 #include <private/qquickmultipointtoucharea_p.h>
 #include <private/qquickflickable_p.h>
-#include <QtGui/QWindowSystemInterface>
+#include <qpa/qwindowsysteminterface.h>
 #include <QtQuick/qquickview.h>
 #include "../../shared/util.h"
 
