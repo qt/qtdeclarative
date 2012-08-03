@@ -4,7 +4,8 @@ TARGET     = QtQuickTest
 CONFIG += dll warn_on
 
 DEFINES += QT_NO_URL_CAST_FROM_STRING
-QT += testlib testlib-private qml quick  gui qml-private v8-private core-private
+QT = core
+QT_PRIVATE = testlib-private quick qml-private v8-private gui core-private
 
 load(qt_module)
 
