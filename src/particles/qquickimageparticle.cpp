@@ -855,6 +855,7 @@ void QQuickImageParticle::setImage(const QUrl &image)
     if (image.isEmpty()){
         if (m_image) {
             delete m_image;
+            m_image = 0;
             emit imageChanged();
         }
         return;
@@ -1431,8 +1432,9 @@ void QQuickImageParticle::finishBuildParticleNodes()
         if (!m_material)
             m_material = SimpleMaterial::createMaterial();
         if (!imageLoaded) {
-            if (!m_image->pix.isReady()) {
-                qmlInfo(this) << m_image->pix.error();
+            if (!m_image || !m_image->pix.isReady()) {
+                if (m_image)
+                    qmlInfo(this) << m_image->pix.error();
                 delete m_material;
                 return;
             }
