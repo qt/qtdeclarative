@@ -275,6 +275,9 @@ the window loses focus.
 \section2 Models and Views
 
 \list
+\li Any delegate of a view that uses a QAbstractItemModel-derived model type can use the syntax
+    \c {model.<role> = <newDataValue>} to modify the data for a particular role. (Previously,
+    the \c {model.<role>} syntax was only available for reading, not writing to, a role value.)
 \li ListModel:
     \list
     \li By default, roles can no longer change type during a model's lifetime. The new
