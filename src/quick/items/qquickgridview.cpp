@@ -1765,8 +1765,10 @@ void QQuickGridView::setSnapMode(SnapMode mode)
     documentation.
 
     \note This transition is not applied to the items that are created when the view is initially
-    populated, or when the view's \l model changes. In those cases, the \l populate transition is
-    applied instead.
+    populated, or when the view's \l model changes. (In those cases, the \l populate transition is
+    applied instead.) Additionally, this transition should \e not animate the height of the new item;
+    doing so will cause any items beneath the new item to be laid out at the wrong position. Instead,
+    the height can be animated within a \l {ListView::onAdd()}{ListView.onAdd} in the delegate.
 
     \sa addDisplaced, populate, ViewTransition
 */
