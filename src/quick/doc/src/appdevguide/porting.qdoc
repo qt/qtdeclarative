@@ -219,7 +219,7 @@ All QML plugins should extend QQmlExtensionPlugin in Qt 5.
 
 Additionally, plugins should use the new Qt plugin infrastructure introduced in Qt 5. QML plugins no
 longer require the Q_EXPORT_PLUGIN2() macro. Instead, they should use the Q_PLUGIN_METADATA() macro
-within the plugin class declarations and provide a \c .json file for the plugin.
+within the plugin class declaration.
 
 See the updated \l {qtqml-modules-cppplugins.html}{Creating C++ Plugins For QML} documentation for
 an overview of creating QML plugins in Qt 5.

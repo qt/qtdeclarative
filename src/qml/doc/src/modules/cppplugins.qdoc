@@ -45,12 +45,16 @@
     To write a QML extension plugin:
     \list 1
     \li Subclass QQmlExtensionPlugin
-    \li Implement QQmlExtensionPlugin's
-    \l{QQmlExtensionPlugin::}{registerTypes()} method
-    \li Register types with qmlRegisterType()
-    \li Export the class using the Q_EXPORT_PLUGIN2() macro
+        \list
+            \li Use the Q_PLUGIN_METADATA() macro to register the plugin with
+                the Qt meta object system
+            \li Override the \l{QQmlExtensionPlugin::}{registerTypes()} method
+                and call qmlRegisterType() to register the types to be exported
+                by the plugin
+        \endlist
     \li Write a project file for the plugin
-    \li Create a \l{Adding Module Metadata with a qmldir file}{qmldir file} to describe the plugin
+    \li Create a \l{Adding Module Metadata with a qmldir file}{qmldir file} to
+        describe the plugin
     \endlist
 
     QML extension plugins are for either application-specific or library-like
@@ -67,18 +71,14 @@
     \snippet examples/qml/cppextensions/plugins/plugin.cpp 0
     \dots
 
-    A plugin class, \c QExampleQMLPlugin, is a subclass of
-    \l QQmlExtensionPlugin and it implements the
-    \l{QQmlExtensionPlugin::}{registerTypes()} method.
-
-    In the registerTypes() method, the plugin class can
-    register the \c TimeModel class to the declarative
-    runtime with the qmlRegisterType() function. The Q_EXPORT_PLUGIN2() macro has
-    two parameters, the generated plugin name and the class name.
+    To make this type available, we create a plugin class named \c QExampleQmlPlugin
+    which is a subclass of \l QQmlExtensionPlugin. It overrides the
+    \l{QQmlExtensionPlugin::}{registerTypes()} method in order to register the \c TimeModel
+    type using qmlRegisterType(). It also uses the Q_PLUGIN_METADATA() macro in the class
+    definition to register the plugin with the Qt meta object system using a unique
+    identifier for the plugin.
 
     \snippet examples/qml/cppextensions/plugins/plugin.cpp plugin
-    \codeline
-    \snippet examples/qml/cppextensions/plugins/plugin.cpp export
 
     The \c TimeModel class receives a \c{1.0} version of this plugin library, as
     a QML type called \c Time. The Q_ASSERT() macro can ensure the module is
@@ -88,26 +88,27 @@
 
     For this example, the TimeExample source directory is in
     \c{com/nokia/TimeExample}. The plugin's module import statement will follow
-    this structure.
+    this structure, so the module is registered as "com.nokia.TimeExample".
 
-    The project file, in a \c .pro file, defines the project as a plugin library
-    and specifies it should be built into the \c com/nokia/TimeExample
-    directory:
+    Additionally, the project file, in a \c .pro file, defines the project as a plugin library,
+    specifies it should be built into the \c com/nokia/TimeExample directory, and registers
+    the plugin target name and various other details:
 
     \code
     TEMPLATE = lib
     CONFIG += qt plugin
-    QT += declarative
+    QT += qml
 
     DESTDIR = com/nokia/TimeExample
     TARGET = qmlqtimeexampleplugin
-    ...
+    SOURCES += qexampleqmlplugin.cpp
     \endcode
 
-    Finally, a \l{Adding Module Metadata with a qmldir file}{qmldir file} is required in the \c
-    com/nokia/TimeExample directory to specify the plugin. This directory
-    includes a \c Clock.qml file that should be bundled with the plugin, so it
-    needs to be specified in the \c qmldir file:
+    Finally, a \l{Adding Module Metadata with a qmldir file}{qmldir file} is required
+    in the \c com/nokia/TimeExample directory to describe the plugin and the types that it
+    exports. The plugin includes a \c Clock.qml file along with the \c qmlqtimeexampleplugin
+    that is built by the project (as shown above in the \c .pro file) so both of these
+    need to be specified in the \c qmldir file:
 
     \quotefile examples/qml/cppextensions/plugins/com/nokia/TimeExample/qmldir
 
@@ -123,7 +124,7 @@
 \section1 Reference
 
     \list
-    \li \l {Tutorial: Extending QML with C++} - contains a chapter
+    \li \l {Writing QML Extensions with C++} - contains a chapter
     on creating QML plugins.
     \li \l{Defining QML Types from C++} - information about registering C++ types into
     the runtime.

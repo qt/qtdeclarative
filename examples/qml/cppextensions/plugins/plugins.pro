@@ -7,8 +7,6 @@ TARGET  = qmlqtimeexampleplugin
 
 SOURCES += plugin.cpp
 
-OTHER_FILES += "plugin.json"
-
 qdeclarativesources.files += \
     com/nokia/TimeExample/qmldir \
     com/nokia/TimeExample/center.png \

@@ -58,6 +58,9 @@ used in a way that requires the engine to access additional type information
 property, or if one of its enum types is to be used in this way — then the
 class may need to be registered.
 
+(Note that a number of the important concepts covered in this document are
+demonstrated in the \l{Writing QML Extensions with C++} tutorial.)
+
 
 \section1 Properties
 

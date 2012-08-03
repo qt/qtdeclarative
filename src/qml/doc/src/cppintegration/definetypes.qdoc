@@ -43,6 +43,9 @@ from QML.
 Additionally, the QtQml module provides mechanisms for implementing QML-specific
 features such as \e{attached properties} and \e{default properties} in C++.
 
+(Note that a number of the important concepts covered in this document are
+demonstrated in the \l{Writing QML Extensions with C++} tutorial.)
+
 
 \section1 Registering C++ types with the QML type system
 
@@ -633,7 +636,10 @@ QtQuick C++ module. Therefore, this class should be subclassed when it is
 necessary to implement a visual type in C++ that can be integrated into a
 QML-based user interface.
 
-See the QQuickItem documentation for more information.
+See the QQuickItem documentation for more information. Additionally, the
+\l{Writing QML Extensions with C++} tutorial demonstrates how a QQuickItem-based
+visual item can be implemented in C++ and integrated into a QtQuick-based user
+interface.
 
 
 \section1 Receiving Notifications for Object Initialization
