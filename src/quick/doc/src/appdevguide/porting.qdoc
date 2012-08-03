@@ -73,19 +73,48 @@ for examples.
 Graphics View framework backend used in QtQuick 1.
 \endlist
 
-\section 2 Behavioral Changes
+\section2 Behavioral Changes
 
-There are many behavioral changes caused in the transition and you should thoroughly test your applications after
+QtQuick 2.0 includes a number of behavioral changes and you should thoroughly test your applications after
 porting. These changes will not necessarily lead to run-time errors, but may break certain assumptions in your code.
-Here is a list of some more prominent changes:
+Below are the prominent changes to be aware of when porting your applications.
+
+Item opacity and visibility:
 
 \list
 \li The input handling details of \l{Item::}{opacity} and \l{Item::}{visible} have changed. An opacity of zero no
-longer affects input handling, where previously it stopped mouse input. A visibility of false no longer affects
-keyboard input, but still stops mouse input. The new \l{Item::}{enabled} property stops mouse and keyboard input, but does not affect how or whether
-the item is rendered. A workaround for applying the old behavior in most cases is to bind enabled to (visible &&
-opacity > 0.0).
+    longer affects input handling, where previously it stopped mouse input. A visibility of false no longer affects
+    keyboard input, but still stops mouse input. The new \l{Item::}{enabled} property stops mouse and keyboard input, but does not affect how or whether
+    the item is rendered. A workaround for applying the old behavior in most cases is to bind enabled to
+    \tt {(visible && opacity > 0.0)}.
+\li Previously, if an item was in a positioner (i.e. a \l Row, \l Column, \l Grid and \l Flow)
+    and the item's \c opacity changed to 0, or its \c visible value became \c false, the positioner
+    would remove the item from its layout and collapse the space for that item. In QtQuick 2.0, this
+    now only happens when an item's \c visible is \c false; the item opacity no longer affects whether
+    the item is laid out. (This is consistent with the existing behavior of ListView and GridView).
 \endlist
+
+Text:
+
+\list
+\li The TextEdit::textFormat property now defaults to \c PlainText instead of \c AutoText.
+\li When Text::textFormat is set to \c Text.AutoText format, the text object will automatically
+    switch to \c Text.StyledText instead of \c Text.RichText.
+\endlist
+
+Other:
+
+\list
+\li Modifying the Image::sourceSize now fits the image to the size, maintaining aspect
+    ratio.
+\li For ListView and GridView, the \c cacheBuffer property now has a non-zero default and
+    delegates in the cache buffer are created asynchronously. Also, using a \c RightToLeft layout
+    now also reverses the \c preferredHighlightBegin and \c preferredHighlightEnd.
+\li For \l Loader, the \c sourceChanged and \c sourceComponentChanged signals are now only emitted
+    when their respective properties change value. (Previously \l Loader emitted both of these signals
+    when either of the relevant properties had changed.)
+\endlist
+
 
 \section2 Changes to experimental Qt.labs modules
 

@@ -81,7 +81,8 @@ Custom rendering can be performed on the scenegraph using the following new clas
 
 The QtQuick 2.0 QML module is a major update.
 
-Below are the additions and changes in QtQuick 2.0.
+Below are the additions in QtQuick 2.0. For a list of behavioral changes which may affect
+applications ported from QtQuick 1.x, see the \l {Porting QML Applications to Qt 5}.
 
 \section2 Visual types, Graphical Effects and Sprites
 
@@ -109,8 +110,6 @@ Below are the additions and changes in QtQuick 2.0.
         the image alignment.
     \li New \c Image.Pad enumeration value for \l{Image::}{fillMode} that does not transform the image,
         unlike other \l{Image::}{fillMode} enumeration values.
-    \li Modifying the \l{Image::}{sourceSize} now fits the image to the size, maintaining aspect
-        ratio.
     \endlist
 \li New ShaderEffect and ShaderEffectSource types enable GLSL shader programs to be integrated
     directly into QML code and applied to QML items and images. (This obsoletes the experimental
@@ -182,8 +181,6 @@ relative to its start.
     \endlist
 \li \l Text only:
     \list
-    \li When \l{Text::}{textFormat} is set to \c Text.AutoText format, the text object will
-        automatically switch to \c Text.StyledText instead of \c Text.RichText.
     \li \c Text.RightElide is now supported where text spans multiple lines.
     \li New \l{Text::}{linkColor} property controls the color of linked text.
     \li New \l{Text::}{onLineLaidOut} handler is called for every line during the layout process to
@@ -195,7 +192,6 @@ relative to its start.
     \endlist
 \li TextEdit only:
     \list
-    \li \l{TextEdit::}{textFormat} property now defaults to \c PlainText instead of \c AutoText.
     \li New \l{TextEdit::}{baseUrl} property specified the base URL used to resolve relative URLs
         within the text.
     \endlist
@@ -220,14 +216,11 @@ the window loses focus.
 \li MouseArea:
     \list
     \li Wheel events are now supported; events are provided through the new WheelEvent type.
-    \li The \l{MouseArea::}{onClicked}, \l{MouseArea::}{onDoubleClicked} and
-        \l{MouseArea::}{onPressAndHold} signals are now propagated differently to
-        \l{MouseArea::}{onPressed}. These will now be propagated to the highest-stacking-order enabled
-        MouseArea that has implemented the relevant handlers. You can still ignore these events in the
-        handler to let them pass through; this behavior is triggered with the new property
-        \l{MouseArea::}{propagateComposedEvents}.
     \li New \l{MouseArea::}{propagateComposedEvents} property sets whether composed events are
-        propagated to other mouse areas.
+        propagated to other mouse areas. If this property is true and the l{MouseArea::onClicked}{clicked},
+        \l{MouseArea::onDoubleClicked}{doubleClicked} or \l{MouseArea::onPressAndHold}{pressAndHold}
+        handlers reject a mouse event, the event will be propagated to overlapping MouseArea items
+        in the same area that are lower in the stacking order.
     \li New \l{MouseArea::}{cursorShape} property controls the cursor shape.
         \endlist
 \endlist
@@ -345,9 +338,6 @@ the window loses focus.
         \l{Loader::}{item}.
     \li New \l{Loader::}{setSource()} method loads an object with specific initial property values,
         similar to \l Component::createObject().
-    \li The \c sourceChanged signal is now only emitted when the \l{Loader::}{source} changes and
-        the \c sourceComponentChanged signal is now only emitted when the \l{Loader::}{sourceComponent}
-        changes. (Previously \l Loader emitted both signals when only one of these properties had changed.)
     \endlist
 \li \l Binding:
     \list
