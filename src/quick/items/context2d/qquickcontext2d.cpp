@@ -465,7 +465,7 @@ static v8::Handle<v8::Value> ctx2d_canvas(v8::Local<v8::String>, const v8::Acces
     \qmlmethod object QtQuick2::Context2D::restore()
     Pops the top state on the stack, restoring the context to that state.
 
-    \sa QtQuick2::Context2D::save()
+    \sa save()
 */
 static v8::Handle<v8::Value> ctx2d_restore(const v8::Arguments &args)
 {
@@ -499,26 +499,26 @@ static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
     Each state consists of the current transformation matrix, clipping region,
     and values of the following attributes:
     \list
-    \li\a QtQuick2::Context2D::strokeStyle
-    \li\a QtQuick2::Context2D::fillStyle
-    \li\a QtQuick2::Context2D::fillRule
-    \li\a QtQuick2::Context2D::globalAlpha
-    \li\a QtQuick2::Context2D::lineWidth
-    \li\a QtQuick2::Context2D::lineCap
-    \li\a QtQuick2::Context2D::lineJoin
-    \li\a QtQuick2::Context2D::miterLimit
-    \li\a QtQuick2::Context2D::shadowOffsetX
-    \li\a QtQuick2::Context2D::shadowOffsetY
-    \li\a QtQuick2::Context2D::shadowBlur
-    \li\a QtQuick2::Context2D::shadowColor
-    \li\a QtQuick2::Context2D::globalCompositeOperation
-    \li\a QtQuick2::Context2D::font
-    \li\a QtQuick2::Context2D::textAlign
-    \li\a QtQuick2::Context2D::textBaseline
+    \li strokeStyle
+    \li fillStyle
+    \li fillRule
+    \li globalAlpha
+    \li lineWidth
+    \li lineCap
+    \li lineJoin
+    \li miterLimit
+    \li shadowOffsetX
+    \li shadowOffsetY
+    \li shadowBlur
+    \li shadowColor
+    \li globalCompositeOperation
+    \li \l font
+    \li textAlign
+    \li textBaseline
     \endlist
 
     The current path is NOT part of the drawing state. The path can be reset by
-    invoking the \a QtQuick2::Context2D::beginPath() method.
+    invoking the beginPath() method.
 */
 static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
 {
@@ -609,10 +609,10 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
     \li the last row remains constant
     \endlist
     The scale factors and skew factors are multiples; \c{e} and \c{f} are
-    coordinate space units, just like the units in the \a QtQuick2::Context2D::translate(x,y)
+    coordinate space units, just like the units in the translate(x,y)
     method.
 
-    \sa QtQuick2::Context2D::transform()
+    \sa transform()
 */
 static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
 {
@@ -633,13 +633,13 @@ static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
 
 /*!
     \qmlmethod object QtQuick2::Context2D::transform(real a, real b, real c, real d, real e, real f)
-    This method is very similar to \a QtQuick2::Context2D::setTransform(), but instead of replacing the old
+    This method is very similar to setTransform(), but instead of replacing the old
     tranform matrix, this method applies the given tranform matrix to the current matrix by mulitplying to it.
 
-    The \a setTransform(a, b, c, d, e, f) method actually resets the current transform to the identity matrix,
+    The setTransform(a, b, c, d, e, f) method actually resets the current transform to the identity matrix,
     and then invokes the transform(a, b, c, d, e, f) method with the same arguments.
 
-    \sa QtQuick2::Context2D::setTransform()
+    \sa setTransform()
 */
 static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
 {
@@ -683,7 +683,7 @@ static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
     \qmlmethod object QtQuick2::Context2D::resetTransform()
     Reset the transformation matrix to default value.
 
-    \sa QtQuick2::Context2D::transform(), QtQuick2::Context2D::setTransform(), QtQuick2::Context2D::reset()
+    \sa transform(), setTransform(), reset()
 */
 static v8::Handle<v8::Value> ctx2d_resetTransform(const v8::Arguments &args)
 {
@@ -764,8 +764,8 @@ static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> va
      \li xor              - A xor B. Exclusive OR of the source image and destination image.
      \endlist
 
-     Additionally, this property also accepts the compositon modes listed in \a {QPainter::CompositionMode}. According to the W3C standard, these
-     extension composition modes are provided as "vendorName-operationName" syntax, for example: \c {QPainter::CompositionMode_Exclusion} is porvided as
+     Additionally, this property also accepts the compositon modes listed in QPainter::CompositionMode. According to the W3C standard, these
+     extension composition modes are provided as "vendorName-operationName" syntax, for example: QPainter::CompositionMode_Exclusion is provided as
      "qt-exclusion".
 */
 static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Local<v8::String>, const v8::AccessorInfo &info)
@@ -812,14 +812,14 @@ static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<
      \li '#RRGGBB' - for example: '#00FFCC'
      \li Qt.rgba(red, green, blue, alpha) - for example: Qt.rgba(0.3, 0.7, 1, 1.0)
      \endlist
-     If the \a fillStyle or \a strokeStyle is assigned many times in a loop, the last Qt.rgba() syntax should be chosen, as it has the
+     If the \c fillStyle or \l strokeStyle is assigned many times in a loop, the last Qt.rgba() syntax should be chosen, as it has the
      best performance, because it's already a valid QColor value, does not need to be parsed everytime.
 
      The default value is  '#000000'.
-     \sa QtQuick2::Context2D::createLinearGradient
-     \sa QtQuick2::Context2D::createRadialGradient
-     \sa QtQuick2::Context2D::createPattern()
-     \sa QtQuick2::Context2D::strokeStyle
+     \sa createLinearGradient()
+     \sa createRadialGradient()
+     \sa createPattern()
+     \sa strokeStyle
  */
 static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -881,10 +881,10 @@ static void ctx2d_fillStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
      \li Qt.OddEvenFill
      \li Qt.WindingFill
      \endlist
-     Note: Unlike the \a QPainterPath, the Canvas API uses the winding fill as the default fill rule.
+     Note: Unlike the QPainterPath, the Canvas API uses the winding fill as the default fill rule.
      The fillRule property is part of the context rendering state.
 
-     \sa QtQuick2::Context2D::fillStyle
+     \sa fillStyle
  */
 static v8::Handle<v8::Value> ctx2d_fillRule(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -921,10 +921,10 @@ static void ctx2d_fillRule_set(v8::Local<v8::String>, v8::Local<v8::Value> value
 
      The default value is  '#000000'.
 
-     \sa QtQuick2::Context2D::createLinearGradient
-     \sa QtQuick2::Context2D::createRadialGradient
-     \sa QtQuick2::Context2D::createPattern()
-     \sa QtQuick2::Context2D::fillStyle
+     \sa createLinearGradient()
+     \sa createRadialGradient()
+     \sa createPattern()
+     \sa fillStyle
  */
 v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -990,12 +990,12 @@ static void ctx2d_strokeStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> va
    Gradients must have two or more color stops, representing color shifts positioned from 0 to 1 between
    to the gradient's starting and end points or circles.
 
-    \sa QtQuick2::Context2D::CanvasGradient::addColorStop
-    \sa QtQuick2::Context2D::createRadialGradient
-    \sa QtQuick2::Context2D::ctx2d_createConicalGradient()
-    \sa QtQuick2::Context2D::createPattern()
-    \sa QtQuick2::Context2D::fillStyle
-    \sa QtQuick2::Context2D::strokeStyle
+    \sa CanvasGradient::addColorStop()
+    \sa createRadialGradient()
+    \sa createConicalGradient()
+    \sa createPattern()
+    \sa fillStyle
+    \sa strokeStyle
   */
 
 static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &args)
@@ -1036,12 +1036,12 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
    Returns a CanvasGradient object that represents a radial gradient that paints along the cone given by the start circle with
    origin (x0, y0) and radius r0, and the end circle with origin (x1, y1) and radius r1.
 
-    \sa QtQuick2::Context2D::CanvasGradient::addColorStop
-    \sa QtQuick2::Context2D::createLinearGradient
-    \sa QtQuick2::Context2D::ctx2d_createConicalGradient()
-    \sa QtQuick2::Context2D::createPattern()
-    \sa QtQuick2::Context2D::fillStyle
-    \sa QtQuick2::Context2D::strokeStyle
+    \sa CanvasGradient::addColorStop()
+    \sa createLinearGradient()
+    \sa createConicalGradient()
+    \sa createPattern()
+    \sa fillStyle
+    \sa strokeStyle
   */
 
 static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &args)
@@ -1091,12 +1091,12 @@ static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &arg
    Returns a CanvasGradient object that represents a conical gradient that interpolate colors counter-clockwise around a center point (\c x, \c y)
    with start angle \c angle in units of radians.
 
-    \sa QtQuick2::Context2D::CanvasGradient::addColorStop
-    \sa QtQuick2::Context2D::createLinearGradient
-    \sa QtQuick2::Context2D::ctx2d_createRadialGradient()
-    \sa QtQuick2::Context2D::createPattern()
-    \sa QtQuick2::Context2D::fillStyle
-    \sa QtQuick2::Context2D::strokeStyle
+    \sa CanvasGradient::addColorStop()
+    \sa createLinearGradient()
+    \sa createRadialGradient()
+    \sa createPattern()
+    \sa fillStyle
+    \sa strokeStyle
   */
 
 static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &args)
@@ -1133,9 +1133,9 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
     return args.This();
 }
 /*!
-  \qmlmethod variant createPattern(Color color, enumeration patternMode)
+  \qmlmethod variant QtQuick2::Context2D::createPattern(color color, enumeration patternMode)
   This is a overload function.
-  Returns a CanvasPattern object that uses the given \c color and \c patternMode.
+  Returns a CanvasPattern object that uses the given \a color and \a patternMode.
   The valid pattern modes are:
     \list
     \li Qt.SolidPattern
@@ -1156,10 +1156,10 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
     \sa Qt::BrushStyle
  */
 /*!
-  \qmlmethod variant createPattern(Image image, string repetition)
+  \qmlmethod variant QtQuick2::Context2D::createPattern(Image image, string repetition)
   Returns a CanvasPattern object that uses the given image and repeats in the direction(s) given by the repetition argument.
 
-  The \a image parameter must be a valid Image item, a valid \a QtQuick2::CanvasImageData object or loaded image url, if there is no image data, throws an INVALID_STATE_ERR exception.
+  The \a image parameter must be a valid Image item, a valid CanvasImageData object or loaded image url, if there is no image data, throws an INVALID_STATE_ERR exception.
 
   The allowed values for \a repetition are:
 
@@ -1172,8 +1172,8 @@ static v8::Handle<v8::Value> ctx2d_createConicalGradient(const v8::Arguments &ar
 
   If the repetition argument is empty or null, the value "repeat" is used.
 
-  \sa QtQuick2::Context2D::strokeStyle
-  \sa QtQuick2::Context2D::fillStyle
+  \sa strokeStyle
+  \sa fillStyle
   */
 static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
 {
@@ -1462,7 +1462,7 @@ static void ctx2d_shadowColor_set(v8::Local<v8::String>, v8::Local<v8::Value> va
     \qmlproperty qreal QtQuick2::Context2D::shadowOffsetX
      Holds the current shadow offset in the positive horizontal distance.
 
-     \sa QtQuick2::Context2D::shadowOffsetY
+     \sa shadowOffsetY
  */
 v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -1488,7 +1488,7 @@ static void ctx2d_shadowOffsetX_set(v8::Local<v8::String>, v8::Local<v8::Value> 
     \qmlproperty qreal QtQuick2::Context2D::shadowOffsetY
      Holds the current shadow offset in the positive vertical distance.
 
-     \sa QtQuick2::Context2D::shadowOffsetX
+     \sa shadowOffsetX
  */
 v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -1559,7 +1559,7 @@ static v8::Handle<v8::Value> ctx2d_clearRect(const v8::Arguments &args)
   \qmlmethod object QtQuick2::Context2D::fillRect(real x, real y, real w, real h)
    Paint the specified rectangular area using the fillStyle.
 
-   \sa QtQuick2::Context2D::fillStyle
+   \sa fillStyle
   */
 static v8::Handle<v8::Value> ctx2d_fillRect(const v8::Arguments &args)
 {
@@ -1576,10 +1576,10 @@ static v8::Handle<v8::Value> ctx2d_fillRect(const v8::Arguments &args)
    Stroke the specified rectangle's path using the strokeStyle, lineWidth, lineJoin,
    and (if appropriate) miterLimit attributes.
 
-   \sa QtQuick2::Context2D::strokeStyle
-   \sa QtQuick2::Context2D::lineWidth
-   \sa QtQuick2::Context2D::lineJoin
-   \sa QtQuick2::Context2D::miterLimit
+   \sa strokeStyle
+   \sa lineWidth
+   \sa lineJoin
+   \sa miterLimit
   */
 static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
 {
@@ -1597,7 +1597,7 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
   \qmlmethod object QtQuick2::Context2D::arc(real x, real y, real radius, real startAngle, real endAngle, bool anticlockwise)
   Adds an arc to the current subpath that lies on the circumference of the circle whose center is at the point (\c x,\cy) and whose radius is \c radius.
   \image qml-item-canvas-arcTo2.png
-  \sa QtQuick2::Context2D::arcTo,
+  \sa arcTo,
       {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C 2d context standard for arc}
   */
 static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
@@ -1644,7 +1644,7 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
 
     \image qml-item-canvas-startAngle.png
     The anticlockwise has the value TRUE for each arc in the figure above because they are all drawn in the counterclockwise direction.
-  \sa QtQuick2::Context2D::arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C 2d
+  \sa arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C 2d
       context standard for arcTo}
   */
 static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
@@ -1687,7 +1687,7 @@ static v8::Handle<v8::Value> ctx2d_beginPath(const v8::Arguments &args)
 /*!
   \qmlmethod object QtQuick2::Context2D::bezierCurveTo(real cp1x, real cp1y, real cp2x, real cp2y, real x, real y)
 
-  Adds a cubic Bezier curve between the current position and the given endPoint using the control points specified by (\c cp1x, cp1y),
+  Adds a cubic bezier curve between the current position and the given endPoint using the control points specified by (\c cp1x, cp1y),
   and (\c cp2x, \c cp2y).
   After the curve is added, the current position is updated to be at the end point (\c x, \c y) of the curve.
   The following code produces the path shown below:
@@ -1731,7 +1731,7 @@ static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
 
    Creates the clipping region from the current path.
    Any parts of the shape outside the clipping path are not displayed.
-   To create a complex shape using the \a clip() method:
+   To create a complex shape using the \c clip() method:
 
     \list 1
     \li Call the \c{context.beginPath()} method to set the clipping path.
@@ -1744,10 +1744,10 @@ static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
     modify how an image displays:
 
     \image qml-canvas-clip-complex.png
-    \sa QtQuick2::Context2D::beginPath()
-    \sa QtQuick2::Context2D::closePath()
-    \sa QtQuick2::Context2D::stroke()
-    \sa QtQuick2::Context2D::fill()
+    \sa beginPath()
+    \sa closePath()
+    \sa stroke()
+    \sa fill()
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-clip}{W3C 2d context standard for clip}
   */
 static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
@@ -1784,7 +1784,7 @@ static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
 
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-fill}{W3C 2d context standard for fill}
 
-   \sa QtQuick2::Context2D::fillStyle
+   \sa fillStyle
   */
 static v8::Handle<v8::Value> ctx2d_fill(const v8::Arguments &args)
 {
@@ -1842,9 +1842,9 @@ static v8::Handle<v8::Value> ctx2d_moveTo(const v8::Arguments &args)
 /*!
   \qmlmethod object QtQuick2::Context2D::quadraticCurveTo(real cpx, real cpy, real x, real y)
 
-   Adds a quadratic Bezier curve between the current point and the endpoint (\c x, \c y) with the control point specified by (\c cpx, \c cpy).
+   Adds a quadratic bezier curve between the current point and the endpoint (\c x, \c y) with the control point specified by (\c cpx, \c cpy).
 
-   See {http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for  for quadraticCurveTo}
+   See \l{http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for  for quadraticCurveTo}
  */
 static v8::Handle<v8::Value> ctx2d_quadraticCurveTo(const v8::Arguments &args)
 {
@@ -1950,9 +1950,9 @@ static v8::Handle<v8::Value> ctx2d_text(const v8::Arguments &args)
 
    Strokes the subpaths with the current stroke style.
 
-   See {http://www.w3.org/TR/2dcontext/#dom-context-2d-stroke}{W3C 2d context standard for stroke}
+   See \l{http://www.w3.org/TR/2dcontext/#dom-context-2d-stroke}{W3C 2d context standard for stroke}
 
-   \sa QtQuick2::Context2D::strokeStyle
+   \sa strokeStyle
   */
 static v8::Handle<v8::Value> ctx2d_stroke(const v8::Arguments &args)
 {
@@ -2007,7 +2007,7 @@ static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
   Holds the current font settings.
 
   The default font value is "10px sans-serif".
-  See {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
+  See \l {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
   */
 v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -2162,10 +2162,10 @@ static void ctx2d_textBaseline_set(v8::Local<v8::String>, v8::Local<v8::Value> v
 /*!
   \qmlmethod object QtQuick2::Context2D::fillText(text, x, y)
   Fills the given text at the given position.
-  \sa QtQuick2::Context2D::font
-  \sa QtQuick2::Context2D::textAlign
-  \sa QtQuick2::Context2D::textBaseline
-  \sa QtQuick2::Context2D::strokeText
+  \sa font
+  \sa textAlign
+  \sa textBaseline
+  \sa strokeText
   */
 static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
 {
@@ -2186,10 +2186,10 @@ static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
 /*!
   \qmlmethod object QtQuick2::Context2D::strokeText(text, x, y)
   Strokes the given text at the given position.
-  \sa QtQuick2::Context2D::font
-  \sa QtQuick2::Context2D::textAlign
-  \sa QtQuick2::Context2D::textBaseline
-  \sa QtQuick2::Context2D::fillText
+  \sa font
+  \sa textAlign
+  \sa textBaseline
+  \sa fillText
   */
 static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
 {
@@ -2201,6 +2201,7 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
         r->context->drawText(engine->toString(args[0]), args[1]->NumberValue(), args[2]->NumberValue(), false);
     return args.This();
 }
+
 /*!
   \qmltype TextMetrics
     \inqmlmodule QtQuick 2
@@ -2209,10 +2210,10 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
     \brief Provides a Context2D TextMetrics interface
 
     The TextMetrics object can be created by QtQuick2::Context2D::measureText method.
-    See {http://www.w3.org/TR/2dcontext/#textmetrics}{W3C 2d context TexMetrics} for more details.
+    See \l{http://www.w3.org/TR/2dcontext/#textmetrics}{W3C 2d context TexMetrics} for more details.
 
-    \sa QtQuick2::Context2D::measureText
-    \sa QtQuick2::TextMetrics::width
+    \sa Context2D::measureText
+    \sa width
   */
 
 /*!
@@ -2247,16 +2248,16 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
   \qmlmethod QtQuick2::Context2D::drawImage(variant image, real dx, real dy)
   Draws the given \a image on the canvas at position (\a dx, \a dy).
   Note:
-  The \a image type can be an Image item, an image url or a \a {QtQuick2::CanvasImageData} object.
+  The \a image type can be an Image item, an image url or a CanvasImageData object.
   When given as Image item, if the image isn't fully loaded, this method draws nothing.
-  When given as url string, the image should be loaded by calling Canvas item's \a QtQuick2::Canvas::loadImage() method first.
-  This image been drawing is subject to the current context clip path, even the given \c image is a  {QtQuick2::CanvasImageData} object.
+  When given as url string, the image should be loaded by calling Canvas item's Canvas::loadImage() method first.
+  This image been drawing is subject to the current context clip path, even the given \c image is a CanvasImageData object.
 
-  \sa QtQuick2::CanvasImageData
-  \sa QtQuick2::Image
-  \sa QtQuick2::Canvas::loadImage
-  \sa QtQuick2::Canvas::isImageLoaded
-  \sa QtQuick2::Canvas::onImageLoaded
+  \sa CanvasImageData
+  \sa Image
+  \sa Canvas::loadImage
+  \sa Canvas::isImageLoaded
+  \sa Canvas::onImageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
@@ -2267,16 +2268,16 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
   height \a dh.
 
   Note:
-  The \a image type can be an Image item, an image url or a \a {QtQuick2::CanvasImageData} object.
+  The \a image type can be an Image item, an image url or a CanvasImageData object.
   When given as Image item, if the image isn't fully loaded, this method draws nothing.
-  When given as url string, the image should be loaded by calling Canvas item's \a QtQuick2::Canvas::loadImage() method first.
-  This image been drawing is subject to the current context clip path, even the given \c image is a  {QtQuick2::CanvasImageData} object.
+  When given as url string, the image should be loaded by calling Canvas item's Canvas::loadImage() method first.
+  This image been drawing is subject to the current context clip path, even the given \c image is a CanvasImageData object.
 
-  \sa QtQuick2::CanvasImageData
-  \sa QtQuick2::Image
-  \sa QtQuick2::Canvas::loadImage
-  \sa QtQuick2::Canvas::isImageLoaded
-  \sa QtQuick2::Canvas::onImageLoaded
+  \sa CanvasImageData
+  \sa Image
+  \sa Canvas::loadImage()
+  \sa Canvas::isImageLoaded
+  \sa Canvas::onImageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
@@ -2288,16 +2289,16 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
 
 
   Note:
-  The \a image type can be an Image or Canvas item, an image url or a \a {QtQuick2::CanvasImageData} object.
+  The \a image type can be an Image or Canvas item, an image url or a CanvasImageData object.
   When given as Image item, if the image isn't fully loaded, this method draws nothing.
-  When given as url string, the image should be loaded by calling Canvas item's \a QtQuick2::Canvas::loadImage() method first.
-  This image been drawing is subject to the current context clip path, even the given \c image is a  {QtQuick2::CanvasImageData} object.
+  When given as url string, the image should be loaded by calling Canvas item's Canvas::loadImage() method first.
+  This image been drawing is subject to the current context clip path, even the given \c image is a CanvasImageData object.
 
-  \sa QtQuick2::CanvasImageData
-  \sa QtQuick2::Image
-  \sa QtQuick2::Canvas::loadImage
-  \sa QtQuick2::Canvas::isImageLoaded
-  \sa QtQuick2::Canvas::onImageLoaded
+  \sa CanvasImageData
+  \sa Image
+  \sa Canvas::loadImage()
+  \sa Canvas::isImageLoaded
+  \sa Canvas::onImageLoaded
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
 */
@@ -2410,18 +2411,18 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     \ingroup qtquick-canvas
     \brief Contains image pixel data in RGBA order
 
-     The \a QtQuick2::CanvasImageData object holds the image pixel data.
+     The CanvasImageData object holds the image pixel data.
 
-     The \a QtQuick2::CanvasImageData object has the actual dimensions of the data stored in
+     The CanvasImageData object has the actual dimensions of the data stored in
      this object and holds the one-dimensional array containing the data in RGBA order,
      as integers in the range 0 to 255.
 
-     \sa QtQuick2::CanvasImageData::width
-     \sa QtQuick2::CanvasImageData::height
-     \sa QtQuick2::CanvasImageData::data
-     \sa QtQuick2::Context2D::createImageData()
-     \sa QtQuick2::Context2D::getImageData
-     \sa QtQuick2::Context2D::putImageData
+     \sa width
+     \sa height
+     \sa data
+     \sa Context2D::createImageData()
+     \sa Context2D::getImageData()
+     \sa Context2D::putImageData()
   */
 /*!
   \qmlproperty int QtQuick2::CanvasImageData::width
@@ -2465,7 +2466,7 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::Acce
 
   The CanvasPixelArray object provides ordered, indexed access to the color components of each pixel of the image data.
   The CanvasPixelArray can be accessed as normal Javascript array.
-    \sa QtQuick2::CanvasImageData
+    \sa CanvasImageData
     \sa {http://www.w3.org/TR/2dcontext/#canvaspixelarray}{W3C 2d context standard for PixelArray}
   */
 
@@ -2537,20 +2538,20 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Local<v8:
     return v8::Undefined();
 }
 /*!
-  \qmlmethod QtQuick2::CanvasImageData createImageData(real sw, real sh)
+  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(real sw, real sh)
    Creates a CanvasImageData object with the given dimensions(\a sw, \a sh).
   */
 /*!
-  \qmlmethod QtQuick2::CanvasImageData createImageData(QtQuick2::CanvasImageData imageData)
+  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(CanvasImageData imageData)
    Creates a CanvasImageData object with the same dimensions as the argument.
   */
 /*!
-  \qmlmethod QtQuick2::CanvasImageData createImageData(Url imageUrl)
+  \qmlmethod CanvasImageData QtQuick2::Context2D::createImageData(Url imageUrl)
    Creates a CanvasImageData object with the given image loaded from \a imageUrl.
    Note:The \a imageUrl must be already loaded before this function call, if not, an empty
    CanvasImageData obect will be returned.
 
-   \sa QtQuick2::Canvas::loadImage, QtQuick2::Canvas::unloadImage, QtQuick2::Canvas::isImageLoaded
+   \sa Canvas::loadImage(), QtQuick2::Canvas::unloadImage(), QtQuick2::Canvas::isImageLoaded
   */
 static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
 {
@@ -2588,7 +2589,7 @@ static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod QtQuick2::CanvasImageData getImageData(real sx, real sy, real sw, real sh)
+  \qmlmethod CanvasImageData QtQuick2::Canvas::getImageData(real sx, real sy, real sw, real sh)
   Returns an CanvasImageData object containing the image data for the given rectangle of the canvas.
   */
 static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
@@ -2617,7 +2618,7 @@ static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
 }
 
 /*!
-  \qmlmethod object QtQuick2::Context2D::putImageData(QtQuick2::CanvasImageData imageData, real dx, real dy, real dirtyX, real dirtyY, real dirtyWidth, real dirtyHeight)
+  \qmlmethod object QtQuick2::Context2D::putImageData(CanvasImageData imageData, real dx, real dy, real dirtyX, real dirtyY, real dirtyWidth, real dirtyHeight)
   Paints the data from the given ImageData object onto the canvas. If a dirty rectangle (\a dirtyX, \a dirtyY, \a dirtyWidth, \a dirtyHeight) is provided, only the pixels from that rectangle are painted.
   */
 static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
@@ -2705,7 +2706,7 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
   */
 
 /*!
-  \qmlmethod QtQuick2::CanvasGradient QtQuick2::CanvasGradient::addColorStop(real offsetof, string color)
+  \qmlmethod CanvasGradient QtQuick2::CanvasGradient::addColorStop(real offsetof, string color)
   Adds a color stop with the given color to the gradient at the given offset.
   0.0 is the offset at one end of the gradient, 1.0 is the offset at the other end.
 

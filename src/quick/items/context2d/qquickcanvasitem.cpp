@@ -267,7 +267,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     requires the pixel data to be exchanged between the system memory and the
     graphic card, which is significantly more expensive.  Rendering may also be
     synchronized with the V-sync signal (to avoid
-    {en.wikipedia.org/wiki/Screen_tearing}{screen tearing}) which will further
+    \l{en.wikipedia.org/wiki/Screen_tearing}{screen tearing}) which will further
     impact pixel operations with \c Canvas.FrambufferObject render target.
 
     \section1 Tips for Porting Existing HTML5 Canvas applications
@@ -276,16 +276,16 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     applications need to be modified to run in the Canvas item:
     \list
     \li Replace all DOM API calls with QML property bindings or Canvas item methods.
-    \li Replace all HTML event handlers with the \a MouseArea item.
-    \li Change setInterval/setTimeout function calls with the \a Timer item or
-       the use of requestAnimationFrame.
-    \li Place painting code into the \a QtQuick2::Canvas::onPaint handler and trigger
-       painting by calling the \c markDirty or \c requestPaint methods.
-    \li To draw images, load them by calling the Canvas's loadImage method and then request to paint
+    \li Replace all HTML event handlers with the MouseArea item.
+    \li Change setInterval/setTimeout function calls with the \l Timer item or
+       the use of requestAnimationFrame().
+    \li Place painting code into the onPaint handler and trigger
+       painting by calling the markDirty() or requestPaint() methods.
+    \li To draw images, load them by calling the Canvas's loadImage() method and then request to paint
        them in the onImageLoaded handler.
     \endlist
 
-    \sa QtQuick2::Context2D
+    \sa Context2D
 */
 
 QQuickCanvasItem::QQuickCanvasItem(QQuickItem *parent)
@@ -323,7 +323,7 @@ bool QQuickCanvasItem::isAvailable() const
     The type name is the same as used in the getContext() call, for the 2d
     canvas the value will be "2d".
 
-    \sa QtQuick2::Canvas::getContext, QtQuick2::Canvas::available
+    \sa getContext(), available
 */
 
 QString QQuickCanvasItem::contextType() const
@@ -377,11 +377,11 @@ QQmlV8Handle QQuickCanvasItem::context() const
     size.
 
     By setting the canvasSize, tileSize and canvasWindow, the Canvas item can
-    act as a large virtual canvas with many separately rendered tile rectangles
+    act as a large virtual canvas with many separately rendered tile rectangles.
     Only those tiles within the current canvas window are painted by the Canvas
     render engine.
 
-    \sa QtQuick2::Canvas::tileSize, QtQuick2::Canvas::canvasWindow
+    \sa tileSize, canvasWindow
 */
 QSizeF QQuickCanvasItem::canvasSize() const
 {
@@ -415,7 +415,7 @@ void QQuickCanvasItem::setCanvasSize(const QSizeF & size)
 
     By default the tileSize is the same as the canvasSize.
 
-    \sa QtQuick2::Canvas::canvasSize, QtQuick2::Canvas::canvasWindow
+    \sa canvasSize, canvasWindow
 */
 QSize QQuickCanvasItem::tileSize() const
 {
@@ -448,7 +448,7 @@ void QQuickCanvasItem::setTileSize(const QSize & size)
      can display different visible areas by changing the canvas windowSize
      and/or position.
 
-    \sa QtQuick2::Canvas::canvasSize, QtQuick2::Canvas::tileSize
+    \sa canvasSize, tileSize
 */
 QRectF QQuickCanvasItem::canvasWindow() const
 {
@@ -529,7 +529,7 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
 
     The default value is \c Canvas.Cooperative.
 
-    \sa QtQuick2::Canvas::renderTarget
+    \sa renderTarget
 */
 
 QQuickCanvasItem::RenderStrategy QQuickCanvasItem::renderStrategy() const
@@ -779,7 +779,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod void QtQuick2::Canvas::cancelRequestAnimationFrmae(long handle)
+    \qmlmethod QtQuick2::Canvas::cancelRequestAnimationFrame(long handle)
 
     This function will cancel the animation callback referenced by \a handle.
 */
@@ -797,11 +797,11 @@ void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV8Function *args)
 
 
 /*!
-    \qmlmethod void QtQuick2::Canvas::requestPaint()
+    \qmlmethod QtQuick2::Canvas::requestPaint()
 
     Request the entire visible region be re-drawn.
 
-    \sa QtQuick::Canvas::markDirty
+    \sa markDirty()
 */
 
 void QQuickCanvasItem::requestPaint()
@@ -810,13 +810,13 @@ void QQuickCanvasItem::requestPaint()
 }
 
 /*!
-    \qmlmethod void QtQuick2::Canvas::markDirty(rect area)
+    \qmlmethod QtQuick2::Canvas::markDirty(rect area)
 
     Mark the given \a area as dirty, so that when this area is visible the
-    canvas renderer will redraw it. This will trigger the "onPaint" signal
+    canvas renderer will redraw it. This will trigger the onPaint signal
     handler function.
 
-    \sa QtQuick2::Canvas::paint, QtQuick2::Canvas::requestPaint
+    \sa paint, requestPaint()
 */
 
 void QQuickCanvasItem::markDirty(const QRectF& rect)
@@ -846,7 +846,7 @@ void QQuickCanvasItem::checkAnimationCallbacks()
    Note: calling this method will force painting the whole canvas, not just the
    current canvas visible window.
 
-   \sa canvasWindow, canvasSize, toDataURL
+   \sa canvasWindow, canvasSize, toDataURL()
 */
 bool QQuickCanvasItem::save(const QString &filename) const
 {
@@ -866,15 +866,23 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
 }
 
 /*!
-  \qmlmethod void QtQuick2::Canvas::loadImage(url image)
+    \qmlsignal QtQuick2::Canvas::onImageLoaded()
+
+    This handler is called when an image has been loaded.
+
+    \sa loadImage()
+*/
+
+/*!
+  \qmlmethod QtQuick2::Canvas::loadImage(url image)
     Loads the given \c image asynchronously.
 
     When the image is ready, onImageLoaded will be emitted.
-    The loaded image can be unloaded by the \a QtQuick2::Canvas::unloadImage method.
+    The loaded image can be unloaded by the unloadImage() method.
 
     Note: Only loaded images can be painted on the Canvas item.
-  \sa QtQuick2::Canvas::unloadImage, QtQuick2::Canvas::onImageLoaded, QtQuick2::Canvas::isImageLoaded,
-      QtQuick2::Context2D::createImageData(), QtQuick2::Context2D::drawImage
+  \sa unloadImage, onImageLoaded, isImageLoaded(),
+      Context2D::createImageData(), Context2D::drawImage()
 */
 void QQuickCanvasItem::loadImage(const QUrl& url)
 {
@@ -894,14 +902,14 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
     }
 }
 /*!
-  \qmlmethod void QtQuick2::Canvas::unloadImage(url image)
+  \qmlmethod QtQuick2::Canvas::unloadImage(url image)
   Unloads the \c image.
 
   Once an image is unloaded it cannot be painted by the canvas context
   unless it is loaded again.
 
-  \sa QtQuick2::Canvas::loadImage, QtQuick2::Canvas::onImageLoaded, QtQuick2::Canvas::isImageLoaded,
-      QtQuick2::Context2D::createImageData(), QtQuick2::Context2D::drawImage
+  \sa loadImage(), onImageLoaded, isImageLoaded(),
+      Context2D::createImageData(), Context2D::drawImage
 */
 void QQuickCanvasItem::unloadImage(const QUrl& url)
 {
@@ -910,10 +918,10 @@ void QQuickCanvasItem::unloadImage(const QUrl& url)
 }
 
 /*!
-  \qmlmethod void QtQuick2::Canvas::isImageError(url image)
+  \qmlmethod QtQuick2::Canvas::isImageError(url image)
   Returns true if the \a image failed to load.
 
-  \sa QtQuick2::Canvas::loadImage
+  \sa loadImage()
 */
 bool QQuickCanvasItem::isImageError(const QUrl& url) const
 {
@@ -924,10 +932,10 @@ bool QQuickCanvasItem::isImageError(const QUrl& url) const
 }
 
 /*!
-  \qmlmethod void QtQuick2::Canvas::isImageLoading(url image)
+  \qmlmethod QtQuick2::Canvas::isImageLoading(url image)
   Returns true if the \a image is currently loading.
 
-  \sa QtQuick2::Canvas::loadImage
+  \sa loadImage()
 */
 bool QQuickCanvasItem::isImageLoading(const QUrl& url) const
 {
@@ -937,10 +945,10 @@ bool QQuickCanvasItem::isImageLoading(const QUrl& url) const
         && d->pixmaps.value(fullPathUrl)->pixmap()->isLoading();
 }
 /*!
-  \qmlmethod void QtQuick2::Canvas::isImageLoaded(url image)
+  \qmlmethod QtQuick2::Canvas::isImageLoaded(url image)
   Returns true if the \a image is sucessfully loaded and ready to use.
 
-  \sa QtQuick2::Canvas::loadImage
+  \sa loadImage()
 */
 bool QQuickCanvasItem::isImageLoaded(const QUrl& url) const
 {
@@ -970,7 +978,7 @@ QImage QQuickCanvasItem::toImage(const QRectF& rect) const
 
    The default \a mimeType is "image/png".
 
-   \sa QtQuick2::Canvas::save
+   \sa save()
 */
 QString QQuickCanvasItem::toDataURL(const QString& mimeType) const
 {
@@ -1066,8 +1074,8 @@ QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
     This handler is called to render the \a region. If a context is active it
     can be referenced from the context property.
 
-    This signal can be triggered by QtQuick2::Canvas::markdirty,
-    QtQuick2::Canvas::requestPaint or by changing the current canvas window.
+    This signal can be triggered markdirty(), requestPaint() or by changing
+    the current canvas window.
 */
 
 /*!
