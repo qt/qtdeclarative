@@ -408,8 +408,8 @@ QStringList QQuickDropEvent::keys() const
 */
 
 /*!
-    \qmlmethod void QtQuick2::DragEvent::accept()
-    \qmlmethod void QtQuick2::DragEvent::accept(enumeration action)
+    \qmlmethod QtQuick2::DragEvent::accept()
+    \qmlmethod QtQuick2::DragEvent::accept(enumeration action)
 
     Accepts the drag event.
 

@@ -115,15 +115,15 @@ QT_BEGIN_NAMESPACE
     non-rectangular area.
 */
 /*!
-    \qmlsignal QtQuick.Particles2::Affector::affected(real x, real y)
+    \qmlsignal QtQuick.Particles2::Affector::onAffected(real x, real y)
 
     This handler is called when a particle is selected to be affected. It will not be called
     if a particle is considered by the Affector but not actually altered in any way.
 
     In the special case where an Affector has no possible effect (e.g. Affector {}), affected
     will be emitted for all particles being considered if you connect to it. This allows you to
-    execute arbitrary code in response to particles (use the \l {QtQuick.Particles2::Affector::affectParticles}
-    {affectParticles} signal handler if you want to execute code which affects the particles
+    execute arbitrary code in response to particles (use the Affector::onAffectParticles
+    signal handler if you want to execute code which affects the particles
     themselves). As this executes JavaScript code per particle, it is not recommended to use this
     signal with a high-volume particle system.
 

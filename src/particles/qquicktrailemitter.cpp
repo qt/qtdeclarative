@@ -119,7 +119,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitRatePerParticle
 */
 /*!
-    \qmlsignal QtQuick.Particles2::TrailEmitter::emitFollowParticles(Array particles, Particle followed)
+    \qmlsignal QtQuick.Particles2::TrailEmitter::onEmitFollowParticles(Array particles, Particle followed)
 
     This handler is called when particles are emitted from the \a followed particle. \a particles contains an array of particle objects which can be directly manipulated.
 

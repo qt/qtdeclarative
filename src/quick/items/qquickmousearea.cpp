@@ -1176,7 +1176,7 @@ void QQuickMouseArea::setHovered(bool h)
 }
 
 /*!
-    \qmlproperty Qt::MouseButtons MouseArea::acceptedButtons
+    \qmlproperty Qt::MouseButtons QtQuick2::MouseArea::acceptedButtons
     This property holds the mouse buttons that the mouse area reacts to.
 
     To specify that the MouseArea will react to multiple buttons,
@@ -1256,7 +1256,7 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p)
 
 
 /*!
-    \qmlproperty QtQuick2::Qt::CursorShape MouseArea::cursorShape
+    \qmlproperty Qt::CursorShape QtQuick2::MouseArea::cursorShape
     This property holds the cursor shape for this mouse area.
     Note that on platforms that do not display a mouse cursor this may have
     no effect.

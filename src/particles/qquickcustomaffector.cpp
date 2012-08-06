@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 //TODO: Move docs (and inheritence) to real base when docs can propagate. Currently this pretends to be the base class!
 /*!
-    \qmlsignal QtQuick.Particles2::Affector::affectParticles(Array particles, real dt)
+    \qmlsignal QtQuick.Particles2::Affector::onAffectParticles(Array particles, real dt)
 
     This handler is called when particles are selected to be affected. particles contains
     an array of particle objects which can be directly manipulated.

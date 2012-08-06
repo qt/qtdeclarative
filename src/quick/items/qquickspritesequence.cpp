@@ -252,7 +252,7 @@ struct SpriteVertices {
     If it is possible to return to the goalState from the starting point of the goalState
     it will continue to do so until goalState is set to "" or an unreachable state.
 */
-/*! \qmlmethod void QtQuick2::SpriteSequence::jumpTo(string sprite)
+/*! \qmlmethod QtQuick2::SpriteSequence::jumpTo(string sprite)
 
     This function causes the SpriteSequence to jump to the specified sprite immediately, intermediate
     sprites are not played. The \a sprite argument is the name of the sprite you wish to jump to.

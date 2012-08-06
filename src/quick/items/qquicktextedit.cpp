@@ -822,7 +822,7 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextEdit::moveCursorSelection(int position, SelectionMode mode = TextEdit.SelectCharacters)
+    \qmlmethod QtQuick2::TextEdit::moveCursorSelection(int position, SelectionMode mode = TextEdit.SelectCharacters)
 
     Moves the cursor to \a position and updates the selection according to the optional \a mode
     parameter. (To only move the cursor, set the \l cursorPosition property.)
@@ -1366,7 +1366,7 @@ void QQuickTextEdit::keyReleaseEvent(QKeyEvent *event)
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextEdit::deselect()
+    \qmlmethod QtQuick2::TextEdit::deselect()
 
     Removes active text selection.
 */
@@ -1379,7 +1379,7 @@ void QQuickTextEdit::deselect()
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextEdit::selectAll()
+    \qmlmethod QtQuick2::TextEdit::selectAll()
 
     Causes all text to be selected.
 */
@@ -1390,7 +1390,7 @@ void QQuickTextEdit::selectAll()
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextEdit::selectWord()
+    \qmlmethod QtQuick2::TextEdit::selectWord()
 
     Causes the word closest to the current cursor position to be selected.
 */
@@ -1403,7 +1403,7 @@ void QQuickTextEdit::selectWord()
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextEdit::select(int start, int end)
+    \qmlmethod QtQuick2::TextEdit::select(int start, int end)
 
     Causes the text from \a start to \a end to be selected.
 
@@ -1432,7 +1432,7 @@ void QQuickTextEdit::select(int start, int end)
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextEdit::isRightToLeft(int start, int end)
+    \qmlmethod QtQuick2::TextEdit::isRightToLeft(int start, int end)
 
     Returns true if the natural reading direction of the editor text
     found between positions \a start and \a end is right to left.
@@ -2106,7 +2106,7 @@ QString QQuickTextEdit::getFormattedText(int start, int end) const
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextEdit::insert(int position, string text)
+    \qmlmethod QtQuick2::TextEdit::insert(int position, string text)
 
     Inserts \a text into the TextEdit at position.
 */

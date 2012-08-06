@@ -791,7 +791,7 @@ int QQuickTextInput::selectionEnd() const
     return d->lastSelectionEnd;
 }
 /*!
-    \qmlmethod void QtQuick2::TextInput::select(int start, int end)
+    \qmlmethod QtQuick2::TextInput::select(int start, int end)
 
     Causes the text from \a start to \a end to be selected.
 
@@ -1853,7 +1853,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextInput::deselect()
+    \qmlmethod QtQuick2::TextInput::deselect()
 
     Removes active text selection.
 */
@@ -1864,7 +1864,7 @@ void QQuickTextInput::deselect()
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextInput::selectAll()
+    \qmlmethod QtQuick2::TextInput::selectAll()
 
     Causes all text to be selected.
 */
@@ -1875,7 +1875,7 @@ void QQuickTextInput::selectAll()
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextInput::isRightToLeft(int start, int end)
+    \qmlmethod QtQuick2::TextInput::isRightToLeft(int start, int end)
 
     Returns true if the natural reading direction of the editor text
     found between positions \a start and \a end is right to left.
@@ -1962,7 +1962,7 @@ void QQuickTextInput::redo()
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextInput::insert(int position, string text)
+    \qmlmethod QtQuick2::TextInput::insert(int position, string text)
 
     Inserts \a text into the TextInput at position.
 */
@@ -2114,7 +2114,7 @@ void QQuickTextInput::remove(int start, int end)
 
 
 /*!
-    \qmlmethod void QtQuick2::TextInput::selectWord()
+    \qmlmethod QtQuick2::TextInput::selectWord()
 
     Causes the word closest to the current cursor position to be selected.
 */
@@ -2320,7 +2320,7 @@ void QQuickTextInput::moveCursorSelection(int position)
 }
 
 /*!
-    \qmlmethod void QtQuick2::TextInput::moveCursorSelection(int position, SelectionMode mode = TextInput.SelectCharacters)
+    \qmlmethod QtQuick2::TextInput::moveCursorSelection(int position, SelectionMode mode = TextInput.SelectCharacters)
 
     Moves the cursor to \a position and updates the selection according to the optional \a mode
     parameter.  (To only move the cursor, set the \l cursorPosition property.)

@@ -968,7 +968,7 @@ qreal QQuickXmlListModel::progress() const
 }
 
 /*!
-    \qmlmethod void QtQuick.XmlListModel2::XmlListModel::errorString()
+    \qmlmethod QtQuick.XmlListModel2::XmlListModel::errorString()
 
     Returns a string description of the last error that occurred
     if \l status is XmlListModel::Error.
