@@ -103,7 +103,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 
     t->setFiltering(tx->filtering());
 #ifdef QT_OPENGL_ES_2
-    bool npotSupported = QOpenGLFunctions(const_cast<QOpenGLContext *>(state.context())).hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
+    bool npotSupported = QOpenGLFunctions(const_cast<QOpenGLContext *>(state.context())).hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
     QSize size = t->textureSize();
     bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
     if (!npotSupported && isNpot) {

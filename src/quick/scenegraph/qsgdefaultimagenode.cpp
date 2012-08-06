@@ -411,7 +411,7 @@ void QSGDefaultImageNode::updateGeometry()
 
 #ifdef QT_OPENGL_ES_2
         QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
+        bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
         QSize size = t->textureSize();
         bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
         bool wrapSupported = npotSupported || !isNpot;
