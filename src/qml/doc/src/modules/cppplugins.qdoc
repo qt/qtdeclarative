@@ -81,14 +81,15 @@
     \snippet examples/qml/cppextensions/plugins/plugin.cpp plugin
 
     The \c TimeModel class receives a \c{1.0} version of this plugin library, as
-    a QML type called \c Time. The Q_ASSERT() macro can ensure the module is
+    a QML type called \c Time. The Q_ASSERT() macro can ensure the type namespace is
     imported correctly by any QML components that use this plugin. The
     \l{Defining QML Types from C++} article has more information about registering C++
     types into the runtime.
 
     For this example, the TimeExample source directory is in
-    \c{com/nokia/TimeExample}. The plugin's module import statement will follow
-    this structure, so the module is registered as "com.nokia.TimeExample".
+    \c{com/nokia/TimeExample}.  The plugin's type namespace will mirror
+    this structure, so the types are registered into the namespace
+    "com.nokia.TimeExample".
 
     Additionally, the project file, in a \c .pro file, defines the project as a plugin library,
     specifies it should be built into the \c com/nokia/TimeExample directory, and registers

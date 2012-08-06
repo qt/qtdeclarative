@@ -74,7 +74,7 @@
 
 
   For example, this registers a C++ class \c MySliderItem as a QML type
-  named \c Slider for version 1.0 of a \l{QML Modules}{module} called
+  named \c Slider for version 1.0 of a type namespace called
   "com.mycompany.qmlcomponents":
 
   \code
@@ -86,7 +86,7 @@
   \endcode
 
   Once this is registered, the type can be used in QML by importing the
-  specified module name and version number:
+  specified type namespace and version number:
 
   \qml
   import com.mycompany.qmlcomponents 1.0
@@ -118,7 +118,7 @@
   \endcode
 
   This function is typically used to register the revision of a base class to
-  use for the specified module version (see \l {Type Revisions and Versions}).
+  use for the specified version of the type (see \l {Type Revisions and Versions}).
 */
 
 /*!
@@ -145,12 +145,12 @@
   \fn int qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
   \relates QQmlEngine
 
-  This function registers a type in the QML system with the name \a qmlName, in the library imported from \a uri having the
+  This function registers a type in the QML system with the name \a qmlName, in the type namespace imported from \a uri having the
   version number composed from \a versionMajor and \a versionMinor, but any attempt to instantiate the type
   will produce the given error \a message.
 
-  Normally, the types exported by a module should be fixed. However, if a C++ type is not available, you should
-  at least "reserve" the QML type name, and give the user of your module a meaningful error message.
+  Normally, the types exported by a plugin should be fixed. However, if a C++ type is not available, you should
+  at least "reserve" the QML type name, and give the user of the unavailable type a meaningful error message.
 
   Returns the QML type id.
 
@@ -164,7 +164,7 @@
   #endif
   \endcode
 
-  This will cause any QML which uses this module and attempts to use the type to produce an error message:
+  This will cause any QML which imports the "MinehuntCore" type namespace and attempts to use the type to produce an error message:
   \code
   fun.qml: Get back to work, slacker!
      Game {

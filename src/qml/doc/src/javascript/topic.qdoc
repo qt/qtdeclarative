@@ -51,13 +51,26 @@ See the documentation page titled
 \l{qtqml-javascript-expressions.html}{JavaScript Expressions in QML Documents}
 for more information about using JavaScript expressions in QML.
 
+\section1 JavaScript Resources
+
+Application logic defined in JavaScript functions may be separated into
+separate JavaScript files known as JavaScript resources.  There are several
+different kinds of JavaScript resources, with different semantics.
+
+See the documentation page titled \l{qtqml-javascript-resources.html}
+{Defining JavaScript Resources In QML} for more information about defining JavaScript
+resources for QML.
+
 \section1 JavaScript Imports
 
-A QML document may import JavaScript files.  This allows an application
-developer to provide application logic in modular, self-contained files.
+A QML document may import JavaScript resources, and JavaScript resources may
+import other JavaScript resources as well as QML modules.  This allows an
+application developer to provide application logic in modular, self-contained
+files.
+
 See the documentation page titled
-\l{qtqml-javascript-imports.html}{Importing JavaScript Files in QML Documents}
-for more information on how to import JavaScript files and how to use the
+\l{qtqml-javascript-imports.html}{Importing JavaScript Resources}
+for more information on how to import JavaScript resources and how to use the
 functionality they provide.
 
 \section1 JavaScript Host Environment

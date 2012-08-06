@@ -78,8 +78,9 @@ class instance can be manipulated from QML; as
 Types to QML} explains, the properties, methods and signals of any
 QObject-derived class are accessible from QML code.
 
-To register a QObject-derived class as an instantiable QML object type, call the
-qmlRegisterType() function with the appropriate class and module URI.
+To register a QObject-derived class as an instantiable QML object type, call
+qmlRegisterType() to register the class as QML type into a particular type
+namespace.  Clients can then import that namespace in order to use the type.
 
 For example, suppose there is a \c Message class with \c author and
 \c creationDate properties:
@@ -96,16 +97,16 @@ public:
 \endcode
 
 This type can be registered by calling qmlRegisterType() with an appropriate
-module URI and version number. For example, to make the type available in a
-module \c com.mycompany.messaging with version 1.0:
+type namespace and version number. For example, to make the type available in
+the \c com.mycompany.messaging namespace with version 1.0:
 
 \code
 qmlRegisterType<Message>("com.mycompany.messaging", 1, 0, "Message");
 \endcode
 
-The type can be used in an \l{qtqml-syntax-basics.html#object-declarations}{object declaration}
-from QML, and its properties can be read and written to, as per the example
-below:
+The type can be used in an \l{qtqml-syntax-basics.html#object-declarations}
+{object declaration} from QML, and its properties can be read and written to,
+as per the example below:
 
 \qml
 import com.mycompany.messaging 1.0
@@ -215,7 +216,7 @@ Item {
 
 \code
 // MyType.qml
-import MyModule 1.0
+import MyTypes 1.0
 
 CppType {
     value: root.x
@@ -225,14 +226,14 @@ CppType {
 where \c CppType maps to the C++ class \c CppType.
 
 If the author of CppType adds a \c root property to CppType in a new
-version of the module, \c root.x now resolves to a different value because
-\c root is also the \c id of the top level component. The author could
+version of their type definition, \c root.x now resolves to a different value
+because \c root is also the \c id of the top level component. The author could
 specify that the new \c root property is available from a specific minor
 version. This permits new properties and features to be added to existing
 elements without breaking existing programs.
 
 The REVISION tag is used to mark the \c root property as added in revision 1
-of the class. Methods such as Q_INVOKABLE's, signals and slots can also be
+of the type. Methods such as Q_INVOKABLE's, signals and slots can also be
 tagged for a revision using the \c Q_REVISION(x) macro:
 
 \code
@@ -254,13 +255,13 @@ template<typename T, int metaObjectRevision>
 int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 \endcode
 
-To register \c CppType version 1 for \c {MyModule 1.1}:
+To register \c CppType version 1 for \c {MyTypes 1.1}:
 
 \code
-qmlRegisterType<CppType,1>("MyModule", 1, 1, "CppType")
+qmlRegisterType<CppType,1>("MyTypes", 1, 1, "CppType")
 \endcode
 
-\c root is only available when MyModule 1.1 is imported.
+\c root is only available when \c MyTypes version 1.1 is imported.
 
 For the same reason, new elements introduced in later versions should use
 the minor version argument of qmlRegisterType.
@@ -271,8 +272,8 @@ should always remember to document what changed between minor versions, and
 QML module users should check that their application still runs correctly
 before deploying an updated import statement.
 
-You may also register the revision of a base class that your module depends upon
-using the qmlRegisterRevision() function:
+You may also register the revision of a base class that your type depends
+upon using the qmlRegisterRevision() function:
 
 \code
 template<typename T, int metaObjectRevision>
@@ -283,14 +284,14 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
 \endcode
 
 For example, if \c BaseType is changed and now has a revision 1, you can
-specify that your module uses the new revision:
+specify that your type uses the new revision:
 
 \code
-qmlRegisterRevision<BaseType,1>("MyModule", 1, 1);
+qmlRegisterRevision<BaseType,1>("MyTypes", 1, 1);
 \endcode
 
-This is useful when deriving from base classes not declared as part of your
-module, e.g. when extending classes from the QtQuick library.
+This is useful when deriving from base classes provided by other authors,
+e.g. when extending classes from the QtQuick library.
 
 
 \section1 Defining QML-Specific Types and Attributes

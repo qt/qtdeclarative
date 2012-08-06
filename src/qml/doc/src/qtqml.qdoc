@@ -92,9 +92,12 @@ types, animation classes, and canvas integration) for the QML language.
 
     \li \l{qtqml-modules-topic.html}{QML Modules}
         \list
-        \li \l{qtqml-modules-locatedmodules.html}{Located Modules}
-        \li \l{qtqml-modules-installedmodules.html}{Installed Modules}
-        \li \l{qtqml-modules-qmldir.html}{Adding Module Metadata with a qmldir file}
+        \li \l{qtqml-modules-qmldir.html}{Specifying A QML Module}
+        \li \l{qtqml-modules-topic.html#supported-qml-module-types}{Supported QML Module Types}
+            \list
+            \li \l{qtqml-modules-identifiedmodules.html}{Identified Modules}
+            \li \l{qtqml-modules-legacymodules.html}{Legacy Modules}
+            \endlist
         \li \l{qtqml-modules-cppplugins.html}{Providing Types and Functionality in a C++ Plugin}
         \endlist
 
@@ -125,7 +128,8 @@ types, animation classes, and canvas integration) for the QML language.
     \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
         \list
         \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
-        \li \l{qtqml-javascript-imports.html}{Importing JavaScript Files in QML Documents}
+        \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
+        \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources In QML}
         \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
             \list
             \li \l{qtqml-javascript-qmlglobalobject.html}{QML Global Object}

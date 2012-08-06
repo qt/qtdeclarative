@@ -24,63 +24,68 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 /*!
 \page qtqml-modules-topic.html
 \title QML Modules
 \brief Description of how to write modules for QML
 
-A module is a collection of content files that can be imported as a unit into a QML
-application. Modules can be used to organize QML content into independent groups,
-and they use a versioning mechanism that allows modules to be independently upgraded.
+A QML module provides versioned types and JavaScript resources in a type
+namespace which may be used by clients who import the module.  The types which
+a module provides may be defined in C++ within a plugin, or in QML documents.
+Modules make use of the QML versioning system which allows modules to be
+independently updated.
 
-Modules may contain QML files, JavaScript files and/or QML plugins written in C++. Grouping files
-into modules enables:
-
+Defining of a QML module allows:
 \list
-\li The sharing of common QML types within a project - for example, a group of UI components that
-    are used by different windows
+\li The sharing of common QML types within a project - for example, a group of
+    UI components that are used by different windows
 \li The distribution of QML-based libraries
-\li The modularization of distinct features, so that applications only load the libraries necessary
-    for their individual needs
+\li The modularization of distinct features, so that applications only load the
+    libraries necessary for their individual needs
+\li Versioning of types and resources so that the module can be updated safely
+    without breaking client code
 \endlist
 
-A module may contain QML, JavaScript and/or C++ files. To access the types and functionality within
-a module, the module must be imported with an \l{Import Statements}{import} statement.
 
-\section1 Located Modules
+\section1 Defining a QML Module
 
-A located module is one that is imported by a quoted URL string that refers to the
-local file system path of the module or the network URL location of the module.
+A module is defined by a \l{qtqml-modules-qmldir.html}
+{module definition qmldir file}.  Each module has an associated type
+namespace, which is the module's identifier.  A module can provide QML object
+types (defined either by QML documents or via a C++ plugin) and JavaScript
+resources, and may be imported by clients.
 
-Using this mechanism, any directory of QML files can easily be shared as a module without any
-configuration or installation. Additionally, such modules can be loaded remotely as a network
-resource if it includes a qmldir file with the necessary metadata.
+To define a module, a developer should gather together the various QML
+documents, JavaScript resources and C++ plugins which belong in the module
+into a single directory, and write an appropriate \l{qtqml-modules-qmldir.html}
+{module definition qmldir file} which should also be placed into the directory.
+The directory can then be installed into the
+\l{qtqml-syntax-imports.html#qml-import-path}{QML import path} as a module.
 
-See \l{qtqml-modules-locatedmodules.html}{Located Modules} for more information.
+Note that defining a module is not the only way to share common QML types
+within a project - a simple \l{qtqml-syntax-imports.html#directory-import}
+{QML document directory import} may also be used for this purpose.
 
+\section1 Supported QML Module Types
 
-\section1 Installed Modules
+There are two different types of modules supported by QML:
+\list
+\li \l{qtqml-modules-identifiedmodules.html}{Identified Modules}
+\li \l{qtqml-modules-legacymodules.html}{Legacy Modules} (deprecated)
+\endlist
 
-An installed module is one that is imported by a URI in the form of a dotted identifier string - for
-example, "com.mycompany.mymodule" - that uniquely identifies the module to the QML engine. This
-allows a module to be imported by an identifier rather than a file system path.
+Identified modules explicitly define their identifier and are installed into
+QML import path.  Identified modules are more maintainable (due to type
+versioning) and are provided with type registration guarantees by the QML
+engine which are not provided to legacy modules.  Legacy modules are only
+supported to allow legacy code to continue to work with the latest version of
+QML, and should be avoided by clients if possible.
 
-To enable the engine to find an installed module, the module should be available in the
-\l{qtqml-syntax-imports.html#qml-import-path}{import path}.
-
-See \l{qtqml-modules-installedmodules.html}{Installed Modules} for more information.
-
-
-\section1 Adding Module Metadata with a qmldir File
-
-A qmldir file is a plain text file that describes a module's metadata and contents. This file and
-the associated module contents (QML documents, JavaScript files, and C++ plugins) must be placed
-somewhere into the \l{qtqml-syntax-imports.html#qml-import-path}{QML import path}.
-
-This is required for a module if it is to be imported by URI or as a network resource. It is also
-necessary for exporting JavaScript files and object types defined in C++.
-
-See \l{qtqml-modules-qmldir.html}{Adding Module Metadata with a qmldir File} for more information.
+Clients may import a QML module from within QML documents or JavaScript files.
+Please see the documentation about
+\l{qtqml-syntax-imports.html#module-namespace-imports}{importing a QML module}
+for more information on the topic.
 
 \section1 Providing Types and Functionality in a C++ Plugin
 

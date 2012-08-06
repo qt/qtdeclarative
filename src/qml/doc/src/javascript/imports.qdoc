@@ -26,35 +26,74 @@
 ****************************************************************************/
 /*!
 \page qtqml-javascript-imports.html
-\title Importing JavaScript Files in QML Documents
-\brief Description of how to import and use JavaScript files in QML documents
+\title Importing JavaScript Resources in QML
+\brief Description of how to import and use JavaScript resources in QML documents
 
-Both relative and absolute JavaScript URLs can be imported in QML documents.
-In the case of a relative URL, the location is resolved relative to the
-location of the \l {QML Document} that contains the import.  If the script
-file is not accessible, an error will occur.  If the JavaScript needs to be
-fetched from a network resource, the component's
+\l{qtqml-javascript-resources.html}{JavaScript resources} may be imported by
+QML documents and other JavaScript resources.  JavaScript resources may be
+imported via either relative or absolute URLs.  In the case of a relative URL,
+the location is resolved relative to the location of the \l {QML Document} or
+\l{qtqml-javascript-resources.html}{JavaScript Resource} that contains the
+import.  If the script file is not accessible, an error will occur.  If the
+JavaScript needs to be fetched from a network resource, the component's
 \l {QQmlComponent::status()}{status} is set to "Loading" until the script has
 been downloaded.
 
-Imported JavaScript files are always qualified using the "as" keyword.  The
-qualifier for JavaScript files must be unique, so there is always a one-to-one
-mapping between qualifiers and JavaScript files. (This also means qualifiers
-cannot be named the same as built-in JavaScript objects such as \c Date and
-\c Math).
+JavaScript resources may also import QML modules and other JavaScript
+resources.  The syntax of an import statement within a JavaScript resource
+differs slightly from an import statement within a QML document, which is
+documented thoroughly below.
+
+\section1 Importing a JavaScript Resource from a QML Document
+
+A QML document may import a JavaScript resource with the following syntax:
+\code
+import "ResourceURL" as Qualifier
+\endcode
+For example:
+\code
+import "jsfile.js" as Logic
+\endcode
+
+Imported JavaScript resources are always qualified using the "as" keyword.  The
+qualifier for JavaScript resources must be unique, so there is always a
+one-to-one mapping between qualifiers and JavaScript files. (This also means
+qualifiers cannot be named the same as built-in JavaScript objects such as
+\c Date and \c Math).
 
 The functions defined in an imported JavaScript file are available to objects
-defined in the importing QML document, via the \c{"Qualifier.functionName()"}
-syntax.
+defined in the importing QML document, via the
+\c{"Qualifier.functionName(params)"} syntax.  Functions in JavaScript resources
+may take parameters whose type can be any of the supported QML basic types or
+object types, as well as normal JavaScript types.  The normal
+\l{qtqml-cppintegration-data.html}{data type conversion rules} will apply to
+parameters and return values when calling such functions from QML.
 
-\section1 Importing a JavaScript File from Another
+\section1 Imports Within JavaScript Resources
 
-In QtQuick 2.0, support has been added to allow JavaScript files to import
-other JavaScript files and also QML type namespaces using a variation of the
-standard QML import syntax (where all of the previously described rules and
+In QtQuick 2.0, support has been added to allow JavaScript resources to import
+other JavaScript resources and also QML type namespaces using a variation of
+the standard QML import syntax (where all of the previously described rules and
 qualifications apply).
 
-A JavaScript file may import another in the following fashion:
+Due to the ability of a JavaScript resource to import another script or QML
+module in this fashion in QtQuick 2.0, some extra semantics are defined:
+\list
+\li a script with imports will not inherit imports from the QML document which imported it (so accessing Component.errorString will fail, for example)
+\li a script without imports will inherit imports from the QML document which imported it (so accessing Component.errorString will succeed, for example)
+\li a shared script (i.e., defined as .pragma library) does not inherit imports from any QML document even if it imports no other scripts or modules
+\endlist
+
+The first semantic is conceptually correct, given that a particular script
+might be imported by any number of QML files.  The second semantic is retained
+for the purposes of backwards-compatibility.  The third semantic remains
+unchanged from the current semantics for shared scripts, but is clarified here
+in respect to the newly possible case (where the script imports other scripts
+or modules).
+
+\section2 Importing a JavaScript Resource from Another JavaScript Resource
+
+A JavaScript resource may import another in the following fashion:
 \code
 .import "filename.js" as Qualifier
 \endcode
@@ -63,7 +102,9 @@ For example:
 .import "factorial.js" as MathFunctions
 \endcode
 
-A JavaScript file may import a QML type namespace in the following fashion:
+\section2 Importing a QML Module from a JavaScript Resource
+
+A JavaScript resource may import a QML module in the following fashion:
 \code
 .import TypeNamespace MajorVersion.MinorVersion as Qualifier
 \endcode
@@ -76,86 +117,8 @@ For example:
 In particular, this may be useful in order to access functionality provided
 via a singleton type; see qmlRegisterSingletonType() for more information.
 
-Due to the ability of a JavaScript file to import another script or QML module
-in this fashion in QtQuick 2.0, some extra semantics are defined:
-\list
-\li a script with imports will not inherit imports from the QML file which imported it (so accessing Component.error will fail, for example)
-\li a script without imports will inherit imports from the QML file which imported it (so accessing Component.error will succeed, for example)
-\li a shared script (i.e., defined as .pragma library) does not inherit imports from any QML file even if it imports no other scripts
-\endlist
 
-The first semantic is conceptually correct, given that a particular script
-might be imported by any number of QML files.  The second semantic is retained
-for the purposes of backwards-compatibility.  The third semantic remains
-unchanged from the current semantics for shared scripts, but is clarified here
-in respect to the newly possible case (where the script imports other scripts
-or modules).
-
-
-\section2 Code-Behind Implementation Files
-
-Most JavaScript files imported into a QML file are stateful implementations
-for the QML file importing them.  In these cases, for QML component instances
-to behave correctly each instance requires a separate copy of the JavaScript
-objects and state.
-
-The default behavior when importing JavaScript files is to provide a unique,
-isolated copy for each QML component instance.  If that JavaScript file does
-not import any other JavaScript files or QML type namespaces, its code will run
-in the same scope as the QML component instance and consequently can can access
-and manipulate the objects and properties declared in that QML component.
-Otherwise, it will have its own unique scope, and objects and properties of the
-QML component should be passed to the functions of the JavaScript file as
-parameters if they are required.
-
-\section2 Shared JavaScript Files (Libraries)
-
-Some JavaScript files act more like libraries - they provide a set of helper
-functions that take input and compute output, but never manipulate QML
-component instances directly.
-
-As it would be wasteful for each QML component instance to have a unique copy of
-these libraries, the JavaScript programmer can indicate a particular file is a
-shared library through the use of a pragma, as shown in the following example.
-
-\code
-// factorial.js
-.pragma library
-
-var factorialCount = 0;
-
-function factorial(a) {
-    a = parseInt(a);
-
-    // factorial recursion
-    if (a > 0)
-        return a * factorial(a - 1);
-
-    // shared state
-    factorialCount += 1;
-
-    // recursion base-case.
-    return 1;
-}
-
-function factorialCallCount() {
-    return factorialCount;
-}
-\endcode
-
-The pragma declaration must appear before any JavaScript code excluding comments.
-
-Note that multiple QML documents can import \c{"factorial.js"} and call the
-factorial and factorialCallCount functions that it provides.  The state of the
-JavaScript import is shared across the QML documents which import it, and thus
-the return value of the factorialCallCount function may be non-zero when called
-within a QML document which never calls the factorial function.
-
-As they are shared, .pragma library files cannot access QML component instance
-objects or properties directly, although QML values can be passed as function
-parameters.
-
-\section1 Including a JavaScript File from Another
+\section1 Including a JavaScript Resource from Another JavaScript Resource
 
 When a JavaScript file is imported, it must be imported with a qualifier.  The
 functions in that file are then accessible from the importing script via the

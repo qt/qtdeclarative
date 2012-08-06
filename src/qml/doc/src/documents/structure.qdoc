@@ -45,7 +45,12 @@ QML documents are always encoded in UTF-8 format.
 
 \section1 Imports
 
-A document must import the necessary modules to enable the engine to load the QML object types referenced within the document. By default, a document can access any QML object types that have been defined through \c .qml files in the same directory; if a document needs to refer to any other object types, it must import the module that exports those types.
+A document must import the necessary modules or type namespaces to enable the
+engine to load the QML object types referenced within the document. By default,
+a document can access any QML object types that have been defined through
+\c .qml files in the same directory; if a document needs to refer to any other
+object types, it must import the type namespace into which those types have
+been registered.
 
 QML does \e not have a preprocessor that modifies the document prior to
 presentation to the \l{QQmlEngine}{QML engine}, unlike C or C++.

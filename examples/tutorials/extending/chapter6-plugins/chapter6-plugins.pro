@@ -2,7 +2,7 @@ TEMPLATE = lib
 CONFIG += qt plugin
 QT += qml quick
 
-DESTDIR = ChartsPlugin
+DESTDIR = Charts
 TARGET = chartsplugin
 
 OBJECTS_DIR = tmp
