@@ -133,7 +133,8 @@ QQuickVisualDataModelParts::QQuickVisualDataModelParts(QQuickVisualDataModel *pa
     However, it can be useful for manipulating and accessing the \l modelIndex
     when a QAbstractItemModel subclass is used as the
     model. Also, VisualDataModel is used together with \l Package to
-    provide delegates to multiple views.
+    provide delegates to multiple views, and with VisualDataGroup to sort and filter
+    delegate items.
 
     The example below illustrates using a VisualDataModel with a ListView.
 
@@ -1983,6 +1984,18 @@ void QQuickVisualDataModelAttached::setGroups(const QStringList &groups)
     model->setGroups(it, 1, Compositor::Cache, groupFlags);
 }
 
+/*!
+    \qmlattachedproperty bool QtQuick2::VisualDataModel::isUnresolved
+
+    This attached property holds whether the visual item is bound to a data model index.
+    Returns true if the item is not bound to the model, and false if it is.
+
+    An unresolved item can be bound to the data model using the VisualDataGroup::resolve()
+    function.
+
+    It is attached to each instance of the delegate.
+*/
+
 bool QQuickVisualDataModelAttached::isUnresolved() const
 {
     if (!m_cacheItem)
@@ -2118,6 +2131,32 @@ void QQuickVisualDataGroupPrivate::destroyingPackage(QQuickPackage *package)
     \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items
 
+    The VisualDataGroup type provides a means to address the model data of a VisualDataModel's
+    delegate items, as well as sort and filter these delegate items.
+
+    The initial set of instantiable delegate items in a VisualDataModel is represented
+    by its \l {QtQuick2::VisualDataModel::items}{items} group, which normally directly reflects
+    the contents of the model assigned to VisualDataModel::model.  This set can be changed to
+    the contents of any other member of VisualDataModel::groups by assigning the  \l name of that
+    VisualDataGroup to the VisualDataModel::filterOnGroup property.
+
+    The data of an item in a VisualDataGroup can be accessed using the get() function, which returns
+    information about group membership and indexes as well as model data.  In combination
+    with the move() function this can be used to implement view sorting, with remove() to filter
+    items out of a view, or with setGroups() and \l Package delegates to categorize items into
+    different views.
+
+    Data from models can be supplemented by inserting data directly into a VisualDataGroup
+    with the insert() function.  This can be used to introduce mock items into a view, or
+    placeholder items that are later \l {resolve()}{resolved} to real model data when it becomes
+    available.
+
+    Delegate items can also be be instantiated directly from a VisualDataGroup using the
+    create() function, making it possible to use VisualDataModel without an accompanying view
+    type or to cherry-pick specific items that should be instantiated irregardless of whether
+    they're currently within a view's visible area.
+
+    \sa {QML Dynamic View Ordering Tutorial}
 */
 
 QQuickVisualDataGroup::QQuickVisualDataGroup(QObject *parent)
@@ -2206,7 +2245,7 @@ void QQuickVisualDataGroup::setDefaultInclude(bool include)
 }
 
 /*!
-    \qmlmethod var QtQuick2::VisualDataGroup::get(int index)
+    \qmlmethod object QtQuick2::VisualDataGroup::get(int index)
 
     Returns a javascript object describing the item at \a index in the group.
 
@@ -2221,9 +2260,11 @@ void QQuickVisualDataGroup::setDefaultInclude(bool include)
     \li \b inItems Whether the item belongs to the \l {QtQuick2::VisualDataModel::items}{items} group.
     Writing to this property will add or remove the item from the group.
     \li \b itemsIndex The index of the item within the \l {QtQuick2::VisualDataModel::items}{items} group.
-    \li \b {in\e{GroupName}} Whether the item belongs to the dynamic group \e groupName.  Writing to
+    \li \b {in<GroupName>} Whether the item belongs to the dynamic group \e groupName.  Writing to
     this property will add or remove the item from the group.
-    \li \b {\e{groupName}Index} The index of the item within the dynamic group \e groupName.
+    \li \b {<groupName>Index} The index of the item within the dynamic group \e groupName.
+    \li \b isUnresolved Whether the item is bound to an index in the model assigned to
+    VisualDataModel::model.  Returns true if the item is not bound to the model, and false if it is.
     \endlist
 */
 
@@ -2284,6 +2325,23 @@ bool QQuickVisualDataGroupPrivate::parseIndex(
     return false;
 }
 
+/*!
+    \qmlmethod QtQuick2::VisualDataGroup::insert(int index, jsdict data, array groups = undefined)
+    \qmlmethod QtQuick2::VisualDataGroup::insert(jsdict data, var groups = undefined)
+
+    Creates a new entry at \a index in a VisualDataModel with the values from \a data that
+    correspond to roles in the model assigned to VisualDataModel::model.
+
+    If no index is supplied the data is appended to the model.
+
+    The optional \a groups parameter identifies the groups the new entry should belong to,
+    if unspecified this is equal to the group insert was called on.
+
+    Data inserted into a VisualDataModel can later be merged with an existing entry in
+    VisualDataModel::model using the \l resolve() function.  This can be used to create placeholder
+    items that are later replaced by actual data.
+*/
+
 void QQuickVisualDataGroup::insert(QQmlV8Function *args)
 {
     Q_D(QQuickVisualDataGroup);
@@ -2324,13 +2382,19 @@ void QQuickVisualDataGroup::insert(QQmlV8Function *args)
 }
 
 /*!
-    \qmlmethod QtQuick2::VisualDataGroup::create(var index)
-    \qmlmethod QtQuick2::VisualDataGroup::create(var index, jsdict data)
-    \qmlmethod QtQuick2::VisualDataGroup::create(jsdict data)
+    \qmlmethod QtQuick2::VisualDataGroup::create(int index)
+    \qmlmethod QtQuick2::VisualDataGroup::create(int index, jsdict data, array groups = undefined)
+    \qmlmethod QtQuick2::VisualDataGroup::create(jsdict data, array groups = undefined)
 
     Returns a reference to the instantiated item at \a index in the group.
 
-    All items returned by create are added to the persistedItems group.  Items in this
+    If a \a data object is provided it will be \l {insert}{inserted} at \a index and an item
+    referencing this new entry will be returned.  The optional \a groups parameter identifies
+    the groups the new entry should belong to, if unspecified this is equal to the group create()
+    was called on.
+
+    All items returned by create are added to the
+    \l {QtQuick2::VisualDataModel::persistedItems}{persistedItems} group.  Items in this
     group remain instantiated when not referenced by any view.
 */
 
@@ -2390,6 +2454,22 @@ void QQuickVisualDataGroup::create(QQmlV8Function *args)
     model->emitChanges();
 }
 
+/*!
+    \qmlmethod QtQuick2::VisualDataGroup::resolve(int from, int to)
+
+    Binds an unresolved item at \a from to an item in VisualDataModel::model at index \a to.
+
+    Unresolved items are entries whose data has been \l {insert()}{inserted} into a VisualDataGroup
+    instead of being derived from a VisualDataModel::model index.  Resolving an item will replace
+    the item at the target index with the unresolved item. A resolved an item will reflect the data
+    of the source model at its bound index and will move when that index moves like any other item.
+
+    If a new item is replaced in the VisualDataGroup onChanged() handler its insertion and
+    replacement will be communicated to views as an atomic operation, creating the appearance
+    that the model contents have not changed, or if the unresolved and model item are not adjacent
+    that the previously unresolved item has simply moved.
+
+*/
 void QQuickVisualDataGroup::resolve(QQmlV8Function *args)
 {
     Q_D(QQuickVisualDataGroup);
