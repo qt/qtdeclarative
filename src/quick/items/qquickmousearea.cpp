@@ -336,8 +336,6 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     By effectively acting as a proxy, the logic for mouse handling can be
     contained within a MouseArea item.
 
-    For basic key handling, see the \l{Keys}{Keys attached property}.
-
     The \l enabled property is used to enable and disable mouse handling for
     the proxied item. When disabled, the mouse area becomes transparent to
     mouse events.
@@ -346,14 +344,20 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     holding down a mouse button over the mouse area. This property is often
     used in bindings between properties in a user interface. The containsMouse
     read-only property indicates the presence of the mouse cursor over the
-    mouse area but, by default, only when a mouse button is held down; see below
-    for further details.
+    mouse area but, by default, only when a mouse button is held down; see
+    the containsMouse documentation for details.
 
     Information about the mouse position and button clicks are provided via
     signals for which event handler properties are defined. The most commonly
     used involved handling mouse presses and clicks: onClicked, onDoubleClicked,
     onPressed, onReleased and onPressAndHold. It's also possible to handle mouse
     wheel events via the onWheel signal.
+
+    If a MouseArea overlaps with the area of other MouseArea items, you can choose
+    to propagate \c clicked, \c doubleClicked and \c pressAndHold events to these
+    other items by setting propagateComposedEvents to true and rejecting events
+    that should be propagated. See the propagateComposedEvents documentation for
+    details.
 
     By default, MouseArea items only report mouse clicks and not changes to the
     position of the mouse cursor. Setting the hoverEnabled property ensures that
@@ -384,16 +388,8 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 
     \snippet qml/mousearea/mousearea.qml intro-extended
 
-  Behavioral Change in QtQuick 2.0
-
-  From QtQuick 2.0, the signals clicked, doubleClicked and pressAndHold have a different interaction
-  model with regards to the delivery of events to multiple overlapping MouseAreas. These signals can now propagate
-  to all MouseAreas in the area, in painting order, until accepted by one of them. A signal is accepted by
-  default if there is a signal handler for it, use mouse.accepted = false; to ignore. This propagation
-  can send the signal to MouseAreas other than the one which accepted the press event, although that MouseArea
-  will receive the signal first. This behavior can be enabled by setting propagateComposedEvents to true.
-
-    \sa MouseEvent, {declarative/touchinteraction/mousearea}{MouseArea example}
+    \sa MouseEvent, {declarative/touchinteraction/mousearea}{MouseArea example},
+    {Important Concepts In Qt Quick - User Input}
 */
 
 /*!
@@ -645,23 +641,62 @@ void QQuickMouseArea::setPreventStealing(bool prevent)
 /*!
     \qmlproperty bool QtQuick2::MouseArea::propagateComposedEvents
     This property holds whether composed mouse events will automatically propagate to
-    other MouseAreas.
+    other MouseAreas that overlap with this MouseArea but are lower in the visual stacking order.
+    By default, this property is false.
 
-    MouseArea contains several composed events, clicked, doubleClicked,
-    and pressAndHold. These can propagate via a separate mechanism to basic
-    mouse events, like pressed, which they are composed of.
+    MouseArea contains several composed events: \c clicked, \c doubleClicked and \c pressAndHold.
+    These are composed of basic mouse events, like \c pressed, and can be propagated differently
+    in comparison to basic events.
 
     If propagateComposedEvents is set to true, then composed events will be automatically
-    propagated to other MouseAreas in the same location in the scene. They are propagated
-    in painting order until an item accepts them. Unlike pressed handling, events will
+    propagated to other MouseAreas in the same location in the scene. Each event is propagated
+    to the next \l enabled MouseArea beneath it in the stacking order, propagating down this visual
+    hierarchy until a MouseArea accepts the event. Unlike \c pressed events, composed events will
     not be automatically accepted if no handler is present.
 
-    This property greatly simplifies the usecase of when you want to have overlapping MouseAreas
-    handling the composed events together. For example: if you want one MouseArea to handle click
-    signals and the other to handle pressAndHold, or if you want one MouseArea to handle click most
-    of the time, but pass it through when certain conditions are met.
+    For example, below is a yellow \l Rectangle that contains a blue \l Rectangle. The blue
+    rectangle is the top-most item in the hierarchy of the visual stacking order; it will
+    visually rendered above the yellow rectangle. Since the blue rectangle sets
+    propagateComposedEvents to true, and also sets \l MouseEvent::accepted to false for all
+    received \c clicked events, any \c clicked events it receives are propagated to the
+    MouseArea of the yellow rectangle beneath it.
 
-    By default this property is false.
+    \qml
+    import QtQuick 2.0
+
+    Rectangle {
+        color: "yellow"
+        width: 100; height: 100
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: console.log("clicked yellow")
+        }
+
+        Rectangle {
+            color: "blue"
+            width: 50; height: 50
+
+            MouseArea {
+                anchors.fill: parent
+                propagateComposedEvents: true
+                onClicked: {
+                    console.log("clicked blue")
+                    mouse.accepted = false
+                }
+            }
+        }
+    }
+    \endqml
+
+    Clicking on the blue rectangle will cause the \c onClicked handler of its child MouseArea to
+    be invoked; the event will then be propagated to the MouseArea of the yellow rectangle, causing
+    its own \c onClicked handler to be invoked.
+
+    This property greatly simplifies the usecase of when you want to have overlapping MouseAreas
+    handling the composed events together. For example: if you want one MouseArea to handle \c clicked
+    signals and the other to handle \c pressAndHold, or if you want one MouseArea to handle \c clicked most
+    of the time, but pass it through when certain conditions are met.
 */
 bool QQuickMouseArea::propagateComposedEvents() const
 {
