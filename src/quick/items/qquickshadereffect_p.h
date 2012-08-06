@@ -98,7 +98,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
     Q_PROPERTY(QByteArray vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
     Q_PROPERTY(bool blending READ blending WRITE setBlending NOTIFY blendingChanged)
     Q_PROPERTY(QVariant mesh READ mesh WRITE setMesh NOTIFY meshChanged)
-    Q_PROPERTY(CullMode culling READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
+    Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
     Q_PROPERTY(QString log READ log NOTIFY logChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_ENUMS(CullMode)
