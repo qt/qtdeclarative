@@ -42,19 +42,19 @@
 #include "qsgdefaultdistancefieldglyphcache_p.h"
 
 #include <QtGui/private/qdistancefield_p.h>
+#include <QtGui/private/qopenglcontext_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <qopenglfunctions.h>
 #include <qmath.h>
 
 QT_BEGIN_NAMESPACE
 
-
 QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
     : QSGDistanceFieldGlyphCache(man, c, font)
     , m_maxTextureSize(0)
     , m_maxTextureCount(3)
-    , m_fbo(0)
     , m_blitProgram(0)
+    , m_fboGuard(0)
 {
     m_blitVertexCoordinateArray[0] = -1.0f;
     m_blitVertexCoordinateArray[1] = -1.0f;
@@ -81,7 +81,10 @@ QSGDefaultDistanceFieldGlyphCache::~QSGDefaultDistanceFieldGlyphCache()
 {
     for (int i = 0; i < m_textures.count(); ++i)
         glDeleteTextures(1, &m_textures[i].texture);
-    ctx->functions()->glDeleteFramebuffers(1, &m_fbo);
+
+    if (m_fboGuard != 0)
+        m_fboGuard->free();
+
     delete m_blitProgram;
     delete m_areaAllocator;
 }
@@ -215,6 +218,11 @@ void QSGDefaultDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo, int 
 
 }
 
+static void freeFramebufferFunc(QOpenGLFunctions *funcs, GLuint id)
+{
+    funcs->glDeleteFramebuffers(1, &id);
+}
+
 void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int width, int height)
 {
     int oldWidth = texInfo->size.width();
@@ -242,9 +250,12 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
 
     Q_ASSERT(m_blitProgram);
 
-    if (!m_fbo)
-        ctx->functions()->glGenFramebuffers(1, &m_fbo);
-    ctx->functions()->glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+    if (!m_fboGuard) {
+        GLuint fbo;
+        ctx->functions()->glGenFramebuffers(1, &fbo);
+        m_fboGuard = new QOpenGLSharedResourceGuard(ctx, fbo, freeFramebufferFunc);
+    }
+    ctx->functions()->glBindFramebuffer(GL_FRAMEBUFFER, m_fboGuard->id());
 
     GLuint tmp_texture;
     glGenTextures(1, &tmp_texture);

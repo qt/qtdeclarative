@@ -50,6 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QOpenGLSharedResourceGuard;
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultDistanceFieldGlyphCache : public QSGDistanceFieldGlyphCache
 {
 public:
@@ -122,7 +123,6 @@ private:
 
     QList<TextureInfo> m_textures;
     QHash<glyph_t, TextureInfo *> m_glyphsTexture;
-    GLuint m_fbo;
     QSet<glyph_t> m_unusedGlyphs;
 
     QSGAreaAllocator *m_areaAllocator;
@@ -130,6 +130,8 @@ private:
     QOpenGLShaderProgram *m_blitProgram;
     GLfloat m_blitVertexCoordinateArray[8];
     GLfloat m_blitTextureCoordinateArray[8];
+
+    QOpenGLSharedResourceGuard *m_fboGuard;
 };
 
 QT_END_NAMESPACE
