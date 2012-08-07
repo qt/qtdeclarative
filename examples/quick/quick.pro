@@ -2,16 +2,16 @@ TEMPLATE = subdirs
 SUBDIRS = accessibility \
             animation \
             draganddrop \
-            #canvas \
-            #imageelements \
-            #keyinteraction \
+            canvas \
+            imageelements \
+            keyinteraction \
             modelviews \
-            #mousearea \
-            #openglunderqml \
-            #painteditem \
-            #positioners \
-            #righttoleft \
-            #shadereffects \
-            #text \
-            #threading \
-            #touchinteraction
+            mousearea \
+            openglunderqml \
+            painteditem \
+            positioners \
+            righttoleft \
+            shadereffects \
+            text \
+            threading \
+            touchinteraction
