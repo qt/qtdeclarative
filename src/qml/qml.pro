@@ -2,6 +2,7 @@ load(qt_build_config)
 
 TARGET     = QtQml
 QT = core-private network
+QT_PRIVATE = v8-private
 
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
@@ -17,9 +18,6 @@ exists("qqml_enable_gcov") {
 load(qt_module)
 
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf
-
-# private dependencies
-QT += v8-private
 
 HEADERS += qtqmlglobal.h \
            qtqmlglobal_p.h

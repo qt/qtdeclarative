@@ -5,6 +5,7 @@ TARGET = QtQuick
 CONFIG += dll warn_on
 
 QT = core-private gui-private qml-private
+QT_PRIVATE = v8-private network
 
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
@@ -19,9 +20,6 @@ load(qt_module)
 
 QMAKE_DOCS = $$PWD/doc/qtquick.qdocconf
 QMAKE_DOCS_INDEX = ../../doc
-
-# private dependencies
-QT += v8-private network
 
 include(util/util.pri)
 include(scenegraph/scenegraph.pri)
