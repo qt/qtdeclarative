@@ -707,6 +707,7 @@ public:
 
     VDMObjectDelegateDataType(const VDMObjectDelegateDataType &type)
         : QQmlRefCount()
+        , QQuickVisualAdaptorModel::Accessors()
         , metaObject(0)
         , propertyOffset(type.propertyOffset)
         , signalOffset(type.signalOffset)
