@@ -6,7 +6,7 @@ CONFIG += dll warn_on
 DEFINES += QT_NO_URL_CAST_FROM_STRING
 QT += testlib testlib-private qml quick  gui qml-private v8-private core-private
 
-load(qt_module_config)
+load(qt_module)
 
 # Install qmltestcase.prf into the Qt mkspecs so that "CONFIG += qmltestcase"
 # can be used in customer applications to build against QtQuickTest.

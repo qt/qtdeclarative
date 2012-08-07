@@ -16,7 +16,7 @@ exists("qqml_enable_gcov") {
 }
 
 MODULE = quickparticles
-load(qt_module_config)
+load(qt_module)
 
 # private dependencies
 QT += v8-private
