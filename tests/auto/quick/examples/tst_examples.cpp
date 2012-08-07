@@ -179,9 +179,16 @@ void tst_examples::namingConvention(const QDir &d)
 
 void tst_examples::namingConvention()
 {
-    QString examples = QLibraryInfo::location(QLibraryInfo::ExamplesPath);
+    QStringList examplesLocations;
+    examplesLocations << QLibraryInfo::location(QLibraryInfo::ExamplesPath) + QLatin1String("/qtdeclarative");
+    examplesLocations << QLibraryInfo::location(QLibraryInfo::ExamplesPath) + QLatin1String("/qtquick");
+    examplesLocations << QLibraryInfo::location(QLibraryInfo::ExamplesPath) + QLatin1String("/qtqml");
 
-    namingConvention(QDir(examples));
+    foreach(const QString &examples, examplesLocations) {
+        QDir d(examples);
+        if (d.exists())
+            namingConvention(d);
+    }
 }
 
 QStringList tst_examples::findQmlFiles(const QDir &d)
