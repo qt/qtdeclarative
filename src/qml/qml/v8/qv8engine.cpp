@@ -372,7 +372,6 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QRegExp:
                 return QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(ptr));
             case QMetaType::QObjectStar:
-            case QMetaType::QWidgetStar:
                 return newQObject(*reinterpret_cast<QObject* const *>(ptr));
             case QMetaType::QStringList:
                 {
@@ -1045,7 +1044,6 @@ v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
         result = QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(data));
         break;
     case QMetaType::QObjectStar:
-    case QMetaType::QWidgetStar:
         result = newQObject(*reinterpret_cast<QObject* const *>(data));
         break;
     case QMetaType::QVariant:
@@ -1148,14 +1146,6 @@ bool QV8Engine::metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data
         if (isQObject(value) || value->IsNull()) {
             *reinterpret_cast<QObject* *>(data) = qtObjectFromJS(value);
             return true;
-        } break;
-    case QMetaType::QWidgetStar:
-        if (isQObject(value) || value->IsNull()) {
-            QObject *qo = qtObjectFromJS(value);
-            if (!qo || qo->isWidgetType()) {
-                *reinterpret_cast<QWidget* *>(data) = reinterpret_cast<QWidget*>(qo);
-                return true;
-            }
         } break;
     case QMetaType::QStringList:
         if (value->IsArray()) {
@@ -1361,7 +1351,7 @@ QObject *QV8Engine::qtObjectFromJS(v8::Handle<v8::Value> value)
     else if (type == QV8ObjectResource::VariantType) {
         QVariant variant = variantWrapper()->toVariant(r);
         int type = variant.userType();
-        if ((type == QMetaType::QObjectStar) || (type == QMetaType::QWidgetStar))
+        if (type == QMetaType::QObjectStar)
             return *reinterpret_cast<QObject* const *>(variant.constData());
     }
     return 0;

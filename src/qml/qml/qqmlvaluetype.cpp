@@ -83,7 +83,6 @@ bool QQmlValueTypeFactoryImpl::isValueType(int idx)
     } else if (idx >= 0
             && idx != QVariant::StringList
             && idx != QMetaType::QObjectStar
-            && idx != QMetaType::QWidgetStar
             && idx != QMetaType::VoidStar
             && idx != QMetaType::QVariant) {
         return true;

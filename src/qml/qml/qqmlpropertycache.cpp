@@ -102,7 +102,7 @@ static QQmlPropertyData::Flags flagsForPropertyType(int propType, QQmlEngine *en
 
     QQmlPropertyData::Flags flags;
 
-    if (propType == QMetaType::QObjectStar || propType == QMetaType::QWidgetStar) {
+    if (propType == QMetaType::QObjectStar) {
         flags |= QQmlPropertyData::IsQObjectDerived;
     } else if (propType == QMetaType::QVariant) {
         flags |= QQmlPropertyData::IsQVariant;
@@ -153,7 +153,7 @@ void QQmlPropertyData::lazyLoad(const QMetaProperty &p, QQmlEngine *engine)
     flags = fastFlagsForProperty(p);
 
     int type = p.type();
-    if (type == QMetaType::QObjectStar || type == QMetaType::QWidgetStar) {
+    if (type == QMetaType::QObjectStar) {
         propType = type;
         flags |= QQmlPropertyData::IsQObjectDerived;
     } else if (type == QMetaType::QVariant) {
