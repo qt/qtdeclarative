@@ -59,8 +59,8 @@ void Squircle::setT(qreal t)
         return;
     m_t = t;
     emit tChanged();
-    if (canvas())
-        canvas()->update();
+    if (window())
+        window()->update();
 }
 //! [8]
 
@@ -113,7 +113,7 @@ void Squircle::paint()
         m_program->bindAttributeLocation("vertices", 0);
         m_program->link();
 
-        connect(canvas()->openglContext(), SIGNAL(aboutToBeDestroyed()),
+        connect(window()->openglContext(), SIGNAL(aboutToBeDestroyed()),
                 this, SLOT(cleanup()), Qt::DirectConnection);
     }
 //! [4] //! [5]

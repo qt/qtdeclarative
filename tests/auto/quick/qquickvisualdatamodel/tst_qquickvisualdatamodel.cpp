@@ -956,7 +956,7 @@ void tst_qquickvisualdatamodel::itemsDestroyed()
         view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));
 
-        QVERIFY(delegate = findItem<QQuickItem>(view.rootItem(), "delegate", 1));
+        QVERIFY(delegate = findItem<QQuickItem>(view.contentItem(), "delegate", 1));
     }
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QVERIFY(!delegate);
@@ -3073,7 +3073,7 @@ void tst_qquickvisualdatamodel::insert()
     QScopedPointer<QObject> object(component.create());
     QQuickListView *listView = qobject_cast<QQuickListView *>(object.data());
     QVERIFY(listView);
-    listView->setParentItem(window.rootItem());
+    listView->setParentItem(window.contentItem());
 
     QQuickItem *contentItem = listView->contentItem();
     QVERIFY(contentItem);
@@ -3537,7 +3537,7 @@ void tst_qquickvisualdatamodel::resolve()
     QScopedPointer<QObject> object(component.create());
     QQuickListView *listView = qobject_cast<QQuickListView *>(object.data());
     QVERIFY(listView);
-    listView->setParentItem(window.rootItem());
+    listView->setParentItem(window.contentItem());
 
     QQuickItem *contentItem = listView->contentItem();
     QVERIFY(contentItem);
@@ -3937,7 +3937,7 @@ void tst_qquickvisualdatamodel::warnings()
     QScopedPointer<QObject> object(component.create());
     QQuickListView *listView = qobject_cast<QQuickListView *>(object.data());
     QVERIFY(listView);
-    listView->setParentItem(window.rootItem());
+    listView->setParentItem(window.contentItem());
 
     QQuickItem *contentItem = listView->contentItem();
     QVERIFY(contentItem);

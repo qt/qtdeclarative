@@ -2502,7 +2502,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
     QVERIFY(textInput != 0);
 
     QQuickWindow window;
-    textInput->setParentItem(window.rootItem());
+    textInput->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -3297,7 +3297,7 @@ void tst_qquicktextinput::focusOnPress()
 
     QQuickWindow window;
     window.resize(100, 50);
-    textInputObject->setParentItem(window.rootItem());
+    textInputObject->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -3405,7 +3405,7 @@ void tst_qquicktextinput::openInputPanel()
 
     anotherInput.setFocus(false);
     QVERIFY(qApp->focusObject() != &anotherInput);
-    QCOMPARE(view.activeFocusItem(), view.rootItem());
+    QCOMPARE(view.activeFocusItem(), view.contentItem());
     anotherInput.setFocus(true);
 
     qApp->inputMethod()->hide();
@@ -3449,7 +3449,7 @@ void tst_qquicktextinput::setHAlignClearCache()
     QQuickView view;
     MyTextInput input;
     input.setText("Hello world");
-    input.setParentItem(view.rootItem());
+    input.setParentItem(view.contentItem());
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowActive(&view);
@@ -3469,8 +3469,8 @@ void tst_qquicktextinput::focusOutClearSelection()
     QQuickTextInput input2;
     input.setText(QLatin1String("Hello world"));
     input.setFocus(true);
-    input2.setParentItem(view.rootItem());
-    input.setParentItem(view.rootItem());
+    input2.setParentItem(view.contentItem());
+    input.setParentItem(view.contentItem());
     input.componentComplete();
     input2.componentComplete();
     view.show();
@@ -4967,7 +4967,7 @@ void tst_qquicktextinput::keySequence()
     textInput->setEchoMode(echoMode);
 
     QQuickWindow window;
-    textInput->setParentItem(window.rootItem());
+    textInput->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -5128,7 +5128,7 @@ void tst_qquicktextinput::undo()
     QVERIFY(textInput != 0);
 
     QQuickWindow window;
-    textInput->setParentItem(window.rootItem());
+    textInput->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -5214,7 +5214,7 @@ void tst_qquicktextinput::redo()
     QVERIFY(textInput != 0);
 
     QQuickWindow window;
-    textInput->setParentItem(window.rootItem());
+    textInput->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -5546,7 +5546,7 @@ void tst_qquicktextinput::undo_keypressevents()
     QVERIFY(textInput != 0);
 
     QQuickWindow window;
-    textInput->setParentItem(window.rootItem());
+    textInput->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -5953,7 +5953,7 @@ void tst_qquicktextinput::setInputMask()
         textInput->insert(0, input);
     } else {
         QQuickWindow window;
-        textInput->setParentItem(window.rootItem());
+        textInput->setParentItem(window.contentItem());
         window.show();
         window.requestActivateWindow();
         QTest::qWaitForWindowActive(&window);
@@ -6083,7 +6083,7 @@ void tst_qquicktextinput::keypress_inputMask()
     QVERIFY(textInput != 0);
 
     QQuickWindow window;
-    textInput->setParentItem(window.rootItem());
+    textInput->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);

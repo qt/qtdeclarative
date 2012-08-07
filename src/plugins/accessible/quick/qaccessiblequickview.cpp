@@ -60,7 +60,7 @@ QAccessibleQuickView::QAccessibleQuickView(QQuickView *object)
 
 int QAccessibleQuickView::childCount() const
 {
-    return view()->rootItem() ? 1 : 0;
+    return view()->contentItem() ? 1 : 0;
 }
 
 QAccessibleInterface *QAccessibleQuickView::parent() const
@@ -155,7 +155,7 @@ static QQuickItem *childAt_helper(QQuickItem *item, int x, int y)
 QAccessibleInterface *QAccessibleQuickView::childAt(int x, int y) const
 {
     Q_ASSERT(view());
-    QQuickItem *root = view()->rootItem();
+    QQuickItem *root = view()->contentItem();
     if (root) {
         if (QQuickItem *item = childAt_helper(root, x, y))
             return QAccessible::queryAccessibleInterface(item);

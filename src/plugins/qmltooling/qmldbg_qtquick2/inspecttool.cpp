@@ -61,17 +61,17 @@ namespace QtQuick2 {
 
 InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     AbstractTool(inspector),
-    m_originalSmooth(view->rootItem()->smooth()),
+    m_originalSmooth(view->contentItem()->smooth()),
     m_dragStarted(false),
     m_pinchStarted(false),
     m_didPressAndHold(false),
     m_tapEvent(false),
-    m_rootItem(view->rootItem()),
-    m_originalPosition(view->rootItem()->pos()),
+    m_contentItem(view->contentItem()),
+    m_originalPosition(view->contentItem()->pos()),
     m_smoothScaleFactor(Constants::ZoomSnapDelta),
     m_minScale(0.125f),
     m_maxScale(48.0f),
-    m_originalScale(view->rootItem()->scale()),
+    m_originalScale(view->contentItem()->scale()),
     m_touchTimestamp(0),
     m_hoverHighlight(new HoverHighlight(inspector->overlay())),
     m_lastItem(0),
@@ -98,17 +98,17 @@ void InspectTool::enable(bool enable)
     if (!enable) {
         inspector()->setSelectedItems(QList<QQuickItem*>());
         // restoring the original states.
-        if (m_rootItem) {
-            m_rootItem->setScale(m_originalScale);
-            m_rootItem->setPos(m_originalPosition);
-            m_rootItem->setSmooth(m_originalSmooth);
+        if (m_contentItem) {
+            m_contentItem->setScale(m_originalScale);
+            m_contentItem->setPos(m_originalPosition);
+            m_contentItem->setSmooth(m_originalSmooth);
         }
     } else {
-        if (m_rootItem) {
-            m_originalSmooth = m_rootItem->smooth();
-            m_originalScale = m_rootItem->scale();
-            m_originalPosition = m_rootItem->pos();
-            m_rootItem->setSmooth(true);
+        if (m_contentItem) {
+            m_originalSmooth = m_contentItem->smooth();
+            m_originalScale = m_contentItem->scale();
+            m_originalPosition = m_contentItem->pos();
+            m_contentItem->setSmooth(true);
         }
     }
 }
@@ -174,8 +174,8 @@ void InspectTool::wheelEvent(QWheelEvent *event)
     Qt::KeyboardModifier smoothZoomModifier = Qt::ControlModifier;
     if (event->modifiers() & smoothZoomModifier) {
         int numDegrees = event->delta() / 8;
-        qreal newScale = m_rootItem->scale() + m_smoothScaleFactor * (numDegrees / 15.0f);
-        scaleView(newScale / m_rootItem->scale(), m_mousePosition, m_mousePosition);
+        qreal newScale = m_contentItem->scale() + m_smoothScaleFactor * (numDegrees / 15.0f);
+        scaleView(newScale / m_contentItem->scale(), m_mousePosition, m_mousePosition);
     } else if (!event->modifiers()) {
         if (event->delta() > 0) {
             zoomIn();
@@ -204,7 +204,7 @@ void InspectTool::keyReleaseEvent(QKeyEvent *event)
     case Qt::Key_8:
     case Qt::Key_9: {
         qreal newScale = ((event->key() - Qt::Key_0) * 1.0f);
-        scaleView(newScale / m_rootItem->scale(), m_mousePosition, m_mousePosition);
+        scaleView(newScale / m_contentItem->scale(), m_mousePosition, m_mousePosition);
         break;
     }
     default:
@@ -283,34 +283,34 @@ void InspectTool::touchEvent(QTouchEvent *event)
 void InspectTool::scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter)
 {
     m_pressAndHoldTimer.stop();
-    if (((m_rootItem->scale() * factor) > m_maxScale)
-            || ((m_rootItem->scale() * factor) < m_minScale)) {
+    if (((m_contentItem->scale() * factor) > m_maxScale)
+            || ((m_contentItem->scale() * factor) < m_minScale)) {
         return;
     }
     //New position = new center + scalefactor * (oldposition - oldcenter)
-    QPointF newPosition = newcenter + (factor * (m_rootItem->pos() - oldcenter));
-    m_rootItem->setScale(m_rootItem->scale() * factor);
-    m_rootItem->setPos(newPosition);
+    QPointF newPosition = newcenter + (factor * (m_contentItem->pos() - oldcenter));
+    m_contentItem->setScale(m_contentItem->scale() * factor);
+    m_contentItem->setPos(newPosition);
 }
 
 void InspectTool::zoomIn()
 {
     qreal newScale = nextZoomScale(ZoomIn);
-    scaleView(newScale / m_rootItem->scale(), m_mousePosition, m_mousePosition);
+    scaleView(newScale / m_contentItem->scale(), m_mousePosition, m_mousePosition);
 }
 
 void InspectTool::zoomOut()
 {
     qreal newScale = nextZoomScale(ZoomOut);
-    scaleView(newScale / m_rootItem->scale(), m_mousePosition, m_mousePosition);
+    scaleView(newScale / m_contentItem->scale(), m_mousePosition, m_mousePosition);
 }
 
 void InspectTool::zoomTo100()
 {
     m_didPressAndHold = true;
 
-    m_rootItem->setPos(QPointF(0, 0));
-    m_rootItem->setScale(1.0);
+    m_contentItem->setPos(QPointF(0, 0));
+    m_contentItem->setScale(1.0);
 }
 
 qreal InspectTool::nextZoomScale(ZoomDirection direction)
@@ -338,13 +338,13 @@ qreal InspectTool::nextZoomScale(ZoomDirection direction)
 
     if (direction == ZoomIn) {
         for (int i = 0; i < zoomScales.length(); ++i) {
-            if (zoomScales[i] > m_rootItem->scale())
+            if (zoomScales[i] > m_contentItem->scale())
                 return zoomScales[i];
         }
         return zoomScales.last();
     } else {
         for (int i = zoomScales.length() - 1; i >= 0; --i) {
-            if (zoomScales[i] < m_rootItem->scale())
+            if (zoomScales[i] < m_contentItem->scale())
                 return zoomScales[i];
         }
         return zoomScales.first();
@@ -361,9 +361,9 @@ void InspectTool::initializeDrag(const QPointF &pos)
 
 void InspectTool::dragItemToPosition()
 {
-    QPointF newPosition = m_rootItem->pos() + m_mousePosition - m_dragStartPosition;
+    QPointF newPosition = m_contentItem->pos() + m_mousePosition - m_dragStartPosition;
     m_dragStartPosition = m_mousePosition;
-    m_rootItem->setPos(newPosition);
+    m_contentItem->setPos(newPosition);
 }
 
 void InspectTool::moveItem(bool valid)

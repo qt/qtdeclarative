@@ -81,7 +81,7 @@ void tst_qquickapplication::active()
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
     QQuickWindow window;
-    item->setParentItem(window.rootItem());
+    item->setParentItem(window.contentItem());
 
     // not active
     QVERIFY(!item->property("active").toBool());

@@ -103,9 +103,9 @@ public:
     virtual ~QQuickWindowPrivate();
 
     void init(QQuickWindow *);
-    void initRootItem();//Currently only used if items added in QML
+    void initContentItem();//Currently only used if items added in QML
 
-    QQuickRootItem *rootItem;
+    QQuickRootItem *contentItem;
     QSet<QQuickItem *> parentlessItems;
     QQmlListProperty<QObject> data();
 

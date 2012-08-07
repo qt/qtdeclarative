@@ -1191,7 +1191,7 @@ void tst_qquicktextedit::focusOnPress()
 
     QQuickWindow window;
     window.resize(100, 50);
-    textEditObject->setParentItem(window.rootItem());
+    textEditObject->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -2903,7 +2903,7 @@ void tst_qquicktextedit::openInputPanel()
 
     anotherEdit.setFocus(false);
     QVERIFY(qApp->focusObject() != &anotherEdit);
-    QCOMPARE(view.activeFocusItem(), view.rootItem());
+    QCOMPARE(view.activeFocusItem(), view.contentItem());
     anotherEdit.setFocus(true);
 
     qApp->inputMethod()->hide();
@@ -4253,7 +4253,7 @@ void tst_qquicktextedit::keySequence()
     QVERIFY(textEdit != 0);
 
     QQuickWindow window;
-    textEdit->setParentItem(window.rootItem());
+    textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -4416,7 +4416,7 @@ void tst_qquicktextedit::undo()
     QVERIFY(textEdit != 0);
 
     QQuickWindow window;
-    textEdit->setParentItem(window.rootItem());
+    textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -4502,7 +4502,7 @@ void tst_qquicktextedit::redo()
     QVERIFY(textEdit != 0);
 
     QQuickWindow window;
-    textEdit->setParentItem(window.rootItem());
+    textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);
@@ -4726,7 +4726,7 @@ void tst_qquicktextedit::undo_keypressevents()
     QVERIFY(textEdit != 0);
 
     QQuickWindow window;
-    textEdit->setParentItem(window.rootItem());
+    textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
     QTest::qWaitForWindowActive(&window);

@@ -259,7 +259,7 @@ void tst_QQuickItemLayer::layerVisibility()
     QQuickView view;
     view.setSource(testFileUrl("Visible.qml"));
 
-    QQuickItem *child = view.rootItem()->childItems().at(0);
+    QQuickItem *child = view.contentItem()->childItems().at(0);
     child->setProperty("layerVisible", visible);
     child->setProperty("layerEffect", effect);
     child->setProperty("layerOpacity", opacity);
@@ -305,7 +305,7 @@ void tst_QQuickItemLayer::layerZOrder()
     QQuickView view;
     view.setSource(testFileUrl("ZOrder.qml"));
 
-    QQuickItem *child = view.rootItem()->childItems().at(0);
+    QQuickItem *child = view.contentItem()->childItems().at(0);
     child->setProperty("layerEffect", effect);
 
     view.show();
@@ -340,7 +340,7 @@ void tst_QQuickItemLayer::changeZOrder()
     QQuickView view;
     view.setSource(testFileUrl("ZOrderChange.qml"));
 
-    QQuickItem *child = view.rootItem()->childItems().at(0);
+    QQuickItem *child = view.contentItem()->childItems().at(0);
     child->setProperty("layerEnabled", layered);
     child->setProperty("layerEffect", effect);
     child->setProperty("layerZ", 1);

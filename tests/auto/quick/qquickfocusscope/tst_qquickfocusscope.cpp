@@ -503,7 +503,7 @@ void tst_qquickfocusscope::canvasFocus()
     QQuickItem *rootObject = view->rootObject();
     QVERIFY(rootObject);
 
-    QQuickItem *rootItem = view->rootItem();
+    QQuickItem *rootItem = view->contentItem();
     QQuickItem *scope1 = findItem<QQuickItem>(rootObject, QLatin1String("scope1"));
     QQuickItem *item1 = findItem<QQuickItem>(rootObject, QLatin1String("item1"));
     QQuickItem *scope2 = findItem<QQuickItem>(rootObject, QLatin1String("scope2"));

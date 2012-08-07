@@ -579,7 +579,7 @@ bool QuickTestResult::waitForRendering(QQuickItem *item, int timeout)
 {
     Q_ASSERT(item);
 
-    return qWaitForSignal(item->canvas(), SIGNAL(frameSwapped()), timeout);
+    return qWaitForSignal(item->window(), SIGNAL(frameSwapped()), timeout);
 }
 
 void QuickTestResult::startMeasurement()
