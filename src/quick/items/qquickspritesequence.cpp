@@ -235,7 +235,7 @@ struct SpriteVertices {
     Default is true.
 */
 /*!
-    \qmlproperty string QtQuick2::SpriteSequence::goalSprite
+    \qmlproperty string QtQuick2::SpriteSequence::currentSprite
 
     The name of the Sprite which is currently animating.
 */

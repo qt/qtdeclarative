@@ -635,6 +635,11 @@ void QQuickTextLine::setY(qreal y)
         m_line->setPosition(QPointF(m_line->x(), y));
 }
 
+/*!
+    \qmlmethod QtQuick2::Text::doLayout()
+
+    Triggers a re-layout of the displayed text.
+*/
 void QQuickText::doLayout()
 {
     Q_D(QQuickText);
@@ -1285,13 +1290,16 @@ QQuickText::~QQuickText()
 */
 
 /*!
-    \qmlsignal QtQuick2::Text::onLineLaidOut(line)
+    \qmlsignal QtQuick2::Text::onLineLaidOut(object line)
 
-    This handler is called for every line during the layout process.
+    This handler is called for each line of text that is laid out during the layout
+    process. The specified \a line object provides more details about the line that
+    is currently being laid out.
+
     This gives the opportunity to position and resize a line as it is being laid out.
     It can for example be used to create columns or lay out text around objects.
 
-    The properties of a line are:
+    The properties of the specified \a line object are:
     \list
     \li number (read-only)
     \li x

@@ -1070,8 +1070,8 @@ void QQuickPathQuad::setControlY(qreal y)
 }
 
 /*!
-   \qmlproperty real QtQuick2::PathCubic::relativeControlX
-   \qmlproperty real QtQuick2::PathCubic::relativeControlY
+   \qmlproperty real QtQuick2::PathQuad::relativeControlX
+   \qmlproperty real QtQuick2::PathQuad::relativeControlY
 
     Defines the position of the control point relative to the curve's start.
 

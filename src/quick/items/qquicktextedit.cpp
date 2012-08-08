@@ -1484,7 +1484,7 @@ void QQuickTextEdit::paste()
 
 
 /*!
-    \qmlmethod QtQuick2::QQuickTextEdit::undo()
+    \qmlmethod QtQuick2::TextEdit::undo()
 
     Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
     current selection, and updates the selection start to the current cursor
@@ -1498,7 +1498,7 @@ void QQuickTextEdit::undo()
 }
 
 /*!
-    \qmlmethod QtQuick2::QQuickTextEdit::redo()
+    \qmlmethod QtQuick2::TextEdit::redo()
 
     Redoes the last operation if redo is \l {canRedo}{available}.
 */
@@ -2131,7 +2131,7 @@ void QQuickTextEdit::insert(int position, const QString &text)
 }
 
 /*!
-    \qmlmethod string QtQuick2::TextEdit::getText(int start, int end)
+    \qmlmethod string QtQuick2::TextEdit::remove(int start, int end)
 
     Removes the section of text that is between the \a start and \a end positions from the TextEdit.
 */
