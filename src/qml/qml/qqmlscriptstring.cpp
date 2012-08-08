@@ -46,8 +46,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
 \class QQmlScriptString
-\since 4.7
 \brief The QQmlScriptString class encapsulates a script and its context.
+\inmodule QtQml
 
 QQmlScriptString is used to create QObject properties that accept a script "assignment" from QML.
 

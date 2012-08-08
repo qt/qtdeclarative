@@ -113,7 +113,6 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
     \instantiates QObject
   \inqmlmodule QtQuick 2
   \ingroup qml-utility-elements
-  \since 4.7
   \brief A basic QML type
 
   The QtObject type is a non-visual element which contains only the

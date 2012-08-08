@@ -193,7 +193,6 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
     \qmltype Component
     \instantiates QQmlComponent
     \ingroup qml-utility-elements
-    \since 4.7
     \inqmlmodule QtQuick 2
     \brief Encapsulates a QML component definition
 

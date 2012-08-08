@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QQmlPropertyValueSource
     \brief The QQmlPropertyValueSource class is an interface for property value sources such as animations and bindings.
+    \inmodule QtQml
 
     See \l{Property Value Sources} for information on writing custom property
     value sources.

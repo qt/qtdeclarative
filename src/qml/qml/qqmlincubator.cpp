@@ -174,6 +174,7 @@ void QQmlIncubatorPrivate::clear()
 /*!
 \class QQmlIncubationController
 \brief QQmlIncubationController instances drive the progress of QQmlIncubators
+\inmodule QtQml
 
 In order to behave asynchronously and not introduce stutters or freezes in an application,
 the process of creating objects a QQmlIncubators must be driven only during the
@@ -402,6 +403,7 @@ void QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs)
 /*!
 \class QQmlIncubator
 \brief The QQmlIncubator class allows QML objects to be created asynchronously.
+\inmodule QtQml
 
 Creating QML objects - like delegates in a view, or a new page in an application - can take
 a noticable amount of time, especially on resource constrained mobile devices.  When an

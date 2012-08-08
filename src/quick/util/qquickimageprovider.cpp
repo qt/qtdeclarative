@@ -54,7 +54,7 @@ public:
     \class QQuickTextureFactory
     \since 5.0
     \brief The QQuickTextureFactory class provides an interface for loading custom textures from QML.
-    \inmodule QtQml
+    \inmodule QtQuick
 
     The purpose of the texture factory is to provide a placeholder for a image
     data that can be converted into an OpenGL texture.

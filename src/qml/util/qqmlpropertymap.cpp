@@ -142,6 +142,7 @@ int QQmlPropertyMapMetaObject::createProperty(const char *name, const char *valu
 /*!
     \class QQmlPropertyMap
     \brief The QQmlPropertyMap class allows you to set key-value pairs that can be used in QML bindings.
+    \inmodule QtQml
 
     QQmlPropertyMap provides a convenient way to expose domain data to the UI layer.
     The following example shows how you might declare data in C++ and then
