@@ -354,6 +354,12 @@ struct AnimatedSpriteVertices {
 
 */
 
+/*!
+    \qmlmethod int QtQuick2::AnimatedSprite::restart()
+
+    Stops, then starts the sprite animation.
+*/
+
 //TODO: Implicitly size element to size of sprite
 QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
     QQuickItem(parent)
@@ -425,6 +431,11 @@ void QQuickAnimatedSprite::stop()
     emit runningChanged(false);
 }
 
+/*!
+    \qmlmethod int QtQuick2::AnimatedSprite::advance()
+
+    Advances the sprite animation by one frame.
+*/
 void QQuickAnimatedSprite::advance(int frames)
 {
     if (!frames)
@@ -437,6 +448,14 @@ void QQuickAnimatedSprite::advance(int frames)
     emit currentFrameChanged(m_curFrame);
 }
 
+/*!
+    \qmlmethod int QtQuick2::AnimatedSprite::pause()
+
+    Pauses the sprite animation. This does nothing if
+    \l paused is true.
+
+    \sa resume()
+*/
 void QQuickAnimatedSprite::pause()
 {
     if (m_paused)
@@ -446,6 +465,14 @@ void QQuickAnimatedSprite::pause()
     emit pausedChanged(true);
 }
 
+/*!
+    \qmlmethod int QtQuick2::AnimatedSprite::resume()
+
+    Resumes the sprite animation if \l paused is true;
+    otherwise, this does nothing.
+
+    \sa pause()
+*/
 void QQuickAnimatedSprite::resume()
 {
     if (!m_paused)
