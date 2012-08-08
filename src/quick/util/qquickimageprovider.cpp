@@ -121,7 +121,7 @@ QImage QQuickTextureFactory::image() const
 
     \list
     \li Loaded using QPixmaps rather than actual image files
-    \li Loaded asynchronously in a separate thread, if imageType() is \l{QQmlImageProvider::ImageType}{ImageType::Image}
+    \li Loaded asynchronously in a separate thread, if imageType() is \l{QQuickImageProvider::ImageType}{ImageType::Image}
     \endlist
 
     To specify that an image should be loaded by an image provider, use the

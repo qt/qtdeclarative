@@ -9,10 +9,6 @@
     "QtQmlDevTools" => "../qml/qml/parser",
 );
 %deprecatedheaders = (
-    "QtQml" => {
-        "QQmlImageProvider" => "QtQuick/QQuickImageProvider",
-        "qqmlimageprovider.h" => "QtQuick/qquickimageprovider.h",
-    },
 );
 # Module dependencies.
 # Every module that is required to build this module should have one entry.

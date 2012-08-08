@@ -14,7 +14,6 @@ exists("qqml_enable_gcov") {
     LIBS += -lgcov
 }
 
-MODULE_DEFINES = QQmlImageProvider=QQuickImageProvider
 load(qt_module_config)
 
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf
