@@ -71,6 +71,8 @@ public:
     void init(QV8Engine *);
     void destroy();
 
+    bool isSequenceType(int sequenceTypeId) const;
+
     bool isEqual(QV8ObjectResource *lhs, const QVariant &rhs);
     bool isEqual(QV8ObjectResource *lhs, QV8ObjectResource *rhs);
     quint32 sequenceLength(QV8ObjectResource *);

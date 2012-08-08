@@ -110,6 +110,17 @@ void QV8SequenceWrapper::destroy()
     qPersistentDispose(m_constructor);
 }
 
+#define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \
+    if (sequenceTypeId == qMetaTypeId<SequenceType>()) { \
+        return true; \
+    } else
+
+bool QV8SequenceWrapper::isSequenceType(int sequenceTypeId) const
+{
+    FOREACH_QML_SEQUENCE_TYPE(IS_SEQUENCE) { /* else */ return false; }
+}
+#undef IS_SEQUENCE
+
 bool QV8SequenceWrapper::isEqual(QV8ObjectResource *lhs, QV8ObjectResource *rhs)
 {
     Q_ASSERT(lhs && rhs && lhs->resourceType() == QV8ObjectResource::SequenceType && rhs->resourceType() == QV8ObjectResource::SequenceType);

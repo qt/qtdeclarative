@@ -5569,6 +5569,10 @@ void tst_qqmlecmascript::sequenceConversionCopy()
     QCOMPARE(object->property("success").toBool(), true);
     QMetaObject::invokeMethod(object, "testEqualitySemantics");
     QCOMPARE(object->property("success").toBool(), true);
+    QMetaObject::invokeMethod(object, "testCopyParameters");
+    QCOMPARE(object->property("success").toBool(), true);
+    QMetaObject::invokeMethod(object, "testReferenceParameters");
+    QCOMPARE(object->property("success").toBool(), true);
     delete object;
 }
 

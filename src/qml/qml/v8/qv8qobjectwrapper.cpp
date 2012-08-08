@@ -2160,13 +2160,17 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8::Val
         type = -1;
 
         QQmlEnginePrivate *ep = engine->engine() ? QQmlEnginePrivate::get(engine->engine()) : 0;
-        QVariant v = engine->toVariant(value, -1);
+        QVariant v = engine->toVariant(value, -1); // why -1 instead of callType?
 
         if (v.userType() == callType) {
             *qvariantPtr = v;
         } else if (v.canConvert(callType)) {
             *qvariantPtr = v;
             qvariantPtr->convert(callType);
+        } else if (engine->sequenceWrapper()->isSequenceType(callType) && v.userType() == qMetaTypeId<QVariantList>()) {
+            // convert the JS array to a sequence of the correct type.
+            QVariant seqV = engine->toVariant(value, callType);
+            *qvariantPtr = seqV;
         } else {
             QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(callType) : QQmlMetaObject();
             if (!mo.isNull()) {

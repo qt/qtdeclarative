@@ -225,35 +225,17 @@ public:
     {
         return stringList;
     }
-    Q_INVOKABLE QList<int> integers(QVariant v) const
+    Q_INVOKABLE QList<int> integers(QList<int> v) const
     {
-        QList<int> intList;
-        QList<QVariant> vList = v.toList();
-        for (int i=0 ; i < vList.size() ; ++i) {
-            int iv = vList[i].toInt();
-            intList.append(iv);
-        }
-        return intList;
+        return v;
     }
-    Q_INVOKABLE QList<qreal> reals(QVariant v) const
+    Q_INVOKABLE QList<qreal> reals(QList<qreal> v) const
     {
-        QList<qreal> realList;
-        QList<QVariant> vList = v.toList();
-        for (int i=0 ; i < vList.size() ; ++i) {
-            qreal fv = vList[i].toReal();
-            realList.append(fv);
-        }
-        return realList;
+        return v;
     }
-    Q_INVOKABLE QList<bool> bools(QVariant v) const
+    Q_INVOKABLE QList<bool> bools(QList<bool> v) const
     {
-        QList<bool> boolList;
-        QList<QVariant> vList = v.toList();
-        for (int i=0 ; i < vList.size() ; ++i) {
-            bool bv = vList[i].toBool();
-            boolList.append(bv);
-        }
-        return boolList;
+        return v;
     }
 };
 

@@ -1393,6 +1393,7 @@ public:
     Q_INVOKABLE QList<QString> generateStringSequence() const { QList<QString> retn; retn << "one" << "two" << "three"; return retn; }
     Q_INVOKABLE QList<QUrl> generateUrlSequence() const { QList<QUrl> retn; retn << QUrl("http://www.example1.com") << QUrl("http://www.example2.com") << QUrl("http://www.example3.com"); return retn; }
     Q_INVOKABLE QStringList generateQStringSequence() const { QStringList retn; retn << "one" << "two" << "three"; return retn; }
+    Q_INVOKABLE bool parameterEqualsGeneratedIntSequence(const QList<int>& param) const { return (param == generateIntSequence()); }
 
     // "reference resource" underlying qobject deletion test:
     Q_INVOKABLE MySequenceConversionObject *generateTestObject() const { return new MySequenceConversionObject; }

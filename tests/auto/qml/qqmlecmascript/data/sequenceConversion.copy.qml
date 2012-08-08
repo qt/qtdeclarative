@@ -157,4 +157,27 @@ Item {
         if (jsIntList == jsIntList2) success = false;
         if (jsIntList != jsIntList) success = false;
     }
+
+    // this test ensures that copy resource sequences can be passed as parameters
+    function testCopyParameters() {
+        success = false;
+
+        var jsIntList = msco.generateIntSequence();
+        success = msco.parameterEqualsGeneratedIntSequence(jsIntList);
+        if (success == false) return;
+
+        // here we construct something which should be converted to a copy sequence automatically.
+        success = msco.parameterEqualsGeneratedIntSequence([1,2,3]);
+    }
+
+    // this test ensures that reference resource sequences are converted
+    // to copy resource sequences when passed as parameters.
+    function testReferenceParameters() {
+        success = false;
+
+        msco.intListProperty = msco.generateIntSequence();
+        var jsIntList = msco.intListProperty
+        success = msco.parameterEqualsGeneratedIntSequence(jsIntList);
+        if (success == false) return;
+    }
 }
