@@ -41,32 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick Examples - Positioners
-    \example quick/positioners
-    \brief This is a collection of QML Positioner examples.
-    \image qml-positioners-example.png
-
-    This is a collection of small QML examples relating to positioners. Each example is
-    a small QML file emphasizing a particular element or feature.
-
-    Transitions shows animated transitions when showing or hiding items in a positioner.
-    It consists of a scene populated with items in a variety of positioners: Column, Row, Grid and Flow.
-    Each positioner has animations described as Transitions.
-
-    \snippet examples/quick/positioners/positioners-transitions.qml move
-    The move transition specifies how items inside a positioner will animate when they are displaced by the appearance or disappearance of other items.
-
-    \snippet examples/quick/positioners/positioners-transitions.qml add
-    The add transition specifies how items will appear when they are added to a positioner.
-
-    \snippet examples/quick/positioners/positioners-transitions.qml populate
-    The populate transition specifies how items will appear when their parent positioner is first created.
-
-    Attached Properties shows how the Positioner attached property can be used to determine where an item is within a positioner.
-    \snippet examples/quick/positioners/positioners-attachedproperties.qml 0
-*/
-
 Item {
     height: 480
     width: 320

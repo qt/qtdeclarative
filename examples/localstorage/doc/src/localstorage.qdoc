@@ -24,15 +24,15 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 /*!
-    \title QML Demo - SameGame
-    \example demos/samegame
-    \brief This is an example game written in QML.
-    \image qml-samegame-demo-small.png
+    \title QtQuick Examples - Local Storage
+    \example localstorage
+    \brief This is a collection of QML local storage examples
+    \image qml-localstorage-example.png
 
-    The SameGame demo implements a simple game in QML. It is written for desktop and portrait devices.
+    This is a collection of small QML examples relating to local storage functionality.
 
-    This game has the logic implemented in Javascipt and the appearance implemented in QML.
+    Hello World demos creating a simple SQL table and how to do inserting/selecting operations.
+
 */
 

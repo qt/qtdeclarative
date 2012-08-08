@@ -1,4 +1,4 @@
-/****************************************************************************
+ /****************************************************************************
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
@@ -40,18 +40,6 @@
 
 import QtQuick 2.0
 import "../../shared" as Examples
-
-/*!
-    \title QtQuick Examples - Local Storage
-    \example localstorage
-    \brief This is a collection of QML local storage examples
-    \image qml-localstorage-example.png
-
-    This is a collection of small QML examples relating to local storage functionality.
-
-    Hello World demos creating a simple SQL table and how to do inserting/selecting operations.
-
-*/
 
 Item {
     height: 480

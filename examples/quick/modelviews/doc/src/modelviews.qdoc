@@ -1,0 +1,82 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \title QtQuick Examples - ModelViews
+    \example quick/modelviews
+    \brief This is a collection of QML drag and drop examples
+    \image qml-modelviews-example.png
+
+    This is a collection of small QML examples relating to model and view functionality.
+
+    \section2 GridView and PathView demonstrate usage of these elements to display views.
+    \snippet examples/quick/modelviews/gridview/gridview-example.qml 0
+
+    \section2 Dynamic List demonstrates animation of runtime additions and removals to a ListView.
+
+    The ListView.onAdd signal handler runs an animation when new items are added to the
+    view, and the ListView.onRemove another when they are removed.
+    \snippet examples/quick/modelviews/listview/dynamiclist.qml 0
+    \snippet examples/quick/modelviews/listview/dynamiclist.qml 1
+
+    \section2 Expanding Delegates demonstrates delegates that expand when activated.
+
+    It has a complex delegate the size and appearance of which can change, displacing
+    other items in the view.
+    \snippet examples/quick/modelviews/listview/expandingdelegates.qml 0
+    \snippet examples/quick/modelviews/listview/expandingdelegates.qml 1
+    \snippet examples/quick/modelviews/listview/expandingdelegates.qml 2
+    \snippet examples/quick/modelviews/listview/expandingdelegates.qml 3
+
+    \section2 Highlight demonstrates adding a custom highlight to a ListView.
+    \snippet examples/quick/modelviews/listview/highlight.qml 0
+
+    \section2 Highlight Ranges shows the three different highlight range modes of ListView.
+    \snippet examples/quick/modelviews/listview/highlightranges.qml 0
+    \snippet examples/quick/modelviews/listview/highlightranges.qml 1
+    \snippet examples/quick/modelviews/listview/highlightranges.qml 2
+
+    \section2 Sections demonstrates the various section headers and footers available to ListView.
+    \snippet examples/quick/modelviews/listview/sections.qml 0
+
+    \section2 Packages demonstrates using Packages to transition delegates between two views.
+
+    It has a Package which defines delegate items for each view and an item that can
+    be transferred between delegates.
+
+    \snippet examples/quick/modelviews/package/Delegate.qml 0
+
+    A VisualDataModel allows the individual views to access their specific items from
+    the shared package delegate.
+
+    \snippet examples/quick/modelviews/package/view.qml 0
+
+    \section2 VisualItemModel uses a VisualItemModel for the model instead of a ListModel.
+
+    \snippet examples/quick/modelviews/visualitemmodel/visualitemmodel.qml 0
+*/
+

@@ -24,20 +24,23 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 /*!
-    \title QML Demos - Maroon in Trouble
-    \example demos/maroon
-    \brief This is an example game written in QML.
-    \image qml-maroon-demo-icon.png
+    \title QtQuick Examples - MouseArea
+    \example quick/mousearea
+    \brief This is a collection of QML Animation examples.
+    \image qml-mousearea-example.png
 
-    The Maroon in Trouble game demonstrates some of the UI effects that QtQuick provides to
-    make UIs more visually rich. It take a simple tower defense game and then jazzes it up with
-    animated sprites, particle effects, and sound effects (if the QtMultimedia module is available).
+    This example shows you how to respond to clicks and drags with a MouseArea.
 
-    The game also demonstrates the extensibility of QML, by making it easy to add more types of tower
-    for the player to build. Advanced QML users should be able to play around with adding additional
-    types of towers or mobs.
+    When you click inside the red square, the Text element will list several properties
+    of that click which are available to QML.
+
+    Signals are emitted by the MouseArea when clicks or other discrete operations occur within it
+    \snippet examples/quick/mousearea/mousearea.qml clicks
+
+    The MouseArea can also be used to drag elements around. By setting the parameters of the drag property,
+    the target item will be dragged around if the user starts to drag within the MouseArea.
+    \snippet examples/quick/mousearea/mousearea.qml drag
 
 */
 

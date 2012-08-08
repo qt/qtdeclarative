@@ -41,37 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick Examples - Drag and Drop
-    \example quick/draganddrop
-    \brief This is a collection of QML drag and drop examples
-    \image qml-draganddrop-example.png
-
-    This is a collection of small QML examples relating to drag and drop functionality.
-
-    \section2 Tiles adds drag and drop to simple rectangles, which you can drag into a specific grid.
-
-    It has a DragTile component which uses a MouseArea to move an item when dragged:
-
-    \snippet examples/quick/draganddrop/tiles/DragTile.qml 0
-    \snippet examples/quick/draganddrop/tiles/DragTile.qml 1
-
-    And a DropTile component which the dragged tiles can be dropped onto:
-
-    \snippet examples/quick/draganddrop/tiles/DropTile.qml 0
-
-    The keys property of the DropArea will only allow an item with matching key in
-    it's Drag.keys property to be dropped on it.
-
-    \section2 GridView adds drag and drop to a GridView, allowing you to reorder the list.
-
-    It uses a VisualDataModel to move a delegate item to the position of another item
-    it is dragged over.
-
-    \snippet examples/quick/draganddrop/views/gridview.qml 0
-    \snippet examples/quick/draganddrop/views/gridview.qml 1
-*/
-
 Item {
     height: 480
     width: 320

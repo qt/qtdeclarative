@@ -41,51 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick Examples - Animation
-    \example quick/animation
-    \brief This is a collection of QML Animation examples.
-    \image qml-animations-example.png
-
-    This is a collection of small QML examples relating to animation. Each example is
-    a small QML file emphasizing a particular element or feature.
-
-    ColorAnimation demonstrates using a color animation to fade a sky from day to night.
-    \snippet examples/quick/animation/basics/color-animation.qml 0
-
-    PropertyAnimation demonstrates using a number animation to bounce a circle up and down.
-    \snippet examples/quick/animation/basics/property-animation.qml 0
-
-    Behaviors demonstrates using behaviors to animate moving a rectangle to whereever you click.
-    \snippet examples/quick/animation/behaviors/behavior-example.qml 0
-
-    Wiggly Text demonstrates using more complex behaviors to animate and wiggle some text around as you drag it.
-    It does this by assigning a complex binding to each letter:
-    \snippet examples/quick/animation/behaviors/wigglytext.qml 0
-    Then, it uses behaviors to animate the movement on each letter:
-    \snippet examples/quick/animation/behaviors/wigglytext.qml 1
-
-    Tv Tennis demonstrates using more complex behaviors to get paddles following a ball for an infinite game.
-    Again a binding which depends on other values is applied to the position and a behavior provided the animation.
-    \snippet examples/quick/animation/behaviors/tvtennis.qml 0
-
-    Easing Curves shows off all the easing curves available in Qt Quick animations.
-
-    States demonstrates how the properties of an item can vary between states.
-    It defines several states:
-    \snippet examples/quick/animation/states/states.qml 0
-    Note that there is also the implicit 'base state' from properties set directly on elements.
-
-    Transitions takes the States example and animates the property changes by setting transitions:
-    \snippet examples/quick/animation/states/transitions.qml 0
-
-    PathAnimation animates an image along a beizer curve using a PathAnimation.
-    \snippet examples/quick/animation/pathanimation/pathanimation.qml 0
-
-    PathInterpolator animates an image along the same beizer curve, using a PathInterpolator instead.
-    \snippet examples/quick/animation/pathinterpolator/pathinterpolator.qml 0
-*/
-
 Item {
     height: 480
     width: 320

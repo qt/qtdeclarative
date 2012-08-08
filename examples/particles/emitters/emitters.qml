@@ -41,41 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick.Particles Examples - Emitters
-    \example particles/emitters
-    \brief This is a collection of examples using Emitters in the QML particle system.
-    \image qml-emitters-example.png
-
-    This is a collection of small QML examples relating to using Emitters in the particle system.
-    Each example is a small QML file emphasizing a particular element or feature.
-
-    Velocity from motion gives the effect of strong particle motion through primarily moving the emitters:
-    \snippet examples/particles/emitters/content/velocityfrommotion.qml 0
-
-    Burst and pulse calls the burst and pulse methods on two idential emitters.
-    \snippet examples/particles/emitters/content/burstandpulse.qml 0
-    Note how burst takes an argument of number of particles to emit, and pulse takes an argument of number of milliseconds to emit for.
-    This gives a slightly different behaviour, which is easy to see in this example.
-
-    Custom Emitter connects to the emitParticles signal to set arbitrary values on particle data as they're emitted;
-    \snippet examples/particles/emitters/content/customemitter.qml 0
-    This is used to emit curving particles in six rotating spokes.
-
-    Emit mask sets an image mask on the Emitter, to emit out of an arbitrary shape.
-    \snippet examples/particles/emitters/content/emitmask.qml 0
-
-    Maximum emitted emits no more than a certain number of particles at a time. This example makes it easy to see what happens when the limit is reached.
-
-    Shape and Direction emits particles out of an unfilled Ellipse shape, using a TargetDirection
-    \snippet examples/particles/emitters/content/shapeanddirection.qml 0
-    This sends the particles towards the center of the ellipse with proportional speed, keeping the ellipse outline as they move to the center.
-
-    TrailEmitter uses that element to add smoke particles to trail the fire particles in the scene.
-    \snippet examples/particles/emitters/content/trailemitter.qml 0
-
-*/
-
 Item {
     height: 480
     width: 320

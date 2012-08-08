@@ -42,11 +42,6 @@
 import QtQuick 2.0
 import TextBalloonPlugin 1.0
 
-/*!
-    \title QtQuick Examples - Painted Text Balloons
-    \example quick/painteditem/textballoons
-    \brief This is a simple example that draws text balloons using QPainter
-*/
 Item {
     height: 480
     width: 320
@@ -82,7 +77,7 @@ Item {
     //! [1]
     Rectangle {
         id: controls
- 
+
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.margins: 1

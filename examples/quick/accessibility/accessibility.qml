@@ -42,19 +42,6 @@
 import QtQuick 2.0
 import "content"
 
-/*!
-    \title QtQuick Examples - Accessibility
-    \example quick/accessibility
-    \brief This example has accessible buttons.
-
-    Elements in this example are augmented with meta-data for accessiblity systems.
-
-    For example, the button identifies itself and its functionality to the accessibility system:
-    \snippet examples/quick/accessibility/content/Button.qml button
-
-    As do Text elements inside the example:
-    \snippet examples/quick/accessibility/accessibility.qml text
-*/
 
 Rectangle {
     id: window

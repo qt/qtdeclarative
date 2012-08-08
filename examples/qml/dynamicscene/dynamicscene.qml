@@ -38,13 +38,6 @@
 **
 ****************************************************************************/
 
-/*!
-    \title QML Example - Dynamic Scene
-    \example qml/dynamicscene
-    \brief This example demonstrates creating components dynamically.
-    \image qml-dynamicscene-example.png
-*/
-
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 import "content"

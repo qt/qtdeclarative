@@ -24,16 +24,11 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 /*!
-    \title QML Demo - StocQt
-    \example demos/StocQt
-    \brief This is an example stock chart viewer written in QML.
-    \image qml-stocqt-demo-small.png
-
-    This demo implements a simple stock chart viewer, designed for portrait devices.
-
-    This app requests online data, which it processes in javascript. It then paints a chart depiction of the data using
-    the Canvas imperative drawing API.
+    \title QML Example - Dynamic Scene
+    \example qml/dynamicscene
+    \brief This example demonstrates creating components dynamically.
+    \image qml-dynamicscene-example.png
 */
+
 

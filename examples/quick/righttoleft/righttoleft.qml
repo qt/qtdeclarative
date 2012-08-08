@@ -41,19 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick Examples - Right to Left
-    \example quick/righttoleft
-    \brief This is a collection of QML Right to Left examples.
-    \image qml-righttoleft-example.png
-
-    This is a collection of small QML examples relating to right to left(RTL) localization support.
-
-    Layout direction shows RTL layouting.
-    Layout mirroring shows automatic mirroring of horizontal layouts in RTL locales.
-    Text Alignment shows automatic mirroring of text alignment in RTL locales.
-*/
-
 Item {
     height: 480
     width: 320

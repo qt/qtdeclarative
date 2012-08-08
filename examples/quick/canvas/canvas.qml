@@ -41,37 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick Examples - Canvas
-    \example quick/canvas
-    \brief This is a collection of QML Canvas examples.
-    \image qml-canvas-example.png
-
-    This is a collection of small QML examples relating to Canvas item. Each example is
-    a small QML file emphasizing a particular element or feature.
-
-    Red heart demonstrates using a bezierCurve API to stroke and fill a red heart.
-    \snippet examples/quick/canvas/bezierCurve/bezierCurve.qml 0
-
-    Talk bubble demonstrates using a quadraticCurveTo API to stroke and fill a customized talk bubble:
-    \snippet examples/quick/canvas/quadraticCurveTo/quadraticCurveTo.qml 0
-    This example also demonstrates the fillText API:
-    \snippet examples/quick/canvas/quadraticCurveTo/quadraticCurveTo.qml 1
-
-    Squircle demonstrates using a collection of simple moveTo/lineTo path APIs to draw a smooth squircle.
-
-    Rounded rectangle demonstrates using a collection if lineTo/arcTo path APIs to draw a rounded rectangle.
-
-    Smile face demonstrates using several complex path APIs to draw an fill a smile face.
-
-    Clip demonstrates using clip API to clip a given image.
-    \snippet examples/quick/canvas/clip/clip.qml 0
-
-    Tiger demonstrates using SVG path API to draw a tiger with a collection of SVG path strings.
-    \snippet examples/quick/canvas/tiger/tiger.qml 0
-
-*/
-
 Item {
     height: 480
     width: 320

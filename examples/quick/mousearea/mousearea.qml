@@ -40,26 +40,6 @@
 
 import QtQuick 2.0
 
-/*!
-    \title QtQuick Examples - MouseArea
-    \example quick/mousearea
-    \brief This is a collection of QML Animation examples.
-    \image qml-mousearea-example.png
-
-    This example shows you how to respond to clicks and drags with a MouseArea.
-
-    When you click inside the red square, the Text element will list several properties
-    of that click which are available to QML.
-
-    Signals are emitted by the MouseArea when clicks or other discrete operations occur within it
-    \snippet examples/quick/mousearea/mousearea.qml clicks
-
-    The MouseArea can also be used to drag elements around. By setting the parameters of the drag property,
-    the target item will be dragged around if the user starts to drag within the MouseArea.
-    \snippet examples/quick/mousearea/mousearea.qml drag
-
-*/
-
 Rectangle {
     id: box
     width: 320; height: 480

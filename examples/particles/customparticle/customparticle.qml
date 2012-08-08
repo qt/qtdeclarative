@@ -41,34 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick.Particles Examples - CustomParticle
-    \example particles/customparticle
-    \brief This is a collection of examples using CustomParticle in the QML particle system.
-    \image qml-customparticle-example.png
-
-    This is a collection of small QML examples relating to using CustomParticle in the particle system.
-    Each example is a small QML file emphasizing a different way to use CustomParticle.
-
-    Blur Particles adds a blur effect to the particles, which increases over the particle's life time.
-    It uses a custom vertex shader:
-    \snippet examples/particles/customparticle/content/blurparticles.qml vertex
-    to propagate life time simulation to a custom fragment shader:
-    \snippet examples/particles/customparticle/content/blurparticles.qml fragment
-    which has access to both the normal image sampler and a blurred sampler, the image plus a ShaderEffect.
-
-    Fragment Shader just uses the particle system as a vertex delivery system.
-    \snippet examples/particles/customparticle/content/fragmentshader.qml 0
-
-    Image Colors uses CustomParticle to assign colors to particles based on their location in a picture.
-    The vertex shader,
-    \snippet examples/particles/customparticle/content/imagecolors.qml vertex
-    passes along the starting position for each vertex to the fragment shader,
-    \snippet examples/particles/customparticle/content/imagecolors.qml fragment
-    which uses it to determine the color for that particle.
-
-*/
-
 Item {
     height: 480
     width: 320

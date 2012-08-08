@@ -41,39 +41,6 @@
 import QtQuick 2.0
 import "../../shared"
 
-/*!
-    \title QML Examples - Image Elements
-    \example quick/imageelements
-    \brief This is a collection of QML examples
-    \image qml-imageelements-example.png
-
-    This is a collection of small QML examples relating to image elements.
-
-    'BorderImage' shows off the various scaling modes of the BorderImage item
-    by setting its horizontalTileMode and verticalTileMode properties.
-
-    'Image' shows off the various fill modes of the Image item.
-
-    'Shadows' shows how to create a drop shadow effect for a rectangular item
-    using a BorderImage:
-    \snippet examples/quick/imageelements/content/ShadowRectangle.qml delegate
-
-    'AnimatedSprite' shows how to display a simple animation using an
-    AnimatedSprite element:
-    \snippet examples/quick/imageelements/animatedsprite.qml sprite
-    The sprite animation will loop 3 times.
-
-    'SpriteSequence' demonstrates using a sprite sequence to draw an animated
-    and interactive bear.
-    The SpriteSequence defines 5 different sprites. The bear is initially in
-    a 'still' state:
-    \snippet examples/quick/imageelements/spritesequence.qml still
-    When the scene is clicked, an animation sets the sprite sequence to the
-    'falling' states and animates the bear's y property.
-    \snippet examples/quick/imageelements/spritesequence.qml animation
-    At the end of the animation the bear is set back to its initial state.
-*/
-
 Item {
     height: 480
     width: 320

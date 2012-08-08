@@ -41,18 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick Examples - XMLHttpRequst
-    \example qtquick/xmlhttprequest
-    \brief This is a collection of XMLHttpRequest examples
-    \image qml-xmlhttprequest-example.png
-
-    This is a collection of small QML examples relating to XML HTTP request functionality.
-
-    Get data demos sending get XML request and showing the received header and XML body.
-
-*/
-
 Item {
     height: 480
     width: 320

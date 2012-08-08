@@ -41,15 +41,6 @@
 import QtQuick 2.0
 import "../../shared" as Examples
 
-/*!
-    \title QtQuick Examples - Key Interaction
-    \example quick/keyinteraction
-    \brief This is a collection of QML keyboard interaction examples.
-    \image qml-keyinteraction-example.png
-
-    This example demonstrates combining various methods of interacting with keyboard focus.
-*/
-
 Loader {//Just loader, since there's only one.
     source: "focus/focus.qml"
     focus: true
