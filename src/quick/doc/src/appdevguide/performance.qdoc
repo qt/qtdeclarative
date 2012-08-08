@@ -67,7 +67,7 @@ application so that the performance is improved.  Attempting to optimize code wi
 profiling is likely to result in very minor rather than significant performance
 improvements.
 
-\section1 JavaScript
+\section1 JavaScript Code
 
 Most QML applications will have a large amount of JavaScript code in them, in the
 form of dynamic functions, signal handlers, and property binding expressions.
