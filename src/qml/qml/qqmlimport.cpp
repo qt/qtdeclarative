@@ -1655,7 +1655,7 @@ bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &ur
                     QWriteLocker lock(QQmlMetaType::typeRegistrationLock());
 
                     if (!typeNamespace.isEmpty()) {
-                        // This is a 'strict' module
+                        // This is an 'identified' module
                         if (typeNamespace != uri) {
                             // The namespace for type registrations must match the URI for locating the module
                             QQmlError error;
@@ -1674,8 +1674,8 @@ bool QQmlImportDatabase::importPlugin(const QString &filePath, const QString &ur
                             QQmlMetaType::protectNamespace(typeNamespace);
                         }
                     } else {
-                        // This is not a stict module - provide a warning
-                        qWarning().nospace() << qPrintable(tr("Module '%1' does not contain a module directive - it cannot be protected from external registrations.").arg(uri));
+                        // This is not an identified module - provide a warning
+                        qWarning().nospace() << qPrintable(tr("Module '%1' does not contain a module identifier directive - it cannot be protected from external registrations.").arg(uri));
                     }
 
                     QQmlMetaType::setTypeRegistrationNamespace(typeNamespace);

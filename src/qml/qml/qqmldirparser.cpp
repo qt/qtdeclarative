@@ -150,17 +150,17 @@ bool QQmlDirParser::parse(const QString &source)
         } else if (sections[0] == QLatin1String("module")) {
             if (sectionCount != 2) {
                 reportError(lineNumber, -1,
-                            QString::fromUtf8("module directive requires one argument, but %1 were provided").arg(sectionCount - 1));
+                            QString::fromUtf8("module identifier directive requires one argument, but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
             if (!_typeNamespace.isEmpty()) {
                 reportError(lineNumber, -1,
-                            QString::fromUtf8("only one module directive may be defined in a qmldir file"));
+                            QString::fromUtf8("only one module identifier directive may be defined in a qmldir file"));
                 continue;
             }
             if (!firstLine) {
                 reportError(lineNumber, -1,
-                            QString::fromUtf8("module directive must be the first directive in a qmldir file"));
+                            QString::fromUtf8("module identifier directive must be the first command in a qmldir file"));
                 continue;
             }
 

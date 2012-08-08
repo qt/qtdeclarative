@@ -164,28 +164,28 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("incomplete-module")
         << "incomplete-module/qmldir"
-        << (QStringList() << "qmldir:1: module directive requires one argument, but 0 were provided")
+        << (QStringList() << "qmldir:1: module identifier directive requires one argument, but 0 were provided")
         << QStringList()
         << QStringList()
         << QStringList();
 
     QTest::newRow("excessive-module")
         << "excessive-module/qmldir"
-        << (QStringList() << "qmldir:1: module directive requires one argument, but 2 were provided")
+        << (QStringList() << "qmldir:1: module identifier directive requires one argument, but 2 were provided")
         << QStringList()
         << QStringList()
         << QStringList();
 
     QTest::newRow("repeated-module")
         << "repeated-module/qmldir"
-        << (QStringList() << "qmldir:2: only one module directive may be defined in a qmldir file")
+        << (QStringList() << "qmldir:2: only one module identifier directive may be defined in a qmldir file")
         << QStringList()
         << QStringList()
         << QStringList();
 
     QTest::newRow("non-first-module")
         << "non-first-module/qmldir"
-        << (QStringList() << "qmldir:2: module directive must be the first directive in a qmldir file")
+        << (QStringList() << "qmldir:2: module identifier directive must be the first directive in a qmldir file")
         << (QStringList() << "foo|")
         << QStringList()
         << QStringList();

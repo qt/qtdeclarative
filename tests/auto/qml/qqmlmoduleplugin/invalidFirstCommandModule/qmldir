@@ -1,0 +1,3 @@
+plugin invalidNamespaceModule
+module com.nokia.InvalidFirstCommandModule
+# comment.

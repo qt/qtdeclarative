@@ -50,7 +50,7 @@
 #define SERVER_ADDR "http://127.0.0.1:14456"
 #define SERVER_PORT 14456
 
-// Note: this test does not use module directives in the qmldir files, because
+// Note: this test does not use module identifier directives in the qmldir files, because
 // it would result in repeated attempts to insert types into the same namespace.
 // This occurs because type registration is process-global, while the test
 // cases should really be run in proper per-process isolation.
@@ -141,7 +141,7 @@ void tst_qqmlmoduleplugin::importsPlugin()
     engine.addImportPath(m_importsDirectory);
     QTest::ignoreMessage(QtWarningMsg, "plugin created");
     QTest::ignoreMessage(QtWarningMsg, "import worked");
-    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlPluginType' does not contain a module directive - it cannot be protected from external registrations.");
+    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("works.qml")));
     foreach (QQmlError err, component.errors())
     	qWarning() << err;
@@ -158,7 +158,7 @@ void tst_qqmlmoduleplugin::importsPlugin2()
     engine.addImportPath(m_importsDirectory);
     QTest::ignoreMessage(QtWarningMsg, "plugin2 created");
     QTest::ignoreMessage(QtWarningMsg, "import2 worked");
-    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlPluginType' does not contain a module directive - it cannot be protected from external registrations.");
+    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("works2.qml")));
     foreach (QQmlError err, component.errors())
         qWarning() << err;
@@ -175,7 +175,7 @@ void tst_qqmlmoduleplugin::importsPlugin21()
     engine.addImportPath(m_importsDirectory);
     QTest::ignoreMessage(QtWarningMsg, "plugin2.1 created");
     QTest::ignoreMessage(QtWarningMsg, "import2.1 worked");
-    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlPluginType' does not contain a module directive - it cannot be protected from external registrations.");
+    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("works21.qml")));
     foreach (QQmlError err, component.errors())
         qWarning() << err;
@@ -224,7 +224,7 @@ void tst_qqmlmoduleplugin::importPluginWithQmlFile()
     QQmlEngine engine;
     engine.addImportPath(path);
 
-    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestPluginWithQmlFile' does not contain a module directive - it cannot be protected from external registrations.");
+    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestPluginWithQmlFile' does not contain a module identifier directive - it cannot be protected from external registrations.");
 
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("pluginWithQmlFile.qml")));
     foreach (QQmlError err, component.errors())
@@ -286,7 +286,7 @@ void tst_qqmlmoduleplugin::importsMixedQmlCppPlugin()
     QQmlEngine engine;
     engine.addImportPath(m_importsDirectory);
 
-    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlMixedPluginType' does not contain a module directive - it cannot be protected from external registrations.");
+    QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlMixedPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
 
     {
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("importsMixedQmlCppPlugin.qml")));
@@ -329,7 +329,7 @@ void tst_qqmlmoduleplugin::versionNotInstalled()
 
     static int count = 0;
     if (++count == 1)
-        QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlVersionPluginType' does not contain a module directive - it cannot be protected from external registrations.");
+        QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlVersionPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
 
     QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(errorFile.toLatin1().constData());
@@ -401,7 +401,7 @@ void tst_qqmlmoduleplugin::importsNested()
 
     static int count = 0;
     if (++count == 1)
-        QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlNestedPluginType' does not contain a module directive - it cannot be protected from external registrations.");
+        QTest::ignoreMessage(QtWarningMsg, "Module 'com.nokia.AutoTestQmlNestedPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
 
     QQmlComponent component(&engine, testFile(file));
     QObject *obj = component.create();
@@ -515,14 +515,14 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
     QTest::newRow("non-strict clash")
         << "import com.nokia.NonstrictModule 1.0\n"
            "MyPluginType {}"
-        << "Module 'com.nokia.NonstrictModule' does not contain a module directive - it cannot be protected from external registrations."
+        << "Module 'com.nokia.NonstrictModule' does not contain a module identifier directive - it cannot be protected from external registrations."
         << ":1:1: plugin cannot be loaded for module \"com.nokia.NonstrictModule\": Cannot install element 'MyPluginType' into protected namespace 'com.nokia.StrictModule'";
 
     QTest::newRow("non-strict preemption")
         << "import com.nokia.PreemptiveModule 1.0\n"
            "import com.nokia.PreemptedStrictModule 1.0\n"
            "MyPluginType {}"
-        << "Module 'com.nokia.PreemptiveModule' does not contain a module directive - it cannot be protected from external registrations."
+        << "Module 'com.nokia.PreemptiveModule' does not contain a module identifier directive - it cannot be protected from external registrations."
         << ":2:1: plugin cannot be loaded for module \"com.nokia.PreemptedStrictModule\": Namespace 'com.nokia.PreemptedStrictModule' has already been used for type registration";
 
     QTest::newRow("invalid namespace")
@@ -530,6 +530,12 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
            "MyPluginType {}"
         << QString()
         << ":1:1: plugin cannot be loaded for module \"com.nokia.InvalidNamespaceModule\": Module namespace 'com.nokia.AwesomeModule' does not match import URI 'com.nokia.InvalidNamespaceModule'";
+
+    QTest::newRow("module directive must be first")
+        << "import com.nokia.InvalidFirstCommandModule 1.0\n"
+           "MyPluginType {}"
+        << QString()
+        << ":1:1: module identifier directive must be the first command in a qmldir file";
 }
 
 QTEST_MAIN(tst_qqmlmoduleplugin)
