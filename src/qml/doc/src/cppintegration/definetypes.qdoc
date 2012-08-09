@@ -618,14 +618,11 @@ MessageBoard {
 }
 \endqml
 
-(Incidentally, the \l Item::children property is its default property, which
-enables visual children to be conveniently declared for any \l {Item}-based
-type without explicitly assigning them to this property.)
-
-A default property is optional. A derived class inherits its base class's
-default property, but may override it in its own declaration. The default
-property can refer to a property declared in the class itself, or a property
-inherited from a base class.
+(Incidentally, the \l Item::data property is its default property. Any \l Item
+objects added to this \c data property are also added to the list of
+\l Item::children, so the use of the default property enables visual children
+to be declared for an item without explicitly assigning them to the
+\l{Item::}{children} property.)
 
 
 \section2 Defining Visual Items with the QtQuick Module
