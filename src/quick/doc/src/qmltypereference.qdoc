@@ -30,8 +30,10 @@
 \title QML Types Provided by Qt Quick
 \brief Description of the QML types provided by the Qt Quick module
 
-This page contains links to documentation for every QML type provided by the
-\c QtQuick QML module, organized according to category and purpose.
+The \c QtQuick QML module provides a variety of QML types for creating user
+interfaces and applications with QML.  This page lists every QML type provided
+by this module, organized according to category and purpose.
+
 
 \section1 Importing QtQuick
 

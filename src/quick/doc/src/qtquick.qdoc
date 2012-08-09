@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/
@@ -32,24 +32,34 @@
 
 \section1 Overview of the Qt Quick Module
 
-The Qt Quick module is the standard library for the QML language (which is
-defined and implemented by the \l{qtqml-main.html}{Qt QML module}).
-The Qt Quick module provides a visual canvas, visual item types, an animation
-framework, and types which make dynamic instantiation of objects more
-convenient.  It also provides the QQuickView C++ class to enable displaying
-a user-interface written in Qt Quick.
+The Qt Quick module is the standard library for writing QML applications.
+While the \l{qtqml-main.html}{Qt QML module} provides the QML engine and
+language infrastructure, the Qt Quick module provides all the basic
+elements necessary for creating user interfaces with QML. It
+provides a visual canvas and includes types for creating and animating
+visual components, receiving user input, creating data models and views
+and delayed object instantiation.
 
-In summary, Qt Quick provides a library of visual types to allow building a
-user-interface, and the C++ API to instantiate and interact with it.
+The Qt Quick module provides both the \c QtQuick QML module, which supplies
+\l{qtquick-qmltypereference.html}{a set of QML types} for creating user
+interfaces with the QML language, and the QtQuick C++ module, which supplies
+\l{QtQuick}{a set of C++ APIs} for integrating with user interfaces and
+applications built with QML and the \c QtQuick QML module.
+
+For those new to QML and Qt Quick, please see
+\l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
+for an introduction to writing QML applications.
+
 
 \section1 Important Concepts in Qt Quick
 
 Qt Quick provides everything needed to create a rich application with a fluid
-and dynamic user interface.  It is based around behavior declaration rather
-than imperative programming, and defines a visual canvas with its own
-coordinate system and drawing implementation.  There are many ways to position
-user-interface elements on the screen, and animation and transition effects are
-a first-class concept in Qt Quick.
+and dynamic user interface. It enables user interfaces to be built around the
+behavior of user interface components and how they connect with one another,
+and it provides a visual canvas with its own coordinate system and rendering
+engine. Animation and transition effects are a first class concept in Qt Quick,
+and visual effects can be supplemented through specialised components for
+particle and shader effects.
 
 \list
 \li \l{qtquick-visualcanvas-topic.html}{The Visual Canvas}
@@ -61,18 +71,18 @@ a first-class concept in Qt Quick.
 \li \l{qtquick-convenience-topic.html}{Convenience Types}
 \endlist
 
-When using the QtQuick module, you will need to know how to write QML
+When using the \c QtQuick module, you will need to know how to write QML
 applications using the QML language. In particular, you should have a grasp
 of the \l{qtquick-quickstart-basics.html}{QML Basics} and
 \l{qtquick-quickstart-essentials.html}{QML Essentials} from the
 \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}.
+
 To find out more about using the QML language, see the \l{Qt QML Module Documentation}.
 
 
 \section1 Qt Quick Module Documentation
 
 \list
-
     \li \l{qtquick-qmltypereference.html}{QML Types provided by the QtQuick Module}
         \list
         \li \l{qtquick-qmltypereference.html#importing-qtquick}{Importing QtQuick}
@@ -100,27 +110,20 @@ To find out more about using the QML language, see the \l{Qt QML Module Document
 
 \section1 Reference Documentation
 
-More information about the Qt Quick module is contained within the class and
-function documentation of the \l{qtquick-apireference.html}
-{Qt Quick Singleton Type Reference}.  The QML types provided by the Qt Quick module
-are listed in the \l{qtquick-qmltypereference.html}
-{Qt Quick Module QML Type Reference} page.
-
-Application developers who are interested in writing applications using QML
-should start by reading the \l{qtquick-applicationdevelopers.html}
-{QML Application Developer Resources}.  The documentation for the
-\l{qtqml-main.html}{Qt QML} module is also an indispensible resource for
-application developers who are using Qt Quick, as it provides the definition
-and implementation of the QML language (for which Qt Quick is the standard
-library of types and functionality).
-
-Quick Links:
+Additional Qt Quick information:
 \list
-\li \l{qtquick-qmltypereference.html}{Qt Quick Module QML Type Reference}
-\li \l{qtquick-module.html}{Qt Quick Module C++ API Reference}
-\li \l{qtqml-main.html}{Qt QML Module Documentation}
-\li \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
-\li \l{qtquick-releasenotes.html}{QtQuick Release Notes}
+\li \l{QtQuick}{QtQuick Module C++ API Reference} - the C++ API provided by the
+    Qt Quick module
+\li \l{qtquick-releasenotes.html}{QtQuick Release Notes} - list of changes and
+    additions in the Qt Quick module
 \endlist
 
+Further information for writing QML applications:
+\list
+\li \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
+    - essential information for application development with QML and Qt Quick
+\li \l{qtqml-main.html}{Qt QML Module Documentation} - documentation for the
+    Qt QML module, which provides the QML engine and language infrastructure
+\endlist
 */
+

@@ -24,6 +24,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 /*!
 \page qtqml-main.html
 \title Qt QML Module
@@ -31,40 +32,28 @@
 
 \section1 Overview of the Qt QML Module
 
-The Qt QML module provides a framework for developing applications.  It defines
-and implements the QML language, and provides API which allows clients to
-extend the QML language with more types, and to integrate QML code with
-JavaScript or C++.
+The Qt QML module provides a framework for developing applications and
+libraries with the QML language. It defines and implements the language
+and engine infrastructure, and provides an API to enable application
+developers to extend the QML language with custom types and integrate QML code
+with JavaScript and C++.
 
-Application developers who are interested in writing applications using QML
-should start by reading the \l{qtquick-applicationdevelopers.html}
-{QML Application Developer Resources}.
+The Qt QML module provides both the \c QtQml QML module, which supplies
+\l{qtquick-qmltypereference.html}{a set of core QML types} for creating QML
+applications, and the QtQml C++ module, which supplies \l{QtQml}{a set of C++
+APIs} for extending QML applications with custom types and integrating C++
+implementations with QML applications.
 
-\section2 What is QML?
+Note that the Qt QML module provides only the language and infrastructure
+for the QML, and does not provide a visual canvas or rendering engine for
+creating user interfaces. These are provided instead by the
+\l{qtquick-main.html}{Qt Quick module}, which provides many visual components,
+model/view support, an animation framework and much more for building user
+interfaces with QML.
 
-QML is a user-interface specification and programming language.  It was
-designed specifically to enable and ease the development of modern,
-touch-driven, fluidly animated and visually-appealling applications.
-
-One of the core goals of QML is to allow closer interaction between designers
-and programmers during the development of an application.
-
-\section2 What Does the Qt QML Module Provide?
-
-The Qt QML module provides the definition and an implementation of the QML
-language.  It uses a JavaScript engine to provide JavaScript integration, and
-provides C++ API to provide integration with C++.  It provides a framework for
-object instantiation and manipulation along with strong typing, which can be
-integrated with a visual canvas and an animation framework to enable the
-development of highly-appealling interactive applications.
-
-\section2 What Does the Qt QML Module Not Provide?
-
-It does not provide a visual canvas, visual items, or an animation framework.
-These are provided instead by the \l{QtQuick} module.
-
-Qt Quick can be thought of as the "standard library" of types (including visual
-types, animation classes, and canvas integration) for the QML language.
+For those new to QML and Qt Quick, please see
+\l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
+for an introduction to writing QML applications.
 
 
 \section1 Qt QML Module Documentation
@@ -177,27 +166,22 @@ types, animation classes, and canvas integration) for the QML language.
 
 \section1 Reference Documentation
 
-More information about the Qt QML module is contained within the class and
-function documentation of the \l{QtQml}
-{Qt QML Singleton Type Reference}.  The QML types provided by the Qt QML module
-are listed in the \l{qtqml-typereference-topic.html}
-{Qt QML Module QML Type Reference} page.
-
-Application developers who are interested in writing applications using QML
-should start by reading the \l{qtquick-applicationdevelopers.html}
-{QML Application Developer Resources}.  The documentation for the
-\l{qtquick-main.html}{QtQuick} module is also an indispensible resource for
-application developers, as it provides the standard library of QML types which
-application developers will use in their applications.
-
-Quick Links:
+Additional Qt QML information:
 \list
-\li \l{qtqml-typereference-topic.html}{Qt QML Module QML Type Reference}
-\li \l{QtQml}{Qt QML Module C++ API Reference}
-\li \l{qtquick-main.html}{Qt Quick Module Documentation}
-\li \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
-\li \l{qtqml-releasenotes.html}{QtQml Release Notes}
+\li \l{QtQml}{QtQml Module C++ API Reference} - the C++ API provided by the
+    Qt QML module
+\li \l{qtqml-releasenotes.html}{QtQml Release Notes} - list of changes and
+    additions in the Qt QML module
 \endlist
 
+Further information for writing QML applications:
+\list
+\li \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
+    - essential information for application development with QML and Qt Quick
+\li \l{qtquick-main.html}{Qt Quick Module Documentation} - documentation for
+    the Qt Quick module, which provides a visual canvas, an animation
+    framework, model/view components and more for building fluid user
+    interfaces and applications with QML
+\endlist
 */
 
