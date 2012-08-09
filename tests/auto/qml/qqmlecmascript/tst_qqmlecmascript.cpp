@@ -281,6 +281,7 @@ private slots:
     void overrideDataAssert();
     void fallbackBindings_data();
     void fallbackBindings();
+    void concatenatedStringPropertyAccess();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7277,6 +7278,15 @@ void tst_qqmlecmascript::sequenceSort()
     QMetaObject::invokeMethod(object, function.toAscii().constData(), Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, useComparer));
     QVERIFY(q.toBool() == true);
 
+    delete object;
+}
+
+void tst_qqmlecmascript::concatenatedStringPropertyAccess()
+{
+    QQmlComponent component(&engine, testFileUrl("concatenatedStringPropertyAccess.qml"));
+    QObject *object = component.create();
+    QVERIFY(object);
+    QVERIFY(object->property("success").toBool());
     delete object;
 }
 
