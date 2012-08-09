@@ -231,7 +231,7 @@ union Q_AUTOTEST_EXPORT V4Instr {
     struct instr_id {
         QML_V4_INSTR_HEADER
         quint16 column;
-        quint32 line;
+        quint16 line;
     };
 
     struct instr_init {

@@ -82,7 +82,7 @@ public:
     inline void clearError() { qPersistentDispose(m_message); m_error = QQmlError(); }
 
     void setMessage(v8::Handle<v8::Message> message);
-    void setErrorLocation(const QUrl &url, int line, int column);
+    void setErrorLocation(const QUrl &url, quint16 line, quint16 column);
     void setErrorDescription(const QString &description);
 
 private:
@@ -146,11 +146,11 @@ public:
     static void exceptionToError(v8::Handle<v8::Message>, QQmlError &);
     static v8::Persistent<v8::Function> evalFunction(QQmlContextData *ctxt, QObject *scope,
                                                      const QString &code, const QString &filename,
-                                                     int line,
+                                                     quint16 line,
                                                      v8::Persistent<v8::Object> *qmlscope = 0);
     static v8::Persistent<v8::Function> evalFunction(QQmlContextData *ctxt, QObject *scope,
                                                      const char *code, int codeLength,
-                                                     const QString &filename, int line,
+                                                     const QString &filename, quint16 line,
                                                      v8::Persistent<v8::Object> *qmlscope = 0);
 protected:
     ~QQmlJavaScriptExpression();

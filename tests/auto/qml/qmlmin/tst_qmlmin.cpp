@@ -191,7 +191,9 @@ void tst_qmlmin::qmlMinify()
     QFETCH(QString, file);
 
     QProcess qmlminify;
-    qmlminify.start(qmlminPath, QStringList() << QLatin1String("--verify-only") << file);
+
+    // Restrict line width to 100 characters
+    qmlminify.start(qmlminPath, QStringList() << QLatin1String("--verify-only") << QLatin1String("-w100") << file);
     qmlminify.waitForFinished();
 
     QCOMPARE(qmlminify.error(), QProcess::UnknownError);

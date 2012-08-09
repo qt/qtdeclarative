@@ -122,7 +122,7 @@ struct QQmlVMEMetaData
         int parameterCount;
         int bodyOffset;
         int bodyLength;
-        int lineNumber;
+        quint16 lineNumber;
     };
 
     PropertyData *propertyData() const {
@@ -167,7 +167,7 @@ public:
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
     void registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor);
     v8::Handle<v8::Function> vmeMethod(int index);
-    int vmeMethodLineNumber(int index);
+    quint16 vmeMethodLineNumber(int index);
     void setVmeMethod(int index, v8::Persistent<v8::Function>);
     v8::Handle<v8::Value> vmeProperty(int index);
     void setVMEProperty(int index, v8::Handle<v8::Value> v);

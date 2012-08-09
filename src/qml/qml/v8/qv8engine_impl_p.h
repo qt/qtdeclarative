@@ -152,7 +152,7 @@ inline QJSValuePrivate::PropertyFlags QV8Engine::getPropertyFlags(v8::Handle<v8:
     return flags;
 }
 
-QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(const QString& program, const QString& fileName, int lineNumber)
+QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(const QString& program, const QString& fileName, quint16 lineNumber)
 {
     v8::TryCatch tryCatch;
     v8::ScriptOrigin scriptOrigin(QJSConverter::toString(fileName), v8::Integer::New(lineNumber - 1));

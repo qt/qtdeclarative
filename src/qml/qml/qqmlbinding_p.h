@@ -83,9 +83,9 @@ public:
     QQmlBinding(const QQmlScriptString &, QObject *, QQmlContext *);
     QQmlBinding(const QString &, QObject *, QQmlContextData *);
     QQmlBinding(const QString &, bool isRewritten, QObject *, QQmlContextData *, 
-                const QString &url, int lineNumber, int columnNumber);
+                const QString &url, quint16 lineNumber, quint16 columnNumber);
     QQmlBinding(void *, QObject *, QQmlContextData *,
-                const QString &url, int lineNumber, int columnNumber);
+                const QString &url, quint16 lineNumber, quint16 columnNumber);
 
     void setTarget(const QQmlProperty &);
     void setTarget(QObject *, const QQmlPropertyData &, QQmlContextData *);
@@ -119,7 +119,7 @@ public:
     typedef int Identifier;
     static Identifier Invalid;
 
-    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *, const QString &, int);
+    static QQmlBinding *createBinding(Identifier, QObject *, QQmlContext *, const QString &, quint16);
 
     QVariant evaluate();
 
@@ -152,8 +152,8 @@ private:
 
     // XXX It would be good if we could get rid of these in most circumstances
     QString m_url;
-    int m_lineNumber;
-    int m_columnNumber;
+    quint16 m_lineNumber;
+    quint16 m_columnNumber;
     QByteArray m_expression;
 };
 

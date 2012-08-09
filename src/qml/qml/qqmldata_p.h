@@ -164,8 +164,8 @@ public:
     void clearBindingBit(int);
     void setBindingBit(QObject *obj, int);
 
-    ushort lineNumber;
-    ushort columnNumber;
+    quint16 lineNumber;
+    quint16 columnNumber;
 
     QQmlCompiledData *compiledData;
     unsigned int deferredIdx;

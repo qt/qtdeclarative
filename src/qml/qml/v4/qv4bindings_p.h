@@ -73,7 +73,7 @@ public:
 
     QQmlAbstractBinding *configBinding(int index, int fallbackIndex, QObject *target,
                                        QObject *scope, int property, int propType,
-                                       int line, int column);
+                                       quint16 line, quint16 column);
 
 #ifdef QML_THREADED_INTERPRETER
     static void **getDecodeInstrTable();
@@ -107,8 +107,8 @@ public:
         quint16 propType;
 
         QObject *scope;
-        int line;
-        int column;
+        quint16 line;
+        quint16 column;
         QPointerValuePair<QObject, Retarget> target;
         quint32 executedBlocks;
 

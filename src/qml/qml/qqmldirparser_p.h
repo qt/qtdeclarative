@@ -138,7 +138,7 @@ public:
 #endif
 
 private:
-    void reportError(int line, int column, const QString &message);
+    void reportError(quint16 line, quint16 column, const QString &message);
 
 private:
     QList<QQmlError> _errors;

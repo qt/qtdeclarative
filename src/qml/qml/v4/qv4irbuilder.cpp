@@ -424,8 +424,8 @@ bool QV4IRBuilder::visit(AST::ThisExpression *)
 
 bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
 {
-    const quint32 line = ast->identifierToken.startLine;
-    const quint32 column = ast->identifierToken.startColumn;
+    const quint16 line = ast->identifierToken.startLine;
+    const quint16 column = ast->identifierToken.startColumn;
 
     const QString name = ast->name.toString();
 

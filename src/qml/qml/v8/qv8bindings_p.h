@@ -72,7 +72,7 @@ class QV8Bindings : public QQmlAbstractExpression
 {
 public:
     QV8Bindings(QQmlCompiledData::V8Program *,
-                int line,
+                quint16 line,
                 QQmlContextData *context);
     virtual ~QV8Bindings();
 

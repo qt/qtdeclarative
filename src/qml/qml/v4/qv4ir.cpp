@@ -210,7 +210,7 @@ QString String::escape(const QStringRef &s)
     return r;
 }
 
-void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint32 line, quint32 column)
+void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint16 line, quint16 column)
 {
     this->type = type;
     this->base = base;
@@ -482,12 +482,12 @@ Expr *BasicBlock::STRING(const QStringRef &value)
     return e;
 }
 
-Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
+Name *BasicBlock::NAME(const QString &id, quint16 line, quint16 column)
 { 
     return NAME(0, id, line, column);
 }
 
-Name *BasicBlock::NAME(Name *base, const QString &id, quint32 line, quint32 column)
+Name *BasicBlock::NAME(Name *base, const QString &id, quint16 line, quint16 column)
 { 
     Name *e = function->pool->New<Name>();
     e->init(base, InvalidType,
@@ -497,7 +497,7 @@ Name *BasicBlock::NAME(Name *base, const QString &id, quint32 line, quint32 colu
 }
 
 Name *BasicBlock::SYMBOL(Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage,
-                         quint32 line, quint32 column)
+                         quint16 line, quint16 column)
 {
     Name *name = SYMBOL(/*base = */ 0, type, id, meta, property, line, column);
     name->storage = storage;
@@ -505,7 +505,7 @@ Name *BasicBlock::SYMBOL(Type type, const QString &id, const QQmlMetaObject &met
 }
 
 Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage,
-                         quint32 line, quint32 column)
+                         quint16 line, quint16 column)
 {
     Name *name = function->pool->New<Name>();
     name->init(base, type, function->newString(id),
@@ -517,7 +517,7 @@ Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QQmlMet
 }
 
 Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property,
-                         quint32 line, quint32 column)
+                         quint16 line, quint16 column)
 {
     Name *name = function->pool->New<Name>();
     name->init(base, type, function->newString(id),
@@ -527,7 +527,7 @@ Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QQmlMet
     return name;
 }
 
-Name *BasicBlock::ID_OBJECT(const QString &id, const QQmlScript::Object *object, quint32 line, quint32 column)
+Name *BasicBlock::ID_OBJECT(const QString &id, const QQmlScript::Object *object, quint16 line, quint16 column)
 {
     Name *name = function->pool->New<Name>();
     name->init(/*base = */ 0, IR::ObjectType,
@@ -540,7 +540,7 @@ Name *BasicBlock::ID_OBJECT(const QString &id, const QQmlScript::Object *object,
 }
 
 Name *BasicBlock::ATTACH_TYPE(const QString &id, const QQmlType *attachType, Name::Storage storage,
-                              quint32 line, quint32 column)
+                              quint16 line, quint16 column)
 { 
     Name *name = function->pool->New<Name>();
     name->init(/*base = */ 0, IR::AttachType,
@@ -552,7 +552,7 @@ Name *BasicBlock::ATTACH_TYPE(const QString &id, const QQmlType *attachType, Nam
 }
 
 Name *BasicBlock::MODULE_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage,
-                                quint32 line, quint32 column)
+                                quint16 line, quint16 column)
 {
     Name *name = function->pool->New<Name>();
     name->init(/*base = */ 0, IR::ObjectType,
@@ -668,7 +668,7 @@ Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
     return s;
 }
 
-Stmt *BasicBlock::RET(Expr *expr, Type type, quint32 line, quint32 column)
+Stmt *BasicBlock::RET(Expr *expr, Type type, quint16 line, quint16 column)
 {
     if (isTerminated())
         return 0;

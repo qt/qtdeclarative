@@ -144,12 +144,15 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
     if (QQmlData::wasDeleted(object()))
         return;
 
+    int lineNo = qmlSourceCoordinate(instruction->line);
+    int columnNo = qmlSourceCoordinate(instruction->column);
+
     QQmlTrace trace("V8 Binding Update");
     trace.addDetail("URL", parent->url());
-    trace.addDetail("Line", instruction->line);
-    trace.addDetail("Column", instruction->column);
+    trace.addDetail("Line", lineNo);
+    trace.addDetail("Column", columnNo);
 
-    QQmlBindingProfiler prof(parent->urlString(), instruction->line, instruction->column, QQmlProfilerService::V8Binding);
+    QQmlBindingProfiler prof(parent->urlString(), lineNo, columnNo, QQmlProfilerService::V8Binding);
 
     if (!updatingFlag()) {
         setUpdatingFlag(true);
@@ -179,7 +182,7 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         if (!watcher.wasDeleted() && !destroyedFlag()) {
 
             if (needsErrorLocationData)
-                delayedError()->setErrorLocation(parent->url(), instruction->line, -1);
+                delayedError()->setErrorLocation(parent->url(), instruction->line, 0);
 
             if (hasError()) {
                 if (!delayedError()->addError(ep)) ep->warning(this->error(context->engine));
@@ -202,7 +205,7 @@ QString QV8Bindings::Binding::expressionIdentifier(QQmlJavaScriptExpression *e)
 {
     Binding *This = static_cast<Binding *>(e);
     return This->parent->urlString() + QLatin1Char(':') +
-           QString::number(This->instruction->line);
+           QString::number(qmlSourceCoordinate(This->instruction->line));
 }
 
 void QV8Bindings::Binding::expressionChanged(QQmlJavaScriptExpression *e)
@@ -224,7 +227,7 @@ void QV8Bindings::Binding::destroy(QQmlAbstractBinding *_This)
 }
 
 QV8Bindings::QV8Bindings(QQmlCompiledData::V8Program *program,
-                         int line,
+                         quint16 line,
                          QQmlContextData *context)
 : program(program), bindings(0), refCount(1)
 {

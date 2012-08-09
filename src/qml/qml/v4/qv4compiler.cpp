@@ -73,7 +73,7 @@ QV4CompilerPrivate::QV4CompilerPrivate()
 //
 // tracing
 //
-void QV4CompilerPrivate::trace(int line, int column)
+void QV4CompilerPrivate::trace(quint16 line, quint16 column)
 {
     bytecode.clear();
 
@@ -1401,13 +1401,13 @@ quint32 QV4CompilerPrivate::subscriptionBlockMask(const QStringList &sub)
     return *uiter;
 }
 
-quint8 QV4CompilerPrivate::exceptionId(quint32 line, quint32 column)
+quint8 QV4CompilerPrivate::exceptionId(quint16 line, quint16 column)
 {
     quint8 rv = 0xFF;
     if (exceptions.count() < 0xFF) {
         rv = (quint8)exceptions.count();
-        quint64 e = line;
-        e <<= 32;
+        quint32 e = line;
+        e <<= 16;
         e |= column;
         exceptions.append(e);
     }
@@ -1493,7 +1493,7 @@ QByteArray QV4CompilerPrivate::buildSignalTable() const
 QByteArray QV4CompilerPrivate::buildExceptionData() const
 {
     QByteArray rv;
-    rv.resize(committed.exceptions.count() * sizeof(quint64));
+    rv.resize(committed.exceptions.count() * sizeof(quint32));
     ::memcpy(rv.data(), committed.exceptions.constData(), rv.size());
     return rv;
 }

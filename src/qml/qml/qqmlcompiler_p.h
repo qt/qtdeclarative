@@ -441,7 +441,7 @@ private:
     {
         ComponentStat() : lineNumber(0), ids(0), objects(0) {}
 
-        int lineNumber;
+        quint16 lineNumber;
 
         int ids;
         QList<QQmlScript::LocationSpan> scriptBindings;

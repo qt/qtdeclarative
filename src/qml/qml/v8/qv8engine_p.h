@@ -301,10 +301,10 @@ public:
     // Compile \a source (from \a fileName at \a lineNumber) in QML mode
     v8::Local<v8::Script> qmlModeCompile(const QString &source, 
                                          const QString &fileName = QString(), 
-                                         int lineNumber = 1);
+                                         quint16 lineNumber = 1);
     v8::Local<v8::Script> qmlModeCompile(const char *source, int sourceLength = -1,
                                          const QString &fileName = QString(),
-                                         int lineNumber = 1);
+                                         quint16 lineNumber = 1);
 
     // Return the QML global "scope" object for the \a ctxt context and \a scope object.
     inline v8::Local<v8::Object> qmlScope(QQmlContextData *ctxt, QObject *scope);
@@ -364,7 +364,7 @@ public:
     inline v8::Handle<v8::Value> makeJSValue(QJSValue::SpecialValue value);
     inline v8::Local<v8::Value> makeJSValue(const QString &value);
 
-    inline QScriptPassPointer<QJSValuePrivate> evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1);
+    inline QScriptPassPointer<QJSValuePrivate> evaluate(const QString &program, const QString &fileName = QString(), quint16 lineNumber = 1);
     QScriptPassPointer<QJSValuePrivate> evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch);
 
     QScriptPassPointer<QJSValuePrivate> newArray(uint length);
@@ -402,7 +402,7 @@ public:
     qint64 stopTimer(const QString &timerName, bool *wasRunning);
 
     // used for console.count()
-    int consoleCountHelper(const QString &file, int line, int column);
+    int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
     QObject *qtObjectFromJS(v8::Handle<v8::Value> value);
     QSet<int> visitedConversionObjects;

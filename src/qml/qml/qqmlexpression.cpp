@@ -42,6 +42,7 @@
 #include "qqmlexpression.h"
 #include "qqmlexpression_p.h"
 
+#include "qqmlglobal_p.h"
 #include "qqmlengine_p.h"
 #include "qqmlcontext_p.h"
 #include "qqmlrewrite_p.h"
@@ -60,7 +61,7 @@ static QQmlJavaScriptExpression::VTable QQmlExpressionPrivate_jsvtable = {
 QQmlExpressionPrivate::QQmlExpressionPrivate()
 : QQmlJavaScriptExpression(&QQmlExpressionPrivate_jsvtable),
   expressionFunctionValid(true), expressionFunctionRewritten(false),
-  line(-1)
+  line(0), column(0)
 {
 }
 
@@ -82,7 +83,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QOb
 
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
                                  bool isRewritten, QObject *me, const QString &srcUrl,
-                                 int lineNumber, int columnNumber)
+                                 quint16 lineNumber, quint16 columnNumber)
 {
     url = srcUrl;
     line = lineNumber;
@@ -99,7 +100,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr,
 
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QByteArray &expr,
                                  bool isRewritten, QObject *me, const QString &srcUrl,
-                                 int lineNumber, int columnNumber)
+                                 quint16 lineNumber, quint16 columnNumber)
 {
     url = srcUrl;
     line = lineNumber;
@@ -127,7 +128,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QByteArray &expr,
 QQmlExpression *
 QQmlExpressionPrivate::create(QQmlContextData *ctxt, QObject *object,
                               const QString &expr, bool isRewritten,
-                              const QString &url, int lineNumber, int columnNumber)
+                              const QString &url, quint16 lineNumber, quint16 columnNumber)
 {
     return new QQmlExpression(ctxt, object, expr, isRewritten, url, lineNumber, columnNumber,
                               *new QQmlExpressionPrivate);
@@ -183,7 +184,7 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt,
 : QObject(dd, 0)
 {
     Q_D(QQmlExpression);
-    d->init(ctxt, expr, isRewritten, object, url, lineNumber, columnNumber);
+    d->init(ctxt, expr, isRewritten, object, url, qmlSourceCoordinate(lineNumber), qmlSourceCoordinate(columnNumber));
 }
 
 /*!  \internal */
@@ -195,7 +196,7 @@ QQmlExpression::QQmlExpression(QQmlContextData *ctxt,
 : QObject(dd, 0)
 {
     Q_D(QQmlExpression);
-    d->init(ctxt, expr, isRewritten, object, url, lineNumber, columnNumber);
+    d->init(ctxt, expr, isRewritten, object, url, qmlSourceCoordinate(lineNumber), qmlSourceCoordinate(columnNumber));
 }
 
 /*!
@@ -450,7 +451,7 @@ QString QQmlExpression::sourceFile() const
 int QQmlExpression::lineNumber() const
 {
     Q_D(const QQmlExpression);
-    return d->line;
+    return qmlSourceCoordinate(d->line);
 }
 
 /*!
@@ -460,7 +461,7 @@ int QQmlExpression::lineNumber() const
 int QQmlExpression::columnNumber() const
 {
     Q_D(const QQmlExpression);
-    return d->column;
+    return qmlSourceCoordinate(d->column);
 }
 
 /*!
@@ -471,8 +472,8 @@ void QQmlExpression::setSourceLocation(const QString &url, int line, int column)
 {
     Q_D(QQmlExpression);
     d->url = url;
-    d->line = line;
-    d->column = column;
+    d->line = qmlSourceCoordinate(line);
+    d->column = qmlSourceCoordinate(column);
 }
 
 /*!

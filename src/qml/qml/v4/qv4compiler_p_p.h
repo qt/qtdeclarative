@@ -136,9 +136,9 @@ public:
     int subscriptionIndex(const QStringList &);
     quint32 subscriptionBlockMask(const QStringList &);
 
-    quint8 exceptionId(quint32 line, quint32 column);
+    quint8 exceptionId(quint16 line, quint16 column);
     quint8 exceptionId(QQmlJS::AST::ExpressionNode *);
-    QVector<quint64> exceptions;
+    QVector<quint32> exceptions;
 
     QQmlAssociationList<int, quint32> usedSubscriptionIds;
     int subscriptionOffset;
@@ -164,7 +164,7 @@ public:
         //QQmlJS::Bytecode bytecode;
         QByteArray bytecode;
         QByteArray data;
-        QVector<quint64> exceptions;
+        QVector<quint32> exceptions;
         int subscriptionCount;
         QList<QQmlAssociationList<QString, int> > subscriptions;
 
@@ -191,7 +191,7 @@ protected:
     //
     // tracing
     //
-    void trace(int line, int column);
+    void trace(quint16 line, quint16 column);
     void trace(QVector<QQmlJS::IR::BasicBlock *> *blocks);
     void traceExpression(QQmlJS::IR::Expr *e, quint8 r);
 
@@ -235,8 +235,8 @@ private:
 
     bool usedSubscriptionIdsChanged;
     quint32 currentBlockMask;
-    int bindingLine;
-    int bindingColumn;
+    quint16 bindingLine;
+    quint16 bindingColumn;
     bool invalidatable;
 };
 

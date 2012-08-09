@@ -200,25 +200,46 @@ class Minify: public QmlminLexer
     QList<int> _tokens;
     QList<QString> _tokenStrings;
     QString _minifiedCode;
+    int _maxWidth;
+    int _width;
 
 public:
-    Minify();
+    Minify(int maxWidth);
 
     QString minifiedCode() const;
 
 protected:
+    void append(const QString &s);
     bool parse(int startToken);
     void escape(const QChar &ch, QString *out);
 };
 
-Minify::Minify()
-    : _stateStack(128)
+Minify::Minify(int maxWidth)
+    : _stateStack(128), _maxWidth(maxWidth), _width(0)
 {
 }
 
 QString Minify::minifiedCode() const
 {
     return _minifiedCode;
+}
+
+void Minify::append(const QString &s)
+{
+    if (!s.isEmpty()) {
+        if (_maxWidth) {
+            // Prefer not to exceed the maximum chars per line (but don't break up segments)
+            int segmentLength = s.count();
+            if (_width && ((_width + segmentLength) > _maxWidth)) {
+                _minifiedCode.append(QLatin1Char('\n'));
+                _width = 0;
+            }
+
+            _width += segmentLength;
+        }
+
+        _minifiedCode.append(s);
+    }
 }
 
 void Minify::escape(const QChar &ch, QString *out)
@@ -241,6 +262,7 @@ bool Minify::parse(int startToken)
     int yytoken = -1;
     int yytos = -1;
     QString yytokentext;
+    QString assembled;
 
     _minifiedCode.clear();
     _tokens.append(startToken);
@@ -250,7 +272,7 @@ bool Minify::parse(int startToken)
         // parse optional pragma directive
         if (scanDirectives(this)) {
             // append the scanned directives to the minifier code.
-            _minifiedCode += directives();
+            append(directives());
 
             _tokens.append(tokenKind());
             _tokenStrings.append(tokenText());
@@ -281,33 +303,40 @@ bool Minify::parse(int startToken)
         if (yyaction > 0) {
             if (yyaction == ACCEPT_STATE) {
                 --yytos;
+                if (!assembled.isEmpty())
+                    append(assembled);
                 return true;
             }
 
-            const QChar lastChar = _minifiedCode.isEmpty() ? QChar() : _minifiedCode.at(_minifiedCode.length() - 1);
+            const QChar lastChar = assembled.isEmpty() ? (_minifiedCode.isEmpty() ? QChar()
+                                                                                  : _minifiedCode.at(_minifiedCode.length() - 1))
+                                                       : assembled.at(assembled.length() - 1);
 
             if (yytoken == T_SEMICOLON) {
-                _minifiedCode += QLatin1Char(';');
+                assembled += QLatin1Char(';');
+
+                append(assembled);
+                assembled.clear();
 
             } else if (yytoken == T_PLUS || yytoken == T_MINUS || yytoken == T_PLUS_PLUS || yytoken == T_MINUS_MINUS) {
                 if (lastChar == QLatin1Char(spell[yytoken][0])) {
                     // don't merge unary signs, additive expressions and postfix/prefix increments.
-                    _minifiedCode += QLatin1Char(' ');
+                    assembled += QLatin1Char(' ');
                 }
 
-                _minifiedCode += QLatin1String(spell[yytoken]);
+                assembled += QLatin1String(spell[yytoken]);
 
             } else if (yytoken == T_NUMERIC_LITERAL) {
                 if (isIdentChar(lastChar))
-                    _minifiedCode += QLatin1Char(' ');
+                    assembled += QLatin1Char(' ');
 
                 if (yytokentext.startsWith('.'))
-                    _minifiedCode += QLatin1Char('0');
+                    assembled += QLatin1Char('0');
 
-                _minifiedCode += yytokentext;
+                assembled += yytokentext;
 
-                if (_minifiedCode.endsWith(QLatin1Char('.')))
-                    _minifiedCode += QLatin1Char('0');
+                if (assembled.endsWith(QLatin1Char('.')))
+                    assembled += QLatin1Char('0');
 
             } else if (yytoken == T_IDENTIFIER) {
                 QString identifier = yytokentext;
@@ -321,29 +350,29 @@ bool Minify::parse(int startToken)
                 }
 
                 if (isIdentChar(lastChar))
-                    _minifiedCode += QLatin1Char(' ');
+                    assembled += QLatin1Char(' ');
 
                 foreach (const QChar &ch, identifier) {
                     if (isIdentChar(ch))
-                        _minifiedCode += ch;
+                        assembled += ch;
                     else {
-                        escape(ch, &_minifiedCode);
+                        escape(ch, &assembled);
                     }
                 }
 
             } else if (yytoken == T_STRING_LITERAL || yytoken == T_MULTILINE_STRING_LITERAL) {
-                _minifiedCode += QLatin1Char('"');
-                _minifiedCode += quote(yytokentext);
-                _minifiedCode += QLatin1Char('"');
+                assembled += QLatin1Char('"');
+                assembled += quote(yytokentext);
+                assembled += QLatin1Char('"');
             } else {
                 if (isIdentChar(lastChar)) {
                     if (! yytokentext.isEmpty()) {
                         const QChar ch = yytokentext.at(0);
                         if (isIdentChar(ch))
-                            _minifiedCode += QLatin1Char(' ');
+                            assembled += QLatin1Char(' ');
                     }
                 }
-                _minifiedCode += yytokentext;
+                assembled += yytokentext;
             }
             yytoken = -1;
         } else if (yyaction < 0) {
@@ -356,7 +385,7 @@ bool Minify::parse(int startToken)
                 if (! scanRestOfRegExp(ruleno, &restOfRegExp))
                     break; // break the loop, it wil report a syntax error
 
-                _minifiedCode += restOfRegExp;
+                assembled += restOfRegExp;
             }
             yyaction = nt_action(_stateStack[yytos], lhs[ruleno] - TERMINAL_COUNT);
         }
@@ -503,6 +532,7 @@ static void usage(bool showHelp = false)
                   << " The options are:" << std::endl
                   << "  -o<file>                write output to file rather than stdout" << std::endl
                   << "  -v --verify-only        just run the verifier, no output" << std::endl
+                  << "  -w<width>               restrict line characters to width" << std::endl
                   << "  -h                      display this output" << std::endl;
     }
 }
@@ -516,6 +546,9 @@ int runQmlmin(int argc, char *argv[])
     QString fileName;
     QString outputFile;
     bool verifyOnly = false;
+
+    // By default ensure the output character width is less than 16-bits (pass 0 to disable)
+    int width = USHRT_MAX;
 
     int index = 1;
     while (index < args.size()) {
@@ -540,6 +573,29 @@ int runQmlmin(int argc, char *argv[])
 
             if (outputFile.isEmpty()) {
                 std::cerr << "qmlmin: argument to '-o' is missing" << std::endl;
+                return EXIT_FAILURE;
+            }
+        } else if (arg == QLatin1String("-w")) {
+            if (next.isEmpty()) {
+                std::cerr << "qmlmin: argument to '-w' is missing" << std::endl;
+                return EXIT_FAILURE;
+            } else {
+                bool ok;
+                width = next.toInt(&ok);
+
+                if (!ok) {
+                    std::cerr << "qmlmin: argument to '-w' is invalid" << std::endl;
+                    return EXIT_FAILURE;
+                }
+
+                ++index; // consume the next argument
+            }
+        } else if (arg.startsWith(QLatin1String("-w"))) {
+            bool ok;
+            width = arg.mid(2).toInt(&ok);
+
+            if (!ok) {
+                std::cerr << "qmlmin: argument to '-w' is invalid" << std::endl;
                 return EXIT_FAILURE;
             }
         } else {
@@ -571,7 +627,7 @@ int runQmlmin(int argc, char *argv[])
     const QString code = QString::fromUtf8(file.readAll()); // QML files are UTF-8 encoded.
     file.close();
 
-    QQmlJS::Minify minify;
+    QQmlJS::Minify minify(width);
     if (! minify(fileName, code)) {
         std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << "' (not a valid QML/JS file)" << std::endl;
         return EXIT_FAILURE;
@@ -580,7 +636,7 @@ int runQmlmin(int argc, char *argv[])
     //
     // verify the output
     //
-    QQmlJS::Minify secondMinify;
+    QQmlJS::Minify secondMinify(width);
     if (! secondMinify(fileName, minify.minifiedCode()) || secondMinify.minifiedCode() != minify.minifiedCode()) {
         std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << "'" << std::endl;
         return EXIT_FAILURE;

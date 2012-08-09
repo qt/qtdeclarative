@@ -67,7 +67,7 @@ void QQmlDelayedError::setMessage(v8::Handle<v8::Message> message)
     m_message = qPersistentNew<v8::Message>(message);
 }
 
-void QQmlDelayedError::setErrorLocation(const QUrl &url, int line, int column)
+void QQmlDelayedError::setErrorLocation(const QUrl &url, quint16 line, quint16 column)
 {
     m_error.setUrl(url);
     m_error.setLine(line);
@@ -322,7 +322,7 @@ void QQmlJavaScriptExpression::exceptionToError(v8::Handle<v8::Message> message,
 v8::Persistent<v8::Function>
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
                                        const char *code, int codeLength,
-                                       const QString &filename, int line,
+                                       const QString &filename, quint16 line,
                                        v8::Persistent<v8::Object> *qmlscope)
 {
     QQmlEngine *engine = ctxt->engine;
@@ -364,7 +364,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
 // Callee owns the persistent handle
 v8::Persistent<v8::Function>
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scope,
-                                       const QString &code, const QString &filename, int line,
+                                       const QString &code, const QString &filename, quint16 line,
                                        v8::Persistent<v8::Object> *qmlscope)
 {
     QQmlEngine *engine = ctxt->engine;

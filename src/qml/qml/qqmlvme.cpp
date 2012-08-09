@@ -773,8 +773,8 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             QObject *scope = objects.at(objects.count() - 1 - instr.scope);
             QQmlScriptString ss(PRIMITIVES.at(instr.value), CTXT->asQQmlContext(), scope);
             ss.d.data()->bindingId = instr.bindingId;
-            ss.d.data()->lineNumber = instr.line;
-            ss.d.data()->columnNumber = instr.column;
+            ss.d.data()->lineNumber = qmlSourceCoordinate(instr.line);
+            ss.d.data()->columnNumber = qmlSourceCoordinate(instr.column);
             ss.d.data()->isStringLiteral = instr.isStringLiteral;
             ss.d.data()->isNumberLiteral = instr.isNumberLiteral;
             ss.d.data()->numberValue = instr.numberValue;

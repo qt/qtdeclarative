@@ -299,7 +299,7 @@ QV4Bindings::~QV4Bindings()
 }
 
 QQmlAbstractBinding *QV4Bindings::configBinding(int index, int fallbackIndex, QObject *target, QObject *scope,
-                                                int property, int propType, int line, int column)
+                                                int property, int propType, quint16 line, quint16 column)
 {
     Q_ASSERT(propType <= std::numeric_limits<quint16>::max());
 
@@ -556,7 +556,7 @@ QByteArray testResultToString(const QVariant &result, bool undefined)
     }
 }
 
-static void testBindingResult(const QString &binding, int line, int column, 
+static void testBindingResult(const QString &binding, quint16 line, quint16 column,
                               QQmlContextData *context, QObject *scope, 
                               const Register &result, int resultType)
 {
@@ -658,7 +658,7 @@ static void testBindingResult(const QString &binding, int line, int column,
     }
 }
 
-static void testBindingException(const QString &binding, int line, int column, 
+static void testBindingException(const QString &binding, quint16 line, quint16 column,
                                  QQmlContextData *context, QObject *scope)
 {
     QQmlExpression expression(context->asQQmlContext(), scope, binding);
@@ -683,8 +683,8 @@ static void throwException(int id, QQmlDelayedError *error,
     else
         error->setErrorDescription(description);
     if (id != 0xFF) {
-        quint64 e = *((quint64 *)(program->data() + program->exceptionDataOffset) + id); 
-        error->setErrorLocation(context->url, (e >> 32) & 0xFFFFFFFF, e & 0xFFFFFFFF);
+        quint32 e = *((quint32 *)(program->data() + program->exceptionDataOffset) + id);
+        error->setErrorLocation(context->url, (e >> 16), (e & 0xFFFF));
     } else {
         error->setErrorLocation(context->url, -1, -1);
     }

@@ -67,7 +67,7 @@ static QQmlJavaScriptExpression::VTable QQmlBoundSignalExpression_jsvtable = {
 };
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
-                                                     bool isRewritten, const QString &fileName, int line, int column)
+                                                     bool isRewritten, const QString &fileName, quint16 line, quint16 column)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable)
 {
     setNotifyOnValueChanged(false);
@@ -85,7 +85,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObj
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QString &expression,
-                                                     bool isRewritten, const QString &fileName, int line, int column)
+                                                     bool isRewritten, const QString &fileName, quint16 line, quint16 column)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable)
 {
     setNotifyOnValueChanged(false);

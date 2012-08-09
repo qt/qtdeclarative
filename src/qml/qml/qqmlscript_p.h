@@ -76,9 +76,9 @@ namespace QQmlScript {
 
 struct Location 
 {
-    Location() : line(-1), column(-1) {}
-    int line;
-    int column;
+    Location() : line(0), column(0) {}
+    quint16 line;
+    quint16 column;
 
     inline bool operator<(const Location &other) {
         return line < other.line || 

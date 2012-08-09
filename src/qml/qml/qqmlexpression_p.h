@@ -79,8 +79,8 @@ public:
     ~QQmlExpressionPrivate();
 
     void init(QQmlContextData *, const QString &, QObject *);
-    void init(QQmlContextData *, const QString &, bool, QObject *, const QString &, int, int);
-    void init(QQmlContextData *, const QByteArray &, bool, QObject *, const QString &, int, int);
+    void init(QQmlContextData *, const QString &, bool, QObject *, const QString &, quint16, quint16);
+    void init(QQmlContextData *, const QByteArray &, bool, QObject *, const QString &, quint16, quint16);
 
     QVariant value(bool *isUndefined = 0);
 
@@ -92,7 +92,7 @@ public:
     void _q_notify();
 
     static QQmlExpression *create(QQmlContextData *, QObject *, const QString &, bool,
-                                  const QString &, int, int);
+                                  const QString &, quint16, quint16);
 
     bool expressionFunctionValid:1;
     bool expressionFunctionRewritten:1;
@@ -109,8 +109,8 @@ public:
     v8::Persistent<v8::Function> v8function;
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
-    int line;
-    int column;
+    quint16 line;
+    quint16 column;
     QString name; //function name, hint for the debugger
 };
 

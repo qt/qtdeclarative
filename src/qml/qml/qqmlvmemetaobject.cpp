@@ -66,7 +66,7 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 {
 }
 
-void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *o)
+void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
 {
     if (m_target && m_index >= 0) {
         if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.IsEmpty()) {
@@ -1151,7 +1151,7 @@ void QQmlVMEMetaObject::registerInterceptor(int index, int valueIndex, QQmlPrope
     interceptors = interceptor;
 }
 
-int QQmlVMEMetaObject::vmeMethodLineNumber(int index)
+quint16 QQmlVMEMetaObject::vmeMethodLineNumber(int index)
 {
     if (index < methodOffset()) {
         Q_ASSERT(parent.isT1());

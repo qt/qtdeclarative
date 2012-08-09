@@ -52,6 +52,7 @@
 #include <private/qscript_impl_p.h>
 #include <private/qqmlaccessors_p.h>
 #include <private/qqmlexpression_p.h>
+#include <private/qqmlglobal_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -620,7 +621,7 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QQmlPropert
             int columnNumber = frame->GetColumn();
             QString url = engine->toString(frame->GetScriptName());
 
-            newBinding = new QQmlBinding(&function, object, context, url, lineNumber, columnNumber);
+            newBinding = new QQmlBinding(&function, object, context, url, qmlSourceCoordinate(lineNumber), qmlSourceCoordinate(columnNumber));
             newBinding->setTarget(object, *property, context);
             newBinding->setEvaluateFlags(newBinding->evaluateFlags() |
                                          QQmlBinding::RequiresThisObject);

@@ -72,7 +72,7 @@ QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
 QQmlBinding *
 QQmlBinding::createBinding(Identifier id, QObject *obj, QQmlContext *ctxt,
-                                   const QString &url, int lineNumber)
+                                   const QString &url, quint16 lineNumber)
 {
     if (id < 0)
         return 0;
@@ -102,7 +102,7 @@ static QQmlJavaScriptExpression::VTable QQmlBinding_jsvtable = {
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
-  m_lineNumber(-1), m_columnNumber(-1)
+  m_lineNumber(0), m_columnNumber(0)
 {
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt));
@@ -164,7 +164,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
-  m_lineNumber(-1), m_columnNumber(-1)
+  m_lineNumber(0), m_columnNumber(0)
 {
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(ctxt);
@@ -179,9 +179,9 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
 
 QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj, 
                          QQmlContextData *ctxt,
-                         const QString &url, int lineNumber, int columnNumber)
+                         const QString &url, quint16 lineNumber, quint16 columnNumber)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
-  m_lineNumber(-1), m_columnNumber(-1)
+  m_url(url), m_lineNumber(lineNumber), m_columnNumber(columnNumber)
 {
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(ctxt);
@@ -195,12 +195,9 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
         code = rewriteBinding(str);
     }
 
-    m_url = url;
-    m_lineNumber = lineNumber;
-    m_columnNumber = columnNumber;
     m_expression = str.toUtf8();
 
-    v8function = evalFunction(ctxt, obj, code, url, lineNumber);
+    v8function = evalFunction(ctxt, obj, code, url, m_lineNumber);
 }
 
 /*!  
@@ -212,7 +209,7 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
         new QQmlBinding(&function, scope, ctxt);
  */
 QQmlBinding::QQmlBinding(void *functionPtr, QObject *obj, QQmlContextData *ctxt,
-                         const QString &url, int lineNumber, int columnNumber)
+                         const QString &url, quint16 lineNumber, quint16 columnNumber)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
   m_url(url), m_lineNumber(lineNumber), m_columnNumber(columnNumber)
 {
@@ -252,13 +249,16 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     if (QQmlData::wasDeleted(object()))
         return;
 
+    int lineNo = qmlSourceCoordinate(m_lineNumber);
+    int columnNo = qmlSourceCoordinate(m_columnNumber);
+
     QQmlTrace trace("General Binding Update");
     trace.addDetail("URL", m_url);
-    trace.addDetail("Line", m_lineNumber);
-    trace.addDetail("Column", m_columnNumber);
+    trace.addDetail("Line", lineNo);
+    trace.addDetail("Column", columnNo);
 
     if (!updatingFlag()) {
-        QQmlBindingProfiler prof(m_url, m_lineNumber, m_columnNumber, QQmlProfilerService::QmlBinding);
+        QQmlBindingProfiler prof(m_url, lineNo, columnNo, QQmlProfilerService::QmlBinding);
         setUpdatingFlag(true);
 
         QQmlAbstractExpression::DeleteWatcher watcher(this);

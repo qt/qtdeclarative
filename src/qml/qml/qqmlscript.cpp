@@ -760,7 +760,7 @@ ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
                     state.property->addValue(v);
                 } else {
                     Property *defaultProp = state.object->getDefaultProperty();
-                    if (defaultProp->location.start.line == -1) {
+                    if (defaultProp->location.start.line == 0) {
                         defaultProp->location = v->location;
                         defaultProp->location.end = defaultProp->location.start;
                         defaultProp->location.range.length = 0;
@@ -1523,8 +1523,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
         int startColumn = l.tokenStartColumn();
 
         QQmlError importError;
-        importError.setLine(startLine);
-        importError.setColumn(startColumn);
+        importError.setLine(startLine + 1); // 0-based, adjust to be 1-based
 
         token = l.lex();
 
@@ -1545,6 +1544,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
                 if (!file.endsWith(js)) {
                     importError.setDescription(QCoreApplication::translate("QQmlParser","Imported file must be a script"));
+                    importError.setColumn(l.tokenStartColumn());
                     *error = importError;
                     return rv;
                 }
@@ -1565,6 +1565,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
                 if (invalidImport) {
                     importError.setDescription(QCoreApplication::translate("QQmlParser","File import requires a qualifier"));
+                    importError.setColumn(l.tokenStartColumn());
                     *error = importError;
                     return rv;
                 }
@@ -1580,6 +1581,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
                 if (!importId.at(0).isUpper() || (l.tokenStartLine() == startLine)) {
                     importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier"));
+                    importError.setColumn(l.tokenStartColumn());
                     *error = importError;
                     return rv;
                 }
@@ -1600,6 +1602,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
                 while (true) {
                     if (!isUriToken(token)) {
                         importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid module URI"));
+                        importError.setColumn(l.tokenStartColumn());
                         *error = importError;
                         return rv;
                     }
@@ -1619,6 +1622,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
                 if (token != QQmlJSGrammar::T_NUMERIC_LITERAL) {
                     importError.setDescription(QCoreApplication::translate("QQmlParser","Module import requires a version"));
+                    importError.setColumn(l.tokenStartColumn());
                     *error = importError;
                     return rv;
                 }
@@ -1643,6 +1647,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
                 if (invalidImport) {
                     importError.setDescription(QCoreApplication::translate("QQmlParser","Module import requires a qualifier"));
+                    importError.setColumn(l.tokenStartColumn());
                     *error = importError;
                     return rv;
                 }
@@ -1658,6 +1663,7 @@ QQmlScript::Parser::JavaScriptMetaData QQmlScript::Parser::extractMetaData(QStri
 
                 if (!importId.at(0).isUpper() || (l.tokenStartLine() == startLine)) {
                     importError.setDescription(QCoreApplication::translate("QQmlParser","Invalid import qualifier"));
+                    importError.setColumn(l.tokenStartColumn());
                     *error = importError;
                     return rv;
                 }

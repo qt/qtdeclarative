@@ -283,10 +283,10 @@ struct Name: Expr {
     QQmlPropertyData *property;
     Storage storage;
     BuiltinSymbol builtin;
-    quint32 line;
-    quint32 column;
+    quint16 line;
+    quint16 column;
 
-    void init(Name *base, Type type, const QString *id, Symbol symbol, quint32 line, quint32 column);
+    void init(Name *base, Type type, const QString *id, Symbol symbol, quint16 line, quint16 column);
 
     inline bool is(Symbol s) const { return s == symbol; }
     inline bool isNot(Symbol s) const { return s != symbol; }
@@ -468,10 +468,10 @@ struct CJump: Stmt {
 struct Ret: Stmt {
     Expr *expr;
     Type type;
-    quint32 line;
-    quint32 column;
+    quint16 line;
+    quint16 column;
 
-    void init(Expr *expr, Type type, quint32 line, quint32 column)
+    void init(Expr *expr, Type type, quint16 line, quint16 column)
     {
         this->expr = expr;
         this->type = type;
@@ -538,14 +538,14 @@ struct BasicBlock {
     Expr *CONST(Type type, double value);
     Expr *STRING(const QStringRef &value);
 
-    Name *NAME(const QString &id, quint32 line, quint32 column);
-    Name *NAME(Name *base, const QString &id, quint32 line, quint32 column);
-    Name *SYMBOL(Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage, quint32 line, quint32 column);
-    Name *SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, quint32 line, quint32 column);
-    Name *SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage, quint32 line, quint32 column);
-    Name *ID_OBJECT(const QString &id, const QQmlScript::Object *object, quint32 line, quint32 column);
-    Name *ATTACH_TYPE(const QString &id, const QQmlType *attachType, Name::Storage storage, quint32 line, quint32 column);
-    Name *MODULE_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage, quint32 line, quint32 column);
+    Name *NAME(const QString &id, quint16 line, quint16 column);
+    Name *NAME(Name *base, const QString &id, quint16 line, quint16 column);
+    Name *SYMBOL(Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage, quint16 line, quint16 column);
+    Name *SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, quint16 line, quint16 column);
+    Name *SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage, quint16 line, quint16 column);
+    Name *ID_OBJECT(const QString &id, const QQmlScript::Object *object, quint16 line, quint16 column);
+    Name *ATTACH_TYPE(const QString &id, const QQmlType *attachType, Name::Storage storage, quint16 line, quint16 column);
+    Name *MODULE_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage, quint16 line, quint16 column);
 
     Expr *UNOP(AluOp op, Expr *expr);
     Expr *BINOP(AluOp op, Expr *left, Expr *right);
@@ -556,7 +556,7 @@ struct BasicBlock {
 
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
-    Stmt *RET(Expr *expr, Type type, quint32 line, quint32 column);
+    Stmt *RET(Expr *expr, Type type, quint16 line, quint16 column);
 
     void dump(QTextStream &out);
 };

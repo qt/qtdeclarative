@@ -446,7 +446,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
 // A handle scope and context must be entered
 v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
                                                 const QString &fileName,
-                                                int lineNumber)
+                                                quint16 lineNumber)
 {
     v8::Local<v8::String> v8source = m_stringWrapper.toString(source);
     v8::Local<v8::String> v8fileName = m_stringWrapper.toString(fileName);
@@ -463,7 +463,7 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
 // source can be either ascii or utf8.
 v8::Local<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLength,
                                                 const QString &fileName,
-                                                int lineNumber)
+                                                quint16 lineNumber)
 {
     if (sourceLength == -1)
         sourceLength = int(strlen(source));
@@ -1424,7 +1424,7 @@ qint64 QV8Engine::stopTimer(const QString &timerName, bool *wasRunning)
     return m_time.elapsed() - startedAt;
 }
 
-int QV8Engine::consoleCountHelper(const QString &file, int line, int column)
+int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 column)
 {
     const QString key = file + QString::number(line) + QString::number(column);
     int number = m_consoleCount.value(key, 0);

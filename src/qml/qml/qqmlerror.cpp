@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qqmlerror.h"
+#include "qqmlglobal_p.h"
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
@@ -81,12 +82,12 @@ public:
 
     QUrl url;
     QString description;
-    int line;
-    int column;
+    quint16 line;
+    quint16 column;
 };
 
 QQmlErrorPrivate::QQmlErrorPrivate()
-: line(-1), column(-1)
+: line(0), column(0)
 {
 }
 
@@ -182,7 +183,7 @@ void QQmlError::setDescription(const QString &description)
 */
 int QQmlError::line() const
 {
-    if (d) return d->line;
+    if (d) return qmlSourceCoordinate(d->line);
     else return -1;
 }
 
@@ -192,7 +193,7 @@ int QQmlError::line() const
 void QQmlError::setLine(int line)
 {
     if (!d) d = new QQmlErrorPrivate;
-    d->line = line;
+    d->line = qmlSourceCoordinate(line);
 }
 
 /*!
@@ -200,7 +201,7 @@ void QQmlError::setLine(int line)
 */
 int QQmlError::column() const
 {
-    if (d) return d->column;
+    if (d) return qmlSourceCoordinate(d->column);
     else return -1;
 }
 
@@ -210,7 +211,7 @@ int QQmlError::column() const
 void QQmlError::setColumn(int column)
 {
     if (!d) d = new QQmlErrorPrivate;
-    d->column = column;
+    d->column = qmlSourceCoordinate(column);
 }
 
 /*!
@@ -219,14 +220,20 @@ void QQmlError::setColumn(int column)
 QString QQmlError::toString() const
 {
     QString rv;
-    if (url().isEmpty()) {
+
+    QUrl u(url());
+    int l(line());
+
+    if (u.isEmpty()) {
         rv = QLatin1String("<Unknown File>");
-    } else if (line() != -1) {
-        rv = url().toString() + QLatin1Char(':') + QString::number(line());
-        if(column() != -1) 
-            rv += QLatin1Char(':') + QString::number(column());
+    } else if (l != -1) {
+        rv = u.toString() + QLatin1Char(':') + QString::number(l);
+
+        int c(column());
+        if (c != -1)
+            rv += QLatin1Char(':') + QString::number(c);
     } else {
-        rv = url().toString();
+        rv = u.toString();
     }
 
     rv += QLatin1String(": ") + description();

@@ -61,6 +61,7 @@
 #include <qthread.h>
 #include <qmutex.h>
 #include <qwaitcondition.h>
+#include <private/qqmlglobal_p.h>
 
 #undef Q_D
 #undef Q_Q
@@ -249,7 +250,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     Q_D(QJSEngine);
     QScriptIsolate api(d, QScriptIsolate::NotNullEngine);
     v8::HandleScope handleScope;
-    return QJSValuePrivate::get(d->evaluate(program, fileName, lineNumber));
+    return QJSValuePrivate::get(d->evaluate(program, fileName, qmlSourceCoordinate(lineNumber)));
 }
 
 /*!

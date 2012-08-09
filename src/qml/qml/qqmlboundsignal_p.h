@@ -61,6 +61,7 @@
 #include <private/qqmlnotifier_p.h>
 #include <private/qflagpointer_p.h>
 #include <private/qqmlrefcount_p.h>
+#include <private/qqmlglobal_p.h>
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -69,9 +70,9 @@ class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlAbstractExpres
 {
 public:
     QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QByteArray &expression,
-                              bool isRewritten, const QString &fileName, int line, int column);
+                              bool isRewritten, const QString &fileName, quint16 line, quint16 column);
     QQmlBoundSignalExpression(QQmlContextData *ctxt, QObject *scope, const QString &expression,
-                              bool isRewritten, const QString &fileName, int line, int column);
+                              bool isRewritten, const QString &fileName, quint16 line, quint16 column);
 
     // "inherited" from QQmlJavaScriptExpression.
     static QString expressionIdentifier(QQmlJavaScriptExpression *);
@@ -81,8 +82,8 @@ public:
     void evaluate(QObject *secondaryScope = 0);
 
     QString sourceFile() const { return m_fileName; }
-    int lineNumber() const { return m_line; }
-    int columnNumber() const { return m_column; }
+    quint16 lineNumber() const { return m_line; }
+    quint16 columnNumber() const { return m_column; }
     QString expression() const;
 
     QQmlEngine *engine() const { return context() ? context()->engine : 0; }
@@ -100,8 +101,8 @@ private:
     QString m_expression;   //only used when expression needs to be rewritten
 
     QString m_fileName;
-    int m_line;
-    int m_column;
+    quint16 m_line;
+    quint16 m_column;
 
     bool m_expressionFunctionValid:1;
     bool m_expressionFunctionRewritten:1;
