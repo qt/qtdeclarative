@@ -75,8 +75,7 @@ void QV8SequenceWrapper::init(QV8Engine *engine)
         "})");
 
     m_sort = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Sort)->GetFunction());
-    m_arrayPrototype = qPersistentNew<v8::Object>(v8::Array::New(1)->GetPrototype()->ToObject()->Clone());
-    m_arrayPrototype->Set(v8::String::New("sort"), m_sort);
+    m_arrayPrototype = qPersistentNew<v8::Value>(v8::Array::New(1)->GetPrototype());
     v8::Local<v8::Script> defaultSortCompareScript = v8::Script::Compile(engine->toString(defaultSortString));
     m_defaultSortComparer = qPersistentNew<v8::Function>(v8::Handle<v8::Function>(v8::Function::Cast(*defaultSortCompareScript->Run())));
 
@@ -91,6 +90,9 @@ void QV8SequenceWrapper::init(QV8Engine *engine)
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("valueOf"), ValueOfGetter, 0,
                                         m_valueOf, v8::DEFAULT,
+                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("sort"), SortGetter, 0,
+                                        m_sort, v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete | v8::DontEnum));
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
@@ -241,6 +243,12 @@ v8::Handle<v8::Value> QV8SequenceWrapper::ToStringGetter(v8::Local<v8::String> p
 
 v8::Handle<v8::Value> QV8SequenceWrapper::ValueOfGetter(v8::Local<v8::String> property,
                                                                const v8::AccessorInfo &info)
+{
+    Q_UNUSED(property);
+    return info.Data();
+}
+
+v8::Handle<v8::Value> QV8SequenceWrapper::SortGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info)
 {
     Q_UNUSED(property);
     return info.Data();

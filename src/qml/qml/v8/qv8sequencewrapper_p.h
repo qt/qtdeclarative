@@ -87,7 +87,7 @@ private:
     v8::Persistent<v8::Function> m_toString;
     v8::Persistent<v8::Function> m_valueOf;
     v8::Persistent<v8::Function> m_sort;
-    v8::Persistent<v8::Object> m_arrayPrototype;
+    v8::Persistent<v8::Value> m_arrayPrototype;
     v8::Persistent<v8::Function> m_defaultSortComparer;
 
     static v8::Handle<v8::Value> IndexedGetter(quint32 index, const v8::AccessorInfo &info);
@@ -99,6 +99,7 @@ private:
     static v8::Handle<v8::Value> ToStringGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> ToString(const v8::Arguments &args);
     static v8::Handle<v8::Value> ValueOfGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> SortGetter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> ValueOf(const v8::Arguments &args);
     static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
