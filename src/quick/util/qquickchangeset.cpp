@@ -303,10 +303,6 @@ void QQuickChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
             } else if (rit->count == -offset || rit->count == 0) {
                 insert->index += difference;
                 break;
-            } else if (offset <= 0) {
-                insert->index = index - removeCount;
-                insertCount += insert->count;
-                ++insert;
             } else {
                 insert->index -= removeCount - difference;
                 rit->index -= insert->count;
@@ -351,15 +347,14 @@ void QQuickChangeSet::remove(QVector<Remove> *removes, QVector<Insert> *inserts)
                 // Accumulate all existing non-move removes that are encapsulated by or immediately
                 // follow the current remove into it.
                 int difference = 0;
-                if (rend == m_removes.end())
+                if (rend == m_removes.end()) {
                     difference = rit->count;
-                else if (rit->index + rit->count < rend->index - removeCount)
+                } else if (rit->index + rit->count < rend->index - removeCount) {
                     difference = rit->count;
-                else if (rend->moveId != -1) {
+                } else if (rend->moveId != -1) {
                     difference = rend->index - removeCount - rit->index;
                     index += difference;
-                } else if (offset > 0)
-                    difference = offset;
+                }
                 count += difference;
 
                 rit->count -= difference;
