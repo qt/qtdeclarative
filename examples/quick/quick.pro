@@ -7,11 +7,10 @@ SUBDIRS = accessibility \
             keyinteraction \
             modelviews \
             mousearea \
-            openglunderqml \
-            painteditem \
             positioners \
             righttoleft \
             shadereffects \
             text \
             threading \
-            touchinteraction
+            touchinteraction \
+            customitems
