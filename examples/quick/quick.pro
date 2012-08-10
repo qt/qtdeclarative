@@ -6,7 +6,8 @@ SUBDIRS = accessibility \
             imageelements \
             keyinteraction \
             localstorage \
-            modelviews \
+            models \
+            views \
             mousearea \
             positioners \
             righttoleft \
@@ -17,6 +18,7 @@ SUBDIRS = accessibility \
             touchinteraction \
             tutorials \
             customitems \
+            imageprovider \
             window \
             particles \
             demos

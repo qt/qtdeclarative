@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 
-SUBDIRS +=imageprovider \
+SUBDIRS += \
           networkaccessmanagerfactory \
           plugins \
           referenceexamples \

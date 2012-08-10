@@ -9,7 +9,7 @@ SOURCES += imageprovider.cpp
 
 EXAMPLE_FILES = imageprovider-example.qml
 
-target.path = $$[QT_INSTALL_EXAMPLES]/qml/imageprovider/ImageProviderCore
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/imageprovider/ImageProviderCore
 qml.files = ImageProviderCore/qmldir
-qml.path = $$[QT_INSTALL_EXAMPLES]/qml/imageprovider/ImageProviderCore
+qml.path = $$[QT_INSTALL_EXAMPLES]/quick/imageprovider/ImageProviderCore
 INSTALLS = target qml
