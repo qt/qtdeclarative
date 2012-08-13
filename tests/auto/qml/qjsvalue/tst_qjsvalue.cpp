@@ -2433,14 +2433,14 @@ void tst_QJSValue::prettyPrinter()
 void tst_QJSValue::engineDeleted()
 {
     QJSEngine *eng = new QJSEngine;
-    QObject temp;
+    QObject *temp = new QObject(); // Owned by JS engine, as newQObject() sets JS ownership explicitly
     QJSValue v1 = eng->toScriptValue(123);
     QVERIFY(v1.isNumber());
     QJSValue v2 = eng->toScriptValue(QString("ciao"));
     QVERIFY(v2.isString());
     QJSValue v3 = eng->newObject();
     QVERIFY(v3.isObject());
-    QJSValue v4 = eng->newQObject(&temp);
+    QJSValue v4 = eng->newQObject(temp);
     QVERIFY(v4.isQObject());
     QJSValue v5 = "Hello";
     QVERIFY(v2.isString());

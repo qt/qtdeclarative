@@ -2482,7 +2482,9 @@ void tst_QJSEngine::reentrancy_Array()
 
 void tst_QJSEngine::reentrancy_objectCreation()
 {
-    QObject temp;
+    // Owned by JS engine, as newQObject() sets JS ownership explicitly
+    QObject *temp = new QObject();
+
     QJSEngine eng1;
     QJSEngine eng2;
     {
@@ -2499,8 +2501,8 @@ void tst_QJSEngine::reentrancy_objectCreation()
         QCOMPARE(qjsvalue_cast<QRegExp>(r2), qjsvalue_cast<QRegExp>(r1));
     }
     {
-        QJSValue o1 = eng1.newQObject(&temp);
-        QJSValue o2 = eng2.newQObject(&temp);
+        QJSValue o1 = eng1.newQObject(temp);
+        QJSValue o2 = eng2.newQObject(temp);
         QCOMPARE(o1.toQObject(), o2.toQObject());
         QCOMPARE(o2.toQObject(), o1.toQObject());
     }

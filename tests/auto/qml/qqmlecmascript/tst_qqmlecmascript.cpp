@@ -2239,7 +2239,9 @@ static inline v8::Handle<v8::Value> evaluate(QV8Engine *engine, v8::Handle<v8::O
 
 void tst_qqmlecmascript::callQtInvokables()
 {
-    MyInvokableObject o;
+    // This object has JS ownership, as the call to method_NoArgs_QObject() in this test will return
+    // it, which will set the indestructible flag to false.
+    MyInvokableObject *o = new MyInvokableObject();
 
     QQmlEngine qmlengine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&qmlengine);
@@ -2249,548 +2251,548 @@ void tst_qqmlecmascript::callQtInvokables()
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(engine->context());
 
-    v8::Local<v8::Object> object = engine->newQObject(&o)->ToObject();
+    v8::Local<v8::Object> object = engine->newQObject(o)->ToObject();
 
     // Non-existent methods
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_nonexistent()"));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), -1);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_nonexistent(10, 11)"));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), -1);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
     // Insufficient arguments
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_int()"));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), -1);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_intint(10)"));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), -1);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
     // Excessive arguments
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(10, 11)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 8);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(10));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 8);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(10));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intint(10, 11, 12)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 9);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(10));
-    QCOMPARE(o.actuals().at(1), QVariant(11));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 9);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(10));
+    QCOMPARE(o->actuals().at(1), QVariant(11));
 
     // Test return types
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs()", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 0);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 0);
+    QCOMPARE(o->actuals().count(), 0);
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs_int()", v8::Integer::New(6)));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 1);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 1);
+    QCOMPARE(o->actuals().count(), 0);
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs_real()", v8::Number::New(19.75)));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 2);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 2);
+    QCOMPARE(o->actuals().count(), 0);
 
-    o.reset();
+    o->reset();
     {
     v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QPointF()");
     QVERIFY(!ret.IsEmpty());
     QCOMPARE(engine->toVariant(ret, -1), QVariant(QPointF(123, 4.5)));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 3);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 3);
+    QCOMPARE(o->actuals().count(), 0);
     }
 
-    o.reset();
+    o->reset();
     {
     v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QObject()");
-    QCOMPARE(engine->toQObject(ret), (QObject *)&o);
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 4);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(engine->toQObject(ret), (QObject *)o);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 4);
+    QCOMPARE(o->actuals().count(), 0);
     }
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_NoArgs_unknown()"));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), -1);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
-    o.reset();
+    o->reset();
     {
     v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QScriptValue()");
     QVERIFY(ret->IsString());
     QCOMPARE(engine->toString(ret), QString("Hello world"));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 6);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 6);
+    QCOMPARE(o->actuals().count(), 0);
     }
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", engine->toString("QML rocks")));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 7);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 7);
+    QCOMPARE(o->actuals().count(), 0);
 
     // Test arg types
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(94)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 8);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(94));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 8);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(94));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(\"94\")", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 8);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(94));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 8);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(94));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(\"not a number\")", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 8);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 8);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 8);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 8);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 8);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 8);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(object)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 8);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 8);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intint(122, 9)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 9);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(122));
-    QCOMPARE(o.actuals().at(1), QVariant(9));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 9);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(122));
+    QCOMPARE(o->actuals().at(1), QVariant(9));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(94.3)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 10);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(94.3));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 10);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(94.3));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(\"94.3\")", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 10);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(94.3));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 10);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(94.3));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(\"not a number\")", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 10);
-    QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qIsNaN(o.actuals().at(0).toDouble()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 10);
+    QCOMPARE(o->actuals().count(), 1);
+    QVERIFY(qIsNaN(o->actuals().at(0).toDouble()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 10);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 10);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 10);
-    QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qIsNaN(o.actuals().at(0).toDouble()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 10);
+    QCOMPARE(o->actuals().count(), 1);
+    QVERIFY(qIsNaN(o->actuals().at(0).toDouble()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(object)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 10);
-    QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qIsNaN(o.actuals().at(0).toDouble()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 10);
+    QCOMPARE(o->actuals().count(), 1);
+    QVERIFY(qIsNaN(o->actuals().at(0).toDouble()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QString(\"Hello world\")", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 11);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant("Hello world"));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 11);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant("Hello world"));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QString(19)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 11);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant("19"));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 11);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant("19"));
 
-    o.reset();
+    o->reset();
     {
-    QString expected = "MyInvokableObject(0x" + QString::number((quintptr)&o, 16) + ")";
+    QString expected = "MyInvokableObject(0x" + QString::number((quintptr)o, 16) + ")";
     QVERIFY(EVALUATE_VALUE("object.method_QString(object)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 11);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(expected));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 11);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(expected));
     }
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QString(null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 11);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QString()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 11);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QString()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QString(undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 11);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QString()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 11);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QString()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(0)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 12);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QPointF()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 12);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QPointF()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 12);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QPointF()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 12);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QPointF()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 12);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QPointF()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 12);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QPointF()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(object)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 12);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QPointF()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 12);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QPointF()));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPointF())", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 12);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QPointF(99.3, -10.2)));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 12);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QPointF(99.3, -10.2)));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPoint())", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 12);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QPointF(9, 12)));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 12);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QPointF(9, 12)));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(0)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 13);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 13);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), qVariantFromValue((QObject *)0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(\"Hello world\")", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 13);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 13);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), qVariantFromValue((QObject *)0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 13);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 13);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), qVariantFromValue((QObject *)0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 13);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)0));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 13);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), qVariantFromValue((QObject *)0));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(object)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 13);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)&o));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 13);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), qVariantFromValue((QObject *)o));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 14);
-    QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(0)).isNull());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 14);
+    QCOMPARE(o->actuals().count(), 1);
+    QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(0)).isNull());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 14);
-    QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(0)).isUndefined());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 14);
+    QCOMPARE(o->actuals().count(), 1);
+    QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(0)).isUndefined());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(19)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 14);
-    QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(0)).strictlyEquals(QJSValue(19)));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 14);
+    QCOMPARE(o->actuals().count(), 1);
+    QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(0)).strictlyEquals(QJSValue(19)));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue([19, 20])", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 14);
-    QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(0)).isArray());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 14);
+    QCOMPARE(o->actuals().count(), 1);
+    QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(0)).isArray());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(4, null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 15);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(4));
-    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(1)).isNull());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 15);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(4));
+    QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(1)).isNull());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(8, undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 15);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(8));
-    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(1)).isUndefined());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 15);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(8));
+    QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(1)).isUndefined());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(3, 19)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 15);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(3));
-    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(1)).strictlyEquals(QJSValue(19)));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 15);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(3));
+    QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(1)).strictlyEquals(QJSValue(19)));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(44, [19, 20])", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 15);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(44));
-    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(1)).isArray());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 15);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(44));
+    QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(1)).isArray());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_overload()"));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), -1);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(10)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 16);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(10));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 16);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(10));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(10, 11)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 17);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(10));
-    QCOMPARE(o.actuals().at(1), QVariant(11));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 17);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(10));
+    QCOMPARE(o->actuals().at(1), QVariant(11));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(\"Hello\")", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 18);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(QString("Hello")));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 18);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(QString("Hello")));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_with_enum(9)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 19);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(9));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 19);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(9));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_default(10)", v8::Integer::New(19)));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 20);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(10));
-    QCOMPARE(o.actuals().at(1), QVariant(19));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 20);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(10));
+    QCOMPARE(o->actuals().at(1), QVariant(19));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_default(10, 13)", v8::Integer::New(13)));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 20);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(10));
-    QCOMPARE(o.actuals().at(1), QVariant(13));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 20);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(10));
+    QCOMPARE(o->actuals().at(1), QVariant(13));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_inherited(9)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), -3);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(o.actuals().at(0), QVariant(9));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -3);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().at(0), QVariant(9));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QVariant(9)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 21);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(9));
-    QCOMPARE(o.actuals().at(1), QVariant());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 21);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(9));
+    QCOMPARE(o->actuals().at(1), QVariant());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QVariant(\"Hello\", \"World\")", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 21);
-    QCOMPARE(o.actuals().count(), 2);
-    QCOMPARE(o.actuals().at(0), QVariant(QString("Hello")));
-    QCOMPARE(o.actuals().at(1), QVariant(QString("World")));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 21);
+    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().at(0), QVariant(QString("Hello")));
+    QCOMPARE(o->actuals().at(1), QVariant(QString("World")));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonObject({foo:123})", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 22);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonObject>(o.actuals().at(0)), QJsonDocument::fromJson("{\"foo\":123}").object());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 22);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonObject>(o->actuals().at(0)), QJsonDocument::fromJson("{\"foo\":123}").object());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonArray([123])", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 23);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonArray>(o.actuals().at(0)), QJsonDocument::fromJson("[123]").array());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 23);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonArray>(o->actuals().at(0)), QJsonDocument::fromJson("[123]").array());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(123)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 24);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(123));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 24);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(123));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(42.35)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 24);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(42.35));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 24);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(42.35));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue('ciao')", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 24);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QStringLiteral("ciao")));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 24);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QStringLiteral("ciao")));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(true)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 24);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(true));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 24);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(true));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(false)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 24);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(false));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 24);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(false));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 24);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Null));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 24);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QJsonValue::Null));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 24);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Undefined));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 24);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QJsonValue::Undefined));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload({foo:123})", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 25);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonObject>(o.actuals().at(0)), QJsonDocument::fromJson("{\"foo\":123}").object());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 25);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonObject>(o->actuals().at(0)), QJsonDocument::fromJson("{\"foo\":123}").object());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload([123])", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 26);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonArray>(o.actuals().at(0)), QJsonDocument::fromJson("[123]").array());
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 26);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonArray>(o->actuals().at(0)), QJsonDocument::fromJson("[123]").array());
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(null)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 27);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Null));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 27);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QJsonValue::Null));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(undefined)", v8::Undefined()));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), 27);
-    QCOMPARE(o.actuals().count(), 1);
-    QCOMPARE(qvariant_cast<QJsonValue>(o.actuals().at(0)), QJsonValue(QJsonValue::Undefined));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 27);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QJsonValue::Undefined));
 
-    o.reset();
+    o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_unknown(null)"));
-    QCOMPARE(o.error(), false);
-    QCOMPARE(o.invoked(), -1);
-    QCOMPARE(o.actuals().count(), 0);
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 }
 
 // QTBUG-13047 (check that you can pass registered object types as args)
