@@ -72,6 +72,8 @@ QUICKTESTS =  \
 
 SUBDIRS += $$PUBLICTESTS
 
+!contains(QT_CONFIG, accessibility):SUBDIRS -= qquickaccessible
+
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS
     SUBDIRS += $$QUICKTESTS
