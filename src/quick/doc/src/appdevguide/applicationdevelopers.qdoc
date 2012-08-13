@@ -52,7 +52,7 @@ user interfaces in QML, and have the option of connecting these user
 interfaces to any back-end C++ libraries.
 
 This page links to all the information you need to start developing
-applications with QML and QtQuick.
+applications with \l{Qt QML}{QML} and \l{Qt Quick}.
 
 \section2 Other QML modules
 
@@ -112,7 +112,7 @@ expressions combined with dynamic property bindings.
 
 The QML language and engine infrastructure is provided by the Qt QML module.
 For in-depth information about the QML language, please see the
-\l{qtqml-main.html}{Qt QML Module Documentation}.
+\l{Qt QML} module documentation.
 
 \section2 What is Qt Quick?
 
@@ -121,10 +121,9 @@ includes visual elements, interactive elements, animations, models and views,
 particle effects and shader effects.  A QML application developer can get
 access to all of that functionality with a single import statement.
 
-The QtQuick QML library is provided by the Qt Quick module.
+The \c QtQuick QML library is provided by the \l{Qt Quick} module.
 For in-depth information about the various QML types and other functionality
-provided by Qt Quick, please see the \l{qtquick-main.html}
-{Qt Quick Module Documentation}.
+provided by Qt Quick, please see the \l{Qt Quick} module documentation.
 
 \section1 Advanced Application Development Topics
 
@@ -144,9 +143,9 @@ provided by Qt Quick, please see the \l{qtquick-main.html}
 \section1 Release Notes and Porting Guides
 
 \list
-\li \l{qtqml-releasenotes.html}{QtQml Module Release Notes}
-\li \l{qtquick-releasenotes.html}{QtQuick Module Release Notes}
-\li \l{qtquick-porting-qt5.html}{Porting QML Applications to Qt 5}
+\li \l{Qt QML Release Notes}
+\li \l{Qt Quick Release Notes}
+\li \l{Porting QML Applications to Qt 5}
 \endlist
 
 */

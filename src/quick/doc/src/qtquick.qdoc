@@ -26,14 +26,12 @@
 ****************************************************************************/
 
 /*!
-\page qtquick-main.html
-\title Qt Quick Module
+\page qtquick-index.html
+\title Qt Quick
 \brief The Qt Quick module implements the "standard library" for QML
 
-\section1 Overview of the Qt Quick Module
-
 The Qt Quick module is the standard library for writing QML applications.
-While the \l{qtqml-main.html}{Qt QML module} provides the QML engine and
+While the \l{Qt QML} module provides the QML engine and
 language infrastructure, the Qt Quick module provides all the basic
 elements necessary for creating user interfaces with QML. It
 provides a visual canvas and includes types for creating and animating
@@ -41,13 +39,13 @@ visual components, receiving user input, creating data models and views
 and delayed object instantiation.
 
 The Qt Quick module provides both the \c QtQuick QML module, which supplies
-\l{qtquick-qmltypereference.html}{a set of QML types} for creating user
-interfaces with the QML language, and the QtQuick C++ module, which supplies
-\l{QtQuick}{a set of C++ APIs} for integrating with user interfaces and
+\l{QML Types Provided by Qt Quick}{a set of QML types} for creating user
+interfaces with the QML language, and the \c QtQuick C++ module, which supplies
+\l{Qt Quick Module - C++ Classes}{a set of C++ APIs} for integrating with user interfaces and
 applications built with QML and the \c QtQuick QML module.
 
 For those new to QML and Qt Quick, please see
-\l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
+\l{QML Application Developer Resources}
 for an introduction to writing QML applications.
 
 
@@ -110,20 +108,12 @@ To find out more about using the QML language, see the \l{Qt QML Module Document
 
 \section1 Reference Documentation
 
-Additional Qt Quick information:
 \list
-\li \l{QtQuick}{QtQuick Module C++ API Reference} - the C++ API provided by the
-    Qt Quick module
-\li \l{qtquick-releasenotes.html}{QtQuick Release Notes} - list of changes and
-    additions in the Qt Quick module
-\endlist
-
-Further information for writing QML applications:
-\list
-\li \l{qtquick-applicationdevelopers.html}{QML Application Developer Resources}
-    - essential information for application development with QML and Qt Quick
-\li \l{qtqml-main.html}{Qt QML Module Documentation} - documentation for the
-    Qt QML module, which provides the QML engine and language infrastructure
+\li \l{QML Types Provided by Qt Quick}
+\li \l{Qt Quick Module - C++ Classes}
+\li \l{Qt QML} module documentation
+\li \l{QML Application Developer Resources} - information for application development with QML and Qt Quick
+\li \l{Qt Quick Release Notes}
 \endlist
 */
 

@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \module QtQml
-\title Qt QML Module C++ API Reference
+\title Qt QML - C++ Classes
 \brief The C++ API provided by the Qt QML module
 
 To include the definitions of the module's classes, use the
@@ -44,7 +44,7 @@ QT += qml
 \endcode
 
 For more information on the Qt QML module, see the
-\l{qtqml-main.html}{Qt QML module} documentation.
+\l{Qt QML} module documentation.
 */
 
 
