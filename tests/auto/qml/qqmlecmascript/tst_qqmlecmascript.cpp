@@ -283,6 +283,7 @@ private slots:
     void fallbackBindings();
     void propertyOverride();
     void concatenatedStringPropertyAccess();
+    void jsOwnedObjectsDeletedOnEngineDestroy();
 
 private:
     static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7291,6 +7292,38 @@ void tst_qqmlecmascript::concatenatedStringPropertyAccess()
     QObject *object = component.create();
     QVERIFY(object);
     QVERIFY(object->property("success").toBool());
+    delete object;
+}
+
+void tst_qqmlecmascript::jsOwnedObjectsDeletedOnEngineDestroy()
+{
+    QQmlEngine *myEngine = new QQmlEngine;
+
+    MyDeleteObject deleteObject;
+    deleteObject.setObjectName("deleteObject");
+    QObject * const object1 = new QObject;
+    QObject * const object2 = new QObject;
+    object1->setObjectName("object1");
+    object2->setObjectName("object2");
+    deleteObject.setObject1(object1);
+    deleteObject.setObject2(object2);
+
+    // Objects returned by function calls get marked as destructible, but objects returned by
+    // property getters do not - therefore we explicitly set the object as destructible.
+    QQmlEngine::setObjectOwnership(object2, QQmlEngine::JavaScriptOwnership);
+
+    myEngine->rootContext()->setContextProperty("deleteObject", &deleteObject);
+    QQmlComponent component(myEngine, testFileUrl("jsOwnedObjectsDeletedOnEngineDestroy.qml"));
+    QObject *object = component.create();
+    QVERIFY(object);
+
+    // Destroying the engine should delete all JS owned QObjects
+    QSignalSpy spy1(object1, SIGNAL(destroyed()));
+    QSignalSpy spy2(object2, SIGNAL(destroyed()));
+    delete myEngine;
+    QCOMPARE(spy1.count(), 1);
+    QCOMPARE(spy2.count(), 1);
+
     delete object;
 }
 

@@ -1459,21 +1459,29 @@ private:
 class MyDeleteObject : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QObject *nestedObject READ nestedObject NOTIFY nestedObjectChanged);
-    Q_PROPERTY(int deleteNestedObject READ deleteNestedObject NOTIFY deleteNestedObjectChanged);
+    Q_PROPERTY(QObject *nestedObject READ nestedObject NOTIFY nestedObjectChanged)
+    Q_PROPERTY(int deleteNestedObject READ deleteNestedObject NOTIFY deleteNestedObjectChanged)
+    Q_PROPERTY(QObject *object2 READ object2 NOTIFY object2Changed)
 
 public:
-    MyDeleteObject() : m_nestedObject(new MyQmlObject) {}
+    MyDeleteObject() : m_nestedObject(new MyQmlObject), m_object1(0), m_object2(0) {}
 
+    Q_INVOKABLE QObject *object1() const { return m_object1; }
+    Q_INVOKABLE QObject *object2() const { return m_object2; }
+    void setObject1(QObject *object) { m_object1 = object; }
+    void setObject2(QObject *object) { m_object2 = object; emit object2Changed(); }
     QObject *nestedObject() const { return m_nestedObject; }
     int deleteNestedObject() { delete m_nestedObject; m_nestedObject = 0; return 1; }
 
 signals:
     void nestedObjectChanged();
     void deleteNestedObjectChanged();
+    void object2Changed();
 
 private:
     MyQmlObject *m_nestedObject;
+    QObject *m_object1;
+    QObject *m_object2;
 };
 
 class DateTimeExporter : public QObject

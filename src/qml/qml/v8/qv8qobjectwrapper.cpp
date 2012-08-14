@@ -1178,7 +1178,10 @@ bool QV8QObjectWrapper::deleteWeakQObject(QV8QObjectResource *resource, bool cal
                 if (ddata->ownContext && ddata->context)
                     ddata->context->emitDestruction();
                 ddata->isQueuedForDeletion = true;
-                object->deleteLater();
+                if (calledFromEngineDtor)
+                    delete object;
+                else
+                    object->deleteLater();
             }
         }
     }
