@@ -150,10 +150,8 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     // Enable accessibility for items with accessible content. This also
     // enables accessibility for the ancestors of souch items.
     item->d_func()->setAccessibleFlagAndListener();
-#ifndef QT_NO_ACCESSIBILITY
     QAccessibleEvent ev(item, QAccessible::ObjectCreated);
     QAccessible::updateAccessibility(&ev);
-#endif
 }
 
 QQuickAccessibleAttached::~QQuickAccessibleAttached()
