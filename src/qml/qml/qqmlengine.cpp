@@ -1082,8 +1082,10 @@ void QQmlEngine::setContextForObject(QObject *object, QQmlContext *context)
   have been transferred to the C++ caller.
 
   Objects not-created by QML have CppOwnership by default.  The
-  exception to this is objects returned from a C++ method call.  The
-  ownership of these objects is passed to JavaScript.
+  exception to this is objects returned from C++ method calls; in these cases,
+  the ownership of the returned objects will be set to JavaScriptOwnerShip.
+  Note this applies only to explicit invocations of Q_INVOKABLE methods or slots,
+  and not to property getter invocations.
 
   Calling setObjectOwnership() overrides the default ownership
   heuristic used by QML.
