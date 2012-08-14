@@ -174,6 +174,15 @@ static QObject *qobject_api(QQmlEngine *engine, QJSEngine *scriptEngine)
     return o;
 }
 
+static QObject *qobject_api_two(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    testQObjectApiTwo *o = new testQObjectApiTwo;
+    return o;
+}
+
 static QObject *qobject_api_engine_parent(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(scriptEngine)
@@ -283,6 +292,9 @@ void registerTypes()
     qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApi",1,3,"QObject",qobject_api); // register (qobject) singleton Type for a uri which doesn't contain elements, minor version set
     qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApi",2,0,"QObject",qobject_api); // register (qobject) singleton Type for a uri which doesn't contain elements, major version set
     qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApiParented",1,0,"QObject",qobject_api_engine_parent); // register (parented qobject) singleton Type for a uri which doesn't contain elements
+
+    qmlRegisterSingletonType<testQObjectApi>("Qt.test.qobjectApis",1,0,"One",qobject_api); // register multiple qobject singleton types in a single namespace
+    qmlRegisterSingletonType<testQObjectApiTwo>("Qt.test.qobjectApis",1,0,"Two",qobject_api_two); // register multiple qobject singleton types in a single namespace
 
     qRegisterMetaType<MyQmlObject::MyEnum2>("MyEnum2");
     qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");

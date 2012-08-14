@@ -221,9 +221,6 @@ public:
     inline static void deleteInEngineThread(QQmlEngine *, T *);
 
     // These methods may be called from the loader thread
-    QQmlMetaType::SingletonInstance *singletonTypeInstance(const QQmlMetaType::SingletonType &module);
-
-    // These methods may be called from the loader thread
     inline QQmlPropertyCache *cache(QObject *obj);
     inline QQmlPropertyCache *cache(const QMetaObject *);
     inline QQmlPropertyCache *cache(QQmlType *, int, QQmlError &error);
@@ -303,7 +300,6 @@ private:
 
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
-    QHash<QQmlMetaType::SingletonType, QQmlMetaType::SingletonInstance *> singletonTypeInstances;
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCache;
     QHash<QPair<QQmlType *, int>, QQmlPropertyCache *> typePropertyCache;
     QHash<int, int> m_qmlLists;

@@ -290,23 +290,15 @@ QUrl QQmlImports::baseUrl() const
     return d->baseUrl;
 }
 
-void QQmlImports::populateCache(QQmlTypeNameCache *cache, QQmlEngine *engine) const
+void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
 {
     const QQmlImportNamespace &set = d->unqualifiedset;
 
     for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
         const QQmlImportNamespace::Import *import = set.imports.at(ii);
         QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion);
-        if (module)
+        if (module) {
             cache->m_anonymousImports.append(QQmlTypeModuleVersion(module, import->minversion));
-
-        QQmlMetaType::SingletonType singletonType = QQmlMetaType::singletonType(import->uri, import->majversion,
-                                                                    import->minversion);
-        if (singletonType.script || singletonType.qobject) {
-            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-            QQmlMetaType::SingletonInstance *apiInstance = ep->singletonTypeInstance(singletonType);
-
-            cache->addSingletonType(singletonType.typeName, apiInstance);
         }
     }
 
@@ -320,16 +312,6 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache, QQmlEngine *engine) co
             if (module) {
                 QQmlTypeNameCache::Import &typeimport = cache->m_namedImports[set.prefix];
                 typeimport.modules.append(QQmlTypeModuleVersion(module, import->minversion));
-            }
-
-            QQmlMetaType::SingletonType singletonType = QQmlMetaType::singletonType(import->uri, import->majversion,
-                                                                        import->minversion);
-            if (singletonType.script || singletonType.qobject) {
-                QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-                QQmlMetaType::SingletonInstance *apiInstance = ep->singletonTypeInstance(singletonType);
-
-                cache->add(set.prefix);
-                cache->addSingletonType(singletonType.typeName, apiInstance, set.prefix);
             }
         }
     }

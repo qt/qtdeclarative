@@ -59,6 +59,7 @@ private slots:
     void qmlPropertyValueSourceCast();
     void qmlPropertyValueInterceptorCast();
     void qmlType();
+    void invalidQmlTypeName();
 
     void isList();
 
@@ -186,6 +187,19 @@ void tst_qqmlmetatype::qmlType()
     QVERIFY(type->module() == QLatin1String("Test"));
     QVERIFY(type->elementName() == QLatin1String("ParserStatusTestType"));
     QCOMPARE(type->qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
+}
+
+void tst_qqmlmetatype::invalidQmlTypeName()
+{
+    QStringList currFailures = QQmlMetaType::typeRegistrationFailures();
+    QCOMPARE(qmlRegisterType<TestType>("TestNamespace", 1, 0, "Test$Type"), -1); // should fail due to invalid QML type name.
+    QStringList nowFailures = QQmlMetaType::typeRegistrationFailures();
+
+    foreach (const QString &f, currFailures)
+        nowFailures.removeOne(f);
+
+    QCOMPARE(nowFailures.size(), 1);
+    QCOMPARE(nowFailures.at(0), QStringLiteral("Invalid QML element name \"Test$Type\""));
 }
 
 void tst_qqmlmetatype::isList()

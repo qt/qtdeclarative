@@ -441,22 +441,25 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, versionMajor, versionMinor, typeName,
 
-        callback, 0, 0
+        callback, 0, 0, 0, 0
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
+static const int CurrentSingletonTypeRegistrationVersion = 2;
 template <typename T>
 inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                 QObject *(*callback)(QQmlEngine *, QJSEngine *))
 {
+    QML_GETTYPENAMES
+
     QQmlPrivate::RegisterSingletonType api = {
-        1,
+        CurrentSingletonTypeRegistrationVersion,
 
         uri, versionMajor, versionMinor, typeName,
 
-        0, callback, &T::staticMetaObject
+        0, callback, &T::staticMetaObject, qRegisterNormalizedMetaType<T *>(pointerName.constData()), 0
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);

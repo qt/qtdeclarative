@@ -153,11 +153,10 @@ private slots:
     void signalWithQJSValue();
     void singletonType_data();
     void singletonType();
+    void singletonTypeCaching_data();
+    void singletonTypeCaching();
     void singletonTypeImportOrder();
     void singletonTypeResolution();
-    void singletonTypeConflicts1();
-    void singletonTypeConflicts2();
-    void singletonTypeConflicts3();
     void importScripts_data();
     void importScripts();
     void scarceResources();
@@ -3602,8 +3601,9 @@ void tst_qqmlecmascript::singletonType_data()
             << QString()
             << QStringList()
             << (QStringList() << "existingUriTest" << "qobjectTest" << "qobjectMethodTest"
-                   << "qobjectMinorVersionTest" << "qobjectMajorVersionTest" << "qobjectParentedTest")
-            << (QVariantList() << 20 << 20 << 2 << 20 << 20 << 26)
+                   << "qobjectMinorVersionMethodTest" << "qobjectMinorVersionTest"
+                   << "qobjectMajorVersionTest" << "qobjectParentedTest")
+            << (QVariantList() << 20 << 20 << 2 << 1 << 20 << 20 << 26)
             << QStringList()
             << QVariantList()
             << QStringList()
@@ -3614,29 +3614,7 @@ void tst_qqmlecmascript::singletonType_data()
             << QString()
             << QStringList()
             << (QStringList() << "scriptTest")
-            << (QVariantList() << 13)
-            << QStringList()
-            << QVariantList()
-            << QStringList()
-            << QVariantList();
-
-    QTest::newRow("qobject, caching + read")
-            << testFileUrl("singletontype/qobjectSingletonTypeCaching.qml")
-            << QString()
-            << QStringList()
-            << (QStringList() << "existingUriTest" << "qobjectParentedTest")
-            << (QVariantList() << 20 << 26) // 26, shouldn't have incremented to 27.
-            << QStringList()
-            << QVariantList()
-            << QStringList()
-            << QVariantList();
-
-    QTest::newRow("script, caching + read")
-            << testFileUrl("singletontype/scriptSingletonTypeCaching.qml")
-            << QString()
-            << QStringList()
-            << (QStringList() << "scriptTest")
-            << (QVariantList() << 13) // 13, shouldn't have incremented to 14.
+            << (QVariantList() << 14) // will have incremented, since we create a new engine each row in this test.
             << QStringList()
             << QVariantList()
             << QStringList()
@@ -3658,7 +3636,7 @@ void tst_qqmlecmascript::singletonType_data()
             << QString()
             << (QStringList() << QString(testFileUrl("singletontype/scriptSingletonTypeWriting.qml").toString() + QLatin1String(":21: Error: Cannot assign to read-only property \"scriptTestProperty\"")))
             << (QStringList() << "readBack" << "unchanged")
-            << (QVariantList() << 13 << 42)
+            << (QVariantList() << 15 << 42)
             << (QStringList() << "firstProperty" << "secondProperty")
             << (QVariantList() << 30 << 30)
             << (QStringList() << "readBack" << "unchanged")
@@ -3696,6 +3674,17 @@ void tst_qqmlecmascript::singletonType_data()
             << QVariantList()
             << QStringList()
             << QVariantList();
+
+    QTest::newRow("qobject, multiple in namespace")
+            << testFileUrl("singletontype/singletonTypeMultiple.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "first" << "second")
+            << (QVariantList() << 35 << 42)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
 }
 
 void tst_qqmlecmascript::singletonType()
@@ -3710,7 +3699,8 @@ void tst_qqmlecmascript::singletonType()
     QFETCH(QStringList, readBackProperties);
     QFETCH(QVariantList, readBackExpectedValues);
 
-    QQmlComponent component(&engine, testfile);
+    QQmlEngine cleanEngine; // so tests don't interfere which each other, as singleton types are engine-singletons only.
+    QQmlComponent component(&cleanEngine, testfile);
 
     if (!errorMessage.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, errorMessage.toLatin1().constData());
@@ -3734,6 +3724,45 @@ void tst_qqmlecmascript::singletonType()
     }
 }
 
+void tst_qqmlecmascript::singletonTypeCaching_data()
+{
+    QTest::addColumn<QUrl>("testfile");
+    QTest::addColumn<QStringList>("readProperties");
+
+    QTest::newRow("qobject, caching + read")
+            << testFileUrl("singletontype/qobjectSingletonTypeCaching.qml")
+            << (QStringList() << "existingUriTest" << "qobjectParentedTest");
+
+    QTest::newRow("script, caching + read")
+            << testFileUrl("singletontype/scriptSingletonTypeCaching.qml")
+            << (QStringList() << "scriptTest");
+}
+
+void tst_qqmlecmascript::singletonTypeCaching()
+{
+    QFETCH(QUrl, testfile);
+    QFETCH(QStringList, readProperties);
+
+    // ensure that the singleton type instances are cached per-engine.
+
+    QQmlEngine cleanEngine;
+    QQmlComponent component(&cleanEngine, testfile);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QList<QVariant> firstValues;
+    QMetaObject::invokeMethod(object, "modifyValues");
+    for (int i = 0; i < readProperties.size(); ++i)
+        firstValues << object->property(readProperties.at(i).toLatin1().constData());
+    delete object;
+
+    QQmlComponent component2(&cleanEngine, testfile);
+    QObject *object2 = component2.create();
+    QVERIFY(object2 != 0);
+    for (int i = 0; i < readProperties.size(); ++i)
+        QCOMPARE(object2->property(readProperties.at(i).toLatin1().constData()), firstValues.at(i)); // cached, shouldn't have changed.
+    delete object2;
+}
+
 void tst_qqmlecmascript::singletonTypeImportOrder()
 {
     QQmlComponent component(&engine, testFileUrl("singletontype/singletonTypeImportOrder.qml"));
@@ -3750,72 +3779,6 @@ void tst_qqmlecmascript::singletonTypeResolution()
     QVERIFY(object);
     QVERIFY(object->property("success") == true);
     delete object;
-}
-
-void tst_qqmlecmascript::singletonTypeConflicts1()
-{
-    const char *warning = "Cannot register singleton type TypeName in uri Test.Conflict1 1.5 (a conflicting singleton type already exists)";
-    QTest::ignoreMessage(QtWarningMsg, warning);
-
-    int i0 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 1, 5, "TypeName", 0);
-    QVERIFY(i0 != -1);
-
-    int i1 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 2, 0, "TypeName", 0);
-    QVERIFY(i1 != -1);
-
-    int i2 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 1, 5, "TypeName", 0);
-    QVERIFY(i2 == -1);
-
-    int i3 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 1, 2, "TypeName", 0);
-    QVERIFY(i3 != -1);
-
-    int i4 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict1", 1, 8, "TypeName", 0);
-    QVERIFY(i4 != -1);
-}
-
-void tst_qqmlecmascript::singletonTypeConflicts2()
-{
-    int i0 = qmlRegisterType<MyQmlObject>("Test.Conflict2", 1, 5, "TypeName");
-    QVERIFY(i0 != -1);
-
-    int i2 = qmlRegisterType<MyQmlObject>("Test.Conflict2", 1, 8, "TypeName");
-    QVERIFY(i2 != -1);
-
-    int i3 = qmlRegisterType<MyQmlObject>("Test.Conflict2", 2, 0, "TypeName");
-    QVERIFY(i3 != -1);
-
-    int i4 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict2", 1, 0, "TypeName", 0);
-    QVERIFY(i4 != -1);
-
-    const char *warning2 = "Cannot register singleton type TypeName in uri Test.Conflict2 1.9 (a conflicting type already exists)";
-    QTest::ignoreMessage(QtWarningMsg, warning2);
-
-    int i5 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict2", 1, 9, "TypeName", 0);
-    QVERIFY(i5 == -1);
-}
-
-void tst_qqmlecmascript::singletonTypeConflicts3()
-{
-    int i0 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict3", 1, 0, "TypeName", 0);
-    QVERIFY(i0 != -1);
-
-    int i1 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict3", 1, 5, "TypeName", 0);
-    QVERIFY(i1 != -1);
-
-    int i2 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict3", 1, 8, "TypeName", 0);
-    QVERIFY(i2 != -1);
-
-    int i3 = qmlRegisterSingletonType<testImportOrderApi>("Test.Conflict3", 2, 0, "TypeName", 0);
-    QVERIFY(i3 != -1);
-
-    const char *warning = "Cannot register type TypeName in uri Test.Conflict3 1.0 (a conflicting singleton type already exists)";
-    QTest::ignoreMessage(QtWarningMsg, warning);
-
-    int i4 = qmlRegisterType<MyQmlObject>("Test.Conflict3", 1, 0, "TypeName");
-    QVERIFY(i4 == -1);
-
-    int i5 = qmlRegisterType<MyQmlObject>("Test.Conflict3", 1, 3, "TypeName");
-    QVERIFY(i5 != -1);
 }
 
 void tst_qqmlecmascript::importScripts_data()

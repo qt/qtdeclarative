@@ -896,7 +896,7 @@ void QQmlCompiler::compileTree(QQmlScript::Object *tree)
         output->importCache->add(qualifier, scriptIndex++, enclosingNamespace);
     }
 
-    unit->imports().populateCache(output->importCache, engine);
+    unit->imports().populateCache(output->importCache);
 
     if (!buildObject(tree, BindingContext()) || !completeComponentBuild())
         return;

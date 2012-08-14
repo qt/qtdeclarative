@@ -9,9 +9,8 @@ QtObject {
 
     Component.onCompleted: {
         var s0 = Data.value === 37 && Namespace.Data.value === 37 && Data.value === Namespace.Data.value;
-        var s1 = NamespaceAndType.value === NamespaceAndType.NamespaceAndType.value &&
-                 NamespaceAndType.value === 37 &&
-                 NamespaceAndType.NamespaceAndType.value === 37;
-        success = (s0 === true) && (s1 === true);
+        var s1 = NamespaceAndType.NamespaceAndType.value === 37; // qualifier should shadow typename.
+        var s2 = NamespaceAndType.value === undefined; // should resolve to the qualifier, not the singleton type.
+        success = (s0 === true) && (s1 === true) && (s2 === true);
     }
 }

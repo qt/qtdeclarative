@@ -255,12 +255,12 @@ enum BuiltinSymbol {
 struct Name: Expr {
     enum Symbol {
         Unbound,
-        IdObject,      // This is a load of a id object.  Storage will always be IdStorage
-        AttachType,    // This is a load of an attached object 
-        ModuleObject,  // This is a load of a module object
-        Object,        // XXX what is this for?
-        Property,      // This is a load of a regular property
-        Slot           // XXX what is this for?
+        IdObject,        // This is a load of a id object.  Storage will always be IdStorage
+        AttachType,      // This is a load of an attached object
+        SingletonObject, // This is a load of a singleton object
+        Object,          // XXX what is this for?
+        Property,        // This is a load of a regular property
+        Slot             // XXX what is this for?
     };
 
     enum Storage {
@@ -545,7 +545,7 @@ struct BasicBlock {
     Name *SYMBOL(Name *base, Type type, const QString &id, const QQmlMetaObject &meta, QQmlPropertyData *property, Name::Storage storage, quint16 line, quint16 column);
     Name *ID_OBJECT(const QString &id, const QQmlScript::Object *object, quint16 line, quint16 column);
     Name *ATTACH_TYPE(const QString &id, const QQmlType *attachType, Name::Storage storage, quint16 line, quint16 column);
-    Name *MODULE_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage, quint16 line, quint16 column);
+    Name *SINGLETON_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage, quint16 line, quint16 column);
 
     Expr *UNOP(AluOp op, Expr *expr);
     Expr *BINOP(AluOp op, Expr *left, Expr *right);

@@ -444,20 +444,18 @@ bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
         QQmlTypeNameCache::Result r = m_expression->importCache->query(name);
         if (r.isValid()) {
             if (r.type) {
-                _expr.code = _block->ATTACH_TYPE(name, r.type, IR::Name::ScopeStorage, line, column);
-            } else if (r.importNamespace) {
-                QQmlMetaType::SingletonInstance *singletonType = m_expression->importCache->singletonType(r.importNamespace);
-                if (singletonType && singletonType->instanceMetaObject) {
+                if (r.type->isSingleton()) {
                     // Note: we don't need to check singletonType->qobjectCallback here, since
                     // we did that check in registerSingletonType() in qqmlmetatype.cpp.
                     // We cannot create the QObject Singleton Type Instance here,
                     // as we might be running in a loader thread.
                     // Thus, V4 can only handle bindings which use Singleton Types which
                     // were registered with the templated registration function.
-                    _expr.code = _block->MODULE_OBJECT(name, singletonType->instanceMetaObject, IR::Name::MemberStorage, line, column);
+                    _expr.code = _block->SINGLETON_OBJECT(name, r.type->singletonInstanceInfo()->instanceMetaObject, IR::Name::MemberStorage, line, column);
+                } else {
+                    _expr.code = _block->ATTACH_TYPE(name, r.type, IR::Name::ScopeStorage, line, column);
                 }
             }
-            // We don't support anything else
         } else {
             bool found = false;
 
@@ -625,7 +623,7 @@ bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 }
                 break;
 
-            case IR::Name::ModuleObject: {
+            case IR::Name::SingletonObject: {
                 if (name.at(0).isUpper()) {
                     QByteArray utf8Name = name.toUtf8();
                     const char *enumName = utf8Name.constData();

@@ -134,21 +134,13 @@ QVariant QV8TypeWrapper::toVariant(QV8ObjectResource *r)
     QV8TypeResource *resource = static_cast<QV8TypeResource *>(r);
     QV8Engine *v8engine = resource->engine;
 
-    if (resource->typeNamespace) {
-        if (QQmlMetaType::SingletonInstance *singletonType = resource->typeNamespace->singletonType(resource->importNamespace)) {
-            if (singletonType->scriptCallback) {
-                singletonType->scriptApi = singletonType->scriptCallback(v8engine->engine(), v8engine->engine());
-                singletonType->scriptCallback = 0;
-                singletonType->qobjectCallback = 0;
-            } else if (singletonType->qobjectCallback) {
-                singletonType->qobjectApi = singletonType->qobjectCallback(v8engine->engine(), v8engine->engine());
-                singletonType->scriptCallback = 0;
-                singletonType->qobjectCallback = 0;
-            }
-
-            if (singletonType->qobjectApi) {
-                return QVariant::fromValue<QObject*>(singletonType->qobjectApi);
-            }
+    if (resource->type && resource->type->isSingleton()) {
+        QQmlEngine *e = v8engine->engine();
+        QQmlType::SingletonInstanceInfo *siinfo = resource->type->singletonInstanceInfo();
+        siinfo->init(e); // note: this will also create QJSValue singleton which isn't strictly required.
+        QObject *qobjectSingleton = siinfo->qobjectApi(e);
+        if (qobjectSingleton) {
+            return QVariant::fromValue<QObject*>(qobjectSingleton);
         }
     }
 
@@ -174,19 +166,62 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
     if (resource->type) {
         QQmlType *type = resource->type;
 
-        if (QV8Engine::startsWithUpper(property)) {
-            bool ok = false;
-            int value = type->enumValue(propertystring, &ok);
-            if (ok)
-                return v8::Integer::New(value);
+        // singleton types are handled differently to other types.
+        if (type->isSingleton()) {
+            QQmlEngine *e = v8engine->engine();
+            QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
+            siinfo->init(e);
+
+            QObject *qobjectSingleton = siinfo->qobjectApi(e);
+            if (qobjectSingleton) {
+                // check for enum value
+                if (QV8Engine::startsWithUpper(property)) {
+                    if (resource->mode == IncludeEnums) {
+                        QString name = v8engine->toString(property);
+
+                        // ### Optimize
+                        QByteArray enumName = name.toUtf8();
+                        const QMetaObject *metaObject = qobjectSingleton->metaObject();
+                        for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
+                            QMetaEnum e = metaObject->enumerator(ii);
+                            bool ok;
+                            int value = e.keyToValue(enumName.constData(), &ok);
+                            if (ok)
+                                return v8::Integer::New(value);
+                        }
+                    }
+                }
+
+                // check for property.
+                v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(qobjectSingleton, propertystring, context, QV8QObjectWrapper::IgnoreRevision);
+                return rv;
+            } else if (!siinfo->scriptApi(e).isUndefined()) {
+                // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
+                QJSValuePrivate *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e));
+                QScopedPointer<QJSValuePrivate> propertyValue(apiprivate->property(property).give());
+                return propertyValue->asV8Value(v8engine);
+            }
 
             // Fall through to return empty handle
 
-        } else if (resource->object) {
-            QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
-            if (ao) 
-                return v8engine->qobjectWrapper()->getProperty(ao, propertystring, context,
-                                                               QV8QObjectWrapper::IgnoreRevision);
+        } else {
+
+            if (QV8Engine::startsWithUpper(property)) {
+                bool ok = false;
+                int value = type->enumValue(propertystring, &ok);
+                if (ok)
+                    return v8::Integer::New(value);
+
+                // Fall through to return empty handle
+
+            } else if (resource->object) {
+                QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
+                if (ao)
+                    return v8engine->qobjectWrapper()->getProperty(ao, propertystring, context,
+                                                                   QV8QObjectWrapper::IgnoreRevision);
+
+                // Fall through to return empty handle
+            }
 
             // Fall through to return empty handle
         }
@@ -211,49 +246,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
             }
 
             return v8::Undefined();
-        } else if (QQmlMetaType::SingletonInstance *singletonType = resource->typeNamespace->singletonType(resource->importNamespace)) {
 
-            if (singletonType->scriptCallback) {
-                singletonType->scriptApi = singletonType->scriptCallback(v8engine->engine(), v8engine->engine());
-                singletonType->scriptCallback = 0;
-                singletonType->qobjectCallback = 0;
-            } else if (singletonType->qobjectCallback) {
-                singletonType->qobjectApi = singletonType->qobjectCallback(v8engine->engine(), v8engine->engine());
-                singletonType->scriptCallback = 0;
-                singletonType->qobjectCallback = 0;
-            }
-
-            if (singletonType->qobjectApi) {
-                // check for enum value
-                if (QV8Engine::startsWithUpper(property)) {
-                    if (resource->mode == IncludeEnums) {
-                        QString name = v8engine->toString(property);
-
-                        // ### Optimize
-                        QByteArray enumName = name.toUtf8();
-                        const QMetaObject *metaObject = singletonType->qobjectApi->metaObject();
-                        for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
-                            QMetaEnum e = metaObject->enumerator(ii);
-                            bool ok;
-                            int value = e.keyToValue(enumName.constData(), &ok);
-                            if (ok)
-                                return v8::Integer::New(value);
-                        }
-                    }
-                }
-
-                // check for property.
-                v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(singletonType->qobjectApi, propertystring,
-                                                                                   context, QV8QObjectWrapper::IgnoreRevision);
-                return rv;
-            } else if (!singletonType->scriptApi.isUndefined()) {
-                // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
-                QJSValuePrivate *apiprivate = QJSValuePrivate::get(singletonType->scriptApi);
-                QScopedPointer<QJSValuePrivate> propertyValue(apiprivate->property(property).give());
-                return propertyValue->asV8Value(v8engine);
-            } else {
-                return v8::Handle<v8::Value>();
-            }
         }
 
         // Fall through to return empty handle
@@ -279,38 +272,31 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
 
     QHashedV8String propertystring(property);
 
-    if (resource->type && resource->object) {
-        QQmlType *type = resource->type;
+    QQmlType *type = resource->type;
+    if (type && !type->isSingleton() && resource->object) {
         QObject *object = resource->object;
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
         if (ao) 
             v8engine->qobjectWrapper()->setProperty(ao, propertystring, context, value,
                                                     QV8QObjectWrapper::IgnoreRevision);
-    } else if (resource->typeNamespace) {
-        if (QQmlMetaType::SingletonInstance *singletonType = resource->typeNamespace->singletonType(resource->importNamespace)) {
-            if (singletonType->scriptCallback) {
-                singletonType->scriptApi = singletonType->scriptCallback(v8engine->engine(), v8engine->engine());
-                singletonType->scriptCallback = 0;
-                singletonType->qobjectCallback = 0;
-            } else if (singletonType->qobjectCallback) {
-                singletonType->qobjectApi = singletonType->qobjectCallback(v8engine->engine(), v8engine->engine());
-                singletonType->scriptCallback = 0;
-                singletonType->qobjectCallback = 0;
-            }
+    } else if (type && type->isSingleton()) {
+        QQmlEngine *e = v8engine->engine();
+        QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
+        siinfo->init(e);
 
-            if (singletonType->qobjectApi) {
-                v8engine->qobjectWrapper()->setProperty(singletonType->qobjectApi, propertystring, context, value,
-                                                        QV8QObjectWrapper::IgnoreRevision);
-            } else if (!singletonType->scriptApi.isUndefined()) {
-                QScopedPointer<QJSValuePrivate> setvalp(new QJSValuePrivate(v8engine, value));
-                QJSValuePrivate *apiprivate = QJSValuePrivate::get(singletonType->scriptApi);
-                if (apiprivate->propertyFlags(property) & QJSValuePrivate::ReadOnly) {
-                    QString error = QLatin1String("Cannot assign to read-only property \"") +
-                                    v8engine->toString(property) + QLatin1Char('\"');
-                    v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
-                } else {
-                    apiprivate->setProperty(property, setvalp.data());
-                }
+        QObject *qobjectSingleton = siinfo->qobjectApi(e);
+        if (qobjectSingleton) {
+            v8engine->qobjectWrapper()->setProperty(qobjectSingleton, propertystring, context, value,
+                                                    QV8QObjectWrapper::IgnoreRevision);
+        } else if (!siinfo->scriptApi(e).isUndefined()) {
+            QScopedPointer<QJSValuePrivate> setvalp(new QJSValuePrivate(v8engine, value));
+            QJSValuePrivate *apiprivate = QJSValuePrivate::get(siinfo->scriptApi(e));
+            if (apiprivate->propertyFlags(property) & QJSValuePrivate::ReadOnly) {
+                QString error = QLatin1String("Cannot assign to read-only property \"") +
+                                v8engine->toString(property) + QLatin1Char('\"');
+                v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
+            } else {
+                apiprivate->setProperty(property, setvalp.data());
             }
         }
     }

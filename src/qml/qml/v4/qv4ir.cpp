@@ -551,13 +551,13 @@ Name *BasicBlock::ATTACH_TYPE(const QString &id, const QQmlType *attachType, Nam
     return name;
 }
 
-Name *BasicBlock::MODULE_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage,
+Name *BasicBlock::SINGLETON_OBJECT(const QString &id, const QQmlMetaObject &meta, Name::Storage storage,
                                 quint16 line, quint16 column)
 {
     Name *name = function->pool->New<Name>();
     name->init(/*base = */ 0, IR::ObjectType,
                function->newString(id),
-               Name::ModuleObject, line, column);
+               Name::SingletonObject, line, column);
     name->meta = meta;
     name->storage = storage;
     return name;
@@ -700,8 +700,8 @@ static const char *symbolname(Name::Symbol s)
         return "IdObject";
     case Name::AttachType:
         return "AttachType";
-    case Name::ModuleObject:
-        return "ModuleObject";
+    case Name::SingletonObject:
+        return "SingletonObject";
     case Name::Object:
         return "Object";
     case Name::Property:

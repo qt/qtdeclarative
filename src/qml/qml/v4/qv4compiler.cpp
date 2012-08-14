@@ -330,18 +330,18 @@ void QV4CompilerPrivate::visitName(IR::Name *e)
         gen(attached);
     } break;
 
-    case IR::Name::ModuleObject: {
+    case IR::Name::SingletonObject: {
         /*
-          Existing module object lookup methods include:
-              1. string -> module object (search via importCache->query(name))
-              2. QQmlMetaType::SingletonType -> module object (via QQmlEnginePrivate::singletonTypeInstance() cache)
+          Existing singleton type object lookup methods include:
+              1. string -> singleton object (search via importCache->query(name))
+              2. typeid -> singleton object QQmlType (search via ???)
           We currently use 1, which is not ideal for performance
         */
         _subscribeName << *e->id;
 
         registerLiteralString(currentReg, e->id);
 
-        Instr::LoadModuleObject module;
+        Instr::LoadSingletonObject module;
         module.reg = currentReg;
         gen(module);
     } break;

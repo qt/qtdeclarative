@@ -2295,8 +2295,6 @@ void QQmlScriptBlob::done()
     if (isError())
         return;
 
-    QQmlEngine *engine = typeLoader()->engine();
-
     m_scriptData->importCache = new QQmlTypeNameCache();
 
     QSet<QString> ns;
@@ -2315,7 +2313,7 @@ void QQmlScriptBlob::done()
         m_scriptData->importCache->add(script.qualifier, scriptIndex, script.nameSpace);
     }
 
-    m_imports.populateCache(m_scriptData->importCache, engine);
+    m_imports.populateCache(m_scriptData->importCache);
 
     m_scriptData->pragmas = m_metadata.pragmas;
     m_scriptData->m_programSource = m_source.toUtf8();

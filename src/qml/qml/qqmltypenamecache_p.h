@@ -74,7 +74,6 @@ public:
     inline bool isEmpty() const;
 
     void add(const QHashedString &name, int sciptIndex = -1, const QHashedString &nameSpace = QHashedString());
-    void addSingletonType(const QHashedString &name, QQmlMetaType::SingletonInstance *apiInstance, const QHashedString &nameSpace = QHashedString());
 
     struct Result {
         inline Result();
@@ -93,7 +92,6 @@ public:
     Result query(const QHashedStringRef &, const void *importNamespace);
     Result query(const QHashedV8String &);
     Result query(const QHashedV8String &, const void *importNamespace);
-    QQmlMetaType::SingletonInstance *singletonType(const void *importNamespace);
 
 private:
     friend class QQmlImports;
@@ -101,7 +99,6 @@ private:
     struct Import {
         inline Import();
         // Imported module
-        QQmlMetaType::SingletonInstance *singletonType;
         QVector<QQmlTypeModuleVersion> modules;
 
         // Or, imported script
@@ -173,7 +170,7 @@ bool QQmlTypeNameCache::Result::isValid() const
 }
 
 QQmlTypeNameCache::Import::Import()
-: singletonType(0), scriptIndex(-1)
+: scriptIndex(-1)
 {
 }
 

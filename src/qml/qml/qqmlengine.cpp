@@ -462,10 +462,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
         (*iter)->release();
     for(QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::Iterator iter = typePropertyCache.begin(); iter != typePropertyCache.end(); ++iter)
         (*iter)->release();
-    for (QHash<QQmlMetaType::SingletonType, QQmlMetaType::SingletonInstance *>::Iterator iter = singletonTypeInstances.begin(); iter != singletonTypeInstances.end(); ++iter) {
-        delete (*iter)->qobjectApi;
-        delete *iter;
-    }
     for (QHash<int, QQmlCompiledData *>::Iterator iter = m_compositeTypes.begin(); iter != m_compositeTypes.end(); ++iter)
         iter.value()->isRegisteredWithEngine = false;
 }
@@ -743,21 +739,13 @@ QQmlEngine::~QQmlEngine()
     // may be required to handle the destruction signal.
     QQmlContextData::get(rootContext())->emitDestruction();
 
-    // if we are the parent of any of the qobject singleton type instances,
-    // we need to remove them from our internal list, in order to prevent
-    // a segfault in engine private dtor.
-    QList<QQmlMetaType::SingletonType> keys = d->singletonTypeInstances.keys();
-    QObject *currQObjectApi = 0;
-    QQmlMetaType::SingletonInstance *currInstance = 0;
-    foreach (const QQmlMetaType::SingletonType &key, keys) {
-        currInstance = d->singletonTypeInstances.value(key);
-        currQObjectApi = currInstance->qobjectApi;
-        if (this->children().contains(currQObjectApi)) {
-            delete currQObjectApi;
-            delete currInstance;
-            d->singletonTypeInstances.remove(key);
-        }
-    }
+    // clean up all singleton type instances which we own.
+    // we do this here and not in the private dtor since otherwise a crash can
+    // occur (if we are the QObject parent of the QObject singleton instance)
+    // XXX TODO: performance -- store list of singleton types separately?
+    QList<QQmlType*> singletonTypes = QQmlMetaType::qmlSingletonTypes();
+    foreach (QQmlType *currType, singletonTypes)
+        currType->singletonInstanceInfo()->destroy(this);
 
     if (d->incubationController)
         d->incubationController->d = 0;
@@ -1888,23 +1876,6 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersi
     }
 
     return raw;
-}
-
-QQmlMetaType::SingletonInstance *
-QQmlEnginePrivate::singletonTypeInstance(const QQmlMetaType::SingletonType &module)
-{
-    Locker locker(this);
-
-    QQmlMetaType::SingletonInstance *a = singletonTypeInstances.value(module);
-    if (!a) {
-        a = new QQmlMetaType::SingletonInstance;
-        a->scriptCallback = module.script;
-        a->qobjectCallback = module.qobject;
-        a->instanceMetaObject = module.instanceMetaObject;
-        singletonTypeInstances.insert(module, a);
-    }
-
-    return a;
 }
 
 bool QQmlEnginePrivate::isQObject(int t)

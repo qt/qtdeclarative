@@ -1020,7 +1020,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         registers[instr->load.reg].setQObject(context->contextObject);
     QML_V4_END_INSTR(LoadRoot, load)
 
-    QML_V4_BEGIN_INSTR(LoadModuleObject, load)
+    QML_V4_BEGIN_INSTR(LoadSingletonObject, load)
     {
         Register &reg = registers[instr->load.reg];
 
@@ -1028,20 +1028,18 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         QQmlTypeNameCache::Result r = context->imports->query(*name);
         reg.cleanupString();
 
-        if (r.isValid() && r.importNamespace) {
-            QQmlMetaType::SingletonInstance *singletonType = context->imports->singletonType(r.importNamespace);
-            if (singletonType) {
-                if (singletonType->qobjectCallback) {
-                    singletonType->qobjectApi = singletonType->qobjectCallback(context->engine, context->engine);
-                    singletonType->qobjectCallback = 0;
-                    singletonType->scriptCallback = 0;
-                }
-                if (singletonType->qobjectApi)
-                    reg.setQObject(singletonType->qobjectApi);
+        if (r.isValid() && r.type) {
+            if (r.type->isSingleton()) {
+                QQmlEngine *e = context->engine;
+                QQmlType::SingletonInstanceInfo *siinfo = r.type->singletonInstanceInfo();
+                siinfo->init(e); // note: this will also create QJSValue singleton, which is not strictly required here.
+                QObject *qobjectSingleton = siinfo->qobjectApi(e);
+                if (qobjectSingleton)
+                    reg.setQObject(qobjectSingleton);
             }
         }
     }
-    QML_V4_END_INSTR(LoadModuleObject, load)
+    QML_V4_END_INSTR(LoadSingletonObject, load)
 
     QML_V4_BEGIN_INSTR(LoadAttached, attached)
     {

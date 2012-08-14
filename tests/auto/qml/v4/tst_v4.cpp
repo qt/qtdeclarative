@@ -995,7 +995,7 @@ void tst_v4::debuggingDumpInstructions()
     expectedPreAddress << "\t\tLoadId\t\t\tId_Offset(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tLoadScope\t\t-> Output_Reg(0)";
     expectedPreAddress << "\t\tLoadRoot\t\t-> Output_Reg(0)";
-    expectedPreAddress << "\t\tLoadModuleObject\t\t) -> Output_Reg(0)";
+    expectedPreAddress << "\t\tLoadSingletonObject\t\t) -> Output_Reg(0)";
     expectedPreAddress << "\t\tLoadAttached\t\tObject_Reg(0) Attached_Index(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tUnaryNot\t\tInput_Reg(0) -> Output_Reg(0)";
     expectedPreAddress << "\t\tUnaryMinusNumber\t\tInput_Reg(0) -> Output_Reg(0)";

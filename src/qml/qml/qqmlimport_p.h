@@ -112,7 +112,7 @@ public:
                       const QString &uri, int vmaj, int vmin,
                       QString *qmldirFilePath, QString *url);
 
-    void populateCache(QQmlTypeNameCache *cache, QQmlEngine *) const;
+    void populateCache(QQmlTypeNameCache *cache) const;
 
     struct ScriptReference
     {

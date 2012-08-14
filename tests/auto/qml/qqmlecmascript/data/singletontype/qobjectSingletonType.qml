@@ -10,12 +10,15 @@ QtObject {
     property int existingUriTest: QtTest.QObject.qobjectTestProperty
     property int qobjectTest: QtTestQObjectApi.QObject.qobjectTestProperty
     property int qobjectMethodTest: 3
+    property int qobjectMinorVersionMethodTest: 3
     property int qobjectMinorVersionTest: QtTestMinorVersionQObjectApi.QObject.qobjectTestProperty
     property int qobjectMajorVersionTest: QtTestMajorVersionQObjectApi.QObject.qobjectTestProperty
     property int qobjectParentedTest: QtTestParentedQObjectApi.QObject.qobjectTestProperty
 
     Component.onCompleted: {
-        qobjectMethodTest = QtTestQObjectApi.QObject.qobjectTestMethod();
+        qobjectMethodTest = QtTestQObjectApi.QObject.qobjectTestMethod(); // should be 1
+        qobjectMethodTest = QtTestQObjectApi.QObject.qobjectTestMethod(); // should be 2
+        qobjectMinorVersionMethodTest = QtTestMinorVersionQObjectApi.QObject.qobjectTestMethod(); // should be 1
     }
 }
 

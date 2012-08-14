@@ -114,8 +114,8 @@ void Bytecode::dump(const V4Instr *i, int address) const
     case V4Instr::LoadRoot:
         INSTR_DUMP << '\t' << "LoadRoot" << "\t\t" << "-> Output_Reg(" << i->load.reg << ')';
         break;
-    case V4Instr::LoadModuleObject:
-        INSTR_DUMP << '\t' << "LoadModuleObject" << "\t\t" << ") -> Output_Reg(" << i->load.reg << ')';
+    case V4Instr::LoadSingletonObject:
+        INSTR_DUMP << '\t' << "LoadSingletonObject" << "\t\t" << ") -> Output_Reg(" << i->load.reg << ')';
         break;
     case V4Instr::LoadAttached:
         INSTR_DUMP << '\t' << "LoadAttached" << "\t\t" << "Object_Reg(" << i->attached.reg << ") Attached_Index(" << i->attached.id << ") -> Output_Reg(" << i->attached.output << ')';

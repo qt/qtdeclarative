@@ -64,6 +64,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlType;
+class QQmlEngine;
 class QQmlCustomParser;
 class QQmlTypePrivate;
 class QQmlTypeModule;
@@ -76,6 +77,7 @@ class Q_QML_PRIVATE_EXPORT QQmlMetaType
 public:
     static QList<QString> qmlTypeNames();
     static QList<QQmlType*> qmlTypes();
+    static QList<QQmlType*> qmlSingletonTypes();
 
     static QQmlType *qmlType(const QString &qualifiedName, int, int);
     static QQmlType *qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int, int);
@@ -117,30 +119,6 @@ public:
     static void setQQuickAnchorLineCompareFunction(CompareFunction);
     static bool QQuickAnchorLineCompare(const void *p1, const void *p2);
 
-    struct SingletonInstance {
-        SingletonInstance()
-            : scriptCallback(0), qobjectCallback(0), qobjectApi(0), instanceMetaObject(0) {}
-
-        QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
-        QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);
-        QObject *qobjectApi;
-        const QMetaObject *instanceMetaObject;
-        QJSValue scriptApi;
-
-    };
-    struct SingletonType {
-        inline SingletonType();
-        inline bool operator==(const SingletonType &) const;
-        int major;
-        int minor;
-        QString typeName;
-        QObject *(*qobject)(QQmlEngine *, QJSEngine *);
-        const QMetaObject *instanceMetaObject;
-        QJSValue (*script)(QQmlEngine *, QJSEngine *);
-    };
-    static SingletonType singletonType(const QString &, int, int);
-    static QHash<QString, QList<SingletonType> > singletonTypes();
-
     static bool namespaceContainsRegistrations(const QString &);
 
     static void protectNamespace(const QString &);
@@ -154,6 +132,7 @@ private:
     static CompareFunction anchorLineCompareFunction;
 };
 
+struct QQmlMetaTypeData;
 class QHashedCStringRef;
 class QHashedV8String;
 class Q_QML_PRIVATE_EXPORT QQmlType
@@ -183,6 +162,7 @@ public:
     bool isExtendedType() const;
     QString noCreationReason() const;
 
+    bool isSingleton() const;
     bool isInterface() const;
     int typeId() const;
     int qListTypeId() const;
@@ -203,6 +183,30 @@ public:
 
     int index() const;
 
+    class Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
+    {
+    public:
+        SingletonInstanceInfo()
+            : scriptCallback(0), qobjectCallback(0), instanceMetaObject(0) {}
+
+        QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
+        QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);
+        const QMetaObject *instanceMetaObject;
+        QString typeName;
+
+        void setQObjectApi(QQmlEngine *, QObject *);
+        QObject *qobjectApi(QQmlEngine *) const;
+        void setScriptApi(QQmlEngine *, QJSValue);
+        QJSValue scriptApi(QQmlEngine *) const;
+
+        void init(QQmlEngine *);
+        void destroy(QQmlEngine *);
+
+        QHash<QQmlEngine *, QJSValue> scriptApis;
+        QHash<QQmlEngine *, QObject *> qobjectApis;
+    };
+    SingletonInstanceInfo *singletonInstanceInfo() const;
+
     int enumValue(const QHashedStringRef &, bool *ok) const;
     int enumValue(const QHashedCStringRef &, bool *ok) const;
     int enumValue(const QHashedV8String &, bool *ok) const;
@@ -210,9 +214,19 @@ private:
     QQmlType *superType() const;
     friend class QQmlTypePrivate;
     friend struct QQmlMetaTypeData;
+
+    enum RegistrationType {
+        CppType = 0,
+        SingletonType = 1
+        // In the future, we should register all types via QQmlType, including Composite types.
+    };
+    friend QString registrationTypeString(RegistrationType);
+    friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &);
     friend int registerType(const QQmlPrivate::RegisterType &);
+    friend int registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
     friend int registerInterface(const QQmlPrivate::RegisterInterface &);
     QQmlType(int, const QQmlPrivate::RegisterInterface &);
+    QQmlType(int, const QString &, const QQmlPrivate::RegisterSingletonType &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterType &);
     ~QQmlType();
 
@@ -232,10 +246,11 @@ public:
     QQmlType *type(const QHashedStringRef &, int);
     QQmlType *type(const QHashedV8String &, int);
 
-private:
-    QQmlType *typeNoLock(const QString &name, int minor);
+    QList<QQmlType*> singletonTypes(int) const;
 
+private:
     friend int registerType(const QQmlPrivate::RegisterType &);
+    friend int registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
     friend struct QQmlMetaTypeData;
 
     QQmlTypeModule();
@@ -261,25 +276,6 @@ private:
     QQmlTypeModule *m_module;
     int m_minor;
 };
-
-QQmlMetaType::SingletonType::SingletonType()
-{
-    major = 0;
-    minor = 0;
-    qobject = 0;
-    instanceMetaObject = 0;
-    script = 0;
-}
-
-bool QQmlMetaType::SingletonType::operator==(const SingletonType &other) const
-{
-    return major == other.major && minor == other.minor && script == other.script && qobject == other.qobject;
-}
-
-inline uint qHash(const QQmlMetaType::SingletonType &import)
-{
-    return import.major ^ import.minor ^ quintptr(import.script) ^ quintptr(import.qobject);
-}
 
 QT_END_NAMESPACE
 

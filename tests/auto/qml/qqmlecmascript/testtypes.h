@@ -1133,6 +1133,25 @@ private:
     QObject *m_trackedObject;
 };
 
+class testQObjectApiTwo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int twoTestProperty READ twoTestProperty WRITE setTwoTestProperty NOTIFY twoTestPropertyChanged)
+
+public:
+    testQObjectApiTwo(QObject *parent = 0) : QObject(parent), m_ttp(42) {}
+    ~testQObjectApiTwo() {}
+
+    void setTwoTestProperty(int v) { m_ttp = v; emit twoTestPropertyChanged(); }
+    int twoTestProperty() const { return m_ttp; }
+
+signals:
+    void twoTestPropertyChanged();
+
+private:
+    int m_ttp;
+};
+
 class testImportOrderApi : public QObject
 {
     Q_OBJECT
