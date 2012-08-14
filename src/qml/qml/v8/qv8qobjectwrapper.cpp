@@ -926,12 +926,16 @@ static void FastValueSetterReadOnly(v8::Local<v8::String> property, v8::Local<v8
 void QV8QObjectWrapper::WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void *wrapper)
 {
     Q_ASSERT(handle->IsObject());
-    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(handle->ToObject());
+    v8::Handle<v8::Object> v8object = handle->ToObject();
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(v8object);
     Q_ASSERT(resource);
 
     static_cast<QV8QObjectWrapper*>(wrapper)->unregisterWeakQObjectReference(resource);
     if (static_cast<QV8QObjectWrapper*>(wrapper)->deleteWeakQObject(resource, false)) {
-        qPersistentDispose(handle); // dispose.
+        // dispose
+        v8object->SetExternalResource(0);
+        delete resource;
+        qPersistentDispose(handle);
     } else {
         handle.MakeWeak(0, WeakQObjectReferenceCallback); // revive.
     }
