@@ -229,9 +229,8 @@ void QJSEngine::collectGarbage()
 
     The evaluation of \a program can cause an exception in the
     engine; in this case the return value will be the exception
-    that was thrown (typically an \c{Error} object). You can call
-    isError() on the return value to determine whether an exception
-    occurred.
+    that was thrown (typically an \c{Error} object; see
+    QJSValue::isError()).
 
     \a lineNumber is used to specify a starting line number for \a
     program; line number information reported by the engine that pertain
@@ -244,6 +243,11 @@ void QJSEngine::collectGarbage()
     \a fileName is used for error reporting. For example in error objects
     the file name is accessible through the "fileName" property if it's
     provided with this function.
+
+    \note If an exception was thrown and the exception value is not an
+    Error instance (i.e., QJSValue::isError() returns false), the
+    exception value will still be returned, but there is currently no
+    API for detecting that an exception did occur in this case.
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
