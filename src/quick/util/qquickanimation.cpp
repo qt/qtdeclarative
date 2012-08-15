@@ -363,7 +363,7 @@ void QQuickAbstractAnimation::componentFinalized()
     calling the \c stop() method.  The \c complete() method is not effected
     by this value.
 
-    This behavior is most useful when the \c repeat property is set, as the
+    This behavior is most useful when the \c loops property is set, as the
     animation will finish playing normally but not restart.
 
     By default, the alwaysRunToEnd property is not set.
