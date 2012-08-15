@@ -162,6 +162,14 @@ private:
     inline QQmlAbstractBinding *nextBinding() const;
     inline void setNextBinding(QQmlAbstractBinding *);
 
+    // Pointer to the next binding in the linked list of bindings.
+    // Being a pointer, the address is always aligned to at least 4 bytes, which means the last two
+    // bits of the pointer are free to be used for something else. They are used to store the binding
+    // type. The binding type serves as an index into the static vTables array, which is used instead
+    // of a compiler-generated vTable. Instead of virtual functions, pointers to static functions in
+    // the vTables array are used for dispatching.
+    // This saves a compiler-generated pointer to a compiler-generated vTable, and thus reduces
+    // the binding object size by sizeof(void*).
     uintptr_t m_nextBindingPtr;
 
     static VTable *vTables[];
