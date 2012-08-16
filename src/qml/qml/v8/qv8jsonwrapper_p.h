@@ -57,11 +57,11 @@
 #include <QtCore/qset.h>
 #include <private/qv8_p.h>
 
-QT_BEGIN_NAMESPACE
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonvalue.h>
 
-class QJsonValue;
-class QJsonObject;
-class QJsonArray;
+QT_BEGIN_NAMESPACE
 
 class QV8Engine;
 class QV8JsonWrapper
@@ -74,17 +74,23 @@ public:
     void destroy();
 
     v8::Handle<v8::Value> fromJsonValue(const QJsonValue &value);
-    QJsonValue toJsonValue(v8::Handle<v8::Value> value);
+    inline QJsonValue toJsonValue(v8::Handle<v8::Value> value)
+    { QSet<int> visitedObjects; return toJsonValue(value, visitedObjects); }
 
     v8::Local<v8::Object> fromJsonObject(const QJsonObject &object);
-    QJsonObject toJsonObject(v8::Handle<v8::Value> value);
+    inline QJsonObject toJsonObject(v8::Handle<v8::Value> value)
+    { QSet<int> visitedObjects; return toJsonObject(value, visitedObjects); }
 
     v8::Local<v8::Array> fromJsonArray(const QJsonArray &array);
-    QJsonArray toJsonArray(v8::Handle<v8::Value> value);
+    inline QJsonArray toJsonArray(v8::Handle<v8::Value> value)
+    { QSet<int> visitedObjects; return toJsonArray(value, visitedObjects); }
 
 private:
+    QJsonValue toJsonValue(v8::Handle<v8::Value> value, QSet<int> &visitedObjects);
+    QJsonObject toJsonObject(v8::Handle<v8::Value> value, QSet<int> &visitedObjects);
+    QJsonArray toJsonArray(v8::Handle<v8::Value> value, QSet<int> &visitedObjects);
+
     QV8Engine *m_engine;
-    QSet<int> m_visitedConversionObjects;
 };
 
 QT_END_NAMESPACE

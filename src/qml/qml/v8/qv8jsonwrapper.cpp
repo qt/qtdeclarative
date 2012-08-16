@@ -43,10 +43,6 @@
 #include "qv8engine_p.h"
 #include "qjsconverter_impl_p.h"
 
-#include <QtCore/qjsonarray.h>
-#include <QtCore/qjsonobject.h>
-#include <QtCore/qjsonvalue.h>
-
 QT_BEGIN_NAMESPACE
 
 QV8JsonWrapper::QV8JsonWrapper()
@@ -85,7 +81,8 @@ v8::Handle<v8::Value> QV8JsonWrapper::fromJsonValue(const QJsonValue &value)
         return v8::Undefined();
 }
 
-QJsonValue QV8JsonWrapper::toJsonValue(v8::Handle<v8::Value> value)
+QJsonValue QV8JsonWrapper::toJsonValue(v8::Handle<v8::Value> value,
+                                       QSet<int> &visitedObjects)
 {
     if (value->IsString())
         return QJsonValue(QJSConverter::toString(value.As<v8::String>()));
@@ -94,9 +91,9 @@ QJsonValue QV8JsonWrapper::toJsonValue(v8::Handle<v8::Value> value)
     else if (value->IsBoolean())
         return QJsonValue(value->BooleanValue());
     else if (value->IsArray())
-        return toJsonArray(value.As<v8::Array>());
+        return toJsonArray(value.As<v8::Array>(), visitedObjects);
     else if (value->IsObject())
-        return toJsonObject(value.As<v8::Object>());
+        return toJsonObject(value.As<v8::Object>(), visitedObjects);
     else if (value->IsNull())
         return QJsonValue(QJsonValue::Null);
     else
@@ -111,7 +108,8 @@ v8::Local<v8::Object> QV8JsonWrapper::fromJsonObject(const QJsonObject &object)
     return v8object;
 }
 
-QJsonObject QV8JsonWrapper::toJsonObject(v8::Handle<v8::Value> value)
+QJsonObject QV8JsonWrapper::toJsonObject(v8::Handle<v8::Value> value,
+                                         QSet<int> &visitedObjects)
 {
     QJsonObject result;
     if (!value->IsObject() || value->IsArray() || value->IsFunction())
@@ -119,14 +117,14 @@ QJsonObject QV8JsonWrapper::toJsonObject(v8::Handle<v8::Value> value)
 
     v8::Handle<v8::Object> v8object(value.As<v8::Object>());
     int hash = v8object->GetIdentityHash();
-    if (m_visitedConversionObjects.contains(hash)) {
+    if (visitedObjects.contains(hash)) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty object (and no error is thrown).
         return result;
     }
 
-    m_visitedConversionObjects.insert(hash);
+    visitedObjects.insert(hash);
 
     v8::Local<v8::Array> propertyNames = m_engine->getOwnPropertyNames(v8object);
     uint32_t length = propertyNames->Length();
@@ -134,10 +132,11 @@ QJsonObject QV8JsonWrapper::toJsonObject(v8::Handle<v8::Value> value)
         v8::Local<v8::Value> name = propertyNames->Get(i);
         v8::Local<v8::Value> propertyValue = v8object->Get(name);
         if (!propertyValue->IsFunction())
-            result.insert(QJSConverter::toString(name->ToString()), toJsonValue(propertyValue));
+            result.insert(QJSConverter::toString(name->ToString()),
+                          toJsonValue(propertyValue, visitedObjects));
     }
 
-    m_visitedConversionObjects.remove(hash);
+    visitedObjects.remove(hash);
 
     return result;
 }
@@ -151,7 +150,8 @@ v8::Local<v8::Array> QV8JsonWrapper::fromJsonArray(const QJsonArray &array)
     return v8array;
 }
 
-QJsonArray QV8JsonWrapper::toJsonArray(v8::Handle<v8::Value> value)
+QJsonArray QV8JsonWrapper::toJsonArray(v8::Handle<v8::Value> value,
+                                       QSet<int> &visitedObjects)
 {
     QJsonArray result;
     if (!value->IsArray())
@@ -159,23 +159,23 @@ QJsonArray QV8JsonWrapper::toJsonArray(v8::Handle<v8::Value> value)
 
     v8::Handle<v8::Array> v8array(value.As<v8::Array>());
     int hash = v8array->GetIdentityHash();
-    if (m_visitedConversionObjects.contains(hash)) {
+    if (visitedObjects.contains(hash)) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty array (and no error is thrown).
         return result;
     }
 
-    m_visitedConversionObjects.insert(hash);
+    visitedObjects.insert(hash);
 
     uint32_t length = v8array->Length();
     for (uint32_t i = 0; i < length; ++i) {
         v8::Local<v8::Value> element = v8array->Get(i);
         if (!element->IsFunction())
-            result.append(toJsonValue(element));
+            result.append(toJsonValue(element, visitedObjects));
     }
 
-    m_visitedConversionObjects.remove(hash);
+    visitedObjects.remove(hash);
 
     return result;
 }

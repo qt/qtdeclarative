@@ -924,18 +924,19 @@ v8::Local<v8::Array> QV8Engine::variantListToJS(const QVariantList &lst)
 // The result is a QVariantList with length equal to the length
 // of the JS Array, and elements being the JS Array's elements
 // converted to QVariants, recursively.
-QVariantList QV8Engine::variantListFromJS(v8::Handle<v8::Array> jsArray)
+QVariantList QV8Engine::variantListFromJS(v8::Handle<v8::Array> jsArray,
+                                          QSet<int> &visitedObjects)
 {
     QVariantList result;
     int hash = jsArray->GetIdentityHash();
-    if (visitedConversionObjects.contains(hash))
+    if (visitedObjects.contains(hash))
         return result; // Avoid recursion.
     v8::HandleScope handleScope;
-    visitedConversionObjects.insert(hash);
+    visitedObjects.insert(hash);
     uint32_t length = jsArray->Length();
     for (uint32_t i = 0; i < length; ++i)
-        result.append(variantFromJS(jsArray->Get(i)));
-    visitedConversionObjects.remove(hash);
+        result.append(variantFromJS(jsArray->Get(i), visitedObjects));
+    visitedObjects.remove(hash);
     return result;
 }
 
@@ -956,7 +957,8 @@ v8::Local<v8::Object> QV8Engine::variantMapToJS(const QVariantMap &vmap)
 // The result is a QVariantMap with keys being the property names
 // of the object, and values being the values of the JS object's
 // properties converted to QVariants, recursively.
-QVariantMap QV8Engine::variantMapFromJS(v8::Handle<v8::Object> jsObject)
+QVariantMap QV8Engine::variantMapFromJS(v8::Handle<v8::Object> jsObject,
+                                        QSet<int> &visitedObjects)
 {
     QVariantMap result;
 
@@ -967,16 +969,17 @@ QVariantMap QV8Engine::variantMapFromJS(v8::Handle<v8::Object> jsObject)
         return result;
 
     int hash = jsObject->GetIdentityHash();
-    if (visitedConversionObjects.contains(hash))
+    if (visitedObjects.contains(hash))
         return result; // Avoid recursion.
 
-    visitedConversionObjects.insert(hash);
+    visitedObjects.insert(hash);
     // TODO: Only object's own property names. Include non-enumerable properties.
     for (uint32_t i = 0; i < length; ++i) {
         v8::Handle<v8::Value> name = propertyNames->Get(i);
-        result.insert(QJSConverter::toString(name->ToString()), variantFromJS(jsObject->Get(name)));
+        result.insert(QJSConverter::toString(name->ToString()),
+                      variantFromJS(jsObject->Get(name), visitedObjects));
     }
-    visitedConversionObjects.remove(hash);
+    visitedObjects.remove(hash);
     return result;
 }
 
@@ -1261,7 +1264,8 @@ v8::Handle<v8::Value> QV8Engine::variantToJS(const QVariant &value)
 // Date -> QVariant(QDateTime)
 // RegExp -> QVariant(QRegExp)
 // [Any other object] -> QVariantMap(...)
-QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
+QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value,
+                                  QSet<int> &visitedObjects)
 {
     Q_ASSERT(!value.IsEmpty());
     if (value->IsUndefined())
@@ -1278,7 +1282,7 @@ QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
         return QJSConverter::toString(value->ToString());
     Q_ASSERT(value->IsObject());
     if (value->IsArray())
-        return variantListFromJS(v8::Handle<v8::Array>::Cast(value));
+        return variantListFromJS(v8::Handle<v8::Array>::Cast(value), visitedObjects);
     if (value->IsDate())
         return QJSConverter::toDateTime(v8::Handle<v8::Date>::Cast(value));
     if (value->IsRegExp())
@@ -1287,7 +1291,7 @@ QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
         return variantValue(value);
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
-    return variantMapFromJS(value->ToObject());
+    return variantMapFromJS(value->ToObject(), visitedObjects);
 }
 
 v8::Handle<v8::Value> QV8Engine::jsonValueToJS(const QJsonValue &value)

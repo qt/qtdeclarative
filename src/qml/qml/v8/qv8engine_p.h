@@ -371,13 +371,16 @@ public:
     v8::Local<v8::Object> newVariant(const QVariant &variant);
 
     v8::Local<v8::Array> variantListToJS(const QVariantList &lst);
-    QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray);
+    inline QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray)
+    { QSet<int> visitedObjects; return variantListFromJS(jsArray, visitedObjects); }
 
     v8::Local<v8::Object> variantMapToJS(const QVariantMap &vmap);
-    QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject);
+    inline QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject)
+    { QSet<int> visitedObjects; return variantMapFromJS(jsObject, visitedObjects); }
 
     v8::Handle<v8::Value> variantToJS(const QVariant &value);
-    QVariant variantFromJS(v8::Handle<v8::Value> value);
+    inline QVariant variantFromJS(v8::Handle<v8::Value> value)
+    { QSet<int> visitedObjects; return variantFromJS(value, visitedObjects); }
 
     v8::Handle<v8::Value> jsonValueToJS(const QJsonValue &value);
     QJsonValue jsonValueFromJS(v8::Handle<v8::Value> value);
@@ -405,7 +408,6 @@ public:
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
     QObject *qtObjectFromJS(v8::Handle<v8::Value> value);
-    QSet<int> visitedConversionObjects;
 
     static QDateTime qtDateTimeFromJsDate(double jsDate);
 
@@ -472,6 +474,10 @@ protected:
     double qtDateTimeToJsDate(const QDateTime &dt);
 
 private:
+    QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray, QSet<int> &visitedObjects);
+    QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject, QSet<int> &visitedObjects);
+    QVariant variantFromJS(v8::Handle<v8::Value> value, QSet<int> &visitedObjects);
+
     static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
 
     typedef QScriptIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;
