@@ -46,6 +46,8 @@
 #include <private/qv8engine_p.h>
 #include "qjsconverter_p.h"
 
+QT_BEGIN_NAMESPACE
+
 inline QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValuePrivate* value)
     : m_object(const_cast<QJSValuePrivate*>(value))
     , m_index(0)
@@ -135,5 +137,7 @@ inline QV8Engine* QJSValueIteratorPrivate::engine() const
 {
     return m_object ? m_object->engine() : 0;
 }
+
+QT_END_NAMESPACE
 
 #endif // QJSVALUEITERATOR_IMPL_P_H
