@@ -82,7 +82,7 @@ v8::Handle<v8::Value> QV8JsonWrapper::fromJsonValue(const QJsonValue &value)
 }
 
 QJsonValue QV8JsonWrapper::toJsonValue(v8::Handle<v8::Value> value,
-                                       QSet<int> &visitedObjects)
+                                       V8ObjectSet &visitedObjects)
 {
     if (value->IsString())
         return QJsonValue(QJSConverter::toString(value.As<v8::String>()));
@@ -109,22 +109,21 @@ v8::Local<v8::Object> QV8JsonWrapper::fromJsonObject(const QJsonObject &object)
 }
 
 QJsonObject QV8JsonWrapper::toJsonObject(v8::Handle<v8::Value> value,
-                                         QSet<int> &visitedObjects)
+                                         V8ObjectSet &visitedObjects)
 {
     QJsonObject result;
     if (!value->IsObject() || value->IsArray() || value->IsFunction())
         return result;
 
     v8::Handle<v8::Object> v8object(value.As<v8::Object>());
-    int hash = v8object->GetIdentityHash();
-    if (visitedObjects.contains(hash)) {
+    if (visitedObjects.contains(v8object)) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty object (and no error is thrown).
         return result;
     }
 
-    visitedObjects.insert(hash);
+    visitedObjects.insert(v8object);
 
     v8::Local<v8::Array> propertyNames = m_engine->getOwnPropertyNames(v8object);
     uint32_t length = propertyNames->Length();
@@ -136,7 +135,7 @@ QJsonObject QV8JsonWrapper::toJsonObject(v8::Handle<v8::Value> value,
                           toJsonValue(propertyValue, visitedObjects));
     }
 
-    visitedObjects.remove(hash);
+    visitedObjects.remove(v8object);
 
     return result;
 }
@@ -151,22 +150,21 @@ v8::Local<v8::Array> QV8JsonWrapper::fromJsonArray(const QJsonArray &array)
 }
 
 QJsonArray QV8JsonWrapper::toJsonArray(v8::Handle<v8::Value> value,
-                                       QSet<int> &visitedObjects)
+                                       V8ObjectSet &visitedObjects)
 {
     QJsonArray result;
     if (!value->IsArray())
         return result;
 
     v8::Handle<v8::Array> v8array(value.As<v8::Array>());
-    int hash = v8array->GetIdentityHash();
-    if (visitedObjects.contains(hash)) {
+    if (visitedObjects.contains(v8array)) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty array (and no error is thrown).
         return result;
     }
 
-    visitedObjects.insert(hash);
+    visitedObjects.insert(v8array);
 
     uint32_t length = v8array->Length();
     for (uint32_t i = 0; i < length; ++i) {
@@ -175,7 +173,7 @@ QJsonArray QV8JsonWrapper::toJsonArray(v8::Handle<v8::Value> value,
             result.append(toJsonValue(element, visitedObjects));
     }
 
-    visitedObjects.remove(hash);
+    visitedObjects.remove(v8array);
 
     return result;
 }

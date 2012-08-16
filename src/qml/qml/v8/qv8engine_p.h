@@ -237,6 +237,7 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QV8Engine
 {
+    typedef QSet<v8::Handle<v8::Object> > V8ObjectSet;
 public:
     static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
     static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
@@ -372,15 +373,15 @@ public:
 
     v8::Local<v8::Array> variantListToJS(const QVariantList &lst);
     inline QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray)
-    { QSet<int> visitedObjects; return variantListFromJS(jsArray, visitedObjects); }
+    { V8ObjectSet visitedObjects; return variantListFromJS(jsArray, visitedObjects); }
 
     v8::Local<v8::Object> variantMapToJS(const QVariantMap &vmap);
     inline QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject)
-    { QSet<int> visitedObjects; return variantMapFromJS(jsObject, visitedObjects); }
+    { V8ObjectSet visitedObjects; return variantMapFromJS(jsObject, visitedObjects); }
 
     v8::Handle<v8::Value> variantToJS(const QVariant &value);
     inline QVariant variantFromJS(v8::Handle<v8::Value> value)
-    { QSet<int> visitedObjects; return variantFromJS(value, visitedObjects); }
+    { V8ObjectSet visitedObjects; return variantFromJS(value, visitedObjects); }
 
     v8::Handle<v8::Value> jsonValueToJS(const QJsonValue &value);
     QJsonValue jsonValueFromJS(v8::Handle<v8::Value> value);
@@ -474,9 +475,9 @@ protected:
     double qtDateTimeToJsDate(const QDateTime &dt);
 
 private:
-    QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray, QSet<int> &visitedObjects);
-    QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject, QSet<int> &visitedObjects);
-    QVariant variantFromJS(v8::Handle<v8::Value> value, QSet<int> &visitedObjects);
+    QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray, V8ObjectSet &visitedObjects);
+    QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject, V8ObjectSet &visitedObjects);
+    QVariant variantFromJS(v8::Handle<v8::Value> value, V8ObjectSet &visitedObjects);
 
     static v8::Persistent<v8::Object> *findOwnerAndStrength(QObject *object, bool *shouldBeStrong);
 
@@ -613,6 +614,13 @@ QV8Engine::Deletable *QV8Engine::extensionData(int index) const
         return m_extensionData[index];
     else
         return 0;
+}
+
+// Needed for V8ObjectSet
+template<>
+inline uint qHash<v8::Handle<v8::Object> >(const v8::Handle<v8::Object> &object, uint /*seed*/)
+{
+    return object->GetIdentityHash();
 }
 
 QT_END_NAMESPACE

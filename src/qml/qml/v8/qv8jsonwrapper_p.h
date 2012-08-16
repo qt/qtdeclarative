@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
 class QV8Engine;
 class QV8JsonWrapper
 {
+    typedef QSet<v8::Handle<v8::Object> > V8ObjectSet;
 public:
     QV8JsonWrapper();
     ~QV8JsonWrapper();
@@ -75,20 +76,20 @@ public:
 
     v8::Handle<v8::Value> fromJsonValue(const QJsonValue &value);
     inline QJsonValue toJsonValue(v8::Handle<v8::Value> value)
-    { QSet<int> visitedObjects; return toJsonValue(value, visitedObjects); }
+    { V8ObjectSet visitedObjects; return toJsonValue(value, visitedObjects); }
 
     v8::Local<v8::Object> fromJsonObject(const QJsonObject &object);
     inline QJsonObject toJsonObject(v8::Handle<v8::Value> value)
-    { QSet<int> visitedObjects; return toJsonObject(value, visitedObjects); }
+    { V8ObjectSet visitedObjects; return toJsonObject(value, visitedObjects); }
 
     v8::Local<v8::Array> fromJsonArray(const QJsonArray &array);
     inline QJsonArray toJsonArray(v8::Handle<v8::Value> value)
-    { QSet<int> visitedObjects; return toJsonArray(value, visitedObjects); }
+    { V8ObjectSet visitedObjects; return toJsonArray(value, visitedObjects); }
 
 private:
-    QJsonValue toJsonValue(v8::Handle<v8::Value> value, QSet<int> &visitedObjects);
-    QJsonObject toJsonObject(v8::Handle<v8::Value> value, QSet<int> &visitedObjects);
-    QJsonArray toJsonArray(v8::Handle<v8::Value> value, QSet<int> &visitedObjects);
+    QJsonValue toJsonValue(v8::Handle<v8::Value> value, V8ObjectSet &visitedObjects);
+    QJsonObject toJsonObject(v8::Handle<v8::Value> value, V8ObjectSet &visitedObjects);
+    QJsonArray toJsonArray(v8::Handle<v8::Value> value, V8ObjectSet &visitedObjects);
 
     QV8Engine *m_engine;
 };
