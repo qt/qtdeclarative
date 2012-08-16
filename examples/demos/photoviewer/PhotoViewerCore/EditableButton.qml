@@ -46,7 +46,6 @@ Item {
 
     property string label
     signal clicked
-    signal labelChanged(string label)
 
     width: textInput.width + 70 ; height: textInput.height + 18
 
@@ -61,11 +60,11 @@ Item {
     TextInput {
         id: textInput; text: label; font.pixelSize: 15; anchors.centerIn: parent; smooth: true
         Keys.onReturnPressed: {
-            container.labelChanged(textInput.text)
+            container.label = textInput.text
             container.focus = true
         }
         Keys.onEnterPressed: {
-            container.labelChanged(textInput.text)
+            container.label = textInput.text
             container.focus = true
         }
         Keys.onEscapePressed: {
