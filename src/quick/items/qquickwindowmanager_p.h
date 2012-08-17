@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickWindow;
 class QSGContext;
+class QAnimationDriver;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowManager
 {
@@ -66,9 +67,8 @@ public:
 
     virtual void update(QQuickWindow *window) = 0;
     virtual void maybeUpdate(QQuickWindow *window) = 0;
-    virtual void wakeup() = 0;
 
-    virtual volatile bool *allowMainThreadProcessing() = 0;
+    virtual QAnimationDriver *animationDriver() const = 0;
 
     virtual QSGContext *sceneGraphContext() const = 0;
 

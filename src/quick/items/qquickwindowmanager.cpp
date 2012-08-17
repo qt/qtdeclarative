@@ -92,14 +92,13 @@ public:
     void exposureChanged(QQuickWindow *window);
     QImage grab(QQuickWindow *window);
     void resize(QQuickWindow *window, const QSize &size);
-    void wakeup();
 
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation.
 
     void releaseResources() { }
 
-    volatile bool *allowMainThreadProcessing();
+    QAnimationDriver *animationDriver() const { return 0; }
 
     QSGContext *sceneGraphContext() const;
 
@@ -290,15 +289,6 @@ void QQuickTrivialWindowManager::maybeUpdate(QQuickWindow *window)
         QCoreApplication::postEvent(this, new QEvent(QEvent::User));
         eventPending = true;
     }
-}
-
-void QQuickTrivialWindowManager::wakeup()
-{
-}
-
-volatile bool *QQuickTrivialWindowManager::allowMainThreadProcessing()
-{
-    return 0;
 }
 
 

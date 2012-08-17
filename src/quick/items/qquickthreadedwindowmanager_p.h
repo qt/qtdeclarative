@@ -63,7 +63,6 @@ public:
         : sg(QSGContext::createDefaultContext())
         , gl(0)
         , animationTimer(-1)
-        , allowMainThreadProcessingFlag(false)
         , isGuiLocked(0)
         , animationRunning(false)
         , isPostingSyncEvent(false)
@@ -78,10 +77,10 @@ public:
     {
         sg->moveToThread(this);
 
-        animationDriver = sg->createAnimationDriver(this);
-        animationDriver->install();
-        connect(animationDriver, SIGNAL(started()), this, SLOT(animationStarted()));
-        connect(animationDriver, SIGNAL(stopped()), this, SLOT(animationStopped()));
+        animDriver = sg->createAnimationDriver(this);
+        animDriver->install();
+        connect(animDriver, SIGNAL(started()), this, SLOT(animationStarted()));
+        connect(animDriver, SIGNAL(stopped()), this, SLOT(animationStopped()));
     }
 
     QSGContext *sceneGraphContext() const { return sg; }
@@ -99,7 +98,6 @@ public:
     void handleDeferredUpdate();
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation
-    void wakeup();
 
     void startRendering();
     void stopRendering();
@@ -108,8 +106,6 @@ public:
     void sync(bool guiAlreadyLocked);
 
     void initialize();
-
-    volatile bool *allowMainThreadProcessing() { return &allowMainThreadProcessingFlag; }
 
     bool event(QEvent *);
 
@@ -132,6 +128,8 @@ public:
         return win;
     }
 
+    QAnimationDriver *animationDriver() const { return animDriver; }
+
 public slots:
     void animationStarted();
     void animationStopped();
@@ -144,13 +142,11 @@ private:
 
     QSGContext *sg;
     QOpenGLContext *gl;
-    QAnimationDriver *animationDriver;
+    QAnimationDriver *animDriver;
     int animationTimer;
 
     QMutex mutex;
     QWaitCondition condition;
-
-    volatile bool allowMainThreadProcessingFlag;
 
     int isGuiLocked;
     uint animationRunning: 1;

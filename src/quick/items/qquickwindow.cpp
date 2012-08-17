@@ -80,45 +80,65 @@ void QQuickWindowPrivate::updateFocusItemTransform()
         qApp->inputMethod()->setInputItemTransform(QQuickItemPrivate::get(focus)->itemToWindowTransform());
 }
 
+
 class QQuickWindowIncubationController : public QObject, public QQmlIncubationController
 {
+    Q_OBJECT
+
 public:
-    QQuickWindowIncubationController(QQuickWindowPrivate *window)
-    : m_window(window), m_eventSent(false) {}
+    QQuickWindowIncubationController(const QQuickWindow *window)
+        : m_window(QQuickWindowPrivate::get(const_cast<QQuickWindow *>(window)))
+    {
+        // Allow incubation for 1/3 of a frame.
+        m_incubation_time = qMax(1, int(1000 / QGuiApplication::primaryScreen()->refreshRate()) / 3);
+
+        m_animation_driver = m_window->windowManager->animationDriver();
+        if (m_animation_driver) {
+            connect(m_animation_driver, SIGNAL(stopped()), this, SLOT(animationStopped()));
+            connect(window, SIGNAL(frameSwapped()), this, SLOT(incubate()));
+        }
+    }
 
 protected:
     virtual bool event(QEvent *e)
     {
         if (e->type() == QEvent::User) {
-            Q_ASSERT(m_eventSent);
-            volatile bool *amtp = m_window->windowManager->allowMainThreadProcessing();
-            while (incubatingObjectCount()) {
-                if (amtp)
-                    incubateWhile(amtp, 2);
-                else
-                    incubateFor(5);
-                QCoreApplication::processEvents();
-            }
-
-            m_eventSent = false;
+            incubate();
+            return true;
         }
         return QObject::event(e);
     }
 
+public slots:
+    void incubate() {
+        if (incubatingObjectCount()) {
+            if (m_animation_driver && m_animation_driver->isRunning()) {
+                incubateFor(m_incubation_time);
+            } else {
+                incubateFor(m_incubation_time * 2);
+                if (incubatingObjectCount())
+                    QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+            }
+        }
+    }
+
+    void animationStopped() { incubate(); }
+
+protected:
     virtual void incubatingObjectCountChanged(int count)
     {
-        if (count && !m_eventSent) {
-            m_eventSent = true;
+        if (count && (!m_animation_driver || !m_animation_driver->isRunning()))
             QCoreApplication::postEvent(this, new QEvent(QEvent::User));
-        }
-        // If no animations are running, the renderer may be waiting
-        m_window->windowManager->wakeup();
     }
 
 private:
     QQuickWindowPrivate *m_window;
-    bool m_eventSent;
+    int m_incubation_time;
+    QAnimationDriver *m_animation_driver;
 };
+
+#include "qquickwindow.moc"
+
 
 #ifndef QT_NO_ACCESSIBILITY
 QAccessibleInterface *QQuickWindow::accessibleRoot() const
@@ -2507,7 +2527,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     Q_D(const QQuickWindow);
 
     if (!d->incubationController)
-        d->incubationController = new QQuickWindowIncubationController(const_cast<QQuickWindowPrivate *>(d));
+        d->incubationController = new QQuickWindowIncubationController(this);
     return d->incubationController;
 }
 

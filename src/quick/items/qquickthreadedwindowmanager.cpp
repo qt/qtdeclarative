@@ -360,7 +360,6 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 #ifdef THREAD_DEBUG
             printf("                RenderThread: aquired sync lock...\n");
 #endif
-            allowMainThreadProcessingFlag = false;
             QCoreApplication::postEvent(this, new QEvent(QEvent_Sync));
 
 #ifdef THREAD_DEBUG
@@ -413,7 +412,6 @@ void QQuickRenderThreadSingleContextWindowManager::run()
         inSync = false;
 
         // Wake GUI after sync to let it continue animating and event processing.
-        allowMainThreadProcessingFlag = true;
         wake();
         unlock();
 #ifdef THREAD_DEBUG
@@ -574,7 +572,7 @@ bool QQuickRenderThreadSingleContextWindowManager::event(QEvent *e)
             printf("GUI: Advancing animations...\n");
 #endif
 
-            animationDriver->advance();
+            animDriver->advance();
 
 #ifdef THREAD_DEBUG
             printf("GUI: Animations advanced...\n");
@@ -589,7 +587,7 @@ bool QQuickRenderThreadSingleContextWindowManager::event(QEvent *e)
 #ifdef THREAD_DEBUG
             printf("GUI: Animations advanced via timer...\n");
 #endif
-        animationDriver->advance();
+        animDriver->advance();
     }
 
     return QThread::event(e);
@@ -766,7 +764,7 @@ void QQuickRenderThreadSingleContextWindowManager::startRendering()
     inSync = false;
 
     lockInGui();
-    animationRunning = animationDriver->isRunning();
+    animationRunning = animDriver->isRunning();
     start(); // Start the render thread...
     wait();
     unlockInGui();
@@ -820,7 +818,7 @@ void QQuickRenderThreadSingleContextWindowManager::stopRendering()
 #endif
 
     // Activate timer to keep animations running
-    if (animationDriver->isRunning())
+    if (animDriver->isRunning())
         animationTimer = startTimer(1000/60);
 }
 
@@ -892,15 +890,5 @@ void QQuickRenderThreadSingleContextWindowManager::maybeUpdate(QQuickWindow *)
     }
 
 }
-
-void QQuickRenderThreadSingleContextWindowManager::wakeup()
-{
-    lockInGui();
-    isExternalUpdatePending = true;
-    if (isRenderBlocked)
-        wake();
-    unlockInGui();
-}
-
 
 QT_END_NAMESPACE
