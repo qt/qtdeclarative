@@ -64,6 +64,7 @@ public slots:
 protected:
     virtual void moveEvent(QMoveEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
+    virtual void closeEvent(QCloseEvent *event);
     void initQml();
 
 private:

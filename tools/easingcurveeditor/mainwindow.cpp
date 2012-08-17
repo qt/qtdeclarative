@@ -98,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
     groupBoxLayout->addWidget(splineEditor->pointListWidget());
     m_splineEditor = splineEditor;
     connect(ui_properties.plainTextEdit, SIGNAL(textChanged()), this, SLOT(textEditTextChanged()));
+    connect(this, SIGNAL(close()), this, SLOT(doClose()));
     initQml();
 }
 
@@ -133,4 +134,9 @@ void MainWindow::initQml()
     quickView.rootContext()->setContextProperty(QLatin1String("editor"), m_splineEditor);
     quickView.setSource(QUrl("qrc:/preview.qml"));
     quickView.show();
+}
+
+void MainWindow::closeEvent(QCloseEvent *)
+{
+    quickView.close();
 }
