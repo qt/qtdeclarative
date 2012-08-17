@@ -1537,7 +1537,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
 /*!
     \class QQuickItem
-    \brief The QQuickItem class provides the most basic of all visual items in QtQuick
+    \brief The QQuickItem class provides the most basic of all visual items in QtQuick.
     \inmodule QtQuick
 
     All visual items in Qt Quick inherit from QQuickItem. Although a QQuickItem
@@ -1662,6 +1662,30 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 */
 
 /*!
+    \enum QQuickItem::Flag
+
+    This enum type is used to specify various item properties.
+
+    \value ItemClipsChildrenToShape Indicates this item should visually clip
+    its children so that they are rendered only within the boundaries of this
+    item.
+    \value ItemAcceptsInputMethod Indicates the item supports text input
+    methods.
+    \value ItemIsFocusScope Indicates the item is a focus scope. See
+    \l {Keyboard Focus in Qt Quick} for more information.
+    \value ItemHasContents Indicates the item has visual content and should be
+    rendered by the scene graph.
+    \value ItemAcceptsDrops Indicates the item accepts drag and drop events.
+
+    \sa setFlag(), setFlags(), flags()
+*/
+
+/*!
+    \enum QQuickItem::ItemChange
+    \internal
+*/
+
+/*!
     \enum QQuickItem::TransformOrigin
 
     Controls the point about which simple transforms like scale apply.
@@ -1675,6 +1699,8 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \value BottomLeft The bottom-left corner of the item.
     \value Bottom The center point of the bottom of the item.
     \value BottomRight The bottom-right corner of the item.
+
+    \sa transformOrigin
 */
 
 /*!
@@ -1703,12 +1729,18 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 */
 
 /*!
+    \fn void QQuickItem::antialiasingChanged(bool)
+    \internal
+*/
+
+/*!
     \fn void QQuickItem::clipChanged(bool)
     \internal
 */
 
-/*! \fn void QQuickItem::transformOriginChanged(TransformOrigin)
-  \internal
+/*!
+    \fn void QQuickItem::transformOriginChanged(TransformOrigin)
+    \internal
 */
 
 /*!
@@ -1720,6 +1752,77 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \fn void QQuickItem::activeFocusChanged(bool)
     \internal
 */
+
+/*!
+    \fn void QQuickItem::childrenChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::opacityChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::enabledChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::visibleChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::visibleChildrenChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::rotationChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::scaleChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::xChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::yChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::widthChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::heightChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::zChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::implicitWidthChanged()
+    \internal
+*/
+
+/*!
+    \fn void QQuickItem::implicitHeightChanged()
+    \internal
+*/
+
 /*!
     \fn QQuickItem::QQuickItem(QQuickItem *parent)
 
@@ -1814,8 +1917,14 @@ QQuickItem::~QQuickItem()
 */
 /*!
     \property QQuickItem::parent
-    This property holds the parent of the item.
+    This property holds the visual parent of the item.
 */
+QQuickItem *QQuickItem::parentItem() const
+{
+    Q_D(const QQuickItem);
+    return d->parentItem;
+}
+
 void QQuickItem::setParentItem(QQuickItem *parentItem)
 {
     Q_D(QQuickItem);
@@ -1939,6 +2048,15 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
         emit d->parentItem->visibleChildrenChanged();
 }
 
+/*!
+    Moves the specified \a sibling item to the index before this item
+    within the visual stacking order.
+
+    The given \a sibling must be a sibling of this item; that is, they must
+    have the same immediate \l parent.
+
+    \sa {Concepts - Visual Parent in Qt Quick}
+*/
 void QQuickItem::stackBefore(const QQuickItem *sibling)
 {
     Q_D(QQuickItem);
@@ -1966,6 +2084,15 @@ void QQuickItem::stackBefore(const QQuickItem *sibling)
         QQuickItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
 }
 
+/*!
+    Moves the specified \a sibling item to the index after this item
+    within the visual stacking order.
+
+    The given \a sibling must be a sibling of this item; that is, they must
+    have the same immediate \l parent.
+
+    \sa {Concepts - Visual Parent in Qt Quick}
+*/
 void QQuickItem::stackAfter(const QQuickItem *sibling)
 {
     Q_D(QQuickItem);
@@ -1994,14 +2121,8 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
 }
 
 /*!
-    Returns the QQuickItem parent of this item.
-*/
-QQuickItem *QQuickItem::parentItem() const
-{
-    Q_D(const QQuickItem);
-    return d->parentItem;
-}
-
+  Returns the window in which this item is rendered.
+  */
 QQuickWindow *QQuickItem::window() const
 {
     Q_D(const QQuickItem);
@@ -2721,6 +2842,9 @@ QRectF QQuickItem::childrenRect()
     return d->extra->contents->rectF();
 }
 
+/*!
+    Returns the children of this item.
+  */
 QList<QQuickItem *> QQuickItem::childItems() const
 {
     Q_D(const QQuickItem);
@@ -2876,6 +3000,14 @@ QSGTransformNode *QQuickItemPrivate::createTransformNode()
     return new QSGTransformNode;
 }
 
+/*!
+    This function should perform any layout as required for this item.
+
+    When polish() is called, the scene graph schedules a polish event for this
+    item. When the scene graph is ready to render this item, it calls
+    updatePolish() to do any item layout as required before it renders the
+    next frame.
+  */
 void QQuickItem::updatePolish()
 {
 }
@@ -2914,22 +3046,42 @@ void QQuickItemPrivate::updateOrRemoveGeometryChangeListener(QQuickItemChangeLis
     }
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive key
+    press events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::keyPressEvent(QKeyEvent *event)
 {
     event->ignore();
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive key
+    release events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::keyReleaseEvent(QKeyEvent *event)
 {
     event->ignore();
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive input
+    method events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 {
     event->ignore();
 }
 
-void QQuickItem::focusInEvent(QFocusEvent *)
+/*!
+    This event handler can be reimplemented in a subclass to receive focus-in
+    events for an item. The event information is provided by the
+    \a event parameter.
+  */
+void QQuickItem::focusInEvent(QFocusEvent *event)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessibleEvent ev(this, QAccessible::Focus);
@@ -2937,93 +3089,213 @@ void QQuickItem::focusInEvent(QFocusEvent *)
 #endif
 }
 
-void QQuickItem::focusOutEvent(QFocusEvent *)
+/*!
+    This event handler can be reimplemented in a subclass to receive focus-out
+    events for an item. The event information is provided by the
+    \a event parameter.
+  */
+void QQuickItem::focusOutEvent(QFocusEvent *event)
 {
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive mouse
+    press events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::mousePressEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive mouse
+    move events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::mouseMoveEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive mouse
+    release events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::mouseReleaseEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive mouse
+    double-click events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::mouseDoubleClickEvent(QMouseEvent *)
 {
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to be notified
+    when a mouse ungrab event has occurred on this item.
+
+    \sa ungrabMouse()
+  */
 void QQuickItem::mouseUngrabEvent()
 {
     // XXX todo
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to be notified
+    when a touch ungrab event has occurred on this item.
+  */
 void QQuickItem::touchUngrabEvent()
 {
     // XXX todo
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive
+    wheel events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::wheelEvent(QWheelEvent *event)
 {
     event->ignore();
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive touch
+    events for an item. The event information is provided by the
+    \a event parameter.
+  */
 void QQuickItem::touchEvent(QTouchEvent *event)
 {
     event->ignore();
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive hover-enter
+    events for an item. The event information is provided by the
+    \a event parameter.
+
+    Hover events are only provided if acceptHoverEvents() is true.
+  */
 void QQuickItem::hoverEnterEvent(QHoverEvent *event)
 {
     Q_UNUSED(event);
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive hover-move
+    events for an item. The event information is provided by the
+    \a event parameter.
+
+    Hover events are only provided if acceptHoverEvents() is true.
+  */
 void QQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
     Q_UNUSED(event);
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive hover-leave
+    events for an item. The event information is provided by the
+    \a event parameter.
+
+    Hover events are only provided if acceptHoverEvents() is true.
+  */
 void QQuickItem::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_UNUSED(event);
 }
 
 #ifndef QT_NO_DRAGANDDROP
+/*!
+    This event handler can be reimplemented in a subclass to receive drag-enter
+    events for an item. The event information is provided by the
+    \a event parameter.
+
+    Drag and drop events are only provided if the ItemAcceptsDrops flag
+    has been set for this item.
+
+    \sa Drag, {Drag and Drop}
+  */
 void QQuickItem::dragEnterEvent(QDragEnterEvent *event)
 {
     Q_UNUSED(event);
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive drag-move
+    events for an item. The event information is provided by the
+    \a event parameter.
+
+    Drag and drop events are only provided if the ItemAcceptsDrops flag
+    has been set for this item.
+
+    \sa Drag, {Drag and Drop}
+  */
 void QQuickItem::dragMoveEvent(QDragMoveEvent *event)
 {
-
     Q_UNUSED(event);
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive drag-leave
+    events for an item. The event information is provided by the
+    \a event parameter.
+
+    Drag and drop events are only provided if the ItemAcceptsDrops flag
+    has been set for this item.
+
+    \sa Drag, {Drag and Drop}
+  */
 void QQuickItem::dragLeaveEvent(QDragLeaveEvent *event)
 {
-
     Q_UNUSED(event);
 }
 
+/*!
+    This event handler can be reimplemented in a subclass to receive drop
+    events for an item. The event information is provided by the
+    \a event parameter.
+
+    Drag and drop events are only provided if the ItemAcceptsDrops flag
+    has been set for this item.
+
+    \sa Drag, {Drag and Drop}
+  */
 void QQuickItem::dropEvent(QDropEvent *event)
 {
     Q_UNUSED(event);
 }
 #endif // QT_NO_DRAGANDDROP
 
-bool QQuickItem::childMouseEventFilter(QQuickItem *, QEvent *)
+/*!
+    Reimplement this method to filter the mouse events that are received by
+    this item's children.
+
+    This method will only be called if filtersChildMouseEvents() is true.
+
+    Return true if the specified \a event should not be passed onto the
+    specified child \a item, and false otherwise.
+
+    \sa setFiltersChildMouseEvents()
+  */
+bool QQuickItem::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
+    Q_UNUSED(item);
+    Q_UNUSED(event);
     return false;
 }
 
+/*!
+    \internal
+  */
 void QQuickItem::windowDeactivateEvent()
 {
     foreach (QQuickItem* item, childItems()) {
@@ -3031,6 +3303,14 @@ void QQuickItem::windowDeactivateEvent()
     }
 }
 
+/*!
+    This method is only relevant for input items.
+
+    If this item is an input item, this method should be reimplemented to
+    return the relevant input method flags for the given \a query.
+
+    \sa QWidget::inputMethodQuery()
+  */
 QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
 {
     Q_D(const QQuickItem);
@@ -3101,6 +3381,17 @@ QQuickAnchorLine QQuickItemPrivate::baseline() const
 }
 
 /*!
+  \qmlproperty int QtQuick2::Item::baselineOffset
+
+  Specifies the position of the item's baseline in local coordinates.
+
+  The baseline of a \l Text item is the imaginary line on which the text
+  sits. Controls containing text usually set their baseline to the
+  baseline of their text.
+
+  For non-text items, a default baseline offset of 0 is used.
+*/
+/*!
   \property QQuickItem::baselineOffset
 
   Specifies the position of the item's baseline in local coordinates.
@@ -3162,6 +3453,12 @@ void QQuickItem::update()
     d->dirty(QQuickItemPrivate::Content);
 }
 
+/*!
+    Schedules a polish event for this item.
+
+    When the scene graph processes the request, it will call updatePolish()
+    on this item.
+  */
 void QQuickItem::polish()
 {
     Q_D(QQuickItem);
@@ -3187,6 +3484,9 @@ void QQuickItem::polish()
     If \a item is a \c null value, this maps the point or rect from the coordinate system of
     the root QML view.
 */
+/*!
+    \internal
+  */
 void QQuickItem::mapFromItem(QQmlV8Function *args) const
 {
     if (args->Length() != 0) {
@@ -3228,6 +3528,9 @@ void QQuickItem::mapFromItem(QQmlV8Function *args) const
     }
 }
 
+/*!
+    \internal
+  */
 QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 {
     Q_D(const QQuickItem);
@@ -3253,6 +3556,9 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
     If \a item is a \c null value, this maps the point or rect to the coordinate system of the
     root QML view.
 */
+/*!
+    \internal
+  */
 void QQuickItem::mapToItem(QQmlV8Function *args) const
 {
     if (args->Length() != 0) {
@@ -3374,6 +3680,14 @@ QQmlListProperty<QObject> QQuickItemPrivate::resources()
     automatically assign child objects to the \c children and \c resources
     properties as appropriate. See the \l data documentation for details.
 */
+/*!
+    \property QQuickItem::children
+    \internal
+  */
+/*!
+    \fn void QQuickItem::childrenChanged()
+    \internal
+*/
 QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 {
     return QQmlListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::children_append,
@@ -3389,6 +3703,14 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
   Note that a child's visibility may have changed explicitly, or because the visibility
   of this (it's parent) item or another grandparent changed.
 */
+/*!
+    \property QQuickItem::visibleChildren
+    \internal
+  */
+/*!
+    \fn void QQuickItem::visibleChildrenChanged()
+    \internal
+*/
 QQmlListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
 {
     return QQmlListProperty<QQuickItem>(q_func(), 0, QQuickItemPrivate::visibleChildren_append,
@@ -3402,7 +3724,7 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
 
     This property holds the list of possible states for this item. To change
     the state of this item, set the \l state property to one of these states,
-    or set the \state property to an empty string to revert the item to its
+    or set the \l state property to an empty string to revert the item to its
     default state.
 
     This property is specified as a list of \l State objects. For example,
@@ -3433,6 +3755,10 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
 
     \sa transitions
 */
+/*!
+    \property QQuickItem::states
+    \internal
+  */
 QQmlListProperty<QQuickState> QQuickItemPrivate::states()
 {
     return _states()->statesProperty();
@@ -3466,6 +3792,10 @@ QQmlListProperty<QQuickState> QQuickItemPrivate::states()
 
     \sa transitions
 */
+/*!
+    \property QQuickItem::transitions
+    \internal
+  */
 QQmlListProperty<QQuickTransition> QQuickItemPrivate::transitions()
 {
     return _states()->transitionsProperty();
@@ -3495,6 +3825,17 @@ void QQuickItemPrivate::setState(const QString &state)
 
     \sa {Qt Quick States}
 */
+/*!
+    \property QQuickItem::state
+
+    This property holds the name of the current state of the item.
+
+    If the item is in its default state — that is, no explicit state has been
+    set — then this property holds an empty string. Likewise, you can return
+    an item to its default state by setting this property to an empty string.
+
+    \sa {Qt Quick States}
+*/
 QString QQuickItem::state() const
 {
     Q_D(const QQuickItem);
@@ -3513,6 +3854,10 @@ void QQuickItem::setState(const QString &state)
 
   For more information see \l Transform.
 */
+/*!
+    \property QQuickItem::transform
+    \internal
+  */
 QQmlListProperty<QQuickTransform> QQuickItem::transform()
 {
     return QQmlListProperty<QQuickTransform>(this, 0, QQuickItemPrivate::transform_append,
@@ -3763,6 +4108,9 @@ void QQuickItemPrivate::deliverDragEvent(QEvent *e)
 }
 #endif // QT_NO_DRAGANDDROP
 
+/*!
+  \internal
+  */
 void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 {
     Q_UNUSED(change);
@@ -3798,6 +4146,7 @@ QRectF QQuickItem::clipRect() const
     This property holds the origin point around which scale and rotation transform.
 
     Nine transform origins are available, as shown in the image below.
+    The default transform origin is \c Item.Center.
 
     \image declarative-transformorigin.png
 
@@ -3810,10 +4159,17 @@ QRectF QQuickItem::clipRect() const
     }
     \endqml
 
+    To set an arbitrary transform origin point use the \l Scale or \l Rotation
+    transform types with \l transform.
+*/
+/*!
+    \property QQuickItem::transformOrigin
+    This property holds the origin point around which scale and rotation transform.
+
+    Nine transform origins are available, as shown in the image below.
     The default transform origin is \c Item.Center.
 
-    To set an arbitrary transform origin point use the \l Scale or \l Rotation
-    transform types.
+    \image declarative-transformorigin.png
 */
 QQuickItem::TransformOrigin QQuickItem::transformOrigin() const
 {
@@ -3833,6 +4189,13 @@ void QQuickItem::setTransformOrigin(TransformOrigin origin)
     emit transformOriginChanged(d->origin());
 }
 
+/*!
+    \property QQuickItem::transformOriginPoint
+    \internal
+  */
+/*!
+  \internal
+  */
 QPointF QQuickItem::transformOriginPoint() const
 {
     Q_D(const QQuickItem);
@@ -3841,6 +4204,9 @@ QPointF QQuickItem::transformOriginPoint() const
     return d->computeTransformOrigin();
 }
 
+/*!
+  \internal
+  */
 void QQuickItem::setTransformOriginPoint(const QPointF &point)
 {
     Q_D(QQuickItem);
@@ -3928,6 +4294,83 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
   \endqml
   \endtable
  */
+/*!
+  \qmlproperty real QtQuick2::Item::z
+
+  Sets the stacking order of sibling items.  By default the stacking order is 0.
+
+  Items with a higher stacking value are drawn on top of siblings with a
+  lower stacking order.  Items with the same stacking value are drawn
+  bottom up in the order they appear.  Items with a negative stacking
+  value are drawn under their parent's content.
+
+  The following example shows the various effects of stacking order.
+
+  \table
+  \row
+  \li \image declarative-item_stacking1.png
+  \li Same \c z - later children above earlier children:
+  \qml
+  Item {
+      Rectangle {
+          color: "red"
+          width: 100; height: 100
+      }
+      Rectangle {
+          color: "blue"
+          x: 50; y: 50; width: 100; height: 100
+      }
+  }
+  \endqml
+  \row
+  \li \image declarative-item_stacking2.png
+  \li Higher \c z on top:
+  \qml
+  Item {
+      Rectangle {
+          z: 1
+          color: "red"
+          width: 100; height: 100
+      }
+      Rectangle {
+          color: "blue"
+          x: 50; y: 50; width: 100; height: 100
+      }
+  }
+  \endqml
+  \row
+  \li \image declarative-item_stacking3.png
+  \li Same \c z - children above parents:
+  \qml
+  Item {
+      Rectangle {
+          color: "red"
+          width: 100; height: 100
+          Rectangle {
+              color: "blue"
+              x: 50; y: 50; width: 100; height: 100
+          }
+      }
+  }
+  \endqml
+  \row
+  \li \image declarative-item_stacking4.png
+  \li Lower \c z below:
+  \qml
+  Item {
+      Rectangle {
+          color: "red"
+          width: 100; height: 100
+          Rectangle {
+              z: -1
+              color: "blue"
+              x: 50; y: 50; width: 100; height: 100
+          }
+      }
+  }
+  \endqml
+  \endtable
+  */
 qreal QQuickItem::z() const
 {
     Q_D(const QQuickItem);
@@ -3980,6 +4423,32 @@ void QQuickItem::setZ(qreal v)
 
   \sa transform, Rotation
 */
+/*!
+  \property QQuickItem::rotation
+  This property holds the rotation of the item in degrees clockwise around
+  its transformOrigin.
+
+  The default value is 0 degrees (that is, no rotation).
+
+  \table
+  \row
+  \li \image declarative-rotation.png
+  \li
+  \qml
+  Rectangle {
+      color: "blue"
+      width: 100; height: 100
+      Rectangle {
+          color: "red"
+          x: 25; y: 25; width: 50; height: 50
+          rotation: 30
+      }
+  }
+  \endqml
+  \endtable
+
+  \sa transform, Rotation
+  */
 qreal QQuickItem::rotation() const
 {
     Q_D(const QQuickItem);
@@ -4040,6 +4509,45 @@ void QQuickItem::setRotation(qreal r)
 
   \sa transform, Scale
 */
+/*!
+  \property QQuickItem::scale
+  This property holds the scale factor for this item.
+
+  A scale of less than 1.0 causes the item to be rendered at a smaller
+  size, and a scale greater than 1.0 renders the item at a larger size.
+  A negative scale causes the item to be mirrored when rendered.
+
+  The default value is 1.0.
+
+  Scaling is applied from the transformOrigin.
+
+  \table
+  \row
+  \li \image declarative-scale.png
+  \li
+  \qml
+  import QtQuick 2.0
+
+  Rectangle {
+      color: "blue"
+      width: 100; height: 100
+
+      Rectangle {
+          color: "green"
+          width: 25; height: 25
+      }
+
+      Rectangle {
+          color: "red"
+          x: 25; y: 25; width: 50; height: 50
+          scale: 1.4
+      }
+  }
+  \endqml
+  \endtable
+
+  \sa transform, Scale
+  */
 qreal QQuickItem::scale() const
 {
     Q_D(const QQuickItem);
@@ -4110,6 +4618,62 @@ void QQuickItem::setScale(qreal s)
   input events. (In contrast, setting \l visible property to \c false stops
   mouse events, and setting the \l enabled property to \c false stops mouse
   and keyboard events, and also removes active focus from the item.)
+
+  \sa visible
+*/
+/*!
+  \property QQuickItem::opacity
+
+  This property holds the opacity of the item.  Opacity is specified as a
+  number between 0.0 (fully transparent) and 1.0 (fully opaque). The default
+  value is 1.0.
+
+  When this property is set, the specified opacity is also applied
+  individually to child items. This may have an unintended effect in some
+  circumstances. For example in the second set of rectangles below, the red
+  rectangle has specified an opacity of 0.5, which affects the opacity of
+  its blue child rectangle even though the child has not specified an opacity.
+
+  \table
+  \row
+  \li \image declarative-item_opacity1.png
+  \li
+  \qml
+    Item {
+        Rectangle {
+            color: "red"
+            width: 100; height: 100
+            Rectangle {
+                color: "blue"
+                x: 50; y: 50; width: 100; height: 100
+            }
+        }
+    }
+  \endqml
+  \row
+  \li \image declarative-item_opacity2.png
+  \li
+  \qml
+    Item {
+        Rectangle {
+            opacity: 0.5
+            color: "red"
+            width: 100; height: 100
+            Rectangle {
+                color: "blue"
+                x: 50; y: 50; width: 100; height: 100
+            }
+        }
+    }
+  \endqml
+  \endtable
+
+  Changing an item's opacity does not affect whether the item receives user
+  input events. (In contrast, setting \l visible property to \c false stops
+  mouse events, and setting the \l enabled property to \c false stops mouse
+  and keyboard events, and also removes active focus from the item.)
+
+  \sa visible
 */
 qreal QQuickItem::opacity() const
 {
@@ -4159,6 +4723,33 @@ void QQuickItem::setOpacity(qreal o)
 
     \sa opacity, enabled
 */
+/*!
+    \property QQuickItem::visible
+
+    This property holds whether the item is visible. By default this is true.
+
+    Setting this property directly affects the \c visible value of child
+    items. When set to \c false, the \c visible values of all child items also
+    become \c false. When set to \c true, the \c visible values of child items
+    are returned to \c true, unless they have explicitly been set to \c false.
+
+    (Because of this flow-on behavior, using the \c visible property may not
+    have the intended effect if a property binding should only respond to
+    explicit property changes. In such cases it may be better to use the
+    \l opacity property instead.)
+
+    If this property is set to \c false, the item will no longer receive mouse
+    events, but will continue to receive key events and will retain the keyboard
+    \l focus if it has been set. (In contrast, setting the \l enabled property
+    to \c false stops both mouse and keyboard events, and also removes focus
+    from the item.)
+
+    \note This property's value is only affected by changes to this property or
+    the parent's \c visible property. It does not change, for example, if this
+    item moves off-screen, or if the \l opacity changes to 0.
+
+    \sa opacity, enabled
+*/
 bool QQuickItem::isVisible() const
 {
     Q_D(const QQuickItem);
@@ -4182,6 +4773,22 @@ void QQuickItem::setVisible(bool v)
 
 /*!
     \qmlproperty bool QtQuick2::Item::enabled
+
+    This property holds whether the item receives mouse and keyboard events.
+    By default this is true.
+
+    Setting this property directly affects the \c enabled value of child
+    items. When set to \c false, the \c enabled values of all child items also
+    become \c false. When set to \c true, the \c enabled values of child items
+    are returned to \c true, unless they have explicitly been set to \c false.
+
+    Setting this property to \c false automatically causes \l activeFocus to be
+    set to \c false, and this item will longer receive keyboard events.
+
+    \sa visible
+*/
+/*!
+    \property QQuickItem::enabled
 
     This property holds whether the item receives mouse and keyboard events.
     By default this is true.
@@ -4497,6 +5104,17 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 }
 
 /*!
+    \qmlproperty bool QtQuick2::Item::smooth
+
+    Primarily used in image based items to decide if the item should use smooth
+    sampling or not. Smooth sampling is performed using linear interpolation, while
+    non-smooth is performed using nearest neighbor.
+
+    In Qt Quick 2.0, this property has minimal impact on performance.
+
+    By default is true.
+*/
+/*!
     \property QQuickItem::smooth
     \brief Specifies whether the item is smoothed or not
 
@@ -4508,27 +5126,11 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 
     By default is true.
 */
-
-/*!
-    Returns true if the item should be drawn with
-    smooth pixmap filtering, false otherwise.
-
-    The default is true.
-
-    \sa setSmooth()
-*/
 bool QQuickItem::smooth() const
 {
     Q_D(const QQuickItem);
     return d->smooth;
 }
-
-/*!
-    Sets whether the item should be drawn with
-    smooth pixmap filtering to \a smooth.
-
-    \sa smooth()
-*/
 void QQuickItem::setSmooth(bool smooth)
 {
     Q_D(QQuickItem);
@@ -4542,6 +5144,15 @@ void QQuickItem::setSmooth(bool smooth)
 }
 
 /*!
+    \qmlproperty bool QtQuick2::Item::antialiasing
+
+    Primarily used in Rectangle and image based elements to decide if the item should
+    use antialiasing or not. Items with antialiasing enabled require more memory and
+    are potentially slower to render.
+
+    The default is false.
+*/
+/*!
     \property QQuickItem::antialiasing
     \brief Specifies whether the item is antialiased or not
 
@@ -4551,25 +5162,11 @@ void QQuickItem::setSmooth(bool smooth)
 
     The default is false.
 */
-
-/*!
-    Returns true if the item should be drawn with antialiasing, false otherwise.
-
-    The default is false.
-
-    \sa setAntialiasing()
-*/
 bool QQuickItem::antialiasing() const
 {
     Q_D(const QQuickItem);
     return d->antialiasing;
 }
-
-/*!
-    Sets whether the item should be drawn with antialiasing to \a antialiasing.
-
-    \sa antialiasing()
-*/
 void QQuickItem::setAntialiasing(bool antialiasing)
 {
     Q_D(QQuickItem);
@@ -4582,12 +5179,25 @@ void QQuickItem::setAntialiasing(bool antialiasing)
     emit antialiasingChanged(antialiasing);
 }
 
+/*!
+    Returns the item flags for this item.
+
+    \sa setFlag()
+  */
 QQuickItem::Flags QQuickItem::flags() const
 {
     Q_D(const QQuickItem);
     return (QQuickItem::Flags)d->flags;
 }
 
+/*!
+    Enables the specified \a flag for this item if \a enabled is true;
+    if \a enabled is false, the flag is disabled.
+
+    These provide various hints for the item; for example, the
+    ItemClipsChildrenToShape flag indicates that all children of this
+    item should be clipped to fit within the item area.
+  */
 void QQuickItem::setFlag(Flag flag, bool enabled)
 {
     Q_D(QQuickItem);
@@ -4597,6 +5207,11 @@ void QQuickItem::setFlag(Flag flag, bool enabled)
         setFlags((Flags)(d->flags & ~(quint32)flag));
 }
 
+/*!
+    Enables the specified \a flags for this item.
+
+    \sa setFlag()
+  */
 void QQuickItem::setFlags(Flags flags)
 {
     Q_D(QQuickItem);
@@ -4623,12 +5238,24 @@ void QQuickItem::setFlags(Flags flags)
   \qmlproperty real QtQuick2::Item::width
   \qmlproperty real QtQuick2::Item::height
 
-  Defines the item's position and size relative to its parent.
+  Defines the item's position and size.
+
+  The (x,y) position is relative to the \l parent.
 
   \qml
   Item { x: 100; y: 100; width: 100; height: 100 }
   \endqml
  */
+/*!
+  \property QQuickItem::x
+
+  Defines the item's x position relative to its parent.
+  */
+/*!
+  \property QQuickItem::y
+
+  Defines the item's y position relative to its parent.
+  */
 qreal QQuickItem::x() const
 {
     Q_D(const QQuickItem);
@@ -4641,6 +5268,13 @@ qreal QQuickItem::y() const
     return d->y;
 }
 
+/*!
+    \property QQuickItem::pos
+    \internal
+  */
+/*!
+    \internal
+  */
 QPointF QQuickItem::pos() const
 {
     Q_D(const QQuickItem);
@@ -4677,6 +5311,9 @@ void QQuickItem::setY(qreal v)
                     QRectF(x(), oldy, width(), height()));
 }
 
+/*!
+    \internal
+  */
 void QQuickItem::setPos(const QPointF &pos)
 {
     Q_D(QQuickItem);
@@ -4695,6 +5332,11 @@ void QQuickItem::setPos(const QPointF &pos)
                     QRectF(oldx, oldy, width(), height()));
 }
 
+/*!
+    \property QQuickItem::width
+
+    This property holds the width of this item.
+  */
 qreal QQuickItem::width() const
 {
     Q_D(const QQuickItem);
@@ -4786,10 +5428,39 @@ qreal QQuickItem::implicitWidth() const
     \b Note: using implicitWidth of Text or TextEdit and setting the width explicitly
     incurs a performance penalty as the text must be laid out twice.
 */
-
 /*!
-    Sets the implied width of the item to \a w.
-    This is the width implied by other properties that determine the content.
+    \property QQuickItem::implicitWidth
+    \property QQuickItem::implicitHeight
+
+    Defines the natural width or height of the Item if no \l width or \l height is specified.
+
+    The default implicit size for most items is 0x0, however some items have an inherent
+    implicit size which cannot be overridden, e.g. Image, Text.
+
+    Setting the implicit size is useful for defining components that have a preferred size
+    based on their content, for example:
+
+    \qml
+    // Label.qml
+    import QtQuick 2.0
+
+    Item {
+        property alias icon: image.source
+        property alias label: text.text
+        implicitWidth: text.implicitWidth + image.implicitWidth
+        implicitHeight: Math.max(text.implicitHeight, image.implicitHeight)
+        Image { id: image }
+        Text {
+            id: text
+            wrapMode: Text.Wrap
+            anchors.left: image.right; anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+        }
+    }
+    \endqml
+
+    \b Note: using implicitWidth of Text or TextEdit and setting the width explicitly
+    incurs a performance penalty as the text must be laid out twice.
 */
 void QQuickItem::setImplicitWidth(qreal w)
 {
@@ -4825,6 +5496,11 @@ bool QQuickItem::widthValid() const
     return d->widthValid;
 }
 
+/*!
+    \property QQuickItem::height
+
+    This property holds the height of this item.
+  */
 qreal QQuickItem::height() const
 {
     Q_D(const QQuickItem);
@@ -4874,20 +5550,12 @@ qreal QQuickItemPrivate::getImplicitHeight() const
     return implicitHeight;
 }
 
-/*!
-    Returns the height of the item that is implied by other properties that determine the content.
-*/
 qreal QQuickItem::implicitHeight() const
 {
     Q_D(const QQuickItem);
     return d->getImplicitHeight();
 }
 
-
-/*!
-    Sets the implied height of the item to \a h.
-    This is the height implied by other properties that determine the content.
-*/
 void QQuickItem::setImplicitHeight(qreal h)
 {
     Q_D(QQuickItem);
@@ -4913,6 +5581,9 @@ void QQuickItem::setImplicitHeight(qreal h)
         d->implicitHeightChanged();
 }
 
+/*!
+    \internal
+  */
 void QQuickItem::setImplicitSize(qreal w, qreal h)
 {
     Q_D(QQuickItem);
@@ -4966,6 +5637,9 @@ bool QQuickItem::heightValid() const
     return d->heightValid;
 }
 
+/*!
+    \internal
+  */
 void QQuickItem::setSize(const QSizeF &size)
 {
     Q_D(QQuickItem);
@@ -4996,8 +5670,43 @@ void QQuickItem::setSize(const QSizeF &size)
     that currently receives keyboard input.
 
     Usually, activeFocus is gained by setting \l focus on an item and its
-    enclosing FocusScope objects. In the following example \c input will
-    have activeFocus.
+    enclosing FocusScope objects. In the following example, the \c input
+    and \c focusScope objects will have active focus, while the root
+    rectangle object will not.
+
+    \qml
+    import QtQuick 2.0
+
+    Rectangle {
+        width: 100; height: 100
+
+        FocusScope {
+            id: focusScope
+            focus: true
+
+            TextInput {
+                id: input
+                focus: true
+            }
+        }
+    }
+    \endqml
+
+    \sa focus, {Keyboard Focus in Qt Quick}
+*/
+/*!
+    \property QQuickItem::activeFocus
+
+    This read-only property indicates whether the item has active focus.
+
+    If activeFocus is true, either this item is the one that currently
+    receives keyboard input, or it is a FocusScope ancestor of the item
+    that currently receives keyboard input.
+
+    Usually, activeFocus is gained by setting \l focus on an item and its
+    enclosing FocusScope objects. In the following example, the \c input
+    and \c focusScope objects will have active focus, while the root
+    rectangle object will not.
 
     \qml
     import QtQuick 2.0
@@ -5026,6 +5735,50 @@ bool QQuickItem::hasActiveFocus() const
 
 /*!
     \qmlproperty bool QtQuick2::Item::focus
+
+    This property holds whether the item has focus within the enclosing
+    FocusScope. If true, this item will gain active focus when the
+    enclosing FocusScope gains active focus.
+
+    In the following example, \c input will be given active focus when
+    \c scope gains active focus:
+
+    \qml
+    import QtQuick 2.0
+
+    Rectangle {
+        width: 100; height: 100
+
+        FocusScope {
+            id: scope
+
+            TextInput {
+                id: input
+                focus: true
+            }
+        }
+    }
+    \endqml
+
+    For the purposes of this property, the scene as a whole is assumed
+    to act like a focus scope. On a practical level, that means the
+    following QML will give active focus to \c input on startup.
+
+    \qml
+    Rectangle {
+        width: 100; height: 100
+
+        TextInput {
+              id: input
+              focus: true
+        }
+    }
+    \endqml
+
+    \sa activeFocus, {Keyboard Focus in Qt Quick}
+*/
+/*!
+    \property QQuickItem::focus
 
     This property holds whether the item has focus within the enclosing
     FocusScope. If true, this item will gain active focus when the
@@ -5128,11 +5881,20 @@ void QQuickItem::setFocus(bool focus)
     }
 }
 
+/*!
+    Returns true if this item is a focus scope, and false otherwise.
+  */
 bool QQuickItem::isFocusScope() const
 {
     return flags() & ItemIsFocusScope;
 }
 
+/*!
+    If this item is a focus scope, this returns the item in its focus chain
+    that currently has focus.
+
+    Returns 0 if this item is not a focus scope.
+  */
 QQuickItem *QQuickItem::scopedFocusItem() const
 {
     Q_D(const QQuickItem);
@@ -5142,13 +5904,24 @@ QQuickItem *QQuickItem::scopedFocusItem() const
         return d->subFocusItem;
 }
 
+/*!
+    Returns the mouse buttons accepted by this item.
 
+    The default value is Qt::NoButton; that is, no mouse buttons are accepted.
+
+    If an item does not accept the mouse button for a particular mouse event,
+    the mouse event will not be delivered to the item and will be delivered
+    to the next item in the item hierarchy instead.
+  */
 Qt::MouseButtons QQuickItem::acceptedMouseButtons() const
 {
     Q_D(const QQuickItem);
     return d->acceptedMouseButtons();
 }
 
+/*!
+    Sets the mouse buttons accepted by this item to \a buttons.
+  */
 void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
 {
     Q_D(QQuickItem);
@@ -5162,18 +5935,36 @@ void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
         d->extra.value().acceptedMouseButtons = buttons;
 }
 
+/*!
+    Returns whether mouse events of this item's children should be filtered
+    through this item.
+
+    \sa setFiltersChildMouseEvents(), childMouseEventFilter()
+  */
 bool QQuickItem::filtersChildMouseEvents() const
 {
     Q_D(const QQuickItem);
     return d->filtersChildMouseEvents;
 }
 
+/*!
+    Sets whether mouse events of this item's children should be filtered
+    through this item.
+
+    If \a filter is true, childMouseEventFilter() will be called when
+    a mouse event is triggered for a child item.
+
+    \sa filtersChildMouseEvents()
+  */
 void QQuickItem::setFiltersChildMouseEvents(bool filter)
 {
     Q_D(QQuickItem);
     d->filtersChildMouseEvents = filter;
 }
 
+/*!
+    \internal
+  */
 bool QQuickItem::isUnderMouse() const
 {
     Q_D(const QQuickItem);
@@ -5184,12 +5975,26 @@ bool QQuickItem::isUnderMouse() const
     return contains(mapFromScene(d->window->mapFromGlobal(cursorPos.toPoint())));
 }
 
+/*!
+    Returns whether hover events are accepted by this item.
+
+    The default value is false.
+
+    If this is false, then the item will not receive any hover events through
+    the hoverEnterEvent(), hoverMoveEvent() and hoverLeaveEvent() functions.
+*/
 bool QQuickItem::acceptHoverEvents() const
 {
     Q_D(const QQuickItem);
     return d->hoverEnabled;
 }
 
+/*!
+    If \a enabled is true, this sets the item to accept hover events;
+    otherwise, hover events are not accepted by this item.
+
+    \sa acceptHoverEvents()
+*/
 void QQuickItem::setAcceptHoverEvents(bool enabled)
 {
     Q_D(QQuickItem);
@@ -5278,6 +6083,13 @@ void QQuickItem::unsetCursor()
 
 #endif
 
+/*!
+    Grabs the mouse input.
+
+    This item will receive all mouse events until ungrabMouse() is called.
+
+    \warning This function should be used with caution.
+  */
 void QQuickItem::grabMouse()
 {
     Q_D(QQuickItem);
@@ -5295,6 +6107,9 @@ void QQuickItem::grabMouse()
     }
 }
 
+/*!
+    Releases the mouse grab following a call to grabMouse().
+*/
 void QQuickItem::ungrabMouse()
 {
     Q_D(QQuickItem);
@@ -5451,6 +6266,16 @@ bool QQuickItem::contains(const QPointF &point) const
     return QRectF(0, 0, d->width, d->height).contains(point);
 }
 
+/*!
+    Maps the given \a point in this item's coordinate system to the equivalent
+    point within \a item's coordinate system, and returns the mapped
+    coordinate.
+
+    If \a item is 0, this maps \a point to the coordinate system of the
+    scene.
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
 QPointF QQuickItem::mapToItem(const QQuickItem *item, const QPointF &point) const
 {
     QPointF p = mapToScene(point);
@@ -5459,12 +6284,29 @@ QPointF QQuickItem::mapToItem(const QQuickItem *item, const QPointF &point) cons
     return p;
 }
 
+/*!
+    Maps the given \a point in this item's coordinate system to the equivalent
+    point within the scene's coordinate system, and returns the mapped
+    coordinate.
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
 QPointF QQuickItem::mapToScene(const QPointF &point) const
 {
     Q_D(const QQuickItem);
     return d->itemToWindowTransform().map(point);
 }
 
+/*!
+    Maps the given \a rect in this item's coordinate system to the equivalent
+    rectangular area within \a item's coordinate system, and returns the mapped
+    rectangle value.
+
+    If \a item is 0, this maps \a rect to the coordinate system of the
+    scene.
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
 QRectF QQuickItem::mapRectToItem(const QQuickItem *item, const QRectF &rect) const
 {
     Q_D(const QQuickItem);
@@ -5474,24 +6316,58 @@ QRectF QQuickItem::mapRectToItem(const QQuickItem *item, const QRectF &rect) con
     return t.mapRect(rect);
 }
 
+/*!
+    Maps the given \a rect in this item's coordinate system to the equivalent
+    rectangular area within the scene's coordinate system, and returns the mapped
+    rectangle value.
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
 QRectF QQuickItem::mapRectToScene(const QRectF &rect) const
 {
     Q_D(const QQuickItem);
     return d->itemToWindowTransform().mapRect(rect);
 }
 
+/*!
+    Maps the given \a point in \a item's coordinate system to the equivalent
+    point within this item's coordinate system, and returns the mapped
+    coordinate.
+
+    If \a item is 0, this maps \a point from the coordinate system of the
+    scene.
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
 QPointF QQuickItem::mapFromItem(const QQuickItem *item, const QPointF &point) const
 {
     QPointF p = item?item->mapToScene(point):point;
     return mapFromScene(p);
 }
 
+/*!
+    Maps the given \a point in the scene's coordinate system to the equivalent
+    point within this item's coordinate system, and returns the mapped
+    coordinate.
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
 QPointF QQuickItem::mapFromScene(const QPointF &point) const
 {
     Q_D(const QQuickItem);
     return d->windowToItemTransform().map(point);
 }
 
+/*!
+    Maps the given \a rect in \a item's coordinate system to the equivalent
+    rectangular area within this item's coordinate system, and returns the mapped
+    rectangle value.
+
+    If \a item is 0, this maps \a rect from the coordinate system of the
+    scene.
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
 QRectF QQuickItem::mapRectFromItem(const QQuickItem *item, const QRectF &rect) const
 {
     Q_D(const QQuickItem);
@@ -5500,6 +6376,13 @@ QRectF QQuickItem::mapRectFromItem(const QQuickItem *item, const QRectF &rect) c
     return t.mapRect(rect);
 }
 
+/*!
+    Maps the given \a rect in the scene's coordinate system to the equivalent
+    rectangular area within this item's coordinate system, and returns the mapped
+    rectangle value.
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
 QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
 {
     Q_D(const QQuickItem);
@@ -5542,26 +6425,6 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
 */
 
 /*!
-  \property QQuickItem::focus
-  \internal
-*/
-
-/*!
-  \property QQuickItem::transform
-  \internal
-*/
-
-/*!
-  \property QQuickItem::transformOrigin
-  \internal
-*/
-
-/*!
-  \property QQuickItem::activeFocus
-  \internal
-*/
-
-/*!
   \property QQuickItem::baseline
   \internal
 */
@@ -5577,25 +6440,8 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
 */
 
 /*!
-  \property QQuickItem::state
-  \internal
-*/
-
-/*!
-  \property QQuickItem::states
-  \internal
-*/
-
-/*!
-  \property QQuickItem::transformOriginPoint
-  \internal
-*/
-
-/*!
-  \property QQuickItem::transitions
-  \internal
-*/
-
+  \reimp
+  */
 bool QQuickItem::event(QEvent *ev)
 {
 #if 0
@@ -5728,6 +6574,10 @@ QSGTextureProvider *QQuickItem::textureProvider() const
            d->extra->layer->effectSource()->textureProvider() : 0;
 }
 
+/*!
+    \property QQuickItem::layer
+    \internal
+  */
 QQuickItemLayer *QQuickItemPrivate::layer() const
 {
     if (!extra.isAllocated() || !extra->layer) {
@@ -5762,11 +6612,11 @@ QQuickItemLayer::~QQuickItemLayer()
 /*!
     \qmlproperty bool QtQuick2::Item::layer.enabled
 
-    Holds wether the item is layered or not. Layering is disabled by default.
+    Holds whether the item is layered or not. Layering is disabled by default.
 
     A layered item is rendered into an offscreen surface and cached until
     it is changed. Enabling layering for complex QML item hierarchies can
-    some times be an optimization.
+    sometimes be an optimization.
 
     None of the other layer properties have any effect when the layer
     is disabled.
