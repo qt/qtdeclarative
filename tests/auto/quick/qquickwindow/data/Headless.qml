@@ -1,11 +1,10 @@
 import QtQuick 2.0
-import QtQuick.Window 2.0 as Window
+import QtQuick.Window 2.0 as Windows
 
-Window.Window {
+Windows.Window {
 
     width: 300
     height: 200
-    visible: true
 
     Text {
         anchors.left: parent.left

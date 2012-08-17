@@ -336,6 +336,8 @@ void tst_qquickwindow::touchEvent_basic()
     TestTouchItem::clearMousePressCounter();
 
     QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
+
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
@@ -451,7 +453,6 @@ void tst_qquickwindow::touchEvent_basic()
     delete topItem;
     delete middleItem;
     delete bottomItem;
-    delete window;
 }
 
 void tst_qquickwindow::touchEvent_propagation()
@@ -464,6 +465,8 @@ void tst_qquickwindow::touchEvent_propagation()
     QFETCH(bool, showItem);
 
     QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
+
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
@@ -576,7 +579,6 @@ void tst_qquickwindow::touchEvent_propagation()
     delete topItem;
     delete middleItem;
     delete bottomItem;
-    delete window;
 }
 
 void tst_qquickwindow::touchEvent_propagation_data()
@@ -596,6 +598,8 @@ void tst_qquickwindow::touchEvent_cancel()
     TestTouchItem::clearMousePressCounter();
 
     QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
+
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
@@ -620,7 +624,6 @@ void tst_qquickwindow::touchEvent_cancel()
     COMPARE_TOUCH_DATA(item->lastEvent, d);
 
     delete item;
-    delete window;
 }
 
 void tst_qquickwindow::touchEvent_reentrant()
@@ -628,6 +631,8 @@ void tst_qquickwindow::touchEvent_reentrant()
     TestTouchItem::clearMousePressCounter();
 
     QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
+
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
@@ -657,7 +662,6 @@ void tst_qquickwindow::touchEvent_reentrant()
     QTRY_COMPARE(item->touchEventCount, 3);
 
     delete item;
-    delete window;
 }
 
 void tst_qquickwindow::touchEvent_velocity()
@@ -665,6 +669,7 @@ void tst_qquickwindow::touchEvent_velocity()
     TestTouchItem::clearMousePressCounter();
 
     QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
@@ -710,7 +715,6 @@ void tst_qquickwindow::touchEvent_velocity()
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity, points);
     QCoreApplication::processEvents();
     delete item;
-    delete window;
 }
 
 void tst_qquickwindow::mouseFromTouch_basic()
@@ -721,6 +725,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
 
     TestTouchItem::clearMousePressCounter();
     QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
@@ -777,7 +782,6 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity, points);
     QCoreApplication::processEvents();
     delete item;
-    delete window;
 }
 
 void tst_qquickwindow::clearWindow()
@@ -800,6 +804,7 @@ void tst_qquickwindow::mouseFiltering()
     TestTouchItem::clearMousePressCounter();
 
     QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(250, 250);
     window->setPos(100, 100);
     window->show();
@@ -831,8 +836,6 @@ void tst_qquickwindow::mouseFiltering()
     QTRY_COMPARE(middleItem->mousePressId, 1);
     QTRY_COMPARE(bottomItem->mousePressId, 2);
     QTRY_COMPARE(topItem->mousePressId, 3);
-
-    delete window;
 }
 
 void tst_qquickwindow::qmlCreation()
@@ -841,6 +844,7 @@ void tst_qquickwindow::qmlCreation()
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("window.qml"));
     QObject* created = component.create();
+    QScopedPointer<QObject> cleanup(created);
     QVERIFY(created);
 
     QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
@@ -850,21 +854,19 @@ void tst_qquickwindow::qmlCreation()
     QQuickItem* item = window->findChild<QQuickItem*>("item");
     QVERIFY(item);
     QCOMPARE(item->window(), window);
-
-    delete window;
 }
 
 void tst_qquickwindow::clearColor()
 {
     //::grab examines rendering to make sure it works visually
     QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(250, 250);
     window->setPos(100, 100);
     window->setColor(Qt::blue);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QCOMPARE(window->color(), QColor(Qt::blue));
-    delete window;
 }
 
 void tst_qquickwindow::grab()
@@ -886,6 +888,8 @@ void tst_qquickwindow::grab()
 void tst_qquickwindow::multipleWindows()
 {
     QList<QQuickWindow *> windows;
+    QScopedPointer<QQuickWindow> cleanup[6];
+
     for (int i=0; i<6; ++i) {
         QQuickWindow *c = new QQuickWindow();
         c->setColor(Qt::GlobalColor(Qt::red + i));
@@ -893,13 +897,14 @@ void tst_qquickwindow::multipleWindows()
         c->setPos(100 + i * 30, 100 + i * 20);
         c->show();
         windows << c;
-        QVERIFY(c->isVisible());
+        cleanup[i].reset(c);
+        QVERIFY(QTest::qWaitForWindowExposed(c));
     }
 
     // move them
     for (int i=0; i<windows.size(); ++i) {
         QQuickWindow *c = windows.at(i);
-        c->setPos(c->x() - 10, c->y() - 10);
+        c->setPos(100 + i * 30, 100 + i * 20 + 100);
     }
 
     // resize them
@@ -907,8 +912,6 @@ void tst_qquickwindow::multipleWindows()
         QQuickWindow *c = windows.at(i);
         c->resize(200, 150);
     }
-
-    qDeleteAll(windows);
 }
 
 void tst_qquickwindow::animationsWhileHidden()
@@ -917,6 +920,7 @@ void tst_qquickwindow::animationsWhileHidden()
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("AnimationsWhileHidden.qml"));
     QObject* created = component.create();
+    QScopedPointer<QObject> cleanup(created);
 
     QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
@@ -929,8 +933,6 @@ void tst_qquickwindow::animationsWhileHidden()
 
     // Running animaiton should cause it to become visible again shortly.
     QTRY_VERIFY(window->isVisible());
-
-    delete window;
 }
 
 
@@ -940,9 +942,11 @@ void tst_qquickwindow::headless()
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("Headless.qml"));
     QObject* created = component.create();
+    QScopedPointer<QObject> cleanup(created);
 
     QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
+    window->show();
 
     QVERIFY(QTest::qWaitForWindowExposed(window));
     QVERIFY(window->isVisible());
@@ -978,8 +982,6 @@ void tst_qquickwindow::headless()
     QImage newContent = window->grabWindow();
 
     QCOMPARE(originalContent, newContent);
-
-    delete window;
 }
 
 void tst_qquickwindow::focusObject()
@@ -988,6 +990,8 @@ void tst_qquickwindow::focusObject()
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("focus.qml"));
     QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+
     QVERIFY(created);
 
     QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
@@ -1002,13 +1006,12 @@ void tst_qquickwindow::focusObject()
     QVERIFY(item2);
     item2->setFocus(true);
     QCOMPARE(item2, window->focusObject());
-
-    delete window;
 }
 
 void tst_qquickwindow::ignoreUnhandledMouseEvents()
 {
     QQuickWindow* window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
     window->resize(100, 100);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -1040,8 +1043,6 @@ void tst_qquickwindow::ignoreUnhandledMouseEvents()
         QVERIFY(QCoreApplication::sendEvent(window, &me));
         QVERIFY(!me.isAccepted());
     }
-
-    delete window;
 }
 
 
@@ -1053,6 +1054,7 @@ void tst_qquickwindow::ownershipRootItem()
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("ownershipRootItem.qml"));
     QObject* created = component.create();
+    QScopedPointer<QObject> cleanup(created);
 
     QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
