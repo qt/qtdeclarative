@@ -228,11 +228,13 @@ public:
     qreal width() const;
     void setWidth(qreal);
     void resetWidth();
+    void setImplicitWidth(qreal);
     qreal implicitWidth() const;
 
     qreal height() const;
     void setHeight(qreal);
     void resetHeight();
+    void setImplicitHeight(qreal);
     qreal implicitHeight() const;
 
     void setSize(const QSizeF &size);
@@ -373,9 +375,7 @@ protected:
 
     void updateInputMethod(Qt::InputMethodQueries queries = Qt::ImQueryInput);
 
-    void setImplicitWidth(qreal);
     bool widthValid() const; // ### better name?
-    void setImplicitHeight(qreal);
     bool heightValid() const; // ### better name?
     void setImplicitSize(qreal, qreal);
 
