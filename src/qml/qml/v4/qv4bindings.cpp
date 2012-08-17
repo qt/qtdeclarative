@@ -298,21 +298,14 @@ QV4Bindings::~QV4Bindings()
     delete [] subscriptions; subscriptions = 0;
 }
 
-QQmlAbstractBinding *QV4Bindings::configBinding(int index, int fallbackIndex, QObject *target, QObject *scope,
-                                                int property, int propType, quint16 line, quint16 column)
+QQmlAbstractBinding *QV4Bindings::configBinding(QObject *target, QObject *scope,
+                                                const QQmlInstruction::instr_assignV4Binding *i)
 {
-    Q_ASSERT(propType <= std::numeric_limits<quint16>::max());
+    Binding *rv = bindings + i->value;
 
-    Binding *rv = bindings + index;
-
-    rv->index = index;
-    rv->fallbackIndex = fallbackIndex;
-    rv->property = property;
-    rv->propType = propType;
+    rv->instruction = i;
     rv->target = target;
     rv->scope = scope;
-    rv->line = line;
-    rv->column = column;
     rv->parent = this;
 
     addref(); // This is decremented in Binding::destroy()
@@ -325,8 +318,8 @@ void QV4Bindings::Binding::setEnabled(QQmlAbstractBinding *_This,
 {
     QV4Bindings::Binding *This = static_cast<QV4Bindings::Binding *>(_This);
 
-    if (This->enabled != e) {
-        This->enabled = e;
+    if (This->enabledFlag() != e) {
+        This->setEnabledFlag(e);
 
         if (e) update(_This, flags);
     }
@@ -342,7 +335,7 @@ void QV4Bindings::Binding::destroy(QQmlAbstractBinding *_This)
 {
     QV4Bindings::Binding *This = static_cast<QV4Bindings::Binding *>(_This);
 
-    This->enabled = false;
+    This->setEnabledFlag(false);
     This->removeFromObject();
     This->clear();
     This->removeError();
@@ -354,7 +347,7 @@ int QV4Bindings::Binding::propertyIndex(const QQmlAbstractBinding *_This)
     const QV4Bindings::Binding *This = static_cast<const QV4Bindings::Binding *>(_This);
 
     if (This->target.hasValue()) return This->target.constValue()->targetProperty;
-    else return This->property;
+    else return This->instruction->property;
 }
 
 QObject *QV4Bindings::Binding::object(const QQmlAbstractBinding *_This)
@@ -402,7 +395,7 @@ void QV4Bindings::subscriptionNotify(int id)
 
 void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
 {
-    if (!binding->enabled)
+    if (!binding->enabledFlag())
         return;
 
     QQmlContextData *context = QQmlAbstractExpression::context();
@@ -415,62 +408,68 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
 
     QQmlTrace trace("V4 Binding Update");
     trace.addDetail("URL", context->url);
-    trace.addDetail("Line", binding->line);
-    trace.addDetail("Column", binding->column);
+    trace.addDetail("Line", binding->instruction->line);
+    trace.addDetail("Column", binding->instruction->column);
 
-    QQmlBindingProfiler prof(context->urlString, binding->line, binding->column, QQmlProfilerService::V4Binding);
+    QQmlBindingProfiler prof(context->urlString, binding->instruction->line, binding->instruction->column, QQmlProfilerService::V4Binding);
 
-    if (binding->updating) {
+    const int propType = binding->instruction->propType;
+    const int property = binding->instruction->property;
+
+    if (binding->updatingFlag()) {
         QString name;
-        if (binding->propType) {
-            QQmlValueType *vt = QQmlValueTypeFactory::valueType(binding->propType);
+        if (propType) {
+            QQmlValueType *vt = QQmlValueTypeFactory::valueType(propType);
             Q_ASSERT(vt);
 
-            name = QLatin1String(binding->target->metaObject()->property(binding->property & 0x0000FFFF).name());
+            name = QLatin1String(binding->target->metaObject()->property(property & 0x0000FFFF).name());
             name.append(QLatin1Char('.'));
-            name.append(QLatin1String(vt->metaObject()->property(binding->property >> 16).name()));
+            name.append(QLatin1String(vt->metaObject()->property(property >> 16).name()));
         } else {
-            name = QLatin1String(binding->target->metaObject()->property(binding->property).name());
+            name = QLatin1String(binding->target->metaObject()->property(property).name());
         }
         qmlInfo(*binding->target) << tr("Binding loop detected for property \"%1\"").arg(name);
         return;
     }
 
-    bool invalidated = false;
-    bool *inv = (binding->fallbackIndex != -1) ? &invalidated : 0;
+    int index = binding->instruction->value;
+    int fallbackIndex = binding->instruction->fallbackValue;
 
-    binding->updating = true;
-    if (binding->propType) {
-        QQmlValueType *vt = QQmlValueTypeFactory::valueType(binding->propType);
+    bool invalidated = false;
+    bool *inv = (fallbackIndex != -1) ? &invalidated : 0;
+
+    binding->setUpdatingFlag(true);
+    if (propType) {
+        QQmlValueType *vt = QQmlValueTypeFactory::valueType(propType);
         Q_ASSERT(vt);
-        vt->read(*binding->target, binding->property & 0x0000FFFF);
+        vt->read(*binding->target, property & 0x0000FFFF);
 
         QObject *target = vt;
-        run(binding->index, binding->executedBlocks, context, binding, binding->scope, target, flags, inv);
+        run(index, binding->executedBlocks, context, binding, binding->scope, target, flags, inv);
 
         if (!invalidated) {
-            vt->write(*binding->target, binding->property & 0x0000FFFF, flags);
+            vt->write(*binding->target, property & 0x0000FFFF, flags);
         }
     } else {
         QQmlData *data = QQmlData::get(*binding->target);
-        QQmlPropertyData *propertyData = (data && data->propertyCache ? data->propertyCache->property(binding->property) : 0);
+        QQmlPropertyData *propertyData = (data && data->propertyCache ? data->propertyCache->property(property) : 0);
 
         if (propertyData && propertyData->isVarProperty()) {
             // We will allocate a V8 handle in this conversion/store
             v8::HandleScope handle_scope;
             v8::Context::Scope context_scope(QQmlEnginePrivate::get(context->engine)->v8engine()->context());
 
-            run(binding->index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags, inv);
+            run(index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags, inv);
         } else {
-            run(binding->index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags, inv);
+            run(index, binding->executedBlocks, context, binding, binding->scope, *binding->target, flags, inv);
         }
     }
-    binding->updating = false;
+    binding->setUpdatingFlag(false);
 
     if (invalidated) {
         // This binding is no longer valid - fallback to V8
-        Q_ASSERT(binding->fallbackIndex > -1);
-        QQmlAbstractBinding *b = QQmlPropertyPrivate::activateSharedBinding(context, binding->fallbackIndex, flags);
+        Q_ASSERT(fallbackIndex > -1);
+        QQmlAbstractBinding *b = QQmlPropertyPrivate::activateSharedBinding(context, fallbackIndex, flags);
         Q_ASSERT(b == binding);
         b->destroy();
     }

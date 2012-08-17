@@ -3664,9 +3664,6 @@ bool QQmlCompiler::completeComponentBuild()
         bool needsFallback = false;
         int index = bindingCompiler.compile(expr, enginePrivate, &needsFallback);
         if (index != -1) {
-            // Ensure the index value fits within the available space
-            Q_ASSERT(index < (1 << 15));
-
             binding.dataType = BindingReference::V4;
             binding.compiledIndex = index;
             binding.sharedIndex = -1;
@@ -3736,8 +3733,6 @@ bool QQmlCompiler::completeComponentBuild()
             functionArray += expression.toUtf8();
             lineNumber += expression.count(QLatin1Char('\n'));
 
-            // Ensure the index value fits within the available space
-            Q_ASSERT(ii < (1 << 15));
             reference->sharedIndex = ii;
         }
         functionArray.append("]", 1);

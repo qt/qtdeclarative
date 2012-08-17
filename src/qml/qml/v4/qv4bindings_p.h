@@ -55,6 +55,7 @@
 
 #include "private/qqmlexpression_p.h"
 #include "private/qqmlbinding_p.h"
+#include "private/qqmlinstruction_p.h"
 #include "private/qv4instruction_p.h"
 #include "private/qpointervaluepair_p.h"
 
@@ -71,17 +72,16 @@ public:
     QV4Bindings(const char *program, QQmlContextData *context);
     virtual ~QV4Bindings();
 
-    QQmlAbstractBinding *configBinding(int index, int fallbackIndex, QObject *target,
-                                       QObject *scope, int property, int propType,
-                                       quint16 line, quint16 column);
+    QQmlAbstractBinding *configBinding(QObject *target, QObject *scope,
+                                       const QQmlInstruction::instr_assignV4Binding *);
 
 #ifdef QML_THREADED_INTERPRETER
     static void **getDecodeInstrTable();
 #endif
 
     struct Binding : public QQmlAbstractBinding, public QQmlDelayedError {
-        Binding() : QQmlAbstractBinding(V4), index(-1), fallbackIndex(-1), enabled(false),
-                    updating(0), property(0), propType(0), scope(0), target(0), executedBlocks(0), parent(0) {}
+        Binding()
+            : QQmlAbstractBinding(V4), target(0), scope(0), instruction(0), executedBlocks(0), parent(0) {}
 
         // Inherited from QQmlAbstractBinding
         static void destroy(QQmlAbstractBinding *);
@@ -96,23 +96,21 @@ public:
             int targetProperty;
         };
 
-        int index:15;
-        int fallbackIndex:15;
-        bool enabled:1;
-        bool updating:1;
-
-        // Encoding of property is: coreIndex | (valueTypeIndex << 16)
-        // propType and valueTypeIndex are only set if the property is a value type property
-        int property;
-        quint16 propType;
-
-        QObject *scope;
-        quint16 line;
-        quint16 column;
         QPointerValuePair<QObject, Retarget> target;
-        quint32 executedBlocks;
+        QObject *scope;
 
+        // To save memory, we store flags inside the instruction pointer.
+        //    instruction.flag1: enabled
+        //    instruction.flag2: updating
+        QFlagPointer<const QQmlInstruction::instr_assignV4Binding> instruction;
+
+        quint32 executedBlocks;
         QV4Bindings *parent;
+
+        inline bool enabledFlag() const { return instruction.flag(); }
+        inline void setEnabledFlag(bool v) { instruction.setFlagValue(v); }
+        inline bool updatingFlag() const { return instruction.flag2(); }
+        inline void setUpdatingFlag(bool v) { instruction.setFlag2Value(v); }
     };
 
 private:

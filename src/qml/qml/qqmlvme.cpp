@@ -846,9 +846,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
             if (instr.isRoot && BINDINGSKIPLIST.testBit(propertyIdx))
                 QML_NEXT_INSTR(StoreV4Binding);
 
-            QQmlAbstractBinding *binding = 
-                CTXT->v4bindings->configBinding(instr.value, instr.fallbackValue, target, scope, instr.property,
-                                                instr.propType, instr.line, instr.column);
+            QQmlAbstractBinding *binding = CTXT->v4bindings->configBinding(target, scope, &instr);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
 
