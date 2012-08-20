@@ -81,15 +81,10 @@ QT_BEGIN_NAMESPACE
     to animate the parent change via another item that does not have clipping
     enabled. Such an item can be set using the \l via property.
 
-    For convenience, when a ParentAnimation is used in a \l Transition, it will
-    animate any ParentChange that has occurred during the state change.
-    This can be overridden by setting a specific target item using the
-    \l target property.
-
-    Like any other animation type, a ParentAnimation can be applied in a
-    number of ways, including transitions, behaviors and property value
-    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
-    variety of methods for creating animations.
+    ParentAnimation is typically used within a \l Transition in conjunction
+    with a ParentChange. When used in this manner, it animates any
+    ParentChange that has occurred during the state change. This can be
+    overridden by setting a specific target item using the \l target property.
 
     \sa {Animation and Transitions in Qt Quick}, {declarative/animation/basics}{Animation basics example}
 */
@@ -129,10 +124,9 @@ void QQuickParentAnimation::setTargetObject(QQuickItem *target)
     \qmlproperty Item QtQuick2::ParentAnimation::newParent
     The new parent to animate to.
 
-    If the ParentAnimation is defined within a \l Transition or \l Behavior,
+    If the ParentAnimation is defined within a \l Transition,
     this value defaults to the value defined in the end state of the
-    \l Transition, or the value of the property change that triggered the
-    \l Behavior.
+    \l Transition.
 */
 QQuickItem *QQuickParentAnimation::newParent() const
 {
@@ -162,6 +156,9 @@ void QQuickParentAnimation::setNewParent(QQuickItem *newParent)
         // ...
     }
     \endqml
+
+    \note This only works when the ParentAnimation is used in a \l Transition
+    in conjunction with a ParentChange.
 */
 QQuickItem *QQuickParentAnimation::via() const
 {
@@ -429,15 +426,14 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
     \snippet qml/anchoranimation.qml 0
 
-    For convenience, when an AnchorAnimation is used in a \l Transition, it will
+    When an AnchorAnimation is used in a \l Transition, it will
     animate any AnchorChanges that have occurred during the state change.
     This can be overridden by setting a specific target item using the
     \l target property.
 
-    Like any other animation type, an AnchorAnimation can be applied in a
-    number of ways, including transitions, behaviors and property value
-    sources. The \l {Animation and Transitions in Qt Quick} documentation shows a
-    variety of methods for creating animations.
+    \note AnchorAnimation can only be used in a \l Transition and in
+    conjunction with an AnchorChange. It cannot be used in behaviors and
+    other types of animations.
 
     \sa {Animation and Transitions in Qt Quick}, AnchorChanges
 */
