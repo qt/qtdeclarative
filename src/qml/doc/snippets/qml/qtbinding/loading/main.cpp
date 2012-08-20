@@ -37,8 +37,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QtCore>
+#include <QGuiApplication>
 #include <QtQml>
+#include <QtQuick>
 
 static void withComponent()
 {
@@ -53,7 +54,7 @@ QObject *object = component.create();
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
 //![QQuickView]
 // Using QQuickView

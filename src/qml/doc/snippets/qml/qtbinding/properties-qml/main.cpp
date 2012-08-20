@@ -42,7 +42,7 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QCoreApplication app(argc, argv);
 
 //![0]
 QQmlEngine engine;

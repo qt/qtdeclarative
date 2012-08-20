@@ -37,11 +37,11 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QtCore>
-#include <QtQml>
+#include <QGuiApplication>
+#include <QtQuick>
 
 int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
 //![0]
 // C++

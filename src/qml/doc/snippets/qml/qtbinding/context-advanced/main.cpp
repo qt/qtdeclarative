@@ -37,14 +37,14 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QtCore>
-#include <QtQml>
+#include <QGuiApplication>
+#include <QtQuick>
 
 #include "applicationdata.h"
 
 //![0]
 int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     QQuickView view;
 

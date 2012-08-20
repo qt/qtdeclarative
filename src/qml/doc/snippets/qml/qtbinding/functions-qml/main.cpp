@@ -38,11 +38,11 @@
 **
 ****************************************************************************/
 #include <QtCore>
-#include <QtQml>
+#include <QtQuick>
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QCoreApplication app(argc, argv);
 
 //![0]
 // main.cpp
