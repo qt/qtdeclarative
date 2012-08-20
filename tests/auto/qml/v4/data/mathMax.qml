@@ -20,9 +20,13 @@ Item {
     property real subtest9: Math.max(i1.p10, i1.p9)
     property bool test9: subtest9 === 0 && (1/subtest9) === Infinity
 
-    property real test10: Math.max(i1.p11, i1.p1)
-    property real test11: Math.max(i1.p11, i1.p2)
-    property real test12: Math.max(i1.p1, i1.p2, i1.p3)
+    // Reverse the inputs to Math.max
+    property real subtest10: Math.max(i1.p9, i1.p10)
+    property bool test10: subtest10 === 0 && (1/subtest10) === Infinity
+
+    property real test11: Math.max(i1.p11, i1.p1)
+    property real test12: Math.max(i1.p11, i1.p2)
+    property real test13: Math.max(i1.p1, i1.p2, i1.p3)
 
     QtObject {
         id: i1
@@ -38,4 +42,4 @@ Item {
         property real p10: -0
         property var p11: null
     }
- }
+}

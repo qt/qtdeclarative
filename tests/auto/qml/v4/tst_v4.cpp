@@ -142,13 +142,13 @@ void tst_v4::qtscript_data()
     QTest::newRow("unary minus") << "unaryMinus.qml";
     QTest::newRow("null qobject") << "nullQObject.qml";
     QTest::newRow("qobject -> bool") << "objectToBool.qml";
-    QTest::newRow("conversion from bool") << "conversions.1.qml"; // QTBUG-24706
-    QTest::newRow("conversion from int") << "conversions.2.qml"; // QTBUG-24706
+    QTest::newRow("conversion from bool") << "conversions.1.qml";
+    QTest::newRow("conversion from int") << "conversions.2.qml";
     QTest::newRow("conversion from float") << "conversions.3.qml";
-    QTest::newRow("conversion from double") << "conversions.4.qml"; // QTBUG-24706
-    QTest::newRow("conversion from real") << "conversions.5.qml"; // QTBUG-24706
-    QTest::newRow("conversion from string") << "conversions.6.qml"; // QTBUG-24706
-    QTest::newRow("conversion from url") << "conversions.7.qml"; // QTBUG-24706
+    QTest::newRow("conversion from double") << "conversions.4.qml";
+    QTest::newRow("conversion from real") << "conversions.5.qml";
+    QTest::newRow("conversion from string") << "conversions.6.qml";
+    QTest::newRow("conversion from url") << "conversions.7.qml";
     QTest::newRow("conversion from vec3") << "conversions.8.qml";
     QTest::newRow("variantHandling") << "variantHandling.qml";
     QTest::newRow("varHandling") << "varHandling.qml";
@@ -536,7 +536,7 @@ void tst_v4::mathAbs()
     QCOMPARE(o->property("test9").toBool(), true);
     QCOMPARE(o->property("test10").toBool(), true);
     QCOMPARE(o->property("test11").toInt(), 0);
-    //QCOMPARE(o->property("test12").toBool(), true);   //QTBUG-24706
+    QCOMPARE(o->property("test12").toBool(), true);
 
     delete o;
 }
@@ -551,13 +551,13 @@ void tst_v4::mathCeil()
     QCOMPARE(o->property("test1").toReal(), qreal(-3));
     QCOMPARE(o->property("test2").toReal(), qreal(5));
     QCOMPARE(o->property("test3").toBool(), true);
-    //QCOMPARE(o->property("test4").toBool(), true);    //QTBUG-24706
+    QCOMPARE(o->property("test4").toBool(), true);
     QCOMPARE(o->property("test5").toBool(), true);
     QCOMPARE(o->property("test6").toReal(), qreal(83));
-    //QCOMPARE(o->property("test7").toBool(), true);    //QTBUG-24706
-    //QCOMPARE(o->property("test8").toBool(), true);    //QTBUG-24706
+    QCOMPARE(o->property("test7").toBool(), true);
+    QCOMPARE(o->property("test8").toBool(), true);
     QCOMPARE(o->property("test9").toInt(), 0);
-    //QCOMPARE(o->property("test10").toBool(), true);   //QTBUG-24706
+    QCOMPARE(o->property("test10").toBool(), true);
 
     delete o;
 }
@@ -577,10 +577,11 @@ void tst_v4::mathMax()
     QCOMPARE(o->property("test6").toReal(), qreal(82.6));
     QCOMPARE(o->property("test7").toReal(), qreal(4.4));
     QCOMPARE(o->property("test8").toBool(), true);
-    //QCOMPARE(o->property("test9").toBool(), true);    //QTBUG-24706
-    QCOMPARE(o->property("test10").toReal(), qreal(0));
-    QCOMPARE(o->property("test11").toReal(), qreal(4.4));
-    QCOMPARE(o->property("test12").toReal(), qreal(7));
+    QCOMPARE(o->property("test9").toBool(), true);
+    QCOMPARE(o->property("test10").toBool(), true);
+    QCOMPARE(o->property("test11").toReal(), qreal(0));
+    QCOMPARE(o->property("test12").toReal(), qreal(4.4));
+    QCOMPARE(o->property("test13").toReal(), qreal(7));
 
     delete o;
 }
@@ -600,10 +601,11 @@ void tst_v4::mathMin()
     QCOMPARE(o->property("test6").toReal(), qreal(82.6));
     QCOMPARE(o->property("test7").toBool(), true);
     QCOMPARE(o->property("test8").toReal(), qreal(4.4));
-    //QCOMPARE(o->property("test9").toBool(), true);    //QTBUG-24706
-    QCOMPARE(o->property("test10").toReal(), qreal(-3.7));
-    QCOMPARE(o->property("test11").toReal(), qreal(0));
-    QCOMPARE(o->property("test12").toReal(), qreal(-3.7));
+    QCOMPARE(o->property("test9").toBool(), true);
+    QCOMPARE(o->property("test10").toBool(), true);
+    QCOMPARE(o->property("test11").toReal(), qreal(-3.7));
+    QCOMPARE(o->property("test12").toReal(), qreal(0));
+    QCOMPARE(o->property("test13").toReal(), qreal(-3.7));
     delete o;
 }
 
@@ -726,7 +728,6 @@ void tst_v4::conversions_data()
             << QUrl(testFileUrl("").toString() + QString(QLatin1String("4")))
             << QVector3D(4, 4, 4);
 
-    // QTBUG-24706
     QTest::newRow("from url") << testFileUrl("conversions.7.qml")
             << (QStringList() << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":6:14: Unable to assign QUrl to int"))
                               << (testFileUrl("conversions.7.qml").toString() + QLatin1String(":7:16: Unable to assign QUrl to number"))

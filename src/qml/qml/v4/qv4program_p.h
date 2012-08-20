@@ -95,6 +95,7 @@ enum QQmlRegisterType {
     FloatType,
     IntType,
     BoolType,
+    SpecialNumericType,
 
     PODValueType,
 

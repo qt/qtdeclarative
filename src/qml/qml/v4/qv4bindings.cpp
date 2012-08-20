@@ -84,13 +84,64 @@ QQmlAbstractBinding::VTable QV4Bindings_Binding_vtable = {
 };
 
 namespace {
+
+// The highest bit is the sign bit, in any endianness
+static const quint64 doubleSignMask = (quint64(0x1) << 63);
+
+inline bool signBitSet(const double &v)
+{
+    union { double d; quint64 u; } u;
+    u.d = v;
+    return (u.u & doubleSignMask);
+}
+
+inline double setSignBit(const double &v, bool b = true)
+{
+    union { double d; quint64 u; } u;
+
+    u.d = v;
+    if (b) {
+        u.u |= doubleSignMask;
+    } else {
+        u.u &= ~doubleSignMask;
+    }
+    return u.d;
+}
+
+inline double clearSignBit(const double &v, bool b = true)
+{
+    return setSignBit(v, !b);
+}
+
 struct Register {
     typedef QQmlRegisterType Type;
 
+    enum SpecialNumericValue {
+        NegativeZero = 1,
+        PositiveInfinity = 2,
+        NegativeInfinity = 3,
+        NotANumber = 4
+    };
+
     inline void setUndefined() { dataType = UndefinedType; }
-    inline void setNull() { dataType = NullType; }
-    inline void setNaN() { setnumber(qSNaN()); }
     inline bool isUndefined() const { return dataType == UndefinedType; }
+
+    inline void setNull() { dataType = NullType; }
+
+    inline void setNaN() { setnumber(qSNaN()); }
+    inline void setNaNType() { dataType = SpecialNumericType; intValue = NotANumber; } // non-numeric representation of NaN
+    inline bool isNaN() const { return (((dataType == SpecialNumericType) && (intValue == NotANumber)) ||
+                                        ((dataType == NumberType) && qIsNaN(numberValue))); }
+
+    inline void setInf(bool negative) { setnumber(setSignBit(qInf(), negative)); }
+    inline void setInfType(bool negative) { dataType = SpecialNumericType; intValue = (negative ? NegativeInfinity : PositiveInfinity); } // non-numeric representation of Inf
+    inline bool isInf() const { return (((dataType == SpecialNumericType) && ((intValue == NegativeInfinity) || (intValue == PositiveInfinity))) ||
+                                        ((dataType == NumberType) && qIsInf(numberValue))); }
+
+    inline void setNegativeZero() { setnumber(setSignBit(0)); }
+    inline void setNegativeZeroType() { dataType = SpecialNumericType; intValue = NegativeZero; } // non-numeric representation of -0
+    inline bool isNegativeZero() const { return (((dataType == SpecialNumericType) && (intValue == NegativeZero)) ||
+                                                 ((dataType == NumberType) && (numberValue == 0) && signBitSet(numberValue))); }
 
     inline void setQObject(QObject *o) { qobjectValue = o; dataType = QObjectStarType; }
     inline QObject *getQObject() const { return qobjectValue; }
@@ -1104,6 +1155,9 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
+        else if (src.isNaN()) output.setNaN();
+        else if (src.isInf()) output.setInf(src.getint() == Register::NegativeInfinity);
+        else if (src.isNegativeZero()) output.setNegativeZero();
         else output.setnumber(double(src.getint()));
     }
     QML_V4_END_INSTR(ConvertIntToNumber, unaryop)
@@ -1734,7 +1788,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
-        else output.setnumber(qAbs(src.getnumber()));
+        else output.setnumber(clearSignBit(qAbs(src.getnumber())));
     }
     QML_V4_END_INSTR(MathAbsNumber, unaryop)
 
@@ -1760,8 +1814,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
-        if (src.isUndefined()) output.setUndefined();
-        else output.setint(qCeil(src.getnumber()));
+        if (src.isUndefined())
+            output.setUndefined();
+        else if (src.isNaN())
+            // output should be an int, but still NaN
+            output.setNaNType();
+        else if (src.isInf())
+            // output should be an int, but still Inf
+            output.setInfType(signBitSet(src.getnumber()));
+        else if (src.isNegativeZero())
+            // output should be an int, but still -0
+            output.setNegativeZeroType();
+        else
+            output.setint(qCeil(src.getnumber()));
     }
     QML_V4_END_INSTR(MathCeilNumber, unaryop)
 
@@ -2101,8 +2166,21 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         const Register &left = registers[instr->binaryop.left];
         const Register &right = registers[instr->binaryop.right];
         Register &output = registers[instr->binaryop.output];
-        if (left.isUndefined() || right.isUndefined()) output.setUndefined();
-        else output.setnumber(qMax(left.getnumber(), right.getnumber()));
+        if (left.isUndefined() || right.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const double lhs = left.getnumber();
+            const double rhs = right.getnumber();
+            double result(lhs);
+            if (lhs == rhs) {
+                // If these are both zero, +0 is greater than -0
+                if (signBitSet(lhs) && !signBitSet(rhs))
+                    result = rhs;
+            } else {
+                result = qMax(lhs, rhs);
+            }
+            output.setnumber(result);
+        }
     }
     QML_V4_END_INSTR(MathMaxNumber, binaryop)
 
@@ -2111,8 +2189,21 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         const Register &left = registers[instr->binaryop.left];
         const Register &right = registers[instr->binaryop.right];
         Register &output = registers[instr->binaryop.output];
-        if (left.isUndefined() || right.isUndefined()) output.setUndefined();
-        else output.setnumber(qMin(left.getnumber(), right.getnumber()));
+        if (left.isUndefined() || right.isUndefined()) {
+            output.setUndefined();
+        } else {
+            const double lhs = left.getnumber();
+            const double rhs = right.getnumber();
+            double result(lhs);
+            if (lhs == rhs) {
+                // If these are both zero, -0 is lesser than +0
+                if (!signBitSet(lhs) && signBitSet(rhs))
+                    result = rhs;
+            } else {
+                result = qMin(lhs, rhs);
+            }
+            output.setnumber(result);
+        }
     }
     QML_V4_END_INSTR(MathMinNumber, binaryop)
 
