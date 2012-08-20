@@ -2942,9 +2942,8 @@ bool QQmlCompiler::buildDynamicMeta(QQmlScript::Object *obj, DynamicMetaMode mod
     while ((parentCache = parentCache->parent())) {
         if (int pSigCount = parentCache->signalCount()) {
             int pSigOffset = parentCache->signalOffset();
-            for (int i = 0; i < pSigCount; ++i) {
-                QQmlPropertyData *currPSig = parentCache->signal(pSigOffset+i);
-                if (!currPSig) continue;
+            for (int i = pSigOffset; i < pSigCount; ++i) {
+                QQmlPropertyData *currPSig = parentCache->signal(i);
                 // XXX TODO: find a better way to get signal name from the property data :-/
                 for (QQmlPropertyCache::StringCache::ConstIterator iter = parentCache->stringCache.begin();
                         iter != parentCache->stringCache.end(); ++iter) {
