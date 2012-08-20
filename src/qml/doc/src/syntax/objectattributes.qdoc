@@ -600,6 +600,34 @@ Item {
 \l {Property Aliases}{alias} property.
 
 
+\section3 Property Modifier Objects
+
+Properties can have
+\l{qtqml-cppintegration-definetypes.html#property-modifier-types}
+{property value modifier objects} associated with them.
+The syntax for declaring an instance of a property modifier type associated
+with a particular property is as follows:
+
+\code
+<PropertyModifierTypeName> on <propertyName> {
+    // attributes of the object instance
+}
+\endcode
+
+It is important to note that the above syntax is in fact an
+\l{qtqml-syntax-basics.html#object-declarations}{object declaration} which
+will instantiate an object which acts on a pre-existing property.
+
+Certain property modifier types may only be applicable to specific property
+types, however this is not enforced by the language.  For example, the
+\c NumberAnimation type provided by \c QtQuick will only animate
+numeric-type (such as \c int or \c real) properties.  Attempting to use a
+\c NumberAnimation with non-numeric property will not result in an error,
+however the non-numeric property will not be animated.  The behavior of a
+property modifier type when associated with a particular property type is
+defined by its implementation.
+
+
 \section2 Signal Attributes
 
 A signal is a notification from an object that some event has occurred: for

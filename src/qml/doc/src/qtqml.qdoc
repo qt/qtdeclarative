@@ -76,7 +76,6 @@ for an introduction to writing QML applications.
             \li \l{qtqml-documents-definetypes.html}{Defining Object Types from QML}
             \li \l{qtqml-cppintegration-definetypes.html}{Defining Object Types from C++}
             \endlist
-        \li \l{qtqml-typesystem-topic.html#property-modifier-types}{Property Modifier Types}
         \endlist
 
     \li \l{qtqml-modules-topic.html}{QML Modules}

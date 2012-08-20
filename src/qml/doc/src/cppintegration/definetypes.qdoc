@@ -475,13 +475,63 @@ qDebug() << "Value of MessageBoard.expired:" << attached->expired();
 \endcode
 
 
-\section2 Property Value Sources
+\section2 Property Modifier Types
 
-In the QML language syntax, there is a concept of \e {property value sources}.
-These are QML types that can automatically update the value of a property over
-time, using the \c {<PropertyValueSource> on <property>} syntax. For example,
-the various \l{qtquick-statesanimations-animations.html}{property animation}
-types provided by the \c QtQuick module are examples of property value sources.
+A property modifier type is a special kind of QML object type.  A property
+modifier type instance affects a property (of a QML object instance) which it
+is applied to.  There are two different kinds of property modifier types:
+\list
+\li property value write interceptors
+\li property value sources
+\endlist
+
+A property value write interceptor can be used to filter or modify values as
+they are written to properties.  Currently, the only supported property
+value write interceptor is the \l Behavior type provided by the \c QtQuick
+import.
+
+A property value source can be used to automatically update the value of a
+property over time.  Clients can define their own property value source types.
+The various \l{qtquick-statesanimations-animations.html}{property animation}
+types provided by the \c QtQuick import are examples of property value
+sources.
+
+Property modifier type instances can be created and applied to a property of
+a QML object through the "<ModifierType> on <propertyName>" syntax, as the
+following example shows:
+
+\qml
+import QtQuick 2.0
+
+Item {
+    width: 400
+    height: 50
+
+    Rectangle {
+        width: 50
+        height: 50
+        color: "red"
+
+        NumberAnimation on x {
+            from: 0
+            to: 350
+            loops: Animation.Infinite
+            duration: 2000
+        }
+    }
+}
+\endqml
+
+Clients can register their own property value source types, but currently not
+property value write interceptors.
+
+\section3 Property Value Sources
+
+\e {Property value sources} are QML types that can automatically update the
+value of a property over time, using the
+\c {<PropertyValueSource> on <property>} syntax. For example, the various
+\l{qtquick-statesanimations-animations.html}{property animation} types
+provided by the \c QtQuick module are examples of property value sources.
 
 A property value source can be implemented in C++ by subclassing
 QQmlPropertyValueSource and providing an implementation that writes different

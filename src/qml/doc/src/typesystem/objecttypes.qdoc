@@ -119,21 +119,14 @@ See \l{qtqml-documents-scope.html}{Scope and Naming Resolution} for more details
 C++ plugin writers and application developers may register types defined in C++
 through API provided by the Qt QML module.  There are various registration
 functions which each allow different use-cases to be fulfilled.
-
-\list
-\li qmlRegisterType
-\li qmlRegisterUncreatableType
-\li qmlRegisterExtendedType
-\li qmlRegisterInterface
-\li qmlRegisterCustomType
-\li qmlRegisterSingletonType
-\endlist
-
-For more information on this topic, see the documentation regarding
+For more information about those registration functions, and the specifics of
+exposing custom C++ types to QML, see the documentation regarding
 \l{qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 
 The QML type-system relies on imports, plugins and extensions being installed
 into a known import path.  Plugins may be provided by third-party developers
-and reused by client application developers.
+and reused by client application developers.  Please see the documentation
+about \l{qtqml-modules-topic.html}{QML modules} for more information about
+how to create and deploy a QML extension module.
 
 */
