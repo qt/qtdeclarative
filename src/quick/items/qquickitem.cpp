@@ -5042,7 +5042,7 @@ void QQuickItemPrivate::setCulled(bool cull)
         return;
 
     culled = cull;
-    if ((cull && ++extra->hideRefCount == 1) || (!cull && --extra->hideRefCount == 0))
+    if ((cull && ++extra.value().hideRefCount == 1) || (!cull && --extra.value().hideRefCount == 0))
         dirty(HideReference);
 }
 

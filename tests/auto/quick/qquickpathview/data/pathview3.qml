@@ -9,6 +9,10 @@ PathView {
     preferredHighlightBegin: 0.50
     preferredHighlightEnd: 0.50
 
+    function addColor(color) {
+        model.append({"lColor":color})
+    }
+
     path: Path {
         startX: -50; startY: 40;
 
@@ -35,7 +39,6 @@ PathView {
     }
 
     model: ListModel {
-        id: rssModel
         ListElement { lColor: "red" }
         ListElement { lColor: "green" }
         ListElement { lColor: "yellow" }

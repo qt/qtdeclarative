@@ -1167,7 +1167,7 @@ bool QQuickWindowPrivate::deliverInitialMousePressEvent(QQuickItem *item, QMouse
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled())
+        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
             continue;
         if (deliverInitialMousePressEvent(child, event))
             return true;
@@ -1329,7 +1329,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled())
+        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
             continue;
         if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
             return true;
@@ -1395,7 +1395,7 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled())
+        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
             continue;
         if (deliverWheelEvent(child, event))
             return true;
@@ -1542,7 +1542,7 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
-        if (!child->isEnabled() || !child->isVisible())
+        if (!child->isEnabled() || !child->isVisible() || QQuickItemPrivate::get(child)->culled)
             continue;
         if (deliverTouchPoints(child, event, newPoints, acceptedNewPoints, updatedPoints))
             return true;
@@ -1782,7 +1782,7 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     Q_Q(QQuickWindow);
     bool accepted = false;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    if (!item->isVisible() || !item->isEnabled())
+    if (!item->isVisible() || !item->isEnabled() || QQuickItemPrivate::get(item)->culled)
         return false;
 
     QPointF p = item->mapFromScene(event->pos());
@@ -1855,7 +1855,7 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled())
+        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
             continue;
         if (QQuickItem *cursorItem = findCursorItem(child, scenePos))
             return cursorItem;

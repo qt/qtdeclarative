@@ -139,6 +139,7 @@ private slots:
     void positionViewAtIndex_data();
     void indexAt_itemAt();
     void indexAt_itemAt_data();
+    void cacheItemCount();
 };
 
 class TestObject : public QObject
@@ -2019,6 +2020,85 @@ void tst_QQuickPathView::indexAt_itemAt_data()
     QTest::newRow("No Item a - 580, 95") << 580. << 95. << -1;
     QTest::newRow("No Item b - 585, 85") << 585. << 85. << -1;
     QTest::newRow("Item 7 - 360, 200") << 360. << 200. << 7;
+}
+
+void tst_QQuickPathView::cacheItemCount()
+{
+    QQuickView *window = createView();
+
+    window->setSource(testFileUrl("pathview3.qml"));
+    window->show();
+    qApp->processEvents();
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());
+    QVERIFY(pathview != 0);
+
+    QMetaObject::invokeMethod(pathview, "addColor", Q_ARG(QVariant, QString("orange")));
+    QMetaObject::invokeMethod(pathview, "addColor", Q_ARG(QVariant, QString("lightsteelblue")));
+    QMetaObject::invokeMethod(pathview, "addColor", Q_ARG(QVariant, QString("teal")));
+    QMetaObject::invokeMethod(pathview, "addColor", Q_ARG(QVariant, QString("aqua")));
+
+    pathview->setOffset(0);
+
+    pathview->setCacheItemCount(3);
+    QVERIFY(pathview->cacheItemCount() == 3);
+
+    QQmlIncubationController controller;
+    window->engine()->setIncubationController(&controller);
+
+    // Items on the path are created immediately
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 0));
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 1));
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 11));
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 10));
+
+    const int cached[] = { 2, 3, 9, -1 }; // two appended, one prepended
+
+    int i = 0;
+    while (cached[i] >= 0) {
+        // items will be created one at a time
+        QVERIFY(findItem<QQuickItem>(pathview, "wrapper", cached[i]) == 0);
+        QQuickItem *item = 0;
+        while (!item) {
+            bool b = false;
+            controller.incubateWhile(&b);
+            item = findItem<QQuickItem>(pathview, "wrapper", cached[i]);
+        }
+        ++i;
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    // move view and confirm items in view are visible immediately and outside are created async
+    pathview->setOffset(4);
+
+    // Items on the path are created immediately
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 6));
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 7));
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 8));
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 9));
+    // already created items within cache stay created
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 10));
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 11));
+
+    // one item prepended async.
+    QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 5) == 0);
+    QQuickItem *item = 0;
+    while (!item) {
+        bool b = false;
+        controller.incubateWhile(&b);
+        item = findItem<QQuickItem>(pathview, "wrapper", 5);
+    }
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickPathView)

@@ -86,6 +86,8 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
     Q_PROPERTY(int pathItemCount READ pathItemCount WRITE setPathItemCount RESET resetPathItemCount NOTIFY pathItemCountChanged)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
+    Q_PROPERTY(int cacheItemCount READ cacheItemCount WRITE setCacheItemCount NOTIFY cacheItemCountChanged)
+
     Q_ENUMS(HighlightRangeMode)
     Q_ENUMS(SnapMode)
     Q_ENUMS(PositionMode)
@@ -150,6 +152,9 @@ public:
     void setPathItemCount(int);
     void resetPathItemCount();
 
+    int cacheItemCount() const;
+    void setCacheItemCount(int);
+
     enum SnapMode { NoSnap, SnapToItem, SnapOneItem };
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
@@ -195,6 +200,7 @@ Q_SIGNALS:
     void dragStarted();
     void dragEnded();
     void snapModeChanged();
+    void cacheItemCountChanged();
 
 protected:
     virtual void updatePolish();

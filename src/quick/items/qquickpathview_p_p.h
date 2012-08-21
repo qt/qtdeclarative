@@ -95,13 +95,14 @@ public:
         }
     }
 
-    QQuickItem *getItem(int modelIndex, qreal z = 0, bool onPath=true);
+    QQuickItem *getItem(int modelIndex, qreal z = 0, bool async=false);
     void releaseItem(QQuickItem *item);
     QQuickPathViewAttached *attached(QQuickItem *item);
     QQmlOpenMetaObjectType *attachedType();
     void clear();
     void updateMappedRange();
     qreal positionOfIndex(qreal index) const;
+    bool isInBound(qreal position, qreal lower, qreal upper) const;
     void createHighlight();
     void updateHighlight();
     void setHighlightPosition(qreal pos);
@@ -138,6 +139,7 @@ public:
     qreal offset;
     qreal offsetAdj;
     qreal mappedRange;
+    qreal mappedCache;
     bool stealMouse : 1;
     bool ownModel : 1;
     bool interactive : 1;
@@ -162,6 +164,7 @@ public:
     int firstIndex;
     int pathItems;
     int requestedIndex;
+    int cacheSize;
     qreal requestedZ;
     QList<QQuickItem *> items;
     QList<QQuickItem *> itemCache;
