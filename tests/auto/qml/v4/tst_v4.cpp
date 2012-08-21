@@ -80,9 +80,13 @@ private slots:
     void colorType();
     void mathAbs();
     void mathCeil();
+    void mathFloor();
     void mathMax();
     void mathMin();
+    void mathCos();
+    void mathSin();
     void singletonType();
+    void integerOperations();
 
     void conversions_data();
     void conversions();
@@ -100,22 +104,29 @@ void tst_v4::initTestCase()
     registerTypes();
 }
 
-static int v4ErrorsMsgCount = 0;
+static int v4ErrorCount;
+static QList<QByteArray> v4ErrorMessages;
 static void v4ErrorsMsgHandler(QtMsgType, const char *message)
 {
     QByteArray m(message);
+    v4ErrorMessages.append(m);
+
     if (m.contains("QV4"))
-        v4ErrorsMsgCount++;
+        ++v4ErrorCount;
 }
 
 void tst_v4::qtscript()
 {
+    if (strcmp(QTest::currentDataTag(), "jsvalueHandling") == 0)
+        QSKIP("Test failing - QTBUG-26951");
+
     QFETCH(QString, file);
     QV4Compiler::enableBindingsTest(true);
 
     QQmlComponent component(&engine, testFileUrl(file));
 
-    v4ErrorsMsgCount = 0;
+    v4ErrorCount = 0;
+    v4ErrorMessages.clear();
     QtMsgHandler old = qInstallMsgHandler(v4ErrorsMsgHandler);
 
     QObject *o = component.create();
@@ -123,7 +134,11 @@ void tst_v4::qtscript()
 
     qInstallMsgHandler(old);
 
-    QCOMPARE(v4ErrorsMsgCount, 0);
+    if (v4ErrorCount) {
+        foreach (const QByteArray &msg, v4ErrorMessages)
+            qDebug() << msg;
+    }
+    QCOMPARE(v4ErrorCount, 0);
 
     QV4Compiler::enableBindingsTest(false);
 }
@@ -152,6 +167,8 @@ void tst_v4::qtscript_data()
     QTest::newRow("conversion from vec3") << "conversions.8.qml";
     QTest::newRow("variantHandling") << "variantHandling.qml";
     QTest::newRow("varHandling") << "varHandling.qml";
+    QTest::newRow("jsvalueHandling") << "jsvalueHandling.qml";
+    QTest::newRow("integerOperations") << "integerOperations.qml";
 }
 
 void tst_v4::unnecessaryReeval()
@@ -558,6 +575,28 @@ void tst_v4::mathCeil()
     QCOMPARE(o->property("test8").toBool(), true);
     QCOMPARE(o->property("test9").toInt(), 0);
     QCOMPARE(o->property("test10").toBool(), true);
+    QCOMPARE(o->property("test11").toBool(), true);
+
+    delete o;
+}
+
+void tst_v4::mathFloor()
+{
+    QQmlComponent component(&engine, testFileUrl("mathFloor.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test1").toReal(), qreal(-4));
+    QCOMPARE(o->property("test2").toReal(), qreal(4));
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("test4").toBool(), true);
+    QCOMPARE(o->property("test5").toBool(), true);
+    QCOMPARE(o->property("test6").toReal(), qreal(82));
+    QCOMPARE(o->property("test7").toBool(), true);
+    QCOMPARE(o->property("test8").toBool(), true);
+    QCOMPARE(o->property("test9").toInt(), 0);
+    QCOMPARE(o->property("test10").toBool(), true);
 
     delete o;
 }
@@ -606,6 +645,113 @@ void tst_v4::mathMin()
     QCOMPARE(o->property("test11").toReal(), qreal(-3.7));
     QCOMPARE(o->property("test12").toReal(), qreal(0));
     QCOMPARE(o->property("test13").toReal(), qreal(-3.7));
+    delete o;
+}
+
+static bool fuzzyCompare(qreal a, qreal b)
+{
+    const qreal EPSILON = 0.0001;
+    return (a + EPSILON > b) && (a - EPSILON < b);
+}
+
+void tst_v4::mathCos()
+{
+    QQmlComponent component(&engine, testFileUrl("mathCos.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QVERIFY(fuzzyCompare(o->property("test1").toReal(), qreal(-0.848100)));
+    QVERIFY(fuzzyCompare(o->property("test2").toReal(), qreal(-0.307333)));
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("test4").toBool(), true);
+    QCOMPARE(o->property("test5").toBool(), true);
+    QVERIFY(fuzzyCompare(o->property("test6").toReal(), qreal(0.606941)));
+    QCOMPARE(o->property("test7").toBool(), true);
+    QCOMPARE(o->property("test8").toBool(), true);
+    QCOMPARE(o->property("test9").toBool(), true);
+    QCOMPARE(o->property("test10").toBool(), true);
+    QVERIFY(fuzzyCompare(o->property("test11").toReal(), qreal(0.890792)));
+
+    delete o;
+}
+
+void tst_v4::mathSin()
+{
+    QQmlComponent component(&engine, testFileUrl("mathSin.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QVERIFY(fuzzyCompare(o->property("test1").toReal(), qreal(0.529836)));
+    QVERIFY(fuzzyCompare(o->property("test2").toReal(), qreal(-0.951602)));
+    QCOMPARE(o->property("test3").toBool(), true);
+    QCOMPARE(o->property("test4").toBool(), true);
+    QCOMPARE(o->property("test5").toBool(), true);
+    QVERIFY(fuzzyCompare(o->property("test6").toReal(), qreal(0.794747)));
+    QCOMPARE(o->property("test7").toBool(), true);
+    QCOMPARE(o->property("test8").toBool(), true);
+    QCOMPARE(o->property("test9").toBool(), true);
+    QCOMPARE(o->property("test10").toBool(), true);
+    QVERIFY(fuzzyCompare(o->property("test11").toReal(), qreal(0.454411)));
+
+    delete o;
+}
+
+void tst_v4::integerOperations()
+{
+    QQmlComponent component(&engine, testFileUrl("integerOperations.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("testa1").toInt(), 333);
+    QCOMPARE(o->property("testa2").toInt(), -666);
+
+    QCOMPARE(o->property("testb1").toInt(), 0);
+    QCOMPARE(o->property("testb2").toInt(), 2);
+    QCOMPARE(o->property("testb3").toInt(), 0);
+    QCOMPARE(o->property("testb4").toInt(), 2);
+    QCOMPARE(o->property("testb5").toInt(), 0);
+    QCOMPARE(o->property("testb6").toInt(), 2);
+    QCOMPARE(o->property("testb7").toInt(), 0);
+    QCOMPARE(o->property("testb8").toInt(), 2);
+
+    QCOMPARE(o->property("testc1").toInt(), 335);
+    QCOMPARE(o->property("testc2").toInt(), -666);
+    QCOMPARE(o->property("testc3").toInt(), 335);
+    QCOMPARE(o->property("testc4").toInt(), -666);
+    QCOMPARE(o->property("testc5").toInt(), 335);
+    QCOMPARE(o->property("testc6").toInt(), -666);
+    QCOMPARE(o->property("testc7").toInt(), 335);
+    QCOMPARE(o->property("testc8").toInt(), -666);
+
+    QCOMPARE(o->property("testd1").toInt(), 330);
+    QCOMPARE(o->property("testd2").toInt(), 330);
+    QCOMPARE(o->property("testd3").toInt(), 330);
+    QCOMPARE(o->property("testd4").toInt(), 330);
+
+    QCOMPARE(o->property("teste1").toInt(), 28);
+    QCOMPARE(o->property("teste2").toInt(), -28);
+    QCOMPARE(o->property("teste3").toInt(), 256);
+    QCOMPARE(o->property("teste4").toInt(), 28);
+    QCOMPARE(o->property("teste5").toInt(), -28);
+    QCOMPARE(o->property("teste6").toInt(), 256);
+
+    QCOMPARE(o->property("testf1").toInt(), 1);
+    QCOMPARE(o->property("testf2").toInt(), -2);
+    QCOMPARE(o->property("testf3").toInt(), 0);
+    QCOMPARE(o->property("testf4").toInt(), 1);
+    QCOMPARE(o->property("testf5").toInt(), -2);
+    QCOMPARE(o->property("testf6").toInt(), 0);
+
+    QCOMPARE(o->property("testg1").toInt(), 1);
+    QCOMPARE(o->property("testg2").toInt(), 0x3FFFFFFE);
+    QCOMPARE(o->property("testg3").toInt(), 0);
+    QCOMPARE(o->property("testg4").toInt(), 1);
+    QCOMPARE(o->property("testg5").toInt(), 0x3FFFFFFE);
+    QCOMPARE(o->property("testg6").toInt(), 0);
+
     delete o;
 }
 

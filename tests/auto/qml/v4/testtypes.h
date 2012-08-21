@@ -44,6 +44,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qurl.h>
 #include <QVector3D>
+#include <QJSValue>
 
 class NestedObject : public QObject
 {
@@ -94,6 +95,7 @@ class ConversionObject : public QObject
     Q_PROPERTY(QString qstringProp READ qstringProp WRITE setQstringProp NOTIFY qstringPropChanged)
     Q_PROPERTY(QUrl qurlProp READ qurlProp WRITE setQurlProp NOTIFY qurlPropChanged)
     Q_PROPERTY(QVector3D vec3Prop READ vec3Prop WRITE setVec3Prop NOTIFY vec3PropChanged)
+    Q_PROPERTY(QJSValue jsvalueProp READ jsvalueProp WRITE setJsvalueProp NOTIFY jsvaluePropChanged)
 
 public:
     ConversionObject() : m_boolProp(false), m_intProp(0), m_floatProp(0.0), m_doubleProp(0.0), m_qrealProp(0.0) {}
@@ -115,6 +117,8 @@ public:
     void setQurlProp(const QUrl& v) { m_qurlProp = v; emit qurlPropChanged(); }
     QVector3D vec3Prop() const { return m_vec3Prop; }
     void setVec3Prop(const QVector3D& v) { m_vec3Prop = v; emit vec3PropChanged(); }
+    QJSValue jsvalueProp() const { return m_jsvalueProp; }
+    void setJsvalueProp(const QJSValue &v) { m_jsvalueProp = v; emit jsvaluePropChanged(); }
 
 signals:
     void boolPropChanged();
@@ -125,6 +129,7 @@ signals:
     void qstringPropChanged();
     void qurlPropChanged();
     void vec3PropChanged();
+    void jsvaluePropChanged();
 
 private:
     bool m_boolProp;
@@ -135,6 +140,74 @@ private:
     QString m_qstringProp;
     QUrl m_qurlProp;
     QVector3D m_vec3Prop;
+    QJSValue m_jsvalueProp;
+};
+
+class JSValueTest : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QJSValue boolVar READ boolVar WRITE setBoolVar NOTIFY boolVarChanged)
+    Q_PROPERTY(QJSValue intVar READ intVar WRITE setIntVar NOTIFY intVarChanged)
+    Q_PROPERTY(QJSValue realVar READ realVar WRITE setRealVar NOTIFY realVarChanged)
+    Q_PROPERTY(QJSValue stringVar READ stringVar WRITE setStringVar NOTIFY stringVarChanged)
+    Q_PROPERTY(QJSValue urlVar READ urlVar WRITE setUrlVar NOTIFY urlVarChanged)
+    Q_PROPERTY(QJSValue colorVar READ colorVar WRITE setColorVar NOTIFY colorVarChanged)
+    Q_PROPERTY(QJSValue objectVar READ objectVar WRITE setObjectVar NOTIFY objectVarChanged)
+    Q_PROPERTY(QJSValue nullVar READ nullVar WRITE setNullVar NOTIFY nullVarChanged)
+    Q_PROPERTY(QJSValue varVar READ varVar WRITE setVarVar NOTIFY varVarChanged)
+
+public:
+    JSValueTest() {}
+    ~JSValueTest() {}
+
+    QJSValue boolVar() const { return m_boolVar; }
+    void setBoolVar(const QJSValue &v) { m_boolVar = v; emit boolVarChanged(); }
+
+    QJSValue intVar() const { return m_intVar; }
+    void setIntVar(const QJSValue &v) { m_intVar = v; emit intVarChanged(); }
+
+    QJSValue realVar() const { return m_realVar; }
+    void setRealVar(const QJSValue &v) { m_realVar = v; emit realVarChanged(); }
+
+    QJSValue stringVar() const { return m_stringVar; }
+    void setStringVar(const QJSValue &v) { m_stringVar = v; emit stringVarChanged(); }
+
+    QJSValue urlVar() const { return m_urlVar; }
+    void setUrlVar(const QJSValue &v) { m_urlVar = v; emit urlVarChanged(); }
+
+    QJSValue colorVar() const { return m_colorVar; }
+    void setColorVar(const QJSValue &v) { m_colorVar = v; emit colorVarChanged(); }
+
+    QJSValue objectVar() const { return m_objectVar; }
+    void setObjectVar(const QJSValue &v) { m_objectVar = v; emit objectVarChanged(); }
+
+    QJSValue nullVar() const { return m_nullVar; }
+    void setNullVar(const QJSValue &v) { m_nullVar = v; emit nullVarChanged(); }
+
+    QJSValue varVar() const { return m_varVar; }
+    void setVarVar(const QJSValue &v) { m_varVar = v; emit varVarChanged(); }
+
+signals:
+    void boolVarChanged();
+    void intVarChanged();
+    void realVarChanged();
+    void stringVarChanged();
+    void urlVarChanged();
+    void colorVarChanged();
+    void objectVarChanged();
+    void nullVarChanged();
+    void varVarChanged();
+
+private:
+    QJSValue m_boolVar;
+    QJSValue m_intVar;
+    QJSValue m_realVar;
+    QJSValue m_stringVar;
+    QJSValue m_urlVar;
+    QJSValue m_colorVar;
+    QJSValue m_objectVar;
+    QJSValue m_nullVar;
+    QJSValue m_varVar;
 };
 
 void registerTypes();

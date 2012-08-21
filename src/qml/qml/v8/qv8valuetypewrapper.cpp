@@ -181,6 +181,12 @@ static bool readReferenceValue(QV8ValueTypeReferenceResource *reference)
     return true;
 }
 
+bool QV8ValueTypeWrapper::isValueType(v8::Handle<v8::Object> obj) const
+{
+    QV8ValueTypeResource *r = v8_resource_cast<QV8ValueTypeResource>(obj);
+    return (r != 0);
+}
+
 QVariant QV8ValueTypeWrapper::toVariant(v8::Handle<v8::Object> obj, int typeHint, bool *succeeded)
 {
     // NOTE: obj must not be an external resource object (ie, wrapper object)

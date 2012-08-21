@@ -1289,6 +1289,8 @@ QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value,
         return variantValue(value);
     if (isQObject(value))
         return qVariantFromValue(qtObjectFromJS(value));
+    if (isValueType(value))
+        return toValueType(value);
     return variantMapFromJS(value->ToObject(), visitedObjects);
 }
 

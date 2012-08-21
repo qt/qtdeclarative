@@ -332,6 +332,8 @@ public:
     // Create a new value type object
     inline v8::Handle<v8::Value> newValueType(QObject *, int coreIndex, QQmlValueType *);
     inline v8::Handle<v8::Value> newValueType(const QVariant &, QQmlValueType *);
+    inline bool isValueType(v8::Handle<v8::Value>) const;
+    inline QVariant toValueType(v8::Handle<v8::Value> obj);
 
     // Create a new sequence type object
     inline v8::Handle<v8::Value> newSequence(int sequenceType, QObject *, int coreIndex, bool *succeeded);
@@ -597,6 +599,16 @@ v8::Handle<v8::Value> QV8Engine::newValueType(QObject *object, int property, QQm
 v8::Handle<v8::Value> QV8Engine::newValueType(const QVariant &value, QQmlValueType *type)
 {
     return m_valueTypeWrapper.newValueType(value, type);
+}
+
+bool QV8Engine::isValueType(v8::Handle<v8::Value> obj) const
+{
+    return obj->IsObject()?m_valueTypeWrapper.isValueType(v8::Handle<v8::Object>::Cast(obj)):false;
+}
+
+QVariant QV8Engine::toValueType(v8::Handle<v8::Value> obj)
+{
+    return obj->IsObject()?m_valueTypeWrapper.toVariant(v8::Handle<v8::Object>::Cast(obj)):QVariant();
 }
 
 v8::Handle<v8::Value> QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)

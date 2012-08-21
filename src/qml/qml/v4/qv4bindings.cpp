@@ -649,6 +649,7 @@ static void testBindingResult(const QString &binding, quint16 line, quint16 colu
         qtscriptResult = "exception";
     } else if ((value.userType() != resultType) &&
                (resultType != QMetaType::QVariant) &&
+               (resultType != qMetaTypeId<QJSValue>()) &&
                (resultType != handleType)) {
         // Override the QMetaType conversions to make them more JS friendly.
         if (value.userType() == QMetaType::Double && (resultType == QMetaType::QString ||
@@ -708,6 +709,8 @@ static void testBindingResult(const QString &binding, quint16 line, quint16 colu
         default:
             if (resultType == QQmlMetaType::QQuickAnchorLineMetaTypeId()) {
                 v4value = QVariant(QQmlMetaType::QQuickAnchorLineMetaTypeId(), result.typeDataPtr());
+            } else if (resultType == qMetaTypeId<QJSValue>()) {
+                v4value = result.getjsvalueptr()->toVariant();
             } else if (resultType == handleType) {
                 QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
                 v4value = ep->v8engine()->toVariant(*result.gethandleptr(), resultType);
@@ -1834,8 +1837,19 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
-        if (src.isUndefined()) output.setUndefined();
-        else output.setint(qFloor(src.getnumber()));
+        if (src.isUndefined())
+            output.setUndefined();
+        else if (src.isNaN())
+            // output should be an int, but still NaN
+            output.setNaNType();
+        else if (src.isInf())
+            // output should be an int, but still Inf
+            output.setInfType(signBitSet(src.getnumber()));
+        else if (src.isNegativeZero())
+            // output should be an int, but still -0
+            output.setNegativeZeroType();
+        else
+            output.setint(qFloor(src.getnumber()));
     }
     QML_V4_END_INSTR(MathFloorNumber, unaryop)
 
@@ -1854,8 +1868,16 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         else if (src.isNegativeZero())
             // output should be an int, but still -0
             output.setNegativeZeroType();
-        else
-            output.setint(qCeil(src.getnumber()));
+        else {
+            // Ensure that we preserve the sign bit (Math.ceil(-0) -> -0)
+            const double input = src.getnumber();
+            const int ceiled = qCeil(input);
+            if (ceiled == 0 && signBitSet(input)) {
+                output.setNegativeZeroType();
+            } else {
+                output.setint(ceiled);
+            }
+        }
     }
     QML_V4_END_INSTR(MathCeilNumber, unaryop)
 
