@@ -83,6 +83,16 @@
 #include "qv8sequencewrapper_p.h"
 #include "qv8jsonwrapper_p.h"
 
+namespace v8 {
+
+// Needed for V8ObjectSet
+inline uint qHash(const v8::Handle<v8::Object> &object, uint seed)
+{
+    return (object->GetIdentityHash() ^ seed);
+}
+
+}
+
 QT_BEGIN_NAMESPACE
 
 
@@ -614,13 +624,6 @@ QV8Engine::Deletable *QV8Engine::extensionData(int index) const
         return m_extensionData[index];
     else
         return 0;
-}
-
-// Needed for V8ObjectSet
-template<>
-inline uint qHash<v8::Handle<v8::Object> >(const v8::Handle<v8::Object> &object, uint /*seed*/)
-{
-    return object->GetIdentityHash();
 }
 
 QT_END_NAMESPACE
