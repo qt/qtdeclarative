@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "../shared" as Examples
+import "../../shared" as Examples
 
 /*!
     \title QtQuick Examples - Local Storage
