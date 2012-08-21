@@ -68,7 +68,7 @@ FocusScope {
 
     MouseArea { 
         anchors.fill: parent
-        onClicked: { focusScope.focus = true; textInput.openSoftwareInputPanel(); } 
+        onClicked: { focusScope.focus = true; Qt.inputMethod.show(); }
     }
 
     TextInput {

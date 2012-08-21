@@ -96,7 +96,7 @@ Rectangle {
 
         onClicked:  {
             if (textInput.text == "" && textInput.opacity > 0)
-                textInput.openSoftwareInputPanel();
+                Qt.inputMethod.show();
             else
                 hide();
         }
