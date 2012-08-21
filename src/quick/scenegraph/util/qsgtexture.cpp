@@ -247,6 +247,14 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     neighboring texels.
 */
 
+/*!
+    \fn QSGTexture::QSGTexture(QSGTexturePrivate &dd)
+    \internal
+ */
+
+/*!
+    Constructs the QSGTexture base class.
+ */
 QSGTexture::QSGTexture()
     : QObject(*(new QSGTexturePrivate))
 {
@@ -255,6 +263,9 @@ QSGTexture::QSGTexture()
 #endif
 }
 
+/*!
+    Destroys the QSGTexture.
+ */
 QSGTexture::~QSGTexture()
 {
 #ifndef QT_NO_DEBUG
@@ -273,6 +284,14 @@ QSGTexture::~QSGTexture()
     a previously set QImage.
 
     \warning This function can only be called from the rendering thread.
+ */
+
+/*!
+    \fn QRectF QSGTexture::convertToNormalizedSourceRect(const QRectF &rect) const
+
+    Returns \a rect converted to normalized coordinates.
+
+    \sa normalizedTextureSubRect()
  */
 
 /*!
@@ -322,7 +341,11 @@ bool QSGTexture::isAtlasTexture() const
     \warning This function can only be called from the rendering thread.
  */
 
+/*!
+    \fn QSize QSGTexture::textureSize() const
 
+    Returns the size of the texture.
+ */
 
 /*!
     Returns the rectangle inside textureSize() that this texture
@@ -335,6 +358,12 @@ QRectF QSGTexture::normalizedTextureSubRect() const
 {
     return QRectF(0, 0, 1, 1);
 }
+
+/*!
+    \fn bool QSGTexture::hasAlphaChannel() const
+
+    Returns true if the texture data contains an alpha channel.
+ */
 
 /*!
     \fn bool QSGTexture::hasMipmaps() const
@@ -380,6 +409,9 @@ void QSGTexture::setFiltering(QSGTexture::Filtering filter)
     }
 }
 
+/*!
+    Returns the sampling mode to be used for this texture.
+ */
 QSGTexture::Filtering QSGTexture::filtering() const
 {
     return (QSGTexture::Filtering) d_func()->filterMode;
@@ -400,6 +432,9 @@ void QSGTexture::setHorizontalWrapMode(WrapMode hwrap)
     }
 }
 
+/*!
+    Returns the horizontal wrap mode to be used for this texture.
+ */
 QSGTexture::WrapMode QSGTexture::horizontalWrapMode() const
 {
     return (QSGTexture::WrapMode) d_func()->horizontalWrap;
@@ -407,6 +442,9 @@ QSGTexture::WrapMode QSGTexture::horizontalWrapMode() const
 
 
 
+/*!
+    Sets the vertical wrap mode to be used for the upcoming bind() call to \a vwrap
+ */
 void QSGTexture::setVerticalWrapMode(WrapMode vwrap)
 {
     Q_D(QSGTexture);
@@ -416,6 +454,9 @@ void QSGTexture::setVerticalWrapMode(WrapMode vwrap)
     }
 }
 
+/*!
+    Returns the vertical wrap mode to be used for this texture.
+ */
 QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
 {
     return (QSGTexture::WrapMode) d_func()->verticalWrap;
