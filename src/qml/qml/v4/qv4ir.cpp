@@ -456,20 +456,20 @@ void Function::dump(QTextStream &out)
     out << '}' << endl;
 }
 
-Temp *BasicBlock::TEMP(Type type, int index) 
-{ 
+Temp *BasicBlock::TEMP(Type type, int index)
+{
     Temp *e = function->pool->New<Temp>();
     e->init(type, index);
     return e;
 }
 
-Temp *BasicBlock::TEMP(Type type) 
-{ 
-    return TEMP(type, function->tempCount++); 
+Temp *BasicBlock::TEMP(Type type)
+{
+    return TEMP(type, function->tempCount++);
 }
 
-Expr *BasicBlock::CONST(Type type, double value) 
-{ 
+Expr *BasicBlock::CONST(Type type, double value)
+{
     Const *e = function->pool->New<Const>();
     e->init(type, value);
     return e;
@@ -563,8 +563,8 @@ Name *BasicBlock::MODULE_OBJECT(const QString &id, const QQmlMetaObject &meta, N
     return name;
 }
 
-Expr *BasicBlock::UNOP(AluOp op, Expr *expr) 
-{ 
+Expr *BasicBlock::UNOP(AluOp op, Expr *expr)
+{
     Unop *e = function->pool->New<Unop>();
     e->init(op, expr);
     return e;
@@ -624,29 +624,29 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
 }
 
 Expr *BasicBlock::CALL(Expr *base, ExprList *args)
-{ 
+{
     Call *e = function->pool->New<Call>();
     e->init(base, args);
     return e;
 }
 
-Stmt *BasicBlock::EXP(Expr *expr) 
-{ 
+Stmt *BasicBlock::EXP(Expr *expr)
+{
     Exp *s = function->pool->New<Exp>();
     s->init(expr);
     statements.append(s);
     return s;
 }
 
-Stmt *BasicBlock::MOVE(Expr *target, Expr *source, bool isMoveForReturn) 
-{ 
+Stmt *BasicBlock::MOVE(Expr *target, Expr *source, bool isMoveForReturn)
+{
     Move *s = function->pool->New<Move>();
     s->init(target, source, isMoveForReturn);
     statements.append(s);
     return s;
 }
 
-Stmt *BasicBlock::JUMP(BasicBlock *target) 
+Stmt *BasicBlock::JUMP(BasicBlock *target)
 {
     if (isTerminated())
         return 0;
@@ -657,7 +657,7 @@ Stmt *BasicBlock::JUMP(BasicBlock *target)
     return s;
 }
 
-Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse) 
+Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
 {
     if (isTerminated())
         return 0;
@@ -691,7 +691,7 @@ void BasicBlock::dump(QTextStream &out)
 
 #ifdef DEBUG_IR_STRUCTURE
 
-static const char *symbolname(Name::Symbol s) 
+static const char *symbolname(Name::Symbol s)
 {
     switch (s) {
     case Name::Unbound:
@@ -710,7 +710,7 @@ static const char *symbolname(Name::Symbol s)
         return "Slot";
     default:
         Q_ASSERT(!"Unreachable");
-        return "Unknown"; 
+        return "Unknown";
     }
 }
 
@@ -811,7 +811,7 @@ void IRDump::visitString(QQmlJS::IR::String *e)
     qWarning().nospace() << indent() << "String:Expr { type: " << typeName(e->type) << ", value: " << e->value << '}';
 }
 
-static void namedumprecur(QQmlJS::IR::Name *e, const char *indent) 
+static void namedumprecur(QQmlJS::IR::Name *e, const char *indent)
 {
     if (e->base) namedumprecur(e->base, indent);
     qWarning().nospace() << indent << "    { type: " << typeName(e->type) << ", symbol: " << symbolname(e->symbol) << ", storage: " << storagename(e->storage) << ", id: " << e->id << '}';

@@ -295,7 +295,7 @@ void Register::copy(const Register &other)
 {
     *this = other;
     if (other.dataType >= FirstCleanupType) {
-        if (other.dataType == QStringType) 
+        if (other.dataType == QStringType)
             copyConstructPointee(getstringptr(), other.getstringptr());
         else if (other.dataType == QUrlType)
             copyConstructPointee(geturlptr(), other.geturlptr());
@@ -307,14 +307,14 @@ void Register::copy(const Register &other)
             copyConstructPointee(gethandleptr(), other.gethandleptr());
         else if (other.dataType == qMetaTypeId<QJSValue>())
             copyConstructPointee(getjsvalueptr(), other.getjsvalueptr());
-    } 
+    }
 }
 
 void Register::init(Type type)
 {
     dataType = type;
     if (dataType >= FirstCleanupType) {
-        if (dataType == QStringType) 
+        if (dataType == QStringType)
             defaultConstructPointee(getstringptr());
         else if (dataType == QUrlType)
             defaultConstructPointee(geturlptr());
@@ -450,7 +450,7 @@ void QV4Bindings::run(Binding *binding, QQmlPropertyPrivate::WriteFlags flags)
         return;
 
     QQmlContextData *context = QQmlAbstractExpression::context();
-    if (!context || !context->isValid()) 
+    if (!context || !context->isValid())
         return;
 
     // Check that the target has not been deleted
@@ -544,14 +544,14 @@ void QV4Bindings::subscribeId(QQmlContextData *p, int idIndex, int subIndex)
         sub->connect(&p->idValues[idIndex].bindings);
     }
 }
- 
+
 void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex, QQmlEngine *e)
 {
     Subscription *sub = (subscriptions + subIndex);
     if (sub->isConnected(o, notifyIndex))
         return;
     sub->bindings = this;
-    sub->method = subIndex; 
+    sub->method = subIndex;
     if (o)
         sub->connect(o, notifyIndex, e);
     else
@@ -652,8 +652,8 @@ static void testBindingResult(const QString &binding, quint16 line, quint16 colu
         return;
     } else if(isUndefined != result.isUndefined()) {
         iserror = true;
-    } 
-    
+    }
+
     QVariant v4value;
     if (!result.isUndefined()) {
         switch (resultType) {
@@ -696,7 +696,7 @@ static void testBindingResult(const QString &binding, quint16 line, quint16 colu
     if (v4Result.isEmpty())
         v4Result = testResultToString(v4value, result.isUndefined());
 
-    if (!testCompareVariants(value, v4value)) 
+    if (!testCompareVariants(value, v4value))
         iserror = true;
 
     if (iserror) {
@@ -724,7 +724,7 @@ static void testBindingException(const QString &binding, quint16 line, quint16 c
     }
 }
 
-static void throwException(int id, QQmlDelayedError *error, 
+static void throwException(int id, QQmlDelayedError *error,
                            QV4Program *program, QQmlContextData *context,
                            const QString &description = QString())
 {
@@ -784,7 +784,7 @@ inline quint32 QV4Bindings::toUint32(double n)
     if (testBinding) testBindingException(*testBindingSource, bindingLine, bindingColumn, context, scope); \
     throwException((id), error, program, context, (str)); \
     goto exceptionExit; \
-} 
+}
 
 #define THROW_VALUE_EXCEPTION_STR(id, str) { \
     throwException((id), error, program, context, (str)); \
@@ -933,7 +933,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     {
         Register &reg = registers[instr->fetchAndSubscribe.reg];
 
-        if (reg.isUndefined()) 
+        if (reg.isUndefined())
             THROW_EXCEPTION(instr->fetchAndSubscribe.exceptionId);
 
         QObject *object = reg.getQObject();
@@ -1014,7 +1014,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     {
         const Register &input = registers[instr->attached.reg];
         Register &output = registers[instr->attached.output];
-        if (input.isUndefined()) 
+        if (input.isUndefined())
             THROW_EXCEPTION(instr->attached.exceptionId);
 
         QObject *object = registers[instr->attached.reg].getQObject();
@@ -1095,7 +1095,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) {
             output.setUndefined();
-        } else { 
+        } else {
             new (output.getstringptr()) QString(QLatin1String(src.getbool() ? "true" : "false"));
             STRING_REGISTER(instr->unaryop.output);
         }
@@ -1872,21 +1872,21 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
 
     QML_V4_BEGIN_INSTR(BitAndInt, binaryop)
     {
-        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() & 
+        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() &
                                                  registers[instr->binaryop.right].getint());
     }
     QML_V4_END_INSTR(BitAndInt, binaryop)
 
     QML_V4_BEGIN_INSTR(BitOrInt, binaryop)
     {
-        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() | 
+        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() |
                                                  registers[instr->binaryop.right].getint());
     }
     QML_V4_END_INSTR(BitAndInt, binaryop)
 
     QML_V4_BEGIN_INSTR(BitXorInt, binaryop)
     {
-        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() ^ 
+        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() ^
                                                  registers[instr->binaryop.right].getint());
     }
     QML_V4_END_INSTR(BitXorInt, binaryop)
@@ -1904,7 +1904,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
         if (instr->binaryop.output == instr->binaryop.left) {
             string += registers[instr->binaryop.right].getstringptr();
         } else {
-            string = *registers[instr->binaryop.left].getstringptr() + 
+            string = *registers[instr->binaryop.left].getstringptr() +
                      *registers[instr->binaryop.right].getstringptr();
         }
     }
@@ -1942,21 +1942,21 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
 
     QML_V4_BEGIN_INSTR(LShiftInt, binaryop)
     {
-        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() << 
+        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() <<
                                                  registers[instr->binaryop.right].getint());
     }
     QML_V4_END_INSTR(LShiftInt, binaryop)
 
     QML_V4_BEGIN_INSTR(RShiftInt, binaryop)
     {
-        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() >> 
+        registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() >>
                                                  registers[instr->binaryop.right].getint());
     }
     QML_V4_END_INSTR(RShiftInt, binaryop)
 
     QML_V4_BEGIN_INSTR(URShiftInt, binaryop)
     {
-        registers[instr->binaryop.output].setint((unsigned)registers[instr->binaryop.left].getint() >> 
+        registers[instr->binaryop.output].setint((unsigned)registers[instr->binaryop.left].getint() >>
                                                  registers[instr->binaryop.right].getint());
     }
     QML_V4_END_INSTR(URShiftInt, binaryop)
@@ -2227,7 +2227,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     {
         Register &reg = registers[instr->fetch.reg];
 
-        if (reg.isUndefined()) 
+        if (reg.isUndefined())
             THROW_EXCEPTION(instr->fetch.exceptionId);
 
         QObject *object = reg.getQObject();
@@ -2254,7 +2254,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     QML_V4_BEGIN_INSTR(TestV4Store, storetest)
     {
         Register &data = registers[instr->storetest.reg];
-        testBindingResult(*testBindingSource, bindingLine, bindingColumn, context, 
+        testBindingResult(*testBindingSource, bindingLine, bindingColumn, context,
                           scope, data, instr->storetest.regType);
     }
     QML_V4_END_INSTR(TestV4Store, storetest)
@@ -2263,7 +2263,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     {
         Register &data = registers[instr->store.reg];
 
-        if (data.isUndefined()) 
+        if (data.isUndefined())
             THROW_EXCEPTION_STR(instr->store.exceptionId, QLatin1String("Unable to assign undefined value"));
 
         if (data.gettype() == QObjectStarType) {
@@ -2371,7 +2371,7 @@ exceptionExit:
 
     int reg = 0;
     while (cleanupRegisterMask) {
-        if (cleanupRegisterMask & 0x1) 
+        if (cleanupRegisterMask & 0x1)
             registers[reg].cleanup();
 
         reg++;

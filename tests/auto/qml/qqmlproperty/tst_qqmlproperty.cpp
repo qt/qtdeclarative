@@ -461,8 +461,8 @@ void tst_qqmlproperty::qmlmetaproperty_object()
 
 void tst_qqmlproperty::qmlmetaproperty_object_string()
 {
-    QObject object; 
-    PropertyObject dobject; 
+    QObject object;
+    PropertyObject dobject;
 
     {
         QQmlProperty prop(&object, QString("defaultProperty"));
@@ -765,8 +765,8 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
 
 void tst_qqmlproperty::qmlmetaproperty_object_string_context()
 {
-    QObject object; 
-    PropertyObject dobject; 
+    QObject object;
+    PropertyObject dobject;
 
     {
         QQmlProperty prop(&object, QString("defaultProperty"), engine.rootContext());
@@ -966,7 +966,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
 
 void tst_qqmlproperty::name()
 {
-    { 
+    {
         QQmlProperty p;
         QCOMPARE(p.name(), QString());
     }
@@ -1039,7 +1039,7 @@ void tst_qqmlproperty::name()
 
 void tst_qqmlproperty::read()
 {
-    // Invalid 
+    // Invalid
     {
         QQmlProperty p;
         QCOMPARE(p.read(), QVariant());
@@ -1108,7 +1108,7 @@ void tst_qqmlproperty::read()
         QCOMPARE(p.read(), QVariant());
     }
 
-    // Automatic signal property 
+    // Automatic signal property
     {
         PropertyObject o;
         QQmlProperty p(&o, "onPropertyWithNotifyChanged");

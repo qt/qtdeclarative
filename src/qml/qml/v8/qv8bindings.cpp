@@ -162,7 +162,7 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
         bool isUndefined = false;
 
         DeleteWatcher watcher(this);
-        ep->referenceScarceResources(); 
+        ep->referenceScarceResources();
 
         v8::HandleScope handle_scope;
         v8::Context::Scope scope(ep->v8engine()->context());
@@ -193,7 +193,7 @@ void QV8Bindings::Binding::update(QQmlPropertyPrivate::WriteFlags flags)
             setUpdatingFlag(false);
         }
 
-        ep->dereferenceScarceResources(); 
+        ep->dereferenceScarceResources();
 
     } else {
         QQmlProperty p = QQmlPropertyPrivate::restore(*target, instruction->property, context);

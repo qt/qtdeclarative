@@ -67,7 +67,7 @@ Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QList<int>)
 
 
-// XXX TODO: Need to check all the global functions will also work in a worker script where the 
+// XXX TODO: Need to check all the global functions will also work in a worker script where the
 // QQmlEngine is not available
 QT_BEGIN_NAMESPACE
 
@@ -99,7 +99,7 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
         case QV8ObjectResource::VariantType:
             // a variant might be equal to a value type or other variant.
             if (rhst == QV8ObjectResource::VariantType) {
-                return lhsr->engine->variantWrapper()->toVariant(lhsr) == 
+                return lhsr->engine->variantWrapper()->toVariant(lhsr) ==
                        lhsr->engine->variantWrapper()->toVariant(rhsr);
             } else if (rhst == QV8ObjectResource::ValueTypeType) {
                 return rhsr->engine->valueTypeWrapper()->isEqual(rhsr, rhsr->engine->variantWrapper()->toVariant(lhsr));
@@ -171,7 +171,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, ContextOwnership ownership)
 QV8Engine::~QV8Engine()
 {
     Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8Engine::~QV8Engine()", "called after v8::Isolate has exited");
-    for (int ii = 0; ii < m_extensionData.count(); ++ii) 
+    for (int ii = 0; ii < m_extensionData.count(); ++ii)
         delete m_extensionData[ii];
     m_extensionData.clear();
 
@@ -220,7 +220,7 @@ QString QV8Engine::toStringStatic(v8::Handle<v8::String> jsstr)
 
 QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
 {
-    if (value.IsEmpty()) 
+    if (value.IsEmpty())
         return QVariant();
 
     if (typeHint == QVariant::Bool)
@@ -320,7 +320,7 @@ static v8::Handle<v8::Object> objectFromVariantMap(QV8Engine *engine, const QVar
 {
     v8::Context::Scope scope(engine->context());
     v8::Local<v8::Object> object = v8::Object::New();
-    for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter) 
+    for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter)
         object->Set(engine->toString(iter.key()), engine->fromVariant(iter.value()));
     return object;
 }
@@ -417,14 +417,14 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             // directly against QList<QObject*>?
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
             v8::Local<v8::Array> array = v8::Array::New(list.count());
-            for (int ii = 0; ii < list.count(); ++ii) 
+            for (int ii = 0; ii < list.count(); ++ii)
                 array->Set(ii, newQObject(list.at(ii)));
             return array;
-        } 
+        }
 
         bool objOk;
         QObject *obj = QQmlMetaType::toQObject(variant, &objOk);
-        if (objOk) 
+        if (objOk)
             return newQObject(obj);
 
         bool succeeded = false;
@@ -453,7 +453,7 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const QString &source,
 
     v8::ScriptOrigin origin(v8fileName, v8::Integer::New(lineNumber - 1));
 
-    v8::Local<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(), 
+    v8::Local<v8::Script> script = v8::Script::Compile(v8source, &origin, 0, v8::Handle<v8::String>(),
                                                        v8::Script::QmlMode);
 
     return script;
@@ -479,7 +479,7 @@ v8::Local<v8::Script> QV8Engine::qmlModeCompile(const char *source, int sourceLe
     return script;
 }
 
-QNetworkAccessManager *QV8Engine::networkAccessManager() 
+QNetworkAccessManager *QV8Engine::networkAccessManager()
 {
     return QQmlEnginePrivate::get(m_engine)->getNetworkAccessManager();
 }
@@ -681,7 +681,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     v8::Handle<v8::Value> args[] = { global };
     v8::Local<v8::Value> names = m_getOwnPropertyNames->Call(global, 1, args);
     v8::Local<v8::Array> namesArray = v8::Local<v8::Array>::Cast(names);
-    for (quint32 ii = 0; ii < namesArray->Length(); ++ii) 
+    for (quint32 ii = 0; ii < namesArray->Length(); ++ii)
         m_illegalNames.insert(toString(namesArray->Get(ii)), true);
     }
 
@@ -735,7 +735,7 @@ void QV8Engine::registerHandle(void *handle)
         return;
     }
 
-    if (!QV8Engine_activeHandles.hasLocalData()) 
+    if (!QV8Engine_activeHandles.hasLocalData())
         QV8Engine_activeHandles.setLocalData(new QSet<void *>);
 
     if (QV8Engine_activeHandles.localData()->contains(handle)) {
@@ -750,7 +750,7 @@ void QV8Engine::releaseHandle(void *handle)
     if (!handle)
         return;
 
-    if (!QV8Engine_activeHandles.hasLocalData()) 
+    if (!QV8Engine_activeHandles.hasLocalData())
         QV8Engine_activeHandles.setLocalData(new QSet<void *>);
 
     if (QV8Engine_activeHandles.localData()->contains(handle)) {
@@ -782,10 +782,10 @@ int QV8Engine::registerExtension()
 
 void QV8Engine::setExtensionData(int index, Deletable *data)
 {
-    if (m_extensionData.count() <= index) 
+    if (m_extensionData.count() <= index)
         m_extensionData.resize(index + 1);
 
-    if (m_extensionData.at(index)) 
+    if (m_extensionData.at(index))
         delete m_extensionData.at(index);
 
     m_extensionData[index] = data;

@@ -177,7 +177,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
     v8function = evalFunction(ctxt, obj, code, QString(), 0);
 }
 
-QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj, 
+QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
                          QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding),
@@ -200,10 +200,10 @@ QQmlBinding::QQmlBinding(const QString &str, bool isRewritten, QObject *obj,
     v8function = evalFunction(ctxt, obj, code, url, m_lineNumber);
 }
 
-/*!  
-    \internal 
+/*!
+    \internal
 
-    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.  
+    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.
     For example:
         v8::Handle<v8::Function> function;
         new QQmlBinding(&function, scope, ctxt);
@@ -275,7 +275,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
         } else {
             QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
-            ep->referenceScarceResources(); 
+            ep->referenceScarceResources();
 
             bool isUndefined = false;
 
@@ -292,7 +292,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
                                                                     this, result, isUndefined, flags);
 
             if (!watcher.wasDeleted()) {
-               
+
                 if (needsErrorLocationData)
                     delayedError()->setErrorLocation(QUrl(m_url), m_lineNumber, m_columnNumber);
 
@@ -304,7 +304,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
             }
 
-            ep->dereferenceScarceResources(); 
+            ep->dereferenceScarceResources();
         }
 
         if (!watcher.wasDeleted())
@@ -385,7 +385,7 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);
 
-    if (e) 
+    if (e)
         update(flags);
 }
 

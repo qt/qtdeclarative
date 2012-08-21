@@ -396,7 +396,7 @@ public:
 private:
     QBiPointer<QQmlPropertyCache, const QMetaObject> _m;
 };
-  
+
 QQmlPropertyData::QQmlPropertyData()
 {
     propType = 0;
@@ -405,7 +405,7 @@ QQmlPropertyData::QQmlPropertyData()
     overrideIndexIsProperty = false;
     overrideIndex = -1;
     revision = 0;
-    metaObjectOffset = -1; 
+    metaObjectOffset = -1;
     flags = 0;
 }
 
@@ -421,8 +421,8 @@ bool QQmlPropertyData::operator==(const QQmlPropertyRawData &other)
            coreIndex == other.coreIndex &&
            notifyIndex == other.notifyIndex &&
            revision == other.revision &&
-           (!isValueTypeVirtual() || 
-            (valueTypeCoreIndex == other.valueTypeCoreIndex && 
+           (!isValueTypeVirtual() ||
+            (valueTypeCoreIndex == other.valueTypeCoreIndex &&
              valueTypePropType == other.valueTypePropType));
 }
 
