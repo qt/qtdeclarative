@@ -5651,8 +5651,8 @@ void tst_qquicktextinput::backspaceSurrogatePairs()
     textInput->setParentItem(window.contentItem());
     window.show();
     window.requestActivateWindow();
-    QTest::qWaitForWindowShown(&window);
-    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    QCOMPARE(QGuiApplication::focusWindow(), &window);
 
     for (int i = text.length(); i >= 0; i -= 2) {
         QCOMPARE(textInput->text(), text.mid(0, i));

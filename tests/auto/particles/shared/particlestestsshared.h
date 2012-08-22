@@ -74,7 +74,7 @@ QQuickView* createView(const QUrl &filename, int additionalWait=0)
     if (view->status() != QQuickView::Ready)
         return 0;
     view->show();
-    QTest::qWaitForWindowShown(view);
+    QTest::qWaitForWindowExposed(view);
     if (additionalWait)
         QTest::qWait(additionalWait);
 
