@@ -26,15 +26,15 @@
 ****************************************************************************/
 
 /*!
-\page qml-coding-conventions.html
+\page qml-codingconventions.html
 \title QML Coding Conventions
 \brief code style convention
 
 This document contains the QML coding conventions that we follow in our documentation and examples and recommend that others follow.
 
-\section1 QML Objects
+\section1 QML Object Declarations
 
-Through our documentation and examples, QML objects are always structured in the following order:
+Throughout our documentation and examples, \l{QML Object Attributes}{QML object attributes} are always structured in the following order:
 
 \list
 \li id
