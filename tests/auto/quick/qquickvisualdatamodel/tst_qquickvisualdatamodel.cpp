@@ -437,6 +437,7 @@ private slots:
     void asynchronousMove();
     void asynchronousMove_data();
     void asynchronousCancel();
+    void invalidContext();
 
 private:
     template <int N> void groups_verify(
@@ -4204,6 +4205,35 @@ void tst_qquickvisualdatamodel::asynchronousCancel()
 
     visualModel->cancel(requestIndex);
     QCOMPARE(controller.incubatingObjectCount(), 0);
+}
+
+void tst_qquickvisualdatamodel::invalidContext()
+{
+    QQmlEngine engine;
+    QaimModel model;
+    for (int i = 0; i < 8; i++)
+        model.addItem("Original item" + QString::number(i), "");
+
+    engine.rootContext()->setContextProperty("myModel", &model);
+
+    QScopedPointer<QQmlContext> context(new QQmlContext(engine.rootContext()));
+
+    QQmlComponent c(&engine, testFileUrl("visualdatamodel.qml"));
+
+
+    QQuickVisualDataModel *visualModel = qobject_cast<QQuickVisualDataModel*>(c.create(context.data()));
+    QVERIFY(visualModel);
+
+    QQuickItem *item = visualModel->item(4, false);
+    QVERIFY(item);
+    visualModel->release(item);
+
+    delete context.take();
+
+    model.insertItem(4, "new item", "");
+
+    item = visualModel->item(4, false);
+    QVERIFY(!item);
 }
 
 QTEST_MAIN(tst_qquickvisualdatamodel)

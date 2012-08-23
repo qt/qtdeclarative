@@ -847,6 +847,8 @@ QObject *QQuickVisualDataModelPrivate::object(Compositor::Group group, int index
     if (!m_delegate || index < 0 || index >= m_compositor.count(group)) {
         qWarning() << "VisualDataModel::item: index out range" << index << m_compositor.count(group);
         return 0;
+    } else if (!m_context->isValid()) {
+        return 0;
     }
 
     Compositor::iterator it = m_compositor.find(group, index);
@@ -1376,7 +1378,7 @@ void QQuickVisualDataModelPrivate::emitModelUpdated(const QQuickChangeSet &chang
 
 void QQuickVisualDataModelPrivate::emitChanges()
 {
-    if (m_transaction || !m_complete)
+    if (m_transaction || !m_complete || !m_context->isValid())
         return;
 
     m_transaction = true;
@@ -1507,6 +1509,9 @@ QQuickVisualDataModelAttached *QQuickVisualDataModel::qmlAttachedProperties(QObj
 bool QQuickVisualDataModelPrivate::insert(
         Compositor::insert_iterator &before, const v8::Local<v8::Object> &object, int groups)
 {
+    if (!m_context->isValid())
+        return false;
+
     QQuickVisualDataModelItem *cacheItem = m_adaptorModel.createItem(m_cacheMetaType, m_context->engine(), -1);
     if (!cacheItem)
         return false;
@@ -2275,7 +2280,9 @@ QQmlV8Handle QQuickVisualDataGroup::get(int index)
         return QQmlV8Handle::fromHandle(v8::Undefined());;
 
     QQuickVisualDataModelPrivate *model = QQuickVisualDataModelPrivate::get(d->model);
-    if (index < 0 || index >= model->m_compositor.count(d->group)) {
+    if (!model->m_context->isValid()) {
+        return QQmlV8Handle::fromHandle(v8::Undefined());
+    } else if (index < 0 || index >= model->m_compositor.count(d->group)) {
         qmlInfo(this) << tr("get: index out of range");
         return QQmlV8Handle::fromHandle(v8::Undefined());
     }
