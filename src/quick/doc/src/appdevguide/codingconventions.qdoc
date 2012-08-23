@@ -58,27 +58,16 @@ For example, a hypothetical \e photo QML object would look like this:
 \section1 Grouped Properties
 
 If using multiple properties from a group of properties,
-we use the \e {group notation} rather than the \e {dot notation} to improve readability.
+consider using \e {group notation} instead of \e {dot notation} if it
+improves readability.
 
 For example, this:
 
 \snippet qml/codingconventions/dotproperties.qml 0
 
-can be written like this:
+could be written like this:
 
 \snippet qml/codingconventions/dotproperties.qml 1
-
-
-\section1 Private Properties
-
-QML and JavaScript do not enforce private properties like C++. There is a need
-to hide these private properties, for example, when the properties are part of
-the implementation. As a convention, private properties begin with two
-\e underscore characters. For example, \c __area, is a property that is
-accessible but is not meant for public use. Note that QML and JavaScript will
-grant the user access to these properties.
-
-\snippet qml/codingconventions/private.qml 0
 
 
 \section1 Lists
