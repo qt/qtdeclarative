@@ -193,7 +193,7 @@ function saveHighScore(name) {
     if (scoresURL != "")
         sendHighScore(name);
 
-    var db = Sql.openDatabaseSync("SameGameScores", "1.0", "Local SameGame High Scores", 100);
+    var db = Sql.LocalStorage.openDatabaseSync("SameGameScores", "1.0", "Local SameGame High Scores", 100);
     var dataStr = "INSERT INTO Scores VALUES(?, ?, ?, ?)";
     var data = [name, gameCanvas.score, maxColumn + "x" + maxRow, Math.floor(gameDuration / 1000)];
     db.transaction(function(tx) {

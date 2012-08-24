@@ -464,7 +464,7 @@ function puzzleVictoryCheck(clearedAll)//gameOver has also been set if no more m
 
 function getHighScore()
 {
-    var db = Sql.openDatabaseSync(
+    var db = Sql.LocalStorage.openDatabaseSync(
         "SameGame",
         "2.0",
         "SameGame Local Data",
@@ -487,7 +487,7 @@ function getHighScore()
 function saveHighScore(score)
 {
     // Offline storage
-    var db = Sql.openDatabaseSync(
+    var db = Sql.LocalStorage.openDatabaseSync(
         "SameGame",
         "2.0",
         "SameGame Local Data",
@@ -513,7 +513,7 @@ function saveHighScore(score)
 
 function getLevelHistory()
 {
-    var db = Sql.openDatabaseSync(
+    var db = Sql.LocalStorage.openDatabaseSync(
         "SameGame",
         "2.0",
         "SameGame Local Data",
@@ -536,7 +536,7 @@ function getLevelHistory()
 
 function saveLevelHistory()
 {
-    var db = Sql.openDatabaseSync(
+    var db = Sql.LocalStorage.openDatabaseSync(
         "SameGame",
         "2.0",
         "SameGame Local Data",
