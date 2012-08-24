@@ -71,14 +71,10 @@ There are several ways of setting animation to an object.
 
 \section2 Direct Property Animation
 
-To create an immediate movement or animated movement, set the property value
-directly. This may be done in signal handlers or attached properties.
-
-\snippet qml/animation.qml direct property change
-
-However, to create more control, \e {property animations} apply smooth movements
-by interpolating values between property value changes. Property animations
-provide timing controls and allows different interpolations through
+Animations are created by applying animation objects to property values to
+gradually change the properties over time. These \e {property animations} apply
+smooth movements by interpolating values between property value changes. Property
+animations provide timing controls and allows different interpolations through
 \l{qml-easing-animation}{easing curves}.
 
 \snippet qml/animation.qml property animation
@@ -90,6 +86,64 @@ rotations. Similarly, the \l{ParentAnimation} can animate parent changes.
 
 See the \l {qml-controlling-animations}{Controlling Animations} section for more
 information about the different animation properties.
+
+
+\section2 Using Predefined Targets and Properties
+
+In the previous example, the PropertyAnimation and NumberAnimation objects needed
+to specify particular \l {PropertyAnimation::}{target} and \l {PropertyAnimation::}{properties}
+values to specify the objects and properties that should be animated. This can be
+avoided by using the \e {<Animation> on <Property>} syntax, which specifies the
+animation is to be applied as a \e {property value source}.
+
+Below are two PropertyAnimation objects that are specified using this syntax:
+
+\qml
+import QtQuick 2.0
+
+Rectangle {
+    id: rect
+    width: 100; height: 100
+    color: "red"
+
+    PropertyAnimation on x { to: 100 }
+    PropertyAnimation on y { to: 100 }
+}
+\endqml
+
+The animation starts as soon as the rectangle is loaded, and will automatically be
+applied to its \c x and \c y values. Since the \e {<Animation> on <Property>}
+syntax has been used, it is not necessary to set the
+\l {PropertyAnimation::}{target} value of the PropertyAnimation objects to
+\c rect, and neither is it necessary to set the \l {PropertyAnimation::}{property}
+values to \c x and \c y.
+
+This can also be used by \l{Playing Animations in Parallel or in Sequence}
+{grouped animations} to ensure that all animations within a group are applied to
+the same property.  For example, the previous example could instead use
+SequentialAnimation to animate the rectangle's \c color first to yellow, then
+to blue:
+
+\qml
+import QtQuick 2.0
+
+Rectangle {
+    width: 100; height: 100
+    color: "red"
+
+    SequentialAnimation on color {
+        ColorAnimation { to: "yellow"; duration: 1000 }
+        ColorAnimation { to: "blue"; duration: 1000 }
+    }
+}
+\endqml
+
+Since the SequentialAnimation object has been specified on the \c color property
+using the \e {<Animation> on <Property>} syntax, its child ColorAnimation objects
+are also automatically applied to this property and do not need to specify
+\l {PropertyAnimation::}{target} or \l {PropertyAnimation::}{property} animation
+values.
+
 
 \keyword qml-transition-animations
 \section2 Transitions during State Changes
