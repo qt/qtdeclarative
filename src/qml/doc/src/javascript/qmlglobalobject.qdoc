@@ -30,7 +30,9 @@
 \brief Description of the Qml Global Object
 
 
-The QML JavaScript host environment implements the following host objects and functions:
+The QML JavaScript host environment implements the following host objects and functions.
+These are built in and can be used from any JavaScript code loaded in QML, without
+additional imports:
 
 \list
 \li The \l{QmlGlobalQtObject}{Qt object}: This object is specific to QML, and provides helper methods

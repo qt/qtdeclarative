@@ -116,12 +116,15 @@ for an introduction to writing QML applications.
     \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
         \list
         \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
+        \li \l{qtqml-javascript-dynamicobjectcreation.html}{Dynamic QML Object Creation from JavaScript}
         \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
         \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources In QML}
         \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
             \list
-            \li \l{qtqml-javascript-qmlglobalobject.html}{QML Global Object}
-            \li \l{qtqml-javascript-functionlist.html}{List of JavaScript Objects and Functions}
+            \li \l{qtqml-javascript-hostenvironment.html#common-base}{Common Base}
+            \li \l{qtqml-javascript-hostenvironment.html#qml-global-object}{QML Global Object}
+            \li \l{qtqml-javascript-hostenvironment.html#javascript-objects-and-functions}{JavaScript Objects and Functions}
+            \li \l{qtqml-javascript-hostenvironment.html#javascript-environment-restrictions}{JavaScript Environment Restrictions}
             \endlist
         \endlist
 

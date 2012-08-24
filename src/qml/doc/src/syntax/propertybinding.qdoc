@@ -186,7 +186,7 @@ In this case, the function could also have referred to \c rect.width rather than
 \c this.width.
 
 Note that the value of \c this is not defined outside of its use in property binding.
-See \l {JavaScript Expression Restrictions in QML} for details.
+See \l {JavaScript Environment Restrictions} for details.
 
 
 */

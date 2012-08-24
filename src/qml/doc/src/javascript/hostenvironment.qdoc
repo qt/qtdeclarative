@@ -52,32 +52,122 @@ specific to the browser environment. In the case of the W3Schools link above, th
 Reference} section generally covers the standard, while the \c{Browser Objects Reference} and \c{HTML DOM
 Objects Reference} sections are browser specific (and thus not applicable to QML).
 
-\section1 Host Objects and Functions
+
+\section1 QML Global Object
 
 The QML JavaScript host environment implements a number of host objects and functions, as
 detailed in the \l{QML Global Object} documentation.
 
+These host objects and functions are always available, regardless of whether any modules
+have been imported.
 
-\section1 Native Object Modification
 
-QML makes the following modifications to native objects:
+\section1 JavaScript Objects and Functions
+
+A list of the JavaScript objects, functions and properties supported by the
+QML engine can be found in the \l{List of JavaScript Objects and Functions}.
+
+Note that QML makes the following modifications to native objects:
 
 \list
 \li An \l {String::arg}{arg()} function is added to the \l String prototype.
 \li Locale-aware coversion functions are added to the \l Date and \l Number prototypes.
 \endlist
 
-\section1 Restrictions
+
+\section1 JavaScript Environment Restrictions
 
 QML implements the following restrictions for JavaScript code:
 
 \list
 \li JavaScript code cannot modify the global object.
+
+In QML, the global object is constant - existing properties cannot be modified
+or deleted, and no new properties may be created.
+
+Most JavaScript programs do not intentionally modify the global object.
+However, JavaScript's automatic creation of undeclared variables is an implicit
+modification of the global object, and is prohibited in QML.
+
+Assuming that the \c a variable does not exist in the scope chain, the
+following code is illegal in QML:
+
+\code
+// Illegal modification of undeclared variable
+a = 1;
+for (var ii = 1; ii < 10; ++ii)
+    a = a * ii;
+console.log("Result: " + a);
+\endcode
+
+It can be trivially modified to this legal code.
+
+\code
+var a = 1;
+for (var ii = 1; ii < 10; ++ii)
+    a = a * ii;
+console.log("Result: " + a);
+\endcode
+
+Any attempt to modify the global object - either implicitly or explicitly - will
+cause an exception.  If uncaught, this will result in an warning being printed,
+that includes the file and line number of the offending code.
+
 \li Global code is run in a reduced scope.
-\li The value of \c this is undefined in QML in the majority of contexts.
+
+During startup, if a QML file includes an external JavaScript file with "global"
+code, it is executed in a scope that contains only the external file itself and
+the global object.  That is, it will not have access to the QML objects and
+properties it \l {Scope and Naming Resolution}{normally would}.
+
+Global code that only accesses script local variable is permitted.  This is an
+example of valid global code.
+
+\code
+var colors = [ "red", "blue", "green", "orange", "purple" ];
+\endcode
+
+Global code that accesses QML objects will not run correctly.
+
+\code
+// Invalid global code - the "rootObject" variable is undefined
+var initialPosition = { rootObject.x, rootObject.y }
+\endcode
+
+This restriction exists as the QML environment is not yet fully established.
+To run code after the environment setup has completed, refer to
+\l {Running JavaScript at Startup}.
+
+\li The value of \c this is currently undefined in QML in the majority of contexts.
+
+The \c this keyword is supported when binding properties from JavaScript.
+In all other situations, the value of
+\c this is undefined in QML.
+
+To refer to any element, provide an \c id.  For example:
+
+\qml
+Item {
+    width: 200; height: 100
+    function mouseAreaClicked(area) {
+        console.log("Clicked in area at: " + area.x + ", " + area.y);
+    }
+    // This will not work because this is undefined
+    MouseArea {
+        height: 50; width: 200
+        onClicked: mouseAreaClicked(this)
+    }
+    // This will pass area2 to the function
+    MouseArea {
+        id: area2
+        y: 50; height: 50; width: 200
+        onClicked: mouseAreaClicked(area2)
+    }
+}
+\endqml
+
 \endlist
 
-See \l {JavaScript Expression Restrictions in QML} for more details on these restrictions.
 
 
 */

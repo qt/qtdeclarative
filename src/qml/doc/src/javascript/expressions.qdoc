@@ -40,9 +40,9 @@ The JavaScript environment provided by QML is stricter than that in a web
 browser.  For example, in QML you cannot add, or modify, members of the
 JavaScript global object.  In regular JavaScript, it is possible to do this
 accidentally by using a variable without declaring it. In QML this will throw
-an exception, so all local variables should be explicitly declared.  A complete
-description of the limitations of JavaScript code in QML is included in an
-\l{JavaScript Expression Restrictions in QML}{upcoming section}.
+an exception, so all local variables should be explicitly declared.  See
+\l{JavaScript Environment Restrictions} for a complete description of the
+restrictions on JavaScript code executed from QML.
 
 There are various ways in which JavaScript expressions may be defined and used
 in QML, including property bindings, signal handlers, custom methods and
@@ -299,8 +299,9 @@ component instance) startup.  While it is tempting to just include the startup
 script as \e {global code} in an external script file, this can have severe
 limitations as the QML environment may not have been fully established.  For
 example, some objects might not have been created or some
-\l {Property Binding}s may not have been run.  \l {JavaScript Expression Restrictions in QML}
-covers the exact limitations of global script code.
+\l {Property Binding}{property bindings} may not have been run.
+\l {JavaScript Environment Restrictions} covers the exact limitations of global
+script code.
 
 Every QML object has an \e attached \l Component property that references the
 component within which the object was instantiated.  Every \l Component
@@ -330,102 +331,6 @@ Likewise, the \l {Component::onDestruction} handler definitions are triggered
 on component destruction.
 
 
-
-
-
-
-\section1 JavaScript Expression Restrictions in QML
-
-QML executes standard JavaScript code, with the following restrictions:
-
-\list
-\li JavaScript code cannot modify the global object.
-
-In QML, the global object is constant - existing properties cannot be modified
-or deleted, and no new properties may be created.
-
-Most JavaScript programs do not intentionally modify the global object.
-However, JavaScript's automatic creation of undeclared variables is an implicit
-modification of the global object, and is prohibited in QML.
-
-Assuming that the \c a variable does not exist in the scope chain, the
-following code is illegal in QML:
-
-\code
-// Illegal modification of undeclared variable
-a = 1;
-for (var ii = 1; ii < 10; ++ii)
-    a = a * ii;
-console.log("Result: " + a);
-\endcode
-
-It can be trivially modified to this legal code.
-
-\code
-var a = 1;
-for (var ii = 1; ii < 10; ++ii)
-    a = a * ii;
-console.log("Result: " + a);
-\endcode
-
-Any attempt to modify the global object - either implicitly or explicitly - will
-cause an exception.  If uncaught, this will result in an warning being printed,
-that includes the file and line number of the offending code.
-
-\li Global code is run in a reduced scope
-
-During startup, if a QML file includes an external JavaScript file with "global"
-code, it is executed in a scope that contains only the external file itself and
-the global object.  That is, it will not have access to the QML objects and
-properties it \l {Scope and Naming Resolution}{normally would}.
-
-Global code that only accesses script local variable is permitted.  This is an
-example of valid global code.
-
-\code
-var colors = [ "red", "blue", "green", "orange", "purple" ];
-\endcode
-
-Global code that accesses QML objects will not run correctly.
-
-\code
-// Invalid global code - the "rootObject" variable is undefined
-var initialPosition = { rootObject.x, rootObject.y }
-\endcode
-
-This restriction exists as the QML environment is not yet fully established.
-To run code after the environment setup has completed, refer to
-\l {Running JavaScript at Startup}.
-
-\li The value of \c this is currently undefined in QML in the majority of contexts
-
-The \c this keyword is supported when binding properties from JavaScript.
-In all other situations, the value of
-\c this is undefined in QML.
-
-To refer to any element, provide an \c id.  For example:
-
-\qml
-Item {
-    width: 200; height: 100
-    function mouseAreaClicked(area) {
-        console.log("Clicked in area at: " + area.x + ", " + area.y);
-    }
-    // This will not work because this is undefined
-    MouseArea {
-        height: 50; width: 200
-        onClicked: mouseAreaClicked(this)
-    }
-    // This will pass area2 to the function
-    MouseArea {
-        id: area2
-        y: 50; height: 50; width: 200
-        onClicked: mouseAreaClicked(area2)
-    }
-}
-\endqml
-
-\endlist
 
 \section1 Scarce Resources in JavaScript
 

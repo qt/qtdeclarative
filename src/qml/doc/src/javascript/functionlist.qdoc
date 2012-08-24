@@ -190,6 +190,12 @@
     \li trim()
     \endlist
 
+    Additionally, the QML engine adds the following functions to the \l String prototype:
+    \list
+    \li \l {String::arg}{arg()}
+    \endlist
+
+
     \section1 Boolean Objects
 
     \section2 Boolean Prototype Object
@@ -213,6 +219,13 @@
     \li toFixed(fractionDigits)
     \li toExponential(fractionDigits)
     \li toPrecision(precision)
+    \endlist
+
+    Additionally, the QML engine adds the following functions to the \l Number prototype:
+    \list
+    \li \l {Number::fromLocaleString}{fromLocaleString(locale, number)}
+    \li \l {Number::toLocaleCurrencyString}{toLocaleCurrencyString(locale, symbol)}
+    \li \l {Number::toLocaleString}{toLocaleString(locale, format, precision)}
     \endlist
 
     \section1 The Math Object
@@ -303,6 +316,14 @@
     \li toUTCString()
     \li toISOString()
     \li toJSON()
+    \endlist
+
+    Additionally, the QML engine adds the following functions to the \l Date prototype:
+    \list
+    \li \l {Date::timeZoneUpdated}{timeZoneUpdated()}
+    \li \l {Date::toLocaleDateString}{toLocaleDateString(locale, format)}
+    \li \l {Date::toLocaleString}{toLocaleString(locale, format)}
+    \li \l {Date::toLocaleTimeString}{toLocaleTimeString(locale, format)}
     \endlist
 
     \section1 RegExp Objects
