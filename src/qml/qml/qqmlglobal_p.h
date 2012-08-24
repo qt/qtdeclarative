@@ -167,7 +167,7 @@ T qmlobject_cast(QObject *object)
 
 inline quint16 qmlSourceCoordinate(int n)
 {
-    return (n > 0 && n <= USHRT_MAX) ? static_cast<quint16>(n) : 0;
+    return (n > 0 && n <= static_cast<int>(USHRT_MAX)) ? static_cast<quint16>(n) : 0;
 }
 
 inline int qmlSourceCoordinate(quint16 n)

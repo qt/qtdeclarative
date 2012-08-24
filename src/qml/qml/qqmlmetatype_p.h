@@ -213,7 +213,7 @@ private:
     friend int registerType(const QQmlPrivate::RegisterType &);
     friend int registerInterface(const QQmlPrivate::RegisterInterface &);
     QQmlType(int, const QQmlPrivate::RegisterInterface &);
-    QQmlType(int, const QQmlPrivate::RegisterType &);
+    QQmlType(int, const QString &, const QQmlPrivate::RegisterType &);
     ~QQmlType();
 
     QQmlTypePrivate *d;

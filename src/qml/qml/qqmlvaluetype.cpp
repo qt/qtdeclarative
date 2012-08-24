@@ -78,7 +78,7 @@ QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
 
 bool QQmlValueTypeFactoryImpl::isValueType(int idx)
 {
-    if (idx >= QVariant::UserType) {
+    if (idx >= (int)QVariant::UserType) {
         return (valueType(idx) != 0);
     } else if (idx >= 0
             && idx != QVariant::StringList

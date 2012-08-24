@@ -264,11 +264,11 @@ QQmlType::QQmlType(int index, const QQmlPrivate::RegisterInterface &interface)
     d->m_version_min = 0;
 }
 
-QQmlType::QQmlType(int index, const QQmlPrivate::RegisterType &type)
+QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::RegisterType &type)
 : d(new QQmlTypePrivate)
 {
+    d->m_elementName = elementName;
     d->m_module = moduleFromUtf8(type.uri);
-    d->m_elementName = QString::fromUtf8(type.elementName);
 
     d->m_version_maj = type.versionMajor;
     d->m_version_min = type.versionMinor;
@@ -943,11 +943,13 @@ int registerType(const QQmlPrivate::RegisterType &type)
     QWriteLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
+    QString elementName = QString::fromUtf8(type.elementName);
+
     if (type.uri && type.elementName) {
         QString nameSpace = moduleFromUtf8(type.uri);
 
-        if (data->singletonTypeExists(nameSpace, type.elementName, type.versionMajor, type.versionMinor)) {
-            qWarning("Cannot register type %s in uri %s %d.%d (a conflicting singleton type already exists)", qPrintable(type.elementName), qPrintable(nameSpace), type.versionMajor, type.versionMinor);
+        if (data->singletonTypeExists(nameSpace, elementName, type.versionMajor, type.versionMinor)) {
+            qWarning("Cannot register type %s in uri %s %d.%d (a conflicting singleton type already exists)", qPrintable(elementName), qPrintable(nameSpace), type.versionMajor, type.versionMinor);
             return -1;
         }
 
@@ -956,7 +958,7 @@ int registerType(const QQmlPrivate::RegisterType &type)
             if (nameSpace != data->typeRegistrationNamespace) {
                 QString failure(QCoreApplication::translate("qmlRegisterType",
                                                             "Cannot install element '%1' into unregistered namespace '%2'"));
-                data->typeRegistrationFailures.append(failure.arg(QString::fromUtf8(type.elementName)).arg(nameSpace));
+                data->typeRegistrationFailures.append(failure.arg(elementName).arg(nameSpace));
                 return -1;
             }
         } else if (data->typeRegistrationNamespace != nameSpace) {
@@ -964,7 +966,7 @@ int registerType(const QQmlPrivate::RegisterType &type)
             if (data->protectedNamespaces.contains(nameSpace)) {
                 QString failure(QCoreApplication::translate("qmlRegisterType",
                                                             "Cannot install element '%1' into protected namespace '%2'"));
-                data->typeRegistrationFailures.append(failure.arg(QString::fromUtf8(type.elementName)).arg(nameSpace));
+                data->typeRegistrationFailures.append(failure.arg(elementName).arg(nameSpace));
                 return -1;
             }
         }
@@ -972,7 +974,7 @@ int registerType(const QQmlPrivate::RegisterType &type)
 
     int index = data->types.count();
 
-    QQmlType *dtype = new QQmlType(index, type);
+    QQmlType *dtype = new QQmlType(index, elementName, type);
 
     data->types.append(dtype);
     data->idToType.insert(dtype->typeId(), dtype);
