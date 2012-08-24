@@ -90,10 +90,11 @@ this simple example.
 
 \section1 Importing Modules
 
-The \c import statement imports the \l{qtquick-main.html}{QtQuick}
-\l{qtqml-modules-topic.html}{module}, which contains all of the standard
-QML types. Without this import statement, the \l Rectangle and
-other visual object types would not be available.
+The \c import statement imports the QtQuick module, which contains all of the
+standard QML types. A \l{qtqml-modules-topic.html}{module} makes a particular
+set of types available to the QML code that imports it; without this import
+statement, the \l Rectangle and other visual object types would not be
+available.
 
 A specific version of a module is imported. This guarantees that the
 QML types imported when the application is run by the user match those
@@ -1274,10 +1275,10 @@ page contains the most important information for QML application developers.
 {Developing Qt Quick Applications with Creator} provides an overview
 of user interface development using the visual \e{Qt Quick Designer} tool.
 
-The \l{qtqml-main.html}{Qt QML module} documentation contains in-depth
+The \l {QtQml}{Qt QML module} documentation contains in-depth
 information about the QML language and the concepts behind QML.
 
-The \l{qtquick-main.html}{Qt Quick module} documentation contains in-depth
+The \l {QtQuick}{Qt Quick module} documentation contains in-depth
 information about the QML types and functionality provided by Qt Quick,
 which forms the basis for user-interfaces developed in QML.
 

@@ -47,7 +47,7 @@ imported via the following statement:
 import QtQuick 2.0
 \endqml
 
-See the \l{qtquick-main.html}{QtQuick} module documentation for more
+See the QtQuick module documentation for more
 information about the concepts which are central to \c QtQuick.
 
 \section1 Basic Types
