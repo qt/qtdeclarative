@@ -58,11 +58,28 @@ used in a way that requires the engine to access additional type information
 property, or if one of its enum types is to be used in this way — then the
 class may need to be registered.
 
-(Note that a number of the important concepts covered in this document are
-demonstrated in the \l{Writing QML Extensions with C++} tutorial.)
+Also note that a number of the important concepts covered in this document are
+demonstrated in the \l{Writing QML Extensions with C++} tutorial.
 
 
-\section1 Properties
+\section1 Data Type Handling and Ownership
+
+Any data that is transferred from C++ to QML, whether as a property value, a
+method paramter or return value, or a signal parameter value, must be of a
+type that is supported by the QML engine.
+
+By default, the engine supports a number of Qt C++ types and can automatically
+convert them as appropriately when used from QML. Additionally, C++ classes
+that are \l{Registering C++ types with the QML type system}{registered} with
+the QML type system can be can be used as data types, as can their enums if
+appropriately registered. See \l{qtqml-cppintegration-data.html}{Data Type
+Conversion Between QML and C++} for details for further information.
+
+Additionally, data ownership rules are taken into consideration when data is
+transferred from C++ to QML. See \l {Data Ownership} for more details.
+
+
+\section1 Exposing Properties
 
 A \e property can be specified for any QObject-derived class using the
 Q_PROPERTY() macro. A property is a class data member with an associated read
@@ -339,7 +356,7 @@ implementation, whereas an object-type property can be freely created and
 destroyed through QML code.
 
 
-\section1 Methods (including Qt Slots)
+\section1 Exposing Methods (including Qt Slots)
 
 Any method of a QObject-derived type is accessible from QML code if it is:
 
@@ -409,10 +426,9 @@ Item {
 \endqml
 \endtable
 
-Note that any QML object may be passed as an argument to a Q_INVOKABLE C++
-method if that method has a QObject pointer as a parameter.  The object
-may be passed via its id, or via a JavaScript \l var that references the
-object.
+If a C++ method has a parameter with a \c QObject* type, the parameter value
+can be passed from QML using an object \c id or a JavaScript \l var value
+that references the object.
 
 QML supports the calling of overloaded C++ functions. If there are multiple C++
 functions with the same name but different arguments, the correct function will
@@ -422,7 +438,7 @@ Values returned from C++ methods are converted to JavaScript values when
 accessed from JavaScript expressions in QML.
 
 
-\section1 Signals
+\section1 Exposing Signals
 
 Any public \l{Signals & Slots}{signal} of a QObject-derived type is accessible
 from QML code.
@@ -469,41 +485,5 @@ Classes may have multiple signals with the same name, but only the final
 signal is accessible as a QML signal. Note that signals with the same name
 but different parameters cannot be distinguished from one another.
 
-
-\section1 Semantics of Data Transfer from C++ to QML
-
-There are several issues to be aware of when transferring data from C++ to
-QML, including how data types are processed by the engine, and where
-ownership of the transferred data lies. (For more details on data type
-conversion between QML and C++, see \l{qtqml-cppintegration-data.html}{Data
-Type Conversion Between QML and C++}.)
-
-
-\section2 Data Type Handling
-
-Any data that is transferred from C++ to QML, whether as a property value, a
-method paramter or return value, or a signal parameter value, must be of a
-type that is supported by the QML engine.
-
-By default, the engine supports a number of Qt C++ types and can automatically
-convert them as appropriately when used from QML. Additionally, C++ classes
-that are \l{Registering C++ types with the QML type system}{registered} with
-the QML type system can be can be used as data types, as can their enums if
-appropriately registered. See \l{qtqml-cppintegration-data.html}{Data Type
-Conversion Between QML and C++} for details for further information.
-
-
-\section2 Data Ownership
-
-When data is transferred from C++ to QML, the ownership of the data always
-remains with C++. The exception to this rule is when a QObject is returned from
-a C++ method: in this case, the QML engine assumes ownership of the object,
-unless the ownership of the object has explicitly been set to remain with C++ by
-invoking QQmlEngine::setObjectOwnership() with QQmlEngine::CppOwnership
-specified.
-
-Furthermore, the QML engine respects the normal QObject parent ownership
-semantics of Qt C++ objects, and will not ever take ownership of a QObject
-instance which already has a parent.
 
 */
