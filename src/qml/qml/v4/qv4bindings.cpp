@@ -434,8 +434,8 @@ void QV4Bindings::Binding::disconnect()
             Binding * const binding = parent->bindings + bindingRef->binding;
             if (binding == this) {
                 Subscription * const sub = parent->subscriptions + subIndex;
-                if (sub->active) {
-                    sub->active = false;
+                if (sub->active()) {
+                    sub->setActive(false);
                     sub->disconnect();
                 }
             }
@@ -444,15 +444,42 @@ void QV4Bindings::Binding::disconnect()
 }
 
 QV4Bindings::Subscription::Subscription()
-    : bindings(0), method(-1), active(false)
+    : m_bindings(0)
 {
     setCallback(QQmlNotifierEndpoint::QV4BindingsSubscription);
+}
+
+int QV4Bindings::Subscription::method() const
+{
+    Q_ASSERT(bindings() != 0);
+    return (this - bindings()->subscriptions);
+}
+
+void QV4Bindings::Subscription::setBindings(QV4Bindings *bindings)
+{
+    m_bindings = bindings;
+}
+
+QV4Bindings *QV4Bindings::Subscription::bindings() const
+{
+    return *m_bindings;
+}
+
+bool QV4Bindings::Subscription::active() const
+{
+    return m_bindings.flag();
+}
+
+void QV4Bindings::Subscription::setActive(bool active)
+{
+    m_bindings.setFlagValue(active);
 }
 
 void QV4BindingsSubscription_callback(QQmlNotifierEndpoint *e, void **)
 {
     QV4Bindings::Subscription *s = static_cast<QV4Bindings::Subscription *>(e);
-    s->bindings->subscriptionNotify(s->method);
+    Q_ASSERT(s->bindings());
+    s->bindings()->subscriptionNotify(s->method());
 }
 
 void QV4Bindings::subscriptionNotify(int id)
@@ -558,12 +585,11 @@ void QV4Bindings::subscribeId(QQmlContextData *p, int idIndex, int subIndex)
     sub->disconnect();
 
     if (p->idValues[idIndex]) {
-        sub->bindings = this;
-        sub->method = subIndex;
+        sub->setBindings(this);
         sub->connect(&p->idValues[idIndex].bindings);
-        sub->active = true;
+        sub->setActive(true);
     } else {
-        sub->active = false;
+        sub->setActive(false);
     }
 }
 
@@ -572,14 +598,13 @@ void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex, QQmlEngin
     Subscription *sub = (subscriptions + subIndex);
     if (sub->isConnected(o, notifyIndex))
         return;
-    sub->bindings = this;
-    sub->method = subIndex;
+    sub->setBindings(this);
     if (o) {
         sub->connect(o, notifyIndex, e);
-        sub->active = true;
+        sub->setActive(true);
     } else {
         sub->disconnect();
-        sub->active = false;
+        sub->setActive(false);
     }
 }
 
@@ -992,8 +1017,7 @@ void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                     Subscription *sub = 0;
                     if (subIdx != -1) {
                         sub = (subscriptions + subIdx);
-                        sub->bindings = this;
-                        sub->method = subIdx;
+                        sub->setBindings(this);
                     }
                     sub->connect(notifier);
                 }

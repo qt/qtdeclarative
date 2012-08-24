@@ -122,11 +122,19 @@ private:
     {
     public:
         inline Subscription();
-        QV4Bindings *bindings;
-        int method:31;
 
-        // Subscriptions are not shared between bindings (anymore), so this can be a simple bool flag
-        bool active:1;
+        // Index of this Subscription into the QV4Bindings::subscriptions array.
+        // This may not be used before setBindings() was called.
+        inline int method() const;
+
+        inline void setBindings(QV4Bindings *bindings);
+        inline QV4Bindings *bindings() const;
+
+        inline bool active() const;
+        inline void setActive(bool active);
+
+        // Pointer to the parent QV4Bindings. The flag is used as the 'active' value.
+        QFlagPointer<QV4Bindings> m_bindings;
     };
     friend void QV4BindingsSubscription_callback(QQmlNotifierEndpoint *e, void **);
 
