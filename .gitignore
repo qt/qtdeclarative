@@ -193,6 +193,8 @@ doc-build
 doc/html/*
 doc/qch
 doc-build
+doc/qtqml
+doc/qtquick
 .rcc
 .pch
 .metadata
