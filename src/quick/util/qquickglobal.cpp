@@ -290,7 +290,7 @@ public:
     static QMatrix4x4 matrix4x4FromString(const QString &s, bool *ok)
     {
         if (s.count(QLatin1Char(',')) == 15) {
-            qreal matValues[16];
+            float matValues[16];
             bool vOK = true;
             QString mutableStr = s;
             for (int i = 0; vOK && i < 16; ++i) {
@@ -387,7 +387,7 @@ public:
         if (array->Length() != 16)
             return QMatrix4x4();
 
-        qreal matVals[16];
+        float matVals[16];
         for (uint32_t i = 0; i < 16; ++i) {
             v8::Handle<v8::Value> v = array->Get(i);
             if (!v->IsNumber())
