@@ -316,14 +316,14 @@ static QVariant variantFromString(const QString &string)
 QObject *QQmlVME::run(QList<QQmlError> *errors,
                               const Interrupt &interrupt
 #ifdef QML_THREADED_VME_INTERPRETER
-                              , void ***storeJumpTable
+                              , void * const **storeJumpTable
 #endif
                               )
 {
 #ifdef QML_THREADED_VME_INTERPRETER
     if (storeJumpTable) {
 #define QML_INSTR_ADDR(I, FMT) &&op_##I,
-        static void *jumpTable[] = {
+        static void *const jumpTable[] = {
             FOR_EACH_QML_INSTR(QML_INSTR_ADDR)
         };
 #undef QML_INSTR_ADDR
@@ -1263,9 +1263,9 @@ v8::Persistent<v8::Object> QQmlVME::run(QQmlContextData *parentCtxt, QQmlScriptD
 }
 
 #ifdef QML_THREADED_VME_INTERPRETER
-void **QQmlVME::instructionJumpTable()
+void *const *QQmlVME::instructionJumpTable()
 {
-    static void **jumpTable = 0;
+    static void * const *jumpTable = 0;
     if (!jumpTable) {
         QQmlVME dummy;
         QQmlVME::Interrupt i;

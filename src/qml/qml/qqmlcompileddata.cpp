@@ -215,7 +215,7 @@ QQmlInstruction *QQmlCompiledData::instruction(int index)
 QQmlInstruction::Type QQmlCompiledData::instructionType(const QQmlInstruction *instr)
 {
 #ifdef QML_THREADED_VME_INTERPRETER
-    void **jumpTable = QQmlVME::instructionJumpTable();
+    void *const *jumpTable = QQmlVME::instructionJumpTable();
     void *code = instr->common.code;
 
 #  define QML_CHECK_INSTR_CODE(I, FMT) \

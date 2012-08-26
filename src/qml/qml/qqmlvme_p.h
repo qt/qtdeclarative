@@ -132,13 +132,13 @@ private:
 
     QObject *run(QList<QQmlError> *errors, const Interrupt &
 #ifdef QML_THREADED_VME_INTERPRETER
-                 , void ***storeJumpTable = 0
+                 , void *const**storeJumpTable = 0
 #endif
                 );
     v8::Persistent<v8::Object> run(QQmlContextData *, QQmlScriptData *);
 
 #ifdef QML_THREADED_VME_INTERPRETER
-    static void **instructionJumpTable();
+    static void *const*instructionJumpTable();
     friend class QQmlCompiledData;
 #endif
 
