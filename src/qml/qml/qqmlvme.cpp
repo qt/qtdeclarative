@@ -1085,6 +1085,7 @@ QObject *QQmlVME::run(QList<QQmlError> *errors,
     // nothing to do
 #else
         default:
+            Q_UNREACHABLE();
             qFatal("QQmlCompiledData: Internal error - unknown instruction %d", genericInstr->common.instructionType);
             break;
         }
