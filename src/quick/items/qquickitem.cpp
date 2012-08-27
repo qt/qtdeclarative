@@ -1914,10 +1914,20 @@ QQuickItem::~QQuickItem()
 /*!
     \qmlproperty Item QtQuick2::Item::parent
     This property holds the visual parent of the item.
+
+    \note The concept of the \e {visual parent} differs from that of the
+    \e {QObject parent}. An item's visual parent may not necessarily be the
+    same as its object parent. See \l {Concepts - Visual Parent in Qt Quick}
+    for more details.
 */
 /*!
     \property QQuickItem::parent
     This property holds the visual parent of the item.
+
+    \note The concept of the \e {visual parent} differs from that of the
+    \e {QObject parent}. An item's visual parent may not necessarily be the
+    same as its object parent. See \l {Concepts - Visual Parent in Qt Quick}
+    for more details.
 */
 QQuickItem *QQuickItem::parentItem() const
 {

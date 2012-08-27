@@ -69,6 +69,7 @@ Please see the \l{qtqml-syntax-imports.html}{QML Syntax - Import Statements}
 documentation for in-depth information about QML imports.
 
 
+\keyword qml-object-declarations
 \section1 Object Declarations
 
 Syntactically, a block of QML code defines a tree of QML objects to be created. Objects are

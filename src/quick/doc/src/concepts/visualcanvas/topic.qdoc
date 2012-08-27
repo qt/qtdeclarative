@@ -51,7 +51,7 @@ certain properties (for example, opacity applies to visual children).
 
 In almost all cases, the visual parent is identical to the ownership-parent.
 See the documentation about the \l{qtquick-visualcanvas-visualparent.html}
-{Visual Parent}for more in-depth information on the topic.
+{Visual Parent} for more in-depth information on the topic.
 
 \section1 Scene Graph
 

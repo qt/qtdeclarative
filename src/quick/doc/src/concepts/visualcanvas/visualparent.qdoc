@@ -31,24 +31,66 @@
 \brief Description of the concept of visual parent in Qt Quick
 
 \section1 Visual Parent
-The concept of visual parent in Qt Quick is separate but related to the concept of the QObject parent hierarchy. In QtQuick, the
-default property of Item is \l Item::data which can be any QObject derived type.
 
-Any object that is assigned to an item's data property becomes a child of the item within its QObject hierarchy, for
-memory management purposes. Additionally, if an object added to the data property is of the Item type, it is also
+When creating visual scenes with Qt Quick, it is important to understand the concept of the \e {visual parent}.
+
+The concept of the visual parent in Qt Quick is separate from, but related to, the concept of the \e {object parent}
+within the QObject parent hierarchy.  All QML objects have an \e {object parent}, which is determined by the
+\l{qml-object-declarations}{object hierarchy} in which the object is declared. When working with the \c QtQuick
+module, the \l Item type is the base type for all visual items provided by this module, and it provides the
+concept of an additional \e {visual parent}, as defined by an item's \l {Item::}{parent} property. Every item
+has a visual parent; if an item's \l {Item::}{parent} property value is \c null, the item will not be rendered
+in the scene.
+
+Any object assigned to an item's \l{Item::}{data} property becomes a child of the item within its QObject hierarchy, for
+memory management purposes. Additionally, if an object added to the data property is of the \l Item type, it is also
 assigned to the \l Item::children property and becomes a child of the item within the visual scene hierarchy.
 (Most Qt Quick hierarchy crawling algorithms, especially the rendering algorithms, only consider the visual parent
 hierarchy.)
+
+For convenience, the Item \l {Item::}{data} property is its \l{Default Properties}{default property}. This means
+that any child item declared within an \l Item object without being assigned to a specific property is automatically
+assigned to the \l {Item::}{data} property and becomes a child of the item as described above. So, the two code
+blocks below produce the same result, and you will almost always see the form shown below left, rather than the
+explicit \c data assignment shown below right:
+
+\table
+\row
+\li
+\code
+import QtQuick 2.0
+
+Item {
+    width: 100; height: 100
+
+    Rectangle { width: 50; height: 50; color: "red" }
+}
+\endcode
+
+\li
+\code
+import QtQuick 2.0
+
+Item {
+    width: 100; height: 100
+
+    data: [
+        Rectangle { width: 50; height: 50; color: "red" }
+    ]
+}
+\endcode
+\endtable
+
+An item's visual parent can be changed at any time by setting its \l {Item::}{parent} property. Thus, an item's
+visual parent may not necessarily be the same as its object parent.
 
 When an item becomes the child of another item:
 
 \list
 \li The child's \l{Item::parent}{parent} refers to its parent item
-\li The parent's \l{Item::children}{children} and \l{Item::childrenRect}{childrenRect} properties takes that
+\li The parent's \l{Item::children}{children} and \l{Item::childrenRect.x}{childrenRect} properties takes that
     child into account
 \endlist
-
-An item's visual parent can be changed at any time by setting its \l {Item::}{parent} property.
 
 Declaring an item as a child of another does not automatically mean that the child item will be appropriately
 positioned or sized to fit within its parent. Some QML types may have in-built behaviors that affect the positioning
@@ -57,11 +99,13 @@ but these are behaviors enforced by the types' own specific implementations. Add
 automatically clip its children to visually contain them within the parent's visual bounds, unless its \l{Item::}{clip}
 property is set to true.
 
-The visual parent of an item may come under consideration in the following circumstances:
+The visual parent of an item may come under consideration in particular circumstances, as described in the sections
+below.
+
 
 \section2 Item Coordinates
 As item coordinates are relative to the visual parent, they can be affected by changes to the visual hierarchy. See
-the \l{Visual Coordinates}{qtquick-visualcanvas-visualcoordinates.html} concept page for more detail.
+the \l{qtquick-visualcanvas-coordinates.html}{Visual Coordinates} concept page for more detail.
 
 \section2 Stacking Order
 
@@ -75,7 +119,7 @@ So in the following example, the blue rectangle will be drawn on top of the gree
 Because the algorithm recurses through the visual item hierarchy, any children of the green rectangle will also be drawn beneath
 the blue rectangle and beneath any of the blue rectangle's children.
 
-Stacking order can be influenced with the \Item::z property. Z values below 0 will stack below the parent, and if z
+Stacking order can be influenced with the \l Item::z property. Z values below 0 will stack below the parent, and if z
 values are assigned then siblings will stack in z-order (with creation order used to break ties). Z values only affect
 stacking compared to siblings and the parent item. If you have an item who is obscured by a subtree rooted above its
 parent item, no z value on that item will increase its stacking order to stack above that subtree. To stack that item

@@ -522,7 +522,7 @@ property and refer to the actual defined property rather than the alias.
 
 An object definition can have a single \e default property. A default property
 is the property to which a value is assigned if an object is declared within
-another object's definition without attaching it as a value to a particular
+another object's definition without declaring it as a value for a particular
 property.
 
 Declaring a property with the optional \c default keyword marks it as the
