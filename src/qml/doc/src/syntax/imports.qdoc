@@ -48,9 +48,9 @@ The most common type of import is a module import.  Clients can import
 types and JavaScript resources into a given namespace.
 
 The generic form of a module import is as follows:
-\qml
+\code
 import <ModuleIdentifier> <Version.Number> [as <Qualifier>]
-\endqml
+\endcode
 
 \list
   \li The \c <ModuleIdentifier> is an identifier specified in dotted URI
@@ -68,9 +68,9 @@ import <ModuleIdentifier> <Version.Number> [as <Qualifier>]
 \endlist
 
 An example of an unqualified module import is as follows:
-\qml
+\code
 import QtQuick 2.0
-\endqml
+\endcode
 
 This import allows the use of all of the types provided by the \c QtQuick
 module without needing to specify a qualifier.  For example, the client code to
@@ -87,9 +87,9 @@ Rectangle {
 \endqml
 
 An example of a qualified module import is as follows:
-\qml
+\code
 import QtQuick 2.0 as Quick
-\endqml
+\endcode
 
 This import allows multiple modules which provide conflicting type names to be
 imported at the same time, however since each usage of a type provided by a
@@ -219,9 +219,9 @@ JavaScript resources may be imported directly in a QML document.  Every
 JavaScript resource must have an identifier by which it is accessed.
 
 The generic form of a JavaScript resource import is as follows:
-\qml
+\code
 import "<JavaScriptFile>" as <Identifier>
-\endqml
+\endcode
 
 Note that the \c <Identifier> must be unique within a QML document, unlike the
 local namespace qualifier which can be applied to module imports.

@@ -168,12 +168,21 @@ for an introduction to writing QML applications.
 
 \section1 Reference Documentation
 
+Additional Qt QML information:
 \list
-\li \l{QML Types Provided By The QtQml Module}{Qt QML - QML Type Reference}
-\li \l{Qt QML - C++ Classes}
-\li \l{Qt Quick} module documentation
-\li \l{QML Application Developer Resources} - information for application development with QML and Qt Quick
-\li \l{Qt QML Release Notes}
+\li \l{Qt QML Module - C++ Classes} - the C++ API provided by the
+    Qt QML module
+\li \l{Qt QML Release Notes} - list of changes and
+    additions in the Qt QML module
+\endlist
+
+Further information for writing QML applications:
+\list
+\li \l{QML Application Developer Resources}
+    - essential information for application development with QML and Qt Quick
+\li \l{Qt Quick} - documentation for the Qt Quick module, which provides a
+    visual canvas, an animation framework, model/view components and more for
+    building fluid user interfaces and applications with QML
 \endlist
 */
 

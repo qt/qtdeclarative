@@ -40,7 +40,7 @@ compound interfaces are grouped as applications as they demonstrate more Qt
 Quick features.
 
 To run the sample applications, open them in Qt Creator or use the included
-\l {Protoyping with qmlscene}{qmlscene} tool.
+\l {Prototyping with qmlscene}{qmlscene} tool.
 
 Some of these code samples have a corresponding \l{qtquick-tutorials}{tutorial}.
 The Qt Quick features are covered in the \l {qtquick-overviews}{main page}.

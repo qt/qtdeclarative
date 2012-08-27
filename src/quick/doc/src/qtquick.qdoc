@@ -108,12 +108,20 @@ To find out more about using the QML language, see the \l{Qt QML Module Document
 
 \section1 Reference Documentation
 
+Additional Qt Quick information:
 \list
-\li \l{QML Types Provided by Qt Quick}
-\li \l{Qt Quick Module - C++ Classes}
-\li \l{Qt QML} module documentation
-\li \l{QML Application Developer Resources} - information for application development with QML and Qt Quick
-\li \l{Qt Quick Release Notes}
+\li \l{Qt Quick Module - C++ Classes} - the C++ API provided by the
+    Qt Quick module
+\li \l{Qt Quick Release Notes} - list of changes and
+    additions in the Qt Quick module
+\endlist
+
+Further information for writing QML applications:
+\list
+\li \l{QML Application Developer Resources}
+    - essential information for application development with QML and Qt Quick
+\li \l{Qt Qml} - documentation for the
+    Qt QML module, which provides the QML engine and language infrastructure
 \endlist
 */
 

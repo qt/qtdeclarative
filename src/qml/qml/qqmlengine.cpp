@@ -217,7 +217,8 @@ void QQmlEnginePrivate::defineQtQuick2Module()
     \value Pixmap The Image Provider provides QPixmap images.
         The QQuickImageProvider::requestPixmap() method will be called for all image requests.
     \value Texture The Image Provider provides QSGTextureProvider based images.
-        The QQuickImageProvider::requestTexture() method will be called for all image requests. \omitvalue
+        The QQuickImageProvider::requestTexture() method will be called for all image requests.
+    \omitvalue Invalid
 */
 
 /*!

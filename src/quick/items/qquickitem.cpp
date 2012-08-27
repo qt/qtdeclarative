@@ -412,12 +412,10 @@ void QQuickItemKeyFilter::componentComplete()
     \qmlproperty Item QtQuick2::KeyNavigation::right
     \qmlproperty Item QtQuick2::KeyNavigation::up
     \qmlproperty Item QtQuick2::KeyNavigation::down
-    \qmlproperty Item QtQuick2::KeyNavigation::tab
-    \qmlproperty Item QtQuick2::KeyNavigation::backtab
 
     These properties hold the item to assign focus to
-    when the left, right, up or down cursor keys, or the
-    tab key are pressed.
+    when the left, right, up or down cursor keys
+    are pressed.
 */
 
 /*!
@@ -1682,6 +1680,11 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
 /*!
     \enum QQuickItem::ItemChange
+    \internal
+*/
+
+/*!
+    \class ItemChangeData
     \internal
 */
 
@@ -4128,7 +4131,8 @@ void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 }
 
 /*!
-    Notify input method on updated query values if needed. \a indicates changed attributes.
+    Notify input method on updated query values if needed. \a queries indicates
+    the changed attributes.
 */
 void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
 {
@@ -4305,7 +4309,7 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
   \endtable
  */
 /*!
-  \qmlproperty real QtQuick2::Item::z
+  \property QQuickItem::z
 
   Sets the stacking order of sibling items.  By default the stacking order is 0.
 

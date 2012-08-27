@@ -53,7 +53,7 @@
                 by the plugin
         \endlist
     \li Write a project file for the plugin
-    \li Create a \l{Adding Module Metadata with a qmldir file}{qmldir file} to
+    \li Create a \l{Module Definition qmldir Files}{qmldir file} to
         describe the plugin
     \endlist
 
@@ -105,7 +105,7 @@
     SOURCES += qexampleqmlplugin.cpp
     \endcode
 
-    Finally, a \l{Adding Module Metadata with a qmldir file}{qmldir file} is required
+    Finally, a \l{Module Definition qmldir Files}{qmldir file} is required
     in the \c com/nokia/TimeExample directory to describe the plugin and the types that it
     exports. The plugin includes a \c Clock.qml file along with the \c qmlqtimeexampleplugin
     that is built by the project (as shown above in the \c .pro file) so both of these

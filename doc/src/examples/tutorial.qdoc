@@ -104,7 +104,7 @@ The \c font.pointSize and \c font.bold properties are related to fonts and use t
 
 \section2 Viewing the example
 
-To view what you have created, run the \l{Protoyping with qmlscene}{qmlscene} tool (located in the \c bin directory) with your filename as the first argument.
+To view what you have created, run the \l{Prototyping with qmlscene}{qmlscene} tool (located in the \c bin directory) with your filename as the first argument.
 For example, to run the provided completed Tutorial 1 example from the install location, you would type:
 
 \code
