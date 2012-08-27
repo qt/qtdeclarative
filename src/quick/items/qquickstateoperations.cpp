@@ -857,11 +857,35 @@ QQuickAnchorChanges::QQuickAnchorChanges(QObject *parent)
 
 QQuickAnchorChanges::~QQuickAnchorChanges()
 {
+    /*
+        if the anchorchanges is active at destruction, any non-active orig
+        bindings need to be destroyed
+
+        the basic logic is that if both e.g. left and origLeft are present,
+        then we are active (otherwise left would have been destroyed), and
+        left is in use and origLeft needs to be cleaned up.
+    */
+    Q_D(QQuickAnchorChanges);
+    if (d->leftBinding && d->origLeftBinding)
+        d->origLeftBinding->destroy();
+    if (d->rightBinding && d->origRightBinding)
+        d->origRightBinding->destroy();
+    if (d->hCenterBinding && d->origHCenterBinding)
+        d->origHCenterBinding->destroy();
+    if (d->topBinding && d->origTopBinding)
+        d->origTopBinding->destroy();
+    if (d->bottomBinding && d->origBottomBinding)
+        d->origBottomBinding->destroy();
+    if (d->vCenterBinding && d->origVCenterBinding)
+        d->origVCenterBinding->destroy();
+    if (d->baselineBinding && d->origBaselineBinding)
+        d->origBaselineBinding->destroy();
 }
 
 QQuickAnchorChanges::ActionList QQuickAnchorChanges::actions()
 {
     Q_D(QQuickAnchorChanges);
+    //### ASSERT these are all 0?
     d->leftBinding = d->rightBinding = d->hCenterBinding = d->topBinding
                    = d->bottomBinding = d->vCenterBinding = d->baselineBinding = 0;
 
@@ -1274,7 +1298,24 @@ void QQuickAnchorChanges::copyOriginals(QQuickActionEvent *other)
 
     d->oldBindings.clear();
     d->oldBindings << acp->leftBinding << acp->rightBinding << acp->hCenterBinding
-                << acp->topBinding << acp->bottomBinding << acp->baselineBinding;
+                << acp->topBinding << acp->bottomBinding << acp->vCenterBinding << acp->baselineBinding;
+
+    //clear old values from other
+    //### could this be generalized for all QQuickActionEvents, and called after copyOriginals?
+    acp->leftBinding = 0;
+    acp->rightBinding = 0;
+    acp->hCenterBinding = 0;
+    acp->topBinding = 0;
+    acp->bottomBinding = 0;
+    acp->vCenterBinding = 0;
+    acp->baselineBinding = 0;
+    acp->origLeftBinding = 0;
+    acp->origRightBinding = 0;
+    acp->origHCenterBinding = 0;
+    acp->origTopBinding = 0;
+    acp->origBottomBinding = 0;
+    acp->origVCenterBinding = 0;
+    acp->origBaselineBinding = 0;
 
     saveCurrentValues();
 }
