@@ -3397,7 +3397,7 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_texture->setTileSize(canvasItem->tileSize());
     m_texture->setCanvasSize(canvasItem->canvasSize().toSize());
     m_texture->setSmooth(canvasItem->smooth());
-
+    m_texture->setAntialiasing(canvasItem->antialiasing());
     m_thread = QThread::currentThread();
 
     QThread *renderThread = m_thread;
@@ -3426,16 +3426,17 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     reset();
 }
 
-void QQuickContext2D::prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth)
+void QQuickContext2D::prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing)
 {
-    QMetaObject::invokeMethod(m_texture,
-                                                               "canvasChanged",
-                                                               Qt::AutoConnection,
-                                                               Q_ARG(QSize, canvasSize),
-                                                               Q_ARG(QSize, tileSize),
-                                                               Q_ARG(QRect, canvasWindow),
-                                                               Q_ARG(QRect, dirtyRect),
-                                                               Q_ARG(bool, smooth));
+    QMetaObject::invokeMethod(m_texture
+                                                , "canvasChanged"
+                                                , Qt::AutoConnection
+                                                , Q_ARG(QSize, canvasSize)
+                                                , Q_ARG(QSize, tileSize)
+                                                , Q_ARG(QRect, canvasWindow)
+                                                , Q_ARG(QRect, dirtyRect)
+                                                , Q_ARG(bool, smooth)
+                                                , Q_ARG(bool, antialiasing));
 }
 
 void QQuickContext2D::flush()

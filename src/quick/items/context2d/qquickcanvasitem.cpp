@@ -647,7 +647,7 @@ void QQuickCanvasItem::updatePolish()
     Q_D(QQuickCanvasItem);
 
     if (d->contextInitialized)
-        d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth);
+        d->context->prepare(d->canvasSize.toSize(), d->tileSize, d->canvasWindow.toRect(), d->dirtyRect.toRect(), d->smooth, d->antialiasing);
 
     if (d->animationCallbacks.size() > 0 && isVisible()) {
         QMap<int, v8::Persistent<v8::Function> > animationCallbacks = d->animationCallbacks;
@@ -690,6 +690,11 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     QSGSimpleTextureNode *node = static_cast<QSGSimpleTextureNode*>(oldNode);
     if (!node)
         node = new QSGSimpleTextureNode;
+
+    if (d->smooth)
+        node->setFiltering(QSGTexture::Linear);
+    else
+        node->setFiltering(QSGTexture::Nearest);
 
     if (d->renderStrategy == QQuickCanvasItem::Cooperative)
         d->context->flush();

@@ -67,7 +67,7 @@ public:
     // Init (ignore options if necessary)
     virtual void init(QQuickCanvasItem *canvasItem, const QVariantMap &args) = 0;
 
-    virtual void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
+    virtual void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing);
     virtual void flush();
 
     virtual void setV8Engine(QV8Engine *engine) = 0;

@@ -6,7 +6,6 @@ Component {
         Canvas {
             id:c
              width:100;height:100
-             smooth:false //this line is needed for some tests (smooth painting can change the colors and alpha channel values)
              onPaint :{} //this line is needed for some tests (make sure onPaint handler always called
              property alias paintCount:spyPaint.count
              property alias paintedCount:spyPainted.count

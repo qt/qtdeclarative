@@ -77,6 +77,7 @@ public:
     bool setTileSize(const QSize &size);
     bool setCanvasWindow(const QRect& canvasWindow);
     void setSmooth(bool smooth);
+    void setAntialiasing(bool antialiasing);
     bool setDirtyRect(const QRect &dirtyRect);
     bool canvasDestroyed();
 
@@ -86,7 +87,7 @@ Q_SIGNALS:
 public Q_SLOTS:
     void markDirtyTexture();
     void setItem(QQuickCanvasItem* item);
-    void canvasChanged(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
+    void canvasChanged(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing);
     void paint(QQuickContext2DCommandBuffer *ccb);
     virtual void grabImage(const QRectF& region = QRectF()) = 0;
 
@@ -115,6 +116,7 @@ protected:
     uint m_canvasWindowChanged : 1;
     uint m_dirtyTexture : 1;
     uint m_smooth : 1;
+    uint m_antialiasing : 1;
     uint m_tiledCanvas : 1;
     uint m_painting : 1;
 };

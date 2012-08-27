@@ -64,7 +64,7 @@ public:
     QRect rect() const {return m_rect;}
 
     virtual void setRect(const QRect& r) = 0;
-    virtual QPainter* createPainter(bool smooth = false);
+    virtual QPainter* createPainter(bool smooth, bool antialiasing);
     virtual void drawFinished() {}
 
 protected:

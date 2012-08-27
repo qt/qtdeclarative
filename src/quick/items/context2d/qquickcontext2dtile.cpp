@@ -60,7 +60,7 @@ QQuickContext2DTile::~QQuickContext2DTile()
         m_painter.end();
 }
 
-QPainter* QQuickContext2DTile::createPainter(bool smooth)
+QPainter* QQuickContext2DTile::createPainter(bool smooth, bool antialiasing)
 {
     if (m_painter.isActive())
         m_painter.end();
@@ -78,12 +78,16 @@ QPainter* QQuickContext2DTile::createPainter(bool smooth)
             v = 150;
         m_painter.fillRect(QRect(0, 0, m_rect.width(), m_rect.height()), QColor(v, v, v, 255));
 #endif
-        if (smooth)
-            m_painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing
-                                   | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
+
+        if (antialiasing)
+            m_painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing, true);
         else
-            m_painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing
-                                     | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform, false);
+            m_painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing, false);
+
+        if (smooth)
+            m_painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+        else
+            m_painter.setRenderHint(QPainter::SmoothPixmapTransform, false);
 
         m_painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
         m_painter.translate(-m_rect.left(), -m_rect.top());

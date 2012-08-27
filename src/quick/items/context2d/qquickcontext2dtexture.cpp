@@ -93,7 +93,8 @@ QQuickContext2DTexture::QQuickContext2DTexture()
     , m_dirtyCanvas(false)
     , m_canvasWindowChanged(false)
     , m_dirtyTexture(false)
-    , m_smooth(false)
+    , m_smooth(true)
+    , m_antialiasing(false)
     , m_tiledCanvas(false)
     , m_painting(false)
 {
@@ -141,6 +142,11 @@ void QQuickContext2DTexture::setSmooth(bool smooth)
     m_smooth = smooth;
 }
 
+void QQuickContext2DTexture::setAntialiasing(bool antialiasing)
+{
+    m_antialiasing = antialiasing;
+}
+
 void QQuickContext2DTexture::setItem(QQuickCanvasItem* item)
 {
     m_item = item;
@@ -174,7 +180,7 @@ bool QQuickContext2DTexture::setDirtyRect(const QRect &r)
     return doDirty;
 }
 
-void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth)
+void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing)
 {
     QSize ts = tileSize;
     if (ts.width() > canvasSize.width())
@@ -198,6 +204,7 @@ void QQuickContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize&
         setDirtyRect(dirtyRect);
 
     setSmooth(smooth);
+    setAntialiasing(antialiasing);
 }
 
 void QQuickContext2DTexture::paintWithoutTiles(QQuickContext2DCommandBuffer *ccb)
@@ -213,12 +220,16 @@ void QQuickContext2DTexture::paintWithoutTiles(QQuickContext2DCommandBuffer *ccb
 
     QPainter p;
     p.begin(device);
-    if (m_smooth)
-        p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing
-                               | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
+    if (m_antialiasing)
+        p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing, true);
     else
-        p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing
-                                 | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform, false);
+        p.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing, false);
+
+    if (m_smooth)
+        p.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    else
+        p.setRenderHint(QPainter::SmoothPixmapTransform, false);
+
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     ccb->replay(&p, m_state);
@@ -262,7 +273,7 @@ void QQuickContext2DTexture::paint(QQuickContext2DCommandBuffer *ccb)
             QQuickContext2D::State oldState = m_state;
             foreach (QQuickContext2DTile* tile, m_tiles) {
                 if (tile->dirty()) {
-                    ccb->replay(tile->createPainter(m_smooth), oldState);
+                    ccb->replay(tile->createPainter(m_smooth, m_antialiasing), oldState);
                     tile->drawFinished();
                     tile->markDirty(false);
                 }
@@ -444,7 +455,7 @@ bool QQuickContext2DFBOTexture::doMultisampling() const
         extensionsChecked = true;
     }
 
-    return multisamplingSupported  && m_smooth;
+    return multisamplingSupported  && m_antialiasing;
 }
 
 void QQuickContext2DFBOTexture::grabImage(const QRectF& rf)

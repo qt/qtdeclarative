@@ -169,7 +169,7 @@ public:
 
     QStringList contextNames() const;
     void init(QQuickCanvasItem *canvasItem, const QVariantMap &args);
-    void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth);
+    void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing);
     void flush();
     void sync();
     QThread *thread() const {return m_thread;}
