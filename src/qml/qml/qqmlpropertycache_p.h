@@ -238,6 +238,7 @@ private:
     bool notFullyResolved() const { return flags & NotFullyResolved; }
 };
 
+class QQmlPropertyCacheMethodArguments;
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount, public QQmlCleanup
 {
 public:
@@ -345,6 +346,8 @@ private:
     // Implemented in v8/qv8qobjectwrapper.cpp
     v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);
 
+    QQmlPropertyCacheMethodArguments *createArgumentsObject(int count,
+                                                            const QList<QByteArray> &names = QList<QByteArray>());
     QQmlPropertyData *signal(int, QQmlPropertyCache **) const;
 
     typedef QVector<QQmlPropertyData> IndexCache;
