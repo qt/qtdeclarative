@@ -62,9 +62,7 @@ Custom rendering can be performed on the scenegraph using the following new clas
 \li QSGGeometryNode
 \li QSGClipNode
 \li QSGTransformNode
-\li QSGRootNode
 \li QSGOpacityNode
-\li QSGNodeVisitor
 \li QSGFlatColorMaterial
 \li QSGSimpleRectNode
 \li QSGSimpleTextureNode
@@ -176,8 +174,6 @@ relative to its start.
     \li New \c getText() method returns the text located between specified start and end indexes.
         Additionally TextEdit has a \l{TextEdit::}{getFormattedText()} method that returns the formatted
         text.
-    \li \c openSoftwareInputPanel() and \c closeSoftwareInputPanel() methods have been removed. Use
-        \c Qt.application.inputMethod.show() and \c Qt.application.inputMethod.hide() instead.
     \endlist
 \li \l Text only:
     \list

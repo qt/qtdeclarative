@@ -154,7 +154,7 @@ QImage QQuickTextureFactory::image() const
     an image provider named "colors", and the images to be loaded are "yellow"
     and "red", respectively:
 
-    \snippet examples/qml/cppextensions/imageprovider/imageprovider-example.qml 0
+    \snippet examples/qml/imageprovider/imageprovider-example.qml 0
 
     When these images are loaded by QML, it looks for a matching image provider
     and calls its requestImage() or requestPixmap() method (depending on its
@@ -165,9 +165,9 @@ QImage QQuickTextureFactory::image() const
     requested by the above QML. This implementation dynamically 
     generates QPixmap images that are filled with the requested color:
 
-    \snippet examples/qml/cppextensions/imageprovider/imageprovider.cpp 0
+    \snippet examples/qml/imageprovider/imageprovider.cpp 0
     \codeline
-    \snippet examples/qml/cppextensions/imageprovider/imageprovider.cpp 1
+    \snippet examples/qml/imageprovider/imageprovider.cpp 1
 
     To make this provider accessible to QML, it is registered with the QML engine
     with a "colors" identifier:
@@ -189,7 +189,7 @@ QImage QQuickTextureFactory::image() const
     \image imageprovider.png
 
     A complete example is available in Qt's 
-    \l {qml/cppextensions/imageprovider}{examples/qml/cppextensions/imageprovider}
+    \l {qml/imageprovider}{examples/qml/imageprovider}
     directory. Note the example registers the provider via a \l{QQmlExtensionPlugin}{plugin}
     instead of registering it in the application \c main() function as shown above.
 

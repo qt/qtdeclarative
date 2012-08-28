@@ -1689,6 +1689,11 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 */
 
 /*!
+    \class QQuickItem::ItemChangeData
+    \internal
+*/
+
+/*!
     \enum QQuickItem::TransformOrigin
 
     Controls the point about which simple transforms like scale apply.
@@ -3803,7 +3808,7 @@ QQmlListProperty<QQuickState> QQuickItemPrivate::states()
     See \l{Qt Quick States} and \l{Animation and Transitions in Qt Quick} for
     more details on using states and transitions.
 
-    \sa transitions
+    \sa states
 */
 /*!
     \property QQuickItem::transitions
@@ -3869,6 +3874,9 @@ void QQuickItem::setState(const QString &state)
 */
 /*!
     \property QQuickItem::transform
+    \internal
+  */
+/*!
     \internal
   */
 QQmlListProperty<QQuickTransform> QQuickItem::transform()
@@ -6262,6 +6270,12 @@ void QQuickItem::setKeepTouchGrab(bool keep)
     d->keepTouch = keep;
 }
 
+/*!
+  \qmlmethod object QtQuick2::Item::contains(point point)
+
+  Returns true if this item contains \a point, which is in local coordinates;
+  returns false otherwise.
+  */
 /*!
   Returns true if this item contains \a point, which is in local coordinates;
   returns false otherwise.

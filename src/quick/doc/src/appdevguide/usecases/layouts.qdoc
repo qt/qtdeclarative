@@ -29,39 +29,51 @@
 \title Use Case - Layouts In QML
 \brief Example of how to create layouts for visual elements in a QML application
 
-There are several ways to position items in QML, including simple property bindings.
+There are several ways to position items in QML.
+
+Below is a brief overview. For more details, see \l {Important Concepts In Qt Quick - Positioning}.
 
 \section1 Manual Positioning
 
-Items can be placed at specific x,y coordinates on the screen by setting their x,y properties. This will setup their
-position relative to the top left corner of their parent, for more detail see \c {Visual Canvas}.
+Items can be placed at specific x,y coordinates on the screen by setting their x,y properties. This will
+setup their position relative to the top left corner of their parent, according to the
+\l {Concepts - Visual Coordinates in Qt Quick}{visual coordinate system} rules.
 
-Combined with using bindings instead of constant valudes for these properties, relative positioning is also easily
+Combined with using \l{Property Binding}{bindings} instead of constant valudes for these properties, relative positioning is also easily
 accomplished by setting the x and y coordinates to the appropriate bindings.
 
+\snippet qml/usecases/layouts.qml import
 \snippet qml/usecases/layouts.qml direct
+
+\image qml-uses-layouts-direct.png
+
 
 \section1 Anchors
 
-The \c Item type provides the abilitiy to anchor to other Item types. There are six anchor lines for each item: left,
-right, vertical center, top, bottom and horizontal center. The three vertical anchor lines can be anchored to any of
+The \c Item type provides the abilitiy to anchor to other \l Item types. There are six anchor lines for each item: \e left,
+\e right, \e{vertical center}, \e top, \e bottom and \e{horizontal center}. The three vertical anchor lines can be anchored to any of
 the three vertical anchor lines of another item, and the three horizontal anchor lines can be anchored to the
 horizontal anchor lines of another item.
 
-For full details, see the documentation of the \l{Item::anchors}{anchors property}.
+For full details, see \l {Positioning with Anchors} and the documentation of the \l{Item::anchors.top}{anchors property}.
 
+\snippet qml/usecases/layouts.qml import
 \snippet qml/usecases/layouts.qml anchors
+
+\image qml-uses-layouts-anchors.png
+
 
 \section1 Positioners
 
-For the common case of wanting to position a set of elements in a regular pattern, QtQuick provides some Positioner
-types. Items placed in a positioner are automatically positioned in some way, for example a Row positions items to be
+For the common case of wanting to position a set of elements in a regular pattern, QtQuick provides some positioner
+types. Items placed in a positioner are automatically positioned in some way; for example, a \l Row positions items to be
 horizontally adjacent (forming a row).
 
-For full details see the documentation for \l{qtquick-qmltypereference.html#positioning}{the positioner types}.
+For full details see \l {Item Layouts} and the documentation for \l{qtquick-qmltypereference.html#positioning}{the positioner types}.
 
+\snippet qml/usecases/layouts.qml import
 \snippet qml/usecases/layouts.qml positioners
 
-\image qml-uses-layouts.png
+\image qml-uses-layouts-positioners.png
 
 */

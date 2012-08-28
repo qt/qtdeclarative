@@ -468,16 +468,16 @@ through the data.
 
     \section1 Detailed Description
 
-    To use the types in this module, import the module with a namespace and call the
-    relevant functions using the namespace qualifier:
+    To use the types in this module, import the module and call the
+    relevant functions using the \c LocalStorage type:
 
     \code
-    import QtQuick.LocalStorage 2.0 as LS
+    import QtQuick.LocalStorage 2.0
     import QtQuick 2.0
 
     Item {
         Component.onCompleted: {
-            var db = LS.openDatabaseSync(...)
+            var db = LocalStorage.openDatabaseSync(...)
         }
     }
     \endcode
@@ -491,19 +491,19 @@ Database connections are automatically closed during Javascript garbage collecti
 
 The API can be used from JavaScript functions in your QML:
 
-\snippet qml/sqllocalstorage/hello.qml 0
+\snippet localstorage/localstorage/hello.qml 0
 
 The API conforms to the Synchronous API of the HTML5 Web Database API,
 \link http://www.w3.org/TR/2009/WD-webdatabase-20091029/ W3C Working Draft 29 October 2009\endlink.
 
-The \l{declarative/sqllocalstorage}{SQL Local Storage example} demonstrates the basics of
+The \l{localstorage/localstorage}{SQL Local Storage example} demonstrates the basics of
 using the Offline Storage API.
 
 \section3 Open or create a databaseData
 \code
 import QtQuick.LocalStorage 2.0 as LS
 
-db = LS.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
+db = Sql.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
 \endcode
 The above code returns the database identified by \e identifier. If the database does not already exist, it
 is created, and the function \e callback is called with the database as a parameter. \e description

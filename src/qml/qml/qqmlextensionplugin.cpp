@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
     as a new QML element. It provides the current time through \c hour and \c minute 
     properties, like this:
 
-    \snippet examples/qml/cppextensions/plugins/plugin.cpp 0
+    \snippet examples/qml/plugins/plugin.cpp 0
     \dots
 
     To make this class available as a QML type, create a plugin that registers
@@ -84,9 +84,9 @@ QT_BEGIN_NAMESPACE
     module will be named \c com.nokia.TimeExample (as defined in the project
     file further below).
 
-    \snippet examples/qml/cppextensions/plugins/plugin.cpp plugin
+    \snippet examples/qml/plugins/plugin.cpp plugin
     \codeline
-    \snippet examples/qml/cppextensions/plugins/plugin.cpp export
+    \snippet examples/qml/plugins/plugin.cpp export
 
     This registers the \c TimeModel class with the 1.0 version of this 
     plugin library, as a QML type called \c Time. The Q_ASSERT statement 
@@ -110,14 +110,14 @@ QT_BEGIN_NAMESPACE
     should be bundled with the plugin, so it needs to be specified in the \c qmldir
     file:
 
-    \quotefile examples/qml/cppextensions/plugins/com/nokia/TimeExample/qmldir
+    \quotefile examples/qml/plugins/com/nokia/TimeExample/qmldir
 
     Once the project is built and installed, the new \c Time element can be 
     used by any QML component that imports the \c com.nokia.TimeExample module:
 
-    \snippet examples/qml/cppextensions/plugins/plugins.qml 0
+    \snippet examples/qml/plugins/plugins.qml 0
 
-    The full source code is available in the \l {qml/cppextensions/plugins}{plugins example}.
+    The full source code is available in the \l {qml/plugins}{plugins example}.
 
     The \l {Writing QML Extensions with C++} tutorial also contains a chapter
     on creating QML plugins.

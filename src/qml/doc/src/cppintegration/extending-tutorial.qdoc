@@ -456,7 +456,7 @@ In this tutorial, we've shown the basic steps for creating a QML extension:
 
 The \l{Integrating QML and C++} documentation shows
 other useful features that can be added to QML extensions. For example, we
-could use \l{Default Property}{default properties} to allow
+could use \l{Default Properties}{default properties} to allow
 slices to be added without using the \c slices property:
 
 \code

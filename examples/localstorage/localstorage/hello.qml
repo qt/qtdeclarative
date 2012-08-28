@@ -39,18 +39,18 @@
 ****************************************************************************/
 //![0]
 import QtQuick 2.0
-import QtQuick.LocalStorage 2.0 as LS
+import QtQuick.LocalStorage 2.0
 
 Rectangle {
-    color: "white"
     width: 200
     height: 100
-    
+
     Text {
         text: "?"
         anchors.horizontalCenter: parent.horizontalCenter
+
         function findGreetings() {
-            var db = LS.openDatabaseSync("QDeclarativeExampleDB", "1.0", "The Example QML SQL!", 1000000);
+            var db = LocalStorage.openDatabaseSync("QQmlExampleDB", "1.0", "The Example QML SQL!", 1000000);
 
             db.transaction(
                 function(tx) {

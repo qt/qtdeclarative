@@ -247,7 +247,7 @@ version of installed software, since a versioned import \e only imports types
 for that version, leaving other identifiers available, even if the actual
 installed version might otherwise provide those identifiers.
 
-See \l{examples/qml/cppextensions/plugins} for an example that uses C++
+See \l{examples/qml/plugins} for an example that uses C++
 plugins.
 
 

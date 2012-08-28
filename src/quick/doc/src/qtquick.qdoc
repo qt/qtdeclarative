@@ -102,6 +102,7 @@ To find out more about using the QML language, see the \l{Qt QML Module Document
         \list
         \li \l{qtquick-cppextensionpoints.html#user-defined-qquickitem-derived-types}{Creating User-Defined QQuickItem-Derived Types}
         \li \l{qtquick-cppextensionpoints.html#scene-graph-related-classes}{Scene Graph-Related Classes}
+        \li \l{qtquick-cppextensionpoints.html#pixmap-and-threaded-image-support}{Pixmap and Threaded Image Support}
         \endlist
 
 \endlist

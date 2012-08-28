@@ -39,8 +39,8 @@ developers to extend the QML language with custom types and integrate QML code
 with JavaScript and C++.
 
 The Qt QML module provides both the \c QtQml QML module, which supplies
-\l{Qt QML - C++ Classes}{a set of core QML types} for creating QML
-applications, and the \c QtQml C++ module, which supplies \l{Qt QML - C++ Classes}{a set of C++
+\l{Qt QML Module - C++ Classes}{a set of core QML types} for creating QML
+applications, and the \c QtQml C++ module, which supplies \l{Qt QML Module - C++ Classes}{a set of C++
 APIs} for extending QML applications with custom types and integrating C++
 implementations with QML applications.
 

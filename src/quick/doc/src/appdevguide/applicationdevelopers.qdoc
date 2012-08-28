@@ -110,7 +110,7 @@ animated and visually appealing applications.  QML offers a highly readable,
 declarative, JSON-like syntax with support for imperative JavaScript
 expressions combined with dynamic property bindings.
 
-The QML language and engine infrastructure is provided by the Qt QML module.
+The QML language and engine infrastructure is provided by the \l {Qt QML} module.
 For in-depth information about the QML language, please see the
 \l{Qt QML} module documentation.
 

@@ -83,8 +83,8 @@ Here is a simple object declaration:
 
 \qml
 Rectangle {
-    width: 200
-    height: 200
+    width: 100
+    height: 100
     color: "red"
 }
 \endqml
@@ -97,8 +97,8 @@ The above object can be loaded by the engine if it is part of a \l{qtqml-documen
 import QtQuick 2.0
 
 Rectangle {
-    width: 200
-    height: 200
+    width: 100
+    height: 100
     color: "red"
 }
 \endqml
@@ -110,7 +110,7 @@ When placed into a \c .qml file and loaded by the QML engine, the above code cre
 \note If an object definition only has a small number of properties, it can be written on a single line like this, with the properties separated by semi-colons:
 
 \qml
-Rectangle { width: 200; height: 200; color: "red" }
+Rectangle { width: 100; height: 100; color: "red" }
 \endqml
 
 Obviously, the \l Rectangle object declared in this example is very simple indeed, as it defines nothing more than a few property values. To create more useful objects, an object declaration may define many other types of attributes: these are discussed in the \l{qtqml-syntax-objectattributes.html}{QML Object Attributes} documentation. Additionally, an object declaration may define child objects, as discussed below.
@@ -127,8 +127,8 @@ which in turn contains two \l GradientStop declarations:
 import QtQuick 2.0
 
 Rectangle {
-    width: 200
-    height: 200
+    width: 100
+    height: 100
 
     gradient: Gradient {
         GradientStop { position: 0.0; color: "yellow" }

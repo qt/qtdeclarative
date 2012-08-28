@@ -82,7 +82,7 @@ QT_BEGIN_NAMESPACE
 
     The QtQuick 1 version of this class is named QDeclarativeNetworkAccessManagerFactory.
 
-    \sa {qml/cppextensions/networkaccessmanagerfactory}{NetworkAccessManagerFactory example}
+    \sa {qml/networkaccessmanagerfactory}{NetworkAccessManagerFactory example}
 */
 
 /*!
