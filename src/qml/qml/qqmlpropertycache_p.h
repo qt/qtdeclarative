@@ -285,7 +285,7 @@ public:
 
     QQmlPropertyData *property(int) const;
     QQmlPropertyData *method(int) const;
-    QQmlPropertyData *signal(int) const;
+    QQmlPropertyData *signal(int index) const { return signal(index, 0); }
     int methodIndexToSignalIndex(int) const;
     QStringList propertyNames() const;
 
@@ -344,6 +344,8 @@ private:
 
     // Implemented in v8/qv8qobjectwrapper.cpp
     v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);
+
+    QQmlPropertyData *signal(int, QQmlPropertyCache **) const;
 
     typedef QVector<QQmlPropertyData> IndexCache;
     typedef QStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;

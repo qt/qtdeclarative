@@ -887,17 +887,18 @@ void QQmlPropertyCache::update(QQmlEngine *engine, const QMetaObject *metaObject
     This is different from QMetaMethod::methodIndex().
 */
 QQmlPropertyData *
-QQmlPropertyCache::signal(int index) const
+QQmlPropertyCache::signal(int index, QQmlPropertyCache **c) const
 {
     if (index < 0 || index >= (signalHandlerIndexCacheStart + signalHandlerIndexCache.count()))
         return 0;
 
     if (index < signalHandlerIndexCacheStart)
-        return _parent->signal(index);
+        return _parent->signal(index, c);
 
     QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
     if (rv->notFullyResolved()) resolve(rv);
     Q_ASSERT(rv->isSignal() || rv->coreIndex == -1);
+    if (c) *c = const_cast<QQmlPropertyCache *>(this);
     return rv;
 }
 
@@ -1066,7 +1067,8 @@ static int EnumType(const QMetaObject *metaobj, const QByteArray &str, int type)
 */
 QString QQmlPropertyCache::signalParameterStringForJS(int index, int *count, QString *errorString)
 {
-    QQmlPropertyData *signalData = signal(index);
+    QQmlPropertyCache *c = 0;
+    QQmlPropertyData *signalData = signal(index, &c);
     if (!signalData)
         return QString();
 
@@ -1098,6 +1100,8 @@ QString QQmlPropertyCache::signalParameterStringForJS(int index, int *count, QSt
         args->parameterError = false;
         args->names = new QList<QByteArray>(parameterNameList);
         signalData->arguments = args;
+        args->next = c->argumentsCache;
+        c->argumentsCache = args;
     }
 
     QQmlRewrite::RewriteSignalHandler rewriter;
@@ -1158,6 +1162,8 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
             args->parameterError = false;
             args->names = 0;
             rv->arguments = args;
+            args->next = c->argumentsCache;
+            c->argumentsCache = args;
         }
         A *args = static_cast<A *>(rv->arguments);
 
@@ -1183,9 +1189,6 @@ int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
             args->arguments[ii + 1] = type;
         }
         args->argumentsValid = true;
-
-        args->next = c->argumentsCache;
-        c->argumentsCache = args;
         return static_cast<A *>(rv->arguments)->arguments;
 
     } else {
