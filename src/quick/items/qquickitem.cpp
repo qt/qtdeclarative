@@ -3099,7 +3099,7 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
     events for an item. The event information is provided by the
     \a event parameter.
   */
-void QQuickItem::focusInEvent(QFocusEvent *event)
+void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessibleEvent ev(this, QAccessible::Focus);
@@ -3112,7 +3112,7 @@ void QQuickItem::focusInEvent(QFocusEvent *event)
     events for an item. The event information is provided by the
     \a event parameter.
   */
-void QQuickItem::focusOutEvent(QFocusEvent *event)
+void QQuickItem::focusOutEvent(QFocusEvent * /*event*/)
 {
 }
 

@@ -49,6 +49,10 @@
 #include <QtGui/qdesktopservices.h>
 #include <QtGui/qfontdatabase.h>
 
+#ifdef Q_CC_MSVC
+// MSVC2010 warns about 'unused variable t', even if it's used in t->~T()
+#  pragma warning( disable : 4189 )
+#endif
 
 QT_BEGIN_NAMESPACE
 

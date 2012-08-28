@@ -70,6 +70,11 @@
 
 Q_DECLARE_METATYPE(QJSValue)
 
+#ifdef Q_CC_MSVC
+// MSVC2010 warns about 'unreferenced formal parameter', even if it's used in p->~T()
+#  pragma warning( disable : 4100 )
+#endif
+
 QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS;
