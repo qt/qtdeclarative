@@ -289,6 +289,56 @@ Text {
 }
 \endcode
 
+\section1 Overridden Properties
+
+QML permits property names defined in an object declaration to be overridden by properties
+declared within another object declaration that extends the first.  For example:
+
+\code
+// Displayable.qml
+import QtQuick 2.0
+Item {
+    property string title
+    property string detail
+
+    Text {
+        text: "<b>" + title + "</b><br>" + detail
+    }
+
+    function getTitle() { return title }
+    function setTitle(newTitle) { title = newTitle }
+}
+
+// Person.qml
+import QtQuick 2.0
+Displayable {
+    property string title
+    property string firstName
+    property string lastName
+
+    function fullName()  { return title + " " + firstName + " " + lastName }
+}
+\endcode
+
+Here, the name \c title is given to both the heading of the output text for Displayable,
+and also to the honorific title of the Person object.
+
+An overridden property is resolved according to the scope in which it is referenced.
+Inside the scope of the Person component, or from an external scope that refers
+to an instance of the Person component, \c title resolves to the property
+declared inside Person.qml.  The \c fullName function will refer to the \c title
+property declared inside Person.
+
+Inside the Displayable component, however, \c title refers to the property
+declared in Displayable.qml.  The getTitle() and setTitle() functions, and the
+binding for the \c text property of the Text object will all refer to the \c title
+property declared in the Displayable component.
+
+Despite sharing the same name, the two properties are entirely separate.  An
+onChanged signal handler for one of the properties will not be triggered by
+a change to the other property with the same name.  An alias to either property
+will refer to one or the other, but not both.
+
 \section1 JavaScript Global Object
 
 QML disallows element, id and property names that conflict with the properties
