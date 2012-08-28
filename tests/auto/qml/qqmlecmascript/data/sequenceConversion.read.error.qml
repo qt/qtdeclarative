@@ -10,12 +10,12 @@ Item {
         objectName: "msco"
     }
 
-    property int pointListLength: 0
-    property variant pointList
+    property int typeListLength: 0
+    property variant typeList
 
     function performTest() {
-        // we have NOT registered QList<QPoint> as a type
-        pointListLength = msco.pointListProperty.length;
-        pointList = msco.pointListProperty;
+        // we have NOT registered QList<NonRegisteredType> as a type
+        typeListLength = msco.typeListProperty.length;
+        typeList = msco.typeListProperty;
     }
 }

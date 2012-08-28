@@ -707,6 +707,11 @@ public:
     Q_INVOKABLE inline void method_overload();
 };
 
+struct NonRegisteredType
+{
+
+};
+
 class MyInvokableObject : public MyInvokableBaseObject
 {
     Q_OBJECT
@@ -759,7 +764,7 @@ public:
     Q_INVOKABLE void method_overload(const QJsonArray &a) { invoke(26); m_actuals << QVariant::fromValue(a); }
     Q_INVOKABLE void method_overload(const QJsonValue &a) { invoke(27); m_actuals << QVariant::fromValue(a); }
 
-    Q_INVOKABLE void method_unknown(MyInvokableObject *) { invoke(28); }
+    Q_INVOKABLE void method_unknown(NonRegisteredType) { invoke(28); }
 
 private:
     friend class MyInvokableBaseObject;
@@ -1352,6 +1357,7 @@ class MySequenceConversionObject : public QObject
     Q_PROPERTY (QStringList qstringListProperty READ qstringListProperty WRITE setQStringListProperty NOTIFY qstringListPropertyChanged)
 
     Q_PROPERTY (QList<QPoint> pointListProperty READ pointListProperty WRITE setPointListProperty NOTIFY pointListPropertyChanged)
+    Q_PROPERTY (QList<NonRegisteredType> typeListProperty READ typeListProperty WRITE setTypeListProperty NOTIFY typeListPropertyChanged)
     Q_PROPERTY (QList<QVariant> variantListProperty READ variantListProperty WRITE setVariantListProperty NOTIFY variantListPropertyChanged)
 
     Q_PROPERTY (qint32 maxIndex READ maxIndex CONSTANT)
@@ -1406,6 +1412,8 @@ public:
     void setQStringListProperty(const QStringList &list) { m_qstringList = list; emit qstringListPropertyChanged(); }
     QList<QPoint> pointListProperty() const { return m_pointList; }
     void setPointListProperty(const QList<QPoint> &list) { m_pointList = list; emit pointListPropertyChanged(); }
+    QList<NonRegisteredType> typeListProperty() const { return m_typeList; }
+    void setTypeListProperty(const QList<NonRegisteredType> &list) { m_typeList = list; emit typeListPropertyChanged(); }
     QList<QVariant> variantListProperty() const { return m_variantList; }
     void setVariantListProperty(const QList<QVariant> &list) { m_variantList = list; emit variantListPropertyChanged(); }
 
@@ -1431,6 +1439,7 @@ signals:
     void urlListPropertyChanged();
     void qstringListPropertyChanged();
     void pointListPropertyChanged();
+    void typeListPropertyChanged();
     void variantListPropertyChanged();
 
 private:
@@ -1442,7 +1451,8 @@ private:
     QList<QUrl> m_urlList;
     QStringList m_qstringList;
 
-    QList<QPoint> m_pointList; // not a supported sequence type
+    QList<QPoint> m_pointList;
+    QList<NonRegisteredType> m_typeList; // not a supported sequence type
     QList<QVariant> m_variantList; // not a supported sequence type, but QVariantList support is hardcoded.
 };
 

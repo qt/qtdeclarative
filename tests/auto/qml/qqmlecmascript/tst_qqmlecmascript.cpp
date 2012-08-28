@@ -5382,19 +5382,19 @@ void tst_qqmlecmascript::sequenceConversionRead()
         MySequenceConversionObject *seq = object->findChild<MySequenceConversionObject*>("msco");
         QVERIFY(seq != 0);
 
-        // we haven't registered QList<QPoint> as a sequence type.
-        QString warningOne = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'QList<QPoint>' for property 'MySequenceConversionObject::pointListProperty'");
+        // we haven't registered QList<NonRegisteredType> as a sequence type.
+        QString warningOne = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'QList<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
         QString warningTwo = qmlFile.toString() + QLatin1String(":18: TypeError: Cannot read property 'length' of undefined");
         QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
         QTest::ignoreMessage(QtWarningMsg, warningTwo.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");
 
-        // QList<QPoint> has not been registered as a sequence type.
+        // QList<NonRegisteredType> has not been registered as a sequence type.
         QCOMPARE(object->property("pointListLength").toInt(), 0);
         QVERIFY(!object->property("pointList").isValid());
-        QTest::ignoreMessage(QtWarningMsg, "QMetaProperty::read: Unable to handle unregistered datatype 'QList<QPoint>' for property 'MySequenceConversionObject::pointListProperty'");
-        QQmlProperty seqProp(seq, "pointListProperty", &engine);
+        QTest::ignoreMessage(QtWarningMsg, "QMetaProperty::read: Unable to handle unregistered datatype 'QList<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
+        QQmlProperty seqProp(seq, "typeListProperty", &engine);
         QVERIFY(!seqProp.read().isValid()); // not a valid/known sequence type
 
         delete object;
