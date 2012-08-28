@@ -935,8 +935,14 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
     StringCache::ConstIterator end = stringCache.end();
 
     if (it != end) {
+        QQmlPropertyData *result = it.value().second;
+
+        // If there exists a typed property (not a function or signal handler), of the
+        // right name available to the specified context, we need to return that
+        // property rather than any subsequent override
+
         if (vmemo && context && !contextHasNoExtensions(context)) {
-            // Find the highest property offset known to the supplied context
+            // Find the meta-object that corresponds to the supplied context
             do {
                 if (vmemo->ctxt == context)
                     break;
@@ -945,14 +951,28 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
             } while (vmemo);
         }
 
-        do {
-            // Is this property available to this context?
-            const StringCache::mapped_type &property(it.value());
-            if (!vmemo || (property.first < maximumIndexForProperty(property.second, vmemo)))
-                return ensureResolved(property.second);
+        if (vmemo) {
+            // Ensure that the property we resolve to is accessible from this meta-object
+            do {
+                const StringCache::mapped_type &property(it.value());
 
-            it = stringCache.findNext(it);
-        } while (it != end);
+                if (property.first < maximumIndexForProperty(property.second, vmemo)) {
+                    // This property is available in the specified context
+                    if (property.second->isFunction() || property.second->isSignalHandler()) {
+                        // Prefer the earlier resolution
+                    } else {
+                        // Prefer the typed property to any previous property found
+                        result = property.second;
+                    }
+                    break;
+                }
+
+                // See if there is a better candidate
+                it = stringCache.findNext(it);
+            } while (it != end);
+        }
+
+        return ensureResolved(result);
     }
 
     return 0;
