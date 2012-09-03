@@ -1,5 +1,3 @@
-load(qt_build_config)
-
 TARGET = QtQuick
 
 CONFIG += dll warn_on

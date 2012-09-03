@@ -1,5 +1,3 @@
-load(qt_build_config)
-
 TARGET = qmldbg_tcp
 QT       += qml-private network v8-private core-private
 

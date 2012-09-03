@@ -1,5 +1,3 @@
-load(qt_build_config)
-
 TARGET     = QtQml
 QT = core-private network
 QT_PRIVATE = v8-private

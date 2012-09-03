@@ -1,5 +1,3 @@
-load(qt_build_config)
-
 TARGET = QtQuickParticles
 
 CONFIG += dll warn_on internal_module

@@ -1,5 +1,3 @@
-load(qt_build_config)
-
 TARGET     = QtQuickTest
 CONFIG += dll warn_on
 

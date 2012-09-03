@@ -1,5 +1,3 @@
-load(qt_build_config)
-
 TARGET     = QtQmlDevTools
 QT         = core
 CONFIG += static internal_module
