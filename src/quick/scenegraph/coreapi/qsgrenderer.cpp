@@ -256,7 +256,7 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 #ifndef QT_NO_DEBUG
     // Sanity check that attribute registers are disabled
     {
-        GLint count;
+        GLint count = 0;
         glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &count);
         GLint enabled;
         for (int i=0; i<count; ++i) {
