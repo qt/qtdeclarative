@@ -2395,7 +2395,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 
 
 /*!
-    \fn void QSGContext::sceneGraphInitialized()
+    \fn void QQuickWindow::sceneGraphInitialized()
 
     This signal is emitted when the scene graph has been initialized.
 
@@ -2405,7 +2405,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 
 
 /*!
-    \fn void QSGContext::sceneGraphInvalidated()
+    \fn void QQuickWindow::sceneGraphInvalidated()
 
     This signal is emitted when the scene graph has been invalidated.
 

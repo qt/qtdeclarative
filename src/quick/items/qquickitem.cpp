@@ -1684,11 +1684,6 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 */
 
 /*!
-    \class ItemChangeData
-    \internal
-*/
-
-/*!
     \class QQuickItem::ItemChangeData
     \internal
 */
@@ -3701,10 +3696,6 @@ QQmlListProperty<QObject> QQuickItemPrivate::resources()
 /*!
     \property QQuickItem::children
     \internal
-  */
-/*!
-    \fn void QQuickItem::childrenChanged()
-    \internal
 */
 QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 {
@@ -3723,10 +3714,6 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::children()
 */
 /*!
     \property QQuickItem::visibleChildren
-    \internal
-  */
-/*!
-    \fn void QQuickItem::visibleChildrenChanged()
     \internal
 */
 QQmlListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()

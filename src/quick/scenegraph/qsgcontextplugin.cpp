@@ -137,8 +137,6 @@ QSGContext *QSGContext::createDefaultContext()
 
 
 /*!
-    \fn QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image)
-
     Calls into the scene graph adaptation if available and creates a texture
     factory. The primary purpose of this function is to reimplement hardware
     specific asynchronous texture frameskip-less uploads that can happen on
@@ -155,8 +153,6 @@ QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &im
 
 
 /*!
-    \fn QQuickWindowManager *createWindowManager()
-
     Calls into the scene graph adaptation if available and creates a hardware
     specific window manager.
  */

@@ -153,16 +153,8 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRectF
 */
 
 
-/*! \fn void QQuickView::sceneResized(QSize size)
-  This signal is emitted when the view is resized to \a size.
-*/
-
 /*! \fn void QQuickView::statusChanged(QQuickView::Status status)
     This signal is emitted when the component's current \a status changes.
-*/
-
-/*! \fn void QQuickView::initialSizeChanged(QSize size)
-  \internal
 */
 
 /*!

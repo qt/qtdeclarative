@@ -61,16 +61,30 @@ public:
 
     Creating a texture directly is not possible as there is rarely an OpenGL context
     available in the thread that is responsible for loading the image data.
- */
+*/
+
+/*!
+    Constructs a texture factory. Since QQuickTextureFactory is abstract, it
+    cannot be instantiated directly.
+*/
 
 QQuickTextureFactory::QQuickTextureFactory()
 {
 }
 
+/*!
+    Destroys the texture factory.
+*/
+
 QQuickTextureFactory::~QQuickTextureFactory()
 {
 }
 
+/*!
+    \fn int QQuickTextureFactory::textureByteCount() const
+
+    Returns the number of bytes of memory the texture consumes.
+*/
 
 /*!
     \fn QImage QQuickTextureFactory::image() const
@@ -91,10 +105,11 @@ QImage QQuickTextureFactory::image() const
 
 
 /*!
-    \fn QSGTexture *QQuickTextureFactory::createTexture() const
+    \fn QSGTexture *QQuickTextureFactory::createTexture(QQuickWindow *window) const
 
     This function is called on the scene graph rendering thread to create a QSGTexture
-    instance from the factory.
+    instance from the factory. \a window provides the context which this texture is
+    created in.
 
     QML will internally cache the returned texture as needed. Each call to this
     function should return a unique instance.
@@ -233,7 +248,8 @@ QImage QQuickTextureFactory::image() const
 */
 
 /*!
-    Creates an image provider that will provide images of the given \a type.
+    Creates an image provider that will provide images of the given \a type and
+    behave according to the given \a flags.
 */
 QQuickImageProvider::QQuickImageProvider(ImageType type, Flags flags)
     : d(new QQuickImageProviderPrivate)
