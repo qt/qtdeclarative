@@ -493,8 +493,7 @@ void QQuickPaintedItem::setRenderTarget(RenderTarget target)
 */
 
 /*!
-    This function is called when the Scene Graph node associated to the item needs to
-    be updated.
+    \reimp
 */
 QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {

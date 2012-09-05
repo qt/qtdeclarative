@@ -141,6 +141,12 @@ private:
 
 
 #ifndef QT_NO_ACCESSIBILITY
+/*!
+    Returns an accessibility interface for this window, or 0 if such an
+    interface cannot be created.
+
+    \warning The caller is responsible for deleting the returned interface.
+*/
 QAccessibleInterface *QQuickWindow::accessibleRoot() const
 {
     return QAccessible::queryAccessibleInterface(const_cast<QQuickWindow*>(this));
@@ -399,6 +405,11 @@ void QQuickWindowPrivate::init(QQuickWindow *c)
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
 }
+
+/*!
+    \property QQuickWindow::data
+    \internal
+*/
 
 QQmlListProperty<QObject> QQuickWindowPrivate::data()
 {
@@ -910,6 +921,10 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \sa {OpenGL Under QML Example}
 
 */
+
+/*!
+    Constructs a window for displaying a QML scene with parent window \a parent.
+*/
 QQuickWindow::QQuickWindow(QWindow *parent)
     : QWindow(*(new QQuickWindowPrivate), parent)
 {
@@ -917,6 +932,9 @@ QQuickWindow::QQuickWindow(QWindow *parent)
     d->init(this);
 }
 
+/*!
+    \internal
+*/
 QQuickWindow::QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent)
     : QWindow(dd, parent)
 {
@@ -924,6 +942,9 @@ QQuickWindow::QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent)
     d->init(this);
 }
 
+/*!
+    Destroys the window.
+*/
 QQuickWindow::~QQuickWindow()
 {
     Q_D(QQuickWindow);
@@ -961,8 +982,8 @@ void QQuickWindow::releaseResources()
 
 
 /*!
-    Controls whether the OpenGL context can be released as a part of a call to
-    releaseResources().
+    Sets whether the OpenGL context can be released as a part of a call to
+    releaseResources() to \a persistent.
 
     The OpenGL context might still be released when the user makes an explicit
     call to hide().
@@ -991,8 +1012,8 @@ bool QQuickWindow::isPersistentOpenGLContext() const
 
 
 /*!
-    Controls whether the scene graph nodes and resources can be released as a
-    part of a call to releaseResources().
+    Sets whether the scene graph nodes and resources can be released as a
+    part of a call to releaseResources() to \a persistent.
 
     The scene graph nodes and resources might still be released when the user
     makes an explicit call to hide().
@@ -1024,7 +1045,8 @@ bool QQuickWindow::isPersistentSceneGraph() const
 
 
 /*!
-  Returns the invisible root item of the scene.
+    \property QQuickWindow::contentItem
+    \brief The invisible root item of the scene.
 
   A QQuickWindow always has a single invisible root item containing all of its content.
   To add items to this window, reparent the items to the contentItem or to an existing
@@ -1975,7 +1997,9 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
 }
 
 /*!
-    Propagates an event to a QQuickItem on the window
+    Propagates an event \a e to a QQuickItem \a item on the window.
+
+    The return value is currently not used.
 */
 bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
 {
@@ -2393,6 +2417,14 @@ QOpenGLContext *QQuickWindow::openglContext() const
     return 0;
 }
 
+/*!
+    \fn void QQuickWindow::frameSwapped()
+
+    This signal is emitted when the frame buffers have been swapped.
+
+    This signal will be emitted from the scene graph rendering thread.
+*/
+
 
 /*!
     \fn void QQuickWindow::sceneGraphInitialized()
@@ -2448,7 +2480,18 @@ void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
 
 /*!
     \overload
- */
+
+    Sets the render target for this window to be an FBO with
+    \a fboId and \a size.
+
+    The specified FBO must be created in the context of the window
+    or one that shares with it.
+
+    \warning
+    This function can only be called from the thread doing
+    the rendering.
+*/
+
 void QQuickWindow::setRenderTarget(uint fboId, const QSize &size)
 {
     Q_D(QQuickWindow);
@@ -2549,6 +2592,25 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
+    \fn void QQuickWindow::beforeSynchronizing()
+
+    This signal is emitted before the scene graph is synchronized with the QML state.
+
+    This signal can be used to do any preparation required before calls to
+    QQuickItem::updatePaintNode().
+
+    The GL context used for rendering the scene graph will be bound at this point.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \warning Make very sure that a signal handler for beforeSynchronizing leaves the GL
+    context in the same state as it was when the signal handler was entered. Failing to
+    do so can result in the scene not rendering properly.
+*/
+
+/*!
     \fn void QQuickWindow::beforeRendering()
 
     This signal is emitted before the scene starts rendering.
@@ -2559,8 +2621,9 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     The GL context used for rendering the scene graph will be bound
     at this point.
 
-    \warning Since this signal is emitted from the scene graph rendering thread, the
-    receiver should be on the scene graph thread or the connection should be Qt::DirectConnection.
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
 
     \warning Make very sure that a signal handler for beforeRendering leaves the GL
     context in the same state as it was when the signal handler was entered. Failing to
@@ -2577,8 +2640,9 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     The GL context used for rendering the scene graph will be bound at this point.
 
-    \warning Since this signal is emitted from the scene graph rendering thread, the
-    receiver should be on the scene graph thread or the connection should be Qt::DirectConnection.
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
 
     \warning Make very sure that a signal handler for afterRendering() leaves the GL
     context in the same state as it was when the signal handler was entered. Failing to
@@ -2589,7 +2653,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
 /*!
     Sets weither the scene graph rendering of QML should clear the color buffer
-    before it starts rendering to \a enbled.
+    before it starts rendering to \a enabled.
 
     By disabling clearing of the color buffer, it is possible to do GL painting
     under the scene graph.
@@ -2657,7 +2721,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 
 
 /*!
-    Creates a new QSGTexture object from an existing GL texture \a id.
+    Creates a new QSGTexture object from an existing GL texture \a id and \a size.
 
     The caller of the function is responsible for deleting the returned texture.
 
@@ -2683,11 +2747,12 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
     return 0;
 }
 
-
 /*!
-    Sets the color used to clear the opengl context to \a color.
+    \property QQuickWindow::color
+    \brief The color used to clear the OpenGL context.
 
     Setting the clear color has no effect when clearing is disabled.
+    By default, the clear color is white.
 
     \sa setClearBeforeRendering()
  */
@@ -2701,12 +2766,6 @@ void QQuickWindow::setColor(const QColor &color)
     d->clearColor = color;
     emit colorChanged(color);
 }
-
-
-
-/*!
-    Returns the color used to clear the opengl context.
- */
 
 QColor QQuickWindow::color() const
 {

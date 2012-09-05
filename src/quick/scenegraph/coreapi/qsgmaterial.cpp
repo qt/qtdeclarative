@@ -561,6 +561,9 @@ QSGMaterial::~QSGMaterial()
     \value RequiresDeterminant Set this flag to true if the material relies on
     the determinant of the matrix of the geometry nodes for rendering.
 
+    \value RequiresFullMatrixExceptTranslate Set this flag to true if the material
+    relies on the full matrix of the geometry nodes for rendering, except the translation part.
+
     \value RequiresFullMatrix Set this flag to true if the material relies on
     the full matrix of the geometry nodes for rendering.
  */

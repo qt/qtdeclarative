@@ -105,7 +105,7 @@ QSGTexture::Filtering QSGSimpleTextureNode::filtering() const
 
 
 /*!
-    Sets the target rect of this texture node to \a r
+    Sets the target rect of this texture node to \a r.
  */
 void QSGSimpleTextureNode::setRect(const QRectF &r)
 {
@@ -116,6 +116,13 @@ void QSGSimpleTextureNode::setRect(const QRectF &r)
     markDirty(DirtyGeometry);
 }
 
+/*!
+    \fn void QSGSimpleTextureNode::setRect(qreal x, qreal y, qreal w, qreal h)
+    \overload
+
+    Sets the rectangle of this texture node to begin at (\a x, \a y) and have
+    width \a w and height \a h.
+ */
 
 /*!
     Returns the target rect of this texture node.

@@ -185,7 +185,7 @@ QQuickView::QQuickView(const QUrl &source, QWindow *parent)
 
   Note: In this case, the QQuickView does not own the given \a engine object;
   it is the caller's responsibility to destroy the engine. If the \a engine is deleted
-  before the view \a status() will return \a QQuickView::Error.
+  before the view, status() will return QQuickView::Error.
 
   \sa Status, status(), errors()
 */

@@ -93,6 +93,13 @@ void QSGSimpleRectNode::setRect(const QRectF &rect)
 }
 
 
+/*!
+    \fn void QSGSimpleRectNode::setRect(qreal x, qreal y, qreal w, qreal h)
+    \overload
+
+    Sets the rectangle of this rect node to begin at (\a x, \a y) and have
+    width \a w and height \a h.
+ */
 
 /*!
     Returns the rectangle that this rect node covers.

@@ -2952,7 +2952,8 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     this item. Most implementations will return a single
     QSGGeometryNode containing the visual representation of this item.
     \a oldNode is the node that was returned the last time the
-    function was called.
+    function was called. \a updatePaintNodeData provides a pointer to
+    the QSGTransformNode associated with this QQuickItem.
 
     \code
     QSGNode *MyItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
@@ -2985,8 +2986,9 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     QSGFlatColorMaterial, QSGTextureMaterial, QSGNode::markDirty()
  */
 
-QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
+QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
+    Q_UNUSED(updatePaintNodeData)
     delete oldNode;
     return 0;
 }
