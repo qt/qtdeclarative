@@ -579,7 +579,7 @@ is finished.
 
     This handler is called when the user stops dragging the view.
 
-    If the velocity of the drag is suffient at the time the
+    If the velocity of the drag is sufficient at the time the
     touch/mouse button is released then a flick will start.
 */
 
