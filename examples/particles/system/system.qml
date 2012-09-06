@@ -56,7 +56,7 @@ import "../../shared" as Examples
 
     Start and Stop simply sets the running and paused states of a ParticleSystem. While the system does not perform any simulation when stopped or paused, a restart restarts the simulation from the beginning, while unpausing resumes the simulation from where it was.
 
-    Timed group changes is an example that highlights the ParticleGroup element. While normally referring to groups with a string name is sufficent, additional effects can be
+    Timed group changes is an example that highlights the ParticleGroup element. While normally referring to groups with a string name is sufficient, additional effects can be
     done by setting properties on groups.
     The first group has a variable duration on it, but always transitions to the second group.
     \snippet examples/particles/system/content/timedgroupchanges.qml 0

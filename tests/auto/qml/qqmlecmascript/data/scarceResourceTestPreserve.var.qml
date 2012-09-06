@@ -2,7 +2,7 @@ import QtQuick 2.0
 import Qt.test 1.0
 import "scarceResourceTest.var.js" as ScarceResourceProviderJs
 
-// In this case, the scarce resource is explicity preserved.
+// In this case, the scarce resource is explicitly preserved.
 // It should not be automatically released after the evaluation
 // of the binding is complete, but instead will be kept in
 // memory until the JS garbage collector runs.

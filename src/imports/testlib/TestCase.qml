@@ -427,7 +427,7 @@ Item {
             delay = -1
 
         mousePress(item, x, y, button, modifiers, delay)
-        //trigger draging
+        //trigger dragging
         mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, delay, button)
         mouseMove(item, x + dx, y + dy, delay, button)
     }

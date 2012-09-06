@@ -79,7 +79,7 @@ import "../../shared"
     the <img> tag.
 
     'Text Layout' shows how to create a more complex layout for a text element.
-    This example lays out the text in two colums using the onLineLaidOut handler
+    This example lays out the text in two columns using the onLineLaidOut handler
     that allows you to position and resize each line:
     \snippet examples/quick/text/styledtext-layout.qml layout
 */

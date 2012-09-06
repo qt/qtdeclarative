@@ -77,7 +77,7 @@ Rectangle {
     }
 
 //! [0]
-    // Define a highlight with customised movement between items.
+    // Define a highlight with customized movement between items.
     Component {
         id: highlightBar
         Rectangle {

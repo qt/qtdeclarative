@@ -53,7 +53,7 @@ CanvasTestCase {
 
        ctx.fillStyle = '#0f0';
        ctx.fillRect(0, 0, 100, 50);
-       ctx.globalAlpha = 0.01; // avoid any potential alpha=0 optimisations
+       ctx.globalAlpha = 0.01; // avoid any potential alpha=0 optimizations
        ctx.fillStyle = '#f00';
        ctx.fillRect(0, 0, 100, 50);
        //comparePixel(ctx, 50,25, 2,253,0,255, 2);

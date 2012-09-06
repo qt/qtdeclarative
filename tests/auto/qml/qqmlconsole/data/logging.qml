@@ -46,7 +46,7 @@ QtObject {
     id:root
 
     function consoleCount() {
-        console.count("console.count", "Ignore additonal argument");
+        console.count("console.count", "Ignore additional argument");
         console.count();
     }
 

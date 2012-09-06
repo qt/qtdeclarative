@@ -53,7 +53,7 @@ import "../../shared" as Examples
     Blur Particles adds a blur effect to the particles, which increases over the particle's life time.
     It uses a custom vertex shader:
     \snippet examples/particles/customparticle/content/blurparticles.qml vertex
-    to propagate life time simulation to a custom fragement shader:
+    to propagate life time simulation to a custom fragment shader:
     \snippet examples/particles/customparticle/content/blurparticles.qml fragment
     which has access to both the normal image sampler and a blurred sampler, the image plus a ShaderEffect.
 
