@@ -424,7 +424,7 @@ void tst_qquickflickable::flickableDirection()
 void tst_qquickflickable::resizeContent()
 {
     QQmlEngine engine;
-    engine.rootContext()->setContextProperty("setRebound", false);
+    engine.rootContext()->setContextProperty("setRebound", QVariant::fromValue(false));
     QQmlComponent c(&engine, testFileUrl("resize.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
     QQuickFlickable *obj = findItem<QQuickFlickable>(root, "flick");
