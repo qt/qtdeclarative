@@ -2268,7 +2268,7 @@ void tst_qquicktextedit::cursorDelegate()
     view.requestActivateWindow();
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
     QVERIFY(textEditObject != 0);
-    // Delegate creation is deferred until focus in or cursor visiblity is forced.
+    // Delegate creation is deferred until focus in or cursor visibility is forced.
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
     QVERIFY(!textEditObject->isCursorVisible());
     //Test Delegate gets created

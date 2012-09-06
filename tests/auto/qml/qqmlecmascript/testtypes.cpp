@@ -266,7 +266,7 @@ void registerTypes()
     qmlRegisterType<MyRevisionedClass,1>("Qt.test",1,1,"MyRevisionedClass");
     qmlRegisterType<MyWorkerObject>("Qt.test", 1,0, "MyWorkerObject");
 
-    // test scarce resource property binding post-evaluation optimisation
+    // test scarce resource property binding post-evaluation optimization
     // and for testing memory usage in property var circular reference test
     qmlRegisterType<ScarceResourceObject>("Qt.test", 1,0, "MyScarceResourceObject");
 

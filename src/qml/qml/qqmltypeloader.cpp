@@ -1627,7 +1627,7 @@ Returns a empty string if the path does not exist.
 
 Why a directory cache?  QML checks for files in many paths with
 invalid directories.  By caching whether a directory exists
-we avoid many stats.  We also cache the files' existance in the
+we avoid many stats.  We also cache the files' existence in the
 directory, for the same reason.
 */
 QString QQmlTypeLoader::absoluteFilePath(const QString &path)

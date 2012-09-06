@@ -978,7 +978,7 @@ v8::Local<v8::Object> QQmlPropertyCache::newQObject(QObject *object, QV8Engine *
 
         // XXX TODO: Enables fast property accessors.  These more than double the property access 
         // performance, but the  cost of setting up this structure hasn't been measured so 
-        // its not guarenteed that this is a win overall.  We need to try and measure the cost.
+        // its not guaranteed that this is a win overall.  We need to try and measure the cost.
         for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) {
             if (iter.equals(toString) || iter.equals(destroy))
                 continue;

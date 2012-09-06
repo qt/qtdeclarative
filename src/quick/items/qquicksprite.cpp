@@ -197,7 +197,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty bool QtQuick2::Sprite::frameSync
 
     If true, then the animation will have no duration. Instead, the animation will advance
-    one frame each time a frame is rendered to the screen. This syncronizes it with the painting
+    one frame each time a frame is rendered to the screen. This synchronizes it with the painting
     rate as opposed to elapsed time.
 
     If frameSync is set to true, it overrides all of duration, frameRate and frameDuration.

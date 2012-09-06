@@ -358,7 +358,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
             isPostingSyncEvent = true;
 
 #ifdef THREAD_DEBUG
-            printf("                RenderThread: aquired sync lock...\n");
+            printf("                RenderThread: acquired sync lock...\n");
 #endif
             QCoreApplication::postEvent(this, new QEvent(QEvent_Sync));
 
@@ -641,7 +641,7 @@ void QQuickRenderThreadSingleContextWindowManager::lockInGui()
         lock();
 
 #ifdef THREAD_DEBUG
-    printf("GUI: aquired lock... level=%d\n", isGuiLocked);
+    printf("GUI: acquired lock... level=%d\n", isGuiLocked);
 #endif
 }
 

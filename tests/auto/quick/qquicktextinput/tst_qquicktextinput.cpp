@@ -1533,7 +1533,7 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QTest::qWaitForWindowActive(&window);
     QVERIFY(textInput->hasActiveFocus());
 
-    // If there is no commited text, the preedit text should determine the alignment.
+    // If there is no committed text, the preedit text should determine the alignment.
     textInput->setText(QString());
     { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(textInput, &ev); }
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);

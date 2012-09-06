@@ -312,7 +312,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         subNode->setPreferredAntialiasingMode(m_antialiasingMode);
         subNode->setGlyphs(m_originalPosition, subNodeGlyphRun);
         subNode->update();
-        subNode->updateGeometry(); // we have to explicity call this now as preprocess won't be called before it's rendered
+        subNode->updateGeometry(); // we have to explicitly call this now as preprocess won't be called before it's rendered
         appendChildNode(subNode);
 
         ++ite;

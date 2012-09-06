@@ -2699,7 +2699,7 @@ bool QQuickWindow::clearBeforeRendering() const
     initialized.
 
     \warning The returned texture is not memory managed by the scene graph and
-    must be explicitely deleted by the caller on the rendering thread.
+    must be explicitly deleted by the caller on the rendering thread.
     This is acheived by deleting the texture from a QSGNode destructor
     or by using deleteLater() in the case where the texture already has affinity
     to the rendering thread.

@@ -406,9 +406,9 @@ void QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs)
 \inmodule QtQml
 
 Creating QML objects - like delegates in a view, or a new page in an application - can take
-a noticable amount of time, especially on resource constrained mobile devices.  When an
+a noticeable amount of time, especially on resource constrained mobile devices.  When an
 application uses QQmlComponent::create() directly, the QML object instance is created
-synchronously which, depending on the complexity of the object,  can cause noticable pauses or 
+synchronously which, depending on the complexity of the object,  can cause noticeable pauses or
 stutters in the application.
 
 The use of QQmlIncubator gives more control over the creation of a QML object, 

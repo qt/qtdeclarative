@@ -609,7 +609,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
     This sharing of data happens behind the scenes based off of whether properties were implicitly or explicitly
     set. One drawback of the current implementation is that it is only possible to reset the capabilities as a whole.
-    So if you explicity set an attribute affecting color, such as redVariation, and then reset it (by setting redVariation
+    So if you explicitly set an attribute affecting color, such as redVariation, and then reset it (by setting redVariation
     to undefined), all color data will be reset and it will begin to have an implicit value of any shared color from
     other ImageParticles.
 */

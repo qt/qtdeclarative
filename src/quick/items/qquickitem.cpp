@@ -401,7 +401,7 @@ void QQuickItemKeyFilter::componentComplete()
     KeyNavigation will implicitly set the other direction to return focus to this item. So if you set
     \l left to another item, \l right will be set on that item's KeyNavigation to set focus back to this
     item. However, if that item's KeyNavigation has had right explicitly set then no change will occur.
-    This means that the above example could have been written, with the same behaviour, without specifing
+    This means that the above example could have been written, with the same behaviour, without specifying
     KeyNavigation.right or KeyNavigation.down for any of the items.
 
     \sa {Keys}{Keys attached property}

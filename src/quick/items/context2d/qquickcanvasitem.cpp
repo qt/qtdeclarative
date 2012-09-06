@@ -951,7 +951,7 @@ bool QQuickCanvasItem::isImageLoading(const QUrl& url) const
 }
 /*!
   \qmlmethod QtQuick2::Canvas::isImageLoaded(url image)
-  Returns true if the \a image is sucessfully loaded and ready to use.
+  Returns true if the \a image is successfully loaded and ready to use.
 
   \sa loadImage()
 */

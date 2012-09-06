@@ -102,7 +102,7 @@ public:
 
     In some circumstances you may want to control the value of a property
     only when a certain condition is true (and relinquish control in all
-    other cirumstances). This often isn't possible to accomplish with a direct
+    other circumstances). This often isn't possible to accomplish with a direct
     binding, as you need to supply values for all possible branches.
 
     \code

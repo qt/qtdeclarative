@@ -1265,7 +1265,7 @@ void QQmlVMEMetaObject::GcPrologueCallback(QV8GCCallback::Node *node)
 
     // add references created by VMEVariant properties
     int maxDataIdx = vmemo->metaData->propertyCount - vmemo->metaData->varPropertyCount;
-    for (int ii = 0; ii < maxDataIdx; ++ii) { // XXX TODO: optimise?
+    for (int ii = 0; ii < maxDataIdx; ++ii) { // XXX TODO: optimize?
         if (vmemo->data[ii].dataType() == QMetaType::QObjectStar) {
             // possible QObject reference.
             QObject *ref = vmemo->data[ii].asQObject();

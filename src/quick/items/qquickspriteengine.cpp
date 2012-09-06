@@ -676,7 +676,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
         goalName = m_globalGoal;
     if (goalName.isEmpty())
         return -1;
-    //TODO: caching instead of excessively redoing iterative deepening (which was chosen arbitarily anyways)
+    //TODO: caching instead of excessively redoing iterative deepening (which was chosen arbitrarily anyways)
     // Paraphrased - implement in an *efficient* manner
     for (int i=0; i<m_states.count(); i++)
         if (m_states[curIdx]->name() == goalName)

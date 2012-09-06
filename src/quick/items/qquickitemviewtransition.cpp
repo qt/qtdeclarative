@@ -606,7 +606,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 
     View transitions have access to a ViewTransition attached property that
     provides details of the items that are under transition and the operation that triggered the
-    transition. Since view transitions are run once per item, these details can be used to customise
+    transition. Since view transitions are run once per item, these details can be used to customize
     each transition for each individual item.
 
     The ViewTransition attached property provides the following properties specific to the item to
@@ -663,7 +663,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     At its simplest, a view transition may just animate an item to its new position following a
     view operation, just as the \c displaced transition does above, or animate some item properties,
     as in the \c add transition above. Additionally, a view transition may make use of the
-    ViewTransition attached property to customise animation behavior for different items. Following
+    ViewTransition attached property to customize animation behavior for different items. Following
     are some examples of how this can be achieved.
 
 

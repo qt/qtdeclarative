@@ -277,7 +277,7 @@ void QSGMaterialShader::updateState(const RenderState & /* state */, QSGMaterial
 
 /*!
     This function is called when the shader is initialized to compile the
-    actual QOpenGLShaderProgram. Do not call it explicitely.
+    actual QOpenGLShaderProgram. Do not call it explicitly.
 
     The default implementation will extract the vertexShader() and
     fragmentShader() and bind the names returned from attributeNames()
@@ -625,7 +625,7 @@ int QSGMaterial::compare(const QSGMaterial *other) const
     \fn QSGMaterialShader *QSGMaterial::createShader() const
 
     This function returns a new instance of a the QSGMaterialShader
-    implementatation used to render geometry for a specifc implementation
+    implementatation used to render geometry for a specific implementation
     of QSGMaterial.
 
     The function will be called only once for each material type that

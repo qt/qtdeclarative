@@ -144,7 +144,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     attribute set compatible with this material.
 
     The texture to be rendered is can be set using setTexture(). How the
-    texure should be rendered can be specified using setMipmapFiltering(),
+    texture should be rendered can be specified using setMipmapFiltering(),
     setFiltering(), setHorizontalWrapMode() and setVerticalWrapMode().
     The rendering state is set on the texture instance just before it
     is bound.
@@ -334,7 +334,7 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     attribute set compatible with this material.
 
     The texture to be rendered is set using setTexture(). How the
-    texure should be rendered can be specified using setMipmapFiltering(),
+    texture should be rendered can be specified using setMipmapFiltering(),
     setFiltering(), setHorizontalWrapMode() and setVerticalWrapMode().
     The rendering state is set on the texture instance just before it
     is bound.

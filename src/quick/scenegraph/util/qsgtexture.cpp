@@ -655,7 +655,7 @@ void QSGPlainTexture::bind()
 /*!
     \fn bool QSGDynamicTexture::updateTexture()
 
-    Call this function to explicitely update the dynamic texture. Calling bind() will bind
+    Call this function to explicitly update the dynamic texture. Calling bind() will bind
     the content that was previously updated.
 
     The function returns true if the texture was changed as a resul of the update; otherwise

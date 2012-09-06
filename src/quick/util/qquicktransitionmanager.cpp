@@ -156,7 +156,7 @@ void QQuickTransitionManager::transition(const QList<QQuickAction> &list,
     // some cases - but whatcha going to do?
     //
     // Note that we only fast forward if both a transition and bindings are
-    // present, as it is unneccessary (and potentially expensive) otherwise.
+    // present, as it is unnecessary (and potentially expensive) otherwise.
 
     if (transition && !d->bindingsList.isEmpty()) {
 

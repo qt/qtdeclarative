@@ -1051,7 +1051,7 @@ void QQuickListCompositor::listItemsInserted(
     This corrects the indexes of each range for that list in the compositor, splitting the range
     in two if the insert index is in the middle of that range.  If a range at the insert position
     has the Prepend flag set then a new range will be inserted at that position with the groups
-    specified in defaultGroups().  If the insert index correponds to the end of a range with
+    specified in defaultGroups().  If the insert index corresponds to the end of a range with
     the Append flag set a new range will be inserted before the end of the append range.
 
     The \a translatedInsertions list is populated with insert notifications for affected

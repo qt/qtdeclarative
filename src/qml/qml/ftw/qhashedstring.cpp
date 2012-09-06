@@ -42,7 +42,7 @@
 #include "qhashedstring_p.h"
 
 // This is a reimplementation of V8's string hash algorithm.  It is significantly
-// faster to do it here than call into V8, but it adds the maintainence burden of
+// faster to do it here than call into V8, but it adds the maintenance burden of
 // ensuring that the two hashes are identical.  We Q_ASSERT() that the two return
 // the same value.  If these asserts start to fail, the hash code needs to be 
 // synced with V8.

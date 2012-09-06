@@ -138,7 +138,7 @@
     \warning The QSGSimpleMaterialShader relies on template
     instantiation to create a QSGMaterialType which the scene graph
     renderer internally uses to identify this shader. For this reason,
-    the unique QSGSimpleMaterialShader implemenation must be
+    the unique QSGSimpleMaterialShader implementation must be
     instantiated with a unique C++ type.
 
     \sa {Simple Material Example}

@@ -224,7 +224,7 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
     to be used for textured 2D geometry. The vertex data is internally
     stored as a \c {void *} and is accessible with the vertexData()
     function. Convenience accessors for the common attribute sets are
-    availble with vertexDataAsPoint2D() and
+    available with vertexDataAsPoint2D() and
     vertexDataAsTexturedPoint2D(). Vertex data is allocated by passing
     a vertex count to the constructor or by calling allocate() later.
 
