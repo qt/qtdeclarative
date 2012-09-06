@@ -2168,8 +2168,6 @@ void tst_QQuickListView::sectionsDragOutsideBounds()
 
 void tst_QQuickListView::sectionsDelegate_headerVisibility()
 {
-    QSKIP("QTBUG-24395");
-
     QQuickView *window = createView();
 
     QaimModel model;
@@ -2179,7 +2177,8 @@ void tst_QQuickListView::sectionsDelegate_headerVisibility()
     window->rootContext()->setContextProperty("testModel", &model);
     window->setSource(testFileUrl("listview-sections_delegate.qml"));
     window->show();
-    qApp->processEvents();
+    window->requestActivateWindow();
+    QTest::qWaitForWindowActive(window);
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2191,10 +2190,10 @@ void tst_QQuickListView::sectionsDelegate_headerVisibility()
     // ensure section header is maintained in view
     listview->setCurrentIndex(20);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
-    QTRY_COMPARE(listview->contentY(), 200.0);
+    QTRY_VERIFY(qFuzzyCompare(listview->contentY(), 200.0));
     QTRY_VERIFY(listview->isMoving() == false);
     listview->setCurrentIndex(0);
-    QTRY_COMPARE(listview->contentY(), 0.0);
+    QTRY_VERIFY(qFuzzyIsNull(listview->contentY()));
 
     delete window;
 }
