@@ -151,41 +151,45 @@ void tst_qquickanimatedimage::mirror_running()
     // test where mirror is set to true after animation has started
 
     QQuickView window;
-    window.show();
-
     window.setSource(testFileUrl("hearts.qml"));
+    window.requestActivateWindow();
+    window.show();
+    QTest::qWaitForWindowActive(&window);
+
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);
 
     int width = anim->property("width").toInt();
 
+    QCOMPARE(anim->frameCount(), 2);
+
     QCOMPARE(anim->currentFrame(), 0);
-    QPixmap frame0 = QPixmap::fromImage(window.grabWindow());
+    QImage frame0 = window.grabWindow();
 
     anim->setCurrentFrame(1);
-    QPixmap frame1 = QPixmap::fromImage(window.grabWindow());
+    QCOMPARE(anim->currentFrame(), 1);
+    QImage frame1 = window.grabWindow();
 
     anim->setCurrentFrame(0);
 
     QSignalSpy spy(anim, SIGNAL(frameChanged()));
+    QVERIFY(spy.isValid());
     anim->setPlaying(true);
 
     QTRY_VERIFY(spy.count() == 1); spy.clear();
-    anim->setProperty("mirror", true);
+    anim->setMirror(true);
 
     QCOMPARE(anim->currentFrame(), 1);
-    QPixmap frame1_flipped = QPixmap::fromImage(window.grabWindow());
+    QImage frame1_flipped = window.grabWindow();
 
     QTRY_VERIFY(spy.count() == 1); spy.clear();
     QCOMPARE(anim->currentFrame(), 0);  // animation only has 2 frames, should cycle back to first
-    QPixmap frame0_flipped = QPixmap::fromImage(window.grabWindow());
-
-    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved");
+    QImage frame0_flipped = window.grabWindow();
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
-    QPixmap frame0_expected = frame0.transformed(transform);
-    QPixmap frame1_expected = frame1.transformed(transform);
+    QImage frame0_expected = frame0.transformed(transform);
+    QImage frame1_expected = frame1.transformed(transform);
 
     QCOMPARE(frame0_flipped, frame0_expected);
     QCOMPARE(frame1_flipped, frame1_expected);
