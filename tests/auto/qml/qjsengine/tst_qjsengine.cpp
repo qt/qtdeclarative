@@ -290,16 +290,17 @@ void tst_QJSEngine::newVariant_valueOfToString()
 
 void tst_QJSEngine::newRegExp()
 {
-    QSKIP("Test failing - QTBUG-22238");
     QJSEngine eng;
     QJSValue rexp = eng.toScriptValue(QRegExp("foo"));
     QVERIFY(!rexp.isUndefined());
     QCOMPARE(rexp.isRegExp(), true);
     QCOMPARE(rexp.isObject(), true);
+    QEXPECT_FAIL("", "QTBUG-27169", Continue);
     QVERIFY(rexp.isCallable()); // in JSC, RegExp objects are callable
     // prototype should be RegExp.prototype
     QVERIFY(!rexp.prototype().isUndefined());
     QCOMPARE(rexp.prototype().isObject(), true);
+    QEXPECT_FAIL("", "QTBUG-27169", Continue);
     QCOMPARE(rexp.prototype().isRegExp(), false);
     QCOMPARE(rexp.prototype().strictlyEquals(eng.evaluate("RegExp.prototype")), true);
 
@@ -308,8 +309,6 @@ void tst_QJSEngine::newRegExp()
 
 void tst_QJSEngine::jsRegExp()
 {
-    QSKIP("Test failing - QTBUG-22238");
-
     // See ECMA-262 Section 15.10, "RegExp Objects".
     // These should really be JS-only tests, as they test the implementation's
     // ECMA-compliance, not the C++ API. Compliance should already be covered
@@ -341,7 +340,6 @@ void tst_QJSEngine::jsRegExp()
     // This is different from SpiderMonkey and old back-end.
     QVERIFY(!r5.strictlyEquals(r));
 
-    QEXPECT_FAIL("", "V8 and jsc ignores invalid flags", Continue); //https://bugs.webkit.org/show_bug.cgi?id=41614
     QJSValue r6 = rxCtor.callAsConstructor(QJSValueList() << "foo" << "bar");
     QVERIFY(r6.isError());
     // QVERIFY(r6.toString().contains(QString::fromLatin1("SyntaxError"))); // Invalid regular expression flag
@@ -355,7 +353,9 @@ void tst_QJSEngine::jsRegExp()
 
     // JSC doesn't complain about duplicate flags.
     QJSValue r8 = eng.evaluate("/foo/migmigmig");
+    QEXPECT_FAIL("", "QTBUG-27169", Continue);
     QVERIFY(r8.isRegExp());
+    QEXPECT_FAIL("", "QTBUG-27169", Continue);
     QCOMPARE(r8.toString(), QString::fromLatin1("/foo/gim"));
 
     QJSValue r9 = rxCtor.callAsConstructor();
@@ -526,7 +526,6 @@ void tst_QJSEngine::newQObject_deletedEngine()
 
 void tst_QJSEngine::globalObjectProperties()
 {
-    QSKIP("Test failing - QTBUG-22238");
     // See ECMA-262 Section 15.1, "The Global Object".
 
     QJSEngine eng;
@@ -587,7 +586,6 @@ void tst_QJSEngine::globalObjectEquals()
 
 void tst_QJSEngine::globalObjectProperties_enumerate()
 {
-    QSKIP("Test failing - QTBUG-22238");
     QJSEngine eng;
     QJSValue global = eng.globalObject();
 
@@ -625,8 +623,6 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "undefined"
         // JavaScriptCore
         << "JSON"
-        // V8
-        << "execScript" //execScript for IE compatibility.
         ;
     QSet<QString> actualNames;
     {
@@ -2609,7 +2605,6 @@ void tst_QJSEngine::qRegExpInport_data()
 
 void tst_QJSEngine::qRegExpInport()
 {
-    QSKIP("Test failing - QTBUG-22238");
     QFETCH(QRegExp, rx);
     QFETCH(QString, string);
 
@@ -2618,6 +2613,7 @@ void tst_QJSEngine::qRegExpInport()
     rexp = eng.toScriptValue(rx);
 
     QCOMPARE(rexp.isRegExp(), true);
+    QEXPECT_FAIL("", "QTBUG-27169", Continue);
     QVERIFY(rexp.isCallable());
 
     QJSValue func = eng.evaluate("(function(string, regexp) { return string.match(regexp); })");
