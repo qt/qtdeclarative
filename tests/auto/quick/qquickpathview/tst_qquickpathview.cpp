@@ -1342,7 +1342,7 @@ void tst_QQuickPathView::package()
     QVERIFY(pathView);
 
 #ifdef Q_OS_MAC
-    QSKIP("QTBUG-21590 view does not reliably receive polish without a running animation");
+    QSKIP("QTBUG-27170 view does not reliably receive polish without a running animation");
 #endif
 
     QQuickItem *item = findItem<QQuickItem>(pathView, "pathItem");
