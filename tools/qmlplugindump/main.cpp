@@ -254,7 +254,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
                 continue; // we don't handle QJSValue singleton types.
             }
         } else {
-            ty->create();
+            object = ty->create();
         }
 
         inObjectInstantiation.clear();
