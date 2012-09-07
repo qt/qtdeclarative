@@ -473,7 +473,7 @@ private:
                 && !meth.revision()
                 && meth.methodType() == QMetaMethod::Signal
                 && meth.parameterNames().isEmpty()
-                && typeName.isEmpty()) {
+                && typeName != QLatin1String("void")) {
             // don't mention implicit signals
             return;
         }
@@ -490,7 +490,7 @@ private:
             qml->writeScriptBinding(QLatin1String("revision"), QString::number(revision));
 #endif
 
-        if (! typeName.isEmpty())
+        if (typeName != QLatin1String("void"))
             qml->writeScriptBinding(QLatin1String("type"), enquote(typeName));
 
         for (int i = 0; i < meth.parameterTypes().size(); ++i) {
