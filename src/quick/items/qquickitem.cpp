@@ -2180,6 +2180,10 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
 
     childItems.append(child);
 
+    QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
+    if (childPrivate->extra.isAllocated())
+        incrementCursorCount(childPrivate->extra.value().numItemsWithCursor);
+
     markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
 
@@ -2196,6 +2200,10 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     Q_ASSERT(childItems.contains(child));
     childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
+
+    QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
+    if (childPrivate->extra.isAllocated())
+        incrementCursorCount(-childPrivate->extra.value().numItemsWithCursor);
 
     markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
@@ -6012,8 +6020,20 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
     d->hoverEnabled = enabled;
 }
 
+void QQuickItemPrivate::incrementCursorCount(int delta)
+{
 #ifndef QT_NO_CURSOR
+    Q_Q(QQuickItem);
+    extra.value().numItemsWithCursor += delta;
+    QQuickItem *parent = q->parentItem();
+    if (parent) {
+        QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
+        parentPrivate->incrementCursorCount(delta);
+    }
+#endif
+}
 
+#ifndef QT_NO_CURSOR
 
 /*!
     Returns the cursor shape for this item.
@@ -6059,6 +6079,7 @@ void QQuickItem::setCursor(const QCursor &cursor)
     }
 
     if (!d->hasCursor) {
+        d->incrementCursorCount(+1);
         d->hasCursor = true;
         if (d->window) {
             QPointF pos = d->window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
@@ -6079,6 +6100,7 @@ void QQuickItem::unsetCursor()
     Q_D(QQuickItem);
     if (!d->hasCursor)
         return;
+    d->incrementCursorCount(-1);
     d->hasCursor = false;
     if (d->extra.isAllocated())
         d->extra->cursor = QCursor();
@@ -7047,7 +7069,11 @@ void QQuickItemLayer::updateMatrix()
 QQuickItemPrivate::ExtraData::ExtraData()
 : z(0), scale(1), rotation(0), opacity(1),
   contents(0), screenAttached(0), layoutDirectionAttached(0),
-  keyHandler(0), layer(0), effectRefCount(0), hideRefCount(0),
+  keyHandler(0), layer(0),
+#ifndef QT_NO_CURSOR
+  numItemsWithCursor(0),
+#endif
+  effectRefCount(0), hideRefCount(0),
   opacityNode(0), clipNode(0), rootNode(0), beforePaintNode(0),
   acceptedMouseButtons(0), origin(QQuickItem::Center)
 {

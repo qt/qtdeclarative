@@ -11,7 +11,8 @@ SUBDIRS += \
            qqmlmetaproperty \
            script \
            qmltime \
-           js
+           js \
+           qquickwindow
 
 contains(QT_CONFIG, opengl): SUBDIRS += painting
 

@@ -344,6 +344,7 @@ public:
         mutable QQuickItemLayer *layer;
 #ifndef QT_NO_CURSOR
         QCursor cursor;
+        int numItemsWithCursor;
 #endif
         QPointF userTransformOriginPoint;
 
@@ -574,6 +575,8 @@ public:
     static void start(QElapsedTimer &);
     static qint64 elapsed(QElapsedTimer &);
     static qint64 restart(QElapsedTimer &);
+
+    void incrementCursorCount(int delta);
 };
 
 /*
