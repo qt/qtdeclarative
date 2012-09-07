@@ -106,8 +106,6 @@ private slots:
     void width();
     void wrap();
     void textFormat();
-    void alignments();
-    void alignments_data();
 
     // ### these tests may be trivial
     void hAlign();
@@ -602,54 +600,6 @@ void tst_qquicktextedit::textFormat()
         QCOMPARE(spy.count(), 2);
     }
 }
-
-void tst_qquicktextedit::alignments_data()
-{
-    QTest::addColumn<int>("hAlign");
-    QTest::addColumn<int>("vAlign");
-    QTest::addColumn<QString>("expectfile");
-
-    QTest::newRow("LT") << int(Qt::AlignLeft) << int(Qt::AlignTop) << "alignments_lt";
-    QTest::newRow("RT") << int(Qt::AlignRight) << int(Qt::AlignTop) << "alignments_rt";
-    QTest::newRow("CT") << int(Qt::AlignHCenter) << int(Qt::AlignTop) << "alignments_ct";
-
-    QTest::newRow("LB") << int(Qt::AlignLeft) << int(Qt::AlignBottom) << "alignments_lb";
-    QTest::newRow("RB") << int(Qt::AlignRight) << int(Qt::AlignBottom) << "alignments_rb";
-    QTest::newRow("CB") << int(Qt::AlignHCenter) << int(Qt::AlignBottom) << "alignments_cb";
-
-    QTest::newRow("LC") << int(Qt::AlignLeft) << int(Qt::AlignVCenter) << "alignments_lc";
-    QTest::newRow("RC") << int(Qt::AlignRight) << int(Qt::AlignVCenter) << "alignments_rc";
-    QTest::newRow("CC") << int(Qt::AlignHCenter) << int(Qt::AlignVCenter) << "alignments_cc";
-}
-
-
-void tst_qquicktextedit::alignments()
-{
-    QSKIP("Image comparison of text is almost guaranteed to fail during development");
-
-    QFETCH(int, hAlign);
-    QFETCH(int, vAlign);
-    QFETCH(QString, expectfile);
-
-    QQuickView window(testFileUrl("alignments.qml"));
-
-    window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
-
-    QObject *ob = window.rootObject();
-    QVERIFY(ob != 0);
-    ob->setProperty("horizontalAlignment",hAlign);
-    ob->setProperty("verticalAlignment",vAlign);
-    QTRY_COMPARE(ob->property("running").toBool(),false);
-    QImage actual = window.grabWindow();
-
-    expectfile = createExpectedFileIfNotFound(expectfile, actual);
-
-    QImage expect(expectfile);
-
-    QCOMPARE(actual,expect);
-}
-
 
 //the alignment tests may be trivial o.oa
 void tst_qquicktextedit::hAlign()
