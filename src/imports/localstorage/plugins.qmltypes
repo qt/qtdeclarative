@@ -1,0 +1,18 @@
+import QtQuick.tooling 1.1
+
+// This file describes the plugin-supplied types contained in the library.
+// It is used for QML tooling purposes only.
+//
+// This file was auto-generated with the command 'qmlplugindump QtQuick.LocalStorage 2.0'.
+
+Module {
+    Component {
+        name: "QQuickLocalStorage"
+        prototype: "QObject"
+        exports: ["LocalStorage 2.0"]
+        Method {
+            name: "openDatabaseSync"
+            Parameter { name: "args"; type: "QQmlV8Function"; isPointer: true }
+        }
+    }
+}

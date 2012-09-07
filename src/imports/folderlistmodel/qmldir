@@ -1,2 +1,3 @@
 module Qt.labs.folderlistmodel
 plugin qmlfolderlistmodelplugin
+typeinfo plugins.qmltypes

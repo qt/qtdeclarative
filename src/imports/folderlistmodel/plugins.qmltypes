@@ -1,0 +1,47 @@
+import QtQuick.tooling 1.1
+
+// This file describes the plugin-supplied types contained in the library.
+// It is used for QML tooling purposes only.
+//
+// This file was auto-generated with the command 'qmlplugindump Qt.labs.folderlistmodel 2.0'.
+
+Module {
+    Component {
+        name: "QQuickFolderListModel"
+        prototype: "QAbstractListModel"
+        exports: ["FolderListModel 1.0", "FolderListModel 2.0"]
+        Enum {
+            name: "SortField"
+            values: {
+                "Unsorted": 0,
+                "Name": 1,
+                "Time": 2,
+                "Size": 3,
+                "Type": 4
+            }
+        }
+        Property { name: "folder"; type: "QUrl" }
+        Property { name: "rootFolder"; type: "QUrl" }
+        Property { name: "parentFolder"; type: "QUrl"; isReadonly: true }
+        Property { name: "nameFilters"; type: "QStringList" }
+        Property { name: "sortField"; type: "SortField" }
+        Property { name: "sortReversed"; type: "bool" }
+        Property { name: "showDirs"; type: "bool" }
+        Property { name: "showDirsFirst"; type: "bool" }
+        Property { name: "showDotAndDotDot"; type: "bool" }
+        Property { name: "showOnlyReadable"; type: "bool" }
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Signal { name: "rowCountChanged" }
+        Method {
+            name: "isFolder"
+            type: "bool"
+            Parameter { name: "index"; type: "int" }
+        }
+        Method {
+            name: "get"
+            type: "QVariant"
+            Parameter { name: "idx"; type: "int" }
+            Parameter { name: "property"; type: "string" }
+        }
+    }
+}

@@ -1,0 +1,149 @@
+import QtQuick.tooling 1.1
+
+// This file describes the plugin-supplied types contained in the library.
+// It is used for QML tooling purposes only.
+//
+// This file was auto-generated with the command 'qmlplugindump QtQuick.Window 2.0'.
+
+Module {
+    Component {
+        name: "QQuickRootItem"
+        defaultProperty: "data"
+        prototype: "QQuickItem"
+        Method {
+            name: "setWidth"
+            Parameter { name: "w"; type: "int" }
+        }
+        Method {
+            name: "setHeight"
+            Parameter { name: "h"; type: "int" }
+        }
+    }
+    Component {
+        name: "QQuickScreen"
+        prototype: "QObject"
+        exports: ["Screen 2.0"]
+        attachedType: "QQuickScreenAttached"
+    }
+    Component {
+        name: "QQuickScreenAttached"
+        prototype: "QObject"
+        Property { name: "width"; type: "int"; isReadonly: true }
+        Property { name: "height"; type: "int"; isReadonly: true }
+        Property { name: "primaryOrientation"; type: "Qt::ScreenOrientation"; isReadonly: true }
+        Property { name: "orientation"; type: "Qt::ScreenOrientation"; isReadonly: true }
+        Method {
+            name: "angleBetween"
+            type: "int"
+            Parameter { name: "a"; type: "int" }
+            Parameter { name: "b"; type: "int" }
+        }
+    }
+    Component {
+        name: "QQuickWindow"
+        defaultProperty: "data"
+        prototype: "QWindow"
+        exports: ["Window 2.0"]
+        Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "color"; type: "QColor" }
+        Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Signal { name: "frameSwapped" }
+        Signal { name: "sceneGraphInitialized" }
+        Signal { name: "sceneGraphInvalidated" }
+        Signal { name: "beforeSynchronizing" }
+        Signal { name: "beforeRendering" }
+        Signal { name: "afterRendering" }
+        Signal {
+            name: "colorChanged"
+            Parameter { type: "QColor" }
+        }
+        Method { name: "update" }
+        Method { name: "releaseResources" }
+    }
+    Component {
+        name: "QWindow"
+        prototype: "QObject"
+        Property { name: "windowTitle"; type: "string" }
+        Property { name: "windowIcon"; type: "QIcon" }
+        Property { name: "windowModality"; type: "Qt::WindowModality" }
+        Property { name: "x"; type: "int" }
+        Property { name: "y"; type: "int" }
+        Property { name: "width"; type: "int" }
+        Property { name: "height"; type: "int" }
+        Property { name: "pos"; type: "QPoint" }
+        Property { name: "size"; type: "QSize" }
+        Property { name: "geometry"; type: "QRect" }
+        Property { name: "visible"; type: "bool" }
+        Property { name: "contentOrientation"; type: "Qt::ScreenOrientation" }
+        Property { name: "cursor"; type: "QCursor" }
+        Signal {
+            name: "screenChanged"
+            Parameter { name: "screen"; type: "QScreen"; isPointer: true }
+        }
+        Signal {
+            name: "windowModalityChanged"
+            Parameter { name: "windowModality"; type: "Qt::WindowModality" }
+        }
+        Signal {
+            name: "xChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "yChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "widthChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "heightChanged"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Signal {
+            name: "visibleChanged"
+            Parameter { name: "arg"; type: "bool" }
+        }
+        Signal {
+            name: "contentOrientationChanged"
+            Parameter { name: "orientation"; type: "Qt::ScreenOrientation" }
+        }
+        Signal {
+            name: "focusObjectChanged"
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
+        Method {
+            name: "setVisible"
+            Parameter { name: "visible"; type: "bool" }
+        }
+        Method { name: "show" }
+        Method { name: "hide" }
+        Method { name: "showMinimized" }
+        Method { name: "showMaximized" }
+        Method { name: "showFullScreen" }
+        Method { name: "showNormal" }
+        Method { name: "close"; type: "bool" }
+        Method { name: "raise" }
+        Method { name: "lower" }
+        Method {
+            name: "setWindowTitle"
+            Parameter { type: "string" }
+        }
+        Method {
+            name: "setX"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setY"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setWidth"
+            Parameter { name: "arg"; type: "int" }
+        }
+        Method {
+            name: "setHeight"
+            Parameter { name: "arg"; type: "int" }
+        }
+    }
+}
