@@ -83,9 +83,6 @@ private slots:
     void implicitElide();
     void textFormat();
 
-    void alignments_data();
-    void alignments();
-
     void baseUrl();
     void embeddedImages_data();
     void embeddedImages();
@@ -687,59 +684,6 @@ void tst_qquicktext::textFormat()
         QCOMPARE(text->textFormat(), QQuickText::AutoText);
         QCOMPARE(spy.count(), 2);
     }
-}
-
-
-void tst_qquicktext::alignments_data()
-{
-    QTest::addColumn<int>("hAlign");
-    QTest::addColumn<int>("vAlign");
-    QTest::addColumn<QString>("expectfile");
-
-    QTest::newRow("LT") << int(Qt::AlignLeft) << int(Qt::AlignTop) << testFile("alignments_lt.png");
-    QTest::newRow("RT") << int(Qt::AlignRight) << int(Qt::AlignTop) << testFile("alignments_rt.png");
-    QTest::newRow("CT") << int(Qt::AlignHCenter) << int(Qt::AlignTop) << testFile("alignments_ct.png");
-
-    QTest::newRow("LB") << int(Qt::AlignLeft) << int(Qt::AlignBottom) << testFile("alignments_lb.png");
-    QTest::newRow("RB") << int(Qt::AlignRight) << int(Qt::AlignBottom) << testFile("alignments_rb.png");
-    QTest::newRow("CB") << int(Qt::AlignHCenter) << int(Qt::AlignBottom) << testFile("alignments_cb.png");
-
-    QTest::newRow("LC") << int(Qt::AlignLeft) << int(Qt::AlignVCenter) << testFile("alignments_lc.png");
-    QTest::newRow("RC") << int(Qt::AlignRight) << int(Qt::AlignVCenter) << testFile("alignments_rc.png");
-    QTest::newRow("CC") << int(Qt::AlignHCenter) << int(Qt::AlignVCenter) << testFile("alignments_cc.png");
-}
-
-
-void tst_qquicktext::alignments()
-{
-    QSKIP("Text alignment pixmap comparison tests will not work with scenegraph");
-#if (0)// No widgets in scenegraph
-    QFETCH(int, hAlign);
-    QFETCH(int, vAlign);
-    QFETCH(QString, expectfile);
-
-    QQuickView *window = createView(testFile("alignments.qml"));
-    window->show();
-    window->requestActivateWindow();
-    QTest::qWait(50);
-    QTRY_COMPARE(QGuiApplication::activeWindow(), static_cast<QWidget *>(window));
-
-    QObject *ob = window->rootObject();
-    QVERIFY(ob != 0);
-    ob->setProperty("horizontalAlignment",hAlign);
-    ob->setProperty("verticalAlignment",vAlign);
-    QTRY_COMPARE(ob->property("running").toBool(),false);
-    QImage actual(window->width(), window->height(), QImage::Format_RGB32);
-    actual.fill(qRgb(255,255,255));
-    QPainter p(&actual);
-    window->render(&p);
-
-    QImage expect(expectfile);
-    if (QGuiApplicationPrivate::graphics_system_name == "raster" || QGuiApplicationPrivate::graphics_system_name == "") {
-        QCOMPARE(actual,expect);
-    }
-    delete window;
-#endif
 }
 
 //the alignment tests may be trivial o.oa
