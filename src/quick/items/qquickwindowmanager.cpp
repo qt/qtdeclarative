@@ -261,10 +261,14 @@ void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
     }
 
     if (qquick_render_timing()) {
+        static QTime lastFrameTime = QTime::currentTime();
         const int swapTime = renderTimer.elapsed() - renderTime;
         qDebug() << "- Breakdown of frame time; sync:" << syncTime
                  << "ms render:" << renderTime << "ms swap:" << swapTime
-                 << "ms total:" << swapTime + renderTime << "ms";
+                 << "ms total:" << swapTime + renderTime
+                 << "ms time since last frame:" << (lastFrameTime.msecsTo(QTime::currentTime()))
+                 << "ms";
+        lastFrameTime = QTime::currentTime();
     }
 
     // Might have been set during syncSceneGraph()

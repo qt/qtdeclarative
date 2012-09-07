@@ -476,10 +476,14 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 
 #ifdef QQUICK_RENDER_TIMING
             if (qquick_render_timing()) {
+                static QTime lastFrameTime = QTime::currentTime();
                 swapTime = threadTimer.elapsed() - renderTime;
                 qDebug() << "- Breakdown of frame time; sync:" << syncTime
                          << "ms render:" << renderTime << "ms swap:" << swapTime
-                         << "ms total:" << swapTime + renderTime << "ms";
+                         << "ms total:" << swapTime + renderTime
+                         << "ms time since last frame:" << (lastFrameTime.msecsTo(QTime::currentTime()))
+                         << "ms";
+                lastFrameTime = QTime::currentTime();
             }
 #endif
 
