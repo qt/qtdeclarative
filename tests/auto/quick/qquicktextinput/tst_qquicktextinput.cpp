@@ -131,8 +131,6 @@ private slots:
     void renderType();
     void tripleClickSelectsAll();
 
-    void horizontalAlignment_data();
-    void horizontalAlignment();
     void horizontalAlignment_RightToLeft();
     void verticalAlignment();
 
@@ -1412,40 +1410,6 @@ void tst_qquicktextinput::renderType()
     input->setRenderType(QQuickTextInput::QtRendering);
     QCOMPARE(input->renderType(), QQuickTextInput::QtRendering);
     QCOMPARE(spy.count(), 2);
-}
-
-void tst_qquicktextinput::horizontalAlignment_data()
-{
-    QTest::addColumn<int>("hAlign");
-    QTest::addColumn<QString>("expectfile");
-
-    QTest::newRow("L") << int(Qt::AlignLeft) << "halign_left";
-    QTest::newRow("R") << int(Qt::AlignRight) << "halign_right";
-    QTest::newRow("C") << int(Qt::AlignHCenter) << "halign_center";
-}
-
-void tst_qquicktextinput::horizontalAlignment()
-{
-    QSKIP("Image comparison of text is almost guaranteed to fail during development");
-
-    QFETCH(int, hAlign);
-    QFETCH(QString, expectfile);
-
-    QQuickView window(testFileUrl("horizontalAlignment.qml"));
-
-    window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
-
-    QObject *ob = window.rootObject();
-    QVERIFY(ob != 0);
-    ob->setProperty("horizontalAlignment",hAlign);
-    QImage actual = window.grabWindow();
-
-    expectfile = createExpectedFileIfNotFound(expectfile, actual);
-
-    QImage expect(expectfile);
-
-    QCOMPARE(actual,expect);
 }
 
 void tst_qquicktextinput::horizontalAlignment_RightToLeft()
