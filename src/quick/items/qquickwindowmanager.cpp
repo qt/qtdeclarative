@@ -58,6 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
+DEFINE_BOOL_CONFIG_OPTION(qquick_render_timing, QML_RENDER_TIMING)
+
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 /*!
@@ -232,8 +234,21 @@ void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->polishItems();
+
+    int renderTime, syncTime;
+    QTime renderTimer;
+    if (qquick_render_timing())
+        renderTimer.start();
+
     cd->syncSceneGraph();
+
+    if (qquick_render_timing())
+        syncTime = renderTimer.elapsed();
+
     cd->renderSceneGraph(window->size());
+
+    if (qquick_render_timing())
+        renderTime = renderTimer.elapsed() - syncTime;
 
     if (data.grabOnly) {
         grabContent = qt_gl_read_framebuffer(window->size(), false, false);
@@ -243,6 +258,13 @@ void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
     if (alsoSwap && window->isVisible()) {
         gl->swapBuffers(window);
         cd->fireFrameSwapped();
+    }
+
+    if (qquick_render_timing()) {
+        const int swapTime = renderTimer.elapsed() - renderTime;
+        qDebug() << "- Breakdown of frame time; sync:" << syncTime
+                 << "ms render:" << renderTime << "ms swap:" << swapTime
+                 << "ms total:" << swapTime + renderTime << "ms";
     }
 
     // Might have been set during syncSceneGraph()
