@@ -63,7 +63,7 @@ const QEvent::Type QEvent_DeferredUpdate = QEvent::Type(QEvent::User + 1);
 
 #define QQUICK_RENDER_TIMING
 #ifdef QQUICK_RENDER_TIMING
-static bool qquick_render_timing = !qgetenv("QML_RENDER_TIMING").isEmpty();
+DEFINE_BOOL_CONFIG_OPTION(qquick_render_timing, QML_RENDER_TIMING)
 static QTime threadTimer;
 static int syncTime;
 static int renderTime;
@@ -376,7 +376,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
         printf("                RenderThread: Doing locked sync\n");
 #endif
 #ifdef QQUICK_RENDER_TIMING
-        if (qquick_render_timing)
+        if (qquick_render_timing())
             threadTimer.start();
 #endif
         inSync = true;
@@ -418,7 +418,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
         printf("                RenderThread: sync done\n");
 #endif
 #ifdef QQUICK_RENDER_TIMING
-        if (qquick_render_timing)
+        if (qquick_render_timing())
             syncTime = threadTimer.elapsed();
 #endif
 
@@ -446,7 +446,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
 
             windowPrivate->renderSceneGraph(windowData->viewportSize);
 #ifdef QQUICK_RENDER_TIMING
-            if (qquick_render_timing)
+            if (qquick_render_timing())
                 renderTime = threadTimer.elapsed() - syncTime;
 #endif
 
@@ -475,7 +475,7 @@ void QQuickRenderThreadSingleContextWindowManager::run()
         }
 
 #ifdef QQUICK_RENDER_TIMING
-            if (qquick_render_timing) {
+            if (qquick_render_timing()) {
                 swapTime = threadTimer.elapsed() - renderTime;
                 qDebug() << "- Breakdown of frame time; sync:" << syncTime
                          << "ms render:" << renderTime << "ms swap:" << swapTime
