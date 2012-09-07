@@ -83,7 +83,9 @@ private slots:
     void dateTimeFormat();
     void timeFormat_data();
     void timeFormat();
+#if defined(Q_OS_UNIX)
     void timeZoneUpdated();
+#endif
 
     void dateToLocaleString_data();
     void dateToLocaleString();
@@ -1218,16 +1220,6 @@ void tst_qqmllocale::stringLocaleCompare()
     QCOMPARE(obj->property("comparison").toInt(), QString::localeAwareCompare(string1, string2));
 }
 
-static void setTimeZone(const QByteArray &tz)
-{
-    qputenv("TZ", tz);
-#if defined(Q_OS_WIN32)
-    ::_tzset();
-#elif defined(Q_OS_UNIX)
-    ::tzset();
-#endif
-}
-
 class DateFormatter : public QObject
 {
     Q_OBJECT
@@ -1244,17 +1236,25 @@ QString DateFormatter::getLocalizedForm(const QString &isoTimestamp)
     return locale.toString(input);
 }
 
+#if defined(Q_OS_UNIX)
+// Currently disabled on Windows as adjusting the timezone
+// requires additional privileges that aren't normally
+// enabled for a process. This can be achieved by calling
+// AdjustTokenPrivileges() and then SetTimeZoneInformation(),
+// which will require linking to a different library to access that API.
+static void setTimeZone(const QByteArray &tz)
+{
+    qputenv("TZ", tz);
+    ::tzset();
+
+// following left for future reference, see comment above
+// #if defined(Q_OS_WIN32)
+//     ::_tzset();
+// #endif
+}
+
 void tst_qqmllocale::timeZoneUpdated()
 {
-#if !defined(Q_OS_UNIX)
-    // Currently disabled on Windows as adjusting the timezone
-    // requires additional privileges that aren't normally
-    // enabled for a process. This can be achieved by calling
-    // AdjustTokenPrivileges() and then SetTimeZoneInformation(),
-    // which will require linking to a different library to access that API.
-    QSKIP("Timezone manipulation not available for this platform");
-#endif
-
     QByteArray original(qgetenv("TZ"));
 
     // Set the timezone to Brisbane time
@@ -1281,6 +1281,7 @@ void tst_qqmllocale::timeZoneUpdated()
 
     QCOMPARE(obj->property("success").toBool(), true);
 }
+#endif
 
 QTEST_MAIN(tst_qqmllocale)
 
