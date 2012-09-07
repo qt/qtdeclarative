@@ -55,8 +55,10 @@ public:
 
 private slots:
     void initTestCase();
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void qmlMinify_data();
     void qmlMinify();
+#endif
 
 private:
     QString qmlminPath;
@@ -164,12 +166,9 @@ Examples are any .qml files under the examples/ directory that start
 with a lower case letter.
 */
 
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void tst_qmlmin::qmlMinify_data()
 {
-#if defined(QTEST_CROSS_COMPILED)
-    return;
-#endif
-
     QTest::addColumn<QString>("file");
 
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
@@ -182,12 +181,11 @@ void tst_qmlmin::qmlMinify_data()
     foreach (const QString &file, files)
         QTest::newRow(qPrintable(file)) << file;
 }
+#endif
 
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void tst_qmlmin::qmlMinify()
 {
-#if defined(QTEST_CROSS_COMPILED)
-    QSKIP("sources not available when cross compiled");
-#endif
     QFETCH(QString, file);
 
     QProcess qmlminify;
@@ -204,6 +202,7 @@ void tst_qmlmin::qmlMinify()
     else
         QCOMPARE(qmlminify.exitCode(), 0);
 }
+#endif
 
 QTEST_MAIN(tst_qmlmin)
 

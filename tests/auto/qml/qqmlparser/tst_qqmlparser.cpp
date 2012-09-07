@@ -58,8 +58,10 @@ public:
 
 private slots:
     void initTestCase();
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void qmlParser_data();
     void qmlParser();
+#endif
 
 private:
     QStringList excludedDirs;
@@ -163,12 +165,9 @@ This test checks all the qml and js files in the QtQml UI source tree
 and ensures that the subnode's source locations are inside parent node's source locations
 */
 
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void tst_qqmlparser::qmlParser_data()
 {
-#if defined(QTEST_CROSS_COMPILED)
-    return;
-#endif
-
     QTest::addColumn<QString>("file");
 
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
@@ -181,12 +180,11 @@ void tst_qqmlparser::qmlParser_data()
     foreach (const QString &file, files)
         QTest::newRow(qPrintable(file)) << file;
 }
+#endif
 
+#if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void tst_qqmlparser::qmlParser()
 {
-#if defined(QTEST_CROSS_COMPILED)
-    QSKIP("sources not available when cross compiled");
-#endif
     QFETCH(QString, file);
 
     using namespace QQmlJS;
@@ -211,6 +209,7 @@ void tst_qqmlparser::qmlParser()
     check::Check chk(&engine);
     chk(parser.rootNode());
 }
+#endif
 
 QTEST_MAIN(tst_qqmlparser)
 
