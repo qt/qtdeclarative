@@ -75,7 +75,7 @@ QT_BEGIN_NAMESPACE
     membership can be changed with the setFlags() and clearFlags() functions, and the position
     of items in the compositor can be changed with the move() function.  Each of these functions
     optionally returns a list of the changes made to indexes within each group which can then
-    be propogated to view so that it can correctly refresh its contents; e.g. 3 items
+    be propagated to view so that it can correctly refresh its contents; e.g. 3 items
     removed at index 6, and 5 items inserted at index 1.  The notification changes are always
     ordered from the start of the list to the end and accumulate, so if 5 items are removed at
     index 4, one is skipped and then 3 move are removed, the changes returned are 5 items removed

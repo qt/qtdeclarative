@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
 
     The attributeNames() returns the name of the attributes used in the
     vertexShader(). These are used in the default implementation of
-    activate() and deactive() to decide whice vertex registers are enabled.
+    activate() and deactivate() to decide whice vertex registers are enabled.
 
     The initialize() function is called during program creation to allow
     subclasses to prepare for use, such as resolve uniform names in the

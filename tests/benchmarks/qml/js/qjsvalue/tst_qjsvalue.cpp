@@ -963,7 +963,7 @@ void tst_QJSValue::defineStandardTestValues()
     QTest::newRow("qmetaobject") << m_engine->newQMetaObject(&QJSEngine::staticMetaObject);
 #endif
     QTest::newRow("variant") << m_engine->toScriptValue(QPoint(10, 20));
-#if 0 // no classess
+#if 0 // no classes
     QTest::newRow("qscriptclassobject") << m_engine->newObject(new QJSClass(m_engine));
 #endif
 

@@ -1468,7 +1468,7 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
     qWarning() << "QQuickWindow::wheelEvent()" << event->pixelDelta() << event->angleDelta();
 #endif
 
-    //if the actual wheel event was accepted, accept the compatability wheel event and return early
+    //if the actual wheel event was accepted, accept the compatibility wheel event and return early
     if (d->lastWheelEventAccepted && event->angleDelta().isNull())
         return;
 

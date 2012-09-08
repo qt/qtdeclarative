@@ -605,7 +605,7 @@ inline void QJSValuePrivate::setProperty(quint32 index, QJSValuePrivate* value, 
         return;
 
     if (attribs) {
-        // FIXME we dont need to convert index to a string.
+        // FIXME we don't need to convert index to a string.
         //Object::Set(int,value) do not take attributes.
         setProperty(QString::number(index), value, attribs);
         return;

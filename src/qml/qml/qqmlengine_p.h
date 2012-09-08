@@ -275,7 +275,7 @@ private:
     // either idle, or is running with the main thread blocked, no locking is necessary.  This way
     // we only pay for locking when we have to.
     // Consequently, this class should only be used to protect simple accesses or modifications of the 
-    // QQmlEnginePrivate structures or operations that can be guarenteed not to start activity
+    // QQmlEnginePrivate structures or operations that can be guaranteed not to start activity
     // on the loader thread.
     // The Locker API is identical to QMutexLocker.  Locker reuses the QQmlEnginePrivate::mutex 
     // QMutex instance and multiple Lockers are recursive in the same thread.

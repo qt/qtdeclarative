@@ -203,7 +203,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine, const 
             const QSet<const QQmlType *> extensionExports = qmlTypesByCppName.value(extensionCppName);
 
             // remove extension exports from base imports
-            // unfortunately the QQmlType pointers don't match, so can't use QSet::substract
+            // unfortunately the QQmlType pointers don't match, so can't use QSet::subtract
             QSet<const QQmlType *> newBaseExports;
             foreach (const QQmlType *baseExport, baseExports) {
                 bool match = false;
