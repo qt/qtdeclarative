@@ -6088,7 +6088,7 @@ void tst_qquicktextinput::clearInputMask()
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != 0);
 
-    QVERIFY(textInput->inputMask() != QString());
+    QVERIFY(!textInput->inputMask().isEmpty());
     textInput->setInputMask(QString());
     QCOMPARE(textInput->inputMask(), QString());
 }
