@@ -60,6 +60,7 @@
 #include <QMimeData>
 #include <private/qquicktextcontrol_p.h>
 #include "../../shared/util.h"
+#include "../../shared/platformquirks.h"
 #include "../../shared/platforminputcontext.h"
 #include <private/qinputmethod_p.h>
 #include <QtGui/qstylehints.h>
@@ -148,15 +149,19 @@ private slots:
     void delegateLoading();
     void navigation();
     void readOnly();
+#ifndef QT_NO_CLIPBOARD
     void copyAndPaste();
     void canPaste();
     void canPasteEmpty();
     void middleClickPaste();
+#endif
     void textInput();
     void inputMethodUpdate();
     void openInputPanel();
     void geometrySignals();
+#ifndef QT_NO_CLIPBOARD
     void pastingRichText_QTBUG_14003();
+#endif
     void implicitSize_data();
     void implicitSize();
     void contentSize();
@@ -2533,19 +2538,11 @@ void tst_qquicktextedit::navigation()
     QCOMPARE(input->hasActiveFocus(), false);
 }
 
-void tst_qquicktextedit::copyAndPaste() {
 #ifndef QT_NO_CLIPBOARD
-
-#ifdef Q_OS_MAC
-    {
-        PasteboardRef pasteboard;
-        OSStatus status = PasteboardCreate(0, &pasteboard);
-        if (status == noErr)
-            CFRelease(pasteboard);
-        else
-            QSKIP("This machine doesn't support the clipboard");
-    }
-#endif
+void tst_qquicktextedit::copyAndPaste()
+{
+    if (!PlatformQuirks::isClipboardAvailable())
+        QSKIP("This machine doesn't support the clipboard");
 
     QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"Hello world!\" }";
     QQmlComponent textEditComponent(&engine);
@@ -2615,12 +2612,12 @@ void tst_qquicktextedit::copyAndPaste() {
     textEdit->setText(QString());
     textEdit->paste();
     QCOMPARE(textEdit->text(), QString("Hello"));
-#endif
 }
+#endif
 
-void tst_qquicktextedit::canPaste() {
 #ifndef QT_NO_CLIPBOARD
-
+void tst_qquicktextedit::canPaste()
+{
     QGuiApplication::clipboard()->setText("Some text");
 
     QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"Hello world!\" }";
@@ -2633,13 +2630,12 @@ void tst_qquicktextedit::canPaste() {
     QTextDocument document;
     QQuickTextControl tc(&document);
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
-
-#endif
 }
+#endif
 
-void tst_qquicktextedit::canPasteEmpty() {
 #ifndef QT_NO_CLIPBOARD
-
+void tst_qquicktextedit::canPasteEmpty()
+{
     QGuiApplication::clipboard()->clear();
 
     QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"Hello world!\" }";
@@ -2652,25 +2648,14 @@ void tst_qquicktextedit::canPasteEmpty() {
     QTextDocument document;
     QQuickTextControl tc(&document);
     QCOMPARE(textEdit->canPaste(), tc.canPaste());
-
-#endif
 }
+#endif
 
-
+#ifndef QT_NO_CLIPBOARD
 void tst_qquicktextedit::middleClickPaste()
 {
-#ifndef QT_NO_CLIPBOARD
-
-#ifdef Q_OS_MAC
-    {
-        PasteboardRef pasteboard;
-        OSStatus status = PasteboardCreate(0, &pasteboard);
-        if (status == noErr)
-            CFRelease(pasteboard);
-        else
-            QSKIP("This machine doesn't support the clipboard");
-    }
-#endif
+    if (!PlatformQuirks::isClipboardAvailable())
+        QSKIP("This machine doesn't support the clipboard");
 
     QQuickView window(testFileUrl("mouseselection_true.qml"));
 
@@ -2706,8 +2691,8 @@ void tst_qquicktextedit::middleClickPaste()
         QCOMPARE(textEditObject->text().mid(1, selectedText.length()), selectedText);
     else
         QCOMPARE(textEditObject->text(), originalText);
-#endif
 }
+#endif
 
 void tst_qquicktextedit::readOnly()
 {
@@ -2954,9 +2939,9 @@ void tst_qquicktextedit::geometrySignals()
     delete o;
 }
 
+#ifndef QT_NO_CLIPBOARD
 void tst_qquicktextedit::pastingRichText_QTBUG_14003()
 {
-#ifndef QT_NO_CLIPBOARD
     QString componentStr = "import QtQuick 2.0\nTextEdit { textFormat: TextEdit.PlainText }";
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -2972,8 +2957,8 @@ void tst_qquicktextedit::pastingRichText_QTBUG_14003()
     obj->paste();
     QTRY_VERIFY(obj->text() == "");
     QTRY_VERIFY(obj->textFormat() == QQuickTextEdit::PlainText);
-#endif
 }
+#endif
 
 void tst_qquicktextedit::implicitSize_data()
 {
@@ -4697,18 +4682,7 @@ void tst_qquicktextedit::undo_keypressevents_data()
         QTest::newRow("Inserts,moving,selection and overwriting") << keys << expectedString;
     }
 
-
-#ifndef QT_NO_CLIPBOARD
-
-    bool canCopyPaste = true;
-#ifdef Q_OS_MAC
-
-    {
-        PasteboardRef pasteboard;
-        OSStatus status = PasteboardCreate(0, &pasteboard);
-        canCopyPaste = status == noErr;
-    }
-#endif
+    bool canCopyPaste = PlatformQuirks::isClipboardAvailable();
 
     if (canCopyPaste) {
         KeyList keys;
@@ -4738,8 +4712,6 @@ void tst_qquicktextedit::undo_keypressevents_data()
                 << "123";
         QTest::newRow("Copy,paste") << keys << expectedString;
     }
-
-#endif
 }
 
 void tst_qquicktextedit::undo_keypressevents()

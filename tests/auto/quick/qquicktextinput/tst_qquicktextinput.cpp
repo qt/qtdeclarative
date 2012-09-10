@@ -61,6 +61,7 @@
 #endif
 
 #include "qplatformdefs.h"
+#include "../../shared/platformquirks.h"
 #include "../../shared/platforminputcontext.h"
 
 #define SERVER_PORT 14460
@@ -153,11 +154,13 @@ private slots:
     void cursorRectangle();
     void navigation();
     void navigation_RTL();
+#ifndef QT_NO_CLIPBOARD
     void copyAndPaste();
     void copyAndPasteKeySequence();
     void canPasteEmpty();
     void canPaste();
     void middleClickPaste();
+#endif
     void readOnly();
     void focusOnPress();
 
@@ -2388,19 +2391,11 @@ void tst_qquicktextinput::navigation_RTL()
     QVERIFY(input->hasActiveFocus() == true);
 }
 
-void tst_qquicktextinput::copyAndPaste() {
 #ifndef QT_NO_CLIPBOARD
-
-#ifdef Q_OS_MAC
-    {
-        PasteboardRef pasteboard;
-        OSStatus status = PasteboardCreate(0, &pasteboard);
-        if (status == noErr)
-            CFRelease(pasteboard);
-        else
-            QSKIP("This machine doesn't support the clipboard");
-    }
-#endif
+void tst_qquicktextinput::copyAndPaste()
+{
+    if (!PlatformQuirks::isClipboardAvailable())
+        QSKIP("This machine doesn't support the clipboard");
 
     QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\" }";
     QQmlComponent textInputComponent(&engine);
@@ -2491,22 +2486,14 @@ void tst_qquicktextinput::copyAndPaste() {
     }
 
     delete textInput;
-#endif
 }
-
-void tst_qquicktextinput::copyAndPasteKeySequence() {
-#ifndef QT_NO_CLIPBOARD
-
-#ifdef Q_OS_MAC
-    {
-        PasteboardRef pasteboard;
-        OSStatus status = PasteboardCreate(0, &pasteboard);
-        if (status == noErr)
-            CFRelease(pasteboard);
-        else
-            QSKIP("This machine doesn't support the clipboard");
-    }
 #endif
+
+#ifndef QT_NO_CLIPBOARD
+void tst_qquicktextinput::copyAndPasteKeySequence()
+{
+    if (!PlatformQuirks::isClipboardAvailable())
+        QSKIP("This machine doesn't support the clipboard");
 
     QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\"; focus: true }";
     QQmlComponent textInputComponent(&engine);
@@ -2567,12 +2554,12 @@ void tst_qquicktextinput::copyAndPasteKeySequence() {
     }
 
     delete textInput;
-#endif
 }
+#endif
 
-void tst_qquicktextinput::canPasteEmpty() {
 #ifndef QT_NO_CLIPBOARD
-
+void tst_qquicktextinput::canPasteEmpty()
+{
     QGuiApplication::clipboard()->clear();
 
     QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\" }";
@@ -2583,13 +2570,12 @@ void tst_qquicktextinput::canPasteEmpty() {
 
     bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
-
-#endif
 }
+#endif
 
-void tst_qquicktextinput::canPaste() {
 #ifndef QT_NO_CLIPBOARD
-
+void tst_qquicktextinput::canPaste()
+{
     QGuiApplication::clipboard()->setText("Some text");
 
     QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\" }";
@@ -2600,24 +2586,14 @@ void tst_qquicktextinput::canPaste() {
 
     bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
     QCOMPARE(textInput->canPaste(), cp);
-
-#endif
 }
+#endif
 
+#ifndef QT_NO_CLIPBOARD
 void tst_qquicktextinput::middleClickPaste()
 {
-#ifndef QT_NO_CLIPBOARD
-
-#ifdef Q_OS_MAC
-    {
-        PasteboardRef pasteboard;
-        OSStatus status = PasteboardCreate(0, &pasteboard);
-        if (status == noErr)
-            CFRelease(pasteboard);
-        else
-            QSKIP("This machine doesn't support the clipboard");
-    }
-#endif
+    if (!PlatformQuirks::isClipboardAvailable())
+        QSKIP("This machine doesn't support the clipboard");
 
     QQuickView window(testFileUrl("mouseselection_true.qml"));
 
@@ -2653,8 +2629,8 @@ void tst_qquicktextinput::middleClickPaste()
         QCOMPARE(textInputObject->text().mid(1, selectedText.length()), selectedText);
     else
         QCOMPARE(textInputObject->text(), originalText);
-#endif
 }
+#endif
 
 void tst_qquicktextinput::passwordCharacter()
 {
@@ -5526,17 +5502,7 @@ void tst_qquicktextinput::undo_keypressevents_data()
         QTest::newRow("Insert,move,select,delete next word,undo,insert") << keys << expectedString;
     }
 
-#ifndef QT_NO_CLIPBOARD
-
-    bool canCopyPaste = true;
-#ifdef Q_OS_MAC
-
-    {
-        PasteboardRef pasteboard;
-        OSStatus status = PasteboardCreate(0, &pasteboard);
-        canCopyPaste = status == noErr;
-    }
-#endif
+    bool canCopyPaste = PlatformQuirks::isClipboardAvailable();
 
     if (canCopyPaste) {
         KeyList keys;
@@ -5566,8 +5532,6 @@ void tst_qquicktextinput::undo_keypressevents_data()
                 << "123";
         QTest::newRow("Copy,paste") << keys << expectedString;
     }
-
-#endif
 }
 
 void tst_qquicktextinput::undo_keypressevents()
