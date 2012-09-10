@@ -473,7 +473,7 @@ private:
                 && !meth.revision()
                 && meth.methodType() == QMetaMethod::Signal
                 && meth.parameterNames().isEmpty()
-                && typeName != QLatin1String("void")) {
+                && typeName == QLatin1String("void")) {
             // don't mention implicit signals
             return;
         }
