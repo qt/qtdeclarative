@@ -117,9 +117,6 @@ static void v4ErrorsMsgHandler(QtMsgType, const char *message)
 
 void tst_v4::qtscript()
 {
-    if (strcmp(QTest::currentDataTag(), "jsvalueHandling") == 0)
-        QSKIP("Test failing - QTBUG-26951");
-
     QFETCH(QString, file);
     QV4Compiler::enableBindingsTest(true);
 
@@ -138,6 +135,7 @@ void tst_v4::qtscript()
         foreach (const QByteArray &msg, v4ErrorMessages)
             qDebug() << msg;
     }
+    QEXPECT_FAIL("jsvalueHandling", "QTBUG-26951 - QJSValue has a different representation of NULL to QV8Engine", Continue);
     QCOMPARE(v4ErrorCount, 0);
 
     QV4Compiler::enableBindingsTest(false);
