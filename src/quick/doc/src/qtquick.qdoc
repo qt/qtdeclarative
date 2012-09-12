@@ -113,8 +113,20 @@ Additional Qt Quick information:
 \list
 \li \l{Qt Quick Module - C++ Classes} - the C++ API provided by the
     Qt Quick module
-\li \l{Qt Quick Release Notes} - list of changes and
-    additions in the Qt Quick module
+\li \l{QML Types Provided by Qt Quick} - a list of QML types provided by the
+    \c{QtQuick} import
+    \list
+    \li \l{QML Module QtQuick.XmlListModel 2.0}{XML List Model} - contains types
+    for creating models from XML data
+    \li \l{QML Module QtQuick.LocalStorage 2.0}{Local Storage} - a submodule
+    containing a JavaScript interface for an SQLite database
+    \li \l{QML Module QtQuick.Particles 2.0}{Particles} - provides a particle
+    system for Qt Quick
+    \li \l{QML Module QtQuick.Window 2.0}{Window} - contains types for creating
+    top-level windows and accessing screen information
+    \endlist
+\li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
+module
 \endlist
 
 Further information for writing QML applications:
