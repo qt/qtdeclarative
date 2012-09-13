@@ -66,9 +66,9 @@ private slots:
 };
 
 static QStringList messages;
-static void msgHandler(QtMsgType, const char *msg)
+static void msgHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
 {
-    messages << QLatin1String(msg);
+    messages << msg;
 }
 
 void tst_qqmlinstruction::dump()
@@ -565,10 +565,10 @@ void tst_qqmlinstruction::dump()
         << "-------------------------------------------------------------------------------";
 
     messages = QStringList();
-    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+    QtMessageHandler old = qInstallMessageHandler(msgHandler);
 
     data->dumpInstructions();
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QCOMPARE(messages.count(), expect.count());
     for (int ii = 0; ii < messages.count(); ++ii) {

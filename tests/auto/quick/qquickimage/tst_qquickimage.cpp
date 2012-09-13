@@ -662,9 +662,9 @@ void tst_qquickimage::sourceSize_QTBUG_16389()
 }
 
 static int numberOfWarnings = 0;
-static void checkWarnings(QtMsgType, const char *msg)
+static void checkWarnings(QtMsgType, const QMessageLogContext &, const QString &msg)
 {
-    if (!QString(msg).contains("QGLContext::makeCurrent(): Failed."))
+    if (!msg.contains("QGLContext::makeCurrent(): Failed."))
         numberOfWarnings++;
 }
 
@@ -679,11 +679,11 @@ void tst_qquickimage::nullPixmapPaint()
     QTRY_VERIFY(image != 0);
     image->setSource(SERVER_ADDR + QString("/no-such-file.png"));
 
-    QtMsgHandler previousMsgHandler = qInstallMsgHandler(checkWarnings);
+    QtMessageHandler previousMsgHandler = qInstallMessageHandler(checkWarnings);
 
     // used to print "QTransform::translate with NaN called"
     QPixmap pm = QPixmap::fromImage(window->grabWindow());
-    qInstallMsgHandler(previousMsgHandler);
+    qInstallMessageHandler(previousMsgHandler);
     QVERIFY(numberOfWarnings == 0);
     delete image;
 

@@ -1922,7 +1922,7 @@ void tst_qqmlecmascript::compileInvalidBinding()
 }
 
 static int transientErrorsMsgCount = 0;
-static void transientErrorsMsgHandler(QtMsgType, const char *)
+static void transientErrorsMsgHandler(QtMsgType, const QMessageLogContext &, const QString &)
 {
     ++transientErrorsMsgCount;
 }
@@ -1934,12 +1934,12 @@ void tst_qqmlecmascript::transientErrors()
     QQmlComponent component(&engine, testFileUrl("transientErrors.qml"));
 
     transientErrorsMsgCount = 0;
-    QtMsgHandler old = qInstallMsgHandler(transientErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
 
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QCOMPARE(transientErrorsMsgCount, 0);
 
@@ -1951,12 +1951,12 @@ void tst_qqmlecmascript::transientErrors()
     QQmlComponent component(&engine, testFileUrl("transientErrors.2.qml"));
 
     transientErrorsMsgCount = 0;
-    QtMsgHandler old = qInstallMsgHandler(transientErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
 
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QCOMPARE(transientErrorsMsgCount, 0);
 
@@ -1972,11 +1972,11 @@ void tst_qqmlecmascript::shutdownErrors()
     QVERIFY(object != 0);
 
     transientErrorsMsgCount = 0;
-    QtMsgHandler old = qInstallMsgHandler(transientErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
 
     delete object;
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
     QCOMPARE(transientErrorsMsgCount, 0);
 }
 
@@ -5754,11 +5754,11 @@ void tst_qqmlecmascript::qtbug_9792()
     delete context;
 
     transientErrorsMsgCount = 0;
-    QtMsgHandler old = qInstallMsgHandler(transientErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
 
     object->basicSignal();
     
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QCOMPARE(transientErrorsMsgCount, 0);
 
@@ -5795,11 +5795,11 @@ void tst_qqmlecmascript::noSpuriousWarningsAtShutdown()
     QObject *o = component.create();
 
     transientErrorsMsgCount = 0;
-    QtMsgHandler old = qInstallMsgHandler(transientErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
 
     delete o;
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QCOMPARE(transientErrorsMsgCount, 0);
     }
@@ -5811,11 +5811,11 @@ void tst_qqmlecmascript::noSpuriousWarningsAtShutdown()
     QObject *o = component.create();
 
     transientErrorsMsgCount = 0;
-    QtMsgHandler old = qInstallMsgHandler(transientErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
 
     delete o;
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QCOMPARE(transientErrorsMsgCount, 0);
     }
@@ -6625,9 +6625,9 @@ void tst_qqmlecmascript::doubleEvaluate()
 }
 
 static QStringList messages;
-static void captureMsgHandler(QtMsgType, const char *msg)
+static void captureMsgHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
 {
-    messages.append(QLatin1String(msg));
+    messages.append(msg);
 }
 
 void tst_qqmlecmascript::nonNotifyable()
@@ -6636,10 +6636,10 @@ void tst_qqmlecmascript::nonNotifyable()
     QQmlComponent component(&engine, testFileUrl("nonNotifyable.qml"));
     QV4Compiler::enableV4(true);
 
-    QtMsgHandler old = qInstallMsgHandler(captureMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(captureMsgHandler);
     messages.clear();
     QObject *object = component.create();
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QVERIFY(object != 0);
 
@@ -7078,14 +7078,14 @@ void tst_qqmlecmascript::bindingSuppression()
     engine.rootContext()->setContextProperty("pendingEvents", &processor);
 
     transientErrorsMsgCount = 0;
-    QtMsgHandler old = qInstallMsgHandler(transientErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(transientErrorsMsgHandler);
 
     QQmlComponent c(&engine, testFileUrl("bindingSuppression.qml"));
     QObject *obj = c.create();
     QVERIFY(obj != 0);
     delete obj;
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
     QCOMPARE(transientErrorsMsgCount, 0);
 }
 

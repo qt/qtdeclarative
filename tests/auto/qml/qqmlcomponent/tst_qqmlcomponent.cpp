@@ -227,9 +227,9 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
 }
 
 static QStringList warnings;
-static void msgHandler(QtMsgType, const char *warning)
+static void msgHandler(QtMsgType, const QMessageLogContext &, const QString &warning)
 {
-    warnings << QString::fromUtf8(warning);
+    warnings << warning;
 }
 
 void tst_qqmlcomponent::qmlCreateParentReference()
@@ -239,7 +239,7 @@ void tst_qqmlcomponent::qmlCreateParentReference()
     QCOMPARE(engine.outputWarningsToStandardError(), true);
 
     warnings.clear();
-    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+    QtMessageHandler old = qInstallMessageHandler(msgHandler);
 
     QQmlComponent component(&engine, testFileUrl("createParentReference.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
@@ -249,7 +249,7 @@ void tst_qqmlcomponent::qmlCreateParentReference()
     QVERIFY(QMetaObject::invokeMethod(object, "createChild"));
     delete object;
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     engine.setOutputWarningsToStandardError(false);
     QCOMPARE(engine.outputWarningsToStandardError(), false);
@@ -399,12 +399,12 @@ void tst_qqmlcomponent::onDestructionCount()
     QCOMPARE(engine.outputWarningsToStandardError(), true);
 
     warnings.clear();
-    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+    QtMessageHandler old = qInstallMessageHandler(msgHandler);
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     engine.setOutputWarningsToStandardError(false);
     QCOMPARE(engine.outputWarningsToStandardError(), false);

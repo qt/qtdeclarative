@@ -242,24 +242,24 @@ void tst_QQuickWorkerScript::script_included()
 }
 
 static QString qquickworkerscript_lastWarning;
-static void qquickworkerscript_warningsHandler(QtMsgType type, const char *msg)
+static void qquickworkerscript_warningsHandler(QtMsgType type, const QMessageLogContext &, const QString &msg)
 {
     if (type == QtWarningMsg)
-         qquickworkerscript_lastWarning = QString::fromUtf8(msg);
+         qquickworkerscript_lastWarning = msg;
 }
 
 void tst_QQuickWorkerScript::scriptError_onLoad()
 {
     QQmlComponent component(&m_engine, testFileUrl("worker_error_onLoad.qml"));
 
-    QtMsgHandler previousMsgHandler = qInstallMsgHandler(qquickworkerscript_warningsHandler);
+    QtMessageHandler previousMsgHandler = qInstallMessageHandler(qquickworkerscript_warningsHandler);
     QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
     QTRY_COMPARE(qquickworkerscript_lastWarning,
             testFileUrl("script_error_onLoad.js").toString() + QLatin1String(":3: SyntaxError: Unexpected identifier"));
 
-    qInstallMsgHandler(previousMsgHandler);
+    qInstallMessageHandler(previousMsgHandler);
     qApp->processEvents();
     delete worker;
 }
@@ -270,14 +270,14 @@ void tst_QQuickWorkerScript::scriptError_onCall()
     QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
     QVERIFY(worker != 0);
 
-    QtMsgHandler previousMsgHandler = qInstallMsgHandler(qquickworkerscript_warningsHandler);
+    QtMessageHandler previousMsgHandler = qInstallMessageHandler(qquickworkerscript_warningsHandler);
     QVariant value;
     QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
 
     QTRY_COMPARE(qquickworkerscript_lastWarning,
             testFileUrl("script_error_onCall.js").toString() + QLatin1String(":4: ReferenceError: getData is not defined"));
 
-    qInstallMsgHandler(previousMsgHandler);
+    qInstallMessageHandler(previousMsgHandler);
     qApp->processEvents();
     delete worker;
 }

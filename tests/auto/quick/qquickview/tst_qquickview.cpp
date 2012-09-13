@@ -187,7 +187,7 @@ void tst_QQuickView::resizemodeitem()
     delete view;
 }
 
-static void silentErrorsMsgHandler(QtMsgType, const char *)
+static void silentErrorsMsgHandler(QtMsgType, const QMessageLogContext &, const QString &)
 {
 }
 
@@ -195,9 +195,9 @@ void tst_QQuickView::errors()
 {
     QQuickView *view = new QQuickView;
     QVERIFY(view);
-    QtMsgHandler old = qInstallMsgHandler(silentErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(silentErrorsMsgHandler);
     view->setSource(testFileUrl("error1.qml"));
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
     QVERIFY(view->status() == QQuickView::Error);
     QVERIFY(view->errors().count() == 1);
     delete view;

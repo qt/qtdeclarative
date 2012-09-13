@@ -418,9 +418,9 @@ void tst_qqmlengine::failedCompilation_data()
 }
 
 static QStringList warnings;
-static void msgHandler(QtMsgType, const char *warning)
+static void msgHandler(QtMsgType, const QMessageLogContext &, const QString &warning)
 {
-    warnings << QString::fromUtf8(warning);
+    warnings << warning;
 }
 
 void tst_qqmlengine::outputWarningsToStandardError()
@@ -435,11 +435,11 @@ void tst_qqmlengine::outputWarningsToStandardError()
     QVERIFY(c.isReady() == true);
 
     warnings.clear();
-    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+    QtMessageHandler old = qInstallMessageHandler(msgHandler);
 
     QObject *o = c.create();
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QVERIFY(o != 0);
     delete o;
@@ -453,11 +453,11 @@ void tst_qqmlengine::outputWarningsToStandardError()
     QCOMPARE(engine.outputWarningsToStandardError(), false);
 
 
-    old = qInstallMsgHandler(msgHandler);
+    old = qInstallMessageHandler(msgHandler);
 
     o = c.create();
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QVERIFY(o != 0);
     delete o;

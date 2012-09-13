@@ -50,11 +50,11 @@
 #include <QQmlEngine>
 #include <QQmlError>
 
-static QtMsgHandler testlibMsgHandler = 0;
-void msgHandlerFilter(QtMsgType type, const char *msg)
+static QtMessageHandler testlibMsgHandler = 0;
+void msgHandlerFilter(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
 {
     if (type == QtCriticalMsg || type == QtFatalMsg)
-        (*testlibMsgHandler)(type, msg);
+        (*testlibMsgHandler)(type, ctxt, msg);
 }
 
 class tst_examples : public QObject
@@ -129,13 +129,13 @@ tst_examples::~tst_examples()
 void tst_examples::init()
 {
     if (!qstrcmp(QTest::currentTestFunction(), "sgsnippets"))
-        testlibMsgHandler = qInstallMsgHandler(msgHandlerFilter);
+        testlibMsgHandler = qInstallMessageHandler(msgHandlerFilter);
 }
 
 void tst_examples::cleanup()
 {
     if (!qstrcmp(QTest::currentTestFunction(), "sgsnippets"))
-        qInstallMsgHandler(testlibMsgHandler);
+        qInstallMessageHandler(testlibMsgHandler);
 }
 
 /*

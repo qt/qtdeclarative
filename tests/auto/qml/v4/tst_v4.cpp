@@ -105,13 +105,12 @@ void tst_v4::initTestCase()
 }
 
 static int v4ErrorCount;
-static QList<QByteArray> v4ErrorMessages;
-static void v4ErrorsMsgHandler(QtMsgType, const char *message)
+static QList<QString> v4ErrorMessages;
+static void v4ErrorsMsgHandler(QtMsgType, const QMessageLogContext &, const QString &message)
 {
-    QByteArray m(message);
-    v4ErrorMessages.append(m);
+    v4ErrorMessages.append(message);
 
-    if (m.contains("QV4"))
+    if (message.contains("QV4"))
         ++v4ErrorCount;
 }
 
@@ -124,15 +123,15 @@ void tst_v4::qtscript()
 
     v4ErrorCount = 0;
     v4ErrorMessages.clear();
-    QtMsgHandler old = qInstallMsgHandler(v4ErrorsMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(v4ErrorsMsgHandler);
 
     QObject *o = component.create();
     delete o;
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     if (v4ErrorCount) {
-        foreach (const QByteArray &msg, v4ErrorMessages)
+        foreach (const QString &msg, v4ErrorMessages)
             qDebug() << msg;
     }
     QEXPECT_FAIL("jsvalueHandling", "QTBUG-26951 - QJSValue has a different representation of NULL to QV8Engine", Continue);
@@ -961,9 +960,9 @@ void tst_v4::subscriptions()
 }
 
 static QStringList messages;
-static void msgHandler(QtMsgType, const char *msg)
+static void msgHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
 {
-    messages << QLatin1String(msg);
+    messages << msg;
 }
 
 static QByteArray getAddress(int address)
@@ -1110,7 +1109,7 @@ void tst_v4::debuggingDumpInstructions()
     QStringList expected;
 
     messages = QStringList();
-    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+    QtMessageHandler old = qInstallMessageHandler(msgHandler);
 
     QQmlJS::Bytecode bc;
 #define DUMP_INSTR_IN_UNIT_TEST(I, FMT) { QQmlJS::V4InstrData<QQmlJS::V4Instr::I> i; memset(&i, 0, sizeof(i)); bc.append(i); }
@@ -1131,7 +1130,7 @@ void tst_v4::debuggingDumpInstructions()
     bc.dump(start, end);
 
     // ensure that the output was expected.
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
     QCOMPARE(messages.count(), expected.count());
     for (int ii = 0; ii < messages.count(); ++ii) {
         // Calculating the destination address of a null jump/branch instruction is tricky

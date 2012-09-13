@@ -1724,7 +1724,7 @@ void tst_qquickpositioners::test_flow_implicit_resize()
 
 QString warningMessage;
 
-void interceptWarnings(QtMsgType type, const char *msg)
+void interceptWarnings(QtMsgType type, const QMessageLogContext &, const QString &msg)
 {
     Q_UNUSED( type );
     warningMessage = msg;
@@ -1732,7 +1732,7 @@ void interceptWarnings(QtMsgType type, const char *msg)
 
 void tst_qquickpositioners::test_conflictinganchors()
 {
-    QtMsgHandler oldMsgHandler = qInstallMsgHandler(interceptWarnings);
+    QtMessageHandler oldMsgHandler = qInstallMessageHandler(interceptWarnings);
     QQmlEngine engine;
     QQmlComponent component(&engine);
 
@@ -1826,7 +1826,7 @@ void tst_qquickpositioners::test_conflictinganchors()
     item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
     QCOMPARE(warningMessage, QString("file::2:1: QML Flow: Cannot specify anchors for items inside Flow. Flow will not function."));
-    qInstallMsgHandler(oldMsgHandler);
+    qInstallMessageHandler(oldMsgHandler);
     delete item;
 }
 

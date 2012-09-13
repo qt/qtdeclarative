@@ -259,7 +259,7 @@ private:
     }
 #endif
 
-    static void errorMsgHandler(QtMsgType, const char *)
+    static void errorMsgHandler(QtMsgType, const QMessageLogContext &, const QString &)
     {
         ++m_errorCount;
     }
@@ -6784,7 +6784,7 @@ void tst_QQuickListView::parentBinding()
     QQuickView *window = createView();
 
     m_errorCount = 0;
-    QtMsgHandler old = qInstallMsgHandler(errorMsgHandler);
+    QtMessageHandler old = qInstallMessageHandler(errorMsgHandler);
 
     window->setSource(testFileUrl("parentBinding.qml"));
     window->show();
@@ -6805,7 +6805,7 @@ void tst_QQuickListView::parentBinding()
     // there should be no transient binding error
     QVERIFY(!m_errorCount);
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     delete window;
 }

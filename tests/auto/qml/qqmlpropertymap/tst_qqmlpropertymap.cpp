@@ -297,16 +297,16 @@ public slots:
 namespace
 {
     QStringList messages;
-    void msgHandler(QtMsgType, const char *msg)
+    void msgHandler(QtMsgType, const QMessageLogContext &, const QString &msg)
     {
-        messages << QLatin1String(msg);
+        messages << msg;
     }
 }
 
 void tst_QQmlPropertyMap::metaObjectAccessibility()
 {
     messages.clear();
-    QtMsgHandler old = qInstallMsgHandler(msgHandler);
+    QtMessageHandler old = qInstallMessageHandler(msgHandler);
 
     QQmlEngine engine;
 
@@ -318,7 +318,7 @@ void tst_QQmlPropertyMap::metaObjectAccessibility()
 
     QCOMPARE(map.metaObject()->className(), "MyEnhancedPropertyMap");
 
-    qInstallMsgHandler(old);
+    qInstallMessageHandler(old);
 
     QCOMPARE(messages.count(), 0);
 }
