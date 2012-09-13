@@ -1172,27 +1172,31 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     flickBoost = canBoost ? qBound(1.0, flickBoost+0.25, QML_FLICK_MULTIFLICK_MAXBOOST) : 1.0;
 
-    bool flickedV = false;
+    bool flickedVertically = false;
     vVelocity *= flickBoost;
-    if (q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold) {
+    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold;
+    if (isVerticalFlickAllowed) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
-        flickedV = flickY(vVelocity);
-    } else {
-        fixupY();
+        flickedVertically = flickY(vVelocity);
     }
 
-    bool flickedH = false;
+    bool flickedHorizontally = false;
     hVelocity *= flickBoost;
-    if (q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold) {
+    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold;
+    if (isHorizontalFlickAllowed) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);
-        flickedH = flickX(hVelocity);
-    } else {
-        fixupX();
+        flickedHorizontally = flickX(hVelocity);
     }
 
-    flickingStarted(flickedH, flickedV);
+    if (!isVerticalFlickAllowed)
+        fixupY();
+
+    if (!isHorizontalFlickAllowed)
+        fixupX();
+
+    flickingStarted(flickedHorizontally, flickedVertically);
     if (!isViewMoving())
         q->movementEnding();
 }
