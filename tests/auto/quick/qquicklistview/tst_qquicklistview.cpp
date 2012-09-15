@@ -2168,6 +2168,8 @@ void tst_QQuickListView::sectionsDragOutsideBounds()
 
 void tst_QQuickListView::sectionsDelegate_headerVisibility()
 {
+    QSKIP("QTBUG-24395");
+
     QQuickView *window = createView();
 
     QaimModel model;
