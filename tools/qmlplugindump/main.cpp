@@ -545,7 +545,7 @@ void printUsage(const QString &appName)
                                  "Usage: %1 [-v] [-notrelocatable] module.uri version [module/import/path]\n"
                                  "       %1 [-v] -path path/to/qmldir/directory [version]\n"
                                  "       %1 [-v] -builtins\n"
-                                 "Example: %1 Qt.labs.particles 4.7 /home/user/dev/qt-install/imports").arg(
+                                 "Example: %1 Qt.labs.folderlistmodel 2.0 /home/user/dev/qt-install/imports").arg(
                                  appName));
 }
 
