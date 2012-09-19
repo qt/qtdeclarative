@@ -17,15 +17,6 @@ struct Function;
 
 namespace VM {
 
-enum ValueType {
-    UNDEFINED_TYPE,
-    NULL_TYPE,
-    BOOLEAN_TYPE,
-    NUMBER_TYPE,
-    STRING_TYPE,
-    OBJECT_TYPE
-};
-
 enum TypeHint {
     PREFERREDTYPE_HINT,
     NUMBER_HINT,
@@ -248,60 +239,149 @@ bool __qmljs_cmp_in(Context *ctx, const Value *left, const Value *right);
 
 } // extern "C"
 
-struct Value {
-    int type;
+struct ValueData {
     union {
-        bool booleanValue;
-        double numberValue;
-        Object *objectValue;
-        String *stringValue;
+        quint64 val;
+        double dbl;
+        struct {
+#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
+            uint tag;
+#endif
+            union {
+                uint uint_32;
+                int int_32;
+                bool b;
+            };
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+            uint tag;
+#endif
+        };
+    };
+};
+
+struct Value;
+template <int> struct ValueBase;
+template <> struct ValueBase<4> : public ValueData
+{
+    // we have all 4 bytes on 32 bit to specify the type
+    enum Masks {
+        NaN_Mask = 0xfff80000,
+        Type_Mask = 0xffffffff
     };
 
-    inline bool is(ValueType t) const { return type == t; }
-    inline bool isNot(ValueType t) const { return type != t; }
+    enum ValueType {
+        Undefined_Type = NaN_Mask | 0x7ffff, // all 1's
+        Null_Type = NaN_Mask | 0x0,
+        Boolean_Type = NaN_Mask | 0x1,
+//        Integer_Type = NaN_Mask | 0x2,
+        Object_Type = NaN_Mask | 0x2d59b, // give it randomness to avoid accidental collisions (for gc)
+        String_Type = NaN_Mask | 0x2d5ba,
+        Double_Type = 0
+    };
 
-    static inline Value undefinedValue() {
-        Value v;
-        v.type = UNDEFINED_TYPE;
-        return v;
+    inline bool is(ValueType type) const {
+        if (type == Double_Type)
+            return (tag & NaN_Mask) != NaN_Mask;
+        return tag == type;
+    }
+    inline ValueType type() const {
+        return (ValueType)tag;
     }
 
-    static inline Value nullValue() {
-        Value v;
-        v.type = NULL_TYPE;
-        return v;
+    bool booleanValue() const {
+        return b;
+    }
+    double doubleValue() const {
+        return dbl;
+    }
+    void setDouble(double d) {
+        dbl = d;
     }
 
-    static inline Value fromBoolean(bool value) {
-        Value v;
-        __qmljs_init_boolean(&v, value);
-        return v;
+    String *stringValue() const {
+        return (String *)(quintptr) uint_32;
+    }
+    Object *objectValue() const {
+        return (Object *)(quintptr) uint_32;
+    }
+    quint64 rawValue() const {
+        return val;
     }
 
-    static inline Value fromNumber(double value) {
-        Value v;
-        __qmljs_init_number(&v, value);
-        return v;
+    static Value undefinedValue();
+    static Value nullValue();
+    static Value fromBoolean(bool b);
+    static Value fromDouble(double d);
+    static Value fromInt32(int i);
+    static Value fromString(String *s);
+    static Value fromObject(Object *o);
+};
+
+template <> struct ValueBase<8> : public ValueData
+{
+    enum Masks {
+        NaN_Mask = 0x7ff80000,
+        Type_Mask = 0x7fff0000,
+        Tag_Shift = 32
+    };
+    enum ValueType {
+        Undefined_Type = NaN_Mask | 0x70000,
+        Null_Type = NaN_Mask | 0x00000,
+        Boolean_Type = NaN_Mask | 0x10000,
+//        Integer_Type = NaN_Mask | 0x20000,
+        Object_Type = NaN_Mask | 0x30000,
+        String_Type = NaN_Mask | 0x40000,
+        Double_Type = 0
+    };
+
+    inline bool is(ValueType type) const {
+        if (type == Double_Type)
+            return (tag & NaN_Mask) != NaN_Mask;
+        return (tag & Type_Mask) == type;
+    }
+    inline bool isNot(ValueType type) {
+        return !is(type);
+    }
+    inline ValueType type() const {
+        return (ValueType)(tag & Type_Mask);
     }
 
-    static inline Value fromObject(Object *value) {
-        Value v;
-        if (value) {
-            __qmljs_init_object(&v, value);
-        } else {
-            __qmljs_init_null(&v);
-        }
-        return v;
+    bool booleanValue() const {
+        return b;
+    }
+    double doubleValue() const {
+        return dbl;
+    }
+    void setDouble(double d) {
+        dbl = d;
     }
 
-    static inline Value fromString(String *value) {
-        Value v;
-        __qmljs_init_string(&v, value);
-        return v;
+    String *stringValue() const {
+        return (String *)(val & ~(quint64(Type_Mask) << Tag_Shift));
     }
+    Object *objectValue() const {
+        return (Object *)(val & ~(quint64(Type_Mask) << Tag_Shift));
+    }
+    quint64 rawValue() const {
+        return val;
+    }
+
+    static Value undefinedValue();
+    static Value nullValue();
+    static Value fromBoolean(bool b);
+    static Value fromDouble(double d);
+    static Value fromInt32(int i);
+    static Value fromString(String *s);
+    static Value fromObject(Object *o);
+};
+
+
+struct Value : public ValueBase<sizeof(void *)>
+{
 
 #ifndef QMLJS_LLVM_RUNTIME
     static Value fromString(Context *ctx, const QString &fromString);
+    using ValueBase<sizeof(void *)>::fromString;
 #endif
 
     static int toInteger(double fromNumber);
@@ -317,14 +397,14 @@ struct Value {
     String *toString(Context *ctx) const;
     Value toObject(Context *ctx) const;
 
-    inline bool isUndefined() const { return is(UNDEFINED_TYPE); }
-    inline bool isNull() const { return is(NULL_TYPE); }
-    inline bool isString() const { return is(STRING_TYPE); }
-    inline bool isBoolean() const { return is(BOOLEAN_TYPE); }
-    inline bool isNumber() const { return is(NUMBER_TYPE); }
-    inline bool isObject() const { return is(OBJECT_TYPE); }
+    inline bool isUndefined() const { return is(Value::Undefined_Type); }
+    inline bool isNull() const { return is(Value::Null_Type); }
+    inline bool isString() const { return is(Value::String_Type); }
+    inline bool isBoolean() const { return type() == Value::Boolean_Type; }
+    inline bool isNumber() const { return is(Value::Double_Type) /*|| is(Value::Integer_Type)*/; }
+    inline bool isObject() const { return type() == Value::Object_Type; }
 
-    inline bool isPrimitive() const { return type != OBJECT_TYPE; }
+    inline bool isPrimitive() const { ValueType t = type(); return t != Value::Object_Type; }
     bool isFunctionObject() const;
     bool isBooleanObject() const;
     bool isNumberObject() const;
@@ -347,6 +427,116 @@ struct Value {
     Value property(Context *ctx, String *name) const;
     Value *getPropertyDescriptor(Context *ctx, String *name) const;
 };
+
+inline Value ValueBase<4>::undefinedValue()
+{
+    Value v;
+    v.tag = Undefined_Type;
+    v.uint_32 = 0;
+    return v;
+}
+
+inline Value ValueBase<4>::nullValue()
+{
+    Value v;
+    v.tag = Null_Type;
+    v.uint_32 = 0;
+    return v;
+}
+
+inline Value ValueBase<4>::fromBoolean(bool b)
+{
+    Value v;
+    v.tag = Boolean_Type;
+    v.b = b;
+    return v;
+}
+
+inline Value ValueBase<4>::fromDouble(double d)
+{
+    Value v;
+    v.dbl = d;
+    return v;
+}
+
+inline Value ValueBase<4>::fromInt32(int i)
+{
+    Value v;
+    // ###
+    v.dbl = i;
+    return v;
+}
+
+inline Value ValueBase<4>::fromString(String *s)
+{
+    Value v;
+    v.tag = String_Type;
+    v.uint_32 = (quint32)(quintptr) s;
+    return v;
+}
+
+inline Value ValueBase<4>::fromObject(Object *o)
+{
+    Value v;
+    v.tag = Object_Type;
+    v.uint_32 = (quint32)(quintptr) o;
+    return v;
+}
+
+
+inline Value ValueBase<8>::undefinedValue()
+{
+    Value v;
+    v.val = quint64(Undefined_Type) << Tag_Shift;
+    return v;
+}
+
+inline Value ValueBase<8>::nullValue()
+{
+    Value v;
+    v.val = quint64(Null_Type) << Tag_Shift;
+    return v;
+}
+
+inline Value ValueBase<8>::fromBoolean(bool b)
+{
+    Value v;
+    v.tag = Boolean_Type;
+    v.b = b;
+    return v;
+}
+
+inline Value ValueBase<8>::fromDouble(double d)
+{
+    Value v;
+    v.dbl = d;
+    return v;
+}
+
+inline Value ValueBase<8>::fromInt32(int i)
+{
+    Value v;
+    // ###
+    v.dbl = i;
+    return v;
+}
+
+inline Value ValueBase<8>::fromString(String *s)
+{
+    Value v;
+    v.val = (quint64)s;
+    v.val |= quint64(String_Type) << Tag_Shift;
+    return v;
+}
+
+inline Value ValueBase<8>::fromObject(Object *o)
+{
+    Value v;
+    v.val = (quint64)o;
+    v.val |= quint64(Object_Type) << Tag_Shift;
+    return v;
+}
+
 
 struct Context {
     ExecutionEngine *engine;
@@ -406,102 +596,90 @@ extern "C" {
 // constructors
 inline void __qmljs_init_undefined(Value *result)
 {
-    result->type = UNDEFINED_TYPE;
+    *result = Value::undefinedValue();
 }
 
 inline void __qmljs_init_null(Value *result)
 {
-    result->type = NULL_TYPE;
+    *result = Value::nullValue();
 }
 
 inline void __qmljs_init_boolean(Value *result, bool value)
 {
-    result->type = BOOLEAN_TYPE;
-    result->booleanValue = value;
+    *result = Value::fromBoolean(value);
 }
 
 inline void __qmljs_init_number(Value *result, double value)
 {
-    result->type = NUMBER_TYPE;
-    result->numberValue = value;
+    *result = Value::fromDouble(value);
 }
 
 inline void __qmljs_init_string(Value *result, String *value)
 {
-    result->type = STRING_TYPE;
-    result->stringValue = value;
+    *result = Value::fromString(value);
 }
 
 inline void __qmljs_init_object(Value *result, Object *object)
 {
-    result->type = OBJECT_TYPE;
-    result->objectValue = object;
+    *result = Value::fromObject(object);
 }
 
 inline void __qmljs_copy(Value *result, Value *source)
 {
-    result->type = source->type;
-    result->numberValue = source->numberValue;
+    *result = *source;
 }
 
 // type conversion and testing
 inline void __qmljs_to_primitive(Context *ctx, Value *result, const Value *value, int typeHint)
 {
-    switch ((ValueType) value->type) {
-    case UNDEFINED_TYPE:
-    case NULL_TYPE:
-    case BOOLEAN_TYPE:
-    case NUMBER_TYPE:
-    case STRING_TYPE:
+    if (!value->isObject())
         *result = *value;
-        break;
-    case OBJECT_TYPE:
+    else
         __qmljs_default_value(ctx, result, value, typeHint);
-        break;
-    }
 }
 
 inline bool __qmljs_to_boolean(Context *ctx, const Value *value)
 {
-    switch ((ValueType) value->type) {
-    case UNDEFINED_TYPE:
-    case NULL_TYPE:
+    switch (value->type()) {
+    case Value::Undefined_Type:
+    case Value::Null_Type:
         return false;
-    case BOOLEAN_TYPE:
-        return value->booleanValue;
-    case NUMBER_TYPE:
-        if (! value->numberValue || isnan(value->numberValue))
+    case Value::Boolean_Type:
+        return value->booleanValue();
+//    case Value::Integer_Type:
+//        return value->data;
+    case Value::String_Type:
+        return __qmljs_string_length(ctx, value->stringValue()) > 0;
+    case Value::Object_Type:
+        return true;
+    default: // double
+        if (! value->doubleValue() || isnan(value->doubleValue()))
             return false;
         return true;
-    case STRING_TYPE:
-        return __qmljs_string_length(ctx, value->stringValue) > 0;
-    case OBJECT_TYPE:
-        return true;
     }
-    assert(!"unreachable");
-    return false;
 }
 
 inline double __qmljs_to_number(Context *ctx, const Value *value)
 {
-    switch ((ValueType) value->type) {
-    case UNDEFINED_TYPE:
+    switch (value->type()) {
+    case Value::Undefined_Type:
         return nan("");
-    case NULL_TYPE:
+    case Value::Null_Type:
         return 0;
-    case BOOLEAN_TYPE:
-        return (double) value->booleanValue;
-    case NUMBER_TYPE:
-        return value->numberValue;
-    case STRING_TYPE:
-        return __qmljs_string_to_number(ctx, value->stringValue);
-    case OBJECT_TYPE: {
+    case Value::Boolean_Type:
+        return (value->booleanValue() ? 1. : 0.);
+//    case Value::Integer_Type:
+//        return value->data;
+    case Value::String_Type:
+        return __qmljs_string_to_number(ctx, value->stringValue());
+    case Value::Object_Type: {
         Value prim;
         __qmljs_to_primitive(ctx, &prim, value, NUMBER_HINT);
         return __qmljs_to_number(ctx, &prim);
     }
-    } // switch
-    return 0; // unreachable
+    default: // double
+        return value->doubleValue();
+    }
 }
 
 inline double __qmljs_to_integer(Context *ctx, const Value *value)
@@ -580,26 +758,23 @@ inline unsigned short __qmljs_to_uint16(Context *ctx, const Value *value)
 
 inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
 {
-    switch ((ValueType) value->type) {
-    case UNDEFINED_TYPE:
+    switch (value->type()) {
+    case Value::Undefined_Type:
         __qmljs_string_literal_undefined(ctx, result);
         break;
-    case NULL_TYPE:
+    case Value::Null_Type:
         __qmljs_string_literal_null(ctx, result);
         break;
-    case BOOLEAN_TYPE:
-        if (value->booleanValue)
+    case Value::Boolean_Type:
+        if (value->booleanValue())
             __qmljs_string_literal_true(ctx, result);
         else
             __qmljs_string_literal_false(ctx, result);
         break;
-    case NUMBER_TYPE:
-        __qmljs_string_from_number(ctx, result, value->numberValue);
-        break;
-    case STRING_TYPE:
+    case Value::String_Type:
         *result = *value;
         break;
-    case OBJECT_TYPE: {
+    case Value::Object_Type: {
         Value prim;
         __qmljs_to_primitive(ctx, &prim, value, STRING_HINT);
         if (prim.isPrimitive())
@@ -608,50 +783,56 @@ inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
             __qmljs_throw_type_error(ctx, result);
         break;
     }
+//    case Value::Integer_Type:
+//        __qmljs_string_from_number(ctx, result, value->data);
+//        break;
+    default: // double
+        __qmljs_string_from_number(ctx, result, value->doubleValue());
+        break;
 
     } // switch
 }
 
 inline void __qmljs_to_object(Context *ctx, Value *result, const Value *value)
 {
-    switch ((ValueType) value->type) {
-    case UNDEFINED_TYPE:
-    case NULL_TYPE:
+    switch (value->type()) {
+    case Value::Undefined_Type:
+    case Value::Null_Type:
         __qmljs_throw_type_error(ctx, result);
         break;
-    case BOOLEAN_TYPE:
-        __qmljs_new_boolean_object(ctx, result, value->booleanValue);
+    case Value::Boolean_Type:
+        __qmljs_new_boolean_object(ctx, result, value->booleanValue());
         break;
-    case NUMBER_TYPE:
-        __qmljs_new_number_object(ctx, result, value->numberValue);
+    case Value::String_Type:
+        __qmljs_new_string_object(ctx, result, value->stringValue());
         break;
-    case STRING_TYPE:
-        __qmljs_new_string_object(ctx, result, value->stringValue);
-        break;
-    case OBJECT_TYPE:
+    case Value::Object_Type:
         *result = *value;
+        break;
+//    case Value::Integer_Type:
+//        __qmljs_new_number_object(ctx, result, value->data);
+//        break;
+    default:
+        __qmljs_new_number_object(ctx, result, value->doubleValue());
         break;
     }
 }
 
 inline bool __qmljs_check_object_coercible(Context *ctx, Value *result, const Value *value)
 {
-    switch ((ValueType) value->type) {
-    case UNDEFINED_TYPE:
-    case NULL_TYPE:
+    switch (value->type()) {
+    case Value::Undefined_Type:
+    case Value::Null_Type:
         __qmljs_throw_type_error(ctx, result);
         return false;
-    case BOOLEAN_TYPE:
-    case NUMBER_TYPE:
-    case STRING_TYPE:
-    case OBJECT_TYPE:
+    default:
         return true;
     }
 }
 
 inline bool __qmljs_is_callable(Context *ctx, const Value *value)
 {
-    if (value->type == OBJECT_TYPE)
+    if (value->isObject())
         return __qmljs_is_function(ctx, value);
     else
         return false;
@@ -659,7 +840,7 @@ inline bool __qmljs_is_callable(Context *ctx, const Value *value)
 
 inline void __qmljs_default_value(Context *ctx, Value *result, const Value *value, int typeHint)
 {
-    if (value->type == OBJECT_TYPE)
+    if (value->isObject())
         __qmljs_object_default_value(ctx, result, value, typeHint);
     else
         __qmljs_init_undefined(result);
@@ -669,27 +850,28 @@ inline void __qmljs_default_value(Context *ctx, Value *result, const Value *valu
 // unary operators
 inline void __qmljs_typeof(Context *ctx, Value *result, const Value *value)
 {
-    switch ((ValueType) value->type) {
-    case UNDEFINED_TYPE:
+    switch (value->type()) {
+    case Value::Undefined_Type:
         __qmljs_string_literal_undefined(ctx, result);
         break;
-    case NULL_TYPE:
+    case Value::Null_Type:
         __qmljs_string_literal_object(ctx, result);
         break;
-    case BOOLEAN_TYPE:
+    case Value::Boolean_Type:
         __qmljs_string_literal_boolean(ctx, result);
         break;
-    case NUMBER_TYPE:
-        __qmljs_string_literal_number(ctx, result);
-        break;
-    case STRING_TYPE:
+    case Value::String_Type:
         __qmljs_string_literal_string(ctx, result);
         break;
-    case OBJECT_TYPE:
+    case Value::Object_Type:
         if (__qmljs_is_callable(ctx, value))
             __qmljs_string_literal_function(ctx, result);
         else
             __qmljs_string_literal_object(ctx, result); // ### implementation-defined
+        break;
+//    case Value::Integer_Type:
+    case Value::Double_Type:
+        __qmljs_string_literal_number(ctx, result);
         break;
     }
 }
@@ -797,8 +979,8 @@ inline void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value)
 
 inline void __qmljs_add(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE)
-        __qmljs_init_number(result, left->numberValue + right->numberValue);
+    if (left->isNumber() && right->isNumber())
+        __qmljs_init_number(result, left->doubleValue() + right->doubleValue());
     else
         __qmljs_add_helper(ctx, result, left, right);
 }
@@ -854,62 +1036,58 @@ inline void __qmljs_ushr(Context *ctx, Value *result, const Value *left, const V
 
 inline void __qmljs_gt(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
-        __qmljs_init_boolean(result, left->numberValue > right->numberValue);
+    if (left->isNumber() && right->isNumber()) {
+        __qmljs_init_boolean(result, left->doubleValue() > right->doubleValue());
     } else {
         __qmljs_compare(ctx, result, left, right, false);
 
-        if (result->type == UNDEFINED_TYPE)
+        if (result->isUndefined())
             __qmljs_init_boolean(result, false);
     }
 }
 
 inline void __qmljs_lt(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
-        __qmljs_init_boolean(result, left->numberValue < right->numberValue);
+    if (left->isNumber() && right->isNumber()) {
+        __qmljs_init_boolean(result, left->doubleValue() < right->doubleValue());
     } else {
         __qmljs_compare(ctx, result, left, right, true);
 
-        if (result->type == UNDEFINED_TYPE)
+        if (result->isUndefined())
             __qmljs_init_boolean(result, false);
     }
 }
 
 inline void __qmljs_ge(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
-        __qmljs_init_boolean(result, left->numberValue >= right->numberValue);
+    if (left->isNumber() && right->isNumber()) {
+        __qmljs_init_boolean(result, left->doubleValue() >= right->doubleValue());
     } else {
         __qmljs_compare(ctx, result, right, left, false);
 
-        bool r = ! (result->type == UNDEFINED_TYPE ||
-                    (result->type == BOOLEAN_TYPE && result->booleanValue == true));
-
+        bool r = ! (result->isUndefined() || (result->isBoolean() && result->booleanValue()));
         __qmljs_init_boolean(result, r);
     }
 }
 
 inline void __qmljs_le(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
-        __qmljs_init_boolean(result, left->numberValue <= right->numberValue);
+    if (left->isNumber() && right->isNumber()) {
+        __qmljs_init_boolean(result, left->doubleValue() <= right->doubleValue());
     } else {
         __qmljs_compare(ctx, result, right, left, true);
 
-        bool r = ! (result->type == UNDEFINED_TYPE ||
-                    (result->type == BOOLEAN_TYPE && result->booleanValue == true));
-
+        bool r = ! (result->isUndefined() || (result->isBoolean() && result->booleanValue()));
         __qmljs_init_boolean(result, r);
     }
 }
 
 inline void __qmljs_eq(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
-        __qmljs_init_boolean(result, left->numberValue == right->numberValue);
-    } else if (left->type == STRING_TYPE && right->type == STRING_TYPE) {
-        __qmljs_init_boolean(result, __qmljs_string_equal(ctx, left->stringValue, right->stringValue));
+    if (left->isNumber() && right->isNumber()) {
+        __qmljs_init_boolean(result, left->doubleValue() == right->doubleValue());
+    } else if (left->isString() && right->isString()) {
+        __qmljs_init_boolean(result, __qmljs_string_equal(ctx, left->stringValue(), right->stringValue()));
     } else {
         bool r = __qmljs_equal(ctx, left, right);
         __qmljs_init_boolean(result, r);
@@ -918,10 +1096,10 @@ inline void __qmljs_eq(Context *ctx, Value *result, const Value *left, const Val
 
 inline void __qmljs_ne(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (left->type == NUMBER_TYPE && right->type == NUMBER_TYPE) {
-        __qmljs_init_boolean(result, left->numberValue != right->numberValue);
-    } else if (left->type == STRING_TYPE && right->type == STRING_TYPE) {
-        __qmljs_init_boolean(result, !__qmljs_string_equal(ctx, left->stringValue, right->stringValue));
+    if (left->isNumber() && right->isNumber()) {
+        __qmljs_init_boolean(result, left->doubleValue() != right->doubleValue());
+    } else if (left->isString() && right->isString()) {
+        __qmljs_init_boolean(result, !__qmljs_string_equal(ctx, left->stringValue(), right->stringValue()));
     } else {
         bool r = ! __qmljs_equal(ctx, left, right);
         __qmljs_init_boolean(result, r);
@@ -1012,23 +1190,10 @@ inline bool __qmljs_cmp_in(Context *ctx, const Value *left, const Value *right)
 
 inline bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y)
 {
-    if (x->type != y->type)
-        return false;
-
-    switch ((ValueType) x->type) {
-    case UNDEFINED_TYPE:
-    case NULL_TYPE:
+    if (x->rawValue() == y->rawValue())
         return true;
-    case BOOLEAN_TYPE:
-        return x->booleanValue == y->booleanValue;
-    case NUMBER_TYPE:
-        return x->numberValue == y->numberValue;
-    case STRING_TYPE:
-        return __qmljs_string_equal(ctx, x->stringValue, y->stringValue);
-    case OBJECT_TYPE:
-        return x->objectValue == y->objectValue;
-    }
-    assert(!"unreachable");
+    if (x->isString() && y->isString())
+        return __qmljs_string_equal(ctx, x->stringValue(), y->stringValue());
     return false;
 }
 

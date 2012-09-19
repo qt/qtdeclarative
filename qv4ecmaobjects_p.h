@@ -89,7 +89,7 @@ struct NumberCtor: FunctionObject
 
 struct NumberPrototype: NumberObject
 {
-    NumberPrototype(): NumberObject(Value::fromNumber(0)) {}
+    NumberPrototype(): NumberObject(Value::fromDouble(0)) {}
     void init(Context *ctx, const Value &ctor);
 
     static void method_toString(Context *ctx);
@@ -181,7 +181,7 @@ struct DateCtor: FunctionObject
 
 struct DatePrototype: DateObject
 {
-    DatePrototype(): DateObject(Value::fromNumber(qSNaN())) {}
+    DatePrototype(): DateObject(Value::fromDouble(qSNaN())) {}
     void init(Context *ctx, const Value &ctor);
 
     static double getThisDate(Context *ctx);
@@ -246,7 +246,7 @@ struct RegExpCtor: FunctionObject
 
 struct RegExpPrototype: RegExpObject
 {
-    RegExpPrototype(): RegExpObject(Value::fromNumber(qSNaN())) {}
+    RegExpPrototype(): RegExpObject(Value::fromDouble(qSNaN())) {}
     void init(Context *ctx, const Value &ctor);
 
     static void method_exec(Context *ctx);

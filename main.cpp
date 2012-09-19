@@ -168,7 +168,7 @@ int evaluateCompiledCode(const QStringList &files)
         VM::ExecutionEngine vm;
         VM::Context *ctx = vm.rootContext;
 
-        QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue;
+        QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
         globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
                                   QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
 
@@ -244,7 +244,7 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
         __qmljs_init_object(&ctx->activation, new QQmlJS::VM::Object());
 
     foreach (const QString *local, globalCode->locals) {
-        ctx->activation.objectValue->setProperty(ctx, *local, QQmlJS::VM::Value::undefinedValue());
+        ctx->activation.objectValue()->setProperty(ctx, *local, QQmlJS::VM::Value::undefinedValue());
     }
 
     if (useMoth) {
@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
     QQmlJS::VM::ExecutionEngine vm;
     QQmlJS::VM::Context *ctx = vm.rootContext;
 
-    QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue;
+    QQmlJS::VM::Object *globalObject = vm.globalObject.objectValue();
     globalObject->setProperty(ctx, vm.identifier(QStringLiteral("print")),
                               QQmlJS::VM::Value::fromObject(new builtins::Print(ctx)));
 

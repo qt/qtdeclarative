@@ -112,7 +112,7 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(LoadFalse)
 
     MOTH_BEGIN_INSTR(LoadNumber)
-        tempRegister = VM::Value::fromNumber(instr.value);
+        tempRegister = VM::Value::fromDouble(instr.value);
     MOTH_END_INSTR(LoadNumber)
 
     MOTH_BEGIN_INSTR(LoadString)

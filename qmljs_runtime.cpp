@@ -124,8 +124,8 @@ String *Value::toString(Context *ctx) const
 {
     Value v;
     __qmljs_to_string(ctx, &v, this);
-    assert(v.is(STRING_TYPE));
-    return v.stringValue;
+    assert(v.is(Value::String_Type));
+    return v.stringValue();
 }
 
 Value Value::toObject(Context *ctx) const
@@ -137,97 +137,97 @@ Value Value::toObject(Context *ctx) const
 
 bool Value::isFunctionObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asFunctionObject() != 0 : false;
+    return isObject() ? objectValue()->asFunctionObject() != 0 : false;
 }
 
 bool Value::isBooleanObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asBooleanObject() != 0 : false;
+    return isObject() ? objectValue()->asBooleanObject() != 0 : false;
 }
 
 bool Value::isNumberObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asNumberObject() != 0 : false;
+    return isObject() ? objectValue()->asNumberObject() != 0 : false;
 }
 
 bool Value::isStringObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asStringObject() != 0 : false;
+    return isObject() ? objectValue()->asStringObject() != 0 : false;
 }
 
 bool Value::isDateObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asDateObject() != 0 : false;
+    return isObject() ? objectValue()->asDateObject() != 0 : false;
 }
 
 bool Value::isArrayObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asArrayObject() != 0 : false;
+    return isObject() ? objectValue()->asArrayObject() != 0 : false;
 }
 
 bool Value::isErrorObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asErrorObject() != 0 : false;
+    return isObject() ? objectValue()->asErrorObject() != 0 : false;
 }
 
 bool Value::isArgumentsObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asActivationObject() != 0 : false;
+    return isObject() ? objectValue()->asActivationObject() != 0 : false;
 }
 
 Object *Value::asObject() const
 {
-    return type == OBJECT_TYPE ? objectValue : 0;
+    return isObject() ? objectValue() : 0;
 }
 
 FunctionObject *Value::asFunctionObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asFunctionObject() : 0;
+    return isObject() ? objectValue()->asFunctionObject() : 0;
 }
 
 BooleanObject *Value::asBooleanObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asBooleanObject() : 0;
+    return isObject() ? objectValue()->asBooleanObject() : 0;
 }
 
 NumberObject *Value::asNumberObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asNumberObject() : 0;
+    return isObject() ? objectValue()->asNumberObject() : 0;
 }
 
 StringObject *Value::asStringObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asStringObject() : 0;
+    return isObject() ? objectValue()->asStringObject() : 0;
 }
 
 DateObject *Value::asDateObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asDateObject() : 0;
+    return isObject() ? objectValue()->asDateObject() : 0;
 }
 
 ArrayObject *Value::asArrayObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asArrayObject() : 0;
+    return isObject() ? objectValue()->asArrayObject() : 0;
 }
 
 ErrorObject *Value::asErrorObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asErrorObject() : 0;
+    return isObject() ? objectValue()->asErrorObject() : 0;
 }
 
 ActivationObject *Value::asArgumentsObject() const
 {
-    return type == OBJECT_TYPE ? objectValue->asActivationObject() : 0;
+    return isObject() ? objectValue()->asActivationObject() : 0;
 }
 
 Value Value::property(Context *ctx, String *name) const
 {
-    return isObject() ? objectValue->getProperty(ctx, name) : undefinedValue();
+    return isObject() ? objectValue()->getProperty(ctx, name) : undefinedValue();
 }
 
 Value *Value::getPropertyDescriptor(Context *ctx, String *name) const
 {
-    return isObject() ? objectValue->getPropertyDescriptor(ctx, name) : 0;
+    return isObject() ? objectValue()->getPropertyDescriptor(ctx, name) : 0;
 }
 
 void Context::init(ExecutionEngine *eng)
@@ -237,9 +237,9 @@ void Context::init(ExecutionEngine *eng)
     arguments = 0;
     argumentCount = 0;
     locals = 0;
-    activation.type = NULL_TYPE;
-    thisObject.type = NULL_TYPE;
-    result.type = UNDEFINED_TYPE;
+    activation = Value::nullValue();
+    thisObject = Value::nullValue();
+    result = Value::undefinedValue();
     formals = 0;
     formalCount = 0;
     vars = 0;
@@ -251,8 +251,8 @@ void Context::init(ExecutionEngine *eng)
 Value *Context::lookupPropertyDescriptor(String *name)
 {
     for (Context *ctx = this; ctx; ctx = ctx->parent) {
-        if (ctx->activation.is(OBJECT_TYPE)) {
-            if (Value *prop = ctx->activation.objectValue->getPropertyDescriptor(this, name)) {
+        if (ctx->activation.is(Value::Object_Type)) {
+            if (Value *prop = ctx->activation.objectValue()->getPropertyDescriptor(this, name)) {
                 return prop;
             }
         }
@@ -346,13 +346,13 @@ void Context::initConstructorContext(ExecutionEngine *e, const Value *object, Fu
 
 void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
 {
-    assert(thisObject.is(OBJECT_TYPE));
+    assert(thisObject.is(Value::Object_Type));
     result = thisObject;
 
     Value proto = f->getProperty(this, engine->id_prototype);
-    thisObject.objectValue->prototype = proto.objectValue;
+    thisObject.objectValue()->prototype = proto.objectValue();
     if (! thisObject.isObject())
-        thisObject.objectValue->prototype = engine->objectPrototype;
+        thisObject.objectValue()->prototype = engine->objectPrototype;
 
     leaveCallContext(f, returnValue);
 }
@@ -418,7 +418,7 @@ void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *i
 {
     if (ArrayObject *a = base->asArrayObject()) {
         if (index->isNumber()) {
-            const quint32 n = index->numberValue;
+            const quint32 n = index->doubleValue();
             if (n < a->value.size()) {
                 a->value.assign(n, Value::undefinedValue());
                 __qmljs_init_boolean(result, true);
@@ -434,7 +434,7 @@ void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *i
 void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *name)
 {
     Value obj = base->toObject(ctx);
-    __qmljs_init_boolean(result, obj.objectValue->deleteProperty(ctx, name, true));
+    __qmljs_init_boolean(result, obj.objectValue()->deleteProperty(ctx, name, true));
 }
 
 void __qmljs_delete_property(Context *ctx, Value *result, String *name)
@@ -442,7 +442,7 @@ void __qmljs_delete_property(Context *ctx, Value *result, String *name)
     Value obj = ctx->activation;
     if (! obj.isObject())
         obj = ctx->engine->globalObject;
-    __qmljs_init_boolean(result, obj.objectValue->deleteProperty(ctx, name, true));
+    __qmljs_init_boolean(result, obj.objectValue()->deleteProperty(ctx, name, true));
 }
 
 void __qmljs_delete_value(Context *ctx, Value *result, Value *value)
@@ -456,12 +456,12 @@ void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Va
     Value pleft, pright;
     __qmljs_to_primitive(ctx, &pleft, left, PREFERREDTYPE_HINT);
     __qmljs_to_primitive(ctx, &pright, right, PREFERREDTYPE_HINT);
-    if (pleft.type == STRING_TYPE || pright.type == STRING_TYPE) {
-        if (pleft.type != STRING_TYPE)
+    if (pleft.isString() || pright.isString()) {
+        if (!pleft.isString())
             __qmljs_to_string(ctx, &pleft, &pleft);
-        if (pright.type != STRING_TYPE)
+        if (!pright.isString())
             __qmljs_to_string(ctx, &pright, &pright);
-        String *string = __qmljs_string_concat(ctx, pleft.stringValue, pright.stringValue);
+        String *string = __qmljs_string_concat(ctx, pleft.stringValue(), pright.stringValue());
         __qmljs_init_string(result, string);
     } else {
         double x = __qmljs_to_number(ctx, &pleft);
@@ -483,10 +483,10 @@ void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Va
 
 void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    if (right->type == OBJECT_TYPE) {
+    if (right->isObject()) {
         Value s;
         __qmljs_to_string(ctx, &s, left);
-        bool r = right->objectValue->hasProperty(ctx, s.stringValue);
+        bool r = right->objectValue()->hasProperty(ctx, s.stringValue());
         __qmljs_init_boolean(result, r);
     } else {
         __qmljs_throw_type_error(ctx, result);
@@ -558,7 +558,7 @@ void __qmljs_inplace_bit_and_element(Context *ctx, Value *base, Value *index, Va
 
 void __qmljs_inplace_bit_or_element(Context *ctx, Value *base, Value *index, Value *value)
 {
-    Object *obj = base->toObject(ctx).objectValue;
+    Object *obj = base->toObject(ctx).objectValue();
     if (ArrayObject *a = obj->asArrayObject()) {
         if (index->isNumber()) {
             const quint32 idx = index->toUInt32(ctx);
@@ -573,7 +573,7 @@ void __qmljs_inplace_bit_or_element(Context *ctx, Value *base, Value *index, Val
 
 void __qmljs_inplace_bit_xor_element(Context *ctx, Value *base, Value *index, Value *value)
 {
-    Object *obj = base->toObject(ctx).objectValue;
+    Object *obj = base->toObject(ctx).objectValue();
     if (ArrayObject *a = obj->asArrayObject()) {
         if (index->isNumber()) {
             const quint32 idx = index->toUInt32(ctx);
@@ -588,7 +588,7 @@ void __qmljs_inplace_bit_xor_element(Context *ctx, Value *base, Value *index, Va
 
 void __qmljs_inplace_add_element(Context *ctx, Value *base, Value *index, Value *value)
 {
-    Object *obj = base->toObject(ctx).objectValue;
+    Object *obj = base->toObject(ctx).objectValue();
     if (ArrayObject *a = obj->asArrayObject()) {
         if (index->isNumber()) {
             const quint32 idx = index->toUInt32(ctx);
@@ -603,7 +603,7 @@ void __qmljs_inplace_add_element(Context *ctx, Value *base, Value *index, Value 
 
 void __qmljs_inplace_sub_element(Context *ctx, Value *base, Value *index, Value *value)
 {
-    Object *obj = base->toObject(ctx).objectValue;
+    Object *obj = base->toObject(ctx).objectValue();
     if (ArrayObject *a = obj->asArrayObject()) {
         if (index->isNumber()) {
             const quint32 idx = index->toUInt32(ctx);
@@ -663,16 +663,16 @@ void __qmljs_inplace_bit_xor_member(Context *ctx, Value *base, String *name, Val
 
 void __qmljs_inplace_add_member(Context *ctx, Value *base, String *name, Value *value)
 {
-    Value prop = base->objectValue->getProperty(ctx, name);
+    Value prop = base->objectValue()->getProperty(ctx, name);
     __qmljs_add(ctx, &prop, &prop, value);
-    base->objectValue->setProperty(ctx, name, prop);
+    base->objectValue()->setProperty(ctx, name, prop);
 }
 
 void __qmljs_inplace_sub_member(Context *ctx, Value *base, String *name, Value *value)
 {
-    Value prop = base->objectValue->getProperty(ctx, name);
+    Value prop = base->objectValue()->getProperty(ctx, name);
     __qmljs_sub(ctx, &prop, &prop, value);
-    base->objectValue->setProperty(ctx, name, prop);
+    base->objectValue()->setProperty(ctx, name, prop);
 }
 
 void __qmljs_inplace_mul_member(Context *ctx, Value *base, String *name, Value *value)
@@ -752,7 +752,7 @@ String *__qmljs_string_concat(Context *ctx, String *first, String *second)
 
 bool __qmljs_is_function(Context *, const Value *value)
 {
-    return value->objectValue->asFunctionObject() != 0;
+    return value->objectValue()->asFunctionObject() != 0;
 }
 
 void __qmljs_object_default_value(Context *ctx, Value *result, const Value *object, int typeHint)
@@ -831,14 +831,14 @@ void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
 
 void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value)
 {
-    object->objectValue->setProperty(ctx, name, *value, /*flags*/ 0);
+    object->objectValue()->setProperty(ctx, name, *value, /*flags*/ 0);
 }
 
 void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool number)
 {
     Value value;
     __qmljs_init_boolean(&value, number);
-    object->objectValue->setProperty(ctx, name, value, /*flag*/ 0);
+    object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double number)
@@ -846,7 +846,7 @@ void __qmljs_set_property_number(Context *ctx, Value *object, String *name, doub
     Q_UNUSED(ctx);
     Value value;
     __qmljs_init_number(&value, number);
-    object->objectValue->setProperty(ctx, name, value, /*flag*/ 0);
+    object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_string(Context *ctx, Value *object, String *name, String *s)
@@ -854,26 +854,26 @@ void __qmljs_set_property_string(Context *ctx, Value *object, String *name, Stri
     Q_UNUSED(ctx);
     Value value;
     __qmljs_init_string(&value, s);
-    object->objectValue->setProperty(ctx, name, value, /*flag*/ 0);
+    object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR::Function *function)
 {
     Value value;
     __qmljs_init_closure(ctx, &value, function);
-    object->objectValue->setProperty(ctx, name, value, /*flag*/ 0);
+    object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index)
 {
     if (object->isString() && index->isNumber()) {
-        const QString s = object->stringValue->toQString().mid(Value::toUInt32(index->numberValue), 1);
+        const QString s = object->stringValue()->toQString().mid(Value::toUInt32(index->doubleValue()), 1);
         if (s.isNull())
             __qmljs_init_undefined(result);
         else
             *result = Value::fromString(ctx, s);
     } else if (object->isArrayObject() && index->isNumber()) {
-        *result = object->asArrayObject()->value.at(Value::toUInt32(index->numberValue));
+        *result = object->asArrayObject()->value.at(Value::toUInt32(index->doubleValue()));
     } else {
         String *name = index->toString(ctx);
 
@@ -887,14 +887,14 @@ void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *inde
 void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value)
 {
     if (object->isArrayObject() && index->isNumber()) {
-        object->asArrayObject()->value.assign(Value::toUInt32(index->numberValue), *value);
+        object->asArrayObject()->value.assign(Value::toUInt32(index->doubleValue()), *value);
     } else {
         String *name = index->toString(ctx);
 
         if (! object->isObject())
             __qmljs_to_object(ctx, object, object);
 
-        object->objectValue->setProperty(ctx, name, *value, /*flags*/ 0);
+        object->objectValue()->setProperty(ctx, name, *value, /*flags*/ 0);
     }
 }
 
@@ -919,7 +919,7 @@ void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
     if (Value *prop = ctx->lookupPropertyDescriptor(name)) {
         *prop = *value;
     } else
-        ctx->engine->globalObject.objectValue->setProperty(ctx, name, *value);
+        ctx->engine->globalObject.objectValue()->setProperty(ctx, name, *value);
 }
 
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
@@ -960,10 +960,10 @@ void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Fun
 
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name)
 {
-    if (object->type == OBJECT_TYPE) {
+    if (object->isObject()) {
         *result = object->property(ctx, name);
-    } else if (object->type == STRING_TYPE && name->isEqualTo(ctx->engine->id_length)) {
-        __qmljs_init_number(result,  object->stringValue->toQString().length());
+    } else if (object->isString() && name->isEqualTo(ctx->engine->id_length)) {
+        __qmljs_init_number(result,  object->stringValue()->toQString().length());
     } else {
         Value o;
         __qmljs_to_object(ctx, &o, object);
@@ -1008,8 +1008,8 @@ void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y
         __qmljs_to_primitive(ctx, &px, y, NUMBER_HINT);
     }
 
-    if (px.type == STRING_TYPE && py.type == STRING_TYPE) {
-        bool r = __qmljs_string_compare(ctx, px.stringValue, py.stringValue);
+    if (px.isString() && py.isString()) {
+        bool r = __qmljs_string_compare(ctx, px.stringValue(), py.stringValue());
         __qmljs_init_boolean(result, r);
     } else {
         double nx = __qmljs_to_number(ctx, &px);
@@ -1024,49 +1024,51 @@ void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y
 
 bool __qmljs_equal(Context *ctx, const Value *x, const Value *y)
 {
-    if (x->type == y->type) {
-        switch ((ValueType) x->type) {
-        case UNDEFINED_TYPE:
+    if (x->type() == y->type()) {
+        switch (x->type()) {
+        case Value::Undefined_Type:
             return true;
-        case NULL_TYPE:
+        case Value::Null_Type:
             return true;
-        case BOOLEAN_TYPE:
-            return x->booleanValue == y->booleanValue;
+        case Value::Boolean_Type:
+            return x->booleanValue() == y->booleanValue();
             break;
-        case NUMBER_TYPE:
-            return x->numberValue == y->numberValue;
-        case STRING_TYPE:
-            return __qmljs_string_equal(ctx, x->stringValue, y->stringValue);
-        case OBJECT_TYPE:
-            return x->objectValue == y->objectValue;
+        case Value::String_Type:
+            return __qmljs_string_equal(ctx, x->stringValue(), y->stringValue());
+        case Value::Object_Type:
+            return x->objectValue() == y->objectValue();
+        default: // double
+            return x->doubleValue() == y->doubleValue();
         }
         // unreachable
     } else {
-        if (x->type == NULL_TYPE && y->type == UNDEFINED_TYPE) {
+        if (x->isNumber() && y->isNumber())
+            return x == y;
+        if (x->isNull() && y->isUndefined()) {
             return true;
-        } else if (x->type == UNDEFINED_TYPE && y->type == NULL_TYPE) {
+        } else if (x->isUndefined() && y->isNull()) {
             return true;
-        } else if (x->type == NUMBER_TYPE && y->type == STRING_TYPE) {
+        } else if (x->isNumber() && y->isString()) {
             Value ny;
             __qmljs_init_number(&ny, __qmljs_to_number(ctx, y));
             return __qmljs_equal(ctx, x, &ny);
-        } else if (x->type == STRING_TYPE && y->type == NUMBER_TYPE) {
+        } else if (x->isString() && y->isNumber()) {
             Value nx;
             __qmljs_init_number(&nx, __qmljs_to_number(ctx, x));
             return __qmljs_equal(ctx, &nx, y);
-        } else if (x->type == BOOLEAN_TYPE) {
+        } else if (x->isBoolean()) {
             Value nx;
-            __qmljs_init_number(&nx, (double) x->booleanValue);
+            __qmljs_init_number(&nx, (double) x->booleanValue());
             return __qmljs_equal(ctx, &nx, y);
-        } else if (y->type == BOOLEAN_TYPE) {
+        } else if (y->isBoolean()) {
             Value ny;
-            __qmljs_init_number(&ny, (double) y->booleanValue);
+            __qmljs_init_number(&ny, (double) y->booleanValue());
             return __qmljs_equal(ctx, x, &ny);
-        } else if ((x->type == NUMBER_TYPE || x->type == STRING_TYPE) && y->type == OBJECT_TYPE) {
+        } else if ((x->isNumber() || x->isString()) && y->isObject()) {
             Value py;
             __qmljs_to_primitive(ctx, &py, y, PREFERREDTYPE_HINT);
             return __qmljs_equal(ctx, x, &py);
-        } else if (x->type == OBJECT_TYPE && (y->type == NUMBER_TYPE || y->type == STRING_TYPE)) {
+        } else if (x->isObject() && (y->isNumber() || y->isString())) {
             Value px;
             __qmljs_to_primitive(ctx, &px, x, PREFERREDTYPE_HINT);
             return __qmljs_equal(ctx, &px, y);
@@ -1091,9 +1093,9 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
     Value thisObject;
     if (base) {
         baseObject = *base;
-        if (baseObject.type != OBJECT_TYPE)
+        if (!baseObject.isObject())
             __qmljs_to_object(context, &baseObject, &baseObject);
-        assert(baseObject.type == OBJECT_TYPE);
+        assert(baseObject.isObject());
         thisObject = baseObject;
     } else {
         baseObject = context->activation;
@@ -1161,10 +1163,10 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
 void __qmljs_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
 {
     Value thisObject = *base;
-    if (thisObject.type != OBJECT_TYPE)
+    if (!thisObject.isObject())
         __qmljs_to_object(context, &thisObject, base);
 
-    assert(thisObject.type == OBJECT_TYPE);
+    assert(thisObject.isObject());
     Value func = thisObject.property(context, name);
     if (FunctionObject *f = func.asFunctionObject()) {
         Context k;

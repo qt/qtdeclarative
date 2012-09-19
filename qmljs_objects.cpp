@@ -112,7 +112,7 @@ void Object::defineOwnProperty(Context *ctx, const Value &getter, const Value &s
 Value ArrayObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
 {
     if (name->isEqualTo(ctx->engine->id_length))
-        return Value::fromNumber(value.size());
+        return Value::fromDouble(value.size());
     return Object::getProperty(ctx, name, attributes);
 }
 
@@ -129,13 +129,13 @@ bool FunctionObject::hasInstance(Context *ctx, const Value &value)
         return false;
     }
 
-    Object *v = value.objectValue;
+    Object *v = value.objectValue();
     while (v) {
         v = v->prototype;
 
         if (! v)
             break;
-        else if (o.objectValue == v)
+        else if (o.objectValue() == v)
             return true;
     }
 
@@ -193,7 +193,7 @@ void ScriptFunction::construct(VM::Context *ctx)
     Object *obj = ctx->engine->newObject();
     Value proto = getProperty(ctx, ctx->engine->id_prototype);
     if (proto.isObject())
-        obj->prototype = proto.objectValue;
+        obj->prototype = proto.objectValue();
     __qmljs_init_object(&ctx->thisObject, obj);
     function->code(ctx, function->codeData);
 }
@@ -220,7 +220,7 @@ Value *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, Prope
         if (name->isEqualTo(ctx->engine->id_arguments)) {
             if (arguments.isUndefined()) {
                 arguments = Value::fromObject(new ArgumentsObject(ctx));
-                arguments.objectValue->prototype = ctx->engine->objectPrototype;
+                arguments.objectValue()->prototype = ctx->engine->objectPrototype;
             }
 
             return &arguments;
@@ -234,7 +234,7 @@ Value *ActivationObject::getPropertyDescriptor(Context *ctx, String *name, Prope
 Value ArgumentsObject::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
 {
     if (name->isEqualTo(ctx->engine->id_length))
-        return Value::fromNumber(context->argumentCount);
+        return Value::fromDouble(context->argumentCount);
     return Object::getProperty(ctx, name, attributes);
 }
 
@@ -285,13 +285,13 @@ ExecutionEngine::ExecutionEngine()
     dateCtor = Value::fromObject(new DateCtor(rootContext));
     regExpCtor = Value::fromObject(new RegExpCtor(rootContext));
 
-    stringCtor.objectValue->prototype = functionPrototype;
-    numberCtor.objectValue->prototype = functionPrototype;
-    booleanCtor.objectValue->prototype = functionPrototype;
-    arrayCtor.objectValue->prototype = functionPrototype;
-    functionCtor.objectValue->prototype = functionPrototype;
-    dateCtor.objectValue->prototype = functionPrototype;
-    regExpCtor.objectValue->prototype = functionPrototype;
+    stringCtor.objectValue()->prototype = functionPrototype;
+    numberCtor.objectValue()->prototype = functionPrototype;
+    booleanCtor.objectValue()->prototype = functionPrototype;
+    arrayCtor.objectValue()->prototype = functionPrototype;
+    functionCtor.objectValue()->prototype = functionPrototype;
+    dateCtor.objectValue()->prototype = functionPrototype;
+    regExpCtor.objectValue()->prototype = functionPrototype;
 
     objectPrototype->init(rootContext, objectCtor);
     stringPrototype->init(rootContext, stringCtor);
