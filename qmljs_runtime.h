@@ -1003,7 +1003,7 @@ inline void __qmljs_div(Context *ctx, Value *result, const Value *left, const Va
 {
     double lval = __qmljs_to_number(ctx, left);
     double rval = __qmljs_to_number(ctx, right);
-    __qmljs_init_number(result, lval * rval);
+    __qmljs_init_number(result, lval / rval);
 }
 
 inline void __qmljs_mod(Context *ctx, Value *result, const Value *left, const Value *right)
