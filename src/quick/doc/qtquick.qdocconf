@@ -1,13 +1,13 @@
-include(global/qt-html-templates-offline.qdocconf)
-include(global/qt-module-defaults.qdocconf)
+include(../../../doc/global/qt-html-templates-offline.qdocconf)
+include(../../../doc/global/qt-module-defaults.qdocconf)
 
 project                 = QtQuick
 description             = Qt Quick Reference Documentation
-url                     = http://qt-project.org/doc/qt-5.0/qtquick
+url                     = http://qt-project.org/doc/qt-5.0/qtquick-index.html
 version                 = 5.0.0
 
 
-qhp.projects            = QtCore
+qhp.projects            = QtQuick
 
 qhp.QtQuick.file                = qtquick.qhp
 qhp.QtQuick.namespace           = org.qt-project.qtquick.500
@@ -31,7 +31,7 @@ qhp.QtQuick.subprojects.examples.indexTitle = Qt Quick Examples
 qhp.QtQuick.subprojects.examples.selectors = fake:example
 
 outputdir               = ../../../doc/qtquick
-tagfile                 = ../../../doc/qtquick/qtcore.tags
+tagfile                 = ../../../doc/qtquick/qtquick.tags
 
 depends += qtcore qtxmlpatterns qtqml
 
@@ -39,13 +39,11 @@ headerdirs  += ..
 
 sourcedirs  += .. ../../../examples/quick/doc
 
-exampledirs += ../../../ \
-               ../../../examples/ \
-               ../ \
-               snippets
+exampledirs +=  ../../../examples/ \
+                snippets
 
 
-imagedirs   += images ../../../examples/quick/doc/images
+imagedirs   += images
 
 #add qml sources because of dependencies
 headerdirs += ../../qml
