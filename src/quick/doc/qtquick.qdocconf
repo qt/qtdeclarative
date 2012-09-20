@@ -37,7 +37,7 @@ depends += qtcore qtxmlpatterns qtqml
 
 headerdirs  += ..
 
-sourcedirs  += .. ../../../examples/quick/doc
+sourcedirs  += ..
 
 exampledirs +=  ../../../examples/ \
                 snippets
@@ -57,4 +57,8 @@ sourcedirs += ../../particles
 #add imports directory because of dependencies
 headerdirs += ../../imports
 sourcedirs += ../../imports
+
+#add plugins directory because of dependencies
+headerdirs += ../../plugins
+sourcedirs += ../../plugins
 
