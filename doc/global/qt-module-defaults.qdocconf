@@ -1,3 +1,15 @@
+#
+#  W A R N I N G
+#  -------------
+#
+# A common template for modules in this repository.
+# This template is common among the Qt 5 modules.
+#
+# A change in this template must be replicated in all of the repositories.
+#
+# We mean it.
+#
+
 codeindent              = 1
 
 Cpp.ignoretokens        = \
@@ -33,6 +45,7 @@ Cpp.ignoretokens        = \
                           Q_OPENGL_EXPORT \
                           Q_OPENVG_EXPORT \
                           Q_OUTOFLINE_TEMPLATE \
+                          Q_PRINTSUPPORT_EXPORT \
                           Q_SQL_EXPORT \
                           Q_SVG_EXPORT \
                           Q_SCRIPT_EXPORT \

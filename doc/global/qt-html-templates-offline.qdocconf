@@ -1,6 +1,20 @@
+#
+#  W A R N I N G
+#  -------------
+#
+# A common HTML template for modules in this repository.
+# This template is common among the Qt 5 modules.
+#
+# A change in this template must be replicated in all of the repositories.
+#
+# We mean it.
+#
+
+HTML.templatedir = ../../../doc
+
 HTML.nobreadcrumbs      = "true"
 
-HTML.stylesheets = ../../../doc/global/style/offline.css
+HTML.stylesheets = global/style/offline.css
 
 HTML.headerstyles = \
     "  <link rel=\"stylesheet\" type=\"text/css\" href=\"style/offline.css\" />\n"
@@ -29,4 +43,3 @@ HTML.footer = \
     "      of their respective owners. <a title=\"Privacy Policy\"\n" \
     "      href=\"http://en.gitorious.org/privacy_policy/\">Privacy Policy</a></p>\n" \
     "</div>\n" \
-
