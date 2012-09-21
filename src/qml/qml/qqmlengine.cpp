@@ -2065,7 +2065,7 @@ bool QQml_isFileCaseCorrect(const QString &fileName)
     QFileInfo info(fileName);
     const QString absolute = info.absoluteFilePath();
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MAC) || defined(Q_OS_WINCE)
     const QString canonical = info.canonicalFilePath();
 #elif defined(Q_OS_WIN)
     wchar_t buffer[1024];

@@ -65,6 +65,10 @@
 
 // #define DEBUG_IR_STRUCTURE
 
+#ifdef CONST
+#  undef CONST
+#endif
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
