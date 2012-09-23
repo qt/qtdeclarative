@@ -2,6 +2,7 @@
 #include "qmljs_objects.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_x86_64_p.h"
+#include "qv4isel_masm_p.h"
 #include "qv4isel_moth_p.h"
 #include "qv4vme_moth_p.h"
 #include "qv4syntaxchecker_p.h"
@@ -226,7 +227,7 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
                 foreach (IR::Function *function, module.functions)
                     isel(function);
             } else {
-                x86_64::InstructionSelection isel(vm, &module, code);
+                MASM::InstructionSelection isel(vm, &module, code);
                 foreach (IR::Function *function, module.functions)
                     isel(function);
 

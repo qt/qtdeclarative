@@ -18,6 +18,7 @@ SOURCES += main.cpp \
     qv4ecmaobjects.cpp \
     qv4array.cpp \
     qv4isel_x86_64.cpp \
+    qv4isel_masm.cpp \
     llvm_runtime.cpp
 
 HEADERS += \
@@ -28,7 +29,8 @@ HEADERS += \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
     qv4array_p.h \
-    qv4isel_x86_64_p.h
+    qv4isel_x86_64_p.h \
+    qv4isel_masm_p.h
 
 HEADERS += \
     asm/x86-codegen.h \
@@ -75,3 +77,4 @@ DEFINES += QMLJS_NO_LLVM
 }
 
 include(moth/moth.pri)
+include(masm/masm.pri)
