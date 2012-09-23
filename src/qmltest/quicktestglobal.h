@@ -45,6 +45,7 @@
 #include <QtCore/qglobal.h>
 
 QT_BEGIN_HEADER
+QT_BEGIN_NAMESPACE
 
 #ifndef QT_STATIC
 #  if defined(QT_BUILD_QMLTEST_LIB)
@@ -56,6 +57,7 @@ QT_BEGIN_HEADER
 #  define Q_QUICK_TEST_EXPORT
 #endif
 
+QT_END_NAMESPACE
 QT_END_HEADER
 
 #endif
