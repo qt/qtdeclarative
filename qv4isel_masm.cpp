@@ -41,7 +41,7 @@ void InstructionSelection::operator()(IR::Function *function)
     _assembler.ret();
     JSC::JSGlobalData dummy;
     JSC::LinkBuffer linkBuffer(dummy, &_assembler, 0);
-    JSC::MacroAssembler::CodeRef code = linkBuffer.finalizeCodeWithoutDisassembly();
+    JSC::MacroAssembler::CodeRef code = linkBuffer.finalizeCodeWithDisassembly("operator()(IR::Function*)");
     memcpy(_buffer, code.executableMemory()->start(), code.size());
     function->code = (void (*)(VM::Context *, const uchar *)) _buffer;
 }
