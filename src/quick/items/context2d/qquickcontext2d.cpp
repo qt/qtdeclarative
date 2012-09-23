@@ -64,7 +64,7 @@
 #include <private/qquickwindow_p.h>
 #include <private/qquickwindowmanager_p.h>
 
-#ifdef Q_OS_QNX
+#if defined(Q_OS_QNX) || defined(Q_OS_LINUX_ANDROID)
 #include <ctype.h>
 #endif
 
