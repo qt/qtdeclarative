@@ -52,6 +52,10 @@ QQmlValueTypeProvider::QQmlValueTypeProvider()
 {
 }
 
+QQmlValueTypeProvider::~QQmlValueTypeProvider()
+{
+}
+
 QQmlValueType *QQmlValueTypeProvider::createValueType(int type)
 {
     QQmlValueType *value = 0;
@@ -287,7 +291,7 @@ Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider(void)
     return *providerPtr;
 }
 
-
+QQmlColorProvider::~QQmlColorProvider() {}
 QVariant QQmlColorProvider::colorFromString(const QString &, bool *ok) { if (ok) *ok = false; return QVariant(); }
 unsigned QQmlColorProvider::rgbaFromString(const QString &, bool *ok) { if (ok) *ok = false; return 0; }
 QVariant QQmlColorProvider::fromRgbF(double, double, double, double) { return QVariant(); }
@@ -323,6 +327,7 @@ Q_AUTOTEST_EXPORT QQmlColorProvider *QQml_colorProvider(void)
 }
 
 
+QQmlGuiProvider::~QQmlGuiProvider() {}
 QObject *QQmlGuiProvider::application(QObject *) { return 0; }
 QStringList QQmlGuiProvider::fontFamilies() { return QStringList(); }
 bool QQmlGuiProvider::openUrlExternally(QUrl &) { return false; }

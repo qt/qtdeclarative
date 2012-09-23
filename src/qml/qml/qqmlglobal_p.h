@@ -224,6 +224,7 @@ class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider
 {
 public:
     QQmlValueTypeProvider();
+    virtual ~QQmlValueTypeProvider();
 
     QQmlValueType *createValueType(int);
 
@@ -276,6 +277,7 @@ Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider();
 class Q_QML_PRIVATE_EXPORT QQmlColorProvider
 {
 public:
+    virtual ~QQmlColorProvider();
     virtual QVariant colorFromString(const QString &, bool *);
     virtual unsigned rgbaFromString(const QString &, bool *);
 
@@ -293,6 +295,7 @@ Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_colorProvider();
 class Q_QML_PRIVATE_EXPORT QQmlGuiProvider
 {
 public:
+    virtual ~QQmlGuiProvider();
     virtual QObject *application(QObject *parent);
     virtual QObject *inputMethod();
     virtual QStringList fontFamilies();

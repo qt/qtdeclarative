@@ -499,7 +499,7 @@ struct Function {
     Function(QQmlPool *pool)
       : pool(pool), tempCount(0) {}
 
-    ~Function();
+    virtual ~Function();
 
     BasicBlock *newBasicBlock();
     QString *newString(const QString &text);

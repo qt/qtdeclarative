@@ -876,6 +876,10 @@ QQuickVDMObjectData::QQuickVDMObjectData(
 static const QQuickVisualAdaptorModel::Accessors qt_vdm_null_accessors;
 static const VDMListDelegateDataType qt_vdm_list_accessors;
 
+QQuickVisualAdaptorModel::Accessors::~Accessors()
+{
+}
+
 QQuickVisualAdaptorModel::QQuickVisualAdaptorModel()
     : accessors(&qt_vdm_null_accessors)
 {

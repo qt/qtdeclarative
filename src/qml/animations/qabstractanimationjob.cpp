@@ -53,6 +53,10 @@ QT_BEGIN_NAMESPACE
 Q_GLOBAL_STATIC(QThreadStorage<QQmlAnimationTimer *>, animationTimer)
 #endif
 
+QAnimationJobChangeListener::~QAnimationJobChangeListener()
+{
+}
+
 QQmlAnimationTimer::QQmlAnimationTimer() :
     QAbstractAnimationTimer(), lastTick(0), lastDelta(0),
     currentAnimationIdx(0), insideTick(false),

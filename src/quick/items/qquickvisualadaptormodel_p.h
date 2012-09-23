@@ -65,6 +65,7 @@ public:
     {
     public:
         inline Accessors() {}
+        virtual ~Accessors();
         virtual int count(const QQuickVisualAdaptorModel &) const { return 0; }
         virtual void cleanup(QQuickVisualAdaptorModel &, QQuickVisualDataModel * = 0) const {}
 

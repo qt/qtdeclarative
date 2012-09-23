@@ -429,7 +429,7 @@ public:
 
     // Used by QQmlComponent to get notifications
     struct TypeDataCallback {
-        ~TypeDataCallback() {}
+        virtual ~TypeDataCallback();
         virtual void typeDataProgress(QQmlTypeData *, qreal) {}
         virtual void typeDataReady(QQmlTypeData *) {}
     };

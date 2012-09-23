@@ -166,9 +166,10 @@ protected:
     friend class QAnimationGroupJob;
 };
 
-class Q_AUTOTEST_EXPORT QAnimationJobChangeListener
+class Q_QML_PRIVATE_EXPORT QAnimationJobChangeListener
 {
 public:
+    virtual ~QAnimationJobChangeListener();
     virtual void animationFinished(QAbstractAnimationJob *) {}
     virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State, QAbstractAnimationJob::State) {}
     virtual void animationCurrentLoopChanged(QAbstractAnimationJob *) {}

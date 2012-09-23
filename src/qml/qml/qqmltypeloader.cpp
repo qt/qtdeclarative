@@ -1880,6 +1880,9 @@ bool QQmlTypeLoader::isScriptLoaded(const QUrl &url) const
     return m_scriptCache.contains(url);
 }
 
+QQmlTypeData::TypeDataCallback::~TypeDataCallback()
+{
+}
 
 QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader::Options options, 
                                            QQmlTypeLoader *manager)
