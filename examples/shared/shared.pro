@@ -5,5 +5,5 @@ qml.files = images \
             LauncherList.qml \
             SimpleLauncherDelegate.qml \
             Button.qml
-qml.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/shared
+qml.path = $$[QT_INSTALL_EXAMPLES]/qtquick/shared
 INSTALLS = qml

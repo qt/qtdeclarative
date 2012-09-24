@@ -16,10 +16,10 @@ DESTDIR = TextBalloonPlugin
 qdeclarativesources.files += \
     TextBalloonPlugin/qmldir
 
-qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/painteditem/TextBalloonPlugin
+qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/painteditem/TextBalloonPlugin
  
 sources.files = textballoons.qml
-sources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/painteditem
-target.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/painteditem/TextBalloonPlugin
+sources.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/painteditem
+target.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/painteditem/TextBalloonPlugin
 
 INSTALLS = qdeclarativesources sources target

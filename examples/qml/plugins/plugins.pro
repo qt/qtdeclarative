@@ -15,11 +15,11 @@ qdeclarativesources.files += \
     imports/TimeExample/hour.png \
     imports/TimeExample/minute.png
 
-qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/plugins/imports/TimeExample
+qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/plugins/imports/TimeExample
 
 sources.files += plugins.pro plugin.cpp plugins.qml
-sources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/plugins
-target.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/qml/plugins/imports/TimeExample
+sources.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/plugins
+target.path += $$[QT_INSTALL_EXAMPLES]/qtquick/qml/plugins/imports/TimeExample
 
 INSTALLS += qdeclarativesources sources target
 
