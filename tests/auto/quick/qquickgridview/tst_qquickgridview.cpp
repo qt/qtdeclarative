@@ -5038,7 +5038,7 @@ void tst_QQuickGridView::moveTransitions_data()
     QTest::newRow("move from below view, move 1 up, move to bottom, contentY not 0")
             << 30 << 1.0 << 0.0
             << 25 << 17+3 << 1 << ListRange(17+3, 17+3);
-    QTest::newRow("move from below view, move multiple up, move to to bottom")
+    QTest::newRow("move from below view, move multiple up, move to bottom")
             << 30 << 0.0 << 0.0
             << 20 << 17 << 3 << ListRange(17, 17);
     QTest::newRow("move from below view, move multiple up, move to bottom, contentY not 0")

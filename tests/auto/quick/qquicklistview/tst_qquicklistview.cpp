@@ -6014,7 +6014,7 @@ void tst_QQuickListView::moveTransitions_data()
             << 20 << 15 << 1 << ListRange(15, 15);
     QTest::newRow("move from below view, move 1 up, move to bottom, contentY not 0") << 30 << 4*20.0 << 0.0
             << 25 << 15+4 << 1 << ListRange(15+4, 15+4);
-    QTest::newRow("move from below view, move multiple up, move to to bottom") << 30 << 0.0 << 0.0
+    QTest::newRow("move from below view, move multiple up, move to bottom") << 30 << 0.0 << 0.0
             << 20 << 15 << 3 << ListRange(15, 15);
     QTest::newRow("move from below view, move multiple up, move to bottom, contentY not 0") << 30 << 4*20.0 << 0.0
             << 25 << 15+4 << 3 << ListRange(15+4, 15+4);

@@ -139,7 +139,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 /*!
     \qmlproperty bool QtQuick.XmlListModel2::XmlRole::isKey
     Defines whether this is a key role.
-    Key roles are used to to determine whether a set of values should
+    Key roles are used to determine whether a set of values should
     be updated or added to the XML list model when XmlListModel::reload()
     is called.
 
