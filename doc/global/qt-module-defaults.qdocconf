@@ -1,15 +1,3 @@
-#
-#  W A R N I N G
-#  -------------
-#
-# A common template for modules in this repository.
-# This template is common among the Qt 5 modules.
-#
-# A change in this template must be replicated in all of the repositories.
-#
-# We mean it.
-#
-
 codeindent              = 1
 
 Cpp.ignoretokens        = \
@@ -92,7 +80,7 @@ dita.metadata.default.author      = Qt Project
 dita.metadata.default.permissions = all
 dita.metadata.default.publisher   = Qt Project
 dita.metadata.default.copyryear = 2012
-dita.metadata.default.copyrholder = Digia
+dita.metadata.default.copyrholder = Digia Plc
 dita.metadata.default.audience = programmer
 
 naturallanguage         = en_US
