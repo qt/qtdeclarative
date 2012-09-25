@@ -30,7 +30,7 @@
 \brief Description of how to embed C++ data into QML using context properties
 
 When loading a QML object into a C++ application, it can be useful to directly embed some C++ data
-that can be used from within th QML code. This makes it possible, for example, to invoke a C++
+that can be used from within the QML code. This makes it possible, for example, to invoke a C++
 method on the embedded object, or use a C++ object instance as a data model for a QML view.
 
 The ability to inject C++ data into a QML object is made possible by the QQmlContext class. This

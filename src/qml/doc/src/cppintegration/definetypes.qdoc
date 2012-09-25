@@ -361,7 +361,7 @@ the attributes to be made accessible to \e attachee objects. For the
 
     The QML engine invokes this method in order to attach an instance of
     the attached object type to the \e attachee specified by the \c object
-    paramter.  It is customary, though not strictly required, for this method
+    parameter.  It is customary, though not strictly required, for this method
     implementation to parent the returned instance to \c object in order
     to prevent memory leaks.
 
