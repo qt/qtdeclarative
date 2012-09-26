@@ -59,6 +59,8 @@
 #include <QtCore/QString>
 #include <QtCore/QBitArray>
 
+#include <assembler/MacroAssemblerCodeRef.h>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -566,6 +568,7 @@ struct Function {
 
     void (*code)(VM::Context *, const uchar *);
     const uchar *codeData;
+    JSC::MacroAssemblerCodeRef codeRef;
 
     bool hasDirectEval: 1;
     bool hasNestedFunctions: 1;
