@@ -27,20 +27,18 @@
 
 /*!
 \page qtquick-porting-qt5.html
-\title Porting QML Applications to Qt 5
-\brief Guide to porting from Qt 4.8 to Qt 5 for QML applications
+\title QML Application in Qt 5
+\brief Lists the Qt 5.0 changes that affect the existing QML applications
 
 When porting QML-related code from Qt 4.8 to Qt 5, application developers should be aware that
-the QML infrastructure has undergone considerable changes in Qt 5. Below is a guide to updating
-existing code to work with Qt 5.
+the QML infrastructure has undergone considerable changes in Qt 5. The sections below describe
+these changes and the impact they have on your existing code.
 
-(This article just describes the changes that affect existing code. Developers may also be
-interested in the summary of all new features in Qt 5 for QML application development, as described
-in the \l{qtqml-releasenotes.html}{QtQml Release Notes} and \l{qtquick-releasenotes.html}{QtQuick
-Release Notes}.)
+This article describes the changes that affect your existing code. If you are
+interested in the summary of all new features in Qt 5 for QML application development, see
+\l{qtqml-releasenotes.html}{QtQml Release Notes} and \l{qtquick-releasenotes.html}{QtQuick Release Notes}.
 
-
-\section1 Porting QML code
+\section1 QtQuick Module
 
 The QtQuick module has been updated to version 2.0. All QML applications should update their import
 statements to use the new version:
@@ -127,7 +125,7 @@ ShaderEffectItem type has been renamed to \l ShaderEffect.
 \endlist
 
 
-\section1 Porting C++ code
+\section1 C++ code
 
 In Qt 5, all QML applications are rendered with an OpenGL scenegraph architecture rather than the
 Graphics View framework used in Qt 4. Due to the scale of this architectural change, the C++ API has
@@ -189,7 +187,7 @@ discussed in \l{Using the QtDeclarative module in Qt 5}{below}. However, it shou
 new applications.)
 
 
-\section3 Porting uses of QDeclarativeItem and QDeclarativeView
+\section3 QDeclarativeItem and QDeclarativeView
 
 When porting to QQuickItem, note that QDeclarativeItem inherited from QGraphicsItem; in contrast,
 QQuickItem inherits directly from QObject, and any QGraphicsItem-specific functionality is longer
@@ -207,13 +205,13 @@ QGraphicsView. In contrast, QQuickView inherits from QQuickWindow and uses the Q
 infrastructure introduced in Qt 5; any QGraphicsView-specific functionality is no longer available.
 
 
-\section3 Using qmlscene instead of qmlviewer
+\section3 qmlscene Utility
 
 The \c qmlviewer tool provided for prototyping and testing QML applications in Qt 4.x has been
 replaced with the \c qmlscene tool which integrates with the new scenegraph features in Qt 5.
 
 
-\section2 Porting QML plugins
+\section2 QML plugins
 
 All QML plugins should extend QQmlExtensionPlugin in Qt 5.
 
@@ -225,7 +223,7 @@ See the updated \l {qtqml-modules-cppplugins.html}{Creating C++ Plugins For QML}
 an overview of creating QML plugins in Qt 5.
 
 
-\section2 Using the QtDeclarative module in Qt 5
+\section2 QtDeclarative module in Qt 5
 
 For the purposes of porting older applications, the \c QtDeclarative module is still available in Qt
 5 but has been renamed to \c QtQuick1. Applications that required QtQuick 1 specific API (e.g.
