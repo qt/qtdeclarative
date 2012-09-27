@@ -198,13 +198,14 @@ void QQuickTrivialWindowManager::windowDestroyed(QQuickWindow *window)
 
 void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
 {
-    if (!window->isExposed() || !m_windows.contains(window))
+    bool renderWithoutShowing = QQuickWindowPrivate::get(window)->renderWithoutShowing;
+    if ((!window->isExposed() && !renderWithoutShowing) || !m_windows.contains(window))
         return;
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
 
     QQuickWindow *masterWindow = 0;
-    if (!window->isVisible()) {
+    if (!window->isVisible() && !renderWithoutShowing) {
         // Find a "proper surface" to bind...
         for (QHash<QQuickWindow *, WindowData>::const_iterator it = m_windows.constBegin();
              it != m_windows.constEnd() && !masterWindow; ++it) {
@@ -217,6 +218,8 @@ void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
 
     if (!masterWindow)
         return;
+
+    Q_ASSERT(QQuickWindowPrivate::get(masterWindow)->isRenderable());
 
     if (!gl) {
         gl = new QOpenGLContext();

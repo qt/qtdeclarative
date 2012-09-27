@@ -118,16 +118,6 @@ public:
 
     void run();
 
-    QQuickWindow *masterWindow() {
-        QQuickWindow *win = 0;
-        for (QHash<QQuickWindow *, WindowData *>::const_iterator it = m_rendered_windows.constBegin();
-            it != m_rendered_windows.constEnd() && !win; ++it) {
-            if (it.value()->isVisible)
-                win = it.key();
-        }
-        return win;
-    }
-
     QAnimationDriver *animationDriver() const { return animDriver; }
 
 public slots:

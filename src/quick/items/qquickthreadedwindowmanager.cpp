@@ -126,7 +126,12 @@ void QQuickRenderThreadSingleContextWindowManager::initialize()
 {
     Q_ASSERT(m_rendered_windows.size());
 
-    QQuickWindow *win = masterWindow();
+    QQuickWindow *win = 0;
+    for (QHash<QQuickWindow *, WindowData *>::const_iterator it = m_rendered_windows.constBegin();
+        it != m_rendered_windows.constEnd() && !win; ++it) {
+        if (QQuickWindowPrivate::get(it.key())->isRenderable())
+            win = it.key();
+    }
     if (!win)
         return;
 
@@ -391,12 +396,9 @@ void QQuickRenderThreadSingleContextWindowManager::run()
             WindowData *windowData = it.value();
             QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(window);
 
-            Q_ASSERT(windowData->windowSize.width() > 0 && windowData->windowSize.height() > 0);
+            Q_ASSERT(windowPrivate->isRenderable());
 
-            if (!windowData->isVisible)
-                gl->makeCurrent(masterWindow());
-            else
-                gl->makeCurrent(window);
+            gl->makeCurrent(window);
 
             if (windowData->viewportSize != windowData->windowSize) {
 #ifdef THREAD_DEBUG

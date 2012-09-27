@@ -259,9 +259,8 @@ void QQuickWindowPrivate::polishItems()
  * This parameter enables that this window can be rendered without
  * being shown on screen. This feature is very limited in what it supports.
  *
- * There needs to be another window actually showing that we can make current
- * to get a surface to make current AND for this feature to be useful
- * one needs to hook into beforeRender() and set the render tareget.
+ * For this feature to be useful one needs to hook into beforeRender()
+ * and set the render tareget.
  *
  */
 void QQuickWindowPrivate::setRenderWithoutShowing(bool render)
@@ -1994,6 +1993,13 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
     return overThreshold;
+}
+
+bool QQuickWindowPrivate::isRenderable() const
+{
+    if (geometry.width() <= 0 || geometry.height() <= 0)
+        return false;
+    return visible || (renderWithoutShowing && platformWindow);
 }
 
 /*!

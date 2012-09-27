@@ -173,6 +173,8 @@ public:
     void syncSceneGraph();
     void renderSceneGraph(const QSize &size);
 
+    bool isRenderable() const;
+
     bool renderWithoutShowing;
     void setRenderWithoutShowing(bool enabled);
 
