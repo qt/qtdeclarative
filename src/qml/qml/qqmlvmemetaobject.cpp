@@ -559,8 +559,12 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 {
     QObjectPrivate *op = QObjectPrivate::get(obj);
 
-    if (op->metaObject) parent = op->metaObject;
-    else parent = obj->metaObject();
+    if (op->metaObject) {
+        parent = op->metaObject;
+        // Use the extra flag in QBiPointer to know if we can safely cast parent.asT1() to QQmlVMEMetaObject*
+        parent.setFlagValue(QQmlData::get(obj)->hasVMEMetaObject);
+    } else
+        parent = obj->metaObject();
 
     op->metaObject = this;
     QQmlData::get(obj)->hasVMEMetaObject = true;
@@ -1154,8 +1158,8 @@ void QQmlVMEMetaObject::registerInterceptor(int index, int valueIndex, QQmlPrope
 quint16 QQmlVMEMetaObject::vmeMethodLineNumber(int index)
 {
     if (index < methodOffset()) {
-        Q_ASSERT(parent.isT1());
-        return static_cast<QQmlVMEMetaObject *>(parent.asT1())->vmeMethodLineNumber(index);
+        Q_ASSERT(parentVMEMetaObject());
+        return parentVMEMetaObject()->vmeMethodLineNumber(index);
     }
 
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
@@ -1170,8 +1174,8 @@ quint16 QQmlVMEMetaObject::vmeMethodLineNumber(int index)
 v8::Handle<v8::Function> QQmlVMEMetaObject::vmeMethod(int index)
 {
     if (index < methodOffset()) {
-        Q_ASSERT(parent.isT1());
-        return static_cast<QQmlVMEMetaObject *>(parent.asT1())->vmeMethod(index);
+        Q_ASSERT(parentVMEMetaObject());
+        return parentVMEMetaObject()->vmeMethod(index);
     }
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
     Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
@@ -1182,8 +1186,8 @@ v8::Handle<v8::Function> QQmlVMEMetaObject::vmeMethod(int index)
 void QQmlVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Function> value)
 {
     if (index < methodOffset()) {
-        Q_ASSERT(parent.isT1());
-        return static_cast<QQmlVMEMetaObject *>(parent.asT1())->setVmeMethod(index, value);
+        Q_ASSERT(parentVMEMetaObject());
+        return parentVMEMetaObject()->setVmeMethod(index, value);
     }
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
     Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + metaData->methodCount));
@@ -1200,8 +1204,8 @@ void QQmlVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Function> val
 v8::Handle<v8::Value> QQmlVMEMetaObject::vmeProperty(int index)
 {
     if (index < propOffset()) {
-        Q_ASSERT(parent.isT1());
-        return static_cast<QQmlVMEMetaObject *>(parent.asT1())->vmeProperty(index);
+        Q_ASSERT(parentVMEMetaObject());
+        return parentVMEMetaObject()->vmeProperty(index);
     }
     return readVarProperty(index - propOffset());
 }
@@ -1209,8 +1213,8 @@ v8::Handle<v8::Value> QQmlVMEMetaObject::vmeProperty(int index)
 void QQmlVMEMetaObject::setVMEProperty(int index, v8::Handle<v8::Value> v)
 {
     if (index < propOffset()) {
-        Q_ASSERT(parent.isT1());
-        static_cast<QQmlVMEMetaObject *>(parent.asT1())->setVMEProperty(index, v);
+        Q_ASSERT(parentVMEMetaObject());
+        parentVMEMetaObject()->setVMEProperty(index, v);
         return;
     }
     return writeVarProperty(index - propOffset(), v);
@@ -1351,20 +1355,20 @@ void QQmlVMEMetaObject::activate(QObject *object, int index, void **args)
 QQmlVMEMetaObject *QQmlVMEMetaObject::getForProperty(QObject *o, int coreIndex)
 {
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
-    while (vme->propOffset() > coreIndex) {
-        Q_ASSERT(vme->parent.isT1());
-        vme = static_cast<QQmlVMEMetaObject *>(vme->parent.asT1());
-    }
+    while (vme && vme->propOffset() > coreIndex)
+        vme = vme->parentVMEMetaObject();
+
+    Q_ASSERT(vme);
     return vme;
 }
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::getForMethod(QObject *o, int coreIndex)
 {
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
-    while (vme->methodOffset() > coreIndex) {
-        Q_ASSERT(vme->parent.isT1());
-        vme = static_cast<QQmlVMEMetaObject *>(vme->parent.asT1());
-    }
+    while (vme && vme->methodOffset() > coreIndex)
+        vme = vme->parentVMEMetaObject();
+
+    Q_ASSERT(vme);
     return vme;
 }
 
@@ -1375,10 +1379,10 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::getForMethod(QObject *o, int coreIndex)
 QQmlVMEMetaObject *QQmlVMEMetaObject::getForSignal(QObject *o, int coreIndex)
 {
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
-    while (vme->signalOffset() > coreIndex) {
-        Q_ASSERT(vme->parent.isT1());
-        vme = static_cast<QQmlVMEMetaObject *>(vme->parent.asT1());
-    }
+    while (vme && vme->signalOffset() > coreIndex)
+        vme = vme->parentVMEMetaObject();
+
+    Q_ASSERT(vme);
     return vme;
 }
 

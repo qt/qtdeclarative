@@ -287,7 +287,7 @@ int QQmlVMEMetaObject::signalCount() const
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::parentVMEMetaObject() const
 {
-    if (parent.isT1())
+    if (parent.isT1() && parent.flag())
         return static_cast<QQmlVMEMetaObject *>(parent.asT1());
 
     return 0;
