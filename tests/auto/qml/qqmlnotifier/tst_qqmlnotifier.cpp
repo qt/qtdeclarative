@@ -95,6 +95,20 @@ public:
     int v4BindingProp2() const { return 42; }
     int cppObjectProp() const { return 42; }
     int scriptBindingProp() const { return 42; }
+
+    void verifyReceiverCount()
+    {
+        QCOMPARE(receivers(SIGNAL(qmlObjectPropChanged())), qmlObjectPropConnections);
+        QCOMPARE(receivers(SIGNAL(cppObjectPropChanged())), cppObjectPropConnections);
+        QCOMPARE(receivers(SIGNAL(unboundPropChanged())), unboundPropConnections);
+        QCOMPARE(receivers(SIGNAL(v8BindingPropChanged())), v8BindingPropConnections);
+        QCOMPARE(receivers(SIGNAL(v4BindingPropChanged())), v4BindingPropConnections);
+        QCOMPARE(receivers(SIGNAL(v4BindingProp2Changed())), v4BindingProp2Connections);
+        QCOMPARE(receivers(SIGNAL(scriptBindingPropChanged())), scriptBindingPropConnections);
+        QCOMPARE(receivers(SIGNAL(boundSignal())), boundSignalConnections);
+        QCOMPARE(receivers(SIGNAL(unusedSignal())), unusedSignalConnections);
+    }
+
 protected:
     void connectNotify(const QMetaMethod &signal) Q_DECL_OVERRIDE {
         if (signal.name() == "qmlObjectPropChanged") qmlObjectPropConnections++;
@@ -212,6 +226,7 @@ void tst_qqmlnotifier::connectNotify()
     QCOMPARE(exportedClass->scriptBindingPropConnections, 1);
     QCOMPARE(exportedClass->boundSignalConnections, 1);
     QCOMPARE(exportedClass->unusedSignalConnections, 0);
+    exportedClass->verifyReceiverCount();
 
     QCOMPARE(exportedObject->qmlObjectPropConnections, 0);
     QCOMPARE(exportedObject->cppObjectPropConnections, 1);
@@ -222,6 +237,7 @@ void tst_qqmlnotifier::connectNotify()
     QCOMPARE(exportedObject->scriptBindingPropConnections, 0);
     QCOMPARE(exportedObject->boundSignalConnections, 0);
     QCOMPARE(exportedObject->unusedSignalConnections, 0);
+    exportedObject->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::removeV4Binding()
@@ -231,6 +247,7 @@ void tst_qqmlnotifier::removeV4Binding()
     // Removing a binding should disconnect all of its guarded properties
     QVERIFY(QMetaObject::invokeMethod(root, "removeV4Binding"));
     QCOMPARE(exportedClass->v4BindingPropConnections, 0);
+    exportedClass->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::removeV4Binding2()
@@ -241,6 +258,7 @@ void tst_qqmlnotifier::removeV4Binding2()
     // Make sure that removing one binding doesn't by accident disconnect all.
     QVERIFY(QMetaObject::invokeMethod(root, "removeV4Binding2"));
     QCOMPARE(exportedClass->v4BindingProp2Connections, 1);
+    exportedClass->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::removeV8Binding()
@@ -250,6 +268,7 @@ void tst_qqmlnotifier::removeV8Binding()
     // Removing a binding should disconnect all of its guarded properties
     QVERIFY(QMetaObject::invokeMethod(root, "removeV8Binding"));
     QCOMPARE(exportedClass->v8BindingPropConnections, 0);
+    exportedClass->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::removeScriptBinding()
@@ -259,6 +278,7 @@ void tst_qqmlnotifier::removeScriptBinding()
     // Removing a binding should disconnect all of its guarded properties
     QVERIFY(QMetaObject::invokeMethod(root, "removeScriptBinding"));
     QCOMPARE(exportedClass->scriptBindingPropConnections, 0);
+    exportedClass->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::readProperty()
@@ -268,6 +288,7 @@ void tst_qqmlnotifier::readProperty()
     // Reading a property should not connect to it
     QVERIFY(QMetaObject::invokeMethod(root, "readProperty"));
     QCOMPARE(exportedClass->unboundPropConnections, 0);
+    exportedClass->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::propertyChange()
@@ -278,8 +299,10 @@ void tst_qqmlnotifier::propertyChange()
     // For this, the new binding needs to be connected, and afterwards disconnected.
     QVERIFY(QMetaObject::invokeMethod(root, "changeState"));
     QCOMPARE(exportedClass->unboundPropConnections, 1);
+    exportedClass->verifyReceiverCount();
     QVERIFY(QMetaObject::invokeMethod(root, "changeState"));
     QCOMPARE(exportedClass->unboundPropConnections, 0);
+    exportedClass->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::disconnectOnDestroy()
@@ -291,6 +314,7 @@ void tst_qqmlnotifier::disconnectOnDestroy()
     delete root;
     root = 0;
     QCOMPARE(exportedObject->cppObjectPropConnections, 0);
+    exportedObject->verifyReceiverCount();
 }
 
 QTEST_MAIN(tst_qqmlnotifier)
