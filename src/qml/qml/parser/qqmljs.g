@@ -413,6 +413,7 @@ Parser::Parser(Engine *engine):
     state_stack(0),
     location_stack(0),
     string_stack(0),
+    program(0),
     first_token(0),
     last_token(0)
 {
@@ -835,6 +836,7 @@ UiParameterList: UiParameterList T_COMMA UiPropertyType JsIdentifier ;
 /.
 case $rule_number: {
   AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiParameterList, stringRef(3), stringRef(4));
+  node->propertyTypeToken = loc(3);
   node->commaToken = loc(2);
   node->identifierToken = loc(4);
   sym(1).Node = node;
