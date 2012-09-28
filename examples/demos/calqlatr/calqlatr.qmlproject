@@ -1,7 +1,7 @@
 import QmlProject 1.1
 
 Project {
-    mainFile: "samegame.qml"
+    mainFile: "calqlatr.qml"
 
     /* Include .qml, .js, and image files from current directory and subdirectories */
     QmlFiles {
