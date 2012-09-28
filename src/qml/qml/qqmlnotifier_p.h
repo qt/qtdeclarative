@@ -189,13 +189,17 @@ void QQmlNotifierEndpoint::connect(QQmlNotifier *notifier)
 
 void QQmlNotifierEndpoint::disconnect()
 {
+    // Remove from notifier chain before calling disconnectNotify(), so that that
+    // QObject::receivers() returns the correct value in there
+    if (next) next->prev = prev;
+    if (prev) *prev = next;
+
     if (sourceSignal != -1) {
         QObject * const obj = senderAsObject();
         QObjectPrivate * const priv = QObjectPrivate::get(obj);
         priv->disconnectNotify(QMetaObjectPrivate::signal(obj->metaObject(), sourceSignal));
     }
-    if (next) next->prev = prev;
-    if (prev) *prev = next;
+
     if (isNotifying()) *((intptr_t *)(senderPtr & ~0x1)) = 0;
     next = 0;
     prev = 0;

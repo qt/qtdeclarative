@@ -120,6 +120,7 @@ protected:
         if (signal.name() == "scriptBindingPropChanged") scriptBindingPropConnections++;
         if (signal.name() == "boundSignal")   boundSignalConnections++;
         if (signal.name() == "unusedSignal") unusedSignalConnections++;
+        verifyReceiverCount();
         //qDebug() << Q_FUNC_INFO << this << signal.name();
     }
 
@@ -133,6 +134,7 @@ protected:
         if (signal.name() == "scriptBindingPropChanged") scriptBindingPropConnections--;
         if (signal.name() == "boundSignal")   boundSignalConnections--;
         if (signal.name() == "unusedSignal") unusedSignalConnections--;
+        verifyReceiverCount();
         //qDebug() << Q_FUNC_INFO << this << signal.methodSignature();
     }
 
