@@ -83,6 +83,30 @@ private:
         _callsToLink.append(ctl);
     }
 
+    template <typename Arg1>
+    void callHelper(FunctionPtr function, Arg1 arg1) {
+        push(arg1);
+        callAbsolute(function);
+        add32(TrustedImm32(1 * sizeof(void*)), StackPointerRegister);
+    }
+
+    template <typename Arg1, typename Arg2>
+    void callHelper(FunctionPtr function, Arg1 arg1, Arg2 arg2) {
+        push(arg2);
+        push(arg1);
+        callAbsolute(function);
+        add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
+    }
+
+    template <typename Arg1, typename Arg2, typename Arg3>
+    void callHelper(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3) {
+        push(arg3);
+        push(arg2);
+        push(arg1);
+        callAbsolute(function);
+        add32(TrustedImm32(3 * sizeof(void*)), StackPointerRegister);
+    }
+
     struct CallToLink {
         Call call;
         FunctionPtr externalFunction;

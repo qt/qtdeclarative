@@ -181,16 +181,10 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-        Address addr = loadTempAddress(Gpr0, t);
-        add32(TrustedImm32(addr.offset), addr.base, Gpr0);
-        push(Gpr0);
-
+        Address addr = loadTempAddress(Gpr1, t);
+        add32(TrustedImm32(addr.offset), addr.base, Gpr1);
         add32(TrustedImm32(offsetof(Context, result)), ContextRegister, Gpr0);
-        push(Gpr0);
-
-        callAbsolute(__qmljs_copy);
-
-        add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
+        callHelper(__qmljs_copy, Gpr1, Gpr0);
         return;
     }
     Q_UNIMPLEMENTED();
