@@ -12,7 +12,7 @@
 namespace QQmlJS {
 namespace MASM {
 
-class InstructionSelection: protected IR::StmtVisitor
+class InstructionSelection: protected IR::StmtVisitor, public JSC::MacroAssembler
 {
 public:
     InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module, uchar *code);
@@ -21,6 +21,50 @@ public:
     void operator()(IR::Function *function);
 
 protected:
+#if CPU(X86)
+    static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
+    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID ContextRegister = JSC::X86Registers::esi;
+    static const RegisterID Gpr0 = JSC::X86Registers::eax;
+    static const RegisterID Gpr1 = JSC::X86Registers::ecx;
+    static const RegisterID Gpr2 = JSC::X86Registers::edx;
+    static const RegisterID Gpr3 = JSC::X86Registers::edi;
+    static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
+#else
+#error Argh.
+#endif
+
+#if CPU(X86) || CPU(X86_64)
+    void enterStandardStackFrame()
+    {
+        push(StackFrameRegister);
+        move(StackPointerRegister, StackFrameRegister);
+    }
+    void leaveStandardStackFrame()
+    {
+        pop(StackFrameRegister);
+    }
+#else
+#error Argh.
+#endif
+
+    Address addressForArgument(int index) const
+    {
+        // ### CPU specific: on x86/x86_64 we need +2 to jump over ebp and the return address
+        // on the stack. Maybe same on arm if we save lr on stack on enter.
+        return Address(StackFrameRegister, (index + 2) * sizeof(void*));
+    }
+
+    int stackOffsetForLocal(int index) const
+    {
+        return -(index + 1) * sizeof(void*);
+    }
+
+    Address addressForLocal(int index) const
+    {
+        return Address(StackFrameRegister, stackOffsetForLocal(index));
+    }
+
     VM::String *identifier(const QString &s);
     void loadTempAddress(int reg, IR::Temp *t);
     void callActivationProperty(IR::Call *call, IR::Temp *result);
@@ -40,6 +84,20 @@ protected:
     virtual void visitRet(IR::Ret *);
 
 private:
+    typedef JSC::FunctionPtr FunctionPtr;
+
+    void callAbsolute(FunctionPtr function) {
+        CallToLink ctl;
+        ctl.call = call();
+        ctl.externalFunction = function;
+        _callsToLink.append(ctl);
+    }
+
+    struct CallToLink {
+        Call call;
+        FunctionPtr externalFunction;
+    };
+
     VM::ExecutionEngine *_engine;
     IR::Module *_module;
     IR::Function *_function;
@@ -49,7 +107,7 @@ private:
     uchar *_codePtr;
     QHash<IR::BasicBlock *, QVector<uchar *> > _patches;
     QHash<IR::BasicBlock *, uchar *> _addrs;
-    JSC::MacroAssembler _assembler;
+    QList<CallToLink> _callsToLink;
 };
 
 } // end of namespace MASM

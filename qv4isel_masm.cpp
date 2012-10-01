@@ -38,11 +38,40 @@ InstructionSelection::~InstructionSelection()
 
 void InstructionSelection::operator()(IR::Function *function)
 {
-    _assembler.ret();
+    qSwap(_function, function);
+
+    enterStandardStackFrame();
+
+    int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) * sizeof(Value);
+    locals = (locals + 15) & ~15;
+    sub32(TrustedImm32(locals), StackPointerRegister);
+
+    push(ContextRegister);
+    loadPtr(addressForArgument(0), ContextRegister);
+
+    foreach (IR::BasicBlock *block, _function->basicBlocks) {
+        _block = block;
+    //    _addrs[block] = _codePtr;
+        foreach (IR::Stmt *s, block->statements) {
+            s->accept(this);
+        }
+    }
+
+    pop(ContextRegister);
+
+    add32(TrustedImm32(locals), StackPointerRegister);
+
+    leaveStandardStackFrame();
+    ret();
+
     JSC::JSGlobalData dummy;
-    JSC::LinkBuffer linkBuffer(dummy, &_assembler, 0);
-    function->codeRef = linkBuffer.finalizeCodeWithDisassembly("operator()(IR::Function*)");
-    function->code = (void (*)(VM::Context *, const uchar *)) function->codeRef.code().executableAddress();
+    JSC::LinkBuffer linkBuffer(dummy, this, 0);
+    foreach (CallToLink ctl, _callsToLink)
+        linkBuffer.link(ctl.call, ctl.externalFunction);
+    _function->codeRef = linkBuffer.finalizeCodeWithDisassembly("operator()(IR::Function*)");
+    _function->code = (void (*)(VM::Context *, const uchar *)) _function->codeRef.code().executableAddress();
+
+    qSwap(_function, function);
 }
 
 String *InstructionSelection::identifier(const QString &s)
@@ -103,6 +132,20 @@ void InstructionSelection::visitLeave(IR::Leave *)
 
 void InstructionSelection::visitMove(IR::Move *s)
 {
+    if (s->op == IR::OpInvalid) {
+        if (IR::Temp *t = s->target->asTemp()) {
+            if (IR::Const *c = s->source->asConst()) {
+                Address dest = addressForLocal(t->index);
+                switch (c->type) {
+                case IR::NumberType:
+                    // ### Taking address of pointer inside IR.
+                    loadDouble(&c->value, FPGpr0);
+                    storeDouble(FPGpr0, dest);
+                    break;
+                }
+            }
+        }
+    }
     Q_UNIMPLEMENTED();
     s->dump(qout, IR::Stmt::MIR);
     qout << endl;
@@ -121,6 +164,18 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
 void InstructionSelection::visitRet(IR::Ret *s)
 {
+    if (IR::Temp *t = s->expr->asTemp()) {
+        add32(TrustedImm32(stackOffsetForLocal(t->index)), StackFrameRegister, Gpr0);
+        push(Gpr0);
+
+        add32(TrustedImm32(offsetof(Context, result)), ContextRegister, Gpr0);
+        push(Gpr0);
+
+        callAbsolute(__qmljs_copy);
+
+        add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
+        return;
+    }
     Q_UNIMPLEMENTED();
     Q_UNUSED(s);
 }
