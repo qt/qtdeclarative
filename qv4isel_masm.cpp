@@ -149,7 +149,20 @@ void InstructionSelection::visitMove(IR::Move *s)
 {
     if (s->op == IR::OpInvalid) {
         if (IR::Temp *t = s->target->asTemp()) {
-            if (IR::Const *c = s->source->asConst()) {
+            if (IR::Name *n = s->source->asName()) {
+                Address temp = loadTempAddress(Gpr0, t);
+                add32(TrustedImm32(temp.offset), temp.base, Gpr0);
+
+                if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
+                    callRuntimeMethod(__qmljs_get_thisObject, Gpr0);
+                } else {
+                    String *propertyName = identifier(*n->id);
+                    move(TrustedImmPtr(propertyName), Gpr1);
+                    callRuntimeMethod(__qmljs_get_activation_property, Gpr0, Gpr1);
+                    checkExceptions();
+                }
+                return;
+            } else if (IR::Const *c = s->source->asConst()) {
                 Address dest = loadTempAddress(Gpr0, t);
                 switch (c->type) {
                 case IR::NullType:
@@ -170,6 +183,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     Q_UNIMPLEMENTED();
                     assert(!"TODO");
                 }
+                return;
             }
         }
     }

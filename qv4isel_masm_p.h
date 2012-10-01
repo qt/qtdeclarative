@@ -108,6 +108,19 @@ private:
         add32(TrustedImm32(3 * sizeof(void*)), StackPointerRegister);
     }
 
+    template <typename Arg1>
+    void callRuntimeMethod(FunctionPtr function, Arg1 arg1)
+    {
+        callHelper(function, ContextRegister, arg1);
+    }
+
+    template <typename Arg1, typename Arg2>
+    void callRuntimeMethod(FunctionPtr function, Arg1 arg1, Arg2 arg2)
+    {
+        callHelper(function, ContextRegister, arg1, arg2);
+    }
+
+
     struct CallToLink {
         Call call;
         FunctionPtr externalFunction;
