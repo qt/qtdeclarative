@@ -81,7 +81,6 @@ String *InstructionSelection::identifier(const QString &s)
 
 JSC::MacroAssembler::Address InstructionSelection::loadTempAddress(RegisterID reg, IR::Temp *t)
 {
-    fprintf(stderr, "loadtempAddress %d -- locals %d\n", t->index, _function->locals.size());
     int32_t offset = 0;
     if (t->index < 0) {
         const int arg = -t->index - 1;
