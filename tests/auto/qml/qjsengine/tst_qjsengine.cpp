@@ -295,13 +295,16 @@ void tst_QJSEngine::newRegExp()
     QVERIFY(!rexp.isUndefined());
     QCOMPARE(rexp.isRegExp(), true);
     QCOMPARE(rexp.isObject(), true);
-    QEXPECT_FAIL("", "QTBUG-27169", Continue);
-    QVERIFY(rexp.isCallable()); // in JSC, RegExp objects are callable
+    QCOMPARE(rexp.isCallable(), false);
     // prototype should be RegExp.prototype
     QVERIFY(!rexp.prototype().isUndefined());
     QCOMPARE(rexp.prototype().isObject(), true);
-    QEXPECT_FAIL("", "QTBUG-27169", Continue);
-    QCOMPARE(rexp.prototype().isRegExp(), false);
+    QCOMPARE(rexp.prototype().isRegExp(), true);
+    // Get [[Class]] internal property of RegExp Prototype Object.
+    // See ECMA-262 Section 8.6.2, "Object Internal Properties and Methods".
+    // See ECMA-262 Section 15.10.6, "Properties of the RegExp Prototype Object".
+    QJSValue r = eng.evaluate("Object.prototype.toString.call(RegExp.prototype)");
+    QCOMPARE(r.toString(), QString::fromLatin1("[object RegExp]"));
     QCOMPARE(rexp.prototype().strictlyEquals(eng.evaluate("RegExp.prototype")), true);
 
     QCOMPARE(qjsvalue_cast<QRegExp>(rexp).pattern(), QRegExp("foo").pattern());
@@ -340,23 +343,18 @@ void tst_QJSEngine::jsRegExp()
     // This is different from SpiderMonkey and old back-end.
     QVERIFY(!r5.strictlyEquals(r));
 
+    // See ECMA-262 Section 15.10.4.1, "new RegExp(pattern, flags)".
     QJSValue r6 = rxCtor.callAsConstructor(QJSValueList() << "foo" << "bar");
     QVERIFY(r6.isError());
-    // QVERIFY(r6.toString().contains(QString::fromLatin1("SyntaxError"))); // Invalid regular expression flag
-
+    QVERIFY(r6.toString().contains(QString::fromLatin1("SyntaxError"))); // Invalid regular expression flag
 
     QJSValue r7 = eng.evaluate("/foo/gimp");
-    /*  v8 and jsc ignores invalid flags
     QVERIFY(r7.isError());
     QVERIFY(r7.toString().contains(QString::fromLatin1("SyntaxError"))); // Invalid regular expression flag
-    */
 
-    // JSC doesn't complain about duplicate flags.
     QJSValue r8 = eng.evaluate("/foo/migmigmig");
-    QEXPECT_FAIL("", "QTBUG-27169", Continue);
-    QVERIFY(r8.isRegExp());
-    QEXPECT_FAIL("", "QTBUG-27169", Continue);
-    QCOMPARE(r8.toString(), QString::fromLatin1("/foo/gim"));
+    QVERIFY(r8.isError());
+    QVERIFY(r8.toString().contains(QString::fromLatin1("SyntaxError"))); // Invalid regular expression flag
 
     QJSValue r9 = rxCtor.callAsConstructor();
     QVERIFY(r9.isRegExp());
@@ -2622,8 +2620,7 @@ void tst_QJSEngine::qRegExpInport()
     rexp = eng.toScriptValue(rx);
 
     QCOMPARE(rexp.isRegExp(), true);
-    QEXPECT_FAIL("", "QTBUG-27169", Continue);
-    QVERIFY(rexp.isCallable());
+    QCOMPARE(rexp.isCallable(), false);
 
     QJSValue func = eng.evaluate("(function(string, regexp) { return string.match(regexp); })");
     QJSValue result = func.call(QJSValueList() << string << rexp);
