@@ -79,8 +79,24 @@ String *InstructionSelection::identifier(const QString &s)
     return _engine->identifier(s);
 }
 
-void InstructionSelection::loadTempAddress(int reg, IR::Temp *t)
+JSC::MacroAssembler::Address InstructionSelection::loadTempAddress(RegisterID reg, IR::Temp *t)
 {
+    fprintf(stderr, "loadtempAddress %d -- locals %d\n", t->index, _function->locals.size());
+    int32_t offset = 0;
+    if (t->index < 0) {
+        const int arg = -t->index - 1;
+        loadPtr(Address(ContextRegister, offsetof(Context, arguments)), reg);
+        offset = arg * sizeof(Value);
+    } else if (t->index < _function->locals.size()) {
+        loadPtr(Address(ContextRegister, offsetof(Context, locals)), reg);
+        offset = t->index * sizeof(Value);
+    } else {
+        const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size();
+        offset = sizeof(Value) * (-arg)
+                 - sizeof(void*); // size of ebp
+        reg = StackFrameRegister;
+    }
+    return Address(reg, offset);
 }
 
 void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *result)
@@ -135,7 +151,7 @@ void InstructionSelection::visitMove(IR::Move *s)
     if (s->op == IR::OpInvalid) {
         if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Const *c = s->source->asConst()) {
-                Address dest = addressForLocal(t->index);
+                Address dest = loadTempAddress(Gpr0, t);
                 switch (c->type) {
                 case IR::NumberType:
                     // ### Taking address of pointer inside IR.
@@ -165,7 +181,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-        add32(TrustedImm32(stackOffsetForLocal(t->index)), StackFrameRegister, Gpr0);
+        Address addr = loadTempAddress(Gpr0, t);
+        add32(TrustedImm32(addr.offset), addr.base, Gpr0);
         push(Gpr0);
 
         add32(TrustedImm32(offsetof(Context, result)), ContextRegister, Gpr0);

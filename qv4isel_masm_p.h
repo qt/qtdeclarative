@@ -55,18 +55,8 @@ protected:
         return Address(StackFrameRegister, (index + 2) * sizeof(void*));
     }
 
-    int stackOffsetForLocal(int index) const
-    {
-        return -(index + 1) * sizeof(void*);
-    }
-
-    Address addressForLocal(int index) const
-    {
-        return Address(StackFrameRegister, stackOffsetForLocal(index));
-    }
-
     VM::String *identifier(const QString &s);
-    void loadTempAddress(int reg, IR::Temp *t);
+    Address loadTempAddress(RegisterID reg, IR::Temp *t);
     void callActivationProperty(IR::Call *call, IR::Temp *result);
     void callProperty(IR::Call *call, IR::Temp *result);
     void constructActivationProperty(IR::New *call, IR::Temp *result);
