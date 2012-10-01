@@ -168,6 +168,7 @@ class UiProgram;
 class UiImportList;
 class UiImport;
 class UiPublicMember;
+class UiParameterList;
 class UiObjectDefinition;
 class UiObjectInitializer;
 class UiObjectBinding;

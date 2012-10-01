@@ -2402,7 +2402,7 @@ public:
         previous->next = this;
     }
 
-    virtual void accept0(Visitor *) {}
+    virtual void accept0(Visitor *);
 
     virtual SourceLocation firstSourceLocation() const
     { return propertyTypeToken; }
