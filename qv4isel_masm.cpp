@@ -152,11 +152,23 @@ void InstructionSelection::visitMove(IR::Move *s)
             if (IR::Const *c = s->source->asConst()) {
                 Address dest = loadTempAddress(Gpr0, t);
                 switch (c->type) {
+                case IR::NullType:
+                    storeValue<Value::Null_Type>(TrustedImm32(0), dest);
+                    break;
+                case IR::UndefinedType:
+                    storeValue<Value::Undefined_Type>(TrustedImm32(0), dest);
+                    break;
+                case IR::BoolType:
+                    storeValue<Value::Boolean_Type>(TrustedImm32(c->value != 0), dest);
+                    break;
                 case IR::NumberType:
                     // ### Taking address of pointer inside IR.
                     loadDouble(&c->value, FPGpr0);
                     storeDouble(FPGpr0, dest);
                     break;
+                default:
+                    Q_UNIMPLEMENTED();
+                    assert(!"TODO");
                 }
             }
         }

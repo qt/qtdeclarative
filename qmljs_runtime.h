@@ -537,6 +537,21 @@ inline Value ValueBase<8>::fromObject(Object *o)
     return v;
 }
 
+template <Value::ValueType> struct ValueOffsetHelper;
+template <> struct ValueOffsetHelper<Value::Boolean_Type>
+{
+    enum { Offset = offsetof(ValueData, b) };
+};
+
+template <> struct ValueOffsetHelper<Value::Undefined_Type>
+{
+    enum { Offset = offsetof(ValueData, uint_32) };
+};
+
+template <> struct ValueOffsetHelper<Value::Null_Type>
+{
+    enum { Offset = offsetof(ValueData, uint_32) };
+};
 
 struct Context {
     ExecutionEngine *engine;

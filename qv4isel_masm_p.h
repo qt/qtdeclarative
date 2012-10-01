@@ -3,6 +3,7 @@
 
 #include "qv4ir_p.h"
 #include "qmljs_objects.h"
+#include "qmljs_runtime.h"
 
 #include <QtCore/QHash>
 #include <config.h>
@@ -111,6 +112,16 @@ private:
         Call call;
         FunctionPtr externalFunction;
     };
+
+    template <VM::Value::ValueType type>
+    void storeValue(TrustedImm32 value, Address destination)
+    {
+        destination.offset += offsetof(VM::ValueData, tag);
+        store32(TrustedImm32(type), destination);
+        destination.offset -= offsetof(VM::ValueData, tag);
+        destination.offset += VM::ValueOffsetHelper<type>::Offset;
+        store32(value, destination);
+    }
 
     VM::ExecutionEngine *_engine;
     IR::Module *_module;
