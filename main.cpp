@@ -227,9 +227,10 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
                 foreach (IR::Function *function, module.functions)
                     isel(function);
             } else {
-                MASM::InstructionSelection isel(vm, &module, code);
-                foreach (IR::Function *function, module.functions)
+                foreach (IR::Function *function, module.functions) {
+                    MASM::InstructionSelection isel(vm, &module, code);
                     isel(function);
+                }
 
                 if (! protect(code, codeSize))
                     Q_UNREACHABLE();
