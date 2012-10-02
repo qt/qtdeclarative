@@ -110,6 +110,70 @@ JSC::MacroAssembler::Address InstructionSelection::loadTempAddress(RegisterID re
 
 void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *result)
 {
+    IR::Name *baseName = call->base->asName();
+    assert(baseName != 0);
+
+    int argc = 0;
+    for (IR::ExprList *it = call->args; it; it = it->next) {
+        ++argc;
+    }
+
+    int i = 0;
+    for (IR::ExprList *it = call->args; it; it = it->next, ++i) {
+        IR::Temp *arg = it->expr->asTemp();
+        assert(arg != 0);
+
+        Address tempAddress = loadTempAddress(Gpr0, arg);
+        FunctionCall fc(this);
+        fc.addArgumentAsAddress(argumentAddressForCall(i));
+        fc.addArgumentAsAddress(tempAddress);
+        fc.call(__qmljs_copy);
+    }
+
+    FunctionCall activationCall(this);
+
+    activationCall.addArgumentFromRegister(ContextRegister);
+
+    if (result) {
+        activationCall.addArgumentAsAddress(loadTempAddress(Gpr0, result));
+    } else {
+        xor32(Gpr0, Gpr0);
+        activationCall.addArgumentFromRegister(Gpr0);
+    }
+
+    if (baseName->id) {
+        move(TrustedImmPtr(identifier(*baseName->id)), Gpr1);
+        activationCall.addArgumentFromRegister(Gpr1);
+        activationCall.addArgumentAsAddress(baseAddressForCallArguments());
+        activationCall.addArgumentByValue(TrustedImm32(argc));
+        activationCall.call(__qmljs_call_activation_property);
+    } else {
+        switch (baseName->builtin) {
+        case IR::Name::builtin_invalid:
+            Q_UNREACHABLE();
+            break;
+        case IR::Name::builtin_typeof:
+            activationCall.addArgumentAsAddress(baseAddressForCallArguments());
+            activationCall.addArgumentByValue(TrustedImm32(argc));
+            activationCall.call(__qmljs_builtin_typeof);
+            break;
+        case IR::Name::builtin_delete:
+            Q_UNREACHABLE();
+            break;
+        case IR::Name::builtin_throw:
+            activationCall.addArgumentAsAddress(baseAddressForCallArguments());
+            activationCall.addArgumentByValue(TrustedImm32(argc));
+            activationCall.call(__qmljs_builtin_throw);
+            break;
+        case IR::Name::builtin_rethrow:
+            activationCall.addArgumentAsAddress(baseAddressForCallArguments());
+            activationCall.addArgumentByValue(TrustedImm32(argc));
+            activationCall.call(__qmljs_builtin_rethrow);
+            return; // we need to return to avoid checking the exceptions
+        }
+    }
+
+    checkExceptions();
 }
 
 
@@ -135,6 +199,9 @@ void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
 
 void InstructionSelection::checkExceptions()
 {
+    Address addr(ContextRegister, offsetof(Context, hasUncaughtException));
+    Jump jmp = branch8(Equal, addr, TrustedImm32(1));
+    _patches[_function->handlersBlock].append(jmp);
 }
 
 void InstructionSelection::visitExp(IR::Exp *s)
@@ -158,7 +225,22 @@ void InstructionSelection::visitLeave(IR::Leave *)
 void InstructionSelection::visitMove(IR::Move *s)
 {
     if (s->op == IR::OpInvalid) {
-        if (IR::Temp *t = s->target->asTemp()) {
+        if (IR::Name *n = s->target->asName()) {
+            String *propertyName = identifier(*n->id);
+
+            if (IR::Temp *t = s->source->asTemp()) {
+                FunctionCall fct(this);
+                fct.addArgumentFromRegister(ContextRegister);
+                move(TrustedImmPtr(propertyName), Gpr1);
+                fct.addArgumentFromRegister(Gpr1);
+                fct.addArgumentAsAddress(loadTempAddress(Gpr2, t));
+                fct.call(__qmljs_set_activation_property);
+                checkExceptions();
+                return;
+            } else {
+                Q_UNREACHABLE();
+            }
+        } else if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
                 Address temp = loadTempAddress(Gpr0, t);
 
@@ -198,6 +280,25 @@ void InstructionSelection::visitMove(IR::Move *s)
                     assert(!"TODO");
                 }
                 return;
+            } else if (IR::Closure *clos = s->source->asClosure()) {
+                FunctionCall fct(this);
+                fct.addArgumentFromRegister(ContextRegister);
+                fct.addArgumentAsAddress(loadTempAddress(Gpr0, t));
+                move(TrustedImmPtr(clos->value), Gpr1);
+                fct.addArgumentFromRegister(Gpr1);
+                fct.call(__qmljs_init_closure);
+                return;
+            } else if (IR::Call *c = s->source->asCall()) {
+                if (c->base->asName()) {
+                    callActivationProperty(c, t);
+                    return;
+                } else if (c->base->asMember()) {
+                    callProperty(c, t);
+                    return;
+                } else if (c->base->asTemp()) {
+                    callValue(c, t);
+                    return;
+                }
             }
         }
     }

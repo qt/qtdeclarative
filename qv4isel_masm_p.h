@@ -29,7 +29,6 @@ protected:
     static const RegisterID Gpr0 = JSC::X86Registers::eax;
     static const RegisterID Gpr1 = JSC::X86Registers::ecx;
     static const RegisterID Gpr2 = JSC::X86Registers::edx;
-    static const RegisterID Gpr3 = JSC::X86Registers::edi;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 #else
 #error Argh.
@@ -54,6 +53,19 @@ protected:
         // ### CPU specific: on x86/x86_64 we need +2 to jump over ebp and the return address
         // on the stack. Maybe same on arm if we save lr on stack on enter.
         return Address(StackFrameRegister, (index + 2) * sizeof(void*));
+    }
+
+    // Some run-time functions take (Value* args, int argc). This function is for populating
+    // the args.
+    static Address argumentAddressForCall(int argument)
+    {
+        return Address(StackFrameRegister, sizeof(VM::Value) * (-argument)
+                                          - sizeof(void*) // size
+                       );
+    }
+    static Address baseAddressForCallArguments()
+    {
+        return argumentAddressForCall(0);
     }
 
     VM::String *identifier(const QString &s);
@@ -109,6 +121,12 @@ private:
             arg.setAddress(address);
             arguments << arg;
         }
+        void addArgumentByValue(TrustedImm32 value)
+        {
+            Argument arg;
+            arg.setValue(value);
+            arguments << arg;
+        }
 
         void call(FunctionPtr function)
         {
@@ -141,12 +159,18 @@ private:
                 this->address = address;
                 type = Address;
             }
+            void setValue(TrustedImm32 value)
+            {
+                this->value = value;
+                type = Value;
+            }
 
             void push(JSC::MacroAssembler* assembler, RegisterID scratchRegister) const
             {
                 switch (type) {
                     case None: break;
                     case Register: assembler->push(reg); break;
+                    case Value: assembler->push(value); break;
                     case MemoryValue: assembler->push(address); break;
                     case Address:
                         assembler->add32(TrustedImm32(address.offset), address.base, scratchRegister);
@@ -158,10 +182,12 @@ private:
             enum Type {
                 None,
                 Register,
+                Value,
                 MemoryValue,
                 Address
             } type;
             RegisterID reg;
+            TrustedImm32 value;
             JSC::MacroAssembler::Address address;
         };
         QList<Argument> arguments;
@@ -179,6 +205,7 @@ private:
         destination.offset += offsetof(VM::ValueData, tag);
         store32(TrustedImm32(type), destination);
         destination.offset -= offsetof(VM::ValueData, tag);
+        // ### Rename ::Ofset to ::DataOffset
         destination.offset += VM::ValueOffsetHelper<type>::Offset;
         store32(value, destination);
     }
