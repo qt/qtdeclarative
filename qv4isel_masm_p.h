@@ -143,8 +143,8 @@ private:
     uchar *_buffer;
     uchar *_code;
     uchar *_codePtr;
-    QHash<IR::BasicBlock *, QVector<uchar *> > _patches;
-    QHash<IR::BasicBlock *, uchar *> _addrs;
+    QHash<IR::BasicBlock *, QVector<Jump> > _patches;
+    QHash<IR::BasicBlock *, Label> _addrs;
     QList<CallToLink> _callsToLink;
 };
 

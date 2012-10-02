@@ -51,7 +51,7 @@ void InstructionSelection::operator()(IR::Function *function)
 
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
         _block = block;
-    //    _addrs[block] = _codePtr;
+        _addrs[block] = label();
         foreach (IR::Stmt *s, block->statements) {
             s->accept(this);
         }
@@ -63,6 +63,16 @@ void InstructionSelection::operator()(IR::Function *function)
 
     leaveStandardStackFrame();
     ret();
+
+    QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
+    while (it.hasNext()) {
+        it.next();
+        IR::BasicBlock *block = it.key();
+        Label target = _addrs.value(block);
+        assert(target.isSet());
+        foreach (Jump jump, it.value())
+            jump.linkTo(target, this);
+    }
 
     JSC::JSGlobalData dummy;
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
@@ -195,6 +205,8 @@ void InstructionSelection::visitMove(IR::Move *s)
 
 void InstructionSelection::visitJump(IR::Jump *s)
 {
+    if (_block->index + 1 != s->target->index)
+        _patches[s->target].append(jump());
 }
 
 void InstructionSelection::visitCJump(IR::CJump *s)
