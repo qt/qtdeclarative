@@ -101,7 +101,7 @@ JSC::MacroAssembler::Address InstructionSelection::loadTempAddress(RegisterID re
         offset = t->index * sizeof(Value);
     } else {
         const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size();
-        offset = sizeof(Value) * (-arg)
+        offset = sizeof(Value) * (-arg - 1)
                  - sizeof(void*); // size of ebp
         reg = StackFrameRegister;
     }
