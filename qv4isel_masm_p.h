@@ -84,42 +84,89 @@ private:
         _callsToLink.append(ctl);
     }
 
-    template <typename Arg1>
-    void callHelper(FunctionPtr function, Arg1 arg1) {
-        push(arg1);
-        callAbsolute(function);
-        add32(TrustedImm32(1 * sizeof(void*)), StackPointerRegister);
-    }
-
-    template <typename Arg1, typename Arg2>
-    void callHelper(FunctionPtr function, Arg1 arg1, Arg2 arg2) {
-        push(arg2);
-        push(arg1);
-        callAbsolute(function);
-        add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
-    }
-
-    template <typename Arg1, typename Arg2, typename Arg3>
-    void callHelper(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        push(arg3);
-        push(arg2);
-        push(arg1);
-        callAbsolute(function);
-        add32(TrustedImm32(3 * sizeof(void*)), StackPointerRegister);
-    }
-
-    template <typename Arg1>
-    void callRuntimeMethod(FunctionPtr function, Arg1 arg1)
+    class FunctionCall
     {
-        callHelper(function, ContextRegister, arg1);
-    }
+    public:
+        FunctionCall(InstructionSelection* selection)
+            : isel(selection)
+        {}
 
-    template <typename Arg1, typename Arg2>
-    void callRuntimeMethod(FunctionPtr function, Arg1 arg1, Arg2 arg2)
-    {
-        callHelper(function, ContextRegister, arg1, arg2);
-    }
+        void addArgumentFromRegister(RegisterID reg)
+        {
+            Argument arg;
+            arg.setRegister(reg);
+            arguments << arg;
+        }
+        void addArgumentFromMemory(const Address& address)
+        {
+            Argument arg;
+            arg.setMemoryValue(address);
+            arguments << arg;
+        }
+        void addArgumentAsAddress(const Address& address)
+        {
+            Argument arg;
+            arg.setAddress(address);
+            arguments << arg;
+        }
 
+        void call(FunctionPtr function)
+        {
+            for (int i = arguments.count() - 1; i >= 0; --i)
+                arguments.at(i).push(isel, /*scratch register*/ Gpr0);
+            isel->callAbsolute(function);
+            isel->add32(TrustedImm32(arguments.count() * sizeof(void*)), StackPointerRegister);
+        }
+
+    private:
+        class Argument {
+        public:
+            Argument()
+                : type(None)
+                , address(InstructionSelection::Gpr0, 0)
+            {}
+
+            void setRegister(RegisterID regi)
+            {
+                reg = regi;
+                type = Register;
+            }
+            void setMemoryValue(const Address& address)
+            {
+                this->address = address;
+                type = MemoryValue;
+            }
+            void setAddress(const Address& address)
+            {
+                this->address = address;
+                type = Address;
+            }
+
+            void push(JSC::MacroAssembler* assembler, RegisterID scratchRegister) const
+            {
+                switch (type) {
+                    case None: break;
+                    case Register: assembler->push(reg); break;
+                    case MemoryValue: assembler->push(address); break;
+                    case Address:
+                        assembler->add32(TrustedImm32(address.offset), address.base, scratchRegister);
+                        assembler->push(scratchRegister);
+                        break;
+                }
+            }
+        private:
+            enum Type {
+                None,
+                Register,
+                MemoryValue,
+                Address
+            } type;
+            RegisterID reg;
+            JSC::MacroAssembler::Address address;
+        };
+        QList<Argument> arguments;
+        InstructionSelection* isel;
+    };
 
     struct CallToLink {
         Call call;

@@ -161,14 +161,18 @@ void InstructionSelection::visitMove(IR::Move *s)
         if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
                 Address temp = loadTempAddress(Gpr0, t);
-                add32(TrustedImm32(temp.offset), temp.base, Gpr0);
+
+                FunctionCall fc(this);
+                fc.addArgumentFromRegister(ContextRegister);
+                fc.addArgumentAsAddress(temp);
 
                 if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
-                    callRuntimeMethod(__qmljs_get_thisObject, Gpr0);
+                    fc.call(__qmljs_get_thisObject);
                 } else {
                     String *propertyName = identifier(*n->id);
                     move(TrustedImmPtr(propertyName), Gpr1);
-                    callRuntimeMethod(__qmljs_get_activation_property, Gpr0, Gpr1);
+                    fc.addArgumentFromRegister(Gpr1);
+                    fc.call(__qmljs_get_activation_property);
                     checkExceptions();
                 }
                 return;
@@ -218,10 +222,13 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-        Address addr = loadTempAddress(Gpr0, t);
-        add32(TrustedImm32(addr.offset), addr.base, Gpr0);
-        add32(TrustedImm32(offsetof(Context, result)), ContextRegister, Gpr1);
-        callHelper(__qmljs_copy, Gpr1, Gpr0);
+        Address source = loadTempAddress(Gpr0, t);
+        Address result = Address(ContextRegister, offsetof(Context, result));
+
+        FunctionCall fc(this);
+        fc.addArgumentAsAddress(result);
+        fc.addArgumentAsAddress(source);
+        fc.call(__qmljs_copy);
         return;
     }
     Q_UNIMPLEMENTED();
