@@ -205,8 +205,7 @@ private:
         destination.offset += offsetof(VM::ValueData, tag);
         store32(TrustedImm32(type), destination);
         destination.offset -= offsetof(VM::ValueData, tag);
-        // ### Rename ::Ofset to ::DataOffset
-        destination.offset += VM::ValueOffsetHelper<type>::Offset;
+        destination.offset += VM::ValueOffsetHelper<type>::DataOffset;
         store32(value, destination);
     }
 
