@@ -37,13 +37,30 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include <QDir>
 #include <QGuiApplication>
 #include <QQuickView>
 #define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
 {\
     QGuiApplication app(argc,argv);\
     QQuickView view;\
-    view.setSource(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + QLatin1String("/" #NAME ".qml")));\
+    QDir directory(QCoreApplication::applicationDirPath());\
+    if (QGuiApplication::platformName() == QLatin1String("windows")) {\
+        if (directory.absolutePath().endsWith("/debug", Qt::CaseInsensitive)\
+            || directory.absolutePath().endsWith("/release", Qt::CaseInsensitive))\
+            if (!directory.cdUp())\
+                exit(-1);\
+    } else if (QGuiApplication::platformName() == QLatin1String("Cocoa")) {\
+        if (directory.absolutePath().endsWith(#NAME".app/Contents/MacOS"))\
+            for (int i = 0; i < 3; ++i) {\
+                if (!directory.cdUp())\
+                    exit(-1);\
+            }\
+    }\
+    const QString fileName(directory.absolutePath() + "/" #NAME ".qml");\
+    if (!QFile::exists(fileName))\
+            exit(-1);\
+    view.setSource(QUrl::fromLocalFile(fileName));\
     view.show();\
     return app.exec();\
 }
