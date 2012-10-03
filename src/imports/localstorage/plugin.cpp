@@ -453,8 +453,10 @@ through the data.
 
 /*!
     \qmlmodule QtQuick.LocalStorage 2
-    \title QML Module QtQuick.LocalStorage 2.0
-    \brief Provides a JavaScript object singleton type for accessing a local SQLite database
+    \title Qt Quick Local Storage QML Types
+    \ingroup qmlmodules
+    \brief Provides a JavaScript object singleton type for accessing a local
+    SQLite database
 
     This is a singleton type for reading and writing to SQLite databases.
 

@@ -70,8 +70,9 @@ typedef QPair<int, int> QQuickXmlListRange;
 
 /*!
     \qmlmodule QtQuick.XmlListModel 2
-    \title QML Module QtQuick.XmlListModel 2.0
-    \brief Contains types for creating models from XML data
+    \title Qt Quick XmlListModel QML Types
+    \ingroup qmlmodules
+    \brief Provides QML types for creating models from XML data
 
     This QML module contains types for creating models from XML data.
 

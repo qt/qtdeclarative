@@ -47,8 +47,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlmodule QtQuick.Window 2
-    \title QML Module QtQuick.Window 2.0
-    \brief Contains types for window management
+    \title Qt Quick Window QML Types
+    \ingroup qmlmodules
+    \brief Provides QML types for window management
 
     This QML module contains types for creating top-level windows and accessing screen information.
 
