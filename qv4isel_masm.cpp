@@ -288,6 +288,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                 fc.addArgumentAsAddress(source);
                 fc.call(__qmljs_copy);
                 return;
+            } else if (IR::String *str = s->source->asString()) {
+                Q_UNIMPLEMENTED();
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 FunctionCall fct(this);
                 fct.addArgumentFromRegister(ContextRegister);
@@ -296,6 +298,16 @@ void InstructionSelection::visitMove(IR::Move *s)
                 fct.addArgumentFromRegister(Gpr1);
                 fct.call(__qmljs_init_closure);
                 return;
+            } else if (IR::New *ctor = s->source->asNew()) {
+                Q_UNIMPLEMENTED();
+            } else if (IR::Member *m = s->source->asMember()) {
+                Q_UNIMPLEMENTED();
+            } else if (IR::Subscript *ss = s->source->asSubscript()) {
+                Q_UNIMPLEMENTED();
+            } else if (IR::Unop *u = s->source->asUnop()) {
+                Q_UNIMPLEMENTED();
+            } else if (IR::Binop *b = s->source->asBinop()) {
+                Q_UNIMPLEMENTED();
             } else if (IR::Call *c = s->source->asCall()) {
                 if (c->base->asName()) {
                     callActivationProperty(c, t);
