@@ -287,6 +287,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 fc.addArgumentAsAddress(dest);
                 fc.addArgumentAsAddress(source);
                 fc.call(__qmljs_copy);
+                return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 FunctionCall fct(this);
                 fct.addArgumentFromRegister(ContextRegister);
@@ -307,7 +308,13 @@ void InstructionSelection::visitMove(IR::Move *s)
                     return;
                 }
             }
+        } else if (IR::Member *m = s->target->asMember()) {
+            Q_UNIMPLEMENTED();
+        } else if (IR::Subscript *ss = s->target->asSubscript()) {
+            Q_UNIMPLEMENTED();
         }
+    } else {
+        Q_UNIMPLEMENTED();
     }
     Q_UNIMPLEMENTED();
     s->dump(qout, IR::Stmt::MIR);
