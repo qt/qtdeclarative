@@ -123,7 +123,7 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         IR::Temp *arg = it->expr->asTemp();
         assert(arg != 0);
 
-        Address tempAddress = loadTempAddress(Gpr0, arg);
+        Address tempAddress = loadTempAddress(Gpr1, arg);
         FunctionCall fc(this);
         fc.addArgumentAsAddress(argumentAddressForCall(i));
         fc.addArgumentAsAddress(tempAddress);

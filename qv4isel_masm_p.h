@@ -58,13 +58,14 @@ protected:
 
     // Some run-time functions take (Value* args, int argc). This function is for populating
     // the args.
-    static Address argumentAddressForCall(int argument)
+    Address argumentAddressForCall(int argument)
     {
-        return Address(StackFrameRegister, sizeof(VM::Value) * (-argument)
-                                          - sizeof(void*) // size
+        const int index = _function->maxNumberOfArguments - argument;
+        return Address(StackFrameRegister, sizeof(VM::Value) * (-index)
+                                          - sizeof(void*) // size of ebp
                        );
     }
-    static Address baseAddressForCallArguments()
+    Address baseAddressForCallArguments()
     {
         return argumentAddressForCall(0);
     }
