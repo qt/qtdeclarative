@@ -280,6 +280,13 @@ void InstructionSelection::visitMove(IR::Move *s)
                     assert(!"TODO");
                 }
                 return;
+            } else if (IR::Temp *t2 = s->source->asTemp()) {
+                Address dest = loadTempAddress(Gpr1, t);
+                Address source = loadTempAddress(Gpr2, t2);
+                FunctionCall fc(this);
+                fc.addArgumentAsAddress(dest);
+                fc.addArgumentAsAddress(source);
+                fc.call(__qmljs_copy);
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 FunctionCall fct(this);
                 fct.addArgumentFromRegister(ContextRegister);
