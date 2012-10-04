@@ -362,6 +362,45 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
         jumpToBlock(s->iffalse);
         return;
+    } else if (IR::Binop *b = s->cond->asBinop()) {
+        IR::Temp *l = b->left->asTemp();
+        IR::Temp *r = b->right->asTemp();
+        if (l && r) {
+            Address lhs = loadTempAddress(Gpr1, l);
+            Address rhs = loadTempAddress(Gpr2, r);
+
+            bool (*op)(Context *, const Value *, const Value *);
+            switch (b->op) {
+            default: Q_UNREACHABLE(); assert(!"todo"); break;
+            case IR::OpGt: op = __qmljs_cmp_gt; break;
+            case IR::OpLt: op = __qmljs_cmp_lt; break;
+            case IR::OpGe: op = __qmljs_cmp_ge; break;
+            case IR::OpLe: op = __qmljs_cmp_le; break;
+            case IR::OpEqual: op = __qmljs_cmp_eq; break;
+            case IR::OpNotEqual: op = __qmljs_cmp_ne; break;
+            case IR::OpStrictEqual: op = __qmljs_cmp_se; break;
+            case IR::OpStrictNotEqual: op = __qmljs_cmp_sne; break;
+            case IR::OpInstanceof: op = __qmljs_cmp_instanceof; break;
+            case IR::OpIn: op = __qmljs_cmp_in; break;
+            } // switch
+
+            FunctionCall fct(this);
+            fct.addArgumentFromRegister(ContextRegister);
+            fct.addArgumentAsAddress(lhs);
+            fct.addArgumentAsAddress(rhs);
+            fct.call(op);
+            move(ReturnValueRegister, Gpr0);
+
+            move(TrustedImm32(1), Gpr1);
+            Jump target = branch32(Equal, Gpr0, Gpr1);
+            _patches[s->iftrue].append(target);
+
+            jumpToBlock(s->iffalse);
+            return;
+        } else {
+            assert(!"wip");
+        }
+        Q_UNIMPLEMENTED();
     }
     Q_UNIMPLEMENTED();
     assert(!"TODO");
