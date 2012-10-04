@@ -43,6 +43,7 @@
 #include "qquickthreadedwindowmanager_p.h"
 
 #include <QtCore/QTime>
+#include <QtCore/QDebug>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/private/qguiapplication_p.h>
@@ -396,20 +397,24 @@ void QQuickRenderThreadSingleContextWindowManager::run()
             WindowData *windowData = it.value();
             QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(window);
 
-            Q_ASSERT(windowPrivate->isRenderable());
+            if (windowPrivate->isRenderable()) {
+                gl->makeCurrent(window);
 
-            gl->makeCurrent(window);
-
-            if (windowData->viewportSize != windowData->windowSize) {
+                if (windowData->viewportSize != windowData->windowSize) {
 #ifdef THREAD_DEBUG
-                printf("                RenderThread: --- window has changed size...\n");
+                    printf("                RenderThread: --- window has changed size...\n");
 #endif
-                windowData->viewportSize = windowData->windowSize;
-                windowData->sizeWasChanged = true;
-                glViewport(0, 0, windowData->viewportSize.width(), windowData->viewportSize.height());
-            }
+                    windowData->viewportSize = windowData->windowSize;
+                    windowData->sizeWasChanged = true;
+                    glViewport(0, 0, windowData->viewportSize.width(), windowData->viewportSize.height());
+                }
 
-            windowPrivate->syncSceneGraph();
+                windowPrivate->syncSceneGraph();
+            } else {
+                qWarning().nospace()
+                    << "Non-renderable window " << window
+                    << " (" << window->geometry() << ").";
+            }
         }
         inSync = false;
 

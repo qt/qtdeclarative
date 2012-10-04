@@ -225,7 +225,13 @@ void QQuickTrivialWindowManager::renderWindow(QQuickWindow *window)
     if (!masterWindow)
         return;
 
-    Q_ASSERT(QQuickWindowPrivate::get(masterWindow)->isRenderable());
+    if (!QQuickWindowPrivate::get(masterWindow)->isRenderable()) {
+        qWarning().nospace()
+            << "Unable to find a renderable master window "
+            << masterWindow << "when trying to render"
+            << window << " (" << window->geometry() << ").";
+        return;
+    }
 
     if (!gl) {
         gl = new QOpenGLContext();
