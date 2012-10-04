@@ -306,7 +306,25 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Subscript *ss = s->source->asSubscript()) {
                 Q_UNIMPLEMENTED();
             } else if (IR::Unop *u = s->source->asUnop()) {
-                Q_UNIMPLEMENTED();
+                if (IR::Temp *e = u->expr->asTemp()) {
+                    FunctionCall fct(this);
+                    fct.addArgumentFromRegister(ContextRegister);
+                    Address result = loadTempAddress(Gpr1, t);
+                    Address value = loadTempAddress(Gpr2, e);
+                    fct.addArgumentAsAddress(result);
+                    fct.addArgumentAsAddress(value);
+                    void (*op)(Context *, Value *, const Value *) = 0;
+                    switch (u->op) {
+                    case IR::OpIfTrue: assert(!"unreachable"); break;
+                    case IR::OpNot: op = __qmljs_not; break;
+                    case IR::OpUMinus: op = __qmljs_uminus; break;
+                    case IR::OpUPlus: op = __qmljs_uplus; break;
+                    case IR::OpCompl: op = __qmljs_compl; break;
+                    default: assert(!"unreachable"); break;
+                    } // switch
+                    fct.call(op);
+                    return;
+                }
             } else if (IR::Binop *b = s->source->asBinop()) {
                 IR::Temp *l = b->left->asTemp();
                 IR::Temp *r = b->right->asTemp();
