@@ -289,7 +289,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                 fc.call(__qmljs_copy);
                 return;
             } else if (IR::String *str = s->source->asString()) {
-                Q_UNIMPLEMENTED();
+                FunctionCall fct(this);
+                Address temp = loadTempAddress(Gpr0, t);
+                fct.addArgumentAsAddress(temp);
+                move(TrustedImmPtr(_engine->newString(*str->value)), Gpr1);
+                fct.addArgumentFromRegister(Gpr1);
+                fct.call(__qmljs_init_string);
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 FunctionCall fct(this);
                 fct.addArgumentFromRegister(ContextRegister);
