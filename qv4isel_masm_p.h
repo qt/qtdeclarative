@@ -26,6 +26,7 @@ protected:
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const RegisterID ContextRegister = JSC::X86Registers::esi;
+    static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
     static const RegisterID Gpr0 = JSC::X86Registers::eax;
     static const RegisterID Gpr1 = JSC::X86Registers::ecx;
     static const RegisterID Gpr2 = JSC::X86Registers::edx;
@@ -87,6 +88,8 @@ protected:
     virtual void visitRet(IR::Ret *);
 
 private:
+    void jumpToBlock(IR::BasicBlock *target);
+
     typedef JSC::FunctionPtr FunctionPtr;
 
     void callAbsolute(FunctionPtr function) {

@@ -310,12 +310,45 @@ void InstructionSelection::visitMove(IR::Move *s)
 
 void InstructionSelection::visitJump(IR::Jump *s)
 {
-    if (_block->index + 1 != s->target->index)
-        _patches[s->target].append(jump());
+    jumpToBlock(s->target);
+}
+
+void InstructionSelection::jumpToBlock(IR::BasicBlock *target)
+{
+    if (_block->index + 1 != target->index)
+        _patches[target].append(jump());
 }
 
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
+    if (IR::Temp *t = s->cond->asTemp()) {
+        Address temp = loadTempAddress(Gpr1, t);
+        Address tag = temp;
+        tag.offset += offsetof(VM::ValueData, tag);
+        Jump booleanConversion = branch32(NotEqual, tag, TrustedImm32(VM::Value::Boolean_Type));
+
+        Address data = temp;
+        data.offset += offsetof(VM::ValueData, b);
+        load32(data, Gpr1);
+        Jump testBoolean = jump();
+
+        booleanConversion.link(this);
+        {
+            FunctionCall fct(this);
+            fct.addArgumentFromRegister(ContextRegister);
+            fct.addArgumentAsAddress(temp);
+            fct.call(__qmljs_to_boolean);
+            move(ReturnValueRegister, Gpr1);
+        }
+
+        testBoolean.link(this);
+        move(TrustedImm32(1), Gpr0);
+        Jump target = branch32(Equal, Gpr1, Gpr0);
+        _patches[s->iftrue].append(target);
+
+        jumpToBlock(s->iffalse);
+        return;
+    }
     Q_UNIMPLEMENTED();
     assert(!"TODO");
 }
