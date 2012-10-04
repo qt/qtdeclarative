@@ -109,67 +109,28 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
     IR::Name *baseName = call->base->asName();
     assert(baseName != 0);
 
-    int argc = 0;
-    for (IR::ExprList *it = call->args; it; it = it->next) {
-        ++argc;
-    }
-
-    int i = 0;
-    for (IR::ExprList *it = call->args; it; it = it->next, ++i) {
-        IR::Temp *arg = it->expr->asTemp();
-        assert(arg != 0);
-
-        Address tempAddress = loadTempAddress(Gpr1, arg);
-        FunctionCall fc(this);
-        fc.addArgumentAsAddress(argumentAddressForCall(i));
-        fc.addArgumentAsAddress(tempAddress);
-        fc.call(__qmljs_copy);
-    }
-
-    FunctionCall activationCall(this);
-
-    activationCall.addArgumentFromRegister(ContextRegister);
-
-    if (result) {
-        activationCall.addArgumentAsAddress(loadTempAddress(Gpr0, result));
-    } else {
-        xor32(Gpr0, Gpr0);
-        activationCall.addArgumentFromRegister(Gpr0);
-    }
-
-    if (baseName->id) {
-        move(TrustedImmPtr(identifier(*baseName->id)), Gpr1);
-        activationCall.addArgumentFromRegister(Gpr1);
-        activationCall.addArgumentAsAddress(baseAddressForCallArguments());
-        activationCall.addArgumentByValue(TrustedImm32(argc));
-        activationCall.call(__qmljs_call_activation_property);
-    } else {
+    FunctionCall fct(this);
+    if (baseName->id)
+        fct.callRuntimeMethod(__qmljs_call_activation_property, result, call->base, call->args);
+    else {
         switch (baseName->builtin) {
         case IR::Name::builtin_invalid:
             Q_UNREACHABLE();
             break;
         case IR::Name::builtin_typeof:
-            activationCall.addArgumentAsAddress(baseAddressForCallArguments());
-            activationCall.addArgumentByValue(TrustedImm32(argc));
-            activationCall.call(__qmljs_builtin_typeof);
+            fct.callRuntimeMethod(__qmljs_builtin_typeof, result, call->args);
             break;
         case IR::Name::builtin_delete:
             Q_UNREACHABLE();
             break;
         case IR::Name::builtin_throw:
-            activationCall.addArgumentAsAddress(baseAddressForCallArguments());
-            activationCall.addArgumentByValue(TrustedImm32(argc));
-            activationCall.call(__qmljs_builtin_throw);
+            fct.callRuntimeMethod(__qmljs_builtin_throw, result, call->args);
             break;
         case IR::Name::builtin_rethrow:
-            activationCall.addArgumentAsAddress(baseAddressForCallArguments());
-            activationCall.addArgumentByValue(TrustedImm32(argc));
-            activationCall.call(__qmljs_builtin_rethrow);
+            fct.callRuntimeMethod(__qmljs_builtin_rethrow, result, call->args);
             return; // we need to return to avoid checking the exceptions
         }
     }
-
-    checkExceptions();
 }
 
 
@@ -183,14 +144,21 @@ void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
 
 void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *result)
 {
+    IR::Name *baseName = call->base->asName();
+    assert(baseName != 0);
+
+    FunctionCall fct(this);
+    fct.callRuntimeMethod(__qmljs_construct_activation_property, result, call->base, call->args);
 }
 
 void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
 {
+    Q_UNIMPLEMENTED();
 }
 
 void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
 {
+    Q_UNIMPLEMENTED();
 }
 
 void InstructionSelection::checkExceptions()
@@ -300,7 +268,16 @@ void InstructionSelection::visitMove(IR::Move *s)
                 fct.call(__qmljs_init_closure);
                 return;
             } else if (IR::New *ctor = s->source->asNew()) {
-                Q_UNIMPLEMENTED();
+                if (ctor->base->asName()) {
+                    constructActivationProperty(ctor, t);
+                    return;
+                } else if (ctor->base->asMember()) {
+                    constructProperty(ctor, t);
+                    return;
+                } else if (ctor->base->asTemp()) {
+                    constructValue(ctor, t);
+                    return;
+                }
             } else if (IR::Member *m = s->source->asMember()) {
                 Q_UNIMPLEMENTED();
             } else if (IR::Subscript *ss = s->source->asSubscript()) {
@@ -507,3 +484,64 @@ void InstructionSelection::visitRet(IR::Ret *s)
     Q_UNUSED(s);
 }
 
+void InstructionSelection::FunctionCall::addVariableArguments(IR::ExprList* args)
+{
+    int argc = 0;
+    for (IR::ExprList *it = args; it; it = it->next) {
+        ++argc;
+    }
+
+    int i = 0;
+    for (IR::ExprList *it = args; it; it = it->next, ++i) {
+        IR::Temp *arg = it->expr->asTemp();
+        assert(arg != 0);
+
+        Address tempAddress = isel->loadTempAddress(Gpr0, arg);
+        FunctionCall fc(isel);
+        fc.addArgumentAsAddress(isel->argumentAddressForCall(i));
+        fc.addArgumentAsAddress(tempAddress);
+        fc.call(__qmljs_copy);
+    }
+
+    addArgumentAsAddress(isel->baseAddressForCallArguments());
+    addArgumentByValue(TrustedImm32(argc));
+}
+
+void InstructionSelection::FunctionCall::callRuntimeMethod(ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args)
+{
+    IR::Name *baseName = base->asName();
+    assert(baseName != 0);
+
+    addArgumentFromRegister(ContextRegister);
+
+    if (result) {
+        addArgumentAsAddress(isel->loadTempAddress(Gpr1, result));
+    } else {
+        isel->xor32(Gpr1, Gpr1);
+        addArgumentFromRegister(Gpr1);
+    }
+
+    isel->move(TrustedImmPtr(isel->identifier(*baseName->id)), Gpr2);
+    addArgumentFromRegister(Gpr2);
+    addVariableArguments(args);
+    call(method);
+
+    isel->checkExceptions();
+}
+
+void InstructionSelection::FunctionCall::callRuntimeMethod(BuiltinMethod method, IR::Temp *result, IR::ExprList *args)
+{
+    addArgumentFromRegister(ContextRegister);
+
+    if (result) {
+        addArgumentAsAddress(isel->loadTempAddress(Gpr1, result));
+    } else {
+        isel->xor32(Gpr1, Gpr1);
+        addArgumentFromRegister(Gpr1);
+    }
+
+    addVariableArguments(args);
+    call(method);
+
+    isel->checkExceptions();
+}

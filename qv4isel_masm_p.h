@@ -138,6 +138,8 @@ private:
             arguments << arg;
         }
 
+        void addVariableArguments(IR::ExprList* args);
+
         void call(FunctionPtr function)
         {
             for (int i = arguments.count() - 1; i >= 0; --i)
@@ -145,6 +147,11 @@ private:
             isel->callAbsolute(function);
             isel->add32(TrustedImm32(arguments.count() * sizeof(void*)), StackPointerRegister);
         }
+
+        typedef void (*ActivationMethod)(VM::Context *, VM::Value *result, VM::String *name, VM::Value *args, int argc);
+        typedef void (*BuiltinMethod)(VM::Context *, VM::Value *result, VM::Value *args, int argc);
+        void callRuntimeMethod(ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args);
+        void callRuntimeMethod(BuiltinMethod method, IR::Temp *result, IR::ExprList *args);
 
     private:
         class Argument {
