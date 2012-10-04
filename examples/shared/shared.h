@@ -48,18 +48,26 @@
     if (QGuiApplication::platformName() == QLatin1String("windows")) {\
         if (directory.absolutePath().endsWith("/debug", Qt::CaseInsensitive)\
             || directory.absolutePath().endsWith("/release", Qt::CaseInsensitive))\
-            if (!directory.cdUp())\
-                exit(-1);\
+            if (!directory.cdUp()) {\
+                qWarning("Could not change to parent directory of '%s'",\
+                    qPrintable(QDir::toNativeSeparators(directory.absolutePath())));\
+                return -1;\
+            }\
     } else if (QGuiApplication::platformName() == QLatin1String("Cocoa")) {\
         if (directory.absolutePath().endsWith(#NAME".app/Contents/MacOS"))\
             for (int i = 0; i < 3; ++i) {\
-                if (!directory.cdUp())\
-                    exit(-1);\
+                if (!directory.cdUp()) {\
+                    qWarning("Could not change to parent directory of '%s'",\
+                        qPrintable(QDir::toNativeSeparators(directory.absolutePath())));\
+                    return -1;\
+                }\
             }\
     }\
     const QString fileName(directory.absolutePath() + "/" #NAME ".qml");\
-    if (!QFile::exists(fileName))\
-            exit(-1);\
+    if (!QFile::exists(fileName)) {\
+            qWarning("Could not find file '%s'", qPrintable(QDir::toNativeSeparators(fileName)));\
+            return -1;\
+    }\
     view.setSource(QUrl::fromLocalFile(fileName));\
     view.show();\
     return app.exec();\
