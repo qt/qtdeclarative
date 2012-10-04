@@ -40,11 +40,9 @@ void InstructionSelection::operator()(IR::Function *function)
 {
     qSwap(_function, function);
 
-    enterStandardStackFrame();
-
     int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) * sizeof(Value);
     locals = (locals + 15) & ~15;
-    sub32(TrustedImm32(locals), StackPointerRegister);
+    enterStandardStackFrame(locals);
 
     push(ContextRegister);
     loadPtr(addressForArgument(0), ContextRegister);
@@ -59,9 +57,7 @@ void InstructionSelection::operator()(IR::Function *function)
 
     pop(ContextRegister);
 
-    add32(TrustedImm32(locals), StackPointerRegister);
-
-    leaveStandardStackFrame();
+    leaveStandardStackFrame(locals);
     ret();
 
     QHashIterator<IR::BasicBlock *, QVector<Jump> > it(_patches);
@@ -312,7 +308,61 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Unop *u = s->source->asUnop()) {
                 Q_UNIMPLEMENTED();
             } else if (IR::Binop *b = s->source->asBinop()) {
-                Q_UNIMPLEMENTED();
+                IR::Temp *l = b->left->asTemp();
+                IR::Temp *r = b->right->asTemp();
+                if (l && r) {
+                    FunctionCall fct(this);
+                    fct.addArgumentFromRegister(ContextRegister);
+
+                    Address result = loadTempAddress(Gpr1, t);
+                    Address lhs = loadTempAddress(Gpr2, l);
+                    Address rhs = loadTempAddress(Gpr3, r);
+                    fct.addArgumentAsAddress(result);
+                    fct.addArgumentAsAddress(lhs);
+                    fct.addArgumentAsAddress(rhs);
+
+                    void (*op)(Context *, Value *, const Value *, const Value *) = 0;
+
+                    switch ((IR::AluOp) b->op) {
+                    case IR::OpInvalid:
+                    case IR::OpIfTrue:
+                    case IR::OpNot:
+                    case IR::OpUMinus:
+                    case IR::OpUPlus:
+                    case IR::OpCompl:
+                        assert(!"unreachable");
+                        break;
+
+                    case IR::OpBitAnd: op = __qmljs_bit_and; break;
+                    case IR::OpBitOr: op = __qmljs_bit_or; break;
+                    case IR::OpBitXor: op = __qmljs_bit_xor; break;
+                    case IR::OpAdd: op = __qmljs_add; break;
+                    case IR::OpSub: op = __qmljs_sub; break;
+                    case IR::OpMul: op = __qmljs_mul; break;
+                    case IR::OpDiv: op = __qmljs_div; break;
+                    case IR::OpMod: op = __qmljs_mod; break;
+                    case IR::OpLShift: op = __qmljs_shl; break;
+                    case IR::OpRShift: op = __qmljs_shr; break;
+                    case IR::OpURShift: op = __qmljs_ushr; break;
+                    case IR::OpGt: op = __qmljs_gt; break;
+                    case IR::OpLt: op = __qmljs_lt; break;
+                    case IR::OpGe: op = __qmljs_ge; break;
+                    case IR::OpLe: op = __qmljs_le; break;
+                    case IR::OpEqual: op = __qmljs_eq; break;
+                    case IR::OpNotEqual: op = __qmljs_ne; break;
+                    case IR::OpStrictEqual: op = __qmljs_se; break;
+                    case IR::OpStrictNotEqual: op = __qmljs_sne; break;
+                    case IR::OpInstanceof: op = __qmljs_instanceof; break;
+                    case IR::OpIn: op = __qmljs_in; break;
+
+                    case IR::OpAnd:
+                    case IR::OpOr:
+                        assert(!"unreachable");
+                        break;
+                    }
+                    fct.call(op);
+                    return;
+                }
             } else if (IR::Call *c = s->source->asCall()) {
                 if (c->base->asName()) {
                     callActivationProperty(c, t);

@@ -30,19 +30,25 @@ protected:
     static const RegisterID Gpr0 = JSC::X86Registers::eax;
     static const RegisterID Gpr1 = JSC::X86Registers::ecx;
     static const RegisterID Gpr2 = JSC::X86Registers::edx;
+    static const RegisterID Gpr3 = JSC::X86Registers::esi;
+    static const RegisterID CalleeSavedGpr = Gpr3;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 #else
 #error Argh.
 #endif
 
 #if CPU(X86) || CPU(X86_64)
-    void enterStandardStackFrame()
+    void enterStandardStackFrame(int locals)
     {
         push(StackFrameRegister);
         move(StackPointerRegister, StackFrameRegister);
+        sub32(TrustedImm32(locals), StackPointerRegister);
+        push(CalleeSavedGpr);
     }
-    void leaveStandardStackFrame()
+    void leaveStandardStackFrame(int locals)
     {
+        pop(CalleeSavedGpr);
+        add32(TrustedImm32(locals), StackPointerRegister);
         pop(StackFrameRegister);
     }
 #else
