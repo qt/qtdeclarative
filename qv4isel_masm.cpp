@@ -423,12 +423,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     Q_UNREACHABLE();
                     break;
                 }
-                FunctionCall fct(this);
-                fct.addArgumentFromRegister(ContextRegister);
-                move(TrustedImmPtr(identifier(*n->id)), Gpr1);
-                fct.addArgumentFromRegister(Gpr1);
-                fct.addArgument(t);
-                fct.call(op);
+                generateFunctionCall(op, ContextRegister, TrustedImmPtr(identifier(*n->id)), t);
                 checkExceptions();
                 return;
             }

@@ -231,6 +231,30 @@ private:
         InstructionSelection* isel;
     };
 
+    using JSC::MacroAssembler::push;
+    void push(IR::Temp* temp)
+    {
+        Address addr = loadTempAddress(Gpr0, temp);
+        add32(TrustedImm32(addr.offset), addr.base, Gpr0);
+        push(Gpr0);
+    }
+    void push(TrustedImmPtr ptr)
+    {
+        move(ptr, Gpr0);
+        push(Gpr0);
+    }
+
+    template <typename Arg1, typename Arg2, typename Arg3>
+    void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    {
+        // Reverse order
+        push(arg3);
+        push(arg2);
+        push(arg1);
+        callAbsolute(function);
+        add32(TrustedImm32(3 * sizeof(void*)), StackPointerRegister);
+    }
+
     struct CallToLink {
         Call call;
         FunctionPtr externalFunction;
