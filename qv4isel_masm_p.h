@@ -138,6 +138,13 @@ private:
             arguments << arg;
         }
 
+        void addArgument(IR::Temp* temp)
+        {
+            Argument arg;
+            arg.setValue(temp);
+            arguments << arg;
+        }
+
         int prepareVariableArguments(IR::ExprList* args);
 
         void call(FunctionPtr function)
@@ -181,8 +188,13 @@ private:
                 this->value = value;
                 type = Value;
             }
+            void setValue(IR::Temp *temp)
+            {
+                this->temp = temp;
+                type = Temp;
+            }
 
-            void push(JSC::MacroAssembler* assembler, RegisterID scratchRegister) const
+            void push(InstructionSelection* assembler, RegisterID scratchRegister) const
             {
                 switch (type) {
                     case None: break;
@@ -193,6 +205,12 @@ private:
                         assembler->add32(TrustedImm32(address.offset), address.base, scratchRegister);
                         assembler->push(scratchRegister);
                         break;
+                    case Temp: {
+                        JSC::MacroAssembler::Address tempAddr = assembler->loadTempAddress(scratchRegister, temp);
+                        assembler->add32(TrustedImm32(tempAddr.offset), tempAddr.base, scratchRegister);
+                        assembler->push(scratchRegister);
+                        break;
+                    }
                 }
             }
         private:
@@ -201,11 +219,13 @@ private:
                 Register,
                 Value,
                 MemoryValue,
-                Address
+                Address,
+                Temp
             } type;
             RegisterID reg;
             TrustedImm32 value;
             JSC::MacroAssembler::Address address;
+            IR::Temp* temp;
         };
         QList<Argument> arguments;
         InstructionSelection* isel;

@@ -381,10 +381,8 @@ void InstructionSelection::visitMove(IR::Move *s)
             if (IR::Temp *t2 = s->source->asTemp()) {
                 FunctionCall fct(this);
                 fct.addArgumentFromRegister(ContextRegister);
-                Address target = loadTempAddress(Gpr1, t);
-                fct.addArgumentAsAddress(target);
-                Address source = loadTempAddress(Gpr2, t2);
-                fct.addArgumentAsAddress(source);
+                fct.addArgument(t);
+                fct.addArgument(t2);
                 void (*op)(Context *, Value *, const Value *, const Value *) = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: op = __qmljs_bit_and; break;
@@ -429,8 +427,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 fct.addArgumentFromRegister(ContextRegister);
                 move(TrustedImmPtr(identifier(*n->id)), Gpr1);
                 fct.addArgumentFromRegister(Gpr1);
-                Address target = loadTempAddress(Gpr2, t);
-                fct.addArgumentAsAddress(target);
+                fct.addArgument(t);
                 fct.call(op);
                 checkExceptions();
                 return;
