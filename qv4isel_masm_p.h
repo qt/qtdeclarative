@@ -138,7 +138,7 @@ private:
             arguments << arg;
         }
 
-        void addVariableArguments(IR::ExprList* args);
+        int prepareVariableArguments(IR::ExprList* args);
 
         void call(FunctionPtr function)
         {

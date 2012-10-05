@@ -484,7 +484,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     Q_UNUSED(s);
 }
 
-void InstructionSelection::FunctionCall::addVariableArguments(IR::ExprList* args)
+int InstructionSelection::FunctionCall::prepareVariableArguments(IR::ExprList* args)
 {
     int argc = 0;
     for (IR::ExprList *it = args; it; it = it->next) {
@@ -503,14 +503,15 @@ void InstructionSelection::FunctionCall::addVariableArguments(IR::ExprList* args
         fc.call(__qmljs_copy);
     }
 
-    addArgumentAsAddress(isel->baseAddressForCallArguments());
-    addArgumentByValue(TrustedImm32(argc));
+    return argc;
 }
 
 void InstructionSelection::FunctionCall::callRuntimeMethod(ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args)
 {
     IR::Name *baseName = base->asName();
     assert(baseName != 0);
+
+    int argc = prepareVariableArguments(args);
 
     addArgumentFromRegister(ContextRegister);
 
@@ -523,7 +524,8 @@ void InstructionSelection::FunctionCall::callRuntimeMethod(ActivationMethod meth
 
     isel->move(TrustedImmPtr(isel->identifier(*baseName->id)), Gpr2);
     addArgumentFromRegister(Gpr2);
-    addVariableArguments(args);
+    addArgumentAsAddress(isel->baseAddressForCallArguments());
+    addArgumentByValue(TrustedImm32(argc));
     call(method);
 
     isel->checkExceptions();
@@ -531,6 +533,8 @@ void InstructionSelection::FunctionCall::callRuntimeMethod(ActivationMethod meth
 
 void InstructionSelection::FunctionCall::callRuntimeMethod(BuiltinMethod method, IR::Temp *result, IR::ExprList *args)
 {
+    int argc = prepareVariableArguments(args);
+
     addArgumentFromRegister(ContextRegister);
 
     if (result) {
@@ -540,7 +544,8 @@ void InstructionSelection::FunctionCall::callRuntimeMethod(BuiltinMethod method,
         addArgumentFromRegister(Gpr1);
     }
 
-    addVariableArguments(args);
+    addArgumentAsAddress(isel->baseAddressForCallArguments());
+    addArgumentByValue(TrustedImm32(argc));
     call(method);
 
     isel->checkExceptions();
