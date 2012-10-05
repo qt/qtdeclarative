@@ -238,11 +238,12 @@ private:
         add32(TrustedImm32(addr.offset), addr.base, Gpr0);
         push(Gpr0);
     }
-    void push(TrustedImmPtr ptr)
+    void push(VM::String* name)
     {
-        move(ptr, Gpr0);
+        move(TrustedImmPtr(name), Gpr0);
         push(Gpr0);
     }
+
 
     template <typename Arg1, typename Arg2, typename Arg3>
     void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
@@ -253,6 +254,16 @@ private:
         push(arg1);
         callAbsolute(function);
         add32(TrustedImm32(3 * sizeof(void*)), StackPointerRegister);
+    }
+
+    template <typename Arg1, typename Arg2>
+    void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2)
+    {
+        // Reverse order
+        push(arg2);
+        push(arg1);
+        callAbsolute(function);
+        add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
     }
 
     struct CallToLink {

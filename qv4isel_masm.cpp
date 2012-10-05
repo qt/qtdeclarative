@@ -193,12 +193,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             String *propertyName = identifier(*n->id);
 
             if (IR::Temp *t = s->source->asTemp()) {
-                FunctionCall fct(this);
-                fct.addArgumentFromRegister(ContextRegister);
-                move(TrustedImmPtr(propertyName), Gpr1);
-                fct.addArgumentFromRegister(Gpr1);
-                fct.addArgumentAsAddress(loadTempAddress(Gpr2, t));
-                fct.call(__qmljs_set_activation_property);
+                generateFunctionCall(__qmljs_set_activation_property, ContextRegister, propertyName, t);
                 checkExceptions();
                 return;
             } else {
@@ -206,19 +201,11 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
-                Address temp = loadTempAddress(Gpr0, t);
-
-                FunctionCall fc(this);
-                fc.addArgumentFromRegister(ContextRegister);
-                fc.addArgumentAsAddress(temp);
-
                 if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
-                    fc.call(__qmljs_get_thisObject);
+                    generateFunctionCall(__qmljs_get_thisObject, ContextRegister, t);
                 } else {
                     String *propertyName = identifier(*n->id);
-                    move(TrustedImmPtr(propertyName), Gpr1);
-                    fc.addArgumentFromRegister(Gpr1);
-                    fc.call(__qmljs_get_activation_property);
+                    generateFunctionCall(__qmljs_get_activation_property, ContextRegister, t, propertyName);
                     checkExceptions();
                 }
                 return;
@@ -423,7 +410,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     Q_UNREACHABLE();
                     break;
                 }
-                generateFunctionCall(op, ContextRegister, TrustedImmPtr(identifier(*n->id)), t);
+                generateFunctionCall(op, ContextRegister, identifier(*n->id), t);
                 checkExceptions();
                 return;
             }
