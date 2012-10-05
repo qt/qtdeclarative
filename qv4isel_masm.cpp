@@ -376,6 +376,66 @@ void InstructionSelection::visitMove(IR::Move *s)
             Q_UNIMPLEMENTED();
         }
     } else {
+        // inplace assignment, e.g. x += 1, ++x, ...
+        if (IR::Temp *t = s->target->asTemp()) {
+            if (IR::Temp *t2 = s->source->asTemp()) {
+                FunctionCall fct(this);
+                fct.addArgumentFromRegister(ContextRegister);
+                Address target = loadTempAddress(Gpr1, t);
+                fct.addArgumentAsAddress(target);
+                Address source = loadTempAddress(Gpr2, t2);
+                fct.addArgumentAsAddress(source);
+                void (*op)(Context *, Value *, const Value *, const Value *) = 0;
+                switch (s->op) {
+                case IR::OpBitAnd: op = __qmljs_bit_and; break;
+                case IR::OpBitOr: op = __qmljs_bit_or; break;
+                case IR::OpBitXor: op = __qmljs_bit_xor; break;
+                case IR::OpAdd: op = __qmljs_add; break;
+                case IR::OpSub: op = __qmljs_sub; break;
+                case IR::OpMul: op = __qmljs_mul; break;
+                case IR::OpDiv: op = __qmljs_div; break;
+                case IR::OpMod: op = __qmljs_mod; break;
+                case IR::OpLShift: op = __qmljs_shl; break;
+                case IR::OpRShift: op = __qmljs_shr; break;
+                case IR::OpURShift: op = __qmljs_ushr; break;
+                default:
+                    Q_UNREACHABLE();
+                    break;
+                }
+
+                fct.call(op);
+                return;
+            }
+        } else if (IR::Name *n = s->target->asName()) {
+            if (IR::Temp *t = s->source->asTemp()) {
+                void (*op)(Context *, String *, Value *) = 0;
+                switch (s->op) {
+                case IR::OpBitAnd: op = __qmljs_inplace_bit_and_name; break;
+                case IR::OpBitOr: op = __qmljs_inplace_bit_or_name; break;
+                case IR::OpBitXor: op = __qmljs_inplace_bit_xor_name; break;
+                case IR::OpAdd: op = __qmljs_inplace_add_name; break;
+                case IR::OpSub: op = __qmljs_inplace_sub_name; break;
+                case IR::OpMul: op = __qmljs_inplace_mul_name; break;
+                case IR::OpDiv: op = __qmljs_inplace_div_name; break;
+                case IR::OpMod: op = __qmljs_inplace_mod_name; break;
+                case IR::OpLShift: op = __qmljs_inplace_shl_name; break;
+                case IR::OpRShift: op = __qmljs_inplace_shr_name; break;
+                case IR::OpURShift: op = __qmljs_inplace_ushr_name; break;
+                default:
+                    Q_UNREACHABLE();
+                    break;
+                }
+                FunctionCall fct(this);
+                fct.addArgumentFromRegister(ContextRegister);
+                move(TrustedImmPtr(identifier(*n->id)), Gpr1);
+                fct.addArgumentFromRegister(Gpr1);
+                Address target = loadTempAddress(Gpr2, t);
+                fct.addArgumentAsAddress(target);
+                fct.call(op);
+                checkExceptions();
+                return;
+            }
+        }
         Q_UNIMPLEMENTED();
     }
     Q_UNIMPLEMENTED();
