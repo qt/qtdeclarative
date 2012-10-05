@@ -232,27 +232,12 @@ void InstructionSelection::visitMove(IR::Move *s)
                 }
                 return;
             } else if (IR::Temp *t2 = s->source->asTemp()) {
-                Address dest = loadTempAddress(Gpr1, t);
-                Address source = loadTempAddress(Gpr2, t2);
-                FunctionCall fc(this);
-                fc.addArgumentAsAddress(dest);
-                fc.addArgumentAsAddress(source);
-                fc.call(__qmljs_copy);
+                generateFunctionCall(__qmljs_copy, t, t2);
                 return;
             } else if (IR::String *str = s->source->asString()) {
-                FunctionCall fct(this);
-                Address temp = loadTempAddress(Gpr0, t);
-                fct.addArgumentAsAddress(temp);
-                move(TrustedImmPtr(_engine->newString(*str->value)), Gpr1);
-                fct.addArgumentFromRegister(Gpr1);
-                fct.call(__qmljs_init_string);
+                generateFunctionCall(__qmljs_init_string, t, _engine->newString(*str->value));
             } else if (IR::Closure *clos = s->source->asClosure()) {
-                FunctionCall fct(this);
-                fct.addArgumentFromRegister(ContextRegister);
-                fct.addArgumentAsAddress(loadTempAddress(Gpr0, t));
-                move(TrustedImmPtr(clos->value), Gpr1);
-                fct.addArgumentFromRegister(Gpr1);
-                fct.call(__qmljs_init_closure);
+                generateFunctionCall(__qmljs_init_closure, ContextRegister, TrustedImmPtr(clos->value));
                 return;
             } else if (IR::New *ctor = s->source->asNew()) {
                 if (ctor->base->asName()) {
@@ -271,12 +256,6 @@ void InstructionSelection::visitMove(IR::Move *s)
                 Q_UNIMPLEMENTED();
             } else if (IR::Unop *u = s->source->asUnop()) {
                 if (IR::Temp *e = u->expr->asTemp()) {
-                    FunctionCall fct(this);
-                    fct.addArgumentFromRegister(ContextRegister);
-                    Address result = loadTempAddress(Gpr1, t);
-                    Address value = loadTempAddress(Gpr2, e);
-                    fct.addArgumentAsAddress(result);
-                    fct.addArgumentAsAddress(value);
                     void (*op)(Context *, Value *, const Value *) = 0;
                     switch (u->op) {
                     case IR::OpIfTrue: assert(!"unreachable"); break;
@@ -286,23 +265,13 @@ void InstructionSelection::visitMove(IR::Move *s)
                     case IR::OpCompl: op = __qmljs_compl; break;
                     default: assert(!"unreachable"); break;
                     } // switch
-                    fct.call(op);
+                    generateFunctionCall(op, ContextRegister, t, e);
                     return;
                 }
             } else if (IR::Binop *b = s->source->asBinop()) {
                 IR::Temp *l = b->left->asTemp();
                 IR::Temp *r = b->right->asTemp();
                 if (l && r) {
-                    FunctionCall fct(this);
-                    fct.addArgumentFromRegister(ContextRegister);
-
-                    Address result = loadTempAddress(Gpr1, t);
-                    Address lhs = loadTempAddress(Gpr2, l);
-                    Address rhs = loadTempAddress(Gpr3, r);
-                    fct.addArgumentAsAddress(result);
-                    fct.addArgumentAsAddress(lhs);
-                    fct.addArgumentAsAddress(rhs);
-
                     void (*op)(Context *, Value *, const Value *, const Value *) = 0;
 
                     switch ((IR::AluOp) b->op) {
@@ -342,7 +311,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                         assert(!"unreachable");
                         break;
                     }
-                    fct.call(op);
+                    generateFunctionCall(op, ContextRegister, t, l, r);
                     return;
                 }
             } else if (IR::Call *c = s->source->asCall()) {
@@ -366,10 +335,6 @@ void InstructionSelection::visitMove(IR::Move *s)
         // inplace assignment, e.g. x += 1, ++x, ...
         if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Temp *t2 = s->source->asTemp()) {
-                FunctionCall fct(this);
-                fct.addArgumentFromRegister(ContextRegister);
-                fct.addArgument(t);
-                fct.addArgument(t2);
                 void (*op)(Context *, Value *, const Value *, const Value *) = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: op = __qmljs_bit_and; break;
@@ -388,7 +353,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
 
-                fct.call(op);
+                generateFunctionCall(op, ContextRegister, t, t, t2);
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {
@@ -449,10 +414,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
         booleanConversion.link(this);
         {
-            FunctionCall fct(this);
-            fct.addArgumentFromRegister(ContextRegister);
-            fct.addArgumentAsAddress(temp);
-            fct.call(__qmljs_to_boolean);
+            generateFunctionCall(__qmljs_to_boolean, ContextRegister, t);
             move(ReturnValueRegister, Gpr1);
         }
 
@@ -467,9 +429,6 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         IR::Temp *l = b->left->asTemp();
         IR::Temp *r = b->right->asTemp();
         if (l && r) {
-            Address lhs = loadTempAddress(Gpr1, l);
-            Address rhs = loadTempAddress(Gpr2, r);
-
             bool (*op)(Context *, const Value *, const Value *);
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;
@@ -485,11 +444,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             case IR::OpIn: op = __qmljs_cmp_in; break;
             } // switch
 
-            FunctionCall fct(this);
-            fct.addArgumentFromRegister(ContextRegister);
-            fct.addArgumentAsAddress(lhs);
-            fct.addArgumentAsAddress(rhs);
-            fct.call(op);
+            generateFunctionCall(op, ContextRegister, l, r);
             move(ReturnValueRegister, Gpr0);
 
             move(TrustedImm32(1), Gpr1);
@@ -510,13 +465,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-        Address source = loadTempAddress(Gpr0, t);
-        Address result = Address(ContextRegister, offsetof(Context, result));
-
-        FunctionCall fc(this);
-        fc.addArgumentAsAddress(result);
-        fc.addArgumentAsAddress(source);
-        fc.call(__qmljs_copy);
+        add32(TrustedImm32(offsetof(Context, result)), ContextRegister, Gpr1);
+        generateFunctionCall(__qmljs_copy, Gpr1, t);
         return;
     }
     Q_UNIMPLEMENTED();
