@@ -195,7 +195,18 @@ void InstructionSelection::checkExceptions()
 
 void InstructionSelection::visitExp(IR::Exp *s)
 {
-    Q_UNIMPLEMENTED();
+    if (IR::Call *c = s->expr->asCall()) {
+        if (c->base->asName()) {
+            callActivationProperty(c, 0);
+            return;
+        } else if (c->base->asTemp()) {
+            callValue(c, 0);
+            return;
+        } else if (c->base->asMember()) {
+            callProperty(c, 0);
+            return;
+        }
+    }
     assert(!"TODO");
 }
 
