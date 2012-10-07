@@ -149,6 +149,19 @@ private:
         push(TrustedImmPtr(name));
     }
 
+    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
+    void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
+    {
+        // Reverse order
+        push(arg6);
+        push(arg5);
+        push(arg4);
+        push(arg3);
+        push(arg2);
+        push(arg1);
+        callAbsolute(function);
+        add32(TrustedImm32(6 * sizeof(void*)), StackPointerRegister);
+    }
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
     void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
