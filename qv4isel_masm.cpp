@@ -85,7 +85,7 @@ String *InstructionSelection::identifier(const QString &s)
     return _engine->identifier(s);
 }
 
-JSC::MacroAssembler::Address InstructionSelection::loadTempAddress(RegisterID reg, IR::Temp *t)
+InstructionSelection::Pointer InstructionSelection::loadTempAddress(RegisterID reg, IR::Temp *t)
 {
     int32_t offset = 0;
     if (t->index < 0) {
@@ -101,7 +101,7 @@ JSC::MacroAssembler::Address InstructionSelection::loadTempAddress(RegisterID re
                  - sizeof(void*); // size of ebp
         reg = StackFrameRegister;
     }
-    return Address(reg, offset);
+    return Pointer(reg, offset);
 }
 
 void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *result)
@@ -109,25 +109,24 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
     IR::Name *baseName = call->base->asName();
     assert(baseName != 0);
 
-    FunctionCall fct(this);
     if (baseName->id)
-        fct.callRuntimeMethod(__qmljs_call_activation_property, result, call->base, call->args);
+        callRuntimeMethod(__qmljs_call_activation_property, result, call->base, call->args);
     else {
         switch (baseName->builtin) {
         case IR::Name::builtin_invalid:
             Q_UNREACHABLE();
             break;
         case IR::Name::builtin_typeof:
-            fct.callRuntimeMethod(__qmljs_builtin_typeof, result, call->args);
+            callRuntimeMethod(__qmljs_builtin_typeof, result, call->args);
             break;
         case IR::Name::builtin_delete:
             Q_UNREACHABLE();
             break;
         case IR::Name::builtin_throw:
-            fct.callRuntimeMethod(__qmljs_builtin_throw, result, call->args);
+            callRuntimeMethod(__qmljs_builtin_throw, result, call->args);
             break;
         case IR::Name::builtin_rethrow:
-            fct.callRuntimeMethod(__qmljs_builtin_rethrow, result, call->args);
+            callRuntimeMethod(__qmljs_builtin_rethrow, result, call->args);
             return; // we need to return to avoid checking the exceptions
         }
     }
@@ -147,8 +146,7 @@ void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *
     IR::Name *baseName = call->base->asName();
     assert(baseName != 0);
 
-    FunctionCall fct(this);
-    fct.callRuntimeMethod(__qmljs_construct_activation_property, result, call->base, call->args);
+    callRuntimeMethod(__qmljs_construct_activation_property, result, call->base, call->args);
 }
 
 void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
@@ -465,15 +463,14 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-        add32(TrustedImm32(offsetof(Context, result)), ContextRegister, Gpr1);
-        generateFunctionCall(__qmljs_copy, Gpr1, t);
+        generateFunctionCall(__qmljs_copy, Pointer(ContextRegister, offsetof(Context, result)), t);
         return;
     }
     Q_UNIMPLEMENTED();
     Q_UNUSED(s);
 }
 
-int InstructionSelection::FunctionCall::prepareVariableArguments(IR::ExprList* args)
+int InstructionSelection::prepareVariableArguments(IR::ExprList* args)
 {
     int argc = 0;
     for (IR::ExprList *it = args; it; it = it->next) {
@@ -484,58 +481,26 @@ int InstructionSelection::FunctionCall::prepareVariableArguments(IR::ExprList* a
     for (IR::ExprList *it = args; it; it = it->next, ++i) {
         IR::Temp *arg = it->expr->asTemp();
         assert(arg != 0);
-
-        Address tempAddress = isel->loadTempAddress(Gpr0, arg);
-        FunctionCall fc(isel);
-        fc.addArgumentAsAddress(isel->argumentAddressForCall(i));
-        fc.addArgumentAsAddress(tempAddress);
-        fc.call(__qmljs_copy);
+        generateFunctionCall(__qmljs_copy, argumentAddressForCall(i), arg);
     }
 
     return argc;
 }
 
-void InstructionSelection::FunctionCall::callRuntimeMethod(ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args)
+void InstructionSelection::callRuntimeMethod(ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args)
 {
     IR::Name *baseName = base->asName();
     assert(baseName != 0);
 
     int argc = prepareVariableArguments(args);
-
-    addArgumentFromRegister(ContextRegister);
-
-    if (result) {
-        addArgumentAsAddress(isel->loadTempAddress(Gpr1, result));
-    } else {
-        isel->xor32(Gpr1, Gpr1);
-        addArgumentFromRegister(Gpr1);
-    }
-
-    isel->move(TrustedImmPtr(isel->identifier(*baseName->id)), Gpr2);
-    addArgumentFromRegister(Gpr2);
-    addArgumentAsAddress(isel->baseAddressForCallArguments());
-    addArgumentByValue(TrustedImm32(argc));
-    call(method);
-
-    isel->checkExceptions();
+    generateFunctionCall(method, ContextRegister, result, identifier(*baseName->id), baseAddressForCallArguments(), TrustedImm32(argc));
+    checkExceptions();
 }
 
-void InstructionSelection::FunctionCall::callRuntimeMethod(BuiltinMethod method, IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callRuntimeMethod(BuiltinMethod method, IR::Temp *result, IR::ExprList *args)
 {
     int argc = prepareVariableArguments(args);
-
-    addArgumentFromRegister(ContextRegister);
-
-    if (result) {
-        addArgumentAsAddress(isel->loadTempAddress(Gpr1, result));
-    } else {
-        isel->xor32(Gpr1, Gpr1);
-        addArgumentFromRegister(Gpr1);
-    }
-
-    addArgumentAsAddress(isel->baseAddressForCallArguments());
-    addArgumentByValue(TrustedImm32(argc));
-    call(method);
-
-    isel->checkExceptions();
+    generateFunctionCall(method, ContextRegister, result, baseAddressForCallArguments(), TrustedImm32(argc));
+    checkExceptions();
 }
+
