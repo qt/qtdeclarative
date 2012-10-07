@@ -287,9 +287,18 @@ void InstructionSelection::visitMove(IR::Move *s)
                     return;
                 }
             } else if (IR::Member *m = s->source->asMember()) {
-                Q_UNIMPLEMENTED();
+                //__qmljs_get_property(ctx, result, object, name);
+                if (IR::Temp *base = m->base->asTemp()) {
+                    generateFunctionCall(__qmljs_get_property, ContextRegister, t, base, identifier(*m->name));
+                    checkExceptions();
+                    return;
+                }
+                assert(!"wip");
+                return;
             } else if (IR::Subscript *ss = s->source->asSubscript()) {
-                Q_UNIMPLEMENTED();
+                generateFunctionCall(__qmljs_get_element, ContextRegister, t, ss->base->asTemp(), ss->index->asTemp());
+                checkExceptions();
+                return;
             } else if (IR::Unop *u = s->source->asUnop()) {
                 if (IR::Temp *e = u->expr->asTemp()) {
                     void (*op)(Context *, Value *, const Value *) = 0;
@@ -363,9 +372,23 @@ void InstructionSelection::visitMove(IR::Move *s)
                 }
             }
         } else if (IR::Member *m = s->target->asMember()) {
-            Q_UNIMPLEMENTED();
+            if (IR::Temp *base = m->base->asTemp()) {
+                if (IR::Temp *t = s->source->asTemp()) {
+                    generateFunctionCall(__qmljs_set_property, ContextRegister, base, identifier(*m->name), t);
+                    checkExceptions();
+                    return;
+                } else {
+                    Q_UNREACHABLE();
+                }
+            }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
-            Q_UNIMPLEMENTED();
+            if (IR::Temp *t2 = s->source->asTemp()) {
+                generateFunctionCall(__qmljs_set_element, ss->base->asTemp(), ss->index->asTemp(), t2);
+                checkExceptions();
+                return;
+            } else {
+                Q_UNIMPLEMENTED();
+            }
         }
     } else {
         // inplace assignment, e.g. x += 1, ++x, ...
@@ -415,8 +438,55 @@ void InstructionSelection::visitMove(IR::Move *s)
                 checkExceptions();
                 return;
             }
+        } else if (IR::Subscript *ss = s->target->asSubscript()) {
+            if (IR::Temp *t = s->source->asTemp()) {
+                void (*op)(Context *, Value *, Value *, Value *) = 0;
+                switch (s->op) {
+                case IR::OpBitAnd: op = __qmljs_inplace_bit_and_element; break;
+                case IR::OpBitOr: op = __qmljs_inplace_bit_or_element; break;
+                case IR::OpBitXor: op = __qmljs_inplace_bit_xor_element; break;
+                case IR::OpAdd: op = __qmljs_inplace_add_element; break;
+                case IR::OpSub: op = __qmljs_inplace_sub_element; break;
+                case IR::OpMul: op = __qmljs_inplace_mul_element; break;
+                case IR::OpDiv: op = __qmljs_inplace_div_element; break;
+                case IR::OpMod: op = __qmljs_inplace_mod_element; break;
+                case IR::OpLShift: op = __qmljs_inplace_shl_element; break;
+                case IR::OpRShift: op = __qmljs_inplace_shr_element; break;
+                case IR::OpURShift: op = __qmljs_inplace_ushr_element; break;
+                default:
+                    Q_UNREACHABLE();
+                    break;
+                }
+
+                generateFunctionCall(op, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t);
+                checkExceptions();
+                return;
+            }
+        } else if (IR::Member *m = s->target->asMember()) {
+            if (IR::Temp *t = s->source->asTemp()) {
+                void (*op)(Context *, Value *, String *, Value *) = 0;
+                switch (s->op) {
+                case IR::OpBitAnd: op = __qmljs_inplace_bit_and_member; break;
+                case IR::OpBitOr: op = __qmljs_inplace_bit_or_member; break;
+                case IR::OpBitXor: op = __qmljs_inplace_bit_xor_member; break;
+                case IR::OpAdd: op = __qmljs_inplace_add_member; break;
+                case IR::OpSub: op = __qmljs_inplace_sub_member; break;
+                case IR::OpMul: op = __qmljs_inplace_mul_member; break;
+                case IR::OpDiv: op = __qmljs_inplace_div_member; break;
+                case IR::OpMod: op = __qmljs_inplace_mod_member; break;
+                case IR::OpLShift: op = __qmljs_inplace_shl_member; break;
+                case IR::OpRShift: op = __qmljs_inplace_shr_member; break;
+                case IR::OpURShift: op = __qmljs_inplace_ushr_member; break;
+                default:
+                    Q_UNREACHABLE();
+                    break;
+                }
+
+                generateFunctionCall(op, ContextRegister, m->base->asTemp(), identifier(*m->name), t);
+                checkExceptions();
+                return;
+            }
         }
-        Q_UNIMPLEMENTED();
     }
     Q_UNIMPLEMENTED();
     s->dump(qout, IR::Stmt::MIR);
