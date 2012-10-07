@@ -272,6 +272,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 generateFunctionCall(__qmljs_init_string, t, _engine->newString(*str->value));
+                return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
                 generateFunctionCall(__qmljs_init_closure, ContextRegister, t, TrustedImmPtr(clos->value));
                 return;
