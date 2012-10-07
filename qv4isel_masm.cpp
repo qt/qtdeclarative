@@ -166,12 +166,24 @@ void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *
 
 void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
 {
-    Q_UNIMPLEMENTED();
+    IR::Member *member = call->base->asMember();
+    assert(member != 0);
+    assert(member->base->asTemp() != 0);
+
+    int argc = prepareVariableArguments(call->args);
+    IR::Temp* thisObject = 0;
+    generateFunctionCall(__qmljs_construct_property, ContextRegister, result, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
+    checkExceptions();
 }
 
 void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
 {
-    Q_UNIMPLEMENTED();
+    IR::Temp *baseTemp = call->base->asTemp();
+    assert(baseTemp != 0);
+
+    int argc = prepareVariableArguments(call->args);
+    generateFunctionCall(__qmljs_construct_value, ContextRegister, result, baseTemp, baseAddressForCallArguments(), TrustedImm32(argc));
+    checkExceptions();
 }
 
 void InstructionSelection::checkExceptions()
