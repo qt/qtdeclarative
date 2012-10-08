@@ -21,6 +21,8 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
         free(m_data);
     }
 
+    inline bool isManaged() const { return true; }
+
     void* start() { return m_data; }
     int sizeInBytes() { return m_size; }
 

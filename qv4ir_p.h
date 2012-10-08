@@ -59,6 +59,7 @@
 #include <QtCore/QString>
 #include <QtCore/QBitArray>
 
+#include <config.h>
 #include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_HEADER

@@ -1,3 +1,4 @@
+#include <config.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -16,7 +17,7 @@ void fastFree(void* ptr)
     free(ptr);
 }
 
-int cryptographicallyRandomNumber()
+uint32_t cryptographicallyRandomNumber()
 {
     return 0;
 }
@@ -45,3 +46,27 @@ void dataLogString(const char* str)
 }
 
 }
+
+extern "C" {
+
+void WTFReportAssertionFailure(const char* file, int line, const char* function, const char* assertion)
+{
+}
+
+void WTFReportBacktrace()
+{
+}
+
+void WTFInvokeCrashHook()
+{
+}
+
+}
+
+
+#if ENABLE(ASSEMBLER) && CPU(X86) && !OS(MAC_OS_X)
+#include <MacroAssemblerX86Common.h>
+
+JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse2CheckState = JSC::MacroAssemblerX86Common::NotCheckedSSE2;
+#endif
+

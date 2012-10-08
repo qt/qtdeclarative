@@ -7,7 +7,6 @@ SOURCES += $$PWD/assembler/MacroAssemblerSH4.cpp
 SOURCES += $$PWD/assembler/LinkBuffer.cpp
 SOURCES += $$PWD/stubs/WTFStubs.cpp
 
-DEFINES += NDEBUG
 DEFINES += WTF_EXPORT_PRIVATE=""
 
 INCLUDEPATH += $$PWD/jit
