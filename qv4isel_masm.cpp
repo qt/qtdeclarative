@@ -384,7 +384,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
             if (IR::Temp *t2 = s->source->asTemp()) {
-                generateFunctionCall(__qmljs_set_element, ss->base->asTemp(), ss->index->asTemp(), t2);
+                generateFunctionCall(__qmljs_set_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t2);
                 checkExceptions();
                 return;
             } else {
