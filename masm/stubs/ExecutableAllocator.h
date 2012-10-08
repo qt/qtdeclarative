@@ -14,11 +14,13 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     ExecutableMemoryHandle(int size)
         : m_size(size)
     {
-        m_data = malloc(m_size);
+        static size_t pageSize = sysconf(_SC_PAGESIZE);
+        m_size = (m_size + pageSize - 1) & ~(pageSize - 1);
+        m_data = mmap(0, m_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     }
     ~ExecutableMemoryHandle()
     {
-        free(m_data);
+        munmap(m_data, m_size);
     }
 
     inline bool isManaged() const { return true; }
@@ -42,7 +44,7 @@ struct ExecutableAllocator {
 
     static void makeExecutable(void* addr, int size)
     {
-        size_t pageSize = sysconf(_SC_PAGESIZE);
+        static size_t pageSize = sysconf(_SC_PAGESIZE);
         size_t iaddr = reinterpret_cast<size_t>(addr);
         size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
         int mode = PROT_READ | PROT_WRITE | PROT_EXEC;
