@@ -363,7 +363,10 @@ QList<QObject*> DesignerSupport::statesForItem(QQuickItem *item)
 {
     QList<QObject*> objectList;
     QList<QQuickState *> stateList = QQuickItemPrivate::get(item)->_states()->states();
-    qCopy(stateList.begin(), stateList.end(), objectList.begin());
+
+    objectList.reserve(stateList.size());
+    foreach (QQuickState* state, stateList)
+        objectList.append(state);
 
     return objectList;
 }
