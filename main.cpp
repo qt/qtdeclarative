@@ -197,7 +197,9 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
     IR::Function *globalCode = 0;
 
     const size_t codeSize = 400 * getpagesize();
-    uchar *code = (uchar *) malloc(codeSize);
+    uchar *code = 0;
+    posix_memalign((void**)&code, 16, codeSize);
+    assert(code);
     assert(! (size_t(code) & 15));
 
     static bool useMoth = !qgetenv("USE_MOTH").isNull();
