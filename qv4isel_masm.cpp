@@ -296,7 +296,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 }
                 return;
             } else if (IR::Temp *t2 = s->source->asTemp()) {
-                generateFunctionCall(__qmljs_copy, t, t2);
+                copyValue(t, t2);
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 generateFunctionCall(__qmljs_init_string, t, _engine->newString(*str->value));
@@ -603,7 +603,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 void InstructionSelection::visitRet(IR::Ret *s)
 {
     if (IR::Temp *t = s->expr->asTemp()) {
-        generateFunctionCall(__qmljs_copy, Pointer(ContextRegister, offsetof(Context, result)), t);
+        copyValue(Pointer(ContextRegister, offsetof(Context, result)), t);
         return;
     }
     Q_UNIMPLEMENTED();
@@ -621,7 +621,7 @@ int InstructionSelection::prepareVariableArguments(IR::ExprList* args)
     for (IR::ExprList *it = args; it; it = it->next, ++i) {
         IR::Temp *arg = it->expr->asTemp();
         assert(arg != 0);
-        generateFunctionCall(__qmljs_copy, argumentAddressForCall(i), arg);
+        copyValue(argumentAddressForCall(i), arg);
     }
 
     return argc;
@@ -644,3 +644,8 @@ void InstructionSelection::callRuntimeMethodImp(const char* name, BuiltinMethod 
     checkExceptions();
 }
 
+template <typename Result, typename Source>
+void InstructionSelection::copyValue(Result result, Source source)
+{
+    generateFunctionCall(__qmljs_copy, result, source);
+}

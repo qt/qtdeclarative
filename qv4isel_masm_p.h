@@ -246,6 +246,9 @@ private:
 #define callRuntimeMethod(function, ...) \
     callRuntimeMethodImp(isel_stringIfy(function), function, __VA_ARGS__)
 
+    template <typename Result, typename Source>
+    void copyValue(Result result, Source source);
+
     struct CallToLink {
         Call call;
         FunctionPtr externalFunction;
