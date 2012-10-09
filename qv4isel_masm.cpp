@@ -624,20 +624,20 @@ int InstructionSelection::prepareVariableArguments(IR::ExprList* args)
     return argc;
 }
 
-void InstructionSelection::callRuntimeMethod(ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args)
+void InstructionSelection::callRuntimeMethodImp(const char* name, ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args)
 {
     IR::Name *baseName = base->asName();
     assert(baseName != 0);
 
     int argc = prepareVariableArguments(args);
-    generateFunctionCall(method, ContextRegister, result, identifier(*baseName->id), baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCallImp(name, method, ContextRegister, result, identifier(*baseName->id), baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
-void InstructionSelection::callRuntimeMethod(BuiltinMethod method, IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callRuntimeMethodImp(const char* name, BuiltinMethod method, IR::Temp *result, IR::ExprList *args)
 {
     int argc = prepareVariableArguments(args);
-    generateFunctionCall(method, ContextRegister, result, baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCallImp(name, method, ContextRegister, result, baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 

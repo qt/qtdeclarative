@@ -221,8 +221,10 @@ private:
 
     typedef void (*ActivationMethod)(VM::Context *, VM::Value *result, VM::String *name, VM::Value *args, int argc);
     typedef void (*BuiltinMethod)(VM::Context *, VM::Value *result, VM::Value *args, int argc);
-    void callRuntimeMethod(ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args);
-    void callRuntimeMethod(BuiltinMethod method, IR::Temp *result, IR::ExprList *args);
+    void callRuntimeMethodImp(const char* name, ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args);
+    void callRuntimeMethodImp(const char* name, BuiltinMethod method, IR::Temp *result, IR::ExprList *args);
+#define callRuntimeMethod(function, ...) \
+    callRuntimeMethodImp(isel_stringIfy(function), function, __VA_ARGS__)
 
     struct CallToLink {
         Call call;
