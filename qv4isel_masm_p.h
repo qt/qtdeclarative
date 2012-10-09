@@ -150,6 +150,16 @@ private:
         push(TrustedImmPtr(name));
     }
 
+    void callFunctionPrologue()
+    {
+        // Callee might clobber it :(
+        push(ContextRegister);
+    }
+    void callFunctionEpilogue()
+    {
+        pop(ContextRegister);
+    }
+
     #define isel_stringIfyx(s) #s
     #define isel_stringIfy(s) isel_stringIfyx(s)
 
@@ -159,6 +169,7 @@ private:
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
     void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
+        callFunctionPrologue();
         // Reverse order
         push(arg6);
         push(arg5);
@@ -168,10 +179,12 @@ private:
         push(arg1);
         callAbsolute(functionName, function);
         add32(TrustedImm32(6 * sizeof(void*)), StackPointerRegister);
+        callFunctionEpilogue();
     }
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
     void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
+        callFunctionPrologue();
         // Reverse order
         push(arg5);
         push(arg4);
@@ -180,12 +193,14 @@ private:
         push(arg1);
         callAbsolute(functionName, function);
         add32(TrustedImm32(5 * sizeof(void*)), StackPointerRegister);
+        callFunctionEpilogue();
     }
 
 
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
     void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
+        callFunctionPrologue();
         // Reverse order
         push(arg4);
         push(arg3);
@@ -193,28 +208,33 @@ private:
         push(arg1);
         callAbsolute(functionName, function);
         add32(TrustedImm32(4 * sizeof(void*)), StackPointerRegister);
+        callFunctionEpilogue();
     }
 
 
     template <typename Arg1, typename Arg2, typename Arg3>
     void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
+        callFunctionPrologue();
         // Reverse order
         push(arg3);
         push(arg2);
         push(arg1);
         callAbsolute(functionName, function);
         add32(TrustedImm32(3 * sizeof(void*)), StackPointerRegister);
+        callFunctionEpilogue();
     }
 
     template <typename Arg1, typename Arg2>
     void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
     {
+        callFunctionPrologue();
         // Reverse order
         push(arg2);
         push(arg1);
         callAbsolute(functionName, function);
         add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
+        callFunctionEpilogue();
     }
 
     int prepareVariableArguments(IR::ExprList* args);

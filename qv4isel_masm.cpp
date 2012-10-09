@@ -441,7 +441,8 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
 
-                generateFunctionCall(op, ContextRegister, t, t, t2);
+                if (op)
+                    generateFunctionCall(op, ContextRegister, t, t, t2);
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {
@@ -487,8 +488,10 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
 
-                generateFunctionCall(op, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t);
-                checkExceptions();
+                if (op) {
+                    generateFunctionCall(op, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t);
+                    checkExceptions();
+                }
                 return;
             }
         } else if (IR::Member *m = s->target->asMember()) {
