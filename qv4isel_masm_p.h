@@ -33,6 +33,17 @@ protected:
     static const RegisterID Gpr3 = JSC::X86Registers::esi;
     static const RegisterID CalleeSavedGpr = Gpr3;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
+#elif CPU(X86_64)
+    static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
+    static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
+    static const RegisterID ContextRegister = JSC::X86Registers::esi;
+    static const RegisterID ReturnValueRegister = JSC::X86Registers::eax;
+    static const RegisterID Gpr0 = JSC::X86Registers::eax;
+    static const RegisterID Gpr1 = JSC::X86Registers::ecx;
+    static const RegisterID Gpr2 = JSC::X86Registers::edx;
+    static const RegisterID Gpr3 = JSC::X86Registers::esi;
+    static const RegisterID CalleeSavedGpr = Gpr3;
+    static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 #else
 #error Argh.
 #endif

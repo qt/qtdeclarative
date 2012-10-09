@@ -6,5 +6,6 @@
 #include <wtf/Vector.h>
 #endif
 #include <limits.h>
+#include <math.h>
 
 #endif // MASM_CONFIG_H

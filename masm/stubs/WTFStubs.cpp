@@ -7,7 +7,7 @@
 
 namespace WTF {
 
-void* fastMalloc(unsigned int size)
+void* fastMalloc(size_t size)
 {
     return malloc(size);
 }

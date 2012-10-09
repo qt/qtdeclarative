@@ -578,7 +578,7 @@ public:
         default: {
             if (value <= 0xff)
                 return false;
-#if CPU(X86_64)
+#if CPU(X86_64) && 0
             JSValue jsValue = JSValue::decode(reinterpret_cast<void*>(value));
             if (jsValue.isInt32())
                 return shouldBlind(Imm32(jsValue.asInt32()));
