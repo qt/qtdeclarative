@@ -112,10 +112,11 @@ private:
 
     typedef JSC::FunctionPtr FunctionPtr;
 
-    void callAbsolute(FunctionPtr function) {
+    void callAbsolute(const char* functionName, FunctionPtr function) {
         CallToLink ctl;
         ctl.call = call();
         ctl.externalFunction = function;
+        ctl.functionName = functionName;
         _callsToLink.append(ctl);
     }
 
@@ -149,8 +150,14 @@ private:
         push(TrustedImmPtr(name));
     }
 
+    #define isel_stringIfyx(s) #s
+    #define isel_stringIfy(s) isel_stringIfyx(s)
+
+    #define generateFunctionCall(function, ...) \
+        generateFunctionCallImp(isel_stringIfy(function), function, __VA_ARGS__)
+
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
-    void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
     {
         // Reverse order
         push(arg6);
@@ -159,11 +166,11 @@ private:
         push(arg3);
         push(arg2);
         push(arg1);
-        callAbsolute(function);
+        callAbsolute(functionName, function);
         add32(TrustedImm32(6 * sizeof(void*)), StackPointerRegister);
     }
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
         // Reverse order
         push(arg5);
@@ -171,42 +178,42 @@ private:
         push(arg3);
         push(arg2);
         push(arg1);
-        callAbsolute(function);
+        callAbsolute(functionName, function);
         add32(TrustedImm32(5 * sizeof(void*)), StackPointerRegister);
     }
 
 
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
         // Reverse order
         push(arg4);
         push(arg3);
         push(arg2);
         push(arg1);
-        callAbsolute(function);
+        callAbsolute(functionName, function);
         add32(TrustedImm32(4 * sizeof(void*)), StackPointerRegister);
     }
 
 
     template <typename Arg1, typename Arg2, typename Arg3>
-    void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
         // Reverse order
         push(arg3);
         push(arg2);
         push(arg1);
-        callAbsolute(function);
+        callAbsolute(functionName, function);
         add32(TrustedImm32(3 * sizeof(void*)), StackPointerRegister);
     }
 
     template <typename Arg1, typename Arg2>
-    void generateFunctionCall(FunctionPtr function, Arg1 arg1, Arg2 arg2)
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
     {
         // Reverse order
         push(arg2);
         push(arg1);
-        callAbsolute(function);
+        callAbsolute(functionName, function);
         add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
     }
 
@@ -220,6 +227,7 @@ private:
     struct CallToLink {
         Call call;
         FunctionPtr externalFunction;
+        const char* functionName;
     };
 
     template <VM::Value::ValueType type>
