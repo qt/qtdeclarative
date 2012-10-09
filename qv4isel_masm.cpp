@@ -4,6 +4,7 @@
 #include "qmljs_objects.h"
 
 #include <assembler/LinkBuffer.h>
+#include <WTFStubs.h>
 
 #include <sys/mman.h>
 #include <iostream>
@@ -19,6 +20,18 @@ using namespace QQmlJS::VM;
 
 namespace {
 QTextStream qout(stdout, QIODevice::WriteOnly);
+}
+
+static void printDisassmbleOutputWithCalls(const char* output, const QHash<void*, const char*>& functions)
+{
+    QByteArray processedOutput(output);
+    for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
+         it != end; ++it) {
+        QByteArray ptrString = QByteArray::number(qlonglong(it.key()), 16);
+        ptrString.prepend("0x");
+        processedOutput = processedOutput.replace(ptrString, it.value());
+    }
+    fprintf(stdout, "%s\n", processedOutput.constData());
 }
 
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module, uchar *buffer)
@@ -72,9 +85,24 @@ void InstructionSelection::operator()(IR::Function *function)
 
     JSC::JSGlobalData dummy;
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
-    foreach (CallToLink ctl, _callsToLink)
+    QHash<void*, const char*> functions;
+    foreach (CallToLink ctl, _callsToLink) {
         linkBuffer.link(ctl.call, ctl.externalFunction);
+        functions[ctl.externalFunction.value()] = ctl.functionName;
+    }
+
+    char* disasmOutput = 0;
+    size_t disasmLength = 0;
+    FILE* disasmStream = open_memstream(&disasmOutput, &disasmLength);
+    WTF::setDataFile(disasmStream);
+
     _function->codeRef = linkBuffer.finalizeCodeWithDisassembly("operator()(IR::Function*)");
+
+    WTF::setDataFile(stdout);
+    fclose(disasmStream);
+    printDisassmbleOutputWithCalls(disasmOutput, functions);
+    free(disasmOutput);
+
     _function->code = (void (*)(VM::Context *, const uchar *)) _function->codeRef.code().executableAddress();
 
     qSwap(_function, function);

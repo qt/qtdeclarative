@@ -5,7 +5,9 @@ SOURCES += $$PWD/assembler/ARMv7Assembler.cpp
 SOURCES += $$PWD/assembler/MacroAssemblerARM.cpp
 SOURCES += $$PWD/assembler/MacroAssemblerSH4.cpp
 SOURCES += $$PWD/assembler/LinkBuffer.cpp
+
 SOURCES += $$PWD/stubs/WTFStubs.cpp
+HEADERS += $$PWD/stubs/WTFStubs.h
 
 DEFINES += WTF_EXPORT_PRIVATE=""
 

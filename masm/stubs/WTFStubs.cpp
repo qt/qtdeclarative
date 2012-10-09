@@ -22,9 +22,16 @@ uint32_t cryptographicallyRandomNumber()
     return 0;
 }
 
+static FILE* s_dataFile = stdout;
+
+void setDataFile(FILE* f)
+{
+    s_dataFile = f;
+}
+
 FILE* dataFile()
 {
-    return stdout;
+    return s_dataFile;
 }
 
 void dataLogV(const char* format, va_list args)
