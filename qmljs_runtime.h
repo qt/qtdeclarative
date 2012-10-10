@@ -639,11 +639,6 @@ inline void __qmljs_init_object(Value *result, Object *object)
     *result = Value::fromObject(object);
 }
 
-inline void __qmljs_copy(Value *result, Value *source)
-{
-    *result = *source;
-}
-
 // type conversion and testing
 inline void __qmljs_to_primitive(Context *ctx, Value *result, const Value *value, int typeHint)
 {

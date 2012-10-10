@@ -330,7 +330,7 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
 void Context::leaveCallContext(FunctionObject *f, Value *returnValue)
 {
     if (returnValue)
-        __qmljs_copy(returnValue, &result);
+        *returnValue = result;
 
     if (! f->needsActivation) {
         delete[] locals;
