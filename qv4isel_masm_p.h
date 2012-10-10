@@ -69,21 +69,21 @@ protected:
     };
 
 #if CPU(X86) || CPU(X86_64)
-    void enterStandardStackFrame(quintptr locals)
+    void enterStandardStackFrame(int locals)
     {
         push(StackFrameRegister);
         move(StackPointerRegister, StackFrameRegister);
-        subPtr(TrustedImm32(locals), StackPointerRegister);
+        subPtr(TrustedImm32(locals*sizeof(QQmlJS::VM::Value)), StackPointerRegister);
 #if CPU(X86)
         push(CalleeSavedGpr);
 #endif
     }
-    void leaveStandardStackFrame(quintptr locals)
+    void leaveStandardStackFrame(int locals)
     {
 #if CPU(X86)
         pop(CalleeSavedGpr);
 #endif
-        addPtr(TrustedImm32(locals), StackPointerRegister);
+        addPtr(TrustedImm32(locals*sizeof(QQmlJS::VM::Value)), StackPointerRegister);
         pop(StackFrameRegister);
     }
 #else
@@ -192,12 +192,16 @@ private:
 
     void callFunctionPrologue()
     {
+#if CPU(X86)
         // Callee might clobber it :(
         push(ContextRegister);
+#endif
     }
     void callFunctionEpilogue()
     {
+#if CPU(X86)
         pop(ContextRegister);
+#endif
     }
 
     #define isel_stringIfyx(s) #s

@@ -53,8 +53,8 @@ void InstructionSelection::operator()(IR::Function *function)
 {
     qSwap(_function, function);
 
-    int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments) * sizeof(Value);
-    locals = (locals + 15) & ~15;
+    int locals = (_function->tempCount - _function->locals.size() + _function->maxNumberOfArguments);
+    locals = (locals + 1) & ~1;
     enterStandardStackFrame(locals);
 
     push(ContextRegister);
@@ -131,8 +131,7 @@ InstructionSelection::Pointer InstructionSelection::loadTempAddress(RegisterID r
         offset = t->index * sizeof(Value);
     } else {
         const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size();
-        offset = sizeof(Value) * (-arg - 1)
-                 - sizeof(void*); // size of ebp
+        offset = - sizeof(Value) * arg - sizeof(void*); // size of ebp
         reg = StackFrameRegister;
     }
     return Pointer(reg, offset);
