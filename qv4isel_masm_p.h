@@ -160,6 +160,43 @@ private:
         _callsToLink.append(ctl);
     }
 
+    void loadArgument(RegisterID source, RegisterID dest)
+    {
+        move(source, dest);
+    }
+
+    void loadArgument(const Pointer& ptr, RegisterID dest)
+    {
+        addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
+    }
+
+    void loadArgument(IR::Temp* temp, RegisterID dest)
+    {
+        if (temp) {
+            Pointer addr = loadTempAddress(dest, temp);
+            loadArgument(addr, dest);
+        } else {
+            xorPtr(dest, dest);
+        }
+    }
+
+    void loadArgument(TrustedImmPtr ptr, RegisterID dest)
+    {
+        move(TrustedImmPtr(ptr), dest);
+    }
+
+    void loadArgument(VM::String* string, RegisterID dest)
+    {
+        loadArgument(TrustedImmPtr(string), dest);
+    }
+
+    void loadArgument(TrustedImm32 imm32, RegisterID dest)
+    {
+        xorPtr(dest, dest);
+        move(imm32, dest);
+    }
+
+
     using JSC::MacroAssembler::push;
 
     void push(const Pointer& ptr)
@@ -282,42 +319,6 @@ private:
         callFunctionEpilogue();
     }
 #elif CPU(X86_64)
-    void loadArgument(RegisterID source, RegisterID dest)
-    {
-        move(source, dest);
-    }
-
-    void loadArgument(const Pointer& ptr, RegisterID dest)
-    {
-        addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
-    }
-
-    void loadArgument(IR::Temp* temp, RegisterID dest)
-    {
-        if (temp) {
-            Pointer addr = loadTempAddress(dest, temp);
-            loadArgument(addr, dest);
-        } else {
-            xorPtr(dest, dest);
-        }
-    }
-
-    void loadArgument(TrustedImmPtr ptr, RegisterID dest)
-    {
-        move(TrustedImmPtr(ptr), dest);
-    }
-
-    void loadArgument(VM::String* string, RegisterID dest)
-    {
-        loadArgument(TrustedImmPtr(string), dest);
-    }
-
-    void loadArgument(TrustedImm32 imm32, RegisterID dest)
-    {
-        xorPtr(dest, dest);
-        move(imm32, dest);
-    }
-
 
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
     void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
