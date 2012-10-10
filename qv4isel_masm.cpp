@@ -561,22 +561,20 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         IR::Temp *l = b->left->asTemp();
         IR::Temp *r = b->right->asTemp();
         if (l && r) {
-            bool (*op)(Context *, const Value *, const Value *);
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;
-            case IR::OpGt: op = __qmljs_cmp_gt; break;
-            case IR::OpLt: op = __qmljs_cmp_lt; break;
-            case IR::OpGe: op = __qmljs_cmp_ge; break;
-            case IR::OpLe: op = __qmljs_cmp_le; break;
-            case IR::OpEqual: op = __qmljs_cmp_eq; break;
-            case IR::OpNotEqual: op = __qmljs_cmp_ne; break;
-            case IR::OpStrictEqual: op = __qmljs_cmp_se; break;
-            case IR::OpStrictNotEqual: op = __qmljs_cmp_sne; break;
-            case IR::OpInstanceof: op = __qmljs_cmp_instanceof; break;
-            case IR::OpIn: op = __qmljs_cmp_in; break;
+            case IR::OpGt: generateFunctionCall(__qmljs_cmp_gt, ContextRegister, l, r); break;
+            case IR::OpLt: generateFunctionCall(__qmljs_cmp_lt, ContextRegister, l, r); break;
+            case IR::OpGe: generateFunctionCall(__qmljs_cmp_ge, ContextRegister, l, r); break;
+            case IR::OpLe: generateFunctionCall(__qmljs_cmp_le, ContextRegister, l, r); break;
+            case IR::OpEqual: generateFunctionCall(__qmljs_cmp_eq, ContextRegister, l, r); break;
+            case IR::OpNotEqual: generateFunctionCall(__qmljs_cmp_ne, ContextRegister, l, r); break;
+            case IR::OpStrictEqual: generateFunctionCall(__qmljs_cmp_se, ContextRegister, l, r); break;
+            case IR::OpStrictNotEqual: generateFunctionCall(__qmljs_cmp_sne, ContextRegister, l, r); break;
+            case IR::OpInstanceof: generateFunctionCall(__qmljs_cmp_instanceof, ContextRegister, l, r); break;
+            case IR::OpIn: generateFunctionCall(__qmljs_cmp_in, ContextRegister, l, r); break;
             } // switch
 
-            generateFunctionCall(op, ContextRegister, l, r);
             move(ReturnValueRegister, Gpr0);
 
             move(TrustedImm32(1), Gpr1);
