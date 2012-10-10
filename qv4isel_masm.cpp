@@ -534,25 +534,24 @@ void InstructionSelection::jumpToBlock(IR::BasicBlock *target)
 void InstructionSelection::visitCJump(IR::CJump *s)
 {
     if (IR::Temp *t = s->cond->asTemp()) {
-        Address temp = loadTempAddress(Gpr1, t);
+        Address temp = loadTempAddress(Gpr0, t);
         Address tag = temp;
         tag.offset += offsetof(VM::ValueData, tag);
         Jump booleanConversion = branch32(NotEqual, tag, TrustedImm32(VM::Value::Boolean_Type));
 
         Address data = temp;
         data.offset += offsetof(VM::ValueData, b);
-        load32(data, Gpr1);
+        load32(data, Gpr0);
         Jump testBoolean = jump();
 
         booleanConversion.link(this);
         {
             generateFunctionCall(__qmljs_to_boolean, ContextRegister, t);
-            move(ReturnValueRegister, Gpr1);
+            move(ReturnValueRegister, Gpr0);
         }
 
         testBoolean.link(this);
-        move(TrustedImm32(1), Gpr0);
-        Jump target = branch32(Equal, Gpr1, Gpr0);
+        Jump target = branch32(Equal, Gpr0, TrustedImm32(1));
         _patches[s->iftrue].append(target);
 
         jumpToBlock(s->iffalse);
@@ -577,8 +576,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
             move(ReturnValueRegister, Gpr0);
 
-            move(TrustedImm32(1), Gpr1);
-            Jump target = branch32(Equal, Gpr0, Gpr1);
+            Jump target = branch32(Equal, Gpr0, TrustedImm32(1));
             _patches[s->iftrue].append(target);
 
             jumpToBlock(s->iffalse);
