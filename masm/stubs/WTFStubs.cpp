@@ -12,6 +12,11 @@ void* fastMalloc(size_t size)
     return malloc(size);
 }
 
+void* fastRealloc(void* ptr, size_t size)
+{
+    return realloc(ptr, size);
+}
+
 void fastFree(void* ptr)
 {
     free(ptr);

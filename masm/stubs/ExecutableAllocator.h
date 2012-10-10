@@ -23,6 +23,10 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
         munmap(m_data, m_size);
     }
 
+    inline void shrink(size_t) {
+        // ### TODO.
+    }
+
     inline bool isManaged() const { return true; }
 
     void* start() { return m_data; }

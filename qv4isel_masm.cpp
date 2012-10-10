@@ -60,7 +60,7 @@ void InstructionSelection::operator()(IR::Function *function)
     push(ContextRegister);
 #if CPU(X86)
     loadPtr(addressForArgument(0), ContextRegister);
-#elif CPU(X86_64)
+#elif CPU(X86_64) || CPU(ARM)
     move(RegisterArgument1, ContextRegister);
 #else
     assert(!"TODO");
@@ -106,7 +106,9 @@ void InstructionSelection::operator()(IR::Function *function)
 
     WTF::setDataFile(stdout);
     fclose(disasmStream);
+#if CPU(X86) || CPU(X86_64)
     printDisassmbleOutputWithCalls(disasmOutput, functions);
+#endif
     free(disasmOutput);
 
     _function->code = (void (*)(VM::Context *, const uchar *)) _function->codeRef.code().executableAddress();

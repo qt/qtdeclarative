@@ -42,7 +42,6 @@ protected:
     static const RegisterID Gpr1 = JSC::X86Registers::ecx;
     static const RegisterID Gpr2 = JSC::X86Registers::edx;
     static const RegisterID Gpr3 = JSC::X86Registers::esi;
-    static const RegisterID CalleeSavedGpr = ContextRegister;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
     static const RegisterID RegisterArgument1 = JSC::X86Registers::edi;
@@ -51,6 +50,21 @@ protected:
     static const RegisterID RegisterArgument4 = JSC::X86Registers::ecx;
     static const RegisterID RegisterArgument5 = JSC::X86Registers::r8;
     static const RegisterID RegisterArgument6 = JSC::X86Registers::r9;
+#elif CPU(ARM)
+    static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
+    static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
+    static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
+    static const RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
+    static const RegisterID Gpr0 = JSC::ARMRegisters::r6;
+    static const RegisterID Gpr1 = JSC::ARMRegisters::r7;
+    static const RegisterID Gpr2 = JSC::ARMRegisters::r8;
+    static const RegisterID Gpr3 = JSC::ARMRegisters::r10;
+    static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
+
+    static const RegisterID RegisterArgument1 = JSC::ARMRegisters::r0;
+    static const RegisterID RegisterArgument2 = JSC::ARMRegisters::r1;
+    static const RegisterID RegisterArgument3 = JSC::ARMRegisters::r2;
+    static const RegisterID RegisterArgument4 = JSC::ARMRegisters::r3;
 #else
 #error Argh.
 #endif
@@ -68,34 +82,46 @@ protected:
         {}
     };
 
-#if CPU(X86) || CPU(X86_64)
     void enterStandardStackFrame(int locals)
     {
+#if CPU(ARM)
+        push(JSC::ARMRegisters::lr);
+#endif
         push(StackFrameRegister);
         move(StackPointerRegister, StackFrameRegister);
         subPtr(TrustedImm32(locals*sizeof(QQmlJS::VM::Value)), StackPointerRegister);
 #if CPU(X86)
         push(CalleeSavedGpr);
+#elif CPU(ARM)
+        for (int saveReg = JSC::ARMRegisters::r4; saveReg <= JSC::ARMRegisters::r11; ++saveReg)
+            push(static_cast<JSC::ARMRegisters::RegisterID>(saveReg));
 #endif
     }
     void leaveStandardStackFrame(int locals)
     {
 #if CPU(X86)
         pop(CalleeSavedGpr);
+#elif CPU(ARM)
+        for (int saveReg = JSC::ARMRegisters::r11; saveReg >= JSC::ARMRegisters::r4; --saveReg)
+            pop(static_cast<JSC::ARMRegisters::RegisterID>(saveReg));
 #endif
         addPtr(TrustedImm32(locals*sizeof(QQmlJS::VM::Value)), StackPointerRegister);
         pop(StackFrameRegister);
-    }
-#else
-#error Argh.
+#if CPU(ARM)
+        pop(JSC::ARMRegisters::lr);
 #endif
+    }
 
-#if CPU(X86)
-    Address addressForArgument(int index) const
+    Address stackAddressForArgument(int index) const
     {
         return Address(StackFrameRegister, (index + 2) * sizeof(void*));
     }
-#else
+#if CPU(X86)
+    Address addressForArgument(int index) const
+    {
+        return stackAddressForArgument(index);
+    }
+#elif CPU(X86_64)
     Address addressForArgument(int index) const
     {
         static RegisterID args[6] = {
@@ -108,10 +134,22 @@ protected:
         };
         if (index < 6)
             return Address(args[index], 0);
-        else {
-            Q_UNREACHABLE();
-            assert(!"TODO");
-        }
+        else
+            return stackAddressForArgument(index - 6);
+    }
+#elif CPU(ARM)
+    Address addressForArgument(int index) const
+    {
+        static RegisterID args[4] = {
+            RegisterArgument1,
+            RegisterArgument2,
+            RegisterArgument3,
+            RegisterArgument4,
+        };
+        if (index < 4)
+            return Address(args[index], 0);
+        else
+            return stackAddressForArgument(index - 4);
     }
 #endif
 
@@ -380,6 +418,71 @@ private:
         callAbsolute(functionName, function);
         callFunctionEpilogue();
     }
+#elif CPU(ARM)
+
+    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5, Arg6 arg6)
+    {
+        callFunctionPrologue();
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
+        loadArgument(arg3, RegisterArgument3);
+        loadArgument(arg4, RegisterArgument4);
+        push(arg5);
+        push(arg6);
+        callAbsolute(functionName, function);
+        add32(TrustedImm32(2 * sizeof(void*)), StackPointerRegister);
+        callFunctionEpilogue();
+    }
+    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    {
+        callFunctionPrologue();
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
+        loadArgument(arg3, RegisterArgument3);
+        loadArgument(arg4, RegisterArgument4);
+        push(arg5);
+        callAbsolute(functionName, function);
+        add32(TrustedImm32(1 * sizeof(void*)), StackPointerRegister);
+        callFunctionEpilogue();
+    }
+
+
+    template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    {
+        callFunctionPrologue();
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
+        loadArgument(arg3, RegisterArgument3);
+        loadArgument(arg4, RegisterArgument4);
+        callAbsolute(functionName, function);
+        callFunctionEpilogue();
+    }
+
+
+    template <typename Arg1, typename Arg2, typename Arg3>
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    {
+        callFunctionPrologue();
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
+        loadArgument(arg3, RegisterArgument3);
+        callAbsolute(functionName, function);
+        callFunctionEpilogue();
+    }
+
+    template <typename Arg1, typename Arg2>
+    void generateFunctionCallImp(const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
+    {
+        callFunctionPrologue();
+        loadArgument(arg1, RegisterArgument1);
+        loadArgument(arg2, RegisterArgument2);
+        callAbsolute(functionName, function);
+        callFunctionEpilogue();
+    }
+
 #endif
 
     int prepareVariableArguments(IR::ExprList* args);
