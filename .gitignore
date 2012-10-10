@@ -1,3 +1,5 @@
 *.o
 Makefile
 v4
+udis86_itab.*
+*.pyc
