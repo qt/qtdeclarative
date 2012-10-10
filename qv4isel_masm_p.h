@@ -73,15 +73,17 @@ protected:
     {
         push(StackFrameRegister);
         move(StackPointerRegister, StackFrameRegister);
-        // ####
-        subPtr(TrustedImmPtr((void*)locals), StackPointerRegister);
+        subPtr(TrustedImm32(locals), StackPointerRegister);
+#if CPU(X86)
         push(CalleeSavedGpr);
+#endif
     }
     void leaveStandardStackFrame(quintptr locals)
     {
+#if CPU(X86)
         pop(CalleeSavedGpr);
-        // ####
-        addPtr(TrustedImmPtr((void*)locals), StackPointerRegister);
+#endif
+        addPtr(TrustedImm32(locals), StackPointerRegister);
         pop(StackFrameRegister);
     }
 #else
