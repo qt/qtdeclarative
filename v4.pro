@@ -2,11 +2,6 @@ QT = core qmldevtools-private
 CONFIG -= app_bundle
 CONFIG += console
 
-DEFINES += __default_codegen__
-
-udis86:LIBS += -ludis86
-else:DEFINES += NO_UDIS86
-
 LIBS += -rdynamic
 
 SOURCES += main.cpp \
@@ -17,7 +12,6 @@ SOURCES += main.cpp \
     qv4syntaxchecker.cpp \
     qv4ecmaobjects.cpp \
     qv4array.cpp \
-    qv4isel_x86_64.cpp \
     qv4isel_masm.cpp \
     llvm_runtime.cpp
 
@@ -29,20 +23,7 @@ HEADERS += \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
     qv4array_p.h \
-    qv4isel_x86_64_p.h \
     qv4isel_masm_p.h
-
-HEADERS += \
-    asm/x86-codegen.h \
-    asm/amd64-codegen.h \
-    asm/arm-codegen.h \
-    asm/arm-dis.h \
-    asm/arm_dpimacros.h \
-    asm/arm-wmmx.h
-
-SOURCES += \
-    asm/arm-codegen.c \
-    asm/arm-dis.c
 
 llvm {
 

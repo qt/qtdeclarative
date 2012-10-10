@@ -1,7 +1,6 @@
 
 #include "qmljs_objects.h"
 #include "qv4codegen_p.h"
-#include "qv4isel_x86_64_p.h"
 #include "qv4isel_masm_p.h"
 #include "qv4isel_moth_p.h"
 #include "qv4vme_moth_p.h"
