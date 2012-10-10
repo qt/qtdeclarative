@@ -69,7 +69,7 @@ protected:
     };
 
 #if CPU(X86) || CPU(X86_64)
-    void enterStandardStackFrame(int locals)
+    void enterStandardStackFrame(quintptr locals)
     {
         push(StackFrameRegister);
         move(StackPointerRegister, StackFrameRegister);
@@ -77,7 +77,7 @@ protected:
         subPtr(TrustedImmPtr((void*)locals), StackPointerRegister);
         push(CalleeSavedGpr);
     }
-    void leaveStandardStackFrame(int locals)
+    void leaveStandardStackFrame(quintptr locals)
     {
         pop(CalleeSavedGpr);
         // ####

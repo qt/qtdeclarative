@@ -58,7 +58,13 @@ void InstructionSelection::operator()(IR::Function *function)
     enterStandardStackFrame(locals);
 
     push(ContextRegister);
+#if CPU(X86)
     loadPtr(addressForArgument(0), ContextRegister);
+#elif CPU(X86_64)
+    move(RegisterArgument1, ContextRegister);
+#else
+    assert(!"TODO");
+#endif
 
     foreach (IR::BasicBlock *block, _function->basicBlocks) {
         _block = block;
