@@ -153,9 +153,11 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
         case IR::Name::builtin_throw:
             callRuntimeMethod(__qmljs_builtin_throw, result, call->args);
             break;
-        case IR::Name::builtin_rethrow:
-            callRuntimeMethod(__qmljs_builtin_rethrow, result, call->args);
+        case IR::Name::builtin_rethrow: {
+            int argc = prepareVariableArguments(call->args);
+            generateFunctionCall(__qmljs_builtin_rethrow, ContextRegister, result, baseAddressForCallArguments(), TrustedImm32(argc));
             return; // we need to return to avoid checking the exceptions
+        }
         }
     }
 }
