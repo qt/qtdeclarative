@@ -637,9 +637,6 @@ void InstructionSelection::callRuntimeMethodImp(const char* name, BuiltinMethod 
 template <typename Result, typename Source>
 void InstructionSelection::copyValue(Result result, Source source)
 {
-    // ### could avoid using Gpr0 in many cases
-    loadArgument(source, Gpr0);
-    loadDouble(Gpr0, FPGpr0);
-    loadArgument(result, Gpr0);
-    storeDouble(FPGpr0, Gpr0);
+    loadDouble(source, FPGpr0);
+    storeDouble(FPGpr0, result);
 }

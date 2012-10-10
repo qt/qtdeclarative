@@ -391,6 +391,20 @@ private:
 #define callRuntimeMethod(function, ...) \
     callRuntimeMethodImp(isel_stringIfy(function), function, __VA_ARGS__)
 
+    using JSC::MacroAssembler::loadDouble;
+    void loadDouble(IR::Temp* temp, FPRegisterID dest)
+    {
+        Pointer ptr = loadTempAddress(Gpr0, temp);
+        loadDouble(ptr, dest);
+    }
+
+    using JSC::MacroAssembler::storeDouble;
+    void storeDouble(FPRegisterID source, IR::Temp* temp)
+    {
+        Pointer ptr = loadTempAddress(Gpr0, temp);
+        storeDouble(source, ptr);
+    }
+
     template <typename Result, typename Source>
     void copyValue(Result result, Source source);
 
