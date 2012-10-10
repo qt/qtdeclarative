@@ -172,7 +172,7 @@ private:
             Pointer addr = loadTempAddress(Gpr0, temp);
             push(addr);
         } else {
-            xor32(Gpr0, Gpr0);
+            xorPtr(Gpr0, Gpr0);
             push(Gpr0);
         }
     }
@@ -292,7 +292,7 @@ private:
             Pointer addr = loadTempAddress(dest, temp);
             loadArgument(addr, dest);
         } else {
-            xor32(dest, dest);
+            xorPtr(dest, dest);
         }
     }
 
@@ -308,6 +308,7 @@ private:
 
     void loadArgument(TrustedImm32 imm32, RegisterID dest)
     {
+        xorPtr(dest, dest);
         move(imm32, dest);
     }
 
