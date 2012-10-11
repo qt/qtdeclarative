@@ -788,7 +788,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
 static IR::AluOp baseOp(int op)
 {
     switch ((QSOperator::Op) op) {
-    case QSOperator::InplaceAnd: return IR::OpAnd;
+    case QSOperator::InplaceAnd: return IR::OpBitAnd;
     case QSOperator::InplaceSub: return IR::OpSub;
     case QSOperator::InplaceDiv: return IR::OpDiv;
     case QSOperator::InplaceAdd: return IR::OpAdd;
