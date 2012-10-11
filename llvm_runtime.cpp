@@ -27,12 +27,12 @@ void __qmljs_llvm_init_null(Value *result)
 
 void __qmljs_llvm_init_boolean(Value *result, bool value)
 {
-    __qmljs_init_boolean(result, value);
+    *result = Value::fromBoolean(value);
 }
 
 void __qmljs_llvm_init_number(Value *result, double value)
 {
-    __qmljs_init_number(result, value);
+    *result = Value::fromDouble(value);
 }
 
 void __qmljs_llvm_init_string(Context *ctx, Value *result, const char *str)

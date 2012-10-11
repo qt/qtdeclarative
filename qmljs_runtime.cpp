@@ -470,7 +470,7 @@ void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Va
     } else {
         double x = __qmljs_to_number(ctx, &pleft);
         double y = __qmljs_to_number(ctx, &pright);
-        __qmljs_init_number(result, x + y);
+        *result = Value::fromDouble(x + y);
     }
 }
 
@@ -814,15 +814,13 @@ void __qmljs_new_object(Context *ctx, Value *result)
 
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
 {
-    Value value;
-    __qmljs_init_boolean(&value, boolean);
+    Value value = Value::fromBoolean(boolean);
     __qmljs_init_object(result, ctx->engine->newBooleanObject(value));
 }
 
 void __qmljs_new_number_object(Context *ctx, Value *result, double number)
 {
-    Value value;
-    __qmljs_init_number(&value, number);
+    Value value = Value::fromDouble(number);
     __qmljs_init_object(result, ctx->engine->newNumberObject(value));
 }
 
@@ -838,18 +836,16 @@ void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *valu
     object->objectValue()->setProperty(ctx, name, *value, /*flags*/ 0);
 }
 
-void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool number)
+void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool b)
 {
-    Value value;
-    __qmljs_init_boolean(&value, number);
+    Value value = Value::fromBoolean(b);
     object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
 void __qmljs_set_property_number(Context *ctx, Value *object, String *name, double number)
 {
     Q_UNUSED(ctx);
-    Value value;
-    __qmljs_init_number(&value, number);
+    Value value = Value::fromDouble(number);
     object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
@@ -935,8 +931,7 @@ void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
 
 void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool b)
 {
-    Value value;
-    __qmljs_init_boolean(&value, b);
+    Value value = Value::fromBoolean(b);
     __qmljs_set_activation_property(ctx, name, &value);
 }
 
@@ -965,7 +960,7 @@ void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *na
     if (object->isObject()) {
         *result = object->property(ctx, name);
     } else if (object->isString() && name->isEqualTo(ctx->engine->id_length)) {
-        __qmljs_init_number(result,  object->stringValue()->toQString().length());
+        *result = Value::fromDouble(object->stringValue()->toQString().length());
     } else {
         Value o;
         __qmljs_to_object(ctx, &o, object);
@@ -1051,20 +1046,16 @@ bool __qmljs_equal(Context *ctx, const Value *x, const Value *y)
         } else if (x->isUndefined() && y->isNull()) {
             return true;
         } else if (x->isNumber() && y->isString()) {
-            Value ny;
-            __qmljs_init_number(&ny, __qmljs_to_number(ctx, y));
+            Value ny = Value::fromDouble(__qmljs_to_number(ctx, y));
             return __qmljs_equal(ctx, x, &ny);
         } else if (x->isString() && y->isNumber()) {
-            Value nx;
-            __qmljs_init_number(&nx, __qmljs_to_number(ctx, x));
+            Value nx = Value::fromDouble(__qmljs_to_number(ctx, x));
             return __qmljs_equal(ctx, &nx, y);
         } else if (x->isBoolean()) {
-            Value nx;
-            __qmljs_init_number(&nx, (double) x->booleanValue());
+            Value nx = Value::fromDouble((double) x->booleanValue());
             return __qmljs_equal(ctx, &nx, y);
         } else if (y->isBoolean()) {
-            Value ny;
-            __qmljs_init_number(&ny, (double) y->booleanValue());
+            Value ny = Value::fromDouble((double) y->booleanValue());
             return __qmljs_equal(ctx, x, &ny);
         } else if ((x->isNumber() || x->isString()) && y->isObject()) {
             Value py;

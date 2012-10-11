@@ -759,7 +759,7 @@ void StringPrototype::method_charCodeAt(Context *ctx)
     if (pos >= 0 && pos < str.length())
         result = str.at(pos).unicode();
 
-    __qmljs_init_number(&ctx->result, result);
+    ctx->result = Value::fromDouble(result);
 }
 
 void StringPrototype::method_concat(Context *ctx)
@@ -792,7 +792,7 @@ void StringPrototype::method_indexOf(Context *ctx)
     if (! value.isEmpty())
         index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
 
-    __qmljs_init_number(&ctx->result, index);
+    ctx->result = Value::fromDouble(index);
 }
 
 void StringPrototype::method_lastIndexOf(Context *ctx)
@@ -817,14 +817,14 @@ void StringPrototype::method_lastIndexOf(Context *ctx)
     if (!searchString.isEmpty() && pos == value.length())
         --pos;
     int index = value.lastIndexOf(searchString, pos);
-    __qmljs_init_number(&ctx->result, index);
+    ctx->result = Value::fromDouble(index);
 }
 
 void StringPrototype::method_localeCompare(Context *ctx)
 {
     const QString value = getThisString(ctx);
     const QString that = ctx->argument(0).toString(ctx)->toQString();
-    __qmljs_init_number(&ctx->result, QString::localeAwareCompare(value, that));
+    ctx->result = Value::fromDouble(QString::localeAwareCompare(value, that));
 }
 
 void StringPrototype::method_match(Context *ctx)
@@ -982,7 +982,7 @@ void NumberCtor::construct(Context *ctx)
 void NumberCtor::call(Context *ctx)
 {
     double value = ctx->argumentCount ? ctx->argument(0).toNumber(ctx) : 0;
-    __qmljs_init_number(&ctx->result, value);
+    ctx->result = Value::fromDouble(value);
 }
 
 void NumberPrototype::init(Context *ctx, const Value &ctor)
@@ -1160,8 +1160,8 @@ void BooleanCtor::construct(Context *ctx)
 
 void BooleanCtor::call(Context *ctx)
 {
-    double value = ctx->argumentCount ? ctx->argument(0).toBoolean(ctx) : 0;
-    __qmljs_init_boolean(&ctx->result, value);
+    bool value = ctx->argumentCount ? ctx->argument(0).toBoolean(ctx) : 0;
+    ctx->result = Value::fromBoolean(value);
 }
 
 void BooleanPrototype::init(Context *ctx, const Value &ctor)
