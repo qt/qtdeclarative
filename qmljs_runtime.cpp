@@ -295,17 +295,17 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
 {
     engine = e;
     parent = f->scope;
-    __qmljs_init_undefined(&result);
+    result = Value::undefinedValue();
 
     if (f->needsActivation)
         __qmljs_init_object(&activation, engine->newActivationObject(this));
     else
-        __qmljs_init_null(&activation);
+        activation = Value::nullValue();
 
     if (object)
         thisObject = *object;
     else
-        __qmljs_init_null(&thisObject);
+        thisObject = Value::nullValue();
 
     formals = f->formalParameterList;
     formalCount = f->formalParameterCount;
@@ -417,11 +417,15 @@ void __qmljs_string_literal_function(Context *ctx, Value *result)
 void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *index)
 {
     if (ArrayObject *a = base->asArrayObject()) {
-        if (index->isNumber()) {
-            const quint32 n = index->doubleValue();
+        int n = -1;
+        if (index->isInteger())
+            n = index->integerValue();
+        else if (index->isDouble())
+            n = index->doubleValue();
+        if (n >= 0) {
             if (n < a->value.size()) {
                 a->value.assign(n, Value::undefinedValue());
-                __qmljs_init_boolean(result, true);
+                *result = Value::fromBoolean(true);
                 return;
             }
         }
@@ -434,7 +438,7 @@ void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *i
 void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *name)
 {
     Value obj = base->toObject(ctx);
-    __qmljs_init_boolean(result, obj.objectValue()->deleteProperty(ctx, name, true));
+    *result = Value::fromBoolean(obj.objectValue()->deleteProperty(ctx, name, true));
 }
 
 void __qmljs_delete_property(Context *ctx, Value *result, String *name)
@@ -442,7 +446,7 @@ void __qmljs_delete_property(Context *ctx, Value *result, String *name)
     Value obj = ctx->activation;
     if (! obj.isObject())
         obj = ctx->engine->globalObject;
-    __qmljs_init_boolean(result, obj.objectValue()->deleteProperty(ctx, name, true));
+    *result = Value::fromBoolean(obj.objectValue()->deleteProperty(ctx, name, true));
 }
 
 void __qmljs_delete_value(Context *ctx, Value *result, Value *value)
@@ -474,7 +478,7 @@ void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Va
 {
     if (FunctionObject *function = right->asFunctionObject()) {
         bool r = function->hasInstance(ctx, *left);
-        __qmljs_init_boolean(result, r);
+        *result = Value::fromBoolean(r);
         return;
     }
 
@@ -487,7 +491,7 @@ void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *rig
         Value s;
         __qmljs_to_string(ctx, &s, left);
         bool r = right->objectValue()->hasProperty(ctx, s.stringValue());
-        __qmljs_init_boolean(result, r);
+        *result = Value::fromBoolean(r);
     } else {
         __qmljs_throw_type_error(ctx, result);
     }
@@ -793,7 +797,7 @@ void __qmljs_object_default_value(Context *ctx, Value *result, const Value *obje
         }
     }
 
-    __qmljs_init_undefined(result);
+    *result = Value::undefinedValue();
 }
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
@@ -867,13 +871,13 @@ void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR:
 void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index)
 {
     if (object->isString() && index->isNumber()) {
-        const QString s = object->stringValue()->toQString().mid(Value::toUInt32(index->doubleValue()), 1);
+        const QString s = object->stringValue()->toQString().mid(index->toUInt32(ctx), 1);
         if (s.isNull())
-            __qmljs_init_undefined(result);
+            *result = Value::undefinedValue();
         else
             *result = Value::fromString(ctx, s);
     } else if (object->isArrayObject() && index->isNumber()) {
-        *result = object->asArrayObject()->value.at(Value::toUInt32(index->doubleValue()));
+        *result = object->asArrayObject()->value.at(index->toUInt32(ctx));
     } else {
         String *name = index->toString(ctx);
 
@@ -887,7 +891,7 @@ void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *inde
 void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value)
 {
     if (object->isArrayObject() && index->isNumber()) {
-        object->asArrayObject()->value.assign(Value::toUInt32(index->doubleValue()), *value);
+        object->asArrayObject()->value.assign(index->toUInt32(ctx), *value);
     } else {
         String *name = index->toString(ctx);
 
@@ -900,8 +904,7 @@ void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value
 
 void __qmljs_set_element_number(Context *ctx, Value *object, Value *index, double number)
 {
-    Value v;
-    __qmljs_init_number(&v, number);
+    Value v = Value::fromDouble(number);
     __qmljs_set_element(ctx, object, index, &v);
 }
 
@@ -939,8 +942,7 @@ void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool b)
 
 void __qmljs_set_activation_property_number(Context *ctx, String *name, double number)
 {
-    Value value;
-    __qmljs_init_number(&value, number);
+    Value value = Value::fromDouble(number);
     __qmljs_set_activation_property(ctx, name, &value);
 }
 
@@ -1010,14 +1012,14 @@ void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y
 
     if (px.isString() && py.isString()) {
         bool r = __qmljs_string_compare(ctx, px.stringValue(), py.stringValue());
-        __qmljs_init_boolean(result, r);
+        *result = Value::fromBoolean(r);
     } else {
         double nx = __qmljs_to_number(ctx, &px);
         double ny = __qmljs_to_number(ctx, &py);
         if (isnan(nx) || isnan(ny)) {
-            __qmljs_init_undefined(result);
+            *result = Value::undefinedValue();
         } else {
-            __qmljs_init_boolean(result, nx < ny);
+            *result = Value::fromBoolean(nx < ny);
         }
     }
 }
@@ -1099,7 +1101,7 @@ void __qmljs_call_property(Context *context, Value *result, const Value *base, S
         thisObject = baseObject;
     } else {
         baseObject = context->activation;
-        __qmljs_init_null(&thisObject);
+        thisObject = Value::nullValue();
     }
     Value func = baseObject.property(context, name);
     if (FunctionObject *f = func.asFunctionObject()) {

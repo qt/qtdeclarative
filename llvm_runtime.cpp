@@ -17,12 +17,12 @@ Value *__qmljs_llvm_get_argument(Context *ctx, int index)
 
 void __qmljs_llvm_init_undefined(Value *result)
 {
-    __qmljs_init_undefined(result);
+    *result = Value::undefinedValue();
 }
 
 void __qmljs_llvm_init_null(Value *result)
 {
-    __qmljs_init_null(result);
+    *result = Value::nullValue();
 }
 
 void __qmljs_llvm_init_boolean(Value *result, bool value)
