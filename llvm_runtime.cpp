@@ -37,7 +37,7 @@ void __qmljs_llvm_init_number(Value *result, double value)
 
 void __qmljs_llvm_init_string(Context *ctx, Value *result, const char *str)
 {
-    __qmljs_init_string(result, __qmljs_string_from_utf8(ctx, str));
+    *result = Value::fromString(__qmljs_string_from_utf8(ctx, str));
 }
 
 void __qmljs_llvm_init_native_function(Context *ctx, Value *result, void (*code)(Context *))

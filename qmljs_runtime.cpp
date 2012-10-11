@@ -371,47 +371,47 @@ void __qmljs_init_native_function(Context *ctx, Value *result, void (*code)(Cont
 
 void __qmljs_string_literal_undefined(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("undefined")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("undefined")));
 }
 
 void __qmljs_string_literal_null(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("null")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("null")));
 }
 
 void __qmljs_string_literal_true(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("true")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("true")));
 }
 
 void __qmljs_string_literal_false(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("false")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("false")));
 }
 
 void __qmljs_string_literal_object(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("object")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("object")));
 }
 
 void __qmljs_string_literal_boolean(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("boolean")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("boolean")));
 }
 
 void __qmljs_string_literal_number(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("number")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("number")));
 }
 
 void __qmljs_string_literal_string(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("string")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("string")));
 }
 
 void __qmljs_string_literal_function(Context *ctx, Value *result)
 {
-    __qmljs_init_string(result, ctx->engine->identifier(QStringLiteral("function")));
+    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("function")));
 }
 
 void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *index)
@@ -466,7 +466,7 @@ void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Va
         if (!pright.isString())
             __qmljs_to_string(ctx, &pright, &pright);
         String *string = __qmljs_string_concat(ctx, pleft.stringValue(), pright.stringValue());
-        __qmljs_init_string(result, string);
+        *result = Value::fromString(string);
     } else {
         double x = __qmljs_to_number(ctx, &pleft);
         double y = __qmljs_to_number(ctx, &pright);
@@ -736,7 +736,7 @@ double __qmljs_string_to_number(Context *, String *string)
 void __qmljs_string_from_number(Context *ctx, Value *result, double number)
 {
     String *string = ctx->engine->newString(numberToString(number, 10));
-    __qmljs_init_string(result, string);
+    *result = Value::fromString(string);
 }
 
 bool __qmljs_string_compare(Context *, String *left, String *right)
@@ -826,8 +826,7 @@ void __qmljs_new_number_object(Context *ctx, Value *result, double number)
 
 void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
 {
-    Value value;
-    __qmljs_init_string(&value, string);
+    Value value = Value::fromString(string);
     __qmljs_init_object(result, ctx->engine->newStringObject(value));
 }
 
@@ -852,8 +851,7 @@ void __qmljs_set_property_number(Context *ctx, Value *object, String *name, doub
 void __qmljs_set_property_string(Context *ctx, Value *object, String *name, String *s)
 {
     Q_UNUSED(ctx);
-    Value value;
-    __qmljs_init_string(&value, s);
+    Value value = Value::fromString(s);
     object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
@@ -943,8 +941,7 @@ void __qmljs_set_activation_property_number(Context *ctx, String *name, double n
 
 void __qmljs_set_activation_property_string(Context *ctx, String *name, String *string)
 {
-    Value value;
-    __qmljs_init_string(&value, string);
+    Value value = Value::fromString(string);
     __qmljs_set_activation_property(ctx, name, &value);
 }
 

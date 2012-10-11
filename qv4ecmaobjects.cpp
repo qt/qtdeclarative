@@ -671,7 +671,7 @@ void StringCtor::call(Context *ctx)
 {
     const Value arg = ctx->argument(0);
     if (arg.is(Value::Undefined_Type))
-        __qmljs_init_string(&ctx->result, ctx->engine->newString(QString()));
+        ctx->result = Value::fromString(ctx->engine->newString(QString()));
     else
         __qmljs_to_string(ctx, &ctx->result, &arg);
 }

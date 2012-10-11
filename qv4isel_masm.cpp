@@ -310,6 +310,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 copyValue(t, t2);
                 return;
             } else if (IR::String *str = s->source->asString()) {
+                // ### inline
                 generateFunctionCall(__qmljs_init_string, t, _engine->newString(*str->value));
                 return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
