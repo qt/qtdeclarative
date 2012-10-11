@@ -1,5 +1,5 @@
-include(../../../doc/global/qt-html-templates-offline.qdocconf)
-include(../../../doc/global/qt-module-defaults.qdocconf)
+include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtQml
 description             = Qt QML Reference Documentation
@@ -29,7 +29,6 @@ qhp.QtQml.subprojects.examples.title = Qt QML Examples
 qhp.QtQml.subprojects.examples.indexTitle = Qt QML Examples
 qhp.QtQml.subprojects.examples.selectors = fake:example
 
-outputdir               = ../../../doc/qtqml
 tagfile                 = ../../../doc/qtqml/qtqml.tags
 
 depends += qtcore qtxmlpatterns

@@ -14,10 +14,9 @@ exists("qqml_enable_gcov") {
     LIBS += -lgcov
 }
 
-load(qt_module)
-
 QMAKE_DOCS = $$PWD/doc/qtquick.qdocconf
-QMAKE_DOCS_INDEX = ../../doc
+
+load(qt_module)
 
 include(util/util.pri)
 include(scenegraph/scenegraph.pri)

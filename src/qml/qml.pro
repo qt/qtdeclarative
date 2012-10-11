@@ -13,9 +13,9 @@ exists("qqml_enable_gcov") {
     LIBS += -lgcov
 }
 
-load(qt_module)
-
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf
+
+load(qt_module)
 
 HEADERS += qtqmlglobal.h \
            qtqmlglobal_p.h

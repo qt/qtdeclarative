@@ -1,5 +1,5 @@
-include(../../../doc/global/qt-html-templates-offline.qdocconf)
-include(../../../doc/global/qt-module-defaults.qdocconf)
+include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtQuick
 description             = Qt Quick Reference Documentation
@@ -30,7 +30,6 @@ qhp.QtQuick.subprojects.examples.title = Qt Quick Examples
 qhp.QtQuick.subprojects.examples.indexTitle = Qt Quick Examples
 qhp.QtQuick.subprojects.examples.selectors = fake:example
 
-outputdir               = ../../../doc/qtquick
 tagfile                 = ../../../doc/qtquick/qtquick.tags
 
 depends += qtcore qtxmlpatterns qtqml
