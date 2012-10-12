@@ -46,7 +46,8 @@
 
 namespace JSC {
 
-struct JSGlobalData {
+class JSGlobalData {
+public:
     ExecutableAllocator executableAllocator;
 };
 

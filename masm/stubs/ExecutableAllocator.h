@@ -48,7 +48,7 @@
 
 namespace JSC {
 
-struct JSGlobalData;
+class JSGlobalData;
 
 struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     ExecutableMemoryHandle(int size)
