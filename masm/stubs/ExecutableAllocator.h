@@ -56,6 +56,9 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
     {
         static size_t pageSize = sysconf(_SC_PAGESIZE);
         m_size = (m_size + pageSize - 1) & ~(pageSize - 1);
+#if OS(DARWIN)
+#  define MAP_ANONYMOUS MAP_ANON
+#endif
         m_data = mmap(0, m_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     }
     ~ExecutableMemoryHandle()
