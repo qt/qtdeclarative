@@ -247,7 +247,6 @@ struct ValueData {
             union {
                 uint uint_32;
                 int int_32;
-                bool b;
             };
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
             uint tag;
@@ -286,7 +285,7 @@ template <> struct ValueBase<4> : public ValueData
     }
 
     bool booleanValue() const {
-        return b;
+        return int_32;
     }
     double doubleValue() const {
         return dbl;
@@ -352,7 +351,7 @@ template <> struct ValueBase<8> : public ValueData
     }
 
     bool booleanValue() const {
-        return b;
+        return int_32;
     }
     double doubleValue() const {
         return dbl;
@@ -463,7 +462,7 @@ inline Value ValueBase<4>::fromBoolean(bool b)
 {
     Value v;
     v.tag = Boolean_Type;
-    v.b = b;
+    v.int_32 = b;
     return v;
 }
 
@@ -517,7 +516,7 @@ inline Value ValueBase<8>::fromBoolean(bool b)
 {
     Value v;
     v.tag = Boolean_Type;
-    v.b = b;
+    v.int_32 = b;
     return v;
 }
 
@@ -555,7 +554,7 @@ inline Value ValueBase<8>::fromObject(Object *o)
 template <Value::ValueType> struct ValueOffsetHelper;
 template <> struct ValueOffsetHelper<Value::Boolean_Type>
 {
-    enum { DataOffset = offsetof(ValueData, b) };
+    enum { DataOffset = offsetof(ValueData, int_32) };
 };
 
 template <> struct ValueOffsetHelper<Value::Undefined_Type>
@@ -799,8 +798,8 @@ inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
     case Value::Integer_Type:
         __qmljs_string_from_number(ctx, result, value->int_32);
         break;
-    default: // double
-        __qmljs_string_from_number(ctx, result, value->doubleValue());
+    default: // number
+        __qmljs_string_from_number(ctx, result, value->asDouble());
         break;
 
     } // switch
@@ -1138,7 +1137,7 @@ inline void __qmljs_eq(Context *ctx, Value *result, const Value *left, const Val
 inline void __qmljs_ne(Context *ctx, Value *result, const Value *left, const Value *right)
 {
     __qmljs_eq(ctx, result, left, right);
-    result->b = !result->b;
+    result->int_32 = !(bool)result->int_32;
 }
 
 inline void __qmljs_se(Context *ctx, Value *result, const Value *left, const Value *right)

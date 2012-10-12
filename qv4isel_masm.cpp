@@ -548,7 +548,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         Jump booleanConversion = branch32(NotEqual, tag, TrustedImm32(VM::Value::Boolean_Type));
 
         Address data = temp;
-        data.offset += offsetof(VM::ValueData, b);
+        data.offset += offsetof(VM::ValueData, int_32);
         load32(data, Gpr0);
         Jump testBoolean = jump();
 
@@ -559,7 +559,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         }
 
         testBoolean.link(this);
-        Jump target = branch32(Equal, Gpr0, TrustedImm32(1));
+        Jump target = branch32(NotEqual, Gpr0, TrustedImm32(0));
         _patches[s->iftrue].append(target);
 
         jumpToBlock(s->iffalse);
