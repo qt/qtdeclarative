@@ -62,7 +62,8 @@ namespace {
 QTextStream qout(stderr, QIODevice::WriteOnly);
 }
 
-static void printDisassmbleOutputWithCalls(const char* output, const QHash<void*, const char*>& functions)
+#if OS(LINUX)
+static void printDisassembledOutputWithCalls(const char* output, const QHash<void*, const char*>& functions)
 {
     QByteArray processedOutput(output);
     for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
@@ -73,6 +74,7 @@ static void printDisassmbleOutputWithCalls(const char* output, const QHash<void*
     }
     fprintf(stderr, "%s\n", processedOutput.constData());
 }
+#endif
 
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module, uchar *buffer)
     : _engine(engine)
@@ -137,10 +139,12 @@ void InstructionSelection::operator()(IR::Function *function)
         functions[ctl.externalFunction.value()] = ctl.functionName;
     }
 
+#if OS(LINUX)
     char* disasmOutput = 0;
     size_t disasmLength = 0;
     FILE* disasmStream = open_memstream(&disasmOutput, &disasmLength);
     WTF::setDataFile(disasmStream);
+#endif
 
     QByteArray name = _function->name->toUtf8();
     if (name.startsWith('%'))
@@ -148,11 +152,13 @@ void InstructionSelection::operator()(IR::Function *function)
     _function->codeRef = linkBuffer.finalizeCodeWithDisassembly(name.data());
 
     WTF::setDataFile(stderr);
+#if OS(LINUX)
     fclose(disasmStream);
 #if CPU(X86) || CPU(X86_64)
-    printDisassmbleOutputWithCalls(disasmOutput, functions);
+    printDisassembledOutputWithCalls(disasmOutput, functions);
 #endif
     free(disasmOutput);
+#endif
 
     _function->code = (void (*)(VM::Context *, const uchar *)) _function->codeRef.code().executableAddress();
 
