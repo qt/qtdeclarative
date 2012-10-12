@@ -1027,6 +1027,8 @@ bool __qmljs_equal(Context *ctx, const Value *x, const Value *y)
         case Value::Boolean_Type:
             return x->booleanValue() == y->booleanValue();
             break;
+        case Value::Integer_Type:
+            return x->integerValue() == y->integerValue();
         case Value::String_Type:
             return __qmljs_string_equal(ctx, x->stringValue(), y->stringValue());
         case Value::Object_Type:
