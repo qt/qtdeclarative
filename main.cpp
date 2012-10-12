@@ -39,6 +39,25 @@
 **
 ****************************************************************************/
 
+#ifndef QMLJS_NO_LLVM
+// These includes have to come first, because WTF/Platform.h defines some macros
+// with very unfriendly names that collide with class fields in LLVM.
+#  include <llvm/PassManager.h>
+#  include <llvm/Analysis/Passes.h>
+#  include <llvm/Transforms/Scalar.h>
+#  include <llvm/Transforms/IPO.h>
+#  include <llvm/Assembly/PrintModulePass.h>
+#  include <llvm/Support/raw_ostream.h>
+#  include <llvm/Support/FormattedStream.h>
+#  include <llvm/Support/Host.h>
+#  include <llvm/Support/TargetRegistry.h>
+#  include <llvm/Support/TargetSelect.h>
+#  include <llvm/Target/TargetMachine.h>
+#  include <llvm/Target/TargetData.h>
+
+#  include "qv4isel_llvm_p.h"
+#endif
+
 #include "qmljs_objects.h"
 #include "qv4codegen_p.h"
 #include "qv4isel_masm_p.h"
@@ -55,23 +74,6 @@
 
 #include <sys/mman.h>
 #include <iostream>
-
-#ifndef QMLJS_NO_LLVM
-#  include "qv4isel_llvm_p.h"
-
-#  include <llvm/PassManager.h>
-#  include <llvm/Analysis/Passes.h>
-#  include <llvm/Transforms/Scalar.h>
-#  include <llvm/Transforms/IPO.h>
-#  include <llvm/Assembly/PrintModulePass.h>
-#  include <llvm/Support/raw_ostream.h>
-#  include <llvm/Support/FormattedStream.h>
-#  include <llvm/Support/Host.h>
-#  include <llvm/Support/TargetRegistry.h>
-#  include <llvm/Support/TargetSelect.h>
-#  include <llvm/Target/TargetMachine.h>
-#  include <llvm/Target/TargetData.h>
-#endif
 
 static inline bool protect(const void *addr, size_t size)
 {
