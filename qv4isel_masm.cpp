@@ -266,6 +266,9 @@ void InstructionSelection::visitLeave(IR::Leave *)
 
 void InstructionSelection::visitMove(IR::Move *s)
 {
+    #define setOp(op, opName, operation) \
+        do { op = operation; opName = isel_stringIfy(operation); } while (0)
+
     if (s->op == IR::OpInvalid) {
         if (IR::Name *n = s->target->asName()) {
             String *propertyName = identifier(*n->id);
@@ -345,20 +348,28 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::Unop *u = s->source->asUnop()) {
                 if (IR::Temp *e = u->expr->asTemp()) {
+                    void (*op)(Context *ctx, Value *result, const Value *value) = 0;
+                    const char *opName = 0;
                     switch (u->op) {
                     case IR::OpIfTrue: assert(!"unreachable"); break;
-                    case IR::OpNot: generateFunctionCall(__qmljs_not, ContextRegister, t, e); break;
-                    case IR::OpUMinus: generateFunctionCall(__qmljs_uminus, ContextRegister, t, e); break;
-                    case IR::OpUPlus: generateFunctionCall(__qmljs_uplus, ContextRegister, t, e); break;
-                    case IR::OpCompl: generateFunctionCall(__qmljs_compl, ContextRegister, t, e); break;
+                    case IR::OpNot: setOp(op, opName, __qmljs_not); break;
+                    case IR::OpUMinus: setOp(op, opName, __qmljs_uminus); break;
+                    case IR::OpUPlus: setOp(op, opName, __qmljs_uplus); break;
+                    case IR::OpCompl: setOp(op, opName, __qmljs_compl); break;
                     default: assert(!"unreachable"); break;
                     } // switch
+
+                    if (op)
+                        generateFunctionCallImp(opName, op, ContextRegister, t, e);
                     return;
                 }
             } else if (IR::Binop *b = s->source->asBinop()) {
                 IR::Temp *l = b->left->asTemp();
                 IR::Temp *r = b->right->asTemp();
                 if (l && r) {
+                    void (*op)(Context *, Value *, const Value *, const Value *) = 0;
+                    const char* opName = 0;
+
                     switch ((IR::AluOp) b->op) {
                     case IR::OpInvalid:
                     case IR::OpIfTrue:
@@ -369,32 +380,36 @@ void InstructionSelection::visitMove(IR::Move *s)
                         assert(!"unreachable");
                         break;
 
-                    case IR::OpBitAnd: generateFunctionCall(__qmljs_bit_and, ContextRegister, t, l, r); break;
-                    case IR::OpBitOr: generateFunctionCall(__qmljs_bit_or, ContextRegister, t, l, r); break;
-                    case IR::OpBitXor: generateFunctionCall(__qmljs_bit_xor, ContextRegister, t, l, r); break;
-                    case IR::OpAdd: generateFunctionCall(__qmljs_add, ContextRegister, t, l, r); break;
-                    case IR::OpSub: generateFunctionCall(__qmljs_sub, ContextRegister, t, l, r); break;
-                    case IR::OpMul: generateFunctionCall(__qmljs_mul, ContextRegister, t, l, r); break;
-                    case IR::OpDiv: generateFunctionCall(__qmljs_div, ContextRegister, t, l, r); break;
-                    case IR::OpMod: generateFunctionCall(__qmljs_mod, ContextRegister, t, l, r); break;
-                    case IR::OpLShift: generateFunctionCall(__qmljs_shl, ContextRegister, t, l, r); break;
-                    case IR::OpRShift: generateFunctionCall(__qmljs_shr, ContextRegister, t, l, r); break;
-                    case IR::OpURShift: generateFunctionCall(__qmljs_ushr, ContextRegister, t, l, r); break;
-                    case IR::OpGt: generateFunctionCall(__qmljs_gt, ContextRegister, t, l, r); break;
-                    case IR::OpLt: generateFunctionCall(__qmljs_lt, ContextRegister, t, l, r); break;
-                    case IR::OpGe: generateFunctionCall(__qmljs_ge, ContextRegister, t, l, r); break;
-                    case IR::OpLe: generateFunctionCall(__qmljs_le, ContextRegister, t, l, r); break;
-                    case IR::OpEqual: generateFunctionCall(__qmljs_eq, ContextRegister, t, l, r); break;
-                    case IR::OpNotEqual: generateFunctionCall(__qmljs_ne, ContextRegister, t, l, r); break;
-                    case IR::OpStrictEqual: generateFunctionCall(__qmljs_se, ContextRegister, t, l, r); break;
-                    case IR::OpStrictNotEqual: generateFunctionCall(__qmljs_sne, ContextRegister, t, l, r); break;
-                    case IR::OpInstanceof: generateFunctionCall(__qmljs_instanceof, ContextRegister, t, l, r); break;
-                    case IR::OpIn: generateFunctionCall(__qmljs_in, ContextRegister, t, l, r); break;
+                    case IR::OpBitAnd: setOp(op, opName, __qmljs_bit_and); break;
+                    case IR::OpBitOr: setOp(op, opName, __qmljs_bit_or); break;
+                    case IR::OpBitXor: setOp(op, opName, __qmljs_bit_xor); break;
+                    case IR::OpAdd: setOp(op, opName, __qmljs_add); break;
+                    case IR::OpSub: setOp(op, opName, __qmljs_sub); break;
+                    case IR::OpMul: setOp(op, opName, __qmljs_mul); break;
+                    case IR::OpDiv: setOp(op, opName, __qmljs_div); break;
+                    case IR::OpMod: setOp(op, opName, __qmljs_mod); break;
+                    case IR::OpLShift: setOp(op, opName, __qmljs_shl); break;
+                    case IR::OpRShift: setOp(op, opName, __qmljs_shr); break;
+                    case IR::OpURShift: setOp(op, opName, __qmljs_ushr); break;
+                    case IR::OpGt: setOp(op, opName, __qmljs_gt); break;
+                    case IR::OpLt: setOp(op, opName, __qmljs_lt); break;
+                    case IR::OpGe: setOp(op, opName, __qmljs_ge); break;
+                    case IR::OpLe: setOp(op, opName, __qmljs_le); break;
+                    case IR::OpEqual: setOp(op, opName, __qmljs_eq); break;
+                    case IR::OpNotEqual: setOp(op, opName, __qmljs_ne); break;
+                    case IR::OpStrictEqual: setOp(op, opName, __qmljs_se); break;
+                    case IR::OpStrictNotEqual: setOp(op, opName, __qmljs_sne); break;
+                    case IR::OpInstanceof: setOp(op, opName, __qmljs_instanceof); break;
+                    case IR::OpIn: setOp(op, opName, __qmljs_in);
 
                     case IR::OpAnd:
                     case IR::OpOr:
                         assert(!"unreachable");
                         break;
+                    }
+
+                    if (op) {
+                        generateFunctionCallImp(opName, op, ContextRegister, t, l, r);
                     }
                     return;
                 }
@@ -433,91 +448,110 @@ void InstructionSelection::visitMove(IR::Move *s)
         // inplace assignment, e.g. x += 1, ++x, ...
         if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Temp *t2 = s->source->asTemp()) {
+                void (*op)(Context *ctx, Value *result, const Value *left,const Value *right) = 0;
+                const char *opName = 0;
                 switch (s->op) {
-                case IR::OpBitAnd: generateFunctionCall(__qmljs_bit_and, ContextRegister, t, t, t2); break;
-                case IR::OpBitOr: generateFunctionCall(__qmljs_bit_or, ContextRegister, t, t, t2); break;
-                case IR::OpBitXor: generateFunctionCall(__qmljs_bit_xor, ContextRegister, t, t, t2); break;
-                case IR::OpAdd: generateFunctionCall(__qmljs_add, ContextRegister, t, t, t2); break;
-                case IR::OpSub: generateFunctionCall(__qmljs_sub, ContextRegister, t, t, t2); break;
-                case IR::OpMul: generateFunctionCall(__qmljs_mul, ContextRegister, t, t, t2); break;
-                case IR::OpDiv: generateFunctionCall(__qmljs_div, ContextRegister, t, t, t2); break;
-                case IR::OpMod: generateFunctionCall(__qmljs_mod, ContextRegister, t, t, t2); break;
-                case IR::OpLShift: generateFunctionCall(__qmljs_shl, ContextRegister, t, t, t2); break;
-                case IR::OpRShift: generateFunctionCall(__qmljs_shr, ContextRegister, t, t, t2); break;
-                case IR::OpURShift: generateFunctionCall(__qmljs_ushr, ContextRegister, t, t, t2); break;
+                case IR::OpBitAnd: setOp(op, opName, __qmljs_bit_and); break;
+                case IR::OpBitOr: setOp(op, opName, __qmljs_bit_or); break;
+                case IR::OpBitXor: setOp(op, opName, __qmljs_bit_xor); break;
+                case IR::OpAdd: setOp(op, opName, __qmljs_add); break;
+                case IR::OpSub: setOp(op, opName, __qmljs_sub); break;
+                case IR::OpMul: setOp(op, opName, __qmljs_mul); break;
+                case IR::OpDiv: setOp(op, opName, __qmljs_div); break;
+                case IR::OpMod: setOp(op, opName, __qmljs_mod); break;
+                case IR::OpLShift: setOp(op, opName, __qmljs_shl); break;
+                case IR::OpRShift: setOp(op, opName, __qmljs_shr); break;
+                case IR::OpURShift: setOp(op, opName, __qmljs_ushr); break;
                 default:
                     Q_UNREACHABLE();
                     break;
                 }
+                if (op)
+                    generateFunctionCallImp(opName, op, ContextRegister, t, t, t2);
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {
             if (IR::Temp *t = s->source->asTemp()) {
+                void (*op)(Context *ctx, String *name, Value *value) = 0;
+                const char *opName = 0;
                 switch (s->op) {
-                case IR::OpBitAnd: generateFunctionCall(__qmljs_inplace_bit_and_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpBitOr: generateFunctionCall(__qmljs_inplace_bit_or_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpBitXor: generateFunctionCall(__qmljs_inplace_bit_xor_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpAdd: generateFunctionCall(__qmljs_inplace_add_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpSub: generateFunctionCall(__qmljs_inplace_sub_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpMul: generateFunctionCall(__qmljs_inplace_mul_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpDiv: generateFunctionCall(__qmljs_inplace_div_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpMod: generateFunctionCall(__qmljs_inplace_mod_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpLShift: generateFunctionCall(__qmljs_inplace_shl_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpRShift: generateFunctionCall(__qmljs_inplace_shr_name, ContextRegister, identifier(*n->id), t); break;
-                case IR::OpURShift: generateFunctionCall(__qmljs_inplace_ushr_name, ContextRegister, identifier(*n->id), t); break;
+                case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
+                case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_name); break;
+                case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_name); break;
+                case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_name); break;
+                case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_name); break;
+                case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_name); break;
+                case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_name); break;
+                case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_name); break;
+                case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_name); break;
+                case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_name); break;
+                case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_name); break;
                 default:
                     Q_UNREACHABLE();
                     break;
                 }
-                checkExceptions();
+                if (op) {
+                    generateFunctionCallImp(opName, op, ContextRegister, identifier(*n->id), t);
+                    checkExceptions();
+                }
                 return;
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
             if (IR::Temp *t = s->source->asTemp()) {
-                IR::Temp* base = ss->base->asTemp();
-                IR::Temp* index = ss->index->asTemp();
+                void (*op)(Context *ctx, Value *base, Value *index, Value *value) = 0;
+                const char *opName = 0;
                 switch (s->op) {
-                case IR::OpBitAnd: generateFunctionCall(__qmljs_inplace_bit_and_element, ContextRegister, base, index, t); break;
-                case IR::OpBitOr: generateFunctionCall(__qmljs_inplace_bit_or_element, ContextRegister, base, index, t); break;
-                case IR::OpBitXor: generateFunctionCall(__qmljs_inplace_bit_xor_element, ContextRegister, base, index, t); break;
-                case IR::OpAdd: generateFunctionCall(__qmljs_inplace_add_element, ContextRegister, base, index, t); break;
-                case IR::OpSub: generateFunctionCall(__qmljs_inplace_sub_element, ContextRegister, base, index, t); break;
-                case IR::OpMul: generateFunctionCall(__qmljs_inplace_mul_element, ContextRegister, base, index, t); break;
-                case IR::OpDiv: generateFunctionCall(__qmljs_inplace_div_element, ContextRegister, base, index, t); break;
-                case IR::OpMod: generateFunctionCall(__qmljs_inplace_mod_element, ContextRegister, base, index, t); break;
-                case IR::OpLShift: generateFunctionCall(__qmljs_inplace_shl_element, ContextRegister, base, index, t); break;
-                case IR::OpRShift: generateFunctionCall(__qmljs_inplace_shr_element, ContextRegister, base, index, t); break;
-                case IR::OpURShift: generateFunctionCall(__qmljs_inplace_ushr_element, ContextRegister, base, index, t); break;
+                case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_element); break;
+                case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_element); break;
+                case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_element); break;
+                case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_element); break;
+                case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_element); break;
+                case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_element); break;
+                case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_element); break;
+                case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_element); break;
+                case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_element); break;
+                case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_element); break;
+                case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_element); break;
                 default:
                     Q_UNREACHABLE();
                     break;
                 }
 
-                checkExceptions();
+                if (op) {
+                    IR::Temp* base = ss->base->asTemp();
+                    IR::Temp* index = ss->index->asTemp();
+                    generateFunctionCallImp(opName, op, ContextRegister, base, index, t);
+                    checkExceptions();
+                }
                 return;
             }
         } else if (IR::Member *m = s->target->asMember()) {
             if (IR::Temp *t = s->source->asTemp()) {
-                IR::Temp* base = m->base->asTemp();
-                String* member = identifier(*m->name);
+                void (*op)(Context *ctx, Value *base, String *name, Value *value) = 0;
+                const char *opName = 0;
                 switch (s->op) {
-                case IR::OpBitAnd: generateFunctionCall(__qmljs_inplace_bit_and_member, ContextRegister, base, member, t); break;
-                case IR::OpBitOr: generateFunctionCall(__qmljs_inplace_bit_or_member, ContextRegister, base, member, t); break;
-                case IR::OpBitXor: generateFunctionCall(__qmljs_inplace_bit_xor_member, ContextRegister, base, member, t); break;
-                case IR::OpAdd: generateFunctionCall(__qmljs_inplace_add_member, ContextRegister, base, member, t); break;
-                case IR::OpSub: generateFunctionCall(__qmljs_inplace_sub_member, ContextRegister, base, member, t); break;
-                case IR::OpMul: generateFunctionCall(__qmljs_inplace_mul_member, ContextRegister, base, member, t); break;
-                case IR::OpDiv: generateFunctionCall(__qmljs_inplace_div_member, ContextRegister, base, member, t); break;
-                case IR::OpMod: generateFunctionCall(__qmljs_inplace_mod_member, ContextRegister, base, member, t); break;
-                case IR::OpLShift: generateFunctionCall(__qmljs_inplace_shl_member, ContextRegister, base, member, t); break;
-                case IR::OpRShift: generateFunctionCall(__qmljs_inplace_shr_member, ContextRegister, base, member, t); break;
-                case IR::OpURShift: generateFunctionCall(__qmljs_inplace_ushr_member, ContextRegister, base, member, t); break;
+                case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_member); break;
+                case IR::OpBitOr: setOp(op, opName, __qmljs_inplace_bit_or_member); break;
+                case IR::OpBitXor: setOp(op, opName, __qmljs_inplace_bit_xor_member); break;
+                case IR::OpAdd: setOp(op, opName, __qmljs_inplace_add_member); break;
+                case IR::OpSub: setOp(op, opName, __qmljs_inplace_sub_member); break;
+                case IR::OpMul: setOp(op, opName, __qmljs_inplace_mul_member); break;
+                case IR::OpDiv: setOp(op, opName, __qmljs_inplace_div_member); break;
+                case IR::OpMod: setOp(op, opName, __qmljs_inplace_mod_member); break;
+                case IR::OpLShift: setOp(op, opName, __qmljs_inplace_shl_member); break;
+                case IR::OpRShift: setOp(op, opName, __qmljs_inplace_shr_member); break;
+                case IR::OpURShift: setOp(op, opName, __qmljs_inplace_ushr_member); break;
                 default:
                     Q_UNREACHABLE();
                     break;
                 }
 
-                checkExceptions();
+                if (op) {
+                    IR::Temp* base = m->base->asTemp();
+                    String* member = identifier(*m->name);
+                    generateFunctionCallImp(opName, op, ContextRegister, base, member, t);
+                    checkExceptions();
+                }
                 return;
             }
         }
@@ -526,6 +560,8 @@ void InstructionSelection::visitMove(IR::Move *s)
     s->dump(qout, IR::Stmt::MIR);
     qout << endl;
     assert(!"TODO");
+
+    #undef setOp
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)
