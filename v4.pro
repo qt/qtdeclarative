@@ -2,6 +2,12 @@ QT = core qmldevtools-private
 CONFIG -= app_bundle
 CONFIG += console
 
+LLVM_CONFIG=llvm-config
+
+# Pick up the qmake variable or environment variable for LLVM_INSTALL_DIR. If either was set, change the LLVM_CONFIG to use that.
+isEmpty(LLVM_INSTALL_DIR):LLVM_INSTALL_DIR=$$(LLVM_INSTALL_DIR)
+!isEmpty(LLVM_INSTALL_DIR):LLVM_CONFIG=$$LLVM_INSTALL_DIR/bin/llvm-config
+
 LIBS += -rdynamic
 
 SOURCES += main.cpp \
@@ -34,7 +40,7 @@ HEADERS += \
     qv4isel_llvm_p.h
 
 INCLUDEPATH += \
-    $$system(llvm-config --includedir)
+    $$system($$LLVM_CONFIG --includedir)
 
 DEFINES += \
     __STDC_CONSTANT_MACROS \
@@ -42,8 +48,8 @@ DEFINES += \
     __STDC_LIMIT_MACROS
 
 LIBS += \
-    $$system(llvm-config --ldflags) \
-    $$system(llvm-config --libs core jit bitreader linker ipo target x86 arm)
+    $$system($$LLVM_CONFIG --ldflags) \
+    $$system($$LLVM_CONFIG --libs core jit bitreader linker ipo target x86 arm)
 
 QMAKE_EXTRA_TARGETS += gen_llvm_runtime
 
