@@ -43,7 +43,7 @@
 
 #include "qv4ir_p.h"
 #include <llvm/Module.h>
-#include <llvm/Support/IRBuilder.h>
+#include <llvm/IRBuilder.h>
 
 namespace QQmlJS {
 
