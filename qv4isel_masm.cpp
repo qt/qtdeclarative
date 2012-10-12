@@ -133,7 +133,9 @@ InstructionSelection::Pointer InstructionSelection::loadTempAddress(RegisterID r
         offset = t->index * sizeof(Value);
     } else {
         const int arg = _function->maxNumberOfArguments + t->index - _function->locals.size();
-        offset = - sizeof(Value) * arg - sizeof(void*); // size of ebp
+        // StackFrameRegister points to its old value on the stack, so even for the first temp we need to
+        // subtract at least sizeof(Value).
+        offset = - sizeof(Value) * (arg + 1);
         reg = StackFrameRegister;
     }
     return Pointer(reg, offset);

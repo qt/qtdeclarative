@@ -114,6 +114,9 @@ protected:
 
     Address stackAddressForArgument(int index) const
     {
+        // StackFrameRegister points to its old value on the stack, and above
+        // it we have the return address, hence the need to step over two
+        // values before reaching the first argument.
         return Address(StackFrameRegister, (index + 2) * sizeof(void*));
     }
 #if CPU(X86)
