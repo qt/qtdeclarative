@@ -19,7 +19,7 @@ using namespace QQmlJS::MASM;
 using namespace QQmlJS::VM;
 
 namespace {
-QTextStream qout(stdout, QIODevice::WriteOnly);
+QTextStream qout(stderr, QIODevice::WriteOnly);
 }
 
 static void printDisassmbleOutputWithCalls(const char* output, const QHash<void*, const char*>& functions)
@@ -31,7 +31,7 @@ static void printDisassmbleOutputWithCalls(const char* output, const QHash<void*
         ptrString.prepend("0x");
         processedOutput = processedOutput.replace(ptrString, it.value());
     }
-    fprintf(stdout, "%s\n", processedOutput.constData());
+    fprintf(stderr, "%s\n", processedOutput.constData());
 }
 
 InstructionSelection::InstructionSelection(VM::ExecutionEngine *engine, IR::Module *module, uchar *buffer)
@@ -102,9 +102,12 @@ void InstructionSelection::operator()(IR::Function *function)
     FILE* disasmStream = open_memstream(&disasmOutput, &disasmLength);
     WTF::setDataFile(disasmStream);
 
-    _function->codeRef = linkBuffer.finalizeCodeWithDisassembly("operator()(IR::Function*)");
+    QByteArray name = _function->name->toUtf8();
+    if (name.startsWith('%'))
+        name.prepend('%');
+    _function->codeRef = linkBuffer.finalizeCodeWithDisassembly(name.data());
 
-    WTF::setDataFile(stdout);
+    WTF::setDataFile(stderr);
     fclose(disasmStream);
 #if CPU(X86) || CPU(X86_64)
     printDisassmbleOutputWithCalls(disasmOutput, functions);

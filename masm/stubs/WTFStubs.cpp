@@ -27,7 +27,7 @@ uint32_t cryptographicallyRandomNumber()
     return 0;
 }
 
-static FILE* s_dataFile = stdout;
+static FILE* s_dataFile = stderr;
 
 void setDataFile(FILE* f)
 {
