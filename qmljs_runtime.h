@@ -1035,7 +1035,7 @@ static inline Value add_int32(int a, int b)
 
     asm ("addl %1, %2\n"
          "seto %0"
-         : "=r" (overflow)
+         : "=q" (overflow)
          : "r" (b), "r" (a)
          :
     );
