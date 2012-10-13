@@ -147,11 +147,11 @@ ALUFunction aluOpFunction(IR::AluOp op)
     case IR::OpCompl:
         return 0;
     case IR::OpBitAnd:
-        return 0;
+        return VM::__qmljs_bit_and;
     case IR::OpBitOr:
-        return 0;
+        return VM::__qmljs_bit_or;
     case IR::OpBitXor:
-        return 0;
+        return VM::__qmljs_bit_xor;
     case IR::OpAdd:
         return VM::__qmljs_add;
     case IR::OpSub:
@@ -185,9 +185,9 @@ ALUFunction aluOpFunction(IR::AluOp op)
     case IR::OpStrictNotEqual:
         return VM::__qmljs_sne;
     case IR::OpInstanceof:
-        return 0;
+        return VM::__qmljs_instanceof;
     case IR::OpIn:
-        return 0;
+        return VM::__qmljs_in;
     case IR::OpAnd:
         return 0;
     case IR::OpOr:
