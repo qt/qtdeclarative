@@ -71,7 +71,8 @@ protected:
     static const RegisterID Gpr1 = JSC::X86Registers::ecx;
     static const RegisterID Gpr2 = JSC::X86Registers::edx;
     static const RegisterID Gpr3 = JSC::X86Registers::esi;
-    static const RegisterID CalleeSavedGpr = Gpr3;
+    static const RegisterID CalleeSavedFirstRegister = Gpr3;
+    static const RegisterID CalleeSavedLastRegister = Gpr3;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 #elif CPU(X86_64)
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
@@ -99,6 +100,8 @@ protected:
     static const RegisterID Gpr1 = JSC::ARMRegisters::r7;
     static const RegisterID Gpr2 = JSC::ARMRegisters::r8;
     static const RegisterID Gpr3 = JSC::ARMRegisters::r10;
+    static const RegisterID CalleeSavedFirstRegister = JSC::ARMRegisters::r4;
+    static const RegisterID CalleeSavedLastRegister = JSC::ARMRegisters::r11;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
 
     static const RegisterID RegisterArgument1 = JSC::ARMRegisters::r0;
@@ -130,20 +133,16 @@ protected:
         push(StackFrameRegister);
         move(StackPointerRegister, StackFrameRegister);
         subPtr(TrustedImm32(locals*sizeof(QQmlJS::VM::Value)), StackPointerRegister);
-#if CPU(X86)
-        push(CalleeSavedGpr);
-#elif CPU(ARM)
-        for (int saveReg = JSC::ARMRegisters::r4; saveReg <= JSC::ARMRegisters::r11; ++saveReg)
-            push(static_cast<JSC::ARMRegisters::RegisterID>(saveReg));
+#if CPU(X86) || CPU(ARM)
+        for (int saveReg = CalleeSavedFirstRegister; saveReg <= CalleeSavedLastRegister; ++saveReg)
+            push(static_cast<RegisterID>(saveReg));
 #endif
     }
     void leaveStandardStackFrame(int locals)
     {
-#if CPU(X86)
-        pop(CalleeSavedGpr);
-#elif CPU(ARM)
-        for (int saveReg = JSC::ARMRegisters::r11; saveReg >= JSC::ARMRegisters::r4; --saveReg)
-            pop(static_cast<JSC::ARMRegisters::RegisterID>(saveReg));
+#if CPU(X86) || CPU(ARM)
+        for (int saveReg = CalleeSavedLastRegister; saveReg >= CalleeSavedFirstRegister; --saveReg)
+            pop(static_cast<RegisterID>(saveReg));
 #endif
         addPtr(TrustedImm32(locals*sizeof(QQmlJS::VM::Value)), StackPointerRegister);
         pop(StackFrameRegister);
