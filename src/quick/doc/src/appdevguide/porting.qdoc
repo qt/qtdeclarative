@@ -27,7 +27,7 @@
 
 /*!
 \page qtquick-porting-qt5.html
-\title QML Application in Qt 5
+\title QML Applications in Qt 5
 \brief Lists the Qt 5.0 changes that affect the existing QML applications
 
 When porting QML-related code from Qt 4.8 to Qt 5, application developers should be aware that
