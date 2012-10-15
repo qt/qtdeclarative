@@ -780,12 +780,12 @@ void __qmljs_string_from_number(Context *ctx, Value *result, double number)
     *result = Value::fromString(string);
 }
 
-bool __qmljs_string_compare(Context *, String *left, String *right)
+uint __qmljs_string_compare(Context *, String *left, String *right)
 {
     return left->toQString() < right->toQString();
 }
 
-bool __qmljs_string_equal(Context *, String *left, String *right)
+uint __qmljs_string_equal(Context *, String *left, String *right)
 {
     return left == right || left->isEqualTo(right);
 }
@@ -795,7 +795,7 @@ String *__qmljs_string_concat(Context *ctx, String *first, String *second)
     return ctx->engine->newString(first->toQString() + second->toQString());
 }
 
-bool __qmljs_is_function(Context *, const Value *value)
+uint __qmljs_is_function(Context *, const Value *value)
 {
     return value->objectValue()->asFunctionObject() != 0;
 }
@@ -1057,7 +1057,7 @@ void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y
     }
 }
 
-bool __qmljs_equal(Context *ctx, const Value *x, const Value *y)
+uint __qmljs_equal(Context *ctx, const Value *x, const Value *y)
 {
     if (x->type() == y->type()) {
         switch (x->type()) {
