@@ -911,10 +911,12 @@ void tst_qquicktextinput::moveCursorSelection_data()
     QTest::newRow("jum<()>ped|words")
             << standard[0] << 23 << 23 << QQuickTextInput::SelectWords << 23 << 23 << true;
 
-    QTest::newRow("Hello<(,)> |words")
-            << standard[2] << 5 << 6 << QQuickTextInput::SelectWords << 5 << 6 << true;
-    QTest::newRow("Hello<(, )>world|words,ltr")
-            << standard[2] << 5 << 7 << QQuickTextInput::SelectWords << 5 << 7 << false;
+    QTest::newRow("<Hello(,)> |words,ltr")
+            << standard[2] << 5 << 6 << QQuickTextInput::SelectWords << 0 << 6 << false;
+    QTest::newRow("Hello<(,)> |words,rtl")
+            << standard[2] << 6 << 5 << QQuickTextInput::SelectWords << 5 << 6 << false;
+    QTest::newRow("<Hello(, )>world|words,ltr")
+            << standard[2] << 5 << 7 << QQuickTextInput::SelectWords << 0 << 7 << false;
     QTest::newRow("Hello<(, )world>|words,rtl")
             << standard[2] << 7 << 5 << QQuickTextInput::SelectWords << 5 << 12 << false;
     QTest::newRow("<Hel(lo, )>world|words,ltr")
@@ -927,35 +929,35 @@ void tst_qquicktextinput::moveCursorSelection_data()
             << standard[2] << 5 << 5 << QQuickTextInput::SelectWords << 5 << 5 << true;
     QTest::newRow("Hello,<()>|words")
             << standard[2] << 6 << 6 << QQuickTextInput::SelectWords << 6 << 6 << true;
-    QTest::newRow("Hello<,( )>world|words,ltr")
-            << standard[2] << 6 << 7 << QQuickTextInput::SelectWords << 5 << 7 << false;
+    QTest::newRow("Hello,<( )>world|words,ltr")
+            << standard[2] << 6 << 7 << QQuickTextInput::SelectWords << 6 << 7 << false;
     QTest::newRow("Hello,<( )world>|words,rtl")
             << standard[2] << 7 << 6 << QQuickTextInput::SelectWords << 6 << 12 << false;
-    QTest::newRow("Hello<,( world)>|words,ltr")
-            << standard[2] << 6 << 12 << QQuickTextInput::SelectWords << 5 << 12 << false;
-    QTest::newRow("Hello,<( world)>|words,rtl")
-            << standard[2] << 12 << 6 << QQuickTextInput::SelectWords << 6 << 12 << false;
-    QTest::newRow("Hello<,( world!)>|words,ltr")
-            << standard[2] << 6 << 13 << QQuickTextInput::SelectWords << 5 << 13 << false;
-    QTest::newRow("Hello,<( world!)>|words,rtl")
-            << standard[2] << 13 << 6 << QQuickTextInput::SelectWords << 6 << 13 << false;
-    QTest::newRow("Hello<(, world!)>|words")
-            << standard[2] << 5 << 13 << QQuickTextInput::SelectWords << 5 << 13 << true;
-    // Fails due to an issue with QTextBoundaryFinder and punctuation at the end of strings.
-    // QTBUG-11365
-    // QTest::newRow("world<(!)>|words")
-    //         << standard[2] << 12 << 13 << QQuickTextInput::SelectWords << 12 << 13 << true;
+    QTest::newRow("Hello,<( world)>|words")
+            << standard[2] << 6 << 12 << QQuickTextInput::SelectWords << 6 << 12 << true;
+    QTest::newRow("Hello,<( world!)>|words")
+            << standard[2] << 6 << 13 << QQuickTextInput::SelectWords << 6 << 13 << true;
+    QTest::newRow("<Hello(, world!)>|words,ltr")
+            << standard[2] << 5 << 13 << QQuickTextInput::SelectWords << 0 << 13 << false;
+    QTest::newRow("Hello<(, world!)>|words,rtl")
+            << standard[2] << 13 << 5 << QQuickTextInput::SelectWords << 5 << 13 << false;
+    QTest::newRow("<world(!)>|words,ltr")
+            << standard[2] << 12 << 13 << QQuickTextInput::SelectWords << 7 << 13 << false;
+    QTest::newRow("world<(!)>|words,rtl")
+            << standard[2] << 13 << 12 << QQuickTextInput::SelectWords << 12 << 13 << false;
     QTest::newRow("world!<()>)|words")
             << standard[2] << 13 << 13 << QQuickTextInput::SelectWords << 13 << 13 << true;
     QTest::newRow("world<()>!)|words")
             << standard[2] << 12 << 12 << QQuickTextInput::SelectWords << 12 << 12 << true;
 
-    QTest::newRow("<(,)>olleH |words")
-            << standard[3] << 7 << 8 << QQuickTextInput::SelectWords << 7 << 8 << true;
+    QTest::newRow("<(,)>olleH |words,ltr")
+            << standard[3] << 7 << 8 << QQuickTextInput::SelectWords << 7 << 8 << false;
+    QTest::newRow("<(,)olleH> |words,rtl")
+            << standard[3] << 8 << 7 << QQuickTextInput::SelectWords << 7 << 13 << false;
     QTest::newRow("<dlrow( ,)>olleH|words,ltr")
             << standard[3] << 6 << 8 << QQuickTextInput::SelectWords << 1 << 8 << false;
-    QTest::newRow("dlrow<( ,)>olleH|words,rtl")
-            << standard[3] << 8 << 6 << QQuickTextInput::SelectWords << 6 << 8 << false;
+    QTest::newRow("dlrow<( ,)olleH>|words,rtl")
+            << standard[3] << 8 << 6 << QQuickTextInput::SelectWords << 6 << 13 << false;
     QTest::newRow("<dlrow( ,ol)leH>|words,ltr")
             << standard[3] << 6 << 10 << QQuickTextInput::SelectWords << 1 << 13 << false;
     QTest::newRow("dlrow<( ,ol)leH>|words,rtl")
@@ -968,20 +970,20 @@ void tst_qquicktextinput::moveCursorSelection_data()
             << standard[3] << 7 << 7 << QQuickTextInput::SelectWords << 7 << 7 << true;
     QTest::newRow("<dlrow( )>,olleH|words,ltr")
             << standard[3] << 6 << 7 << QQuickTextInput::SelectWords << 1 << 7 << false;
-    QTest::newRow("dlrow<( ),>olleH|words,rtl")
-            << standard[3] << 7 << 6 << QQuickTextInput::SelectWords << 6 << 8 << false;
-    QTest::newRow("<(dlrow )>,olleH|words,ltr")
-            << standard[3] << 1 << 7 << QQuickTextInput::SelectWords << 1 << 7 << false;
-    QTest::newRow("<(dlrow ),>olleH|words,rtl")
-            << standard[3] << 7 << 1 << QQuickTextInput::SelectWords << 1 << 8 << false;
-    QTest::newRow("<(!dlrow )>,olleH|words,ltr")
-            << standard[3] << 0 << 7 << QQuickTextInput::SelectWords << 0 << 7 << false;
-    QTest::newRow("<(!dlrow ),>olleH|words,rtl")
-            << standard[3] << 7 << 0 << QQuickTextInput::SelectWords << 0 << 8 << false;
-    QTest::newRow("(!dlrow ,)olleH|words")
-            << standard[3] << 0 << 8 << QQuickTextInput::SelectWords << 0 << 8 << true;
-    QTest::newRow("<(!)>dlrow|words")
-            << standard[3] << 0 << 1 << QQuickTextInput::SelectWords << 0 << 1 << true;
+    QTest::newRow("dlrow<( )>,olleH|words,rtl")
+            << standard[3] << 7 << 6 << QQuickTextInput::SelectWords << 6 << 7 << false;
+    QTest::newRow("<(dlrow )>,olleH|words")
+            << standard[3] << 1 << 7 << QQuickTextInput::SelectWords << 1 << 7 << true;
+    QTest::newRow("<(!dlrow )>,olleH|words")
+            << standard[3] << 0 << 7 << QQuickTextInput::SelectWords << 0 << 7 << true;
+    QTest::newRow("<(!dlrow ,)>olleH|words,ltr")
+            << standard[3] << 0 << 8 << QQuickTextInput::SelectWords << 0 << 8 << false;
+    QTest::newRow("<(!dlrow ,)olleH>|words,rtl")
+            << standard[3] << 8 << 0 << QQuickTextInput::SelectWords << 0 << 13 << false;
+    QTest::newRow("<(!)>dlrow|words,ltr")
+            << standard[3] << 0 << 1 << QQuickTextInput::SelectWords << 0 << 1 << false;
+    QTest::newRow("<(!)dlrow|words,rtl")
+            << standard[3] << 1 << 0 << QQuickTextInput::SelectWords << 0 << 6 << false;
     QTest::newRow("<()>!dlrow|words")
             << standard[3] << 0 << 0 << QQuickTextInput::SelectWords << 0 << 0 << true;
     QTest::newRow("!<()>dlrow|words")
@@ -990,16 +992,15 @@ void tst_qquicktextinput::moveCursorSelection_data()
     QTest::newRow(" <s(pac)ey>   text |words")
             << standard[4] << 1 << 4 << QQuickTextInput::SelectWords << 1 << 7 << true;
     QTest::newRow(" spacey   <t(ex)t> |words")
-            << standard[4] << 11 << 13 << QQuickTextInput::SelectWords << 10 << 14 << false; // Should be reversible. QTBUG-11365
+            << standard[4] << 11 << 13 << QQuickTextInput::SelectWords << 10 << 14 << true;
     QTest::newRow("<( )>spacey   text |words|ltr")
             << standard[4] << 0 << 1 << QQuickTextInput::SelectWords << 0 << 1 << false;
     QTest::newRow("<( )spacey>   text |words|rtl")
             << standard[4] << 1 << 0 << QQuickTextInput::SelectWords << 0 << 7 << false;
     QTest::newRow("spacey   <text( )>|words|ltr")
             << standard[4] << 14 << 15 << QQuickTextInput::SelectWords << 10 << 15 << false;
-//    QTBUG-11365
-//    QTest::newRow("spacey   text<( )>|words|rtl")
-//            << standard[4] << 15 << 14 << QQuickTextInput::SelectWords << 14 << 15 << false;
+    QTest::newRow("spacey   text<( )>|words|rtl")
+            << standard[4] << 15 << 14 << QQuickTextInput::SelectWords << 14 << 15 << false;
     QTest::newRow("<()> spacey   text |words")
             << standard[4] << 0 << 0 << QQuickTextInput::SelectWords << 0 << 0 << false;
     QTest::newRow(" spacey   text <()>|words")
