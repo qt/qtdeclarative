@@ -420,7 +420,8 @@ bool DesignerSupport::isValidHeight(QQuickItem *item)
 
 void DesignerSupport::updateDirtyNode(QQuickItem *item)
 {
-    QQuickWindowPrivate::get(item->window())->updateDirtyNode(item);
+    if (item->window())
+        QQuickWindowPrivate::get(item->window())->updateDirtyNode(item);
 }
 
 void DesignerSupport::activateDesignerWindowManager()
