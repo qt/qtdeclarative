@@ -1320,13 +1320,13 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 {
     filePluginPath << QLatin1String(".");
 
-    // Search order is applicationDirPath(), $QML_IMPORT_PATH, QLibraryInfo::ImportsPath
+    // Search order is applicationDirPath(), $QML2_IMPORT_PATH, QLibraryInfo::Qml2ImportsPath
 
-    QString installImportsPath =  QLibraryInfo::location(QLibraryInfo::ImportsPath);
+    QString installImportsPath =  QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     addImportPath(installImportsPath);
 
     // env import paths
-    QByteArray envImportPath = qgetenv("QML_IMPORT_PATH");
+    QByteArray envImportPath = qgetenv("QML2_IMPORT_PATH");
     if (!envImportPath.isEmpty()) {
 #if defined(Q_OS_WIN)
         QLatin1Char pathSep(';');

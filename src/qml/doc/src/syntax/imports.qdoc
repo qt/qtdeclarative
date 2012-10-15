@@ -289,12 +289,12 @@ default locations to be searched by the engine. By default, this list contains:
 
 \list
 \li The directory of the current file
-\li The location specified by QLibraryInfo::ImportsPath
-\li Paths specified by the \c QML_IMPORT_PATH environment variable
+\li The location specified by QLibraryInfo::Qml2ImportsPath
+\li Paths specified by the \c QML2_IMPORT_PATH environment variable
 \endlist
 
 Additional import paths can be added through QQmlEngine::addImportPath() or the
-\c QML_IMPORT_PATH environment variable. When running the
+\c QML2_IMPORT_PATH environment variable. When running the
 \l{Prototyping with qmlscene}{qmlscene} tool, you can also use the \c -I option
 to add an import path.
 

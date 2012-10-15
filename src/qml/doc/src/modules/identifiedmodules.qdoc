@@ -175,13 +175,13 @@ An identified module has several restrictions upon it:
 \endlist
 
 For example, if an identified module is installed into
-\c{$QML_IMPORT_PATH/ExampleModule}, the module identifier directive must be:
+\c{$QML2_IMPORT_PATH/ExampleModule}, the module identifier directive must be:
 \code
 module ExampleModule
 \endcode
 
 If the strict module is installed into
-\c{$QML_IMPORT_PATH/com/example/CustomUi}, the module identifier directive
+\c{$QML2_IMPORT_PATH/com/example/CustomUi}, the module identifier directive
 must be:
 \code
 module com.example.CustomUi
