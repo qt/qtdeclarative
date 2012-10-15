@@ -39,49 +39,80 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKWINDOWMANAGER_P_H
-#define QQUICKWINDOWMANAGER_P_H
+#include "designerwindowmanager_p.h"
 
-#include <QtGui/QImage>
-#include <private/qtquickglobal_p.h>
+#include <QtGui/QOpenGLContext>
+
+#include <QtQuick/QQuickWindow>
+
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-class QSGContext;
-class QAnimationDriver;
-
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowManager
+DesignerWindowManager::DesignerWindowManager()
+    : m_sgContext(QSGContext::createDefaultContext())
 {
-public:
-    virtual ~QQuickWindowManager();
+}
 
-    virtual void show(QQuickWindow *window) = 0;
-    virtual void hide(QQuickWindow *window) = 0;
+void DesignerWindowManager::show(QQuickWindow *window)
+{
+    makeOpenGLContext(window);
+}
 
-    virtual void windowDestroyed(QQuickWindow *window) = 0;
+void DesignerWindowManager::hide(QQuickWindow *)
+{
+}
 
-    virtual void exposureChanged(QQuickWindow *window) = 0;
-    virtual QImage grab(QQuickWindow *window) = 0;
-    virtual void resize(QQuickWindow *window, const QSize &size) = 0;
+void DesignerWindowManager::windowDestroyed(QQuickWindow *)
+{
+}
 
-    virtual void update(QQuickWindow *window) = 0;
-    virtual void maybeUpdate(QQuickWindow *window) = 0;
+void DesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
+{
+    if (!m_openGlContext) {
+        m_openGlContext.reset(new QOpenGLContext());
+        m_openGlContext->setFormat(window->requestedFormat());
+        m_openGlContext->create();
+        if (!m_openGlContext->makeCurrent(window))
+            qWarning("QQuickWindow: makeCurrent() failed...");
+        m_sgContext->initialize(m_openGlContext.data());
+    } else {
+        m_openGlContext->makeCurrent(window);
+    }
+}
 
-    virtual QAnimationDriver *animationDriver() const = 0;
+void DesignerWindowManager::exposureChanged(QQuickWindow *)
+{
+}
 
-    virtual QSGContext *sceneGraphContext() const = 0;
+QImage DesignerWindowManager::grab(QQuickWindow *)
+{
+    return QImage();
+}
 
-    virtual void releaseResources() = 0;
+void DesignerWindowManager::resize(QQuickWindow *, const QSize &)
+{
+}
 
-    // ### make this less of a singleton
-    static QQuickWindowManager *instance();
-    static void setInstance(QQuickWindowManager *instance);
+void DesignerWindowManager::maybeUpdate(QQuickWindow *)
+{
+}
 
-private:
-    static QQuickWindowManager *s_instance;
-};
+QSGContext *DesignerWindowManager::sceneGraphContext() const
+{
+    return m_sgContext.data();
+}
+
+void DesignerWindowManager::createOpenGLContext(QQuickWindow *window)
+{
+    window->create();
+    window->update();
+}
+
+void DesignerWindowManager::update(QQuickWindow *window)
+{
+    makeOpenGLContext(window);
+}
 
 QT_END_NAMESPACE
 
-#endif // QQUICKWINDOWMANAGER_P_H
+

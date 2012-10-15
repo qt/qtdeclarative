@@ -70,6 +70,7 @@ class QTransform;
 class QQmlContext;
 class QQuickView;
 class QObject;
+class QQuickWindow;
 
 class Q_QUICK_EXPORT DesignerSupport
 {
@@ -99,7 +100,8 @@ public:
         TransformUpdateMask     = TransformOrigin | Transform | BasicTransform | Position | Size | Window,
         ComplexTransformUpdateMask     = Transform | Window,
         ContentUpdateMask       = Size | Content | Smooth | Window,
-        ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Window
+        ChildrenUpdateMask      = ChildrenChanged | ChildrenStackingChanged | EffectReference | Window,
+        AllMask                 = TransformUpdateMask | ContentUpdateMask | ChildrenUpdateMask
     };
 
 
@@ -112,6 +114,7 @@ public:
     QImage renderImageForItem(QQuickItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize);
 
     static bool isDirty(QQuickItem *referencedItem, DirtyType dirtyType);
+    static void addDirty(QQuickItem *referencedItem, DirtyType dirtyType);
     static void resetDirty(QQuickItem *referencedItem);
 
     static QTransform windowTransform(QQuickItem *referencedItem);
@@ -140,6 +143,10 @@ public:
     static bool isValidHeight(QQuickItem *item);
 
     static void updateDirtyNode(QQuickItem *item);
+
+    static void activateDesignerWindowManager();
+
+    static void createOpenGLContext(QQuickWindow *window);
 
 private:
     QHash<QQuickItem*, QQuickShaderEffectTexture*> m_itemTextureHash;

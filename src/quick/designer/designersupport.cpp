@@ -46,8 +46,12 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qquickview_p.h>
+#include <private/qquickwindowmanager_p.h>
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <QtGui/QImage>
+
+#include "designerwindowmanager_p.h"
+
 
 QT_BEGIN_NAMESPACE
 
@@ -119,6 +123,7 @@ QImage DesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRe
          return QImage();
     renderTexture->setRect(boundingRect);
     renderTexture->setSize(imageSize);
+    renderTexture->markDirtyTexture();
     renderTexture->updateTexture();
 
     QImage renderImage = renderTexture->toImage();
@@ -136,6 +141,14 @@ bool DesignerSupport::isDirty(QQuickItem *referencedItem, DirtyType dirtyType)
         return false;
 
     return QQuickItemPrivate::get(referencedItem)->dirtyAttributes & dirtyType;
+}
+
+void DesignerSupport::addDirty(QQuickItem *referencedItem, DesignerSupport::DirtyType dirtyType)
+{
+    if (referencedItem == 0)
+        return;
+
+    QQuickItemPrivate::get(referencedItem)->dirtyAttributes |= dirtyType;
 }
 
 void DesignerSupport::resetDirty(QQuickItem *referencedItem)
@@ -408,6 +421,16 @@ bool DesignerSupport::isValidHeight(QQuickItem *item)
 void DesignerSupport::updateDirtyNode(QQuickItem *item)
 {
     QQuickWindowPrivate::get(item->window())->updateDirtyNode(item);
+}
+
+void DesignerSupport::activateDesignerWindowManager()
+{
+    QQuickWindowManager::setInstance(new DesignerWindowManager);
+}
+
+void DesignerSupport::createOpenGLContext(QQuickWindow *window)
+{
+    DesignerWindowManager::createOpenGLContext(window);
 }
 
 QT_END_NAMESPACE

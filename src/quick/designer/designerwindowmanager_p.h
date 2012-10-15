@@ -39,49 +39,69 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKWINDOWMANAGER_P_H
-#define QQUICKWINDOWMANAGER_P_H
+#ifndef DESIGNERWINDOWMANAGER_P_H
+#define DESIGNERWINDOWMANAGER_P_H
 
-#include <QtGui/QImage>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/QScopedPointer>
+
+#include <private/qquickwindowmanager_p.h>
 #include <private/qtquickglobal_p.h>
+#include <QtQuick/private/qsgcontext_p.h>
+
+
+QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 class QQuickWindow;
 class QSGContext;
 class QAnimationDriver;
+class QOpenGLContext;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowManager
+class DesignerWindowManager : public QObject, public QQuickWindowManager
 {
+    Q_OBJECT
 public:
-    virtual ~QQuickWindowManager();
+    DesignerWindowManager();
 
-    virtual void show(QQuickWindow *window) = 0;
-    virtual void hide(QQuickWindow *window) = 0;
+    void show(QQuickWindow *window);
+    void hide(QQuickWindow *window);
 
-    virtual void windowDestroyed(QQuickWindow *window) = 0;
+    void windowDestroyed(QQuickWindow *window);
 
-    virtual void exposureChanged(QQuickWindow *window) = 0;
-    virtual QImage grab(QQuickWindow *window) = 0;
-    virtual void resize(QQuickWindow *window, const QSize &size) = 0;
+    void makeOpenGLContext(QQuickWindow *window);
+    void exposureChanged(QQuickWindow *window);
+    QImage grab(QQuickWindow *window);
+    void resize(QQuickWindow *window, const QSize &size);
 
-    virtual void update(QQuickWindow *window) = 0;
-    virtual void maybeUpdate(QQuickWindow *window) = 0;
+    void maybeUpdate(QQuickWindow *window);
+    void update(QQuickWindow *window); // identical for this implementation.
 
-    virtual QAnimationDriver *animationDriver() const = 0;
+    void releaseResources() { }
 
-    virtual QSGContext *sceneGraphContext() const = 0;
+    QAnimationDriver *animationDriver() const { return 0; }
 
-    virtual void releaseResources() = 0;
+    QSGContext *sceneGraphContext() const;
 
-    // ### make this less of a singleton
-    static QQuickWindowManager *instance();
-    static void setInstance(QQuickWindowManager *instance);
+    static void createOpenGLContext(QQuickWindow *window);
 
 private:
-    static QQuickWindowManager *s_instance;
+    QScopedPointer<QOpenGLContext> m_openGlContext;
+    QScopedPointer<QSGContext> m_sgContext;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKWINDOWMANAGER_P_H
+QT_END_HEADER
+#endif // DESIGNERWINDOWMANAGER_P_H
