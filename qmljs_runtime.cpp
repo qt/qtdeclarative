@@ -339,7 +339,7 @@ void Context::initCallContext(ExecutionEngine *e, const Value *object, FunctionO
     result = Value::undefinedValue();
 
     if (f->needsActivation)
-        __qmljs_init_object(&activation, engine->newActivationObject(this));
+        activation = __qmljs_init_object(engine->newActivationObject(this));
     else
         activation = Value::nullValue();
 
@@ -400,14 +400,14 @@ void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
 
 extern "C" {
 
-void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos)
+Value __qmljs_init_closure(IR::Function *clos, Context *ctx)
 {
-    __qmljs_init_object(result, ctx->engine->newScriptFunction(ctx, clos));
+    return __qmljs_init_object(ctx->engine->newScriptFunction(ctx, clos));
 }
 
-void __qmljs_init_native_function(Context *ctx, Value *result, void (*code)(Context *))
+Value __qmljs_init_native_function(void (*code)(Context *), Context *ctx)
 {
-    __qmljs_init_object(result, ctx->engine->newNativeFunction(ctx, code));
+    return __qmljs_init_object(ctx->engine->newNativeFunction(ctx, code));
 }
 
 Value __qmljs_string_literal_undefined(Context *ctx)
@@ -850,25 +850,25 @@ void __qmljs_throw_type_error(Context *ctx, Value *result)
 
 void __qmljs_new_object(Context *ctx, Value *result)
 {
-    __qmljs_init_object(result, ctx->engine->newObject());
+    *result = __qmljs_init_object(ctx->engine->newObject());
 }
 
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
 {
     Value value = Value::fromBoolean(boolean);
-    __qmljs_init_object(result, ctx->engine->newBooleanObject(value));
+    *result = __qmljs_init_object(ctx->engine->newBooleanObject(value));
 }
 
 void __qmljs_new_number_object(Context *ctx, Value *result, double number)
 {
     Value value = Value::fromDouble(number);
-    __qmljs_init_object(result, ctx->engine->newNumberObject(value));
+    *result = __qmljs_init_object(ctx->engine->newNumberObject(value));
 }
 
 void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
 {
     Value value = Value::fromString(string);
-    __qmljs_init_object(result, ctx->engine->newStringObject(value));
+    *result = __qmljs_init_object(ctx->engine->newStringObject(value));
 }
 
 void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value)
@@ -898,8 +898,7 @@ void __qmljs_set_property_string(Context *ctx, Value *object, String *name, Stri
 
 void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR::Function *function)
 {
-    Value value;
-    __qmljs_init_closure(ctx, &value, function);
+    Value value = __qmljs_init_closure(function, ctx);
     object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
@@ -988,8 +987,7 @@ void __qmljs_set_activation_property_string(Context *ctx, String *name, String *
 
 void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Function *clos)
 {
-    Value value;
-    __qmljs_init_closure(ctx, &value, clos);
+    Value value = __qmljs_init_closure(clos, ctx);
     __qmljs_set_activation_property(ctx, name, &value);
 }
 

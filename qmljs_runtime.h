@@ -102,10 +102,10 @@ void __qmljs_builtin_throw(Context *context, Value *result, Value *args, int arg
 void __qmljs_builtin_rethrow(Context *context, Value *result, Value *args, int argc);
 
 // constructors
-void __qmljs_init_string(Value *result, String *string);
-void __qmljs_init_object(Value *result, Object *object);
-void __qmljs_init_closure(Context *ctx, Value *result, IR::Function *clos);
-void __qmljs_init_native_function(Context *ctx, Value *result, void (*code)(Context *));
+Value __qmljs_init_string(String *string);
+Value __qmljs_init_object(Object *object);
+Value __qmljs_init_closure(IR::Function *clos, Context *ctx);
+Value __qmljs_init_native_function(void (*code)(Context *), Context *ctx);
 
 uint __qmljs_is_function(Context *ctx, const Value *value);
 
@@ -660,14 +660,14 @@ extern "C" {
 
 // constructors
 
-inline void __qmljs_init_string(Value *result, String *value)
+inline Value __qmljs_init_string(String *value)
 {
-    *result = Value::fromString(value);
+    return Value::fromString(value);
 }
 
-inline void __qmljs_init_object(Value *result, Object *object)
+inline Value __qmljs_init_object(Object *object)
 {
-    *result = Value::fromObject(object);
+    return Value::fromObject(object);
 }
 
 // type conversion and testing

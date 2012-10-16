@@ -521,12 +521,12 @@ ObjectCtor::ObjectCtor(Context *scope)
 
 void ObjectCtor::construct(Context *ctx)
 {
-    __qmljs_init_object(&ctx->thisObject, ctx->engine->newObject());
+    ctx->thisObject = __qmljs_init_object(ctx->engine->newObject());
 }
 
 void ObjectCtor::call(Context *ctx)
 {
-    __qmljs_init_object(&ctx->result, ctx->engine->newObject());
+    ctx->result = __qmljs_init_object(ctx->engine->newObject());
 }
 
 Value ObjectCtor::getProperty(Context *ctx, String *name, PropertyAttributes *attributes)
@@ -705,7 +705,7 @@ void StringCtor::construct(Context *ctx)
         value = Value::fromString(ctx->argument(0).toString(ctx));
     else
         value = Value::fromString(ctx, QString());
-    __qmljs_init_object(&ctx->thisObject, ctx->engine->newStringObject(value));
+    ctx->thisObject = __qmljs_init_object(ctx->engine->newStringObject(value));
 }
 
 void StringCtor::call(Context *ctx)
@@ -1017,7 +1017,7 @@ NumberCtor::NumberCtor(Context *scope)
 void NumberCtor::construct(Context *ctx)
 {
     const double n = ctx->argument(0).toNumber(ctx);
-    __qmljs_init_object(&ctx->thisObject, ctx->engine->newNumberObject(Value::fromDouble(n)));
+    ctx->thisObject = __qmljs_init_object(ctx->engine->newNumberObject(Value::fromDouble(n)));
 }
 
 void NumberCtor::call(Context *ctx)
@@ -1196,7 +1196,7 @@ BooleanCtor::BooleanCtor(Context *scope)
 void BooleanCtor::construct(Context *ctx)
 {
     const double n = ctx->argument(0).toBoolean(ctx);
-    __qmljs_init_object(&ctx->thisObject, ctx->engine->newBooleanObject(Value::fromBoolean(n)));
+    ctx->thisObject = __qmljs_init_object(ctx->engine->newBooleanObject(Value::fromBoolean(n)));
 }
 
 void BooleanCtor::call(Context *ctx)
@@ -2437,12 +2437,12 @@ RegExpCtor::RegExpCtor(Context *scope)
 
 void RegExpCtor::construct(Context *ctx)
 {
-    __qmljs_init_object(&ctx->thisObject, ctx->engine->newStringObject(Value::undefinedValue()));
+    ctx->thisObject = __qmljs_init_object(ctx->engine->newStringObject(Value::undefinedValue()));
 }
 
 void RegExpCtor::call(Context *ctx)
 {
-    __qmljs_init_object(&ctx->result, ctx->engine->newRegExpObject(Value::undefinedValue()));
+    ctx->result = __qmljs_init_object(ctx->engine->newRegExpObject(Value::undefinedValue()));
 }
 
 void RegExpPrototype::init(Context *ctx, const Value &ctor)

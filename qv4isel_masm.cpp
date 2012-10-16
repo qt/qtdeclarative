@@ -363,10 +363,10 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::String *str = s->source->asString()) {
                 // ### inline
-                generateFunctionCall(__qmljs_init_string, t, _engine->newString(*str->value));
+                generateFunctionCall2(t, __qmljs_init_string, _engine->newString(*str->value));
                 return;
             } else if (IR::Closure *clos = s->source->asClosure()) {
-                generateFunctionCall(__qmljs_init_closure, ContextRegister, t, TrustedImmPtr(clos->value));
+                generateFunctionCall2(t, __qmljs_init_closure, TrustedImmPtr(clos->value), ContextRegister);
                 return;
             } else if (IR::New *ctor = s->source->asNew()) {
                 if (ctor->base->asName()) {

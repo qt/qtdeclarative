@@ -281,6 +281,11 @@ private:
         move(source, dest);
     }
 
+    void loadArgument1(TrustedImmPtr ptr, RegisterID dest)
+    {
+        move(TrustedImmPtr(ptr), dest);
+    }
+
     void loadArgument1(const Pointer& ptr, RegisterID dest)
     {
         loadPtr(ptr, dest);
@@ -291,6 +296,17 @@ private:
         assert(temp);
         Pointer addr = loadTempAddress(dest, temp);
         loadArgument1(addr, dest);
+    }
+
+    void loadArgument1(VM::String* string, RegisterID dest)
+    {
+        loadArgument1(TrustedImmPtr(string), dest);
+    }
+
+    void loadArgument1(TrustedImm32 imm32, RegisterID dest)
+    {
+        xorPtr(dest, dest);
+        move(imm32, dest);
     }
 
     void storeArgument(RegisterID src, IR::Temp *temp)

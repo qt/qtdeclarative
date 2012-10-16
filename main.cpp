@@ -287,7 +287,7 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
 
     ctx->hasUncaughtException = false;
     if (! ctx->activation.isObject())
-        __qmljs_init_object(&ctx->activation, new QQmlJS::VM::Object());
+        ctx->activation = __qmljs_init_object(new QQmlJS::VM::Object());
 
     foreach (const QString *local, globalCode->locals) {
         ctx->activation.objectValue()->setProperty(ctx, *local, QQmlJS::VM::Value::undefinedValue());

@@ -83,7 +83,7 @@ void __qmljs_llvm_init_string(Context *ctx, Value *result, const char *str)
 
 void __qmljs_llvm_init_native_function(Context *ctx, Value *result, void (*code)(Context *))
 {
-    __qmljs_init_native_function(ctx, result, code);
+    *result = __qmljs_init_native_function(code, ctx);
 }
 
 bool __qmljs_llvm_to_boolean(Context *ctx, const Value *value)
