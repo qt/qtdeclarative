@@ -131,7 +131,7 @@ String *__qmljs_string_concat(Context *ctx, String *first, String *second);
 String *__qmljs_identifier_from_utf8(Context *ctx, const char *s);
 
 // objects
-void __qmljs_object_default_value(Context *ctx, Value *result, const Value *object, int typeHint);
+Value __qmljs_object_default_value(Context *ctx, const Value object, int typeHint);
 void __qmljs_throw_type_error(Context *ctx, Value *result);
 void __qmljs_new_object(Context *ctx, Value *result);
 void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean);
@@ -164,7 +164,7 @@ void __qmljs_to_string(Context *ctx, Value *result, const Value *value);
 void __qmljs_to_object(Context *ctx, Value *result, const Value *value);
 uint __qmljs_check_object_coercible(Context *ctx, Value *result, const Value *value);
 uint __qmljs_is_callable(Context *ctx, const Value *value);
-void __qmljs_default_value(Context *ctx, Value *result, const Value *value, int typeHint);
+Value __qmljs_default_value(Context *ctx, const Value value, int typeHint);
 
 void __qmljs_compare(Context *ctx, Value *result, const Value *left, const Value *right, bool leftFlag);
 uint __qmljs_equal(Context *ctx, const Value *x, const Value *y);
@@ -181,7 +181,7 @@ void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *nam
 void __qmljs_delete_property(Context *ctx, Value *result, String *name);
 void __qmljs_delete_value(Context *ctx, Value *result, Value *value);
 
-Value __qmljs_typeof(Context *ctx, const Value *value);
+Value __qmljs_typeof(Context *ctx, const Value value);
 void __qmljs_throw(Context *context, Value value);
 Value __qmljs_rethrow(Context *context);
 
@@ -676,7 +676,7 @@ inline void __qmljs_to_primitive(Context *ctx, Value *result, const Value *value
     if (!value->isObject())
         *result = *value;
     else
-        __qmljs_default_value(ctx, result, value, typeHint);
+        *result = __qmljs_default_value(ctx, *value, typeHint);
 }
 
 inline uint __qmljs_to_boolean(const Value value, Context *ctx)
@@ -885,40 +885,38 @@ inline uint __qmljs_is_callable(Context *ctx, const Value *value)
         return false;
 }
 
-inline void __qmljs_default_value(Context *ctx, Value *result, const Value *value, int typeHint)
+inline Value __qmljs_default_value(Context *ctx, const Value value, int typeHint)
 {
-    if (value->isObject())
-        __qmljs_object_default_value(ctx, result, value, typeHint);
-    else
-        *result = Value::undefinedValue();
+    if (value.isObject())
+        return __qmljs_object_default_value(ctx, value, typeHint);
+    return Value::undefinedValue();
 }
 
 
 // unary operators
-inline Value __qmljs_typeof(Context *ctx, const Value *value)
+inline Value __qmljs_typeof(Context *ctx, const Value value)
 {
-    switch (value->type()) {
+    switch (value.type()) {
     case Value::Undefined_Type:
-        *result = __qmljs_string_literal_undefined(ctx);
+        return __qmljs_string_literal_undefined(ctx);
         break;
     case Value::Null_Type:
-        *result = __qmljs_string_literal_object(ctx);
+        return __qmljs_string_literal_object(ctx);
         break;
     case Value::Boolean_Type:
-        *result = __qmljs_string_literal_boolean(ctx);
+        return __qmljs_string_literal_boolean(ctx);
         break;
     case Value::String_Type:
-        *result = __qmljs_string_literal_string(ctx);
+        return __qmljs_string_literal_string(ctx);
         break;
     case Value::Object_Type:
-        if (__qmljs_is_callable(ctx, value))
-            *result = __qmljs_string_literal_function(ctx);
+        if (__qmljs_is_callable(ctx, &value))
+            return __qmljs_string_literal_function(ctx);
         else
-            *result = __qmljs_string_literal_object(ctx); // ### implementation-defined
+            return __qmljs_string_literal_object(ctx); // ### implementation-defined
         break;
-    case Value::Integer_Type:
-    case Value::Double_Type:
-        *result = __qmljs_string_literal_number(ctx);
+    default:
+        return __qmljs_string_literal_number(ctx);
         break;
     }
 }

@@ -797,10 +797,10 @@ uint __qmljs_is_function(const Value value)
     return value.objectValue()->asFunctionObject() != 0;
 }
 
-void __qmljs_object_default_value(Context *ctx, Value *result, const Value *object, int typeHint)
+Value __qmljs_object_default_value(Context *ctx, const Value object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
-        if (object->isDateObject())
+        if (object.isDateObject())
             typeHint = STRING_HINT;
         else
             typeHint = NUMBER_HINT;
@@ -812,28 +812,24 @@ void __qmljs_object_default_value(Context *ctx, Value *result, const Value *obje
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
 
-    Object *oo = object->asObject();
+    Object *oo = object.asObject();
     assert(oo != 0);
 
     Value conv = oo->getProperty(ctx, meth1);
     if (!conv.isUndefined() && conv.isFunctionObject()) {
-        Value r = __qmljs_call_value(ctx, *object, &conv, 0, 0);
-        if (r.isPrimitive()) {
-            *result = r;
-            return;
-        }
+        Value r = __qmljs_call_value(ctx, object, &conv, 0, 0);
+        if (r.isPrimitive())
+            return r;
     }
 
     conv = oo->getProperty(ctx, meth2);
     if (!conv.isUndefined() && conv.isFunctionObject()) {
-        Value r = __qmljs_call_value(ctx, *object, &conv, 0, 0);
-        if (r.isPrimitive()) {
-            *result = r;
-            return;
-        }
+        Value r = __qmljs_call_value(ctx, object, &conv, 0, 0);
+        if (r.isPrimitive())
+            return r;
     }
 
-    *result = Value::undefinedValue();
+    return Value::undefinedValue();
 }
 
 void __qmljs_throw_type_error(Context *ctx, Value *result)
@@ -1236,7 +1232,7 @@ Value __qmljs_rethrow(Context *context)
 Value __qmljs_builtin_typeof(Context *context, Value *args, int argc)
 {
     Q_UNUSED(argc);
-    return __qmljs_typeof(context, &args[0]);
+    return __qmljs_typeof(context, args[0]);
 }
 
 Value __qmljs_builtin_throw(Context *context, Value *args, int argc)
