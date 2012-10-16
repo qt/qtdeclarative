@@ -213,7 +213,7 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
             break;
         case IR::Name::builtin_rethrow: {
             int argc = prepareVariableArguments(call->args);
-            generateFunctionCall(__qmljs_builtin_rethrow, ContextRegister, result, baseAddressForCallArguments(), TrustedImm32(argc));
+            generateFunctionCall2(result, __qmljs_builtin_rethrow, ContextRegister, baseAddressForCallArguments(), TrustedImm32(argc));
             return; // we need to return to avoid checking the exceptions
         }
         }
@@ -258,7 +258,7 @@ void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
     assert(member->base->asTemp() != 0);
 
     int argc = prepareVariableArguments(call->args);
-    generateFunctionCall(__qmljs_construct_property, ContextRegister, result, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall2(result, __qmljs_construct_property, ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
@@ -268,7 +268,7 @@ void InstructionSelection::constructValue(IR::New *call, IR::Temp *result)
     assert(baseTemp != 0);
 
     int argc = prepareVariableArguments(call->args);
-    generateFunctionCall(__qmljs_construct_value, ContextRegister, result, baseTemp, baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall2(result, __qmljs_construct_value, ContextRegister, baseTemp, baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 

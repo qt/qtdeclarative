@@ -94,12 +94,12 @@ Value __qmljs_call_property(Context *context, const Value base, String *name, Va
 Value __qmljs_call_value(Context *context, const Value thisObject, const Value *func, Value *args, int argc);
 
 Value __qmljs_construct_activation_property(Context *, String *name, Value *args, int argc);
-void __qmljs_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc);
-void __qmljs_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc);
+Value __qmljs_construct_property(Context *context, const Value base, String *name, Value *args, int argc);
+Value __qmljs_construct_value(Context *context, const Value func, Value *args, int argc);
 
 Value __qmljs_builtin_typeof(Context *context, Value *args, int argc);
 Value __qmljs_builtin_throw(Context *context, Value *args, int argc);
-void __qmljs_builtin_rethrow(Context *context, Value *result, Value *args, int argc);
+Value __qmljs_builtin_rethrow(Context *context, Value *args, int argc);
 
 // constructors
 Value __qmljs_init_string(String *string);
@@ -181,9 +181,9 @@ void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *nam
 void __qmljs_delete_property(Context *ctx, Value *result, String *name);
 void __qmljs_delete_value(Context *ctx, Value *result, Value *value);
 
-void __qmljs_typeof(Context *ctx, Value *result, const Value *value);
-void __qmljs_throw(Context *context, Value *value);
-void __qmljs_rethrow(Context *context, Value *result);
+Value __qmljs_typeof(Context *ctx, const Value *value);
+void __qmljs_throw(Context *context, Value value);
+Value __qmljs_rethrow(Context *context);
 
 // binary operators
 void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Value *right);
@@ -651,7 +651,7 @@ struct Context {
     void leaveCallContext(FunctionObject *f);
 
     void initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc);
-    void leaveConstructorContext(FunctionObject *f, Value *returnValue);
+    void leaveConstructorContext(FunctionObject *f);
 };
 
 
@@ -895,7 +895,7 @@ inline void __qmljs_default_value(Context *ctx, Value *result, const Value *valu
 
 
 // unary operators
-inline void __qmljs_typeof(Context *ctx, Value *result, const Value *value)
+inline Value __qmljs_typeof(Context *ctx, const Value *value)
 {
     switch (value->type()) {
     case Value::Undefined_Type:

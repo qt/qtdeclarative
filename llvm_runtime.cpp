@@ -239,7 +239,7 @@ void __qmljs_llvm_construct_activation_property(Context *context, Value *result,
 
 void __qmljs_llvm_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc)
 {
-    __qmljs_construct_value(context, result, func, args, argc);
+    *result = __qmljs_construct_value(context, *func, args, argc);
 }
 
 void __qmljs_llvm_get_activation_property(Context *ctx, Value *result, String *name)
@@ -264,7 +264,7 @@ void __qmljs_llvm_call_property(Context *context, Value *result, const Value *ba
 
 void __qmljs_llvm_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
 {
-    __qmljs_construct_property(context, result, base, name, args, argc);
+    *result = __qmljs_construct_property(context, *base, name, args, argc);
 }
 
 void __qmljs_llvm_get_element(Context *ctx, Value *result, Value *object, Value *index)
@@ -284,17 +284,17 @@ void __qmljs_llvm_set_property(Context *ctx, Value *object, String *name, Value 
 
 void __qmljs_llvm_typeof(Context *ctx, Value *result, const Value *value)
 {
-    __qmljs_typeof(ctx, result, value);
+    *result = __qmljs_typeof(ctx, value);
 }
 
 void __qmljs_llvm_throw(Context *context, Value *value)
 {
-    __qmljs_throw(context, value);
+    __qmljs_throw(context, *value);
 }
 
 void __qmljs_llvm_rethrow(Context *context, Value *result)
 {
-    __qmljs_rethrow(context, result);
+    *result = __qmljs_rethrow(context);
 }
 
 void __qmljs_llvm_get_this_object(Context *ctx, Value *result)

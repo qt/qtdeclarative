@@ -382,7 +382,7 @@ void Context::initConstructorContext(ExecutionEngine *e, const Value *object, Fu
     calledAsConstructor = true;
 }
 
-void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
+void Context::leaveConstructorContext(FunctionObject *f)
 {
     assert(thisObject.is(Value::Object_Type));
     result = thisObject;
@@ -393,7 +393,6 @@ void Context::leaveConstructorContext(FunctionObject *f, Value *returnValue)
         thisObject.objectValue()->prototype = engine->objectPrototype;
 
     leaveCallContext(f);
-    *returnValue = result;
 }
 
 extern "C" {
@@ -1177,14 +1176,12 @@ Value __qmljs_construct_activation_property(Context *context, String *name, Valu
         context->throwReferenceError(Value::fromString(name));
         return Value::undefinedValue();
     }
-    Value result;
-    __qmljs_construct_value(context, &result, func, args, argc);
-    return result;
+    return __qmljs_construct_value(context, *func, args, argc);
 }
 
-void __qmljs_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc)
+Value __qmljs_construct_value(Context *context, const Value func, Value *args, int argc)
 {
-    if (FunctionObject *f = func->asFunctionObject()) {
+    if (FunctionObject *f = func.asFunctionObject()) {
         Context k;
         Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
         ctx->initConstructorContext(context->engine, 0, f, args, argc);
@@ -1193,17 +1190,18 @@ void __qmljs_construct_value(Context *context, Value *result, const Value *func,
             context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
             context->result = ctx->result;
         }
-        ctx->leaveConstructorContext(f, result);
-    } else {
-        context->throwTypeError();
+        ctx->leaveConstructorContext(f);
+        return ctx->result;
     }
+    context->throwTypeError();
+    return Value::undefinedValue();
 }
 
-void __qmljs_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
+Value __qmljs_construct_property(Context *context, const Value base, String *name, Value *args, int argc)
 {
-    Value thisObject = *base;
+    Value thisObject = base;
     if (!thisObject.isObject())
-        __qmljs_to_object(context, &thisObject, base);
+        __qmljs_to_object(context, &thisObject, &base);
 
     assert(thisObject.isObject());
     Value func = thisObject.property(context, name);
@@ -1217,42 +1215,41 @@ void __qmljs_construct_property(Context *context, Value *result, const Value *ba
             context->hasUncaughtException = ctx->hasUncaughtException; // propagate the exception
             context->result = ctx->result;
         }
-        ctx->leaveConstructorContext(f, result);
-    } else {
-        context->throwTypeError();
+        ctx->leaveConstructorContext(f);
+        return ctx->result;
     }
+    context->throwTypeError();
+    return Value::undefinedValue();
 }
 
-void __qmljs_throw(Context *context, Value *value)
+void __qmljs_throw(Context *context, Value value)
 {
     context->hasUncaughtException = true;
-    context->result = *value;
+    context->result = value;
 }
 
-void __qmljs_rethrow(Context *context, Value *result)
+Value __qmljs_rethrow(Context *context)
 {
-    *result = context->result;
+    return context->result;
 }
 
 Value __qmljs_builtin_typeof(Context *context, Value *args, int argc)
 {
     Q_UNUSED(argc);
-    Value result;
-    __qmljs_typeof(context, &result, &args[0]);
-    return result;
+    return __qmljs_typeof(context, &args[0]);
 }
 
 Value __qmljs_builtin_throw(Context *context, Value *args, int argc)
 {
     Q_UNUSED(argc);
-    __qmljs_throw(context, &args[0]);
+    __qmljs_throw(context, args[0]);
     // ### change to void return value
     return Value::undefinedValue();
 }
 
-void __qmljs_builtin_rethrow(Context *context, Value *result, Value *, int)
+Value __qmljs_builtin_rethrow(Context *context, Value *, int)
 {
-    __qmljs_rethrow(context, result);
+    return context->result;
 }
 
 } // extern "C"
