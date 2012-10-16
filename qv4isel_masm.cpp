@@ -666,7 +666,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
             move(ReturnValueRegister, Gpr0);
 
-            Jump target = branch32(Equal, Gpr0, TrustedImm32(1));
+            Jump target = branch32(NotEqual, Gpr0, TrustedImm32(0));
             _patches[s->iftrue].append(target);
 
             jumpToBlock(s->iffalse);
