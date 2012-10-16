@@ -974,7 +974,7 @@ inline Value __qmljs_bit_and(const Value left, const Value right, Context *ctx)
 
 inline void __qmljs_inplace_bit_and(Context *ctx, Value *result, Value *value)
 {
-    *result = __qmljs_bit_xor(*result, *value, ctx);
+    *result = __qmljs_bit_and(*result, *value, ctx);
 }
 
 inline void __qmljs_inplace_bit_or(Context *ctx, Value *result, Value *value)
