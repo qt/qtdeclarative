@@ -67,7 +67,7 @@ and \l {qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 \example examples/tutorials/extending/chapter1-basics
 
 A common task when extending QML is to provide a new QML type that supports some
- custom functionality beyond what is provided by the built-in \l {QML Types Provided by Qt Quick}{QtQuick types}.
+ custom functionality beyond what is provided by the built-in \l {Qt Quick QML Types}{QtQuick types}.
 For example, this could be done to implement particular data models, or provide
 elements with custom painting and drawing capabilities, or access system features
 like network programming that are not accessible through built-in QML features.
@@ -479,4 +479,3 @@ Or randomly add and remove slices from time to time using \l{Property Value Sour
 See the \l{Integrating QML and C++} documentation for more information.
 
 */
-
