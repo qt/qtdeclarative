@@ -394,7 +394,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 return;
             } else if (IR::Unop *u = s->source->asUnop()) {
                 if (IR::Temp *e = u->expr->asTemp()) {
-                    void (*op)(Context *ctx, Value *result, const Value *value) = 0;
+                    Value (*op)(const Value value, Context *ctx) = 0;
                     const char *opName = 0;
                     switch (u->op) {
                     case IR::OpIfTrue: assert(!"unreachable"); break;
@@ -406,7 +406,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     } // switch
 
                     if (op)
-                        generateFunctionCallImp(opName, op, ContextRegister, t, e);
+                        generateFunctionCallImp2(t, opName, op, e, ContextRegister);
                     return;
                 }
             } else if (IR::Binop *b = s->source->asBinop()) {

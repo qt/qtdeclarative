@@ -171,14 +171,10 @@ uint __qmljs_equal(Context *ctx, const Value *x, const Value *y);
 uint __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y);
 
 // unary operators
-void __qmljs_postincr(Context *ctx, Value *result, const Value *value);
-void __qmljs_postdecr(Context *ctx, Value *result, const Value *value);
-void __qmljs_uplus(Context *ctx, Value *result, const Value *value);
-void __qmljs_uminus(Context *ctx, Value *result, const Value *value);
-void __qmljs_compl(Context *ctx, Value *result, const Value *value);
-void __qmljs_not(Context *ctx, Value *result, const Value *value);
-void __qmljs_preincr(Context *ctx, Value *result, const Value *value);
-void __qmljs_predecr(Context *ctx, Value *result, const Value *value);
+Value __qmljs_uplus(const Value value, Context *ctx);
+Value __qmljs_uminus(const Value value, Context *ctx);
+Value __qmljs_compl(const Value value, Context *ctx);
+Value __qmljs_not(const Value value, Context *ctx);
 
 void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *index);
 void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *name);
@@ -928,28 +924,28 @@ inline void __qmljs_typeof(Context *ctx, Value *result, const Value *value)
     }
 }
 
-inline void __qmljs_uplus(Context *ctx, Value *result, const Value *value)
+inline Value __qmljs_uplus(const Value value, Context *ctx)
 {
-    double n = __qmljs_to_number(ctx, value);
-    *result = Value::fromDouble(n);
+    double n = __qmljs_to_number(ctx, &value);
+    return Value::fromDouble(n);
 }
 
-inline void __qmljs_uminus(Context *ctx, Value *result, const Value *value)
+inline Value __qmljs_uminus(const Value value, Context *ctx)
 {
-    double n = __qmljs_to_number(ctx, value);
-    *result = Value::fromDouble(-n);
+    double n = __qmljs_to_number(ctx, &value);
+    return Value::fromDouble(-n);
 }
 
-inline void __qmljs_compl(Context *ctx, Value *result, const Value *value)
+inline Value __qmljs_compl(const Value value, Context *ctx)
 {
-    int n = __qmljs_to_int32(ctx, value);
-    *result = Value::fromDouble(~n);
+    int n = __qmljs_to_int32(ctx, &value);
+    return Value::fromDouble(~n);
 }
 
-inline void __qmljs_not(Context *ctx, Value *result, const Value *value)
+inline Value __qmljs_not(const Value value, Context *ctx)
 {
-    bool b = __qmljs_to_boolean(ctx, value);
-    *result = Value::fromDouble(!b);
+    bool b = __qmljs_to_boolean(ctx, &value);
+    return Value::fromBoolean(!b);
 }
 
 // binary operators

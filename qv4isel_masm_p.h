@@ -276,6 +276,30 @@ private:
         move(imm32, dest);
     }
 
+    void loadArgument1(RegisterID source, RegisterID dest)
+    {
+        move(source, dest);
+    }
+
+    void loadArgument1(const Pointer& ptr, RegisterID dest)
+    {
+        loadPtr(ptr, dest);
+    }
+
+    void loadArgument1(IR::Temp* temp, RegisterID dest)
+    {
+        assert(temp);
+        Pointer addr = loadTempAddress(dest, temp);
+        loadArgument1(addr, dest);
+    }
+
+    void storeArgument(RegisterID src, IR::Temp *temp)
+    {
+        assert(temp);
+        // ### Should use some ScratchRegister here
+        Pointer addr = loadTempAddress(Gpr3, temp);
+        storePtr(src, addr);
+    }
 
     using JSC::MacroAssembler::push;
 
@@ -326,6 +350,8 @@ private:
 
     #define generateFunctionCall(function, ...) \
         generateFunctionCallImp(isel_stringIfy(function), function, __VA_ARGS__)
+    #define generateFunctionCall2(t, function, ...) \
+        generateFunctionCallImp2(t, isel_stringIfy(function), function, __VA_ARGS__)
 
 #if CPU(X86)
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>
@@ -460,6 +486,28 @@ private:
         callAbsolute(functionName, function);
         callFunctionEpilogue();
     }
+
+    template <typename ArgRet, typename Arg1, typename Arg2>
+    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
+    {
+        callFunctionPrologue();
+        loadArgument1(arg1, RegisterArgument1);
+        loadArgument1(arg2, RegisterArgument2);
+        callAbsolute(functionName, function);
+        storeArgument(ReturnValueRegister, r);
+        callFunctionEpilogue();
+    }
+
+    template <typename ArgRet, typename Arg1>
+    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1)
+    {
+        callFunctionPrologue();
+        loadArgument1(arg1, RegisterArgument1);
+        callAbsolute(functionName, function);
+        storeArgument(ReturnValueRegister, r);
+        callFunctionEpilogue();
+    }
+
 #elif CPU(ARM)
 
     template <typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5, typename Arg6>

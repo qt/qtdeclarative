@@ -198,22 +198,22 @@ void __qmljs_llvm_in(Context *ctx, Value *result, Value *left, Value *right)
 
 void __qmljs_llvm_uplus(Context *ctx, Value *result, const Value *value)
 {
-    __qmljs_uplus(ctx, result, value);
+    *result = __qmljs_uplus(*value, ctx);
 }
 
 void __qmljs_llvm_uminus(Context *ctx, Value *result, const Value *value)
 {
-    __qmljs_uminus(ctx, result, value);
+    *result = __qmljs_uminus(*value, ctx);
 }
 
 void __qmljs_llvm_compl(Context *ctx, Value *result, const Value *value)
 {
-    __qmljs_compl(ctx, result, value);
+    *result = __qmljs_compl(*value, ctx);
 }
 
 void __qmljs_llvm_not(Context *ctx, Value *result, const Value *value)
 {
-    __qmljs_not(ctx, result, value);
+    *result = __qmljs_not(*value, ctx);
 }
 
 String *__qmljs_llvm_identifier_from_utf8(Context *ctx, const char *str)
