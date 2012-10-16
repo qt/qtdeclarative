@@ -434,4 +434,9 @@ void DesignerSupport::createOpenGLContext(QQuickWindow *window)
     DesignerWindowManager::createOpenGLContext(window);
 }
 
+void DesignerSupport::polishItems(QQuickWindow *window)
+{
+    QQuickWindowPrivate::get(window)->polishItems();
+}
+
 QT_END_NAMESPACE

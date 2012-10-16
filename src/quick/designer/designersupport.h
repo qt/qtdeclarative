@@ -148,6 +148,8 @@ public:
 
     static void createOpenGLContext(QQuickWindow *window);
 
+    static void polishItems(QQuickWindow *window);
+
 private:
     QHash<QQuickItem*, QQuickShaderEffectTexture*> m_itemTextureHash;
 };
