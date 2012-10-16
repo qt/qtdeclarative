@@ -714,7 +714,7 @@ void StringCtor::call(Context *ctx)
     if (arg.is(Value::Undefined_Type))
         ctx->result = Value::fromString(ctx->engine->newString(QString()));
     else
-        __qmljs_to_string(ctx, &ctx->result, &arg);
+        ctx->result = __qmljs_to_string(ctx, arg);
 }
 
 void StringPrototype::init(Context *ctx, const Value &ctor)
@@ -808,8 +808,7 @@ void StringPrototype::method_concat(Context *ctx)
     QString value = getThisString(ctx);
 
     for (unsigned i = 0; i < ctx->argumentCount; ++i) {
-        Value v;
-        __qmljs_to_string(ctx, &v, &ctx->arguments[i]);
+        Value v = __qmljs_to_string(ctx, ctx->arguments[i]);
         assert(v.is(Value::String_Type));
         value += v.stringValue()->toQString();
     }
@@ -842,8 +841,7 @@ void StringPrototype::method_lastIndexOf(Context *ctx)
 
     QString searchString;
     if (ctx->argumentCount) {
-        Value v;
-        __qmljs_to_string(ctx, &v, &ctx->arguments[0]);
+        Value v = __qmljs_to_string(ctx, ctx->arguments[0]);
         searchString = v.stringValue()->toQString();
     }
 

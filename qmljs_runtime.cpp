@@ -163,17 +163,14 @@ double Value::toNumber(Context *ctx) const
 
 String *Value::toString(Context *ctx) const
 {
-    Value v;
-    __qmljs_to_string(ctx, &v, this);
+    Value v = __qmljs_to_string(ctx, *this);
     assert(v.is(Value::String_Type));
     return v.stringValue();
 }
 
 Value Value::toObject(Context *ctx) const
 {
-    Value v;
-    __qmljs_to_object(ctx, &v, this);
-    return v;
+    return __qmljs_to_object(ctx, *this);
 }
 
 bool Value::isFunctionObject() const
@@ -499,9 +496,9 @@ void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Va
     Value pright = __qmljs_to_primitive(ctx, *right, PREFERREDTYPE_HINT);
     if (pleft.isString() || pright.isString()) {
         if (!pleft.isString())
-            __qmljs_to_string(ctx, &pleft, &pleft);
+            pleft = __qmljs_to_string(ctx, pleft);
         if (!pright.isString())
-            __qmljs_to_string(ctx, &pright, &pright);
+            pright = __qmljs_to_string(ctx, pright);
         String *string = __qmljs_string_concat(ctx, pleft.stringValue(), pright.stringValue());
         *result = Value::fromString(string);
     } else {
@@ -525,8 +522,7 @@ void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Va
 void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *right)
 {
     if (right->isObject()) {
-        Value s;
-        __qmljs_to_string(ctx, &s, left);
+        Value s = __qmljs_to_string(ctx, *left);
         bool r = right->objectValue()->hasProperty(ctx, s.stringValue());
         *result = Value::fromBoolean(r);
     } else {
@@ -905,7 +901,7 @@ Value __qmljs_get_element(Context *ctx, Value object, Value index)
         String *name = index.toString(ctx);
 
         if (! object.isObject())
-            __qmljs_to_object(ctx, &object, &object);
+            object = __qmljs_to_object(ctx, object);
 
         return object.property(ctx, name);
     }
@@ -919,7 +915,7 @@ void __qmljs_set_element(Context *ctx, Value object, Value index, Value value)
         String *name = index.toString(ctx);
 
         if (! object.isObject())
-            __qmljs_to_object(ctx, &object, &object);
+            object = __qmljs_to_object(ctx, object);
 
         object.objectValue()->setProperty(ctx, name, value, /*flags*/ 0);
     }
@@ -970,11 +966,10 @@ Value __qmljs_get_property(Context *ctx, Value object, String *name)
     } else if (object.isString() && name->isEqualTo(ctx->engine->id_length)) {
         return Value::fromDouble(object.stringValue()->toQString().length());
     } else {
-        Value o;
-        __qmljs_to_object(ctx, &o, &object);
+        object = __qmljs_to_object(ctx, object);
 
-        if (o.isObject()) {
-            return __qmljs_get_property(ctx, o, name);
+        if (object.isObject()) {
+            return __qmljs_get_property(ctx, object, name);
         } else {
             ctx->throwTypeError(); // ### not necessary.
             return Value::undefinedValue();
@@ -1093,7 +1088,7 @@ Value __qmljs_call_property(Context *context, const Value base, String *name, Va
     if (!base.isUndefined()) {
         baseObject = base;
         if (!baseObject.isObject())
-            __qmljs_to_object(context, &baseObject, &baseObject);
+            baseObject = __qmljs_to_object(context, baseObject);
         assert(baseObject.isObject());
         thisObject = baseObject;
     } else {
@@ -1172,7 +1167,7 @@ Value __qmljs_construct_property(Context *context, const Value base, String *nam
 {
     Value thisObject = base;
     if (!thisObject.isObject())
-        __qmljs_to_object(context, &thisObject, &base);
+        thisObject = __qmljs_to_object(context, base);
 
     assert(thisObject.isObject());
     Value func = thisObject.property(context, name);
