@@ -348,8 +348,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 case IR::NumberType:
                     // ### Taking address of pointer inside IR.
-                    loadDouble(&c->value, FPGpr0);
-                    storeDouble(FPGpr0, dest);
+                    copyValue(dest, &c->value);
                     break;
                 default:
                     Q_UNIMPLEMENTED();
