@@ -132,13 +132,13 @@ String *__qmljs_identifier_from_utf8(Context *ctx, const char *s);
 
 // objects
 Value __qmljs_object_default_value(Context *ctx, const Value object, int typeHint);
-void __qmljs_throw_type_error(Context *ctx, Value *result);
-void __qmljs_new_object(Context *ctx, Value *result);
-void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean);
-void __qmljs_new_number_object(Context *ctx, Value *result, double n);
-void __qmljs_new_string_object(Context *ctx, Value *result, String *string);
-void __qmljs_set_activation_property(Context *ctx, String *name, Value *value);
-void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value);
+Value __qmljs_throw_type_error(Context *ctx);
+Value __qmljs_new_object(Context *ctx);
+Value __qmljs_new_boolean_object(Context *ctx, bool boolean);
+Value __qmljs_new_number_object(Context *ctx, double n);
+Value __qmljs_new_string_object(Context *ctx, String *string);
+void __qmljs_set_activation_property(Context *ctx, String *name, Value value);
+void __qmljs_set_property(Context *ctx, Value object, String *name, Value value);
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name);
 void __qmljs_get_activation_property(Context *ctx, Value *result, String *name);
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other);
@@ -827,7 +827,7 @@ inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
         if (prim.isPrimitive())
             __qmljs_to_string(ctx, result, &prim);
         else
-            __qmljs_throw_type_error(ctx, result);
+            *result = __qmljs_throw_type_error(ctx);
         break;
     }
     case Value::Integer_Type:
@@ -845,22 +845,22 @@ inline void __qmljs_to_object(Context *ctx, Value *result, const Value *value)
     switch (value->type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
-        __qmljs_throw_type_error(ctx, result);
+        *result = __qmljs_throw_type_error(ctx);
         break;
     case Value::Boolean_Type:
-        __qmljs_new_boolean_object(ctx, result, value->booleanValue());
+        *result = __qmljs_new_boolean_object(ctx, value->booleanValue());
         break;
     case Value::String_Type:
-        __qmljs_new_string_object(ctx, result, value->stringValue());
+        *result = __qmljs_new_string_object(ctx, value->stringValue());
         break;
     case Value::Object_Type:
         *result = *value;
         break;
     case Value::Integer_Type:
-        __qmljs_new_number_object(ctx, result, value->int_32);
+        *result = __qmljs_new_number_object(ctx, value->int_32);
         break;
     default: // double
-        __qmljs_new_number_object(ctx, result, value->doubleValue());
+        *result = __qmljs_new_number_object(ctx, value->doubleValue());
         break;
     }
 }
@@ -870,7 +870,7 @@ inline uint __qmljs_check_object_coercible(Context *ctx, Value *result, const Va
     switch (value->type()) {
     case Value::Undefined_Type:
     case Value::Null_Type:
-        __qmljs_throw_type_error(ctx, result);
+        *result = __qmljs_throw_type_error(ctx);
         return false;
     default:
         return true;

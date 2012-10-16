@@ -249,7 +249,7 @@ void __qmljs_llvm_get_activation_property(Context *ctx, Value *result, String *n
 
 void __qmljs_llvm_set_activation_property(Context *ctx, String *name, Value *value)
 {
-    __qmljs_set_activation_property(ctx, name, value);
+    __qmljs_set_activation_property(ctx, name, *value);
 }
 
 void __qmljs_llvm_get_property(Context *ctx, Value *result, Value *object, String *name)
@@ -279,7 +279,7 @@ void __qmljs_llvm_set_element(Context *ctx, Value *object, Value *index, Value *
 
 void __qmljs_llvm_set_property(Context *ctx, Value *object, String *name, Value *value)
 {
-    __qmljs_set_property(ctx, object, name, value);
+    __qmljs_set_property(ctx, *object, name, *value);
 }
 
 void __qmljs_llvm_typeof(Context *ctx, Value *result, const Value *value)
@@ -325,7 +325,7 @@ void __qmljs_llvm_delete_value(Context *ctx, Value *result, Value *value)
 void __qmljs_llvm_init_this_object(Context *ctx)
 {
     if (ctx->calledAsConstructor)
-        __qmljs_new_object(ctx, &ctx->thisObject);
+        ctx->thisObject = __qmljs_new_object(ctx);
 }
 
 } // extern "C"

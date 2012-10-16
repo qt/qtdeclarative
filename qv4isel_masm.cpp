@@ -318,7 +318,8 @@ void InstructionSelection::visitMove(IR::Move *s)
             String *propertyName = identifier(*n->id);
 
             if (IR::Temp *t = s->source->asTemp()) {
-                generateFunctionCall(__qmljs_set_activation_property, ContextRegister, propertyName, t);
+                IR::Temp *retval = 0;
+                generateFunctionCall2(retval, __qmljs_set_activation_property, ContextRegister, propertyName, t);
                 checkExceptions();
                 return;
             } else {
@@ -472,7 +473,8 @@ void InstructionSelection::visitMove(IR::Move *s)
         } else if (IR::Member *m = s->target->asMember()) {
             if (IR::Temp *base = m->base->asTemp()) {
                 if (IR::Temp *t = s->source->asTemp()) {
-                    generateFunctionCall(__qmljs_set_property, ContextRegister, base, identifier(*m->name), t);
+                    IR::Temp *retVal = 0;
+                    generateFunctionCall2(retVal, __qmljs_set_property, ContextRegister, base, identifier(*m->name), t);
                     checkExceptions();
                     return;
                 } else {

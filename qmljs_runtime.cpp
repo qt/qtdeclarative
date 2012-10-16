@@ -490,7 +490,7 @@ void __qmljs_delete_property(Context *ctx, Value *result, String *name)
 void __qmljs_delete_value(Context *ctx, Value *result, Value *value)
 {
     Q_UNUSED(value);
-    __qmljs_throw_type_error(ctx, result); // ### throw syntax error
+    *result = __qmljs_throw_type_error(ctx); // ### throw syntax error
 }
 
 void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Value *right)
@@ -520,7 +520,7 @@ void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Va
         return;
     }
 
-    __qmljs_throw_type_error(ctx, result);
+    *result = __qmljs_throw_type_error(ctx);
 }
 
 void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *right)
@@ -531,7 +531,7 @@ void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *rig
         bool r = right->objectValue()->hasProperty(ctx, s.stringValue());
         *result = Value::fromBoolean(r);
     } else {
-        __qmljs_throw_type_error(ctx, result);
+        *result = __qmljs_throw_type_error(ctx);
     }
 }
 
@@ -832,39 +832,38 @@ Value __qmljs_object_default_value(Context *ctx, const Value object, int typeHin
     return Value::undefinedValue();
 }
 
-void __qmljs_throw_type_error(Context *ctx, Value *result)
+Value __qmljs_throw_type_error(Context *ctx)
 {
     ctx->throwTypeError();
-    if (result)
-        *result = ctx->result;
+    return ctx->result;
 }
 
-void __qmljs_new_object(Context *ctx, Value *result)
+Value __qmljs_new_object(Context *ctx)
 {
-    *result = __qmljs_init_object(ctx->engine->newObject());
+    return __qmljs_init_object(ctx->engine->newObject());
 }
 
-void __qmljs_new_boolean_object(Context *ctx, Value *result, bool boolean)
+Value __qmljs_new_boolean_object(Context *ctx, bool boolean)
 {
     Value value = Value::fromBoolean(boolean);
-    *result = __qmljs_init_object(ctx->engine->newBooleanObject(value));
+    return __qmljs_init_object(ctx->engine->newBooleanObject(value));
 }
 
-void __qmljs_new_number_object(Context *ctx, Value *result, double number)
+Value __qmljs_new_number_object(Context *ctx, double number)
 {
     Value value = Value::fromDouble(number);
-    *result = __qmljs_init_object(ctx->engine->newNumberObject(value));
+    return __qmljs_init_object(ctx->engine->newNumberObject(value));
 }
 
-void __qmljs_new_string_object(Context *ctx, Value *result, String *string)
+Value __qmljs_new_string_object(Context *ctx, String *string)
 {
     Value value = Value::fromString(string);
-    *result = __qmljs_init_object(ctx->engine->newStringObject(value));
+    return __qmljs_init_object(ctx->engine->newStringObject(value));
 }
 
-void __qmljs_set_property(Context *ctx, Value *object, String *name, Value *value)
+void __qmljs_set_property(Context *ctx, Value object, String *name, Value value)
 {
-    object->objectValue()->setProperty(ctx, name, *value, /*flags*/ 0);
+    object.objectValue()->setProperty(ctx, name, value, /*flags*/ 0);
 }
 
 void __qmljs_set_property_boolean(Context *ctx, Value *object, String *name, bool b)
@@ -942,18 +941,18 @@ void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Va
     }
 }
 
-void __qmljs_set_activation_property(Context *ctx, String *name, Value *value)
+void __qmljs_set_activation_property(Context *ctx, String *name, Value value)
 {
-    if (Value *prop = ctx->lookupPropertyDescriptor(name)) {
-        *prop = *value;
-    } else
-        ctx->engine->globalObject.objectValue()->setProperty(ctx, name, *value);
+    if (Value *prop = ctx->lookupPropertyDescriptor(name))
+        *prop = value;
+    else
+        ctx->engine->globalObject.objectValue()->setProperty(ctx, name, value);
 }
 
 void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
 {
     if (Value *source = ctx->lookupPropertyDescriptor(other))
-        __qmljs_set_activation_property(ctx, name, source);
+        __qmljs_set_activation_property(ctx, name, *source);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
@@ -961,25 +960,25 @@ void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
 void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool b)
 {
     Value value = Value::fromBoolean(b);
-    __qmljs_set_activation_property(ctx, name, &value);
+    __qmljs_set_activation_property(ctx, name, value);
 }
 
 void __qmljs_set_activation_property_number(Context *ctx, String *name, double number)
 {
     Value value = Value::fromDouble(number);
-    __qmljs_set_activation_property(ctx, name, &value);
+    __qmljs_set_activation_property(ctx, name, value);
 }
 
 void __qmljs_set_activation_property_string(Context *ctx, String *name, String *string)
 {
     Value value = Value::fromString(string);
-    __qmljs_set_activation_property(ctx, name, &value);
+    __qmljs_set_activation_property(ctx, name, value);
 }
 
 void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Function *clos)
 {
     Value value = __qmljs_init_closure(clos, ctx);
-    __qmljs_set_activation_property(ctx, name, &value);
+    __qmljs_set_activation_property(ctx, name, value);
 }
 
 void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name)
