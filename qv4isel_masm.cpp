@@ -636,8 +636,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
         booleanConversion.link(this);
         {
-            generateFunctionCall(__qmljs_to_boolean, ContextRegister, t);
-            move(ReturnValueRegister, Gpr0);
+            generateFunctionCall2(Gpr0, __qmljs_to_boolean, t, ContextRegister);
         }
 
         testBoolean.link(this);

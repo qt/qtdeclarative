@@ -848,7 +848,7 @@ void StringPrototype::method_lastIndexOf(Context *ctx)
     }
 
     Value posArg = ctx->argument(1);
-    double position = __qmljs_to_number(ctx, &posArg);
+    double position = __qmljs_to_number(posArg, ctx);
     if (qIsNaN(position))
         position = +qInf();
     else
@@ -1552,7 +1552,7 @@ void ArrayPrototype::method_every(Context *ctx)
                 args[2] = ctx->thisObject;
                 Value r;
                 __qmljs_call_value(ctx, &r, &thisArg, &callback, args, 3);
-                ok = __qmljs_to_boolean(ctx, &r);
+                ok = __qmljs_to_boolean(r, ctx);
             }
             ctx->result = Value::fromBoolean(ok);
         } else {
@@ -1582,7 +1582,7 @@ void ArrayPrototype::method_some(Context *ctx)
                 args[2] = ctx->thisObject;
                 Value r;
                 __qmljs_call_value(ctx, &r, &thisArg, &callback, args, 3);
-                ok = __qmljs_to_boolean(ctx, &r);
+                ok = __qmljs_to_boolean(r, ctx);
             }
             ctx->result = Value::fromBoolean(ok);
         } else {
@@ -1669,7 +1669,7 @@ void ArrayPrototype::method_filter(Context *ctx)
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
                 __qmljs_call_value(ctx, &r, &thisArg, &callback, args, 3);
-                if (__qmljs_to_boolean(ctx, &r)) {
+                if (__qmljs_to_boolean(r, ctx)) {
                     const uint index = a->value.size();
                     a->value.resize(index + 1);
                     a->value.assign(index, v);

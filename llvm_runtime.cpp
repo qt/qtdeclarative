@@ -88,7 +88,7 @@ void __qmljs_llvm_init_native_function(Context *ctx, Value *result, void (*code)
 
 bool __qmljs_llvm_to_boolean(Context *ctx, const Value *value)
 {
-    return __qmljs_to_boolean(ctx, value);
+    return __qmljs_to_boolean(*value, ctx);
 }
 
 void __qmljs_llvm_bit_and(Context *ctx, Value *result, Value *left, Value *right)

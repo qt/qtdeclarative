@@ -301,6 +301,11 @@ private:
         storePtr(src, addr);
     }
 
+    void storeArgument(RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
+    }
+
     using JSC::MacroAssembler::push;
 
     void push(const Pointer& ptr)

@@ -133,32 +133,32 @@ int Value::toInteger(double number)
 
 int Value::toUInt16(Context *ctx)
 {
-    return __qmljs_to_uint16(ctx, this);
+    return __qmljs_to_uint16(*this, ctx);
 }
 
 int Value::toInt32(Context *ctx)
 {
-    return __qmljs_to_int32(ctx, this);
+    return __qmljs_to_int32(*this, ctx);
 }
 
 unsigned int Value::toUInt32(Context *ctx)
 {
-    return __qmljs_to_int32(ctx, this);
+    return __qmljs_to_uint32(*this, ctx);
 }
 
 bool Value::toBoolean(Context *ctx) const
 {
-    return __qmljs_to_boolean(ctx, this);
+    return __qmljs_to_boolean(*this, ctx);
 }
 
 double Value::toInteger(Context *ctx) const
 {
-    return __qmljs_to_integer(ctx, this);
+    return __qmljs_to_integer(*this, ctx);
 }
 
 double Value::toNumber(Context *ctx) const
 {
-    return __qmljs_to_number(ctx, this);
+    return __qmljs_to_number(*this, ctx);
 }
 
 String *Value::toString(Context *ctx) const
@@ -509,8 +509,8 @@ void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Va
         String *string = __qmljs_string_concat(ctx, pleft.stringValue(), pright.stringValue());
         *result = Value::fromString(string);
     } else {
-        double x = __qmljs_to_number(ctx, &pleft);
-        double y = __qmljs_to_number(ctx, &pright);
+        double x = __qmljs_to_number(pleft, ctx);
+        double y = __qmljs_to_number(pright, ctx);
         *result = Value::fromDouble(x + y);
     }
 }
@@ -1047,8 +1047,8 @@ void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y
         bool r = __qmljs_string_compare(ctx, px.stringValue(), py.stringValue());
         *result = Value::fromBoolean(r);
     } else {
-        double nx = __qmljs_to_number(ctx, &px);
-        double ny = __qmljs_to_number(ctx, &py);
+        double nx = __qmljs_to_number(px, ctx);
+        double ny = __qmljs_to_number(py, ctx);
         if (isnan(nx) || isnan(ny)) {
             *result = Value::undefinedValue();
         } else {
@@ -1086,10 +1086,10 @@ uint __qmljs_equal(Context *ctx, const Value *x, const Value *y)
         } else if (x->isUndefined() && y->isNull()) {
             return true;
         } else if (x->isNumber() && y->isString()) {
-            Value ny = Value::fromDouble(__qmljs_to_number(ctx, y));
+            Value ny = Value::fromDouble(__qmljs_to_number(*y, ctx));
             return __qmljs_equal(ctx, x, &ny);
         } else if (x->isString() && y->isNumber()) {
-            Value nx = Value::fromDouble(__qmljs_to_number(ctx, x));
+            Value nx = Value::fromDouble(__qmljs_to_number(*x, ctx));
             return __qmljs_equal(ctx, &nx, y);
         } else if (x->isBoolean()) {
             Value nx = Value::fromDouble((double) x->booleanValue());

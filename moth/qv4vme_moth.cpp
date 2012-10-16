@@ -141,7 +141,7 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(Jump)
 
     MOTH_BEGIN_INSTR(CJump)
-        if (__qmljs_to_boolean(context, &tempRegister))
+        if (__qmljs_to_boolean(tempRegister, context))
             code = ((uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(CJump)
 
