@@ -342,9 +342,12 @@ void QSGDefaultRectangleNode::update()
 
 void QSGDefaultRectangleNode::updateGeometry()
 {
-    float penWidth = m_aligned ? float(qRound(m_pen_width)) : float(m_pen_width);
     float width = float(m_rect.width());
     float height = float(m_rect.height());
+    float penWidth = qMin(qMin(width, height) * 0.5f, float(m_pen_width));
+
+    if (m_aligned)
+        penWidth = qRound(penWidth);
 
     QSGGeometry *g = geometry();
     g->setDrawingMode(GL_TRIANGLE_STRIP);
@@ -377,14 +380,9 @@ void QSGDefaultRectangleNode::updateGeometry()
         float radius = qMin(qMin(width, height) * 0.5f, float(m_radius));
         QRectF innerRect = m_rect;
         innerRect.adjust(radius, radius, -radius, -radius);
-        if (m_aligned && (int(penWidth) & 1)) {
-            // Pen width is odd, so add the offset as documented.
-            innerRect.moveLeft(innerRect.left() + qreal(0.5));
-            innerRect.moveTop(innerRect.top() + qreal(0.5));
-        }
 
-        float innerRadius = radius - penWidth * 0.5f;
-        float outerRadius = radius + penWidth * 0.5f;
+        float innerRadius = radius - penWidth * 1.0f;
+        float outerRadius = radius;
         float delta = qMin(width, height) * 0.5f;
 
         // Number of segments per corner, approximately one per 3 pixels.
@@ -630,16 +628,8 @@ void QSGDefaultRectangleNode::updateGeometry()
         QRectF innerRect = m_rect;
         QRectF outerRect = m_rect;
 
-        if (penWidth) {
-            if (m_aligned && (int(penWidth) & 1)) {
-                // Pen width is odd, so add the offset as documented.
-                innerRect.moveLeft(innerRect.left() + qreal(0.5));
-                innerRect.moveTop(innerRect.top() + qreal(0.5));
-                outerRect = innerRect;
-            }
-            innerRect.adjust(0.5f * penWidth, 0.5f * penWidth, -0.5f * penWidth, -0.5f * penWidth);
-            outerRect.adjust(-0.5f * penWidth, -0.5f * penWidth, 0.5f * penWidth, 0.5f * penWidth);
-        }
+        if (penWidth)
+            innerRect.adjust(1.0f * penWidth, 1.0f * penWidth, -1.0f * penWidth, -1.0f * penWidth);
 
         float delta = qMin(width, height) * 0.5f;
         int innerVertexCount = 4 + gradientIntersections * 2;
