@@ -164,9 +164,9 @@ Value __qmljs_to_object(Context *ctx, const Value value);
 Bool __qmljs_is_callable(Context *ctx, const Value value);
 Value __qmljs_default_value(Context *ctx, const Value value, int typeHint);
 
-void __qmljs_compare(Context *ctx, Value *result, const Value *left, const Value *right, bool leftFlag);
-Bool __qmljs_equal(Context *ctx, const Value *x, const Value *y);
-Bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y);
+Value __qmljs_compare(Context *ctx, const Value left, const Value right, bool leftFlag);
+Bool __qmljs_equal(Context *ctx, const Value x, const Value y);
+Bool __qmljs_strict_equal(Context *ctx, const Value x, const Value y);
 
 // unary operators
 Value __qmljs_uplus(const Value value, Context *ctx);
@@ -174,10 +174,11 @@ Value __qmljs_uminus(const Value value, Context *ctx);
 Value __qmljs_compl(const Value value, Context *ctx);
 Value __qmljs_not(const Value value, Context *ctx);
 
-void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *index);
-void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *name);
-void __qmljs_delete_property(Context *ctx, Value *result, String *name);
-void __qmljs_delete_value(Context *ctx, Value *result, Value *value);
+/* ### these 4 methods are apparently unused right now */
+Value __qmljs_delete_subscript(Context *ctx, Value base, Value index);
+Value __qmljs_delete_member(Context *ctx, Value base, String *name);
+Value __qmljs_delete_property(Context *ctx, String *name);
+Value __qmljs_delete_value(Context *ctx, Value value);
 
 Value __qmljs_typeof(Context *ctx, const Value value);
 void __qmljs_throw(Context *context, Value value);
@@ -1101,7 +1102,7 @@ inline void __qmljs_gt(Context *ctx, Value *result, const Value *left, const Val
     if (left->isNumber() && right->isNumber()) {
         *result = Value::fromBoolean(left->asDouble() > right->asDouble());
     } else {
-        __qmljs_compare(ctx, result, left, right, false);
+        *result = __qmljs_compare(ctx, *left, *right, false);
 
         if (result->isUndefined())
             *result = Value::fromBoolean(false);
@@ -1115,7 +1116,7 @@ inline void __qmljs_lt(Context *ctx, Value *result, const Value *left, const Val
     if (left->isNumber() && right->isNumber()) {
         *result = Value::fromBoolean(left->asDouble() < right->asDouble());
     } else {
-        __qmljs_compare(ctx, result, left, right, true);
+        *result = __qmljs_compare(ctx, *left, *right, true);
 
         if (result->isUndefined())
             *result = Value::fromBoolean(false);
@@ -1129,7 +1130,7 @@ inline void __qmljs_ge(Context *ctx, Value *result, const Value *left, const Val
     if (left->isNumber() && right->isNumber()) {
         *result = Value::fromBoolean(left->asDouble() >= right->asDouble());
     } else {
-        __qmljs_compare(ctx, result, right, left, false);
+        *result = __qmljs_compare(ctx, *right, *left, false);
 
         bool r = ! (result->isUndefined() || (result->isBoolean() && result->booleanValue()));
         *result = Value::fromBoolean(r);
@@ -1143,7 +1144,7 @@ inline void __qmljs_le(Context *ctx, Value *result, const Value *left, const Val
     if (left->isNumber() && right->isNumber()) {
         *result = Value::fromBoolean(left->asDouble() <= right->asDouble());
     } else {
-        __qmljs_compare(ctx, result, right, left, true);
+        *result = __qmljs_compare(ctx, *right, *left, true);
 
         bool r = ! (result->isUndefined() || (result->isBoolean() && result->booleanValue()));
         *result = Value::fromBoolean(r);
@@ -1159,7 +1160,7 @@ inline void __qmljs_eq(Context *ctx, Value *result, const Value *left, const Val
     } else if (left->isString() && right->isString()) {
         *result = Value::fromBoolean(__qmljs_string_equal(ctx, left->stringValue(), right->stringValue()));
     } else {
-        bool r = __qmljs_equal(ctx, left, right);
+        bool r = __qmljs_equal(ctx, *left, *right);
         *result = Value::fromBoolean(r);
     }
 }
@@ -1172,13 +1173,13 @@ inline void __qmljs_ne(Context *ctx, Value *result, const Value *left, const Val
 
 inline void __qmljs_se(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    bool r = __qmljs_strict_equal(ctx, left, right);
+    bool r = __qmljs_strict_equal(ctx, *left, *right);
     *result = Value::fromBoolean(r);
 }
 
 inline void __qmljs_sne(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    bool r = ! __qmljs_strict_equal(ctx, left, right);
+    bool r = ! __qmljs_strict_equal(ctx, *left, *right);
     *result = Value::fromBoolean(r);
 }
 
@@ -1226,12 +1227,12 @@ inline Bool __qmljs_cmp_ne(Context *ctx, const Value *left, const Value *right)
 
 inline Bool __qmljs_cmp_se(Context *ctx, const Value *left, const Value *right)
 {
-    return __qmljs_strict_equal(ctx, left, right);
+    return __qmljs_strict_equal(ctx, *left, *right);
 }
 
 inline Bool __qmljs_cmp_sne(Context *ctx, const Value *left, const Value *right)
 {
-    return ! __qmljs_strict_equal(ctx, left, right);
+    return ! __qmljs_strict_equal(ctx, *left, *right);
 }
 
 inline Bool __qmljs_cmp_instanceof(Context *ctx, const Value *left, const Value *right)
@@ -1248,12 +1249,12 @@ inline uint __qmljs_cmp_in(Context *ctx, const Value *left, const Value *right)
     return v.booleanValue();
 }
 
-inline Bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y)
+inline Bool __qmljs_strict_equal(Context *ctx, const Value x, const Value y)
 {
-    if (x->rawValue() == y->rawValue())
+    if (x.rawValue() == y.rawValue())
         return true;
-    if (x->isString() && y->isString())
-        return __qmljs_string_equal(ctx, x->stringValue(), y->stringValue());
+    if (x.isString() && y.isString())
+        return __qmljs_string_equal(ctx, x.stringValue(), y.stringValue());
     return false;
 }
 

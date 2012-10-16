@@ -449,45 +449,44 @@ Value __qmljs_string_literal_function(Context *ctx)
     return Value::fromString(ctx->engine->identifier(QStringLiteral("function")));
 }
 
-void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *index)
+Value __qmljs_delete_subscript(Context *ctx, Value base, Value index)
 {
-    if (ArrayObject *a = base->asArrayObject()) {
+    if (ArrayObject *a = base.asArrayObject()) {
         int n = -1;
-        if (index->isInteger())
-            n = index->integerValue();
-        else if (index->isDouble())
-            n = index->doubleValue();
+        if (index.isInteger())
+            n = index.integerValue();
+        else if (index.isDouble())
+            n = index.doubleValue();
         if (n >= 0) {
             if (n < a->value.size()) {
                 a->value.assign(n, Value::undefinedValue());
-                *result = Value::fromBoolean(true);
-                return;
+                return Value::fromBoolean(true);
             }
         }
     }
 
-    String *name = index->toString(ctx);
-    __qmljs_delete_member(ctx, result, base, name);
+    String *name = index.toString(ctx);
+    return __qmljs_delete_member(ctx, base, name);
 }
 
-void __qmljs_delete_member(Context *ctx, Value *result, Value *base, String *name)
+Value __qmljs_delete_member(Context *ctx, Value base, String *name)
 {
-    Value obj = base->toObject(ctx);
-    *result = Value::fromBoolean(obj.objectValue()->deleteProperty(ctx, name, true));
+    Value obj = base.toObject(ctx);
+    return Value::fromBoolean(obj.objectValue()->deleteProperty(ctx, name, true));
 }
 
-void __qmljs_delete_property(Context *ctx, Value *result, String *name)
+Value __qmljs_delete_property(Context *ctx, String *name)
 {
     Value obj = ctx->activation;
     if (! obj.isObject())
         obj = ctx->engine->globalObject;
-    *result = Value::fromBoolean(obj.objectValue()->deleteProperty(ctx, name, true));
+    return Value::fromBoolean(obj.objectValue()->deleteProperty(ctx, name, true));
 }
 
-void __qmljs_delete_value(Context *ctx, Value *result, Value *value)
+Value __qmljs_delete_value(Context *ctx, Value value)
 {
     Q_UNUSED(value);
-    *result = __qmljs_throw_type_error(ctx); // ### throw syntax error
+    return __qmljs_throw_type_error(ctx); // ### throw syntax error
 }
 
 void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Value *right)
@@ -992,78 +991,78 @@ Value __qmljs_get_thisObject(Context *ctx)
     return ctx->engine->globalObject;
 }
 
-void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y, bool leftFirst)
+Value __qmljs_compare(Context *ctx, const Value x, const Value y, bool leftFirst)
 {
     Value px, py;
 
     if (leftFirst) {
-        px = __qmljs_to_primitive(ctx, *x, NUMBER_HINT);
-        py = __qmljs_to_primitive(ctx, *y, NUMBER_HINT);
+        px = __qmljs_to_primitive(ctx, x, NUMBER_HINT);
+        py = __qmljs_to_primitive(ctx, y, NUMBER_HINT);
     } else {
-        px = __qmljs_to_primitive(ctx, *x, NUMBER_HINT);
-        py = __qmljs_to_primitive(ctx, *y, NUMBER_HINT);
+        px = __qmljs_to_primitive(ctx, x, NUMBER_HINT);
+        py = __qmljs_to_primitive(ctx, y, NUMBER_HINT);
     }
 
     if (px.isString() && py.isString()) {
         bool r = __qmljs_string_compare(ctx, px.stringValue(), py.stringValue());
-        *result = Value::fromBoolean(r);
+        return Value::fromBoolean(r);
     } else {
         double nx = __qmljs_to_number(px, ctx);
         double ny = __qmljs_to_number(py, ctx);
         if (isnan(nx) || isnan(ny)) {
-            *result = Value::undefinedValue();
+            return Value::undefinedValue();
         } else {
-            *result = Value::fromBoolean(nx < ny);
+            return Value::fromBoolean(nx < ny);
         }
     }
 }
 
-uint __qmljs_equal(Context *ctx, const Value *x, const Value *y)
+uint __qmljs_equal(Context *ctx, const Value x, const Value y)
 {
-    if (x->type() == y->type()) {
-        switch (x->type()) {
+    if (x.type() == y.type()) {
+        switch (x.type()) {
         case Value::Undefined_Type:
             return true;
         case Value::Null_Type:
             return true;
         case Value::Boolean_Type:
-            return x->booleanValue() == y->booleanValue();
+            return x.booleanValue() == y.booleanValue();
             break;
         case Value::Integer_Type:
-            return x->integerValue() == y->integerValue();
+            return x.integerValue() == y.integerValue();
         case Value::String_Type:
-            return __qmljs_string_equal(ctx, x->stringValue(), y->stringValue());
+            return __qmljs_string_equal(ctx, x.stringValue(), y.stringValue());
         case Value::Object_Type:
-            return x->objectValue() == y->objectValue();
+            return x.objectValue() == y.objectValue();
         default: // double
-            return x->doubleValue() == y->doubleValue();
+            return x.doubleValue() == y.doubleValue();
         }
         // unreachable
     } else {
-        if (x->isNumber() && y->isNumber())
-            return x == y;
-        if (x->isNull() && y->isUndefined()) {
+        if (x.isNumber() && y.isNumber())
+            return x.asDouble() == y.asDouble();
+        if (x.isNull() && y.isUndefined()) {
             return true;
-        } else if (x->isUndefined() && y->isNull()) {
+        } else if (x.isUndefined() && y.isNull()) {
             return true;
-        } else if (x->isNumber() && y->isString()) {
-            Value ny = Value::fromDouble(__qmljs_to_number(*y, ctx));
-            return __qmljs_equal(ctx, x, &ny);
-        } else if (x->isString() && y->isNumber()) {
-            Value nx = Value::fromDouble(__qmljs_to_number(*x, ctx));
-            return __qmljs_equal(ctx, &nx, y);
-        } else if (x->isBoolean()) {
-            Value nx = Value::fromDouble((double) x->booleanValue());
-            return __qmljs_equal(ctx, &nx, y);
-        } else if (y->isBoolean()) {
-            Value ny = Value::fromDouble((double) y->booleanValue());
-            return __qmljs_equal(ctx, x, &ny);
-        } else if ((x->isNumber() || x->isString()) && y->isObject()) {
-            Value py = __qmljs_to_primitive(ctx, *y, PREFERREDTYPE_HINT);
-            return __qmljs_equal(ctx, x, &py);
-        } else if (x->isObject() && (y->isNumber() || y->isString())) {
-            Value px = __qmljs_to_primitive(ctx, *x, PREFERREDTYPE_HINT);
-            return __qmljs_equal(ctx, &px, y);
+        } else if (x.isNumber() && y.isString()) {
+            Value ny = Value::fromDouble(__qmljs_to_number(y, ctx));
+            return __qmljs_equal(ctx, x, ny);
+        } else if (x.isString() && y.isNumber()) {
+            Value nx = Value::fromDouble(__qmljs_to_number(x, ctx));
+            return __qmljs_equal(ctx, nx, y);
+        } else if (x.isBoolean()) {
+            Value nx = Value::fromDouble((double) x.booleanValue());
+            return __qmljs_equal(ctx, nx, y);
+        } else if (y.isBoolean()) {
+            Value ny = Value::fromDouble((double) y.booleanValue());
+            return __qmljs_equal(ctx, x, ny);
+        } else if ((x.isNumber() || x.isString()) && y.isObject()) {
+            Value py = __qmljs_to_primitive(ctx, y, PREFERREDTYPE_HINT);
+            return __qmljs_equal(ctx, x, py);
+        } else if (x.isObject() && (y.isNumber() || y.isString())) {
+            Value px = __qmljs_to_primitive(ctx, x, PREFERREDTYPE_HINT);
+            return __qmljs_equal(ctx, px, y);
         }
     }
 
