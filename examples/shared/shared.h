@@ -39,6 +39,7 @@
 ****************************************************************************/
 #include <QDir>
 #include <QGuiApplication>
+#include <QQmlEngine>
 #include <QQuickView>
 #define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
 {\
@@ -68,6 +69,7 @@
             qWarning("Could not find file '%s'", qPrintable(QDir::toNativeSeparators(fileName)));\
             return -1;\
     }\
+    view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));\
     view.setSource(QUrl::fromLocalFile(fileName));\
     view.show();\
     return app.exec();\
