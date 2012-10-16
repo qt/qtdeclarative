@@ -239,7 +239,8 @@ static void evaluate(QQmlJS::VM::Context *ctx, const QString &fileName, const QS
 
     const size_t codeSize = 400 * getpagesize();
     uchar *code = 0;
-    posix_memalign((void**)&code, 16, codeSize);
+    if (posix_memalign((void**)&code, 16, codeSize))
+        assert(!"memalign failed");
     assert(code);
     assert(! (size_t(code) & 15));
 
