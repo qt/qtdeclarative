@@ -308,10 +308,11 @@ void InstructionSelection::visitLeave(IR::Leave *)
     assert(!"TODO");
 }
 
+#define setOp(op, opName, operation) \
+    do { op = operation; opName = isel_stringIfy(operation); } while (0)
+
 void InstructionSelection::visitMove(IR::Move *s)
 {
-    #define setOp(op, opName, operation) \
-        do { op = operation; opName = isel_stringIfy(operation); } while (0)
 
     if (s->op == IR::OpInvalid) {
         if (IR::Name *n = s->target->asName()) {
@@ -410,7 +411,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                 IR::Temp *l = b->left->asTemp();
                 IR::Temp *r = b->right->asTemp();
                 if (l && r) {
-                    void (*op)(Context *, Value *, const Value *, const Value *) = 0;
+                    Value (*op)(const Value, const Value, Context *) = 0;
                     const char* opName = 0;
 
                     switch ((IR::AluOp) b->op) {
@@ -452,7 +453,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     }
 
                     if (op) {
-                        generateFunctionCallImp(opName, op, ContextRegister, t, l, r);
+                        generateFunctionCallImp2(t, opName, op, l, r, ContextRegister);
                     }
                     return;
                 }
@@ -491,7 +492,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         // inplace assignment, e.g. x += 1, ++x, ...
         if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Temp *t2 = s->source->asTemp()) {
-                void (*op)(Context *ctx, Value *result, const Value *left,const Value *right) = 0;
+                Value (*op)(const Value left, const Value right, Context *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: setOp(op, opName, __qmljs_bit_and); break;
@@ -510,7 +511,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
                 if (op)
-                    generateFunctionCallImp(opName, op, ContextRegister, t, t, t2);
+                    generateFunctionCallImp2(t, opName, op, t, t2, ContextRegister);
                 return;
             }
         } else if (IR::Name *n = s->target->asName()) {
@@ -604,7 +605,6 @@ void InstructionSelection::visitMove(IR::Move *s)
     qout << endl;
     assert(!"TODO");
 
-    #undef setOp
 }
 
 void InstructionSelection::visitJump(IR::Jump *s)
@@ -646,20 +646,23 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         IR::Temp *l = b->left->asTemp();
         IR::Temp *r = b->right->asTemp();
         if (l && r) {
+            Bool (*op)(Context *ctx, const Value, const Value) = 0;
+            const char *opName = 0;
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;
-            case IR::OpGt: generateFunctionCall(__qmljs_cmp_gt, ContextRegister, l, r); break;
-            case IR::OpLt: generateFunctionCall(__qmljs_cmp_lt, ContextRegister, l, r); break;
-            case IR::OpGe: generateFunctionCall(__qmljs_cmp_ge, ContextRegister, l, r); break;
-            case IR::OpLe: generateFunctionCall(__qmljs_cmp_le, ContextRegister, l, r); break;
-            case IR::OpEqual: generateFunctionCall(__qmljs_cmp_eq, ContextRegister, l, r); break;
-            case IR::OpNotEqual: generateFunctionCall(__qmljs_cmp_ne, ContextRegister, l, r); break;
-            case IR::OpStrictEqual: generateFunctionCall(__qmljs_cmp_se, ContextRegister, l, r); break;
-            case IR::OpStrictNotEqual: generateFunctionCall(__qmljs_cmp_sne, ContextRegister, l, r); break;
-            case IR::OpInstanceof: generateFunctionCall(__qmljs_cmp_instanceof, ContextRegister, l, r); break;
-            case IR::OpIn: generateFunctionCall(__qmljs_cmp_in, ContextRegister, l, r); break;
+            case IR::OpGt: setOp(op, opName, __qmljs_cmp_gt); break;
+            case IR::OpLt: setOp(op, opName, __qmljs_cmp_lt); break;
+            case IR::OpGe: setOp(op, opName, __qmljs_cmp_ge); break;
+            case IR::OpLe: setOp(op, opName, __qmljs_cmp_le); break;
+            case IR::OpEqual: setOp(op, opName, __qmljs_cmp_eq); break;
+            case IR::OpNotEqual: setOp(op, opName, __qmljs_cmp_ne); break;
+            case IR::OpStrictEqual: setOp(op, opName, __qmljs_cmp_se); break;
+            case IR::OpStrictNotEqual: setOp(op, opName, __qmljs_cmp_sne); break;
+            case IR::OpInstanceof: setOp(op, opName, __qmljs_cmp_instanceof); break;
+            case IR::OpIn: setOp(op, opName, __qmljs_cmp_in); break;
             } // switch
 
+            generateFunctionCall2(ReturnValueRegister, op, ContextRegister, l, r);
             move(ReturnValueRegister, Gpr0);
 
             Jump target = branch32(NotEqual, Gpr0, TrustedImm32(0));

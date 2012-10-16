@@ -130,7 +130,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         qWarning("UNKNOWN MOVE");
 }
 
-typedef void (*ALUFunction)(VM::Context*, VM::Value*, const VM::Value*, const VM::Value *);
+typedef VM::Value (*ALUFunction)(const VM::Value, const VM::Value, VM::Context*);
 ALUFunction aluOpFunction(IR::AluOp op)
 {
     switch (op) {

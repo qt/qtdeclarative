@@ -489,43 +489,41 @@ Value __qmljs_delete_value(Context *ctx, Value value)
     return __qmljs_throw_type_error(ctx); // ### throw syntax error
 }
 
-void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Value *right)
+Value __qmljs_add_helper(const Value left, const Value right, Context *ctx)
 {
-    Value pleft = __qmljs_to_primitive(ctx, *left, PREFERREDTYPE_HINT);
-    Value pright = __qmljs_to_primitive(ctx, *right, PREFERREDTYPE_HINT);
+    Value pleft = __qmljs_to_primitive(ctx, left, PREFERREDTYPE_HINT);
+    Value pright = __qmljs_to_primitive(ctx, right, PREFERREDTYPE_HINT);
     if (pleft.isString() || pright.isString()) {
         if (!pleft.isString())
             pleft = __qmljs_to_string(ctx, pleft);
         if (!pright.isString())
             pright = __qmljs_to_string(ctx, pright);
         String *string = __qmljs_string_concat(ctx, pleft.stringValue(), pright.stringValue());
-        *result = Value::fromString(string);
-    } else {
-        double x = __qmljs_to_number(pleft, ctx);
-        double y = __qmljs_to_number(pright, ctx);
-        *result = Value::fromDouble(x + y);
+        return Value::fromString(string);
     }
+    double x = __qmljs_to_number(pleft, ctx);
+    double y = __qmljs_to_number(pright, ctx);
+    return Value::fromDouble(x + y);
 }
 
-void __qmljs_instanceof(Context *ctx, Value *result, const Value *left, const Value *right)
+Value __qmljs_instanceof(const Value left, const Value right, Context *ctx)
 {
-    if (FunctionObject *function = right->asFunctionObject()) {
-        bool r = function->hasInstance(ctx, *left);
-        *result = Value::fromBoolean(r);
-        return;
+    if (FunctionObject *function = right.asFunctionObject()) {
+        bool r = function->hasInstance(ctx, left);
+        return Value::fromBoolean(r);
     }
 
-    *result = __qmljs_throw_type_error(ctx);
+    return __qmljs_throw_type_error(ctx);
 }
 
-void __qmljs_in(Context *ctx, Value *result, const Value *left, const Value *right)
+Value __qmljs_in(const Value left, const Value right, Context *ctx)
 {
-    if (right->isObject()) {
-        Value s = __qmljs_to_string(ctx, *left);
-        bool r = right->objectValue()->hasProperty(ctx, s.stringValue());
-        *result = Value::fromBoolean(r);
+    if (right.isObject()) {
+        Value s = __qmljs_to_string(ctx, left);
+        bool r = right.objectValue()->hasProperty(ctx, s.stringValue());
+        return Value::fromBoolean(r);
     } else {
-        *result = __qmljs_throw_type_error(ctx);
+        return __qmljs_throw_type_error(ctx);
     }
 }
 
@@ -547,7 +545,7 @@ void __qmljs_inplace_bit_xor_name(Context *ctx, String *name, Value *value)
 void __qmljs_inplace_add_name(Context *ctx, String *name, Value *value)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        __qmljs_add(ctx, prop, prop, value);
+        *prop = __qmljs_add(*prop, *value, ctx);
     else
         ctx->throwReferenceError(Value::fromString(name));
 }
@@ -599,7 +597,7 @@ void __qmljs_inplace_bit_or_element(Context *ctx, Value *base, Value *index, Val
         if (index->isNumber()) {
             const quint32 idx = index->toUInt32(ctx);
             Value v = a->value.at(idx);
-            __qmljs_bit_or(ctx, &v, &v, value);
+            v = __qmljs_bit_or(v, *value, ctx);
             a->value.assign(idx, v);
             return;
         }
@@ -614,7 +612,7 @@ void __qmljs_inplace_bit_xor_element(Context *ctx, Value *base, Value *index, Va
         if (index->isNumber()) {
             const quint32 idx = index->toUInt32(ctx);
             Value v = a->value.at(idx);
-            __qmljs_bit_xor(ctx, &v, &v, value);
+            v = __qmljs_bit_xor(v, *value, ctx);
             a->value.assign(idx, v);
             return;
         }
@@ -629,7 +627,7 @@ void __qmljs_inplace_add_element(Context *ctx, Value *base, Value *index, Value 
         if (index->isNumber()) {
             const quint32 idx = index->toUInt32(ctx);
             Value v = a->value.at(idx);
-            __qmljs_add(ctx, &v, &v, value);
+            v = __qmljs_add(v, *value, ctx);
             a->value.assign(idx, v);
             return;
         }
@@ -644,7 +642,7 @@ void __qmljs_inplace_sub_element(Context *ctx, Value *base, Value *index, Value 
         if (index->isNumber()) {
             const quint32 idx = index->toUInt32(ctx);
             Value v = a->value.at(idx);
-            __qmljs_sub(ctx, &v, &v, value);
+            v = __qmljs_sub(v, *value, ctx);
             a->value.assign(idx, v);
             return;
         }
@@ -700,14 +698,14 @@ void __qmljs_inplace_bit_xor_member(Context *ctx, Value *base, String *name, Val
 void __qmljs_inplace_add_member(Context *ctx, Value *base, String *name, Value *value)
 {
     Value prop = base->objectValue()->getProperty(ctx, name);
-    __qmljs_add(ctx, &prop, &prop, value);
+    prop = __qmljs_add(prop, *value, ctx);
     base->objectValue()->setProperty(ctx, name, prop);
 }
 
 void __qmljs_inplace_sub_member(Context *ctx, Value *base, String *name, Value *value)
 {
     Value prop = base->objectValue()->getProperty(ctx, name);
-    __qmljs_sub(ctx, &prop, &prop, value);
+    prop = __qmljs_sub(prop, *value, ctx);
     base->objectValue()->setProperty(ctx, name, prop);
 }
 

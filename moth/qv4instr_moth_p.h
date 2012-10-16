@@ -101,7 +101,7 @@ union Instr
         MOTH_INSTR_HEADER
         int lhsTempIndex;
         int rhsTempIndex;
-        void (*alu)(VM::Context *, VM::Value *, const VM::Value *, const VM::Value *);
+        VM::Value (*alu)(const VM::Value , const VM::Value, VM::Context *);
     };
 
     instr_common common;
