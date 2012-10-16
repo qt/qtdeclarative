@@ -196,20 +196,20 @@ void InstructionSelection::callActivationProperty(IR::Call *call, IR::Temp *resu
     assert(baseName != 0);
 
     if (baseName->id)
-        callRuntimeMethod(__qmljs_call_activation_property, result, call->base, call->args);
+        callRuntimeMethod(result, __qmljs_call_activation_property, call->base, call->args);
     else {
         switch (baseName->builtin) {
         case IR::Name::builtin_invalid:
             Q_UNREACHABLE();
             break;
         case IR::Name::builtin_typeof:
-            callRuntimeMethod(__qmljs_builtin_typeof, result, call->args);
+            callRuntimeMethod(result, __qmljs_builtin_typeof, call->args);
             break;
         case IR::Name::builtin_delete:
             Q_UNREACHABLE();
             break;
         case IR::Name::builtin_throw:
-            callRuntimeMethod(__qmljs_builtin_throw, result, call->args);
+            callRuntimeMethod(result, __qmljs_builtin_throw, call->args);
             break;
         case IR::Name::builtin_rethrow: {
             int argc = prepareVariableArguments(call->args);
@@ -249,7 +249,7 @@ void InstructionSelection::constructActivationProperty(IR::New *call, IR::Temp *
     IR::Name *baseName = call->base->asName();
     assert(baseName != 0);
 
-    callRuntimeMethod(__qmljs_construct_activation_property, result, call->base, call->args);
+    callRuntimeMethod(result, __qmljs_construct_activation_property, call->base, call->args);
 }
 
 void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
@@ -706,20 +706,20 @@ int InstructionSelection::prepareVariableArguments(IR::ExprList* args)
     return argc;
 }
 
-void InstructionSelection::callRuntimeMethodImp(const char* name, ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args)
+void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* name, ActivationMethod method, IR::Expr *base, IR::ExprList *args)
 {
     IR::Name *baseName = base->asName();
     assert(baseName != 0);
 
     int argc = prepareVariableArguments(args);
-    generateFunctionCallImp(name, method, ContextRegister, result, identifier(*baseName->id), baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCallImp2(result, name, method, ContextRegister, identifier(*baseName->id), baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
-void InstructionSelection::callRuntimeMethodImp(const char* name, BuiltinMethod method, IR::Temp *result, IR::ExprList *args)
+void InstructionSelection::callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args)
 {
     int argc = prepareVariableArguments(args);
-    generateFunctionCallImp(name, method, ContextRegister, result, baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCallImp2(result, name, method, ContextRegister, baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 

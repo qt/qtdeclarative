@@ -288,14 +288,14 @@ private:
 
     void loadArgument1(const Pointer& ptr, RegisterID dest)
     {
-        loadPtr(ptr, dest);
+        addPtr(TrustedImm32(ptr.offset), ptr.base, dest);
     }
 
     void loadArgument1(IR::Temp* temp, RegisterID dest)
     {
         assert(temp);
         Pointer addr = loadTempAddress(dest, temp);
-        loadArgument1(addr, dest);
+        loadPtr(addr, dest);
     }
 
     void loadArgument1(VM::String* string, RegisterID dest)
@@ -311,10 +311,11 @@ private:
 
     void storeArgument(RegisterID src, IR::Temp *temp)
     {
-        assert(temp);
-        // ### Should use some ScratchRegister here
-        Pointer addr = loadTempAddress(Gpr3, temp);
-        storePtr(src, addr);
+        if (temp) {
+            // ### Should use some ScratchRegister here
+            Pointer addr = loadTempAddress(Gpr3, temp);
+            storePtr(src, addr);
+        }
     }
 
     void storeArgument(RegisterID src, RegisterID dest)
@@ -508,6 +509,31 @@ private:
         callFunctionEpilogue();
     }
 
+    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3>
+    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    {
+        callFunctionPrologue();
+        loadArgument1(arg1, RegisterArgument1);
+        loadArgument1(arg2, RegisterArgument2);
+        loadArgument1(arg3, RegisterArgument3);
+        callAbsolute(functionName, function);
+        storeArgument(ReturnValueRegister, r);
+        callFunctionEpilogue();
+    }
+
+    template <typename ArgRet, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+    void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    {
+        callFunctionPrologue();
+        loadArgument1(arg1, RegisterArgument1);
+        loadArgument1(arg2, RegisterArgument2);
+        loadArgument1(arg3, RegisterArgument3);
+        loadArgument1(arg4, RegisterArgument4);
+        callAbsolute(functionName, function);
+        storeArgument(ReturnValueRegister, r);
+        callFunctionEpilogue();
+    }
+
     template <typename ArgRet, typename Arg1, typename Arg2>
     void generateFunctionCallImp2(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2)
     {
@@ -598,12 +624,12 @@ private:
 
     int prepareVariableArguments(IR::ExprList* args);
 
-    typedef void (*ActivationMethod)(VM::Context *, VM::Value *result, VM::String *name, VM::Value *args, int argc);
-    typedef void (*BuiltinMethod)(VM::Context *, VM::Value *result, VM::Value *args, int argc);
-    void callRuntimeMethodImp(const char* name, ActivationMethod method, IR::Temp *result, IR::Expr *base, IR::ExprList *args);
-    void callRuntimeMethodImp(const char* name, BuiltinMethod method, IR::Temp *result, IR::ExprList *args);
-#define callRuntimeMethod(function, ...) \
-    callRuntimeMethodImp(isel_stringIfy(function), function, __VA_ARGS__)
+    typedef VM::Value (*ActivationMethod)(VM::Context *, VM::String *name, VM::Value *args, int argc);
+    typedef VM::Value (*BuiltinMethod)(VM::Context *, VM::Value *args, int argc);
+    void callRuntimeMethodImp(IR::Temp *result, const char* name, ActivationMethod method, IR::Expr *base, IR::ExprList *args);
+    void callRuntimeMethodImp(IR::Temp *result, const char* name, BuiltinMethod method, IR::ExprList *args);
+#define callRuntimeMethod(result, function, ...) \
+    callRuntimeMethodImp(result, isel_stringIfy(function), function, __VA_ARGS__)
 
     using JSC::MacroAssembler::loadDouble;
     void loadDouble(IR::Temp* temp, FPRegisterID dest)

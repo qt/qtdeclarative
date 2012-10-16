@@ -89,16 +89,16 @@ struct ExecutionEngine;
 extern "C" {
 
 // context
-void __qmljs_call_activation_property(Context *, Value *result, String *name, Value *args, int argc);
+Value __qmljs_call_activation_property(Context *, String *name, Value *args, int argc);
 void __qmljs_call_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc);
 void __qmljs_call_value(Context *context, Value *result, const Value *thisObject, const Value *func, Value *args, int argc);
 
-void __qmljs_construct_activation_property(Context *, Value *result, String *name, Value *args, int argc);
+Value __qmljs_construct_activation_property(Context *, String *name, Value *args, int argc);
 void __qmljs_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc);
 void __qmljs_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc);
 
-void __qmljs_builtin_typeof(Context *context, Value *result, Value *args, int argc);
-void __qmljs_builtin_throw(Context *context, Value *result, Value *args, int argc);
+Value __qmljs_builtin_typeof(Context *context, Value *args, int argc);
+Value __qmljs_builtin_throw(Context *context, Value *args, int argc);
 void __qmljs_builtin_rethrow(Context *context, Value *result, Value *args, int argc);
 
 // constructors
@@ -107,7 +107,7 @@ Value __qmljs_init_object(Object *object);
 Value __qmljs_init_closure(IR::Function *clos, Context *ctx);
 Value __qmljs_init_native_function(void (*code)(Context *), Context *ctx);
 
-uint __qmljs_is_function(Context *ctx, const Value *value);
+uint __qmljs_is_function(const Value value);
 
 // string literals
 Value __qmljs_string_literal_undefined(Context *ctx);
@@ -124,7 +124,7 @@ Value __qmljs_string_literal_function(Context *ctx);
 String *__qmljs_string_from_utf8(Context *ctx, const char *s);
 int __qmljs_string_length(Context *ctx, String *string);
 double __qmljs_string_to_number(Context *ctx, String *string);
-void __qmljs_string_from_number(Context *ctx, Value *result, double number);
+Value __qmljs_string_from_number(Context *ctx, double number);
 uint __qmljs_string_compare(Context *ctx, String *left, String *right);
 uint __qmljs_string_equal(Context *ctx, String *left, String *right);
 String *__qmljs_string_concat(Context *ctx, String *first, String *second);
@@ -831,10 +831,10 @@ inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
         break;
     }
     case Value::Integer_Type:
-        __qmljs_string_from_number(ctx, result, value->int_32);
+        *result = __qmljs_string_from_number(ctx, value->int_32);
         break;
     default: // number
-        __qmljs_string_from_number(ctx, result, value->asDouble());
+        *result = __qmljs_string_from_number(ctx, value->doubleValue());
         break;
 
     } // switch
@@ -880,7 +880,7 @@ inline uint __qmljs_check_object_coercible(Context *ctx, Value *result, const Va
 inline uint __qmljs_is_callable(Context *ctx, const Value *value)
 {
     if (value->isObject())
-        return __qmljs_is_function(ctx, value);
+        return __qmljs_is_function(*value);
     else
         return false;
 }

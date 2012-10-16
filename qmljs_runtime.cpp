@@ -774,10 +774,10 @@ double __qmljs_string_to_number(Context *, String *string)
     return string->toQString().toDouble(&ok); // ### TODO
 }
 
-void __qmljs_string_from_number(Context *ctx, Value *result, double number)
+Value __qmljs_string_from_number(Context *ctx, double number)
 {
     String *string = ctx->engine->newString(numberToString(number, 10));
-    *result = Value::fromString(string);
+    return Value::fromString(string);
 }
 
 uint __qmljs_string_compare(Context *, String *left, String *right)
@@ -795,9 +795,9 @@ String *__qmljs_string_concat(Context *ctx, String *first, String *second)
     return ctx->engine->newString(first->toQString() + second->toQString());
 }
 
-uint __qmljs_is_function(Context *, const Value *value)
+uint __qmljs_is_function(const Value value)
 {
-    return value->objectValue()->asFunctionObject() != 0;
+    return value.objectValue()->asFunctionObject() != 0;
 }
 
 void __qmljs_object_default_value(Context *ctx, Value *result, const Value *object, int typeHint)
@@ -1109,13 +1109,16 @@ uint __qmljs_equal(Context *ctx, const Value *x, const Value *y)
     return false;
 }
 
-void __qmljs_call_activation_property(Context *context, Value *result, String *name, Value *args, int argc)
+Value __qmljs_call_activation_property(Context *context, String *name, Value *args, int argc)
 {
     Value *func = context->lookupPropertyDescriptor(name);
-    if (! func)
+    if (! func) {
         context->throwReferenceError(Value::fromString(name));
-    else
-        __qmljs_call_value(context, result, /*thisObject=*/ 0, func, args, argc);
+        return Value::undefinedValue();
+    }
+    Value result;
+    __qmljs_call_value(context, &result, /*thisObject=*/ 0, func, args, argc);
+    return result;
 }
 
 void __qmljs_call_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
@@ -1165,13 +1168,16 @@ void __qmljs_call_value(Context *context, Value *result, const Value *thisObject
     }
 }
 
-void __qmljs_construct_activation_property(Context *context, Value *result, String *name, Value *args, int argc)
+Value __qmljs_construct_activation_property(Context *context, String *name, Value *args, int argc)
 {
     Value *func = context->lookupPropertyDescriptor(name);
-    if (! func)
+    if (! func) {
         context->throwReferenceError(Value::fromString(name));
-    else
-        __qmljs_construct_value(context, result, func, args, argc);
+        return Value::undefinedValue();
+    }
+    Value result;
+    __qmljs_construct_value(context, &result, func, args, argc);
+    return result;
 }
 
 void __qmljs_construct_value(Context *context, Value *result, const Value *func, Value *args, int argc)
@@ -1226,17 +1232,20 @@ void __qmljs_rethrow(Context *context, Value *result)
     *result = context->result;
 }
 
-void __qmljs_builtin_typeof(Context *context, Value *result, Value *args, int argc)
+Value __qmljs_builtin_typeof(Context *context, Value *args, int argc)
 {
     Q_UNUSED(argc);
-    __qmljs_typeof(context, result, &args[0]);
+    Value result;
+    __qmljs_typeof(context, &result, &args[0]);
+    return result;
 }
 
-void __qmljs_builtin_throw(Context *context, Value *result, Value *args, int argc)
+Value __qmljs_builtin_throw(Context *context, Value *args, int argc)
 {
     Q_UNUSED(argc);
-    Q_UNUSED(result);
     __qmljs_throw(context, &args[0]);
+    // ### change to void return value
+    return Value::undefinedValue();
 }
 
 void __qmljs_builtin_rethrow(Context *context, Value *result, Value *, int)
