@@ -133,7 +133,7 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
 
     MOTH_BEGIN_INSTR(Call)
         VM::Value *args = stack.data() + instr.args;
-        __qmljs_call_value(context, &tempRegister, /*thisObject=*/0, &tempRegister, args, instr.argc);
+        tempRegister = __qmljs_call_value(context, VM::Value::undefinedValue(), &tempRegister, args, instr.argc);
     MOTH_END_INSTR(Call)
 
     MOTH_BEGIN_INSTR(Jump)

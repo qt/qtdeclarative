@@ -90,8 +90,8 @@ extern "C" {
 
 // context
 Value __qmljs_call_activation_property(Context *, String *name, Value *args, int argc);
-void __qmljs_call_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc);
-void __qmljs_call_value(Context *context, Value *result, const Value *thisObject, const Value *func, Value *args, int argc);
+Value __qmljs_call_property(Context *context, const Value base, String *name, Value *args, int argc);
+Value __qmljs_call_value(Context *context, const Value thisObject, const Value *func, Value *args, int argc);
 
 Value __qmljs_construct_activation_property(Context *, String *name, Value *args, int argc);
 void __qmljs_construct_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc);
@@ -648,7 +648,7 @@ struct Context {
 #endif
 
     void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc);
-    void leaveCallContext(FunctionObject *f, Value *r);
+    void leaveCallContext(FunctionObject *f);
 
     void initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc);
     void leaveConstructorContext(FunctionObject *f, Value *returnValue);

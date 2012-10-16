@@ -228,7 +228,7 @@ void InstructionSelection::callValue(IR::Call *call, IR::Temp *result)
 
     int argc = prepareVariableArguments(call->args);
     IR::Temp* thisObject = 0;
-    generateFunctionCall(__qmljs_call_value, ContextRegister, result, baseTemp, thisObject, baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall2(result, __qmljs_call_value, ContextRegister, baseTemp, thisObject, baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
@@ -239,8 +239,7 @@ void InstructionSelection::callProperty(IR::Call *call, IR::Temp *result)
     assert(member->base->asTemp() != 0);
 
     int argc = prepareVariableArguments(call->args);
-    IR::Temp* thisObject = 0;
-    generateFunctionCall(__qmljs_call_property, ContextRegister, result, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall2(result, __qmljs_call_property, ContextRegister, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 
@@ -259,7 +258,6 @@ void InstructionSelection::constructProperty(IR::New *call, IR::Temp *result)
     assert(member->base->asTemp() != 0);
 
     int argc = prepareVariableArguments(call->args);
-    IR::Temp* thisObject = 0;
     generateFunctionCall(__qmljs_construct_property, ContextRegister, result, member->base->asTemp(), identifier(*member->name), baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
