@@ -6508,6 +6508,9 @@ bool QQuickItem::event(QEvent *ev)
     } else if (ev->type() == QEvent::InputMethod) {
         inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
         return true;
+    } else if (ev->type() == QEvent::StyleAnimationUpdate) {
+        update();
+        return true;
     }
     return QObject::event(ev);
 }
