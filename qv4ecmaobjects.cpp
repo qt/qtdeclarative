@@ -1850,7 +1850,7 @@ void DateCtor::construct(Context *ctx)
         if (DateObject *d = arg.asDateObject())
             arg = d->value;
         else
-            __qmljs_to_primitive(ctx, &arg, &arg, PREFERREDTYPE_HINT);
+            arg = __qmljs_to_primitive(ctx, arg, PREFERREDTYPE_HINT);
 
         if (arg.isString())
             t = ParseString(arg.toString(ctx)->toQString());

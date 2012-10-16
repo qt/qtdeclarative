@@ -244,7 +244,7 @@ void __qmljs_llvm_construct_value(Context *context, Value *result, const Value *
 
 void __qmljs_llvm_get_activation_property(Context *ctx, Value *result, String *name)
 {
-    __qmljs_get_activation_property(ctx, result, name);
+    *result = __qmljs_get_activation_property(ctx, name);
 }
 
 void __qmljs_llvm_set_activation_property(Context *ctx, String *name, Value *value)
@@ -254,7 +254,7 @@ void __qmljs_llvm_set_activation_property(Context *ctx, String *name, Value *val
 
 void __qmljs_llvm_get_property(Context *ctx, Value *result, Value *object, String *name)
 {
-    __qmljs_get_property(ctx, result, object, name);
+    *result = __qmljs_get_property(ctx, *object, name);
 }
 
 void __qmljs_llvm_call_property(Context *context, Value *result, const Value *base, String *name, Value *args, int argc)
@@ -269,12 +269,12 @@ void __qmljs_llvm_construct_property(Context *context, Value *result, const Valu
 
 void __qmljs_llvm_get_element(Context *ctx, Value *result, Value *object, Value *index)
 {
-    __qmljs_get_element(ctx, result, object, index);
+    *result = __qmljs_get_element(ctx, *object, *index);
 }
 
 void __qmljs_llvm_set_element(Context *ctx, Value *object, Value *index, Value *value)
 {
-    __qmljs_set_element(ctx, object, index, value);
+    __qmljs_set_element(ctx, *object, *index, *value);
 }
 
 void __qmljs_llvm_set_property(Context *ctx, Value *object, String *name, Value *value)
@@ -299,7 +299,7 @@ void __qmljs_llvm_rethrow(Context *context, Value *result)
 
 void __qmljs_llvm_get_this_object(Context *ctx, Value *result)
 {
-    __qmljs_get_thisObject(ctx, result);
+    *result = __qmljs_get_thisObject(ctx);
 }
 
 void __qmljs_llvm_delete_subscript(Context *ctx, Value *result, Value *base, Value *index)

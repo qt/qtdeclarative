@@ -111,6 +111,8 @@ protected:
 #else
 #error Argh.
 #endif
+    struct VoidType {};
+    static const VoidType Void;
 
     // Explicit type to allow distinguishing between
     // pushing an address itself or the value it points
@@ -325,6 +327,10 @@ private:
     void storeArgument(RegisterID src, RegisterID dest)
     {
         move(src, dest);
+    }
+
+    void storeArgument(RegisterID, VoidType)
+    {
     }
 
     using JSC::MacroAssembler::push;

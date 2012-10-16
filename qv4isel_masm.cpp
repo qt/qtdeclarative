@@ -318,8 +318,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             String *propertyName = identifier(*n->id);
 
             if (IR::Temp *t = s->source->asTemp()) {
-                IR::Temp *retval = 0;
-                generateFunctionCall2(retval, __qmljs_set_activation_property, ContextRegister, propertyName, t);
+                generateFunctionCall2(Void, __qmljs_set_activation_property, ContextRegister, propertyName, t);
                 checkExceptions();
                 return;
             } else {
@@ -328,10 +327,10 @@ void InstructionSelection::visitMove(IR::Move *s)
         } else if (IR::Temp *t = s->target->asTemp()) {
             if (IR::Name *n = s->source->asName()) {
                 if (*n->id == QStringLiteral("this")) { // ### `this' should be a builtin.
-                    generateFunctionCall(__qmljs_get_thisObject, ContextRegister, t);
+                    generateFunctionCall2(t, __qmljs_get_thisObject, ContextRegister);
                 } else {
                     String *propertyName = identifier(*n->id);
-                    generateFunctionCall(__qmljs_get_activation_property, ContextRegister, t, propertyName);
+                    generateFunctionCall2(t, __qmljs_get_activation_property, ContextRegister, propertyName);
                     checkExceptions();
                 }
                 return;
@@ -381,14 +380,14 @@ void InstructionSelection::visitMove(IR::Move *s)
             } else if (IR::Member *m = s->source->asMember()) {
                 //__qmljs_get_property(ctx, result, object, name);
                 if (IR::Temp *base = m->base->asTemp()) {
-                    generateFunctionCall(__qmljs_get_property, ContextRegister, t, base, identifier(*m->name));
+                    generateFunctionCall2(t, __qmljs_get_property, ContextRegister, base, identifier(*m->name));
                     checkExceptions();
                     return;
                 }
                 assert(!"wip");
                 return;
             } else if (IR::Subscript *ss = s->source->asSubscript()) {
-                generateFunctionCall(__qmljs_get_element, ContextRegister, t, ss->base->asTemp(), ss->index->asTemp());
+                generateFunctionCall2(t, __qmljs_get_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp());
                 checkExceptions();
                 return;
             } else if (IR::Unop *u = s->source->asUnop()) {
@@ -473,8 +472,7 @@ void InstructionSelection::visitMove(IR::Move *s)
         } else if (IR::Member *m = s->target->asMember()) {
             if (IR::Temp *base = m->base->asTemp()) {
                 if (IR::Temp *t = s->source->asTemp()) {
-                    IR::Temp *retVal = 0;
-                    generateFunctionCall2(retVal, __qmljs_set_property, ContextRegister, base, identifier(*m->name), t);
+                    generateFunctionCall2(Void, __qmljs_set_property, ContextRegister, base, identifier(*m->name), t);
                     checkExceptions();
                     return;
                 } else {
@@ -483,7 +481,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Subscript *ss = s->target->asSubscript()) {
             if (IR::Temp *t2 = s->source->asTemp()) {
-                generateFunctionCall(__qmljs_set_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t2);
+                generateFunctionCall2(Void, __qmljs_set_element, ContextRegister, ss->base->asTemp(), ss->index->asTemp(), t2);
                 checkExceptions();
                 return;
             } else {

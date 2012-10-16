@@ -495,9 +495,8 @@ void __qmljs_delete_value(Context *ctx, Value *result, Value *value)
 
 void __qmljs_add_helper(Context *ctx, Value *result, const Value *left, const Value *right)
 {
-    Value pleft, pright;
-    __qmljs_to_primitive(ctx, &pleft, left, PREFERREDTYPE_HINT);
-    __qmljs_to_primitive(ctx, &pright, right, PREFERREDTYPE_HINT);
+    Value pleft = __qmljs_to_primitive(ctx, *left, PREFERREDTYPE_HINT);
+    Value pright = __qmljs_to_primitive(ctx, *right, PREFERREDTYPE_HINT);
     if (pleft.isString() || pright.isString()) {
         if (!pleft.isString())
             __qmljs_to_string(ctx, &pleft, &pleft);
@@ -892,53 +891,44 @@ void __qmljs_set_property_closure(Context *ctx, Value *object, String *name, IR:
     object->objectValue()->setProperty(ctx, name, value, /*flag*/ 0);
 }
 
-void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index)
+Value __qmljs_get_element(Context *ctx, Value object, Value index)
 {
-    if (object->isString() && index->isNumber()) {
-        const QString s = object->stringValue()->toQString().mid(index->toUInt32(ctx), 1);
+    if (object.isString() && index.isNumber()) {
+        const QString s = object.stringValue()->toQString().mid(index.toUInt32(ctx), 1);
         if (s.isNull())
-            *result = Value::undefinedValue();
+            return Value::undefinedValue();
         else
-            *result = Value::fromString(ctx, s);
-    } else if (object->isArrayObject() && index->isNumber()) {
-        *result = object->asArrayObject()->value.at(index->toUInt32(ctx));
+            return Value::fromString(ctx, s);
+    } else if (object.isArrayObject() && index.isNumber()) {
+        return object.asArrayObject()->value.at(index.toUInt32(ctx));
     } else {
-        String *name = index->toString(ctx);
+        String *name = index.toString(ctx);
 
-        if (! object->isObject())
-            __qmljs_to_object(ctx, object, object);
+        if (! object.isObject())
+            __qmljs_to_object(ctx, &object, &object);
 
-        *result = object->property(ctx, name);
+        return object.property(ctx, name);
     }
 }
 
-void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value)
+void __qmljs_set_element(Context *ctx, Value object, Value index, Value value)
 {
-    if (object->isArrayObject() && index->isNumber()) {
-        object->asArrayObject()->value.assign(index->toUInt32(ctx), *value);
+    if (object.isArrayObject() && index.isNumber()) {
+        object.asArrayObject()->value.assign(index.toUInt32(ctx), value);
     } else {
-        String *name = index->toString(ctx);
+        String *name = index.toString(ctx);
 
-        if (! object->isObject())
-            __qmljs_to_object(ctx, object, object);
+        if (! object.isObject())
+            __qmljs_to_object(ctx, &object, &object);
 
-        object->objectValue()->setProperty(ctx, name, *value, /*flags*/ 0);
+        object.objectValue()->setProperty(ctx, name, value, /*flags*/ 0);
     }
 }
 
 void __qmljs_set_element_number(Context *ctx, Value *object, Value *index, double number)
 {
     Value v = Value::fromDouble(number);
-    __qmljs_set_element(ctx, object, index, &v);
-}
-
-void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Value *value)
-{
-    if (Value *base = ctx->lookupPropertyDescriptor(name)) {
-        __qmljs_set_element(ctx, base, index, value);
-    } else {
-        ctx->throwReferenceError(Value::fromString(name));
-    }
+    __qmljs_set_element(ctx, *object, *index, v);
 }
 
 void __qmljs_set_activation_property(Context *ctx, String *name, Value value)
@@ -947,14 +937,6 @@ void __qmljs_set_activation_property(Context *ctx, String *name, Value value)
         *prop = value;
     else
         ctx->engine->globalObject.objectValue()->setProperty(ctx, name, value);
-}
-
-void __qmljs_copy_activation_property(Context *ctx, String *name, String *other)
-{
-    if (Value *source = ctx->lookupPropertyDescriptor(other))
-        __qmljs_set_activation_property(ctx, name, *source);
-    else
-        ctx->throwReferenceError(Value::fromString(name));
 }
 
 void __qmljs_set_activation_property_boolean(Context *ctx, String *name, bool b)
@@ -981,42 +963,38 @@ void __qmljs_set_activation_property_closure(Context *ctx, String *name, IR::Fun
     __qmljs_set_activation_property(ctx, name, value);
 }
 
-void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name)
+Value __qmljs_get_property(Context *ctx, Value object, String *name)
 {
-    if (object->isObject()) {
-        *result = object->property(ctx, name);
-    } else if (object->isString() && name->isEqualTo(ctx->engine->id_length)) {
-        *result = Value::fromDouble(object->stringValue()->toQString().length());
+    if (object.isObject()) {
+        return object.property(ctx, name);
+    } else if (object.isString() && name->isEqualTo(ctx->engine->id_length)) {
+        return Value::fromDouble(object.stringValue()->toQString().length());
     } else {
         Value o;
-        __qmljs_to_object(ctx, &o, object);
+        __qmljs_to_object(ctx, &o, &object);
 
-        if (o.isObject())
-            __qmljs_get_property(ctx, result, &o, name);
-        else
+        if (o.isObject()) {
+            return __qmljs_get_property(ctx, o, name);
+        } else {
             ctx->throwTypeError(); // ### not necessary.
+            return Value::undefinedValue();
+        }
     }
 }
 
-void __qmljs_get_activation_property(Context *ctx, Value *result, String *name)
+Value __qmljs_get_activation_property(Context *ctx, String *name)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
-        *result = *prop;
-    else
-        ctx->throwReferenceError(Value::fromString(name));
+        return *prop;
+    ctx->throwReferenceError(Value::fromString(name));
+    return Value::undefinedValue();
 }
 
-void __qmljs_get_activation(Context *ctx, Value *result)
-{
-    *result = ctx->activation;
-}
-
-void __qmljs_get_thisObject(Context *ctx, Value *result)
+Value __qmljs_get_thisObject(Context *ctx)
 {
     if (ctx->thisObject.isObject())
-        *result = ctx->thisObject;
-    else
-        *result = ctx->engine->globalObject;
+        return ctx->thisObject;
+    return ctx->engine->globalObject;
 }
 
 void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y, bool leftFirst)
@@ -1024,11 +1002,11 @@ void __qmljs_compare(Context *ctx, Value *result, const Value *x, const Value *y
     Value px, py;
 
     if (leftFirst) {
-        __qmljs_to_primitive(ctx, &px, x, NUMBER_HINT);
-        __qmljs_to_primitive(ctx, &py, y, NUMBER_HINT);
+        px = __qmljs_to_primitive(ctx, *x, NUMBER_HINT);
+        py = __qmljs_to_primitive(ctx, *y, NUMBER_HINT);
     } else {
-        __qmljs_to_primitive(ctx, &py, x, NUMBER_HINT);
-        __qmljs_to_primitive(ctx, &px, y, NUMBER_HINT);
+        px = __qmljs_to_primitive(ctx, *x, NUMBER_HINT);
+        py = __qmljs_to_primitive(ctx, *y, NUMBER_HINT);
     }
 
     if (px.isString() && py.isString()) {
@@ -1086,12 +1064,10 @@ uint __qmljs_equal(Context *ctx, const Value *x, const Value *y)
             Value ny = Value::fromDouble((double) y->booleanValue());
             return __qmljs_equal(ctx, x, &ny);
         } else if ((x->isNumber() || x->isString()) && y->isObject()) {
-            Value py;
-            __qmljs_to_primitive(ctx, &py, y, PREFERREDTYPE_HINT);
+            Value py = __qmljs_to_primitive(ctx, *y, PREFERREDTYPE_HINT);
             return __qmljs_equal(ctx, x, &py);
         } else if (x->isObject() && (y->isNumber() || y->isString())) {
-            Value px;
-            __qmljs_to_primitive(ctx, &px, x, PREFERREDTYPE_HINT);
+            Value px = __qmljs_to_primitive(ctx, *x, PREFERREDTYPE_HINT);
             return __qmljs_equal(ctx, &px, y);
         }
     }

@@ -139,21 +139,17 @@ Value __qmljs_new_number_object(Context *ctx, double n);
 Value __qmljs_new_string_object(Context *ctx, String *string);
 void __qmljs_set_activation_property(Context *ctx, String *name, Value value);
 void __qmljs_set_property(Context *ctx, Value object, String *name, Value value);
-void __qmljs_get_property(Context *ctx, Value *result, Value *object, String *name);
-void __qmljs_get_activation_property(Context *ctx, Value *result, String *name);
-void __qmljs_copy_activation_property(Context *ctx, String *name, String *other);
+Value __qmljs_get_property(Context *ctx, Value object, String *name);
+Value __qmljs_get_activation_property(Context *ctx, String *name);
 
-void __qmljs_get_element(Context *ctx, Value *result, Value *object, Value *index);
-void __qmljs_set_element(Context *ctx, Value *object, Value *index, Value *value);
-
-void __qmljs_set_activation_element(Context *ctx, String *name, Value *index, Value *value);
+Value __qmljs_get_element(Context *ctx, Value object, Value index);
+void __qmljs_set_element(Context *ctx, Value object, Value index, Value value);
 
 // context
-void __qmljs_get_activation(Context *ctx, Value *result);
-void __qmljs_get_thisObject(Context *ctx, Value *result);
+Value __qmljs_get_thisObject(Context *ctx);
 
 // type conversion and testing
-void __qmljs_to_primitive(Context *ctx, Value *result, const Value *value, int typeHint);
+Value __qmljs_to_primitive(Context *ctx, const Value value, int typeHint);
 uint __qmljs_to_boolean(const Value value, Context *ctx);
 double __qmljs_to_number(const Value value, Context *ctx);
 double __qmljs_to_integer(const Value value, Context *ctx);
@@ -671,12 +667,11 @@ inline Value __qmljs_init_object(Object *object)
 }
 
 // type conversion and testing
-inline void __qmljs_to_primitive(Context *ctx, Value *result, const Value *value, int typeHint)
+inline Value __qmljs_to_primitive(Context *ctx, const Value value, int typeHint)
 {
-    if (!value->isObject())
-        *result = *value;
-    else
-        *result = __qmljs_default_value(ctx, *value, typeHint);
+    if (!value.isObject())
+        return value;
+    return __qmljs_default_value(ctx, value, typeHint);
 }
 
 inline uint __qmljs_to_boolean(const Value value, Context *ctx)
@@ -713,8 +708,7 @@ inline double __qmljs_to_number(const Value value, Context *ctx)
     case Value::String_Type:
         return __qmljs_string_to_number(ctx, value.stringValue());
     case Value::Object_Type: {
-        Value prim;
-        __qmljs_to_primitive(ctx, &prim, &value, NUMBER_HINT);
+        Value prim = __qmljs_to_primitive(ctx, value, NUMBER_HINT);
         return __qmljs_to_number(prim, ctx);
     }
     default: // double
@@ -822,8 +816,7 @@ inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
         *result = *value;
         break;
     case Value::Object_Type: {
-        Value prim;
-        __qmljs_to_primitive(ctx, &prim, value, STRING_HINT);
+        Value prim = __qmljs_to_primitive(ctx, *value, STRING_HINT);
         if (prim.isPrimitive())
             __qmljs_to_string(ctx, result, &prim);
         else

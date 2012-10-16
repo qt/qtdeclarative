@@ -124,7 +124,7 @@ void VME::operator()(QQmlJS::VM::Context *context, const uchar *code
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
-        __qmljs_get_activation_property(context, &tempRegister, instr.value);  
+        tempRegister = __qmljs_get_activation_property(context, instr.value);
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(Push)
