@@ -928,12 +928,16 @@ inline Value __qmljs_typeof(Context *ctx, const Value value)
 
 inline Value __qmljs_uplus(const Value value, Context *ctx)
 {
+    if (value.isInteger())
+        return value;
     double n = __qmljs_to_number(value, ctx);
     return Value::fromDouble(n);
 }
 
 inline Value __qmljs_uminus(const Value value, Context *ctx)
 {
+    if (value.isInteger())
+        return Value::fromInt32(-value.integerValue());
     double n = __qmljs_to_number(value, ctx);
     return Value::fromDouble(-n);
 }
@@ -941,7 +945,7 @@ inline Value __qmljs_uminus(const Value value, Context *ctx)
 inline Value __qmljs_compl(const Value value, Context *ctx)
 {
     int n = __qmljs_to_int32(value, ctx);
-    return Value::fromDouble(~n);
+    return Value::fromInt32(~n);
 }
 
 inline Value __qmljs_not(const Value value, Context *ctx)
@@ -955,6 +959,7 @@ inline Value __qmljs_bit_or(const Value left, const Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     int rval = __qmljs_to_int32(right, ctx);
+    // ### changing this to fromInt32() breaks crypto.js
     return Value::fromDouble(lval | rval);
 }
 
@@ -962,14 +967,14 @@ inline Value __qmljs_bit_xor(const Value left, const Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     int rval = __qmljs_to_int32(right, ctx);
-    return Value::fromDouble(lval ^ rval);
+    return Value::fromInt32(lval ^ rval);
 }
 
 inline Value __qmljs_bit_and(const Value left, const Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     int rval = __qmljs_to_int32(right, ctx);
-    return Value::fromDouble(lval & rval);
+    return Value::fromInt32(lval & rval);
 }
 
 inline void __qmljs_inplace_bit_and(Context *ctx, Value *result, Value *value)
