@@ -26,6 +26,7 @@ HEADERS += \
     qv4ir_p.h \
     qmljs_runtime.h \
     qmljs_objects.h \
+    qmljs_math.h \
     qv4syntaxchecker_p.h \
     qv4ecmaobjects_p.h \
     qv4array_p.h \

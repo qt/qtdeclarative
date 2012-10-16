@@ -347,9 +347,15 @@ void InstructionSelection::visitMove(IR::Move *s)
                 case IR::BoolType:
                     storeValue<Value::Boolean_Type>(TrustedImm32(c->value != 0), dest);
                     break;
-                case IR::NumberType:
-                    // ### Taking address of pointer inside IR.
-                    copyValue(dest, &c->value);
+                case IR::NumberType: {
+                    int ival = (int)c->value;
+                    if (ival == c->value) {
+                        storeValue<Value::Integer_Type>(TrustedImm32(ival), dest);
+                    } else {
+                        // ### Taking address of pointer inside IR.
+                        copyValue(dest, &c->value);
+                    }
+                }
                     break;
                 default:
                     Q_UNIMPLEMENTED();

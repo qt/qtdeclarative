@@ -385,7 +385,7 @@ template <> struct ValueBase<8> : public ValueData
         return (ValueType)(tag & Type_Mask);
     }
 
-    bool booleanValue() const {
+    Bool booleanValue() const {
         return int_32;
     }
     double doubleValue() const {
@@ -497,7 +497,7 @@ inline Value ValueBase<4>::fromBoolean(Bool b)
 {
     Value v;
     v.tag = Boolean_Type;
-    v.int_32 = b;
+    v.int_32 = (bool)b;
     return v;
 }
 
@@ -551,7 +551,7 @@ inline Value ValueBase<8>::fromBoolean(Bool b)
 {
     Value v;
     v.tag = Boolean_Type;
-    v.int_32 = b;
+    v.int_32 = (bool)b;
     return v;
 }
 
@@ -601,6 +601,13 @@ template <> struct ValueOffsetHelper<Value::Null_Type>
 {
     enum { DataOffset = offsetof(ValueData, uint_32) };
 };
+
+template <> struct ValueOffsetHelper<Value::Integer_Type>
+{
+    enum { DataOffset = offsetof(ValueData, uint_32) };
+};
+
+#include <qmljs_math.h>
 
 struct Context {
     ExecutionEngine *engine;
@@ -685,7 +692,7 @@ inline Bool __qmljs_to_boolean(const Value value, Context *ctx)
         return false;
     case Value::Boolean_Type:
     case Value::Integer_Type:
-        return value.int_32;
+        return (bool)value.int_32;
     case Value::String_Type:
         return __qmljs_string_length(ctx, value.stringValue()) > 0;
     case Value::Object_Type:
@@ -829,7 +836,7 @@ inline Value __qmljs_to_string(Context *ctx, const Value value)
     case Value::Integer_Type:
         return __qmljs_string_from_number(ctx, value.int_32);
         break;
-    default: // number
+    default: // double
         return __qmljs_string_from_number(ctx, value.doubleValue());
         break;
 
@@ -1020,21 +1027,6 @@ inline void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value)
     *result = __qmljs_ushr(*result, *value, ctx);
 }
 
-static inline Value add_int32(int a, int b)
-{
-    quint8 overflow;
-
-    asm ("addl %1, %2\n"
-         "seto %0"
-         : "=q" (overflow)
-         : "r" (b), "r" (a)
-         :
-    );
-    if (!overflow)
-        return Value::fromInt32(a);
-    return Value::fromDouble((double)a * b);
-}
-
 inline Value __qmljs_add(const Value left, const Value right, Context *ctx)
 {
     if (left.isInteger() && right.isInteger())
@@ -1048,6 +1040,9 @@ inline Value __qmljs_add(const Value left, const Value right, Context *ctx)
 
 inline Value __qmljs_sub(const Value left, const Value right, Context *ctx)
 {
+    if (left.isInteger() && right.isInteger())
+        return sub_int32(left.integerValue(), right.integerValue());
+
     double lval = __qmljs_to_number(left, ctx);
     double rval = __qmljs_to_number(right, ctx);
     return Value::fromDouble(lval - rval);
@@ -1055,6 +1050,9 @@ inline Value __qmljs_sub(const Value left, const Value right, Context *ctx)
 
 inline Value __qmljs_mul(const Value left, const Value right, Context *ctx)
 {
+    if (left.isInteger() && right.isInteger())
+        return mul_int32(left.integerValue(), right.integerValue());
+
     double lval = __qmljs_to_number(left, ctx);
     double rval = __qmljs_to_number(right, ctx);
     return Value::fromDouble(lval * rval);
@@ -1074,25 +1072,27 @@ inline Value __qmljs_mod(const Value left, const Value right, Context *ctx)
     return Value::fromDouble(fmod(lval, rval));
 }
 
+// ### unsigned shl missing?
+
 inline Value __qmljs_shl(const Value left, const Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     unsigned rval = __qmljs_to_uint32(right, ctx);
-    return Value::fromDouble(lval << rval);
+    return Value::fromInt32(lval << rval);
 }
 
 inline Value __qmljs_shr(const Value left, const Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     unsigned rval = __qmljs_to_uint32(right, ctx);
-    return Value::fromDouble(lval >> rval);
+    return Value::fromInt32(lval >> rval);
 }
 
 inline Value __qmljs_ushr(const Value left, const Value right, Context *ctx)
 {
     unsigned lval = __qmljs_to_uint32(left, ctx);
     unsigned rval = __qmljs_to_uint32(right, ctx);
-    return Value::fromDouble(lval >> rval);
+    return Value::fromInt32(lval >> rval);
 }
 
 inline Value __qmljs_gt(const Value left, const Value right, Context *ctx)
