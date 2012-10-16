@@ -86,6 +86,7 @@ struct ErrorObject;
 struct ActivationObject;
 struct ExecutionEngine;
 
+typedef uint Bool;
 
 extern "C" {
 
@@ -108,7 +109,7 @@ Value __qmljs_init_object(Object *object);
 Value __qmljs_init_closure(IR::Function *clos, Context *ctx);
 Value __qmljs_init_native_function(void (*code)(Context *), Context *ctx);
 
-uint __qmljs_is_function(const Value value);
+Bool __qmljs_is_function(const Value value);
 
 // string literals
 Value __qmljs_string_literal_undefined(Context *ctx);
@@ -126,8 +127,8 @@ String *__qmljs_string_from_utf8(Context *ctx, const char *s);
 int __qmljs_string_length(Context *ctx, String *string);
 double __qmljs_string_to_number(Context *ctx, String *string);
 Value __qmljs_string_from_number(Context *ctx, double number);
-uint __qmljs_string_compare(Context *ctx, String *left, String *right);
-uint __qmljs_string_equal(Context *ctx, String *left, String *right);
+Bool __qmljs_string_compare(Context *ctx, String *left, String *right);
+Bool __qmljs_string_equal(Context *ctx, String *left, String *right);
 String *__qmljs_string_concat(Context *ctx, String *first, String *second);
 String *__qmljs_identifier_from_utf8(Context *ctx, const char *s);
 
@@ -151,7 +152,7 @@ Value __qmljs_get_thisObject(Context *ctx);
 
 // type conversion and testing
 Value __qmljs_to_primitive(Context *ctx, const Value value, int typeHint);
-uint __qmljs_to_boolean(const Value value, Context *ctx);
+Bool __qmljs_to_boolean(const Value value, Context *ctx);
 double __qmljs_to_number(const Value value, Context *ctx);
 double __qmljs_to_integer(const Value value, Context *ctx);
 int __qmljs_to_int32(const Value value, Context *ctx);
@@ -160,12 +161,12 @@ unsigned short __qmljs_to_uint16(const Value value, Context *ctx);
 Value __qmljs_to_string(Context *ctx, const Value value);
 Value __qmljs_to_object(Context *ctx, const Value value);
 //uint __qmljs_check_object_coercible(Context *ctx, Value *result, const Value *value);
-uint __qmljs_is_callable(Context *ctx, const Value value);
+Bool __qmljs_is_callable(Context *ctx, const Value value);
 Value __qmljs_default_value(Context *ctx, const Value value, int typeHint);
 
 void __qmljs_compare(Context *ctx, Value *result, const Value *left, const Value *right, bool leftFlag);
-uint __qmljs_equal(Context *ctx, const Value *x, const Value *y);
-uint __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y);
+Bool __qmljs_equal(Context *ctx, const Value *x, const Value *y);
+Bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y);
 
 // unary operators
 Value __qmljs_uplus(const Value value, Context *ctx);
@@ -255,16 +256,16 @@ void __qmljs_inplace_shl_member(Context *ctx, Value *base, String *name, Value *
 void __qmljs_inplace_shr_member(Context *ctx, Value *base, String *name, Value *value);
 void __qmljs_inplace_ushr_member(Context *ctx, Value *base, String *name, Value *value);
 
-uint __qmljs_cmp_gt(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_lt(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_ge(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_le(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_eq(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_ne(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_se(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_sne(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_instanceof(Context *ctx, const Value *left, const Value *right);
-uint __qmljs_cmp_in(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_gt(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_lt(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_ge(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_le(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_eq(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_ne(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_se(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_sne(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_instanceof(Context *ctx, const Value *left, const Value *right);
+Bool __qmljs_cmp_in(Context *ctx, const Value *left, const Value *right);
 
 
 } // extern "C"
@@ -347,7 +348,7 @@ template <> struct ValueBase<4> : public ValueData
 
     static inline Value undefinedValue();
     static inline Value nullValue();
-    static inline Value fromBoolean(bool b);
+    static inline Value fromBoolean(Bool b);
     static inline Value fromDouble(double d);
     static inline Value fromInt32(int i);
     static inline Value fromString(String *s);
@@ -413,7 +414,7 @@ template <> struct ValueBase<8> : public ValueData
 
     static Value undefinedValue();
     static Value nullValue();
-    static Value fromBoolean(bool b);
+    static Value fromBoolean(Bool b);
     static Value fromDouble(double d);
     static Value fromInt32(int i);
     static Value fromString(String *s);
@@ -436,7 +437,7 @@ struct Value : public ValueBase<sizeof(void *)>
     int toUInt16(Context *ctx);
     int toInt32(Context *ctx);
     unsigned int toUInt32(Context *ctx);
-    bool toBoolean(Context *ctx) const;
+    Bool toBoolean(Context *ctx) const;
     double toInteger(Context *ctx) const;
     double toNumber(Context *ctx) const;
     String *toString(Context *ctx) const;
@@ -491,7 +492,7 @@ inline Value ValueBase<4>::nullValue()
     return v;
 }
 
-inline Value ValueBase<4>::fromBoolean(bool b)
+inline Value ValueBase<4>::fromBoolean(Bool b)
 {
     Value v;
     v.tag = Boolean_Type;
@@ -545,7 +546,7 @@ inline Value ValueBase<8>::nullValue()
     return v;
 }
 
-inline Value ValueBase<8>::fromBoolean(bool b)
+inline Value ValueBase<8>::fromBoolean(Bool b)
 {
     Value v;
     v.tag = Boolean_Type;
@@ -675,7 +676,7 @@ inline Value __qmljs_to_primitive(Context *ctx, const Value value, int typeHint)
     return __qmljs_default_value(ctx, value, typeHint);
 }
 
-inline uint __qmljs_to_boolean(const Value value, Context *ctx)
+inline Bool __qmljs_to_boolean(const Value value, Context *ctx)
 {
     switch (value.type()) {
     case Value::Undefined_Type:
@@ -873,7 +874,7 @@ inline uint __qmljs_check_object_coercible(Context *ctx, Value *result, const Va
 }
 */
 
-inline uint __qmljs_is_callable(Context *ctx, const Value value)
+inline Bool __qmljs_is_callable(Context *ctx, const Value value)
 {
     if (value.isObject())
         return __qmljs_is_function(value);
@@ -1181,59 +1182,59 @@ inline void __qmljs_sne(Context *ctx, Value *result, const Value *left, const Va
     *result = Value::fromBoolean(r);
 }
 
-inline uint __qmljs_cmp_gt(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_gt(Context *ctx, const Value *left, const Value *right)
 {
     Value v;
     __qmljs_gt(ctx, &v, left, right);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_lt(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_lt(Context *ctx, const Value *left, const Value *right)
 {
     Value v;
     __qmljs_lt(ctx, &v, left, right);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_ge(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_ge(Context *ctx, const Value *left, const Value *right)
 {
     Value v;
     __qmljs_ge(ctx, &v, left, right);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_le(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_le(Context *ctx, const Value *left, const Value *right)
 {
     Value v;
     __qmljs_le(ctx, &v, left, right);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_eq(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_eq(Context *ctx, const Value *left, const Value *right)
 {
     Value v;
     __qmljs_eq(ctx, &v, left, right);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_ne(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_ne(Context *ctx, const Value *left, const Value *right)
 {
     Value v;
     __qmljs_ne(ctx, &v, left, right);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_se(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_se(Context *ctx, const Value *left, const Value *right)
 {
     return __qmljs_strict_equal(ctx, left, right);
 }
 
-inline uint __qmljs_cmp_sne(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_sne(Context *ctx, const Value *left, const Value *right)
 {
     return ! __qmljs_strict_equal(ctx, left, right);
 }
 
-inline uint __qmljs_cmp_instanceof(Context *ctx, const Value *left, const Value *right)
+inline Bool __qmljs_cmp_instanceof(Context *ctx, const Value *left, const Value *right)
 {
     Value v;
     __qmljs_instanceof(ctx, &v, left, right);
@@ -1247,7 +1248,7 @@ inline uint __qmljs_cmp_in(Context *ctx, const Value *left, const Value *right)
     return v.booleanValue();
 }
 
-inline uint __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y)
+inline Bool __qmljs_strict_equal(Context *ctx, const Value *x, const Value *y)
 {
     if (x->rawValue() == y->rawValue())
         return true;

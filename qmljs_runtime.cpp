@@ -146,7 +146,7 @@ unsigned int Value::toUInt32(Context *ctx)
     return __qmljs_to_uint32(*this, ctx);
 }
 
-bool Value::toBoolean(Context *ctx) const
+Bool Value::toBoolean(Context *ctx) const
 {
     return __qmljs_to_boolean(*this, ctx);
 }
@@ -772,12 +772,12 @@ Value __qmljs_string_from_number(Context *ctx, double number)
     return Value::fromString(string);
 }
 
-uint __qmljs_string_compare(Context *, String *left, String *right)
+Bool __qmljs_string_compare(Context *, String *left, String *right)
 {
     return left->toQString() < right->toQString();
 }
 
-uint __qmljs_string_equal(Context *, String *left, String *right)
+Bool __qmljs_string_equal(Context *, String *left, String *right)
 {
     return left == right || left->isEqualTo(right);
 }
@@ -787,7 +787,7 @@ String *__qmljs_string_concat(Context *ctx, String *first, String *second)
     return ctx->engine->newString(first->toQString() + second->toQString());
 }
 
-uint __qmljs_is_function(const Value value)
+Bool __qmljs_is_function(const Value value)
 {
     return value.objectValue()->asFunctionObject() != 0;
 }
