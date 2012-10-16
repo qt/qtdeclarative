@@ -110,15 +110,15 @@ void __qmljs_init_native_function(Context *ctx, Value *result, void (*code)(Cont
 uint __qmljs_is_function(Context *ctx, const Value *value);
 
 // string literals
-void __qmljs_string_literal_undefined(Context *ctx, Value *result);
-void __qmljs_string_literal_null(Context *ctx, Value *result);
-void __qmljs_string_literal_true(Context *ctx, Value *result);
-void __qmljs_string_literal_false(Context *ctx, Value *result);
-void __qmljs_string_literal_object(Context *ctx, Value *result);
-void __qmljs_string_literal_boolean(Context *ctx, Value *result);
-void __qmljs_string_literal_number(Context *ctx, Value *result);
-void __qmljs_string_literal_string(Context *ctx, Value *result);
-void __qmljs_string_literal_function(Context *ctx, Value *result);
+Value __qmljs_string_literal_undefined(Context *ctx);
+Value __qmljs_string_literal_null(Context *ctx);
+Value __qmljs_string_literal_true(Context *ctx);
+Value __qmljs_string_literal_false(Context *ctx);
+Value __qmljs_string_literal_object(Context *ctx);
+Value __qmljs_string_literal_boolean(Context *ctx);
+Value __qmljs_string_literal_number(Context *ctx);
+Value __qmljs_string_literal_string(Context *ctx);
+Value __qmljs_string_literal_function(Context *ctx);
 
 // strings
 String *__qmljs_string_from_utf8(Context *ctx, const char *s);
@@ -807,16 +807,16 @@ inline void __qmljs_to_string(Context *ctx, Value *result, const Value *value)
 {
     switch (value->type()) {
     case Value::Undefined_Type:
-        __qmljs_string_literal_undefined(ctx, result);
+        *result = __qmljs_string_literal_undefined(ctx);
         break;
     case Value::Null_Type:
-        __qmljs_string_literal_null(ctx, result);
+        *result = __qmljs_string_literal_null(ctx);
         break;
     case Value::Boolean_Type:
         if (value->booleanValue())
-            __qmljs_string_literal_true(ctx, result);
+            *result = __qmljs_string_literal_true(ctx);
         else
-            __qmljs_string_literal_false(ctx, result);
+            *result = __qmljs_string_literal_false(ctx);
         break;
     case Value::String_Type:
         *result = *value;
@@ -899,26 +899,26 @@ inline void __qmljs_typeof(Context *ctx, Value *result, const Value *value)
 {
     switch (value->type()) {
     case Value::Undefined_Type:
-        __qmljs_string_literal_undefined(ctx, result);
+        *result = __qmljs_string_literal_undefined(ctx);
         break;
     case Value::Null_Type:
-        __qmljs_string_literal_object(ctx, result);
+        *result = __qmljs_string_literal_object(ctx);
         break;
     case Value::Boolean_Type:
-        __qmljs_string_literal_boolean(ctx, result);
+        *result = __qmljs_string_literal_boolean(ctx);
         break;
     case Value::String_Type:
-        __qmljs_string_literal_string(ctx, result);
+        *result = __qmljs_string_literal_string(ctx);
         break;
     case Value::Object_Type:
         if (__qmljs_is_callable(ctx, value))
-            __qmljs_string_literal_function(ctx, result);
+            *result = __qmljs_string_literal_function(ctx);
         else
-            __qmljs_string_literal_object(ctx, result); // ### implementation-defined
+            *result = __qmljs_string_literal_object(ctx); // ### implementation-defined
         break;
     case Value::Integer_Type:
     case Value::Double_Type:
-        __qmljs_string_literal_number(ctx, result);
+        *result = __qmljs_string_literal_number(ctx);
         break;
     }
 }

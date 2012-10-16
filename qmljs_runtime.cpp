@@ -410,49 +410,49 @@ void __qmljs_init_native_function(Context *ctx, Value *result, void (*code)(Cont
     __qmljs_init_object(result, ctx->engine->newNativeFunction(ctx, code));
 }
 
-void __qmljs_string_literal_undefined(Context *ctx, Value *result)
+Value __qmljs_string_literal_undefined(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("undefined")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("undefined")));
 }
 
-void __qmljs_string_literal_null(Context *ctx, Value *result)
+Value __qmljs_string_literal_null(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("null")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("null")));
 }
 
-void __qmljs_string_literal_true(Context *ctx, Value *result)
+Value __qmljs_string_literal_true(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("true")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("true")));
 }
 
-void __qmljs_string_literal_false(Context *ctx, Value *result)
+Value __qmljs_string_literal_false(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("false")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("false")));
 }
 
-void __qmljs_string_literal_object(Context *ctx, Value *result)
+Value __qmljs_string_literal_object(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("object")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("object")));
 }
 
-void __qmljs_string_literal_boolean(Context *ctx, Value *result)
+Value __qmljs_string_literal_boolean(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("boolean")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("boolean")));
 }
 
-void __qmljs_string_literal_number(Context *ctx, Value *result)
+Value __qmljs_string_literal_number(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("number")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("number")));
 }
 
-void __qmljs_string_literal_string(Context *ctx, Value *result)
+Value __qmljs_string_literal_string(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("string")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("string")));
 }
 
-void __qmljs_string_literal_function(Context *ctx, Value *result)
+Value __qmljs_string_literal_function(Context *ctx)
 {
-    *result = Value::fromString(ctx->engine->identifier(QStringLiteral("function")));
+    return Value::fromString(ctx->engine->identifier(QStringLiteral("function")));
 }
 
 void __qmljs_delete_subscript(Context *ctx, Value *result, Value *base, Value *index)
