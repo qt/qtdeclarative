@@ -298,7 +298,7 @@ Value *Context::lookupPropertyDescriptor(String *name)
     return 0;
 }
 
-void Context::throwError(const Value &value)
+void Context::throwError(Value value)
 {
     result = value;
     hasUncaughtException = true;
@@ -322,7 +322,7 @@ void Context::throwUnimplemented(const QString &message)
     throwError(Value::fromObject(engine->newErrorObject(v)));
 }
 
-void Context::throwReferenceError(const Value &value)
+void Context::throwReferenceError(Value value)
 {
     String *s = value.toString(this);
     QString msg = s->toQString() + QStringLiteral(" is not defined");
@@ -373,7 +373,7 @@ void Context::leaveCallContext(FunctionObject *f)
     }
 }
 
-void Context::initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc)
+void Context::initConstructorContext(ExecutionEngine *e, Value *object, FunctionObject *f, Value *args, unsigned argc)
 {
     initCallContext(e, object, f, args, argc);
     calledAsConstructor = true;
@@ -489,7 +489,7 @@ Value __qmljs_delete_value(Context *ctx, Value value)
     return __qmljs_throw_type_error(ctx); // ### throw syntax error
 }
 
-Value __qmljs_add_helper(const Value left, const Value right, Context *ctx)
+Value __qmljs_add_helper(Value left, Value right, Context *ctx)
 {
     Value pleft = __qmljs_to_primitive(left, ctx, PREFERREDTYPE_HINT);
     Value pright = __qmljs_to_primitive(right, ctx, PREFERREDTYPE_HINT);
@@ -506,7 +506,7 @@ Value __qmljs_add_helper(const Value left, const Value right, Context *ctx)
     return Value::fromDouble(x + y);
 }
 
-Value __qmljs_instanceof(const Value left, const Value right, Context *ctx)
+Value __qmljs_instanceof(Value left, Value right, Context *ctx)
 {
     if (FunctionObject *function = right.asFunctionObject()) {
         bool r = function->hasInstance(ctx, left);
@@ -516,7 +516,7 @@ Value __qmljs_instanceof(const Value left, const Value right, Context *ctx)
     return __qmljs_throw_type_error(ctx);
 }
 
-Value __qmljs_in(const Value left, const Value right, Context *ctx)
+Value __qmljs_in(Value left, Value right, Context *ctx)
 {
     if (right.isObject()) {
         Value s = __qmljs_to_string(left, ctx);
@@ -527,7 +527,7 @@ Value __qmljs_in(const Value left, const Value right, Context *ctx)
     }
 }
 
-void __qmljs_inplace_bit_and_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_bit_and_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_bit_and(*prop, value, ctx);
@@ -535,7 +535,7 @@ void __qmljs_inplace_bit_and_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_bit_or_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_bit_or_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_bit_or(*prop, value, ctx);
@@ -543,7 +543,7 @@ void __qmljs_inplace_bit_or_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_bit_xor_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_bit_xor_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_bit_xor(*prop, value, ctx);
@@ -551,7 +551,7 @@ void __qmljs_inplace_bit_xor_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_add_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_add_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_add(*prop, value, ctx);
@@ -559,7 +559,7 @@ void __qmljs_inplace_add_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_sub_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_sub_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_sub(*prop, value, ctx);
@@ -567,7 +567,7 @@ void __qmljs_inplace_sub_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_mul_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_mul_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_mul(*prop, value, ctx);
@@ -575,7 +575,7 @@ void __qmljs_inplace_mul_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_div_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_div_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_div(*prop, value, ctx);
@@ -583,7 +583,7 @@ void __qmljs_inplace_div_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_mod_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_mod_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_mod(*prop, value, ctx);
@@ -591,7 +591,7 @@ void __qmljs_inplace_mod_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_shl_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_shl_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_shl(*prop, value, ctx);
@@ -599,7 +599,7 @@ void __qmljs_inplace_shl_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_shr_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_shr_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_shr(*prop, value, ctx);
@@ -607,7 +607,7 @@ void __qmljs_inplace_shr_name(const Value value, String *name, Context *ctx)
         ctx->throwReferenceError(Value::fromString(name));
 }
 
-void __qmljs_inplace_ushr_name(const Value value, String *name, Context *ctx)
+void __qmljs_inplace_ushr_name(Value value, String *name, Context *ctx)
 {
     if (Value *prop = ctx->lookupPropertyDescriptor(name))
         *prop = __qmljs_ushr(*prop, value, ctx);
@@ -843,12 +843,12 @@ String *__qmljs_string_concat(Context *ctx, String *first, String *second)
     return ctx->engine->newString(first->toQString() + second->toQString());
 }
 
-Bool __qmljs_is_function(const Value value)
+Bool __qmljs_is_function(Value value)
 {
     return value.objectValue()->asFunctionObject() != 0;
 }
 
-Value __qmljs_object_default_value(Context *ctx, const Value object, int typeHint)
+Value __qmljs_object_default_value(Context *ctx, Value object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
         if (object.isDateObject())
@@ -1048,7 +1048,7 @@ Value __qmljs_get_thisObject(Context *ctx)
     return ctx->engine->globalObject;
 }
 
-Value __qmljs_compare(const Value x, const Value y, Context *ctx, bool leftFirst)
+Value __qmljs_compare(Value x, Value y, Context *ctx, bool leftFirst)
 {
     Value px, py;
 
@@ -1074,7 +1074,7 @@ Value __qmljs_compare(const Value x, const Value y, Context *ctx, bool leftFirst
     }
 }
 
-uint __qmljs_equal(const Value x, const Value y, Context *ctx)
+uint __qmljs_equal(Value x, Value y, Context *ctx)
 {
     if (x.type() == y.type()) {
         switch (x.type()) {
@@ -1137,7 +1137,7 @@ Value __qmljs_call_activation_property(Context *context, String *name, Value *ar
     return result;
 }
 
-Value __qmljs_call_property(Context *context, const Value base, String *name, Value *args, int argc)
+Value __qmljs_call_property(Context *context, Value base, String *name, Value *args, int argc)
 {
     Value baseObject;
     Value thisObject;
@@ -1170,7 +1170,7 @@ Value __qmljs_call_property(Context *context, const Value base, String *name, Va
     return result;
 }
 
-Value __qmljs_call_value(Context *context, const Value thisObject, const Value func, Value *args, int argc)
+Value __qmljs_call_value(Context *context, Value thisObject, Value func, Value *args, int argc)
 {
     Value result;
     if (FunctionObject *f = func.asFunctionObject()) {
@@ -1201,7 +1201,7 @@ Value __qmljs_construct_activation_property(Context *context, String *name, Valu
     return __qmljs_construct_value(context, *func, args, argc);
 }
 
-Value __qmljs_construct_value(Context *context, const Value func, Value *args, int argc)
+Value __qmljs_construct_value(Context *context, Value func, Value *args, int argc)
 {
     if (FunctionObject *f = func.asFunctionObject()) {
         Context k;
@@ -1219,7 +1219,7 @@ Value __qmljs_construct_value(Context *context, const Value func, Value *args, i
     return Value::undefinedValue();
 }
 
-Value __qmljs_construct_property(Context *context, const Value base, String *name, Value *args, int argc)
+Value __qmljs_construct_property(Context *context, Value base, String *name, Value *args, int argc)
 {
     Value thisObject = base;
     if (!thisObject.isObject())

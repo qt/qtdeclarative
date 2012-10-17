@@ -92,12 +92,12 @@ extern "C" {
 
 // context
 Value __qmljs_call_activation_property(Context *, String *name, Value *args, int argc);
-Value __qmljs_call_property(Context *context, const Value base, String *name, Value *args, int argc);
-Value __qmljs_call_value(Context *context, const Value thisObject, const Value func, Value *args, int argc);
+Value __qmljs_call_property(Context *context, Value base, String *name, Value *args, int argc);
+Value __qmljs_call_value(Context *context, Value thisObject, Value func, Value *args, int argc);
 
 Value __qmljs_construct_activation_property(Context *, String *name, Value *args, int argc);
-Value __qmljs_construct_property(Context *context, const Value base, String *name, Value *args, int argc);
-Value __qmljs_construct_value(Context *context, const Value func, Value *args, int argc);
+Value __qmljs_construct_property(Context *context, Value base, String *name, Value *args, int argc);
+Value __qmljs_construct_value(Context *context, Value func, Value *args, int argc);
 
 Value __qmljs_builtin_typeof(Context *context, Value *args, int argc);
 Value __qmljs_builtin_throw(Context *context, Value *args, int argc);
@@ -109,7 +109,7 @@ Value __qmljs_init_object(Object *object);
 Value __qmljs_init_closure(IR::Function *clos, Context *ctx);
 Value __qmljs_init_native_function(void (*code)(Context *), Context *ctx);
 
-Bool __qmljs_is_function(const Value value);
+Bool __qmljs_is_function(Value value);
 
 // string literals
 Value __qmljs_string_literal_undefined(Context *ctx);
@@ -133,7 +133,7 @@ String *__qmljs_string_concat(Context *ctx, String *first, String *second);
 String *__qmljs_identifier_from_utf8(Context *ctx, const char *s);
 
 // objects
-Value __qmljs_object_default_value(Context *ctx, const Value object, int typeHint);
+Value __qmljs_object_default_value(Context *ctx, Value object, int typeHint);
 Value __qmljs_throw_type_error(Context *ctx);
 Value __qmljs_new_object(Context *ctx);
 Value __qmljs_new_boolean_object(Context *ctx, bool boolean);
@@ -151,28 +151,28 @@ void __qmljs_set_element(Context *ctx, Value object, Value index, Value value);
 Value __qmljs_get_thisObject(Context *ctx);
 
 // type conversion and testing
-Value __qmljs_to_primitive(const Value value, Context *ctx, int typeHint);
-Bool __qmljs_to_boolean(const Value value, Context *ctx);
-double __qmljs_to_number(const Value value, Context *ctx);
-double __qmljs_to_integer(const Value value, Context *ctx);
-int __qmljs_to_int32(const Value value, Context *ctx);
-unsigned __qmljs_to_uint32(const Value value, Context *ctx);
-unsigned short __qmljs_to_uint16(const Value value, Context *ctx);
-Value __qmljs_to_string(const Value value, Context *ctx);
-Value __qmljs_to_object(const Value value, Context *ctx);
-//uint __qmljs_check_object_coercible(Context *ctx, Value *result, const Value *value);
-Bool __qmljs_is_callable(const Value value, Context *ctx);
-Value __qmljs_default_value(const Value value, Context *ctx, int typeHint);
+Value __qmljs_to_primitive(Value value, Context *ctx, int typeHint);
+Bool __qmljs_to_boolean(Value value, Context *ctx);
+double __qmljs_to_number(Value value, Context *ctx);
+double __qmljs_to_integer(Value value, Context *ctx);
+int __qmljs_to_int32(Value value, Context *ctx);
+unsigned __qmljs_to_uint32(Value value, Context *ctx);
+unsigned short __qmljs_to_uint16(Value value, Context *ctx);
+Value __qmljs_to_string(Value value, Context *ctx);
+Value __qmljs_to_object(Value value, Context *ctx);
+//uint __qmljs_check_object_coercible(Context *ctx, Value *result, Value *value);
+Bool __qmljs_is_callable(Value value, Context *ctx);
+Value __qmljs_default_value(Value value, Context *ctx, int typeHint);
 
-Value __qmljs_compare(const Value left, const Value right, Context *ctx, bool leftFlag);
-Bool __qmljs_equal(const Value x, const Value y, Context *ctx);
-Bool __qmljs_strict_equal(const Value x, const Value y, Context *ctx);
+Value __qmljs_compare(Value left, Value right, Context *ctx, bool leftFlag);
+Bool __qmljs_equal(Value x, Value y, Context *ctx);
+Bool __qmljs_strict_equal(Value x, Value y, Context *ctx);
 
 // unary operators
-Value __qmljs_uplus(const Value value, Context *ctx);
-Value __qmljs_uminus(const Value value, Context *ctx);
-Value __qmljs_compl(const Value value, Context *ctx);
-Value __qmljs_not(const Value value, Context *ctx);
+Value __qmljs_uplus(Value value, Context *ctx);
+Value __qmljs_uminus(Value value, Context *ctx);
+Value __qmljs_compl(Value value, Context *ctx);
+Value __qmljs_not(Value value, Context *ctx);
 
 /* ### these 4 methods are apparently unused right now */
 Value __qmljs_delete_subscript(Context *ctx, Value base, Value index);
@@ -180,34 +180,34 @@ Value __qmljs_delete_member(Context *ctx, Value base, String *name);
 Value __qmljs_delete_property(Context *ctx, String *name);
 Value __qmljs_delete_value(Context *ctx, Value value);
 
-Value __qmljs_typeof(const Value value, Context *ctx);
+Value __qmljs_typeof(Value value, Context *ctx);
 void __qmljs_throw(Value value, Context *context);
 Value __qmljs_rethrow(Context *context);
 
 // binary operators
-Value __qmljs_instanceof(const Value left, const Value right, Context *ctx);
-Value __qmljs_in(const Value left, const Value right, Context *ctx);
-Value __qmljs_bit_or(const Value left, const Value right, Context *ctx);
-Value __qmljs_bit_xor(const Value left, const Value right, Context *ctx);
-Value __qmljs_bit_and(const Value left, const Value right, Context *ctx);
-Value __qmljs_add(const Value left, const Value right, Context *ctx);
-Value __qmljs_sub(const Value left, const Value right, Context *ctx);
-Value __qmljs_mul(const Value left, const Value right, Context *ctx);
-Value __qmljs_div(const Value left, const Value right, Context *ctx);
-Value __qmljs_mod(const Value left, const Value right, Context *ctx);
-Value __qmljs_shl(const Value left, const Value right, Context *ctx);
-Value __qmljs_shr(const Value left, const Value right, Context *ctx);
-Value __qmljs_ushr(const Value left, const Value right, Context *ctx);
-Value __qmljs_gt(const Value left, const Value right, Context *ctx);
-Value __qmljs_lt(const Value left, const Value right, Context *ctx);
-Value __qmljs_ge(const Value left, const Value right, Context *ctx);
-Value __qmljs_le(const Value left, const Value right, Context *ctx);
-Value __qmljs_eq(const Value left, const Value right, Context *ctx);
-Value __qmljs_ne(const Value left, const Value right, Context *ctx);
-Value __qmljs_se(const Value left, const Value right, Context *ctx);
-Value __qmljs_sne(const Value left, const Value right, Context *ctx);
+Value __qmljs_instanceof(Value left, Value right, Context *ctx);
+Value __qmljs_in(Value left, Value right, Context *ctx);
+Value __qmljs_bit_or(Value left, Value right, Context *ctx);
+Value __qmljs_bit_xor(Value left, Value right, Context *ctx);
+Value __qmljs_bit_and(Value left, Value right, Context *ctx);
+Value __qmljs_add(Value left, Value right, Context *ctx);
+Value __qmljs_sub(Value left, Value right, Context *ctx);
+Value __qmljs_mul(Value left, Value right, Context *ctx);
+Value __qmljs_div(Value left, Value right, Context *ctx);
+Value __qmljs_mod(Value left, Value right, Context *ctx);
+Value __qmljs_shl(Value left, Value right, Context *ctx);
+Value __qmljs_shr(Value left, Value right, Context *ctx);
+Value __qmljs_ushr(Value left, Value right, Context *ctx);
+Value __qmljs_gt(Value left, Value right, Context *ctx);
+Value __qmljs_lt(Value left, Value right, Context *ctx);
+Value __qmljs_ge(Value left, Value right, Context *ctx);
+Value __qmljs_le(Value left, Value right, Context *ctx);
+Value __qmljs_eq(Value left, Value right, Context *ctx);
+Value __qmljs_ne(Value left, Value right, Context *ctx);
+Value __qmljs_se(Value left, Value right, Context *ctx);
+Value __qmljs_sne(Value left, Value right, Context *ctx);
 
-Value __qmljs_add_helper(const Value left, const Value right, Context *ctx);
+Value __qmljs_add_helper(Value left, Value right, Context *ctx);
 
 /*
  unused and probably don't make sense with the new calling convention
@@ -224,17 +224,17 @@ void __qmljs_inplace_shr(Context *ctx, Value *result, Value *value);
 void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value);
 */
 
-void __qmljs_inplace_bit_and_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_bit_or_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_bit_xor_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_add_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_sub_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_mul_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_div_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_mod_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_shl_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_shr_name(const Value value, String *name, Context *ctx);
-void __qmljs_inplace_ushr_name(const Value value, String *name, Context *ctx);
+void __qmljs_inplace_bit_and_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_bit_or_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_bit_xor_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_add_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_sub_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_mul_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_div_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_mod_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_shl_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_shr_name(Value value, String *name, Context *ctx);
+void __qmljs_inplace_ushr_name(Value value, String *name, Context *ctx);
 
 void __qmljs_inplace_bit_and_element(Value base, Value index, Value value, Context *ctx);
 void __qmljs_inplace_bit_or_element(Value base, Value index, Value value, Context *ctx);
@@ -260,16 +260,16 @@ void __qmljs_inplace_shl_member(Value value, Value base, String *name, Context *
 void __qmljs_inplace_shr_member(Value value, Value base, String *name, Context *ctx);
 void __qmljs_inplace_ushr_member(Value value, Value base, String *name, Context *ctx);
 
-Bool __qmljs_cmp_gt(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_lt(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_ge(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_le(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_eq(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_ne(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_se(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_sne(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_instanceof(const Value left, const Value right, Context *ctx);
-Bool __qmljs_cmp_in(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_gt(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_lt(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_ge(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_le(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_eq(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_ne(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_se(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_sne(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_instanceof(Value left, Value right, Context *ctx);
+Bool __qmljs_cmp_in(Value left, Value right, Context *ctx);
 
 
 } // extern "C"
@@ -647,9 +647,9 @@ struct Context {
 
     void init(ExecutionEngine *eng);
 
-    void throwError(const Value &value);
+    void throwError(Value value);
     void throwTypeError();
-    void throwReferenceError(const Value &value);
+    void throwReferenceError(Value value);
 
 #ifndef QMLJS_LLVM_RUNTIME
     void throwError(const QString &message);
@@ -659,7 +659,7 @@ struct Context {
     void initCallContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc);
     void leaveCallContext(FunctionObject *f);
 
-    void initConstructorContext(ExecutionEngine *e, const Value *object, FunctionObject *f, Value *args, unsigned argc);
+    void initConstructorContext(ExecutionEngine *e, Value *object, FunctionObject *f, Value *args, unsigned argc);
     void leaveConstructorContext(FunctionObject *f);
 };
 
@@ -680,14 +680,14 @@ inline Value __qmljs_init_object(Object *object)
 }
 
 // type conversion and testing
-inline Value __qmljs_to_primitive(const Value value, Context *ctx, int typeHint)
+inline Value __qmljs_to_primitive(Value value, Context *ctx, int typeHint)
 {
     if (!value.isObject())
         return value;
     return __qmljs_default_value(value, ctx, typeHint);
 }
 
-inline Bool __qmljs_to_boolean(const Value value, Context *ctx)
+inline Bool __qmljs_to_boolean(Value value, Context *ctx)
 {
     switch (value.type()) {
     case Value::Undefined_Type:
@@ -707,7 +707,7 @@ inline Bool __qmljs_to_boolean(const Value value, Context *ctx)
     }
 }
 
-inline double __qmljs_to_number(const Value value, Context *ctx)
+inline double __qmljs_to_number(Value value, Context *ctx)
 {
     switch (value.type()) {
     case Value::Undefined_Type:
@@ -729,7 +729,7 @@ inline double __qmljs_to_number(const Value value, Context *ctx)
     }
 }
 
-inline double __qmljs_to_integer(const Value value, Context *ctx)
+inline double __qmljs_to_integer(Value value, Context *ctx)
 {
     if (value.isInteger())
         return value.int_32;
@@ -742,7 +742,7 @@ inline double __qmljs_to_integer(const Value value, Context *ctx)
     return std::signbit(number) ? -v : v;
 }
 
-inline int __qmljs_to_int32(const Value value, Context *ctx)
+inline int __qmljs_to_int32(Value value, Context *ctx)
 {
     if (value.isInteger())
         return value.int_32;
@@ -771,7 +771,7 @@ inline int __qmljs_to_int32(const Value value, Context *ctx)
     return int(number);
 }
 
-inline unsigned __qmljs_to_uint32(const Value value, Context *ctx)
+inline unsigned __qmljs_to_uint32(Value value, Context *ctx)
 {
     if (value.isInteger())
         return (unsigned) value.int_32;
@@ -792,7 +792,7 @@ inline unsigned __qmljs_to_uint32(const Value value, Context *ctx)
     return unsigned(number);
 }
 
-inline unsigned short __qmljs_to_uint16(const Value value, Context *ctx)
+inline unsigned short __qmljs_to_uint16(Value value, Context *ctx)
 {
     double number = __qmljs_to_number(value, ctx);
     if (! number || qIsNaN(number) || std::isinf(number))
@@ -810,7 +810,7 @@ inline unsigned short __qmljs_to_uint16(const Value value, Context *ctx)
     return (unsigned short)number;
 }
 
-inline Value __qmljs_to_string(const Value value, Context *ctx)
+inline Value __qmljs_to_string(Value value, Context *ctx)
 {
     switch (value.type()) {
     case Value::Undefined_Type:
@@ -846,7 +846,7 @@ inline Value __qmljs_to_string(const Value value, Context *ctx)
     } // switch
 }
 
-inline Value __qmljs_to_object(const Value value, Context *ctx)
+inline Value __qmljs_to_object(Value value, Context *ctx)
 {
     switch (value.type()) {
     case Value::Undefined_Type:
@@ -872,7 +872,7 @@ inline Value __qmljs_to_object(const Value value, Context *ctx)
 }
 
 /*
-inline uint __qmljs_check_object_coercible(Context *ctx, Value *result, const Value *value)
+inline uint __qmljs_check_object_coercible(Context *ctx, Value *result, Value *value)
 {
     switch (value->type()) {
     case Value::Undefined_Type:
@@ -885,7 +885,7 @@ inline uint __qmljs_check_object_coercible(Context *ctx, Value *result, const Va
 }
 */
 
-inline Bool __qmljs_is_callable(const Value value, Context *ctx)
+inline Bool __qmljs_is_callable(Value value, Context *ctx)
 {
     if (value.isObject())
         return __qmljs_is_function(value);
@@ -893,7 +893,7 @@ inline Bool __qmljs_is_callable(const Value value, Context *ctx)
         return false;
 }
 
-inline Value __qmljs_default_value(const Value value, Context *ctx, int typeHint)
+inline Value __qmljs_default_value(Value value, Context *ctx, int typeHint)
 {
     if (value.isObject())
         return __qmljs_object_default_value(ctx, value, typeHint);
@@ -902,7 +902,7 @@ inline Value __qmljs_default_value(const Value value, Context *ctx, int typeHint
 
 
 // unary operators
-inline Value __qmljs_typeof(const Value value, Context *ctx)
+inline Value __qmljs_typeof(Value value, Context *ctx)
 {
     switch (value.type()) {
     case Value::Undefined_Type:
@@ -929,7 +929,7 @@ inline Value __qmljs_typeof(const Value value, Context *ctx)
     }
 }
 
-inline Value __qmljs_uplus(const Value value, Context *ctx)
+inline Value __qmljs_uplus(Value value, Context *ctx)
 {
     if (value.isInteger())
         return value;
@@ -937,7 +937,7 @@ inline Value __qmljs_uplus(const Value value, Context *ctx)
     return Value::fromDouble(n);
 }
 
-inline Value __qmljs_uminus(const Value value, Context *ctx)
+inline Value __qmljs_uminus(Value value, Context *ctx)
 {
     if (value.isInteger())
         return Value::fromInt32(-value.integerValue());
@@ -945,20 +945,20 @@ inline Value __qmljs_uminus(const Value value, Context *ctx)
     return Value::fromDouble(-n);
 }
 
-inline Value __qmljs_compl(const Value value, Context *ctx)
+inline Value __qmljs_compl(Value value, Context *ctx)
 {
     int n = __qmljs_to_int32(value, ctx);
     return Value::fromInt32(~n);
 }
 
-inline Value __qmljs_not(const Value value, Context *ctx)
+inline Value __qmljs_not(Value value, Context *ctx)
 {
     bool b = __qmljs_to_boolean(value, ctx);
     return Value::fromBoolean(!b);
 }
 
 // binary operators
-inline Value __qmljs_bit_or(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_bit_or(Value left, Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     int rval = __qmljs_to_int32(right, ctx);
@@ -966,14 +966,14 @@ inline Value __qmljs_bit_or(const Value left, const Value right, Context *ctx)
     return Value::fromDouble(lval | rval);
 }
 
-inline Value __qmljs_bit_xor(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_bit_xor(Value left, Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     int rval = __qmljs_to_int32(right, ctx);
     return Value::fromInt32(lval ^ rval);
 }
 
-inline Value __qmljs_bit_and(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_bit_and(Value left, Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     int rval = __qmljs_to_int32(right, ctx);
@@ -1037,7 +1037,7 @@ inline void __qmljs_inplace_ushr(Context *ctx, Value *result, Value *value)
 }
 */
 
-inline Value __qmljs_add(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_add(Value left, Value right, Context *ctx)
 {
     if (left.isInteger() && right.isInteger())
         return add_int32(left.integerValue(), right.integerValue());
@@ -1048,7 +1048,7 @@ inline Value __qmljs_add(const Value left, const Value right, Context *ctx)
         return __qmljs_add_helper(left, right, ctx);
 }
 
-inline Value __qmljs_sub(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_sub(Value left, Value right, Context *ctx)
 {
     if (left.isInteger() && right.isInteger())
         return sub_int32(left.integerValue(), right.integerValue());
@@ -1058,7 +1058,7 @@ inline Value __qmljs_sub(const Value left, const Value right, Context *ctx)
     return Value::fromDouble(lval - rval);
 }
 
-inline Value __qmljs_mul(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_mul(Value left, Value right, Context *ctx)
 {
     if (left.isInteger() && right.isInteger())
         return mul_int32(left.integerValue(), right.integerValue());
@@ -1068,14 +1068,14 @@ inline Value __qmljs_mul(const Value left, const Value right, Context *ctx)
     return Value::fromDouble(lval * rval);
 }
 
-inline Value __qmljs_div(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_div(Value left, Value right, Context *ctx)
 {
     double lval = __qmljs_to_number(left, ctx);
     double rval = __qmljs_to_number(right, ctx);
     return Value::fromDouble(lval / rval);
 }
 
-inline Value __qmljs_mod(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_mod(Value left, Value right, Context *ctx)
 {
     double lval = __qmljs_to_number(left, ctx);
     double rval = __qmljs_to_number(right, ctx);
@@ -1084,28 +1084,28 @@ inline Value __qmljs_mod(const Value left, const Value right, Context *ctx)
 
 // ### unsigned shl missing?
 
-inline Value __qmljs_shl(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_shl(Value left, Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     unsigned rval = __qmljs_to_uint32(right, ctx);
     return Value::fromInt32(lval << rval);
 }
 
-inline Value __qmljs_shr(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_shr(Value left, Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
     unsigned rval = __qmljs_to_uint32(right, ctx);
     return Value::fromInt32(lval >> rval);
 }
 
-inline Value __qmljs_ushr(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_ushr(Value left, Value right, Context *ctx)
 {
     unsigned lval = __qmljs_to_uint32(left, ctx);
     unsigned rval = __qmljs_to_uint32(right, ctx);
     return Value::fromInt32(lval >> rval);
 }
 
-inline Value __qmljs_gt(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_gt(Value left, Value right, Context *ctx)
 {
     if (left.isInteger() && right.isInteger())
         return Value::fromBoolean(left.integerValue() > right.integerValue());
@@ -1120,7 +1120,7 @@ inline Value __qmljs_gt(const Value left, const Value right, Context *ctx)
     }
 }
 
-inline Value __qmljs_lt(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_lt(Value left, Value right, Context *ctx)
 {
     if (left.isInteger() && right.isInteger())
         return Value::fromBoolean(left.integerValue() < right.integerValue());
@@ -1135,7 +1135,7 @@ inline Value __qmljs_lt(const Value left, const Value right, Context *ctx)
     }
 }
 
-inline Value __qmljs_ge(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_ge(Value left, Value right, Context *ctx)
 {
     if (left.isInteger() && right.isInteger())
         return Value::fromBoolean(left.integerValue() >= right.integerValue());
@@ -1149,7 +1149,7 @@ inline Value __qmljs_ge(const Value left, const Value right, Context *ctx)
     }
 }
 
-inline Value __qmljs_le(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_le(Value left, Value right, Context *ctx)
 {
     if (left.isInteger() && right.isInteger())
         return Value::fromBoolean(left.integerValue() <= right.integerValue());
@@ -1163,7 +1163,7 @@ inline Value __qmljs_le(const Value left, const Value right, Context *ctx)
     }
 }
 
-inline Value __qmljs_eq(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_eq(Value left, Value right, Context *ctx)
 {
     if (left.val == right.val)
         return Value::fromBoolean(true);
@@ -1177,84 +1177,84 @@ inline Value __qmljs_eq(const Value left, const Value right, Context *ctx)
     }
 }
 
-inline Value __qmljs_ne(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_ne(Value left, Value right, Context *ctx)
 {
     Value result = __qmljs_eq(left, right, ctx);
     result.int_32 = !(bool)result.int_32;
     return result;
 }
 
-inline Value __qmljs_se(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_se(Value left, Value right, Context *ctx)
 {
     bool r = __qmljs_strict_equal(left, right, ctx);
     return Value::fromBoolean(r);
 }
 
-inline Value __qmljs_sne(const Value left, const Value right, Context *ctx)
+inline Value __qmljs_sne(Value left, Value right, Context *ctx)
 {
     bool r = ! __qmljs_strict_equal(left, right, ctx);
     return Value::fromBoolean(r);
 }
 
-inline Bool __qmljs_cmp_gt(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_gt(Value left, Value right, Context *ctx)
 {
     Value v = __qmljs_gt(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_lt(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_lt(Value left, Value right, Context *ctx)
 {
     Value v = __qmljs_lt(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_ge(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_ge(Value left, Value right, Context *ctx)
 {
     Value v = __qmljs_ge(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_le(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_le(Value left, Value right, Context *ctx)
 {
     Value v = __qmljs_le(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_eq(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_eq(Value left, Value right, Context *ctx)
 {
     Value v = __qmljs_eq(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_ne(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_ne(Value left, Value right, Context *ctx)
 {
     Value v = __qmljs_ne(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_se(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_se(Value left, Value right, Context *ctx)
 {
     return __qmljs_strict_equal(left, right, ctx);
 }
 
-inline Bool __qmljs_cmp_sne(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_sne(Value left, Value right, Context *ctx)
 {
     return ! __qmljs_strict_equal(left, right, ctx);
 }
 
-inline Bool __qmljs_cmp_instanceof(const Value left, const Value right, Context *ctx)
+inline Bool __qmljs_cmp_instanceof(Value left, Value right, Context *ctx)
 {
     Value v = __qmljs_instanceof(left, right, ctx);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_in(const Value left, const Value right, Context *ctx)
+inline uint __qmljs_cmp_in(Value left, Value right, Context *ctx)
 {
     Value v = __qmljs_in(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_strict_equal(const Value x, const Value y, Context *ctx)
+inline Bool __qmljs_strict_equal(Value x, Value y, Context *ctx)
 {
     if (x.rawValue() == y.rawValue())
         return true;
