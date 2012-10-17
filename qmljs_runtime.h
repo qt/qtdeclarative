@@ -723,7 +723,7 @@ inline Bool __qmljs_to_boolean(Value value, Context *ctx)
     case Value::Object_Type:
         return true;
     default: // double
-        if (! value.doubleValue() || qIsNaN(value.doubleValue()))
+        if (! value.doubleValue() || std::isnan(value.doubleValue()))
             return false;
         return true;
     }

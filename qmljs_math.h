@@ -41,7 +41,9 @@
 #ifndef QMLJS_MATH_H
 #define QMLJS_MATH_H
 
-#include <QtCore/qnumeric.h>
+#ifndef QMLJS_LLVM_RUNTIME
+#  include <QtCore/qnumeric.h>
+#endif // QMLJS_LLVM_RUNTIME
 #include <cmath>
 
 #if 1 //CPU(X86_64)
