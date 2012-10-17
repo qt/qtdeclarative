@@ -276,7 +276,8 @@ private:
     void loadArgument(TrustedImm32 imm32, RegisterID dest)
     {
         xorPtr(dest, dest);
-        move(imm32, dest);
+        if (imm32.m_value)
+            move(imm32, dest);
     }
 
     void storeArgument(RegisterID src, IR::Temp *temp)
