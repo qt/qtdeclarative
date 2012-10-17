@@ -522,7 +522,7 @@ void InstructionSelection::visitMove(IR::Move *s)
             }
         } else if (IR::Name *n = s->target->asName()) {
             if (IR::Temp *t = s->source->asTemp()) {
-                void (*op)(Context *ctx, String *name, Value *value) = 0;
+                void (*op)(const Value value, String *name, Context *ctx) = 0;
                 const char *opName = 0;
                 switch (s->op) {
                 case IR::OpBitAnd: setOp(op, opName, __qmljs_inplace_bit_and_name); break;
@@ -541,7 +541,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     break;
                 }
                 if (op) {
-                    generateFunctionCallImp(opName, op, ContextRegister, identifier(*n->id), t);
+                    generateFunctionCallImp2(Void, opName, op, t, identifier(*n->id), ContextRegister);
                     checkExceptions();
                 }
                 return;

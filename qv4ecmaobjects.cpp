@@ -714,7 +714,7 @@ void StringCtor::call(Context *ctx)
     if (arg.is(Value::Undefined_Type))
         ctx->result = Value::fromString(ctx->engine->newString(QString()));
     else
-        ctx->result = __qmljs_to_string(ctx, arg);
+        ctx->result = __qmljs_to_string(arg, ctx);
 }
 
 void StringPrototype::init(Context *ctx, const Value &ctor)
@@ -808,7 +808,7 @@ void StringPrototype::method_concat(Context *ctx)
     QString value = getThisString(ctx);
 
     for (unsigned i = 0; i < ctx->argumentCount; ++i) {
-        Value v = __qmljs_to_string(ctx, ctx->arguments[i]);
+        Value v = __qmljs_to_string(ctx->arguments[i], ctx);
         assert(v.is(Value::String_Type));
         value += v.stringValue()->toQString();
     }
@@ -841,7 +841,7 @@ void StringPrototype::method_lastIndexOf(Context *ctx)
 
     QString searchString;
     if (ctx->argumentCount) {
-        Value v = __qmljs_to_string(ctx, ctx->arguments[0]);
+        Value v = __qmljs_to_string(ctx->arguments[0], ctx);
         searchString = v.stringValue()->toQString();
     }
 
@@ -1848,7 +1848,7 @@ void DateCtor::construct(Context *ctx)
         if (DateObject *d = arg.asDateObject())
             arg = d->value;
         else
-            arg = __qmljs_to_primitive(ctx, arg, PREFERREDTYPE_HINT);
+            arg = __qmljs_to_primitive(arg, ctx, PREFERREDTYPE_HINT);
 
         if (arg.isString())
             t = ParseString(arg.toString(ctx)->toQString());

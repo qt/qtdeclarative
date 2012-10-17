@@ -284,12 +284,12 @@ void __qmljs_llvm_set_property(Context *ctx, Value *object, String *name, Value 
 
 void __qmljs_llvm_typeof(Context *ctx, Value *result, const Value *value)
 {
-    *result = __qmljs_typeof(ctx, *value);
+    *result = __qmljs_typeof(*value, ctx);
 }
 
 void __qmljs_llvm_throw(Context *context, Value *value)
 {
-    __qmljs_throw(context, *value);
+    __qmljs_throw(*value, context);
 }
 
 void __qmljs_llvm_rethrow(Context *context, Value *result)
