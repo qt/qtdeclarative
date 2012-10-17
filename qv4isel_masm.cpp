@@ -652,7 +652,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         IR::Temp *l = b->left->asTemp();
         IR::Temp *r = b->right->asTemp();
         if (l && r) {
-            Bool (*op)(Context *ctx, const Value, const Value) = 0;
+            Bool (*op)(const Value, const Value, Context *ctx) = 0;
             const char *opName = 0;
             switch (b->op) {
             default: Q_UNREACHABLE(); assert(!"todo"); break;
@@ -668,7 +668,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             case IR::OpIn: setOp(op, opName, __qmljs_cmp_in); break;
             } // switch
 
-            generateFunctionCall2(ReturnValueRegister, op, ContextRegister, l, r);
+            generateFunctionCall2(ReturnValueRegister, op, l, r, ContextRegister);
             move(ReturnValueRegister, Gpr0);
 
             Jump target = branch32(NotEqual, Gpr0, TrustedImm32(0));

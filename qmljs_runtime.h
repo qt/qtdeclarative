@@ -260,16 +260,16 @@ void __qmljs_inplace_shl_member(Context *ctx, Value *base, String *name, Value *
 void __qmljs_inplace_shr_member(Context *ctx, Value *base, String *name, Value *value);
 void __qmljs_inplace_ushr_member(Context *ctx, Value *base, String *name, Value *value);
 
-Bool __qmljs_cmp_gt(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_lt(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_ge(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_le(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_eq(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_ne(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_se(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_sne(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_instanceof(Context *ctx, const Value left, const Value right);
-Bool __qmljs_cmp_in(Context *ctx, const Value left, const Value right);
+Bool __qmljs_cmp_gt(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_lt(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_ge(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_le(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_eq(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_ne(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_se(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_sne(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_instanceof(const Value left, const Value right, Context *ctx);
+Bool __qmljs_cmp_in(const Value left, const Value right, Context *ctx);
 
 
 } // extern "C"
@@ -1196,59 +1196,59 @@ inline Value __qmljs_sne(const Value left, const Value right, Context *ctx)
     return Value::fromBoolean(r);
 }
 
-inline Bool __qmljs_cmp_gt(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_gt(const Value left, const Value right, Context *ctx)
 {
     Value v = __qmljs_gt(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_lt(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_lt(const Value left, const Value right, Context *ctx)
 {
     Value v = __qmljs_lt(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_ge(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_ge(const Value left, const Value right, Context *ctx)
 {
     Value v = __qmljs_ge(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_le(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_le(const Value left, const Value right, Context *ctx)
 {
     Value v = __qmljs_le(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_eq(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_eq(const Value left, const Value right, Context *ctx)
 {
     Value v = __qmljs_eq(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_ne(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_ne(const Value left, const Value right, Context *ctx)
 {
     Value v = __qmljs_ne(left, right, ctx);
     return v.booleanValue();
 }
 
-inline Bool __qmljs_cmp_se(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_se(const Value left, const Value right, Context *ctx)
 {
     return __qmljs_strict_equal(left, right, ctx);
 }
 
-inline Bool __qmljs_cmp_sne(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_sne(const Value left, const Value right, Context *ctx)
 {
     return ! __qmljs_strict_equal(left, right, ctx);
 }
 
-inline Bool __qmljs_cmp_instanceof(Context *ctx, const Value left, const Value right)
+inline Bool __qmljs_cmp_instanceof(const Value left, const Value right, Context *ctx)
 {
     Value v = __qmljs_instanceof(left, right, ctx);
     return v.booleanValue();
 }
 
-inline uint __qmljs_cmp_in(Context *ctx, const Value left, const Value right)
+inline uint __qmljs_cmp_in(const Value left, const Value right, Context *ctx)
 {
     Value v = __qmljs_in(left, right, ctx);
     return v.booleanValue();
