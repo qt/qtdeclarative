@@ -809,14 +809,14 @@ Value __qmljs_object_default_value(Context *ctx, const Value object, int typeHin
 
     Value conv = oo->getProperty(ctx, meth1);
     if (!conv.isUndefined() && conv.isFunctionObject()) {
-        Value r = __qmljs_call_value(ctx, object, &conv, 0, 0);
+        Value r = __qmljs_call_value(ctx, object, conv, 0, 0);
         if (r.isPrimitive())
             return r;
     }
 
     conv = oo->getProperty(ctx, meth2);
     if (!conv.isUndefined() && conv.isFunctionObject()) {
-        Value r = __qmljs_call_value(ctx, object, &conv, 0, 0);
+        Value r = __qmljs_call_value(ctx, object, conv, 0, 0);
         if (r.isPrimitive())
             return r;
     }
@@ -1074,7 +1074,7 @@ Value __qmljs_call_activation_property(Context *context, String *name, Value *ar
         context->throwReferenceError(Value::fromString(name));
         return Value::undefinedValue();
     }
-    Value result = __qmljs_call_value(context, Value::undefinedValue(), func, args, argc);
+    Value result = __qmljs_call_value(context, Value::undefinedValue(), *func, args, argc);
     return result;
 }
 
@@ -1111,10 +1111,10 @@ Value __qmljs_call_property(Context *context, const Value base, String *name, Va
     return result;
 }
 
-Value __qmljs_call_value(Context *context, const Value thisObject, const Value *func, Value *args, int argc)
+Value __qmljs_call_value(Context *context, const Value thisObject, const Value func, Value *args, int argc)
 {
     Value result;
-    if (FunctionObject *f = func->asFunctionObject()) {
+    if (FunctionObject *f = func.asFunctionObject()) {
         Context k;
         Context *ctx = f->needsActivation ? context->engine->newContext() : &k;
         const Value *that = thisObject.isUndefined() ? 0 : &thisObject;

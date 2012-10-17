@@ -228,7 +228,7 @@ void InstructionSelection::callValue(IR::Call *call, IR::Temp *result)
 
     int argc = prepareVariableArguments(call->args);
     IR::Temp* thisObject = 0;
-    generateFunctionCall2(result, __qmljs_call_value, ContextRegister, baseTemp, thisObject, baseAddressForCallArguments(), TrustedImm32(argc));
+    generateFunctionCall2(result, __qmljs_call_value, ContextRegister, thisObject, baseTemp, baseAddressForCallArguments(), TrustedImm32(argc));
     checkExceptions();
 }
 

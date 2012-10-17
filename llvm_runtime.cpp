@@ -229,7 +229,7 @@ void __qmljs_llvm_call_activation_property(Context *context, Value *result, Stri
 void __qmljs_llvm_call_value(Context *context, Value *result, const Value *thisObject, const Value *func, Value *args, int argc)
 {
     Value that = thisObject ? *thisObject : Value::undefinedValue();
-    *result = __qmljs_call_value(context, that, func, args, argc);
+    *result = __qmljs_call_value(context, that, *func, args, argc);
 }
 
 void __qmljs_llvm_construct_activation_property(Context *context, Value *result, String *name, Value *args, int argc)

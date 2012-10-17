@@ -1548,7 +1548,7 @@ void ArrayPrototype::method_every(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, &callback, args, 3);
+                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
                 ok = __qmljs_to_boolean(r, ctx);
             }
             ctx->result = Value::fromBoolean(ok);
@@ -1577,7 +1577,7 @@ void ArrayPrototype::method_some(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, &callback, args, 3);
+                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
                 ok = __qmljs_to_boolean(r, ctx);
             }
             ctx->result = Value::fromBoolean(ok);
@@ -1606,7 +1606,7 @@ void ArrayPrototype::method_forEach(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, &callback, args, 3);
+                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
             }
         }
     } else {
@@ -1633,7 +1633,7 @@ void ArrayPrototype::method_map(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, &callback, args, 3);
+                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
                 a->value.assign(k, r);
             }
             ctx->result = Value::fromObject(a);
@@ -1661,7 +1661,7 @@ void ArrayPrototype::method_filter(Context *ctx)
                 args[0] = v;
                 args[1] = Value::fromDouble(k);
                 args[2] = ctx->thisObject;
-                Value r = __qmljs_call_value(ctx, thisArg, &callback, args, 3);
+                Value r = __qmljs_call_value(ctx, thisArg, callback, args, 3);
                 if (__qmljs_to_boolean(r, ctx)) {
                     const uint index = a->value.size();
                     a->value.resize(index + 1);
@@ -1697,7 +1697,7 @@ void ArrayPrototype::method_reduce(Context *ctx)
             args[1] = v;
             args[2] = Value::fromDouble(k);
             args[3] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, Value::undefinedValue(), &callback, args, 4);
+            Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
             acc = r;
         }
         ctx->result = acc;
@@ -1728,7 +1728,7 @@ void ArrayPrototype::method_reduceRight(Context *ctx)
             args[1] = v;
             args[2] = Value::fromDouble(k);
             args[3] = ctx->thisObject;
-            Value r = __qmljs_call_value(ctx, Value::undefinedValue(), &callback, args, 4);
+            Value r = __qmljs_call_value(ctx, Value::undefinedValue(), callback, args, 4);
             acc = r;
         }
         ctx->result = acc;
@@ -1798,7 +1798,7 @@ void FunctionPrototype::method_apply(Context *ctx)
             return;
         }
 
-        ctx->result = __qmljs_call_value(ctx, thisObject, &ctx->thisObject, args.data(), args.size());
+        ctx->result = __qmljs_call_value(ctx, thisObject, ctx->thisObject, args.data(), args.size());
     } else {
         ctx->throwTypeError();
     }
@@ -1812,7 +1812,7 @@ void FunctionPrototype::method_call(Context *ctx)
         QVector<Value> args(ctx->argumentCount ? ctx->argumentCount - 1 : 0);
         if (ctx->argumentCount)
             qCopy(ctx->arguments + 1, ctx->arguments + ctx->argumentCount, args.begin());
-        ctx->result = __qmljs_call_value(ctx, thisArg, &ctx->thisObject, args.data(), args.size());
+        ctx->result = __qmljs_call_value(ctx, thisArg, ctx->thisObject, args.data(), args.size());
     } else {
         ctx->throwTypeError();
     }
