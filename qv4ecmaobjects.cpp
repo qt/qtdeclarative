@@ -47,7 +47,7 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
 #include <QtCore/QDebug>
-#include <math.h>
+#include <cmath>
 #include <qmath.h>
 #include <qnumeric.h>
 #include <cassert>

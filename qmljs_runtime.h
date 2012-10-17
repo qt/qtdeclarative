@@ -47,7 +47,7 @@
 #  include <QtCore/QDebug>
 #endif
 
-#include <math.h>
+#include <cmath>
 #include <cassert>
 
 namespace QQmlJS {
@@ -733,10 +733,10 @@ inline double __qmljs_to_integer(const Value value, Context *ctx)
     const double number = __qmljs_to_number(value, ctx);
     if (qIsNaN(number))
         return +0;
-    else if (! number || isinf(number))
+    else if (! number || std::isinf(number))
         return number;
     const double v = floor(fabs(number));
-    return signbit(number) ? -v : v;
+    return std::signbit(number) ? -v : v;
 }
 
 inline int __qmljs_to_int32(const Value value, Context *ctx)
@@ -749,7 +749,7 @@ inline int __qmljs_to_int32(const Value value, Context *ctx)
         return static_cast<int>(number);
     }
 
-    if (! number || qIsNaN(number) || isinf(number))
+    if (! number || qIsNaN(number) || std::isinf(number))
         return 0;
 
     double D32 = 4294967296.0;
@@ -774,7 +774,7 @@ inline unsigned __qmljs_to_uint32(const Value value, Context *ctx)
         return (unsigned) value.int_32;
 
     double number = __qmljs_to_number(value, ctx);
-    if (! number || qIsNaN(number) || isinf(number))
+    if (! number || qIsNaN(number) || std::isinf(number))
         return +0;
 
     double sign = (number < 0) ? -1.0 : 1.0;
@@ -792,7 +792,7 @@ inline unsigned __qmljs_to_uint32(const Value value, Context *ctx)
 inline unsigned short __qmljs_to_uint16(const Value value, Context *ctx)
 {
     double number = __qmljs_to_number(value, ctx);
-    if (! number || qIsNaN(number) || isinf(number))
+    if (! number || qIsNaN(number) || std::isinf(number))
         return +0;
 
     double sign = (number < 0) ? -1.0 : 1.0;

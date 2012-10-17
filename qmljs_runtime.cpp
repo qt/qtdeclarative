@@ -109,26 +109,26 @@ Value Value::fromString(Context *ctx, const QString &s)
 
 int Value::toInt32(double number)
 {
-    if (! number || isnan(number) || isinf(number))
+    if (! number || std::isnan(number) || std::isinf(number))
         return +0;
     return (int) trunc(number); // ###
 }
 
 unsigned int Value::toUInt32(double number)
 {
-    if (! number || isnan(number) || isinf(number))
+    if (! number || std::isnan(number) || std::isinf(number))
         return +0;
     return (uint) trunc(number); // ###
 }
 
 int Value::toInteger(double number)
 {
-    if (isnan(number))
+    if (std::isnan(number))
         return +0;
-    else if (! number || isinf(number))
+    else if (! number || std::isinf(number))
         return number;
     const double v = floor(fabs(number));
-    return signbit(number) ? -v : v;
+    return std::signbit(number) ? -v : v;
 }
 
 int Value::toUInt16(Context *ctx)
@@ -1007,7 +1007,7 @@ Value __qmljs_compare(Context *ctx, const Value x, const Value y, bool leftFirst
     } else {
         double nx = __qmljs_to_number(px, ctx);
         double ny = __qmljs_to_number(py, ctx);
-        if (isnan(nx) || isnan(ny)) {
+        if (std::isnan(nx) || std::isnan(ny)) {
             return Value::undefinedValue();
         } else {
             return Value::fromBoolean(nx < ny);

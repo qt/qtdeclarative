@@ -42,7 +42,7 @@
 #define QMLJS_MATH_H
 
 #include <QtCore/qnumeric.h>
-#include <math.h>
+#include <cmath>
 
 #if 1 //CPU(X86_64)
 

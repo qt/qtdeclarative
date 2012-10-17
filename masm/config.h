@@ -45,8 +45,10 @@
 #include <wtf/Platform.h>
 #ifdef __cplusplus
 #include <wtf/Vector.h>
+#include <cmath>
+#else
+#include <math.h>
 #endif
 #include <limits.h>
-#include <math.h>
 
 #endif // MASM_CONFIG_H

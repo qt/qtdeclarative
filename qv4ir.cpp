@@ -44,7 +44,7 @@
 
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>
-#include <math.h>
+#include <cmath>
 #include <cassert>
 
 QT_BEGIN_NAMESPACE

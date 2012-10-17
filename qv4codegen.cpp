@@ -47,7 +47,7 @@
 #include <QtCore/QBitArray>
 #include <QtCore/QStack>
 #include <private/qqmljsast_p.h>
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include <cassert>
 
