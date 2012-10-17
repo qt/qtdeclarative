@@ -63,6 +63,9 @@ public:
 
 protected:
 #if CPU(X86)
+
+#undef VALUE_FITS_IN_REGISTER
+
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const RegisterID ContextRegister = JSC::X86Registers::esi;
@@ -75,6 +78,8 @@ protected:
     static const RegisterID CalleeSavedLastRegister = Gpr3;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
 
+    static const int RegisterSize = 4;
+
     static const int RegisterArgumentCount = 0;
     static RegisterID registerForArgument(int)
     {
@@ -83,6 +88,9 @@ protected:
         return JSC::X86Registers::eax;
     }
 #elif CPU(X86_64)
+
+#define VALUE_FITS_IN_REGISTER
+
     static const RegisterID StackFrameRegister = JSC::X86Registers::ebp;
     static const RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const RegisterID ContextRegister = JSC::X86Registers::r14;
@@ -92,6 +100,8 @@ protected:
     static const RegisterID Gpr2 = JSC::X86Registers::edx;
     static const RegisterID Gpr3 = JSC::X86Registers::esi;
     static const FPRegisterID FPGpr0 = JSC::X86Registers::xmm0;
+
+    static const int RegisterSize = 8;
 
     static const int RegisterArgumentCount = 6;
     static RegisterID registerForArgument(int index)
@@ -108,6 +118,9 @@ protected:
         return regs[index];
     };
 #elif CPU(ARM)
+
+#undef VALUE_FITS_IN_REGISTER
+
     static const RegisterID StackFrameRegister = JSC::ARMRegisters::r4;
     static const RegisterID StackPointerRegister = JSC::ARMRegisters::sp;
     static const RegisterID ContextRegister = JSC::ARMRegisters::r5;
@@ -119,6 +132,8 @@ protected:
     static const RegisterID CalleeSavedFirstRegister = JSC::ARMRegisters::r4;
     static const RegisterID CalleeSavedLastRegister = JSC::ARMRegisters::r11;
     static const FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
+
+    static const int RegisterSize = 4;
 
     static const RegisterID RegisterArgument1 = JSC::ARMRegisters::r0;
     static const RegisterID RegisterArgument2 = JSC::ARMRegisters::r1;
@@ -134,6 +149,7 @@ protected:
 #else
 #error Argh.
 #endif
+
     struct VoidType {};
     static const VoidType Void;
 
@@ -275,14 +291,23 @@ private:
         if (temp) {
             // ### Should use some ScratchRegister here
             Pointer addr = loadTempAddress(Gpr3, temp);
+#ifdef VALUE_FITS_IN_REGISTER
             storePtr(src, addr);
+#else
+            // If the value doesn't fit into a register, then the
+            // register contains the address to where the argument
+            // (return value) is stored. Copy it from there.
+            copyValue(addr, Pointer(src, 0));
+#endif
         }
     }
 
+#if VALUE_FITS_IN_REGISTER
     void storeArgument(RegisterID src, const Pointer &dest)
     {
         storePtr(src, dest);
     }
+#endif
 
     void storeArgument(RegisterID src, RegisterID dest)
     {
@@ -301,14 +326,30 @@ private:
         push(Gpr0);
     }
 
+    void push(VM::Value value)
+    {
+#if VALUE_FITS_IN_REGISTER
+        move(TrustedImm64((const void *)undefined.val), Gpr0);
+        push(Gpr0);
+#else
+        move(TrustedImm32(value.int_32), Gpr0);
+        push(Gpr0);
+        move(TrustedImm32(value.tag), Gpr0);
+        push(Gpr0);
+#endif
+    }
+
     void push(IR::Temp* temp)
     {
         if (temp) {
-            Pointer addr = loadTempAddress(Gpr0, temp);
+            Address addr = loadTempAddress(Gpr0, temp);
+            addr.offset += 4;
+            push(addr);
+            addr.offset -= 4;
             push(addr);
         } else {
-            xorPtr(Gpr0, Gpr0);
-            push(Gpr0);
+            VM::Value undefined = VM::Value::undefinedValue();
+            push(undefined);
         }
     }
 
@@ -343,11 +384,26 @@ private:
     #define generateFunctionCall(t, function, ...) \
         generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
 
+    static inline int sizeOfArgument(VoidType)
+    { return 0; }
+    static inline int sizeOfArgument(RegisterID)
+    { return RegisterSize; }
+    static inline int sizeOfArgument(IR::Temp*)
+    { return 8; } // Size of value
+    static inline int sizeOfArgument(const Pointer&)
+    { return sizeof(void*); }
+    static inline int sizeOfArgument(VM::String* string)
+    { return sizeof(string); }
+    static inline int sizeOfArgument(TrustedImmPtr)
+    { return sizeof(void*); }
+    static inline int sizeOfArgument(TrustedImm32)
+    { return 4; }
+
     struct ArgumentLoader
     {
         ArgumentLoader(InstructionSelection* instructionSelection, int totalNumberOfArguments)
             : isel(instructionSelection)
-            , stackArgumentCount(0)
+            , stackSpaceForArguments(0)
             , currentRegisterIndex(qMin(totalNumberOfArguments - 1, RegisterArgumentCount - 1))
         {
         }
@@ -360,7 +416,7 @@ private:
                 --currentRegisterIndex;
             } else {
                 isel->push(argument);
-                ++stackArgumentCount;
+                stackSpaceForArguments += sizeOfArgument(argument);
             }
         }
 
@@ -371,7 +427,7 @@ private:
         }
 
         InstructionSelection *isel;
-        int stackArgumentCount;
+        int stackSpaceForArguments;
         int currentRegisterIndex;
     };
 
@@ -379,16 +435,44 @@ private:
     void generateFunctionCallImp(ArgRet r, const char* functionName, FunctionPtr function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
         callFunctionPrologue();
-        ArgumentLoader l(this, 5);
+
+        int totalNumberOfArgs = 5;
+
+        // If necessary reserve space for the return value on the stack and
+        // pass the pointer to it as the first hidden parameter.
+        bool returnValueOnStack = false;
+        int sizeOfReturnValueOnStack = sizeOfArgument(r);
+        if (sizeOfReturnValueOnStack > RegisterSize) {
+            sub32(TrustedImm32(sizeOfReturnValueOnStack), StackPointerRegister);
+            ++totalNumberOfArgs;
+            returnValueOnStack = true;
+        }
+
+        ArgumentLoader l(this, totalNumberOfArgs);
         l.load(arg5);
         l.load(arg4);
         l.load(arg3);
         l.load(arg2);
         l.load(arg1);
+
+        if (returnValueOnStack) {
+            // Load address of return value
+            l.load(Pointer(StackPointerRegister, l.stackSpaceForArguments));
+        }
+
         callAbsolute(functionName, function);
-        if (l.stackArgumentCount)
-            add32(TrustedImm32(l.stackArgumentCount * sizeof(void*)), StackPointerRegister);
+
+        int stackSizeToCorrect = l.stackSpaceForArguments;
+        if (returnValueOnStack) {
+            stackSizeToCorrect -= sizeof(void*); // Callee removed the hidden argument (address of return value)
+            stackSizeToCorrect += sizeOfReturnValueOnStack;
+        }
+
         storeArgument(ReturnValueRegister, r);
+
+        if (stackSizeToCorrect)
+            add32(TrustedImm32(stackSizeToCorrect), StackPointerRegister);
+
         callFunctionEpilogue();
     }
 
@@ -453,16 +537,13 @@ private:
 #if CPU(X86_64)
         storePtr(TrustedImmPtr((void *)value.val), destination);
 #elif CPU(X86)
-        destination.offset += offsetof(VM::ValueData, tag);
-        store32(value.tag, destination);
-        destination.offset -= offsetof(VM::ValueData, tag);
-        destination.offset += offsetof(VM::ValueData, int_32);
-        store32(value.int_32, destination);
+        store32(TrustedImm32(value.int_32), destination);
+        destination.offset += 4;
+        store32(TrustedImm32(value.tag), destination);
 #else
 #error "Missing implementation"
 #endif
     }
-
 
     VM::ExecutionEngine *_engine;
     IR::Module *_module;
