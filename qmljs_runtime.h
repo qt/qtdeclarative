@@ -1078,21 +1078,21 @@ inline Value __qmljs_mod(Value left, Value right, Context *ctx)
 inline Value __qmljs_shl(Value left, Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
-    unsigned rval = __qmljs_to_uint32(right, ctx);
+    unsigned rval = __qmljs_to_uint32(right, ctx) & 0x1f;
     return Value::fromInt32(lval << rval);
 }
 
 inline Value __qmljs_shr(Value left, Value right, Context *ctx)
 {
     int lval = __qmljs_to_int32(left, ctx);
-    unsigned rval = __qmljs_to_uint32(right, ctx);
+    unsigned rval = __qmljs_to_uint32(right, ctx) & 0x1f;
     return Value::fromInt32(lval >> rval);
 }
 
 inline Value __qmljs_ushr(Value left, Value right, Context *ctx)
 {
     unsigned lval = __qmljs_to_uint32(left, ctx);
-    unsigned rval = __qmljs_to_uint32(right, ctx);
+    unsigned rval = __qmljs_to_uint32(right, ctx) & 0x1f;
     return Value::fromInt32(lval >> rval);
 }
 
