@@ -617,6 +617,16 @@ void __qmljs_inplace_ushr_name(Value value, String *name, Context *ctx)
 
 void __qmljs_inplace_bit_and_element(Value base, Value index, Value value, Context *ctx)
 {
+    Object *obj = base.toObject(ctx).objectValue();
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index.isNumber()) {
+            const quint32 idx = index.toUInt32(ctx);
+            Value v = a->value.at(idx);
+            v = __qmljs_bit_and(v, value, ctx);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
@@ -682,31 +692,91 @@ void __qmljs_inplace_sub_element(Value base, Value index, Value value, Context *
 
 void __qmljs_inplace_mul_element(Value base, Value index, Value value, Context *ctx)
 {
+    Object *obj = base.toObject(ctx).objectValue();
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index.isNumber()) {
+            const quint32 idx = index.toUInt32(ctx);
+            Value v = a->value.at(idx);
+            v = __qmljs_mul(v, value, ctx);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
 void __qmljs_inplace_div_element(Value base, Value index, Value value, Context *ctx)
 {
+    Object *obj = base.toObject(ctx).objectValue();
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index.isNumber()) {
+            const quint32 idx = index.toUInt32(ctx);
+            Value v = a->value.at(idx);
+            v = __qmljs_div(v, value, ctx);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
 void __qmljs_inplace_mod_element(Value base, Value index, Value value, Context *ctx)
 {
+    Object *obj = base.toObject(ctx).objectValue();
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index.isNumber()) {
+            const quint32 idx = index.toUInt32(ctx);
+            Value v = a->value.at(idx);
+            v = __qmljs_mod(v, value, ctx);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
 void __qmljs_inplace_shl_element(Value base, Value index, Value value, Context *ctx)
 {
+    Object *obj = base.toObject(ctx).objectValue();
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index.isNumber()) {
+            const quint32 idx = index.toUInt32(ctx);
+            Value v = a->value.at(idx);
+            v = __qmljs_shl(v, value, ctx);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
 void __qmljs_inplace_shr_element(Value base, Value index, Value value, Context *ctx)
 {
+    Object *obj = base.toObject(ctx).objectValue();
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index.isNumber()) {
+            const quint32 idx = index.toUInt32(ctx);
+            Value v = a->value.at(idx);
+            v = __qmljs_shr(v, value, ctx);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
 void __qmljs_inplace_ushr_element(Value base, Value index, Value value, Context *ctx)
 {
+    Object *obj = base.toObject(ctx).objectValue();
+    if (ArrayObject *a = obj->asArrayObject()) {
+        if (index.isNumber()) {
+            const quint32 idx = index.toUInt32(ctx);
+            Value v = a->value.at(idx);
+            v = __qmljs_ushr(v, value, ctx);
+            a->value.assign(idx, v);
+            return;
+        }
+    }
     ctx->throwUnimplemented(QLatin1String(Q_FUNC_INFO));
 }
 
