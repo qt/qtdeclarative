@@ -212,6 +212,14 @@ public:
         m_assembler.orrs(dest, dest, src);
     }
 
+    void or32(RegisterID src, AbsoluteAddress dest)
+    {
+        move(TrustedImmPtr(dest.m_ptr), ARMRegisters::S0);
+        load32(Address(ARMRegisters::S0), ARMRegisters::S1);
+        or32(src, ARMRegisters::S1);
+        store32(ARMRegisters::S1, ARMRegisters::S0);
+    }
+
     void or32(TrustedImm32 imm, RegisterID dest)
     {
         m_assembler.orrs(dest, dest, m_assembler.getImm(imm.m_value, ARMRegisters::S0));
@@ -437,6 +445,13 @@ public:
         m_assembler.baseIndexTransfer32(ARMAssembler::StoreUint8, src, address.base, address.index, static_cast<int>(address.scale), address.offset);
     }
 
+    void store8(TrustedImm32 imm, void* address)
+    {
+        move(TrustedImm32(reinterpret_cast<ARMWord>(address)), ARMRegisters::S0);
+        m_assembler.moveImm(imm.m_value, ARMRegisters::S1);
+        m_assembler.dtrUp(ARMAssembler::StoreUint8, ARMRegisters::S1, ARMRegisters::S0, 0);
+    }
+
     void store16(RegisterID src, BaseIndex address)
     {
         m_assembler.baseIndexTransfer16(ARMAssembler::StoreUint16, src, address.base, address.index, static_cast<int>(address.scale), address.offset);
@@ -655,6 +670,17 @@ public:
     {
         move(TrustedImmPtr(address.m_ptr), ARMRegisters::S0);
         load32(Address(ARMRegisters::S0, 0), ARMRegisters::pc);
+    }
+
+    void moveDoubleToInts(FPRegisterID src, RegisterID dest1, RegisterID dest2)
+    {
+        m_assembler.vmov(dest1, dest2, src);
+    }
+
+    void moveIntsToDouble(RegisterID src1, RegisterID src2, FPRegisterID dest, FPRegisterID scratch)
+    {
+        UNUSED_PARAM(scratch);
+        m_assembler.vmov(dest, src1, src2);
     }
 
     Jump branchAdd32(ResultCondition cond, RegisterID src, RegisterID dest)

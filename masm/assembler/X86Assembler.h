@@ -541,6 +541,11 @@ public:
             m_formatter.immediate32(imm);
         }
     }
+
+    void orl_rm(RegisterID src, const void* addr)
+    {
+        m_formatter.oneByteOp(OP_OR_EvGv, src, addr);
+    }
 #endif
 
     void subl_rr(RegisterID src, RegisterID dst)
@@ -1149,6 +1154,15 @@ public:
         m_formatter.oneByteOp(OP_GROUP11_EvIz, GROUP11_MOV, base, index, scale, offset);
         m_formatter.immediate32(imm);
     }
+
+#if !CPU(X86_64)
+    void movb_i8m(int imm, const void* addr)
+    {
+        ASSERT(-128 <= imm && imm < 128);
+        m_formatter.oneByteOp(OP_GROUP11_EvIb, GROUP11_MOV, addr);
+        m_formatter.immediate8(imm);
+    }
+#endif
 
     void movb_i8m(int imm, int offset, RegisterID base)
     {

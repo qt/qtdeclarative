@@ -313,6 +313,14 @@ public:
     {
         m_assembler.orr(dest, dest, src);
     }
+    
+    void or32(RegisterID src, AbsoluteAddress dest)
+    {
+        move(TrustedImmPtr(dest.m_ptr), addressTempRegister);
+        load32(addressTempRegister, dataTempRegister);
+        or32(src, dataTempRegister);
+        store32(dataTempRegister, addressTempRegister);
+    }
 
     void or32(TrustedImm32 imm, RegisterID dest)
     {
@@ -729,9 +737,33 @@ public:
         store8(src, setupArmAddress(address));
     }
     
+    void store8(RegisterID src, void* address)
+    {
+        move(TrustedImmPtr(address), addressTempRegister);
+        store8(src, ArmAddress(addressTempRegister, 0));
+    }
+    
+    void store8(TrustedImm32 imm, void* address)
+    {
+        move(imm, dataTempRegister);
+        store8(dataTempRegister, address);
+    }
+    
     void store16(RegisterID src, BaseIndex address)
     {
         store16(src, setupArmAddress(address));
+    }
+
+    // Possibly clobbers src, but not on this architecture.
+    void moveDoubleToInts(FPRegisterID src, RegisterID dest1, RegisterID dest2)
+    {
+        m_assembler.vmov(dest1, dest2, src);
+    }
+    
+    void moveIntsToDouble(RegisterID src1, RegisterID src2, FPRegisterID dest, FPRegisterID scratch)
+    {
+        UNUSED_PARAM(scratch);
+        m_assembler.vmov(dest, src1, src2);
     }
 
 #if ENABLE(JIT_CONSTANT_BLINDING)
@@ -1651,6 +1683,30 @@ public:
         load32(left, addressTempRegister);
         dataLabel = moveWithPatch(initialRightValue, dataTempRegister);
         return branch32(cond, addressTempRegister, dataTempRegister);
+    }
+    
+    PatchableJump patchableBranchPtr(RelationalCondition cond, Address left, TrustedImmPtr right = TrustedImmPtr(0))
+    {
+        m_makeJumpPatchable = true;
+        Jump result = branch32(cond, left, TrustedImm32(right));
+        m_makeJumpPatchable = false;
+        return PatchableJump(result);
+    }
+    
+    PatchableJump patchableBranchTest32(ResultCondition cond, RegisterID reg, TrustedImm32 mask = TrustedImm32(-1))
+    {
+        m_makeJumpPatchable = true;
+        Jump result = branchTest32(cond, reg, mask);
+        m_makeJumpPatchable = false;
+        return PatchableJump(result);
+    }
+
+    PatchableJump patchableBranch32(RelationalCondition cond, RegisterID reg, TrustedImm32 imm)
+    {
+        m_makeJumpPatchable = true;
+        Jump result = branch32(cond, reg, imm);
+        m_makeJumpPatchable = false;
+        return PatchableJump(result);
     }
 
     PatchableJump patchableBranchPtrWithPatch(RelationalCondition cond, Address left, DataLabelPtr& dataLabel, TrustedImmPtr initialRightValue = TrustedImmPtr(0))
