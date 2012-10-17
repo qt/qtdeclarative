@@ -302,7 +302,7 @@ private:
         }
     }
 
-#if VALUE_FITS_IN_REGISTER
+#ifdef VALUE_FITS_IN_REGISTER
     void storeArgument(RegisterID src, const Pointer &dest)
     {
         storePtr(src, dest);
@@ -328,8 +328,8 @@ private:
 
     void push(VM::Value value)
     {
-#if VALUE_FITS_IN_REGISTER
-        move(TrustedImm64((const void *)undefined.val), Gpr0);
+#ifdef VALUE_FITS_IN_REGISTER
+        move(TrustedImm64(value.val), Gpr0);
         push(Gpr0);
 #else
         move(TrustedImm32(value.int_32), Gpr0);
