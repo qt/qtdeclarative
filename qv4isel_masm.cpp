@@ -458,7 +458,7 @@ void InstructionSelection::visitMove(IR::Move *s)
                     case IR::OpStrictEqual: setOp(op, opName, __qmljs_se); break;
                     case IR::OpStrictNotEqual: setOp(op, opName, __qmljs_sne); break;
                     case IR::OpInstanceof: setOp(op, opName, __qmljs_instanceof); break;
-                    case IR::OpIn: setOp(op, opName, __qmljs_in);
+                    case IR::OpIn: setOp(op, opName, __qmljs_in); break;
 
                     case IR::OpAnd:
                     case IR::OpOr:
